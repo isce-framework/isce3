@@ -13,8 +13,8 @@
 /** @param[in] lut LUT1d<T> object */
 template <typename T>
 __host__
-isce::cuda::core::gpuLUT1d<T>::
-gpuLUT1d(const isce::core::LUT1d<T> & lut) :
+isce3::cuda::core::gpuLUT1d<T>::
+gpuLUT1d(const isce3::core::LUT1d<T> & lut) :
     _extrapolate(lut.extrapolate()), _size(lut.size()), _owner(true) {
 
     // Check if LUT1d has data
@@ -44,8 +44,8 @@ gpuLUT1d(const isce::core::LUT1d<T> & lut) :
 /** @param[in] lut gpuLUT1d<T> object */
 template <typename T>
 __host__ __device__
-isce::cuda::core::gpuLUT1d<T>::
-gpuLUT1d(isce::cuda::core::gpuLUT1d<T> & lut) :
+isce3::cuda::core::gpuLUT1d<T>::
+gpuLUT1d(isce3::cuda::core::gpuLUT1d<T> & lut) :
     _haveData(lut.haveData()), _refValue(lut.refValue()),
     _coords(lut.coords()), _values(lut.values()),
     _size(lut.size()), _extrapolate(lut.extrapolate()),
@@ -55,9 +55,9 @@ gpuLUT1d(isce::cuda::core::gpuLUT1d<T> & lut) :
 /** @param[in] lut gpuLUT1d<T> object */
 template <typename T>
 __host__ __device__
-isce::cuda::core::gpuLUT1d<T> &
-isce::cuda::core::gpuLUT1d<T>::
-operator=(isce::cuda::core::gpuLUT1d<T> & lut) {
+isce3::cuda::core::gpuLUT1d<T> &
+isce3::cuda::core::gpuLUT1d<T>::
+operator=(isce3::cuda::core::gpuLUT1d<T> & lut) {
     _haveData = lut.haveData();
     _refValue = lut.refValue();
     _coords = lut.coords();
@@ -70,7 +70,7 @@ operator=(isce::cuda::core::gpuLUT1d<T> & lut) {
 
 /** Destructor */
 template <typename T>
-isce::cuda::core::gpuLUT1d<T>::
+isce3::cuda::core::gpuLUT1d<T>::
 ~gpuLUT1d() {
     // Only owner of memory clears it
     if (_owner && _haveData) {
@@ -84,7 +84,7 @@ isce::cuda::core::gpuLUT1d<T>::
   * @param[out] result Interpolated value */
 template <typename T>
 __device__
-T isce::cuda::core::gpuLUT1d<T>::
+T isce3::cuda::core::gpuLUT1d<T>::
 eval(double x) const {
 
     // Check if data are available; if not, return ref value
@@ -150,14 +150,14 @@ eval(double x) const {
 
 template <typename T>
 __global__
-void eval_d(isce::cuda::core::gpuLUT1d<T> lut, double rng, T * val) {
+void eval_d(isce3::cuda::core::gpuLUT1d<T> lut, double rng, T * val) {
     *val = lut.eval(rng);
 }
 
 template <typename T>
 __host__
 T
-isce::cuda::core::gpuLUT1d<T>::
+isce3::cuda::core::gpuLUT1d<T>::
 eval_h(double rng) {
 
     T * val_d;
@@ -179,7 +179,7 @@ eval_h(double rng) {
 }
 
 // Forward declaration
-template class isce::cuda::core::gpuLUT1d<double>;
-template class isce::cuda::core::gpuLUT1d<float>;
+template class isce3::cuda::core::gpuLUT1d<double>;
+template class isce3::cuda::core::gpuLUT1d<float>;
 
 // end of file  

@@ -10,12 +10,12 @@ from Cartesian cimport cartesian_t, cartmat_t
 from Ellipsoid cimport Ellipsoid
 from IH5 cimport IGroup
 
-cdef extern from "isce3/core/Attitude.h" namespace "isce::core":
+cdef extern from "isce3/core/Attitude.h" namespace "isce3::core":
     cdef cppclass Attitude:
         cartesian_t ypr()
         cartmat_t rotmat(string)
 
-cdef extern from "isce3/core/Quaternion.h" namespace "isce::core": 
+cdef extern from "isce3/core/Quaternion.h" namespace "isce3::core": 
     cdef cppclass Quaternion(Attitude):
         # Get copy of quaternion elements
         vector[double] & qvec()
@@ -29,6 +29,6 @@ cdef extern from "isce3/core/Quaternion.h" namespace "isce::core":
         # Convert quaternion to yaw, pitch, and roll angles
         cartesian_t factoredYPR(double, cartesian_t, cartesian_t, Ellipsoid *)
 
-cdef extern from "isce3/core/Serialization.h" namespace "isce::core":
+cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
     void saveQuaternionToH5 "saveToH5" (IGroup &, const Quaternion &)
     void loadQuaternionFromH5 "loadFromH5" (IGroup &, Quaternion &)

@@ -28,39 +28,39 @@
 #include <isce3/error/ErrorCode.h>
 #include <isce3/focus/BistaticDelay.h>
 
-using namespace isce::core;
-using namespace isce::cuda::geometry;
+using namespace isce3::core;
+using namespace isce3::cuda::geometry;
 
-using isce::cuda::core::interp1d;
-using isce::error::ErrorCode;
-using isce::focus::bistaticDelay;
-using isce::focus::dryTropoDelayTSX;
+using isce3::cuda::core::interp1d;
+using isce3::error::ErrorCode;
+using isce3::focus::bistaticDelay;
+using isce3::focus::dryTropoDelayTSX;
 
-using HostDEMInterpolator = isce::geometry::DEMInterpolator;
-using HostRadarGeometry = isce::container::RadarGeometry;
+using HostDEMInterpolator = isce3::geometry::DEMInterpolator;
+using HostRadarGeometry = isce3::container::RadarGeometry;
 
-using DeviceDEMInterpolator = isce::cuda::geometry::gpuDEMInterpolator;
-using DeviceOrbitView = isce::cuda::core::OrbitView;
-using DeviceRadarGeometry = isce::cuda::container::RadarGeometry;
+using DeviceDEMInterpolator = isce3::cuda::geometry::gpuDEMInterpolator;
+using DeviceOrbitView = isce3::cuda::core::OrbitView;
+using DeviceRadarGeometry = isce3::cuda::container::RadarGeometry;
 
 template<typename T>
-using DeviceLUT2d = isce::cuda::core::gpuLUT2d<T>;
+using DeviceLUT2d = isce3::cuda::core::gpuLUT2d<T>;
 
 // clang-format off
-template<typename T> using HostBartlettKernel = isce::core::BartlettKernel<T>;
-template<typename T> using HostChebyKernel = isce::core::ChebyKernel<T>;
-template<typename T> using HostKnabKernel = isce::core::KnabKernel<T>;
-template<typename T> using HostLinearKernel = isce::core::LinearKernel<T>;
-template<typename T> using HostTabulatedKernel = isce::core::TabulatedKernel<T>;
+template<typename T> using HostBartlettKernel = isce3::core::BartlettKernel<T>;
+template<typename T> using HostChebyKernel = isce3::core::ChebyKernel<T>;
+template<typename T> using HostKnabKernel = isce3::core::KnabKernel<T>;
+template<typename T> using HostLinearKernel = isce3::core::LinearKernel<T>;
+template<typename T> using HostTabulatedKernel = isce3::core::TabulatedKernel<T>;
 
-template<typename T> using DeviceBartlettKernel = isce::cuda::core::BartlettKernel<T>;
-template<typename T> using DeviceChebyKernel = isce::cuda::core::ChebyKernel<T>;
-template<typename T> using DeviceKnabKernel = isce::cuda::core::KnabKernel<T>;
-template<typename T> using DeviceLinearKernel = isce::cuda::core::LinearKernel<T>;
-template<typename T> using DeviceTabulatedKernel = isce::cuda::core::TabulatedKernel<T>;
+template<typename T> using DeviceBartlettKernel = isce3::cuda::core::BartlettKernel<T>;
+template<typename T> using DeviceChebyKernel = isce3::cuda::core::ChebyKernel<T>;
+template<typename T> using DeviceKnabKernel = isce3::cuda::core::KnabKernel<T>;
+template<typename T> using DeviceLinearKernel = isce3::cuda::core::LinearKernel<T>;
+template<typename T> using DeviceTabulatedKernel = isce3::cuda::core::TabulatedKernel<T>;
 // clang-format on
 
-namespace isce { namespace cuda { namespace focus {
+namespace isce3 { namespace cuda { namespace focus {
 
 namespace {
 
@@ -481,7 +481,7 @@ void backproject(std::complex<float>* out,
     if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
         std::string errmsg = "input reference epoch must match output "
                              "reference epoch";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 
     // init device variable to return error codes from device code
@@ -511,7 +511,7 @@ void backproject(std::complex<float>* out,
     }
 
     // range sampling window
-    static constexpr double c = isce::core::speed_of_light;
+    static constexpr double c = isce3::core::speed_of_light;
     const double swst = 2. * in_slant_range.first() / c;
     const double dtau = 2. * in_slant_range.spacing() / c;
     const int in_samples = in_slant_range.size();
@@ -612,7 +612,7 @@ void backproject(std::complex<float>* out,
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
     } else {
         std::string errmsg = "unexpected dry troposphere model";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
     // get coherent integration bounds (pulse indices) for each target
@@ -687,8 +687,8 @@ void backproject(std::complex<float>* out,
 
     // check for errors from device code
     if (errc[0] != ErrorCode::Success) {
-        std::string errmsg = isce::error::getErrorString(errc[0]);
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        std::string errmsg = isce3::error::getErrorString(errc[0]);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 }
 
@@ -738,8 +738,8 @@ void backproject(std::complex<float>* out,
                     d_kernel, dry_tropo_model, rdr2geo_params, geo2rdr_params);
     }
     else {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
     }
 }
 
-}}} // namespace isce::cuda::focus
+}}} // namespace isce3::cuda::focus

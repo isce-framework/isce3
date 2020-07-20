@@ -15,7 +15,7 @@ cdef extern from "hdf5.h":
     ctypedef long int hid_t
 
 
-cdef extern from "isce3/io/IH5.h" namespace "isce::io":
+cdef extern from "isce3/io/IH5.h" namespace "isce3::io":
 
     # IDataSet class
     cdef cppclass IDataSet:

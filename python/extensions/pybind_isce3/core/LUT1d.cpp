@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-using isce::core::LUT1d;
+using isce3::core::LUT1d;
 
 template<typename T>
 void addbinding(py::class_<LUT1d<T>> &pyLUT1d)

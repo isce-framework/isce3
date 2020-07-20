@@ -12,7 +12,7 @@
 #include "Vector.h"
 
 /** Simple class to store three-dimensional basis vectors*/
-class isce::core::Basis {
+class isce3::core::Basis {
 
     public:
         /** Default constructor*/

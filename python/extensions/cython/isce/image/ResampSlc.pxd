@@ -13,7 +13,7 @@ from Product cimport Product
 from Swath cimport Swath
 from Raster cimport Raster
 
-cdef extern from "isce3/image/ResampSlc.h" namespace "isce::image":
+cdef extern from "isce3/image/ResampSlc.h" namespace "isce3::image":
 
     # ResampSlc class
     cdef cppclass ResampSlc:
@@ -21,7 +21,7 @@ cdef extern from "isce3/image/ResampSlc.h" namespace "isce::image":
         # Default constructor with a Product (no flattening)
         ResampSlc(const Product & product, char) except +
 
-        # Constructor from an isce::product::Product and reference product (flattening)
+        # Constructor from an isce3::product::Product and reference product (flattening)
         ResampSlc(const Product & product,
                   const Product & refProduct,
                   char) except +

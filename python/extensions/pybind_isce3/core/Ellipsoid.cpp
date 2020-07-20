@@ -6,8 +6,8 @@
 
 namespace py = pybind11;
 
-using isce::core::Ellipsoid;
-using isce::core::Vec3;
+using isce3::core::Ellipsoid;
+using isce3::core::Vec3;
 
 void addbinding(py::class_<Ellipsoid> & pyEllipsoid)
 {

@@ -14,8 +14,8 @@
 // Constructor from an LUT2d (values averaged in y-direction)
 /** @param[in] lut2d LUT2d to copy data from */
 template <typename T>
-isce::core::LUT1d<T>::
-LUT1d(const isce::core::LUT2d<T> & lut2d) {
+isce3::core::LUT1d<T>::
+LUT1d(const isce3::core::LUT2d<T> & lut2d) {
 
     // Check if LUT2d has actual data; if not, just store reference value
     if (!lut2d.haveData()) {
@@ -25,7 +25,7 @@ LUT1d(const isce::core::LUT2d<T> & lut2d) {
     }
 
     // Get a reference to the LUT2d data
-    const isce::core::Matrix<T> & data = lut2d.data();
+    const isce3::core::Matrix<T> & data = lut2d.data();
 
     // Initialize working valarrays for computing mean along y-direction
     std::valarray<double> values(lut2d.width()), count(lut2d.width());
@@ -58,8 +58,8 @@ LUT1d(const isce::core::LUT2d<T> & lut2d) {
 // Assignment operator from an LUT2d (values averaged in y-direction)
 /** @param[in] lut2d LUT2d to copy data from */
 template <typename T>
-isce::core::LUT1d<T> &
-isce::core::LUT1d<T>::
+isce3::core::LUT1d<T> &
+isce3::core::LUT1d<T>::
 operator=(const LUT2d<T> & lut2d) {
 
     // Check if LUT2d has actual data; if not, just store reference value
@@ -70,7 +70,7 @@ operator=(const LUT2d<T> & lut2d) {
     }
 
     // Get a reference to the LUT2d data 
-    const isce::core::Matrix<T> & data = lut2d.data();
+    const isce3::core::Matrix<T> & data = lut2d.data();
     
     // Initialize working valarrays for computing mean along y-direction
     std::valarray<double> values(lut2d.width()), count(lut2d.width());
@@ -102,7 +102,7 @@ operator=(const LUT2d<T> & lut2d) {
 /** @param[in] x Point to evaluate the LUT
   * @param[out] result Interpolated value */
 template <typename T>
-T isce::core::LUT1d<T>::
+T isce3::core::LUT1d<T>::
 eval(double x) const {
 
     // Check if data are available; if not, return ref value

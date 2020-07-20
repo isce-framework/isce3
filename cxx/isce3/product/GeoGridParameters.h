@@ -1,7 +1,7 @@
 #pragma once
 #include <isce3/except/Error.h>
 
-namespace isce { namespace product {
+namespace isce3 { namespace product {
 
 class GeoGridParameters {
 public:
@@ -65,9 +65,9 @@ protected:
     // epsg code for the output geocoded grid
     int _epsg = 4326;
 };
-}} // namespace isce::product
+}} // namespace isce3::product
 
-isce::product::GeoGridParameters::GeoGridParameters(
+isce3::product::GeoGridParameters::GeoGridParameters(
         double geoGridStartX, double geoGridStartY, double geoGridSpacingX,
         double geoGridSpacingY, int width, int length, int epsgcode)
     : // Assumption: origin is the top-left corner of the top-left pixel of the
@@ -97,6 +97,6 @@ isce::product::GeoGridParameters::GeoGridParameters(
 {
     if (geoGridSpacingY > 0.0) {
             std::string errmsg = "Y spacing can not be positive.";
-            throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+            throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 }

@@ -54,7 +54,7 @@ from IH5 cimport IH5File, IDataSet, IGroup
 
 cdef class pyIDataSet:
     """
-    Cython wrapper for isce::io::IDataSet.
+    Cython wrapper for isce3::io::IDataSet.
 
     Args:
         None
@@ -64,7 +64,7 @@ cdef class pyIDataSet:
 
     def __cinit__(self):
         """
-        Pre-constructor that creates a C++ isce::io::IDataSet object and binds it to 
+        Pre-constructor that creates a C++ isce3::io::IDataSet object and binds it to 
         python instance.
         """
         self.c_idataset = new IDataSet()
@@ -77,7 +77,7 @@ cdef class pyIDataSet:
 
 cdef class pyIGroup:
     """
-    Cython wrapper for isce::io::IGroup.
+    Cython wrapper for isce3::io::IGroup.
 
     Args:
         None
@@ -86,7 +86,7 @@ cdef class pyIGroup:
 
     def __cinit__(self):
         """
-        Pre-constructor that creates a C++ isce::io::IGroup object and binds it to
+        Pre-constructor that creates a C++ isce3::io::IGroup object and binds it to
         python instance.
         """
         self.c_igroup = IGroup()
@@ -94,7 +94,7 @@ cdef class pyIGroup:
 
 cdef class pyIH5File:
     """
-    Cython wrapper for isce::io::IH5File.
+    Cython wrapper for isce3::io::IH5File.
 
     Args:
         filename (str): Name of H5 file.
@@ -105,7 +105,7 @@ cdef class pyIH5File:
 
     def __cinit__(self, filename, int access=0):
         """
-        Pre-constructor that creates a C++ isce::io::IH5File object and binds it to 
+        Pre-constructor that creates a C++ isce3::io::IH5File object and binds it to 
         python instance.
         """
         # Convert the filename to a C++ string representation

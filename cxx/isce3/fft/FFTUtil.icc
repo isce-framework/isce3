@@ -4,14 +4,14 @@
 
 #include <cmath>
 
-namespace isce { namespace fft {
+namespace isce3 { namespace fft {
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value>::type *>
 inline
 T nextPowerOfTwo(T n)
 {
     if (n < 0) {
-        throw isce::except::DomainError(ISCE_SRCINFO(), "input must be non-negative");
+        throw isce3::except::DomainError(ISCE_SRCINFO(), "input must be non-negative");
     }
 
     if (n <= 1) {
@@ -40,7 +40,7 @@ inline std::int32_t intpow(std::int32_t base, std::int32_t exponent)
 inline std::int32_t nextFastPower(std::int32_t n)
 {
     if (n < 0) {
-        throw isce::except::DomainError(ISCE_SRCINFO(), "input must be non-negative");
+        throw isce3::except::DomainError(ISCE_SRCINFO(), "input must be non-negative");
     }
     if (n <= 1) {
         return 1;

@@ -2,7 +2,7 @@
 
 #include <isce3/core/Common.h>
 
-namespace isce { namespace math {
+namespace isce3 { namespace math {
 
 /** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
 template<typename T>

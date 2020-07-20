@@ -2,7 +2,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace fft { namespace detail {
+namespace isce3 { namespace fft { namespace detail {
 
 static
 void setNumThreadsf(int threads)
@@ -12,7 +12,7 @@ void setNumThreadsf(int threads)
     if (!initialized) {
         int status = fftwf_init_threads();
         if (status == 0) {
-            throw isce::except::RuntimeError(ISCE_SRCINFO(), "multi-threaded FFTW initialization failed");
+            throw isce3::except::RuntimeError(ISCE_SRCINFO(), "multi-threaded FFTW initialization failed");
         }
         initialized = true;
     }
@@ -29,7 +29,7 @@ void setNumThreads(int threads)
     if (!initialized) {
         int status = fftw_init_threads();
         if (status == 0) {
-            throw isce::except::RuntimeError(ISCE_SRCINFO(), "multi-threaded FFTW initialization failed");
+            throw isce3::except::RuntimeError(ISCE_SRCINFO(), "multi-threaded FFTW initialization failed");
         }
         initialized = true;
     }

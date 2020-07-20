@@ -5,7 +5,7 @@
 #include "DateTime.h"
 #include "Vector.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 struct StateVector {
     DateTime datetime;

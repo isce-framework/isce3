@@ -10,7 +10,7 @@
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
 template<class U>
-U isce::core::BilinearInterpolator<U>::interp_impl(double x, double y,
+U isce3::core::BilinearInterpolator<U>::interp_impl(double x, double y,
                                                    const Map& z) const
 {
 
@@ -49,9 +49,9 @@ U isce::core::BilinearInterpolator<U>::interp_impl(double x, double y,
 }
 
 // Forward declaration of classes
-template class isce::core::BilinearInterpolator<double>;
-template class isce::core::BilinearInterpolator<float>;
-template class isce::core::BilinearInterpolator<std::complex<double>>;
-template class isce::core::BilinearInterpolator<std::complex<float>>;
+template class isce3::core::BilinearInterpolator<double>;
+template class isce3::core::BilinearInterpolator<float>;
+template class isce3::core::BilinearInterpolator<std::complex<double>>;
+template class isce3::core::BilinearInterpolator<std::complex<float>>;
 
 // end of file

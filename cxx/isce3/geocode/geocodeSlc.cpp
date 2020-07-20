@@ -17,15 +17,15 @@
 #include <isce3/product/Product.h>
 #include <isce3/product/RadarGridParameters.h>
 
-void isce::geocode::geocodeSlc(
-        isce::io::Raster& outputRaster, isce::io::Raster& inputRaster,
-        isce::io::Raster& demRaster,
-        const isce::product::RadarGridParameters& radarGrid,
-        const isce::product::GeoGridParameters& geoGrid,
-        const isce::core::Orbit& orbit,
-        const isce::core::LUT2d<double>& nativeDoppler,
-        const isce::core::LUT2d<double>& imageGridDoppler,
-        const isce::core::Ellipsoid& ellipsoid, const double& thresholdGeo2rdr,
+void isce3::geocode::geocodeSlc(
+        isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
+        isce3::io::Raster& demRaster,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::product::GeoGridParameters& geoGrid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& nativeDoppler,
+        const isce3::core::LUT2d<double>& imageGridDoppler,
+        const isce3::core::Ellipsoid& ellipsoid, const double& thresholdGeo2rdr,
         const int& numiterGeo2rdr, const size_t& linesPerBlock,
         const double& demBlockMargin, const bool flatten)
 {
@@ -34,13 +34,13 @@ void isce::geocode::geocodeSlc(
     size_t nbands = inputRaster.numBands();
     std::cout << "nbands: " << nbands << std::endl;
     // create projection based on _epsg code
-    std::unique_ptr<isce::core::ProjectionBase> proj(
-            isce::core::createProj(geoGrid.epsg()));
+    std::unique_ptr<isce3::core::ProjectionBase> proj(
+            isce3::core::createProj(geoGrid.epsg()));
 
     // Interpolator pointer
     auto interp = std::make_unique<
-            isce::core::Sinc2dInterpolator<std::complex<float>>>(
-            isce::core::SINC_LEN, isce::core::SINC_SUB);
+            isce3::core::Sinc2dInterpolator<std::complex<float>>>(
+            isce3::core::SINC_LEN, isce3::core::SINC_SUB);
 
     // Compute number of blocks in the output geocoded grid
     size_t nBlocks = (geoGrid.length() + linesPerBlock - 1) / linesPerBlock;
@@ -69,7 +69,7 @@ void isce::geocode::geocodeSlc(
 
         // get a DEM interpolator for a block of DEM for the current geocoded
         // grid
-        isce::geometry::DEMInterpolator demInterp = isce::geocode::loadDEM(
+        isce3::geometry::DEMInterpolator demInterp = isce3::geocode::loadDEM(
                 demRaster, geoGrid, lineStart, geoBlockLength, geoGrid.width(),
                 demBlockMargin);
 
@@ -114,16 +114,16 @@ void isce::geocode::geocodeSlc(
             aztime = radarGrid.sensingMid();
 
             // coordinate in the output projection system
-            const isce::core::Vec3 xyz {x, y, 0.0};
+            const isce3::core::Vec3 xyz {x, y, 0.0};
 
             // transform the xyz in the output projection system to llh
-            isce::core::Vec3 llh = proj->inverse(xyz);
+            isce3::core::Vec3 llh = proj->inverse(xyz);
 
             // interpolate the height from the DEM for this pixel
             llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
 
             // Perform geo->rdr iterations
-            int geostat = isce::geometry::geo2rdr(
+            int geostat = isce3::geometry::geo2rdr(
                     llh, ellipsoid, orbit, imageGridDoppler, aztime, srange,
                     radarGrid.wavelength(), radarGrid.lookSide(),
                     thresholdGeo2rdr, numiterGeo2rdr, 1.0e-8);
@@ -188,9 +188,9 @@ void isce::geocode::geocodeSlc(
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
 
         // define the matrix based on the rasterbands data type
-        isce::core::Matrix<std::complex<float>> rdrDataBlock(rdrBlockLength,
+        isce3::core::Matrix<std::complex<float>> rdrDataBlock(rdrBlockLength,
                                                              rdrBlockWidth);
-        isce::core::Matrix<std::complex<float>> geoDataBlock(geoBlockLength,
+        isce3::core::Matrix<std::complex<float>> geoDataBlock(geoBlockLength,
                                                              geoGrid.width());
 
         // fill both matrices with zero
@@ -214,7 +214,7 @@ void isce::geocode::geocodeSlc(
             const double blockSensingStart = radarGrid.sensingStart() +
                                              azimuthFirstLine / radarGrid.prf();
 
-            isce::geocode::baseband(rdrDataBlock, blockStartingRange,
+            isce3::geocode::baseband(rdrDataBlock, blockStartingRange,
                                     blockSensingStart,
                                     radarGrid.rangePixelSpacing(),
                                     radarGrid.prf(), nativeDoppler);
@@ -224,7 +224,7 @@ void isce::geocode::geocodeSlc(
             // to be added back and the geometrical phase to be removed is
             // applied.
             std::cout << "resample " << std::endl;
-            isce::geocode::interpolate(rdrDataBlock, geoDataBlock, radarX,
+            isce3::geocode::interpolate(rdrDataBlock, geoDataBlock, radarX,
                                        radarY, geometricalPhase, rdrBlockWidth,
                                        rdrBlockLength, azimuthFirstLine,
                                        rangeFirstPixel, interp.get());

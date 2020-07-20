@@ -30,7 +30,7 @@ TEST_F(Poly2dTest, Constant) {
     for (size_t i = 1; i < 5; ++i)
     {
         //Mean and norm should not matter
-        isce::core::Poly2d poly(0, 0, i*1.0, 0, i*i*1.0, 1.0);
+        isce3::core::Poly2d poly(0, 0, i*1.0, 0, i*i*1.0, 1.0);
         poly.setCoeff(0, 0, refval);
 
         double value = poly.eval(0.0, i*1.0);
@@ -44,14 +44,14 @@ TEST_F(Poly2dTest, Constant) {
 TEST_F(Poly2dTest, MeanShift)
 {
     //Use identity polynomial for testing
-    isce::core::Poly2d refpoly(2, 0, 0.0, 0.0, 1.0, 1.0);
+    isce3::core::Poly2d refpoly(2, 0, 0.0, 0.0, 1.0, 1.0);
     refpoly.setCoeff(0, 0, 0.0);
     refpoly.setCoeff(0, 1, 1.0);
     refpoly.setCoeff(0, 2, 0.0);
 
     for(size_t i=0; i<5; i++)
     {
-        isce::core::Poly2d newpoly(refpoly);
+        isce3::core::Poly2d newpoly(refpoly);
         newpoly.rangeMean = 0.5 * i * i;
 
         double refval = refpoly.eval(0.0, 2.0 * i);
@@ -66,14 +66,14 @@ TEST_F(Poly2dTest, MeanShift)
 TEST_F(Poly2dTest, NormShift)
 {
     //Use square polynomial for testing
-    isce::core::Poly2d refpoly(2, 0, 0.0, 0.0, 1.0, 1.0);
+    isce3::core::Poly2d refpoly(2, 0, 0.0, 0.0, 1.0, 1.0);
     refpoly.setCoeff(0, 0, 0.0);
     refpoly.setCoeff(0, 1, 0.0);
     refpoly.setCoeff(0, 2, 1.0);
 
     for(size_t i=1; i<6; i++)
     {
-        isce::core::Poly2d newpoly(refpoly);
+        isce3::core::Poly2d newpoly(refpoly);
         newpoly.rangeNorm = i * i * 1.0;
 
         double refval = refpoly.eval(0.0, 2.5);

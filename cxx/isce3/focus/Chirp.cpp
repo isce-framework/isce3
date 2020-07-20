@@ -5,7 +5,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 std::vector<std::complex<float>>
 formLinearChirp(double chirprate,
@@ -17,20 +17,20 @@ formLinearChirp(double chirprate,
 {
     // sanity checks
     if (duration <= 0.) {
-        throw isce::except::DomainError(ISCE_SRCINFO(), "chirp duration must be > 0");
+        throw isce3::except::DomainError(ISCE_SRCINFO(), "chirp duration must be > 0");
     }
     if (samplerate <= 0.) {
-        throw isce::except::DomainError(ISCE_SRCINFO(), "sampling rate must be > 0");
+        throw isce3::except::DomainError(ISCE_SRCINFO(), "sampling rate must be > 0");
     }
     if (amplitude <= 0.) {
-        throw isce::except::DomainError(ISCE_SRCINFO(), "amplitude must be > 0");
+        throw isce3::except::DomainError(ISCE_SRCINFO(), "amplitude must be > 0");
     }
 
     // check for possible overflow before double -> int conversion
     double d_size = samplerate * duration + 1;
     double d_maxsize = std::numeric_limits<int>::max();
     if (d_size > d_maxsize) {
-        throw isce::except::OverflowError(ISCE_SRCINFO(), "chirp size exceeds max int value");
+        throw isce3::except::OverflowError(ISCE_SRCINFO(), "chirp size exceeds max int value");
     }
 
     // number of samples (rounded to nearest odd integer)

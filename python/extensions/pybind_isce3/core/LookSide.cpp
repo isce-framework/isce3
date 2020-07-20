@@ -1,8 +1,8 @@
 #include "LookSide.h"
 
-using isce::core::LookSide;
+using isce3::core::LookSide;
 
-void addbinding(pybind11::enum_<isce::core::LookSide> & pyLookSide)
+void addbinding(pybind11::enum_<isce3::core::LookSide> & pyLookSide)
 {
     pyLookSide
         .value("Left", LookSide::Left)

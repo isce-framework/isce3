@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace geometry {
+namespace isce3 { namespace geometry {
 
     class DEMInterpolator;
     class Topo;

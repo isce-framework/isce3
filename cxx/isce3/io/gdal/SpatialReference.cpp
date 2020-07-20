@@ -4,7 +4,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 static
 std::string getOGRErrString(OGRErr status)
@@ -22,7 +22,7 @@ std::string getOGRErrString(OGRErr status)
         case OGRERR_NON_EXISTING_FEATURE      : return "Non existing feature";
     }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unknown OGRErr code");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unknown OGRErr code");
 }
 
 SpatialReference::SpatialReference(int epsg)
@@ -33,7 +33,7 @@ SpatialReference::SpatialReference(int epsg)
             "failed to initialize spatial reference "
             "from EPSG code '" + std::to_string(epsg) + "' - " +
             getOGRErrString(status);
-        throw isce::except::GDALError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::GDALError(ISCE_SRCINFO(), errmsg);
     }
 }
 
@@ -42,13 +42,13 @@ SpatialReference::SpatialReference(const std::string & wkt)
     OGRErr status = _srs.importFromWkt(wkt.c_str());
     if (status != OGRERR_NONE) {
         std::string errmsg = "failed to initialize spatial reference from WKT string - " + getOGRErrString(status);
-        throw isce::except::GDALError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::GDALError(ISCE_SRCINFO(), errmsg);
     }
 
     // add EPSG authority code if missing
     status = _srs.AutoIdentifyEPSG();
     if (status != OGRERR_NONE) {
-        throw isce::except::GDALError(ISCE_SRCINFO(), "failed to identify EPSG authority code");
+        throw isce3::except::GDALError(ISCE_SRCINFO(), "failed to identify EPSG authority code");
     }
 }
 
@@ -60,7 +60,7 @@ SpatialReference::SpatialReference(const OGRSpatialReference & srs)
     // add EPSG authority code if missing
     OGRErr status = _srs.AutoIdentifyEPSG();
     if (status != OGRERR_NONE) {
-        throw isce::except::GDALError(ISCE_SRCINFO(), "failed to identify EPSG authority code");
+        throw isce3::except::GDALError(ISCE_SRCINFO(), "failed to identify EPSG authority code");
     }
 }
 
@@ -69,7 +69,7 @@ int SpatialReference::toEPSG() const
     // get EPSG code
     const char * code = _srs.GetAuthorityCode(nullptr);
     if (!code) {
-        throw isce::except::GDALError(ISCE_SRCINFO(), "unable to fetch EPSG code");
+        throw isce3::except::GDALError(ISCE_SRCINFO(), "unable to fetch EPSG code");
     }
     int epsg = std::atoi(code);
 
@@ -82,7 +82,7 @@ std::string SpatialReference::toWKT() const
     OGRErr status = _srs.exportToPrettyWkt(&tmp);
     if (status != OGRERR_NONE) {
         std::string errmsg = "unable to export spatial reference to WKT - " + getOGRErrString(status);
-        throw isce::except::GDALError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::GDALError(ISCE_SRCINFO(), errmsg);
     }
     std::string wkt = tmp;
 

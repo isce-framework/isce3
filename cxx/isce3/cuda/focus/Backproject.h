@@ -11,11 +11,11 @@
 #include <isce3/focus/Backproject.h>
 #include <isce3/focus/DryTroposphereModel.h>
 
-namespace isce { namespace cuda { namespace focus {
+namespace isce3 { namespace cuda { namespace focus {
 
-using isce::focus::DryTroposphereModel;
-using isce::focus::Geo2RdrParams;
-using isce::focus::Rdr2GeoParams;
+using isce3::focus::DryTroposphereModel;
+using isce3::focus::Geo2RdrParams;
+using isce3::focus::Rdr2GeoParams;
 
 /**
  * Focus in azimuth via time-domain backprojection
@@ -37,10 +37,10 @@ using isce::focus::Rdr2GeoParams;
 // XXX const gpuDEMInterpolator cannot be copied due to implementation details
 template<class Kernel>
 void backproject(std::complex<float>* out,
-                 const isce::cuda::container::RadarGeometry& out_geometry,
+                 const isce3::cuda::container::RadarGeometry& out_geometry,
                  const std::complex<float>* in,
-                 const isce::cuda::container::RadarGeometry& in_geometry,
-                 isce::cuda::geometry::gpuDEMInterpolator& dem, double fc,
+                 const isce3::cuda::container::RadarGeometry& in_geometry,
+                 isce3::cuda::geometry::gpuDEMInterpolator& dem, double fc,
                  double ds, const Kernel& kernel,
                  DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
                  const Rdr2GeoParams& rdr2geo_params = {},
@@ -63,13 +63,13 @@ void backproject(std::complex<float>* out,
  * \param[in]  batch           Number of range-compressed data lines per batch
  */
 void backproject(std::complex<float>* out,
-                 const isce::container::RadarGeometry& out_geometry,
+                 const isce3::container::RadarGeometry& out_geometry,
                  const std::complex<float>* in,
-                 const isce::container::RadarGeometry& in_geometry,
-                 const isce::geometry::DEMInterpolator& dem, double fc,
-                 double ds, const isce::core::Kernel<float>& kernel,
+                 const isce3::container::RadarGeometry& in_geometry,
+                 const isce3::geometry::DEMInterpolator& dem, double fc,
+                 double ds, const isce3::core::Kernel<float>& kernel,
                  DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
                  const Rdr2GeoParams& rdr2geo_params = {},
                  const Geo2RdrParams& geo2rdr_params = {}, int batch = 1024);
 
-}}} // namespace isce::cuda::focus
+}}} // namespace isce3::cuda::focus

@@ -3,9 +3,9 @@
 #include <isce3/except/Error.h>
 #include <map>
 
-using isce::except::InvalidArgument;
+using isce3::except::InvalidArgument;
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 dataInterpMethod
 parseDataInterpMethod(const std::string & method)
@@ -23,4 +23,4 @@ parseDataInterpMethod(const std::string & method)
     throw InvalidArgument(ISCE_SRCINFO(), "Unknown interp method");
 }
 
-}} // isce::core
+}} // isce3::core

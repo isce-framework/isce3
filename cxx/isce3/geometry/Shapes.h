@@ -8,7 +8,7 @@
 
 #include <ogr_geometry.h>
 
-namespace isce { namespace geometry {
+namespace isce3 { namespace geometry {
     /** Same as GDAL's OGRLinearRing structure. See: https://gdal.org/doxygen/classOGRLinearRing.html */
     typedef OGRLinearRing Perimeter;
 

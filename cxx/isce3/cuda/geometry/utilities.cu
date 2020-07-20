@@ -6,7 +6,7 @@
 #include "utilities.h"
 
 // Utility function to get device memory
-size_t isce::cuda::geometry::getDeviceMem() {
+size_t isce3::cuda::geometry::getDeviceMem() {
     size_t freeByte, totalByte;
     cudaMemGetInfo(&freeByte, &totalByte);
     // Round down to nearest GB

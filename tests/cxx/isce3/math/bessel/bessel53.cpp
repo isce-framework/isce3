@@ -13,7 +13,7 @@ struct BesselTest : public ::testing::Test {};
 
 #define besselTest(name,x,r)       \
     TEST_F(BesselTest, name) {     \
-        double y = isce::math::bessel_i0(x); \
+        double y = isce3::math::bessel_i0(x); \
         EXPECT_NEAR(y, r, 1.0e-12);\
     } struct consume_semicolon
 

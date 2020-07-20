@@ -9,8 +9,8 @@
 
 namespace py = pybind11;
 
-using namespace isce::core;
-using isce::except::RuntimeError;
+using namespace isce3::core;
+using isce3::except::RuntimeError;
 
 template <typename TK, typename TD>
 static py::object

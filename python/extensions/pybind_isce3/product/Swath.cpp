@@ -11,7 +11,7 @@
 
 namespace py = pybind11;
 
-using isce::product::Swath;
+using isce3::product::Swath;
 
 void addbinding(pybind11::class_<Swath> & pySwath)
 {
@@ -20,10 +20,10 @@ void addbinding(pybind11::class_<Swath> & pySwath)
         .def(py::init([](const std::string &h5file, const char freq)
                 {
                     // open file
-                    isce::io::IH5File file(h5file);
+                    isce3::io::IH5File file(h5file);
 
                     // instantiate and load a product
-                    isce::product::Product product(file);
+                    isce3::product::Product product(file);
 
                     // return swath from product
                     return product.swath(freq);

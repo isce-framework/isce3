@@ -9,8 +9,8 @@
 #endif
 
 inline
-isce::geometry::Geo2rdr::
-Geo2rdr(const isce::product::Product & product,
+isce3::geometry::Geo2rdr::
+Geo2rdr(const isce3::product::Product & product,
         char frequency,
         bool nativeDoppler)
 :
@@ -23,16 +23,16 @@ Geo2rdr(const isce::product::Product & product,
     }
 
     // Make an ellipsoid manually
-    _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
-                                       isce::core::EarthEccentricitySquared);
+    _ellipsoid = isce3::core::Ellipsoid(isce3::core::EarthSemiMajorAxis,
+                                       isce3::core::EarthEccentricitySquared);
 }
 
 inline
-isce::geometry::Geo2rdr::
-Geo2rdr(const isce::core::Ellipsoid & ellipsoid,
-        const isce::core::Orbit & orbit,
-        const isce::core::LUT2d<double> & doppler,
-        const isce::core::Metadata & meta)
+isce3::geometry::Geo2rdr::
+Geo2rdr(const isce3::core::Ellipsoid & ellipsoid,
+        const isce3::core::Orbit & orbit,
+        const isce3::core::LUT2d<double> & doppler,
+        const isce3::core::Metadata & meta)
 :
     _ellipsoid(ellipsoid),
     _orbit(orbit),
@@ -41,11 +41,11 @@ Geo2rdr(const isce::core::Ellipsoid & ellipsoid,
 {}
 
 inline
-isce::geometry::Geo2rdr::
-Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
-        const isce::core::Orbit & orbit,
-        const isce::core::Ellipsoid & ellipsoid,
-        const isce::core::LUT2d<double> & doppler)
+isce3::geometry::Geo2rdr::
+Geo2rdr(const isce3::product::RadarGridParameters & radarGrid,
+        const isce3::core::Orbit & orbit,
+        const isce3::core::Ellipsoid & ellipsoid,
+        const isce3::core::LUT2d<double> & doppler)
 :
     _ellipsoid(ellipsoid),
     _orbit(orbit),

@@ -4,7 +4,7 @@
 
 #include "ICU.h" // offset2_t
 
-namespace isce::unwrap::icu {
+namespace isce3::unwrap::icu {
 
 // \brief Lookup table of points to search for residues or neutrons
 //

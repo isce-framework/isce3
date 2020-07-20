@@ -6,10 +6,10 @@
 #include "detail/BuildOrbit.h"
 #include "detail/InterpolateOrbit.h"
 
-using isce::error::ErrorCode;
-using isce::error::getErrorString;
+using isce3::error::ErrorCode;
+using isce3::error::getErrorString;
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 Orbit::Orbit(const std::vector<StateVector> & statevecs,
              OrbitInterpMethod interp_method)
@@ -69,7 +69,7 @@ ErrorCode Orbit::interpolate(Vec3* position, Vec3* velocity, double t,
             border_mode == OrbitInterpBorderMode::Error) {
 
         std::string errmsg = getErrorString(status);
-        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 
     return status;

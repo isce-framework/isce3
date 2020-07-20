@@ -9,7 +9,7 @@ from Cartesian cimport cartesian_t, cartmat_t
 from Ellipsoid cimport Ellipsoid
 from Peg cimport Peg
 
-cdef extern from "isce3/core/Pegtrans.h" namespace "isce::core":
+cdef extern from "isce3/core/Pegtrans.h" namespace "isce3::core":
     cdef cppclass Pegtrans:
         cartmat_t mat
         cartmat_t matinv

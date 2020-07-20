@@ -16,8 +16,8 @@
 #include <isce3/except/Error.h>
 #include <isce3/math/Sinc.h>
 
-using namespace isce::cuda::core;
-using namespace isce::except;
+using namespace isce3::cuda::core;
+using namespace isce3::except;
 
 using thrust::complex;
 
@@ -50,7 +50,7 @@ public:
         complex<double> z = {0., 0.};
         auto n = static_cast<int>(_w.size());
         for (int i = 0; i < n; ++i) {
-            z += _w[i] * isce::math::sinc(_bw * (t - _t[i]));
+            z += _w[i] * isce3::math::sinc(_bw * (t - _t[i]));
         }
         return z;
     }

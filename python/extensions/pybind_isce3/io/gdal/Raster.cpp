@@ -14,8 +14,8 @@
 #include "GDALAccess.h"
 #include "GDALDataType.h"
 
-using isce::io::gdal::Buffer;
-using isce::io::gdal::Raster;
+using isce3::io::gdal::Buffer;
+using isce3::io::gdal::Raster;
 
 template<typename T>
 static
@@ -46,7 +46,7 @@ py::buffer_info toBuffer(Raster & raster)
         default             : break;
     }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unsupported GDAL datatype");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unsupported GDAL datatype");
 }
 
 template<typename T>
@@ -56,14 +56,14 @@ Raster toRaster(py::buffer buf)
     py::buffer_info info = buf.request();
 
     if (info.ndim != 2) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "buffer object must be 2-D");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "buffer object must be 2-D");
     }
 
     constexpr static std::size_t max_int = std::numeric_limits<int>::max();
     for (int dim = 0; dim < 2; ++dim) {
         if (info.shape[dim] > max_int) {
             std::string errmsg = "buffer shape along axis " + std::to_string(dim) + " exceeds max size";
-            throw isce::except::OverflowError(ISCE_SRCINFO(), errmsg);
+            throw isce3::except::OverflowError(ISCE_SRCINFO(), errmsg);
         }
     }
 
@@ -86,7 +86,7 @@ Raster toRaster(py::buffer buf)
     if (info.format == py::format_descriptor<std::complex<float>>::format())  { return toRaster<std::complex<float>>(buf); }
     if (info.format == py::format_descriptor<std::complex<double>>::format()) { return toRaster<std::complex<double>>(buf); }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unable to cast buffer format descriptor to GDALDataType");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unable to cast buffer format descriptor to GDALDataType");
 }
 
 void addbinding(py::class_<Raster> & pyRaster)

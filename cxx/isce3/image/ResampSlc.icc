@@ -8,9 +8,9 @@
 // Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++ equivalent
 #define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
 
-/** Constructor from an isce::product::Product */
-isce::image::ResampSlc::
-ResampSlc(const isce::product::Product & product, char frequency) : 
+/** Constructor from an isce3::product::Product */
+isce3::image::ResampSlc::
+ResampSlc(const isce3::product::Product & product, char frequency) : 
           ResampSlc(product.swath(frequency)) {
     // Set the doppler
     _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
@@ -18,10 +18,10 @@ ResampSlc(const isce::product::Product & product, char frequency) :
     _filename = product.filename();
 }
 
-/** Constructor from an isce::product::Product and reference product (flattening) */
-isce::image::ResampSlc::
-ResampSlc(const isce::product::Product & product,
-          const isce::product::Product & refProduct,
+/** Constructor from an isce3::product::Product and reference product (flattening) */
+isce3::image::ResampSlc::
+ResampSlc(const isce3::product::Product & product,
+          const isce3::product::Product & refProduct,
           char frequency) :
           ResampSlc(product.swath(frequency),
                     refProduct.swath(frequency)) {
@@ -31,16 +31,16 @@ ResampSlc(const isce::product::Product & product,
     _filename = product.filename();
 }
 
-/** Constructor from an isce::product::Swath (no flattening) */
-isce::image::ResampSlc::
-ResampSlc(const isce::product::Swath & swath) : _haveRefData(false) {
+/** Constructor from an isce3::product::Swath (no flattening) */
+isce3::image::ResampSlc::
+ResampSlc(const isce3::product::Swath & swath) : _haveRefData(false) {
     // Set radar parameters
     _setDataFromSwath(swath);
 }
 
-/** Constructor from an isce::product::Swath and reference swath (flattening) */
-isce::image::ResampSlc::
-ResampSlc(const isce::product::Swath & swath, const isce::product::Swath & refSwath) :
+/** Constructor from an isce3::product::Swath and reference swath (flattening) */
+isce3::image::ResampSlc::
+ResampSlc(const isce3::product::Swath & swath, const isce3::product::Swath & refSwath) :
           _haveRefData(true) {
     // Set radar parameters
     _setDataFromSwath(swath);
@@ -49,16 +49,16 @@ ResampSlc(const isce::product::Swath & swath, const isce::product::Swath & refSw
 }
 
 /** Constructor from individual components (no flattening) */
-isce::image::ResampSlc::
-ResampSlc(const isce::core::LUT2d<double> & doppler, double startingRange,
+isce3::image::ResampSlc::
+ResampSlc(const isce3::core::LUT2d<double> & doppler, double startingRange,
           double rangePixelSpacing, double sensingStart, double prf, double wvl) :
           _haveRefData(false), _dopplerLUT(doppler), _startingRange(startingRange),
           _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
           _prf(prf), _wavelength(wvl) {}
 
 /** Constructor from individual components (flattening) */
-isce::image::ResampSlc::
-ResampSlc(const isce::core::LUT2d<double> & doppler, double startingRange,
+isce3::image::ResampSlc::
+ResampSlc(const isce3::core::LUT2d<double> & doppler, double startingRange,
           double rangePixelSpacing, double sensingStart, double prf, double wvl,
           double refStartingRange, double refRangePixelSpacing, double refWvl) :
           _haveRefData(true), _dopplerLUT(doppler), _startingRange(startingRange),
@@ -66,11 +66,11 @@ ResampSlc(const isce::core::LUT2d<double> & doppler, double startingRange,
           _prf(prf), _wavelength(wvl), _refStartingRange(refStartingRange),
           _refRangePixelSpacing(refRangePixelSpacing), _refWavelength(refWvl) {}
 
-// Set radar parameters from an isce::product::Swath
-/** @param[in] swath            Input isce::product::Swath */
+// Set radar parameters from an isce3::product::Swath
+/** @param[in] swath            Input isce3::product::Swath */
 void
-isce::image::ResampSlc::
-_setDataFromSwath(const isce::product::Swath & swath) {
+isce3::image::ResampSlc::
+_setDataFromSwath(const isce3::product::Swath & swath) {
     _startingRange = swath.slantRange()[0];
     _rangePixelSpacing = swath.rangePixelSpacing();
     _sensingStart = swath.zeroDopplerTime()[0];
@@ -78,71 +78,71 @@ _setDataFromSwath(const isce::product::Swath & swath) {
     _wavelength = swath.processedWavelength();
 }
 
-// Set reference radar parameters from an isce::product::Swath (for flattening)
-/** @param[in] swath            Input isce::product::Swath */
+// Set reference radar parameters from an isce3::product::Swath (for flattening)
+/** @param[in] swath            Input isce3::product::Swath */
 void
-isce::image::ResampSlc::
-_setRefDataFromSwath(const isce::product::Swath & swath) {
+isce3::image::ResampSlc::
+_setRefDataFromSwath(const isce3::product::Swath & swath) {
     _refStartingRange = swath.slantRange()[0];
     _refRangePixelSpacing = swath.rangePixelSpacing();
     _refWavelength = swath.processedWavelength();
 }
 
 // Get range carrier polynomial
-isce::core::Poly2d
-isce::image::ResampSlc::
+isce3::core::Poly2d
+isce3::image::ResampSlc::
 rgCarrier() const {
     return _rgCarrier;
 }
 
 // Set range carrier polynomial
-void isce::image::ResampSlc::
-rgCarrier(const isce::core::Poly2d & lut) {
+void isce3::image::ResampSlc::
+rgCarrier(const isce3::core::Poly2d & lut) {
     _rgCarrier = lut;
 }
 
 // Get azimuth carrier polynomial
-isce::core::Poly2d
-isce::image::ResampSlc::
+isce3::core::Poly2d
+isce3::image::ResampSlc::
 azCarrier() const {
     return _azCarrier;
 }
 
 // Set azimuth carrier polynomial
-void isce::image::ResampSlc::
-azCarrier(const isce::core::Poly2d & lut) {
+void isce3::image::ResampSlc::
+azCarrier(const isce3::core::Poly2d & lut) {
     _azCarrier = lut;
 }
 
 // Get read-only reference to Doppler LUT
-const isce::core::LUT2d<double> &
-isce::image::ResampSlc::
+const isce3::core::LUT2d<double> &
+isce3::image::ResampSlc::
 doppler() const {
     return _dopplerLUT;
 }
 
 // Get reference to Doppler LUT
-isce::core::LUT2d<double> &
-isce::image::ResampSlc::
+isce3::core::LUT2d<double> &
+isce3::image::ResampSlc::
 doppler() {
     return _dopplerLUT;
 }
 
 // Set Doppler LUT
-void isce::image::ResampSlc::
-doppler(const isce::core::LUT2d<double> & lut) {
+void isce3::image::ResampSlc::
+doppler(const isce3::core::LUT2d<double> & lut) {
     _dopplerLUT = lut;
 }
 
 // Set reference product
-void isce::image::ResampSlc::
-referenceProduct(const isce::product::Product & refProduct, char frequency) {
+void isce3::image::ResampSlc::
+referenceProduct(const isce3::product::Product & refProduct, char frequency) {
     _setRefDataFromSwath(refProduct.swath(frequency));
     _haveRefData = true;
 }
 
 // Announce my properties to the world
-void isce::image::ResampSlc::
+void isce3::image::ResampSlc::
 declare(int inLength, int inWidth,
     int outLength, int outWidth) const {
     // Make info channel
@@ -161,19 +161,19 @@ declare(int inLength, int inWidth,
 }
 
 // Get the number of lines per tile
-size_t isce::image::ResampSlc::
+size_t isce3::image::ResampSlc::
 linesPerTile() const {
     return _linesPerTile;
 }
 
 // Set the number of lines per tile
-void isce::image::ResampSlc::
+void isce3::image::ResampSlc::
 linesPerTile(size_t value) {
     _linesPerTile = value;
 }
 
 // Compute number of tiles given a specified nominal tile size
-int isce::image::ResampSlc::
+int isce3::image::ResampSlc::
 _computeNumberOfTiles(int outLength, int linesPerTile) {
     // Compute floor(nTiles)
     int nTiles = outLength / linesPerTile;
@@ -186,10 +186,10 @@ _computeNumberOfTiles(int outLength, int linesPerTile) {
 }
 
 // Prepare interpolation pointer
-inline void isce::image::ResampSlc::
-_prepareInterpMethods(isce::core::dataInterpMethod, int sinc_len) {
-    _interp = new isce::core::Sinc2dInterpolator<std::complex<float>>(
-                  sinc_len, isce::core::SINC_SUB);
+inline void isce3::image::ResampSlc::
+_prepareInterpMethods(isce3::core::dataInterpMethod, int sinc_len) {
+    _interp = new isce3::core::Sinc2dInterpolator<std::complex<float>>(
+                  sinc_len, isce3::core::SINC_SUB);
 }
 
 // end of file

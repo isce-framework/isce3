@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace isce {
+namespace isce3 {
     namespace math {
         double bessel_i0(double x);
     }

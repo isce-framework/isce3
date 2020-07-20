@@ -8,7 +8,7 @@ from Matrix cimport valarray
 from LUT2d cimport LUT2d
 
 # ProcessingInformation
-cdef extern from "isce3/product/ProcessingInformation.h" namespace "isce::product":
+cdef extern from "isce3/product/ProcessingInformation.h" namespace "isce3::product":
 
     cdef cppclass ProcessingInformation:
 

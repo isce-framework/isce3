@@ -12,17 +12,17 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::core
+// isce3::core
 #include "isce3/core/Constants.h"
 #include "isce3/core/Serialization.h"
 
-// isce::io
+// isce3::io
 #include "isce3/io/Raster.h"
 
-// isce::product
+// isce3::product
 #include "isce3/product/Product.h"
 
-// isce::geometry
+// isce3::geometry
 #include "isce3/geometry/Serialization.h"
 #include "isce3/geometry/Geo2rdr.h"
 
@@ -30,13 +30,13 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
 
     // Open the HDF5 product
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // Create geo2rdr instance
-    isce::geometry::Geo2rdr geo(product, 'A', true);
+    isce3::geometry::Geo2rdr geo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
@@ -46,7 +46,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     }
 
     // Open topo raster from topo unit test
-    isce::io::Raster topoRaster("../topo/topo.vrt");
+    isce3::io::Raster topoRaster("../topo/topo.vrt");
 
     // Run geo2rdr
     geo.geo2rdr(topoRaster, ".");
@@ -56,8 +56,8 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
 // Results should be very close to zero
 TEST(Geo2rdrTest, CheckResults) {
     // Open rasters
-    isce::io::Raster rgoffRaster("range.off");
-    isce::io::Raster azoffRaster("azimuth.off");
+    isce3::io::Raster rgoffRaster("range.off");
+    isce3::io::Raster azoffRaster("azimuth.off");
     double rg_error = 0.0;
     double az_error = 0.0;
     for (size_t i = 0; i < rgoffRaster.length(); ++i) {

@@ -11,7 +11,7 @@
 // pyre
 #include <pyre/journal.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/forward.h>
 #include <isce3/core/Constants.h>
 #include <isce3/core/Interpolator.h>
@@ -19,9 +19,9 @@
 #include <isce3/io/forward.h>
 
 // DEMInterpolator declaration
-class isce::geometry::DEMInterpolator {
+class isce3::geometry::DEMInterpolator {
 
-    using cartesian_t = isce::core::Vec3;
+    using cartesian_t = isce3::core::Vec3;
 
     public:
         /** Default constructor with reference height of 0, bilinear interpolation */
@@ -30,7 +30,7 @@ class isce::geometry::DEMInterpolator {
             _refHeight{0.0},
             _meanValue{0.0},
             _maxValue{0.0},
-            _interpMethod{isce::core::BILINEAR_METHOD} {}
+            _interpMethod{isce3::core::BILINEAR_METHOD} {}
 
         /** Constructor with custom reference height and bilinear interpolation */
         inline DEMInterpolator(float height, int epsg = 4326) :
@@ -39,11 +39,11 @@ class isce::geometry::DEMInterpolator {
             _meanValue{height},
             _maxValue{height},
             _epsgcode{epsg},
-            _interpMethod{isce::core::BILINEAR_METHOD} {}
+            _interpMethod{isce3::core::BILINEAR_METHOD} {}
 
         /** Constructor with custom reference height and custom interpolator method */
         inline DEMInterpolator(float height,
-                               isce::core::dataInterpMethod method,
+                               isce3::core::dataInterpMethod method,
                                int epsg = 4326) :
             _haveRaster{false},
             _refHeight{height},
@@ -56,12 +56,12 @@ class isce::geometry::DEMInterpolator {
         ~DEMInterpolator();
 
         /** Read in subset of data from a DEM with a supported projection */
-        void loadDEM(isce::io::Raster &demRaster,
+        void loadDEM(isce3::io::Raster &demRaster,
                      double minX, double maxX,
                      double minY, double maxY);
 
         /** Read in entire DEM with a supported projection */
-        void loadDEM(isce::io::Raster &demRaster);
+        void loadDEM(isce3::io::Raster &demRaster);
 
         // Print stats
         void declare() const;
@@ -138,11 +138,11 @@ class isce::geometry::DEMInterpolator {
         inline void epsgCode(int epsgcode) { _epsgcode = epsgcode; }
 
         /** Get interpolator method enum */
-        inline isce::core::dataInterpMethod interpMethod() const {
+        inline isce3::core::dataInterpMethod interpMethod() const {
             return _interpMethod;
         }
         /** Set interpolator method enum */
-        inline void interpMethod(isce::core::dataInterpMethod interpMethod) {
+        inline void interpMethod(isce3::core::dataInterpMethod interpMethod) {
             _interpMethod = interpMethod;
         }
 
@@ -156,12 +156,12 @@ class isce::geometry::DEMInterpolator {
         float _maxValue;
         // Pointer to a ProjectionBase
         int _epsgcode;
-        isce::core::ProjectionBase * _proj = nullptr;
+        isce3::core::ProjectionBase * _proj = nullptr;
         // Pointer to an Interpolator
-        isce::core::dataInterpMethod _interpMethod;
-        isce::core::Interpolator<float> * _interp = nullptr;
+        isce3::core::dataInterpMethod _interpMethod;
+        isce3::core::Interpolator<float> * _interp = nullptr;
         // 2D array for storing DEM subset
-        isce::core::Matrix<float> _dem;
+        isce3::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
         int _width, _length;

@@ -13,26 +13,26 @@
 #include <isce3/core/LUT1d.h>
 #include <thrust/complex.h>
 
-class isce::cuda::signal::gpuCrossmul {
+class isce3::cuda::signal::gpuCrossmul {
 
     public:
         gpuCrossmul() {};
         ~gpuCrossmul() {};
 
-        void crossmul(isce::io::Raster& referenceSLC,
-                isce::io::Raster& secondarySLC,
-                isce::io::Raster& interferogram,
-                isce::io::Raster& coherence);
+        void crossmul(isce3::io::Raster& referenceSLC,
+                isce3::io::Raster& secondarySLC,
+                isce3::io::Raster& interferogram,
+                isce3::io::Raster& coherence);
 
-        void crossmul(isce::io::Raster& referenceSLC,
-                isce::io::Raster& secondarySLC,
-                isce::io::Raster& rngOffsetRaster,
-                isce::io::Raster& interferogram,
-                isce::io::Raster& coherenceRaster);
+        void crossmul(isce3::io::Raster& referenceSLC,
+                isce3::io::Raster& secondarySLC,
+                isce3::io::Raster& rngOffsetRaster,
+                isce3::io::Raster& interferogram,
+                isce3::io::Raster& coherenceRaster);
 
        /** Set doppler LUTs for reference and secondary SLCs*/
-        void doppler(isce::core::LUT1d<double>,
-                isce::core::LUT1d<double>);
+        void doppler(isce3::core::LUT1d<double>,
+                isce3::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double p_r_f) {_prf = p_r_f;};
@@ -69,10 +69,10 @@ class isce::cuda::signal::gpuCrossmul {
 
     private:
         //Doppler LUT for the refernce SLC
-        isce::core::LUT1d<double> _refDoppler;
+        isce3::core::LUT1d<double> _refDoppler;
 
         //Doppler LUT for the secondary SLC
-        isce::core::LUT1d<double> _secDoppler;
+        isce3::core::LUT1d<double> _secDoppler;
 
         //pulse repetition frequency
         double _prf;

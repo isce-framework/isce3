@@ -7,7 +7,7 @@
 from libcpp.vector cimport vector
 from Matrix cimport valarray, Matrix
 
-cdef extern from "isce3/core/Constants.h" namespace "isce::core":
+cdef extern from "isce3/core/Constants.h" namespace "isce3::core":
     cdef enum dataInterpMethod:
         SINC_METHOD
         BILINEAR_METHOD
@@ -15,14 +15,14 @@ cdef extern from "isce3/core/Constants.h" namespace "isce::core":
         NEAREST_METHOD
         BIQUINTIC_METHOD 
 
-cdef extern from "isce3/core/Interpolator.h" namespace "isce::core":
+cdef extern from "isce3/core/Interpolator.h" namespace "isce3::core":
 
     # Base interpolator class
     cdef cppclass Interpolator[U]:
         U interpolate(double x, double y, const Matrix[U] & z)
 
 
-cdef extern from "isce3/core/Interpolator.h" namespace "isce::core":
+cdef extern from "isce3/core/Interpolator.h" namespace "isce3::core":
 
     # Base interpolator class
     #cdef cppclass Interpolator[U]:

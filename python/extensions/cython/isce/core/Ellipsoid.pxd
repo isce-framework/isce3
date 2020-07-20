@@ -8,7 +8,7 @@ from libcpp.vector cimport vector
 from libcpp cimport bool
 from Cartesian cimport cartesian_t
 
-cdef extern from "isce3/core/Ellipsoid.h" namespace "isce::core":
+cdef extern from "isce3/core/Ellipsoid.h" namespace "isce3::core":
     cdef cppclass Ellipsoid:
         Ellipsoid() except +
         Ellipsoid(double,double) except +

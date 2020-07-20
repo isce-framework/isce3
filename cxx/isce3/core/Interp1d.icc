@@ -1,12 +1,12 @@
 #include <isce3/math/ComplexMultiply.h>
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 template<typename TK, typename TD>
 TD interp1d(const Kernel<TK>& kernel, const TD* x, size_t length, size_t stride,
             double t, bool periodic)
 {
-    using namespace isce::math::complex_multiply;
+    using namespace isce3::math::complex_multiply;
     int _width = int(ceil(kernel.width()));
     long i0 = 0;
     if (_width % 2 == 0) {
@@ -40,4 +40,4 @@ TD interp1d(const Kernel<TK>& kernel, const std::valarray<TD>& x, double t,
     return interp1d(kernel, &x[0], x.size(), 1, t, periodic);
 }
 
-}} // namespace isce::core
+}} // namespace isce3::core

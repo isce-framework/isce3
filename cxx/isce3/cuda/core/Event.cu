@@ -2,7 +2,7 @@
 
 #include "Event.h"
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 Event::Event()
 {

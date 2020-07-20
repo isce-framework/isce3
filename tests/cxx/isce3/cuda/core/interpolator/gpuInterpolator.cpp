@@ -18,12 +18,12 @@
 #include "isce3/core/Interpolator.h"
 #include "isce3/cuda/core/gpuInterpolator.h"
 
-using isce::core::Matrix;
-using isce::core::Matrix;
-using isce::cuda::core::gpuInterpolator;
-using isce::cuda::core::gpuBilinearInterpolator;
-using isce::cuda::core::gpuBicubicInterpolator;
-using isce::cuda::core::gpuSpline2dInterpolator;
+using isce3::core::Matrix;
+using isce3::core::Matrix;
+using isce3::cuda::core::gpuInterpolator;
+using isce3::cuda::core::gpuBilinearInterpolator;
+using isce3::cuda::core::gpuBicubicInterpolator;
+using isce3::cuda::core::gpuSpline2dInterpolator;
 
 void loadInterpData(Matrix<double> &);
 
@@ -45,12 +45,12 @@ std::vector<double> arange(double low, double high, double increment) {
 struct gpuInterpolatorTest : public ::testing::Test {
 
     // The low resolution data
-    isce::core::Matrix<double> M;
+    isce3::core::Matrix<double> M;
     // The low resolution indices
     std::vector<double> xindex;
     std::vector<double> yindex;
     // Truth data
-    isce::core::Matrix<double> true_values;
+    isce3::core::Matrix<double> true_values;
 
     double start, delta;
 
@@ -165,7 +165,7 @@ TEST_F(gpuInterpolatorTest, Biquintic) {
         const double y = (true_values(i,1) - start) / delta;
         const double zref = true_values(i,5);
         // Perform interpolation
-        double z = isce::core::Interpolator::interp_2d_spline(6, M, x, y);
+        double z = isce3::core::Interpolator::interp_2d_spline(6, M, x, y);
         // Accumulate error
         error += std::pow(z - zref, 2);
     }

@@ -10,7 +10,7 @@
 #include "Common.h"
 
 /** Helper datastructure to handle slant range information for a pixel */
-class isce::core::Pixel {
+class isce3::core::Pixel {
 
     public:
         // Constructors

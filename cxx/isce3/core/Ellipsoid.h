@@ -17,7 +17,7 @@
 /** Data structure to store Ellipsoid information. 
  *
  * Only the semi-major axis and the eccentricity^2 parameters are stored. All other quantities are derived on the fly*/
-class isce::core::Ellipsoid {
+class isce3::core::Ellipsoid {
 
     public:
         /** \brief Constructor using semi-major axis and eccentricity^2 
@@ -114,7 +114,7 @@ class isce::core::Ellipsoid {
         double _e2;
 };
 
-isce::core::Ellipsoid& isce::core::Ellipsoid::operator=(const Ellipsoid &rhs) {
+isce3::core::Ellipsoid& isce3::core::Ellipsoid::operator=(const Ellipsoid &rhs) {
     _a = rhs.a();
     _e2 = rhs.e2();
     return *this;
@@ -124,7 +124,7 @@ isce::core::Ellipsoid& isce::core::Ellipsoid::operator=(const Ellipsoid &rhs) {
  *
  * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Prime_vertical">Prime vertical radius</a>*/
 CUDA_HOSTDEV
-double isce::core::Ellipsoid::rEast(double lat) const {
+double isce3::core::Ellipsoid::rEast(double lat) const {
     // Radius of Ellipsoid in East direction (assuming latitude-wise symmetry)
     return _a / std::sqrt(1.0 - (_e2 * std::pow(std::sin(lat), 2)));
 }
@@ -134,7 +134,7 @@ double isce::core::Ellipsoid::rEast(double lat) const {
  *
  * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Meridional">Meridional radius</a> */
 CUDA_HOSTDEV
-double isce::core::Ellipsoid::rNorth(double lat) const {
+double isce3::core::Ellipsoid::rNorth(double lat) const {
     // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
     return (_a * (1.0 - _e2)) / std::pow((1.0 - (_e2 * std::pow(std::sin(lat), 2))), 1.5);
 }
@@ -145,7 +145,7 @@ double isce::core::Ellipsoid::rNorth(double lat) const {
  *  Heading is measured in clockwise direction from the North direction.
  *  See <a href="https://en.wikipedia.org/wiki/Earth_radius#Directional">Directional Radius</a> */
 CUDA_HOSTDEV
-double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
+double isce3::core::Ellipsoid::rDir(double hdg, double lat) const {
     auto re = rEast(lat);
     auto rn = rNorth(lat);
     return (re * rn) / ((re * std::pow(std::cos(hdg), 2)) 
@@ -159,7 +159,7 @@ double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
  *
  *  See <a href="https://en.wikipedia.org/wiki/N-vector">N-vector</a> */
 CUDA_HOSTDEV
-void isce::core::Ellipsoid::nVector(double lon, double lat, cartesian_t &vec) const
+void isce3::core::Ellipsoid::nVector(double lon, double lat, cartesian_t &vec) const
 {
     double clat = std::cos(lat);
     vec[0] = clat * std::cos(lon);
@@ -174,7 +174,7 @@ void isce::core::Ellipsoid::nVector(double lon, double lat, cartesian_t &vec) co
  *
  *  See <a href="https://en.wikipedia.org/wiki/Ellipsoid#Parametric_representation">parametric representation of ellipsoid</a>*/
 CUDA_HOSTDEV
-void isce::core::Ellipsoid::xyzOnEllipse(double lon, double lat, cartesian_t &vec) const
+void isce3::core::Ellipsoid::xyzOnEllipse(double lon, double lat, cartesian_t &vec) const
 {
     nVector(lon, lat, vec);
     vec[0] *= _a;
@@ -184,7 +184,7 @@ void isce::core::Ellipsoid::xyzOnEllipse(double lon, double lat, cartesian_t &ve
 
 /** @param[in] llh Latitude (ras), Longitude (rad), Height (m).
  *  @param[out] xyz ECEF Cartesian coordinates in meters.*/
-CUDA_HOSTDEV inline void isce::core::Ellipsoid::
+CUDA_HOSTDEV inline void isce3::core::Ellipsoid::
 lonLatToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
     /*
      * Given a lat, lon, and height, produces a geocentric vector.
@@ -203,7 +203,7 @@ lonLatToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
  *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
  *
  *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
-CUDA_HOSTDEV inline void isce::core::Ellipsoid::
+CUDA_HOSTDEV inline void isce3::core::Ellipsoid::
 xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
     /*
      * Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.

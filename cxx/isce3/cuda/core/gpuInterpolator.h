@@ -10,10 +10,10 @@
 #include <isce3/core/forward.h>
 #include <isce3/core/Common.h>
 
-using isce::core::Matrix;
+using isce3::core::Matrix;
 
 /** base interpolator is an abstract base class */
-namespace isce{ namespace cuda{ namespace core{
+namespace isce3{ namespace cuda{ namespace core{
 template <class U>
     class gpuInterpolator {
         public:
@@ -25,7 +25,7 @@ template <class U>
 
 /** gpuBilinearInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
-class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+class gpuBilinearInterpolator : public isce3::cuda::core::gpuInterpolator<U> {
     public:
         CUDA_HOSTDEV gpuBilinearInterpolator(){};
         CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
@@ -35,7 +35,7 @@ class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 
 /** gpuBicubicInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
-class gpuBicubicInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+class gpuBicubicInterpolator : public isce3::cuda::core::gpuInterpolator<U> {
     public:
         CUDA_HOSTDEV gpuBicubicInterpolator(){};
         CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
@@ -45,7 +45,7 @@ class gpuBicubicInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 
 /** gpuSpline2dInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
-class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+class gpuSpline2dInterpolator : public isce3::cuda::core::gpuInterpolator<U> {
     protected:
         size_t _order;
     public:
@@ -57,7 +57,7 @@ class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 
 /** gpuSinc2dInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
-class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+class gpuSinc2dInterpolator : public isce3::cuda::core::gpuInterpolator<U> {
     protected:
         double *kernel;
         int kernel_length, kernel_width, sinc_half;    // filter dimension idec=length, ilen=width

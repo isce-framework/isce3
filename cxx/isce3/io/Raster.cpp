@@ -19,13 +19,13 @@
  * @param[in] access GDAL access mode
  *
  * Files are opened with GDALOpenShared*/
-isce::io::Raster::Raster(const std::string &fname,   // filename
+isce3::io::Raster::Raster(const std::string &fname,   // filename
                          GDALAccess access) {        // GA_ReadOnly or GA_Update
 
     GDALAllRegister();  // GDAL checks internally if drivers are already loaded
     auto tmp = static_cast<GDALDataset*>(GDALOpenShared(fname.c_str(), access));
     if (tmp == nullptr)
-        throw isce::except::RuntimeError(ISCE_SRCINFO(),
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                 "failed to create GDAL dataset from file '" + fname + "'");
     dataset(tmp);
 }
@@ -33,7 +33,7 @@ isce::io::Raster::Raster(const std::string &fname,   // filename
 
 /**
  * @param[in] inputDataset Pointer to an existing dataset*/
-isce::io::Raster::Raster(GDALDataset * inputDataset, bool owner) {
+isce3::io::Raster::Raster(GDALDataset * inputDataset, bool owner) {
     GDALAllRegister();
     dataset(inputDataset);
     _owner = owner;
@@ -51,7 +51,7 @@ isce::io::Raster::Raster(GDALDataset * inputDataset, bool owner) {
  * In general, GDAL is used to create dataset. When VRT driver is used, the
  * dataset is interpreted in a special manner - it is assumed that the user
  * expects a flat binary file with a VRT pointing to the data using VRTRawRasterBand*/
-isce::io::Raster::Raster(const std::string &fname,          // filename
+isce3::io::Raster::Raster(const std::string &fname,          // filename
                          size_t width,                      // number of columns
                          size_t length,                     // number of lines
                          size_t numBands,                   // number of bands
@@ -79,27 +79,27 @@ isce::io::Raster::Raster(const std::string &fname,          // filename
  * @param[in] width Width of raster image
  * @param[in] length Length of raster image
  * @param[in] dtype GDALDataType associated with dataset*/
-isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, GDALDataType dtype) :
-    isce::io::Raster(fname, width, length, 1, dtype, isce::io::defaultGDALDriver) {}
+isce3::io::Raster::Raster(const std::string &fname, size_t width, size_t length, GDALDataType dtype) :
+    isce3::io::Raster(fname, width, length, 1, dtype, isce3::io::defaultGDALDriver) {}
 
 
 /**
  * @param[in] fname File name to create
  * @param[in] rast Reference raster object*/
-isce::io::Raster::Raster(const std::string &fname, const Raster &rast) :
-    isce::io::Raster(fname, rast.width(), rast.length(), rast.numBands(), rast.dtype()) {}
+isce3::io::Raster::Raster(const std::string &fname, const Raster &rast) :
+    isce3::io::Raster(fname, rast.width(), rast.length(), rast.numBands(), rast.dtype()) {}
 
 
-isce::io::Raster::Raster(isce::io::gdal::Raster & src)
+isce3::io::Raster::Raster(isce3::io::gdal::Raster & src)
 :
     _dataset(src.dataset().get()),
     _owner(false)
 {
-    // isce::io::gdal::Raster represents a single raster band while
-    // isce::io::Raster can have one or more bands
+    // isce3::io::gdal::Raster represents a single raster band while
+    // isce3::io::Raster can have one or more bands
     // the conversion is ambiguous if the input dataset contains multiple bands
     if (src.dataset().bands() > 1) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "source dataset must contain a single raster band");
     }
 }
@@ -108,9 +108,9 @@ isce::io::Raster::Raster(isce::io::gdal::Raster & src)
  * @param[in] rast Source raster.
  *
  * It increments GDAL's reference counter after weak-copying the pointer */
-isce::io::Raster::Raster(const Raster &rast) {
+isce3::io::Raster::Raster(const Raster &rast) {
     if (not rast._owner) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "cannot copy non-owning raster");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "cannot copy non-owning raster");
     }
 
     dataset( rast._dataset );
@@ -122,7 +122,7 @@ isce::io::Raster::Raster(const Raster &rast) {
 /**
  * @param[in] fname Output VRT filename to create
  * @param[in] rastVec std::vector of Raster objects*/
-isce::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& rastVec) {
+isce3::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& rastVec) {
     GDALAllRegister();
     GDALDriver * outputDriver = GetGDALDriverManager()->GetDriverByName("VRT");
     dataset(outputDriver->Create (fname.c_str(),
@@ -139,7 +139,7 @@ isce::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& ra
 /** Uses GDAL's inbuilt OSRFindMatches to determine the EPSG code
  * from the WKT representation of the projection system. This is
  * designed to work with GDAL 2.3+*/
-int isce::io::Raster::getEPSG()
+int isce3::io::Raster::getEPSG()
 {
     //Extract WKT string corresponding to the dataset
     const char* pszProjection = GDALGetProjectionRef(_dataset);
@@ -200,7 +200,7 @@ int isce::io::Raster::getEPSG()
  *
  * GDAL relies on GDAL_DATA environment variable to interpret these codes.
  * Make sure that these are set. */
-int isce::io::Raster::setEPSG(int epsgcode)
+int isce3::io::Raster::setEPSG(int epsgcode)
 {
     int status = 1;
 
@@ -232,7 +232,7 @@ int isce::io::Raster::setEPSG(int epsgcode)
 }
 // Destructor. When GDALOpenShared() is used the dataset is dereferenced
 // and closed only if the referenced count is less than 1.
-isce::io::Raster::~Raster() {
+isce3::io::Raster::~Raster() {
     if (_owner) {
         GDALClose( _dataset );
     }

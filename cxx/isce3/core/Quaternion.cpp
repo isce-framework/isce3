@@ -19,14 +19,14 @@
 #include "Ellipsoid.h"
 #include "EulerAngles.h"
 
-constexpr auto Quaternion_t = isce::core::Attitude::Type::Quaternion_t;
+constexpr auto Quaternion_t = isce3::core::Attitude::Type::Quaternion_t;
 
 // Quaternion default constructor
-isce::core::Quaternion::
+isce3::core::Quaternion::
 Quaternion() : Attitude(Quaternion_t) {}
 
 // Quaternion constructor with vectors of time and quaternions
-isce::core::Quaternion::
+isce3::core::Quaternion::
 Quaternion(const std::vector<double> & time, const std::vector<double> & quaternions) :
            Attitude(Quaternion_t) {
     this->data(time, quaternions);
@@ -34,7 +34,7 @@ Quaternion(const std::vector<double> & time, const std::vector<double> & quatern
 
 
 Eigen::Quaternion<double>
-isce::core::Quaternion::_interp(double t) const
+isce3::core::Quaternion::_interp(double t) const
 {
     // Check time bounds; error if out of bonds
     const int n = nVectors();
@@ -66,7 +66,7 @@ isce::core::Quaternion::_interp(double t) const
   * @param[out] opitch Interpolated pitch angle
   * @param[out] oroll Interpolated roll angle */
 void
-isce::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double & roll)
+isce3::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double & roll)
 {
     auto q = _interp(tintp);
 
@@ -84,8 +84,8 @@ isce::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double &
 }
 
 // Convert quaternion to rotation matrix
-isce::core::cartmat_t
-isce::core::Quaternion::
+isce3::core::cartmat_t
+isce3::core::Quaternion::
 rotmat(double tintp, const std::string, double dq0, double dq1, double dq2, double) {
 
     auto q = _interp(tintp);
@@ -114,8 +114,8 @@ rotmat(double tintp, const std::string, double dq0, double dq1, double dq2, doub
 }
 
 // Extract YPR at a given time after factoring out orbit matrix
-isce::core::cartesian_t
-isce::core::Quaternion::
+isce3::core::cartesian_t
+isce3::core::Quaternion::
 factoredYPR(double tintp,
             const cartesian_t& satxyz,
             const cartesian_t& satvel,
@@ -153,7 +153,7 @@ factoredYPR(double tintp,
 // Set quaternion elements from vectors
 /** @param[in] time Vector of seconds since epoch, strictly increasing.
   * @param[in] quaternions Flattened vector of quaternions per time epoch */
-void isce::core::Quaternion::data(const std::vector<double>& time,
+void isce3::core::Quaternion::data(const std::vector<double>& time,
                                   const std::vector<double>& quaternions) {
     // Check size consistency
     const bool flag = time.size() == (quaternions.size() / 4);

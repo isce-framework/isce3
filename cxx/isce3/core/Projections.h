@@ -12,7 +12,7 @@
 #include "Constants.h"
 #include "Ellipsoid.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
     /** Abstract base class for individual projections
      *

@@ -13,8 +13,8 @@
 #include <isce3/core/Matrix.h>
 #include <isce3/cuda/except/Error.h>
 
-using isce::cuda::core::gpuInterpolator;
-using isce::cuda::core::gpuSinc2dInterpolator;
+using isce3::cuda::core::gpuInterpolator;
+using isce3::cuda::core::gpuSinc2dInterpolator;
 
 
 /*

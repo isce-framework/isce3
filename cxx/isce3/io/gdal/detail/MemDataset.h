@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace isce { namespace io { namespace gdal { namespace detail {
+namespace isce3 { namespace io { namespace gdal { namespace detail {
 
 template<typename T>
 inline

@@ -7,7 +7,7 @@
 from libcpp cimport bool
 from libcpp.vector cimport vector
 
-cdef extern from "isce3/core/Poly2d.h" namespace "isce::core":
+cdef extern from "isce3/core/Poly2d.h" namespace "isce3::core":
     cdef cppclass Poly2d:
         int azimuthOrder
         int rangeOrder

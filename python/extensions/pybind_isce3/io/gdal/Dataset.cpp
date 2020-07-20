@@ -11,7 +11,7 @@
 #include "GDALAccess.h"
 #include "GDALDataType.h"
 
-using isce::io::gdal::Dataset;
+using isce3::io::gdal::Dataset;
 
 static
 std::string getInfo(Dataset & dataset)
@@ -20,7 +20,7 @@ std::string getInfo(Dataset & dataset)
 
     char * tmp = GDALInfo(handle, nullptr);
     if (!tmp) {
-        throw isce::except::GDALError(ISCE_SRCINFO(), "failed to display dataset info");
+        throw isce3::except::GDALError(ISCE_SRCINFO(), "failed to display dataset info");
     }
     std::string info(tmp);
     CPLFree(tmp);

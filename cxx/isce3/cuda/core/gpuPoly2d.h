@@ -10,7 +10,7 @@
 
 #include <cmath>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
     struct gpuPoly2d{
         int rangeOrder;
         int azimuthOrder;
@@ -39,7 +39,7 @@ namespace isce { namespace cuda { namespace core {
                                                 rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
                                                 rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), 
                                                 coeffs(p.coeffs), owner(false) {}
-        CUDA_HOST gpuPoly2d(const isce::core::Poly2d&);
+        CUDA_HOST gpuPoly2d(const isce3::core::Poly2d&);
         ~gpuPoly2d();
 
         CUDA_HOSTDEV inline gpuPoly2d& operator=(const gpuPoly2d&);

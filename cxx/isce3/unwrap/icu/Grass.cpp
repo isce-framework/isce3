@@ -5,7 +5,7 @@
 
 #include "ICU.h" // ICU, LabelMap, idx2_t, offset2_t
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 void growConnComp(

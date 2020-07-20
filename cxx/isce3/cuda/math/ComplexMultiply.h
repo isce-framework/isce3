@@ -6,7 +6,7 @@
 #include <isce3/math/ComplexMultiply.h>
 
 /** Promotion rules so T * complex<U> works for {T,U} in {float,double}. */
-namespace isce { namespace math { namespace complex_multiply {
+namespace isce3 { namespace math { namespace complex_multiply {
 
 CUDA_HOSTDEV inline auto operator*(float t, thrust::complex<double> u)
 {
@@ -18,4 +18,4 @@ CUDA_HOSTDEV inline auto operator*(thrust::complex<double> t, float u)
     return t * double(u);
 }
 
-}}} // namespace isce::math::complex_multiply
+}}} // namespace isce3::math::complex_multiply

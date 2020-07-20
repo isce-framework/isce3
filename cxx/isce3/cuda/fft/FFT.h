@@ -2,7 +2,7 @@
 
 #include "FFTPlan.h"
 
-namespace isce { namespace cuda { namespace fft {
+namespace isce3 { namespace cuda { namespace fft {
 
 /**
  * Create a re-useable 1-D forward FFT plan.

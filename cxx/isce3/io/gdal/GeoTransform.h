@@ -2,7 +2,7 @@
 
 #include <array>
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 /**
  * Transform coefficients for transforming from (pixel, line) coordinates in
@@ -33,7 +33,7 @@ struct GeoTransform {
      * Only separable, axis-aligned transforms are supported,
      * ( \code coeffs[2] == 0. \endcode and \code coeffs[4] == 0. \endcode )
      *
-     * \throws isce::except::InvalidArgument if the supplied transform is unsupported
+     * \throws isce3::except::InvalidArgument if the supplied transform is unsupported
      *
      * \param[in] coeffs Affine transform coefficients such as those produced by GDALGetGeoTransform()
      */

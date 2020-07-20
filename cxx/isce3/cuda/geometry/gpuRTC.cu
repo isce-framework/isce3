@@ -32,18 +32,18 @@
 __constant__ double start, r0, pixazm, dr;
 __constant__ float xbound, ybound;
 
-using isce::core::OrbitInterpBorderMode;
-using isce::core::Vec3;
-using isce::core::Mat3;
+using isce3::core::OrbitInterpBorderMode;
+using isce3::core::Vec3;
+using isce3::core::Mat3;
 
 __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_factor,
-        isce::cuda::geometry::gpuDEMInterpolator dem_interp,
-        isce::core::Ellipsoid ellps,
-        isce::cuda::core::OrbitView orbit,
-        isce::cuda::core::gpuLUT1d<double> dop,
+        isce3::cuda::geometry::gpuDEMInterpolator dem_interp,
+        isce3::core::Ellipsoid ellps,
+        isce3::cuda::core::OrbitView orbit,
+        isce3::cuda::core::gpuLUT1d<double> dop,
         size_t width,
         double wavelength,
-        isce::core::LookSide side) {
+        isce3::core::LookSide side) {
 
     size_t xidx = threadIdx.x + blockIdx.x * blockDim.x;
     size_t yidx = threadIdx.y + blockIdx.y * blockDim.y;
@@ -62,9 +62,9 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const Vec3 inputDEM { dem_xmid, dem_ymid,
                           dem_interp.interpolateXY(dem_xmid, dem_ymid) };
     int epsgcode = dem_interp.epsgCode();
-    isce::cuda::core::projInverse(epsgcode, inputDEM, inputLLH);
+    isce3::cuda::core::projInverse(epsgcode, inputDEM, inputLLH);
 
-    isce::cuda::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
+    isce3::cuda::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
                                   &a, &r, wavelength, side,
                                   1e-4, 20, 1e-4);
 
@@ -97,10 +97,10 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
 
     // Get LLH corner vectors
     Vec3 llh00, llh01, llh10, llh11;
-    isce::cuda::core::projInverse(epsgcode, dem00, llh00);
-    isce::cuda::core::projInverse(epsgcode, dem01, llh01);
-    isce::cuda::core::projInverse(epsgcode, dem10, llh10);
-    isce::cuda::core::projInverse(epsgcode, dem11, llh11);
+    isce3::cuda::core::projInverse(epsgcode, dem00, llh00);
+    isce3::cuda::core::projInverse(epsgcode, dem01, llh01);
+    isce3::cuda::core::projInverse(epsgcode, dem10, llh10);
+    isce3::cuda::core::projInverse(epsgcode, dem11, llh11);
 
     // Convert to XYZ
     const Vec3 xyz00 = ellps.lonLatToXyz(llh00);
@@ -109,8 +109,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const Vec3 xyz11 = ellps.lonLatToXyz(llh11);
 
     // Compute normal vectors for each facet
-    const Vec3 normalFacet1 = isce::core::normalPlane(xyz00, xyz10, xyz01);
-    const Vec3 normalFacet2 = isce::core::normalPlane(xyz01, xyz10, xyz11);
+    const Vec3 normalFacet1 = isce3::core::normalPlane(xyz00, xyz10, xyz01);
+    const Vec3 normalFacet2 = isce3::core::normalPlane(xyz01, xyz10, xyz11);
 
     // Side lengths
     const double p00_01 = (xyz00 - xyz01).norm();
@@ -165,13 +165,13 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
 
 // Compute the flat earth incidence angle correction applied by UAVSAR processing
 __global__ void flatearth(float* out,
-        const isce::cuda::geometry::gpuDEMInterpolator flat_interp,
-        const isce::cuda::core::OrbitView orbit,
-        const isce::core::Ellipsoid ellps,
+        const isce3::cuda::geometry::gpuDEMInterpolator flat_interp,
+        const isce3::cuda::core::OrbitView orbit,
+        const isce3::core::Ellipsoid ellps,
         size_t length,
         size_t width,
         double wavelength,
-        isce::core::LookSide lookSide,
+        isce3::core::LookSide lookSide,
         float avg_hgt
         ) {
     size_t j = threadIdx.x + blockIdx.x * blockDim.x;
@@ -190,7 +190,7 @@ __global__ void flatearth(float* out,
     // Get LLH and XYZ coordinates for this azimuth/range
     Vec3 targetLLH;
     targetLLH[2] = avg_hgt; // initialize first guess
-    isce::cuda::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
+    isce3::cuda::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
             flat_interp, targetLLH, wavelength, lookSide,
             1e-4, 20, 20);
 
@@ -208,11 +208,11 @@ __global__ void flatearth(float* out,
     out[width * i + j] *= sintheta;
 }
 
-double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
-                               const isce::core::Ellipsoid& ellps,
+double computeUpsamplingFactor(const isce3::geometry::DEMInterpolator& dem_interp,
+                               const isce3::core::Ellipsoid& ellps,
                                double rangePixelSpacing) {
     // Create a projection object from the DEM interpolator
-    isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
+    isce3::core::ProjectionBase * proj = isce3::core::createProj(dem_interp.epsgCode());
 
     // Get middle XY coordinate in DEM coords, lat/lon, and ECEF XYZ
     Vec3 demXY{dem_interp.midX(), dem_interp.midY(), 0.}, llh;
@@ -266,24 +266,24 @@ T* deviceCopy(T* host_obj) {
     return dev_obj;
 }
 
-namespace isce { namespace cuda {
+namespace isce3 { namespace cuda {
 
     namespace geometry {
 
-        void facetRTC(isce::product::Product& product,
-                      isce::io::Raster& dem,
-                      isce::io::Raster& out_raster,
+        void facetRTC(isce3::product::Product& product,
+                      isce3::io::Raster& dem,
+                      isce3::io::Raster& out_raster,
                       char frequency) {
 
-            isce::core::Ellipsoid ellps_h;
-            isce::core::Orbit orbit_h(product.metadata().orbit());
-            isce::product::RadarGridParameters radarGrid(product, frequency);
-            isce::geometry::Topo topo_h(product, frequency, true);
-            const isce::core::LookSide lookDirection = product.lookSide();
+            isce3::core::Ellipsoid ellps_h;
+            isce3::core::Orbit orbit_h(product.metadata().orbit());
+            isce3::product::RadarGridParameters radarGrid(product, frequency);
+            isce3::geometry::Topo topo_h(product, frequency, true);
+            const isce3::core::LookSide lookDirection = product.lookSide();
 
             // Initialize other ISCE objects
-            isce::core::Peg peg;
-            isce::core::Pegtrans ptm;
+            isce3::core::Peg peg;
+            isce3::core::Pegtrans ptm;
             ptm.radarToXYZ(ellps_h, peg);
 
             const double start_h = radarGrid.sensingStart();
@@ -310,7 +310,7 @@ namespace isce { namespace cuda {
             // ------------------------------------------------------------------------
 
             // Create CPU-only  objects
-            isce::geometry::DEMInterpolator dem_interp_h(0, isce::core::dataInterpMethod::BIQUINTIC_METHOD);
+            isce3::geometry::DEMInterpolator dem_interp_h(0, isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
             topo_h.computeDEMBounds(dem, dem_interp_h, 0, radarGrid.length()); // determine DEM bounds
 
             const float upsample_factor = computeUpsamplingFactor(dem_interp_h, ellps_h, radarGrid.rangePixelSpacing());
@@ -318,16 +318,16 @@ namespace isce { namespace cuda {
             float max_hgt, avg_hgt;
             pyre::journal::info_t info("gpuRTC");
             dem_interp_h.computeHeightStats(max_hgt, avg_hgt, info);
-            isce::cuda::geometry::gpuDEMInterpolator flat_interp(avg_hgt);
+            isce3::cuda::geometry::gpuDEMInterpolator flat_interp(avg_hgt);
 
             // Create hostside device objects
-            isce::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
-            isce::core::Ellipsoid ellps(ellps_h);
-            isce::cuda::core::Orbit orbit(orbit_h);
+            isce3::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
+            isce3::core::Ellipsoid ellps(ellps_h);
+            isce3::cuda::core::Orbit orbit(orbit_h);
 
             // Convert LUT2d doppler to LUT1d
-            isce::core::LUT1d<double> dop_h(product.metadata().procInfo().dopplerCentroid(frequency));
-            isce::cuda::core::gpuLUT1d<double> dop(dop_h);
+            isce3::core::LUT1d<double> dop_h(product.metadata().procInfo().dopplerCentroid(frequency));
+            isce3::cuda::core::gpuLUT1d<double> dop(dop_h);
 
             const size_t xmax = dem_interp.width()  * upsample_factor;
             const size_t ymax = dem_interp.length() * upsample_factor;

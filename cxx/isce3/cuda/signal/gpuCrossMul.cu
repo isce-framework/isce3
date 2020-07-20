@@ -91,36 +91,36 @@ __global__ void calculate_coherence_g<T>(T *ref_amp_to_coh,
 
 
 /** Set number of range looks */
-void isce::cuda::signal::gpuCrossmul::
+void isce3::cuda::signal::gpuCrossmul::
 rangeLooks(int rngLks) {
     _rangeLooks = rngLks;
     _doMultiLook = true;
 }
 
 /** Set number of azimuth looks */
-void isce::cuda::signal::gpuCrossmul::
+void isce3::cuda::signal::gpuCrossmul::
 azimuthLooks(int azLks) {
     _azimuthLooks = azLks;
     _doMultiLook = true;
 }
 
-void isce::cuda::signal::gpuCrossmul::
-doppler(isce::core::LUT1d<double> refDoppler,
-        isce::core::LUT1d<double> secDoppler)
+void isce3::cuda::signal::gpuCrossmul::
+doppler(isce3::core::LUT1d<double> refDoppler,
+        isce3::core::LUT1d<double> secDoppler)
 {
     _refDoppler = refDoppler;
     _secDoppler = secDoppler;
 }
 
 
-void isce::cuda::signal::gpuCrossmul::
-crossmul(isce::io::Raster& referenceSLC,
-        isce::io::Raster& secondarySLC,
-        isce::io::Raster& interferogram,
-        isce::io::Raster& coherence)
+void isce3::cuda::signal::gpuCrossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& interferogram,
+        isce3::io::Raster& coherence)
 {
     _doCommonRangeBandFilter = false;
-    isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
+    isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
     crossmul(referenceSLC,
             secondarySLC,
             rngOffsetRaster,
@@ -129,12 +129,12 @@ crossmul(isce::io::Raster& referenceSLC,
 
 }
 
-void isce::cuda::signal::gpuCrossmul::
-crossmul(isce::io::Raster& referenceSLC,
-        isce::io::Raster& secondarySLC,
-        isce::io::Raster& rngOffsetRaster,
-        isce::io::Raster& interferogram,
-        isce::io::Raster& coherenceRaster)
+void isce3::cuda::signal::gpuCrossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& rngOffsetRaster,
+        isce3::io::Raster& interferogram,
+        isce3::io::Raster& coherenceRaster)
 {
     size_t nrows = referenceSLC.length();
     size_t ncols = referenceSLC.width();
@@ -158,8 +158,8 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 
     // signal object for upsampling
-    isce::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
-    isce::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
+    isce3::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
+    isce3::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
 
     // Compute FFT size (power of 2)
     size_t nfft;
@@ -242,8 +242,8 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 
     // filter objects
-    isce::cuda::signal::gpuAzimuthFilter<float> azimuthFilter;
-    isce::cuda::signal::gpuRangeFilter<float> rangeFilter;
+    isce3::cuda::signal::gpuAzimuthFilter<float> azimuthFilter;
+    isce3::cuda::signal::gpuRangeFilter<float> rangeFilter;
 
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
@@ -468,7 +468,7 @@ void lookdownShiftImpact(size_t oversample,
     double dt = 1.0/oversample;
 
     // get the vector of range frequencies
-    isce::signal::fftfreq(dt, rangeFrequencies);
+    isce3::signal::fftfreq(dt, rangeFrequencies);
 
 
     // in the process of upsampling the SLCs, creating upsampled interferogram

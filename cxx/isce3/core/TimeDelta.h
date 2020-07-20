@@ -13,7 +13,7 @@
  * The intent of the class is to assist in translating DateTime tags
  * to double precision floats w.r.t Reference epoch for numerical
  * computation and vice-versa*/
-class isce::core::TimeDelta {
+class isce3::core::TimeDelta {
 public:
 
     /** Integer days */
@@ -97,7 +97,7 @@ public:
 };
 
 // Some constants
-namespace isce {
+namespace isce3 {
     namespace core {
 
         TimeDelta operator*(double, const TimeDelta &);

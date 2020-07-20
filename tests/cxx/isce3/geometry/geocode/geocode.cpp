@@ -25,7 +25,7 @@
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/Constants.h>
 
-// isce::geometry
+// isce3::geometry
 #include "isce3/geometry/Serialization.h"
 #include "isce3/geometry/Topo.h"
 
@@ -56,15 +56,15 @@ TEST(GeocodeTest, RunGeocode) {
     createTestData();
 
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
-    const isce::product::Swath & swath = product.swath('A');
-    isce::core::Orbit orbit = product.metadata().orbit();
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::LUT2d<double> doppler = product.metadata().procInfo().dopplerCentroid('A');
+    const isce3::product::Swath & swath = product.swath('A');
+    isce3::core::Orbit orbit = product.metadata().orbit();
+    isce3::core::Ellipsoid ellipsoid;
+    isce3::core::LUT2d<double> doppler = product.metadata().procInfo().dopplerCentroid('A');
     auto lookSide = product.lookSide();
 
     double threshold = 1.0e-9 ;
@@ -86,16 +86,16 @@ TEST(GeocodeTest, RunGeocode) {
     int epsgcode = 4326;
 
     // The DEM to be used for geocoding
-    isce::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zeroHeightDEM.geo");
 
     // input raster in radar coordinates to be geocoded
-    isce::io::Raster radarRasterX("x.rdr");
+    isce3::io::Raster radarRasterX("x.rdr");
 
     // The interpolation method used for geocoding
-    isce::core::dataInterpMethod method = isce::core::BIQUINTIC_METHOD;
+    isce3::core::dataInterpMethod method = isce3::core::BIQUINTIC_METHOD;
 
     // Geocode object
-    isce::geometry::Geocode<double> geoObj;
+    isce3::geometry::Geocode<double> geoObj;
 
     // manually configure geoObj
 
@@ -109,7 +109,7 @@ TEST(GeocodeTest, RunGeocode) {
     geoObj.radarBlockMargin(radarBlockMargin);
     geoObj.interpolator(method);
 
-    isce::product::RadarGridParameters radar_grid(swath, lookSide);
+    isce3::product::RadarGridParameters radar_grid(swath, lookSide);
 
     geoObj.geoGrid(geoGridStartX, geoGridStartY, geoGridSpacingX,
                    geoGridSpacingY, geoGridWidth, geoGridLength, epsgcode);
@@ -118,14 +118,14 @@ TEST(GeocodeTest, RunGeocode) {
 
         std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
 
-        isce::geometry::geocodeOutputMode output_mode;
+        isce3::geometry::geocodeOutputMode output_mode;
         if (geocode_mode_str == "interp")
-            output_mode = isce::geometry::geocodeOutputMode::INTERP;
+            output_mode = isce3::geometry::geocodeOutputMode::INTERP;
         else
-            output_mode = isce::geometry::geocodeOutputMode::AREA_PROJECTION;
+            output_mode = isce3::geometry::geocodeOutputMode::AREA_PROJECTION;
 
         // geocoded raster
-        isce::io::Raster geocodedRasterInterpX("x." + geocode_mode_str + ".geo",
+        isce3::io::Raster geocodedRasterInterpX("x." + geocode_mode_str + ".geo",
                                                geoGridWidth, geoGridLength, 1,
                                                GDT_Float64, "ENVI");
 
@@ -136,17 +136,17 @@ TEST(GeocodeTest, RunGeocode) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        isce::geometry::geocodeOutputMode output_mode;
+        isce3::geometry::geocodeOutputMode output_mode;
         if (geocode_mode_str == "interp")
-            output_mode = isce::geometry::geocodeOutputMode::INTERP;
+            output_mode = isce3::geometry::geocodeOutputMode::INTERP;
         else
-            output_mode = isce::geometry::geocodeOutputMode::AREA_PROJECTION;
+            output_mode = isce3::geometry::geocodeOutputMode::AREA_PROJECTION;
 
         // create another raster for latitude data from Topo
-        isce::io::Raster radarRasterY("y.rdr");
+        isce3::io::Raster radarRasterY("y.rdr");
 
         // create output raster for geocoded latitude
-        isce::io::Raster geocodedRasterInterpY("y." + geocode_mode_str + ".geo",
+        isce3::io::Raster geocodedRasterInterpY("y." + geocode_mode_str + ".geo",
                                                geoGridWidth, geoGridLength, 1,
                                                GDT_Float64, "ENVI");
 
@@ -162,8 +162,8 @@ TEST(GeocodeTest, CheckGeocode) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        isce::io::Raster xRaster("x." + geocode_mode_str + ".geo");
-        isce::io::Raster yRaster("y." + geocode_mode_str + ".geo");
+        isce3::io::Raster xRaster("x." + geocode_mode_str + ".geo");
+        isce3::io::Raster yRaster("y." + geocode_mode_str + ".geo");
         size_t length = xRaster.length();
         size_t width = xRaster.width();
 
@@ -248,7 +248,7 @@ int main(int argc, char * argv[]) {
 void createZeroDem() {
 
     // Raster for the existing DEM
-    isce::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
+    isce3::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
 
     // A pointer array for geoTransform
     double geoTrans[6];
@@ -257,7 +257,7 @@ void createZeroDem() {
     demRaster.getGeoTransform(geoTrans);
 
     // create a new Raster same as the demRAster
-    isce::io::Raster zeroDemRaster("zeroHeightDEM.geo", demRaster);
+    isce3::io::Raster zeroDemRaster("zeroHeightDEM.geo", demRaster);
     zeroDemRaster.setGeoTransform(geoTrans);
     zeroDemRaster.setEPSG(demRaster.getEPSG());
 
@@ -274,13 +274,13 @@ void createTestData() {
 
     // Open the HDF5 product
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // Create topo instance with native Doppler
-    isce::geometry::Topo topo(product, 'A', true);
+    isce3::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
@@ -290,7 +290,7 @@ void createTestData() {
     }
 
     // Open DEM raster
-    isce::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zeroHeightDEM.geo");
 
     // Run topo
     topo.topo(demRaster, ".");

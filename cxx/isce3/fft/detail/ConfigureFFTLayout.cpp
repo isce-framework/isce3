@@ -4,7 +4,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace fft { namespace detail {
+namespace isce3 { namespace fft { namespace detail {
 
 void configureFFTLayout(int * n,
                         int * stride,
@@ -16,7 +16,7 @@ void configureFFTLayout(int * n,
     // check for out-of-range axis
     if (axis < -2 || axis >= 2) {
         std::string errmsg = "axis (" + std::to_string(axis) + ") out of range for 2-D array";
-        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 
     // wrap around negative axis

@@ -9,18 +9,18 @@
 
 #include "OrbitView.h"
 
-using isce::core::DateTime;
-using isce::core::OrbitInterpMethod;
-using isce::core::OrbitInterpBorderMode;
-using isce::core::StateVector;
-using isce::core::TimeDelta;
-using isce::core::Vec3;
-using isce::error::ErrorCode;
-using isce::error::getErrorString;
+using isce3::core::DateTime;
+using isce3::core::OrbitInterpMethod;
+using isce3::core::OrbitInterpBorderMode;
+using isce3::core::StateVector;
+using isce3::core::TimeDelta;
+using isce3::core::Vec3;
+using isce3::error::ErrorCode;
+using isce3::error::getErrorString;
 
-using HostOrbit = isce::core::Orbit;
+using HostOrbit = isce3::core::Orbit;
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 Orbit::Orbit(const HostOrbit & orbit)
 :
@@ -90,9 +90,9 @@ std::vector<StateVector> Orbit::getStateVectors() const
 
 void Orbit::setStateVectors(const std::vector<StateVector> & statevecs)
 {
-    _time = isce::core::detail::getOrbitTime(statevecs, _reference_epoch);
-    _position = isce::core::detail::getOrbitPosition(statevecs);
-    _velocity = isce::core::detail::getOrbitVelocity(statevecs);
+    _time = isce3::core::detail::getOrbitTime(statevecs, _reference_epoch);
+    _position = isce3::core::detail::getOrbitPosition(statevecs);
+    _velocity = isce3::core::detail::getOrbitVelocity(statevecs);
 }
 
 void Orbit::referenceEpoch(const DateTime & reference_epoch)
@@ -143,7 +143,7 @@ ErrorCode Orbit::interpolate(Vec3 * position,
             border_mode == OrbitInterpBorderMode::Error) {
 
         std::string errmsg = getErrorString(status);
-        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 
     if (position) { *position = d_pos[0]; }

@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 #include "Common.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 template<int N, typename T>
 class DenseMatrix : public Eigen::Matrix<T, N, N> {

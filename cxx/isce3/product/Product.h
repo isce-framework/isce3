@@ -19,21 +19,21 @@
 #include <isce3/product/Swath.h>
 
 // Declarations
-namespace isce {
+namespace isce3 {
     namespace product {
         class Product;
     }
 }
 
 // Product class declaration
-class isce::product::Product {
+class isce3::product::Product {
 
     public:
         /** Constructor from IH5File object. */
-        Product(isce::io::IH5File &);
+        Product(isce3::io::IH5File &);
 
         /** Constructor with Metadata and Swath map. */
-        inline Product(const Metadata &, const std::map<char, isce::product::Swath> &);
+        inline Product(const Metadata &, const std::map<char, isce3::product::Swath> &);
 
         /** Get a read-only reference to the metadata */
         inline const Metadata & metadata() const { return _metadata; }
@@ -48,9 +48,9 @@ class isce::product::Product {
         inline void swath(const Swath & s, char freq) { _swaths[freq] = s; }
 
         /** Get the look direction */
-        inline isce::core::LookSide lookSide() const { return _lookSide; }
+        inline isce3::core::LookSide lookSide() const { return _lookSide; }
         /** Set look direction using enum */
-        inline void lookSide(isce::core::LookSide side) { _lookSide = side; }
+        inline void lookSide(isce3::core::LookSide side) { _lookSide = side; }
         /** Set look direction from a string */
         inline void lookSide(const std::string &);
 
@@ -58,21 +58,21 @@ class isce::product::Product {
         inline std::string filename() const { return _filename; }
 
     private:
-        isce::product::Metadata _metadata;
-        std::map<char, isce::product::Swath> _swaths;
+        isce3::product::Metadata _metadata;
+        std::map<char, isce3::product::Swath> _swaths;
         std::string _filename;
-        isce::core::LookSide _lookSide;
+        isce3::core::LookSide _lookSide;
 };
 
 /** @param[in] meta Metadata object
   * @param[in] swaths Map of Swath objects per frequency */
-isce::product::Product::
-Product(const Metadata & meta, const std::map<char, isce::product::Swath> & swaths) :
+isce3::product::Product::
+Product(const Metadata & meta, const std::map<char, isce3::product::Swath> & swaths) :
     _metadata(meta), _swaths(swaths) {}
 
 /** @param[in] look String representation of look side */
 void
-isce::product::Product::
+isce3::product::Product::
 lookSide(const std::string & inputLook) {
-    _lookSide = isce::core::parseLookSide(inputLook);
+    _lookSide = isce3::core::parseLookSide(inputLook);
 }

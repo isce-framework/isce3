@@ -13,15 +13,15 @@
 
 #include <gtest/gtest.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Interp1d.h>
 #include <isce3/core/Kernels.h>
 #include <isce3/core/Utilities.h>
 #include <isce3/math/Sinc.h>
 #include <isce3/signal/NFFT.h>
 
-using isce::core::interp1d;
-using isce::math::sinc;
+using isce3::core::interp1d;
+using isce3::math::sinc;
 
 double rad2deg(double x) { return x * 180.0 / M_PI; }
 
@@ -183,7 +183,7 @@ protected:
     }
 
     void fill_out(const std::vector<double>& times,
-                  isce::core::Kernel<double>& kernel)
+                  isce3::core::Kernel<double>& kernel)
     {
         auto nt = times.size();
         out.assign(nt, 0.0);
@@ -226,7 +226,7 @@ protected:
 
     void check_interp(double min_cor, double max_phs, double max_bias,
                       double max_spread, std::vector<double>& times,
-                      isce::core::Kernel<double>& kernel)
+                      isce3::core::Kernel<double>& kernel)
     {
         fill_ref(times);
         fill_out(times, kernel);
@@ -247,7 +247,7 @@ protected:
 
     void test_rand_offsets(double min_cor, double max_phs, double max_bias,
                            double max_spread,
-                           isce::core::Kernel<double>& kernel)
+                           isce3::core::Kernel<double>& kernel)
     {
         printf("Testing random offsets.\n");
         auto times = gen_rand_times();
@@ -256,7 +256,7 @@ protected:
 
     void test_fixed_offset(double min_cor, double max_phs, double max_bias,
                            double max_spread,
-                           isce::core::Kernel<double>& kernel, double off)
+                           isce3::core::Kernel<double>& kernel, double off)
     {
         printf("Testing fixed offset=%g\n", off);
         std::vector<double> times(n);
@@ -269,7 +269,7 @@ protected:
 
 TEST_F(Interp1dTest, Linear)
 {
-    auto kernel = isce::core::LinearKernel<double>();
+    auto kernel = isce3::core::LinearKernel<double>();
     // offset=0 should give back original data for this kernel.
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel, 0.0);
     test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel, -0.3);
@@ -281,7 +281,7 @@ TEST_F(Interp1dTest, Linear)
 
 TEST_F(Interp1dTest, Knab)
 {
-    auto kernel = isce::core::KnabKernel<double>(9.0, 0.8);
+    auto kernel = isce3::core::KnabKernel<double>(9.0, 0.8);
     // offset=0 should give back original data for this kernel.
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel, 0.0);
     test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel, -0.3);
@@ -293,8 +293,8 @@ TEST_F(Interp1dTest, Knab)
 
 TEST_F(Interp1dTest, TabulatedKnab)
 {
-    auto knab = isce::core::KnabKernel<double>(9.0, 0.8);
-    auto kernel = isce::core::TabulatedKernel<double>(knab, 2048);
+    auto knab = isce3::core::KnabKernel<double>(9.0, 0.8);
+    auto kernel = isce3::core::TabulatedKernel<double>(knab, 2048);
     // offset=0 should give back original data for this kernel.
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel, 0.0);
     test_rand_offsets(0.998, 5.0, 0.5, 0.5, kernel);
@@ -302,8 +302,8 @@ TEST_F(Interp1dTest, TabulatedKnab)
 
 TEST_F(Interp1dTest, ChebyKnab)
 {
-    auto knab = isce::core::KnabKernel<double>(9.0, 0.8);
-    auto kernel = isce::core::ChebyKernel<double>(knab, 16);
+    auto knab = isce3::core::KnabKernel<double>(9.0, 0.8);
+    auto kernel = isce3::core::ChebyKernel<double>(knab, 16);
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel, 0.0);
     test_rand_offsets(0.998, 5.0, 0.5, 0.5, kernel);
 }
@@ -313,12 +313,12 @@ TEST_F(Interp1dTest, NFFT)
     // FFT the signal set up by the test class to get a spectrum.
     std::valarray<std::complex<double>> spec(n);
     int i_n = n;
-    isce::signal::Signal<double> fft;
+    isce3::signal::Signal<double> fft;
     fft.fftPlanForward(signal, spec, 1, &i_n, 1, NULL, 1, 1, NULL, 1, 1, -1);
     fft.forward(signal, spec);
 
     // Set up NFFT object with 9 taps and 2x oversampling.
-    isce::signal::NFFT<double> itp(4, n, 2 * n);
+    isce3::signal::NFFT<double> itp(4, n, 2 * n);
 
     // Feed a spectrum to NFFT object.
     itp.set_spectrum(spec);
@@ -355,12 +355,12 @@ public:
         }
     }
 
-    double run(isce::core::Kernel<T>& kernel)
+    double run(isce3::core::Kernel<T>& kernel)
     {
         std::clock_t start = std::clock();
         for (int i = 0; i < n; ++i) {
             int j = i % npts;
-            y[j] = isce::core::interp1d(kernel, x, t[j], true);
+            y[j] = isce3::core::interp1d(kernel, x, t[j], true);
         }
         return (std::clock() - start) / (double) CLOCKS_PER_SEC;
     }
@@ -369,11 +369,11 @@ public:
 TEST(Kernel, Speed)
 {
     using U = float;
-    isce::core::NFFTKernel<U> exact(4, 1, 2);
+    isce3::core::NFFTKernel<U> exact(4, 1, 2);
     // A degree 16 Chebyshev and 2k linear table give similar approximation
     // errors of about 5e-8.  See notebook ApproxWindow.ipynb.
-    isce::core::ChebyKernel<U> cheby(exact, 16);
-    isce::core::TabulatedKernel<U> table(exact, 2048);
+    isce3::core::ChebyKernel<U> cheby(exact, 16);
+    isce3::core::TabulatedKernel<U> table(exact, 2048);
     SpeedCheck<U> timer;
 
     // The first run seems to have a penalty as things get loaded in to cache?

@@ -9,9 +9,9 @@
 #include "Ellipsoid.h"
 #include "Peg.h"
 #include "Pegtrans.h"
-using isce::core::Ellipsoid;
-using isce::core::Peg;
-using isce::core::Pegtrans;
+using isce3::core::Ellipsoid;
+using isce3::core::Peg;
+using isce3::core::Pegtrans;
 using std::invalid_argument;
 
 

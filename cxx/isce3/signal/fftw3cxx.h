@@ -94,8 +94,8 @@ extern "C" {
     FFTW3CXX_DEFINE_FFTW335_NEW_API(FFTW_MANGLE_LONG_DOUBLE, long double, fftwl_complex)
 }
 
-namespace isce{
-    //! The isce::fftw3cxx namespace
+namespace isce3{
+    //! The isce3::fftw3cxx namespace
     namespace fftw3cxx {
 
 //---
@@ -843,4 +843,4 @@ inline const char *codelet_optim(void)
     { return fftw<T>::codelet_optim; }
 
 } // namespace fftw3cxx
-} // namespace isce
+} // namespace isce3

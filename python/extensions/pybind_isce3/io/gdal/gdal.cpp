@@ -14,8 +14,8 @@ void addsubmodule_gdal(py::module & m)
     py::enum_<GDALDataType> pyGDALDataType(m_gdal, "GDALDataType");
 
     // forward declare bound classes
-    py::class_<isce::io::gdal::Dataset> pyDataset(m_gdal, "Dataset");
-    py::class_<isce::io::gdal::Raster> pyRaster(m_gdal, "Raster", py::buffer_protocol());
+    py::class_<isce3::io::gdal::Dataset> pyDataset(m_gdal, "Dataset");
+    py::class_<isce3::io::gdal::Raster> pyRaster(m_gdal, "Raster", py::buffer_protocol());
 
     // add bindings
     addbinding(pyGDALAccess);

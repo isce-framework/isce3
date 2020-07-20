@@ -5,11 +5,11 @@
 #include <cstddef> // size_t
 #include <cstdint> // uint8_t
 
-#include <isce3/io/Raster.h> // isce::io::Raster
+#include <isce3/io/Raster.h> // isce3::io::Raster
 
 #include "LabelMap.h" // LabelMap
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 // 2-D index type
@@ -127,10 +127,10 @@ public:
      * @param[in] seed Random state seed (default: 0)
      */
     void unwrap(
-        isce::io::Raster & unw,
-        isce::io::Raster & ccl,
-        isce::io::Raster & intf,
-        isce::io::Raster & corr,
+        isce3::io::Raster & unw,
+        isce3::io::Raster & ccl,
+        isce3::io::Raster & intf,
+        isce3::io::Raster & corr,
         unsigned int seed = 0);
 
     // Compute residue charges.

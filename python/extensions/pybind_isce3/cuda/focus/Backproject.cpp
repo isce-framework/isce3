@@ -10,13 +10,13 @@
 
 namespace py = pybind11;
 
-using namespace isce::cuda::focus;
-using namespace isce::except;
+using namespace isce3::cuda::focus;
+using namespace isce3::except;
 
-using isce::container::RadarGeometry;
-using isce::core::Kernel;
-using isce::focus::parseDryTropoModel;
-using isce::geometry::DEMInterpolator;
+using isce3::container::RadarGeometry;
+using isce3::core::Kernel;
+using isce3::focus::parseDryTropoModel;
+using isce3::geometry::DEMInterpolator;
 
 void addbinding_cuda_backproject(py::module& m)
 {

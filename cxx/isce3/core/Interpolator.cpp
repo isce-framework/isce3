@@ -7,8 +7,8 @@
 
 /** 1-D sinc evaluation */
 template <class U, class V>
-U isce::core::
-sinc_eval(const isce::core::Matrix<U> & arr, const isce::core::Matrix<V> & intarr, int idec,
+U isce3::core::
+sinc_eval(const isce3::core::Matrix<U> & arr, const isce3::core::Matrix<V> & intarr, int idec,
           int intp, double frp, int nsamp) {
     U ret = 0.;
     int ilen = intarr.width();
@@ -21,43 +21,43 @@ sinc_eval(const isce::core::Matrix<U> & arr, const isce::core::Matrix<V> & intar
 }
 
 template std::complex<double>
-isce::core::
-sinc_eval(const isce::core::Matrix<std::complex<double>> &,
-          const isce::core::Matrix<double> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<std::complex<double>> &,
+          const isce3::core::Matrix<double> &, int, int, double, int);
 
 template std::complex<double>
-isce::core::
-sinc_eval(const isce::core::Matrix<std::complex<double>> &,
-          const isce::core::Matrix<float> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<std::complex<double>> &,
+          const isce3::core::Matrix<float> &, int, int, double, int);
 
 template std::complex<float>
-isce::core::
-sinc_eval(const isce::core::Matrix<std::complex<float>> &,
-          const isce::core::Matrix<double> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<std::complex<float>> &,
+          const isce3::core::Matrix<double> &, int, int, double, int);
 
 template std::complex<float>
-isce::core::
-sinc_eval(const isce::core::Matrix<std::complex<float>> &,
-          const isce::core::Matrix<float> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<std::complex<float>> &,
+          const isce3::core::Matrix<float> &, int, int, double, int);
 
 template double
-isce::core::
-sinc_eval(const isce::core::Matrix<double> &,
-          const isce::core::Matrix<double> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<double> &,
+          const isce3::core::Matrix<double> &, int, int, double, int);
 
 template double
-isce::core::
-sinc_eval(const isce::core::Matrix<double> &,
-          const isce::core::Matrix<float> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<double> &,
+          const isce3::core::Matrix<float> &, int, int, double, int);
 
 template float
-isce::core::
-sinc_eval(const isce::core::Matrix<float> &,
-          const isce::core::Matrix<double> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<float> &,
+          const isce3::core::Matrix<double> &, int, int, double, int);
 
 template float
-isce::core::
-sinc_eval(const isce::core::Matrix<float> &,
-          const isce::core::Matrix<float> &, int, int, double, int);
+isce3::core::
+sinc_eval(const isce3::core::Matrix<float> &,
+          const isce3::core::Matrix<float> &, int, int, double, int);
 
 // end of file

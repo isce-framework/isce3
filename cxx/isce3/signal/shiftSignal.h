@@ -14,7 +14,7 @@
 #include <isce3/core/Utilities.h>
 
 
-namespace isce {
+namespace isce3 {
     namespace signal {
 
         /**
@@ -26,7 +26,7 @@ namespace isce {
             std::valarray<std::complex<U>> & spectrum,
             size_t ncols, size_t nrows,
             const double shiftX, const double shiftY,
-            isce::signal::Signal<U> & sigObj);
+            isce3::signal::Signal<U> & sigObj);
 
         /**
          *\brief shift a signal by constant offsets in x (columns) or y (rows) directions
@@ -36,7 +36,7 @@ namespace isce {
             std::valarray<T> & dataShifted,
             std::valarray<std::complex<U>> & spectrum,
             std::valarray<std::complex<U>> & phaseRamp,
-            isce::signal::Signal<U> & sigObj);
+            isce3::signal::Signal<U> & sigObj);
         
         /**
          *\brief compute the impact of a constant range pixel shift in frequency domain

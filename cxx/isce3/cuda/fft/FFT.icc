@@ -4,7 +4,7 @@
 
 #include <isce3/fft/detail/ConfigureFFTLayout.h>
 
-namespace isce { namespace cuda { namespace fft {
+namespace isce3 { namespace cuda { namespace fft {
 
 template<typename T>
 inline
@@ -25,7 +25,7 @@ inline
 FwdFFTPlan<T> planfft1d(thrust::complex<T> * out, thrust::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
-    isce::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
+    isce3::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
 
     return FwdFFTPlan<T>(out, in, n, n, stride, dist, batch);
 }
@@ -35,7 +35,7 @@ inline
 FwdFFTPlan<T> planfft1d(thrust::complex<T> * out, T * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
-    isce::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
+    isce3::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
 
     return FwdFFTPlan<T>(out, in, n, n, stride, dist, batch);
 }
@@ -73,7 +73,7 @@ inline
 InvFFTPlan<T> planifft1d(thrust::complex<T> * out, thrust::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
-    isce::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
+    isce3::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
 
     return InvFFTPlan<T>(out, in, n, n, stride, dist, batch);
 }
@@ -83,7 +83,7 @@ inline
 InvFFTPlan<T> planifft1d(T * out, thrust::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
-    isce::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
+    isce3::fft::detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
 
     return InvFFTPlan<T>(out, in, n, n, stride, dist, batch);
 }

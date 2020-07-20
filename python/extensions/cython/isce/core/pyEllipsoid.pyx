@@ -14,7 +14,7 @@ cimport numpy as np
 
 cdef class pyEllipsoid:
     '''
-    Python wrapper for isce::core::Ellipsoid.
+    Python wrapper for isce3::core::Ellipsoid.
     By default returns a WGS84 Ellipsoid.
 
     Args:
@@ -27,7 +27,7 @@ cdef class pyEllipsoid:
 
     def __cinit__(self):
         '''
-        Pre-constructor that creates a C++ isce::core::Ellipsoid objects and binds it to python instance.
+        Pre-constructor that creates a C++ isce3::core::Ellipsoid objects and binds it to python instance.
         '''
 
         self.c_ellipsoid = new Ellipsoid()

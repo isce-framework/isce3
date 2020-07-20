@@ -37,7 +37,7 @@ struct ProjTest : public ::testing::Test {
         std::valarray<double> transval(trans, 6); \
         std::vector<double> transvec(trans, trans+6); \
         int incode = code; \
-        isce::io::Raster img = isce::io::Raster( projFilename, nc, nl, 1, GDT_Float32, "VRT" ); \
+        isce3::io::Raster img = isce3::io::Raster( projFilename, nc, nl, 1, GDT_Float32, "VRT" ); \
         img.setEPSG(incode); \
         img.setGeoTransform(trans); \
         img.setGeoTransform(transval); \

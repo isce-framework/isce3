@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace signal {
+namespace isce3 { namespace signal {
 
     class Crossmul;
     template<class> class Covariance;

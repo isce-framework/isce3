@@ -2,10 +2,10 @@
 
 #include <isce3/container/RSD.h>
 
-using isce::container::RSD;
-using isce::core::DateTime;
-using isce::core::LookSide;
-using isce::io::gdal::Raster;
+using isce3::container::RSD;
+using isce3::core::DateTime;
+using isce3::core::LookSide;
+using isce3::io::gdal::Raster;
 
 struct RSDTest : public testing::Test {
     int lines = 21;

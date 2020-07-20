@@ -9,28 +9,28 @@
 
 TEST(TestRTC, RunRTC) {
     // Open HDF5 file and load products
-    isce::io::IH5File file(TESTDATA_DIR "envisat.h5");
-    isce::product::Product product(file);
+    isce3::io::IH5File file(TESTDATA_DIR "envisat.h5");
+    isce3::product::Product product(file);
 
     // Open DEM raster
-    isce::io::Raster dem(TESTDATA_DIR "srtm_cropped.tif");
+    isce3::io::Raster dem(TESTDATA_DIR "srtm_cropped.tif");
 
     // Create output raster
-    isce::product::Swath & swath = product.swath('A');
-    isce::io::Raster out_raster("./rtc.bin", swath.samples(), swath.lines(), 1,
+    isce3::product::Swath & swath = product.swath('A');
+    isce3::io::Raster out_raster("./rtc.bin", swath.samples(), swath.lines(), 1,
                                 GDT_Float32, "ENVI");
  
     // Call RTC
-    isce::cuda::geometry::facetRTC(product, dem, out_raster, 'A');
+    isce3::cuda::geometry::facetRTC(product, dem, out_raster, 'A');
 }
 
 TEST(TestRTC, CheckResults) {
 
     // Open computed integrated-area raster
-    isce::io::Raster testRaster("./rtc.bin");
+    isce3::io::Raster testRaster("./rtc.bin");
 
     // Open reference raster
-    isce::io::Raster refRaster(TESTDATA_DIR "rtc/rtc.vrt");
+    isce3::io::Raster refRaster(TESTDATA_DIR "rtc/rtc.vrt");
 
     ASSERT_TRUE(testRaster.width()  == refRaster.width() and
                 testRaster.length() == refRaster.length());

@@ -13,7 +13,7 @@
 #include <array>
 #include <vector>
 
-namespace isce {
+namespace isce3 {
 namespace io {
 
 // Dataset chunking size
@@ -494,7 +494,7 @@ public:
     IGroup createGroup(const H5std_string& name);
 };
 } // namespace io
-} // namespace isce
+} // namespace isce3
 
 // Get inline implementations for IH5
 #define ISCE_IO_IH5_ICC

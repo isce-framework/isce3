@@ -11,7 +11,7 @@
 
 namespace py = pybind11;
 
-using isce::io::Raster;
+using isce3::io::Raster;
 
 
 auto py2CxxDtype = [](const int dtype)
@@ -28,7 +28,7 @@ auto py2CxxDtype = [](const int dtype)
         case 11 : return GDT_CFloat64;
         default : break;
     }
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unsupported GDAL datatype");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unsupported GDAL datatype");
 };
 
 
@@ -46,7 +46,7 @@ auto cxx2PyDtype = [](const int dtype)
         case GDT_CFloat64   : return 11;
         default             : break;
     }
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unsupported GDAL datatype");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unsupported GDAL datatype");
 };
 
 

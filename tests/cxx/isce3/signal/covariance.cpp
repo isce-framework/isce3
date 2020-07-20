@@ -35,27 +35,27 @@ TEST(Covariance, DualpolRun)
     createTestData();
     
     // rasters for two SLC polarizations
-    isce::io::Raster slcHH("hh.vrt");
-    isce::io::Raster slcHV("hv.vrt");
+    isce3::io::Raster slcHH("hh.vrt");
+    isce3::io::Raster slcHV("hv.vrt");
 
-    std::map<std::string, isce::io::Raster> slcList =
+    std::map<std::string, isce3::io::Raster> slcList =
         {{"hh", slcHH},
         {"hv", slcHV}};
      
-    isce::io::Raster c_hh_hh("cov_hh_hh.vrt", widthLooked, lengthLooked, 1, GDT_CFloat32, "VRT");
-    isce::io::Raster c_hh_hv("cov_hh_hv.vrt", widthLooked, lengthLooked, 1, GDT_CFloat32, "VRT");
-    isce::io::Raster c_hv_hv("cov_hv_hv.vrt", widthLooked, lengthLooked, 1, GDT_CFloat32, "VRT");
+    isce3::io::Raster c_hh_hh("cov_hh_hh.vrt", widthLooked, lengthLooked, 1, GDT_CFloat32, "VRT");
+    isce3::io::Raster c_hh_hv("cov_hh_hv.vrt", widthLooked, lengthLooked, 1, GDT_CFloat32, "VRT");
+    isce3::io::Raster c_hv_hv("cov_hv_hv.vrt", widthLooked, lengthLooked, 1, GDT_CFloat32, "VRT");
     
-    std::map<std::pair<std::string, std::string>, isce::io::Raster> covList =
+    std::map<std::pair<std::string, std::string>, isce3::io::Raster> covList =
       {{std::make_pair("hh", "hh"), c_hh_hh},
       {std::make_pair("hh", "hv"), c_hh_hv},
       {std::make_pair("hv", "hv"), c_hv_hv}};
    
     std::cout << "define covariance obj" << std::endl;
-    isce::signal::Covariance<std::complex<float>> covarianceObj;
-    isce::signal::Crossmul crsmul;
+    isce3::signal::Covariance<std::complex<float>> covarianceObj;
+    isce3::signal::Crossmul crsmul;
 
-    //isce::geometry::Geocode<float> geoObj;
+    //isce3::geometry::Geocode<float> geoObj;
 
     std::cout << "end" << std::endl;
 
@@ -68,8 +68,8 @@ TEST(Covariance, DualpolCheck)
 {
 
     // read rasters for two SLC polarizations
-    isce::io::Raster slcHH("hh.vrt");
-    isce::io::Raster slcHV("hv.vrt");
+    isce3::io::Raster slcHH("hh.vrt");
+    isce3::io::Raster slcHV("hv.vrt");
  
     size_t length = slcHH.length();
     size_t width = slcHH.width();
@@ -95,9 +95,9 @@ TEST(Covariance, DualpolCheck)
     }
 
     // raster of the computed covariance values 
-    isce::io::Raster c_hh_hh_raster("cov_hh_hh.vrt");
-    isce::io::Raster c_hh_hv_raster("cov_hh_hv.vrt");
-    isce::io::Raster c_hv_hv_raster("cov_hv_hv.vrt");
+    isce3::io::Raster c_hh_hh_raster("cov_hh_hh.vrt");
+    isce3::io::Raster c_hh_hv_raster("cov_hh_hv.vrt");
+    isce3::io::Raster c_hv_hv_raster("cov_hv_hv.vrt");
 
     // valarrays to read the computed covariance values
     std::valarray<std::complex<float>> c_hh_hh(length*width);
@@ -131,8 +131,8 @@ void createTestData() {
     size_t length = 10;
 
     // make rasters for two SLC polarizations
-    isce::io::Raster slcHH("hh.vrt", width, length, 1, GDT_CFloat32, "VRT");
-    isce::io::Raster slcHV("hv.vrt", width, length, 1, GDT_CFloat32, "VRT");
+    isce3::io::Raster slcHH("hh.vrt", width, length, 1, GDT_CFloat32, "VRT");
+    isce3::io::Raster slcHV("hv.vrt", width, length, 1, GDT_CFloat32, "VRT");
 
     // consider some values for the two slcs
     

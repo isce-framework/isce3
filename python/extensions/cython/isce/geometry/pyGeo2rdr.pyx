@@ -12,7 +12,7 @@ from Geo2rdr cimport *
 
 cdef class pyGeo2rdr:
     """
-    Cython wrapper for isce::geometry::Geo2rdr.
+    Cython wrapper for isce3::geometry::Geo2rdr.
 
     Args:
         radarGrid (pyRadarGridParameters)    radar grid parameters object .

@@ -12,21 +12,21 @@
 #include <vector>
 #include "gtest/gtest.h"
 
-// isce::core
+// isce3::core
 #include "isce3/core/Constants.h"
 #include "isce3/core/Utilities.h"
 #include "isce3/core/Matrix.h"
 
 TEST(MatrixTest, SimpleConstructor) {
     // Make a matrix with a fixed shape
-    isce::core::Matrix<double> M(3, 3);
+    isce3::core::Matrix<double> M(3, 3);
     ASSERT_EQ(M.width(), 3);
     ASSERT_EQ(M.length(), 3);
 }
 
 TEST(MatrixTest, Resize) {
     // Make a matrix with a fixed shape
-    isce::core::Matrix<double> M(3, 3);
+    isce3::core::Matrix<double> M(3, 3);
     // Resize it
     M.resize(5, 5);
     // Check shape 
@@ -36,7 +36,7 @@ TEST(MatrixTest, Resize) {
 
 TEST(MatrixTest, FixedValues) {
     // Make a matrix with a fixed shape
-    isce::core::Matrix<double> M(3, 3);
+    isce3::core::Matrix<double> M(3, 3);
 
     // Fill it with zeros and check values
     M.zeros();
@@ -53,9 +53,9 @@ TEST(MatrixTest, FixedValues) {
 
 TEST(MatrixTest, VectorConstructor) {
     // Make a vector of values
-    std::vector<double> values = isce::core::arange(0.0, 9.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a matrix from the vector
-    isce::core::Matrix<double> M(values, 3);
+    isce3::core::Matrix<double> M(values, 3);
 
     // Check the shape
     ASSERT_EQ(M.width(), 3);
@@ -74,11 +74,11 @@ TEST(MatrixTest, VectorConstructor) {
 
 TEST(MatrixTest, CopyConstructor) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 9.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a matrix from the vector
-    isce::core::Matrix<double> M(values, 3);
+    isce3::core::Matrix<double> M(values, 3);
     // Make a shallow copy
-    isce::core::Matrix<double> N(M);
+    isce3::core::Matrix<double> N(M);
 
     // Check shapes are equal
     ASSERT_EQ(M.width(), N.width());
@@ -104,11 +104,11 @@ TEST(MatrixTest, CopyConstructor) {
 
 TEST(MatrixTest, DeepCopyConstructor) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 9.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a const matrix from the vector
-    const isce::core::Matrix<double> M(values, 3);
+    const isce3::core::Matrix<double> M(values, 3);
     // Make a deep copy (by passing in const matrix)
-    isce::core::Matrix<double> N(M);
+    isce3::core::Matrix<double> N(M);
 
     // Change value of middle element of copied matrix
     N(1, 1) = 20.0;
@@ -118,11 +118,11 @@ TEST(MatrixTest, DeepCopyConstructor) {
 
 TEST(MatrixTest, MatrixView) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 9.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a matrix from the vector
-    isce::core::Matrix<double> M(values, 3);
+    isce3::core::Matrix<double> M(values, 3);
     // Get a view of a subset of the matrix
-    const isce::core::Matrix<double>::view_t view = M.submat(1, 1, 2, 2);
+    const isce3::core::Matrix<double>::view_t view = M.submat(1, 1, 2, 2);
 
     // Vector of expected values
     std::vector<double> expected{4.0, 5.0, 7.0, 8.0};
@@ -138,11 +138,11 @@ TEST(MatrixTest, MatrixView) {
 
 TEST(MatrixTest, MatrixViewConstructor) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 9.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a matrix from the vector
-    isce::core::Matrix<double> M(values, 3);
+    isce3::core::Matrix<double> M(values, 3);
     // Construct a new matrix from a view of a subset of the matrix
-    isce::core::Matrix<double>N(M.submat(1, 1, 2, 2));
+    isce3::core::Matrix<double>N(M.submat(1, 1, 2, 2));
 
     // Vector of expected values
     std::vector<double> expected{4.0, 5.0, 7.0, 8.0};
@@ -159,12 +159,12 @@ TEST(MatrixTest, MatrixViewConstructor) {
 
 TEST(MatrixTest, MatrixViewSet) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 9.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a matrix from the vector
-    isce::core::Matrix<double> M(values, 3);
+    isce3::core::Matrix<double> M(values, 3);
 
     // Make a new matrix of zeros
-    isce::core::Matrix<double> N(3, 3);
+    isce3::core::Matrix<double> N(3, 3);
     N.zeros();
 
     // Set column of matrix with row from original matrix

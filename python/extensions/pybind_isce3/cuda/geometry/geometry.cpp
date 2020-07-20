@@ -9,7 +9,7 @@ void addsubmodule_cuda_geometry(py::module & m)
     py::module geometry = m.def_submodule("geometry");
 
     // forward declare bound classes
-    py::class_<isce::cuda::geometry::Topo>
+    py::class_<isce3::cuda::geometry::Topo>
         pyRdr2Geo(geometry, "Rdr2Geo");
 
     // add bindings

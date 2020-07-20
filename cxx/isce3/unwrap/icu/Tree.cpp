@@ -5,7 +5,7 @@
 #include "ICU.h" // ICU, idx2_t, offset2_t
 #include "SearchTable.h" // SearchTable
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 template<typename T, class URNG>

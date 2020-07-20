@@ -5,7 +5,7 @@
 
 #include <isce3/fft/FFT.h>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 /** Range compression processor */
 class RangeComp {
@@ -100,8 +100,8 @@ private:
     Mode _mode;
     std::vector<std::complex<float>> _reffn;
     std::vector<std::complex<float>> _wkspc;
-    isce::fft::FwdFFTPlan<float> _fftplan;
-    isce::fft::InvFFTPlan<float> _ifftplan;
+    isce3::fft::FwdFFTPlan<float> _fftplan;
+    isce3::fft::InvFFTPlan<float> _ifftplan;
 };
 
 }}

@@ -3,11 +3,11 @@
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Matrix.h>
 
-void isce::geocode::baseband(isce::core::Matrix<std::complex<float>>& data,
+void isce3::geocode::baseband(isce3::core::Matrix<std::complex<float>>& data,
                              const double starting_range,
                              const double sensing_start,
                              const double range_pixel_spacing, const double prf,
-                             const isce::core::LUT2d<double>& doppler_lut)
+                             const isce3::core::LUT2d<double>& doppler_lut)
 {
 
     size_t length = data.length();

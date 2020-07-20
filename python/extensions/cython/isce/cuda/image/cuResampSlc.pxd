@@ -7,14 +7,14 @@
 from libcpp.string cimport string
 from libcpp cimport bool
 
-# Cython declaration for isce::io objects
+# Cython declaration for isce3::io objects
 from isceextension cimport LUT2d
 from isceextension cimport Poly2d
 from isceextension cimport Product
 from isceextension cimport Raster
 from isceextension cimport Swath
 
-cdef extern from "isce3/cuda/image/ResampSlc.h" namespace "isce::cuda::image":
+cdef extern from "isce3/cuda/image/ResampSlc.h" namespace "isce3::cuda::image":
 
     # ResampSlc class
     cdef cppclass ResampSlc:
@@ -22,7 +22,7 @@ cdef extern from "isce3/cuda/image/ResampSlc.h" namespace "isce::cuda::image":
         # Default constructor with a Product (no flattening)
         ResampSlc(const Product & product, char) except +
 
-        # Constructor from an isce::product::Product and reference product (flattening)
+        # Constructor from an isce3::product::Product and reference product (flattening)
         ResampSlc(const Product & product,
                   const Product & refProduct,
                   char) except +

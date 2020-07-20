@@ -8,14 +8,14 @@
 
 namespace py = pybind11;
 
-using isce::geometry::Geocode;
-using isce::geometry::geocodeMemoryMode;
-using isce::geometry::geocodeOutputMode;
-using isce::geometry::rtcInputRadiometry;
-using isce::geometry::rtcAlgorithm;
-using isce::core::parseDataInterpMethod;
-using isce::product::RadarGridParameters;
-using isce::io::Raster;
+using isce3::geometry::Geocode;
+using isce3::geometry::geocodeMemoryMode;
+using isce3::geometry::geocodeOutputMode;
+using isce3::geometry::rtcInputRadiometry;
+using isce3::geometry::rtcAlgorithm;
+using isce3::core::parseDataInterpMethod;
+using isce3::product::RadarGridParameters;
+using isce3::io::Raster;
 
 template<typename T>
 void addbinding(py::class_<Geocode<T>> &pyGeocode)
@@ -76,7 +76,7 @@ void addbinding(py::class_<Geocode<T>> &pyGeocode)
                     Raster * input_rtc,
                     Raster * output_rtc,
                     geocodeMemoryMode mem_mode,
-                    isce::core::dataInterpMethod interp_mode
+                    isce3::core::dataInterpMethod interp_mode
                     )
             {
                 self.geocode(radar_grid,
@@ -122,7 +122,7 @@ void addbinding(py::class_<Geocode<T>> &pyGeocode)
             py::arg("input_rtc") = nullptr,
             py::arg("output_rtc") = nullptr,
             py::arg("mem_mode") = geocodeMemoryMode::AUTO,
-            py::arg("interp_mode") = isce::core::BIQUINTIC_METHOD)
+            py::arg("interp_mode") = isce3::core::BIQUINTIC_METHOD)
     ;
 }
 

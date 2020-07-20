@@ -15,7 +15,7 @@ struct IH5Test : public ::testing::Test {
         void SetUp()
         {
             GDALAllRegister();
-            isce::io::GDALRegister_IH5();
+            isce3::io::GDALRegister_IH5();
         }
 
         void TearDown()
@@ -43,12 +43,12 @@ TYPED_TEST(IH5Test, nochunk) {
     //Create a matrix of typeparam
     int width = 20;
     int length = 30;
-    isce::core::Matrix<TypeParam> _matrix(length, width);
+    isce3::core::Matrix<TypeParam> _matrix(length, width);
     for(size_t ii=0; ii< (width*length); ii++) 
         _matrix(ii) = (ii%255); 
 
     //Get checksum for the data
-    isce::io::Raster matRaster(_matrix); 
+    isce3::io::Raster matRaster(_matrix); 
     int matsum = GDALChecksumImage(matRaster.dataset()->GetRasterBand(1), 0, 0, width, length); 
 
     //Create a HDF5 file
@@ -56,18 +56,18 @@ TYPED_TEST(IH5Test, nochunk) {
     struct stat buffer; 
     if ( stat(wfilename.c_str(), &buffer) == 0 ) 
         std::remove(wfilename.c_str()); 
-    isce::io::IH5File fic(wfilename, 'x'); 
+    isce3::io::IH5File fic(wfilename, 'x'); 
     
-    isce::io::IGroup grp = fic.openGroup("/"); 
+    isce3::io::IGroup grp = fic.openGroup("/"); 
     std::array<int,2> shp={length, width};
-    isce::io::IDataSet dset = grp.createDataSet(std::string("data"), _matrix.data(), shp); 
+    isce3::io::IDataSet dset = grp.createDataSet(std::string("data"), _matrix.data(), shp); 
     {
-        isce::io::Raster img(dset.toGDAL()); 
+        isce3::io::Raster img(dset.toGDAL()); 
         
         //Check contents of the HDF5 file
         ASSERT_EQ( img.width(), width); 
         ASSERT_EQ( img.length(), length); 
-        ASSERT_EQ( img.dtype(1), isce::io::asGDT<TypeParam>);
+        ASSERT_EQ( img.dtype(1), isce3::io::asGDT<TypeParam>);
 
         int hsum = GDALChecksumImage(img.dataset()->GetRasterBand(1),0,0,width,length);
         ASSERT_EQ( hsum, matsum);
@@ -91,12 +91,12 @@ TYPED_TEST(IH5Test, chunk) {
     //Create a matrix of typeparam
     int width = 250;
     int length = 200;
-    isce::core::Matrix<TypeParam> _matrix(length, width);
+    isce3::core::Matrix<TypeParam> _matrix(length, width);
     for(size_t ii=0; ii< (width*length); ii++)
         _matrix(ii) = (ii%255);
 
     //Get checksum for the data
-    isce::io::Raster matRaster(_matrix);
+    isce3::io::Raster matRaster(_matrix);
     int matsum = GDALChecksumImage(matRaster.dataset()->GetRasterBand(1), 120, 120, 10, 10);
 
     //Create a HDF5 file
@@ -104,19 +104,19 @@ TYPED_TEST(IH5Test, chunk) {
     struct stat buffer;
     if ( stat(wfilename.c_str(), &buffer) == 0 )
         std::remove(wfilename.c_str());
-    isce::io::IH5File fic(wfilename, 'x');
+    isce3::io::IH5File fic(wfilename, 'x');
 
-    isce::io::IGroup grp = fic.openGroup("/");
+    isce3::io::IGroup grp = fic.openGroup("/");
     std::array<int,2> shp={length, width};
-    isce::io::IDataSet dset = grp.createDataSet<TypeParam>(std::string("data"), shp, 1);
+    isce3::io::IDataSet dset = grp.createDataSet<TypeParam>(std::string("data"), shp, 1);
     dset.write(_matrix.data(), width*length);
     {
-        isce::io::Raster img(dset.toGDAL());
+        isce3::io::Raster img(dset.toGDAL());
 
         //Check contents of the HDF5 file
         ASSERT_EQ( img.width(), width);
         ASSERT_EQ( img.length(), length);
-        ASSERT_EQ( img.dtype(1), isce::io::asGDT<TypeParam>);
+        ASSERT_EQ( img.dtype(1), isce3::io::asGDT<TypeParam>);
 
         int hsum = GDALChecksumImage(img.dataset()->GetRasterBand(1),120,120,10,10);
         ASSERT_EQ( hsum, matsum);

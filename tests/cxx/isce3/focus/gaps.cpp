@@ -15,7 +15,7 @@ TEST(GapDetectionTest, Mask)
     double fs = 1.0;
     double dwp = 10.0;
     double chirplen = 1.0;
-    isce::focus::GapMask masker(t, n, dwp, fs, chirplen);
+    isce3::focus::GapMask masker(t, n, dwp, fs, chirplen);
     auto mask = masker.mask(0);
     for (int i = 0; i < n; ++i) {
         EXPECT_EQ(i % 2 == 0, mask[i]);

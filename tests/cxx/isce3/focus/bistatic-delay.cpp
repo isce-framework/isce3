@@ -4,8 +4,8 @@
 #include <isce3/core/Vector.h>
 #include <isce3/focus/BistaticDelay.h>
 
-using isce::core::Vec3;
-using isce::focus::bistaticDelay;
+using isce3::core::Vec3;
+using isce3::focus::bistaticDelay;
 
 /** Analytical linear orbit with constant velocity */
 class LinearOrbit {
@@ -45,7 +45,7 @@ TEST(BistaticDelay, BistaticDelay)
         // compare to roundtrip delay using platform position at time = t + tau
         Vec3 p1 = orbit.position(t + tau);
         double d = (x - p).norm() + (p1 - x).norm();
-        double dt = d / isce::core::speed_of_light;
+        double dt = d / isce3::core::speed_of_light;
 
         EXPECT_DOUBLE_EQ(tau, dt);
     }

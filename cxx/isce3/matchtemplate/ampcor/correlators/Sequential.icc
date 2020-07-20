@@ -584,8 +584,8 @@ _refRefine(cell_type * coarseArena, cell_type * refinedArena) const
     nthreads += 1;
 
     // step 1: initiate FFT processor 
-    isce::signal::Signal<float> * procFFT = nullptr;
-    procFFT = new (std::nothrow) isce::signal::Signal<float>(nthreads);
+    isce3::signal::Signal<float> * procFFT = nullptr;
+    procFFT = new (std::nothrow) isce3::signal::Signal<float>(nthreads);
 
     // if something went wrong
     if (procFFT == nullptr) {
@@ -594,10 +594,10 @@ _refRefine(cell_type * coarseArena, cell_type * refinedArena) const
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while instanciating a isce::signal::Signal FFT processor" 
+            << "while instanciating a isce3::signal::Signal FFT processor" 
             << pyre::journal::endl;
         // and bail
-        throw std::runtime_error("while instanciating a isce::signal::Signal FFT processor");
+        throw std::runtime_error("while instanciating a isce3::signal::Signal FFT processor");
     }
 
 
@@ -739,8 +739,8 @@ _tgtRefine(cell_type * refinedArena) const
     nthreads += 1;
 
     // step 1: initiate FFT processor 
-    isce::signal::Signal<float> * procFFT = nullptr;
-    procFFT = new (std::nothrow) isce::signal::Signal<float>(nthreads);
+    isce3::signal::Signal<float> * procFFT = nullptr;
+    procFFT = new (std::nothrow) isce3::signal::Signal<float>(nthreads);
 
     // if something went wrong
     if (procFFT == nullptr) {
@@ -749,10 +749,10 @@ _tgtRefine(cell_type * refinedArena) const
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while instanciating a isce::signal::Signal FFT processor" 
+            << "while instanciating a isce3::signal::Signal FFT processor" 
             << pyre::journal::endl;
         // and bail
-        throw std::runtime_error("while instanciating a isce::signal::Signal FFT processor");
+        throw std::runtime_error("while instanciating a isce3::signal::Signal FFT processor");
     }
 
     
@@ -873,8 +873,8 @@ _zoomcor(value_type * gamma) const -> value_type *
     nthreads += 1;
 
     // step 3: initiate FFT processor 
-    isce::signal::Signal<float> * procFFT = nullptr;
-    procFFT = new (std::nothrow) isce::signal::Signal<float>(nthreads);
+    isce3::signal::Signal<float> * procFFT = nullptr;
+    procFFT = new (std::nothrow) isce3::signal::Signal<float>(nthreads);
 
     // if something went wrong
     if (procFFT == nullptr) {
@@ -883,10 +883,10 @@ _zoomcor(value_type * gamma) const -> value_type *
         // complain
         error
             << pyre::journal::at(__HERE__)
-            << "while instanciating a isce::signal::Signal FFT processor" 
+            << "while instanciating a isce3::signal::Signal FFT processor" 
             << pyre::journal::endl;
         // and bail
-        throw std::runtime_error("while instanciating a isce::signal::Signal FFT processor");
+        throw std::runtime_error("while instanciating a isce3::signal::Signal FFT processor");
     }
 
 

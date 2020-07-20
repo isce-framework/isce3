@@ -16,7 +16,7 @@ cdef extern from "<valarray>" namespace "std":
         size_t size()
 
 # Matrix
-cdef extern from "isce3/core/Matrix.h" namespace "isce::core":
+cdef extern from "isce3/core/Matrix.h" namespace "isce3::core":
     cdef cppclass Matrix[T]:
         # Constructors
         Matrix() except +

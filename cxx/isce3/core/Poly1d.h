@@ -20,7 +20,7 @@
  *
  * where \f$a_i\f$ represents the coefficients, \f$\mu\f$ represents the mean and 
  * \f$\sigma\f$ represents the norm*/
-class isce::core::Poly1d {
+class isce3::core::Poly1d {
 public:
 
     /** Order of the polynomial */
@@ -71,7 +71,7 @@ public:
     Poly1d derivative() const;
 };
 
-isce::core::Poly1d & isce::core::Poly1d::
+isce3::core::Poly1d & isce3::core::Poly1d::
 operator=(const Poly1d &rhs) {
     order = rhs.order;
     mean = rhs.mean;
@@ -80,7 +80,7 @@ operator=(const Poly1d &rhs) {
     return *this;
 }
 
-void isce::core::Poly1d::
+void isce3::core::Poly1d::
 setCoeff(int idx, double val) {
     if ((idx < 0) || (idx > order)){
         std::string errstr = "Poly1d::setCoeff - Trying to set coefficient " + 
@@ -90,7 +90,7 @@ setCoeff(int idx, double val) {
     coeffs[idx] = val;
 }
 
-double isce::core::Poly1d::
+double isce3::core::Poly1d::
 getCoeff(int idx) const {
     if ((idx < 0) || (idx > order)) {
         std::string errstr = "Poly1d::getCoeff - Trying to get coefficient " + 

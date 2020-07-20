@@ -8,7 +8,7 @@
 #include <isce3/core/Common.h>
 #include <isce3/core/Kernels.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 /**
  * CRTP base class for kernels
@@ -61,7 +61,7 @@ public:
     explicit constexpr BartlettKernel(double width) : Base(width) {}
 
     /** Construct from corresponding host kernel object */
-    BartlettKernel(const isce::core::BartlettKernel<T>& other)
+    BartlettKernel(const isce3::core::BartlettKernel<T>& other)
         : BartlettKernel(other.width())
     {}
 
@@ -83,7 +83,7 @@ public:
     constexpr LinearKernel() : Base(2.) {}
 
     /** Construct from corresponding host kernel object */
-    LinearKernel(const isce::core::LinearKernel<T>&) : LinearKernel() {}
+    LinearKernel(const isce3::core::LinearKernel<T>&) : LinearKernel() {}
 };
 
 /**
@@ -110,7 +110,7 @@ public:
     constexpr KnabKernel(double width, double bandwidth);
 
     /** Construct from corresponding host kernel object */
-    KnabKernel(const isce::core::KnabKernel<T>& other)
+    KnabKernel(const isce3::core::KnabKernel<T>& other)
         : Base(other.width()), _bandwidth(other.bandwidth())
     {}
 
@@ -180,7 +180,7 @@ public:
     TabulatedKernel(const OtherKernel& kernel, int n);
 
     /** Construct from corresponding host kernel object */
-    TabulatedKernel(const isce::core::TabulatedKernel<T>&);
+    TabulatedKernel(const isce3::core::TabulatedKernel<T>&);
 
     /**
      * Evaluate the kernel at a given location in [-halfwidth, halfwidth].
@@ -254,7 +254,7 @@ public:
     ChebyKernel(const OtherKernel& kernel, int n);
 
     /** Construct from corresponding host kernel object */
-    ChebyKernel(const isce::core::ChebyKernel<T>& other)
+    ChebyKernel(const isce3::core::ChebyKernel<T>& other)
         : Base(other.width()), _scale(4. / other.width()),
           _coeffs(other.coeffs())
     {}
@@ -275,6 +275,6 @@ private:
     thrust::device_vector<T> _coeffs;
 };
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core
 
 #include "Kernels.icc"

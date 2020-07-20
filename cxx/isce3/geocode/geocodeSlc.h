@@ -4,7 +4,7 @@
 #include <isce3/io/forward.h>
 #include <isce3/product/forward.h>
 
-namespace isce { namespace geocode {
+namespace isce3 { namespace geocode {
 
 /**
  * Geocode SLC
@@ -23,16 +23,16 @@ namespace isce { namespace geocode {
  * \param[in]  demBlockMargin    margin of a DEM block in degrees
  * \param[in]  flatten           flag to flatten the geocoded SLC
  */
-void geocodeSlc(isce::io::Raster& outputRaster, isce::io::Raster& inputRaster,
-                isce::io::Raster& demRaster,
-                const isce::product::RadarGridParameters& radarGrid,
-                const isce::product::GeoGridParameters& geoGrid,
-                const isce::core::Orbit& orbit,
-                const isce::core::LUT2d<double>& nativeDoppler,
-                const isce::core::LUT2d<double>& imageGridDoppler,
-                const isce::core::Ellipsoid& ellipsoid,
+void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
+                isce3::io::Raster& demRaster,
+                const isce3::product::RadarGridParameters& radarGrid,
+                const isce3::product::GeoGridParameters& geoGrid,
+                const isce3::core::Orbit& orbit,
+                const isce3::core::LUT2d<double>& nativeDoppler,
+                const isce3::core::LUT2d<double>& imageGridDoppler,
+                const isce3::core::Ellipsoid& ellipsoid,
                 const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
                 const size_t& linesPerBlock, const double& demBlockMargin,
                 const bool flatten = true);
 
-}} // namespace isce::geocode
+}} // namespace isce3::geocode

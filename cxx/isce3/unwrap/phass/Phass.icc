@@ -8,7 +8,7 @@
 #error "Phass.icc is an implementation detail of class Phass."
 #endif
 
-namespace isce::unwrap::phass
+namespace isce3::unwrap::phass
 {
     /** @param[in] corrThr correlation threshold*/
     inline void Phass::correlationThreshold(const double corrThr) 

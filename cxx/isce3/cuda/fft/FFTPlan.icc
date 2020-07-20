@@ -2,7 +2,7 @@
 #error "FFTPlan.icc is an implementation detail of FFTPlan.h"
 #endif
 
-namespace isce { namespace cuda { namespace fft {
+namespace isce3 { namespace cuda { namespace fft {
 
 template<typename T>
 FwdFFTPlan<T>::FwdFFTPlan(thrust::complex<T> * out, T * in, int n, int batch)

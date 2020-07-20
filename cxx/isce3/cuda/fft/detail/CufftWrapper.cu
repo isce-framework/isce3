@@ -2,7 +2,7 @@
 
 #include <isce3/cuda/except/Error.h>
 
-namespace isce { namespace cuda { namespace fft { namespace detail {
+namespace isce3 { namespace cuda { namespace fft { namespace detail {
 
 template<>
 void executePlan<CUFFT_FORWARD, float>(cufftHandle plan, void * in, void * out, cufftType type)

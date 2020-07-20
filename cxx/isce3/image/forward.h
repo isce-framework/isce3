@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace image {
+namespace isce3 { namespace image {
 
     class ResampSlc;
 

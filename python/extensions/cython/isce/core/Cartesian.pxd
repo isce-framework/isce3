@@ -4,10 +4,10 @@
 # Copyright 2017-2018
 #
 
-cdef extern from "isce3/core/forward.h" namespace "isce::core" nogil:
+cdef extern from "isce3/core/forward.h" namespace "isce3::core" nogil:
 
     # Three-element array for representing coordinate vectors
-    cdef cppclass Vec3 "isce::core::Vec3":
+    cdef cppclass Vec3 "isce3::core::Vec3":
         Vec3() except +
         double& operator[](size_t)
         Vec3 normalized()
@@ -16,7 +16,7 @@ cdef extern from "isce3/core/forward.h" namespace "isce::core" nogil:
     ctypedef Vec3 cartesian_t
 
     # Three-by-three matrix
-    cdef cppclass Mat3 "isce::core::Mat3":
+    cdef cppclass Mat3 "isce3::core::Mat3":
         Mat3() except +
         Vec3& operator[](size_t)
 

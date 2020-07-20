@@ -6,7 +6,7 @@
 
 #include "CufftWrapper.h"
 
-namespace isce { namespace cuda { namespace fft { namespace detail {
+namespace isce3 { namespace cuda { namespace fft { namespace detail {
 
 template<int Sign, typename T>
 class FFTPlanBase {

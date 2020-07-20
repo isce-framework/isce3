@@ -7,7 +7,7 @@
 // Just ensure that checkCudaErrors throws an ISCE CudaError
 TEST(CheckCudaErrors, BasicThrow) {
     EXPECT_THROW(checkCudaErrors(cudaSetDevice(-1)),
-                 isce::cuda::except::CudaError<cudaError_t>);
+                 isce3::cuda::except::CudaError<cudaError_t>);
 }
 
 // Check that a non-zero cufftResult throws an error
@@ -17,7 +17,7 @@ TEST(CheckCudaErrors, CufftResult) {
     thrust::device_vector<cufftComplex> signal;
     cufftComplex* data = signal.data().get();
     EXPECT_THROW(checkCudaErrors(cufftExecC2C(plan, data, data, CUFFT_FORWARD)),
-                 isce::cuda::except::CudaError<cufftResult>);
+                 isce3::cuda::except::CudaError<cufftResult>);
 }
 
 int main(int argc, char* argv[]) {

@@ -4,12 +4,12 @@
 #include <isce3/except/Error.h>
 #include <isce3/fft/FFTUtil.h>
 
-using isce::fft::nextPowerOfTwo;
-using isce::fft::nextFastPower;
+using isce3::fft::nextPowerOfTwo;
+using isce3::fft::nextFastPower;
 
 TEST(FFTUtilTest, NextPowerOfTwo)
 {
-    EXPECT_THROW( { nextPowerOfTwo(-1); }, isce::except::DomainError );
+    EXPECT_THROW( { nextPowerOfTwo(-1); }, isce3::except::DomainError );
 
     EXPECT_EQ( nextPowerOfTwo(0), 1 );
     EXPECT_EQ( nextPowerOfTwo(1), 1 );
@@ -23,7 +23,7 @@ TEST(FFTUtilTest, NextPowerOfTwo)
 
 TEST(FFTUtilTest, NextFastPower)
 {
-    EXPECT_THROW( { nextFastPower(-1); }, isce::except::DomainError );
+    EXPECT_THROW( { nextFastPower(-1); }, isce3::except::DomainError );
 
     EXPECT_EQ( nextFastPower(0), 1 );
     EXPECT_EQ( nextFastPower(1), 1 );

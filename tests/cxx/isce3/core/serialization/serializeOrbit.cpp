@@ -9,7 +9,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Serialization.h>
 
@@ -18,17 +18,17 @@
 
 TEST(OrbitTest, CheckArchive) {
     // Make an orbit
-    isce::core::Orbit orbit;
+    isce3::core::Orbit orbit;
 
     // Open the HDF5 product
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Open group containing orbit
-    isce::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/orbit");
+    isce3::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/orbit");
 
     // Deserialize the orbit
-    isce::core::loadFromH5(group, orbit);
+    isce3::core::loadFromH5(group, orbit);
 
     // Check we have the right number of state vectors
     ASSERT_EQ(orbit.size(), 11);
@@ -44,45 +44,45 @@ TEST(OrbitTest, CheckArchive) {
     ASSERT_NEAR(orbit.velocity(5)[2], -6055.488170, 1.0e-6);
 
     // Check date of middle vector
-    isce::core::DateTime dtime = orbit.referenceEpoch() + orbit.time(5);
+    isce3::core::DateTime dtime = orbit.referenceEpoch() + orbit.time(5);
     ASSERT_EQ(dtime.isoformat(), "2003-02-26T17:55:28.000000000");
 }
 
 TEST(OrbitTest, CheckWrite) {
     // Make an orbit
-    isce::core::Orbit orbit;
+    isce3::core::Orbit orbit;
 
     // Load orbit data
     {
         // Open the HDF5 product
         std::string h5file(TESTDATA_DIR "envisat.h5");
-        isce::io::IH5File file(h5file);
+        isce3::io::IH5File file(h5file);
 
         // Open group containing orbit
-        isce::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/orbit");
+        isce3::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/orbit");
 
         // Deserialize the orbit
-        isce::core::loadFromH5(group, orbit);
-        orbit.interpMethod(isce::core::OrbitInterpMethod::Legendre);
+        isce3::core::loadFromH5(group, orbit);
+        orbit.interpMethod(isce3::core::OrbitInterpMethod::Legendre);
     }
 
     // Write orbit data
     {
         // Create a dummy hdf5 file
         std::string dummyfile("dummy_orbit.h5");
-        isce::io::IH5File dummy(dummyfile, 'x');
+        isce3::io::IH5File dummy(dummyfile, 'x');
 
         // Write orbit to dataset
-        isce::io::IGroup group = dummy.createGroup("orbit");
-        isce::core::saveToH5(group, orbit);
+        isce3::io::IGroup group = dummy.createGroup("orbit");
+        isce3::core::saveToH5(group, orbit);
     }
 
     // Load a new orbit from created file
-    isce::core::Orbit newOrb;
+    isce3::core::Orbit newOrb;
     std::string h5file("dummy_orbit.h5");
-    isce::io::IH5File file(h5file);
-    isce::io::IGroup group = file.openGroup("orbit");
-    isce::core::loadFromH5(group, newOrb);
+    isce3::io::IH5File file(h5file);
+    isce3::io::IGroup group = file.openGroup("orbit");
+    isce3::core::loadFromH5(group, newOrb);
 
     // Check equality
     ASSERT_EQ(orbit, newOrb);

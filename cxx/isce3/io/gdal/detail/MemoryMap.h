@@ -6,7 +6,7 @@
 
 #include "../forward.h"
 
-namespace isce { namespace io { namespace gdal { namespace detail {
+namespace isce3 { namespace io { namespace gdal { namespace detail {
 
 class MemoryMap {
 public:
@@ -33,7 +33,7 @@ public:
     // Stride in bytes between the start of adjacent rows
     std::size_t rowstride() const { return _rowstride; }
 
-    friend class isce::io::gdal::Raster;
+    friend class isce3::io::gdal::Raster;
 
 private:
 

@@ -6,7 +6,7 @@
 #include <isce3/cuda/except/Error.h>
 #include <isce3/except/Error.h>
 
-namespace isce { namespace cuda { namespace io {
+namespace isce3 { namespace cuda { namespace io {
 
 inline
 fstreamCallback::fstreamCallback(const std::string * filename,
@@ -34,7 +34,7 @@ void fstreamCallback::write()
     ofs.open(*filename, std::ios::binary);
     if (!ofs) {
         std::string errmsg = "unable to open file " + (*filename) + " for writing";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 
     // seek to offset, read count bytes
@@ -42,12 +42,12 @@ void fstreamCallback::write()
     ofs.write(buffer, count);
     if (!ofs) {
         std::string errmsg = "error while writing to output file stream";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 }
 
 inline
-RasterCallback::RasterCallback(isce::io::Raster * raster,
+RasterCallback::RasterCallback(isce3::io::Raster * raster,
         char * buffer,
         std::size_t col,
         std::size_t row,
@@ -79,7 +79,7 @@ void RasterCallback::setBlock()
 inline
 FileDataStream::FileDataStream(
         const std::string & filename,
-        isce::cuda::core::Stream stream,
+        isce3::cuda::core::Stream stream,
         std::size_t buffer_size)
 :
     _filename {filename},
@@ -99,22 +99,22 @@ inline
 void FileDataStream::set_filename(const std::string & filename)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     _filename = filename;
 }
 
 inline
-isce::cuda::core::Stream FileDataStream::stream() const
+isce3::cuda::core::Stream FileDataStream::stream() const
 {
     return _stream;
 }
 
 inline
-void FileDataStream::set_stream(isce::cuda::core::Stream stream)
+void FileDataStream::set_stream(isce3::cuda::core::Stream stream)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     _stream = stream;
 }
@@ -129,7 +129,7 @@ inline
 void FileDataStream::resize_buffer(std::size_t buffer_size)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     _buffer.resize(buffer_size);
 }
@@ -138,7 +138,7 @@ inline
 void FileDataStream::load(void * dst, std::size_t offset, std::size_t count)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     // resize internal buffer if necessary
     if (count > _buffer.size()) {
@@ -150,7 +150,7 @@ void FileDataStream::load(void * dst, std::size_t offset, std::size_t count)
     ifs.open(_filename, std::ios::binary);
     if (!ifs) {
         std::string errmsg = "unable to open file " + _filename + " for reading";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 
     // seek to offset, read count bytes
@@ -158,7 +158,7 @@ void FileDataStream::load(void * dst, std::size_t offset, std::size_t count)
     ifs.read(_buffer.data(), count);
     if (!ifs) {
         std::string errmsg = "error while reading from input file stream";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 
     // copy to device
@@ -173,7 +173,7 @@ inline
 void FileDataStream::store(const void * src, std::size_t offset, std::size_t count)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     // resize internal buffer if necessary
     if (count > _buffer.size()) {
@@ -196,8 +196,8 @@ void FileDataStream::store(const void * src, std::size_t offset, std::size_t cou
 
 inline
 RasterDataStream::RasterDataStream(
-        isce::io::Raster * raster,
-        isce::cuda::core::Stream stream,
+        isce3::io::Raster * raster,
+        isce3::cuda::core::Stream stream,
         std::size_t buffer_size)
 :
     _raster {raster},
@@ -208,31 +208,31 @@ RasterDataStream::RasterDataStream(
 {}
 
 inline
-isce::io::Raster * RasterDataStream::raster() const
+isce3::io::Raster * RasterDataStream::raster() const
 {
     return _raster;
 }
 
 inline
-void RasterDataStream::set_raster(isce::io::Raster * raster)
+void RasterDataStream::set_raster(isce3::io::Raster * raster)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     _raster = raster;
 }
 
 inline
-isce::cuda::core::Stream RasterDataStream::stream() const
+isce3::cuda::core::Stream RasterDataStream::stream() const
 {
     return _stream;
 }
 
 inline
-void RasterDataStream::set_stream(isce::cuda::core::Stream stream)
+void RasterDataStream::set_stream(isce3::cuda::core::Stream stream)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     _stream = stream;
 }
@@ -247,7 +247,7 @@ inline
 void RasterDataStream::resize_buffer(std::size_t buffer_size)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     _buffer.resize(buffer_size);
 }
@@ -261,7 +261,7 @@ void RasterDataStream::load(T * dst,
         std::size_t length)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     // resize internal buffer if necessary
     std::size_t count = width * length * sizeof(T);
@@ -289,7 +289,7 @@ void RasterDataStream::store(const T * src,
         std::size_t length)
 {
     // wait til unlocked
-    isce::cuda::core::synchronize(_mutex);
+    isce3::cuda::core::synchronize(_mutex);
 
     // resize internal buffer if necessary
     std::size_t count = width * length * sizeof(T);

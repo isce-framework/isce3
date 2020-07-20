@@ -2,8 +2,8 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <isce3/core/Ellipsoid.h>
-using isce::core::Ellipsoid;
-using isce::core::Vec3;
+using isce3::core::Ellipsoid;
+using isce3::core::Vec3;
 
 //Some commonly used values
 Ellipsoid wgs84(6378137.0, 0.0066943799901);

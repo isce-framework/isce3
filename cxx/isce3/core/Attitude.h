@@ -15,7 +15,7 @@
 #include "DateTime.h"
 
 /** Base class for attitude data representation */
-class isce::core::Attitude {
+class isce3::core::Attitude {
 
     public:
         enum class Type { EulerAngles_t, Quaternion_t };
@@ -49,6 +49,6 @@ class isce::core::Attitude {
 };
 
 // Go ahead and define setYawOrientation here
-void isce::core::Attitude::yawOrientation(const std::string orientation) {
+void isce3::core::Attitude::yawOrientation(const std::string orientation) {
     _yaw_orientation = orientation;
 }

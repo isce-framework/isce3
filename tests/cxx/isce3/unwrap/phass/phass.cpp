@@ -4,15 +4,15 @@
 #include <gtest/gtest.h> // TEST, ASSERT_EQ, ASSERT_TRUE, testing::InitGoogleTest, RUN_ALL_TE  STS
 #include <valarray> // std::valarray, std::abs
 
-#include "isce3/unwrap/phass/Phass.h" // isce::unwrap::phass::Phass
-#include "isce3/io/Raster.h" // isce::io::Raster
+#include "isce3/unwrap/phass/Phass.h" // isce3::unwrap::phass::Phass
+#include "isce3/io/Raster.h" // isce3::io::Raster
 
 void runPhass();
 
 TEST(Phass, GetSetters)
 {
 
-    isce::unwrap::phass::Phass phassObj;
+    isce3::unwrap::phass::Phass phassObj;
 
     phassObj.correlationThreshold(0.5);
     ASSERT_EQ(phassObj.correlationThreshold(), 0.5);
@@ -61,11 +61,11 @@ TEST(Phass, CheckConnCompLabels)
 
 
     // Read connected component labels from prior test.
-    isce::io::Raster cclRasterOut("./labels");
+    isce3::io::Raster cclRasterOut("./labels");
     ASSERT_TRUE(cclRasterOut.length() == l && cclRasterOut.width() == w);
 
     // Read unwrapped phase from prior test.
-    isce::io::Raster outputUnwRaster("./unw");
+    isce3::io::Raster outputUnwRaster("./unw");
     ASSERT_TRUE(outputUnwRaster.length() == l && outputUnwRaster.width() == w);
     std::valarray<float> unw(l*w);
     outputUnwRaster.getBlock(unw, 0, 0, w, l);
@@ -128,17 +128,17 @@ void runPhass() {
     }
 
     // Create wrapped phase and correlation rasters
-    isce::io::Raster wrappedPhaseRaster("./intf", w, l, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster wrappedPhaseRaster("./intf", w, l, 1, GDT_Float32, "ENVI");
     wrappedPhaseRaster.setBlock(phase, 0, 0, w, l);
-    isce::io::Raster corrRaster("./corr", w, l, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster corrRaster("./corr", w, l, 1, GDT_Float32, "ENVI");
     corrRaster.setBlock(corr, 0, 0, w, l);
 
     // Init output unwrapped phase, connected component labels rasters
-    isce::io::Raster unwRaster("./unw", w, l, 1, GDT_Float32, "ENVI");
-    isce::io::Raster labelsRaster("./labels", w, l, 1, GDT_Int32, "ENVI");
+    isce3::io::Raster unwRaster("./unw", w, l, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster labelsRaster("./labels", w, l, 1, GDT_Int32, "ENVI");
 
     // Configure Phass.
-    isce::unwrap::phass::Phass phassObj;
+    isce3::unwrap::phass::Phass phassObj;
 
     //unwrap the interferogram
     phassObj.unwrap(wrappedPhaseRaster, corrRaster, unwRaster, labelsRaster);

@@ -17,7 +17,7 @@
  *
  *  The secondary SLC must be on the same image grid as the reference SLC, 
  */
-class isce::signal::Crossmul {
+class isce3::signal::Crossmul {
     public:
         // Constructor from product
         Crossmul() {};
@@ -25,29 +25,29 @@ class isce::signal::Crossmul {
         ~Crossmul() {};
         
         /*
-        void Crossmul(const isce::product::Product& referenceSLC,
-                    const isce::product::Product& secondarySLC,
-                    const isce::product::Product& outputInterferogram);
+        void Crossmul(const isce3::product::Product& referenceSLC,
+                    const isce3::product::Product& secondarySLC,
+                    const isce3::product::Product& outputInterferogram);
         */
 
 
         /** \brief Run crossmul */
-        void crossmul(isce::io::Raster& referenceSLC,
-                    isce::io::Raster& secondarySLC,
-                    isce::io::Raster& rngOffset,
-                    isce::io::Raster& interferogram,
-                    isce::io::Raster& coherence);
+        void crossmul(isce3::io::Raster& referenceSLC,
+                    isce3::io::Raster& secondarySLC,
+                    isce3::io::Raster& rngOffset,
+                    isce3::io::Raster& interferogram,
+                    isce3::io::Raster& coherence);
 
         /** \brief Run crossmul */
-        void crossmul(isce::io::Raster& referenceSLC, 
-                    isce::io::Raster& secondarySLC,
-                    isce::io::Raster& interferogram,
-                    isce::io::Raster& coherence);
+        void crossmul(isce3::io::Raster& referenceSLC, 
+                    isce3::io::Raster& secondarySLC,
+                    isce3::io::Raster& interferogram,
+                    isce3::io::Raster& coherence);
 
         /** \brief Run crossmul */
-        void crossmul(isce::io::Raster& referenceSLC,
-                    isce::io::Raster& secondarySLC,
-                    isce::io::Raster& interferogram);
+        void crossmul(isce3::io::Raster& referenceSLC,
+                    isce3::io::Raster& secondarySLC,
+                    isce3::io::Raster& interferogram);
 
         /** Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling*/
         void lookdownShiftImpact(size_t oversample, size_t fft_size,
@@ -62,14 +62,14 @@ class isce::signal::Crossmul {
                         std::valarray<std::complex<float>> &refSpectrum,
                         std::valarray<std::complex<float>> &secSpectrum,
                         std::valarray<double> &rangeFrequencies,
-                        isce::signal::Filter<float> &rngFilter,
+                        isce3::signal::Filter<float> &rngFilter,
                         size_t blockRows,
                         size_t ncols);
         
 
        /** Set doppler LUTs for reference and secondary SLCs*/
-        inline void doppler(isce::core::LUT1d<double>, 
-                            isce::core::LUT1d<double>);
+        inline void doppler(isce3::core::LUT1d<double>, 
+                            isce3::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double);
@@ -120,10 +120,10 @@ class isce::signal::Crossmul {
 
     private:
         //Doppler LUT for the refernce SLC
-        isce::core::LUT1d<double> _refDoppler;
+        isce3::core::LUT1d<double> _refDoppler;
 
         //Doppler LUT for the secondary SLC
-        isce::core::LUT1d<double> _secDoppler;
+        isce3::core::LUT1d<double> _secDoppler;
 
         //pulse repetition frequency
         double _prf;

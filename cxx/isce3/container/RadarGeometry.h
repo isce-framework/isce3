@@ -5,7 +5,7 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/product/RadarGridParameters.h>
 
-namespace isce {
+namespace isce3 {
 namespace container {
 
 /**
@@ -15,13 +15,13 @@ namespace container {
  */
 class RadarGeometry {
 private:
-    using DateTime = isce::core::DateTime;
-    using LookSide = isce::core::LookSide;
-    using Orbit = isce::core::Orbit;
-    using RadarGridParameters = isce::product::RadarGridParameters;
+    using DateTime = isce3::core::DateTime;
+    using LookSide = isce3::core::LookSide;
+    using Orbit = isce3::core::Orbit;
+    using RadarGridParameters = isce3::product::RadarGridParameters;
 
-    template<typename T> using Linspace = isce::core::Linspace<T>;
-    template<typename T> using LUT2d = isce::core::LUT2d<T>;
+    template<typename T> using Linspace = isce3::core::Linspace<T>;
+    template<typename T> using LUT2d = isce3::core::LUT2d<T>;
 
 public:
     RadarGeometry(const RadarGridParameters& radar_grid, const Orbit& orbit,
@@ -61,6 +61,6 @@ private:
 };
 
 } // namespace container
-} // namespace isce
+} // namespace isce3
 
 #include "RadarGeometry.icc"

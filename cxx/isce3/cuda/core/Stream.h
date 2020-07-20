@@ -4,7 +4,7 @@
 
 #include "Event.h"
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 /** Thin RAII wrapper around cudaStream_t */
 class Stream {

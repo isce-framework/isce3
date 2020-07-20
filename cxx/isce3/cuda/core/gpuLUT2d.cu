@@ -5,7 +5,7 @@
 #include <isce3/cuda/core/gpuInterpolator.h>
 #include <isce3/cuda/except/Error.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 __device__ double clamp(double d, double min, double max)
 {
@@ -16,14 +16,14 @@ __device__ double clamp(double d, double min, double max)
 // Kernel for initializing interpolation object.
 template<typename T>
 __global__ void initInterpKernel(gpuInterpolator<T>** interp,
-                                 isce::core::dataInterpMethod interpMethod)
+                                 isce3::core::dataInterpMethod interpMethod)
 {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        if (interpMethod == isce::core::BILINEAR_METHOD) {
+        if (interpMethod == isce3::core::BILINEAR_METHOD) {
             (*interp) = new gpuBilinearInterpolator<T>();
-        } else if (interpMethod == isce::core::BICUBIC_METHOD) {
+        } else if (interpMethod == isce3::core::BICUBIC_METHOD) {
             (*interp) = new gpuBicubicInterpolator<T>();
-        } else if (interpMethod == isce::core::BIQUINTIC_METHOD) {
+        } else if (interpMethod == isce3::core::BIQUINTIC_METHOD) {
             (*interp) = new gpuSpline2dInterpolator<T>(6);
         } else {
             (*interp) = new gpuBilinearInterpolator<T>();
@@ -71,7 +71,7 @@ void gpuLUT2d<T>::_finalizeInterp()
 
 // Deep copy constructor from CPU LUT2d
 template<typename T>
-gpuLUT2d<T>::gpuLUT2d(const isce::core::LUT2d<T>& lut)
+gpuLUT2d<T>::gpuLUT2d(const isce3::core::LUT2d<T>& lut)
     : _haveData(lut.haveData()), _boundsError(lut.boundsError()),
       _refValue(lut.refValue()), _xstart(lut.xStart()), _ystart(lut.yStart()),
       _dx(lut.xSpacing()), _dy(lut.ySpacing()), _length(lut.length()),
@@ -88,7 +88,7 @@ gpuLUT2d<T>::gpuLUT2d(const isce::core::LUT2d<T>& lut)
     checkCudaErrors(cudaMalloc((T**) &_data, N * sizeof(T)));
 
     // Copy LUT data
-    const isce::core::Matrix<T>& lutData = lut.data();
+    const isce3::core::Matrix<T>& lutData = lut.data();
     checkCudaErrors(cudaMemcpy(_data, lutData.data(), N * sizeof(T),
                                cudaMemcpyHostToDevice));
 
@@ -225,4 +225,4 @@ T gpuLUT2d<T>::eval_h(double az, double rng)
 template class gpuLUT2d<double>;
 template class gpuLUT2d<float>;
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core

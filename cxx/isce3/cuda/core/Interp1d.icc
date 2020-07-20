@@ -3,13 +3,13 @@
 
 #include <isce3/cuda/math/ComplexMultiply.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 template<class Kernel, typename T>
 CUDA_HOSTDEV inline T interp1d(const Kernel& kernel, const T* x, size_t length,
                                size_t stride, double t, bool periodic)
 {
-    using isce::math::complex_multiply::operator*;
+    using isce3::math::complex_multiply::operator*;
 
     auto width = static_cast<int>(std::ceil(kernel.width()));
     auto i0 = (width % 2 == 0) ? static_cast<long>(std::ceil(t))
@@ -35,4 +35,4 @@ CUDA_HOSTDEV inline T interp1d(const Kernel& kernel, const T* x, size_t length,
     return static_cast<T>(sum);
 }
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core

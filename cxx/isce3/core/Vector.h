@@ -8,7 +8,7 @@
 #include <Eigen/Dense>
 #include "Common.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 template<int N, typename T>
 class Vector : public Eigen::Matrix<T, N, 1> {
@@ -25,4 +25,4 @@ CUDA_HOSTDEV inline Vec3 normalPlane(const Vec3& p1,
     return p13.cross(p12).normalized();
 }
 
-}} // namespace isce::core
+}} // namespace isce3::core

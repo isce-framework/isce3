@@ -12,7 +12,7 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/forward.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
     /** Abstract base class for individual projections
      *
@@ -21,10 +21,10 @@ namespace isce { namespace cuda { namespace core {
      * inverse - To convert expected projection system to llh (radians)
      */
     struct ProjectionBase {
-        typedef isce::core::Vec3        Vec3;
+        typedef isce3::core::Vec3        Vec3;
 
         /** Ellipsoid object for projections - currently only WGS84 */
-        isce::core::Ellipsoid ellipse;
+        isce3::core::Ellipsoid ellipse;
         /** Type of projection system. This can be used to check if projection systems are equal
          * Private member and should not be modified after initialization*/
         int _epsgcode;
@@ -148,5 +148,5 @@ namespace isce { namespace cuda { namespace core {
     CUDA_HOSTDEV ProjectionBase* createProj(int epsg);
 
     CUDA_DEV int projInverse(int code, const double* in, double* out_llh);
-    CUDA_DEV int projInverse(int code, const isce::core::Vec3& in, isce::core::Vec3& out_llh);
+    CUDA_DEV int projInverse(int code, const isce3::core::Vec3& in, isce3::core::Vec3& out_llh);
 }}}

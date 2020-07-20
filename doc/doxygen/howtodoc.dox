@@ -11,7 +11,7 @@ Developers are expected to document their functions using <a href="https://www.s
 
 \subsubsection docinlinecppzero Part of data structure declaration with no input arguments
 
-These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of returning a computed value. In this case, we will use a simple one line description. For example, isce::core::Ellipsoid::a()
+These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of returning a computed value. In this case, we will use a simple one line description. For example, isce3::core::Ellipsoid::a()
 
 \code{.cpp}
 
@@ -22,7 +22,7 @@ double a() const {return _a;}
 
 \subsubsection docinlinecppone Part of data structure declaration with one input argument
 
-These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of setting a value with input or perform a simple computation with input. In this case, we will user the "brief" keyword from doxygen to provide a one line description and "param" keyword to describe the parameter in detail. For example, isce::core::Ellipsoid::a(double)
+These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of setting a value with input or perform a simple computation with input. In this case, we will user the "brief" keyword from doxygen to provide a one line description and "param" keyword to describe the parameter in detail. For example, isce3::core::Ellipsoid::a(double)
 
 \code{.cpp}
 
@@ -36,7 +36,7 @@ void a(double val) {_a = val;}
 
 \subsubsection docinlinecppmulti With multiple inputs
 
-These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function isce::core::Ellipsoid::rDir can be found in two places - first in the class declaration as 
+These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function isce3::core::Ellipsoid::rDir can be found in two places - first in the class declaration as 
 
 \code{.cpp}
 
@@ -54,7 +54,7 @@ and later in the header file, just before the function declaration as
  *
  *  Heading is measured in clockwise direction from the North direction.
  *  See <a href="https://en.wikipedia.org/wiki/Earth_radius#Directional">Directional Radius</a> */
-double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
+double isce3::core::Ellipsoid::rDir(double hdg, double lat) const {
     auto re = rEast(lat);
     auto rn = rNorth(lat);
     return (re * rn) / ((re * std::pow(std::cos(hdg), 2)) 
@@ -71,11 +71,11 @@ For functions that are defined within a namespace and are not a member of a clas
 
 /*/** */*  \file isce/core/Serialization.h
  *
- * Serialization functions for isce::core objects. */
+ * Serialization functions for isce3::core objects. */
 
 //! The isce namespace
-namespace isce {
-    //! The isce::core namespace
+namespace isce3 {
+    //! The isce3::core namespace
     namespace core {
 
 \endcode
@@ -84,7 +84,7 @@ namespace isce {
 
 \subsubsection doccppregheader Brief description in header file
 
-For all regular C++ functions that are not inlined, a brief one line description must be provided in the header file irrespective the number of input arguments. For example, class isce::core::Ellipsoid::xyzToLonLat
+For all regular C++ functions that are not inlined, a brief one line description must be provided in the header file irrespective the number of input arguments. For example, class isce3::core::Ellipsoid::xyzToLonLat
 
 \code{.cpp}
 
@@ -95,7 +95,7 @@ void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
 
 \subsubsection doccppregbody Detailed description in function specfication
 
-The detailed description of individual parameters must be provided just before the function specification. The detailed description can also include math equations and references to publications or reports. For example, isce::core::Ellipsoid::xyzToLonLat
+The detailed description of individual parameters must be provided just before the function specification. The detailed description can also include math equations and references to publications or reports. For example, isce3::core::Ellipsoid::xyzToLonLat
 
 \code{.cpp}
 
@@ -103,7 +103,7 @@ The detailed description of individual parameters must be provided just before t
  *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
  *
  *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
-void isce::core::Ellipsoid::
+void isce3::core::Ellipsoid::
 xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
 
 \endcode
@@ -214,7 +214,7 @@ Python class documentation will be extracted from the docstring immediately foll
 \code{.py}
 cdef class pyEllipsoid:
     '''
-    Python wrapper for isce::core::Ellipsoid
+    Python wrapper for isce3::core::Ellipsoid
 
     Args:
         a (Optional[float]): Semi-major axis of Ellipsoid in m.

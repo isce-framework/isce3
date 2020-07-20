@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace product {
+namespace isce3 { namespace product {
 
     class Product;
     class RadarGridParameters;

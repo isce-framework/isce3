@@ -3,7 +3,7 @@
 #include <isce3/core/Common.h>
 #include <isce3/core/forward.h>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 /**
  * Compute the two-way propagation delay between the radar antenna phase center
@@ -21,9 +21,9 @@ namespace isce { namespace focus {
  * \returns     The bistatic propagation delay (s)
  */
 CUDA_HOSTDEV
-double bistaticDelay(const isce::core::Vec3 & p,
-                     const isce::core::Vec3 & v,
-                     const isce::core::Vec3 & x);
+double bistaticDelay(const isce3::core::Vec3 & p,
+                     const isce3::core::Vec3 & v,
+                     const isce3::core::Vec3 & x);
 
 }}
 

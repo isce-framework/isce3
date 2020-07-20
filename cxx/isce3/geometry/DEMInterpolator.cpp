@@ -10,7 +10,7 @@
 #include <isce3/core/Projections.h>
 #include <isce3/io/Raster.h>
 
-isce::geometry::DEMInterpolator::
+isce3::geometry::DEMInterpolator::
 ~DEMInterpolator() {
     if (_interp) {
         delete _interp;
@@ -28,8 +28,8 @@ isce::geometry::DEMInterpolator::
   * @param[in] maxLat Latitude of northern edge of bounding box
   *
   * Loads a DEM subset given the extents of a bounding box */
-void isce::geometry::DEMInterpolator::
-loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
+void isce3::geometry::DEMInterpolator::
+loadDEM(isce3::io::Raster & demRaster, double minX, double maxX,
         double minY, double maxY) {
 
     // Initialize journal
@@ -50,7 +50,7 @@ loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
     //Initialize projection
     int epsgcode = demRaster.getEPSG();
     _epsgcode = epsgcode;
-    _proj = isce::core::createProj(epsgcode);
+    _proj = isce3::core::createProj(epsgcode);
 
     // Validate requested geographic bounds with input DEM raster
     if (minX < firstX) {
@@ -95,7 +95,7 @@ loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
     demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
 
     // Initialize internal interpolator
-    _interp = isce::core::createInterpolator<float>(_interpMethod);
+    _interp = isce3::core::createInterpolator<float>(_interpMethod);
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;
@@ -106,8 +106,8 @@ loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
 /** @param[in] demRaster input DEM raster to subset
   *
   * Loads the entire DEM */
-void isce::geometry::DEMInterpolator::
-loadDEM(isce::io::Raster & demRaster) {
+void isce3::geometry::DEMInterpolator::
+loadDEM(isce3::io::Raster & demRaster) {
 
     //Get the dimensions of the raster
     int width = demRaster.width();
@@ -126,7 +126,7 @@ loadDEM(isce::io::Raster & demRaster) {
     //Initialize projection
     int epsgcode = demRaster.getEPSG();
     _epsgcode = epsgcode;
-    _proj = isce::core::createProj(epsgcode);
+    _proj = isce3::core::createProj(epsgcode);
 
     // Store actual starting lat/lon for raster subset
     _xstart = firstX;
@@ -141,7 +141,7 @@ loadDEM(isce::io::Raster & demRaster) {
     demRaster.getBlock(_dem.data(), 0, 0, width, length);
 
     // Initialize internal interpolator
-    _interp = isce::core::createInterpolator<float>(_interpMethod);
+    _interp = isce3::core::createInterpolator<float>(_interpMethod);
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;
@@ -149,7 +149,7 @@ loadDEM(isce::io::Raster & demRaster) {
 
 
 // Debugging output
-void isce::geometry::DEMInterpolator::
+void isce3::geometry::DEMInterpolator::
 declare() const {
     pyre::journal::info_t info("isce.core.DEMInterpolator");
     info << "Actual DEM bounds used:" << pyre::journal::newline
@@ -163,7 +163,7 @@ declare() const {
 /** @param[out] maxValue Maximum DEM height
   * @param[out] meanValue Mean DEM height
   * @param[in] info Pyre journal channel for printing info. */
-void isce::geometry::DEMInterpolator::
+void isce3::geometry::DEMInterpolator::
 computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) {
     // Announce myself
     info << "Computing DEM statistics" << pyre::journal::newline << pyre::journal::newline;
@@ -193,8 +193,8 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
 }
 
 // Compute middle latitude and longitude using reference height
-isce::geometry::DEMInterpolator::cartesian_t
-isce::geometry::DEMInterpolator::
+isce3::geometry::DEMInterpolator::cartesian_t
+isce3::geometry::DEMInterpolator::
 midLonLat() const {
     // Create coordinates for middle X/Y
     cartesian_t xyz{midX(), midY(), _refHeight};
@@ -207,7 +207,7 @@ midLonLat() const {
   * @param[in] lat Latitude of interpolation point.
   *
   * Interpolate DEM at a given longitude and latitude */
-double isce::geometry::DEMInterpolator::
+double isce3::geometry::DEMInterpolator::
 interpolateLonLat(double lon, double lat) const {
 
     // If we don't have a DEM, just return reference height
@@ -231,7 +231,7 @@ interpolateLonLat(double lon, double lat) const {
   * @param[in] y Y-coordinate of interpolation point.
   *
   * Interpolate DEM at native coordinates */
-double isce::geometry::DEMInterpolator::
+double isce3::geometry::DEMInterpolator::
 interpolateXY(double x, double y) const {
 
     // If we don't have a DEM, just return reference height

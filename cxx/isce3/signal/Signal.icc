@@ -15,7 +15,7 @@
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 nextPowerOfTwo(size_t N, size_t &fftLength)
 {
     for (size_t i = 0; i < 17; ++i) {
@@ -31,7 +31,7 @@ nextPowerOfTwo(size_t N, size_t &fftLength)
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _fwd_configureRangeFFT(int ncolumns, int nrows)
 {
     _fwd_rank = 1;
@@ -58,7 +58,7 @@ _fwd_configureRangeFFT(int ncolumns, int nrows)
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _rev_configureRangeFFT(int ncolumns, int nrows)
 {
     _rev_rank = 1;
@@ -88,7 +88,7 @@ _rev_configureRangeFFT(int ncolumns, int nrows)
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _fwd_configureAzimuthFFT(int ncolumns, int nrows)
 {
     _fwd_rank = 1;
@@ -116,7 +116,7 @@ _fwd_configureAzimuthFFT(int ncolumns, int nrows)
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _rev_configureAzimuthFFT(int ncolumns, int nrows)
 {
     _rev_rank = 1;
@@ -146,7 +146,7 @@ _rev_configureAzimuthFFT(int ncolumns, int nrows)
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _fwd_configure2DFFT(int incolumns, int inrows,
                     int oncolumns, int onrows)
 {
@@ -178,7 +178,7 @@ _fwd_configure2DFFT(int incolumns, int inrows,
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _rev_configure2DFFT(int ncolumns, int nrows)
 {
     _rev_rank = 2;
@@ -217,7 +217,7 @@ _rev_configure2DFFT(int ncolumns, int nrows)
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _fwd_configure(int rank, int* n, int howmany,
            int* inembed, int istride, int idist,
            int* onembed, int ostride, int odist)
@@ -267,7 +267,7 @@ _fwd_configure(int rank, int* n, int howmany,
 */
 template <class T>
 void
-isce::signal::Signal<T>::
+isce3::signal::Signal<T>::
 _rev_configure(int rank, int* n, int howmany,
            int* inembed, int istride, int idist,
            int* onembed, int ostride, int odist)

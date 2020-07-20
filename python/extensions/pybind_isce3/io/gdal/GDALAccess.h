@@ -18,5 +18,5 @@ GDALAccess toGDALAccess(char c)
         case 'w' : return GA_Update;
     }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), std::string("unsupported access code '") + c + "'");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), std::string("unsupported access code '") + c + "'");
 }

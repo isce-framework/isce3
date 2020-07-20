@@ -12,18 +12,18 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::core
+// isce3::core
 #include "isce3/core/Constants.h"
 #include "isce3/core/Serialization.h"
 
-// isce::io
+// isce3::io
 #include "isce3/io/IH5.h"
 #include "isce3/io/Raster.h"
 
-// isce::product
+// isce3::product
 #include "isce3/product/Product.h"
 
-// isce::geometry
+// isce3::geometry
 #include "isce3/geometry/Serialization.h"
 #include "isce3/geometry/Topo.h"
 
@@ -34,13 +34,13 @@ TEST(TopoTest, RunTopo) {
 
     // Open the HDF5 product
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // Create topo instance
-    isce::geometry::Topo topo(product, 'A', true);
+    isce3::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
@@ -50,7 +50,7 @@ TEST(TopoTest, RunTopo) {
     }
 
     // Open DEM raster
-    isce::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
+    isce3::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
 
     // Run topo
     topo.topo(demRaster, ".");
@@ -60,10 +60,10 @@ TEST(TopoTest, RunTopo) {
 TEST(TopoTest, CheckResults) {
     
     // Open generated topo raster
-    isce::io::Raster testRaster("topo.vrt");
+    isce3::io::Raster testRaster("topo.vrt");
     
     // Open reference topo raster
-    isce::io::Raster refRaster(TESTDATA_DIR "topo/topo.vrt");
+    isce3::io::Raster refRaster(TESTDATA_DIR "topo/topo.vrt");
 
     // The associated tolerances
     std::vector<double> tols{1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02};

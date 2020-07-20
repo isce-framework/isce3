@@ -1,19 +1,19 @@
 #include "interpolate.h"
 
-void isce::geocode::interpolate(
-        const isce::core::Matrix<std::complex<float>>& rdrDataBlock,
-        isce::core::Matrix<std::complex<float>>& geoDataBlock,
+void isce3::geocode::interpolate(
+        const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
+        isce3::core::Matrix<std::complex<float>>& geoDataBlock,
         const std::valarray<double>& radarX,
         const std::valarray<double>& radarY,
         const std::valarray<std::complex<double>>& geometricalPhase,
         const int radarBlockWidth, const int radarBlockLength,
         const int azimuthFirstLine, const int rangeFirstPixel,
-        const isce::core::Interpolator<std::complex<float>>* interp)
+        const isce3::core::Interpolator<std::complex<float>>* interp)
 {
 
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
-    int extraMargin = isce::core::SINC_HALF;
+    int extraMargin = isce3::core::SINC_HALF;
 
 #pragma omp parallel for
     for (size_t kk = 0; kk < length * width; ++kk) {

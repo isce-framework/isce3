@@ -15,7 +15,7 @@
 
 /** Definition of parent Interpolator */
 template<typename U>
-class isce::core::Interpolator {
+class isce3::core::Interpolator {
 
 protected:
     using Map = typename Eigen::Map<const EArray2D<U>>;
@@ -37,7 +37,7 @@ public:
         return interp_impl(x, y, map);
     }
 
-    /** Interpolate at a given coordinate for an input isce::core::Matrix */
+    /** Interpolate at a given coordinate for an input isce3::core::Matrix */
     U interpolate(double x, double y, const Matrix<U>& z) const
     {
         return interp_impl(x, y, z.map());
@@ -74,7 +74,7 @@ protected:
 
 /** Definition of BilinearInterpolator */
 template<typename U>
-class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
+class isce3::core::BilinearInterpolator : public isce3::core::Interpolator<U> {
 
     using super_t = Interpolator<U>;
     using typename super_t::Map;
@@ -92,7 +92,7 @@ public:
 
 /** Definition of BicubicInterpolator */
 template<typename U>
-class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
+class isce3::core::BicubicInterpolator : public isce3::core::Interpolator<U> {
 
     using super_t = Interpolator<U>;
     using typename super_t::Map;
@@ -110,8 +110,8 @@ public:
 
 /** Definition of NearestNeighborInterpolator */
 template<typename U>
-class isce::core::NearestNeighborInterpolator :
-    public isce::core::Interpolator<U> {
+class isce3::core::NearestNeighborInterpolator :
+    public isce3::core::Interpolator<U> {
 
     using super_t = Interpolator<U>;
     using typename super_t::Map;
@@ -129,7 +129,7 @@ public:
 
 /** Definition of Spline2dInterpolator */
 template<typename U>
-class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
+class isce3::core::Spline2dInterpolator : public isce3::core::Interpolator<U> {
 
     using super_t = Interpolator<U>;
     using typename super_t::Map;
@@ -159,7 +159,7 @@ private:
 
 /** Definition of Sinc2dInterpolator */
 template<typename U>
-class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
+class isce3::core::Sinc2dInterpolator : public isce3::core::Interpolator<U> {
 
     using super_t = Interpolator<U>;
     using typename super_t::Map;
@@ -190,7 +190,7 @@ private:
 };
 
 // Extra interpolation and utility functions
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** Utility function to create interpolator pointer given an interpolator enum
  * type */
@@ -218,4 +218,4 @@ createInterpolator(dataInterpMethod method, size_t order = 6,
 template<class U, class V>
 U sinc_eval(const Matrix<U>&, const Matrix<V>&, int, int, double, int);
 
-}} // namespace isce::core
+}} // namespace isce3::core

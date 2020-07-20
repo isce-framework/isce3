@@ -14,20 +14,20 @@
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/detail/Rdr2Geo.h>
 
-namespace detail = isce::geometry::detail;
+namespace detail = isce3::geometry::detail;
 
-using isce::core::Basis;
-using isce::core::LookSide;
-using isce::core::OrbitInterpBorderMode;
-using isce::core::Vec3;
-using isce::error::ErrorCode;
+using isce3::core::Basis;
+using isce3::core::LookSide;
+using isce3::core::OrbitInterpBorderMode;
+using isce3::core::Vec3;
+using isce3::error::ErrorCode;
 
-namespace isce { namespace cuda { namespace geometry {
+namespace isce3 { namespace cuda { namespace geometry {
 
 CUDA_DEV
-int rdr2geo(const isce::core::Pixel& pixel, const Basis& TCNbasis,
+int rdr2geo(const isce3::core::Pixel& pixel, const Basis& TCNbasis,
             const Vec3& pos, const Vec3& vel,
-            const isce::core::Ellipsoid& ellipsoid,
+            const isce3::core::Ellipsoid& ellipsoid,
             const gpuDEMInterpolator& demInterp, Vec3& targetLLH, LookSide side,
             double threshold, int maxIter, int extraIter)
 {
@@ -39,8 +39,8 @@ int rdr2geo(const isce::core::Pixel& pixel, const Basis& TCNbasis,
 }
 
 __device__ int rdr2geo(double aztime, double slant_range, double doppler,
-                       const isce::cuda::core::OrbitView& orbit,
-                       const isce::core::Ellipsoid& ellipsoid,
+                       const isce3::cuda::core::OrbitView& orbit,
+                       const isce3::core::Ellipsoid& ellipsoid,
                        const gpuDEMInterpolator& dem_interp, Vec3& target_llh,
                        double wvl, LookSide side, double threshold,
                        int max_iter, int extra_iter)
@@ -54,9 +54,9 @@ __device__ int rdr2geo(double aztime, double slant_range, double doppler,
 }
 
 CUDA_DEV
-int geo2rdr(const Vec3& inputLLH, const isce::core::Ellipsoid& ellipsoid,
-            const isce::cuda::core::OrbitView& orbit,
-            const isce::cuda::core::gpuLUT1d<double>& doppler,
+int geo2rdr(const Vec3& inputLLH, const isce3::core::Ellipsoid& ellipsoid,
+            const isce3::cuda::core::OrbitView& orbit,
+            const isce3::cuda::core::gpuLUT1d<double>& doppler,
             double* aztime_result, double* slantRange_result, double wavelength,
             LookSide side, double threshold, int maxIter, double deltaRange)
 {
@@ -129,12 +129,12 @@ int geo2rdr(const Vec3& inputLLH, const isce::core::Ellipsoid& ellipsoid,
     return converged;
 }
 
-CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
-                     const isce::core::Ellipsoid& ellipsoid,
-                     const isce::cuda::core::OrbitView& orbit,
-                     const isce::cuda::core::gpuLUT2d<double>& doppler,
+CUDA_DEV int geo2rdr(const isce3::core::Vec3& inputLLH,
+                     const isce3::core::Ellipsoid& ellipsoid,
+                     const isce3::cuda::core::OrbitView& orbit,
+                     const isce3::cuda::core::gpuLUT2d<double>& doppler,
                      double* aztime, double* slantRange, double wavelength,
-                     isce::core::LookSide side, double threshold, int maxIter,
+                     isce3::core::LookSide side, double threshold, int maxIter,
                      double deltaRange)
 {
     double t0 = *aztime;
@@ -145,31 +145,31 @@ CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
     return (status == ErrorCode::Success);
 }
 
-}}} // namespace isce::cuda::geometry
+}}} // namespace isce3::cuda::geometry
 
 // Create ProjectionBase pointer on the device (meant to be run by a single
 // thread)
-__global__ void createProjection(isce::cuda::core::ProjectionBase** proj,
+__global__ void createProjection(isce3::cuda::core::ProjectionBase** proj,
                                  int epsgCode)
 {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        (*proj) = isce::cuda::core::createProj(epsgCode);
+        (*proj) = isce3::cuda::core::createProj(epsgCode);
     }
 }
 
 // Delete ProjectionBase pointer on the device (meant to be run by a single
 // thread)
-__global__ void deleteProjection(isce::cuda::core::ProjectionBase** proj)
+__global__ void deleteProjection(isce3::cuda::core::ProjectionBase** proj)
 {
     delete *proj;
 }
 
-namespace isce { namespace cuda { namespace geometry {
+namespace isce3 { namespace cuda { namespace geometry {
 
 // Helper kernel to call device-side rdr2geo
-__global__ void rdr2geo_d(const isce::core::Pixel pixel, const Basis TCNbasis,
+__global__ void rdr2geo_d(const isce3::core::Pixel pixel, const Basis TCNbasis,
                           const Vec3 pos, const Vec3 vel,
-                          const isce::core::Ellipsoid ellipsoid,
+                          const isce3::core::Ellipsoid ellipsoid,
                           gpuDEMInterpolator demInterp, Vec3* targetLLH,
                           LookSide side, double threshold, int maxIter,
                           int extraIter, int* resultcode)
@@ -182,10 +182,10 @@ __global__ void rdr2geo_d(const isce::core::Pixel pixel, const Basis TCNbasis,
 
 // Host radar->geo to test underlying functions in a single-threaded context
 CUDA_HOST
-int rdr2geo_h(const isce::core::Pixel& pixel, const Basis& basis,
+int rdr2geo_h(const isce3::core::Pixel& pixel, const Basis& basis,
               const Vec3& pos, const Vec3& vel,
-              const isce::core::Ellipsoid& ellipsoid,
-              isce::geometry::DEMInterpolator& demInterp, Vec3& llh,
+              const isce3::core::Ellipsoid& ellipsoid,
+              isce3::geometry::DEMInterpolator& demInterp, Vec3& llh,
               LookSide side, double threshold, int maxIter, int extraIter)
 {
 
@@ -232,9 +232,9 @@ int rdr2geo_h(const isce::core::Pixel& pixel, const Basis& basis,
 }
 
 // Helper kernel to call device-side geo2rdr
-__global__ void geo2rdr_d(const Vec3 llh, isce::core::Ellipsoid ellps,
-                          isce::cuda::core::OrbitView orbit,
-                          isce::cuda::core::gpuLUT1d<double> doppler,
+__global__ void geo2rdr_d(const Vec3 llh, isce3::core::Ellipsoid ellps,
+                          isce3::cuda::core::OrbitView orbit,
+                          isce3::cuda::core::gpuLUT1d<double> doppler,
                           double* aztime, double* slantRange, double wavelength,
                           LookSide side, double threshold, int maxIter,
                           double deltaRange, int* resultcode)
@@ -247,17 +247,17 @@ __global__ void geo2rdr_d(const Vec3 llh, isce::core::Ellipsoid ellps,
 
 // Host geo->radar to test underlying functions in a single-threaded context
 CUDA_HOST
-int geo2rdr_h(const cartesian_t& llh, const isce::core::Ellipsoid& ellps,
-              const isce::core::Orbit& orbit,
-              const isce::core::LUT1d<double>& doppler, double& aztime,
+int geo2rdr_h(const cartesian_t& llh, const isce3::core::Ellipsoid& ellps,
+              const isce3::core::Orbit& orbit,
+              const isce3::core::LUT1d<double>& doppler, double& aztime,
               double& slantRange, double wavelength, LookSide side,
               double threshold, int maxIter, double deltaRange)
 {
 
     // Make GPU objects
-    isce::core::Ellipsoid gpu_ellps(ellps);
-    isce::cuda::core::Orbit gpu_orbit(orbit);
-    isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
+    isce3::core::Ellipsoid gpu_ellps(ellps);
+    isce3::cuda::core::Orbit gpu_orbit(orbit);
+    isce3::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
 
     // Allocate necessary device memory
     double *llh_d, *aztime_d, *slantRange_d;
@@ -293,4 +293,4 @@ int geo2rdr_h(const cartesian_t& llh, const isce::core::Ellipsoid& ellps,
     return resultcode;
 }
 
-}}} // namespace isce::cuda::geometry
+}}} // namespace isce3::cuda::geometry

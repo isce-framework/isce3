@@ -8,7 +8,7 @@
 #include <isce3/core/Vector.h>
 #include <isce3/error/ErrorCode.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 /**
  * Non-owning reference to Orbit
@@ -25,7 +25,7 @@ public:
 
     /** Interpolation method */
     CUDA_DEV
-    isce::core::OrbitInterpMethod interpMethod() const { return _interp_method; }
+    isce3::core::OrbitInterpMethod interpMethod() const { return _interp_method; }
 
     /** Time of first state vector relative to reference epoch (s) */
     CUDA_DEV
@@ -49,15 +49,15 @@ public:
 
     /** Get state vector times relative to reference epoch (s) */
     CUDA_DEV
-    const isce::core::Linspace<double> & time() const { return _time; }
+    const isce3::core::Linspace<double> & time() const { return _time; }
 
     /** Get state vector positions in ECEF coordinates (m) */
     CUDA_DEV
-    const isce::core::Vec3 * position() const { return _position; }
+    const isce3::core::Vec3 * position() const { return _position; }
 
     /** Get state vector velocities in ECEF coordinates (m/s) */
     CUDA_DEV
-    const isce::core::Vec3 * velocity() const { return _velocity; }
+    const isce3::core::Vec3 * velocity() const { return _velocity; }
 
     /** Get the specified state vector time relative to reference epoch (s) */
     CUDA_DEV
@@ -65,11 +65,11 @@ public:
 
     /** Get the specified state vector position in ECEF coordinates (m) */
     CUDA_DEV
-    const isce::core::Vec3 & position(int idx) const { return _position[idx]; }
+    const isce3::core::Vec3 & position(int idx) const { return _position[idx]; }
 
     /** Get the specified state vector velocity in ECEF coordinates (m/s) */
     CUDA_DEV
-    const isce::core::Vec3 & velocity(int idx) const { return _velocity[idx]; }
+    const isce3::core::Vec3 & velocity(int idx) const { return _velocity[idx]; }
 
     /**
      * Interpolate platform position and/or velocity
@@ -81,17 +81,17 @@ public:
      * \return Error code indicating exit status
      */
     CUDA_DEV
-    isce::error::ErrorCode
-    interpolate(isce::core::Vec3 * position,
-                isce::core::Vec3 * velocity,
+    isce3::error::ErrorCode
+    interpolate(isce3::core::Vec3 * position,
+                isce3::core::Vec3 * velocity,
                 double t,
-                isce::core::OrbitInterpBorderMode border_mode = isce::core::OrbitInterpBorderMode::Error) const;
+                isce3::core::OrbitInterpBorderMode border_mode = isce3::core::OrbitInterpBorderMode::Error) const;
 
 private:
-    const isce::core::Linspace<double> _time;
-    const isce::core::Vec3 * _position;
-    const isce::core::Vec3 * _velocity;
-    const isce::core::OrbitInterpMethod _interp_method = isce::core::OrbitInterpMethod::Hermite;
+    const isce3::core::Linspace<double> _time;
+    const isce3::core::Vec3 * _position;
+    const isce3::core::Vec3 * _velocity;
+    const isce3::core::OrbitInterpMethod _interp_method = isce3::core::OrbitInterpMethod::Hermite;
 };
 
 }}}

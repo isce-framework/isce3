@@ -2,8 +2,8 @@
 #include <isce3/core/Projections.h>
 #include "projtest.h"
 
-isce::core::PolarStereo North(3413);
-isce::core::PolarStereo South(3031);
+isce3::core::PolarStereo North(3413);
+isce3::core::PolarStereo South(3031);
 
 struct PolarTest : public ::testing::Test {
     unsigned int fails;

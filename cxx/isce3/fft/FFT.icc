@@ -7,7 +7,7 @@
 #include "detail/ConfigureFFTLayout.h"
 #include "detail/Threads.h"
 
-namespace isce { namespace fft {
+namespace isce3 { namespace fft {
 
 template<typename T>
 inline

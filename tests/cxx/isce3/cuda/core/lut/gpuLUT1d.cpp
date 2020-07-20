@@ -7,7 +7,7 @@
 #include <vector>
 #include "gtest/gtest.h"
 
-// isce::core
+// isce3::core
 #include "isce3/core/LUT1d.h"
 #include "isce3/core/Utilities.h"
 #include "isce3/cuda/core/gpuLUT1d.h"
@@ -40,14 +40,14 @@ TEST(LUT1dTest, Lookup) {
     }
 
     // Create LUT with extrapolation beyond the coordinate bounds
-    isce::core::LUT1d<double> lut(coords, values, true);
+    isce3::core::LUT1d<double> lut(coords, values, true);
 
     // Create GPU LUT
-    isce::cuda::core::gpuLUT1d<double> gpuLUT(lut);
+    isce3::cuda::core::gpuLUT1d<double> gpuLUT(lut);
 
     // Construct coordinates for evaluating LUT
     const size_t n_eval = 50;
-    std::vector<double> xvec = isce::core::linspace(-2.0, 12.0, n_eval);
+    std::vector<double> xvec = isce3::core::linspace(-2.0, 12.0, n_eval);
     std::valarray<double> x_eval(xvec.data(), xvec.size());
 
     // Evaluate LUT

@@ -3,7 +3,7 @@
 #include <complex>
 #include <vector>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 /**
  * Construct a time-domain LFM chirp waveform

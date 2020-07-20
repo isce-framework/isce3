@@ -10,7 +10,7 @@
 #include <isce3/core/Quaternion.h>
 #include <isce3/core/Serialization.h>
 
-using isce::core::Quaternion;
+using isce3::core::Quaternion;
 
 namespace py = pybind11;
 
@@ -48,9 +48,9 @@ void addbinding(pybind11::class_<Quaternion>& pyQuaternion)
         })
         .def_static("load_from_h5", [](py::object h5py_group) {
             auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
-            isce::io::IGroup group(id);
+            isce3::io::IGroup group(id);
             Quaternion q;
-            isce::core::loadFromH5(group, q);
+            isce3::core::loadFromH5(group, q);
             return q;
         },
         "De-serialize Quaternion from h5py.Group object",

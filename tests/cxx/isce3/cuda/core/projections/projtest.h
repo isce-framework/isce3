@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 #include <isce3/core/Vector.h>
 #include <isce3/cuda/core/gpuProjections.h>
-using isce::core::Vec3;
-using isce::cuda::core::ProjectionBase;
+using isce3::core::Vec3;
+using isce3::cuda::core::ProjectionBase;
 
 auto projTest(const ProjectionBase& p, const Vec3& ref_llh,
                                        const Vec3& ref_xyz) {

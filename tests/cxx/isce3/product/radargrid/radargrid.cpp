@@ -9,30 +9,30 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::product
+// isce3::product
 #include <isce3/core/LookSide.h>
 #include <isce3/product/RadarGridParameters.h>
 #include <isce3/product/Product.h>
 
-using isce::core::LookSide;
+using isce3::core::LookSide;
 
 TEST(RadarGridTest, fromProduct) {
 
     // Open the file
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Instantiate and load a product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(product);
+    isce3::product::RadarGridParameters grid(product);
 
     // Check its values
     ASSERT_EQ(grid.lookSide(), LookSide::Right);
     ASSERT_EQ(grid.startingRange(), 826988.6900674499);
     ASSERT_EQ(grid.sensingStart(), 237330.843491759);
-    ASSERT_EQ(grid.wavelength(), isce::core::speed_of_light/5.331004416e9);
+    ASSERT_EQ(grid.wavelength(), isce3::core::speed_of_light/5.331004416e9);
     ASSERT_NEAR(grid.rangePixelSpacing(), 7.803973670948287, 1.0e-7);
     ASSERT_EQ(grid.azimuthTimeInterval(), 6.051745968279355e-4);
 }
@@ -41,32 +41,32 @@ TEST(RadarGridTest, fromSwath) {
 
     // Open the file
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Instantiate and load a product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // Get the swath
-    const isce::product::Swath &swath = product.swath('A');
+    const isce3::product::Swath &swath = product.swath('A');
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(swath, LookSide::Right);
+    isce3::product::RadarGridParameters grid(swath, LookSide::Right);
 
     // Check its values
     ASSERT_EQ(grid.lookSide(), LookSide::Right);
     ASSERT_NEAR(grid.startingRange(), 826988.6900674499, 1.0e-5);
     ASSERT_NEAR(grid.sensingStart(), 237330.843491759, 1.0e-5);
-    ASSERT_NEAR(grid.wavelength(), isce::core::speed_of_light/5.331004416e9, 1.0e-5);
+    ASSERT_NEAR(grid.wavelength(), isce3::core::speed_of_light/5.331004416e9, 1.0e-5);
     ASSERT_NEAR(grid.rangePixelSpacing(), 7.803973670948287, 1.0e-7);
     ASSERT_NEAR(grid.azimuthTimeInterval(), 6.051745968279355e-4, 1.0e-7);
 }
 
 TEST(RadarGridTest, fromParametersSingeLook) {
     //Reference epoch
-    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+    isce3::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(10.0,
+    isce3::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, LookSide::Left, 24000, 6400,
                                            t0);
@@ -86,16 +86,16 @@ TEST(RadarGridTest, fromParametersSingeLook) {
 
 TEST(RadarGridTest, fromParametersMultiLook) {
     //Reference epoch
-    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+    isce3::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(10.0,
+    isce3::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Multilook
-    isce::product::RadarGridParameters mlgrid = grid.multilook(3, 4);
+    isce3::product::RadarGridParameters mlgrid = grid.multilook(3, 4);
 
     // Check its values
     ASSERT_EQ(mlgrid.lookSide(), LookSide::Left);
@@ -112,16 +112,16 @@ TEST(RadarGridTest, fromParametersMultiLook) {
 
 TEST(RadarGridTest, fromParametersCrop) {
     //Reference epoch
-    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+    isce3::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(10.0,
+    isce3::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Crop
-    isce::product::RadarGridParameters mlgrid = grid.offsetAndResize(400, 500, 2000, 800);
+    isce3::product::RadarGridParameters mlgrid = grid.offsetAndResize(400, 500, 2000, 800);
 
     // Check its values
     ASSERT_EQ(mlgrid.lookSide(), LookSide::Left);
@@ -140,16 +140,16 @@ TEST(RadarGridTest, singleLook)
 {
 
     //Reference epoch
-    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+    isce3::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(10.0,
+    isce3::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Multilook
-    isce::product::RadarGridParameters mlgrid = grid.multilook(1, 1);
+    isce3::product::RadarGridParameters mlgrid = grid.multilook(1, 1);
 
     ASSERT_EQ( grid.lookSide(), mlgrid.lookSide());
     ASSERT_NEAR(grid.startingRange(), mlgrid.startingRange(), 1.0e-11);
@@ -167,16 +167,16 @@ TEST(RadarGridTest, cropSame)
 {
 
     //Reference epoch
-    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+    isce3::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(10.0,
+    isce3::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Multilook
-    isce::product::RadarGridParameters mlgrid = grid.offsetAndResize(0,0, grid.length(), grid.width());
+    isce3::product::RadarGridParameters mlgrid = grid.offsetAndResize(0,0, grid.length(), grid.width());
 
     ASSERT_EQ( grid.lookSide(), mlgrid.lookSide());
     ASSERT_NEAR(grid.startingRange(), mlgrid.startingRange(), 1.0e-11);

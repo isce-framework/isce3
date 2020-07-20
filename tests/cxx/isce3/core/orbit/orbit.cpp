@@ -12,15 +12,15 @@
 #include <isce3/core/Vector.h>
 #include <isce3/except/Error.h>
 
-using isce::core::DateTime;
-using isce::core::Orbit;
-using isce::core::OrbitInterpBorderMode;
-using isce::core::OrbitInterpMethod;
-using isce::core::StateVector;
-using isce::core::TimeDelta;
-using isce::core::Vec3;
+using isce3::core::DateTime;
+using isce3::core::Orbit;
+using isce3::core::OrbitInterpBorderMode;
+using isce3::core::OrbitInterpMethod;
+using isce3::core::StateVector;
+using isce3::core::TimeDelta;
+using isce3::core::Vec3;
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** Serialize DateTime to ostream */
 std::ostream & operator<<(std::ostream & os, const DateTime & dt)
@@ -358,7 +358,7 @@ TEST_F(OrbitTest, OrbitInterpBorderMode)
 
         double t = orbit.endTime() + 1.;
         Vec3 pos, vel;
-        EXPECT_THROW( orbit.interpolate(&pos, &vel, t, border_mode), isce::except::OutOfRange );
+        EXPECT_THROW( orbit.interpolate(&pos, &vel, t, border_mode), isce3::except::OutOfRange );
     }
 
     // output NaN on attempt to interpolate outside orbit domain

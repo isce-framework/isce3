@@ -9,7 +9,7 @@
 
 /** @param[in] order Order of 2D spline */
 template<typename U>
-isce::core::Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
+isce3::core::Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
     : super_t {BIQUINTIC_METHOD}, _order {order}
 {
 
@@ -30,7 +30,7 @@ isce::core::Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
 template<class U>
-U isce::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
+U isce3::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
                                                    const Map& z) const
 {
 
@@ -67,7 +67,7 @@ U isce::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
 }
 
 template<typename U>
-U isce::core::Spline2dInterpolator<U>::_spline(double x,
+U isce3::core::Spline2dInterpolator<U>::_spline(double x,
                                                const std::valarray<U>& Y, int n,
                                                const std::valarray<U>& R) const
 {
@@ -87,7 +87,7 @@ U isce::core::Spline2dInterpolator<U>::_spline(double x,
 }
 
 template<typename U>
-void isce::core::Spline2dInterpolator<U>::_initSpline(const std::valarray<U>& Y,
+void isce3::core::Spline2dInterpolator<U>::_initSpline(const std::valarray<U>& Y,
                                                       int n,
                                                       std::valarray<U>& R,
                                                       std::valarray<U>& Q) const
@@ -108,9 +108,9 @@ void isce::core::Spline2dInterpolator<U>::_initSpline(const std::valarray<U>& Y,
 }
 
 // Forward declaration of classes
-template class isce::core::Spline2dInterpolator<double>;
-template class isce::core::Spline2dInterpolator<float>;
-template class isce::core::Spline2dInterpolator<std::complex<double>>;
-template class isce::core::Spline2dInterpolator<std::complex<float>>;
+template class isce3::core::Spline2dInterpolator<double>;
+template class isce3::core::Spline2dInterpolator<float>;
+template class isce3::core::Spline2dInterpolator<std::complex<double>>;
+template class isce3::core::Spline2dInterpolator<std::complex<float>>;
 
 // end of file 

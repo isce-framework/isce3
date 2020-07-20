@@ -14,48 +14,48 @@
 std::set<std::string> radar_grid_str_set = {"cropped", "multilooked"};
 
 // Create set of rtcAlgorithms
-std::set<isce::geometry::rtcAlgorithm> rtc_algorithm_set = {
-        isce::geometry::rtcAlgorithm::RTC_DAVID_SMALL,
-        isce::geometry::rtcAlgorithm::RTC_AREA_PROJECTION};
+std::set<isce3::geometry::rtcAlgorithm> rtc_algorithm_set = {
+        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL,
+        isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION};
 
 TEST(TestRTC, RunRTC) {
     // Open HDF5 file and load products
-    isce::io::IH5File file(TESTDATA_DIR "envisat.h5");
-    isce::product::Product product(file);
+    isce3::io::IH5File file(TESTDATA_DIR "envisat.h5");
+    isce3::product::Product product(file);
     char frequency = 'A';
 
     // Open DEM raster
-    isce::io::Raster dem(TESTDATA_DIR "srtm_cropped.tif");
+    isce3::io::Raster dem(TESTDATA_DIR "srtm_cropped.tif");
 
     // Create radar grid parameter
-    isce::product::RadarGridParameters radar_grid_sl(product, frequency);
+    isce3::product::RadarGridParameters radar_grid_sl(product, frequency);
 
     // Crop original radar grid parameter
-    isce::product::RadarGridParameters radar_grid_cropped =
+    isce3::product::RadarGridParameters radar_grid_cropped =
             radar_grid_sl.offsetAndResize(30, 135, 128, 128);
 
     // Multi-look original radar grid parameter
     int nlooks_az = 5, nlooks_rg = 5;
-    isce::product::RadarGridParameters radar_grid_ml =
+    isce3::product::RadarGridParameters radar_grid_ml =
             radar_grid_sl.multilook(nlooks_az, nlooks_rg);
 
     // Create orbit and Doppler LUT
-    isce::core::Orbit orbit = product.metadata().orbit();
-    isce::core::LUT2d<double> dop =
+    isce3::core::Orbit orbit = product.metadata().orbit();
+    isce3::core::LUT2d<double> dop =
             product.metadata().procInfo().dopplerCentroid(frequency);
 
     dop.boundsError(false);
 
     // Set input parameters
-    isce::geometry::rtcInputRadiometry inputRadiometry =
-            isce::geometry::rtcInputRadiometry::BETA_NAUGHT;
+    isce3::geometry::rtcInputRadiometry inputRadiometry =
+            isce3::geometry::rtcInputRadiometry::BETA_NAUGHT;
 
-    isce::geometry::rtcAreaMode rtc_area_mode =
-            isce::geometry::rtcAreaMode::AREA_FACTOR;
+    isce3::geometry::rtcAreaMode rtc_area_mode =
+            isce3::geometry::rtcAreaMode::AREA_FACTOR;
 
     for (auto radar_grid_str : radar_grid_str_set) {
 
-        isce::product::RadarGridParameters radar_grid;
+        isce3::product::RadarGridParameters radar_grid;
 
         // Open DEM raster
         if (radar_grid_str == "cropped")
@@ -71,11 +71,11 @@ TEST(TestRTC, RunRTC) {
             // test removed because it requires high geogrid upsampling (too
             // slow)
             if (rtc_algorithm ==
-                        isce::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
+                        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
                 radar_grid_str == "cropped") {
                 continue;
             } else if (rtc_algorithm ==
-                       isce::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
+                       isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
                 filename = "./rtc_david_small_" + radar_grid_str + ".bin";
             } else {
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
@@ -83,12 +83,12 @@ TEST(TestRTC, RunRTC) {
             std::cout << "generating file: " << filename << std::endl;
 
             // Create output raster
-            isce::io::Raster out_raster(filename, radar_grid.width(),
+            isce3::io::Raster out_raster(filename, radar_grid.width(),
                                         radar_grid.length(), 1, GDT_Float32,
                                         "ENVI");
 
             // Call RTC
-            isce::geometry::facetRTC(radar_grid, orbit, dop, dem, out_raster,
+            isce3::geometry::facetRTC(radar_grid, orbit, dop, dem, out_raster,
                                      inputRadiometry, rtc_area_mode,
                                      rtc_algorithm, geogrid_upsampling);
         }
@@ -108,11 +108,11 @@ TEST(TestRTC, CheckResults) {
             // test removed because it requires high geogrid upsampling (too
             // slow)
             if (rtc_algorithm ==
-                        isce::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
+                        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
                 radar_grid_str == "cropped") {
                 continue;
             } else if (rtc_algorithm ==
-                       isce::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
+                       isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
                 max_rmse = 0.7;
                 filename = "./rtc_david_small_" + radar_grid_str + ".bin";
             } else {
@@ -123,12 +123,12 @@ TEST(TestRTC, CheckResults) {
             std::cout << "evaluating file: " << filename << std::endl;
 
             // Open computed integrated-area raster
-            isce::io::Raster testRaster(filename);
+            isce3::io::Raster testRaster(filename);
 
             // Open reference raster
             std::string ref_filename =
                     TESTDATA_DIR "rtc/rtc_" + radar_grid_str + ".bin";
-            isce::io::Raster refRaster(ref_filename);
+            isce3::io::Raster refRaster(ref_filename);
             std::cout << "reference file: " << ref_filename << std::endl;
 
             ASSERT_TRUE(testRaster.width() == refRaster.width() and

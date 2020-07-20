@@ -6,7 +6,7 @@
 #include <isce3/except/Error.h>
 #include <isce3/io/gdal/SpatialReference.h>
 
-using isce::io::gdal::SpatialReference;
+using isce3::io::gdal::SpatialReference;
 
 struct SpatialReferenceTest : public testing::TestWithParam<int> {};
 
@@ -27,7 +27,7 @@ INSTANTIATE_TEST_SUITE_P(UTM_South, SpatialReferenceTest, testing::Range(32701, 
 
 TEST(SpatialReferenceTest, InvalidEPSG)
 {
-    EXPECT_THROW( { SpatialReference srs(0); }, isce::except::GDALError );
+    EXPECT_THROW( { SpatialReference srs(0); }, isce3::except::GDALError );
 }
 
 TEST(SpatialReferenceTest, WKT)

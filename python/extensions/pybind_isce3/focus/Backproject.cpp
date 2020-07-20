@@ -10,12 +10,12 @@
 
 namespace py = pybind11;
 
-using namespace isce::focus;
+using namespace isce3::focus;
 
-using isce::container::RadarGeometry;
-using isce::core::Kernel;
-using isce::except::InvalidArgument;
-using isce::geometry::DEMInterpolator;
+using isce3::container::RadarGeometry;
+using isce3::core::Kernel;
+using isce3::except::InvalidArgument;
+using isce3::geometry::DEMInterpolator;
 
 void addbinding_backproject(py::module& m)
 {

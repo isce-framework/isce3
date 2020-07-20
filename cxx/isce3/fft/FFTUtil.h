@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace isce { namespace fft {
+namespace isce3 { namespace fft {
 
 /**
  * Return the smallest power of two greater than or equal to the input.

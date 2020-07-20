@@ -8,12 +8,12 @@
 
 #include <isce3/except/Error.h>
 
-using isce::core::CEA;
-using isce::core::Geocent;
-using isce::core::LonLat;
-using isce::core::PolarStereo;
-using isce::core::ProjectionBase;
-using isce::core::UTM;
+using isce3::core::CEA;
+using isce3::core::Geocent;
+using isce3::core::LonLat;
+using isce3::core::PolarStereo;
+using isce3::core::ProjectionBase;
+using isce3::core::UTM;
 using std::cout;
 using std::endl;
 using std::invalid_argument;
@@ -357,7 +357,7 @@ int CEA::inverse(const cartesian_t &enu, cartesian_t &llh) const {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * Projection Factory * * * * * * * * * * * * * * * * * * */
-ProjectionBase* isce::core::createProj(int epsgcode)
+ProjectionBase* isce3::core::createProj(int epsgcode)
 {
     //Check for Lat/Lon
     if (epsgcode == 4326)
@@ -386,20 +386,20 @@ ProjectionBase* isce::core::createProj(int epsgcode)
     }
     else
     {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "Unknown EPSG code in factory");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Unknown EPSG code in factory");
     }
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * Projection Transformer * * * * * * * * * * * * * * * * * * */
-int isce::core::projTransform(ProjectionBase *in, ProjectionBase *out, const isce::core::Vec3 &inpts,
-                  isce::core::Vec3 &outpts) {
+int isce3::core::projTransform(ProjectionBase *in, ProjectionBase *out, const isce3::core::Vec3 &inpts,
+                  isce3::core::Vec3 &outpts) {
     if (in->code() == out->code()) {
         // If input/output projections are the same don't even bother processing
         outpts = inpts;
         return 0;
     } else {
-        isce::core::Vec3 temp;
+        isce3::core::Vec3 temp;
         if (in->inverse(inpts, temp) != 0) return -2;
         if (out->forward(temp, outpts) != 0) return 2;
     }

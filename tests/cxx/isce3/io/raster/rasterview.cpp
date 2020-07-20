@@ -28,10 +28,10 @@ struct RasterTest : public ::testing::Test {
 
 // Create a Raster from a Matrix view
 TEST_F(RasterTest, constructors) {
-  using isce::io::Raster;
+  using isce3::io::Raster;
 
   // Set up matrix/view with test values
-  isce::core::Matrix<float> mat(2, 2);
+  isce3::core::Matrix<float> mat(2, 2);
   mat.fill(2);
 
   GDALAllRegister();
@@ -68,10 +68,10 @@ TEST_F(RasterTest, constructors) {
 // Populate first band of ENVI Raster with setBlock (blocks can't overflow image)
 TEST_F(RasterTest, setBlockView) {
   std::remove( testFilename.c_str());
-  isce::io::Raster inc = isce::io::Raster( testFilename, nc, nl, 1, GDT_Float32, "GTiff" );
+  isce3::io::Raster inc = isce3::io::Raster( testFilename, nc, nl, 1, GDT_Float32, "GTiff" );
 
-  isce::core::Matrix<float> fullmat(nl,nc);
-  isce::core::Matrix<int> matrix(nby+margin, nbx+margin);
+  isce3::core::Matrix<float> fullmat(nl,nc);
+  isce3::core::Matrix<int> matrix(nby+margin, nbx+margin);
   float a;
    
   for(uint ii=0; ii < margin; ++ii)
@@ -110,15 +110,15 @@ TEST_F(RasterTest, setBlockView) {
 // Populate first band of ENVI Raster with setBlock (blocks can't overflow image)
 TEST_F(RasterTest, getSetBlockView) {
   std::remove( testFilename.c_str());
-  isce::io::Raster inc = isce::io::Raster( testFilename, nc, nl, 1, GDT_Float32, "GTiff" );
+  isce3::io::Raster inc = isce3::io::Raster( testFilename, nc, nl, 1, GDT_Float32, "GTiff" );
 
   //Set the raster to 2
-  isce::core::Matrix<float> fullmat(nl,nc);
+  isce3::core::Matrix<float> fullmat(nl,nc);
   fullmat.fill(2);
   inc.setBlock(fullmat,0,0);
 
   //Create a larger matrix
-  isce::core::Matrix<int> matrix(nl, nc);
+  isce3::core::Matrix<int> matrix(nl, nc);
    
   for(uint ii=0; ii < margin; ++ii)
       for(uint jj=0; jj < margin; ++jj)

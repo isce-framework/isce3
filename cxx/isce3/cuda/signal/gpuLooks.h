@@ -13,7 +13,7 @@
 #include <isce3/core/Common.h>
 
 template<class T>
-class isce::cuda::signal::gpuLooks {
+class isce3::cuda::signal::gpuLooks {
     public:
         gpuLooks() {};
         ~gpuLooks() {};

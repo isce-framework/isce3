@@ -7,7 +7,7 @@
 from libcpp.string cimport string
 from libcpp cimport bool
 
-# Cython declaration for isce::io objects
+# Cython declaration for isce3::io objects
 from isceextension cimport dataInterpMethod
 from isceextension cimport Ellipsoid
 from isceextension cimport Product
@@ -16,7 +16,7 @@ from isceextension cimport Raster
 from LUT2d cimport LUT2d
 from RadarGridParameters cimport RadarGridParameters
 
-cdef extern from "isce3/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
+cdef extern from "isce3/cuda/geometry/Topo.h" namespace "isce3::cuda::geometry":
     cdef cppclass Topo:
 
         # Constructor

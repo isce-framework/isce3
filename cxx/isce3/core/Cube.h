@@ -13,9 +13,9 @@
 #include <vector>
 #include <pyre/grid.h>
 
-// isce::core::Cube definition
+// isce3::core::Cube definition
 template <typename cell_t>
-class isce::core::Cube {
+class isce3::core::Cube {
 
     public:
         // Types for interfacing with pyre::grid

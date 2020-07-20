@@ -40,7 +40,7 @@
  *         on the fly.  The NFFT.execute convenience function combines these.
  */
 template<class T>
-class isce::signal::NFFT {
+class isce3::signal::NFFT {
     public:
         /** NFFT Constructor.
          *
@@ -168,6 +168,6 @@ class isce::signal::NFFT {
         size_t _m, _n, _fft_size;
         std::valarray<std::complex<T>> _xf, _xt;
         std::valarray<T> _weights;
-        isce::core::NFFTKernel<T> _kernel;
-        isce::signal::Signal<T> _fft;
+        isce3::core::NFFTKernel<T> _kernel;
+        isce3::signal::Signal<T> _fft;
 };

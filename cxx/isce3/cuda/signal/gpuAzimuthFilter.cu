@@ -11,7 +11,7 @@
 
 #include <isce3/cuda/except/Error.h>
 
-using isce::cuda::signal::gpuAzimuthFilter;
+using isce3::cuda::signal::gpuAzimuthFilter;
 
 template<class T>
 gpuAzimuthFilter<T>::gpuAzimuthFilter()
@@ -34,8 +34,8 @@ initiateAzimuthFilter(std::valarray<std::complex<T>> &input,
 // construct filter on host then copy to device
 template<class T>
 void gpuAzimuthFilter<T>::
-constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
-        const isce::core::LUT1d<double> & secDoppler,
+constructAzimuthCommonbandFilter(const isce3::core::LUT1d<double> & refDoppler,
+        const isce3::core::LUT1d<double> & secDoppler,
         double bandwidth,
         double prf,
         double beta,
@@ -52,7 +52,7 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
     // Construct vector of frequencies
     std::valarray<double> frequency(nrows);
-    isce::signal::fftfreq(1.0/prf, frequency);
+    isce3::signal::fftfreq(1.0/prf, frequency);
 
     if (this->_filter_set) {
         checkCudaErrors(cudaFree(this->_d_filter));

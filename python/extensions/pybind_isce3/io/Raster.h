@@ -6,4 +6,4 @@
 
 namespace py = pybind11;
 
-void addbinding(py::class_<isce::io::Raster> &);
+void addbinding(py::class_<isce3::io::Raster> &);

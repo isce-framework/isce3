@@ -12,11 +12,11 @@
 #include <isce3/geometry/forward.h>
 
 // DEMInterpolator declaration
-class isce::cuda::geometry::gpuTopoLayers {
+class isce3::cuda::geometry::gpuTopoLayers {
 
     public:
         // Constructor for host only - allocate memory on device
-        CUDA_HOST gpuTopoLayers(const isce::geometry::TopoLayers & layers);
+        CUDA_HOST gpuTopoLayers(const isce3::geometry::TopoLayers & layers);
 
         // Copy constructor on device (these should nominally be CUDA_HOSTDEV)
         CUDA_HOSTDEV
@@ -84,7 +84,7 @@ class isce::cuda::geometry::gpuTopoLayers {
         CUDA_HOSTDEV inline size_t nbytes_float() const { return _nbytes_float; }
 
         // Copy results to host TopoLayers
-        CUDA_HOST void copyToHost(isce::geometry::TopoLayers & layers);
+        CUDA_HOST void copyToHost(isce3::geometry::TopoLayers & layers);
 
         // Unlike CPU version, make the data pointers public to allow for easy
         // copy construction on the device; still use the underbar convention to discourage

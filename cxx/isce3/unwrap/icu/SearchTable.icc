@@ -2,7 +2,7 @@
 #error "SearchTable.icc is an implementation detail of class SearchTable."
 #endif
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 inline

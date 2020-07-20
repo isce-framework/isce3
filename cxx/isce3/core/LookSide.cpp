@@ -8,9 +8,9 @@
 #include <cctype>
 #include <pyre/journal.h>
 
-using isce::core::LookSide;
+using isce3::core::LookSide;
 
-LookSide isce::core::parseLookSide(const std::string & inputLook)
+LookSide isce3::core::parseLookSide(const std::string & inputLook)
 {
     // Convert to lowercase
     std::string look(inputLook);
@@ -30,7 +30,7 @@ LookSide isce::core::parseLookSide(const std::string & inputLook)
     return LookSide::Left;
 }
 
-std::string isce::core::to_string(LookSide d)
+std::string isce3::core::to_string(LookSide d)
 {
     if (d == LookSide::Left) {
         return std::string("left");
@@ -39,7 +39,7 @@ std::string isce::core::to_string(LookSide d)
     return std::string("right");
 }
 
-std::ostream & isce::core::operator<<(std::ostream & out, const LookSide d)
+std::ostream & isce3::core::operator<<(std::ostream & out, const LookSide d)
 {
-    return out << isce::core::to_string(d);
+    return out << isce3::core::to_string(d);
 }

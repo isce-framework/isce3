@@ -72,7 +72,7 @@ def getRtcAlgorithm(*args, **kwargs):
 
 cdef class pyGeocodeBase:
     """
-    Cython wrapper for isce::geometry::Geocode.
+    Cython wrapper for isce3::geometry::Geocode.
 
     Args:
         orbit (pyOrbit):                    Orbit instance.

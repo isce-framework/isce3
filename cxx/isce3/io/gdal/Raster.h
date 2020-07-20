@@ -8,7 +8,7 @@
 #include "Dataset.h"
 #include "detail/MemoryMap.h"
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 /** Wrapper for GDALRasterBand representing a single raster */
 class Raster {
@@ -34,7 +34,7 @@ public:
      * \param[in] dataset   HDF5 dataset
      * \param[in] access    Access mode
      */
-    Raster(const isce::io::IDataSet & dataset, GDALAccess access = GA_ReadOnly);
+    Raster(const isce3::io::IDataSet & dataset, GDALAccess access = GA_ReadOnly);
 
     /**
      * Open an existing file as a GDAL dataset and fetch the specified raster band.
@@ -54,7 +54,7 @@ public:
      * \param[in] band      Raster band index (1-based)
      * \param[in] access    Access mode
      */
-    Raster(const isce::io::IDataSet & dataset, int band, GDALAccess access = GA_ReadOnly);
+    Raster(const isce3::io::IDataSet & dataset, int band, GDALAccess access = GA_ReadOnly);
 
     /**
      * Create a new GDAL dataset containing a single raster band.
@@ -165,23 +165,23 @@ public:
     /**
      * Set geotransform
      *
-     * \throws isce::except::GDALError if the format does not support this operation
+     * \throws isce3::except::GDALError if the format does not support this operation
      */
     void setGeoTransform(const GeoTransform & transform) { _dataset.setGeoTransform(transform); }
 
     /**
      * Get spatial reference system
      *
-     * \throws isce::except::GDALError if the spatial reference system is unavailable
+     * \throws isce3::except::GDALError if the spatial reference system is unavailable
      */
-    isce::core::ProjectionBase * getProjection() const { return _dataset.getProjection(); }
+    isce3::core::ProjectionBase * getProjection() const { return _dataset.getProjection(); }
 
     /**
      * Set spatial reference system
      *
-     * \throws isce::except::GDALError if the format does not support this operation
+     * \throws isce3::except::GDALError if the format does not support this operation
      */
-    void setProjection(const isce::core::ProjectionBase * proj) { _dataset.setProjection(proj); }
+    void setProjection(const isce3::core::ProjectionBase * proj) { _dataset.setProjection(proj); }
 
     /** Left edge of left-most pixel in projection coordinates */
     double x0() const { return _dataset.x0(); }
@@ -345,7 +345,7 @@ public:
      * The memory map is internally managed and is valid only during the lifetime
      * of the raster object.
      *
-     * \throws isce::except::RuntimeError if the requested type does not match
+     * \throws isce3::except::RuntimeError if the requested type does not match
      * the underlying raster datatype
      *
      * \returns A buffer object describing the virtual memory mapping

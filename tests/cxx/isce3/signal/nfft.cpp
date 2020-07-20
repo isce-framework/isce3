@@ -10,7 +10,7 @@
 
 const int seed = 1234;
 using namespace std::literals::complex_literals;
-using isce::signal::fftfreq;
+using isce3::signal::fftfreq;
 using std::sqrt;
 
 #ifndef _DBG_NFFT
@@ -26,7 +26,7 @@ error_bound(long m, long n, long fft_size)
 }
 
 void
-compare_output(const isce::signal::NFFT<double> &p,
+compare_output(const isce3::signal::NFFT<double> &p,
                const std::valarray<std::complex<double>> &expected,
                const std::valarray<std::complex<double>> &result)
 {
@@ -83,7 +83,7 @@ test_nfft(size_t m, size_t nf, size_t fft_size)
     }
 
     // Compute NFFT.
-    isce::signal::NFFT<double> nfft(m, nf, fft_size);
+    isce3::signal::NFFT<double> nfft(m, nf, fft_size);
     nfft.execute(xf, times, xt);
 
     // Compare NFFT to DFT.
@@ -123,7 +123,7 @@ test_adjoint_nfft(size_t m, size_t nf, size_t fft_size)
     }
 
     // Compute adjoint NFFT.
-    isce::signal::NFFT<double> nfft(m, nf, fft_size);
+    isce3::signal::NFFT<double> nfft(m, nf, fft_size);
     nfft.execute_adjoint(xt, times, xf);
 
     // Compare adjoint NFFT to expected values.
@@ -136,8 +136,8 @@ TEST(NFFT, LongEven)  { test_nfft(4, 256, 1024); }
 TEST(NFFT, LongOdd)   { test_nfft(4, 256,  625); }
 TEST(NFFT, Odd)
 {
-    ASSERT_THROW(isce::signal::NFFT<double>(1, 9, 32),
-                 isce::except::LengthError);
+    ASSERT_THROW(isce3::signal::NFFT<double>(1, 9, 32),
+                 isce3::except::LengthError);
 }
 
 TEST(AdjointNFFT, ShortEven) { test_adjoint_nfft(1,   8,   32); }
@@ -148,7 +148,7 @@ TEST(AdjointNFFT, LongOdd)   { test_adjoint_nfft(4, 256,  625); }
 TEST(Kernel, Singularity)
 {
     size_t m = 1;
-    auto window = isce::core::NFFTKernel<double>(m, 10, 20);
+    auto window = isce3::core::NFFTKernel<double>(m, 10, 20);
     double dx = 1e-6;
     // Window should be monotonically decreasing.
     EXPECT_GT(window(m-dx), window(m));

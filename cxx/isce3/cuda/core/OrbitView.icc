@@ -4,7 +4,7 @@
 
 #include <isce3/core/detail/InterpolateOrbit.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 inline
 OrbitView::OrbitView(const Orbit & orbit)
@@ -17,13 +17,13 @@ OrbitView::OrbitView(const Orbit & orbit)
 
 CUDA_DEV
 inline
-isce::error::ErrorCode
-OrbitView::interpolate(isce::core::Vec3 * position,
-                       isce::core::Vec3 * velocity,
+isce3::error::ErrorCode
+OrbitView::interpolate(isce3::core::Vec3 * position,
+                       isce3::core::Vec3 * velocity,
                        double t,
-                       isce::core::OrbitInterpBorderMode border_mode) const
+                       isce3::core::OrbitInterpBorderMode border_mode) const
 {
-    return isce::core::detail::interpolateOrbit(position, velocity, *this, t, border_mode);
+    return isce3::core::detail::interpolateOrbit(position, velocity, *this, t, border_mode);
 }
 
 }}}

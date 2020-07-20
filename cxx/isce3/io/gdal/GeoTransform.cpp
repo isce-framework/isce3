@@ -2,7 +2,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 GeoTransform::GeoTransform(const std::array<double, 6> & coeffs)
 :
@@ -12,7 +12,7 @@ GeoTransform::GeoTransform(const std::array<double, 6> & coeffs)
     dy(coeffs[5])
 {
     if (coeffs[2] != 0. || coeffs[4] != 0.) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "unsupported geotransform orientation");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), "unsupported geotransform orientation");
     }
 }
 

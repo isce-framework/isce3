@@ -15,7 +15,7 @@ struct IH5Test : public ::testing::Test {
         void SetUp()
         {
             GDALAllRegister();
-            isce::io::GDALRegister_IH5();
+            isce3::io::GDALRegister_IH5();
         }
 
         void TearDown()
@@ -26,10 +26,10 @@ struct IH5Test : public ::testing::Test {
 
 TEST_F(IH5Test, dataSetOpen) {
 
-    isce::io::IH5File file(rFileName);
+    isce3::io::IH5File file(rFileName);
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
 
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
     auto dims = dset.getDimensions();
     std::string fname = dset.toGDAL();
         
@@ -52,10 +52,10 @@ TEST_F(IH5Test, dataSetOpen) {
 
 
 TEST_F(IH5Test, dataSet3D) {
-    isce::io::IH5File file(rFileName);
+    isce3::io::IH5File file(rFileName);
     std::string datasetName("/science/LSAR/SLC/metadata/geolocationGrid/incidenceAngle");
 
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
     auto dims = dset.getDimensions();
     std::string fname = dset.toGDAL();
 

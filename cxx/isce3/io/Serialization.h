@@ -13,15 +13,15 @@
 #include <iostream>
 #include <sstream>
 
-// isce::core
+// isce3::core
 #include <isce3/core/DateTime.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/IH5.h>
 
 //! The isce namespace
-namespace isce {
-    //! The isce::io namespace
+namespace isce3 {
+    //! The isce3::io namespace
     namespace io {
 
         /** Check existence of a dataset or group
@@ -51,7 +51,7 @@ namespace isce {
         template <typename H5obj, typename T>
         inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath, T & v) {
             // Open dataset
-            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
             // Read the scalar dataset
             dataset.read(v);
         }
@@ -65,7 +65,7 @@ namespace isce {
         inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath,
                                std::vector<T> & v) {
             // Open dataset
-            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
             // Read the vector dataset
             dataset.read(v);
         }
@@ -79,7 +79,7 @@ namespace isce {
         inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath,
                                std::valarray<T> & v) {
             // Open dataset
-            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
             // Read the valarray dataset
             dataset.read(v);
         }
@@ -91,9 +91,9 @@ namespace isce {
           * @param[in] m             Matrix to store dataset. */
         template <typename H5obj, typename T>
         inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath,
-                               isce::core::Matrix<T> & m) {
+                               isce3::core::Matrix<T> & m) {
             // Open dataset
-            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
             // Read the Matrix dataset using raw pointer interface
             dataset.read(m.data());
         }
@@ -112,7 +112,7 @@ namespace isce {
                 return;
             }
             //Create dataset
-            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, val);
+            isce3::io::IDataSet dset = h5obj.createDataSet(datasetPath, val);
             //Update units attribute if long enough
             if (units.length() > 0) {
                 dset.createAttribute("units", units);
@@ -133,7 +133,7 @@ namespace isce {
                 return;
             }
             // Create dataset
-            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v);
+            isce3::io::IDataSet dset = h5obj.createDataSet(datasetPath, v);
             // Update units attribute if long enough
             if (units.length() > 0) {
                 dset.createAttribute("units", units);
@@ -154,7 +154,7 @@ namespace isce {
                 return;
             }
             // Create dataset
-            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v);
+            isce3::io::IDataSet dset = h5obj.createDataSet(datasetPath, v);
             // Update units attribute if long enough
             if (units.length() > 0) {
                 dset.createAttribute("units", units);
@@ -176,7 +176,7 @@ namespace isce {
                 return;
             }
             // Create dataset
-            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v, dims);
+            isce3::io::IDataSet dset = h5obj.createDataSet(datasetPath, v, dims);
             // Update units attribute if long enough
             if (units.length() > 0) {
                 dset.createAttribute("units", units);
@@ -198,7 +198,7 @@ namespace isce {
                 return;
             }
             // Create dataset
-            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v, dims);
+            isce3::io::IDataSet dset = h5obj.createDataSet(datasetPath, v, dims);
             // Update units attribute if long enough
             if (units.length() > 0) {
                 dset.createAttribute("units", units);
@@ -213,7 +213,7 @@ namespace isce {
          * @param[in] units         Units of dataset. */
         template <typename H5obj, typename T>
         inline void saveToH5(H5obj & h5obj, const std::string & datasetPath,
-                             const isce::core::Matrix<T> & mat, 
+                             const isce3::core::Matrix<T> & mat, 
                              const std::string & units = "") {
             // Check for existence of dataset
             if (exists(h5obj, datasetPath)) {
@@ -221,7 +221,7 @@ namespace isce {
             }
             // Create dataset
             std::array<size_t, 2> dims{mat.length(), mat.width()};
-            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, mat.data(), dims);
+            isce3::io::IDataSet dset = h5obj.createDataSet(datasetPath, mat.data(), dims);
             // Update units attribute if long enough
             if (units.length() > 0) {
                 dset.createAttribute("units", units);
@@ -235,7 +235,7 @@ namespace isce {
         template <typename H5obj>
         inline std::vector<int> getImageDims(H5obj & h5obj, const std::string & datasetPath) {
             // Open dataset
-            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
             // Get dimensions
             return dataset.getDimensions();
         }
@@ -244,12 +244,12 @@ namespace isce {
           *
           * @param[in] h5obj        HDF5 file or group object.
           * @param[in] datasetPath  H5 path of dataset relative to h5obj.
-          * @param[out] epoch       isce::core::DateTime of reference epoch. */
+          * @param[out] epoch       isce3::core::DateTime of reference epoch. */
         template <typename H5obj>
-        inline isce::core::DateTime getRefEpoch(H5obj & h5obj, const std::string & datasetPath) {
+        inline isce3::core::DateTime getRefEpoch(H5obj & h5obj, const std::string & datasetPath) {
 
             // Open the dataset
-            isce::io::IDataSet dset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dset = h5obj.openDataSet(datasetPath);
 
             // Get the attribute
             std::string unitAttr;
@@ -261,7 +261,7 @@ namespace isce {
             std::istringstream ss(unitAttr);
             ss >> dummy1 >> dummy2 >> datestr >> timestr;
             std::string inputstr = datestr + "T" + timestr + ".00";
-            isce::core::DateTime epoch(inputstr);
+            isce3::core::DateTime epoch(inputstr);
 
             // Done
             return epoch;
@@ -271,13 +271,13 @@ namespace isce {
           *
           * @param[in] h5obj        HDF5 file or group object.
           * @param[in] datasetPath  H5 path of dataset relative to h5obj.
-          * @param[in] epoch        isce::core::DateTime of reference epoch. */
+          * @param[in] epoch        isce3::core::DateTime of reference epoch. */
         template <typename H5obj>
         inline void setRefEpoch(H5obj & h5obj, const std::string & datasetPath,
-                                const isce::core::DateTime & refEpoch) {
+                                const isce3::core::DateTime & refEpoch) {
 
             // Open the dataset
-            isce::io::IDataSet dset = h5obj.openDataSet(datasetPath);
+            isce3::io::IDataSet dset = h5obj.openDataSet(datasetPath);
             
             // Need to create string representation of DateTime manually
             char buffer[40];

@@ -11,8 +11,8 @@
 #include <isce3/core/Matrix.h>
 #include <isce3/cuda/except/Error.h>
 
-using isce::cuda::core::gpuInterpolator;
-using isce::cuda::core::gpuBicubicInterpolator;
+using isce3::cuda::core::gpuInterpolator;
+using isce3::cuda::core::gpuBicubicInterpolator;
 
 
 template <class U>
@@ -26,7 +26,7 @@ __global__ void gpuInterpolator_g(gpuBicubicInterpolator<U> interp, double *x, d
 
 
 template <class U>
-__host__ void isce::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* h_z) {
+__host__ void isce3::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* h_z) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency checking
      */
@@ -76,7 +76,7 @@ __host__ void isce::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const M
 
 
 template <class U>
-__device__ U isce::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx, size_t ny=0) {
+__device__ U isce3::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx, size_t ny=0) {
 
     // The bicubic interpolation weights
     const double weights[] = {

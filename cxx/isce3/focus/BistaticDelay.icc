@@ -3,16 +3,16 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/Vector.h>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 CUDA_HOSTDEV
 inline
-double bistaticDelay(const isce::core::Vec3 & p,
-                     const isce::core::Vec3 & v,
-                     const isce::core::Vec3 & x)
+double bistaticDelay(const isce3::core::Vec3 & p,
+                     const isce3::core::Vec3 & v,
+                     const isce3::core::Vec3 & x)
 {
-    constexpr static double c = isce::core::speed_of_light;
-    isce::core::Vec3 r = x - p;
+    constexpr static double c = isce3::core::speed_of_light;
+    isce3::core::Vec3 r = x - p;
     return 2. * (r.dot(v) - c * r.norm()) / (v.squaredNorm() - (c * c));
 }
 

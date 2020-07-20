@@ -9,7 +9,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce::cuda::signal::gpuLooks;
+using isce3::cuda::signal::gpuLooks;
 
 /**
 input:

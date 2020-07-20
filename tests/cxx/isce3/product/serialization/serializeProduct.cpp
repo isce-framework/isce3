@@ -9,10 +9,10 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/IH5.h>
 
-// isce::product
+// isce3::product
 #include <isce3/product/Product.h>
 #include <isce3/product/Swath.h>
 
@@ -20,13 +20,13 @@ TEST(ProductTest, FromHDF5) {
 
     // Open the file
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Instantiate and load a product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // Get the swath
-    const isce::product::Swath & swath = product.swath('A');
+    const isce3::product::Swath & swath = product.swath('A');
 
     // Check its values
     ASSERT_DOUBLE_EQ(swath.slantRange()[0], 826988.6900674499);

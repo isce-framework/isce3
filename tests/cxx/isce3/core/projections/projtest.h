@@ -4,8 +4,8 @@
 #include <gtest/gtest.h>
 #include <isce3/core/Vector.h>
 #include <isce3/core/Projections.h>
-using isce::core::Vec3;
-using isce::core::ProjectionBase;
+using isce3::core::Vec3;
+using isce3::core::ProjectionBase;
 
 auto projTest(const ProjectionBase& p, const Vec3& ref_llh,
                                        const Vec3& ref_xyz) {

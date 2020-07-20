@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace cuda { namespace signal {
+namespace isce3 { namespace cuda { namespace signal {
 
     class gpuCrossmul;
 
@@ -10,4 +10,4 @@ namespace isce { namespace cuda { namespace signal {
     template<class> class gpuRangeFilter;
     template<class> class gpuSignal;
 
-}}} // namespace isce::cuda::signal
+}}} // namespace isce3::cuda::signal

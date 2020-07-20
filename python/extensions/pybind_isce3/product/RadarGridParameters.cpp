@@ -9,9 +9,9 @@
 
 namespace py = pybind11;
 
-using isce::product::RadarGridParameters;
-using isce::core::DateTime;
-using isce::core::LookSide;
+using isce3::product::RadarGridParameters;
+using isce3::core::DateTime;
+using isce3::core::LookSide;
 
 void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
 {
@@ -19,10 +19,10 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
         .def(py::init([](const std::string &h5file, const char freq)
                 {
                     // open file
-                    isce::io::IH5File file(h5file);
+                    isce3::io::IH5File file(h5file);
 
                     // instantiate and load a product
-                    isce::product::Product product(file);
+                    isce3::product::Product product(file);
 
                     // return swath from product
                     return RadarGridParameters(product, freq);
@@ -49,7 +49,7 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                          size_t width,
                          const DateTime& ref_epoch) {
 
-                    LookSide side = isce::core::parseLookSide(look_side);
+                    LookSide side = isce3::core::parseLookSide(look_side);
 
                     return RadarGridParameters(sensing_start, wavelength, prf,
                             starting_range, range_pixel_spacing, side, length,

@@ -29,7 +29,7 @@ namespace H5
 }
 
 
-namespace isce{
+namespace isce3{
 namespace io{
 
 /************************************************************************/
@@ -317,7 +317,7 @@ IH5Dataset::IH5Dataset(const hid_t &inputds, GDALAccess eAccessIn ):
     }
 
     eAccess = eAccessIn;
-    _dataset = new isce::io::IDataSet(inputds);
+    _dataset = new isce3::io::IDataSet(inputds);
 
     {
         std::stringstream ss;

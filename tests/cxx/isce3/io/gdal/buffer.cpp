@@ -5,8 +5,8 @@
 #include <isce3/except/Error.h>
 #include <isce3/io/gdal/Buffer.h>
 
-using isce::io::gdal::Buffer;
-using isce::io::gdal::TypedBuffer;
+using isce3::io::gdal::Buffer;
+using isce3::io::gdal::TypedBuffer;
 
 TEST(BufferTest, Buffer)
 {
@@ -105,7 +105,7 @@ TEST(BufferTest, CastInvalidType)
     Buffer buffer(static_cast<void *>(v.data()), datatype, {length, width}, {rowstride, colstride});
 
     using U = double;
-    EXPECT_THROW( { buffer.cast<U>(); }, isce::except::RuntimeError );
+    EXPECT_THROW( { buffer.cast<U>(); }, isce3::except::RuntimeError );
 }
 
 int main(int argc, char * argv[])

@@ -15,7 +15,7 @@ cimport numpy as np
 
 cdef class pyQuaternion:
     '''
-    Python wrapper for isce::core::Quaternion
+    Python wrapper for isce3::core::Quaternion
 
     Args:
         q (list or np.array(4)): List of quaternions.

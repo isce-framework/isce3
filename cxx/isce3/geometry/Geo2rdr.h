@@ -9,7 +9,7 @@
 // pyre
 #include <pyre/journal.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Metadata.h>
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Poly2d.h>
@@ -18,15 +18,15 @@
 #include <isce3/core/Peg.h>
 #include <isce3/core/Projections.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/Raster.h>
 
-// isce::product
+// isce3::product
 #include <isce3/product/Product.h>
 #include <isce3/product/RadarGridParameters.h>
 
 // Declaration
-namespace isce {
+namespace isce3 {
     namespace geometry {
         class Geo2rdr;
     }
@@ -38,7 +38,7 @@ namespace isce {
  * See <a href="overview_geometry.html#inversegeom">geometry overview</a>
  * for description of the algorithm.
  */
-class isce::geometry::Geo2rdr {
+class isce3::geometry::Geo2rdr {
 public:
 
     /**
@@ -48,7 +48,7 @@ public:
      * @param[in] frequency Frequency designation
      * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
      */
-    Geo2rdr(const isce::product::Product &,
+    Geo2rdr(const isce3::product::Product &,
             char frequency = 'A',
             bool nativeDoppler = false);
 
@@ -60,10 +60,10 @@ public:
      * @param[in] doppler LUT1d doppler model
      * @param[in] meta Metadata object
      */
-    Geo2rdr(const isce::core::Ellipsoid &,
-            const isce::core::Orbit &,
-            const isce::core::LUT2d<double> &,
-            const isce::core::Metadata &);
+    Geo2rdr(const isce3::core::Ellipsoid &,
+            const isce3::core::Orbit &,
+            const isce3::core::LUT2d<double> &,
+            const isce3::core::Metadata &);
 
     /**
      * Constructor from core objects
@@ -73,10 +73,10 @@ public:
      * @param[in] ellipsoid Ellipsoid object
      * @param[in] doppler   LUT2d doppler model
      */
-    Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
-            const isce::core::Orbit & orbit,
-            const isce::core::Ellipsoid & ellipsoid,
-            const isce::core::LUT2d<double> & doppler = {});
+    Geo2rdr(const isce3::product::RadarGridParameters & radarGrid,
+            const isce3::core::Orbit & orbit,
+            const isce3::core::Ellipsoid & ellipsoid,
+            const isce3::core::LUT2d<double> & doppler = {});
 
     /**
      * Set convergence threshold
@@ -102,9 +102,9 @@ public:
      * @param[in] azshift Number of lines to shift by in azimuth
      * @param[in] rgshift Number of pixels to shift by in range
      */
-    void geo2rdr(isce::io::Raster & topoRaster,
-                 isce::io::Raster & rgoffRaster,
-                 isce::io::Raster & azoffRaster,
+    void geo2rdr(isce3::io::Raster & topoRaster,
+                 isce3::io::Raster & rgoffRaster,
+                 isce3::io::Raster & azoffRaster,
                  double azshift=0.0, double rgshift=0.0);
 
     /**
@@ -120,7 +120,7 @@ public:
      * @param[in] azshift Number of lines to shift by in azimuth
      * @param[in] rgshift Number of pixels to shift by in range
      */
-    void geo2rdr(isce::io::Raster & topoRaster,
+    void geo2rdr(isce3::io::Raster & topoRaster,
                  const std::string & outdir,
                  double azshift=0.0, double rgshift=0.0);
 
@@ -130,16 +130,16 @@ public:
     // Getters for isce objects
 
     /** Get Orbit object used for processing */
-    const isce::core::Orbit & orbit() const { return _orbit; }
+    const isce3::core::Orbit & orbit() const { return _orbit; }
 
     /** Get Ellipsoid object used for processing */
-    const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+    const isce3::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
 
     /** Get Doppler model used for processing */
-    const isce::core::LUT2d<double> & doppler() const { return _doppler; }
+    const isce3::core::LUT2d<double> & doppler() const { return _doppler; }
 
     /** Get read-only reference to RadarGridParameters */
-    const isce::product::RadarGridParameters & radarGridParameters() const { return _radarGrid; }
+    const isce3::product::RadarGridParameters & radarGridParameters() const { return _radarGrid; }
 
     // Get geo2rdr processing options
 
@@ -160,16 +160,16 @@ private:
     /** Quick check to ensure we can interpolate orbit to middle of DEM*/
     void _checkOrbitInterpolation(double);
 
-    // isce::core objects
-    isce::core::Ellipsoid _ellipsoid;
-    isce::core::Orbit _orbit;
-    isce::core::LUT2d<double> _doppler;
+    // isce3::core objects
+    isce3::core::Ellipsoid _ellipsoid;
+    isce3::core::Orbit _orbit;
+    isce3::core::LUT2d<double> _doppler;
 
     // RadarGridParameters
-    isce::product::RadarGridParameters _radarGrid;
+    isce3::product::RadarGridParameters _radarGrid;
 
     // Projection related data
-    isce::core::ProjectionBase * _projTopo;
+    isce3::core::ProjectionBase * _projTopo;
 
     // Processing parameters
     int _numiter;

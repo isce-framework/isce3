@@ -10,7 +10,7 @@
 
 /** Default constructor */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube() : _nslices(0), _nrows{0}, _ncols{0}, _owner{false}, _grid{nullptr} {}
 
 // Constructor with number of slices, rows and columns 
@@ -18,7 +18,7 @@ Cube() : _nslices(0), _nrows{0}, _ncols{0}, _owner{false}, _grid{nullptr} {}
   * @param[in] nrows Number of rows 
   * @param[in] ncols Number of columns */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube(size_t nslices, size_t nrows, size_t ncols) : 
     _nslices{nslices},
     _nrows{nrows}, 
@@ -28,9 +28,9 @@ Cube(size_t nslices, size_t nrows, size_t ncols) :
     _grid{nullptr} {}
 
 // Deep copy constructor - allocates memory and copies values 
-/** @param[in] m isce::core::Cube object to copy */
+/** @param[in] m isce3::core::Cube object to copy */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube(const Cube<cell_t> & m) :
     _nslices{m.height()},
     _nrows{m.length()},
@@ -42,9 +42,9 @@ Cube(const Cube<cell_t> & m) :
 }
 
 // Shallow copy constructor - does not allocate its own memory 
-/** @param[in] m isce::core::Cube object to copy */
+/** @param[in] m isce3::core::Cube object to copy */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube(Cube<cell_t> & m) :
     _nslices{m.height()},
     _nrows{m.length()},
@@ -59,7 +59,7 @@ Cube(Cube<cell_t> & m) :
   * @param[in] nrows Number of rows for data
   * @param[in] ncols Number of columns for data (assume row major packing) */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube(cell_t * data, size_t nslices, size_t nrows, size_t ncols) :
     _nslices{nslices},
     _nrows{nrows},
@@ -73,7 +73,7 @@ Cube(cell_t * data, size_t nslices, size_t nrows, size_t ncols) :
   * @param[in] nrows Number of rows for data 
   * @param[in] ncols Number of columns for data (assume row major packing) */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube(std::valarray<cell_t> & data, size_t nrows, size_t ncols) :
     _nslices{data.size()/(nrows*ncols)},
     _nrows{nrows},
@@ -87,7 +87,7 @@ Cube(std::valarray<cell_t> & data, size_t nrows, size_t ncols) :
   * @param[in] nrows Number of rows for data
   * @param[in] ncols Number of columns for data (assume row major packing) */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 Cube(std::vector<cell_t> & data, size_t nrows, size_t ncols) :
     _nslices{data.size()/(nrows*ncols)},
     _nrows{nrows},
@@ -98,7 +98,7 @@ Cube(std::vector<cell_t> & data, size_t nrows, size_t ncols) :
 
 /** Destructor */
 template <typename cell_t>
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 ~Cube() {
     // If I allocated memory myself, delete it
     if (_owner) {
@@ -111,10 +111,10 @@ isce::core::Cube<cell_t>::
 }
 
 // Deep assignment operator - allocates memory and copies values 
-/** @param[in] m isce::core::Cube object to copy */
+/** @param[in] m isce3::core::Cube object to copy */
 template <typename cell_t>
-isce::core::Cube<cell_t> &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t> &
+isce3::core::Cube<cell_t>::
 operator=(const Cube<cell_t> & m) {
     // Resize my storage
     resize(m.height(), m.length(), m.width());
@@ -126,10 +126,10 @@ operator=(const Cube<cell_t> & m) {
 }
 
 // Shallow assignment operator - does not allocate its own memory 
-/** @param[in] m isce::core::Cube object to copy */
+/** @param[in] m isce3::core::Cube object to copy */
 template <typename cell_t>
-isce::core::Cube<cell_t> &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t> &
+isce3::core::Cube<cell_t>::
 operator=(Cube<cell_t> & m) {
     _nslices = m.height();
     _nrows = m.length();
@@ -146,7 +146,7 @@ operator=(Cube<cell_t> & m) {
   * @param[in] ncols Number of columns */
 template <typename cell_t>
 void
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 resize(size_t nslices, size_t nrows, size_t ncols) {
 
     // If I have already allocated memory, delete it first
@@ -173,8 +173,8 @@ resize(size_t nslices, size_t nrows, size_t ncols) {
   * @param[in] rowspan Number of rows of subcube
   * @param[in] colspan Number of columns of subcube */
 template <typename cell_t>
-const typename isce::core::Cube<cell_t>::view_t
-isce::core::Cube<cell_t>::
+const typename isce3::core::Cube<cell_t>::view_t
+isce3::core::Cube<cell_t>::
 subcube(size_t slice, size_t row, size_t col, size_t slicespan, size_t rowspan, size_t colspan) {
 
     // Allocate grid pointer for my data
@@ -195,7 +195,7 @@ subcube(size_t slice, size_t row, size_t col, size_t slicespan, size_t rowspan, 
 /** Access to data buffer */
 template <typename cell_t>
 cell_t *
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 data() {
     return _buffer;
 }
@@ -203,7 +203,7 @@ data() {
 /** Read-only access to data buffer */
 template <typename cell_t>
 const cell_t *
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 data() const {
     return _buffer;
 }
@@ -211,7 +211,7 @@ data() const {
 /** Access to data buffer at specific slice */
 template <typename cell_t>
 cell_t *
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 sliceptr(size_t slice) {
     // Make a view pointing to row
     auto view = subcube(slice, 0, 0, 1, 1, 1);
@@ -222,7 +222,7 @@ sliceptr(size_t slice) {
 /** Read-only access to data buffer at specific slice */
 template <typename cell_t>
 const cell_t *
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 sliceptr(size_t slicenum) const {
     // Make a view pointing to row
     auto view = subcube(slicenum, 0, 0, 1, 1, 1);
@@ -236,7 +236,7 @@ sliceptr(size_t slicenum) const {
   * @param[in] col Column coordinate to access */
 template <typename cell_t>
 cell_t &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 operator()(size_t slice, size_t row, size_t col) {
     return _buffer[(slice*_nrows + row)*_ncols + col];
 }
@@ -247,7 +247,7 @@ operator()(size_t slice, size_t row, size_t col) {
   * @param[in] col Column coordinate to access */
 template <typename cell_t>
 const cell_t &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 operator()(size_t slice, size_t row, size_t col) const {
     return _buffer[(slice*_nrows + row)*_ncols + col];
 }
@@ -256,7 +256,7 @@ operator()(size_t slice, size_t row, size_t col) const {
 /** @param[in] index Flattened index to access */
 template <typename cell_t>
 cell_t &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 operator()(size_t index) {
     return _buffer[index];
 }
@@ -265,7 +265,7 @@ operator()(size_t index) {
 /** @param[in] index Flattened index to access */
 template <typename cell_t>
 const cell_t &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 operator()(size_t index) const {
     return _buffer[index];
 }
@@ -274,7 +274,7 @@ operator()(size_t index) const {
 /** @param[in] index pyre::grid_t::index_type for coordinate */
 template <typename cell_t>
 cell_t &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 operator[](const index_t & index) {
     // Create grid for my data
     shape_t shape{_nslices, _nrows, _ncols};
@@ -287,7 +287,7 @@ operator[](const index_t & index) {
 /** @param[in] index pyre::grid_t::index_type for coordinate */
 template <typename cell_t>
 const cell_t &
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 operator[](const index_t & index) const {
     // Create grid for my data
     shape_t shape{_nslices, _nrows, _ncols};
@@ -299,7 +299,7 @@ operator[](const index_t & index) const {
 // Fill with zeros
 template <typename cell_t>
 void
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 zeros() {
     for (size_t i = 0; i < _nslices *_nrows * _ncols; ++i) {
         _buffer[i] = 0.0;
@@ -309,7 +309,7 @@ zeros() {
 // Fill with a constant value
 template <typename cell_t>
 void
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 fill(cell_t value) {
     for (size_t i = 0; i < _nslices * _nrows * _ncols; ++i) {
         _buffer[i] = value;
@@ -318,8 +318,8 @@ fill(cell_t value) {
 
 /** Get shape information as grid::shape_type */
 template <typename cell_t>
-typename isce::core::Cube<cell_t>::shape_t
-isce::core::Cube<cell_t>::
+typename isce3::core::Cube<cell_t>::shape_t
+isce3::core::Cube<cell_t>::
 shape() const {
     return {_nslices, _nrows, _ncols};
 }
@@ -327,7 +327,7 @@ shape() const {
 /** Get cube width */
 template <typename cell_t>
 size_t
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 width() const {
     return _ncols;
 }
@@ -335,7 +335,7 @@ width() const {
 /** Get cube length */
 template <typename cell_t>
 size_t
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 length() const {
     return _nrows;
 }
@@ -343,15 +343,15 @@ length() const {
 /** Get cube height */
 template <typename cell_t>
 size_t 
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 height() const {
     return _nslices;
 }
 
 /** Get matrix byte offset for slice, row and column for raw binary buffer */
 template <typename cell_t>
-typename isce::core::Cube<cell_t>::shape_t
-isce::core::Cube<cell_t>::
+typename isce3::core::Cube<cell_t>::shape_t
+isce3::core::Cube<cell_t>::
 byteoffset() const {
     size_t unitsize = sizeof(cell_t);
     return { _nrows * _ncols * unitsize, _ncols * unitsize, unitsize}; 
@@ -360,7 +360,7 @@ byteoffset() const {
 // Reset grid pointer for matrix views
 template <typename cell_t>
 void 
-isce::core::Cube<cell_t>::
+isce3::core::Cube<cell_t>::
 _resetGrid() {
     if (_grid) {
         delete _grid;

@@ -10,9 +10,9 @@
 /** @param[in] sincLen Length of sinc kernel
   * @param[in] sincSub Sinc decimation factor */
 template <typename U>
-isce::core::Sinc2dInterpolator<U>::
+isce3::core::Sinc2dInterpolator<U>::
 Sinc2dInterpolator(int sincLen, int sincSub) :
-    isce::core::Interpolator<U>(SINC_METHOD),
+    isce3::core::Interpolator<U>(SINC_METHOD),
     _kernelLength{sincSub}, _kernelWidth{sincLen}, _sincHalf{sincLen / 2} {
 
     // Temporary valarray for storing sinc coefficients
@@ -41,7 +41,7 @@ Sinc2dInterpolator(int sincLen, int sincSub) :
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
 template<class U>
-U isce::core::Sinc2dInterpolator<U>::interp_impl(double x, double y,
+U isce3::core::Sinc2dInterpolator<U>::interp_impl(double x, double y,
                                                  const Map& z) const
 {
 
@@ -68,7 +68,7 @@ U isce::core::Sinc2dInterpolator<U>::interp_impl(double x, double y,
 }
 
 template<class U>
-U isce::core::Sinc2dInterpolator<U>::_sinc_eval_2d(const Map& arrin, int intpx,
+U isce3::core::Sinc2dInterpolator<U>::_sinc_eval_2d(const Map& arrin, int intpx,
                                                    int intpy, double frpx,
                                                    double frpy) const
 {
@@ -94,7 +94,7 @@ U isce::core::Sinc2dInterpolator<U>::_sinc_eval_2d(const Map& arrin, int intpx,
 }
 
 template<class U>
-void isce::core::Sinc2dInterpolator<U>::_sinc_coef(
+void isce3::core::Sinc2dInterpolator<U>::_sinc_coef(
         double beta, double, int decfactor, double pedestal, int weight,
         std::valarray<double>& filter) const
 {
@@ -113,9 +113,9 @@ void isce::core::Sinc2dInterpolator<U>::_sinc_coef(
 }
 
 // Forward declaration of classes
-template class isce::core::Sinc2dInterpolator<double>;
-template class isce::core::Sinc2dInterpolator<float>;
-template class isce::core::Sinc2dInterpolator<std::complex<double>>;
-template class isce::core::Sinc2dInterpolator<std::complex<float>>;
+template class isce3::core::Sinc2dInterpolator<double>;
+template class isce3::core::Sinc2dInterpolator<float>;
+template class isce3::core::Sinc2dInterpolator<std::complex<double>>;
+template class isce3::core::Sinc2dInterpolator<std::complex<float>>;
 
 // end of file

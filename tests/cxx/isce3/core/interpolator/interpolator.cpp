@@ -15,10 +15,10 @@
 #include <vector>
 #include "gtest/gtest.h"
 
-// isce::core
+// isce3::core
 #include "isce3/core/Constants.h"
 #include "isce3/core/Interpolator.h"
-using isce::core::Matrix;
+using isce3::core::Matrix;
 
 void loadInterpData(Matrix<double> &);
 
@@ -44,16 +44,16 @@ struct InterpolatorTest : public ::testing::Test {
     std::vector<double> yindex;
 
     // The low resolution data
-    isce::core::Matrix<double> M;
+    isce3::core::Matrix<double> M;
     std::vector<double> M_vec;
     // Truth data
-    isce::core::Matrix<double> true_values;
+    isce3::core::Matrix<double> true_values;
 
     // The low resolution complex data
-    isce::core::Matrix<std::complex<double>> M_cpx;
+    isce3::core::Matrix<std::complex<double>> M_cpx;
     std::vector<std::complex<double>> M_vec_cpx;
     // Complex truth data
-    isce::core::Matrix<std::complex<double>> true_values_cpx;
+    isce3::core::Matrix<std::complex<double>> true_values_cpx;
 
     double start, delta;
 
@@ -100,7 +100,7 @@ struct InterpolatorTest : public ::testing::Test {
 TEST_F(InterpolatorTest, Nearest) {
     size_t N_pts = true_values.length();
     // Create interpolator
-    isce::core::NearestNeighborInterpolator<double> interp;
+    isce3::core::NearestNeighborInterpolator<double> interp;
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -122,7 +122,7 @@ TEST_F(InterpolatorTest, Bilinear) {
     size_t N_pts = true_values.length();
     double error = 0.0;
     // Create interpolator
-    isce::core::BilinearInterpolator<double> interp;
+    isce3::core::BilinearInterpolator<double> interp;
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -145,7 +145,7 @@ TEST_F(InterpolatorTest, Bicubic) {
     size_t N_pts = true_values.length();
     double error = 0.0;
     // Create interpolator
-    isce::core::BicubicInterpolator<double> interp;
+    isce3::core::BicubicInterpolator<double> interp;
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -172,7 +172,7 @@ TEST_F(InterpolatorTest, Biquintic) {
     size_t N_pts = true_values.length();
     double error = 0.0;
     // Create interpolator
-    isce::core::Spline2dInterpolator<double> interp(6);
+    isce3::core::Spline2dInterpolator<double> interp(6);
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -192,7 +192,7 @@ TEST_F(InterpolatorTest, BiquinticVector) {
     size_t N_pts = true_values.length();
     double error = 0.0;
     // Create interpolator
-    isce::core::Spline2dInterpolator<double> interp(6);
+    isce3::core::Spline2dInterpolator<double> interp(6);
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -212,8 +212,8 @@ TEST_F(InterpolatorTest, Sinc2d) {
     double error = 0.0;
     size_t N_pts = 0;
     // Create interpolator (exercise flexible interpolator creation)
-    isce::core::Interpolator<double> * interp = isce::core::createInterpolator<double>(
-        isce::core::SINC_METHOD, 0, 8, 8192
+    isce3::core::Interpolator<double> * interp = isce3::core::createInterpolator<double>(
+        isce3::core::SINC_METHOD, 0, 8, 8192
     );
     // Loop over test points
     for (size_t i = 0; i < true_values.length(); ++i) {
@@ -239,7 +239,7 @@ TEST_F(InterpolatorTest, Sinc2d) {
 TEST_F(InterpolatorTest, NearestComplex) {
     size_t N_pts = true_values.length();
     // Create interpolator
-    isce::core::NearestNeighborInterpolator<std::complex<double>> interp;
+    isce3::core::NearestNeighborInterpolator<std::complex<double>> interp;
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -263,7 +263,7 @@ TEST_F(InterpolatorTest, BilinearComplex) {
     double real_error = 0.0;
     double imag_error = 0.0;
     // Create interpolator
-    isce::core::BilinearInterpolator<std::complex<double>> interp;
+    isce3::core::BilinearInterpolator<std::complex<double>> interp;
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -291,7 +291,7 @@ TEST_F(InterpolatorTest, BicubicComplex) {
     double real_error = 0.0;
     double imag_error = 0.0;
     // Create interpolator
-    isce::core::BicubicInterpolator<std::complex<double>> interp;
+    isce3::core::BicubicInterpolator<std::complex<double>> interp;
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -325,7 +325,7 @@ TEST_F(InterpolatorTest, BiquinticComplex) {
     double real_error = 0.0;
     double imag_error = 0.0;
     // Create interpolator
-    isce::core::Spline2dInterpolator<std::complex<double>> interp(6);
+    isce3::core::Spline2dInterpolator<std::complex<double>> interp(6);
     // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
@@ -353,9 +353,9 @@ TEST_F(InterpolatorTest, Sinc2dComplex) {
     double imag_error = 0.0;
     size_t N_pts = 0;
     // Create interpolator (exercise flexible interpolator creation)
-    isce::core::Interpolator<std::complex<double>> * interp = 
-        isce::core::createInterpolator<std::complex<double>>(
-            isce::core::SINC_METHOD, 0, 8, 8192
+    isce3::core::Interpolator<std::complex<double>> * interp = 
+        isce3::core::createInterpolator<std::complex<double>>(
+            isce3::core::SINC_METHOD, 0, 8, 8192
         );
     // Loop over test points
     for (size_t i = 0; i < true_values.length(); ++i) {
@@ -393,7 +393,7 @@ TEST_F(InterpolatorTest, SimpleRampTest) {
     size_t length = 100;
     size_t width = 100;
 
-    isce::core::Matrix<double> M(length, width);
+    isce3::core::Matrix<double> M(length, width);
 
     for (size_t line = 20; line < 60; ++line) {
         for (size_t pixel = 20; pixel < 60; ++pixel) {
@@ -403,15 +403,15 @@ TEST_F(InterpolatorTest, SimpleRampTest) {
 
     double err = 0.0; //interp_val - x;
       
-    isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD;
-    isce::core::Interpolator<double> * interp = nullptr;
-    interp = isce::core::createInterpolator<double>(method);
+    isce3::core::dataInterpMethod method = isce3::core::BILINEAR_METHOD;
+    isce3::core::Interpolator<double> * interp = nullptr;
+    interp = isce3::core::createInterpolator<double>(method);
 
-    isce::core::Interpolator<double> * interp2 = nullptr;
-    interp2 = isce::core::createInterpolator<double>(isce::core::BICUBIC_METHOD);
+    isce3::core::Interpolator<double> * interp2 = nullptr;
+    interp2 = isce3::core::createInterpolator<double>(isce3::core::BICUBIC_METHOD);
 
-    isce::core::Interpolator<double> * interp3 = nullptr;
-    interp3 = isce::core::createInterpolator<double>(isce::core::BIQUINTIC_METHOD);
+    isce3::core::Interpolator<double> * interp3 = nullptr;
+    interp3 = isce3::core::createInterpolator<double>(isce3::core::BIQUINTIC_METHOD);
 
     double y = 40.0;
     double x = 30.0;

@@ -7,8 +7,8 @@
 
 #include "Looks.h"
 
-bool isce::signal::verifyComplexToRealCasting(isce::io::Raster& input_raster,
-                                              isce::io::Raster& output_raster,
+bool isce3::signal::verifyComplexToRealCasting(isce3::io::Raster& input_raster,
+                                              isce3::io::Raster& output_raster,
                                               int& exponent) {
     GDALDataType input_dtype = input_raster.dtype();
     GDALDataType output_dtype = output_raster.dtype();
@@ -23,14 +23,14 @@ bool isce::signal::verifyComplexToRealCasting(isce::io::Raster& input_raster,
                 "ERROR multilooking with non-unitary exponents";
         error_message += " is only implemented for complex inputs (SLCs) with "
                          "real outputs";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
     }
     return flag_complex_to_real;
 }
 
 template<class T>
-void isce::signal::Looks<T>::multilook(isce::io::Raster& input_raster,
-                                       isce::io::Raster& output_raster,
+void isce3::signal::Looks<T>::multilook(isce3::io::Raster& input_raster,
+                                       isce3::io::Raster& output_raster,
                                        int exponent) {
     int nbands = input_raster.numBands();
     _ncols = input_raster.width();
@@ -68,7 +68,7 @@ void isce::signal::Looks<T>::multilook(isce::io::Raster& input_raster,
  * * @param[out] output output multilooked and downsampled array 
  * */
 template<class T>
-void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
+void isce3::signal::Looks<T>::multilook(std::valarray<T>& input,
                                        std::valarray<T>& output) {
 
     // Time-domain multi-looking of an array with following parameters
@@ -124,7 +124,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
  * @param[in] noDataValue invalid data which will be excluded when multi-looking
  */
 template<class T>
-void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
+void isce3::signal::Looks<T>::multilook(std::valarray<T>& input,
                                        std::valarray<T>& output,
                                        T noDataValue) {
 
@@ -135,7 +135,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
     std::valarray<bool> mask(input.size());
 
     // create the mask. (mask[input==noDataValue] = false)
-    mask = isce::core::makeMask(input, noDataValue);
+    mask = isce3::core::makeMask(input, noDataValue);
 
     // perform multi-looking using the mask array
     multilook(input, mask, output);
@@ -147,7 +147,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
  * @param[out] output output multilooked and downsampled array
  */
 template<class T>
-void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
+void isce3::signal::Looks<T>::multilook(std::valarray<T>& input,
                                        std::valarray<bool>& mask,
                                        std::valarray<T>& output) {
 
@@ -173,7 +173,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
  * @param[out] output output multilooked and downsampled array
  */
 template<class T>
-void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
+void isce3::signal::Looks<T>::multilook(std::valarray<T>& input,
                                        std::valarray<T>& weights,
                                        std::valarray<T>& output) {
 
@@ -226,7 +226,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<T>& input,
  * @param[out] output output multilooked and downsampled array of complex data
  */
 template<class T>
-void isce::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
+void isce3::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
                                        std::valarray<std::complex<T>>& output) {
 
     // The implementation details are same as real data. See the notes above.
@@ -265,7 +265,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
  */
 template <class T>
 void
-isce::signal::Looks<T>::
+isce3::signal::Looks<T>::
 multilook(std::valarray<std::complex<T>> &input,
             std::valarray<std::complex<T>> &output,
             std::complex<T> noDataValue)
@@ -275,7 +275,7 @@ multilook(std::valarray<std::complex<T>> &input,
     std::valarray<bool> mask(input.size());
 
     // create the mask. (mask[input==noDataValue] = false)
-    mask = isce::core::makeMask(input, noDataValue);
+    mask = isce3::core::makeMask(input, noDataValue);
 
     // multilooking 
     multilook(input, mask, output);
@@ -289,7 +289,7 @@ multilook(std::valarray<std::complex<T>> &input,
  */
 template <class T>
 void
-isce::signal::Looks<T>::
+isce3::signal::Looks<T>::
 multilook(std::valarray<std::complex<T>> &input,
         std::valarray<bool> &mask,
         std::valarray<std::complex<T>> &output)
@@ -309,7 +309,7 @@ multilook(std::valarray<std::complex<T>> &input,
  */
 template <class T>
 void
-isce::signal::Looks<T>::
+isce3::signal::Looks<T>::
 multilook(std::valarray<std::complex<T>> &input,
             std::valarray<T> &weights,
             std::valarray<std::complex<T>> &output)
@@ -358,7 +358,7 @@ multilook(std::valarray<std::complex<T>> &input,
  * raisen to before multi-looking
  */
 template<class T>
-void isce::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
+void isce3::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
                                        std::valarray<T>& output, int exponent) {
 
     // If exponent == 0, apply default complex-to-float multilooking (squared)
@@ -392,7 +392,7 @@ void isce::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
     output /= (_colsLooks * _rowsLooks);
 }
 
-template class isce::signal::Looks<int>;
-template class isce::signal::Looks<float>;
-template class isce::signal::Looks<double>;
+template class isce3::signal::Looks<int>;
+template class isce3::signal::Looks<float>;
+template class isce3::signal::Looks<double>;
 

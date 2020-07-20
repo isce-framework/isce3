@@ -7,7 +7,7 @@
 #include <thrust/host_vector.h>
 #include <thrust/system/cuda/experimental/pinned_allocator.h>
 
-namespace isce { namespace cuda { namespace io {
+namespace isce3 { namespace cuda { namespace io {
 
 // thrust::host_vector whose data buffer uses page-locked memory
 template<typename T>
@@ -45,7 +45,7 @@ class RasterCallback {
 private:
     RasterCallback() = default;
 
-    RasterCallback(isce::io::Raster * raster,
+    RasterCallback(isce3::io::Raster * raster,
                    char * buffer,
                    std::size_t col,
                    std::size_t row,
@@ -62,7 +62,7 @@ private:
     template<typename T>
     void setBlock();
 
-    isce::io::Raster * raster;
+    isce3::io::Raster * raster;
     char * buffer;
     std::size_t col;
     std::size_t row;
@@ -88,7 +88,7 @@ public:
      * @param[in] buffer_size stream buffer size in bytes
      */
     FileDataStream(const std::string & filename,
-                   isce::cuda::core::Stream stream,
+                   isce3::cuda::core::Stream stream,
                    std::size_t buffer_size = 0);
 
     /** Get path to file. */
@@ -98,10 +98,10 @@ public:
     void set_filename(const std::string &);
 
     /** Get associated CUDA stream object. */
-    isce::cuda::core::Stream stream() const;
+    isce3::cuda::core::Stream stream() const;
 
     /** Set CUDA stream. */
-    void set_stream(isce::cuda::core::Stream stream);
+    void set_stream(isce3::cuda::core::Stream stream);
 
     /** Get stream buffer size in bytes. */
     std::size_t buffer_size() const;
@@ -141,8 +141,8 @@ public:
 
 private:
     std::string _filename;
-    isce::cuda::core::Stream _stream = 0;
-    isce::cuda::core::Event _mutex;
+    isce3::cuda::core::Stream _stream = 0;
+    isce3::cuda::core::Event _mutex;
     pinned_host_vector<char> _buffer;
     fstreamCallback _callback;
 };
@@ -162,21 +162,21 @@ public:
      * @param[in] stream CUDA stream
      * @param[in] buffer_size stream buffer size in bytes
      */
-    RasterDataStream(isce::io::Raster * raster,
-                     isce::cuda::core::Stream stream,
+    RasterDataStream(isce3::io::Raster * raster,
+                     isce3::cuda::core::Stream stream,
                      std::size_t buffer_size = 0);
 
     /** Get pointer to Raster object. */
-    isce::io::Raster * raster() const;
+    isce3::io::Raster * raster() const;
 
     /** Set raster. */
-    void set_raster(isce::io::Raster *);
+    void set_raster(isce3::io::Raster *);
 
     /** Get associated CUDA stream object. */
-    isce::cuda::core::Stream stream() const;
+    isce3::cuda::core::Stream stream() const;
 
     /** Set CUDA stream. */
-    void set_stream(isce::cuda::core::Stream stream);
+    void set_stream(isce3::cuda::core::Stream stream);
 
     /** Get stream buffer size in bytes. */
     std::size_t buffer_size() const;
@@ -231,9 +231,9 @@ public:
             std::size_t length);
 
 private:
-    isce::io::Raster * _raster;
-    isce::cuda::core::Stream _stream = 0;
-    isce::cuda::core::Event _mutex;
+    isce3::io::Raster * _raster;
+    isce3::cuda::core::Stream _stream = 0;
+    isce3::cuda::core::Event _mutex;
     pinned_host_vector<char> _buffer;
     RasterCallback _callback;
 };

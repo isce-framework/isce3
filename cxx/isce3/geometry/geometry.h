@@ -8,8 +8,8 @@
  * Collection of simple commonly used geometry functions
  *
  * There are no classes defined in this file. Its a collection of functions
- * that are meant to be light weight versions of isce::geometry::Topo and
- * isce::geometry::Geo2rdr.*/
+ * that are meant to be light weight versions of isce3::geometry::Topo and
+ * isce3::geometry::Geo2rdr.*/
 
 #pragma once
 
@@ -20,14 +20,14 @@
 #include <isce3/core/Constants.h>
 
 // Declaration
-namespace isce {
-//! The isce::geometry namespace
+namespace isce3 {
+//! The isce3::geometry namespace
 namespace geometry {
 
 /**
  * Radar geometry coordinates to map coordinates transformer
  *
- * This is meant to be the light version of isce::geometry::Topo and not meant
+ * This is meant to be the light version of isce3::geometry::Topo and not meant
  * to be used for processing large number of targets of interest. Note that
  * doppler and wavelength are meant for completeness and this method can be
  * used with both Native and Zero Doppler geometries. For details of the
@@ -47,11 +47,11 @@ namespace geometry {
  * @param[in] extraIter Number of secondary iterations
  */
 int rdr2geo(double aztime, double slantRange, double doppler,
-            const isce::core::Orbit & orbit,
-            const isce::core::Ellipsoid & ellipsoid,
+            const isce3::core::Orbit & orbit,
+            const isce3::core::Ellipsoid & ellipsoid,
             const DEMInterpolator & demInterp,
-            isce::core::Vec3 & targetLLH,
-            double wvl, isce::core::LookSide side, double threshold,
+            isce3::core::Vec3 & targetLLH,
+            double wvl, isce3::core::LookSide side, double threshold,
             int maxIter, int extraIter);
 
 /**
@@ -77,14 +77,14 @@ int rdr2geo(double aztime, double slantRange, double doppler,
  * @param[in] maxIter Number of primary iterations
  * @param[in] extraIter Number of secondary iterations
  */
-int rdr2geo(const isce::core::Pixel & pixel,
-            const isce::core::Basis & TCNbasis,
-            const isce::core::Vec3& pos,
-            const isce::core::Vec3& vel,
-            const isce::core::Ellipsoid & ellipsoid,
+int rdr2geo(const isce3::core::Pixel & pixel,
+            const isce3::core::Basis & TCNbasis,
+            const isce3::core::Vec3& pos,
+            const isce3::core::Vec3& vel,
+            const isce3::core::Ellipsoid & ellipsoid,
             const DEMInterpolator & demInterp,
-            isce::core::Vec3 & targetLLH,
-            isce::core::LookSide side,
+            isce3::core::Vec3 & targetLLH,
+            isce3::core::LookSide side,
             double threshold, int maxIter, int extraIter);
 
 /** "Cone" interface to rdr2geo.
@@ -114,10 +114,10 @@ int rdr2geo(const isce::core::Pixel & pixel,
  *
  *  @returns non-zero when iterations successfully converge.
  */
-int rdr2geo(const isce::core::Vec3& radarXYZ,
-            const isce::core::Vec3& axis, double angle,
+int rdr2geo(const isce3::core::Vec3& radarXYZ,
+            const isce3::core::Vec3& axis, double angle,
             double range, const DEMInterpolator& dem,
-            isce::core::Vec3& targetXYZ, isce::core::LookSide side,
+            isce3::core::Vec3& targetXYZ, isce3::core::LookSide side,
             double threshold, int maxIter, int extraIter);
 
 /**
@@ -143,13 +143,13 @@ int rdr2geo(const isce::core::Vec3& radarXYZ,
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange step size used for computing derivative of doppler
  */
-int geo2rdr(const isce::core::Vec3 & inputLLH,
-            const isce::core::Ellipsoid & ellipsoid,
-            const isce::core::Orbit & orbit,
-            const isce::core::Poly2d & doppler,
+int geo2rdr(const isce3::core::Vec3 & inputLLH,
+            const isce3::core::Ellipsoid & ellipsoid,
+            const isce3::core::Orbit & orbit,
+            const isce3::core::Poly2d & doppler,
             double & aztime, double & slantRange,
             double wavelength, double startingRange,
-            double rangePixelSpacing, size_t rwidth, isce::core::LookSide side,
+            double rangePixelSpacing, size_t rwidth, isce3::core::LookSide side,
             double threshold, int maxIter, double deltaRange);
 
 /**
@@ -172,12 +172,12 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
  * @param[in] maxIter     Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange  step size used for computing derivative of doppler
  */
-int geo2rdr(const isce::core::Vec3 & inputLLH,
-            const isce::core::Ellipsoid & ellipsoid,
-            const isce::core::Orbit & orbit,
-            const isce::core::LUT2d<double> & doppler,
+int geo2rdr(const isce3::core::Vec3 & inputLLH,
+            const isce3::core::Ellipsoid & ellipsoid,
+            const isce3::core::Orbit & orbit,
+            const isce3::core::LUT2d<double> & doppler,
             double & aztime, double & slantRange,
-            double wavelength, isce::core::LookSide side, double threshold,
+            double wavelength, isce3::core::LookSide side, double threshold,
             int maxIter, double deltaRange);
 
 /**
@@ -198,10 +198,10 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
  * @param[out] max_lon  Maximum longitude of geographic region (radians)
  * @param[out] max_lat  Maximum latitude of geographic region (radians)
  */
-void computeDEMBounds(const isce::core::Orbit & orbit,
-                      const isce::core::Ellipsoid & ellipsoid,
-                      const isce::core::LUT2d<double> & doppler,
-                      const isce::product::RadarGridParameters & radarGrid,
+void computeDEMBounds(const isce3::core::Orbit & orbit,
+                      const isce3::core::Ellipsoid & ellipsoid,
+                      const isce3::core::LUT2d<double> & doppler,
+                      const isce3::product::RadarGridParameters & radarGrid,
                       size_t xoff,
                       size_t yoff,
                       size_t xsize,
@@ -213,7 +213,7 @@ void computeDEMBounds(const isce::core::Orbit & orbit,
                       double & max_lat);
 
 template <class T>
-double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel,
+double _compute_doppler_aztime_diff(isce3::core::Vec3 dr, isce3::core::Vec3 satvel,
                                     T & doppler, double wavelength,
                                     double aztime, double slantRange,
                                     double deltaRange);

@@ -4,7 +4,7 @@
 
 #include <exception> // std::domain_error
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 inline size_t ICU::numBufLines() const { return _NumBufLines; }

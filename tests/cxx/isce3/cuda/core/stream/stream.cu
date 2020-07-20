@@ -5,7 +5,7 @@
 #include <thrust/host_vector.h>
 #include <thrust/system/cuda/experimental/pinned_allocator.h>
 
-using namespace isce::cuda::core;
+using namespace isce3::cuda::core;
 
 using thrust::device_vector;
 using thrust::host_vector;

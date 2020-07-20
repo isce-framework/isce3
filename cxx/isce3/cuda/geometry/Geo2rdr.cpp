@@ -10,12 +10,12 @@
 #include "gpuGeo2rdr.h"
 
 // pull in some isce namespaces
-using isce::core::Ellipsoid;
-using isce::core::Orbit;
-using isce::core::LUT1d;
-using isce::core::DateTime;
-using isce::product::RadarGridParameters;
-using isce::io::Raster;
+using isce3::core::Ellipsoid;
+using isce3::core::Orbit;
+using isce3::core::LUT1d;
+using isce3::core::DateTime;
+using isce3::product::RadarGridParameters;
+using isce3::io::Raster;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
 /** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
@@ -28,8 +28,8 @@ using isce::io::Raster;
   * <li>azimuth.off - Azimuth offset to be applied to product to align with topoRaster
   * <li>range.off - Range offset to be applied to product to align with topoRaster
 */
-void isce::cuda::geometry::Geo2rdr::
-geo2rdr(isce::io::Raster & topoRaster,
+void isce3::cuda::geometry::Geo2rdr::
+geo2rdr(isce3::io::Raster & topoRaster,
         const std::string & outdir,
         double azshift, double rgshift) {
 
@@ -54,10 +54,10 @@ geo2rdr(isce::io::Raster & topoRaster,
   * @param[in] azoffRaster azimuth offset output
   * @param[in] azshift Number of lines to shift by in azimuth
   * @param[in] rgshift Number of pixels to shift by in range */
-void isce::cuda::geometry::Geo2rdr::
-geo2rdr(isce::io::Raster & topoRaster,
-        isce::io::Raster & rgoffRaster,
-        isce::io::Raster & azoffRaster,
+void isce3::cuda::geometry::Geo2rdr::
+geo2rdr(isce3::io::Raster & topoRaster,
+        isce3::io::Raster & rgoffRaster,
+        isce3::io::Raster & azoffRaster,
         double azshift, double rgshift) {
 
     // Create reusable pyre::journal channels
@@ -71,7 +71,7 @@ geo2rdr(isce::io::Raster & topoRaster,
     // Cache EPSG code for topo results
     const int topoEPSG = topoRaster.getEPSG();
 
-    // Cache ISCE objects (use public interface of parent isce::geometry::Geo2rdr class)
+    // Cache ISCE objects (use public interface of parent isce3::geometry::Geo2rdr class)
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
     const LUT1d<double> doppler(this->doppler());
@@ -150,7 +150,7 @@ geo2rdr(isce::io::Raster & topoRaster,
         topoRaster.getBlock(hgt, 0, lineStart, demWidth, blockLength,3);
 
         // Process block on GPU
-        isce::cuda::geometry::runGPUGeo2rdr(
+        isce3::cuda::geometry::runGPUGeo2rdr(
             ellipsoid, orbit, doppler, x, y, hgt, azoff, rgoff, topoEPSG,
             lineStart, demWidth, t0, r0,
             radarGrid.length(), radarGrid.width(), radarGrid.prf(),
@@ -171,7 +171,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 }
 
 // Print extents and image sizes
-void isce::cuda::geometry::Geo2rdr::
+void isce3::cuda::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
               double r0, double rngend, double dmrg, size_t demWidth, size_t demLength) {
     info
@@ -189,14 +189,14 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 }
 
 // Check we can interpolate orbit to middle of DEM
-void isce::cuda::geometry::Geo2rdr::
+void isce3::cuda::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime) {
-    isce::core::cartesian_t satxyz, satvel;
+    isce3::core::cartesian_t satxyz, satvel;
     this->orbit().interpolate(&satxyz, &satvel, aztime);
 }
 
 // Compute number of lines per block dynamically from GPU memory
-void isce::cuda::geometry::Geo2rdr::
+void isce3::cuda::geometry::Geo2rdr::
 computeLinesPerBlock() {
 
     // Compute GPU memory

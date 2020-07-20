@@ -1,14 +1,14 @@
 #include "loadDem.h"
 #include <isce3/except/Error.h>
 
-isce::geometry::DEMInterpolator
-isce::geocode::loadDEM(isce::io::Raster& demRaster,
-                       const isce::product::GeoGridParameters& geoGrid,
+isce3::geometry::DEMInterpolator
+isce3::geocode::loadDEM(isce3::io::Raster& demRaster,
+                       const isce3::product::GeoGridParameters& geoGrid,
                        int lineStart, int blockLength, int blockWidth,
                        double demMargin)
 {
     // DEM interpolator
-    isce::geometry::DEMInterpolator demInterp;
+    isce3::geometry::DEMInterpolator demInterp;
 
     // the epsg code of the input DEM
     int epsgcode = demRaster.getEPSG();
@@ -21,12 +21,12 @@ isce::geocode::loadDEM(isce::io::Raster& demRaster,
 
     // If the projection systems are different
     if (epsgcode != geoGrid.epsg()) {
-        std::unique_ptr<isce::core::ProjectionBase> proj(
-                isce::core::createProj(geoGrid.epsg()));
+        std::unique_ptr<isce3::core::ProjectionBase> proj(
+                isce3::core::createProj(geoGrid.epsg()));
 
         // Create transformer to match the DEM
-        std::unique_ptr<isce::core::ProjectionBase> demproj(
-                isce::core::createProj(epsgcode));
+        std::unique_ptr<isce3::core::ProjectionBase> demproj(
+                isce3::core::createProj(epsgcode));
 
         // Skip factors
         const int askip = std::max(static_cast<int>(blockLength / 10.), 1);
@@ -61,11 +61,11 @@ isce::geocode::loadDEM(isce::io::Raster& demRaster,
 
         // Loop over the indices
         for (size_t i = 0; i < lineInd.size(); i++) {
-            isce::core::Vec3 outpt = {
+            isce3::core::Vec3 outpt = {
                     geoGrid.startX() + geoGrid.spacingX() * pixInd[i],
                     geoGrid.startY() + geoGrid.spacingY() * (lineStart + lineInd[i]), 0.0};
 
-            isce::core::Vec3 dempt;
+            isce3::core::Vec3 dempt;
             if (!projTransform(proj.get(), demproj.get(), outpt, dempt)) {
                 minX = std::min(minX, dempt[0]);
                 maxX = std::max(maxX, dempt[0]);
@@ -73,7 +73,7 @@ isce::geocode::loadDEM(isce::io::Raster& demRaster,
                 maxY = std::max(maxY, dempt[1]);
             } else {
                 std::string errmsg = "projection transformation between geogrid and DEM failed";
-                throw isce::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+                throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
 
             }
         }
@@ -87,7 +87,7 @@ isce::geocode::loadDEM(isce::io::Raster& demRaster,
     }
 
     // If not LonLat, scale to meters
-    demMargin = (epsgcode != 4326) ? isce::core::decimaldeg2meters(demMargin)
+    demMargin = (epsgcode != 4326) ? isce3::core::decimaldeg2meters(demMargin)
                                    : demMargin;
 
     // Account for margins

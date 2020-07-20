@@ -12,11 +12,11 @@
 #include <cmath>
 #include <memory>
 
-using isce::except::LengthError;
+using isce3::except::LengthError;
 
 // Constructor
 template<class T>
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 NFFT(size_t m, size_t n, size_t fft_size)
     : _m(m), _n(n), _fft_size(fft_size), _kernel(m,n,fft_size)
 {
@@ -47,22 +47,22 @@ NFFT(size_t m, size_t n, size_t fft_size)
     // Pre-compute spectral weights (1/phi_hat in NFFT papers).
     // Also include factor of n since FFTW does not normalize DFT.
     T b = M_PI * (2.0 - 1.0*n/fft_size);
-    T norm = isce::math::bessel_i0(b*m) / n;
+    T norm = isce3::math::bessel_i0(b*m) / n;
     size_t n2 = (n - 1) / 2 + 1;
     for (size_t i=0; i<n2; ++i) {
         double f = 2 * M_PI * i / _fft_size;
-        _weights[i] = norm / isce::math::bessel_i0(m * std::sqrt(b*b-f*f));
+        _weights[i] = norm / isce3::math::bessel_i0(m * std::sqrt(b*b-f*f));
     }
     for (size_t i=n2; i<n; ++i) {
         double f = 2 * M_PI * ((double)i - n) / _fft_size;
-        _weights[i] = norm / isce::math::bessel_i0(m * std::sqrt(b*b-f*f));
+        _weights[i] = norm / isce3::math::bessel_i0(m * std::sqrt(b*b-f*f));
     }
 }
 
 // Digest some data.
 template<class T>
 void
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 set_spectrum(size_t size, size_t stride, const std::complex<T> *x)
 {
     if (size != _n) {
@@ -88,7 +88,7 @@ set_spectrum(size_t size, size_t stride, const std::complex<T> *x)
 // valarray version
 template<class T>
 void
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 set_spectrum(const std::valarray<std::complex<T>> &x)
 {
     set_spectrum(x.size(), /*stride*/1, &x[0]);
@@ -97,18 +97,18 @@ set_spectrum(const std::valarray<std::complex<T>> &x)
 // Emit samples.
 template<class T>
 std::complex<T>
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 interp(double t) const
 {
     // scale time index to account for zero-padding of spectrum.
     t *= (double)_fft_size / (double)_n;
-    return isce::core::interp1d<T,std::complex<T>>(_kernel, _xt, t,
+    return isce3::core::interp1d<T,std::complex<T>>(_kernel, _xt, t,
                                                    /*periodic*/true);
 }
 
 template<class T>
 void
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 execute(size_t isize, size_t istride,
         const std::complex<T> *spectrum,
         size_t tsize, size_t tstride,
@@ -128,7 +128,7 @@ execute(size_t isize, size_t istride,
 
 template<class T>
 void
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 execute(const std::valarray<std::complex<T>> &spectrum,
         const std::valarray<double> &times,
         std::valarray<std::complex<T>> &out)
@@ -142,7 +142,7 @@ execute(const std::valarray<std::complex<T>> &spectrum,
 // Execute adjoint transform.
 template<class T>
 void
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 execute_adjoint(size_t isize, size_t istride,
                 const std::complex<T> *time_series,
                 size_t tsize, size_t tstride,
@@ -191,7 +191,7 @@ execute_adjoint(size_t isize, size_t istride,
 
 template<class T>
 void
-isce::signal::NFFT<T>::
+isce3::signal::NFFT<T>::
 execute_adjoint(const std::valarray<std::complex<T>> &time_series,
                 const std::valarray<double> &times,
                 std::valarray<std::complex<T>> &spectrum)
@@ -201,5 +201,5 @@ execute_adjoint(const std::valarray<std::complex<T>> &time_series,
                     spectrum.size(), 1, &spectrum[0]);
 }
 
-template class isce::signal::NFFT<float>;
-template class isce::signal::NFFT<double>;
+template class isce3::signal::NFFT<float>;
+template class isce3::signal::NFFT<double>;

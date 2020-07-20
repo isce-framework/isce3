@@ -21,39 +21,39 @@ TEST(gpuCrossmul, Crossmul)
     //interferometric phase is zero.
 
     //a raster object for the reference SLC
-    isce::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     // get the length and width of the SLC
     int width = referenceSlc.width();
     int length = referenceSlc.length();
 
     // a raster object for the interferogram
-    isce::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    isce3::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
-    isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
+    isce3::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
     std::string h5file(TESTDATA_DIR "envisat.h5");
 
     //H5 object
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce::product::Product product(file);
-    const isce::product::Swath & swath = product.swath('A');
+    isce3::product::Product product(file);
+    const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::LUT1d<double> dop2 = dop1;
+    isce3::core::LUT1d<double> dop2 = dop1;
 
     // get the pulse repetition frequency (PRF)
     double prf = swath.nominalAcquisitionPRF();
 
     //instantiate the Crossmul class
-    isce::cuda::signal::gpuCrossmul crsmul;
+    isce3::cuda::signal::gpuCrossmul crsmul;
 
     // set Doppler polynomials for refernce and secondary SLCs
     crsmul.doppler(dop1, dop2);
@@ -106,39 +106,39 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     //interferometric phase is zero.
 
     //a raster object for the reference SLC
-    isce::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     // get the length and width of the SLC
     int width = referenceSlc.width();
     int length = referenceSlc.length();
 
     // a raster object for the interferogram
-    isce::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    isce3::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
-    isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
+    isce3::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
     std::string h5file(TESTDATA_DIR "envisat.h5");
 
     //H5 object
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce::product::Product product(file);
-    const isce::product::Swath & swath = product.swath('A');
+    isce3::product::Product product(file);
+    const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::LUT1d<double> dop2 = dop1;
+    isce3::core::LUT1d<double> dop2 = dop1;
 
     // get the pulse repetition frequency (PRF)
     double prf = swath.nominalAcquisitionPRF();
 
     //instantiate the Crossmul class
-    isce::cuda::signal::gpuCrossmul crsmul;
+    isce3::cuda::signal::gpuCrossmul crsmul;
 
     // set Doppler polynomials for refernce and secondary SLCs
     crsmul.doppler(dop1, dop2);

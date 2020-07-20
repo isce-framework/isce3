@@ -14,7 +14,7 @@
 /** Data structure to hold a 1D Lookup table.
  *  Suitable for storing data of the form y = f(x)*/
 template <typename T>
-class isce::core::LUT1d {
+class isce3::core::LUT1d {
 
     public:
         /** Default constructor */

@@ -18,7 +18,7 @@
 
 /** Data structure for a 2D row-major matrix*/
 template <typename cell_t>
-class isce::core::Matrix {
+class isce3::core::Matrix {
 
     public:
         // Types for interfacing with pyre::grid

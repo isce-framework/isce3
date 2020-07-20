@@ -8,15 +8,15 @@
 
 #include <isce3/core/LUT2d.h>
 
-//isce::product
+//isce3::product
 #include <isce3/product/RadarGridParameters.h>
 
-//isce::geometry
+//isce3::geometry
 #include "Shapes.h"
 #include "DEMInterpolator.h"
 
 //Declaration
-namespace isce{
+namespace isce3{
     namespace geometry{
 
     /** Compute the perimeter of a radar grid in map coordinates.
@@ -42,10 +42,10 @@ namespace isce{
     * </ul>
     */
     Perimeter
-    getGeoPerimeter(const isce::product::RadarGridParameters &radarGrid,
-                const isce::core::Orbit &orbit,
-                const isce::core::ProjectionBase *proj,
-                const isce::core::LUT2d<double> &doppler = {},
+    getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
+                const isce3::core::Orbit &orbit,
+                const isce3::core::ProjectionBase *proj,
+                const isce3::core::LUT2d<double> &doppler = {},
                 const DEMInterpolator& demInterp = DEMInterpolator(0.),
                 const int pointsPerEdge = 11,
                 const double threshold = 1.0e-8,
@@ -66,12 +66,12 @@ namespace isce{
     * The output of this method is an OGREnvelope.
     */
     BoundingBox getGeoBoundingBox(
-            const isce::product::RadarGridParameters& radarGrid,
-            const isce::core::Orbit& orbit,
-            const isce::core::ProjectionBase* proj,
-            const isce::core::LUT2d<double>& doppler = {},
-            const std::vector<double>& hgts = {isce::core::GLOBAL_MIN_HEIGHT,
-                                               isce::core::GLOBAL_MAX_HEIGHT},
+            const isce3::product::RadarGridParameters& radarGrid,
+            const isce3::core::Orbit& orbit,
+            const isce3::core::ProjectionBase* proj,
+            const isce3::core::LUT2d<double>& doppler = {},
+            const std::vector<double>& hgts = {isce3::core::GLOBAL_MIN_HEIGHT,
+                                               isce3::core::GLOBAL_MAX_HEIGHT},
             const double margin = 0.0, const int pointsPerEdge = 11,
             const double threshold = 1.0e-8, const int numiter = 15,
             bool ignore_out_of_range_exception = false);
@@ -96,12 +96,12 @@ namespace isce{
      * The output of this method is an OGREnvelope.
      */
     BoundingBox getGeoBoundingBoxHeightSearch(
-            const isce::product::RadarGridParameters& radarGrid,
-            const isce::core::Orbit& orbit,
-            const isce::core::ProjectionBase* proj,
-            const isce::core::LUT2d<double>& doppler = {},
-            double min_height = isce::core::GLOBAL_MIN_HEIGHT,
-            double max_height = isce::core::GLOBAL_MAX_HEIGHT,
+            const isce3::product::RadarGridParameters& radarGrid,
+            const isce3::core::Orbit& orbit,
+            const isce3::core::ProjectionBase* proj,
+            const isce3::core::LUT2d<double>& doppler = {},
+            double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
+            double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
             const double margin = 0.0, const int pointsPerEdge = 11,
             const double threshold = 1.0e-8, const int numiter = 15,
             const double height_threshold = 100);

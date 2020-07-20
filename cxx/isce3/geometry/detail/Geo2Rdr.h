@@ -6,7 +6,7 @@
 #include <isce3/core/LookSide.h>
 #include <isce3/error/ErrorCode.h>
 
-namespace isce { namespace geometry { namespace detail {
+namespace isce3 { namespace geometry { namespace detail {
 
 /** \internal Root-finding configuration parameters for geo2rdr */
 struct Geo2RdrParams {
@@ -22,8 +22,8 @@ struct Geo2RdrParams {
 
 /**
  * \internal
- * Unified host/device implementation of isce::geometry::geo2rdr and
- * isce::cuda::geometry::geo2rdr
+ * Unified host/device implementation of isce3::geometry::geo2rdr and
+ * isce3::cuda::geometry::geo2rdr
  *
  * Transform from geodetic coordinates (longitude, latitude, height) to radar
  * coordinates (azimuth, range).
@@ -42,12 +42,12 @@ struct Geo2RdrParams {
  * \param[in]  params    Root-finding algorithm parameters
  */
 template<class Orbit, class DopplerModel>
-CUDA_HOSTDEV isce::error::ErrorCode
-geo2rdr(double* t, double* r, const isce::core::Vec3& llh,
-        const isce::core::Ellipsoid& ellipsoid, const Orbit& orbit,
-        const DopplerModel& doppler, double wvl, isce::core::LookSide side,
+CUDA_HOSTDEV isce3::error::ErrorCode
+geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
+        const isce3::core::Ellipsoid& ellipsoid, const Orbit& orbit,
+        const DopplerModel& doppler, double wvl, isce3::core::LookSide side,
         double t0, const Geo2RdrParams& params = {});
 
-}}} // namespace isce::geometry::detail
+}}} // namespace isce3::geometry::detail
 
 #include "Geo2Rdr.icc"

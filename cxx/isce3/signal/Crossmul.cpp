@@ -21,10 +21,10 @@ size_t omp_thread_count() {
 }
 
 /*
-isce::signal::Crossmul::
-Crossmul(const isce::product::Product& referenceSlcProduct,
-         const isce::product::Product& secondarySlcProduct,
-         isce::product::Product& outputInterferogramProduct)
+isce3::signal::Crossmul::
+Crossmul(const isce3::product::Product& referenceSlcProduct,
+         const isce3::product::Product& secondarySlcProduct,
+         isce3::product::Product& outputInterferogramProduct)
 */
 
 /**
@@ -32,17 +32,17 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
  * @param[in] secondarySLC Raster object of secondary SLC
  * @param[out] interferogram Raster object of output interferogram
  */
-void isce::signal::Crossmul::
-crossmul(isce::io::Raster& referenceSLC,
-        isce::io::Raster& secondarySLC,
-        isce::io::Raster& interferogram)
+void isce3::signal::Crossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& interferogram)
 {
 
     _computeCoherence = false;
     _doCommonRangebandFilter = false;
 
-    isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
-    isce::io::Raster coherence("/vsimem/dummyCoh", 1, 1, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster coherence("/vsimem/dummyCoh", 1, 1, 1, GDT_Float32, "ENVI");
 
     crossmul(referenceSLC,
             secondarySLC,
@@ -58,15 +58,15 @@ crossmul(isce::io::Raster& referenceSLC,
  * @param[out] interferogram Raster object of output interferogram
  * @param[out] coherence Raster object of output coherence
  */
-void isce::signal::Crossmul::
-crossmul(isce::io::Raster& referenceSLC,
-        isce::io::Raster& secondarySLC,
-        isce::io::Raster& interferogram,
-        isce::io::Raster& coherence)
+void isce3::signal::Crossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& interferogram,
+        isce3::io::Raster& coherence)
 {
 
     _doCommonRangebandFilter = false;
-    isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
+    isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
     crossmul(referenceSLC, 
             secondarySLC,
             rngOffsetRaster,
@@ -83,12 +83,12 @@ crossmul(isce::io::Raster& referenceSLC,
  * @param[out] interferogram Raster object of output interferogram
  * @param[out] coherence Raster object of output coherence
  */
-void isce::signal::Crossmul::
-crossmul(isce::io::Raster& referenceSLC,
-        isce::io::Raster& secondarySLC,
-        isce::io::Raster& rngOffsetRaster,
-        isce::io::Raster& interferogram,
-        isce::io::Raster& coherenceRaster)
+void isce3::signal::Crossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& rngOffsetRaster,
+        isce3::io::Raster& interferogram,
+        isce3::io::Raster& coherenceRaster)
 {
 
     // Create reusable pyre::journal channels
@@ -100,13 +100,13 @@ crossmul(isce::io::Raster& referenceSLC,
     size_t nthreads = omp_thread_count();
 
     //signal object for refSlc
-    isce::signal::Signal<float> refSignal(nthreads);
+    isce3::signal::Signal<float> refSignal(nthreads);
 
     //signal object for secSlc
-    isce::signal::Signal<float> secSignal(nthreads);
+    isce3::signal::Signal<float> secSignal(nthreads);
 
     // instantiate Looks used for multi-looking the interferogram
-    isce::signal::Looks<float> looksObj;
+    isce3::signal::Looks<float> looksObj;
 
     // setting the parameters of the multi-looking oject
     if (_doMultiLook){
@@ -204,8 +204,8 @@ crossmul(isce::io::Raster& referenceSLC,
                         blockRows, shiftImpact);
 
     //filter objects which will be used for azimuth and range common band filtering
-    isce::signal::Filter<float> azimuthFilter;
-    isce::signal::Filter<float> rangeFilter;
+    isce3::signal::Filter<float> azimuthFilter;
+    isce3::signal::Filter<float> rangeFilter;
 
     std::valarray<double> rangeFrequencies(fft_size);
     fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
@@ -387,7 +387,7 @@ crossmul(isce::io::Raster& referenceSLC,
  * @param[in] blockRows number of rows of the block of data
  * @param[out] shiftImpact frequency responce (a linear phase) to a sub-pixel shift in time domain introduced by upsampling followed by downsampling 
  */
-void isce::signal::Crossmul::
+void isce3::signal::Crossmul::
 lookdownShiftImpact(size_t oversample, size_t fft_size, size_t blockRows, 
         std::valarray<std::complex<float>> &shiftImpact)
 {
@@ -442,7 +442,7 @@ lookdownShiftImpact(size_t oversample, size_t fft_size, size_t blockRows,
 * @param[in] blockLength number of rows
 * @param[in] ncols number of columns
 */
-void isce::signal::Crossmul::
+void isce3::signal::Crossmul::
 rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &secSlc,
                         std::valarray<std::complex<float>> geometryIfgram,
@@ -450,7 +450,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &refSpectrum,
                         std::valarray<std::complex<float>> &secSpectrum,
                         std::valarray<double> &rangeFrequencies,
-                        isce::signal::Filter<float> &rngFilter,
+                        isce3::signal::Filter<float> &rngFilter,
                         size_t blockLength,
                         size_t ncols)
 {

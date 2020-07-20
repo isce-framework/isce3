@@ -5,13 +5,13 @@ namespace py = pybind11;
 
 void add_constants(py::module & core)
 {
-    py::enum_<isce::core::dataInterpMethod>(core, "DataInterpMethod")
-        .value("SINC", isce::core::SINC_METHOD)
-        .value("BILINEAR", isce::core::BILINEAR_METHOD)
-        .value("BICUBIC", isce::core::BICUBIC_METHOD)
-        .value("NEAREST", isce::core::NEAREST_METHOD)
-        .value("BIQUINTIC", isce::core::BIQUINTIC_METHOD);
+    py::enum_<isce3::core::dataInterpMethod>(core, "DataInterpMethod")
+        .value("SINC", isce3::core::SINC_METHOD)
+        .value("BILINEAR", isce3::core::BILINEAR_METHOD)
+        .value("BICUBIC", isce3::core::BICUBIC_METHOD)
+        .value("NEAREST", isce3::core::NEAREST_METHOD)
+        .value("BIQUINTIC", isce3::core::BIQUINTIC_METHOD);
         // nicer not to export_values() to parent namespace
 
-    core.attr("speed_of_light") = py::float_(isce::core::speed_of_light);
+    core.attr("speed_of_light") = py::float_(isce3::core::speed_of_light);
 }

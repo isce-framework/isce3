@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace isce {
+namespace isce3 {
     namespace cuda {
         namespace geometry {
 

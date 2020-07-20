@@ -4,7 +4,7 @@
 #include <cstdint> // uint8_t
 #include <vector> // std::vector
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 // \brief Table of connected component label equivalences

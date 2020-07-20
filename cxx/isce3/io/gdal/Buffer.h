@@ -7,7 +7,7 @@
 
 #include "detail/GDALDataTypeUtil.h"
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 /** Interface to 2-D memory array */
 class Buffer {
@@ -116,7 +116,7 @@ public:
     /**
      * Cast to typed buffer
      *
-     * \throws isce::except::RuntimeError if the requested type does not match
+     * \throws isce3::except::RuntimeError if the requested type does not match
      * the underlying buffer datatype
      */
     template<typename T>

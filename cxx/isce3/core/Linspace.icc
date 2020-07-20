@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 template<typename T>
 CUDA_HOSTDEV

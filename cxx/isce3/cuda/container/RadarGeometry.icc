@@ -2,7 +2,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace cuda { namespace container {
+namespace isce3 { namespace cuda { namespace container {
 
 namespace detail {
 
@@ -32,32 +32,32 @@ inline RadarGeometry::RadarGeometry(const RadarGridParameters& radar_grid,
     }
 }
 
-inline isce::core::Linspace<double> RadarGeometry::sensingTime() const
+inline isce3::core::Linspace<double> RadarGeometry::sensingTime() const
 {
     auto t0 = radarGrid().sensingStart();
     auto dt = radarGrid().azimuthTimeInterval();
     auto lines = gridLength();
 
     if (detail::checkOverflow<int>(lines)) {
-        throw isce::except::OverflowError(ISCE_SRCINFO(),
+        throw isce3::except::OverflowError(ISCE_SRCINFO(),
                                           "grid length exceeds max int");
     }
 
     return {t0, dt, static_cast<int>(lines)};
 }
 
-inline isce::core::Linspace<double> RadarGeometry::slantRange() const
+inline isce3::core::Linspace<double> RadarGeometry::slantRange() const
 {
     auto r0 = radarGrid().startingRange();
     auto dr = radarGrid().rangePixelSpacing();
     auto samples = gridWidth();
 
     if (detail::checkOverflow<int>(samples)) {
-        throw isce::except::OverflowError(ISCE_SRCINFO(),
+        throw isce3::except::OverflowError(ISCE_SRCINFO(),
                                           "grid width exceeds max int");
     }
 
     return {r0, dr, static_cast<int>(samples)};
 }
 
-}}} // namespace isce::cuda::container
+}}} // namespace isce3::cuda::container

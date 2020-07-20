@@ -7,7 +7,7 @@
 #include "FFTWWrapper.h"
 #include "Threads.h"
 
-namespace isce { namespace fft { namespace detail {
+namespace isce3 { namespace fft { namespace detail {
 
 template<int Sign, typename T>
 class FFTPlanBase {

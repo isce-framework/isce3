@@ -4,7 +4,7 @@
 
 #include "projtest.h"
 
-isce::cuda::core::Geocent proj;
+isce3::cuda::core::Geocent proj;
 const double a = proj.ellipse.a();
 const double b = a * std::sqrt(1. - proj.ellipse.e2());
 

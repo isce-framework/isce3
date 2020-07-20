@@ -14,15 +14,15 @@
 #include "isce3/core/Utilities.h"
 #include "gtest/gtest.h"
 
-void loadInterpData(isce::core::Matrix<double> & M);
+void loadInterpData(isce3::core::Matrix<double> & M);
 
 
 // Test biquintic LUT evaluation
 TEST(LUT2dTest, Evaluation) {
 
     // Create indices
-    std::vector<double> xvec = isce::core::arange(-5.01, 5.01, 0.25);
-    std::vector<double> yvec = isce::core::arange(-5.01, 5.01, 0.25);
+    std::vector<double> xvec = isce3::core::arange(-5.01, 5.01, 0.25);
+    std::vector<double> yvec = isce3::core::arange(-5.01, 5.01, 0.25);
     size_t nx = xvec.size();
     size_t ny = yvec.size();
 
@@ -31,11 +31,11 @@ TEST(LUT2dTest, Evaluation) {
     std::valarray<double> yindex(yvec.data(), yvec.size());
 
     // Allocate the matrix
-    isce::core::Matrix<double> M;
+    isce3::core::Matrix<double> M;
     M.resize(ny, nx);
 
     // Read the reference data
-    isce::core::Matrix<double> ref_values;
+    isce3::core::Matrix<double> ref_values;
     loadInterpData(ref_values);
     const size_t N_pts = ref_values.length();
 
@@ -47,7 +47,7 @@ TEST(LUT2dTest, Evaluation) {
     }
 
     // Create LUT2d
-    isce::core::LUT2d<double> lut(xindex, yindex, M, isce::core::BIQUINTIC_METHOD);
+    isce3::core::LUT2d<double> lut(xindex, yindex, M, isce3::core::BIQUINTIC_METHOD);
     
     // Loop over test points
     double error = 0.0;
@@ -60,7 +60,7 @@ TEST(LUT2dTest, Evaluation) {
     ASSERT_TRUE((error / N_pts) < 0.058);
 }
 
-void loadInterpData(isce::core::Matrix<double> & M) {
+void loadInterpData(isce3::core::Matrix<double> & M) {
     /*
     Load ground truth interpolation data. The test data is the function:
 

@@ -7,9 +7,9 @@
 #include <isce3/focus/RangeComp.h>
 #include <isce3/math/Sinc.h>
 
-using isce::focus::formLinearChirp;
-using isce::focus::RangeComp;
-using isce::math::sinc;
+using isce3::focus::formLinearChirp;
+using isce3::focus::RangeComp;
+using isce3::math::sinc;
 
 template<typename T>
 auto maxAbsError(const std::vector<T>& a, const std::vector<T>& b)

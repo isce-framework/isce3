@@ -10,7 +10,7 @@ namespace thrust {
     template<typename> struct complex;
 }
 
-namespace isce { namespace io { namespace gdal { namespace detail {
+namespace isce3 { namespace io { namespace gdal { namespace detail {
 
 template<GDALDataType DataType>
 struct GDT {

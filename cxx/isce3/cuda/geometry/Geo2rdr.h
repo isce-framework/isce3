@@ -14,36 +14,36 @@
 /** Transformer from map coordinates to radar geometry coordinates using GPU.
  *
  * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
-class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
+class isce3::cuda::geometry::Geo2rdr : public isce3::geometry::Geo2rdr {
 
     public:
         /** Constructor from Product */
-        inline Geo2rdr(const isce::product::Product & product,
+        inline Geo2rdr(const isce3::product::Product & product,
                        char frequency = 'A',
                        bool nativeDoppler = false) :
-            isce::geometry::Geo2rdr(product, frequency, nativeDoppler) {}
+            isce3::geometry::Geo2rdr(product, frequency, nativeDoppler) {}
 
-        /** Constructor from isce::core objects */
-        inline Geo2rdr(const isce::core::Ellipsoid & ellps,
-                       const isce::core::Orbit & orbit,
-                       const isce::core::LUT2d<double> & doppler,
-                       const isce::core::Metadata & meta) :
-            isce::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
+        /** Constructor from isce3::core objects */
+        inline Geo2rdr(const isce3::core::Ellipsoid & ellps,
+                       const isce3::core::Orbit & orbit,
+                       const isce3::core::LUT2d<double> & doppler,
+                       const isce3::core::Metadata & meta) :
+            isce3::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
 
-        inline Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
-                const isce::core::Orbit & orbit,
-                const isce::core::Ellipsoid & ellipsoid,
-                const isce::core::LUT2d<double> & doppler = {}) : 
-            isce::geometry::Geo2rdr(radarGrid, orbit, ellipsoid, doppler) {}
+        inline Geo2rdr(const isce3::product::RadarGridParameters & radarGrid,
+                const isce3::core::Orbit & orbit,
+                const isce3::core::Ellipsoid & ellipsoid,
+                const isce3::core::LUT2d<double> & doppler = {}) : 
+            isce3::geometry::Geo2rdr(radarGrid, orbit, ellipsoid, doppler) {}
 
         /** Run geo2rdr with offsets and externally created offset rasters */
-        void geo2rdr(isce::io::Raster & topoRaster,
-                     isce::io::Raster & rgoffRaster,
-                     isce::io::Raster & azoffRaster,
+        void geo2rdr(isce3::io::Raster & topoRaster,
+                     isce3::io::Raster & rgoffRaster,
+                     isce3::io::Raster & azoffRaster,
                      double azshift=0.0, double rgshift=0.0);
 
         /** Run geo2rdr with constant offsets and internally created offset rasters */
-        void geo2rdr(isce::io::Raster & topoRaster,
+        void geo2rdr(isce3::io::Raster & topoRaster,
                      const std::string & outdir,
                      double azshift=0.0, double rgshift=0.0);
 

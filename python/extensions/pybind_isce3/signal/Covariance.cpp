@@ -6,16 +6,16 @@
 
 namespace py = pybind11;
 
-using isce::signal::Covariance;
+using isce3::signal::Covariance;
 
 template<typename T>
 void addbinding(py::class_<Covariance<T>> &pyCovariance)
 {
     pyCovariance
         .def(py::init<>())
-        .def("covariance", [](isce::signal::Covariance<T> & self,
-                    std::map<std::string, isce::io::Raster> & slc,
-                    std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov,
+        .def("covariance", [](isce3::signal::Covariance<T> & self,
+                    std::map<std::string, isce3::io::Raster> & slc,
+                    std::map<std::pair<std::string, std::string>, isce3::io::Raster> & cov,
                     size_t rng_looks, size_t az_looks)
             {
                 // perform covariance

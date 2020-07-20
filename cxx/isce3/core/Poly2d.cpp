@@ -10,7 +10,7 @@
 /** 
  * @param[in] azi azimuth or y value
  * @param[in] rng range or x value*/
-double isce::core::Poly2d::
+double isce3::core::Poly2d::
 eval(double azi, double rng) const {
 
     double xval = (rng - rangeMean) / rangeNorm;
@@ -28,7 +28,7 @@ eval(double azi, double rng) const {
     return val;
 }
 
-void isce::core::Poly2d::
+void isce3::core::Poly2d::
 printPoly() const {
     std::cout << "Polynomial Order: " << azimuthOrder << " - by - " << rangeOrder << std::endl;
     for (int i=0; i<=azimuthOrder; i++) {

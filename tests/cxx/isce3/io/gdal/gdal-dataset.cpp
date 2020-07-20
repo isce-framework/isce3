@@ -5,8 +5,8 @@
 #include <isce3/io/gdal/Dataset.h>
 #include <isce3/io/gdal/Raster.h>
 
-using isce::io::gdal::Dataset;
-using isce::io::gdal::Raster;
+using isce3::io::gdal::Dataset;
+using isce3::io::gdal::Raster;
 
 struct DatasetTest : public testing::TestWithParam<std::string> {};
 
@@ -75,7 +75,7 @@ TEST_P(DatasetTest, GetRaster)
     // attempting to fetch invalid raster band should throw
     {
         int band = bands + 1;
-        EXPECT_THROW( { dataset.getRaster(band); }, isce::except::OutOfRange );
+        EXPECT_THROW( { dataset.getRaster(band); }, isce3::except::OutOfRange );
     }
 }
 

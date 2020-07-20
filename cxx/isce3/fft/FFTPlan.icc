@@ -2,7 +2,7 @@
 #error "FFTPlan.icc is an implementation detail of FFTPlan.h"
 #endif
 
-namespace isce { namespace fft {
+namespace isce3 { namespace fft {
 
 template<typename T>
 FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out, T * in, int n, int batch, unsigned flags, int threads)

@@ -8,7 +8,7 @@
 
 #include "GDALDataTypeUtil.h"
 
-namespace isce { namespace io { namespace gdal { namespace detail {
+namespace isce3 { namespace io { namespace gdal { namespace detail {
 
 template<typename T>
 inline
@@ -24,7 +24,7 @@ std::string toString(T * ptr)
     // check if length may have exceeded buffer size
     if (len >= maxlen) {
         std::string errmsg = "string size exceeds buffer length";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 
     // need to null-terminate the resulting string
@@ -45,7 +45,7 @@ std::string getMemDatasetName(T * data,
 {
     GDALDataType datatype = Type2GDALDataType<T>::datatype;
     if (datatype == GDT_Unknown) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "type is not mappable to GDALDataType");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "type is not mappable to GDALDataType");
     }
     std::string datatype_str = GDALGetDataTypeName(datatype);
 

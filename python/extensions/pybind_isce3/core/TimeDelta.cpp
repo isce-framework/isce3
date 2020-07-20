@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-using isce::core::TimeDelta;
+using isce3::core::TimeDelta;
 
 void addbinding(py::class_<TimeDelta> & pyTimeDelta)
 {

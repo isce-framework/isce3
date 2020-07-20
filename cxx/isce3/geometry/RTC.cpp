@@ -26,10 +26,10 @@
 #include <isce3/signal/Looks.h>
 #include <string>
 
-using isce::core::cartesian_t;
-using isce::core::Mat3;
-using isce::core::OrbitInterpBorderMode;
-using isce::core::Vec3;
+using isce3::core::cartesian_t;
+using isce3::core::Mat3;
+using isce3::core::OrbitInterpBorderMode;
+using isce3::core::Vec3;
 
 template<typename T1, typename T2>
 auto operator*(const std::complex<T1>& lhs, const T2& rhs) {
@@ -43,7 +43,7 @@ auto operator*(const T1& lhs, const std::complex<T2>& rhs) {
     return U(lhs) * std::complex<U>(rhs);
 }
 
-namespace isce {
+namespace isce3 {
 namespace geometry {
 
 int _omp_thread_count() {
@@ -60,8 +60,8 @@ template <typename T>
 constexpr bool is_complex() { return is_complex_t<T>::value; }
 
 template<typename T>
-void _applyRTC(isce::io::Raster& input_raster, isce::io::Raster& input_rtc,
-               isce::io::Raster& output_raster, float rtc_min_value,
+void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
+               isce3::io::Raster& output_raster, float rtc_min_value,
                double abs_cal_factor, pyre::journal::info_t& info,
                bool flag_complex_to_real_squared) {
 
@@ -91,14 +91,14 @@ void _applyRTC(isce::io::Raster& input_raster, isce::io::Raster& input_rtc,
                 effective_block_size = length - block * block_size;
             }
 
-            isce::core::Matrix<float> rtc_ratio(effective_block_size, width);
+            isce3::core::Matrix<float> rtc_ratio(effective_block_size, width);
             #pragma omp critical
             {
                 input_rtc.getBlock(rtc_ratio.data(), 0, block * block_size,
                                    width, effective_block_size, 1);
             }
 
-            isce::core::Matrix<T> radar_data_block(block_size, width);
+            isce3::core::Matrix<T> radar_data_block(block_size, width);
             if (!flag_complex_to_real_squared) {
                 #pragma omp critical
                 {
@@ -123,7 +123,7 @@ void _applyRTC(isce::io::Raster& input_raster, isce::io::Raster& input_rtc,
                         }
                     }
             } else {
-                isce::core::Matrix<std::complex<T>> radar_data_block_complex(
+                isce3::core::Matrix<std::complex<T>> radar_data_block_complex(
                         block_size, width);
                 #pragma omp critical
                 {
@@ -162,40 +162,40 @@ void _applyRTC(isce::io::Raster& input_raster, isce::io::Raster& input_rtc,
     }
 }
 
-void applyRTC(const isce::product::RadarGridParameters& radar_grid,
-              const isce::core::Orbit& orbit,
-              const isce::core::LUT2d<double>& input_dop,
-              isce::io::Raster& input_raster, isce::io::Raster& dem_raster,
-              isce::io::Raster& output_raster,
+void applyRTC(const isce3::product::RadarGridParameters& radar_grid,
+              const isce3::core::Orbit& orbit,
+              const isce3::core::LUT2d<double>& input_dop,
+              isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
+              isce3::io::Raster& output_raster,
               rtcInputRadiometry input_radiometry, int exponent,
               rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
               double geogrid_upsampling, float rtc_min_value_db,
               double abs_cal_factor, float radar_grid_nlooks,
-              isce::io::Raster* out_nlooks, isce::io::Raster* input_rtc,
-              isce::io::Raster* output_rtc, rtcMemoryMode rtc_memory_mode) {
+              isce3::io::Raster* out_nlooks, isce3::io::Raster* input_rtc,
+              isce3::io::Raster* output_rtc, rtcMemoryMode rtc_memory_mode) {
 
     if (exponent < 0 || exponent > 2) {
         std::string error_message =
                 "ERROR invalid exponent for RTC pre-process. Valid options:";
         error_message += " 0 (auto selection), 1 (linear), or 2 (square).";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
     }
 
-    bool flag_complex_to_real = isce::signal::verifyComplexToRealCasting(
+    bool flag_complex_to_real = isce3::signal::verifyComplexToRealCasting(
             input_raster, output_raster, exponent);
 
     pyre::journal::info_t info("isce.geometry.applyRTC");
 
     // declare pointer to the raster containing the RTC area factor
-    isce::io::Raster* rtc_raster;
-    std::unique_ptr<isce::io::Raster> rtc_raster_unique_ptr;
+    isce3::io::Raster* rtc_raster;
+    std::unique_ptr<isce3::io::Raster> rtc_raster_unique_ptr;
 
     if (input_rtc == nullptr) {
 
         // if RTC (area factor) raster does not needed to be saved,
         // initialize it as a GDAL memory virtual file
         if (output_rtc == nullptr) {
-            rtc_raster_unique_ptr = std::make_unique<isce::io::Raster>(
+            rtc_raster_unique_ptr = std::make_unique<isce3::io::Raster>(
                     "/vsimem/dummy", radar_grid.width(), radar_grid.length(), 1,
                     GDT_Float32, "ENVI");
             rtc_raster = rtc_raster_unique_ptr.get();
@@ -247,18 +247,18 @@ void applyRTC(const isce::product::RadarGridParameters& radar_grid,
     else {
         std::string error_message =
                 "ERROR not implemented for input raster datatype";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), error_message);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), error_message);
     }
 }
 
 double
 computeUpsamplingFactor(const DEMInterpolator& dem_interp,
-                        const isce::product::RadarGridParameters& radar_grid,
-                        const isce::core::Ellipsoid& ellps) {
+                        const isce3::product::RadarGridParameters& radar_grid,
+                        const isce3::core::Ellipsoid& ellps) {
 
     // Create a projection object from the DEM interpolator
-    std::unique_ptr<isce::core::ProjectionBase> proj(
-            isce::core::createProj(dem_interp.epsgCode()));
+    std::unique_ptr<isce3::core::ProjectionBase> proj(
+            isce3::core::createProj(dem_interp.epsgCode()));
 
     // Get middle XY coordinate in DEM coords, lat/lon, and ECEF XYZ
     Vec3 demXY {dem_interp.midX(), dem_interp.midY(), 0.0};
@@ -336,21 +336,21 @@ int areaProjGetNBlocks(int array_length, pyre::journal::info_t* channel,
     return nblocks;
 }
 
-void facetRTC(isce::product::Product& product, isce::io::Raster& dem_raster,
-              isce::io::Raster& output_raster, char frequency,
+void facetRTC(isce3::product::Product& product, isce3::io::Raster& dem_raster,
+              isce3::io::Raster& output_raster, char frequency,
               bool native_doppler, rtcInputRadiometry input_radiometry,
               rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
               double geogrid_upsampling, float rtc_min_value_db,
-              size_t nlooks_az, size_t nlooks_rg, isce::io::Raster* out_nlooks,
+              size_t nlooks_az, size_t nlooks_rg, isce3::io::Raster* out_nlooks,
               rtcMemoryMode rtc_memory_mode) {
 
-    isce::core::Orbit orbit = product.metadata().orbit();
-    isce::product::RadarGridParameters radar_grid(product, frequency);
-    isce::product::RadarGridParameters radar_grid_ml =
+    isce3::core::Orbit orbit = product.metadata().orbit();
+    isce3::product::RadarGridParameters radar_grid(product, frequency);
+    isce3::product::RadarGridParameters radar_grid_ml =
             radar_grid.multilook(nlooks_az, nlooks_rg);
 
     // Get a copy of the Doppler LUT; allow for out-of-bounds extrapolation
-    isce::core::LUT2d<double> dop;
+    isce3::core::LUT2d<double> dop;
     if (native_doppler)
         dop = product.metadata().procInfo().dopplerCentroid(frequency);
 
@@ -361,15 +361,15 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem_raster,
              rtc_min_value_db, radar_grid_nlooks, out_nlooks, rtc_memory_mode);
 }
 
-void facetRTC(const isce::product::RadarGridParameters& radar_grid,
-              const isce::core::Orbit& orbit,
-              const isce::core::LUT2d<double>& input_dop,
-              isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
+void facetRTC(const isce3::product::RadarGridParameters& radar_grid,
+              const isce3::core::Orbit& orbit,
+              const isce3::core::LUT2d<double>& input_dop,
+              isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
               rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
               rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
               float rtc_min_value_db, float radar_grid_nlooks,
-              isce::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
-              isce::core::dataInterpMethod interp_method, double threshold,
+              isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
+              isce3::core::dataInterpMethod interp_method, double threshold,
               int num_iter, double delta_range) {
 
     double geotransform[6];
@@ -378,8 +378,8 @@ void facetRTC(const isce::product::RadarGridParameters& radar_grid,
     const double dx = geotransform[1];
 
     int epsg = dem_raster.getEPSG();
-    std::unique_ptr<isce::core::ProjectionBase> proj(
-            isce::core::createProj(epsg));
+    std::unique_ptr<isce3::core::ProjectionBase> proj(
+            isce3::core::createProj(epsg));
 
     BoundingBox bbox = getGeoBoundingBoxHeightSearch(radar_grid, orbit,
                                                      proj.get(), input_dop);
@@ -402,19 +402,19 @@ void facetRTC(const isce::product::RadarGridParameters& radar_grid,
              interp_method, threshold, num_iter, delta_range);
 }
 
-void facetRTC(isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
-              const isce::product::RadarGridParameters& radar_grid,
-              const isce::core::Orbit& orbit,
-              const isce::core::LUT2d<double>& input_dop, const double y0,
+void facetRTC(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
+              const isce3::product::RadarGridParameters& radar_grid,
+              const isce3::core::Orbit& orbit,
+              const isce3::core::LUT2d<double>& input_dop, const double y0,
               const double dy, const double x0, const double dx,
               const int geogrid_length, const int geogrid_width, const int epsg,
               rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
               rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
               float rtc_min_value_db, float radar_grid_nlooks,
-              isce::io::Raster* out_geo_vertices,
-              isce::io::Raster* out_geo_grid, isce::io::Raster* out_nlooks,
+              isce3::io::Raster* out_geo_vertices,
+              isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_nlooks,
               rtcMemoryMode rtc_memory_mode,
-              isce::core::dataInterpMethod interp_method, double threshold,
+              isce3::core::dataInterpMethod interp_method, double threshold,
               int num_iter, double delta_range)
 {
 
@@ -436,7 +436,7 @@ void facetRTC(isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
-                              isce::core::Matrix<double>& w_arr, double& nlooks,
+                              isce3::core::Matrix<double>& w_arr, double& nlooks,
                               int plane_orientation)
 {
 
@@ -517,12 +517,12 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
     }
 }
 
-void _addArea(double area, isce::core::Matrix<float>& out_array,
+void _addArea(double area, isce3::core::Matrix<float>& out_array,
               float radar_grid_nlooks,
-              isce::core::Matrix<float>& out_nlooks_array, int length,
+              isce3::core::Matrix<float>& out_nlooks_array, int length,
               int width, int x_min, int y_min, int size_x, int size_y,
-              isce::core::Matrix<double>& w_arr, double nlooks,
-              isce::core::Matrix<double>& w_arr_out, double& nlooks_out,
+              isce3::core::Matrix<double>& w_arr, double nlooks,
+              isce3::core::Matrix<double>& w_arr_out, double& nlooks_out,
               double x_center, double x_left, double x_right, double y_center,
               double y_left, double y_right, int plane_orientation) {
     areaProjIntegrateSegment(y_left, y_right, x_left, x_right, size_y, size_x,
@@ -579,11 +579,11 @@ double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
     return area;
 }
 
-void facetRTCDavidSmall(isce::io::Raster& dem_raster,
-                        isce::io::Raster& output_raster,
-                        const isce::product::RadarGridParameters& radar_grid,
-                        const isce::core::Orbit& orbit,
-                        const isce::core::LUT2d<double>& input_dop,
+void facetRTCDavidSmall(isce3::io::Raster& dem_raster,
+                        isce3::io::Raster& output_raster,
+                        const isce3::product::RadarGridParameters& radar_grid,
+                        const isce3::core::Orbit& orbit,
+                        const isce3::core::LUT2d<double>& input_dop,
                         const double y0, const double dy, const double x0,
                         const double dx, const int geogrid_length,
                         const int geogrid_width, const int epsg,
@@ -592,9 +592,9 @@ void facetRTCDavidSmall(isce::io::Raster& dem_raster,
 
     pyre::journal::info_t info("isce.geometry.facetRTCDavidSmall");
 
-    std::unique_ptr<isce::core::ProjectionBase> proj(
-            isce::core::createProj(epsg));
-    const isce::core::Ellipsoid& ellps = proj->ellipsoid();
+    std::unique_ptr<isce3::core::ProjectionBase> proj(
+            isce3::core::createProj(epsg));
+    const isce3::core::Ellipsoid& ellps = proj->ellipsoid();
 
     print_parameters(info, radar_grid, y0, dy, x0, dx, geogrid_length,
                      geogrid_width, input_radiometry, rtc_area_mode,
@@ -605,7 +605,7 @@ void facetRTCDavidSmall(isce::io::Raster& dem_raster,
     const double margin_y = std::abs(dy) * 20;
 
     DEMInterpolator dem_interp(0,
-                               isce::core::dataInterpMethod::BIQUINTIC_METHOD);
+                               isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
     dem_interp.loadDEM(
             dem_raster, x0 - margin_x, x0 + geogrid_width * dx + margin_x,
             std::min(y0, yf) - margin_y, std::max(y0, yf) + margin_y);
@@ -622,7 +622,7 @@ void facetRTCDavidSmall(isce::io::Raster& dem_raster,
     double ybound = radar_grid.length() - 1.0;
 
     // Output raster
-    isce::core::Matrix<float> out(radar_grid.length(), radar_grid.width());
+    isce3::core::Matrix<float> out(radar_grid.length(), radar_grid.width());
     out.fill(0);
 
     // ------------------------------------------------------------------------
@@ -734,10 +734,10 @@ void facetRTCDavidSmall(isce::io::Raster& dem_raster,
 
             // Compute look angle from sensor to ground
             const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
-            isce::core::cartesian_t xyz_plat, vel;
-            isce::error::ErrorCode status = orbit.interpolate(
+            isce3::core::cartesian_t xyz_plat, vel;
+            isce3::error::ErrorCode status = orbit.interpolate(
                     &xyz_plat, &vel, a, OrbitInterpBorderMode::FillNaN);
-            if (status != isce::error::ErrorCode::Success)
+            if (status != isce3::error::ErrorCode::Success)
                 continue;
 
             const Vec3 lookXYZ = (xyz_plat - xyz_mid).normalized();
@@ -810,18 +810,18 @@ void facetRTCDavidSmall(isce::io::Raster& dem_raster,
         for (size_t i = 0; i < radar_grid.length(); ++i) {
             for (size_t j = 0; j < radar_grid.width(); ++j) {
 
-                isce::core::cartesian_t xyz_plat, vel;
+                isce3::core::cartesian_t xyz_plat, vel;
                 double a = start + i * pixazm;
-                isce::error::ErrorCode status = orbit.interpolate(
+                isce3::error::ErrorCode status = orbit.interpolate(
                         &xyz_plat, &vel, a, OrbitInterpBorderMode::FillNaN);
-                if (status != isce::error::ErrorCode::Success)
+                if (status != isce3::error::ErrorCode::Success)
                     continue;
 
                 // Slant range for current pixel
                 const double slt_range = r0 + j * dr;
 
                 // Get LLH and XYZ coordinates for this azimuth/range
-                isce::core::cartesian_t targetLLH, targetXYZ;
+                isce3::core::cartesian_t targetLLH, targetXYZ;
                 targetLLH[2] = avg_hgt; // initialize first guess
                 rdr2geo(a, slt_range, 0, orbit, ellps, flat_interp, targetLLH,
                         radar_grid.wavelength(), side, 1e-4, 20, 20);
@@ -848,20 +848,20 @@ void facetRTCDavidSmall(isce::io::Raster& dem_raster,
 void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                int block, int& numdone, int progress_block,
                double geogrid_upsampling,
-               isce::core::dataInterpMethod interp_method,
-               isce::io::Raster& dem_raster, isce::io::Raster* out_geo_vertices,
-               isce::io::Raster* out_geo_grid, const double start,
+               isce3::core::dataInterpMethod interp_method,
+               isce3::io::Raster& dem_raster, isce3::io::Raster* out_geo_vertices,
+               isce3::io::Raster* out_geo_grid, const double start,
                const double pixazm, const double dr, double r0, int xbound,
                int ybound, const double y0, const double dy, const double x0,
                const double dx, const int geogrid_length,
                const int geogrid_width,
-               const isce::product::RadarGridParameters& radar_grid,
-               const isce::core::LUT2d<double>& dop,
-               const isce::core::Ellipsoid& ellipsoid,
-               const isce::core::Orbit& orbit, double threshold, int num_iter,
-               double delta_range, isce::core::Matrix<float>& out_array,
-               isce::core::Matrix<float>& out_nlooks_array,
-               isce::core::ProjectionBase* proj, rtcAreaMode rtc_area_mode,
+               const isce3::product::RadarGridParameters& radar_grid,
+               const isce3::core::LUT2d<double>& dop,
+               const isce3::core::Ellipsoid& ellipsoid,
+               const isce3::core::Orbit& orbit, double threshold, int num_iter,
+               double delta_range, isce3::core::Matrix<float>& out_array,
+               isce3::core::Matrix<float>& out_nlooks_array,
+               isce3::core::ProjectionBase* proj, rtcAreaMode rtc_area_mode,
                rtcInputRadiometry input_radiometry, float radar_grid_nlooks) {
 
     auto side = radar_grid.lookSide();
@@ -876,8 +876,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
 
     DEMInterpolator dem_interp_block(0, interp_method);
 
-    isce::core::Matrix<float> out_geo_vertices_a;
-    isce::core::Matrix<float> out_geo_vertices_r;
+    isce3::core::Matrix<float> out_geo_vertices_a;
+    isce3::core::Matrix<float> out_geo_vertices_r;
     if (out_geo_vertices != nullptr) {
         out_geo_vertices_a.resize(this_block_size_with_upsampling + 1,
                                   jmax + 1);
@@ -887,8 +887,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
         out_geo_vertices_r.fill(std::numeric_limits<float>::quiet_NaN());
     }
 
-    isce::core::Matrix<float> out_geo_grid_a;
-    isce::core::Matrix<float> out_geo_grid_r;
+    isce3::core::Matrix<float> out_geo_grid_a;
+    isce3::core::Matrix<float> out_geo_grid_r;
 
     if (out_geo_grid != nullptr) {
         out_geo_grid_r.resize(this_block_size_with_upsampling, jmax);
@@ -1042,7 +1042,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                     start) /
                                    pixazm) -
                         1;
-            if (y_min < -isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+            if (y_min < -isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
                     y_min > ybound + 1)
                 continue;
             int x_min = std::floor((std::min(std::min(r00, r01),
@@ -1050,7 +1050,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                     r0) /
                                    dr) -
                         1;
-            if (x_min < -isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN ||
+            if (x_min < -isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN ||
                     x_min > xbound + 1)
                 continue;
             int y_max = std::ceil((std::max(std::max(a00, a01),
@@ -1059,7 +1059,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                   pixazm) +
                         1;
             if (y_max > ybound + 1 + 
-                isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
                     y_max < -1 || y_max < y_min)
                 continue;
             int x_max = std::ceil((std::max(std::max(r00, r01),
@@ -1068,7 +1068,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                   dr) +
                         1;
             if (x_max > xbound + 1 +
-                isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
                     x_max < -1 || x_max < x_min)
                 continue;
 
@@ -1125,10 +1125,10 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             const Vec3 xyz_c = ellipsoid.lonLatToXyz(proj->inverse(dem_c));
 
             // Calculate look vector
-            isce::core::cartesian_t xyz_plat, vel;
-            isce::error::ErrorCode status = orbit.interpolate(
+            isce3::core::cartesian_t xyz_plat, vel;
+            isce3::error::ErrorCode status = orbit.interpolate(
                     &xyz_plat, &vel, a_c, OrbitInterpBorderMode::FillNaN);
-            if (status != isce::error::ErrorCode::Success)
+            if (status != isce3::error::ErrorCode::Success)
                 continue;
 
             const Vec3 lookXYZ = (xyz_plat - xyz_c).normalized();
@@ -1154,8 +1154,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             // Prepare call to _addArea()
             int size_x = x_max - x_min + 1;
             int size_y = y_max - y_min + 1;
-            isce::core::Matrix<double> w_arr_1(size_y, size_x);
-            isce::core::Matrix<double> w_arr_2(size_y, size_x);
+            isce3::core::Matrix<double> w_arr_1(size_y, size_x);
+            isce3::core::Matrix<double> w_arr_2(size_y, size_x);
             w_arr_1.fill(0);
             w_arr_2.fill(0);
 
@@ -1174,7 +1174,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             double x_c = (r_c - r0) / dr - x_min;
 
             int plane_orientation;
-            if (radar_grid.lookSide() == isce::core::LookSide::Left)
+            if (radar_grid.lookSide() == isce3::core::LookSide::Left)
                 plane_orientation = -1;
             else
                 plane_orientation = 1;
@@ -1247,18 +1247,18 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
 }
 
 void facetRTCAreaProj(
-        isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
-        const isce::product::RadarGridParameters& radar_grid,
-        const isce::core::Orbit& orbit,
-        const isce::core::LUT2d<double>& input_dop, const double y0,
+        isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
+        const isce3::product::RadarGridParameters& radar_grid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& input_dop, const double y0,
         const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width, const int epsg,
         rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
         double geogrid_upsampling, float rtc_min_value_db,
         float radar_grid_nlooks,
-        isce::io::Raster* out_geo_vertices, isce::io::Raster* out_geo_grid,
-        isce::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
-        isce::core::dataInterpMethod interp_method, double threshold,
+        isce3::io::Raster* out_geo_vertices, isce3::io::Raster* out_geo_grid,
+        isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
+        isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range) {
     /*
       Description of the area projection algorithm can be found in Geocode.cpp
@@ -1274,9 +1274,9 @@ void facetRTCAreaProj(
     assert(geogrid_upsampling > 0);
 
     // Ellipsoid being used for processing
-    std::unique_ptr<isce::core::ProjectionBase> proj(
-            isce::core::createProj(epsg));
-    const isce::core::Ellipsoid& ellipsoid = proj->ellipsoid();
+    std::unique_ptr<isce3::core::ProjectionBase> proj(
+            isce3::core::createProj(epsg));
+    const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
 
     print_parameters(info, radar_grid, y0, dy, x0, dx, geogrid_length,
                      geogrid_width, input_radiometry, rtc_area_mode,
@@ -1296,10 +1296,10 @@ void facetRTCAreaProj(
     const int jmax = geogrid_width * geogrid_upsampling;
 
     // Output raster
-    isce::core::Matrix<float> out_array(radar_grid.length(),
+    isce3::core::Matrix<float> out_array(radar_grid.length(),
                                         radar_grid.width());
     out_array.fill(0);
-    isce::core::Matrix<float> out_nlooks_array;
+    isce3::core::Matrix<float> out_nlooks_array;
     if (out_nlooks != nullptr) {
         out_nlooks_array.resize(radar_grid.length(), radar_grid.width());
         out_nlooks_array.fill(0);
@@ -1392,7 +1392,7 @@ std::string get_input_radiometry_str(rtcInputRadiometry input_radiometry) {
     default:
         std::string error_message =
                 "ERROR invalid radiometric terrain radiometry";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
     }
     return input_radiometry_str;
 }
@@ -1405,7 +1405,7 @@ std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode) {
     case rtcAreaMode::AREA_FACTOR: rtc_area_mode_str = "area factor"; break;
     default:
         std::string error_message = "ERROR invalid RTC area mode";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
         break;
     }
     return rtc_area_mode_str;
@@ -1423,14 +1423,14 @@ std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm) {
         break;
     default:
         std::string error_message = "ERROR invalid RTC algorithm";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
         break;
     }
     return rtc_algorithm_str;
 }
 
 void print_parameters(pyre::journal::info_t& channel,
-                      const isce::product::RadarGridParameters& radar_grid,
+                      const isce3::product::RadarGridParameters& radar_grid,
                       const double y0, const double dy, const double x0,
                       const double dx, const int geogrid_length,
                       const int geogrid_width,
@@ -1465,4 +1465,4 @@ void print_parameters(pyre::journal::info_t& channel,
             << pyre::journal::endl;
 }
 } // namespace geometry
-} // namespace isce
+} // namespace isce3

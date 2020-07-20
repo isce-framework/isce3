@@ -6,10 +6,10 @@
 TEST(DataStreamTest, FileDataStream)
 {
     std::string filename = "./tmpfile";
-    isce::cuda::core::Stream stream;
+    isce3::cuda::core::Stream stream;
     std::size_t buffer_size = 16;
 
-    isce::cuda::io::FileDataStream datastream (filename, stream, buffer_size);
+    isce3::cuda::io::FileDataStream datastream (filename, stream, buffer_size);
 
     EXPECT_EQ( datastream.filename(), filename );
     EXPECT_EQ( datastream.stream(), stream );
@@ -19,12 +19,12 @@ TEST(DataStreamTest, FileDataStream)
 TEST(DataStreamTest, SetStream)
 {
     std::string filename = "./tmpfile";
-    isce::cuda::core::Stream stream1;
+    isce3::cuda::core::Stream stream1;
     std::size_t buffer_size = 16;
 
-    isce::cuda::io::FileDataStream datastream (filename, stream1, buffer_size);
+    isce3::cuda::io::FileDataStream datastream (filename, stream1, buffer_size);
 
-    isce::cuda::core::Stream stream2;
+    isce3::cuda::core::Stream stream2;
     datastream.set_stream(stream2);
 
     EXPECT_EQ( datastream.stream(), stream2 );
@@ -33,10 +33,10 @@ TEST(DataStreamTest, SetStream)
 TEST(DataStreamTest, ResizeBuffer)
 {
     std::string filename = "./tmpfile";
-    isce::cuda::core::Stream stream;
+    isce3::cuda::core::Stream stream;
     std::size_t buffer_size = 16;
 
-    isce::cuda::io::FileDataStream datastream (filename, stream, buffer_size);
+    isce3::cuda::io::FileDataStream datastream (filename, stream, buffer_size);
 
     std::size_t new_buffer_size = 32;
     datastream.resize_buffer(new_buffer_size);
@@ -55,9 +55,9 @@ TEST(DataStreamTest, FileStoreThenLoad)
     thrust::device_vector<int> dst (size);
 
     std::string filename = "./tmpfile";
-    isce::cuda::core::Stream stream;
+    isce3::cuda::core::Stream stream;
 
-    isce::cuda::io::FileDataStream datastream (filename, stream);
+    isce3::cuda::io::FileDataStream datastream (filename, stream);
 
     // write data to file
     std::size_t count = size * sizeof(int);
@@ -67,7 +67,7 @@ TEST(DataStreamTest, FileStoreThenLoad)
     datastream.load(dst.data().get(), 0, count);
 
     // wait for asynchronous operations to complete
-    isce::cuda::core::synchronize(stream);
+    isce3::cuda::core::synchronize(stream);
     EXPECT_EQ( src, dst );
 }
 
@@ -75,12 +75,12 @@ TEST(DataStreamTest, RasterDataStream)
 {
     std::size_t width = 4;
     std::size_t length = 4;
-    isce::io::Raster raster ("./tmpraster", width, length, 1, GDT_Int32, "ENVI");
+    isce3::io::Raster raster ("./tmpraster", width, length, 1, GDT_Int32, "ENVI");
 
-    isce::cuda::core::Stream stream;
+    isce3::cuda::core::Stream stream;
     std::size_t buffer_size = width * length;
 
-    isce::cuda::io::RasterDataStream datastream (&raster, stream, buffer_size);
+    isce3::cuda::io::RasterDataStream datastream (&raster, stream, buffer_size);
 
     EXPECT_EQ( datastream.raster(), &raster );
     EXPECT_EQ( datastream.stream(), stream );
@@ -98,10 +98,10 @@ TEST(DataStreamTest, RasterStoreThenLoad)
     // output device vector
     thrust::device_vector<int> dst (width * length);
 
-    isce::io::Raster raster ("./tmpraster", width, length, 1, GDT_Int32, "ENVI");
-    isce::cuda::core::Stream stream;
+    isce3::io::Raster raster ("./tmpraster", width, length, 1, GDT_Int32, "ENVI");
+    isce3::cuda::core::Stream stream;
 
-    isce::cuda::io::RasterDataStream datastream (&raster, stream);
+    isce3::cuda::io::RasterDataStream datastream (&raster, stream);
 
     // write data to file
     datastream.store(src.data().get(), 0, 0, width, length);
@@ -110,7 +110,7 @@ TEST(DataStreamTest, RasterStoreThenLoad)
     datastream.load(dst.data().get(), 0, 0, width, length);
 
     // wait for asynchronous operations to complete
-    isce::cuda::core::synchronize(stream);
+    isce3::cuda::core::synchronize(stream);
     EXPECT_EQ( src, dst );
 }
 

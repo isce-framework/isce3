@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 class gpuBasis;
 class Orbit;
@@ -20,4 +20,4 @@ template<typename> class TabulatedKernel;
 template<typename> class ChebyKernel;
 // clang-format on
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core

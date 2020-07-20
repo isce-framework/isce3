@@ -10,7 +10,7 @@ void addsubmodule_io(py::module & m)
 
     addsubmodule_gdal(m_io);
 
-    py::class_<isce::io::Raster> pyRaster(m_io, "Raster");
+    py::class_<isce3::io::Raster> pyRaster(m_io, "Raster");
 
     addbinding(pyRaster);
     addbinding_serialization(m_io);

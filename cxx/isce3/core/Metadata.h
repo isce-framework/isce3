@@ -14,7 +14,7 @@
 #include "LookSide.h"
 
 /** Data structure for storing basic radar geometry image metadata */
-class isce::core::Metadata {
+class isce3::core::Metadata {
 public:
 
     // Acquisition related parameters
@@ -40,4 +40,4 @@ public:
 };
 
 // Define std::cout interaction for debugging
-std::ostream& operator<<(std::ostream &os, const isce::core::Metadata &radar);
+std::ostream& operator<<(std::ostream &os, const isce3::core::Metadata &radar);

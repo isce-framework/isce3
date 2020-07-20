@@ -6,11 +6,11 @@
 #include "../Orbit.h"
 #include "../Vector.h"
 
-namespace isce { namespace core { namespace detail {
+namespace isce3 { namespace core { namespace detail {
 
 template<class Orbit>
 CUDA_HOSTDEV
-isce::error::ErrorCode
+isce3::error::ErrorCode
 interpolateOrbit(Vec3 * position,
                  Vec3 * velocity,
                  const Orbit & orbit,

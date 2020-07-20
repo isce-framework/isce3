@@ -29,15 +29,15 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     std::string h5file(TESTDATA_DIR "envisat.h5");
 
     // an HDF5 object
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce::product::Product product(file);
-    const isce::product::Swath & swath = product.swath('A');
+    isce3::product::Product product(file);
+    const isce3::product::Swath & swath = product.swath('A');
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
-    isce::core::LUT2d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
-    isce::core::LUT2d<double> dop2 = dop1;
+    isce3::core::LUT2d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT2d<double> dop2 = dop1;
 
     // get pulase repetition frequency (prf)
     double prf = swath.nominalAcquisitionPRF();
@@ -49,7 +49,7 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     // desired common azimuth band
     double commonAzimuthBandwidth = 1000.0;
 
-    isce::signal::Filter<float> filter;
+    isce3::signal::Filter<float> filter;
     filter.constructAzimuthCommonbandFilter(dop1,
                                             dop2,
                                             commonAzimuthBandwidth,
@@ -72,11 +72,11 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::valarray<std::complex<float>> refSpectrum(ncols*blockRows);
 
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce::product::Product product(file);
-    const isce::product::Swath & swath = product.swath('A');
+    isce3::product::Product product(file);
+    const isce3::product::Swath & swath = product.swath('A');
 
     // get the range bandwidth
     double BW = swath.processedRangeBandwidth();
@@ -91,7 +91,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     // Assume range sampling frequency equals bandwidth for this test
     double rangeSamplingFrequency = BW;
 
-    isce::signal::Filter<float> filter;
+    isce3::signal::Filter<float> filter;
     filter.constructRangeBandpassFilter(rangeSamplingFrequency,
                                 subBandCenterFrequencies,
                                 subBandBandwidths,

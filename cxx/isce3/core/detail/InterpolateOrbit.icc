@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <limits>
 
-namespace isce { namespace core { namespace detail {
+namespace isce3 { namespace core { namespace detail {
 
 NVCC_HD_WARNING_DISABLE
 template<class Orbit>
 CUDA_HOSTDEV
 inline
-isce::error::ErrorCode
+isce3::error::ErrorCode
 interpolateOrbitHermite(Vec3 * position, Vec3 * velocity, const Orbit & orbit, double t)
 {
     // find index of the first state vector to use to form the interpolant
@@ -59,7 +59,7 @@ interpolateOrbitHermite(Vec3 * position, Vec3 * velocity, const Orbit & orbit, d
 
     // if only interpolating position, we can finish here
     if (!velocity) {
-        return isce::error::ErrorCode::Success;
+        return isce3::error::ErrorCode::Success;
     }
 
     double hdot[4];
@@ -105,14 +105,14 @@ interpolateOrbitHermite(Vec3 * position, Vec3 * velocity, const Orbit & orbit, d
     }
     *velocity = vel;
 
-    return isce::error::ErrorCode::Success;
+    return isce3::error::ErrorCode::Success;
 }
 
 NVCC_HD_WARNING_DISABLE
 template<class Orbit>
 CUDA_HOSTDEV
 inline
-isce::error::ErrorCode
+isce3::error::ErrorCode
 interpolateOrbitLegendre(Vec3 * position, Vec3 * velocity, const Orbit & orbit, double t)
 {
     // find index of the first state vector to use to form the interpolant
@@ -131,7 +131,7 @@ interpolateOrbitLegendre(Vec3 * position, Vec3 * velocity, const Orbit & orbit, 
         int i = trel;
         if (position) { *position = orbit.position(idx + i); }
         if (velocity) { *velocity = orbit.velocity(idx + i); }
-        return isce::error::ErrorCode::Success;
+        return isce3::error::ErrorCode::Success;
     }
 
     constexpr static double noemer[9] =
@@ -151,13 +151,13 @@ interpolateOrbitLegendre(Vec3 * position, Vec3 * velocity, const Orbit & orbit, 
     if (position) { *position = pos; }
     if (velocity) { *velocity = vel; }
 
-    return isce::error::ErrorCode::Success;
+    return isce3::error::ErrorCode::Success;
 }
 
 template<class Orbit>
 CUDA_HOSTDEV
 inline
-isce::error::ErrorCode
+isce3::error::ErrorCode
 interpolateOrbit(Vec3 * position,
                  Vec3 * velocity,
                  const Orbit & orbit,
@@ -166,7 +166,7 @@ interpolateOrbit(Vec3 * position,
 {
     // make sure we have enough state vectors to form the interpolant
     if (orbit.size() < minStateVecs(orbit.interpMethod())) {
-        return isce::error::ErrorCode::OrbitInterpSizeError;
+        return isce3::error::ErrorCode::OrbitInterpSizeError;
     }
 
     // check if interpolation time is outside orbit domain
@@ -177,7 +177,7 @@ interpolateOrbit(Vec3 * position,
             if (velocity) { *velocity = {nan, nan, nan}; }
         }
         if (border_mode != OrbitInterpBorderMode::Extrapolate) {
-            return isce::error::ErrorCode::OrbitInterpDomainError;
+            return isce3::error::ErrorCode::OrbitInterpDomainError;
         }
     }
 
@@ -188,7 +188,7 @@ interpolateOrbit(Vec3 * position,
         case OrbitInterpMethod::Legendre :
             return interpolateOrbitLegendre(position, velocity, orbit, t);
         default :
-            return isce::error::ErrorCode::OrbitInterpUnknownMethod;
+            return isce3::error::ErrorCode::OrbitInterpUnknownMethod;
     }
 }
 

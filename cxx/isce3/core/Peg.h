@@ -10,7 +10,7 @@
 /** Data structure to store a peg point
  *
  * Peg points are used for SCH coordinate system representation for UAVSAR*/
-class isce::core::Peg {
+class isce3::core::Peg {
 public:
 
     //peg latitude in radians
@@ -39,7 +39,7 @@ public:
     inline Peg& operator=(const Peg&);
 };
 
-isce::core::Peg & isce::core::Peg::
+isce3::core::Peg & isce3::core::Peg::
 operator=(const Peg &rhs) {
     lat = rhs.lat;
     lon = rhs.lon;

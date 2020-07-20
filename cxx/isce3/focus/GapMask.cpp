@@ -4,7 +4,7 @@
 #include <climits>
 #include <isce3/except/Error.h>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 GapMask::GapMask(const std::vector<double> & azimuth_time, int samples,
     double range_window_start, double range_sampling_rate,
@@ -18,16 +18,16 @@ GapMask::GapMask(const std::vector<double> & azimuth_time, int samples,
     guard(guard)
 {
     if (t.size() > INT_MAX) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "require azimuth_time.size() <= INT_MAX");
     }
     for (int i = 1; i < t.size(); ++i) {
         if (t[i - 1] > t[i]) {
             std::string errmsg = "azimuth time must be monotonically increasing";
-            throw isce::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
         }
     }
-    using isce::except::DomainError;
+    using isce3::except::DomainError;
     if (n <= 0) {
         throw DomainError(ISCE_SRCINFO(), "require range samples > 0");
     }
@@ -49,7 +49,7 @@ std::vector<std::pair<int, int>>
 GapMask::gaps(int pulse) const
 {
     if ((pulse < 0) || (pulse >= t.size())) {
-        throw isce::except::DomainError(ISCE_SRCINFO(), "pulse out of bounds");
+        throw isce3::except::DomainError(ISCE_SRCINFO(), "pulse out of bounds");
     }
     std::vector<std::pair<int, int>> g;
     const double t0 = t[pulse] + dwp;
@@ -87,4 +87,4 @@ GapMask::mask(int pulse) const
     return mask;
 }
 
-}} // namespace isce::focus
+}} // namespace isce3::focus

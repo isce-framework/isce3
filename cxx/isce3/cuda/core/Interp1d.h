@@ -2,7 +2,7 @@
 
 #include <isce3/core/Common.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 /**
  * Interpolate sequence x at point t
@@ -21,6 +21,6 @@ template<class Kernel, typename T>
 CUDA_HOSTDEV T interp1d(const Kernel& kernel, const T* x, size_t length,
                         size_t stride, double t, bool periodic = false);
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core
 
 #include "Interp1d.icc"

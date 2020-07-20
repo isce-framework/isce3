@@ -8,7 +8,7 @@ TEST(LinspaceTest, BasicConstructor)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x(first, spacing, size);
+    isce3::core::Linspace<int> x(first, spacing, size);
 
     EXPECT_EQ( x.first(), first );
     EXPECT_EQ( x.spacing(), spacing );
@@ -23,7 +23,7 @@ TEST(LinspaceTest, FromInterval)
 
     int last = first + spacing * (size - 1);
 
-    typedef isce::core::Linspace<int> Linspace;
+    typedef isce3::core::Linspace<int> Linspace;
 
     Linspace x = Linspace::from_interval(first, last, size);
 
@@ -39,8 +39,8 @@ TEST(LinspaceTest, CopyConstructor)
     float spacing = 1.;
     int size = 10;
 
-    isce::core::Linspace<float> x1(first, spacing, size);
-    isce::core::Linspace<double> x2(x1);
+    isce3::core::Linspace<float> x1(first, spacing, size);
+    isce3::core::Linspace<double> x2(x1);
 
     EXPECT_FLOAT_EQ( x2.first(), x1.first() );
     EXPECT_FLOAT_EQ( x2.spacing(), x1.spacing() );
@@ -53,8 +53,8 @@ TEST(LinspaceTest, Assignment)
     float spacing = 1.;
     int size = 10;
 
-    isce::core::Linspace<float> x1(first, spacing, size);
-    isce::core::Linspace<double> x2;
+    isce3::core::Linspace<float> x1(first, spacing, size);
+    isce3::core::Linspace<double> x2;
     x2 = x1;
 
     EXPECT_FLOAT_EQ( x2.first(), x1.first() );
@@ -68,7 +68,7 @@ TEST(LinspaceTest, Accessor)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x(first, spacing, size);
+    isce3::core::Linspace<int> x(first, spacing, size);
 
     EXPECT_EQ( x[0], first );
     EXPECT_EQ( x[1], first + spacing );
@@ -81,7 +81,7 @@ TEST(LinspaceTest, SetFirst)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x(first, spacing, size);
+    isce3::core::Linspace<int> x(first, spacing, size);
 
     int new_first = 10;
 
@@ -99,7 +99,7 @@ TEST(LinspaceTest, SetSpacing)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x(first, spacing, size);
+    isce3::core::Linspace<int> x(first, spacing, size);
 
     int new_spacing = 2;
 
@@ -115,7 +115,7 @@ TEST(LinspaceTest, Resize)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x(first, spacing, size);
+    isce3::core::Linspace<int> x(first, spacing, size);
 
     int new_size = 15;
 
@@ -130,12 +130,12 @@ TEST(LinspaceTest, SubInterval)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x1(first, spacing, size);
+    isce3::core::Linspace<int> x1(first, spacing, size);
 
     int start = 3;
     int stop = 8;
 
-    isce::core::Linspace<int> x2 = x1.subinterval(start, stop);
+    isce3::core::Linspace<int> x2 = x1.subinterval(start, stop);
 
     EXPECT_EQ( x2.first(), first + start * spacing );
     EXPECT_EQ( x2.last(), first + (stop - 1) * spacing );
@@ -148,8 +148,8 @@ TEST(LinspaceTest, Empty)
     int first = 0;
     int spacing = 1;
 
-    isce::core::Linspace<int> x1(first, spacing, 0);
-    isce::core::Linspace<int> x2(first, spacing, 10);
+    isce3::core::Linspace<int> x1(first, spacing, 0);
+    isce3::core::Linspace<int> x2(first, spacing, 10);
 
     EXPECT_TRUE( x1.empty() );
     EXPECT_FALSE( x2.empty() );
@@ -163,7 +163,7 @@ TEST(LinspaceTest, Search)
         int spacing = 1;
         int size = 10;
 
-        isce::core::Linspace<int> x(first, spacing, size);
+        isce3::core::Linspace<int> x(first, spacing, size);
 
         EXPECT_EQ( x.search(-1), 0 );
         EXPECT_EQ( x.search(2.5), 3 );
@@ -176,7 +176,7 @@ TEST(LinspaceTest, Search)
         int spacing = -1;
         int size = 10;
 
-        isce::core::Linspace<int> x(first, spacing, size);
+        isce3::core::Linspace<int> x(first, spacing, size);
 
         EXPECT_EQ( x.search(1), 0 );
         EXPECT_EQ( x.search(-2.5), 3 );
@@ -190,9 +190,9 @@ TEST(LinspaceTest, Comparison)
     int spacing = 1;
     int size = 10;
 
-    isce::core::Linspace<int> x1(first, spacing, size);
-    isce::core::Linspace<int> x2(first, spacing, size);
-    isce::core::Linspace<int> x3(first + 1, spacing, size);
+    isce3::core::Linspace<int> x1(first, spacing, size);
+    isce3::core::Linspace<int> x2(first, spacing, size);
+    isce3::core::Linspace<int> x3(first + 1, spacing, size);
 
     EXPECT_TRUE( x1 == x2 );
     EXPECT_TRUE( x1 != x3 );

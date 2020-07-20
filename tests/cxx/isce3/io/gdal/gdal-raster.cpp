@@ -11,14 +11,14 @@
 #include <isce3/io/gdal/Raster.h>
 #include <isce3/io/IH5.h>
 
-using isce::core::ProjectionBase;
-using isce::io::gdal::Buffer;
-using isce::io::gdal::Dataset;
-using isce::io::gdal::GeoTransform;
-using isce::io::gdal::Raster;
-using isce::io::gdal::TypedBuffer;
-using isce::io::IH5File;
-using isce::io::IDataSet;
+using isce3::core::ProjectionBase;
+using isce3::io::gdal::Buffer;
+using isce3::io::gdal::Dataset;
+using isce3::io::gdal::GeoTransform;
+using isce3::io::gdal::Raster;
+using isce3::io::gdal::TypedBuffer;
+using isce3::io::IH5File;
+using isce3::io::IDataSet;
 
 /** Raster w/ spatial reference & geo transform data */
 struct DEMRasterTestData {
@@ -122,7 +122,7 @@ TEST_P(RasterTest, OpenBand)
     // attempting to fetch invalid raster band should throw
     {
         int band = bands + 1;
-        EXPECT_THROW( { Raster raster(path, band); }, isce::except::OutOfRange );
+        EXPECT_THROW( { Raster raster(path, band); }, isce3::except::OutOfRange );
     }
 }
 
@@ -193,7 +193,7 @@ TEST_P(RasterTest, SetGeoTransform)
     {
         Raster raster(path, GA_ReadOnly);
 
-        EXPECT_THROW( { raster.setGeoTransform(geo_transform); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.setGeoTransform(geo_transform); }, isce3::except::RuntimeError );
     }
 }
 
@@ -212,7 +212,7 @@ TEST_P(RasterTest, GetProjection)
     {
         Raster raster(testdata.sequence.path);
 
-        EXPECT_THROW( { raster.getProjection(); }, isce::except::GDALError );
+        EXPECT_THROW( { raster.getProjection(); }, isce3::except::GDALError );
     }
 }
 
@@ -224,7 +224,7 @@ TEST_P(RasterTest, SetProjection)
     int length = 8;
     GDALDataType datatype = GDT_UInt16;
 
-    std::unique_ptr<ProjectionBase> proj(isce::core::createProj(4326));
+    std::unique_ptr<ProjectionBase> proj(isce3::core::createProj(4326));
 
     {
         Raster raster(path, width, length, datatype, testdata.driver);
@@ -238,7 +238,7 @@ TEST_P(RasterTest, SetProjection)
     {
         Raster raster(path, GA_ReadOnly);
 
-        EXPECT_THROW( { raster.setProjection(proj.get()); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.setProjection(proj.get()); }, isce3::except::RuntimeError );
     }
 }
 
@@ -283,7 +283,7 @@ TEST_P(RasterTest, WritePixel)
     // writing to read-only raster should throw
     {
         Raster raster(path, GA_ReadOnly);
-        EXPECT_THROW( { raster.writePixel(&expected, col, row); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.writePixel(&expected, col, row); }, isce3::except::RuntimeError );
     }
 }
 
@@ -326,7 +326,7 @@ TEST_P(RasterTest, WriteLine)
     // writing to read-only raster should throw
     {
         Raster raster(path, GA_ReadOnly);
-        EXPECT_THROW( { raster.writeLine(expected.data(), row); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.writeLine(expected.data(), row); }, isce3::except::RuntimeError );
     }
 }
 
@@ -374,7 +374,7 @@ TEST_P(RasterTest, WriteLines)
     // writing to read-only raster should throw
     {
         Raster raster(path, GA_ReadOnly);
-        EXPECT_THROW( { raster.writeLines(expected.data(), first_row, num_rows); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.writeLines(expected.data(), first_row, num_rows); }, isce3::except::RuntimeError );
     }
 }
 
@@ -429,7 +429,7 @@ TEST_P(RasterTest, WriteBlock)
         Raster raster(path, GA_ReadOnly);
         EXPECT_THROW(
                 { raster.writeBlock(expected.data(), first_col, first_row, num_cols, num_rows); },
-                isce::except::RuntimeError );
+                isce3::except::RuntimeError );
     }
 }
 
@@ -474,7 +474,7 @@ TEST_P(RasterTest, WriteAll)
     // writing to read-only raster should throw
     {
         Raster raster(path, GA_ReadOnly);
-        EXPECT_THROW( { raster.writeAll(expected.data()); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.writeAll(expected.data()); }, isce3::except::RuntimeError );
     }
 }
 
@@ -488,7 +488,7 @@ TEST_P(RasterTest, OutOfBoundsRead)
     int row = 0;
 
     int val;
-    EXPECT_THROW( { raster.readPixel(&val, col, row); }, isce::except::OutOfRange );
+    EXPECT_THROW( { raster.readPixel(&val, col, row); }, isce3::except::OutOfRange );
 }
 
 TEST_P(RasterTest, OutOfBoundsWrite)
@@ -504,7 +504,7 @@ TEST_P(RasterTest, OutOfBoundsWrite)
     int row = -1;
 
     int val = 123;
-    EXPECT_THROW( { raster.writePixel(&val, col, row); }, isce::except::OutOfRange );
+    EXPECT_THROW( { raster.writePixel(&val, col, row); }, isce3::except::OutOfRange );
 }
 
 TEST_P(RasterTest, Memmap)
@@ -627,7 +627,7 @@ TEST_F(H5RasterTest, OpenBand)
     // attempting to fetch invalid raster band should throw
     {
         int band = 100;
-        EXPECT_THROW( { Raster raster(dataset, band); }, isce::except::OutOfRange );
+        EXPECT_THROW( { Raster raster(dataset, band); }, isce3::except::OutOfRange );
     }
 }
 
@@ -822,7 +822,7 @@ TEST_F(MEMRasterTest, WriteBlockRowMajor)
     // writing to read-only raster should throw
     {
         Raster raster(v.data(), width, length, GA_ReadOnly);
-        EXPECT_THROW( { raster.writeBlock(vals.data(), 0, 0, width, length); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.writeBlock(vals.data(), 0, 0, width, length); }, isce3::except::RuntimeError );
     }
 }
 
@@ -869,7 +869,7 @@ TEST_F(MEMRasterTest, WriteBlockColMajor)
     // writing to read-only raster should throw
     {
         Raster raster(v.data(), width, length, colstride, rowstride, GA_ReadOnly);
-        EXPECT_THROW( { raster.writeBlock(vals.data(), 0, 0, width, length); }, isce::except::RuntimeError );
+        EXPECT_THROW( { raster.writeBlock(vals.data(), 0, 0, width, length); }, isce3::except::RuntimeError );
     }
 }
 

@@ -8,13 +8,13 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LookSide.h>
 
-// isce::cuda::core
+// isce3::cuda::core
 #include <isce3/cuda/core/gpuLUT1d.h>
 #include <isce3/cuda/core/Orbit.h>
 #include <isce3/cuda/core/OrbitView.h>
 #include <isce3/cuda/core/gpuProjections.h>
 
-// isce::cuda::geometry
+// isce3::cuda::geometry
 #include "gpuGeometry.h"
 
 #include <isce3/cuda/except/Error.h>
@@ -22,19 +22,19 @@
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 #define NULL_VALUE -1000000.0
 
-using isce::core::Vec3;
+using isce3::core::Vec3;
 
 __global__
-void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
-                     isce::cuda::core::OrbitView orbit,
-                     isce::cuda::core::gpuLUT1d<double> doppler,
+void runGeo2rdrBlock(isce3::core::Ellipsoid ellps,
+                     isce3::cuda::core::OrbitView orbit,
+                     isce3::cuda::core::gpuLUT1d<double> doppler,
                      double * x, double * y, double * hgt,
                      float * azoff, float * rgoff,
-                     isce::cuda::core::ProjectionBase ** projTopo,
+                     isce3::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
                      double t0, double r0, size_t length, size_t width,
                      double prf, double rangePixelSpacing, double wavelength,
-                     isce::core::LookSide side, double threshold, int numiter,
+                     isce3::core::LookSide side, double threshold, int numiter,
                      unsigned int * totalconv) {
 
     // Get the flattened index
@@ -56,7 +56,7 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
         // Perform geo->rdr iterations
         double aztime, slantRange;
         const double deltaRange = 1.0e-8;
-        int geostat = isce::cuda::geometry::geo2rdr(
+        int geostat = isce3::cuda::geometry::geo2rdr(
             llh, ellps, orbit, doppler, &aztime, &slantRange, wavelength,
             side, threshold, numiter, deltaRange);
 
@@ -90,10 +90,10 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
 }
 
 // C++ Host code for launching kernel to run topo on current block
-void isce::cuda::geometry::
-runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
-              const isce::core::Orbit & orbit,
-              const isce::core::LUT1d<double> & doppler,
+void isce3::cuda::geometry::
+runGPUGeo2rdr(const isce3::core::Ellipsoid& ellipsoid,
+              const isce3::core::Orbit & orbit,
+              const isce3::core::LUT1d<double> & doppler,
               const std::valarray<double> & x,
               const std::valarray<double> & y,
               const std::valarray<double> & hgt,
@@ -103,12 +103,12 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
               double t0, double r0,
               size_t length, size_t width,
               double prf, double rangePixelSpacing, double wavelength,
-              isce::core::LookSide side, double threshold, double numiter,
+              isce3::core::LookSide side, double threshold, double numiter,
               unsigned int & totalconv) {
 
     // Create gpu ISCE objects
-    isce::cuda::core::Orbit gpu_orbit(orbit);
-    isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
+    isce3::cuda::core::Orbit gpu_orbit(orbit);
+    isce3::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
 
     // Allocate memory on device topo data and results
     double *x_d, *y_d, *hgt_d;
@@ -127,8 +127,8 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
     checkCudaErrors(cudaMemcpy(hgt_d, &hgt[0], nbytes_double, cudaMemcpyHostToDevice));
 
     // Allocate projection pointer on device
-    isce::cuda::core::ProjectionBase **proj_d;
-    checkCudaErrors(cudaMalloc(&proj_d, sizeof(isce::cuda::core::ProjectionBase **)));
+    isce3::cuda::core::ProjectionBase **proj_d;
+    checkCudaErrors(cudaMalloc(&proj_d, sizeof(isce3::cuda::core::ProjectionBase **)));
     createProjection<<<1, 1>>>(proj_d, topoEPSG);
 
     // Allocate integer for storing convergence results

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 /** Thin RAII wrapper around cudaEvent_t */
 class Event {

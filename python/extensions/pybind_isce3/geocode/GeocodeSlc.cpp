@@ -13,7 +13,7 @@ namespace py = pybind11;
 
 void addbinding_geocodeslc(py::module & m)
 {
-    m.def("geocode_slc", &isce::geocode::geocodeSlc,
+    m.def("geocode_slc", &isce3::geocode::geocodeSlc,
         py::arg("output_raster"),
         py::arg("input_raster"),
         py::arg("dem_raster"),

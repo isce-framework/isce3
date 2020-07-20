@@ -17,7 +17,7 @@
 
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 initiateRangeFilter(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &spectrum,
                     size_t ncols,
@@ -36,7 +36,7 @@ initiateRangeFilter(std::valarray<std::complex<T>> &signal,
  */
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &spectrum,
                     size_t ncols,
@@ -58,7 +58,7 @@ initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
  */
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 std::valarray<double> subBandCenterFrequencies,
                                 std::valarray<double> subBandBandwidths,
@@ -82,7 +82,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
 
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 std::valarray<double> subBandCenterFrequencies,
                                 std::valarray<double> subBandBandwidths,
@@ -142,7 +142,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
  */
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
                              double dt,
@@ -193,7 +193,7 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
  */
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
                              double,
@@ -242,9 +242,9 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
 */
 template <class T>
 void
-isce::signal::Filter<T>::
-constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
-                        const isce::core::LUT1d<double> & secDoppler,
+isce3::signal::Filter<T>::
+constructAzimuthCommonbandFilter(const isce3::core::LUT1d<double> & refDoppler,
+                        const isce3::core::LUT1d<double> & secDoppler,
                         double bandwidth,
                         double prf,
                         double beta,
@@ -315,7 +315,7 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 */
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum)
 {
@@ -330,7 +330,7 @@ filter(std::valarray<std::complex<T>> &signal,
  * @param[out] freq output vector of the frequencies 
  */
 void
-isce::signal::
+isce3::signal::
 fftfreq(double dt, std::valarray<double> &freq){
 
     int N = freq.size();
@@ -359,7 +359,7 @@ fftfreq(double dt, std::valarray<double> &freq){
  */
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 indexOfFrequency(double dt, int N, double f, int &n)
 // deterrmine the index (n) of a given frequency f
 // dt: sampling rate, 
@@ -378,14 +378,14 @@ indexOfFrequency(double dt, int N, double f, int &n)
 
 template <class T>
 void
-isce::signal::Filter<T>::
+isce3::signal::Filter<T>::
 writeFilter(size_t ncols, size_t nrows)
 {
-    isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
+    isce3::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
     filterRaster.setBlock(_filter, 0, 0, ncols, nrows);
 
 }
 
-template class isce::signal::Filter<float>;
-template class isce::signal::Filter<double>;
+template class isce3::signal::Filter<float>;
+template class isce3::signal::Filter<double>;
 

@@ -6,23 +6,23 @@
 // std
 #include <valarray>
 
-// isce::core
+// isce3::core
 #include <isce3/core/DateTime.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Constants.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/Raster.h>
 
 // Declaration
-namespace isce {
+namespace isce3 {
     namespace product {
         class Swath;
     }
 }
 
-// isce::product::Swath definition
-class isce::product::Swath {
+// isce3::product::Swath definition
+class isce3::product::Swath {
 
     public:
         // Constructors
@@ -59,7 +59,7 @@ class isce::product::Swath {
 
         /** Get processed wavelength */
         inline double processedWavelength() const {
-            return isce::core::speed_of_light / _processedCenterFrequency;
+            return isce3::core::speed_of_light / _processedCenterFrequency;
         }
 
         /** Get acquired range bandwidth */
@@ -101,9 +101,9 @@ class isce::product::Swath {
         inline void processedAzimuthBandwidth(double b) { _processedAzimuthBandwidth = b; }
 
         /** Get reference epoch */
-        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        inline const isce3::core::DateTime & refEpoch() const { return _refEpoch; }
         /** Set reference epoch */
-        inline void refEpoch(const isce::core::DateTime & epoch) { _refEpoch = epoch; }
+        inline void refEpoch(const isce3::core::DateTime & epoch) { _refEpoch = epoch; }
 
         /** Get valid array indices */
         inline std::array<size_t, 2> validSamples() const { return {_validStart, _validEnd}; }
@@ -131,5 +131,5 @@ class isce::product::Swath {
         size_t _validEnd;
 
         // Reference epoch
-        isce::core::DateTime _refEpoch;
+        isce3::core::DateTime _refEpoch;
 };

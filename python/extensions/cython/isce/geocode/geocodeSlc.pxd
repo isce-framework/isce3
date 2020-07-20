@@ -13,7 +13,7 @@ from Raster  cimport Raster
 from libcpp.string cimport string
 from libcpp cimport bool
 
-cdef extern from "isce3/geocode/geocodeSlc.h" namespace "isce::geocode":
+cdef extern from "isce3/geocode/geocodeSlc.h" namespace "isce3::geocode":
     void geocodeSlc(Raster & outputRaster,
         Raster & inputRaster,
         Raster & demRaster,

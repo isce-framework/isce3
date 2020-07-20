@@ -7,7 +7,7 @@
 #include "../StateVector.h"
 #include "../Vector.h"
 
-namespace isce { namespace core { namespace detail {
+namespace isce3 { namespace core { namespace detail {
 
 Linspace<double>
 getOrbitTime(const std::vector<StateVector> & statevecs, const DateTime & reference_epoch);

@@ -9,16 +9,16 @@ from DateTime cimport DateTime
 from IH5 cimport IGroup
 from StateVector cimport StateVector
 
-cdef extern from "isce3/core/Orbit.h" namespace "isce::core":
+cdef extern from "isce3/core/Orbit.h" namespace "isce3::core":
 
     cdef enum OrbitInterpMethod:
-        Hermite "isce::core::OrbitInterpMethod::Hermite"
-        Legendre "isce::core::OrbitInterpMethod::Legendre"
+        Hermite "isce3::core::OrbitInterpMethod::Hermite"
+        Legendre "isce3::core::OrbitInterpMethod::Legendre"
 
     cdef enum OrbitInterpBorderMode:
-        Error "isce::core::OrbitInterpBorderMode::Error"
-        Extrapolate "isce::core::OrbitInterpBorderMode::Extrapolate"
-        FillNaN "isce::core::OrbitInterpBorderMode::FillNaN"
+        Error "isce3::core::OrbitInterpBorderMode::Error"
+        Extrapolate "isce3::core::OrbitInterpBorderMode::Extrapolate"
+        FillNaN "isce3::core::OrbitInterpBorderMode::FillNaN"
 
     cdef cppclass Orbit:
         Orbit()
@@ -46,6 +46,6 @@ cdef extern from "isce3/core/Orbit.h" namespace "isce::core":
     bool operator==(const Orbit &, const Orbit &)
     bool operator!=(const Orbit &, const Orbit &)
 
-cdef extern from "isce3/core/Serialization.h" namespace "isce::core":
+cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
     void saveOrbitToH5 "saveToH5" (IGroup &, const Orbit &)
     void loadOrbitFromH5 "loadFromH5" (IGroup &, Orbit &)

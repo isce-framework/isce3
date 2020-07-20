@@ -10,7 +10,7 @@
 #include "Constants.h"
 #include "DenseMatrix.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
     /** Data structure to assist with Peg point transformations
      *

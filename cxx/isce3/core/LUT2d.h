@@ -15,20 +15,20 @@
 /** Data structure to store 2D Lookup table.
  *  Suitable for storing data of the form z = f(x,y)*/
 template <typename T>
-class isce::core::LUT2d {
+class isce3::core::LUT2d {
 
     public:
         // Constructors
         inline LUT2d();
-        inline LUT2d(isce::core::dataInterpMethod method);
+        inline LUT2d(isce3::core::dataInterpMethod method);
         LUT2d(double xstart, double ystart, double dx, double dy,
-              const isce::core::Matrix<T> & data,
-              isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD,
+              const isce3::core::Matrix<T> & data,
+              isce3::core::dataInterpMethod method = isce3::core::BILINEAR_METHOD,
               bool boundsError = true);
         LUT2d(const std::valarray<double> & xcoord,
               const std::valarray<double> & ycoord,
-              const isce::core::Matrix<T> & data,
-              isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD,
+              const isce3::core::Matrix<T> & data,
+              isce3::core::dataInterpMethod method = isce3::core::BILINEAR_METHOD,
               bool boundsError = true);
 
         // Deep copy constructor
@@ -40,13 +40,13 @@ class isce::core::LUT2d {
         // Set data from external data
         void setFromData(const std::valarray<double> & xcoord,
                          const std::valarray<double> & ycoord,
-                         const isce::core::Matrix<T> & data);
+                         const isce3::core::Matrix<T> & data);
 
         // Get interpolator method
-        isce::core::dataInterpMethod interpMethod() const;
+        isce3::core::dataInterpMethod interpMethod() const;
 
         // Set interpolator method
-        void interpMethod(isce::core::dataInterpMethod method);
+        void interpMethod(isce3::core::dataInterpMethod method);
 
         // Get starting X-coordinate
         inline double xStart() const { return _xstart; }
@@ -67,7 +67,7 @@ class isce::core::LUT2d {
         // Get bounds error flag
         inline bool boundsError() const { return _boundsError; }
         // Get read-only reference to data
-        inline const isce::core::Matrix<T> & data() const { return _data; }
+        inline const isce3::core::Matrix<T> & data() const { return _data; }
 
         // Set bounds error floag
         inline void boundsError(bool flag) { _boundsError = flag; }
@@ -81,9 +81,9 @@ class isce::core::LUT2d {
         T _refValue;
         // Data
         double _xstart, _ystart, _dx, _dy;
-        isce::core::Matrix<T> _data;
+        isce3::core::Matrix<T> _data;
         // Interpolation method
-        isce::core::Interpolator<T> * _interp;
+        isce3::core::Interpolator<T> * _interp;
 
     private:
         /** @internal
@@ -98,25 +98,25 @@ class isce::core::LUT2d {
 
         // Comparison operator for floating point
         template <typename U = T, std::enable_if_t<!std::is_compound<U>::value, int> = 0>
-        inline bool operator==(const isce::core::LUT2d<T> & other) const {
+        inline bool operator==(const isce3::core::LUT2d<T> & other) const {
             // Check coordinates and dimensions first
             bool equal = _data.width() == other.width();
             equal *= _data.length() == other.length();
             if (!equal) {
                 return false;
             }
-            equal *= isce::core::compareFloatingPoint(_xstart, other.xStart());
-            equal *= isce::core::compareFloatingPoint(_ystart, other.yStart());
-            equal *= isce::core::compareFloatingPoint(_dx, other.xSpacing());
-            equal *= isce::core::compareFloatingPoint(_dy, other.ySpacing());
+            equal *= isce3::core::compareFloatingPoint(_xstart, other.xStart());
+            equal *= isce3::core::compareFloatingPoint(_ystart, other.yStart());
+            equal *= isce3::core::compareFloatingPoint(_dx, other.xSpacing());
+            equal *= isce3::core::compareFloatingPoint(_dy, other.ySpacing());
             if (!equal) {
                 return false;
             }
             // If we made it this far, check contents
-            const isce::core::Matrix<T> & otherMat = other.data();
+            const isce3::core::Matrix<T> & otherMat = other.data();
             for (size_t i = 0; i < _data.length(); ++i) {
                 for (size_t j = 0; j < _data.width(); ++j) {
-                    equal *= isce::core::compareFloatingPoint(_data(i,j), otherMat(i,j));
+                    equal *= isce3::core::compareFloatingPoint(_data(i,j), otherMat(i,j));
                 }
             }
             return equal;
@@ -124,25 +124,25 @@ class isce::core::LUT2d {
         
         // Comparison operator for complex
         template <typename U = T, std::enable_if_t<std::is_compound<U>::value, int> = 0>
-        inline bool operator==(const isce::core::LUT2d<T> & other) const {
+        inline bool operator==(const isce3::core::LUT2d<T> & other) const {
             // Check coordinates and dimensions first
             bool equal = _data.width() == other.width();
             equal *= _data.length() == other.length();
             if (!equal) {
                 return false;
             }
-            equal *= isce::core::compareFloatingPoint(_xstart, other.xStart());
-            equal *= isce::core::compareFloatingPoint(_ystart, other.yStart());
-            equal *= isce::core::compareFloatingPoint(_dx, other.xSpacing());
-            equal *= isce::core::compareFloatingPoint(_dy, other.ySpacing());
+            equal *= isce3::core::compareFloatingPoint(_xstart, other.xStart());
+            equal *= isce3::core::compareFloatingPoint(_ystart, other.yStart());
+            equal *= isce3::core::compareFloatingPoint(_dx, other.xSpacing());
+            equal *= isce3::core::compareFloatingPoint(_dy, other.ySpacing());
             if (!equal) {
                 return false;
             }
             // If we made it this far, check contents
-            const isce::core::Matrix<T> & otherMat = other.data();
+            const isce3::core::Matrix<T> & otherMat = other.data();
             for (size_t i = 0; i < _data.length(); ++i) {
                 for (size_t j = 0; j < _data.width(); ++j) {
-                    equal *= isce::core::compareComplex(_data(i,j), otherMat(i,j));
+                    equal *= isce3::core::compareComplex(_data(i,j), otherMat(i,j));
                 }
             }
             return equal;
@@ -151,23 +151,23 @@ class isce::core::LUT2d {
 
 // Default constructor using bilinear interpolator
 template <typename T>
-isce::core::LUT2d<T>::
+isce3::core::LUT2d<T>::
 LUT2d() : _haveData(false), _boundsError(true), _refValue(0.0) {
-    _setInterpolator(isce::core::BILINEAR_METHOD);
+    _setInterpolator(isce3::core::BILINEAR_METHOD);
 }
 
 // Constructor with specified interpolator
 template <typename T>
-isce::core::LUT2d<T>::
-LUT2d(isce::core::dataInterpMethod method) : _haveData(false), _boundsError(true),
+isce3::core::LUT2d<T>::
+LUT2d(isce3::core::dataInterpMethod method) : _haveData(false), _boundsError(true),
                                              _refValue(0.0) {
     _setInterpolator(method);
 }
 
 // Deep copy constructor
 template <typename T>
-isce::core::LUT2d<T>::
-LUT2d(const isce::core::LUT2d<T> & lut) : _haveData(lut.haveData()),
+isce3::core::LUT2d<T>::
+LUT2d(const isce3::core::LUT2d<T> & lut) : _haveData(lut.haveData()),
                                           _boundsError(lut.boundsError()),
                                           _refValue(lut.refValue()),
                                           _xstart(lut.xStart()), _ystart(lut.yStart()),
@@ -178,8 +178,8 @@ LUT2d(const isce::core::LUT2d<T> & lut) : _haveData(lut.haveData()),
 
 // Deep assignment operator
 template <typename T>
-isce::core::LUT2d<T> &
-isce::core::LUT2d<T>::
+isce3::core::LUT2d<T> &
+isce3::core::LUT2d<T>::
 operator=(const LUT2d<T> & lut) {
     _refValue = lut.refValue();
     _xstart = lut.xStart();

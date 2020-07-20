@@ -9,7 +9,7 @@ from Poly2d cimport Poly2d
 
 cdef class pyPoly2d:
     '''
-    Python wrapper for isce::core::Poly2D
+    Python wrapper for isce3::core::Poly2D
 
     Note:
         Always set the orders of the polynomials before assigning coefficients to it.

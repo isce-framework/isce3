@@ -5,13 +5,13 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Vector.h>
 
-namespace isce { namespace geometry { namespace detail {
+namespace isce3 { namespace geometry { namespace detail {
 
 NVCC_HD_WARNING_DISABLE
 template<class DopplerModel>
 CUDA_HOSTDEV double
-computeDopplerAztimeDiff(double t, double r, const isce::core::Vec3& rvec,
-                         const isce::core::Vec3& vel,
+computeDopplerAztimeDiff(double t, double r, const isce3::core::Vec3& rvec,
+                         const isce3::core::Vec3& vel,
                          const DopplerModel& doppler, double wvl,
                          const Geo2RdrParams& params)
 {
@@ -35,14 +35,14 @@ computeDopplerAztimeDiff(double t, double r, const isce::core::Vec3& rvec,
 
 NVCC_HD_WARNING_DISABLE
 template<class Orbit>
-CUDA_HOSTDEV isce::error::ErrorCode
-updateAztime(double* t, const Orbit& orbit, const isce::core::Vec3& xyz,
-             isce::core::LookSide side,
+CUDA_HOSTDEV isce3::error::ErrorCode
+updateAztime(double* t, const Orbit& orbit, const isce3::core::Vec3& xyz,
+             isce3::core::LookSide side,
              double rmin = std::numeric_limits<double>::quiet_NaN(),
              double rmax = std::numeric_limits<double>::quiet_NaN())
 {
-    using namespace isce::core;
-    using isce::error::ErrorCode;
+    using namespace isce3::core;
+    using isce3::error::ErrorCode;
 
     // compute azimuth time spacing for coarse grid search
     constexpr static int num_aztime_test = 15;
@@ -99,14 +99,14 @@ updateAztime(double* t, const Orbit& orbit, const isce::core::Vec3& xyz,
 
 NVCC_HD_WARNING_DISABLE
 template<class Orbit, class DopplerModel>
-CUDA_HOSTDEV isce::error::ErrorCode
-geo2rdr(double* t, double* r, const isce::core::Vec3& llh,
-        const isce::core::Ellipsoid& ellipsoid, const Orbit& orbit,
-        const DopplerModel& doppler, double wvl, isce::core::LookSide side,
+CUDA_HOSTDEV isce3::error::ErrorCode
+geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
+        const isce3::core::Ellipsoid& ellipsoid, const Orbit& orbit,
+        const DopplerModel& doppler, double wvl, isce3::core::LookSide side,
         double t0, const Geo2RdrParams& params)
 {
-    using namespace isce::core;
-    using isce::error::ErrorCode;
+    using namespace isce3::core;
+    using isce3::error::ErrorCode;
 
     // convert LLH to ECEF
     const auto xyz = ellipsoid.lonLatToXyz(llh);
@@ -160,4 +160,4 @@ geo2rdr(double* t, double* r, const isce::core::Vec3& llh,
     return ErrorCode::FailedToConverge;
 }
 
-}}} // namespace isce::geometry::detail
+}}} // namespace isce3::geometry::detail

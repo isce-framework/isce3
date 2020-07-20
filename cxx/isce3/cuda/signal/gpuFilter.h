@@ -16,7 +16,7 @@
 
 // Definition of base class
 template<class T>
-class isce::cuda::signal::gpuFilter {
+class isce3::cuda::signal::gpuFilter {
     public:
         gpuFilter() {};
         ~gpuFilter();
@@ -43,7 +43,7 @@ class isce::cuda::signal::gpuFilter {
 
 // Azimuth filter class derived from base class
 template <class T>
-class isce::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
+class isce3::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
     public:
         gpuAzimuthFilter();
         ~gpuAzimuthFilter() {};
@@ -54,8 +54,8 @@ class isce::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
                 size_t ncols,
                 size_t nrows);
 
-        void constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
-                const isce::core::LUT1d<double> & secDoppler,
+        void constructAzimuthCommonbandFilter(const isce3::core::LUT1d<double> & refDoppler,
+                const isce3::core::LUT1d<double> & secDoppler,
                 double bandwidth,
                 double prf,
                 double beta,
@@ -66,7 +66,7 @@ class isce::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
 
 // Range filter class derived from base class
 template <class T>
-class isce::cuda::signal::gpuRangeFilter : public gpuFilter<T> {
+class isce3::cuda::signal::gpuRangeFilter : public gpuFilter<T> {
     public:
         gpuRangeFilter();
         ~gpuRangeFilter();

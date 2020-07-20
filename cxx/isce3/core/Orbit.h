@@ -9,7 +9,7 @@
 #include "TimeDelta.h"
 #include "Vector.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /**
  * Orbit interpolation method
@@ -141,7 +141,7 @@ public:
      * domain
      * \return Error code indicating exit status
      */
-    isce::error::ErrorCode
+    isce3::error::ErrorCode
     interpolate(Vec3* position, Vec3* velocity, double t,
                    OrbitInterpBorderMode border_mode =
                            OrbitInterpBorderMode::Error) const;

@@ -10,7 +10,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce::cuda::signal::gpuFilter;
+using isce3::cuda::signal::gpuFilter;
 
 template<class T>
 gpuFilter<T>::~gpuFilter()
@@ -99,7 +99,7 @@ template<class T>
 void gpuFilter<T>::
 writeFilter(size_t ncols, size_t nrows)
 {
-    isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
+    isce3::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
 }
 
 template<class T>

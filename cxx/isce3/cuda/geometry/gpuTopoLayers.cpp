@@ -4,8 +4,8 @@
 #include <isce3/geometry/TopoLayers.h>
 #include <isce3/cuda/except/Error.h>
 
-namespace isce { namespace cuda { namespace geometry {
-    gpuTopoLayers::gpuTopoLayers(const isce::geometry::TopoLayers & layers) :
+namespace isce3 { namespace cuda { namespace geometry {
+    gpuTopoLayers::gpuTopoLayers(const isce3::geometry::TopoLayers & layers) :
         _length(layers.length()), _width(layers.width()), _owner(true) {
 
         // Allocate memory
@@ -38,7 +38,7 @@ namespace isce { namespace cuda { namespace geometry {
     }
 
     // Copy results to host TopoLayers
-    void gpuTopoLayers::copyToHost(isce::geometry::TopoLayers & layers) {
+    void gpuTopoLayers::copyToHost(isce3::geometry::TopoLayers & layers) {
         checkCudaErrors(cudaMemcpy(&layers.x()[0], _x, _nbytes_double,
                         cudaMemcpyDeviceToHost));
         checkCudaErrors(cudaMemcpy(&layers.y()[0], _y, _nbytes_double,

@@ -1,7 +1,7 @@
 #include <isce3/except/Error.h>
 #include <limits>
 
-namespace isce {
+namespace isce3 {
 namespace container {
 
 inline RadarGeometry::RadarGeometry(const RadarGridParameters& radar_grid,
@@ -25,13 +25,13 @@ inline RadarGeometry::RadarGeometry(const RadarGridParameters& radar_grid,
     }
 }
 
-inline isce::core::Linspace<double> RadarGeometry::sensingTime() const
+inline isce3::core::Linspace<double> RadarGeometry::sensingTime() const
 {
     // check for overflow when converting gridLength() -> int
     constexpr static auto maxint =
             static_cast<size_t>(std::numeric_limits<int>::max());
     if (gridLength() > maxint) {
-        using isce::except::OverflowError;
+        using isce3::except::OverflowError;
         throw OverflowError(ISCE_SRCINFO(), "grid length exceeds max int");
     }
 
@@ -41,13 +41,13 @@ inline isce::core::Linspace<double> RadarGeometry::sensingTime() const
     return {t0, dt, lines};
 }
 
-inline isce::core::Linspace<double> RadarGeometry::slantRange() const
+inline isce3::core::Linspace<double> RadarGeometry::slantRange() const
 {
     // check for overflow when converting gridWidth() -> int
     constexpr static auto maxint =
             static_cast<size_t>(std::numeric_limits<int>::max());
     if (gridWidth() > maxint) {
-        using isce::except::OverflowError;
+        using isce3::except::OverflowError;
         throw OverflowError(ISCE_SRCINFO(), "grid width exceeds max int");
     }
 
@@ -58,4 +58,4 @@ inline isce::core::Linspace<double> RadarGeometry::slantRange() const
 }
 
 } // namespace container
-} // namespace isce
+} // namespace isce3

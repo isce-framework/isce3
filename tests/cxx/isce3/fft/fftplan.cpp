@@ -7,8 +7,8 @@
 
 #include "FFTTestHelper.h"
 
-using isce::fft::FwdFFTPlan;
-using isce::fft::InvFFTPlan;
+using isce3::fft::FwdFFTPlan;
+using isce3::fft::InvFFTPlan;
 
 TEST(FFTPlanTest, Logical)
 {
@@ -34,7 +34,7 @@ TEST(FFTPlanTest, InvalidPlanConfig)
     std::vector<std::complex<double>> in(n), out(n);
 
     // invalid FFT size (must be > 0)
-    EXPECT_THROW( { FwdFFTPlan<double> plan(out.data(), in.data(), -n); }, isce::except::RuntimeError );
+    EXPECT_THROW( { FwdFFTPlan<double> plan(out.data(), in.data(), -n); }, isce3::except::RuntimeError );
 }
 
 struct FFTPlanTest : public testing::TestWithParam<int> {};

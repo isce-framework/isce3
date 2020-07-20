@@ -12,7 +12,7 @@ std::string rFileName(TESTDATA_DIR "envisat.h5");
 
 struct IH5Test : public ::testing::Test {
 
-   isce::io::IH5File file;
+   isce3::io::IH5File file;
 
    // Constructor
     protected:
@@ -121,7 +121,7 @@ TEST_F(IH5Test, findInGroup) {
 
 
     // Open group
-    isce::io::IGroup group = file.openGroup(groupName);
+    isce3::io::IGroup group = file.openGroup(groupName);
 
 
     // Run the default find function on the group, i.e.:
@@ -169,7 +169,7 @@ TEST_F(IH5Test, findInGroup) {
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'f');
 //    for (auto i:list) {
-//        isce::io::IDataSet dset = group.openDataSet(i);   
+//        isce3::io::IDataSet dset = group.openDataSet(i);   
 //        ASSERT_EQ(dset.getId(), H5I_DATASET);
 //        dset.close();
 //    }
@@ -186,7 +186,7 @@ TEST_F(IH5Test, findInGroup) {
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'c' || i[0] == 'a');
     for (auto i:list) {
-        //isce::io::IDataSet dset = group.openDataSet(i);   
+        //isce3::io::IDataSet dset = group.openDataSet(i);   
         //ASSERT_EQ(dset.getId(), H5I_DATASET);
         //dset.close();
         hid_t id = H5Oopen(group.getId(), i.c_str(), H5P_DEFAULT);
@@ -222,7 +222,7 @@ TEST_F(IH5Test, dataSetOpen) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
 
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Check that the type of the open object corresponds to a dataset type
     ASSERT_EQ(H5Iget_type(dset.getId()), H5I_DATASET);
@@ -234,7 +234,7 @@ TEST_F(IH5Test, dataSetMetaData) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
 
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Nb dimensions
     ASSERT_EQ(dset.getRank(), 2);
@@ -266,7 +266,7 @@ TEST_F(IH5Test, attributeMetaData) {
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
     std::string attributeName("units");
 
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     ASSERT_EQ(dset.getRank(attributeName), 0); //scalar attribute
     ASSERT_EQ(dset.getNumElements(attributeName), 1);
@@ -279,7 +279,7 @@ TEST_F(IH5Test, readVariableLengthString) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
     std::string attribute("units");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
     
 
     std::string strVal;
@@ -295,7 +295,7 @@ TEST_F(IH5Test, readVariableLengthString2) {
 
     std::string datasetName("/science/complex_imagery/primary_mode/hh");
     std::string attribute("description");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
     
 
     char *strVal;
@@ -312,7 +312,7 @@ TEST_F(IH5Test, readVariableLengthString2) {
 TEST_F(IH5Test, readVariableLengthString2) {
 
     std::string datasetName("/science/LSAR/identification/boundingPolygon");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
     
     std::string strVal;
     dset.read(strVal);
@@ -328,7 +328,7 @@ TEST_F(IH5Test, readVariableLengthString2) {
 TEST_F(IH5Test, datasetReadComplexWithRawPointer) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Dataset is a 500x500 floating complex image
 
@@ -411,7 +411,7 @@ TEST_F(IH5Test, datasetReadComplexWithRawPointer) {
 TEST_F(IH5Test, datasetReadComplexWithVector) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Dataset is a 500x500 floating complex image
 
@@ -485,7 +485,7 @@ TEST_F(IH5Test, datasetReadComplexWithVector) {
 TEST_F(IH5Test, datasetReadComplexWithValarray) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Dataset is a 500x500 floating complex image
 
@@ -553,7 +553,7 @@ TEST_F(IH5Test, datasetReadComplexWithValarray) {
 TEST_F(IH5Test, datasetReadU16WithRawPointer) {
 
     std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/validSamples");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     std::vector<unsigned int> dval;
     dset.read(dval);
@@ -567,7 +567,7 @@ TEST_F(IH5Test, datasetReadU16WithRawPointer) {
 TEST_F(IH5Test, datasetReadFloatWithVector) {
 
     std::string datasetName("/science/LSAR/SLC/metadata/attitude/angularVelocity");
-    isce::io::IDataSet dset = file.openDataSet(datasetName);
+    isce3::io::IDataSet dset = file.openDataSet(datasetName);
 
     std::vector<float> dval;
     dset.read(dval);
@@ -592,52 +592,52 @@ TEST_F(IH5Test, openFileMode) {
     if (stat (wFileName.c_str(), &buffer) == 0)
        std::remove(wFileName.c_str());
 
-    isce::io::IH5File fic;
+    isce3::io::IH5File fic;
 
     // Open unexisting file in default (reading) mode
-    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName));
+    EXPECT_ANY_THROW(fic = isce3::io::IH5File(wFileName));
 
     // Open unexisting file in explicit reading mode
-    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName,'r'));
+    EXPECT_ANY_THROW(fic = isce3::io::IH5File(wFileName,'r'));
 
     // Open unexisting file for read/write    
-    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_ANY_THROW(fic = isce3::io::IH5File(wFileName,'w'));
     
     // Create file for write - whether or not it exists    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'x'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'x'));
     fic.close();
   
     // Create file for write - only if it does not exists
-    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName,'a'));
+    EXPECT_ANY_THROW(fic = isce3::io::IH5File(wFileName,'a'));
 
     // Delete the empty file
     std::remove(wFileName.c_str());
 
     // Create file for write - only if it does not exists
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'a'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'a'));
 }
 
 
 TEST_F(IH5Test, createGroups) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
+    isce3::io::IH5File fic;
 
     // Create file for write - whether or not it exists    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'x'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'x'));
 
     // Create a few groups in "/"
-    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupVector")));
-    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupValarray")));
-    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup("groupRawPointer"));
-    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup("groupScalar"));
+    EXPECT_NO_THROW(isce3::io::IGroup grp = fic.createGroup(std::string("groupVector")));
+    EXPECT_NO_THROW(isce3::io::IGroup grp = fic.createGroup(std::string("groupValarray")));
+    EXPECT_NO_THROW(isce3::io::IGroup grp = fic.createGroup("groupRawPointer"));
+    EXPECT_NO_THROW(isce3::io::IGroup grp = fic.createGroup("groupScalar"));
 
     // Does that group exists?
     list = fic.find(std::string("groupVector"), "/", "GROUP");
     ASSERT_EQ(list.size(), 1);
 
     // Create a group with unexisiting group path    
-    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupX/groupXX/groupXXX")));
+    EXPECT_NO_THROW(isce3::io::IGroup grp = fic.createGroup(std::string("groupX/groupXX/groupXXX")));
 
     // Does that group exists?
     list.clear();
@@ -650,11 +650,11 @@ TEST_F(IH5Test, createGroups) {
 TEST_F(IH5Test, createSimpleDatasetFromVectorBuffer) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
-    isce::io::IDataSet dset;
+    isce3::io::IH5File fic;
+    isce3::io::IDataSet dset;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
 
 
@@ -665,7 +665,7 @@ TEST_F(IH5Test, createSimpleDatasetFromVectorBuffer) {
 
 
     // Create simple dataset in groupVector, stored as 1D array from a std::vector buffer
-    isce::io::IGroup grp = fic.openGroup("/groupVector");
+    isce3::io::IGroup grp = fic.openGroup("/groupVector");
     dset = grp.createDataSet(std::string("v1"), v1);
 
     // Check that Dataset has been created
@@ -735,11 +735,11 @@ TEST_F(IH5Test, createSimpleDatasetFromVectorBuffer) {
 TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
-    isce::io::IDataSet dset;
+    isce3::io::IH5File fic;
+    isce3::io::IDataSet dset;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
 
     // Simple std::vector array with indices values
@@ -750,7 +750,7 @@ TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
 
 
     // Create simple dataset in groupValarray, stored as 1D array from a std::valarray buffer
-    isce::io::IGroup grp = fic.openGroup("/groupValarray");
+    isce3::io::IGroup grp = fic.openGroup("/groupValarray");
     dset = grp.createDataSet(std::string("v1"), v1);
 
     // Check that Dataset has been created
@@ -815,11 +815,11 @@ TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
 TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
-    isce::io::IDataSet dset;
+    isce3::io::IH5File fic;
+    isce3::io::IDataSet dset;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
 
     // Simple buffer with indices values
@@ -827,7 +827,7 @@ TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
     for(int i=0; i<100; i++) v1[i] = i+1;
 
     // Create simple dataset in groupRawPointer, stored as 1D array from a std::valarray buffer
-    isce::io::IGroup grp = fic.openGroup("/groupRawPointer");
+    isce3::io::IGroup grp = fic.openGroup("/groupRawPointer");
     dset = grp.createDataSet<int>(std::string("v1"), v1, 100);
 
     // Check that Dataset has been created
@@ -897,17 +897,17 @@ TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
 TEST_F(IH5Test, createSimpleDatasetFromScalar) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
-    isce::io::IDataSet dset;
+    isce3::io::IH5File fic;
+    isce3::io::IDataSet dset;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
     float val1 = 9;
     std::string val2("value1");
 
     // Create simple dataset in groupScalar, stored as an int scalar
-    isce::io::IGroup grp = fic.openGroup("/groupScalar");
+    isce3::io::IGroup grp = fic.openGroup("/groupScalar");
     dset = grp.createDataSet(std::string("v1"), val1);
 
     // Check that Dataset has been created
@@ -938,14 +938,14 @@ TEST_F(IH5Test, createSimpleDatasetFromScalar) {
 TEST_F(IH5Test, createGroupAttributes) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
+    isce3::io::IH5File fic;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
 
     // Open the root group
-    isce::io::IGroup grp = fic.openGroup("/");
+    isce3::io::IGroup grp = fic.openGroup("/");
 
     // Create a scalar attribute (int) in the root group
     int att1 = 9;
@@ -1006,14 +1006,14 @@ TEST_F(IH5Test, createGroupAttributes) {
 TEST_F(IH5Test, createDataSetAttributes) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
-    isce::io::IDataSet dset;
+    isce3::io::IH5File fic;
+    isce3::io::IDataSet dset;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
     // Open a group
-    isce::io::IGroup grp = fic.openGroup("/groupVector");
+    isce3::io::IGroup grp = fic.openGroup("/groupVector");
 
     // Open dataset v1
     dset = grp.openDataSet("v1");
@@ -1077,11 +1077,11 @@ TEST_F(IH5Test, createDataSetAttributes) {
 TEST_F(IH5Test, createFloat16Dataset) {
 
     std::vector<std::string> list;
-    isce::io::IH5File fic;
-    isce::io::IDataSet dset;
+    isce3::io::IH5File fic;
+    isce3::io::IDataSet dset;
 
     // Open file for write    
-    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    EXPECT_NO_THROW(fic = isce3::io::IH5File(wFileName,'w'));
 
 
     // Fill a vector with 0-255 values
@@ -1093,9 +1093,9 @@ TEST_F(IH5Test, createFloat16Dataset) {
     // Create a dataset with float16 values, without NBIT filter
     ////////////////////////////////////////////////////////////
 
-    isce::io::IGroup grp = fic.openGroup("/groupVector");
+    isce3::io::IGroup grp = fic.openGroup("/groupVector");
     std::array<int, 2> dims = {1000,1000};
-    dset = grp.createDataSet<isce::io::float16>(std::string("vFloat16"), dims);
+    dset = grp.createDataSet<isce3::io::float16>(std::string("vFloat16"), dims);
     dset.write(v1);
 
     // Check that Dataset has been created
@@ -1121,7 +1121,7 @@ TEST_F(IH5Test, createFloat16Dataset) {
     // Create a dataset with float16 values, with NBIT filter
     ////////////////////////////////////////////////////////////
 
-    dset = grp.createDataSet<isce::io::float16>(std::string("vFloat16_nbit"), dims,1);
+    dset = grp.createDataSet<isce3::io::float16>(std::string("vFloat16_nbit"), dims,1);
     dset.write(v1);
 
     // Check that Dataset has been created
@@ -1147,7 +1147,7 @@ TEST_F(IH5Test, createFloat16Dataset) {
     // Create a dataset with float16 values, with NBIT filter + deflate
     ////////////////////////////////////////////////////////////
 
-    dset = grp.createDataSet<isce::io::float16>(std::string("vFloat16_nbit_deflate"), dims,1,0,9);
+    dset = grp.createDataSet<isce3::io::float16>(std::string("vFloat16_nbit_deflate"), dims,1,0,9);
     dset.write(v1);
 
     // Check that Dataset has been created

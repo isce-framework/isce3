@@ -2,15 +2,15 @@
 
 #include "Product.h"
 
-isce::product::RadarGridParameters::
+isce3::product::RadarGridParameters::
 RadarGridParameters(const Product & product, char frequency) :
     RadarGridParameters(product.swath(frequency), product.lookSide())
 {
     validate();
 }
 
-isce::product::RadarGridParameters::
-RadarGridParameters(const Swath & swath, isce::core::LookSide lookSide) :
+isce3::product::RadarGridParameters::
+RadarGridParameters(const Swath & swath, isce3::core::LookSide lookSide) :
     _lookSide(lookSide),
     _sensingStart(swath.zeroDopplerTime()[0]),
     _wavelength(swath.processedWavelength()),

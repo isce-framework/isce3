@@ -1,6 +1,6 @@
 #include "ErrorCode.h"
 
-namespace isce { namespace error {
+namespace isce3 { namespace error {
 
 std::string getErrorString(ErrorCode status)
 {
@@ -23,4 +23,4 @@ std::string getErrorString(ErrorCode status)
     }
 }
 
-}} // namespace isce::error
+}} // namespace isce3::error

@@ -15,7 +15,7 @@
 TEST(Signal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
@@ -33,7 +33,7 @@ TEST(Signal, ForwardBackwardRangeFloat)
     std::valarray<std::complex<float>> invertData(width*blockLength);
 
     // a signal object
-    isce::signal::Signal<float> sig;
+    isce3::signal::Signal<float> sig;
 
     // create the forward and backward plans
     sig.forwardRangeFFT(data, range_spectrum, width, blockLength);
@@ -67,7 +67,7 @@ TEST(Signal, ForwardBackwardRangeFloat)
 TEST(Signal, ForwardBackwardAzimuthFloat)
 {
       // take a block of data, perform azimuth FFT and then iverse FFT and compare with original data
-      isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+      isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
       int width = inputSlc.width();
       int length = inputSlc.length();
@@ -85,7 +85,7 @@ TEST(Signal, ForwardBackwardAzimuthFloat)
       std::valarray<std::complex<float>> invertData(width*blockLength);
 
       // a signal object
-      isce::signal::Signal<float> sig;
+      isce3::signal::Signal<float> sig;
 
       // create the forward and backward plans
       sig.forwardAzimuthFFT(data, azimuth_spectrum, width, blockLength);
@@ -119,7 +119,7 @@ TEST(Signal, ForwardBackwardAzimuthFloat)
 TEST(Signal, nfft)
 {
     // This test is same as the previous test but with nfft used for FFT computation instead of number of columns
-    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
@@ -145,7 +145,7 @@ TEST(Signal, nfft)
     invertData = 0;
 
     // instantiate a signal object
-    isce::signal::Signal<float> sig;
+    isce3::signal::Signal<float> sig;
 
     // create the forward and backward plans
     sig.forwardRangeFFT(data, range_spectrum, nfft, blockLength);
@@ -169,7 +169,7 @@ TEST(Signal, nfft)
     //normalize the result of inverse fft
     invertData /=nfft;
 
-    /*isce::io::Raster outputSlc("secSlc.slc", nfft, length, 1, GDT_CFloat32, "ENVI");
+    /*isce3::io::Raster outputSlc("secSlc.slc", nfft, length, 1, GDT_CFloat32, "ENVI");
     outputSlc.setBlock(invertData, 0 ,0 , nfft, length);
     */ 
 
@@ -201,7 +201,7 @@ TEST(Signal, nfftDouble)
     size_t nfft;
 
     // instantiate a signal object
-    isce::signal::Signal<double> sig;
+    isce3::signal::Signal<double> sig;
     sig.nextPowerOfTwo(width, nfft);
     //nfft = width;
 
@@ -249,7 +249,7 @@ TEST(Signal, nfftFloat)
       size_t nfft;
 
       // instantiate a signal object
-      isce::signal::Signal<float> sig;
+      isce3::signal::Signal<float> sig;
       sig.nextPowerOfTwo(width, nfft);
       //nfft = width;
 
@@ -327,7 +327,7 @@ TEST(Signal, upsample)
 
 
     // instantiate a signal object
-    isce::signal::Signal<double> sig;
+    isce3::signal::Signal<double> sig;
  
     sig.forwardRangeFFT(slc, spec, nfft, 1);
     sig.inverseRangeFFT(specU, slcU, nfft*oversample, 1);
@@ -398,7 +398,7 @@ TEST(Signal, upsample2D)
 
 
     // instantiate a signal object
-    isce::signal::Signal<double> sig;
+    isce3::signal::Signal<double> sig;
 
     // Upsampling
     sig.forward2DFFT(slc, slcU, nX, nY, nX*oversample, nY*oversample);
@@ -467,7 +467,7 @@ TEST(Signal, FFT2D)
         std::valarray<std::complex<double>> invertData(width*blockLength);
 
         // a signal object
-        isce::signal::Signal<double> sig;
+        isce3::signal::Signal<double> sig;
 
         // create the forward and backward plans
         sig.forward2DFFT(data, spectrum, width, blockLength);
@@ -515,7 +515,7 @@ TEST(Signal, MultiThread)
     std::valarray<std::complex<double>> invertData(width*blockLength);
 
     // a signal object
-    isce::signal::Signal<double> sig(4);
+    isce3::signal::Signal<double> sig(4);
 
     // create the forward and backward plans
     sig.forwardRangeFFT(data, spectrum, width, blockLength);
@@ -561,7 +561,7 @@ TEST(Signal, rawPointerArrayComplex)
     std::complex<double> *invertData = new std::complex<double>[width*blockLength];
     
     // a signal object
-    isce::signal::Signal<double> sig;
+    isce3::signal::Signal<double> sig;
 
     for (size_t i = 0; i< length; ++i){
         for (size_t j = 0; j< width; ++j){
@@ -672,7 +672,7 @@ TEST(Signal, realDataFFT)
       double *invertData = new double[width*blockLength];
 
       // a signal object
-      isce::signal::Signal<double> sig;
+      isce3::signal::Signal<double> sig;
 
       for (size_t i = 0; i< length; ++i){
           for (size_t j = 0; j< width; ++j){

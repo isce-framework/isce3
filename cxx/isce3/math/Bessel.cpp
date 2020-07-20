@@ -8,7 +8,7 @@
 #include "Bessel.h"
 #include <cmath>
 
-namespace isce{
+namespace isce3{
     namespace math{
 
 //Sourced from:
@@ -30,7 +30,7 @@ double bessel_i0(double x)
         // Bessel I0 over[10 ^ -16, 7.75]
         // Max error in interpolated form : 3.042e-18
         // Max Error found at double precision = Poly : 5.106609e-16 Cheb : 5.239199e-16
-        isce::core::Poly1d bessel_i0_P0(14, 0.0, 1.0);
+        isce3::core::Poly1d bessel_i0_P0(14, 0.0, 1.0);
         bessel_i0_P0.coeffs[0] = 1.00000000000000000e+00;
         bessel_i0_P0.coeffs[1] = 2.49999999999999909e-01;
         bessel_i0_P0.coeffs[2] = 2.77777777777782257e-02;
@@ -52,7 +52,7 @@ double bessel_i0(double x)
     }
     else if(x < 500)
     {
-        isce::core::Poly1d bessel_i0_P1(21, 0.0, 1.0);
+        isce3::core::Poly1d bessel_i0_P1(21, 0.0, 1.0);
         bessel_i0_P1.coeffs[0] = 3.98942280401425088e-01;
         bessel_i0_P1.coeffs[1] = 4.98677850604961985e-02;
         bessel_i0_P1.coeffs[2] = 2.80506233928312623e-02;
@@ -82,7 +82,7 @@ double bessel_i0(double x)
     {
         // Max error in interpolated form : 2.437e-18
         // Max Error found at double precision = Poly : 1.216719e-16
-        isce::core::Poly1d bessel_i0_P2(4, 0.0, 1.0);
+        isce3::core::Poly1d bessel_i0_P2(4, 0.0, 1.0);
         bessel_i0_P2.coeffs[0] = 3.98942280401432905e-01;
         bessel_i0_P2.coeffs[1] = 4.98677850491434560e-02;
         bessel_i0_P2.coeffs[2] = 2.80506308916506102e-02;

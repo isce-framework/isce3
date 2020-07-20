@@ -2,7 +2,7 @@
 
 #include "Common.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** A uniformly-spaced sequence of values over some interval. */
 template<typename T>

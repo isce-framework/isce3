@@ -9,8 +9,8 @@
 
 namespace py = pybind11;
 
-using isce::core::DateTime;
-using isce::core::TimeDelta;
+using isce3::core::DateTime;
+using isce3::core::TimeDelta;
 
 static
 DateTime fromPyDateTime(py::handle obj)

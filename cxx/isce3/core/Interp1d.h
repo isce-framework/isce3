@@ -4,7 +4,7 @@
 
 #include <valarray>
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** Interpolate sequence x at point t
  *
@@ -37,6 +37,6 @@ template<typename TK, typename TD>
 TD interp1d(const Kernel<TK>& kernel, const std::valarray<TD>& x, double t,
             bool periodic = false);
 
-}} // namespace isce::core
+}} // namespace isce3::core
 
 #include "Interp1d.icc"

@@ -11,14 +11,14 @@
 #include "TimeDelta.h"
 
 //Handful of utility functions
-bool isce::core::
+bool isce3::core::
 _is_leap(int yy)
 {
     unsigned int year=(unsigned int) yy;
     return year%4==0 && (year%100 != 0 || year%400 == 0);
 }
 
-int isce::core::
+int isce3::core::
 _days_in_month(int yy, int mm)
 {
     assert((mm >= 1) && (mm <= 12));
@@ -28,7 +28,7 @@ _days_in_month(int yy, int mm)
         return DaysInMonths[mm-1];
 }
 
-int isce::core::
+int isce3::core::
 _days_before_year(int year)
 {
     assert( year >= 1);
@@ -36,7 +36,7 @@ _days_before_year(int year)
     return yy*365 + yy/4 - yy/100 + yy/400;
 }
 
-int isce::core::
+int isce3::core::
 _days_before_month(int yy, int mm)
 {
     assert( (mm>=1) && (mm <=12));
@@ -46,14 +46,14 @@ _days_before_month(int yy, int mm)
     return dd;
 }
 
-int isce::core::
+int isce3::core::
 _ymd_to_ord(int yy, int mm, int dd)
 {
     return _days_before_year(yy) + _days_before_month(yy,mm) + dd;
 }
 
 
-void isce::core::
+void isce3::core::
 _ord_to_ymd(int ord, int &y, int &m, int &d)
 {
     int n, n1, n4, n100, n400, leapyear, preceding;
@@ -104,7 +104,7 @@ _ord_to_ymd(int ord, int &y, int &m, int &d)
 }
 
 //Normalize function
-void isce::core::DateTime::
+void isce3::core::DateTime::
 _normalize_time() {
     //Adjust fractional part
     {
@@ -133,7 +133,7 @@ _normalize_time() {
 
 }
 
-void isce::core::DateTime::
+void isce3::core::DateTime::
 _normalize_date()
 {
     int daylimit;
@@ -182,7 +182,7 @@ _normalize_date()
 
 }
 
-void isce::core::DateTime::
+void isce3::core::DateTime::
 _normalize()
 {
     _normalize_time();
@@ -190,7 +190,7 @@ _normalize()
 }
 
 //Constructors
-void isce::core::DateTime::
+void isce3::core::DateTime::
 _init(int yy, int mm, int dd, int hh, int mn, int ss, double ff)
 {
     year = yy;
@@ -204,7 +204,7 @@ _init(int yy, int mm, int dd, int hh, int mn, int ss, double ff)
 }
 
 
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(double ord)
 {
     int iord = ord;
@@ -215,19 +215,19 @@ DateTime(double ord)
 }
 
 
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(int yy, int mm, int dd)
 {
     _init(yy,mm,dd,0,0,0,0);
 }
 
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(int yy, int mm, int dd, int hh, int mn, int ss)
 {
     _init(yy,mm,dd,hh,mn,ss,0);
 }
 
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(int yy, int mm, int dd, int hh, int mn, double ss)
 {
     int ipart = ss;
@@ -235,80 +235,80 @@ DateTime(int yy, int mm, int dd, int hh, int mn, double ss)
     _init(yy,mm,dd,hh,mn,ipart, fpart);
 }
 
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(int yy, int mm, int dd, int hh, int mn, int ss, double ff)
 {
     _init(yy,mm,dd,hh,mn,ss,ff);
 }
 
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(const DateTime & ts)
 {
     _init(ts.year, ts.months, ts.days, ts.hours, ts.minutes, ts.seconds, ts.frac);
 }
 
 // From string
-isce::core::DateTime::
+isce3::core::DateTime::
 DateTime(const std::string & datestr) {
     strptime(datestr);
 }
 
 // Assignment from another DateTime
-isce::core::DateTime &
-isce::core::DateTime::
+isce3::core::DateTime &
+isce3::core::DateTime::
 operator=(const DateTime & ts) {
     _init(ts.year, ts.months, ts.days, ts.hours, ts.minutes, ts.seconds, ts.frac);
     return *this;
 }
 
 // Assignment from string
-isce::core::DateTime &
-isce::core::DateTime::
+isce3::core::DateTime &
+isce3::core::DateTime::
 operator=(const std::string & datestr) {
     strptime(datestr);
     return *this;
 }
 
 //Comparison operators
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 operator<(const DateTime &ts) const
 {
     return ((*this) - ts) < 0.0;
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 operator>(const DateTime &ts) const
 {
     return ((*this) - ts) > 0.0;
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 operator<=(const DateTime &ts) const
 {
     return !((*this) > ts);
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 operator>=(const DateTime &ts) const
 {
     return !( *this < ts);
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 operator==(const DateTime &ts) const
 {
     return (*this) - ts == 0.0;
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 operator!=(const DateTime &ts) const
 {
     return ((*this) - ts) != 0.0;
 }
 
 // Math operators
-isce::core::DateTime
-isce::core::DateTime::
+isce3::core::DateTime
+isce3::core::DateTime::
 operator+(const TimeDelta &ts) const
 {
     int ord = _ymd_to_ord(year, months, days) + ts.days;
@@ -320,15 +320,15 @@ operator+(const TimeDelta &ts) const
             frac + ts.frac);
 }
 
-isce::core::DateTime
-isce::core::DateTime::
+isce3::core::DateTime
+isce3::core::DateTime::
 operator+(const double &ts) const
 {
     return (*this) + TimeDelta(ts);
 }
 
-isce::core::DateTime
-isce::core::DateTime::
+isce3::core::DateTime
+isce3::core::DateTime::
 operator-(const TimeDelta &ts) const
 {
     int ord = _ymd_to_ord(year, months, days) - ts.days;
@@ -340,8 +340,8 @@ operator-(const TimeDelta &ts) const
             frac - ts.frac);
 }
 
-isce::core::DateTime
-isce::core::DateTime::
+isce3::core::DateTime
+isce3::core::DateTime::
 operator-(const double &ts) const
 {
     return (*this) - TimeDelta(ts);
@@ -349,8 +349,8 @@ operator-(const double &ts) const
 
 
 //In-place update operators
-isce::core::DateTime &
-isce::core::DateTime::
+isce3::core::DateTime &
+isce3::core::DateTime::
 operator+=(const TimeDelta& ts)
 {
     int ord = _ymd_to_ord(year, months, days) + ts.days;
@@ -361,16 +361,16 @@ operator+=(const TimeDelta& ts)
     return *this;
 }
 
-isce::core::DateTime &
-isce::core::DateTime::
+isce3::core::DateTime &
+isce3::core::DateTime::
 operator+=(const double& ts)
 {
     (*this) += TimeDelta(ts);
     return *this;
 }
 
-isce::core::DateTime &
-isce::core::DateTime::
+isce3::core::DateTime &
+isce3::core::DateTime::
 operator-=(const TimeDelta& ts)
 {
     int ord = _ymd_to_ord(year, months, days) - ts.days;
@@ -381,16 +381,16 @@ operator-=(const TimeDelta& ts)
     return *this;
 }
 
-isce::core::DateTime &
-isce::core::DateTime::
+isce3::core::DateTime &
+isce3::core::DateTime::
 operator-=(const double& ts)
 {
     (*this) -= TimeDelta(ts);
     return *this;
 }
 
-isce::core::TimeDelta
-isce::core::DateTime::
+isce3::core::TimeDelta
+isce3::core::DateTime::
 operator-(const DateTime& ts) const
 {
     int delta_days = _ymd_to_ord(year, months, days)
@@ -399,14 +399,14 @@ operator-(const DateTime& ts) const
             seconds-ts.seconds, frac-ts.frac);
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 isClose(const DateTime& ts) const
 {
     TimeDelta dt = (*this) - ts;
     return std::abs(dt.getTotalSeconds()) < TOL_SECONDS;
 }
 
-bool isce::core::DateTime::
+bool isce3::core::DateTime::
 isClose(const DateTime& ts, const TimeDelta& errtol) const
 {
     TimeDelta dt = (*this) - ts;
@@ -414,7 +414,7 @@ isClose(const DateTime& ts, const TimeDelta& errtol) const
 }
 
 // Get seconds of day
-double isce::core::DateTime::
+double isce3::core::DateTime::
 secondsOfDay() const {
     // Make a midnight datetime
     DateTime midnight(year, months, days, 0, 0, 0);
@@ -425,7 +425,7 @@ secondsOfDay() const {
 }
 
 // Get seconds since epoch at provided datetime
-double isce::core::DateTime::
+double isce3::core::DateTime::
 secondsSinceEpoch(const DateTime & epoch) const {
     // Timedelta
     TimeDelta dt = (*this) - epoch;
@@ -434,21 +434,21 @@ secondsSinceEpoch(const DateTime & epoch) const {
 }
 
 // Get seconds since fixed 1970-01-01 epoch
-double isce::core::DateTime::
+double isce3::core::DateTime::
 secondsSinceEpoch() const {
     TimeDelta dt = (*this) - MIN_DATE_TIME;
     return dt.getTotalSeconds();
 }
 
 // Set time based on seconds since 1970-01-01 epoch
-void isce::core::DateTime::
+void isce3::core::DateTime::
 secondsSinceEpoch(double sec) {
     _init(1970, 1, 1, 0, 0, 0, 0);
     (*this) += TimeDelta(sec);
 }
 
 // Formatting output options
-std::string isce::core::DateTime::
+std::string isce3::core::DateTime::
 isoformat() const {
     // Buffer for holding output
     char buffer[100];
@@ -463,7 +463,7 @@ isoformat() const {
 }
 
 // Parse string to fill date time contents
-void isce::core::DateTime::
+void isce3::core::DateTime::
 strptime(const std::string & datetime_string, const std::string & sep) {
     // Parse the string
     double decimal_seconds = std::numeric_limits<double>::min();
@@ -488,7 +488,7 @@ strptime(const std::string & datetime_string, const std::string & sep) {
     this->frac = decimal_seconds - integer_seconds;
 }
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 std::ostream & operator<<(std::ostream & os, const DateTime & datetime)
 {

@@ -6,7 +6,7 @@
 #include <isce3/core/LookSide.h>
 #include <isce3/error/ErrorCode.h>
 
-namespace isce { namespace geometry { namespace detail {
+namespace isce3 { namespace geometry { namespace detail {
 
 /** \internal Root-finding configuration parameters for rdr2geo */
 struct Rdr2GeoParams {
@@ -22,8 +22,8 @@ struct Rdr2GeoParams {
 
 /**
  * \internal
- * Unified host/device implementation of isce::geometry::rdr2geo and
- * isce::cuda::geometry::rdr2geo
+ * Unified host/device implementation of isce3::geometry::rdr2geo and
+ * isce3::cuda::geometry::rdr2geo
  *
  * Transform from radar coordinates (azimuth, range) to geodetic coordinates
  * (longitude, latitude, height).
@@ -43,16 +43,16 @@ struct Rdr2GeoParams {
  * \param[in]  params    Root-finding algorithm parameters
  */
 template<class Orbit, class DEMInterpolator>
-CUDA_HOSTDEV isce::error::ErrorCode
-rdr2geo(isce::core::Vec3* llh, double t, double r, double fd,
+CUDA_HOSTDEV isce3::error::ErrorCode
+rdr2geo(isce3::core::Vec3* llh, double t, double r, double fd,
         const Orbit& orbit, const DEMInterpolator& dem,
-        const isce::core::Ellipsoid& ellipsoid, double wvl,
-        isce::core::LookSide side, double h0 = 0.,
+        const isce3::core::Ellipsoid& ellipsoid, double wvl,
+        isce3::core::LookSide side, double h0 = 0.,
         const Rdr2GeoParams& params = {});
 
 /**
  * \internal
- * Implementation of isce::geometry::rdr2geo
+ * Implementation of isce3::geometry::rdr2geo
  *
  * Transform from radar coordinates (range, azimuth) to geodetic coordinates
  * (longitude, latitude, height).
@@ -71,13 +71,13 @@ rdr2geo(isce::core::Vec3* llh, double t, double r, double fd,
  * \param[in]  params    Root-finding algorithm parameters
  */
 template<class DEMInterpolator>
-CUDA_HOSTDEV isce::error::ErrorCode
-rdr2geo(isce::core::Vec3* llh, const isce::core::Pixel& pixel,
-        const isce::core::Basis& tcnbasis, const isce::core::Vec3& pos,
-        const isce::core::Vec3& vel, const DEMInterpolator& dem,
-        const isce::core::Ellipsoid& ellipsoid, isce::core::LookSide side,
+CUDA_HOSTDEV isce3::error::ErrorCode
+rdr2geo(isce3::core::Vec3* llh, const isce3::core::Pixel& pixel,
+        const isce3::core::Basis& tcnbasis, const isce3::core::Vec3& pos,
+        const isce3::core::Vec3& vel, const DEMInterpolator& dem,
+        const isce3::core::Ellipsoid& ellipsoid, isce3::core::LookSide side,
         double h0 = 0., const Rdr2GeoParams& params = {});
 
-}}} // namespace isce::geometry::detail
+}}} // namespace isce3::geometry::detail
 
 #include "Rdr2Geo.icc"

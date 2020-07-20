@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace isce { namespace error {
+namespace isce3 { namespace error {
 
 /** Return code type indicating the exit status of an ISCE operation */
 enum class ErrorCode {
@@ -17,4 +17,4 @@ enum class ErrorCode {
 /** Return a string describing the error code */
 std::string getErrorString(ErrorCode);
 
-}} // namespace isce::error
+}} // namespace isce3::error

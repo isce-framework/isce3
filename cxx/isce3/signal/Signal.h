@@ -18,7 +18,7 @@
 /** A class to handle 2D FFT or 1D FFT in range or azimuth directions 
  */
 template<class T> 
-class isce::signal::Signal {
+class isce3::signal::Signal {
     public:
         /** Default constructor. */ 
         Signal();

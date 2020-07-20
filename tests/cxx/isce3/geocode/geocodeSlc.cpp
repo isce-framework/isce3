@@ -37,19 +37,19 @@ TEST(geocodeTest, TestGeocodeSlc)
     createTestData();
 
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
     std::cout << "H5 opened" << std::endl;
 
     // Load the product
     std::cout << "create the product" << std::endl;
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // std::cout << "get the swath" << std::endl;
-    // const isce::product::Swath & swath = product.swath('A');
-    isce::core::Orbit orbit = product.metadata().orbit();
+    // const isce3::product::Swath & swath = product.swath('A');
+    isce3::core::Orbit orbit = product.metadata().orbit();
 
     std::cout << "construct the ellipsoid" << std::endl;
-    isce::core::Ellipsoid ellipsoid;
+    isce3::core::Ellipsoid ellipsoid;
 
     std::cout << "get Doppler" << std::endl;
     // This test relies on that SLC test data in the repo to compute
@@ -57,15 +57,15 @@ TEST(geocodeTest, TestGeocodeSlc)
     // Carrier so the simulated SLC phase is zero Doppler but its grid is
     // native Doppler. accordingly we can setup the Dopplers as follows.
     // In future we may want to simulate an SLC which has Carrier
-    isce::core::LUT2d<double> imageGridDoppler =
+    isce3::core::LUT2d<double> imageGridDoppler =
             product.metadata().procInfo().dopplerCentroid('A');
 
     // construct a zero 2D LUT
-    isce::core::Matrix<double> M(imageGridDoppler.width(),
+    isce3::core::Matrix<double> M(imageGridDoppler.width(),
                                  imageGridDoppler.length());
 
     M.zeros();
-    isce::core::LUT2d<double> nativeDoppler(
+    isce3::core::LUT2d<double> nativeDoppler(
             imageGridDoppler.xStart(), imageGridDoppler.yStart(),
             imageGridDoppler.xSpacing(), imageGridDoppler.ySpacing(), M);
 
@@ -77,7 +77,7 @@ TEST(geocodeTest, TestGeocodeSlc)
     // input radar grid
     char freq = 'A';
     std::cout << "construct radar grid" << std::endl;
-    isce::product::RadarGridParameters radarGrid(product, freq);
+    isce3::product::RadarGridParameters radarGrid(product, freq);
 
     double geoGridStartX = -115.65;
     double geoGridStartY = 34.84;
@@ -88,30 +88,30 @@ TEST(geocodeTest, TestGeocodeSlc)
     int epsgcode = 4326;
 
     std::cout << "Geogrid" << std::endl;
-    isce::product::GeoGridParameters geoGrid(
+    isce3::product::GeoGridParameters geoGrid(
             geoGridStartX, geoGridStartY, geoGridSpacingX, geoGridSpacingY,
             geoGridWidth, geoGridLength, epsgcode);
 
-    isce::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zeroHeightDEM.geo");
 
-    isce::io::Raster inputSlc("x.slc", GA_ReadOnly);
+    isce3::io::Raster inputSlc("x.slc", GA_ReadOnly);
 
-    isce::io::Raster geocodedSlc("xslc.geo", geoGridWidth, geoGridLength, 1,
+    isce3::io::Raster geocodedSlc("xslc.geo", geoGridWidth, geoGridLength, 1,
                                  GDT_CFloat32, "ENVI");
 
     bool flatten = false;
 
-    isce::geocode::geocodeSlc(geocodedSlc, inputSlc, demRaster, radarGrid,
+    isce3::geocode::geocodeSlc(geocodedSlc, inputSlc, demRaster, radarGrid,
                               geoGrid, orbit, nativeDoppler, imageGridDoppler,
                               ellipsoid, thresholdGeo2rdr, numiterGeo2rdr,
                               linesPerBlock, demBlockMargin, flatten);
 
-    isce::io::Raster inputSlcY("y.slc", GA_ReadOnly);
+    isce3::io::Raster inputSlcY("y.slc", GA_ReadOnly);
 
-    isce::io::Raster geocodedSlcY("yslc.geo", geoGridWidth, geoGridLength, 1,
+    isce3::io::Raster geocodedSlcY("yslc.geo", geoGridWidth, geoGridLength, 1,
                                   GDT_CFloat32, "ENVI");
 
-    isce::geocode::geocodeSlc(geocodedSlcY, inputSlcY, demRaster, radarGrid,
+    isce3::geocode::geocodeSlc(geocodedSlcY, inputSlcY, demRaster, radarGrid,
                               geoGrid, orbit, nativeDoppler, imageGridDoppler,
                               ellipsoid, thresholdGeo2rdr, numiterGeo2rdr,
                               linesPerBlock, demBlockMargin, flatten);
@@ -132,9 +132,9 @@ TEST(GeocodeTest, CheckGeocode)
     // The geocoded latitude and longitude data should be
     // consistent with the geocoded pixel location.
 
-    isce::io::Raster xRaster("xslc.geo");
+    isce3::io::Raster xRaster("xslc.geo");
 
-    isce::io::Raster yRaster("yslc.geo");
+    isce3::io::Raster yRaster("yslc.geo");
 
     double* geoTrans = new double[6];
     xRaster.getGeoTransform(geoTrans);
@@ -201,7 +201,7 @@ void createZeroDem()
 {
 
     // Raster for the existing DEM
-    isce::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
+    isce3::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
 
     // A pointer array for geoTransform
     double geoTrans[6];
@@ -210,7 +210,7 @@ void createZeroDem()
     demRaster.getGeoTransform(geoTrans);
 
     // create a new Raster same as the demRAster
-    isce::io::Raster zeroDemRaster("zeroHeightDEM.geo", demRaster);
+    isce3::io::Raster zeroDemRaster("zeroHeightDEM.geo", demRaster);
     zeroDemRaster.setGeoTransform(geoTrans);
     zeroDemRaster.setEPSG(demRaster.getEPSG());
 
@@ -227,18 +227,18 @@ void createTestData()
 
     // Open the HDF5 product
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
-    isce::core::LUT2d<double> nativeDoppler =
+    isce3::core::LUT2d<double> nativeDoppler =
             product.metadata().procInfo().dopplerCentroid('A');
-    isce::core::LUT2d<double> imageGridDoppler =
+    isce3::core::LUT2d<double> imageGridDoppler =
             product.metadata().procInfo().dopplerCentroid('A');
 
     // Create topo instance with native Doppler
-    isce::geometry::Topo topo(product, 'A', true);
+    isce3::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
@@ -248,13 +248,13 @@ void createTestData()
     }
 
     // Open DEM raster
-    isce::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zeroHeightDEM.geo");
 
     // Run topo
     topo.topo(demRaster, ".");
 
-    isce::io::Raster xRaster("x.rdr");
-    isce::io::Raster yRaster("y.rdr");
+    isce3::io::Raster xRaster("x.rdr");
+    isce3::io::Raster yRaster("y.rdr");
 
     size_t length = xRaster.length();
     size_t width = xRaster.width();
@@ -278,12 +278,12 @@ void createTestData()
         yslc[ii] = cpxPhaseY;
     }
 
-    isce::io::Raster slcRasterX("x.slc", width, length, 1, GDT_CFloat32,
+    isce3::io::Raster slcRasterX("x.slc", width, length, 1, GDT_CFloat32,
                                 "ENVI");
 
     slcRasterX.setBlock(xslc, 0, 0, width, length);
 
-    isce::io::Raster slcRasterY("y.slc", width, length, 1, GDT_CFloat32,
+    isce3::io::Raster slcRasterY("y.slc", width, length, 1, GDT_CFloat32,
                                 "ENVI");
 
     slcRasterY.setBlock(yslc, 0, 0, width, length);

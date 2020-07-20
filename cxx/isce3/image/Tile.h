@@ -19,7 +19,7 @@
 
 // Definition
 template <typename T>
-class isce::image::Tile {
+class isce3::image::Tile {
     
     public:
         // Constructors

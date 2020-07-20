@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 
-namespace isce {
+namespace isce3 {
 namespace core {
 
 /*
@@ -16,4 +16,4 @@ template<typename T, int rows = Eigen::Dynamic, int cols = Eigen::Dynamic>
 using EArray2D = typename Eigen::Array<T, rows, cols, Eigen::RowMajor>;
 
 } // namespace core
-} // namespace isce
+} // namespace isce3

@@ -11,13 +11,13 @@
 
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the
 // exception)
-#define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
-#define check2dVecLen(v,l,w) isce::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
+#define checkVecLen(v,l) isce3::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
+#define check2dVecLen(v,l,w) isce3::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
 
 // Macro wrapper to provide 2D indexing to a 1D array
 #define IDX1D(i,j,w) (((i)*(w))+(j))
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /**Enumeration type to indicate interpolation method*/
 enum dataInterpMethod {

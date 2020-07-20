@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <isce3/math/Sinc.h>
 
-using isce::math::sinc;
+using isce3::math::sinc;
 
 TEST(SincTest, Sinc)
 {

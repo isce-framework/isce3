@@ -11,11 +11,11 @@
 #include <isce3/core/Projections.h>
 
 inline
-isce::geometry::Topo::
-Topo(const isce::product::RadarGridParameters & radarGrid,
-     const isce::core::Orbit & orbit,
-     const isce::core::Ellipsoid & ellipsoid,
-     const isce::core::LUT2d<double> & doppler)
+isce3::geometry::Topo::
+Topo(const isce3::product::RadarGridParameters & radarGrid,
+     const isce3::core::Orbit & orbit,
+     const isce3::core::Ellipsoid & ellipsoid,
+     const isce3::core::LUT2d<double> & doppler)
 :
     _orbit(orbit),
     _ellipsoid(ellipsoid),
@@ -30,9 +30,9 @@ Topo(const isce::product::RadarGridParameters & radarGrid,
 }
 
 inline
-isce::geometry::Topo::
-Topo(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
-     const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta)
+isce3::geometry::Topo::
+Topo(const isce3::core::Ellipsoid & ellipsoid, const isce3::core::Orbit & orbit,
+     const isce3::core::LUT2d<double> & doppler, const isce3::core::Metadata & meta)
 :
     _orbit(orbit),
     _ellipsoid(ellipsoid),
@@ -47,13 +47,13 @@ Topo(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
 }
 
 inline
-void isce::geometry::Topo::
-demMethod(isce::core::dataInterpMethod method)
+void isce3::geometry::Topo::
+demMethod(isce3::core::dataInterpMethod method)
 {
     // Check validity
-    if ((method != isce::core::SINC_METHOD) && (method != isce::core::BILINEAR_METHOD) &&
-        (method != isce::core::BICUBIC_METHOD) && (method != isce::core::NEAREST_METHOD) &&
-        (method != isce::core::BIQUINTIC_METHOD)) {
+    if ((method != isce3::core::SINC_METHOD) && (method != isce3::core::BILINEAR_METHOD) &&
+        (method != isce3::core::BICUBIC_METHOD) && (method != isce3::core::NEAREST_METHOD) &&
+        (method != isce3::core::BIQUINTIC_METHOD)) {
         pyre::journal::error_t error("isce.geometry.Topo");
         error
             << pyre::journal::at(__HERE__)
@@ -66,13 +66,13 @@ demMethod(isce::core::dataInterpMethod method)
 }
 
 inline
-void isce::geometry::Topo::
+void isce3::geometry::Topo::
 epsgOut(int epsgcode)
 {
     // Save the code
     _epsgOut = epsgcode;
     // Initialize the projection
-    _proj = isce::core::createProj(epsgcode);
+    _proj = isce3::core::createProj(epsgcode);
 }
 
 // end of file

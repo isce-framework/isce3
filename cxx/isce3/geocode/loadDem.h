@@ -4,7 +4,7 @@
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
 
-namespace isce { namespace geocode {
+namespace isce3 { namespace geocode {
 
 /** returns a DEM interpolator for a block of geocoded grid
  * Note the geocoded grid and the inpit raster of the DEM can be in
@@ -16,8 +16,8 @@ namespace isce { namespace geocode {
  * @param[in] blockWidth  width of the block of interest in the eocoded grid
  * @param[in] demMargin  extra margin for the dem relative to the geocoded grid
  */
-isce::geometry::DEMInterpolator
-loadDEM(isce::io::Raster& demRaster,
-        const isce::product::GeoGridParameters& geoGrid, int lineStart,
+isce3::geometry::DEMInterpolator
+loadDEM(isce3::io::Raster& demRaster,
+        const isce3::product::GeoGridParameters& geoGrid, int lineStart,
         int blockLength, int blockWidth, double demMargin);
-}} // namespace isce::geocode
+}} // namespace isce3::geocode

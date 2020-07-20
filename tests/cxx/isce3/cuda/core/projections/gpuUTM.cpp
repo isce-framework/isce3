@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <isce3/cuda/core/gpuProjections.h>
-using isce::cuda::core::UTM;
+using isce3::cuda::core::UTM;
 
 #include "projtest.h"
 

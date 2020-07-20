@@ -3,9 +3,9 @@
 #include <isce3/except/Error.h>
 #include <cufft.h>
 
-namespace isce { namespace cuda { namespace except {
+namespace isce3 { namespace cuda { namespace except {
 
-    using namespace isce::except;
+    using namespace isce3::except;
 
     /** CudaError provide the same information as BaseError,
      *  and also retains the original error code.*/
@@ -31,24 +31,24 @@ namespace isce { namespace cuda { namespace except {
 }}}
 
 template<class T>
-static inline void checkCudaErrorsImpl(const isce::except::SrcInfo& info, T err) {
+static inline void checkCudaErrorsImpl(const isce3::except::SrcInfo& info, T err) {
     if (err)
-        throw isce::cuda::except::CudaError<T>(info, err);
+        throw isce3::cuda::except::CudaError<T>(info, err);
 }
 
 /* Explicit instantiation for cufft calls,
  * since we need to compare against cufftResult */
 template<>
 inline void checkCudaErrorsImpl<cufftResult>(
-        const isce::except::SrcInfo& info, cufftResult err) {
+        const isce3::except::SrcInfo& info, cufftResult err) {
     if (err != CUFFT_SUCCESS)
-        throw isce::cuda::except::CudaError<cufftResult>(info, err);
+        throw isce3::cuda::except::CudaError<cufftResult>(info, err);
 }
 
 // Check errors from kernel launches and, if NDEBUG is not defined,
 // synchronize and check for execution errors
 inline
-void checkCudaAsyncErrorsImpl(const isce::except::SrcInfo & info)
+void checkCudaAsyncErrorsImpl(const isce3::except::SrcInfo & info)
 {
     checkCudaErrorsImpl(info, cudaPeekAtLastError());
 #ifndef NDEBUG

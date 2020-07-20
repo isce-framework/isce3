@@ -13,14 +13,14 @@
 
 // gpuLUT1d declaration
 template <typename T>
-class isce::cuda::core::gpuLUT1d {
+class isce3::cuda::core::gpuLUT1d {
 
     public:
         // Disallow default constructor
         CUDA_HOSTDEV gpuLUT1d() = delete;
     
         /** Deep copy constructor from CPU LUT1d */
-        CUDA_HOST gpuLUT1d(const isce::core::LUT1d<T> &);
+        CUDA_HOST gpuLUT1d(const isce3::core::LUT1d<T> &);
 
         /** Shallow copy constructor on device */
         CUDA_HOSTDEV gpuLUT1d(gpuLUT1d<T> &);

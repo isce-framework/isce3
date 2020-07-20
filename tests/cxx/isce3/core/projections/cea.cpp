@@ -2,7 +2,7 @@
 #include <isce3/core/Projections.h>
 #include "projtest.h"
 
-isce::core::CEA proj;
+isce3::core::CEA proj;
 
 struct CEATest : public ::testing::Test {
     unsigned int fails;

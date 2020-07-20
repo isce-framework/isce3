@@ -18,7 +18,7 @@ from cuResampSlc cimport ResampSlc
 
 cdef class pyResampSlc:
     """
-    Cython wrapper for isce::image::ResampSlc.
+    Cython wrapper for isce3::image::ResampSlc.
 
     Args:
         product (pyProduct):                        Product to be resampled.

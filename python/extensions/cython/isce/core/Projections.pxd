@@ -7,7 +7,7 @@
 from Cartesian cimport cartesian_t
 from Ellipsoid cimport Ellipsoid
 
-cdef extern from "isce3/core/Projections.h" namespace "isce::core":
+cdef extern from "isce3/core/Projections.h" namespace "isce3::core":
     cdef cppclass ProjectionBase:
 
         #Print for debugging

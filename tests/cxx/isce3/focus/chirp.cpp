@@ -4,7 +4,7 @@
 
 #include <isce3/focus/Chirp.h>
 
-using isce::focus::formLinearChirp;
+using isce3::focus::formLinearChirp;
 
 TEST(FormLinearChirpTest, FormLinearChirp)
 {

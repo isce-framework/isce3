@@ -5,7 +5,7 @@
 #include <cstdint> // UINT8_MAX
 #include <exception> // std::overflow_error
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 inline

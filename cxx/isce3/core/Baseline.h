@@ -14,7 +14,7 @@
 #include "Orbit.h"
 #include "Vector.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** Data structure for computing interferometric baselines */
 class Baseline {

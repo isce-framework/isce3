@@ -2,7 +2,7 @@
 #include <limits>
 #include <type_traits>
 
-namespace isce { namespace math {
+namespace isce3 { namespace math {
 
 namespace detail {
 

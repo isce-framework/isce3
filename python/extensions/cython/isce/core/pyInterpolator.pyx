@@ -33,7 +33,7 @@ cdef np.ndarray[double, ndim=1] valarrayToNumpy(valarray[double] & v):
 
 cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
     """
-    Utility function to create an isce::core::Matrix 'view' of a numpy array.
+    Utility function to create an isce3::core::Matrix 'view' of a numpy array.
     """
     cdef int nrows, ncols
     nrows, ncols = a.shape[0], a.shape[1] 
@@ -83,7 +83,7 @@ cdef class pyInterpolator:
         Returns:
             values (float or ndarray): Interpolated values
         """
-        # Convert numpy array to isce::core::Matrix
+        # Convert numpy array to isce3::core::Matrix
         #FIXME cdef Matrix[double] zmat = numpyToMatrix(z)
         cdef Matrix[double] zmat = Matrix[double](&z[0,0], z.shape[0], z.shape[1])
 

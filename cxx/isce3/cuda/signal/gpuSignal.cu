@@ -15,7 +15,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce::cuda::signal::gpuSignal;
+using isce3::cuda::signal::gpuSignal;
 
 /** Constructor **/
 template<class T>
@@ -1032,8 +1032,8 @@ __global__ void normalize_g(thrust::complex<T> *data,
 *  @param[in] pointer to upsampled data
 */
 template<class T>
-void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
-        isce::cuda::signal::gpuSignal<T> &inv,
+void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
+        isce3::cuda::signal::gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output)
 {
@@ -1070,8 +1070,8 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 *  @param[in] pointer to shift impact data
 */
 template<class T>
-void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
-        isce::cuda::signal::gpuSignal<T> &inv,
+void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
+        isce3::cuda::signal::gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output,
         thrust::complex<T> *shiftImpact)
@@ -1109,8 +1109,8 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 *  @param[in] valarray containing upsampled data
 */
 template<class T>
-void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
-        isce::cuda::signal::gpuSignal<T> &inv,
+void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
+        isce3::cuda::signal::gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output)
 {
@@ -1132,8 +1132,8 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 *  @param[in] valarray containing shift impact data
 */
 template<class T>
-void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
-        isce::cuda::signal::gpuSignal<T> &inv,
+void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
+        isce3::cuda::signal::gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output,
         std::valarray<std::complex<T>> &shiftImpact)
@@ -1182,20 +1182,20 @@ template class gpuSignal<float>;
 template class gpuSignal<double>;
 
 template void
-upsample<float>(isce::cuda::signal::gpuSignal<float> &fwd,
-        isce::cuda::signal::gpuSignal<float> &inv,
+upsample<float>(isce3::cuda::signal::gpuSignal<float> &fwd,
+        isce3::cuda::signal::gpuSignal<float> &inv,
         std::valarray<std::complex<float>> &input,
         std::valarray<std::complex<float>> &output);
 
 template void
-upsample<double>(isce::cuda::signal::gpuSignal<double> &fwd,
-        isce::cuda::signal::gpuSignal<double> &inv,
+upsample<double>(isce3::cuda::signal::gpuSignal<double> &fwd,
+        isce3::cuda::signal::gpuSignal<double> &inv,
         std::valarray<std::complex<double>> &input,
         std::valarray<std::complex<double>> &output);
 
 template<class T>
-void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
-        isce::cuda::signal::gpuSignal<T> &inv,
+void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
+        isce3::cuda::signal::gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output);
 
@@ -1217,14 +1217,14 @@ rangeShiftImpactMult_g<double>(thrust::complex<double> *data_lo_res, thrust::com
         thrust::complex<double> *impact_shift,
         int n_rows, int n_cols_lo, int n_cols_hi);
 
-template void upsample<float>(isce::cuda::signal::gpuSignal<float> &fwd,
-        isce::cuda::signal::gpuSignal<float> &inv,
+template void upsample<float>(isce3::cuda::signal::gpuSignal<float> &fwd,
+        isce3::cuda::signal::gpuSignal<float> &inv,
         thrust::complex<float> *input,
         thrust::complex<float> *output,
         thrust::complex<float> *shiftImpact);
 
-template void upsample<double>(isce::cuda::signal::gpuSignal<double> &fwd,
-        isce::cuda::signal::gpuSignal<double> &inv,
+template void upsample<double>(isce3::cuda::signal::gpuSignal<double> &fwd,
+        isce3::cuda::signal::gpuSignal<double> &inv,
         thrust::complex<double> *input,
         thrust::complex<double> *output,
         thrust::complex<double> *shiftImpact);

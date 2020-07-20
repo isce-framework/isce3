@@ -2,7 +2,7 @@
 #include <isce3/core/Projections.h>
 #include "projtest.h"
 
-isce::core::Geocent proj;
+isce3::core::Geocent proj;
 const double a = proj.ellipsoid().a();
 const double b = a * std::sqrt(1.0 - proj.ellipsoid().e2());
 

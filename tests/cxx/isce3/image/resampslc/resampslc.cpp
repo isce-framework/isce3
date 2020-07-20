@@ -12,18 +12,18 @@
 #include <gtest/gtest.h>
 #include <cpl_conv.h>
 
-// isce::core
+// isce3::core
 #include "isce3/core/Constants.h"
 #include "isce3/core/Serialization.h"
 
-// isce::io
+// isce3::io
 #include "isce3/io/IH5.h"
 #include "isce3/io/Raster.h"
 
-// isce::product
+// isce3::product
 #include "isce3/product/Product.h"
 
-// isce::image
+// isce3::image
 #include "isce3/image/ResampSlc.h"
 
 
@@ -33,13 +33,13 @@ TEST(ResampSlcTest, Resamp) {
     // Open the HDF5 product
     const std::string filename = TESTDATA_DIR "envisat.h5";
     std::string h5file(filename);
-    isce::io::IH5File file(h5file);
+    isce3::io::IH5File file(h5file);
 
     // Create product
-    isce::product::Product product(file);
+    isce3::product::Product product(file);
 
     // Instantiate a ResampSLC object
-    isce::image::ResampSlc resamp(product);
+    isce3::image::ResampSlc resamp(product);
 
     // The HDF5 path to the input image
     const std::string & input_data = "HDF5:\"" + filename + 
@@ -59,8 +59,8 @@ TEST(ResampSlcTest, Resamp) {
 // Compute sum of difference between reference image and warped image
 TEST(ResampSlcTest, Validate) {
     // Open SLC rasters 
-    isce::io::Raster refSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
-    isce::io::Raster testSlc("warped.slc");
+    isce3::io::Raster refSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster testSlc("warped.slc");
     // Compute total complex error
     std::complex<float> sum(0.0, 0.0);
     size_t count = 0;

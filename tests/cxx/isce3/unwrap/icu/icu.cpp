@@ -4,12 +4,12 @@
 #include <gtest/gtest.h> // TEST, ASSERT_EQ, ASSERT_TRUE, testing::InitGoogleTest, RUN_ALL_TESTS
 #include <valarray> // std::valarray, std::abs
 
-#include "isce3/unwrap/icu/ICU.h" // isce::unwrap::icu::ICU
-#include "isce3/io/Raster.h" // isce::io::Raster
+#include "isce3/unwrap/icu/ICU.h" // isce3::unwrap::icu::ICU
+#include "isce3/io/Raster.h" // isce3::io::Raster
 
 TEST(ICU, GetSetters)
 {
-    isce::unwrap::icu::ICU icuobj;
+    isce3::unwrap::icu::ICU icuobj;
 
     icuobj.numBufLines(1024);
     ASSERT_EQ(icuobj.numBufLines(), 1024);
@@ -62,14 +62,14 @@ TEST(ICU, ResidueCalculation)
     refcharge[0] = 1;
     refcharge[2] = -1;
 
-    isce::unwrap::icu::ICU icuobj;
+    isce3::unwrap::icu::ICU icuobj;
     icuobj.getResidues(&charge[0], &phase[0], l, w);
     ASSERT_TRUE((charge == refcharge).min());
 }
 
 TEST(ICU, PhaseGradNeutronCalculation)
 {
-    isce::unwrap::icu::ICU icuobj;
+    isce3::unwrap::icu::ICU icuobj;
     icuobj.usePhaseGradNeut(true);
     icuobj.phaseGradWinSize(3);
 
@@ -104,7 +104,7 @@ TEST(ICU, PhaseGradNeutronCalculation)
 
 TEST(ICU, IntensityNeutronCalculation)
 {
-    isce::unwrap::icu::ICU icuobj;
+    isce3::unwrap::icu::ICU icuobj;
     icuobj.useIntensityNeut(true);
 
     constexpr size_t l = 64;
@@ -131,7 +131,7 @@ TEST(ICU, IntensityNeutronCalculation)
 
 TEST(ICU, TreeGrowing)
 {
-    isce::unwrap::icu::ICU icuobj;
+    isce3::unwrap::icu::ICU icuobj;
     icuobj.numTrees(1);
     icuobj.maxBranchLen(16);
 
@@ -141,7 +141,7 @@ TEST(ICU, TreeGrowing)
     std::valarray<bool> neut(l*w), tree(l*w), reftree(l*w);
 
     // Load reference raster.
-    isce::io::Raster refRaster(TESTDATA_DIR "icu/tree");
+    isce3::io::Raster refRaster(TESTDATA_DIR "icu/tree");
     ASSERT_TRUE(refRaster.length() == l && refRaster.width() == w);
     refRaster.getBlock(reinterpret_cast<uint8_t *>(&reftree[0]), 0, 0, w, l);
 
@@ -206,17 +206,17 @@ TEST(ICU, RunICU)
     }
 
     // Create interferogram, correlation rasters
-    isce::io::Raster intfRaster("./intf", w, l, 1, GDT_CFloat32, "ENVI");
+    isce3::io::Raster intfRaster("./intf", w, l, 1, GDT_CFloat32, "ENVI");
     intfRaster.setBlock(intf, 0, 0, w, l);
-    isce::io::Raster corrRaster("./corr", w, l, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster corrRaster("./corr", w, l, 1, GDT_Float32, "ENVI");
     corrRaster.setBlock(corr, 0, 0, w, l);
 
     // Init output unwrapped phase, connected component labels rasters
-    isce::io::Raster unwRaster("./unw", w, l, 1, GDT_Float32, "ENVI");
-    isce::io::Raster cclRaster("./ccl", w, l, 1, GDT_Byte, "ENVI");
+    isce3::io::Raster unwRaster("./unw", w, l, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster cclRaster("./ccl", w, l, 1, GDT_Byte, "ENVI");
 
     // Configure ICU to process the interferogram as 3 tiles.
-    isce::unwrap::icu::ICU icuobj;
+    isce3::unwrap::icu::ICU icuobj;
     icuobj.numBufLines(400);
     icuobj.numOverlapLines(50);
 
@@ -226,7 +226,7 @@ TEST(ICU, RunICU)
 TEST(ICU, CheckUnwrappedPhase)
 {
     // Read interferogram from prior test.
-    isce::io::Raster intfRaster("./intf");
+    isce3::io::Raster intfRaster("./intf");
     const size_t l = intfRaster.length();
     const size_t w = intfRaster.width();
     std::valarray<std::complex<float>> intf(l*w);
@@ -237,13 +237,13 @@ TEST(ICU, CheckUnwrappedPhase)
     for (size_t i = 0; i < l*w; ++i) { phase[i] = std::arg(intf[i]); }
 
     // Read unwrapped phase from prior test.
-    isce::io::Raster unwRaster("./unw");
+    isce3::io::Raster unwRaster("./unw");
     ASSERT_TRUE(unwRaster.length() == l && unwRaster.width() == w);
     std::valarray<float> unw(l*w);
     unwRaster.getBlock(unw, 0, 0, w, l);
 
     // Read connected component labels from prior test.
-    isce::io::Raster cclRaster("./ccl");
+    isce3::io::Raster cclRaster("./ccl");
     ASSERT_TRUE(cclRaster.length() == l && cclRaster.width() == w);
     std::valarray<uint8_t> ccl(l*w);
     cclRaster.getBlock(ccl, 0, 0, w, l);
@@ -283,7 +283,7 @@ TEST(ICU, CheckConnCompLabels)
     }
 
     // Read connected component labels from prior test.
-    isce::io::Raster cclRaster("./ccl");
+    isce3::io::Raster cclRaster("./ccl");
     ASSERT_TRUE(cclRaster.length() == l && cclRaster.width() == w);
     std::valarray<uint8_t> ccl(l*w);
     cclRaster.getBlock(ccl, 0, 0, w, l);

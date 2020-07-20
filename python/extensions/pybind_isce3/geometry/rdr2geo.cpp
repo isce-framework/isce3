@@ -16,8 +16,8 @@
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
-using isce::geometry::DEMInterpolator;
-using isce::geometry::Topo;
+using isce3::geometry::DEMInterpolator;
+using isce3::geometry::Topo;
 
 namespace py = pybind11;
 
@@ -79,10 +79,10 @@ void addbinding_rdr2geo(py::module& m)
 void addbinding(py::class_<Topo> & pyRdr2Geo)
 {
     pyRdr2Geo
-        .def(py::init([](const isce::product::RadarGridParameters & radar_grid,
-             const isce::core::Orbit & orbit,
-             const isce::core::Ellipsoid & ellipsoid,
-             const isce::core::LUT2d<double> & doppler,
+        .def(py::init([](const isce3::product::RadarGridParameters & radar_grid,
+             const isce3::core::Orbit & orbit,
+             const isce3::core::Ellipsoid & ellipsoid,
+             const isce3::core::LUT2d<double> & doppler,
              const double threshold,
              const int numiter,
              const int extraiter,
@@ -106,10 +106,10 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
             py::arg("threshold") = 0.05,
             py::arg("numiter") = 25,
             py::arg("extraiter") = 10,
-            py::arg("dem_interp_method") = isce::core::BIQUINTIC_METHOD,
+            py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
             py::arg("epsg_out") = 4326,
             py::arg("compute_mask") = false)
-        .def("topo", py::overload_cast<isce::io::Raster &, const std::string &>
+        .def("topo", py::overload_cast<isce3::io::Raster &, const std::string &>
                 (&Topo::topo),
                 py::arg("dem_raster"),
                 py::arg("outdir"))

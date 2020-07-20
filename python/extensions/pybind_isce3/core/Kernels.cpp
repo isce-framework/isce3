@@ -7,7 +7,7 @@ template class PyKernel<double>;
 
 namespace py = pybind11;
 
-using namespace isce::core;
+using namespace isce3::core;
 
 // Base class, inherit from "trampoline" class to allow inheritance in python
 template <typename T>

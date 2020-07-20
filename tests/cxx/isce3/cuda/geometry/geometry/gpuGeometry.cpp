@@ -12,11 +12,11 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::io
+// isce3::io
 #include "isce3/io/Raster.h"
 #include "isce3/io/IH5.h"
 
-// isce::core
+// isce3::core
 #include "isce3/core/Basis.h"
 #include "isce3/core/Constants.h"
 #include "isce3/core/DateTime.h"
@@ -26,61 +26,61 @@
 #include "isce3/core/LUT1d.h"
 #include "isce3/core/Serialization.h"
 
-// isce::product
+// isce3::product
 #include "isce3/product/Product.h"
 #include "isce3/product/RadarGridParameters.h"
 
-// isce::geometry
+// isce3::geometry
 #include "isce3/geometry/geometry.h"
 #include "isce3/geometry/DEMInterpolator.h"
 
-// isce::cuda::geometry
+// isce3::cuda::geometry
 #include "isce3/cuda/geometry/gpuGeometry.h"
 
-using isce::core::Vec3;
-using isce::geometry::DEMInterpolator;
+using isce3::core::Vec3;
+using isce3::geometry::DEMInterpolator;
 
 // Declaration for function to load DEM
 void loadDEM(DEMInterpolator & demInterp);
 
 struct GpuGeometryTest : public ::testing::Test {
 
-    // isce::core objects
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::LUT2d<double> doppler;
-    isce::core::Orbit orbit;
+    // isce3::core objects
+    isce3::core::Ellipsoid ellipsoid;
+    isce3::core::LUT2d<double> doppler;
+    isce3::core::Orbit orbit;
 
-    // isce::product objects
-    isce::product::RadarGridParameters rgparam;
-    isce::core::LookSide lookSide;
+    // isce3::product objects
+    isce3::product::RadarGridParameters rgparam;
+    isce3::core::LookSide lookSide;
 
     // Constructor
     protected:
         GpuGeometryTest() {
             // Open the HDF5 product
             std::string h5file(TESTDATA_DIR "envisat.h5");
-            isce::io::IH5File file(h5file);
+            isce3::io::IH5File file(h5file);
 
             // Instantiate a Product
-            isce::product::Product product(file);
+            isce3::product::Product product(file);
 
             // Extract core and product objects
             orbit = product.metadata().orbit();
-            rgparam = isce::product::RadarGridParameters(product, 'A');
+            rgparam = isce3::product::RadarGridParameters(product, 'A');
             doppler = product.metadata().procInfo().dopplerCentroid('A');
             lookSide = product.lookSide();
-            ellipsoid.a(isce::core::EarthSemiMajorAxis);
-            ellipsoid.e2(isce::core::EarthEccentricitySquared);
+            ellipsoid.a(isce3::core::EarthSemiMajorAxis);
+            ellipsoid.e2(isce3::core::EarthEccentricitySquared);
 
             // For this test, use biquintic interpolation for Doppler LUT
-            doppler.interpMethod(isce::core::BIQUINTIC_METHOD);
+            doppler.interpMethod(isce3::core::BIQUINTIC_METHOD);
         }
 };
 
 TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
 
     // Load DEM subset covering test points
-    DEMInterpolator dem(-500.0, isce::core::BILINEAR_METHOD);
+    DEMInterpolator dem(-500.0, isce3::core::BILINEAR_METHOD);
     loadDEM(dem);
 
     // Loop over uniform grid of test points
@@ -96,14 +96,14 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             const double dopval = doppler.eval(azTime, range);
 
             // Initialize guess
-            isce::core::cartesian_t targetLLH = {0.0, 0.0, 1000.0};
+            isce3::core::cartesian_t targetLLH = {0.0, 0.0, 1000.0};
 
             // Interpolate orbit to get state vector
             Vec3 pos, vel;
             orbit.interpolate(&pos, &vel, azTime);
 
             // Setup geocentric TCN basis
-            isce::core::Basis TCNbasis(pos, vel);
+            isce3::core::Basis TCNbasis(pos, vel);
 
             // Compute satellite velocity magnitude
             const double vmag = vel.norm();
@@ -111,10 +111,10 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             const double dopfact = 0.5 * rgparam.wavelength() * dopval * range / vmag;
 
             // Wrap range and Doppler factor in a Pixel object
-            isce::core::Pixel pixel(range, dopfact, 0);
+            isce3::core::Pixel pixel(range, dopfact, 0);
 
             // Run rdr2geo on CPU
-            int stat_cpu = isce::geometry::rdr2geo(pixel, TCNbasis, pos, vel,
+            int stat_cpu = isce3::geometry::rdr2geo(pixel, TCNbasis, pos, vel,
                 ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
             // Cache results
             const double reflon = degrees * targetLLH[0];
@@ -125,7 +125,7 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             targetLLH = {0.0, 0.0, 1000.0};
 
             // Run rdr2geo on GPU
-            int stat_gpu = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, pos, vel,
+            int stat_gpu = isce3::cuda::geometry::rdr2geo_h(pixel, TCNbasis, pos, vel,
                 ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
 
             // Check
@@ -140,12 +140,12 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
 TEST_F(GpuGeometryTest, GeoToRdr) {
 
     // Make a reference epoch for numerical precision
-    isce::core::DateTime refEpoch(2003, 2, 25);
+    isce3::core::DateTime refEpoch(2003, 2, 25);
     orbit.referenceEpoch(refEpoch);
 
     // Make a test LLH
     const double radians = M_PI / 180.0;
-    isce::core::cartesian_t llh = {
+    isce3::core::cartesian_t llh = {
         -115.72466801139711 * radians,
         34.65846532785868 * radians,
         1772.0
@@ -153,18 +153,18 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
 
     // Run geo2rdr on gpu
     double aztime, slantRange;
-    int stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler,
+    int stat = isce3::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler,
         aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
-    isce::core::DateTime azdate = refEpoch + aztime;
+    isce3::core::DateTime azdate = refEpoch + aztime;
 
     ASSERT_EQ(stat, 1);
     ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:33.993088889");
     ASSERT_NEAR(slantRange, 830450.1859446081, 1.0e-6);
 
     // Run geo2rdr again with zero doppler
-    isce::core::LUT1d<double> zeroDoppler;
-    stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, zeroDoppler,
+    isce3::core::LUT1d<double> zeroDoppler;
+    stat = isce3::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, zeroDoppler,
         aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1.0e-10, 50, 10.0);
     azdate = refEpoch + aztime;
 
@@ -188,7 +188,7 @@ void loadDEM(DEMInterpolator & demInterp) {
     double max_lat = 35.0;
 
     // Open DEM raster
-    isce::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
+    isce3::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
 
     // Extract DEM subset
     demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat);

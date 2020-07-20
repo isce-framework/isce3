@@ -14,9 +14,9 @@
 #include "Signal.h"
 
 template<class T>
-void isce::signal::Covariance<T>::covariance(
-        std::map<std::string, isce::io::Raster> & slc,
-        std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov,
+void isce3::signal::Covariance<T>::covariance(
+        std::map<std::string, isce3::io::Raster> & slc,
+        std::map<std::pair<std::string, std::string>, isce3::io::Raster> & cov,
         size_t rangeLooks, size_t azimuthLooks)
 {
     size_t numPolarizations = slc.size();
@@ -48,7 +48,7 @@ void isce::signal::Covariance<T>::covariance(
     }
 
     // instantiate the crossmul object
-    isce::signal::Crossmul crsmul;
+    isce3::signal::Crossmul crsmul;
 
     // set up crossmul
     crsmul.rangeLooks(rangeLooks);
@@ -97,16 +97,16 @@ void isce::signal::Covariance<T>::covariance(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::geocodeCovariance(
-        isce::io::Raster & rdrCov, isce::io::Raster & geoCov,
-        isce::io::Raster & demRaster)
+void isce3::signal::Covariance<T>::geocodeCovariance(
+        isce3::io::Raster & rdrCov, isce3::io::Raster & geoCov,
+        isce3::io::Raster & demRaster)
 {
     _correctRtcFlag = false;
     _correctOrientationFlag = false;
 
-    isce::io::Raster rtcRaster("/vsimem/dummyRtc", 1, 1, 1, GDT_Float32,
+    isce3::io::Raster rtcRaster("/vsimem/dummyRtc", 1, 1, 1, GDT_Float32,
                                "ENVI");
-    isce::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1,
+    isce3::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1,
                                             GDT_Float32, "ENVI");
 
     geocodeCovariance(rdrCov, geoCov, demRaster, rtcRaster,
@@ -114,12 +114,12 @@ void isce::signal::Covariance<T>::geocodeCovariance(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::geocodeCovariance(
-        isce::io::Raster & rdrCov, isce::io::Raster & geoCov,
-        isce::io::Raster & demRaster, isce::io::Raster & rtcRaster)
+void isce3::signal::Covariance<T>::geocodeCovariance(
+        isce3::io::Raster & rdrCov, isce3::io::Raster & geoCov,
+        isce3::io::Raster & demRaster, isce3::io::Raster & rtcRaster)
 {
     _correctOrientationFlag = false;
-    isce::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1,
+    isce3::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1,
                                             GDT_Float32, "ENVI");
 
     geocodeCovariance(rdrCov, geoCov, demRaster, rtcRaster,
@@ -127,19 +127,19 @@ void isce::signal::Covariance<T>::geocodeCovariance(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::geocodeCovariance(
-        isce::io::Raster & rdrCov, isce::io::Raster & geoCov,
-        isce::io::Raster & demRaster, isce::io::Raster & rtc,
-        isce::io::Raster & orientationAngleRaster)
+void isce3::signal::Covariance<T>::geocodeCovariance(
+        isce3::io::Raster & rdrCov, isce3::io::Raster & geoCov,
+        isce3::io::Raster & demRaster, isce3::io::Raster & rtc,
+        isce3::io::Raster & orientationAngleRaster)
 {
     // number of bands in the input raster
     size_t nbands = rdrCov.numBands();
 
     // create projection based on _epsg code
-    _proj = isce::core::createProj(_epsgOut);
+    _proj = isce3::core::createProj(_epsgOut);
 
     // instantiate the DEMInterpolator
-    isce::geometry::DEMInterpolator demInterp;
+    isce3::geometry::DEMInterpolator demInterp;
 
     // Compute number of blocks in the output geocoded grid
     size_t nBlocks = _geoGridLength / _linesPerBlock;
@@ -287,7 +287,7 @@ void isce::signal::Covariance<T>::geocodeCovariance(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_correctRTC(
+void isce3::signal::Covariance<T>::_correctRTC(
         std::valarray<std::complex<float>> & rdrDataBlock,
         std::valarray<float> & rtcDataBlock)
 {
@@ -297,7 +297,7 @@ void isce::signal::Covariance<T>::_correctRTC(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_correctRTC(
+void isce3::signal::Covariance<T>::_correctRTC(
         std::valarray<std::complex<double>> & rdrDataBlock,
         std::valarray<float> & rtcDataBlock)
 {
@@ -308,9 +308,9 @@ void isce::signal::Covariance<T>::_correctRTC(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::faradayRotation(
-        std::map<std::string, isce::io::Raster> & slc,
-        isce::io::Raster & faradayAngleRaster, size_t rangeLooks,
+void isce3::signal::Covariance<T>::faradayRotation(
+        std::map<std::string, isce3::io::Raster> & slc,
+        isce3::io::Raster & faradayAngleRaster, size_t rangeLooks,
         size_t azimuthLooks)
 {
     size_t numPolarizations = slc.size();
@@ -388,7 +388,7 @@ void isce::signal::Covariance<T>::faradayRotation(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_faradayRotationAngle(
+void isce3::signal::Covariance<T>::_faradayRotationAngle(
         std::valarray<T> & Shh, std::valarray<T> & Shv, std::valarray<T> & Svh,
         std::valarray<T> & Svv, std::valarray<float> & faradayRotation,
         size_t width, size_t length, size_t rngLooks, size_t azLooks)
@@ -412,7 +412,7 @@ void isce::signal::Covariance<T>::_faradayRotationAngle(
     std::valarray<float> M2avg(widthLooked * lengthLooked);
     std::valarray<float> M3avg(widthLooked * lengthLooked);
 
-    isce::signal::Looks<float> looksObj;
+    isce3::signal::Looks<float> looksObj;
     looksObj.nrows(length);
     looksObj.ncols(width);
     looksObj.nrowsLooked(lengthLooked);
@@ -433,8 +433,8 @@ void isce::signal::Covariance<T>::_faradayRotationAngle(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_correctFaradayRotation(
-        isce::core::LUT2d<double> & faradayAngle,
+void isce3::signal::Covariance<T>::_correctFaradayRotation(
+        isce3::core::LUT2d<double> & faradayAngle,
         std::valarray<std::complex<float>> & Shh,
         std::valarray<std::complex<float>> & Shv,
         std::valarray<std::complex<float>> & Svh,
@@ -468,10 +468,10 @@ void isce::signal::Covariance<T>::_correctFaradayRotation(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::orientationAngle(
-        isce::io::Raster & azimuthSlopeRaster,
-        isce::io::Raster & rangeSlopeRaster, isce::io::Raster & lookAngleRaster,
-        isce::io::Raster & tauRaster)
+void isce3::signal::Covariance<T>::orientationAngle(
+        isce3::io::Raster & azimuthSlopeRaster,
+        isce3::io::Raster & rangeSlopeRaster, isce3::io::Raster & lookAngleRaster,
+        isce3::io::Raster & tauRaster)
 {
     size_t nrows = azimuthSlopeRaster.length();
     size_t ncols = azimuthSlopeRaster.width();
@@ -524,7 +524,7 @@ void isce::signal::Covariance<T>::orientationAngle(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_orientationAngle(
+void isce3::signal::Covariance<T>::_orientationAngle(
         std::valarray<float> & azimuthSlope, std::valarray<float> & rangeSlope,
         std::valarray<float> & lookAngle, std::valarray<float> & tau)
 {
@@ -538,7 +538,7 @@ void isce::signal::Covariance<T>::_orientationAngle(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_correctOrientation(
+void isce3::signal::Covariance<T>::_correctOrientation(
         std::valarray<float> & tau, std::valarray<std::complex<float>> & C11,
         std::valarray<std::complex<float>> & C12,
         std::valarray<std::complex<float>> & C13,
@@ -647,7 +647,7 @@ void isce::signal::Covariance<T>::_correctOrientation(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_interpolate(
+void isce3::signal::Covariance<T>::_interpolate(
         std::valarray<T> & rdrDataBlock,
         std::valarray<T> & geoDataBlock,
         std::valarray<double> & radarX,
@@ -679,9 +679,9 @@ void isce::signal::Covariance<T>::_interpolate(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_loadDEM(
-        isce::io::Raster demRaster, isce::geometry::DEMInterpolator & demInterp,
-        isce::core::ProjectionBase * _proj, int lineStart, int blockLength,
+void isce3::signal::Covariance<T>::_loadDEM(
+        isce3::io::Raster demRaster, isce3::geometry::DEMInterpolator & demInterp,
+        isce3::core::ProjectionBase * _proj, int lineStart, int blockLength,
         int blockWidth, double demMargin)
 {
     // convert the corner of the current geocoded grid to lon lat
@@ -714,9 +714,9 @@ void isce::signal::Covariance<T>::_loadDEM(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_computeRangeAzimuthBoundingBox(
+void isce3::signal::Covariance<T>::_computeRangeAzimuthBoundingBox(
         int lineStart, int blockLength, int blockWidth, int margin,
-        isce::geometry::DEMInterpolator & demInterp, int & azimuthFirstLine,
+        isce3::geometry::DEMInterpolator & demInterp, int & azimuthFirstLine,
         int & azimuthLastLine, int & rangeFirstPixel, int & rangeLastPixel)
 {
     // to store the four corner of the block on ground
@@ -785,15 +785,15 @@ void isce::signal::Covariance<T>::_computeRangeAzimuthBoundingBox(
 }
 
 template<class T>
-void isce::signal::Covariance<T>::_geo2rdr(
+void isce3::signal::Covariance<T>::_geo2rdr(
         double x, double y, double & azimuthTime, double & slantRange,
-        isce::geometry::DEMInterpolator & demInterp)
+        isce3::geometry::DEMInterpolator & demInterp)
 {
     // coordinate in the output projection system
-    isce::core::cartesian_t xyz {x, y, 0.0};
+    isce3::core::cartesian_t xyz {x, y, 0.0};
 
     // coordinate in lon lat height
-    isce::core::cartesian_t llh;
+    isce3::core::cartesian_t llh;
 
     // transform the xyz in the output projection system to llh
     _proj->inverse(xyz, llh);
@@ -802,7 +802,7 @@ void isce::signal::Covariance<T>::_geo2rdr(
     llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
 
     // Perform geo->rdr iterations
-    int converged = isce::geometry::geo2rdr(
+    int converged = isce3::geometry::geo2rdr(
             llh, _ellipsoid, _orbit, _doppler, azimuthTime, slantRange,
             _radarGrid.wavelength(), _radarGrid.lookSide(), _threshold,
             _numiter, 1.0e-8);
@@ -814,5 +814,5 @@ void isce::signal::Covariance<T>::_geo2rdr(
     }
 }
 
-template class isce::signal::Covariance<std::complex<float>>;
-template class isce::signal::Covariance<std::complex<double>>;
+template class isce3::signal::Covariance<std::complex<float>>;
+template class isce3::signal::Covariance<std::complex<double>>;

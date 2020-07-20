@@ -2,7 +2,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace io { namespace gdal { namespace detail {
+namespace isce3 { namespace io { namespace gdal { namespace detail {
 
 MemoryMap::MemoryMap(const GDALRasterBand * raster)
 :
@@ -19,7 +19,7 @@ MemoryMap::MemoryMap(GDALRasterBand * raster, GDALAccess access)
     GIntBig rowstride;
     CPLVirtualMem * mmap = raster->GetVirtualMemAuto(rwflag, &colstride, &rowstride, nullptr);
     if (!mmap) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "failed to memory map specified raster");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "failed to memory map specified raster");
     }
 
     _mmap = std::shared_ptr<CPLVirtualMem>(mmap, [](CPLVirtualMem * mmap) { CPLVirtualMemFree(mmap); });

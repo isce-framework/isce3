@@ -18,13 +18,13 @@
 #include "Signal.h"
 
 // Declaration
-namespace isce { namespace signal {
+namespace isce3 { namespace signal {
     /** Create a vector of frequencies*/
     void fftfreq(double dt, std::valarray<double> &freq);
 }}
 
 template<class T>
-class isce::signal::Filter {
+class isce3::signal::Filter {
     public:
 
         Filter() {};
@@ -80,8 +80,8 @@ class isce::signal::Filter {
         //T constructRangeCommonbandFilter();
 
         /** Construct azimuth common band filter*/
-        void constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
-                                const isce::core::LUT1d<double> & secDoppler,
+        void constructAzimuthCommonbandFilter(const isce3::core::LUT1d<double> & refDoppler,
+                                const isce3::core::LUT1d<double> & secDoppler,
                                 double bandwidth,
                                 double prf,
                                 double beta,
@@ -100,7 +100,7 @@ class isce::signal::Filter {
         void writeFilter(size_t ncols, size_t nrows);
 
     private:
-        isce::signal::Signal<T> _signal;
+        isce3::signal::Signal<T> _signal;
         std::valarray<std::complex<T>> _filter;
 
 };

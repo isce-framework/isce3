@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** Side that radar looks at, Left or Right. */
 enum class LookSide {
@@ -24,4 +24,4 @@ std::string to_string(LookSide d);
 
 std::ostream & operator<<(std::ostream & out, const LookSide d);
 
-}} // isce::core
+}} // isce3::core

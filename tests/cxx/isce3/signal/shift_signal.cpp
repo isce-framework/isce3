@@ -24,7 +24,7 @@ TEST(shiftSignal, shiftSignal)
     size_t nfft;
 
     // instantiate a signal object
-    isce::signal::Signal<double> sigObj;
+    isce3::signal::Signal<double> sigObj;
     sigObj.nextPowerOfTwo(width, nfft);
 
     // reserve memory for a block of data with the size of nfft
@@ -53,7 +53,7 @@ TEST(shiftSignal, shiftSignal)
     double shiftY = 0.0;
 
     // shift the signal
-    isce::signal::shiftSignal(slc, slcShifted, spec,
+    isce3::signal::shiftSignal(slc, slcShifted, spec,
                   nfft, length,
                   shiftX, shiftY, sigObj);
 

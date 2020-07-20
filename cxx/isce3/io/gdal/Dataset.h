@@ -11,7 +11,7 @@
 
 #include "GeoTransform.h"
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 /** Wrapper for GDALDataset representing a collection of associated Raster bands */
 class Dataset {
@@ -37,7 +37,7 @@ public:
      * \param[in] dataset   HDF5 dataset
      * \param[in] access    Access mode
      */
-    Dataset(const isce::io::IDataSet & dataset, GDALAccess access = GA_ReadOnly);
+    Dataset(const isce3::io::IDataSet & dataset, GDALAccess access = GA_ReadOnly);
 
     /**
      * Create a new GDAL dataset.
@@ -177,23 +177,23 @@ public:
     /**
      * Set geotransform
      *
-     * \throws isce::except::GDALError if the format does not support this operation
+     * \throws isce3::except::GDALError if the format does not support this operation
      */
     void setGeoTransform(const GeoTransform &);
 
     /**
      * Get spatial reference system
      *
-     * \throws isce::except::GDALError if the spatial reference system is unavailable
+     * \throws isce3::except::GDALError if the spatial reference system is unavailable
      */
-    isce::core::ProjectionBase * getProjection() const;
+    isce3::core::ProjectionBase * getProjection() const;
 
     /**
      * Set spatial reference system
      *
-     * \throws isce::except::GDALError if the format does not support this operation
+     * \throws isce3::except::GDALError if the format does not support this operation
      */
-    void setProjection(const isce::core::ProjectionBase *);
+    void setProjection(const isce3::core::ProjectionBase *);
 
     /** Left edge of left-most pixel in projection coordinates */
     double x0() const { return getGeoTransform().x0; }

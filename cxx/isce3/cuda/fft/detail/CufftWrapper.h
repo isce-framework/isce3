@@ -3,7 +3,7 @@
 #include <cufft.h>
 #include <thrust/complex.h>
 
-namespace isce { namespace cuda { namespace fft { namespace detail {
+namespace isce3 { namespace cuda { namespace fft { namespace detail {
 
 template<typename T> struct CufftC2CType {};
 template<>           struct CufftC2CType<float>  { constexpr static cufftType type = CUFFT_C2C; };

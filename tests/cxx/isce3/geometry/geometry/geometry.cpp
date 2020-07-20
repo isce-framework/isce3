@@ -12,10 +12,10 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/IH5.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/Ellipsoid.h>
@@ -23,10 +23,10 @@
 #include <isce3/core/Serialization.h>
 #include <isce3/core/TimeDelta.h>
 
-// isce::product
+// isce3::product
 #include <isce3/product/Product.h>
 
-// isce::geometry
+// isce3::geometry
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
 
@@ -37,26 +37,26 @@ void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & rang
 
 struct GeometryTest : public ::testing::Test {
 
-    // isce::core objects
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::LUT2d<double> doppler;
-    isce::core::Orbit orbit;
+    // isce3::core objects
+    isce3::core::Ellipsoid ellipsoid;
+    isce3::core::LUT2d<double> doppler;
+    isce3::core::Orbit orbit;
 
-    // isce::product objects
-    isce::product::ProcessingInformation proc;
-    isce::product::Swath swath;
+    // isce3::product objects
+    isce3::product::ProcessingInformation proc;
+    isce3::product::Swath swath;
 
-    isce::core::LookSide lookSide;
+    isce3::core::LookSide lookSide;
 
     // Constructor
     protected:
         GeometryTest() {
             // Open the HDF5 product
             std::string h5file(TESTDATA_DIR "envisat.h5");
-            isce::io::IH5File file(h5file);
+            isce3::io::IH5File file(h5file);
 
             // Instantiate a Product
-            isce::product::Product product(file);
+            isce3::product::Product product(file);
 
             // Extract core and product objects
             orbit = product.metadata().orbit();
@@ -64,11 +64,11 @@ struct GeometryTest : public ::testing::Test {
             swath = product.swath('A');
             doppler = proc.dopplerCentroid('A');
             lookSide = product.lookSide();
-            ellipsoid.a(isce::core::EarthSemiMajorAxis);
-            ellipsoid.e2(isce::core::EarthEccentricitySquared);
+            ellipsoid.a(isce3::core::EarthSemiMajorAxis);
+            ellipsoid.e2(isce3::core::EarthEccentricitySquared);
 
             // For this test, use biquintic interpolation for Doppler LUT
-            doppler.interpMethod(isce::core::BIQUINTIC_METHOD);
+            doppler.interpMethod(isce3::core::BIQUINTIC_METHOD);
         }
 };
 
@@ -84,20 +84,20 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
     for (size_t i = 0; i < aztimes.size(); ++i) {
 
         // Make azimuth time in seconds
-        isce::core::DateTime azDate = aztimes[i];
+        isce3::core::DateTime azDate = aztimes[i];
         const double azTime = (azDate - orbit.referenceEpoch()).getTotalSeconds();
 
         // Evaluate Doppler
         const double dopval = doppler.eval(azTime, ranges[i]);
 
         // Make constant DEM interpolator set to input height
-        isce::geometry::DEMInterpolator dem(heights[i]);
+        isce3::geometry::DEMInterpolator dem(heights[i]);
 
         // Initialize guess
-        isce::core::cartesian_t targetLLH = {0.0, 0.0, heights[i]};
+        isce3::core::cartesian_t targetLLH = {0.0, 0.0, heights[i]};
 
         // Run rdr2geo
-        int stat = isce::geometry::rdr2geo(azTime, ranges[i], dopval,
+        int stat = isce3::geometry::rdr2geo(azTime, ranges[i], dopval,
             orbit, ellipsoid, dem, targetLLH, swath.processedWavelength(), lookSide,
             1.0e-8, 25, 15);
 
@@ -108,7 +108,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
         ASSERT_NEAR(targetLLH[2], ref_data[3*i+2], 1.0e-8);
 
         // Run again with zero doppler
-        stat = isce::geometry::rdr2geo(azTime, ranges[i], 0.0,
+        stat = isce3::geometry::rdr2geo(azTime, ranges[i], 0.0,
             orbit, ellipsoid, dem, targetLLH, swath.processedWavelength(), lookSide,
             1.0e-8, 25, 15);
         // Check
@@ -125,7 +125,7 @@ TEST_F(GeometryTest, GeoToRdr) {
 
     // Make a test LLH
     const double radians = M_PI / 180.0;
-    isce::core::cartesian_t llh = {
+    isce3::core::cartesian_t llh = {
         -115.72466801139711 * radians,
         34.65846532785868 * radians,
         1772.0
@@ -133,19 +133,19 @@ TEST_F(GeometryTest, GeoToRdr) {
 
     // Run geo2rdr
     double aztime, slantRange;
-    int stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, doppler,
+    int stat = isce3::geometry::geo2rdr(llh, ellipsoid, orbit, doppler,
         aztime, slantRange, swath.processedWavelength(), lookSide,
         1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
-    isce::core::DateTime azdate = orbit.referenceEpoch() + aztime;
+    isce3::core::DateTime azdate = orbit.referenceEpoch() + aztime;
 
     ASSERT_EQ(stat, 1);
     ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:33.993088889");
     ASSERT_NEAR(slantRange, 830450.1859446081, 1.0e-6);
 
     // Run geo2rdr again with zero doppler
-    isce::core::LUT2d<double> zeroDoppler;
-    stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
+    isce3::core::LUT2d<double> zeroDoppler;
+    stat = isce3::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
         aztime, slantRange, swath.processedWavelength(), lookSide,
         1.0e-10, 50, 10.0);
     azdate = orbit.referenceEpoch() + aztime;

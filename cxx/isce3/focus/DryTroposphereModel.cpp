@@ -2,9 +2,9 @@
 
 #include <isce3/except/Error.h>
 
-using isce::except::InvalidArgument;
+using isce3::except::InvalidArgument;
 
-namespace isce {
+namespace isce3 {
 namespace focus {
 
 std::string toString(DryTroposphereModel m)
@@ -32,4 +32,4 @@ DryTroposphereModel parseDryTropoModel(const std::string& s)
 }
 
 } // namespace focus
-} // namespace isce
+} // namespace isce3

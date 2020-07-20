@@ -4,7 +4,7 @@
 
 #include <complex>
 
-namespace isce { namespace geocode {
+namespace isce3 { namespace geocode {
 /**
  * param[in,out] data a matrix of data that needs to be base-banded in azimuth
  * param[in] starting_range starting range of the data block 
@@ -13,9 +13,9 @@ namespace isce { namespace geocode {
  * param[in] prf pulse repetition frequency
  * param[in] doppler_lut 2D LUT of the image Doppler
  */
-void baseband(isce::core::Matrix<std::complex<float>>& data,
+void baseband(isce3::core::Matrix<std::complex<float>>& data,
               const double starting_range, const double sensing_start,
               const double range_pixel_spacing, const double prf,
-              const isce::core::LUT2d<double>& doppler_lut);
+              const isce3::core::LUT2d<double>& doppler_lut);
 
-}} // namespace isce::geocode
+}} // namespace isce3::geocode

@@ -11,9 +11,9 @@
 #include <iostream>
 #include "gpuProjections.h"
 #include <isce3/cuda/except/Error.h>
-using isce::core::Vec3;
+using isce3::core::Vec3;
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 //Helper for the host side function - used only for testing
 __global__ void forward_g(int code,

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <isce3/core/Projections.h>
 #include "projtest.h"
-using isce::core::UTM;
+using isce3::core::UTM;
 
 struct UTMTest : public ::testing::Test {
     unsigned int fails;

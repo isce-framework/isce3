@@ -4,7 +4,7 @@
 
 #include "detail/FFTPlanBase.h"
 
-namespace isce { namespace fft {
+namespace isce3 { namespace fft {
 
 /** RAII wrapper encapsulating FFTW plan for forward FFT execution */
 template<typename T>

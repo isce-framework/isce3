@@ -5,29 +5,29 @@
 #include <isce3/cuda/core/gpuLUT2d.h>
 #include <isce3/product/RadarGridParameters.h>
 
-namespace isce { namespace cuda { namespace container {
+namespace isce3 { namespace cuda { namespace container {
 
 /**
- * CUDA counterpart of isce::container::RadarGeometry
+ * CUDA counterpart of isce3::container::RadarGeometry
  */
 class RadarGeometry {
-    using DateTime = isce::core::DateTime;
-    using LookSide = isce::core::LookSide;
-    using RadarGridParameters = isce::product::RadarGridParameters;
+    using DateTime = isce3::core::DateTime;
+    using LookSide = isce3::core::LookSide;
+    using RadarGridParameters = isce3::product::RadarGridParameters;
 
-    using HostOrbit = isce::core::Orbit;
-    using DeviceOrbit = isce::cuda::core::Orbit;
+    using HostOrbit = isce3::core::Orbit;
+    using DeviceOrbit = isce3::cuda::core::Orbit;
 
-    using HostRadarGeometry = isce::container::RadarGeometry;
-
-    template<typename T>
-    using Linspace = isce::core::Linspace<T>;
+    using HostRadarGeometry = isce3::container::RadarGeometry;
 
     template<typename T>
-    using HostLUT2d = isce::core::LUT2d<T>;
+    using Linspace = isce3::core::Linspace<T>;
 
     template<typename T>
-    using DeviceLUT2d = isce::cuda::core::gpuLUT2d<T>;
+    using HostLUT2d = isce3::core::LUT2d<T>;
+
+    template<typename T>
+    using DeviceLUT2d = isce3::cuda::core::gpuLUT2d<T>;
 
 public:
     /** Construct a new RadarGeometry object. */
@@ -79,6 +79,6 @@ private:
     DeviceLUT2d<double> _doppler;
 };
 
-}}} // namespace isce::cuda::container
+}}} // namespace isce3::cuda::container
 
 #include "RadarGeometry.icc"

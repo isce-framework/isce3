@@ -7,9 +7,9 @@
 
 #include <isce3/core/Common.h>
 
-namespace isce { namespace cuda { namespace geometry {
+namespace isce3 { namespace cuda { namespace geometry {
 
-using cartesian_t = isce::core::Vec3;
+using cartesian_t = isce3::core::Vec3;
 
 /**
  * Radar geometry coordinates to map coordinates transformer
@@ -18,9 +18,9 @@ using cartesian_t = isce::core::Vec3;
  * For more information, see its CPU equivalent in isce/geometry/geometry.h.
  * This GPU version is simplified since it cannot perform error checking.
  */
-CUDA_DEV int rdr2geo(double, double, double, const isce::cuda::core::OrbitView&,
-                     const isce::core::Ellipsoid&, const gpuDEMInterpolator&,
-                     isce::core::Vec3&, double, isce::core::LookSide, double,
+CUDA_DEV int rdr2geo(double, double, double, const isce3::cuda::core::OrbitView&,
+                     const isce3::core::Ellipsoid&, const gpuDEMInterpolator&,
+                     isce3::core::Vec3&, double, isce3::core::LookSide, double,
                      int, int);
 
 /**
@@ -45,12 +45,12 @@ CUDA_DEV int rdr2geo(double, double, double, const isce::cuda::core::OrbitView&,
  * the platform. For algorithmic details, see \ref overview_geometry "geometry
  * overview".
  */
-CUDA_DEV int rdr2geo(const isce::core::Pixel& pixel,
-                     const isce::core::Basis& TCNbasis,
-                     const isce::core::Vec3& pos, const isce::core::Vec3& vel,
-                     const isce::core::Ellipsoid& ellipsoid,
+CUDA_DEV int rdr2geo(const isce3::core::Pixel& pixel,
+                     const isce3::core::Basis& TCNbasis,
+                     const isce3::core::Vec3& pos, const isce3::core::Vec3& vel,
+                     const isce3::core::Ellipsoid& ellipsoid,
                      const gpuDEMInterpolator& demInterp,
-                     isce::core::Vec3& targetLLH, isce::core::LookSide side,
+                     isce3::core::Vec3& targetLLH, isce3::core::LookSide side,
                      double threshold, int maxIter, int extraIter);
 
 /**
@@ -73,12 +73,12 @@ CUDA_DEV int rdr2geo(const isce::core::Pixel& pixel,
  * (i.e., a single point target). For algorithmic details, see \ref
  * overview_geometry "geometry overview".
  */
-CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
-                     const isce::core::Ellipsoid& ellipsoid,
-                     const isce::cuda::core::OrbitView& orbit,
-                     const isce::cuda::core::gpuLUT1d<double>& doppler,
+CUDA_DEV int geo2rdr(const isce3::core::Vec3& inputLLH,
+                     const isce3::core::Ellipsoid& ellipsoid,
+                     const isce3::cuda::core::OrbitView& orbit,
+                     const isce3::cuda::core::gpuLUT1d<double>& doppler,
                      double* aztime, double* slantRange, double wavelength,
-                     isce::core::LookSide side, double threshold, int maxIter,
+                     isce3::core::LookSide side, double threshold, int maxIter,
                      double deltaRange);
 
 /**
@@ -101,34 +101,34 @@ CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
  * (i.e., a single point target). For algorithmic details, see \ref
  * overview_geometry "geometry overview".
  */
-CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
-                     const isce::core::Ellipsoid& ellipsoid,
-                     const isce::cuda::core::OrbitView& orbit,
-                     const isce::cuda::core::gpuLUT2d<double>& doppler,
+CUDA_DEV int geo2rdr(const isce3::core::Vec3& inputLLH,
+                     const isce3::core::Ellipsoid& ellipsoid,
+                     const isce3::cuda::core::OrbitView& orbit,
+                     const isce3::cuda::core::gpuLUT2d<double>& doppler,
                      double* aztime, double* slantRange, double wavelength,
-                     isce::core::LookSide side, double threshold, int maxIter,
+                     isce3::core::LookSide side, double threshold, int maxIter,
                      double deltaRange);
 
 /** Radar geometry coordinates to map coordinates transformer (host testing) */
-CUDA_HOST int rdr2geo_h(const isce::core::Pixel&, const isce::core::Basis&,
-                        const isce::core::Vec3& pos,
-                        const isce::core::Vec3& vel,
-                        const isce::core::Ellipsoid&,
-                        isce::geometry::DEMInterpolator&, cartesian_t&,
-                        isce::core::LookSide, double, int, int);
+CUDA_HOST int rdr2geo_h(const isce3::core::Pixel&, const isce3::core::Basis&,
+                        const isce3::core::Vec3& pos,
+                        const isce3::core::Vec3& vel,
+                        const isce3::core::Ellipsoid&,
+                        isce3::geometry::DEMInterpolator&, cartesian_t&,
+                        isce3::core::LookSide, double, int, int);
 
 /** Map coordinates to radar geometry coordinates transformer (host testing) */
-CUDA_HOST int geo2rdr_h(const cartesian_t&, const isce::core::Ellipsoid&,
-                        const isce::core::Orbit&,
-                        const isce::core::LUT1d<double>&, double&, double&,
-                        double, isce::core::LookSide, double, int, double);
+CUDA_HOST int geo2rdr_h(const cartesian_t&, const isce3::core::Ellipsoid&,
+                        const isce3::core::Orbit&,
+                        const isce3::core::LUT1d<double>&, double&, double&,
+                        double, isce3::core::LookSide, double, int, double);
 
-}}} // namespace isce::cuda::geometry
+}}} // namespace isce3::cuda::geometry
 
 /** Create ProjectionBase pointer on the device (meant to be run by a single
  * thread) */
-CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase**, int);
+CUDA_GLOBAL void createProjection(isce3::cuda::core::ProjectionBase**, int);
 
 /** Delete ProjectionBase pointer on the device (meant to be run by a single
  * thread) */
-CUDA_GLOBAL void deleteProjection(isce::cuda::core::ProjectionBase**);
+CUDA_GLOBAL void deleteProjection(isce3::cuda::core::ProjectionBase**);

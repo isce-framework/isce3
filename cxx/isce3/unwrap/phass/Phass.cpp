@@ -12,14 +12,14 @@
  * @param[out] unwRaster unwrapped phase
  * @param[out] labelRaster connected component labels
  */
-void isce::unwrap::phass::Phass::
-unwrap(isce::io::Raster & phaseRaster,
-        isce::io::Raster & corrRaster,
-        isce::io::Raster & unwRaster,
-        isce::io::Raster & labelRaster)
+void isce3::unwrap::phass::Phass::
+unwrap(isce3::io::Raster & phaseRaster,
+        isce3::io::Raster & corrRaster,
+        isce3::io::Raster & unwRaster,
+        isce3::io::Raster & labelRaster)
 {
     _usePower = false;
-    isce::io::Raster powerRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
+    isce3::io::Raster powerRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
 
     std::cout << "unwrapping without intensity" << std::endl;
     unwrap(phaseRaster,
@@ -36,12 +36,12 @@ unwrap(isce::io::Raster & phaseRaster,
 * @param[out] unwRaster unwrapped phase
 * @param[out] labelRaster connected component labels
 */
-void isce::unwrap::phass::Phass::
-unwrap(isce::io::Raster & phaseRaster,
-        isce::io::Raster & powerRaster,
-        isce::io::Raster & corrRaster,
-        isce::io::Raster & unwRaster,
-        isce::io::Raster & labelRaster)
+void isce3::unwrap::phass::Phass::
+unwrap(isce3::io::Raster & phaseRaster,
+        isce3::io::Raster & powerRaster,
+        isce3::io::Raster & corrRaster,
+        isce3::io::Raster & unwRaster,
+        isce3::io::Raster & labelRaster)
 {
 
     int nrows = phaseRaster.length();

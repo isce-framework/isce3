@@ -14,7 +14,7 @@
 #include "IH5.h"
 
 
-namespace isce {
+namespace isce3 {
 namespace io {
 
 /************************************************************************/
@@ -40,7 +40,7 @@ class IH5Dataset final: public GDALDataset
     OGRSpatialReference oSRS;
 
     //IDataSet from Francois's IH5
-    isce::io::IDataSet* _dataset;
+    isce3::io::IDataSet* _dataset;
     H5::DataType nativeType;
     H5::DataType actualType;
     int ndims;
@@ -128,4 +128,4 @@ class IH5RasterBand : public GDALPamRasterBand
 /** Function to register driver with GDAL */
 void GDALRegister_IH5();
 
-}} // namespace isce::io
+}} // namespace isce3::io

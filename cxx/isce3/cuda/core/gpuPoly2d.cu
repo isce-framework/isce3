@@ -11,8 +11,8 @@
 #include "gpuPoly2d.h"
 #include <stdio.h>
 
-using isce::cuda::core::gpuPoly2d;
-using isce::core::Poly2d;
+using isce3::cuda::core::gpuPoly2d;
+using isce3::core::Poly2d;
 using std::vector;
 
 

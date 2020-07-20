@@ -13,32 +13,32 @@
 #include <isce3/error/ErrorCode.h>
 #include <isce3/geometry/TopoLayers.h>
 
-// isce::cuda::core
+// isce3::cuda::core
 #include <isce3/cuda/core/Orbit.h>
 #include <isce3/cuda/core/OrbitView.h>
 #include <isce3/cuda/core/gpuLUT1d.h>
 
 #include <isce3/cuda/except/Error.h>
 
-// isce::cuda::geometry
+// isce3::cuda::geometry
 #include "gpuDEMInterpolator.h"
 #include "gpuGeometry.h"
 #include "gpuTopoLayers.h"
 
-using isce::core::Vec3;
-using isce::core::Mat3;
-using isce::error::ErrorCode;
-using isce::core::LookSide;
+using isce3::core::Vec3;
+using isce3::core::Mat3;
+using isce3::error::ErrorCode;
+using isce3::core::LookSide;
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 
 __device__
 bool initAzimuthLine(size_t line,
-                     const isce::cuda::core::OrbitView& orbit,
+                     const isce3::cuda::core::OrbitView& orbit,
                      double startAzUTCTime,
                      double prf,
                      Vec3& pos, Vec3& vel,
-                     isce::core::Basis& TCNbasis) {
+                     isce3::core::Basis& TCNbasis) {
 
     // Get satellite azimuth time
     const double tline = startAzUTCTime + line / prf;
@@ -48,21 +48,21 @@ bool initAzimuthLine(size_t line,
     bool valid = (status == ErrorCode::Success);
 
     // Compute geocentric TCN basis
-    TCNbasis = isce::core::Basis(pos, vel);
+    TCNbasis = isce3::core::Basis(pos, vel);
 
     return valid;
 }
 
 __device__
 void setOutputTopoLayers(const Vec3& targetLLH,
-                         isce::cuda::geometry::gpuTopoLayers & layers,
+                         isce3::cuda::geometry::gpuTopoLayers & layers,
                          size_t index, LookSide lookSide,
-                         const isce::core::Pixel & pixel,
+                         const isce3::core::Pixel & pixel,
                          const Vec3& pos, const Vec3& vel,
-                         const isce::core::Basis& TCNbasis,
-                         isce::cuda::core::ProjectionBase ** projOutput,
-                         const isce::core::Ellipsoid& ellipsoid,
-                         const isce::cuda::geometry::gpuDEMInterpolator & demInterp) {
+                         const isce3::core::Basis& TCNbasis,
+                         isce3::cuda::core::ProjectionBase ** projOutput,
+                         const isce3::core::Ellipsoid& ellipsoid,
+                         const isce3::cuda::geometry::gpuDEMInterpolator & demInterp) {
 
     Vec3 targetXYZ, enu;
     const double degrees = 180.0 / M_PI;
@@ -139,12 +139,12 @@ void setOutputTopoLayers(const Vec3& targetLLH,
 }
 
 __global__
-void runTopoBlock(isce::core::Ellipsoid ellipsoid,
-                  isce::cuda::core::OrbitView orbit,
-                  isce::cuda::core::gpuLUT1d<double> doppler,
-                  isce::cuda::geometry::gpuDEMInterpolator demInterp,
-                  isce::cuda::core::ProjectionBase ** projOutput,
-                  isce::cuda::geometry::gpuTopoLayers layers,
+void runTopoBlock(isce3::core::Ellipsoid ellipsoid,
+                  isce3::cuda::core::OrbitView orbit,
+                  isce3::cuda::core::gpuLUT1d<double> doppler,
+                  isce3::cuda::geometry::gpuDEMInterpolator demInterp,
+                  isce3::cuda::core::ProjectionBase ** projOutput,
+                  isce3::cuda::geometry::gpuTopoLayers layers,
                   size_t lineStart,
                   LookSide lookSide,
                   double startAzUTCTime,
@@ -167,7 +167,7 @@ void runTopoBlock(isce::core::Ellipsoid ellipsoid,
         const size_t rbin = index_flat - line * layers.width();
 
         // Interpolate orbit (keeping track of validity without interrupting workflow)
-        isce::core::Basis TCNbasis;
+        isce3::core::Basis TCNbasis;
         Vec3 pos, vel;
         bool valid = (initAzimuthLine(line + lineStart, orbit, startAzUTCTime,
                                       prf, pos, vel, TCNbasis) != 0);
@@ -183,13 +183,13 @@ void runTopoBlock(isce::core::Ellipsoid ellipsoid,
         const double dopfact = 0.5 * wavelength * (dopval / satVmag) * rng;
 
         // Store slant range bin data in Pixel
-        isce::core::Pixel pixel(rng, dopfact, rbin);
+        isce3::core::Pixel pixel(rng, dopfact, rbin);
 
         // Initialize LLH to middle of input DEM and average height
         Vec3 llh = demInterp.midLonLat();
 
         // Perform rdr->geo iterations
-        int geostat = isce::cuda::geometry::rdr2geo(
+        int geostat = isce3::cuda::geometry::rdr2geo(
             pixel, TCNbasis, pos, vel, ellipsoid, demInterp, llh, lookSide,
             threshold, numiter, extraiter);
 
@@ -203,12 +203,12 @@ void runTopoBlock(isce::core::Ellipsoid ellipsoid,
 }
 
 // C++ Host code for launching kernel to run topo on current block
-void isce::cuda::geometry::
-runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
-           const isce::core::Orbit & orbit,
-           const isce::core::LUT1d<double> & doppler,
-           isce::geometry::DEMInterpolator & demInterp,
-           isce::geometry::TopoLayers & layers,
+void isce3::cuda::geometry::
+runGPUTopo(const isce3::core::Ellipsoid & ellipsoid,
+           const isce3::core::Orbit & orbit,
+           const isce3::core::LUT1d<double> & doppler,
+           isce3::geometry::DEMInterpolator & demInterp,
+           isce3::geometry::TopoLayers & layers,
            size_t lineStart,
            LookSide lookSide,
            int epsgOut,
@@ -221,14 +221,14 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            unsigned int & totalconv) {
 
     // Create gpu ISCE objects
-    isce::cuda::core::Orbit gpu_orbit(orbit);
-    isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
-    isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp);
-    isce::cuda::geometry::gpuTopoLayers gpu_layers(layers);
+    isce3::cuda::core::Orbit gpu_orbit(orbit);
+    isce3::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
+    isce3::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp);
+    isce3::cuda::geometry::gpuTopoLayers gpu_layers(layers);
 
     // Allocate projection pointers on device
-    isce::cuda::core::ProjectionBase **projOutput_d;
-    checkCudaErrors(cudaMalloc(&projOutput_d, sizeof(isce::cuda::core::ProjectionBase **)));
+    isce3::cuda::core::ProjectionBase **projOutput_d;
+    checkCudaErrors(cudaMalloc(&projOutput_d, sizeof(isce3::cuda::core::ProjectionBase **)));
     createProjection<<<1, 1>>>(projOutput_d, epsgOut);
 
     // DEM interpolator initializes its projection and interpolator

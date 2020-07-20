@@ -9,13 +9,13 @@
 #include <string>
 #include <gtest/gtest.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/Raster.h>
 
-// isce::geometry
+// isce3::geometry
 #include <isce3/geometry/DEMInterpolator.h>
 
 
@@ -23,7 +23,7 @@ TEST(DEMTest, ConstDEM) {
 
     //Create a constant height DEM
     float consthgt = 150.0;
-    isce::geometry::DEMInterpolator dem(consthgt);
+    isce3::geometry::DEMInterpolator dem(consthgt);
 
     //Check for initialization
     EXPECT_NEAR(dem.refHeight(), consthgt, 1.0e-6);
@@ -35,15 +35,15 @@ TEST(DEMTest, MethodConstruct) {
     float consthgt = 220.0;
 
     //Methods to iterate over
-    std::vector<isce::core::dataInterpMethod> methods = { isce::core::SINC_METHOD,
-                                                          isce::core::BILINEAR_METHOD,
-                                                          isce::core::BICUBIC_METHOD,
-                                                          isce::core::NEAREST_METHOD,
-                                                          isce::core::BIQUINTIC_METHOD };
+    std::vector<isce3::core::dataInterpMethod> methods = { isce3::core::SINC_METHOD,
+                                                          isce3::core::BILINEAR_METHOD,
+                                                          isce3::core::BICUBIC_METHOD,
+                                                          isce3::core::NEAREST_METHOD,
+                                                          isce3::core::BIQUINTIC_METHOD };
 
     for(auto &method: methods)
     {
-        isce::geometry::DEMInterpolator dem(consthgt, method);
+        isce3::geometry::DEMInterpolator dem(consthgt, method);
         EXPECT_NEAR(dem.refHeight(), consthgt, 1.0e-6);
         EXPECT_EQ(dem.interpMethod(), method);
     }

@@ -4,7 +4,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 constexpr
 Buffer::Buffer(const void * data,
@@ -36,7 +36,7 @@ Buffer::Buffer(const void * data,
     _access(GA_ReadOnly)
 {
     if (shape[0] < 0 || shape[1] < 0) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
     }
 }
 
@@ -54,7 +54,7 @@ Buffer::Buffer(void * data,
     _access(access)
 {
     if (shape[0] < 0 || shape[1] < 0) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
     }
 }
 
@@ -63,7 +63,7 @@ constexpr
 TypedBuffer<T> Buffer::cast() const
 {
     if (detail::Type2GDALDataType<T>::datatype != datatype()) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "requested type must match the underlying data type");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "requested type must match the underlying data type");
     }
 
     return TypedBuffer<T>(static_cast<T *>(_data), _shape, _strides, _access);
@@ -98,7 +98,7 @@ TypedBuffer<T>::TypedBuffer(const T * data,
     _access(GA_ReadOnly)
 {
     if (shape[0] < 0 || shape[1] < 0) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
     }
 }
 
@@ -115,7 +115,7 @@ TypedBuffer<T>::TypedBuffer(T * data,
     _access(access)
 {
     if (shape[0] < 0 || shape[1] < 0) {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
     }
 }
 

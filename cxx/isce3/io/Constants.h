@@ -9,8 +9,8 @@
 #include "gdal/detail/GDALDataTypeUtil.h"
 
 //! The isce namespace
-namespace isce {
-    //! The isce::io namespace
+namespace isce3 {
+    //! The isce3::io namespace
     namespace io {
 
         // Constants for Raster class

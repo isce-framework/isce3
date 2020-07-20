@@ -10,7 +10,7 @@
 #include "Metadata.h"
 
 // Define std::cout interaction for debugging
-std::ostream& operator<<(std::ostream &os, const isce::core::Metadata &radar) {
+std::ostream& operator<<(std::ostream &os, const isce3::core::Metadata &radar) {
     os << "Radar parameters:" << std::endl;
     os << "  - width: " << radar.width << std::endl;
     os << "  - length: " << radar.length << std::endl;

@@ -11,7 +11,7 @@
 #include "Peg.h"
 #include "Pegtrans.h"
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 void Baseline::init()
 {

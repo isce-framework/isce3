@@ -4,7 +4,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace fft { namespace detail {
+namespace isce3 { namespace fft { namespace detail {
 
 template<int Sign, typename T>
 inline
@@ -142,7 +142,7 @@ FFTPlanBase<Sign, T>::FFTPlanBase(U * out,
 
     // make sure plan creation was successful
     if (!(*_plan)) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), "FFT plan creation failed");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "FFT plan creation failed");
     }
 }
 

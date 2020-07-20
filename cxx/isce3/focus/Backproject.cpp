@@ -16,12 +16,12 @@
 
 #include "BistaticDelay.h"
 
-using namespace isce::core;
-using namespace isce::geometry;
+using namespace isce3::core;
+using namespace isce3::geometry;
 
-using isce::container::RadarGeometry;
+using isce3::container::RadarGeometry;
 
-namespace isce {
+namespace isce3 {
 namespace focus {
 
 inline std::complex<float> sumCoherent(const std::complex<float>* data,
@@ -71,7 +71,7 @@ void backproject(std::complex<float>* out,
                  const Rdr2GeoParams& r2g_params,
                  const Geo2RdrParams& g2r_params)
 {
-    static constexpr double c = isce::core::speed_of_light;
+    static constexpr double c = isce3::core::speed_of_light;
     static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
 
     // check that dry_tropo_model is supported internally
@@ -79,7 +79,7 @@ void backproject(std::complex<float>* out,
             dry_tropo_model == DryTroposphereModel::TSX)) {
 
         std::string errmsg = "unexpected dry troposphere model";
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
     }
 
     // XXX not very nice to throw here instead of simply adjusting the epoch
@@ -88,7 +88,7 @@ void backproject(std::complex<float>* out,
     if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
         std::string errmsg = "input reference epoch must match output "
                              "reference epoch";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 
     // get input & output radar grid azimuth time & slant range
@@ -205,9 +205,9 @@ void backproject(std::complex<float>* out,
     if (not all_converged) {
         std::string errmsg = "rdr2geo/geo2rdr failed to converge for one or "
                              "more targets";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
     }
 }
 
 } // namespace focus
-} // namespace isce
+} // namespace isce3

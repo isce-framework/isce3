@@ -13,17 +13,17 @@
 // pyre
 #include <pyre/journal.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 
-// isce::image
+// isce3::image
 #include "ResampSlc.h"
 #include "Tile.h"
 
-using isce::io::Raster;
+using isce3::io::Raster;
 
 // Alternative generic resamp entry point: use filenames to internally create rasters
-void isce::image::ResampSlc::
+void isce3::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
@@ -47,9 +47,9 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 }
 
 // Generic resamp entry point from externally created rasters
-void isce::image::ResampSlc::
-resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
-       isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
+void isce3::image::ResampSlc::
+resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
+       isce3::io::Raster & rgOffsetRaster, isce3::io::Raster & azOffsetRaster,
        int inputBand, bool flatten, bool isComplex, int rowBuffer,
        int chipSize) {
 
@@ -69,7 +69,7 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
     const int outWidth = rgOffsetRaster.width();
 
     // Initialize resampling methods
-    _prepareInterpMethods(isce::core::SINC_METHOD, chipSize-1);
+    _prepareInterpMethods(isce3::core::SINC_METHOD, chipSize-1);
    
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
@@ -94,7 +94,7 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
         }
 
         // Initialize offsets tiles
-        isce::image::Tile<float> azOffTile, rgOffTile;
+        isce3::image::Tile<float> azOffTile, rgOffTile;
         _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster,
                                azOffTile, rgOffTile, outWidth);
 
@@ -115,12 +115,12 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
 }
 
 // Initialize and read azimuth and range offsets
-void isce::image::ResampSlc::
+void isce3::image::ResampSlc::
 _initializeOffsetTiles(Tile_t & tile,
                        Raster & azOffsetRaster,
                        Raster & rgOffsetRaster,
-                       isce::image::Tile<float> & azOffTile,
-                       isce::image::Tile<float> & rgOffTile,
+                       isce3::image::Tile<float> & azOffTile,
+                       isce3::image::Tile<float> & rgOffTile,
                        int outWidth) {
 
     // Copy size properties and initialize azimuth offset tiles
@@ -147,8 +147,8 @@ _initializeOffsetTiles(Tile_t & tile,
 }
 
 // Initialize tile bounds
-void isce::image::ResampSlc::
-_initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float> & azOffTile,
+void isce3::image::ResampSlc::
+_initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float> & azOffTile,
                 int outLength, int rowBuffer, int chipHalf) {
 
     // Cache geometry values
@@ -230,11 +230,11 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
 }
 
 // Interpolate tile to perform transformation
-void isce::image::ResampSlc::
+void isce3::image::ResampSlc::
 _transformTile(Tile_t & tile,
                Raster & outputSlc,
-               const isce::image::Tile<float> & rgOffTile,
-               const isce::image::Tile<float> & azOffTile,
+               const isce3::image::Tile<float> & rgOffTile,
+               const isce3::image::Tile<float> & azOffTile,
                int inLength, bool flatten,
                int chipSize) {
 
@@ -259,7 +259,7 @@ _transformTile(Tile_t & tile,
 
     // set half chip size
     // Allocate matrix for working sinc chip
-    isce::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
+    isce3::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
 
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
@@ -326,7 +326,7 @@ _transformTile(Tile_t & tile,
 
             // Interpolate chip
             const std::complex<float> cval = _interp->interpolate(
-                isce::core::SINC_HALF + fracRg, isce::core::SINC_HALF + fracAz, chip
+                isce3::core::SINC_HALF + fracRg, isce3::core::SINC_HALF + fracAz, chip
             );
 
             // Add doppler to interpolated value and save

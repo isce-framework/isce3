@@ -6,22 +6,22 @@
 
 #pragma once
 
-// isce::core
+// isce3::core
 #include <isce3/core/EulerAngles.h>
 #include <isce3/core/Orbit.h>
 
-// isce::product
+// isce3::product
 #include <isce3/product/ProcessingInformation.h>
 
 // Declarations
-namespace isce {
+namespace isce3 {
     namespace product {
         class Metadata;
     }
 }
 
 // Declare Metadata class
-class isce::product::Metadata {
+class isce3::product::Metadata {
 
     public:
         /** Default constructor */
@@ -31,22 +31,22 @@ class isce::product::Metadata {
         inline Metadata(const Metadata &);
 
         /** Get read-only reference to attitude */
-        inline const isce::core::EulerAngles & attitude() const { return _attitude; }
+        inline const isce3::core::EulerAngles & attitude() const { return _attitude; }
     
         /** Get reference to attitude */
-        inline isce::core::EulerAngles & attitude() { return _attitude; }
+        inline isce3::core::EulerAngles & attitude() { return _attitude; }
 
         /** Set attitude */
-        inline void attitude(const isce::core::EulerAngles & att) { _attitude = att; }
+        inline void attitude(const isce3::core::EulerAngles & att) { _attitude = att; }
 
         /** Get read-only reference to orbit */
-        inline const isce::core::Orbit & orbit() const { return _orbit; };
+        inline const isce3::core::Orbit & orbit() const { return _orbit; };
 
         /** Get reference to orbit */
-        inline isce::core::Orbit & orbit() { return _orbit; }
+        inline isce3::core::Orbit & orbit() { return _orbit; }
 
         /** Set orbit */
-        inline void orbit(const isce::core::Orbit & orb) { _orbit = orb; };
+        inline void orbit(const isce3::core::Orbit & orb) { _orbit = orb; };
 
         /** Get read-only reference to ProcessingInformation */
         inline const ProcessingInformation & procInfo() const { return _procInfo; }
@@ -56,15 +56,15 @@ class isce::product::Metadata {
         
     private:
         // Attitude
-        isce::core::EulerAngles _attitude;
+        isce3::core::EulerAngles _attitude;
         // Orbit
-        isce::core::Orbit _orbit;
+        isce3::core::Orbit _orbit;
         // ProcessingInformation
-        isce::product::ProcessingInformation _procInfo;
+        isce3::product::ProcessingInformation _procInfo;
 };
 
 // Copy constructor
 /** @param[in] meta Metadata object */
-isce::product::Metadata::
+isce3::product::Metadata::
 Metadata(const Metadata & meta) : _attitude(meta.attitude()), _orbit(meta.orbit()),
                                   _procInfo(meta.procInfo()) {}

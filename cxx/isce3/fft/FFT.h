@@ -3,7 +3,7 @@
 #include "FFTPlan.h"
 #include "FFTUtil.h"
 
-namespace isce { namespace fft {
+namespace isce3 { namespace fft {
 
 /**
  * Create a re-useable 1-D forward FFT plan.

@@ -13,7 +13,7 @@
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
-using isce::cuda::signal::gpuRangeFilter;
+using isce3::cuda::signal::gpuRangeFilter;
 
 template<class T>
 gpuRangeFilter<T>::gpuRangeFilter()
@@ -86,9 +86,9 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     _filter1D = std::complex<T>(0.0,0.0);
 
     std::valarray<double> frequency(nfft);
-    isce::signal::Filter<float> tempFilter;
+    isce3::signal::Filter<float> tempFilter;
     double dt = 1.0/rangeSamplingFrequency;
-    isce::signal::fftfreq(dt, frequency);
+    isce3::signal::fftfreq(dt, frequency);
 
     if (filterType=="boxcar"){
         constructRangeBandpassBoxcar(
@@ -142,9 +142,9 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
 
         //index of frequencies for fL and fH
         int indL;
-        isce::signal::Filter<T>::indexOfFrequency(dt, nfft, fL, indL);
+        isce3::signal::Filter<T>::indexOfFrequency(dt, nfft, fL, indL);
         int indH;
-        isce::signal::Filter<T>::indexOfFrequency(dt, nfft, fH, indH);
+        isce3::signal::Filter<T>::indexOfFrequency(dt, nfft, fH, indH);
         std::cout << "fL: "<< fL << " , fH: " << fH << " indL: " << indL << " , indH: " << indH << std::endl;
         if (fL<0 && fH>=0){
             for (size_t ind = indL; ind < nfft; ++ind){
@@ -227,7 +227,7 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     auto ncols = this->_signal.getColumns();
     auto nrows = this->_signal.getRows();
     std::valarray<double> rangeFrequencies(ncols);
-    isce::signal::fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
+    isce3::signal::fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
 
     // calculate frequency shift
     size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<thrust::complex<T> *>(&d_refSlc), nrows, ncols);

@@ -18,8 +18,8 @@
 
 struct EulerTest : public ::testing::Test {
 
-    typedef isce::core::EulerAngles EulerAngles;
-    typedef isce::core::cartmat_t cartmat_t;
+    typedef isce3::core::EulerAngles EulerAngles;
+    typedef isce3::core::cartmat_t cartmat_t;
 
     double tol;
     cartmat_t R_ypr_ref, R_rpy_ref;
@@ -30,7 +30,7 @@ struct EulerTest : public ::testing::Test {
         EulerTest() {
 
             // Make an array of epoch times
-            std::vector<double> time = isce::core::linspace(0.0, 10.0, 20);
+            std::vector<double> time = isce3::core::linspace(0.0, 10.0, 20);
 
             // Make constant arrays of Euler angles
             std::vector<double> yaw, pitch, roll;

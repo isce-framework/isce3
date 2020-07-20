@@ -3,7 +3,7 @@
 #include <ogr_spatialref.h>
 #include <string>
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 /** Spatial reference system / coordinate reference system */
 class SpatialReference {

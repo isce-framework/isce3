@@ -12,7 +12,7 @@
 #include <array>
 
 // my declarations
-namespace isce {
+namespace isce3 {
     // my version is an array of three integers
     typedef std::array<int, 3> version_t;
 

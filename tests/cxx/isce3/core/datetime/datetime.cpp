@@ -10,12 +10,12 @@
 #include <vector>
 #include <gtest/gtest.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/DateTime.h>
 #include <isce3/core/TimeDelta.h>
 
 TEST(DateTimeTest, StandardConstruction) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
     ASSERT_EQ(dtime.year, 2017);
     ASSERT_EQ(dtime.months, 5);
     ASSERT_EQ(dtime.days, 12);
@@ -26,7 +26,7 @@ TEST(DateTimeTest, StandardConstruction) {
 }
 
 TEST(DateTimeTest, NonStandardConstructionV1) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 62, 30.141592);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 62, 30.141592);
     ASSERT_EQ(dtime.year, 2017);
     ASSERT_EQ(dtime.months, 5);
     ASSERT_EQ(dtime.days, 12);
@@ -37,7 +37,7 @@ TEST(DateTimeTest, NonStandardConstructionV1) {
 }
 
 TEST(DateTimeTest, NonStandardConstructionV2) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 62, 130.141592);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 62, 130.141592);
     ASSERT_EQ(dtime.year, 2017);
     ASSERT_EQ(dtime.months, 5);
     ASSERT_EQ(dtime.days, 12);
@@ -48,7 +48,7 @@ TEST(DateTimeTest, NonStandardConstructionV2) {
 }
 
 TEST(DateTimeTest, FromString) {
-    isce::core::DateTime dtime("2017-05-12T01:12:30.141592");
+    isce3::core::DateTime dtime("2017-05-12T01:12:30.141592");
     ASSERT_EQ(dtime.year, 2017);
     ASSERT_EQ(dtime.months, 5);
     ASSERT_EQ(dtime.days, 12);
@@ -57,7 +57,7 @@ TEST(DateTimeTest, FromString) {
     ASSERT_EQ(dtime.seconds, 30);
     ASSERT_NEAR(dtime.frac, 0.141592, 1.0e-6);
     // Test assignment
-    isce::core::DateTime dtime2;
+    isce3::core::DateTime dtime2;
     dtime2 = "2017-05-12T01:12:30.141592";
     ASSERT_EQ(dtime2.year, 2017);
     ASSERT_EQ(dtime2.months, 5);
@@ -69,12 +69,12 @@ TEST(DateTimeTest, FromString) {
 }
 
 TEST(DateTimeTest, ToString) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
     ASSERT_EQ(dtime.isoformat(), "2017-05-12T01:12:30.141592000");
 }
 
 TEST(DateTimeTest, BasicTimeDelta) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
     dtime += 25.0;
     ASSERT_EQ(dtime.year, 2017);
     ASSERT_EQ(dtime.months, 5);
@@ -86,9 +86,9 @@ TEST(DateTimeTest, BasicTimeDelta) {
 }
 
 TEST(DateTimeTest, TimeDeltaSub) {
-    isce::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
-    isce::core::DateTime dtime2(2017, 5, 13, 2, 12, 33.241592);
-    isce::core::TimeDelta dt = dtime2 - dtime1;
+    isce3::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime2(2017, 5, 13, 2, 12, 33.241592);
+    isce3::core::TimeDelta dt = dtime2 - dtime1;
     ASSERT_EQ(dt.days, 1);
     ASSERT_EQ(dt.hours, 1);
     ASSERT_EQ(dt.minutes, 0);
@@ -98,8 +98,8 @@ TEST(DateTimeTest, TimeDeltaSub) {
 }
 
 TEST(DateTimeTest, TimeDeltaAdd) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
-    isce::core::TimeDelta dt(1, 12, 5.5);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::TimeDelta dt(1, 12, 5.5);
     dtime += dt;
     ASSERT_EQ(dtime.year, 2017);
     ASSERT_EQ(dtime.months, 5);
@@ -111,24 +111,24 @@ TEST(DateTimeTest, TimeDeltaAdd) {
 }
 
 TEST(DateTimeTest, Epoch) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
     ASSERT_NEAR(dtime.secondsSinceEpoch(), 1494551550.141592, 1.0e-6);
     dtime.secondsSinceEpoch(1493626353.141592026);
     ASSERT_EQ(dtime.isoformat(), "2017-05-01T08:12:33.141592026");
 }
 
 TEST(DateTimeTest, TimeDeltaAssign) {
-    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592026);
-    isce::core::TimeDelta dt;
+    isce3::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592026);
+    isce3::core::TimeDelta dt;
     dt = 3.5;
     dtime += dt;
     ASSERT_EQ(dtime.isoformat(), "2017-05-12T01:12:33.641592026");
 }
 
 TEST(DateTimeTest, Comparison) {
-    isce::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
-    isce::core::DateTime dtime2(2017, 5, 12, 1, 12, 30.141592);
-    isce::core::DateTime dtime3(2017, 5, 13, 2, 12, 33.241592);
+    isce3::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime2(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime3(2017, 5, 13, 2, 12, 33.241592);
     ASSERT_TRUE(dtime1 == dtime2);
     ASSERT_TRUE(dtime1 != dtime3);
     ASSERT_TRUE(dtime3 > dtime2);
@@ -137,17 +137,17 @@ TEST(DateTimeTest, Comparison) {
 }
 
 TEST(DateTimeTest, IsClose) {
-    isce::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
-    isce::core::DateTime dtime2 = dtime1 + isce::core::TimeDelta(1e-11);
+    isce3::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
+    isce3::core::DateTime dtime2 = dtime1 + isce3::core::TimeDelta(1e-11);
     ASSERT_TRUE(dtime1.isClose(dtime2));
-    isce::core::TimeDelta errtol(1e-12);
+    isce3::core::TimeDelta errtol(1e-12);
     ASSERT_FALSE(dtime1.isClose(dtime2, errtol));
 }
 
 TEST(DateTimeTest, TimeDeltaComparison) {
-    isce::core::TimeDelta dt1(0.5);
-    isce::core::TimeDelta dt2(0.5);
-    isce::core::TimeDelta dt3(-0.5);
+    isce3::core::TimeDelta dt1(0.5);
+    isce3::core::TimeDelta dt2(0.5);
+    isce3::core::TimeDelta dt3(-0.5);
     ASSERT_TRUE(dt1 == dt2);
     ASSERT_TRUE(dt1 != dt3);
     ASSERT_TRUE(dt3 < dt2);
@@ -157,11 +157,11 @@ TEST(DateTimeTest, TimeDeltaComparison) {
 
 TEST(DateTimeTest, Normalize)
 {
-    isce::core::DateTime t0(1999, 12, 31, 23, 59, 59);
-    isce::core::TimeDelta dt = 1.0;
-    isce::core::DateTime t1 = t0 + dt;
+    isce3::core::DateTime t0(1999, 12, 31, 23, 59, 59);
+    isce3::core::TimeDelta dt = 1.0;
+    isce3::core::DateTime t1 = t0 + dt;
 
-    isce::core::DateTime expected(2000, 1, 1);
+    isce3::core::DateTime expected(2000, 1, 1);
 
     EXPECT_TRUE( t1.isClose(expected) );
 }

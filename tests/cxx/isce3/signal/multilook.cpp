@@ -42,8 +42,8 @@ TEST(Looks, Multilook)
     std::valarray<std::complex<float>> cpxDataLookednoData(width*length);
 
     // Same, but using Eigen datatypes
-    isce::core::EArray2D<float> a_data(length, width);
-    isce::core::EArray2D<std::complex<float>> a_cpxData(length, width);
+    isce3::core::EArray2D<float> a_data(length, width);
+    isce3::core::EArray2D<std::complex<float>> a_cpxData(length, width);
 
     // fill the arrays
     for (size_t i = 0; i< length; ++i){
@@ -58,7 +58,7 @@ TEST(Looks, Multilook)
     }
 
     //instantiate a looks object
-    isce::signal::Looks<float> lksObj;
+    isce3::signal::Looks<float> lksObj;
     lksObj.nrows(length);
     lksObj.ncols(width);
     lksObj.nrowsLooked(lengthLooked);
@@ -69,7 +69,7 @@ TEST(Looks, Multilook)
     // multilook the real data
     lksObj.multilook(data, dataLooked) ;
     const auto a_dataLooked =
-            isce::signal::multilookSummed(a_data, azLooks, rngLooks);
+            isce3::signal::multilookSummed(a_data, azLooks, rngLooks);
 
     // multilook the real data while excluding pixels with zero value.
     // This first creates a boolean mask and then creates a weight, 
@@ -77,17 +77,17 @@ TEST(Looks, Multilook)
     float noData = 0.0;
     lksObj.multilook(data, dataLookednoData, noData);
     const auto a_dataLookednoData =
-            isce::signal::multilookNoData(a_data, azLooks, rngLooks, noData);
+            isce3::signal::multilookNoData(a_data, azLooks, rngLooks, noData);
 
     // multilook the complex data
     lksObj.multilook(cpxData, cpxDataLooked) ;
     const auto a_cpxDataLooked =
-            isce::signal::multilookSummed(a_cpxData, azLooks, rngLooks);
+            isce3::signal::multilookSummed(a_cpxData, azLooks, rngLooks);
 
     // excluding pixels with 1 + 0.0J values (i.e., 1*exp(0.0j))
     std::complex<float>  cpxNoData = std::complex<float> (std::cos(0), std::sin(0));
     lksObj.multilook(cpxData, cpxDataLookednoData, cpxNoData) ;
-    const auto a_cpxDataLookednoData = isce::signal::multilookNoData(
+    const auto a_cpxDataLookednoData = isce3::signal::multilookNoData(
             a_cpxData, azLooks, rngLooks, cpxNoData);
 
     // multilook the power of complex data (sum(abs(cpxData)^p))
@@ -95,11 +95,11 @@ TEST(Looks, Multilook)
     std::valarray<float> ampLooked(widthLooked*lengthLooked);
     lksObj.multilook(cpxData, ampLooked, p) ;
     const auto a_ampLooked =
-            isce::signal::multilookPow(a_cpxData, azLooks, rngLooks, p);
+            isce3::signal::multilookPow(a_cpxData, azLooks, rngLooks, p);
 
     //expected output for the multilooked array
     std::valarray<float> dataLookedExp(widthLooked*lengthLooked);
-    isce::core::EArray2D<float> a_dataLookedExp(lengthLooked, widthLooked);
+    isce3::core::EArray2D<float> a_dataLookedExp(lengthLooked, widthLooked);
     // Given the number of looks in range and azimuth (3x3) 
     // and given data above, the multi-looked array
     // has the following values at the begining of each line

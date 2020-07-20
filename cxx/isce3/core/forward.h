@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce {
+namespace isce3 {
     namespace core {
         // plain classes
         class Attitude;

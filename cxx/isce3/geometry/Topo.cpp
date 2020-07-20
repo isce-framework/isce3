@@ -16,7 +16,7 @@
 #include <valarray>
 #include <vector>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Basis.h>
 #include <isce3/core/Constants.h>
 #include <isce3/core/Pixel.h>
@@ -25,19 +25,19 @@
 
 #include <isce3/product/Product.h>
 
-// isce::geometry
+// isce3::geometry
 #include "DEMInterpolator.h"
 #include "TopoLayers.h"
 
-// pull in some isce::core namespaces
-using isce::core::Basis;
-using isce::core::Mat3;
-using isce::core::Pixel;
-using isce::core::Vec3;
-using isce::io::Raster;
+// pull in some isce3::core namespaces
+using isce3::core::Basis;
+using isce3::core::Mat3;
+using isce3::core::Pixel;
+using isce3::core::Vec3;
+using isce3::io::Raster;
 
-isce::geometry::Topo::
-Topo(const isce::product::Product & product,
+isce3::geometry::Topo::
+Topo(const isce3::product::Product & product,
      char frequency,
      bool nativeDoppler)
 :
@@ -50,8 +50,8 @@ Topo(const isce::product::Product & product,
     }
 
     // Make an ellipsoid manually
-    _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
-                                       isce::core::EarthEccentricitySquared);
+    _ellipsoid = isce3::core::Ellipsoid(isce3::core::EarthSemiMajorAxis,
+                                       isce3::core::EarthEccentricitySquared);
     _lookSide = product.lookSide();
 
     // Adjust block length based in input SLC length
@@ -60,7 +60,7 @@ Topo(const isce::product::Product & product,
 
 // Main topo driver; internally create topo rasters
 template<typename T>
-void isce::geometry::Topo::_topo(T& dem, const std::string& outdir) {
+void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
     { // Topo scope for creating output rasters
         // Initialize a TopoLayers object to handle block data and raster data
         TopoLayers layers;
@@ -91,7 +91,7 @@ void isce::geometry::Topo::_topo(T& dem, const std::string& outdir) {
 }
 
 template<typename T>
-void isce::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
+void isce3::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
                                  Raster& heightRaster, Raster& incRaster,
                                  Raster& hdgRaster, Raster& localIncRaster,
                                  Raster& localPsiRaster, Raster& simRaster,
@@ -110,7 +110,7 @@ void isce::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
 }
 
 template<typename T>
-void isce::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
+void isce3::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
                                  Raster& heightRaster, Raster& incRaster,
                                  Raster& hdgRaster, Raster& localIncRaster,
                                  Raster& localPsiRaster, Raster& simRaster) {
@@ -127,7 +127,7 @@ void isce::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
     topo(dem, layers);
 }
 
-void isce::geometry::Topo::
+void isce3::geometry::Topo::
 topo(Raster & demRaster, TopoLayers & layers)
 {
     // Create reusable pyre::journal channels
@@ -256,7 +256,7 @@ topo(Raster & demRaster, TopoLayers & layers)
          << pyre::journal::newline;
 }
 
-void isce::geometry::Topo::topo(DEMInterpolator& demInterp,
+void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
                                 TopoLayers& layers) {
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.geometry.Topo");
@@ -397,7 +397,7 @@ void isce::geometry::Topo::topo(DEMInterpolator& demInterp,
  * @param[in] demRaster input DEM raster
  * @param[in] outdir  directory to write outputs to
  */
-void isce::geometry::Topo::topo(isce::io::Raster& demRaster,
+void isce3::geometry::Topo::topo(isce3::io::Raster& demRaster,
                                 const std::string& outdir) {
     _topo(demRaster, outdir);
 }
@@ -422,12 +422,12 @@ void isce::geometry::Topo::topo(isce::io::Raster& demRaster,
  * @param[in] simRaster output raster for simulated amplitude image.
  * @param[in] maskRaster output raster for layover/shadow mask.
  */
-void isce::geometry::Topo::topo(
-        isce::io::Raster& demRaster, isce::io::Raster& xRaster,
-        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
-        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
-        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
-        isce::io::Raster& simRaster, isce::io::Raster& maskRaster) {
+void isce3::geometry::Topo::topo(
+        isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
+        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
+        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
+        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
+        isce3::io::Raster& simRaster, isce3::io::Raster& maskRaster) {
     _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
           localIncRaster, localPsiRaster, simRaster, maskRaster);
 }
@@ -451,12 +451,12 @@ void isce::geometry::Topo::topo(
  * at target
  * @param[in] simRaster output raster for simulated amplitude image.
  */
-void isce::geometry::Topo::topo(
-        isce::io::Raster& demRaster, isce::io::Raster& xRaster,
-        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
-        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
-        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
-        isce::io::Raster& simRaster) {
+void isce3::geometry::Topo::topo(
+        isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
+        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
+        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
+        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
+        isce3::io::Raster& simRaster) {
     _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
           localIncRaster, localPsiRaster, simRaster);
 }
@@ -478,7 +478,7 @@ void isce::geometry::Topo::topo(
  * @param[in] demInterp input DEM interpolator
  * @param[in] outdir  directory to write outputs to
  */
-void isce::geometry::Topo::topo(isce::geometry::DEMInterpolator& demInterp,
+void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
                                 const std::string& outdir) {
     _topo(demInterp, outdir);
 }
@@ -503,12 +503,12 @@ void isce::geometry::Topo::topo(isce::geometry::DEMInterpolator& demInterp,
  * @param[in] simRaster output raster for simulated amplitude image.
  * @param[in] maskRaster output raster for layover/shadow mask.
  */
-void isce::geometry::Topo::topo(
-        isce::geometry::DEMInterpolator& demInterp, isce::io::Raster& xRaster,
-        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
-        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
-        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
-        isce::io::Raster& simRaster, isce::io::Raster& maskRaster) {
+void isce3::geometry::Topo::topo(
+        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster& xRaster,
+        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
+        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
+        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
+        isce3::io::Raster& simRaster, isce3::io::Raster& maskRaster) {
     _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
           localIncRaster, localPsiRaster, simRaster, maskRaster);
 }
@@ -532,17 +532,17 @@ void isce::geometry::Topo::topo(
  * at target
  * @param[in] simRaster output raster for simulated amplitude image.
  */
-void isce::geometry::Topo::topo(
-        isce::geometry::DEMInterpolator& demInterp, isce::io::Raster& xRaster,
-        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
-        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
-        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
-        isce::io::Raster& simRaster) {
+void isce3::geometry::Topo::topo(
+        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster& xRaster,
+        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
+        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
+        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
+        isce3::io::Raster& simRaster) {
     _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
           localIncRaster, localPsiRaster, simRaster);
 }
 
-void isce::geometry::Topo::
+void isce3::geometry::Topo::
 _initAzimuthLine(size_t line, double& tline, Vec3& pos, Vec3& vel, Basis& TCNbasis)
 {
     // Get satellite azimuth time
@@ -550,14 +550,14 @@ _initAzimuthLine(size_t line, double& tline, Vec3& pos, Vec3& vel, Basis& TCNbas
 
     // Get state vector
     _orbit.interpolate(&pos, &vel, tline,
-                       isce::core::OrbitInterpBorderMode::FillNaN);
+                       isce3::core::OrbitInterpBorderMode::FillNaN);
 
     // Get geocentric TCN basis using satellite basis
     TCNbasis = Basis(pos, vel);
 }
 
 // Get DEM bounds using first/last azimuth line and slant range bin
-void isce::geometry::Topo::
+void isce3::geometry::Topo::
 computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOffset,
                  size_t blockLength)
 {
@@ -577,7 +577,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     //Construct projection base with DEM's epsg code
     int epsgcode = demRaster.getEPSG();
 
-    isce::core::ProjectionBase * proj = isce::core::createProj(epsgcode);
+    isce3::core::ProjectionBase * proj = isce3::core::createProj(epsgcode);
 
     // Construct vectors of range/azimuth indices traversing the perimeter of the radar frame
 
@@ -662,7 +662,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     }
 
     //Convert margin to meters it not LonLat
-    double margin = (epsgcode == 4326)? _margin : isce::core::decimaldeg2meters(_margin);
+    double margin = (epsgcode == 4326)? _margin : isce3::core::decimaldeg2meters(_margin);
 
     // Account for margins
     minX -= margin;
@@ -676,7 +676,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     demInterp.declare();
 }
 
-void isce::geometry::Topo::
+void isce3::geometry::Topo::
 _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
                      Pixel & pixel, Vec3& pos, Vec3& vel, Basis & TCNbasis,
                      DEMInterpolator & demInterp)
@@ -704,7 +704,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     const Vec3 satToGround = targetXYZ - pos;
 
     // Compute cross-track range
-    if (_lookSide == isce::core::LookSide::Right) {
+    if (_lookSide == isce3::core::LookSide::Right) {
         layers.crossTrack(line, bin, satToGround.dot(TCNbasis.x1()));
     } else {
         layers.crossTrack(line, bin, -satToGround.dot(TCNbasis.x1()));
@@ -743,7 +743,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
     // Calculate psi angle between image plane and local slope
     Vec3 n_imghat = satToGround.cross(vel).normalized();
-    if (_lookSide == isce::core::LookSide::Left) {
+    if (_lookSide == isce3::core::LookSide::Left) {
         n_imghat *= -1.0;
     }
     Vec3 n_img_enu = xyz2enu.dot(n_imghat);
@@ -753,7 +753,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.localPsi(line, bin, std::acos(cospsi) * degrees);
 }
 
-void isce::geometry::Topo::
+void isce3::geometry::Topo::
 setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                  std::vector<Vec3>& satPosition)
 {
@@ -791,19 +791,19 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         }
 
         // Sort ctrack, x, and y by values in ctrack
-        isce::core::insertionSort(ctrack, x, y);
+        isce3::core::insertionSort(ctrack, x, y);
 
         // Create regular grid for cross-track values
         const double cmin = ctrack.min();// - demInterp.maxHeight();
         const double cmax = ctrack.max();// + demInterp.maxHeight();
-        isce::core::linspace<double>(cmin, cmax, ctrackGrid);
+        isce3::core::linspace<double>(cmin, cmax, ctrackGrid);
 
         // Interpolate DEM to regular cross-track grid
         for (int i = 0; i < gridWidth; ++i) {
 
             // Compute nearest ctrack index for current ctrackGrid value
             const double crossTrack = ctrackGrid[i];
-            int k = isce::core::binarySearch(ctrack, crossTrack);
+            int k = isce3::core::binarySearch(ctrack, crossTrack);
             // Adjust edges if necessary
             if (k == (width - 1)) {
                 k = width - 2;
@@ -834,7 +834,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         }
 
         // Now sort cross-track grid in terms of slant range grid
-        isce::core::insertionSort(slantRangeGrid, ctrackGrid);
+        isce3::core::insertionSort(slantRangeGrid, ctrackGrid);
 
         // Traverse from near range to far range on original spacing for shadow detection
         double minIncAngle = layers.inc(line, 0);
@@ -842,7 +842,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double inc = layers.inc(line, i);
             // Test shadow
             if (inc <= minIncAngle) {
-                layers.mask(line, i, isce::core::SHADOW_VALUE);
+                layers.mask(line, i, isce3::core::SHADOW_VALUE);
             } else {
                 minIncAngle = inc;
             }
@@ -854,7 +854,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double inc = layers.inc(line, i);
             // Test shadow
             if (inc >= maxIncAngle) {
-                layers.mask(line, i, isce::core::SHADOW_VALUE);
+                layers.mask(line, i, isce3::core::SHADOW_VALUE);
             } else {
                 maxIncAngle = inc;
             }
@@ -867,7 +867,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double crossTrack = ctrackGrid[i];
             // Test layover
             if (crossTrack <= minCrossTrack) {
-                maskGrid[i] = isce::core::LAYOVER_VALUE;
+                maskGrid[i] = isce3::core::LAYOVER_VALUE;
             } else {
                 minCrossTrack = crossTrack;
             }
@@ -879,7 +879,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double crossTrack = ctrackGrid[i];
             // Test layover
             if (crossTrack >= maxCrossTrack) {
-                maskGrid[i] = isce::core::LAYOVER_VALUE;
+                maskGrid[i] = isce3::core::LAYOVER_VALUE;
             } else {
                 maxCrossTrack = crossTrack;
             }
@@ -889,12 +889,12 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         for (int i = 0; i < gridWidth; ++i) {
             if (maskGrid[i] > 0) {
                 // Find index in original grid spacing
-                int k = isce::core::binarySearch(slantRange, slantRangeGrid[i]);
+                int k = isce3::core::binarySearch(slantRange, slantRangeGrid[i]);
                 if (k < 0 || k >= width) continue;
                 // Update it
                 const short maskval = layers.mask(line, k);
-                if (maskval < isce::core::LAYOVER_VALUE) {
-                    layers.mask(line, k, maskval + isce::core::LAYOVER_VALUE);
+                if (maskval < isce3::core::LAYOVER_VALUE) {
+                    layers.mask(line, k, maskval + isce3::core::LAYOVER_VALUE);
                 }
             }
         }

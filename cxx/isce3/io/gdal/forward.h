@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace io { namespace gdal {
+namespace isce3 { namespace io { namespace gdal {
 
 class Buffer;
 class Dataset;

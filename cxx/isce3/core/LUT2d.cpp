@@ -17,9 +17,9 @@
   * @param[in] dy Y-spacing
   * @param[in] method Interpolation method */
 template <typename T>
-isce::core::LUT2d<T>::
-LUT2d(double xstart, double ystart, double dx, double dy, const isce::core::Matrix<T> & data,
-      isce::core::dataInterpMethod method, bool boundsError) : 
+isce3::core::LUT2d<T>::
+LUT2d(double xstart, double ystart, double dx, double dy, const isce3::core::Matrix<T> & data,
+      isce3::core::dataInterpMethod method, bool boundsError) : 
           _haveData(true), _boundsError(boundsError), _refValue(data(0,0)),
           _xstart(xstart), _ystart(ystart), _dx(dx), _dy(dy), _data(data) {
     _setInterpolator(method);
@@ -31,9 +31,9 @@ LUT2d(double xstart, double ystart, double dx, double dy, const isce::core::Matr
   * @param[in] data Matrix of LUT data
   * @param[in] method Interpolation method */
 template <typename T>
-isce::core::LUT2d<T>::
+isce3::core::LUT2d<T>::
 LUT2d(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord,
-      const isce::core::Matrix<T> & data, isce::core::dataInterpMethod method,
+      const isce3::core::Matrix<T> & data, isce3::core::dataInterpMethod method,
       bool boundsError) :
           _haveData(true), _boundsError(boundsError), _refValue(data(0,0)) {
     // Set the data
@@ -48,9 +48,9 @@ LUT2d(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord
   * @param[in] data Matrix of LUT data */
 template <typename T>
 void
-isce::core::LUT2d<T>::
+isce3::core::LUT2d<T>::
 setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord,
-            const isce::core::Matrix<T> & data) {
+            const isce3::core::Matrix<T> & data) {
 
     // Consistency check for sizes
     if (xcoord.size() != data.width() || ycoord.size() != data.length()) {
@@ -104,7 +104,7 @@ setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & 
   * @param[in] x X-coordinate for evaluation
   * @param[out] value Interpolated value */
 template <typename T>
-T isce::core::LUT2d<T>::
+T isce3::core::LUT2d<T>::
 eval(double y, double x) const {
     /*
      * Evaluate the LUT at the given coordinates.
@@ -131,8 +131,8 @@ eval(double y, double x) const {
             << _xstart << " " << _xstart + _dx*_data.width()
             << pyre::journal::endl;
     }
-    x_idx = isce::core::clamp(x_idx, 0.0, _data.width() - 1.0);
-    y_idx = isce::core::clamp(y_idx, 0.0, _data.length() - 1.0);
+    x_idx = isce3::core::clamp(x_idx, 0.0, _data.width() - 1.0);
+    y_idx = isce3::core::clamp(y_idx, 0.0, _data.length() - 1.0);
 
     // Call interpolator
     value = _interp->interpolate(x_idx, y_idx, _data);
@@ -141,42 +141,42 @@ eval(double y, double x) const {
 
 template <typename T>
 void
-isce::core::LUT2d<T>::
-_setInterpolator(isce::core::dataInterpMethod method)
+isce3::core::LUT2d<T>::
+_setInterpolator(isce3::core::dataInterpMethod method)
 {
     // If biquintic, set the order
-    if (method == isce::core::BIQUINTIC_METHOD) {
-        _interp = isce::core::createInterpolator<T>(isce::core::BIQUINTIC_METHOD, 6);
+    if (method == isce3::core::BIQUINTIC_METHOD) {
+        _interp = isce3::core::createInterpolator<T>(isce3::core::BIQUINTIC_METHOD, 6);
 
     // If sinc, set the window sizes
-    } else if (method == isce::core::SINC_METHOD) {
-        _interp = isce::core::createInterpolator<T>(
-            isce::core::SINC_METHOD,
-            6, isce::core::SINC_LEN, isce::core::SINC_SUB
+    } else if (method == isce3::core::SINC_METHOD) {
+        _interp = isce3::core::createInterpolator<T>(
+            isce3::core::SINC_METHOD,
+            6, isce3::core::SINC_LEN, isce3::core::SINC_SUB
         );
 
     // Otherwise, just pass the interpolation method
     } else {
-        _interp = isce::core::createInterpolator<T>(method);
+        _interp = isce3::core::createInterpolator<T>(method);
     }
 }
 
 template<typename T>
-isce::core::dataInterpMethod isce::core::LUT2d<T>::interpMethod() const
+isce3::core::dataInterpMethod isce3::core::LUT2d<T>::interpMethod() const
 {
     return _interp->method();
 }
 
 template<typename T>
-void isce::core::LUT2d<T>::interpMethod(dataInterpMethod method)
+void isce3::core::LUT2d<T>::interpMethod(dataInterpMethod method)
 {
     _setInterpolator(method);
 }
 
 // Forward declaration of classes
-template class isce::core::LUT2d<double>;
-template class isce::core::LUT2d<float>;
-template class isce::core::LUT2d<std::complex<double>>;
-template class isce::core::LUT2d<std::complex<float>>;
+template class isce3::core::LUT2d<double>;
+template class isce3::core::LUT2d<float>;
+template class isce3::core::LUT2d<std::complex<double>>;
+template class isce3::core::LUT2d<std::complex<float>>;
 
 // end of file

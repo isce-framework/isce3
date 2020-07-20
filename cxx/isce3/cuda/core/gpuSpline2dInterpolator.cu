@@ -13,8 +13,8 @@
 
 #define MAX_ORDER 20
 
-using isce::cuda::core::gpuInterpolator;
-using isce::cuda::core::gpuSpline2dInterpolator;
+using isce3::cuda::core::gpuInterpolator;
+using isce3::cuda::core::gpuSpline2dInterpolator;
 
 
 template <class U>

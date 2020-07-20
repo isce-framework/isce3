@@ -4,7 +4,7 @@
 #include <isce3/except/Error.h>
 #include <isce3/io/gdal/GeoTransform.h>
 
-using isce::io::gdal::GeoTransform;
+using isce3::io::gdal::GeoTransform;
 
 TEST(GeoTransformTest, DefaultConstructor)
 {
@@ -44,7 +44,7 @@ TEST(GeoTransformTest, AffineCoeffsConstructor)
 TEST(GeoTransformTest, InvalidGeoTransform)
 {
     std::array<double, 6> coeffs = { 1., 2., 3., 4., 5., 6. };
-    EXPECT_THROW( { GeoTransform transform(coeffs); }, isce::except::InvalidArgument );
+    EXPECT_THROW( { GeoTransform transform(coeffs); }, isce3::except::InvalidArgument );
 }
 
 TEST(GeoTransformTest, GetCoeffs)

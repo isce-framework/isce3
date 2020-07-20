@@ -31,7 +31,7 @@
 * This is currently a thin wrapper over GDAL's Dataset class with some simpler
 * interfaces for I/O. ISCE is expected to only support North-up and West-left
 * oriented rasters. */
-class isce::io::Raster {
+class isce3::io::Raster {
 
   public:
 
@@ -42,16 +42,16 @@ class isce::io::Raster {
 
       /** Constructor to create a dataset */
       Raster(const std::string& fname, size_t width, size_t length,
-             size_t numBands, GDALDataType dtype = isce::io::defaultGDALDataType,
-             const std::string& driverName = isce::io::defaultGDALDriver);
+             size_t numBands, GDALDataType dtype = isce3::io::defaultGDALDataType,
+             const std::string& driverName = isce3::io::defaultGDALDriver);
 
       /** Constructor to create a 1 band dataset with default Driver */
-      Raster(const std::string& fname, size_t width, size_t length, GDALDataType dtype = isce::io::defaultGDALDataType);
+      Raster(const std::string& fname, size_t width, size_t length, GDALDataType dtype = isce3::io::defaultGDALDataType);
 
-      /** Constructor for a 1 band dataset from isce::core::Matrix<T> */
-      template<typename T> Raster(isce::core::Matrix<T> &matrix);
+      /** Constructor for a 1 band dataset from isce3::core::Matrix<T> */
+      template<typename T> Raster(isce3::core::Matrix<T> &matrix);
 
-      // Constructor for a 1 band dataset from isce::core::Matrix<T>::view_type
+      // Constructor for a 1 band dataset from isce3::core::Matrix<T>::view_type
       template<typename T> Raster(pyre::grid::View<T> &view);
 
       /** Create new raster object like another */
@@ -64,8 +64,8 @@ class isce::io::Raster {
       /** Create a VRT raster dataset with collection of bands from Rasters */
       Raster(const std::string& fname, const std::vector<Raster>& rastVec);
 
-      /** Create legacy raster reference to isce::io::gdal::Raster */
-      Raster(isce::io::gdal::Raster&);
+      /** Create legacy raster reference to isce3::io::gdal::Raster */
+      Raster(isce3::io::gdal::Raster&);
 
       /** Copy constructor*/
       Raster(const Raster&);
@@ -116,7 +116,7 @@ class isce::io::Raster {
       inline void         open(const std::string &fname, GDALAccess access);
 
       /** Add a raster to VRT*/
-      inline void         addRasterToVRT(const isce::io::Raster& rast);
+      inline void         addRasterToVRT(const isce3::io::Raster& rast);
 
       /** Add a GDALRasterBand to VRT */
       inline void         addBandToVRT(GDALRasterBand *inBand);
@@ -157,8 +157,8 @@ class isce::io::Raster {
 
       //2D block read/write for Matrix<T>, optional band index
       /** Read/write block of data from given band to/from Matrix<T> */
-      template<typename T> void getBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
-      template<typename T> void setBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+      template<typename T> void getBlock(isce3::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+      template<typename T> void setBlock(isce3::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
       //2D block read/write for Matrix<T>, optional band index
       /** Read/Write block of data from given band to/from Matrix<T>::view_type */
       template<typename T> void getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir);

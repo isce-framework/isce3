@@ -10,11 +10,11 @@
 #include <cstddef> // size_t
 #include <cstdint> // uint8_t
 
-#include <isce3/io/Raster.h> // isce::io::Raster
+#include <isce3/io/Raster.h> // isce3::io::Raster
 
 #include "PhassUnwrapper.h"
 
-namespace isce::unwrap::phass {
+namespace isce3::unwrap::phass {
 
 class Phass
 {
@@ -32,18 +32,18 @@ public:
 
     /** Unwrap the interferometric wrapped phase. */
     void unwrap(
-        isce::io::Raster & phaseRaster,
-        isce::io::Raster & corrRaster,
-        isce::io::Raster & unwRaster,
-        isce::io::Raster & labelRaster);
+        isce3::io::Raster & phaseRaster,
+        isce3::io::Raster & corrRaster,
+        isce3::io::Raster & unwRaster,
+        isce3::io::Raster & labelRaster);
 
     /** Unwrap the interferometric wrapped phase. */
     void unwrap(
-        isce::io::Raster & phaseRaster,
-        isce::io::Raster & powerRaster,
-        isce::io::Raster & corrRaster,
-        isce::io::Raster & unwRaster,
-        isce::io::Raster & labelRaster);
+        isce3::io::Raster & phaseRaster,
+        isce3::io::Raster & powerRaster,
+        isce3::io::Raster & corrRaster,
+        isce3::io::Raster & unwRaster,
+        isce3::io::Raster & labelRaster);
 
     /** Get correlation threshold increment. */
     double correlationThreshold() const;

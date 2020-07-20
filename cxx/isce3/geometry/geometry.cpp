@@ -28,12 +28,12 @@
 #include "detail/Geo2Rdr.h"
 #include "detail/Rdr2Geo.h"
 
-// pull in useful isce::core namespace
-using namespace isce::core;
-using isce::error::ErrorCode;
-using isce::product::RadarGridParameters;
+// pull in useful isce3::core namespace
+using namespace isce3::core;
+using isce3::error::ErrorCode;
+using isce3::product::RadarGridParameters;
 
-int isce::geometry::
+int isce3::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
         double wvl, LookSide side, double threshold, int maxIter, int extraIter)
@@ -46,7 +46,7 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
     return (status == ErrorCode::Success);
 }
 
-int isce::geometry::
+int isce3::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3& vel,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
         Vec3 & targetLLH, LookSide side, double threshold, int maxIter, int extraIter)
@@ -59,7 +59,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
 }
 
 
-int isce::geometry::
+int isce3::geometry::
 rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
         double range, const DEMInterpolator& dem, Vec3& targetXYZ,
         LookSide side, double threshold, int maxIter, int extraIter)
@@ -73,7 +73,7 @@ rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
     // Construct "doppler factor" with desired angle.
     Pixel pix{range, range * sin(angle), 0};
     Vec3 llh{0,0,0}; // XXX Initialize height guess of 0 m.
-    int converged = isce::geometry::rdr2geo(pix, tcn, radarXYZ, axis, ell, dem,
+    int converged = isce3::geometry::rdr2geo(pix, tcn, radarXYZ, axis, ell, dem,
                                     llh, side, threshold, maxIter, extraIter);
     if (converged)
         ell.lonLatToXyz(llh, targetXYZ);
@@ -82,7 +82,7 @@ rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
 
 
 template <class T>
-double isce::geometry::
+double isce3::geometry::
     _compute_doppler_aztime_diff(Vec3 dr, Vec3 satvel,
                                  T &doppler, double wavelength,
                                  double aztime, double slantRange,
@@ -106,7 +106,7 @@ double isce::geometry::
     return aztime_diff;
 }
 
-namespace isce::geometry {
+namespace isce3::geometry {
 namespace {
 int
 _update_aztime(const Orbit & orbit,
@@ -174,10 +174,10 @@ _update_aztime(const Orbit & orbit,
     return !error;
 }
 } // anonymous namespace
-} // isce::geometry
+} // isce3::geometry
 
 
-int isce::geometry::
+int isce3::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, double & aztime, double & slantRange,
         double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
@@ -239,7 +239,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     return !converged;
 }
 
-int isce::geometry::
+int isce3::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
         double wavelength, LookSide side, double threshold, int maxIter,
@@ -254,7 +254,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 }
 
 // Utility function to compute geographic bounds for a radar grid
-void isce::geometry::
+void isce3::geometry::
 computeDEMBounds(const Orbit & orbit,
                  const Ellipsoid & ellipsoid,
                  const LUT2d<double> & doppler,
@@ -278,7 +278,7 @@ computeDEMBounds(const Orbit & orbit,
     // Initialize journal
     pyre::journal::warning_t warning("isce.geometry.extractDEM");
 
-    isce::core::LookSide lookSide = radarGrid.lookSide();
+    isce3::core::LookSide lookSide = radarGrid.lookSide();
 
     // Skip factors along azimuth and range
     const int askip = std::max((int) ysize / 10, 1);

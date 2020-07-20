@@ -2,7 +2,7 @@
 
 #include <gdal_priv.h>
 
-std::string isce::core::stringFromVRT(const char * filename, int bandNum)
+std::string isce3::core::stringFromVRT(const char * filename, int bandNum)
 {
     // Register GDAL drivers
     GDALAllRegister();

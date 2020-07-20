@@ -9,7 +9,7 @@ from Swath cimport Swath, loadSwath
 
 cdef class pySwath:
     """
-    Cython wrapper for isce::product::Swath.
+    Cython wrapper for isce3::product::Swath.
 
     Args:
         None

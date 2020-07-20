@@ -5,14 +5,14 @@
 
 #include "forward.h"
 
-// isce::core
+// isce3::core
 #include <isce3/core/Metadata.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/LookSide.h>
 #include <isce3/core/TimeDelta.h>
 #include <isce3/except/Error.h>
 
-class isce::product::RadarGridParameters {
+class isce3::product::RadarGridParameters {
 
     public:
         /** Default constructor */
@@ -23,7 +23,7 @@ class isce::product::RadarGridParameters {
          * @param[in] product Input Product
          * @param[in] frequency Frequency designation
          */
-        RadarGridParameters(const isce::product::Product & product,
+        RadarGridParameters(const isce3::product::Product & product,
                             char frequency = 'A');
 
         /**
@@ -31,12 +31,12 @@ class isce::product::RadarGridParameters {
          * @param[in] swath Input swath
          * @param[in] lookSide Indicate left (+1) or right (-1)
          */
-        RadarGridParameters(const isce::product::Swath & swath,
-                            isce::core::LookSide lookSide);
+        RadarGridParameters(const isce3::product::Swath & swath,
+                            isce3::core::LookSide lookSide);
 
-        /** Constructor from an isce::core::Metadata object. */
-        inline RadarGridParameters(const isce::core::Metadata & meta,
-                                   const isce::core::DateTime & refEpoch);
+        /** Constructor from an isce3::core::Metadata object. */
+        inline RadarGridParameters(const isce3::core::Metadata & meta,
+                                   const isce3::core::DateTime & refEpoch);
 
         /** Constructor from individual components and values. */
         inline RadarGridParameters(double sensingStart,
@@ -44,10 +44,10 @@ class isce::product::RadarGridParameters {
                                    double prf,
                                    double startingRange,
                                    double rangePixelSpacing,
-                                   isce::core::LookSide lookSide,
+                                   isce3::core::LookSide lookSide,
                                    size_t length,
                                    size_t width,
-                                   isce::core::DateTime refEpoch);
+                                   isce3::core::DateTime refEpoch);
 
         /** Copy constructor */
         inline RadarGridParameters(const RadarGridParameters & rgparam);
@@ -57,21 +57,21 @@ class isce::product::RadarGridParameters {
         operator=(const RadarGridParameters& rgparam);
 
         /** Get the look direction */
-        inline isce::core::LookSide lookSide() const { return _lookSide; }
+        inline isce3::core::LookSide lookSide() const { return _lookSide; }
 
         /** Set look direction */
-        inline void lookSide(isce::core::LookSide side) { _lookSide = side; }
+        inline void lookSide(isce3::core::LookSide side) { _lookSide = side; }
 
         /** Set look direction from a string */
         inline void lookSide(const std::string &);
 
         /** Get reference epoch DateTime*/
-        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        inline const isce3::core::DateTime & refEpoch() const { return _refEpoch; }
 
         /** Set reference epoch DateTime
          *
          * Other dependent parameters like sensingStart are not modified. Use with caution.*/
-        inline void refEpoch(const isce::core::DateTime &epoch) { _refEpoch = epoch; }
+        inline void refEpoch(const isce3::core::DateTime &epoch) { _refEpoch = epoch; }
 
         /** Get sensing start time in seconds since reference epoch */
         inline double sensingStart() const { return _sensingStart; }
@@ -135,7 +135,7 @@ class isce::product::RadarGridParameters {
         }
 
         /** Get a sensing DateTime for a given line (zero-index row) */
-        inline isce::core::DateTime sensingDateTime(double line) const {
+        inline isce3::core::DateTime sensingDateTime(double line) const {
             return _refEpoch + sensingTime(line);
         }
 
@@ -178,7 +178,7 @@ class isce::product::RadarGridParameters {
                 std::string errstr = "Number of looks must be positive. " +
                                     std::to_string(azlooks) + "Az x" +
                                     std::to_string(rglooks) + "Rg looks requested.";
-                throw isce::except::OutOfRange(ISCE_SRCINFO(), errstr); 
+                throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr); 
             }
 
             //Currently implements the multilooking operation used in ISCE2 
@@ -196,7 +196,7 @@ class isce::product::RadarGridParameters {
     // Protected data members can be accessed by derived classes
     protected:
         /** Left or right looking geometry indicator */
-        isce::core::LookSide _lookSide;
+        isce3::core::LookSide _lookSide;
 
         /** Sensing start time */
         double _sensingStart;
@@ -220,23 +220,23 @@ class isce::product::RadarGridParameters {
         size_t _rwidth;
 
         /** Reference epoch for time tags */
-        isce::core::DateTime _refEpoch;
+        isce3::core::DateTime _refEpoch;
 
         /** Validate parameters of data structure */
         inline void validate() const;
 };
 
-isce::product::RadarGridParameters::RadarGridParameters()
-    : _lookSide(isce::core::LookSide::Left), _sensingStart {0},
+isce3::product::RadarGridParameters::RadarGridParameters()
+    : _lookSide(isce3::core::LookSide::Left), _sensingStart {0},
       _wavelength {0}, _prf {0}, _startingRange {0},
       _rangePixelSpacing {0}, _rlength {0}, _rwidth {0}, _refEpoch {1} {}
 
-// Constructor from an isce::core::Metadata object.
-/** @param[in] meta isce::core::Metadata object
+// Constructor from an isce3::core::Metadata object.
+/** @param[in] meta isce3::core::Metadata object
   * @param[in] refEpoch Reference epoch date */
-isce::product::RadarGridParameters::
-RadarGridParameters(const isce::core::Metadata & meta,
-                    const isce::core::DateTime & refEpoch) :
+isce3::product::RadarGridParameters::
+RadarGridParameters(const isce3::core::Metadata & meta,
+                    const isce3::core::DateTime & refEpoch) :
     _lookSide(meta.lookSide),
     _sensingStart((meta.sensingStart - refEpoch).getTotalSeconds()),
     _wavelength(meta.radarWavelength),
@@ -249,7 +249,7 @@ RadarGridParameters(const isce::core::Metadata & meta,
 
 // Copy constructors
 /** @param[in] rgparam RadarGridParameters object */
-isce::product::RadarGridParameters::
+isce3::product::RadarGridParameters::
 RadarGridParameters(const RadarGridParameters & rgparams) :
     _lookSide(rgparams.lookSide()),
     _sensingStart(rgparams.sensingStart()),
@@ -263,8 +263,8 @@ RadarGridParameters(const RadarGridParameters & rgparams) :
 
 // Assignment operator
 /** @param[in] rgparam RadarGridParameters object */
-isce::product::RadarGridParameters &
-isce::product::RadarGridParameters::
+isce3::product::RadarGridParameters &
+isce3::product::RadarGridParameters::
 operator=(const RadarGridParameters & rgparams) {
     _sensingStart = rgparams.sensingStart();
     _wavelength = rgparams.wavelength();
@@ -280,16 +280,16 @@ operator=(const RadarGridParameters & rgparams) {
 }
 
 // Constructor from individual components and values
-isce::product::RadarGridParameters::
+isce3::product::RadarGridParameters::
 RadarGridParameters(double sensingStart,
                     double wavelength,
                     double prf,
                     double startingRange,
                     double rangePixelSpacing,
-                    isce::core::LookSide lookSide,
+                    isce3::core::LookSide lookSide,
                     size_t length,
                     size_t width,
-                    isce::core::DateTime refEpoch) :
+                    isce3::core::DateTime refEpoch) :
     _lookSide(lookSide),
     _sensingStart(sensingStart),
     _wavelength(wavelength),
@@ -302,7 +302,7 @@ RadarGridParameters(double sensingStart,
 
 // Validation of radar grid parameters
 void
-isce::product::RadarGridParameters::
+isce3::product::RadarGridParameters::
 validate() const
 {
 
@@ -340,14 +340,14 @@ validate() const
 
     if (! errstr.empty())
     {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(), errstr);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
     }
 }
 
 
 /** @param[in] look String representation of look side */
 void
-isce::product::RadarGridParameters::
+isce3::product::RadarGridParameters::
 lookSide(const std::string & inputLook) {
-    _lookSide = isce::core::parseLookSide(inputLook);
+    _lookSide = isce3::core::parseLookSide(inputLook);
 }

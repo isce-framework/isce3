@@ -35,7 +35,7 @@ struct RasterTest : public ::testing::Test {
 // Create GeoTiff one-band dataset (float)
 TEST_F(RasterTest, createGeoTiffFloat) {
   std::remove(latFilename.c_str());
-  isce::io::Raster lat = isce::io::Raster( latFilename, nc, nl, 1, GDT_Float32, "GTiff" );
+  isce3::io::Raster lat = isce3::io::Raster( latFilename, nc, nl, 1, GDT_Float32, "GTiff" );
 
   ASSERT_EQ( exists(latFilename), true);
   ASSERT_EQ( lat.width(),    nc );  // width must be number of columns
@@ -49,7 +49,7 @@ TEST_F(RasterTest, createGeoTiffFloat) {
 // Create VRT one-band dataset (double)
 TEST_F(RasterTest, createVRTDouble_setGetValue) {
   std::remove(lonFilename.c_str());
-  isce::io::Raster lon = isce::io::Raster( lonFilename, nc, nl, 1, GDT_Float64, "VRT" );
+  isce3::io::Raster lon = isce3::io::Raster( lonFilename, nc, nl, 1, GDT_Float64, "VRT" );
   float a;
 
   ASSERT_EQ( exists(lonFilename), true );  // check if exists
@@ -67,7 +67,7 @@ TEST_F(RasterTest, createVRTDouble_setGetValue) {
 
 // GetValue from VRT double dataset
 TEST_F(RasterTest, openVRTRasterReadOnlyMode_getValue) {
-  isce::io::Raster lon = isce::io::Raster( lonFilename );
+  isce3::io::Raster lon = isce3::io::Raster( lonFilename );
   uint a;
 
   //ASSERT_EQ (lon.access(), GA_ReadOnly);  // files are opened in readonly mode by default
@@ -79,8 +79,8 @@ TEST_F(RasterTest, openVRTRasterReadOnlyMode_getValue) {
 
 TEST_F(RasterTest, LegacyRasterReference)
 {
-    isce::io::gdal::Raster raster1(lonFilename);
-    isce::io::Raster raster2(raster1);
+    isce3::io::gdal::Raster raster1(lonFilename);
+    isce3::io::Raster raster2(raster1);
 
     EXPECT_EQ( raster1.length(), raster2.length() );
     EXPECT_EQ( raster1.width(), raster2.width() );
@@ -95,7 +95,7 @@ TEST_F(RasterTest, openVRTGDALReadOnly_getValue) {
         GDALOpenShared(lonFilename.c_str(), GA_ReadOnly)
     );
     // Make an ISCE raster from the dataset
-    isce::io::Raster lon = isce::io::Raster(dset);
+    isce3::io::Raster lon = isce3::io::Raster(dset);
     uint a;
     // Check values
     for (uint i = 0; i < std::min(nl, nc); ++i) {
@@ -107,7 +107,7 @@ TEST_F(RasterTest, openVRTGDALReadOnly_getValue) {
 
 // Update GeoTiff line-wise and check valarray
 TEST_F(RasterTest, updateGeoTiff_getLineValarray) {
-  isce::io::Raster lat = isce::io::Raster( latFilename, GA_Update );
+  isce3::io::Raster lat = isce3::io::Raster( latFilename, GA_Update );
   std::vector<int>      lineIn(nc);
   std::valarray<double> lineOut(nc);
   std::iota (std::begin(lineIn), std::end(lineIn), 0);  // 0, 1, 2, ..., nc
@@ -125,7 +125,7 @@ TEST_F(RasterTest, updateGeoTiff_getLineValarray) {
 // Create a 2-band file with ENVI format
 TEST_F(RasterTest, createTwoBandsENVIRaster) {
   std::remove(incFilename.c_str());
-  isce::io::Raster inc = isce::io::Raster(incFilename, nc, nl, 2, GDT_Int16, "ENVI");
+  isce3::io::Raster inc = isce3::io::Raster(incFilename, nc, nl, 2, GDT_Int16, "ENVI");
 
   ASSERT_EQ( exists(incFilename), true );
 }
@@ -133,7 +133,7 @@ TEST_F(RasterTest, createTwoBandsENVIRaster) {
 
 // Populate first band of ENVI Raster with setBlock (blocks can't overflow image)
 TEST_F(RasterTest, setBlockBandOneENVIRaster) {
-  isce::io::Raster inc = isce::io::Raster( incFilename, GA_Update );
+  isce3::io::Raster inc = isce3::io::Raster( incFilename, GA_Update );
   std::valarray<int> block( nbx*nby );                           // 1d valarray for 2d blocks
   float a;
   uint nXBlocks = floor( (float) inc.width()  / (float) nbx );  // number of blocks along X
@@ -152,7 +152,7 @@ TEST_F(RasterTest, setBlockBandOneENVIRaster) {
 
 // Populate second band of ENVI Raster with setBlock (blocks can't overflow image)
 TEST_F(RasterTest, setGetBlockBandTwoENVIRaster) {
-  isce::io::Raster inc = isce::io::Raster(incFilename, GA_Update);
+  isce3::io::Raster inc = isce3::io::Raster(incFilename, GA_Update);
   std::valarray<int> fullimg( 1, nc*nl );       // ones
   std::valarray<int> block  ( 0, nbx*nby );       // zeros
   std::valarray<int> chunk  ( 9, (nbx+1) * (nby+1));   // nines
@@ -169,13 +169,13 @@ TEST_F(RasterTest, setGetBlockBandTwoENVIRaster) {
 
 // Create VRT multiband from std::vector of Raster objects
 TEST_F(RasterTest, createMultiBandVRT) {
-  isce::io::Raster lat = isce::io::Raster( latFilename );
-  isce::io::Raster lon = isce::io::Raster( lonFilename );
-  isce::io::Raster inc = isce::io::Raster( incFilename );
+  isce3::io::Raster lat = isce3::io::Raster( latFilename );
+  isce3::io::Raster lon = isce3::io::Raster( lonFilename );
+  isce3::io::Raster inc = isce3::io::Raster( incFilename );
 
   std::remove( vrtFilename.c_str() );
   ASSERT_EQ( lat.dataset()->GetRefCount(), 1 );  // one Raster points to lat
-  isce::io::Raster vrt = isce::io::Raster( vrtFilename, {lat, lon, inc} );
+  isce3::io::Raster vrt = isce3::io::Raster( vrtFilename, {lat, lon, inc} );
   ASSERT_EQ( lat.dataset()->GetRefCount(), 2 );  // lat is now shared
 }
 
@@ -183,7 +183,7 @@ TEST_F(RasterTest, createMultiBandVRT) {
 
 // Check number of size and bands in input VRT
 TEST_F(RasterTest, checkSizeNumBandsVRT) {
-  isce::io::Raster vrt = isce::io::Raster( vrtFilename );
+  isce3::io::Raster vrt = isce3::io::Raster( vrtFilename );
   const int refNumBands = 4;
 
   ASSERT_EQ( vrt.width(),  nc);              // number of columns
@@ -195,7 +195,7 @@ TEST_F(RasterTest, checkSizeNumBandsVRT) {
 
 // Check data types in multiband VRT dataset
 TEST_F(RasterTest, checkDataTypeVRT) {
-  isce::io::Raster vrt = isce::io::Raster( vrtFilename );
+  isce3::io::Raster vrt = isce3::io::Raster( vrtFilename );
   const std::vector<int> refDataType = {6, 7, 3};
 
   ASSERT_EQ( vrt.dtype(1), refDataType[0] ); //Float32
@@ -207,7 +207,7 @@ TEST_F(RasterTest, checkDataTypeVRT) {
 
 // Get lines from band 1 and 2 in VRT
 TEST_F(RasterTest, checkGetLineVRT) {
-  isce::io::Raster vrt = isce::io::Raster( vrtFilename );
+  isce3::io::Raster vrt = isce3::io::Raster( vrtFilename );
   std::valarray<double> line( vrt.width() );
   double refSum  = 0.;
 
@@ -228,7 +228,7 @@ TEST_F(RasterTest, checkGetLineVRT) {
 TEST_F(RasterTest, createRasterFromStdVector) {
   std::valarray<uint8_t>  dataLineIn(  1,  nc );             // ones
   std::valarray<float>    dataLineOut( 0., nc );             // zeros
-  isce::io::Raster msk = isce::io::Raster( mskFilename,  // filename
+  isce3::io::Raster msk = isce3::io::Raster( mskFilename,  // filename
                                                dataLineIn,   // line valarray or vector
                                                nl );         // numnber of lines in Raster
     for (uint i=0; i < msk.width(); ++i) {
@@ -241,8 +241,8 @@ TEST_F(RasterTest, createRasterFromStdVector) {
 
 // Add Raster to existing VRT and loop over all pixels in multiband VRT
 TEST_F(RasterTest, addRasterToVRT) {
-  isce::io::Raster vrt = isce::io::Raster( vrtFilename, GA_Update);
-  isce::io::Raster msk = isce::io::Raster( mskFilename );
+  isce3::io::Raster vrt = isce3::io::Raster( vrtFilename, GA_Update);
+  isce3::io::Raster msk = isce3::io::Raster( mskFilename );
   uint refNumBands = 5;
   double val;
 
@@ -264,10 +264,10 @@ TEST_F(RasterTest, pushBack) {
   std::remove(latFilename.c_str());
   std::remove(lonFilename.c_str());
 
-  isce::io::Raster lat = isce::io::Raster( latFilename, nc, nl, 1, GDT_Float32, "GTiff" );
-  isce::io::Raster lon = isce::io::Raster( lonFilename, nc, nl, 1, GDT_Float64, "VRT" );
+  isce3::io::Raster lat = isce3::io::Raster( latFilename, nc, nl, 1, GDT_Float32, "GTiff" );
+  isce3::io::Raster lon = isce3::io::Raster( lonFilename, nc, nl, 1, GDT_Float64, "VRT" );
 
-  std::vector<isce::io::Raster> v;
+  std::vector<isce3::io::Raster> v;
   v.push_back(lat);
   v.push_back(lon);
 }

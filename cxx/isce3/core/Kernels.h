@@ -7,7 +7,7 @@
 
 #include <isce3/math/Bessel.h>
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /** Abstract base class for all kernels.
  *
@@ -152,6 +152,6 @@ private:
     T _scale;
 };
 
-}} // namespace isce::core
+}} // namespace isce3::core
 
 #include "Kernels.icc"

@@ -8,7 +8,7 @@ cimport cython
 
 cdef class pyLooksBase:
     '''
-    Python wrapper for isce::signal::Looks
+    Python wrapper for isce3::signal::Looks
 
     Args:
 

@@ -18,10 +18,10 @@
 
 // Macro wrappers to check vector lengths 
 // (adds calling function and variable name information to the exception)
-#define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
-#define check2dVecLen(v,l,w) isce::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
+#define checkVecLen(v,l) isce3::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
+#define check2dVecLen(v,l,w) isce3::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
     /** Inline function for input checking on vector lengths (primarily to check to see 
       * if 3D vector has the correct number of inputs, but is generalized to any length).

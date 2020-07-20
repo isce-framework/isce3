@@ -8,7 +8,7 @@ from ProcessingInformation cimport ProcessingInformation
 
 cdef class pyProcessingInformation:
     """
-    Cython wrapper for isce::product::ProcessingInformation.
+    Cython wrapper for isce3::product::ProcessingInformation.
 
     Args:
         None

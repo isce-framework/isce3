@@ -26,14 +26,14 @@ class RasterTest : public ::testing::Test {
 
     void SetUp(const std::string &filename) {
         std::remove( filename.c_str());
-        isce::io::Raster inc = isce::io::Raster( filename, nc,
+        isce3::io::Raster inc = isce3::io::Raster( filename, nc,
                                     nl, 1, GDT_Float32, "GTiff");
         std::valarray<int> block( nbx*nby );                           // 1d valarray for
         uint nXBlocks = floor( (float) inc.width()  / (float) nbx );  // number of blocks
         uint nYBlocks = floor( (float) inc.length() / (float) nby );  // number of blocks
 
         //Wrap Matrix around valarray
-        isce::core::Matrix<int> mat( &(block[0]), nby, nbx);
+        isce3::core::Matrix<int> mat( &(block[0]), nby, nbx);
 
         for ( uint y=0; y<nYBlocks; ++y ) {
             for ( uint x=0; x<nXBlocks; ++x ) {
@@ -52,7 +52,7 @@ TEST_F(RasterTest, setBlockMatrix) {
     std::string filename = "matrix_gtiff.tif";
     SetUp(filename);
 
-    isce::io::Raster inc = isce::io::Raster( filename, GA_ReadOnly);
+    isce3::io::Raster inc = isce3::io::Raster( filename, GA_ReadOnly);
     std::valarray<int> block( nbx*nby );                           // 1d valarray for 2d blocks
     float a;
     uint nXBlocks = floor( (float) inc.width()  / (float) nbx );  // number of blocks along X
@@ -74,19 +74,19 @@ TEST_F(RasterTest, setGetBlockMatrix) {
     std::string filename = "matrix_getset.tif";
     SetUp(filename);
 
-    isce::io::Raster inc = isce::io::Raster(filename, GA_Update);
+    isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
     std::valarray<int> fullimg( 1, nc*nl );       // ones
     std::valarray<int> block  ( 0, nbx*nby );       // zeros
     std::valarray<int> chunk  ( 9, (nbx+1) * (nby+1));   // nines
 
     //Wrap full image into matrix
-    isce::core::Matrix<int> fullmat(&(fullimg[0]), nl, nc);
+    isce3::core::Matrix<int> fullmat(&(fullimg[0]), nl, nc);
 
     //Wrap block into Matrix
-    isce::core::Matrix<int> blockmat(&(block[0]), nby, nbx);
+    isce3::core::Matrix<int> blockmat(&(block[0]), nby, nbx);
 
     //Wrap chunk into Matrix
-    isce::core::Matrix<int> chunkmat(&(chunk[0]), nby+1, nbx+1);
+    isce3::core::Matrix<int> chunkmat(&(chunk[0]), nby+1, nbx+1);
 
     ASSERT_EQ( inc.numBands(), 1 );               // inc must have one band
     inc.setBlock( fullmat, 0, 0, 1 );     // write full image
@@ -100,10 +100,10 @@ TEST_F(RasterTest, setGetBlockMatrix) {
 //Test for Matrix behaving like a Raster
 TEST_F(RasterTest, getMatrixRaster) {
   //Wrap block into Matrix
-  isce::core::Matrix<int> blockmat(nby, nbx);
+  isce3::core::Matrix<int> blockmat(nby, nbx);
 
   //Create raster object from matrix
-  isce::io::Raster raster(blockmat);
+  isce3::io::Raster raster(blockmat);
 
   //Fill the matrix
   for(uint ii=0; ii < nby; ii++)
@@ -122,11 +122,11 @@ TEST_F(RasterTest, getMatrixRaster) {
 //Test for Matrix behaving like a Raster
 TEST_F(RasterTest, setMatrixRaster) {
   //Wrap block into Matrix
-  isce::core::Matrix<int> blockmat(nby, nbx);
+  isce3::core::Matrix<int> blockmat(nby, nbx);
   blockmat.fill(1);
 
   //Create raster object from matrix
-  isce::io::Raster raster(blockmat);
+  isce3::io::Raster raster(blockmat);
 
   //Scalar for setting raster
   double a;

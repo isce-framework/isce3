@@ -7,14 +7,14 @@
 
 #include <cmath>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 #include <isce3/core/Poly2d.h>
 
 #include <isce3/image/Tile.h>
 #include <isce3/io/Raster.h>
 
-// isce::cuda::core
+// isce3::cuda::core
 #include <isce3/cuda/core/gpuPoly2d.h>
 #include <isce3/cuda/core/gpuLUT1d.h>
 #include <isce3/cuda/core/gpuInterpolator.h>
@@ -23,10 +23,10 @@
 
 #include <string>
 
-using isce::cuda::core::gpuPoly2d;
-using isce::cuda::core::gpuInterpolator;
-using isce::cuda::core::gpuLUT1d;
-using isce::cuda::core::gpuSinc2dInterpolator;
+using isce3::cuda::core::gpuPoly2d;
+using isce3::cuda::core::gpuInterpolator;
+using isce3::cuda::core::gpuLUT1d;
+using isce3::cuda::core::gpuSinc2dInterpolator;
 
 #define THRD_PER_BLOCK 512// Number of threads per block (should always %32==0)
 
@@ -131,15 +131,15 @@ void transformTile(const thrust::complex<float> *tile,
 
 
 // Interpolate tile to perform transformation
-void isce::cuda::image::
-gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
-               isce::io::Raster & outputSlc,
-               isce::image::Tile<float> & rgOffTile,
-               isce::image::Tile<float> & azOffTile,
-               const isce::core::Poly2d & rgCarrier,
-               const isce::core::Poly2d & azCarrier,
-               const isce::core::LUT1d<double> & dopplerLUT,
-               isce::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
+void isce3::cuda::image::
+gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
+               isce3::io::Raster & outputSlc,
+               isce3::image::Tile<float> & rgOffTile,
+               isce3::image::Tile<float> & azOffTile,
+               const isce3::core::Poly2d & rgCarrier,
+               const isce3::core::Poly2d & azCarrier,
+               const isce3::core::LUT1d<double> & dopplerLUT,
+               isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
                double prf, double wavelength, double refStartingRange,
                double refRangePixelSpacing, double refWavelength, 

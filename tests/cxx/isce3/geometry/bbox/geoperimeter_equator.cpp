@@ -13,7 +13,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/Orbit.h>
@@ -22,25 +22,25 @@
 #include <isce3/core/StateVector.h>
 #include <isce3/core/Projections.h>
 
-// isce::product
+// isce3::product
 #include <isce3/product/RadarGridParameters.h>
 
-// isce::geometry
+// isce3::geometry
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/boundingbox.h>
 
-using isce::core::LookSide;
+using isce3::core::LookSide;
 
 struct PerimeterTest : public ::testing::TestWithParam< std::tuple<LookSide,int,int>> {
 
     //Reference epoch
-    isce::core::DateTime t0;
+    isce3::core::DateTime t0;
 
-    // isce::product objects
-    isce::product::RadarGridParameters grid;
-    // isce::core objects
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::Orbit orbit;
+    // isce3::product objects
+    isce3::product::RadarGridParameters grid;
+    // isce3::core objects
+    isce3::core::Ellipsoid ellipsoid;
+    isce3::core::Orbit orbit;
     double hsat;
 
     // Constructor
@@ -53,7 +53,7 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<LookSide,int,
     void Setup_orbit(double lon0, double omega, int Nvec)
     {
         //WGS84 ellipsoid
-        ellipsoid = isce::core::Ellipsoid(6378137.,.0066943799901);
+        ellipsoid = isce3::core::Ellipsoid(6378137.,.0066943799901);
 
         //Satellite height
         hsat = 700000.0;
@@ -61,12 +61,12 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<LookSide,int,
         //Setup orbit
         orbit.referenceEpoch(t0);
 
-        std::vector<isce::core::StateVector> statevecs(Nvec);
+        std::vector<isce3::core::StateVector> statevecs(Nvec);
         for(int ii=0; ii < Nvec; ii++)
         {
             double deltat = ii * 10.0;
             double lon = lon0 + omega * deltat;
-            isce::core::Vec3 pos, vel;
+            isce3::core::Vec3 pos, vel;
 
             pos[0] = (ellipsoid.a() + hsat) * std::cos(lon);
             pos[1] = (ellipsoid.a() + hsat) * std::sin(lon);
@@ -76,7 +76,7 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<LookSide,int,
             vel[1] = omega * pos[0];
             vel[2] = 0.0;
 
-            isce::core::DateTime epoch = t0 + deltat;
+            isce3::core::DateTime epoch = t0 + deltat;
 
             statevecs[ii].datetime = epoch;
             statevecs[ii].position = pos;
@@ -140,13 +140,13 @@ TEST_P(PerimeterTest, Normal) {
     Setup_grid(azlooks, rglooks,side);
 
     //Setup projection system
-    isce::core::ProjectionBase *proj = isce::core::createProj(4326);
+    isce3::core::ProjectionBase *proj = isce3::core::createProj(4326);
 
     //Number of points per edge - default value
     int nPtsPerEdge = 11;
 
     //Compute perimeter
-    isce::geometry::Perimeter perimeter = isce::geometry::getGeoPerimeter(grid, orbit,
+    isce3::geometry::Perimeter perimeter = isce3::geometry::getGeoPerimeter(grid, orbit,
                                                 proj);
 
     //Check length of perimeter for default edge length 
@@ -211,10 +211,10 @@ TEST_P(PerimeterTest, Normal) {
         double geocentricLat = std::acos(solve(rng));
 
         //Convert geocentric coords to xyz
-        isce::core::cartesian_t xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
+        isce3::core::cartesian_t xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
                                         ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon),
                                         ellipsoid.b() * std::sin(geocentricLat)};
-        isce::core::cartesian_t expLLH;
+        isce3::core::cartesian_t expLLH;
         ellipsoid.xyzToLonLat(xyz, expLLH);
 
         OGRPoint pt;
@@ -258,11 +258,11 @@ TEST_P(PerimeterTest, DateLine) {
     Setup_grid(azlooks, rglooks,side);
 
     //Setup projection system
-    isce::core::ProjectionBase *proj = isce::core::createProj(4326);
+    isce3::core::ProjectionBase *proj = isce3::core::createProj(4326);
 
 
     //Compute perimeter
-    isce::geometry::BoundingBox box= isce::geometry::getGeoBoundingBox(grid, orbit,
+    isce3::geometry::BoundingBox box= isce3::geometry::getGeoBoundingBox(grid, orbit,
                                                 proj);
 
     double lonStart = degrees * (lon0 + omega * grid.sensingStart());

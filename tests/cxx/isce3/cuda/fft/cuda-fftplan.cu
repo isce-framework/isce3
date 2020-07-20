@@ -8,8 +8,8 @@
 
 #include "FFTTestHelper.h"
 
-using isce::cuda::fft::FwdFFTPlan;
-using isce::cuda::fft::InvFFTPlan;
+using isce3::cuda::fft::FwdFFTPlan;
+using isce3::cuda::fft::InvFFTPlan;
 
 TEST(FFTPlanTest, Logical)
 {
@@ -36,7 +36,7 @@ TEST(FFTPlanTest, InvalidPlanConfig)
 
     // invalid FFT size (must be > 0)
     EXPECT_THROW( { FwdFFTPlan<double> plan(out.data().get(), in.data().get(), -n); },
-            isce::cuda::except::CudaError<cufftResult> );
+            isce3::cuda::except::CudaError<cufftResult> );
 }
 
 struct FFTPlanTest : public testing::TestWithParam<int> {};

@@ -21,10 +21,10 @@
 #include "isce3/core/Interpolator.h"
 #include "isce3/cuda/core/gpuInterpolator.h"
 
-using isce::core::Matrix;
-using isce::core::Sinc2dInterpolator;
-using isce::cuda::core::gpuInterpolator;
-using isce::cuda::core::gpuSinc2dInterpolator;
+using isce3::core::Matrix;
+using isce3::core::Sinc2dInterpolator;
+using isce3::cuda::core::gpuInterpolator;
+using isce3::cuda::core::gpuSinc2dInterpolator;
 
 void loadChipData(Matrix<std::complex<float>> &);
 
@@ -74,7 +74,7 @@ struct gpuSinc2dInterpolatorTest : public ::testing::Test {
 
 // Test sinc2d interpolation
 TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
-    isce::core::Matrix<double> indices;
+    isce3::core::Matrix<double> indices;
     constexpr int n_instances = 1024;
     indices.resize(n_instances,2);
     for (int i = 0; i < n_instances; ++i) {
@@ -87,12 +87,12 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
 
     // instantiate GPU and CPU class
     gpuSinc2dInterpolator<thrust::complex<float>> gpuSinc2d(
-                  isce::core::SINC_LEN, isce::core::SINC_SUB);
+                  isce3::core::SINC_LEN, isce3::core::SINC_SUB);
     Sinc2dInterpolator<std::complex<float>> cpuSinc2d(
-                  isce::core::SINC_LEN, isce::core::SINC_SUB);
+                  isce3::core::SINC_LEN, isce3::core::SINC_SUB);
 
     // Perform interpolation
-    isce::core::Matrix<thrust::complex<float>> gpu_chip(chip.length(), chip.width());
+    isce3::core::Matrix<thrust::complex<float>> gpu_chip(chip.length(), chip.width());
     for (int i = 0; i < chip.length(); ++i) {
         for (int j = 0; j < chip.width(); ++j)
             gpu_chip(i,j) = thrust::complex<float>(std::real(chip(i,j)), std::imag(chip(i,j)));

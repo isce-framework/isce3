@@ -14,7 +14,7 @@
 #include "Attitude.h"
 
 /** Quaternion representation of attitude information*/
-class isce::core::Quaternion : public isce::core::Attitude {
+class isce3::core::Quaternion : public isce3::core::Attitude {
 
     public:
         /**Default constructor*/

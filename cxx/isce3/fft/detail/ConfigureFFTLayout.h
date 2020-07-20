@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce { namespace fft { namespace detail {
+namespace isce3 { namespace fft { namespace detail {
 
 void configureFFTLayout(int * n,
                         int * stride,

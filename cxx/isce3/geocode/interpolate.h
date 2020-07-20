@@ -7,7 +7,7 @@
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/Matrix.h>
 
-namespace isce { namespace geocode {
+namespace isce3 { namespace geocode {
 
 /**
  * @param[in] rdrDataBlock a basebanded block of data in radar coordinate
@@ -21,13 +21,13 @@ namespace isce { namespace geocode {
  * @param[in] rangeFirstPixel  range of the first sample
  * @param[in] interp interpolator object
  */
-void interpolate(const isce::core::Matrix<std::complex<float>>& rdrDataBlock,
-                 isce::core::Matrix<std::complex<float>>& geoDataBlock,
+void interpolate(const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
+                 isce3::core::Matrix<std::complex<float>>& geoDataBlock,
                  const std::valarray<double>& radarX,
                  const std::valarray<double>& radarY,
                  const std::valarray<std::complex<double>>& geometricalPhase,
                  const int radarBlockWidth, const int radarBlockLength,
                  const int azimuthFirstLine, const int rangeFirstPixel,
-                 const isce::core::Interpolator<std::complex<float>>* interp);
+                 const isce3::core::Interpolator<std::complex<float>>* interp);
 
-}} // namespace isce::geocode
+}} // namespace isce3::geocode

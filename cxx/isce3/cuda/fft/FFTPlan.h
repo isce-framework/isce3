@@ -4,7 +4,7 @@
 
 #include "detail/FFTPlanBase.h"
 
-namespace isce { namespace cuda { namespace fft {
+namespace isce3 { namespace cuda { namespace fft {
 
 /** RAII wrapper encapsulating cuFFT plan for forward FFT execution */
 template<typename T>

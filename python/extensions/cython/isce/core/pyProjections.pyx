@@ -9,7 +9,7 @@ from Ellipsoid cimport Ellipsoid
 
 cdef class pyProjection:
     '''
-    Python wrapper for isce::core::ProjectionBase
+    Python wrapper for isce3::core::ProjectionBase
 
     Args:
         epsg (int, epsg): EPSG code of projection system. Defaults to 4326.

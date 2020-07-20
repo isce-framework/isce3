@@ -11,13 +11,13 @@
 #include <utility>
 
 namespace py = pybind11;
-using isce::core::Orbit;
+using isce3::core::Orbit;
 
-static py::buffer_info toBuffer(const std::vector<isce::core::Vec3>& buf)
+static py::buffer_info toBuffer(const std::vector<isce3::core::Vec3>& buf)
 {
     const auto format = py::format_descriptor<double>::format();
     const std::vector<ssize_t> shape  { ssize_t(buf.size()), 3 };
-    const std::vector<ssize_t> strides{ sizeof(isce::core::Vec3), sizeof(double) };
+    const std::vector<ssize_t> strides{ sizeof(isce3::core::Vec3), sizeof(double) };
     const bool readonly = true;
 
     return {(void*) buf.data(), sizeof(double), format, 2, shape, strides, readonly};
@@ -39,10 +39,10 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         .def_static("load_from_h5", [](py::object h5py_group) {
 
                 auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
-                isce::io::IGroup group(id);
+                isce3::io::IGroup group(id);
 
                 Orbit orbit;
-                isce::core::loadFromH5(group, orbit);
+                isce3::core::loadFromH5(group, orbit);
 
                 return orbit;
             },
@@ -51,8 +51,8 @@ void addbinding(py::class_<Orbit> & pyOrbit)
 
         .def("save_to_h5", [](const Orbit& self, py::object h5py_group) {
                 auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
-                isce::io::IGroup group(id);
-                isce::core::saveToH5(group, self);
+                isce3::io::IGroup group(id);
+                isce3::core::saveToH5(group, self);
             },
             "Serialize Orbit to h5py.Group object.",
             py::arg("h5py_group"))
@@ -67,7 +67,7 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         .def_property_readonly("end_datetime",   &Orbit::endDateTime)
 
         .def("interpolate", [](const Orbit& self, double t) {
-                isce::core::Vec3 p, v;
+                isce3::core::Vec3 p, v;
                 self.interpolate(&p, &v, t);
                 return std::make_pair(p, v);
             },

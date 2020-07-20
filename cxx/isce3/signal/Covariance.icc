@@ -12,7 +12,7 @@
 #include <isce3/core/Projections.h>
 
 template<class T>
-inline isce::signal::Covariance<T>::~Covariance()
+inline isce3::signal::Covariance<T>::~Covariance()
 {
     if (_interp) {
         delete _interp;
@@ -24,7 +24,7 @@ inline isce::signal::Covariance<T>::~Covariance()
 
 template<class T>
 inline void
-isce::signal::Covariance<T>::geoGrid(double geoGridStartX, double geoGridStartY,
+isce3::signal::Covariance<T>::geoGrid(double geoGridStartX, double geoGridStartY,
                                      double geoGridSpacingX,
                                      double geoGridSpacingY, double geoGridEndX,
                                      double geoGridEndY, int epsgcode)
@@ -38,7 +38,7 @@ isce::signal::Covariance<T>::geoGrid(double geoGridStartX, double geoGridStartY,
 }
 
 template<class T>
-inline void isce::signal::Covariance<T>::geoGrid(
+inline void isce3::signal::Covariance<T>::geoGrid(
         double geoGridStartX, double geoGridStartY, double geoGridSpacingX,
         double geoGridSpacingY, int width, int length, int epsgcode)
 {
@@ -78,18 +78,18 @@ inline void isce::signal::Covariance<T>::geoGrid(
     _epsgOut = epsgcode;
 
     // Initialize the projection
-    _proj = isce::core::createProj(epsgcode);
+    _proj = isce3::core::createProj(epsgcode);
 }
 
 template<class T>
-inline void isce::signal::Covariance<T>::radarGrid(
-        isce::core::LUT2d<double> doppler, isce::core::DateTime refEpoch,
+inline void isce3::signal::Covariance<T>::radarGrid(
+        isce3::core::LUT2d<double> doppler, isce3::core::DateTime refEpoch,
         double azimuthStartTime, double azimuthTimeInterval,
         int radarGridLength, double startingRange, double rangeSpacing,
-        isce::core::LookSide side, double wavelength, int radarGridWidth)
+        isce3::core::LookSide side, double wavelength, int radarGridWidth)
 {
     _doppler = doppler;
-    _radarGrid = isce::product::RadarGridParameters(
+    _radarGrid = isce3::product::RadarGridParameters(
             azimuthStartTime, wavelength, 1.0 / azimuthTimeInterval,
             startingRange, rangeSpacing, side, radarGridLength, radarGridWidth,
             refEpoch);
@@ -97,14 +97,14 @@ inline void isce::signal::Covariance<T>::radarGrid(
 
 template<class T>
 inline void
-isce::signal::Covariance<T>::rangeSamplingFrequency(double rngSamplingFreq)
+isce3::signal::Covariance<T>::rangeSamplingFrequency(double rngSamplingFreq)
 {
     _rangeSamplingFrequency = rngSamplingFreq;
 }
 
 template<class T>
 inline void
-isce::signal::Covariance<T>::interpolator(isce::core::dataInterpMethod method)
+isce3::signal::Covariance<T>::interpolator(isce3::core::dataInterpMethod method)
 {
-    _interp = isce::core::createInterpolator<T>(method);
+    _interp = isce3::core::createInterpolator<T>(method);
 }

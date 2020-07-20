@@ -10,7 +10,7 @@
 #include <isce3/core/Ellipsoid.h>
 #include "gtest/gtest.h"
 
-using isce::core::Ellipsoid;
+using isce3::core::Ellipsoid;
 using std::endl;
 
 //Some commonly used values
@@ -46,8 +46,8 @@ public:
     }
 };
 
-using isce::core::Ellipsoid;
-using isce::core::Vec3;
+using isce3::core::Ellipsoid;
+using isce3::core::Vec3;
 
 __global__ void lonLatToXyz_g(Ellipsoid e, const Vec3 llh, Vec3* xyz) {
     *xyz = e.lonLatToXyz(llh);
@@ -56,13 +56,13 @@ __global__ void xyzToLonLat_g(Ellipsoid e, const Vec3 xyz, Vec3* llh) {
     *llh = e.xyzToLonLat(xyz);
 }
 
-void lonLatToXyz_h(isce::core::Ellipsoid e, const Vec3& llh, Vec3& xyz) {
+void lonLatToXyz_h(isce3::core::Ellipsoid e, const Vec3& llh, Vec3& xyz) {
     CudaUniquePtr<Vec3> gpu_xyz;
     lonLatToXyz_g<<<1, 1>>>(e, llh, gpu_xyz.get());
     xyz = *gpu_xyz;
 }
 
-void xyzToLonLat_h(isce::core::Ellipsoid e, const Vec3& xyz, Vec3& llh) {
+void xyzToLonLat_h(isce3::core::Ellipsoid e, const Vec3& xyz, Vec3& llh) {
     CudaUniquePtr<Vec3> gpu_llh;
     xyzToLonLat_g<<<1, 1>>>(e, xyz, gpu_llh.get());
     llh = *gpu_llh;

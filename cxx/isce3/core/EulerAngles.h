@@ -14,7 +14,7 @@
 /** Data structure for Euler Angle representation of attitude information
  *
  * All angles are stored and returned in radians*/
-class isce::core::EulerAngles : public isce::core::Attitude {
+class isce3::core::EulerAngles : public isce3::core::Attitude {
 
     public:
         /** Default constructor*/
@@ -81,9 +81,9 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         static cartesian_t rotmat2ypr(const cartmat_t &);
 
         /** Get reference epoch */
-        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        inline const isce3::core::DateTime & refEpoch() const { return _refEpoch; }
         /** Set reference epoch */
-        inline void refEpoch(const isce::core::DateTime & epoch) { _refEpoch = epoch; }
+        inline void refEpoch(const isce3::core::DateTime & epoch) { _refEpoch = epoch; }
 
         /** Return number of epochs */
         inline size_t nVectors() const { return _yaw.size(); }
@@ -97,5 +97,5 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         std::vector<double> _roll;
 
         // Reference epoch
-        isce::core::DateTime _refEpoch;
+        isce3::core::DateTime _refEpoch;
 };

@@ -5,7 +5,7 @@
 #include <isce3/except/Error.h>
 #include <isce3/math/Sinc.h>
 
-namespace isce { namespace core {
+namespace isce3 { namespace core {
 
 /*
  * Bartlett
@@ -29,7 +29,7 @@ T BartlettKernel<T>::operator()(double t) const
 template<typename T>
 T _sampling_window(T t, T halfwidth, T bandwidth)
 {
-    using isce::except::RuntimeError;
+    using isce3::except::RuntimeError;
     if (!((0.0 < bandwidth) && (bandwidth < 1.0))) {
         throw RuntimeError(ISCE_SRCINFO(), "Require 0 < bandwidth < 1");
     }
@@ -47,7 +47,7 @@ T _sampling_window(T t, T halfwidth, T bandwidth)
 template<typename T>
 T KnabKernel<T>::operator()(double t) const
 {
-    auto st = isce::math::sinc<T>(t);
+    auto st = isce3::math::sinc<T>(t);
     return _sampling_window(t, this->_halfwidth, this->_bandwidth) * st;
 }
 
@@ -61,11 +61,11 @@ NFFTKernel<T>::NFFTKernel(int m, int n, int fft_size)
     : Kernel<T>(2 * m + 1), _m(m), _n(n), _fft_size(fft_size)
 {
     if ((m < 1) || (n < 1) || (fft_size < 1)) {
-        throw isce::except::LengthError(ISCE_SRCINFO(),
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
                                         "NFFT parameters must be positive.");
     }
     _b = M_PI * (2.0 - 1.0 * n / fft_size);
-    _scale = 1.0 / (M_PI * isce::math::bessel_i0(_m * _b));
+    _scale = 1.0 / (M_PI * isce3::math::bessel_i0(_m * _b));
 }
 
 // call
@@ -100,7 +100,7 @@ TabulatedKernel<T>::TabulatedKernel(const Kernel<TI>& kernel, int n)
 {
     // Need at least two points for linear interpolation.
     if (n < 2) {
-        throw isce::except::LengthError(ISCE_SRCINFO(),
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
                                         "Require table size >= 2.");
     }
     // Need i+1 < n so linear interp doesn't run off of table.
@@ -141,7 +141,7 @@ ChebyKernel<T>::ChebyKernel(const Kernel<Tin>& kernel, int n)
     : Kernel<T>(kernel.width())
 {
     if (n < 1) {
-        throw isce::except::LengthError(ISCE_SRCINFO(),
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
                                         "Need at least one coefficient.");
     }
     // Fit a kernel with DCT of fn at Chebyshev zeros.
@@ -156,7 +156,7 @@ ChebyKernel<T>::ChebyKernel(const Kernel<Tin>& kernel, int n)
         fx[i] = static_cast<T>(kernel(x));
     }
     // FFTW provides DCT with plan_r2r(REDFT10) but this isn't exposed in
-    // isce::core::signal.  Typically we're only fitting a few coefficients
+    // isce3::core::signal.  Typically we're only fitting a few coefficients
     // anyway so just implement O(n^2) algorithm.
     _coeffs.resize(n);
     for (int i = 0; i < n; ++i) {
@@ -192,4 +192,4 @@ T ChebyKernel<T>::operator()(double x) const
     return _coeffs[0] + q * bk1 - bk2;
 }
 
-}} // namespace isce::core
+}} // namespace isce3::core

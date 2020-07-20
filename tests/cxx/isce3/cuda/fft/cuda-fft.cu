@@ -15,8 +15,8 @@ TEST(FFTTest, InvalidAxis)
     thrust::device_vector<thrust::complex<double>> in(batch * n), out(batch * n);
 
     // axis out-of-range for 2-D data
-    EXPECT_THROW( { isce::cuda::fft::fft1d(out.data().get(), in.data().get(), {n, batch}, 3); },
-            isce::except::OutOfRange );
+    EXPECT_THROW( { isce3::cuda::fft::fft1d(out.data().get(), in.data().get(), {n, batch}, 3); },
+            isce3::except::OutOfRange );
 }
 
 struct FFTTest : public testing::TestWithParam<int> {};
@@ -32,7 +32,7 @@ TEST_P(FFTTest, FFT1D)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n);
 
-    isce::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), n);
+    isce3::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), n);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -52,7 +52,7 @@ TEST_P(FFTTest, RealFFT1D)
     thrust::device_vector<double> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n/2 + 1);
 
-    isce::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), n);
+    isce3::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), n);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -72,7 +72,7 @@ TEST_P(FFTTest, FFTAxis0)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n * batch);
 
-    isce::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), {n, batch}, 0);
+    isce3::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), {n, batch}, 0);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -92,7 +92,7 @@ TEST_P(FFTTest, FFTAxis1)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(batch * n);
 
-    isce::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), {batch, n}, 1);
+    isce3::cuda::fft::fft1d(d_out.data().get(), d_in.data().get(), {batch, n}, 1);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -111,7 +111,7 @@ TEST_P(FFTTest, FFT2D)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n * n);
 
-    isce::cuda::fft::fft2d(d_out.data().get(), d_in.data().get(), {n, n});
+    isce3::cuda::fft::fft2d(d_out.data().get(), d_in.data().get(), {n, n});
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -131,7 +131,7 @@ TEST_P(FFTTest, RealFFT2D)
     thrust::device_vector<double> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n * n);
 
-    isce::cuda::fft::fft2d(d_out.data().get(), d_in.data().get(), {n, n});
+    isce3::cuda::fft::fft2d(d_out.data().get(), d_in.data().get(), {n, n});
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -150,7 +150,7 @@ TEST_P(FFTTest, InverseFFT1D)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n);
 
-    isce::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), n);
+    isce3::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), n);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -170,7 +170,7 @@ TEST_P(FFTTest, HermitianInverseFFT1D)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<double> d_out(n);
 
-    isce::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), n);
+    isce3::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), n);
 
     std::vector<double> out = copyToHost(d_out);
 
@@ -190,7 +190,7 @@ TEST_P(FFTTest, InverseFFTAxis0)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n * batch);
 
-    isce::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), {n, batch}, 0);
+    isce3::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), {n, batch}, 0);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -210,7 +210,7 @@ TEST_P(FFTTest, InverseFFTAxis1)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(batch * n);
 
-    isce::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), {batch, n}, 1);
+    isce3::cuda::fft::ifft1d(d_out.data().get(), d_in.data().get(), {batch, n}, 1);
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -229,7 +229,7 @@ TEST_P(FFTTest, InverseFFT2D)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<thrust::complex<double>> d_out(n * n);
 
-    isce::cuda::fft::ifft2d(d_out.data().get(), d_in.data().get(), {n, n});
+    isce3::cuda::fft::ifft2d(d_out.data().get(), d_in.data().get(), {n, n});
 
     std::vector<thrust::complex<double>> out = copyToHost(d_out);
 
@@ -249,7 +249,7 @@ TEST_P(FFTTest, HermitianInverseFFT2D)
     thrust::device_vector<thrust::complex<double>> d_in = copyToDevice(in);
     thrust::device_vector<double> d_out(n * n);
 
-    isce::cuda::fft::ifft2d(d_out.data().get(), d_in.data().get(), {n, n});
+    isce3::cuda::fft::ifft2d(d_out.data().get(), d_in.data().get(), {n, n});
 
     std::vector<double> out = copyToHost(d_out);
 

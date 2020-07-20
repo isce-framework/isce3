@@ -17,7 +17,7 @@ from IH5 cimport hid_t, IGroup
 
 cdef class pyEulerAngles:
     '''
-    Python wrapper for isce::core::EulerAngles
+    Python wrapper for isce3::core::EulerAngles
 
     Args:
         yaw (float): Yaw angle in radians

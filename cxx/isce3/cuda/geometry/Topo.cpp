@@ -15,15 +15,15 @@
 #include <isce3/geometry/TopoLayers.h>
 
 // pull in some isce namespaces
-using isce::core::Ellipsoid;
-using isce::core::Orbit;
-using isce::core::OrbitInterpBorderMode;
-using isce::core::LUT1d;
-using isce::core::cartesian_t;
-using isce::io::Raster;
-using isce::product::RadarGridParameters;
-using isce::geometry::DEMInterpolator;
-using isce::geometry::TopoLayers;
+using isce3::core::Ellipsoid;
+using isce3::core::Orbit;
+using isce3::core::OrbitInterpBorderMode;
+using isce3::core::LUT1d;
+using isce3::core::cartesian_t;
+using isce3::io::Raster;
+using isce3::product::RadarGridParameters;
+using isce3::geometry::DEMInterpolator;
+using isce3::geometry::TopoLayers;
 
 // Main topo driver; internally create topo rasters
 /** @param[in] demRaster input DEM raster
@@ -41,7 +41,7 @@ using isce::geometry::TopoLayers;
  * <li> simamp.rdr - Simulated amplitude image.
  * <li> mask.rdr - Layover and shadow image.
  * </ul>*/
-void isce::cuda::geometry::Topo::
+void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster,
      const std::string & outdir) {
 
@@ -96,7 +96,7 @@ topo(Raster & demRaster,
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
   * @param[in] simRaster output raster for simulated amplitude image.
   * @param[in] maskRaster output raster for layover/shadow mask. */
-void isce::cuda::geometry::Topo::
+void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
      Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
      Raster & simRaster, Raster & maskRaster) {
@@ -128,7 +128,7 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
   * @param[in] simRaster output raster for simulated amplitude image.
   * @param[in] maskRaster output raster for layover/shadow mask. */
-void isce::cuda::geometry::Topo::
+void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
      Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
      Raster & simRaster) {
@@ -149,14 +149,14 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
 /** @param[in] demRaster input DEM raster
   * @param[in] layers TopoLayers object for storing and writing results
   */
-void isce::cuda::geometry::Topo::
+void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster, TopoLayers & layers) {
 
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.cuda.geometry.Topo");
     pyre::journal::info_t info("isce.cuda.geometry.Topo");
 
-    // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
+    // Cache ISCE objects (use public interface of parent isce3::geometry::Topo class)
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
     const LUT1d<double> doppler(this->doppler());
@@ -217,7 +217,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
         layers.setBlockSize(blockLength, radarGrid.width());
 
         // Run Topo on the GPU for this block
-        isce::cuda::geometry::runGPUTopo(
+        isce3::cuda::geometry::runGPUTopo(
             ellipsoid, orbit, doppler, demInterp, layers, lineStart, this->lookSide(),
             this->epsgOut(), radarGrid.sensingStart(),
             radarGrid.wavelength(), radarGrid.prf(), radarGrid.startingRange(),
@@ -248,8 +248,8 @@ topo(Raster & demRaster, TopoLayers & layers) {
 }
 
 // Compute number of lines per block dynamically from GPU memory
-void isce::cuda::geometry::Topo::
-computeLinesPerBlock(isce::io::Raster & demRaster, TopoLayers & layers) {
+void isce3::cuda::geometry::Topo::
+computeLinesPerBlock(isce3::io::Raster & demRaster, TopoLayers & layers) {
 
     // Compute GPU memory
     const size_t nGPUBytes = getDeviceMem();
@@ -281,7 +281,7 @@ computeLinesPerBlock(isce::io::Raster & demRaster, TopoLayers & layers) {
 }
 
 // Compute layover and shadow masks
-void isce::cuda::geometry::Topo::
+void isce3::cuda::geometry::Topo::
 _setLayoverShadowWithOrbit(const Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,

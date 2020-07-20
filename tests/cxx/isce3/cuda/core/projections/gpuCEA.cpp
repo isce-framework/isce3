@@ -3,7 +3,7 @@
 
 #include "projtest.h"
 
-isce::cuda::core::CEA testproj;
+isce3::cuda::core::CEA testproj;
 
 struct CEATest : public ::testing::Test {
     virtual void SetUp() {

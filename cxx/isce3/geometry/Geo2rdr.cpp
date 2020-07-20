@@ -18,14 +18,14 @@
 
 #include "geometry.h"
 
-// pull in some isce::core namespaces
-using isce::io::Raster;
-using isce::core::LUT1d;
-using isce::core::Vec3;
+// pull in some isce3::core namespaces
+using isce3::io::Raster;
+using isce3::core::LUT1d;
+using isce3::core::Vec3;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
-void isce::geometry::Geo2rdr::
-geo2rdr(isce::io::Raster & topoRaster,
+void isce3::geometry::Geo2rdr::
+geo2rdr(isce3::io::Raster & topoRaster,
         const std::string & outdir,
         double azshift, double rgshift)
 {
@@ -44,10 +44,10 @@ geo2rdr(isce::io::Raster & topoRaster,
 }
 
 // Run geo2rdr with externally created offset rasters
-void isce::geometry::Geo2rdr::
-geo2rdr(isce::io::Raster & topoRaster,
-        isce::io::Raster & rgoffRaster,
-        isce::io::Raster & azoffRaster,
+void isce3::geometry::Geo2rdr::
+geo2rdr(isce3::io::Raster & topoRaster,
+        isce3::io::Raster & rgoffRaster,
+        isce3::io::Raster & azoffRaster,
         double azshift, double rgshift)
 {
     // Create reusable pyre::journal channels
@@ -59,7 +59,7 @@ geo2rdr(isce::io::Raster & topoRaster,
     const size_t demLength = topoRaster.length();
 
     // Initialize projection for topo results
-    _projTopo = isce::core::createProj(topoRaster.getEPSG());
+    _projTopo = isce3::core::createProj(topoRaster.getEPSG());
 
     // Cache sensing start
     double t0 = _radarGrid.sensingStart();
@@ -146,7 +146,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 
                 // Perform geo->rdr iterations
                 double aztime, slantRange;
-                int geostat = isce::geometry::geo2rdr(
+                int geostat = isce3::geometry::geo2rdr(
                     llh, _ellipsoid, _orbit, _doppler,  aztime, slantRange,
                     _radarGrid.wavelength(), _radarGrid.lookSide(),
                     _threshold, _numiter, 1.0e-8
@@ -183,7 +183,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 }
 
 // Print extents and image sizes
-void isce::geometry::Geo2rdr::
+void isce3::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
               double r0, double rngend, double dmrg, size_t demWidth, size_t demLength)
 {
@@ -201,7 +201,7 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 }
 
 // Check we can interpolate orbit to middle of DEM
-void isce::geometry::Geo2rdr::
+void isce3::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime)
 {
     Vec3 pos, vel;

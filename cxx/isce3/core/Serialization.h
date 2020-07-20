@@ -6,7 +6,7 @@
 
 /** \file core/Serialization.h
  *
- * Serialization functions for isce::core objects. */
+ * Serialization functions for isce3::core objects. */
 
 #pragma once
 
@@ -22,7 +22,7 @@
 // pyre
 #include <pyre/journal.h>
 
-// isce::core
+// isce3::core
 #include <isce3/core/DateTime.h>
 #include <isce3/core/EulerAngles.h>
 #include <isce3/core/Ellipsoid.h>
@@ -35,16 +35,16 @@
 #include <isce3/core/StateVector.h>
 #include <isce3/core/TimeDelta.h>
 
-// isce::io
+// isce3::io
 #include <isce3/io/IH5.h>
 #include <isce3/io/Serialization.h>
 
 //! The isce namespace
-namespace isce {
-//! The isce::core namespace
+namespace isce3 {
+//! The isce3::core namespace
 namespace core {
 
-// Archiving any isce::core object by pointer
+// Archiving any isce3::core object by pointer
 template <typename T>
 inline void load_archive(std::string metadata, char * objectTag, T * object)
 {
@@ -54,7 +54,7 @@ inline void load_archive(std::string metadata, char * objectTag, T * object)
     archive(cereal::make_nvp(objectTag, (*object)));
 }
 
-// Archiving any isce::core object by reference
+// Archiving any isce3::core object by reference
 template <typename T>
 inline void load_archive_reference(std::string metadata, char * objectTag, T & object)
 {
@@ -88,11 +88,11 @@ inline void load(Archive & archive, Ellipsoid & ellps)
  * @param[in] group         HDF5 group object.
  * @param[in] ellps         Ellipsoid object to be configured.
  */
-inline void loadFromH5(isce::io::IGroup & group, Ellipsoid & ellps)
+inline void loadFromH5(isce3::io::IGroup & group, Ellipsoid & ellps)
 {
     // Read data
     std::vector<double> ellpsData;
-    isce::io::loadFromH5(group, "ellipsoid", ellpsData);
+    isce3::io::loadFromH5(group, "ellipsoid", ellpsData);
     // Set ellipsoid properties
     ellps.a(ellpsData[0]);
     ellps.e2(ellpsData[1]);
@@ -126,12 +126,12 @@ inline void load(Archive & archive, Orbit & orbit)
  * @param[in] group         HDF5 group object.
  * @param[in] orbit         Orbit object to be configured.
  */
-inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
+inline void loadFromH5(isce3::io::IGroup & group, Orbit & orbit)
 {
     // open datasets
-    isce::io::IDataSet time_ds = group.openDataSet("time");
-    isce::io::IDataSet pos_ds = group.openDataSet("position");
-    isce::io::IDataSet vel_ds = group.openDataSet("velocity");
+    isce3::io::IDataSet time_ds = group.openDataSet("time");
+    isce3::io::IDataSet pos_ds = group.openDataSet("position");
+    isce3::io::IDataSet vel_ds = group.openDataSet("velocity");
 
     // get dataset dimensions
     std::vector<int> time_dims = time_ds.getDimensions();
@@ -159,7 +159,7 @@ inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
     vel_ds.read(vel);
 
     // get reference epoch
-    DateTime reference_epoch = isce::io::getRefEpoch(group, "time");
+    DateTime reference_epoch = isce3::io::getRefEpoch(group, "time");
 
     // convert to state vectors
     std::vector<StateVector> statevecs(size);
@@ -175,8 +175,8 @@ inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
 
     // get interp method
     std::string interp_method = "Hermite";
-    if (isce::io::exists(group, "interpMethod")) {
-        isce::io::loadFromH5(group, "interpMethod", interp_method);
+    if (isce3::io::exists(group, "interpMethod")) {
+        isce3::io::loadFromH5(group, "interpMethod", interp_method);
     }
 
     if (interp_method == "Hermite") {
@@ -196,7 +196,7 @@ inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
  * @param[in] group         HDF5 group object.
  * @param[in] orbit         Orbit object to be saved.
  */
-inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit)
+inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit)
 {
     // convert times to vector, get flattened position, velocity
     std::vector<double> time(orbit.size());
@@ -232,11 +232,11 @@ inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit)
     }
 
     // serialize
-    isce::io::saveToH5(group, "time", time);
-    isce::io::setRefEpoch(group, "time", orbit.referenceEpoch());
-    isce::io::saveToH5(group, "position", pos, dims, "meters");
-    isce::io::saveToH5(group, "velocity", vel, dims, "meters per second");
-    isce::io::saveToH5(group, "interpMethod", interp_method);
+    isce3::io::saveToH5(group, "time", time);
+    isce3::io::setRefEpoch(group, "time", orbit.referenceEpoch());
+    isce3::io::saveToH5(group, "position", pos, dims, "meters");
+    isce3::io::saveToH5(group, "velocity", vel, dims, "meters per second");
+    isce3::io::saveToH5(group, "interpMethod", interp_method);
 }
 
 // ------------------------------------------------------------------------
@@ -249,20 +249,20 @@ inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit)
  * @param[in] group         HDF5 group object.
  * @param[in] euler         EulerAngles object to be configured.
  */
-inline void loadFromH5(isce::io::IGroup & group, EulerAngles & euler)
+inline void loadFromH5(isce3::io::IGroup & group, EulerAngles & euler)
 {
     // Create temporary data
     std::vector<double> time, angles, yaw, pitch, roll;
-    isce::core::DateTime refEpoch;
+    isce3::core::DateTime refEpoch;
 
     // Load angles
-    isce::io::loadFromH5(group, "eulerAngles", angles);
+    isce3::io::loadFromH5(group, "eulerAngles", angles);
 
     // Load time
-    isce::io::loadFromH5(group, "time", time);
+    isce3::io::loadFromH5(group, "time", time);
 
     // Get the reference epoch
-    refEpoch = isce::io::getRefEpoch(group, "time");
+    refEpoch = isce3::io::getRefEpoch(group, "time");
 
     // Unpack the angles
     const double rad = M_PI / 180.0;
@@ -286,7 +286,7 @@ inline void loadFromH5(isce::io::IGroup & group, EulerAngles & euler)
  * @param[in] group         HDF5 group object.
  * @param[in] euler         EulerAngles object to be save.
  */
-inline void saveToH5(isce::io::IGroup & group, const EulerAngles & euler)
+inline void saveToH5(isce3::io::IGroup & group, const EulerAngles & euler)
 {
     // Create vector to store all data (convert angles to degrees)
     const double deg = 180.0 / M_PI;
@@ -299,30 +299,30 @@ inline void saveToH5(isce::io::IGroup & group, const EulerAngles & euler)
 
     // Save angles
     std::array<size_t, 2> dims = {euler.nVectors(), 3};
-    isce::io::saveToH5(group, "eulerAngles", angles, dims, "degrees");
+    isce3::io::saveToH5(group, "eulerAngles", angles, dims, "degrees");
 
     // Save time and reference epoch attribute
-    isce::io::saveToH5(group, "time", euler.time());
-    isce::io::setRefEpoch(group, "time", euler.refEpoch());
+    isce3::io::saveToH5(group, "time", euler.time());
+    isce3::io::setRefEpoch(group, "time", euler.refEpoch());
 }
 
 // ------------------------------------------------------------------------
 // Serialization for Quaternion
 // ------------------------------------------------------------------------
 
-inline void loadFromH5(isce::io::IGroup & group, Quaternion & qs)
+inline void loadFromH5(isce3::io::IGroup & group, Quaternion & qs)
 {
     std::vector<double> time, qvec;
-    isce::io::loadFromH5(group, "time", time);
-    isce::io::loadFromH5(group, "quaternions", qvec);
+    isce3::io::loadFromH5(group, "time", time);
+    isce3::io::loadFromH5(group, "quaternions", qvec);
     qs.data(time, qvec);
 }
 
-inline void saveToH5(isce::io::IGroup & group, const Quaternion & qs)
+inline void saveToH5(isce3::io::IGroup & group, const Quaternion & qs)
 {
     std::array<size_t, 2> dims = {qs.nVectors(), 4};
-    isce::io::saveToH5(group, "time", qs.time());
-    isce::io::saveToH5(group, "quaternions", qs.qvec(), dims);
+    isce3::io::saveToH5(group, "time", qs.time());
+    isce3::io::saveToH5(group, "quaternions", qs.qvec(), dims);
 }
 
 // ------------------------------------------------------------------------
@@ -395,10 +395,10 @@ inline void serialize(Archive & archive, Poly2d & poly)
  * @param[in] poly          Poly2d to be configured.
  * @param[in] name          Dataset name within group.
  */
-inline void loadFromH5(isce::io::IGroup & group, Poly2d & poly, std::string name)
+inline void loadFromH5(isce3::io::IGroup & group, Poly2d & poly, std::string name)
 {
     // Configure the polynomial coefficients
-    isce::io::loadFromH5(group, name, poly.coeffs);
+    isce3::io::loadFromH5(group, name, poly.coeffs);
 
     // Set other polynomial properties
     poly.rangeOrder = poly.coeffs.size() - 1;
@@ -421,17 +421,17 @@ inline void loadFromH5(isce::io::IGroup & group, Poly2d & poly, std::string name
  * @param[in] lut           LUT2d to be configured.
  */
 template <typename T>
-inline void loadCalGrid(isce::io::IGroup & group, const std::string & dsetName,
-                        isce::core::LUT2d<T> & lut)
+inline void loadCalGrid(isce3::io::IGroup & group, const std::string & dsetName,
+                        isce3::core::LUT2d<T> & lut)
 {
     // Load coordinates
     std::valarray<double> slantRange, zeroDopplerTime;
-    isce::io::loadFromH5(group, "slantRange", slantRange);
-    isce::io::loadFromH5(group, "zeroDopplerTime", zeroDopplerTime);
+    isce3::io::loadFromH5(group, "slantRange", slantRange);
+    isce3::io::loadFromH5(group, "zeroDopplerTime", zeroDopplerTime);
 
     // Load LUT2d data in matrix
-    isce::core::Matrix<T> matrix(zeroDopplerTime.size(), slantRange.size());
-    isce::io::loadFromH5(group, dsetName, matrix);
+    isce3::core::Matrix<T> matrix(zeroDopplerTime.size(), slantRange.size());
+    isce3::io::loadFromH5(group, dsetName, matrix);
 
     // Set in lut
     lut.setFromData(slantRange, zeroDopplerTime, matrix);
@@ -446,29 +446,29 @@ inline void loadCalGrid(isce::io::IGroup & group, const std::string & dsetName,
  * @param[in] units         Units of LUT2d data.
  */
 template <typename T>
-inline void saveCalGrid(isce::io::IGroup & group,
+inline void saveCalGrid(isce3::io::IGroup & group,
                         const std::string & dsetName,
-                        const isce::core::LUT2d<T> & lut,
-                        const isce::core::DateTime & refEpoch,
+                        const isce3::core::LUT2d<T> & lut,
+                        const isce3::core::DateTime & refEpoch,
                         const std::string & units = "")
 {
     // Generate uniformly spaced X (slant range) coordinates
     const double x0 = lut.xStart();
     const double x1 = x0 + lut.xSpacing() * (lut.width() - 1.0);
-    const std::vector<double> x = isce::core::linspace(x0, x1, lut.width());
+    const std::vector<double> x = isce3::core::linspace(x0, x1, lut.width());
 
     // Generate uniformly spaced Y (zero Doppler time) coordinates
     const double y0 = lut.yStart();
     const double y1 = y0 + lut.ySpacing() * (lut.length() - 1.0);
-    const std::vector<double> y = isce::core::linspace(y0, y1, lut.length());
+    const std::vector<double> y = isce3::core::linspace(y0, y1, lut.length());
 
     // Save coordinates
-    isce::io::saveToH5(group, "slantRange", x, "meters");
-    isce::io::saveToH5(group, "zeroDopplerTime", y);
-    isce::io::setRefEpoch(group, "zeroDopplerTime", refEpoch);
+    isce3::io::saveToH5(group, "slantRange", x, "meters");
+    isce3::io::saveToH5(group, "zeroDopplerTime", y);
+    isce3::io::setRefEpoch(group, "zeroDopplerTime", refEpoch);
 
     // Save LUT2d data
-    isce::io::saveToH5(group, dsetName, lut.data(), units);
+    isce3::io::saveToH5(group, dsetName, lut.data(), units);
 }
 
 // ------------------------------------------------------------------------
@@ -516,15 +516,15 @@ inline void load(Archive & archive, LUT1d<T> & lut)
  * @param[in] name          Dataset name within group.
  */
 template <typename T>
-inline void loadFromH5(isce::io::IGroup & group, LUT1d<T> & lut,
+inline void loadFromH5(isce3::io::IGroup & group, LUT1d<T> & lut,
                        std::string name_coords, std::string name_values)
 {
     // Valarrays for storing results
     std::valarray<double> x, y;
     // Load the LUT values
-    isce::io::loadFromH5(group, name_values, y);
+    isce3::io::loadFromH5(group, name_values, y);
     // Load the LUT coordinates
-    isce::io::loadFromH5(group, name_coords, x);
+    isce3::io::loadFromH5(group, name_coords, x);
     // Set LUT data
     lut.coords(x);
     lut.values(y);

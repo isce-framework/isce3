@@ -13,7 +13,7 @@ from cuCrossmul cimport gpuCrossmul
 
 cdef class pyCrossmul:
     '''
-    Python wrapper for isce::signal::cuda::gpuCrossmul
+    Python wrapper for isce3::signal::cuda::gpuCrossmul
 
     Args:
 

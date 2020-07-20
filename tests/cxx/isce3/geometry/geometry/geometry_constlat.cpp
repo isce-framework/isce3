@@ -13,7 +13,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/Ellipsoid.h>
@@ -23,12 +23,12 @@
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/StateVector.h>
 
-// isce::geometry
+// isce3::geometry
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
 
 // flatten namespaces
-using isce::core::LookSide;
+using isce3::core::LookSide;
 const auto Left = LookSide::Left;
 const auto Right = LookSide::Right;
 
@@ -41,9 +41,9 @@ enum OrbitDirection orbDir(double omega) {
 
 struct GeometryTest : public ::testing::Test {
 
-    // isce::core objects
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::Orbit orbit;
+    // isce3::core objects
+    isce3::core::Ellipsoid ellipsoid;
+    isce3::core::Orbit orbit;
     double hsat;
     double satlat0;
     double satomega;
@@ -57,7 +57,7 @@ struct GeometryTest : public ::testing::Test {
     void Setup_data(double lat0, double lon0, double omega, int Nvec)
     {
         //WGS84 ellipsoid
-        ellipsoid = isce::core::Ellipsoid(6378137.,.0066943799901);
+        ellipsoid = isce3::core::Ellipsoid(6378137.,.0066943799901);
 
         //Satellite height
         hsat = 700000.0;
@@ -67,19 +67,19 @@ struct GeometryTest : public ::testing::Test {
         satomega = omega;
 
         //Setup orbit
-        isce::core::DateTime t0("2017-02-12T01:12:30.0");
+        isce3::core::DateTime t0("2017-02-12T01:12:30.0");
         orbit.referenceEpoch(t0);
 
         double clat = std::cos(lat0);
         double slat = std::sin(lat0);
         double sath = ellipsoid.a() + hsat;
 
-        std::vector<isce::core::StateVector> statevecs(Nvec);
+        std::vector<isce3::core::StateVector> statevecs(Nvec);
         for(int ii=0; ii < Nvec; ii++)
         {
             double deltat = ii * 10.0;
             double lon = lon0 + omega * deltat;
-            isce::core::Vec3 pos, vel;
+            isce3::core::Vec3 pos, vel;
 
             pos[0] = sath * clat * std::cos(lon);
             pos[1] = sath * clat * std::sin(lon);
@@ -89,7 +89,7 @@ struct GeometryTest : public ::testing::Test {
             vel[1] = omega * pos[0];
             vel[2] = 0.0;
 
-            isce::core::DateTime epoch = t0 + deltat;
+            isce3::core::DateTime epoch = t0 + deltat;
 
             statevecs[ii].datetime = epoch;
             statevecs[ii].position = pos;
@@ -154,22 +154,22 @@ TEST_F(GeometryTest, RdrToGeoLat) {
             double geocentricLat = solve(rng, sides[kk]);
 
             //Convert geocentric coords to xyz
-            isce::core::cartesian_t xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
+            isce3::core::cartesian_t xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
                                             ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon),
                                             ellipsoid.a() * std::sin(geocentricLat)};
 
             //Convert xyz to geodetic coords
-            isce::core::cartesian_t expLLH;
+            isce3::core::cartesian_t expLLH;
             ellipsoid.xyzToLonLat(xyz, expLLH);
 
             //Set up DEM to match expected height
-            isce::geometry::DEMInterpolator dem(expLLH[2]);
+            isce3::geometry::DEMInterpolator dem(expLLH[2]);
 
             // Initialize guess
-            isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
+            isce3::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
 
             // Run rdr2geo
-            int stat = isce::geometry::rdr2geo(tinp, rng, 0.0,
+            int stat = isce3::geometry::rdr2geo(tinp, rng, 0.0,
                         orbit, ellipsoid, dem, targetLLH, 0.24, sides[kk],
                         1.0e-8, 25, 15);
 
@@ -201,7 +201,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     Setup_data(lat0, lon0, omega, Nvec);
 
     //Constant zero Doppler
-    isce::core::LUT2d<double> zeroDoppler;
+    isce3::core::LUT2d<double> zeroDoppler;
 
     // Dummy wavelength
     const double wavelength = 0.24;
@@ -228,27 +228,27 @@ TEST_F(GeometryTest, GeoToRdrLat) {
             double expectedLon = lon0 + omega * tinp;
 
             //Convert geocentric coords to xyz
-            isce::core::cartesian_t targ_xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
+            isce3::core::cartesian_t targ_xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
                                                  ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon),
                                                  ellipsoid.a() * std::sin(geocentricLat)};
 
             //Transform to geodetic LLH
-            isce::core::cartesian_t targ_LLH;
+            isce3::core::cartesian_t targ_LLH;
             ellipsoid.xyzToLonLat(targ_xyz, targ_LLH);
 
             //Expected satellite position
-            isce::core::cartesian_t sat_xyz = { (ellipsoid.a() + hsat) * std::cos(expectedLon) * std::cos(lat0),
+            isce3::core::cartesian_t sat_xyz = { (ellipsoid.a() + hsat) * std::cos(expectedLon) * std::cos(lat0),
                                                 (ellipsoid.a() + hsat) * std::sin(expectedLon) * std::cos(lat0),
                                                 (ellipsoid.a() + hsat) * std::sin(lat0)};
 
-            const isce::core::cartesian_t los = sat_xyz - targ_xyz;
+            const isce3::core::cartesian_t los = sat_xyz - targ_xyz;
 
             //Expected slant range
             double expRange = los.norm();
 
             // Run geo2rdr
             double aztime, slantRange;
-            int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
+            int stat = isce3::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
                 zeroDoppler, aztime, slantRange, wavelength, sides[kk],
                 1.0e-9, 50, 10.0);
 

@@ -3,7 +3,7 @@
 #include <isce3/except/Error.h>
 #include <isce3/math/Sinc.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 namespace detail {
 
@@ -36,7 +36,7 @@ constexpr KnabKernel<T>::KnabKernel(double width, double bandwidth)
     : Base(width), _bandwidth(bandwidth)
 {
     if (bandwidth < 0. or bandwidth > 1.) {
-        throw isce::except::RuntimeError(ISCE_SRCINFO(),
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                                          "Require 0 < bandwidth < 1");
     }
 }
@@ -44,7 +44,7 @@ constexpr KnabKernel<T>::KnabKernel(double width, double bandwidth)
 template<typename T>
 CUDA_HOSTDEV inline T KnabKernel<T>::eval(double t) const
 {
-    using isce::math::sinc;
+    using isce3::math::sinc;
     auto x = static_cast<T>(t);
     return sinc(x) * detail::samplingWindow(t, Base::halfwidth(), bandwidth());
 }
@@ -83,7 +83,7 @@ TabulatedKernel<T>::TabulatedKernel(const OtherKernel& kernel, int n)
     : Base(kernel.width())
 {
     if (n < 2) {
-        throw isce::except::LengthError(ISCE_SRCINFO(),
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
                                         "Require table size >= 2");
     }
 
@@ -105,7 +105,7 @@ TabulatedKernel<T>::TabulatedKernel(const OtherKernel& kernel, int n)
 }
 
 template<typename T>
-TabulatedKernel<T>::TabulatedKernel(const isce::core::TabulatedKernel<T>& other)
+TabulatedKernel<T>::TabulatedKernel(const isce3::core::TabulatedKernel<T>& other)
     : Base(other.width()), _table(other.table())
 {
     auto n = static_cast<int>(other.table().size());
@@ -156,7 +156,7 @@ ChebyKernel<T>::ChebyKernel(const OtherKernel& kernel, int n)
     : Base(kernel.width()), _scale(4. / kernel.width())
 {
     if (n < 2) {
-        throw isce::except::LengthError(ISCE_SRCINFO(),
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
                                         "Need at least one coefficient");
     }
 
@@ -194,4 +194,4 @@ CUDA_DEV inline T ChebyKernel<T>::eval(double t) const
     return ChebyKernelView<T>(*this).eval(t);
 }
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core

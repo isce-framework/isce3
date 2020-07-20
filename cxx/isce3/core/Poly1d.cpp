@@ -8,7 +8,7 @@
 #include <pyre/journal.h>
 #include "Poly1d.h"
 
-double isce::core::Poly1d::
+double isce3::core::Poly1d::
 eval(double xin) const {
     /*
      * Evaluate the polynomial at a given position.
@@ -34,14 +34,14 @@ eval(double xin) const {
     return val;
 }
 
-void isce::core::Poly1d::
+void isce3::core::Poly1d::
 printPoly() const {
     std::cout << "Polynomial Order: " << order << std::endl;
     for (int i=0; i<=order; i++) std::cout << getCoeff(i) << " ";
     std::cout << std::endl;
 }
 
-isce::core::Poly1d isce::core::Poly1d::
+isce3::core::Poly1d isce3::core::Poly1d::
 derivative() const {
     /*
      * Helper function to adjust the mean.

@@ -4,23 +4,23 @@
 #include <isce3/cuda/container/RadarGeometry.h>
 #include <isce3/io/IH5.h>
 
-using HostRadarGeometry = isce::container::RadarGeometry;
-using DeviceRadarGeometry = isce::cuda::container::RadarGeometry;
+using HostRadarGeometry = isce3::container::RadarGeometry;
+using DeviceRadarGeometry = isce3::cuda::container::RadarGeometry;
 
 struct RadarGeometryTest : public testing::Test {
 
-    isce::product::RadarGridParameters radar_grid;
-    isce::core::Orbit orbit;
-    isce::core::LUT2d<double> doppler;
+    isce3::product::RadarGridParameters radar_grid;
+    isce3::core::Orbit orbit;
+    isce3::core::LUT2d<double> doppler;
 
     void SetUp() override
     {
         std::string filename = TESTDATA_DIR "point-target-sim-rc.h5";
-        auto h5file = isce::io::IH5File(filename, 'r');
+        auto h5file = isce3::io::IH5File(filename, 'r');
 
         // load orbit
         auto orbit_grp = h5file.openGroup("orbit");
-        isce::core::loadFromH5(orbit_grp, orbit);
+        isce3::core::loadFromH5(orbit_grp, orbit);
 
         // load radar grid parameters
         double sensing_start_time;
@@ -38,14 +38,14 @@ struct RadarGeometryTest : public testing::Test {
         double centerfreq;
         h5file.openDataSet("center_frequency").read(&centerfreq);
 
-        static constexpr double c = isce::core::speed_of_light;
+        static constexpr double c = isce3::core::speed_of_light;
         double near_range = c / 2. * two_way_range_delay;
         double range_spacing = c / (2. * range_sampling_rate);
         double wavelength = c / centerfreq;
 
         std::string look_side_str;
         h5file.openDataSet("look_side").read(look_side_str);
-        auto look_side = isce::core::parseLookSide(look_side_str);
+        auto look_side = isce3::core::parseLookSide(look_side_str);
 
         auto data_ds = h5file.openDataSet("data");
         auto shape = data_ds.getDimensions();
@@ -54,13 +54,13 @@ struct RadarGeometryTest : public testing::Test {
 
         const double prf = 1. / azimuth_spacing;
 
-        radar_grid = isce::product::RadarGridParameters(
+        radar_grid = isce3::product::RadarGridParameters(
                 sensing_start_time, wavelength, prf, near_range, range_spacing,
                 look_side, lines, samples, orbit.referenceEpoch());
 
         // load Doppler
         auto doppler_grp = h5file.openGroup("doppler");
-        isce::core::loadCalGrid(doppler_grp, "doppler", doppler);
+        isce3::core::loadCalGrid(doppler_grp, "doppler", doppler);
     }
 };
 

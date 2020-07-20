@@ -21,10 +21,10 @@
 #include "Utilities.h"
 #include "Vector.h"
 
-constexpr auto EulerAngles_t = isce::core::Attitude::Type::EulerAngles_t;
+constexpr auto EulerAngles_t = isce3::core::Attitude::Type::EulerAngles_t;
 
 /** @param[in] yaw_orientation Can be "normal" or "center" */
-isce::core::EulerAngles::
+isce3::core::EulerAngles::
 EulerAngles(const std::string yaw_orientation) : Attitude(EulerAngles_t) {
     if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
         yawOrientation(yaw_orientation);
@@ -39,7 +39,7 @@ EulerAngles(const std::string yaw_orientation) : Attitude(EulerAngles_t) {
   * @param[in] yaw Vector of yaw angles
   * @param[in] pitch Vector of pitch angles
   * @param[in] roll Vector of roll angles */
-isce::core::EulerAngles::
+isce3::core::EulerAngles::
 EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
             const std::vector<double> & pitch, const std::vector<double> & roll,
             const std::string yaw_orientation) : EulerAngles(yaw_orientation) {
@@ -49,7 +49,7 @@ EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
 
 // Copy constructor
 /** @param[in] euler EulerAngles object */
-isce::core::EulerAngles::
+isce3::core::EulerAngles::
 EulerAngles(const EulerAngles & euler) : Attitude(EulerAngles_t),
                                          _time(euler.time()), _yaw(euler.yaw()),
                                          _pitch(euler.pitch()), _roll(euler.roll()) {
@@ -63,7 +63,7 @@ EulerAngles(const EulerAngles & euler) : Attitude(EulerAngles_t),
 }
 
 // Comparison operator
-bool isce::core::EulerAngles::
+bool isce3::core::EulerAngles::
 operator==(const EulerAngles & other) const {
     // Easy checks first
     bool equal = this->nVectors() == other.nVectors();
@@ -73,18 +73,18 @@ operator==(const EulerAngles & other) const {
     }
     // If we pass the easy checks, check the contents
     for (size_t i = 0; i < this->nVectors(); ++i) {
-        equal *= isce::core::compareFloatingPoint(_time[i], other.time()[i]);
-        equal *= isce::core::compareFloatingPoint(_yaw[i], other.yaw()[i]);
-        equal *= isce::core::compareFloatingPoint(_pitch[i], other.pitch()[i]);
-        equal *= isce::core::compareFloatingPoint(_roll[i], other.roll()[i]);
+        equal *= isce3::core::compareFloatingPoint(_time[i], other.time()[i]);
+        equal *= isce3::core::compareFloatingPoint(_yaw[i], other.yaw()[i]);
+        equal *= isce3::core::compareFloatingPoint(_pitch[i], other.pitch()[i]);
+        equal *= isce3::core::compareFloatingPoint(_roll[i], other.roll()[i]);
     }
     return equal;
 }
 
 // Assignment operator
 /** @param[in] euler EulerAngles object */
-isce::core::EulerAngles &
-isce::core::EulerAngles::
+isce3::core::EulerAngles &
+isce3::core::EulerAngles::
 operator=(const EulerAngles & euler) {
     _time = euler.time();
     _yaw = euler.yaw();
@@ -101,7 +101,7 @@ operator=(const EulerAngles & euler) {
   * @param[in] pitch Vector of pitch angles
   * @param[in] roll Vector of roll angles */
 void
-isce::core::EulerAngles::
+isce3::core::EulerAngles::
 data(const std::vector<double> & time, const std::vector<double> & yaw,
      const std::vector<double> & pitch, const std::vector<double> & roll) {
     // Check size consistency
@@ -126,7 +126,7 @@ data(const std::vector<double> & time, const std::vector<double> & yaw,
   * @param[out] opitch Interpolated pitch angle
   * @param[out] oroll Interpolated roll angle */
 void
-isce::core::EulerAngles::
+isce3::core::EulerAngles::
 ypr(double tintp, double & oyaw, double & opitch, double & oroll) {
 
     // Check we have enough state vectors
@@ -204,8 +204,8 @@ ypr(double tintp, double & oyaw, double & opitch, double & oroll) {
   * @param[in] d2 (Not used)
   * @param[in] d3 (Not used)
   * @param[out] R Rotation matrix for given sequence */
-isce::core::cartmat_t
-isce::core::EulerAngles::
+isce3::core::cartmat_t
+isce3::core::EulerAngles::
 rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
        double, double) {
 
@@ -224,8 +224,8 @@ rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
 }
 
 // Rotation around Z-axis
-isce::core::cartmat_t
-isce::core::EulerAngles::T3(double angle) {
+isce3::core::cartmat_t
+isce3::core::EulerAngles::T3(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
     return cartmat_t {{
@@ -236,8 +236,8 @@ isce::core::EulerAngles::T3(double angle) {
 }
 
 // Rotation around Y-axis
-isce::core::cartmat_t
-isce::core::EulerAngles::T2(double angle) {
+isce3::core::cartmat_t
+isce3::core::EulerAngles::T2(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
     return cartmat_t {{
@@ -248,8 +248,8 @@ isce::core::EulerAngles::T2(double angle) {
 }
 
 // Rotation around X-axis
-isce::core::cartmat_t
-isce::core::EulerAngles::T1(double angle) {
+isce3::core::cartmat_t
+isce3::core::EulerAngles::T1(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
     cartmat_t T{{
@@ -261,8 +261,8 @@ isce::core::EulerAngles::T1(double angle) {
 }
 
 // Extract YPR angles from a rotation matrix
-isce::core::cartesian_t
-isce::core::EulerAngles::rotmat2ypr(const cartmat_t & R) {
+isce3::core::cartesian_t
+isce3::core::EulerAngles::rotmat2ypr(const cartmat_t & R) {
 
     const double sy = std::sqrt(R[0][0]*R[0][0] + R[1][0]*R[1][0]);
     double yaw, pitch, roll;
@@ -285,7 +285,7 @@ isce::core::EulerAngles::rotmat2ypr(const cartmat_t & R) {
 /** @param[in] tintp Seconds since reference epoch
   * @param[out] q Vector of quaternion elements */
 std::vector<double>
-isce::core::EulerAngles::toQuaternionElements(double tintp) {
+isce3::core::EulerAngles::toQuaternionElements(double tintp) {
 
     // Interpolate to get YPR angles
     double yaw, pitch, roll;
@@ -311,8 +311,8 @@ isce::core::EulerAngles::toQuaternionElements(double tintp) {
 
 // Return quaternion representation for all epochs
 /** @param[out] quat Quaternion instance */
-isce::core::Quaternion
-isce::core::EulerAngles::toQuaternion() {
+isce3::core::Quaternion
+isce3::core::EulerAngles::toQuaternion() {
     // Vector to fill
     std::vector<double> qvec(nVectors()*4);
     // Loop over epochs and convert to quaternion values

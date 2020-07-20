@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include <string>
 
-namespace isce {
-    //! The isce::except namespace
+namespace isce3 {
+    //! The isce3::except namespace
     namespace except {
 
     struct SrcInfo {
@@ -15,7 +15,7 @@ namespace isce {
 
 // macro-expanded pseudo-constructors
 #define ISCE_SRCINFO() { __FILE__, __LINE__, __PRETTY_FUNCTION__ }
-#define ISCE_ERROR(T, str) isce::except::Error<T>(ISCE_SRCINFO(), str)
+#define ISCE_ERROR(T, str) isce3::except::Error<T>(ISCE_SRCINFO(), str)
 
     template<typename T>
     class Error : public T {

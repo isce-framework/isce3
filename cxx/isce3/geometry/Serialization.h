@@ -14,10 +14,10 @@
 #include <isce3/geometry/Topo.h>
 #include <isce3/geometry/Geo2rdr.h>
 
-namespace isce {
+namespace isce3 {
     namespace geometry {
 
-        // Main template call for archiving any isce::geometry object
+        // Main template call for archiving any isce3::geometry object
         template <typename T>
         void load_archive(std::string metadata, char * objectTag, T * object) {
             std::stringstream metastream;
@@ -42,7 +42,7 @@ namespace isce {
             double threshold;
             int epsgOut;
             size_t numiter, extraiter;
-            isce::core::dataInterpMethod demMethod;
+            isce3::core::dataInterpMethod demMethod;
             archive(cereal::make_nvp("threshold", threshold),
                     cereal::make_nvp("numIterations", numiter),
                     cereal::make_nvp("extraIterations", extraiter),

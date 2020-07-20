@@ -3,7 +3,7 @@
 #include <complex>
 #include <fftw3.h>
 
-namespace isce { namespace fft { namespace detail {
+namespace isce3 { namespace fft { namespace detail {
 
 template<typename T> struct FFTWPlanType {};
 template<>           struct FFTWPlanType<float>  { using plan_t = fftwf_plan; };

@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 /** Determine location of blind ranges in SweepSAR systems. */
 class GapMask {
@@ -48,4 +48,4 @@ private:
     double guard;
 };
 
-}} // namespace isce::focus
+}} // namespace isce3::focus

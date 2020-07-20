@@ -5,14 +5,14 @@
 
 #pragma once
 
-// isce::core
+// isce3::core
 #include <isce3/core/Basis.h>
 
-// isce::cuda::core
+// isce3::cuda::core
 #include <isce3/cuda/core/Common.h>
 
 /** Simple class to store three-dimensional basis vectors. */
-class isce::cuda::core::gpuBasis {
+class isce3::cuda::core::gpuBasis {
 
     public:
         /** Default constructor*/
@@ -34,7 +34,7 @@ class isce::cuda::core::gpuBasis {
         }
 
         /** Constructor from CPU Basis. */
-        CUDA_HOST inline gpuBasis(const isce::core::Basis & basis) {
+        CUDA_HOST inline gpuBasis(const isce3::core::Basis & basis) {
             for (int i = 0; i < 3; ++i) {
                 x0[i] = basis.x0()[i];
                 x1[i] = basis.x1()[i];

@@ -10,18 +10,18 @@
 #include <valarray>
 #include <map>
 
-// isce::core
+// isce3::core
 #include <isce3/core/LUT2d.h>
 
 // Declaration
-namespace isce {
+namespace isce3 {
     namespace product {
         class ProcessingInformation;
     }
 }
 
-// Definition of isce::product::ProcessingInformation
-class isce::product::ProcessingInformation {
+// Definition of isce3::product::ProcessingInformation
+class isce3::product::ProcessingInformation {
 
     public:
         /** Default constructor */
@@ -44,39 +44,39 @@ class isce::product::ProcessingInformation {
         inline void zeroDopplerTime(const std::valarray<double> & t) { _zeroDopplerTime = t; }
 
         /** Get read-only look-up-table for effective velocity */
-        inline const isce::core::LUT2d<double> & effectiveVelocity() const {
+        inline const isce3::core::LUT2d<double> & effectiveVelocity() const {
             return _effectiveVelocity;
         }
         /** Set look-up-table for effective velocity */
-        inline void effectiveVelocity(const isce::core::LUT2d<double> & lut) {
+        inline void effectiveVelocity(const isce3::core::LUT2d<double> & lut) {
             _effectiveVelocity = lut;
         }
 
         /** Get read-only map for azimuth FM rate tables */
-        inline const std::map<char, isce::core::LUT2d<double>> & azimuthFMRateMap() const {
+        inline const std::map<char, isce3::core::LUT2d<double>> & azimuthFMRateMap() const {
             return _azimuthFMRate;
         }
 
         /** Get read-only look-up-table for azimuth FM rate */
-        inline const isce::core::LUT2d<double> & azimuthFMRate(char freq) const {
+        inline const isce3::core::LUT2d<double> & azimuthFMRate(char freq) const {
             return _azimuthFMRate.at(freq);
         }
         /** Set look-up-table for azimuth FM rate */
-        inline void azimuthFMRate(const isce::core::LUT2d<double> & lut, char freq) {
+        inline void azimuthFMRate(const isce3::core::LUT2d<double> & lut, char freq) {
             _azimuthFMRate[freq] = lut;
         }
 
         /** Get read-only map for Doppler centroid tables */
-        inline const std::map<char, isce::core::LUT2d<double>> & dopplerCentroidMap() const {
+        inline const std::map<char, isce3::core::LUT2d<double>> & dopplerCentroidMap() const {
             return _dopplerCentroid;
         }
 
         /** Get read-only look-up-table for Doppler centroid */
-        inline const isce::core::LUT2d<double> & dopplerCentroid(char freq) const {
+        inline const isce3::core::LUT2d<double> & dopplerCentroid(char freq) const {
             return _dopplerCentroid.at(freq);
         }
         /** Set look-up-table for azimuth FM rate */
-        inline void dopplerCentroid(const isce::core::LUT2d<double> & lut, char freq) {
+        inline void dopplerCentroid(const isce3::core::LUT2d<double> & lut, char freq) {
             _dopplerCentroid[freq] = lut;
         }
 
@@ -84,20 +84,20 @@ class isce::product::ProcessingInformation {
         // Coordinates
         std::valarray<double> _slantRange;
         std::valarray<double> _zeroDopplerTime;
-        isce::core::DateTime _refEpoch;
+        isce3::core::DateTime _refEpoch;
 
         // Constant look up tables
-        isce::core::LUT2d<double> _effectiveVelocity;
+        isce3::core::LUT2d<double> _effectiveVelocity;
 
         // Frequency-dependent look up tables stored in maps
-        std::map<char, isce::core::LUT2d<double>> _azimuthFMRate;
-        std::map<char, isce::core::LUT2d<double>> _dopplerCentroid;
+        std::map<char, isce3::core::LUT2d<double>> _azimuthFMRate;
+        std::map<char, isce3::core::LUT2d<double>> _dopplerCentroid;
 };
 
 // Copy constructor
 /** @param[in] proc ProcessingInformation */
-isce::product::ProcessingInformation::
-ProcessingInformation(const isce::product::ProcessingInformation & proc) :
+isce3::product::ProcessingInformation::
+ProcessingInformation(const isce3::product::ProcessingInformation & proc) :
                       _slantRange(proc.slantRange()), _zeroDopplerTime(proc.zeroDopplerTime()) {
     for (auto const & pair : proc.azimuthFMRateMap()) {
         _azimuthFMRate[pair.first] = pair.second;
@@ -109,9 +109,9 @@ ProcessingInformation(const isce::product::ProcessingInformation & proc) :
 
 // Deep assignment operator
 /** @param[in] proc ProcessingInformation */
-isce::product::ProcessingInformation &
-isce::product::ProcessingInformation::
-operator=(const isce::product::ProcessingInformation & proc) {
+isce3::product::ProcessingInformation &
+isce3::product::ProcessingInformation::
+operator=(const isce3::product::ProcessingInformation & proc) {
     _slantRange = proc.slantRange();
     _zeroDopplerTime = proc.zeroDopplerTime();
     _effectiveVelocity = proc.effectiveVelocity();

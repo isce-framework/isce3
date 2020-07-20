@@ -12,14 +12,14 @@
 #include <vector>
 #include "gtest/gtest.h"
 
-// isce::core
+// isce3::core
 #include "isce3/core/Constants.h"
 #include "isce3/core/Utilities.h"
 #include "isce3/core/Cube.h"
 
 TEST(CubeTest, SimpleConstructor) {
     // Make a cube with a fixed shape
-    isce::core::Cube<double> M(3, 4, 5);
+    isce3::core::Cube<double> M(3, 4, 5);
     ASSERT_EQ(M.height(), 3);
     ASSERT_EQ(M.length(), 4);
     ASSERT_EQ(M.width(), 5);
@@ -27,7 +27,7 @@ TEST(CubeTest, SimpleConstructor) {
 
 TEST(CubeTest, Resize) {
     // Make a cube with a fixed shape
-    isce::core::Cube<double> M(3, 4, 5);
+    isce3::core::Cube<double> M(3, 4, 5);
     // Resize it
     M.resize(2, 3, 4);
     // Check shape 
@@ -38,7 +38,7 @@ TEST(CubeTest, Resize) {
 
 TEST(CubeTest, FixedValues) {
     // Make a cube with a fixed shape
-    isce::core::Cube<double> M(3, 4, 5);
+    isce3::core::Cube<double> M(3, 4, 5);
 
     // Fill it with zeros and check values
     M.zeros();
@@ -55,9 +55,9 @@ TEST(CubeTest, FixedValues) {
 
 TEST(CubeTest, VectorConstructor) {
     // Make a vector of values
-    std::vector<double> values = isce::core::arange(0.0, 60.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 60.0, 1.0);
     // Make a cube from the vector
-    isce::core::Cube<double> M(values, 4, 5);
+    isce3::core::Cube<double> M(values, 4, 5);
 
     // Check the shape
     ASSERT_EQ(M.height(), 3);
@@ -77,11 +77,11 @@ TEST(CubeTest, VectorConstructor) {
 
 TEST(CubeTest, CopyConstructor) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 60.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 60.0, 1.0);
     // Make a cube from the vector
-    isce::core::Cube<double> M(values, 4, 5);
+    isce3::core::Cube<double> M(values, 4, 5);
     // Make a shallow copy
-    isce::core::Cube<double> N(M);
+    isce3::core::Cube<double> N(M);
 
     // Check shapes are equal
     ASSERT_EQ(M.height(), N.height());
@@ -110,15 +110,15 @@ TEST(CubeTest, CopyConstructor) {
 
 TEST(CubeTest, DeepCopyConstructor) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 60.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 60.0, 1.0);
     // Make a const cube from the vector
-    const isce::core::Cube<double> M(values, 4, 5);
+    const isce3::core::Cube<double> M(values, 4, 5);
 
     //Copy original value in 1,1,1
     double origval = M(1,1,1);
 
     // Make a deep copy (by passing in const matrix)
-    isce::core::Cube<double> N(M);
+    isce3::core::Cube<double> N(M);
 
     // Change value of middle element of copied matrix
     N(1, 1, 1) = 20.0;
@@ -129,11 +129,11 @@ TEST(CubeTest, DeepCopyConstructor) {
 
 TEST(CubeTest, CubeView) {
     // Make a vector of values 
-    std::vector<double> values = isce::core::arange(0.0, 60.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 60.0, 1.0);
     // Make a cube from the vector
-    isce::core::Cube<double> M(values, 4, 5);
+    isce3::core::Cube<double> M(values, 4, 5);
     // Get a view of a subset of the cube
-    const isce::core::Cube<double>::view_t view = M.subcube(1, 1, 1, 2, 2, 2);
+    const isce3::core::Cube<double>::view_t view = M.subcube(1, 1, 1, 2, 2, 2);
 
     // Vector of expected values
     std::vector<double> expected{26.0, 27.0, 31.0, 32.0, 46.0, 47.0, 51.0, 52.0};
@@ -149,9 +149,9 @@ TEST(CubeTest, CubeView) {
 
 TEST(CubeTest, squareBracket) {
     //Make a vector of values
-    std::vector<double> values = isce::core::arange(0.0, 60.0, 1.0);
+    std::vector<double> values = isce3::core::arange(0.0, 60.0, 1.0);
     //Make a cube from the vector
-    isce::core::Cube<double> M(values, 4, 5);
+    isce3::core::Cube<double> M(values, 4, 5);
     //Test flat indices
     for (size_t ii=0; ii<60; ii++)
     {

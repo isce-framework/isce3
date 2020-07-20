@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-using isce::core::Vec3;
+using isce3::core::Vec3;
 
 /** @param[in] pos ECEF coordinates of imaging platform in meters
  *  @param[in] vel ECEF velocity of imaging platform in meters / sec
@@ -18,7 +18,7 @@ using isce::core::Vec3;
  *  Azimuth angle is defined as angle of the LOS vector from the North Direction in the anti-clockwise direction.
  *  Look angle is defined as angle of the LOS vector and the downward normal at the imaging platform .
  */
-void isce::core::Ellipsoid::
+void isce3::core::Ellipsoid::
 getImagingAnglesAtPlatform(const cartesian_t & pos, const cartesian_t & vel,
         const cartesian_t & los, double & azi, double & look) const {
     /*

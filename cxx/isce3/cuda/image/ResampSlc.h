@@ -8,51 +8,51 @@
 
 #include "forward.h"
 
-// isce::image
+// isce3::image
 #include <isce3/image/ResampSlc.h>
 
 // Definition
-class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
+class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
 
     public:
         // Meta-methods
-        // Constructor from an isce::product::Product
-        inline ResampSlc(const isce::product::Product &product, char frequency = 'A') :
-            isce::image::ResampSlc(product, frequency) {}
+        // Constructor from an isce3::product::Product
+        inline ResampSlc(const isce3::product::Product &product, char frequency = 'A') :
+            isce3::image::ResampSlc(product, frequency) {}
 
-        // Constructor from an isce::product::Product and reference product (flattening) 
-        inline ResampSlc(const isce::product::Product & product,
-                         const isce::product::Product & refProduct,
+        // Constructor from an isce3::product::Product and reference product (flattening) 
+        inline ResampSlc(const isce3::product::Product & product,
+                         const isce3::product::Product & refProduct,
                          char frequency = 'A') :
-            isce::image::ResampSlc(product, refProduct, frequency) {}
+            isce3::image::ResampSlc(product, refProduct, frequency) {}
 
         // Constructor from individual components (no flattening) 
-        inline ResampSlc(const isce::core::LUT2d<double> & doppler,
+        inline ResampSlc(const isce3::core::LUT2d<double> & doppler,
                          double startingRange, double rangePixelSpacing,
                          double sensingStart, double prf, double wvl) :
-            isce::image::ResampSlc(doppler, startingRange, rangePixelSpacing, sensingStart,
+            isce3::image::ResampSlc(doppler, startingRange, rangePixelSpacing, sensingStart,
                                    prf, wvl) {}
 
         // Constructor from individual components (flattening)
-        inline ResampSlc(const isce::core::LUT2d<double> & doppler,
+        inline ResampSlc(const isce3::core::LUT2d<double> & doppler,
                          double startingRange, double rangePixelSpacing,
                          double sensingStart, double prf, double wvl,
                          double refStartingRange, double refRangePixelSpacing,
                          double refWvl) :
-            isce::image::ResampSlc(doppler, startingRange, rangePixelSpacing, sensingStart,
+            isce3::image::ResampSlc(doppler, startingRange, rangePixelSpacing, sensingStart,
                                    prf, wvl, refStartingRange, refRangePixelSpacing, refWvl) {}
 
         // All resamp need? to be redefined to ensure derived functions used
         // Generic resamp entry point from externally created rasters
-        void resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
-                    isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
+        void resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
+                    isce3::io::Raster & rgOffsetRaster, isce3::io::Raster & azOffsetRaster,
                     int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40, 
-                    int chipSize=isce::core::SINC_ONE);
+                    int chipSize=isce3::core::SINC_ONE);
 
         // Generic resamp entry point: use filenames to create rasters
         void resamp(const std::string & inputFilename, const std::string & outputFilename,
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
                     int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40,
-                    int chipSize=isce::core::SINC_ONE);
+                    int chipSize=isce3::core::SINC_ONE);
         
 };

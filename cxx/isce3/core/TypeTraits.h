@@ -3,7 +3,7 @@
 #include <complex>
 #include <type_traits>
 
-namespace isce {
+namespace isce3 {
 
 template<class> struct is_floating_or_complex                  : public std::false_type {};
 template<> struct is_floating_or_complex<float>                : public std::true_type {};
@@ -20,4 +20,4 @@ template<class T> using enable_if_floating_or_complex =
 template<class T> using enable_if_floating_or_complex_t =
         typename enable_if_floating_or_complex<T>::type;
 
-} // namespace isce
+} // namespace isce3

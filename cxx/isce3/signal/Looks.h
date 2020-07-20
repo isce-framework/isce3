@@ -15,16 +15,16 @@
 #include <isce3/core/Utilities.h>
 #include <isce3/io/Raster.h>
 
-namespace isce {
+namespace isce3 {
 namespace signal {
 
-bool verifyComplexToRealCasting(isce::io::Raster& input_raster,
-                                isce::io::Raster& output_raster, int& exponent);
+bool verifyComplexToRealCasting(isce3::io::Raster& input_raster,
+                                isce3::io::Raster& output_raster, int& exponent);
 }
-} // namespace isce
+} // namespace isce3
 
 template<class T>
-class isce::signal::Looks {
+class isce3::signal::Looks {
     public:
         Looks() {};
 
@@ -47,8 +47,8 @@ class isce::signal::Looks {
          * float-to-float or complex-to-complex multilooking; or
          * exponent = 2 (squared) for complex-to-float multilooking.
          */
-        void multilook(isce::io::Raster& input_raster,
-                       isce::io::Raster& output_raster, int exponent = 0);
+        void multilook(isce3::io::Raster& input_raster,
+                       isce3::io::Raster& output_raster, int exponent = 0);
 
         /** Multi-looking an array of real data */
         void multilook(std::valarray<T>& input, std::valarray<T>& output);
@@ -142,7 +142,7 @@ class isce::signal::Looks {
 };
 
 template<class T>
-isce::signal::Looks<T>::Looks(size_t colsLooks, size_t rowsLooks)
+isce3::signal::Looks<T>::Looks(size_t colsLooks, size_t rowsLooks)
     : _colsLooks(colsLooks), _rowsLooks(rowsLooks) {}
 
 // Get inline implementations for Looks

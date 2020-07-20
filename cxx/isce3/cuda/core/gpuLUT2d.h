@@ -9,13 +9,13 @@
 #include <isce3/core/Common.h>
 #include <isce3/core/Constants.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 template<typename T>
 class gpuLUT2d {
 public:
     /** Deep copy constructor from CPU LUT1d */
-    gpuLUT2d(const isce::core::LUT2d<T>&);
+    gpuLUT2d(const isce3::core::LUT2d<T>&);
 
     /** Deep copy constructor */
     gpuLUT2d(const gpuLUT2d<T>&);
@@ -58,7 +58,7 @@ public:
 
     /** Get interp method */
     CUDA_HOSTDEV
-    isce::core::dataInterpMethod interpMethod() const { return _interpMethod; }
+    isce3::core::dataInterpMethod interpMethod() const { return _interpMethod; }
 
     /** Get pointer to interpolator */
     CUDA_HOSTDEV gpuInterpolator<T>** interp() const { return _interp; }
@@ -95,7 +95,7 @@ private:
     size_t _length, _width;
     T* _data;
     // Interpolator pointer
-    isce::core::dataInterpMethod _interpMethod;
+    isce3::core::dataInterpMethod _interpMethod;
     gpuInterpolator<T>** _interp;
     // Do I own data?
     bool _owner;
@@ -109,4 +109,4 @@ private:
     void _finalizeInterp();
 };
 
-}}} // namespace isce::cuda::core
+}}} // namespace isce3::cuda::core

@@ -7,10 +7,10 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 
-# Cython declarations for isce::core objects
+# Cython declarations for isce3::core objects
 from Raster cimport Raster
 
-# Cython declarations for isce::product objects
+# Cython declarations for isce3::product objects
 from Product cimport Product
 
 # Orbit
@@ -20,7 +20,7 @@ from RadarGridParameters cimport RadarGridParameters
 from Ellipsoid cimport Ellipsoid
 from LUT2d cimport LUT2d
 
-cdef extern from "isce3/geometry/Geo2rdr.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Geo2rdr.h" namespace "isce3::geometry":
 
     # Geo2rdr class
     cdef cppclass Geo2rdr:

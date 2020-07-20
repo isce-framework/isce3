@@ -12,26 +12,26 @@
 #include <isce3/cuda/core/gpuProjections.h>
 
 // DEMInterpolator declaration
-class isce::cuda::geometry::gpuDEMInterpolator {
+class isce3::cuda::geometry::gpuDEMInterpolator {
 
-    typedef isce::core::Vec3 Vec3;
+    typedef isce3::core::Vec3 Vec3;
 
     public:
         /** Default constructor .*/
         CUDA_HOSTDEV inline gpuDEMInterpolator() :
-            _haveRaster(false), _refHeight(0.0), _interpMethod(isce::core::BILINEAR_METHOD),
+            _haveRaster(false), _refHeight(0.0), _interpMethod(isce3::core::BILINEAR_METHOD),
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 
         /** Constructor with a constant height .*/
         CUDA_HOSTDEV inline gpuDEMInterpolator(float height) :
-            _haveRaster(false), _refHeight(height), _interpMethod(isce::core::BILINEAR_METHOD),
+            _haveRaster(false), _refHeight(height), _interpMethod(isce3::core::BILINEAR_METHOD),
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 
         /** Destructor. */
         ~gpuDEMInterpolator();
 
         /** Copy constructor from CPU DEMInterpolator. */
-        CUDA_HOST gpuDEMInterpolator(const isce::geometry::DEMInterpolator&);
+        CUDA_HOST gpuDEMInterpolator(const isce3::geometry::DEMInterpolator&);
 
         /** Copy constructor on device. */
         CUDA_HOSTDEV gpuDEMInterpolator(gpuDEMInterpolator &);
@@ -77,17 +77,17 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         CUDA_HOSTDEV inline int epsgCode() const { return _epsgcode; }
 
         /** Interpolator method. */
-        CUDA_HOSTDEV inline isce::core::dataInterpMethod interpMethod() const {
+        CUDA_HOSTDEV inline isce3::core::dataInterpMethod interpMethod() const {
             return _interpMethod;
         }
 
         /** Pointer to ProjectionBase pointer. */
-        CUDA_HOSTDEV inline isce::cuda::core::ProjectionBase ** proj() const {
+        CUDA_HOSTDEV inline isce3::cuda::core::ProjectionBase ** proj() const {
             return _proj;
         }
 
         /** Pointer to gpuInterpolator pointer. */
-        CUDA_HOSTDEV inline isce::cuda::core::gpuInterpolator<float> ** interp() const {
+        CUDA_HOSTDEV inline isce3::cuda::core::gpuInterpolator<float> ** interp() const {
             return _interp;
         }
 
@@ -107,12 +107,12 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         float _refHeight;
         // Pointers to ProjectionBase
         int _epsgcode;
-        isce::cuda::core::ProjectionBase ** _proj;
+        isce3::cuda::core::ProjectionBase ** _proj;
         // Pointer to an Interpolator
-        isce::core::dataInterpMethod _interpMethod;
-        isce::cuda::core::gpuInterpolator<float> ** _interp;
+        isce3::core::dataInterpMethod _interpMethod;
+        isce3::cuda::core::gpuInterpolator<float> ** _interp;
         //// 2D array for storing DEM subset
-        //isce::core::Matrix<float> _dem;
+        //isce3::core::Matrix<float> _dem;
         // DEM dimensions
         size_t _length, _width;
         // Starting x/y for DEM subset and spacing

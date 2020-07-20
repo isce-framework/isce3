@@ -1,6 +1,6 @@
 #pragma once
 
-namespace isce {
+namespace isce3 {
 namespace cuda {
 namespace container {
 
@@ -8,4 +8,4 @@ class RadarGeometry;
 
 } // namespace container
 } // namespace cuda
-} // namespace isce
+} // namespace isce3

@@ -2,16 +2,16 @@
 #include <cstring> // std::memcpy
 #include <exception> // std::domain_error
 
-#include "ICU.h" // ICU, isce::io::Raster, size_t, uint8_t
+#include "ICU.h" // ICU, isce3::io::Raster, size_t, uint8_t
 
-namespace isce::unwrap::icu
+namespace isce3::unwrap::icu
 {
 
 void ICU::unwrap(
-    isce::io::Raster & unw,
-    isce::io::Raster & ccl,
-    isce::io::Raster & intf,
-    isce::io::Raster & corr,
+    isce3::io::Raster & unw,
+    isce3::io::Raster & ccl,
+    isce3::io::Raster & intf,
+    isce3::io::Raster & corr,
     unsigned int seed)
 {
     // Raster dims

@@ -15,7 +15,7 @@
 #include <string>
 
 /** Data structure to store date time to nano-sec precision*/
-class isce::core::DateTime {
+class isce3::core::DateTime {
 public:
 
     int year;
@@ -122,7 +122,7 @@ public:
 };
 
 // Some constants
-namespace isce {
+namespace isce3 {
     namespace core {
 
         std::ostream & operator<<(std::ostream &, const DateTime &);

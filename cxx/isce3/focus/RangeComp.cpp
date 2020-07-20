@@ -5,7 +5,7 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce { namespace focus {
+namespace isce3 { namespace focus {
 
 inline
 int getOutputSize(int m, int n, RangeComp::Mode mode)
@@ -16,7 +16,7 @@ int getOutputSize(int m, int n, RangeComp::Mode mode)
         case RangeComp::Mode::Same  : return n;
     }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unexpected range compression mode");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unexpected range compression mode");
 }
 
 static
@@ -46,14 +46,14 @@ RangeComp::RangeComp(const std::vector<std::complex<float>> & chirp,
             // make sure chirp size can be cast to int
             std::size_t maxint = std::numeric_limits<int>::max();
             if (chirp.size() > maxint) {
-                throw isce::except::OverflowError(ISCE_SRCINFO(), "chirp length exceeds max int");
+                throw isce3::except::OverflowError(ISCE_SRCINFO(), "chirp length exceeds max int");
             }
             return static_cast<int>(chirp.size());
         }()),
     _inputsize([=]()
         {
             if (inputsize < 1) {
-                throw isce::except::DomainError(ISCE_SRCINFO(), "number of samples must be > 0");
+                throw isce3::except::DomainError(ISCE_SRCINFO(), "number of samples must be > 0");
             }
             return inputsize;
         }()),
@@ -61,7 +61,7 @@ RangeComp::RangeComp(const std::vector<std::complex<float>> & chirp,
     _maxbatch([=]()
         {
             if (maxbatch < 1) {
-                throw isce::except::DomainError(ISCE_SRCINFO(), "max batch size must be > 0");
+                throw isce3::except::DomainError(ISCE_SRCINFO(), "max batch size must be > 0");
             }
             return maxbatch;
         }()),
@@ -85,7 +85,7 @@ int RangeComp::firstValidSample() const
         case Mode::Same  : return chirpSize() / 2;
     }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unexpected range compression mode");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unexpected range compression mode");
 }
 
 void RangeComp::rangecompress(std::complex<float> * out,
@@ -93,7 +93,7 @@ void RangeComp::rangecompress(std::complex<float> * out,
                               int batch)
 {
     if (batch > maxBatch()) {
-        throw isce::except::LengthError(ISCE_SRCINFO(), "batch size exceeds max batch");
+        throw isce3::except::LengthError(ISCE_SRCINFO(), "batch size exceeds max batch");
     }
 
     // copy input data to internal workspace buffer & zero pad to FFT length

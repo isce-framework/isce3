@@ -12,7 +12,7 @@
 #include <chrono>
 #include <cmath>
 
-// isce::core
+// isce3::core
 #include <isce3/core/Constants.h>
 #include <isce3/core/LUT1d.h>
 
@@ -22,10 +22,10 @@
 
 #include "gpuResampSlc.h"
 
-using isce::io::Raster;
+using isce3::io::Raster;
 
 // Alternative generic resamp entry point: use filenames to internally create rasters
-void isce::cuda::image::ResampSlc::
+void isce3::cuda::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
@@ -49,9 +49,9 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 }
 
 // Generic resamp entry point from externally created rasters
-void isce::cuda::image::ResampSlc::
-resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
-       isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
+void isce3::cuda::image::ResampSlc::
+resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
+       isce3::io::Raster & rgOffsetRaster, isce3::io::Raster & azOffsetRaster,
        int inputBand, bool flatten, bool isComplex, int rowBuffer,
        int chipSize) {
 
@@ -75,7 +75,7 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
     }
 
     // initialize interpolator
-    isce::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp(chipSize-1, isce::core::SINC_SUB);
+    isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp(chipSize-1, isce3::core::SINC_SUB);
 
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
@@ -100,7 +100,7 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
         }
 
         // Initialize offsets tiles
-        isce::image::Tile<float> azOffTile, rgOffTile;
+        isce3::image::Tile<float> azOffTile, rgOffTile;
         _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster,
                                azOffTile, rgOffTile, outWidth);
 

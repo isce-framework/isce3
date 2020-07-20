@@ -2,7 +2,7 @@
 
 #include <isce3/core/EMatrix.h>
 
-namespace isce {
+namespace isce3 {
 namespace signal {
 
 /**
@@ -26,7 +26,7 @@ auto multilookWeightedAvg(const EigenT1& input, int row_looks, int col_looks,
     const auto ncols = input.cols() / col_looks;
 
     using value_type = typename EigenT1::value_type;
-    isce::core::EArray2D<value_type> output(nrows, ncols);
+    isce3::core::EArray2D<value_type> output(nrows, ncols);
 
     #pragma omp parallel for collapse(2)
     for (int row = 0; row < nrows; ++row) {
@@ -61,7 +61,7 @@ auto multilookSummed(const EigenType& input, int row_looks, int col_looks)
     const auto ncols = input.cols() / col_looks;
 
     using value_type = typename EigenType::value_type;
-    isce::core::EArray2D<value_type> output(nrows, ncols);
+    isce3::core::EArray2D<value_type> output(nrows, ncols);
 
     #pragma omp parallel for collapse(2)
     for (int row = 0; row < nrows; ++row) {
@@ -93,7 +93,7 @@ auto multilookAveraged(const EigenType& input, int row_looks, int col_looks)
     const auto ncols = input.cols() / col_looks;
 
     using value_type = typename EigenType::value_type;
-    isce::core::EArray2D<value_type> output(nrows, ncols);
+    isce3::core::EArray2D<value_type> output(nrows, ncols);
 
     #pragma omp parallel for collapse(2)
     for (int row = 0; row < nrows; ++row) {
@@ -156,4 +156,4 @@ auto multilookPow(const EigenInput& input, int row_looks, int col_looks,
 }
 
 } // namespace signal
-} // namespace isce
+} // namespace isce3

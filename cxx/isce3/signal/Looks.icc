@@ -12,7 +12,7 @@
 /** @param[in] numberOfRows number of rows before multi-looking
 */
 template <class T>
-void isce::signal::Looks<T>::
+void isce3::signal::Looks<T>::
 nrows(int numberOfRows)
 {
     _nrows = numberOfRows;
@@ -21,7 +21,7 @@ nrows(int numberOfRows)
 /** @param[in] numberOfColumns number of columns before multi-looking
 */
 template <class T>
-void isce::signal::Looks<T>::
+void isce3::signal::Looks<T>::
 ncols(int numberOfColumns)
 {
     _ncols = numberOfColumns;
@@ -30,7 +30,7 @@ ncols(int numberOfColumns)
 /** @param[in] numLooksRow number of looks to be taken on rows
 */
 template <class T>
-void isce::signal::Looks<T>::
+void isce3::signal::Looks<T>::
 rowsLooks(int numLooksRow)
 {
     _rowsLooks = numLooksRow;
@@ -39,7 +39,7 @@ rowsLooks(int numLooksRow)
 /** @param[in] numLooksCol number of looks to be taken on columns
 */
 template <class T>
-void isce::signal::Looks<T>::
+void isce3::signal::Looks<T>::
 colsLooks(int numLooksCol)
 {
     _colsLooks = numLooksCol;
@@ -48,7 +48,7 @@ colsLooks(int numLooksCol)
 /** @param[in] numberOfRows number of rows after multi-looking
 */
 template <class T>
-void isce::signal::Looks<T>::
+void isce3::signal::Looks<T>::
 nrowsLooked(int numberOfRows)
 {
     _nrowsLooked = numberOfRows;
@@ -57,7 +57,7 @@ nrowsLooked(int numberOfRows)
 /** @param[in] numberOfColumns number of columns after multi-looking
 */
 template <class T>
-void isce::signal::Looks<T>::
+void isce3::signal::Looks<T>::
 ncolsLooked(int numberOfColumns)
 {
     _ncolsLooked = numberOfColumns;

@@ -32,7 +32,7 @@ def deserialize(h5Group, pyOrbit isceobj, **kwargs):
         raise NotImplementedError('No suitable deserialization method found.')
     
 # --------------------------------------------------------------------------------
-# Serialization functions for isce::core objects
+# Serialization functions for isce3::core objects
 # --------------------------------------------------------------------------------
 
 def loadPoly2d(pyIGroup group, pyPoly2d poly, poly_name='skew_dcpolynomial'):
@@ -50,7 +50,7 @@ def loadPoly2d(pyIGroup group, pyPoly2d poly, poly_name='skew_dcpolynomial'):
     loadFromH5(group.c_igroup, deref(poly.c_poly2d), <string> pyStringToBytes(poly_name))
 
 # --------------------------------------------------------------------------------
-# Serialization functions for isce::product objects
+# Serialization functions for isce3::product objects
 # --------------------------------------------------------------------------------
 
 def loadMetadata(pyIGroup group, pyMetadata meta):
@@ -67,7 +67,7 @@ def loadMetadata(pyIGroup group, pyMetadata meta):
     loadFromH5(group.c_igroup, deref(meta.c_metadata))
 
 # --------------------------------------------------------------------------------
-# Serialization functions for isce::geometry objects
+# Serialization functions for isce3::geometry objects
 # --------------------------------------------------------------------------------
 
 def loadTopo(pyTopo topo, metadata):

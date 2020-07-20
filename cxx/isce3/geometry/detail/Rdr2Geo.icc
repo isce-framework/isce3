@@ -7,18 +7,18 @@
 #include <isce3/core/Pixel.h>
 #include <isce3/core/Vector.h>
 
-namespace isce { namespace geometry { namespace detail {
+namespace isce3 { namespace geometry { namespace detail {
 
 NVCC_HD_WARNING_DISABLE
 template<class Orbit, class DEMInterpolator>
-CUDA_HOSTDEV isce::error::ErrorCode
-rdr2geo(isce::core::Vec3* llh, double t, double r, double fd,
+CUDA_HOSTDEV isce3::error::ErrorCode
+rdr2geo(isce3::core::Vec3* llh, double t, double r, double fd,
         const Orbit& orbit, const DEMInterpolator& dem,
-        const isce::core::Ellipsoid& ellipsoid, double wvl,
-        isce::core::LookSide side, double h0, const Rdr2GeoParams& params)
+        const isce3::core::Ellipsoid& ellipsoid, double wvl,
+        isce3::core::LookSide side, double h0, const Rdr2GeoParams& params)
 {
-    using namespace isce::core;
-    using isce::error::ErrorCode;
+    using namespace isce3::core;
+    using isce3::error::ErrorCode;
 
     // interpolate orbit at target azimuth time
     Vec3 pos, vel;
@@ -42,15 +42,15 @@ rdr2geo(isce::core::Vec3* llh, double t, double r, double fd,
 
 NVCC_HD_WARNING_DISABLE
 template<class DEMInterpolator>
-CUDA_HOSTDEV isce::error::ErrorCode
-rdr2geo(isce::core::Vec3* llh, const isce::core::Pixel& pixel,
-        const isce::core::Basis& tcnbasis, const isce::core::Vec3& pos,
-        const isce::core::Vec3& vel, const DEMInterpolator& dem,
-        const isce::core::Ellipsoid& ellipsoid, isce::core::LookSide side,
+CUDA_HOSTDEV isce3::error::ErrorCode
+rdr2geo(isce3::core::Vec3* llh, const isce3::core::Pixel& pixel,
+        const isce3::core::Basis& tcnbasis, const isce3::core::Vec3& pos,
+        const isce3::core::Vec3& vel, const DEMInterpolator& dem,
+        const isce3::core::Ellipsoid& ellipsoid, isce3::core::LookSide side,
         double h0, const Rdr2GeoParams& params)
 {
-    using namespace isce::core;
-    using isce::error::ErrorCode;
+    using namespace isce3::core;
+    using isce3::error::ErrorCode;
 
     // compute platform heading unit vector
     const auto vhat = vel.normalized();
@@ -167,4 +167,4 @@ rdr2geo(isce::core::Vec3* llh, const isce::core::Pixel& pixel,
     return converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
 }
 
-}}} // namespace isce::geometry::detail
+}}} // namespace isce3::geometry::detail

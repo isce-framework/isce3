@@ -2,8 +2,8 @@
 
 namespace py = pybind11;
 
-using isce::geometry::rtcInputRadiometry;
-using isce::geometry::rtcAlgorithm;
+using isce3::geometry::rtcInputRadiometry;
+using isce3::geometry::rtcAlgorithm;
 
 void addbinding(py::enum_<rtcInputRadiometry> & pyInputRadiometry)
 {

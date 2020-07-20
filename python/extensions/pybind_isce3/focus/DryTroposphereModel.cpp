@@ -1,6 +1,6 @@
 #include "DryTroposphereModel.h"
 
-using isce::focus::DryTroposphereModel;
+using isce3::focus::DryTroposphereModel;
 
 void addbinding(pybind11::enum_<DryTroposphereModel> & pyDryTropoModel)
 {

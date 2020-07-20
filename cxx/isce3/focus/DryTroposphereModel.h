@@ -5,7 +5,7 @@
 #include <isce3/core/Common.h>
 #include <string>
 
-namespace isce {
+namespace isce3 {
 namespace focus {
 
 /**
@@ -41,10 +41,10 @@ DryTroposphereModel parseDryTropoModel(const std::string& s);
  * \returns             Propagation delay (s)
  */
 CUDA_HOSTDEV
-double dryTropoDelayTSX(const isce::core::Vec3& p, const isce::core::Vec3& llh,
-                        const isce::core::Ellipsoid& ellipsoid);
+double dryTropoDelayTSX(const isce3::core::Vec3& p, const isce3::core::Vec3& llh,
+                        const isce3::core::Ellipsoid& ellipsoid);
 
 } // namespace focus
-} // namespace isce
+} // namespace isce3
 
 #include "DryTroposphereModel.icc"

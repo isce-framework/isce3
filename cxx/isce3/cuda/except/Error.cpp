@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include <isce3/cuda/except/Error.h>
 
-using namespace isce::cuda::except;
+using namespace isce3::cuda::except;
 
 static const char* cufftGetErrorString(const cufftResult err) {
     switch (err) {

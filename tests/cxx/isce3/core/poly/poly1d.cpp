@@ -30,7 +30,7 @@ TEST_F(Poly1DTest, Constant) {
     for (size_t i = 1; i < 5; ++i)
     {
         //Mean and norm should not matter
-        isce::core::Poly1d poly(0, i*1.0, i*i*1.0);
+        isce3::core::Poly1d poly(0, i*1.0, i*i*1.0);
         poly.setCoeff(0, refval);
 
         double value = poly.eval(i*1.0);
@@ -44,14 +44,14 @@ TEST_F(Poly1DTest, Constant) {
 TEST_F(Poly1DTest, MeanShift)
 {
     //Use identity polynomial for testing
-    isce::core::Poly1d refpoly(2, 0.0, 1.0);
+    isce3::core::Poly1d refpoly(2, 0.0, 1.0);
     refpoly.setCoeff(0, 0.0);
     refpoly.setCoeff(1, 1.0);
     refpoly.setCoeff(2, 0.0);
 
     for(size_t i=0; i<5; i++)
     {
-        isce::core::Poly1d newpoly(refpoly);
+        isce3::core::Poly1d newpoly(refpoly);
         newpoly.mean = 0.5 * i * i;
 
         double refval = refpoly.eval(2.0 * i);
@@ -66,14 +66,14 @@ TEST_F(Poly1DTest, MeanShift)
 TEST_F(Poly1DTest, NormShift)
 {
     //Use square polynomial for testing
-    isce::core::Poly1d refpoly(2,0.0,1.0);
+    isce3::core::Poly1d refpoly(2,0.0,1.0);
     refpoly.setCoeff(0, 0.0);
     refpoly.setCoeff(1, 0.0);
     refpoly.setCoeff(2, 1.0);
 
     for(size_t i=1; i<6; i++)
     {
-        isce::core::Poly1d newpoly(refpoly);
+        isce3::core::Poly1d newpoly(refpoly);
         newpoly.norm = i * i * 1.0;
 
         double refval = refpoly.eval(2.5);
@@ -89,7 +89,7 @@ TEST_F(Poly1DTest, Derivative)
 {
     for(size_t i=1; i<6; i++)
     {
-        isce::core::Poly1d refpoly(i, 0.0, 1.0);
+        isce3::core::Poly1d refpoly(i, 0.0, 1.0);
         refpoly.norm = i;
         refpoly.setCoeff(0, 10.0);
         for (int ii=1; ii<=static_cast<int>(i); ii++)
@@ -98,11 +98,11 @@ TEST_F(Poly1DTest, Derivative)
         }
 
 
-        isce::core::Poly1d refder(i-1,0.0,1.0);
+        isce3::core::Poly1d refder(i-1,0.0,1.0);
         refder.norm = i;
         std::fill( refder.coeffs.begin(), refder.coeffs.end(), 1.0/i);
 
-        isce::core::Poly1d newpoly = refpoly.derivative();
+        isce3::core::Poly1d newpoly = refpoly.derivative();
 
         double refval = refder.eval(0.8);
         double newval = newpoly.eval(0.8);

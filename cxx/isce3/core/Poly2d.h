@@ -22,7 +22,7 @@
  *
  * where \f$a_ij\f$ represents the coefficients, \f$\mu_x\f$ and \f$\mu_y\f$ represent the means and 
  * \f$\sigma_x\f$ and \f$\sigma_y\f$ represent the norms*/
-class isce::core::Poly2d {
+class isce3::core::Poly2d {
 public:
 
     /** Order of polynomial in range or x*/
@@ -84,7 +84,7 @@ public:
     void printPoly() const;
 };
 
-isce::core::Poly2d & isce::core::Poly2d::
+isce3::core::Poly2d & isce3::core::Poly2d::
 operator=(const Poly2d &rhs) {
     rangeOrder = rhs.rangeOrder;
     azimuthOrder = rhs.azimuthOrder;
@@ -100,7 +100,7 @@ operator=(const Poly2d &rhs) {
  * @param[in] row azimuth/y index 
  * @param[in] col range/x index
  * @param[in] val Coefficient value*/
-void isce::core::Poly2d::
+void isce3::core::Poly2d::
 setCoeff(int row, int col, double val) {
     if ((row < 0) || (row > azimuthOrder)) {
         std::string errstr = "Poly2d::setCoeff - Trying to set coefficient for row " + 
@@ -119,7 +119,7 @@ setCoeff(int row, int col, double val) {
 /**
  * @param[in] row azimuth/y index
  * @param[in] col range/x index*/
-double isce::core::Poly2d::
+double isce3::core::Poly2d::
 getCoeff(int row, int col) const {
     if ((row < 0) || (row > azimuthOrder)) {
         std::string errstr = "Poly2d::getCoeff - Trying to get coefficient for row " +

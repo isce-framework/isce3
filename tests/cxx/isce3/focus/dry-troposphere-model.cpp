@@ -2,10 +2,10 @@
 #include <isce3/except/Error.h>
 #include <isce3/focus/DryTroposphereModel.h>
 
-using isce::except::InvalidArgument;
-using isce::focus::DryTroposphereModel;
-using isce::focus::parseDryTropoModel;
-using isce::focus::toString;
+using isce3::except::InvalidArgument;
+using isce3::focus::DryTroposphereModel;
+using isce3::focus::parseDryTropoModel;
+using isce3::focus::toString;
 
 TEST(DryTroposphereModelTest, ToString)
 {

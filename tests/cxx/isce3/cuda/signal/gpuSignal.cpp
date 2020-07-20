@@ -17,12 +17,12 @@
 #include "isce3/cuda/except/Error.h"
 #include "isce3/cuda/signal/gpuSignal.h"
 
-using isce::cuda::signal::gpuSignal;
+using isce3::cuda::signal::gpuSignal;
 
 TEST(gpuSignal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data
-    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
@@ -72,7 +72,7 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
 TEST(gpuSignal, ForwardBackwardRangeDouble)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data
-    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
@@ -122,7 +122,7 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
 TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data
-    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
@@ -172,7 +172,7 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 TEST(gpuSignal, ForwardBackwardAzimuthDouble)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data
-    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
+    isce3::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();

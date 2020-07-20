@@ -12,7 +12,7 @@
 #include <string>
 #include <isce3/io/Raster.h>
 
-class isce::geometry::TopoLayers {
+class isce3::geometry::TopoLayers {
 
     public:
         // Default constructor
@@ -73,26 +73,26 @@ class isce::geometry::TopoLayers {
                          bool computeMask = false) {
 
             // Initialize the standard output rasters
-            _xRaster = new isce::io::Raster(outdir + "/x.rdr", width, length, 1,
+            _xRaster = new isce3::io::Raster(outdir + "/x.rdr", width, length, 1,
                 GDT_Float64, "ISCE");
-            _yRaster = new isce::io::Raster(outdir + "/y.rdr", width, length, 1,
+            _yRaster = new isce3::io::Raster(outdir + "/y.rdr", width, length, 1,
                 GDT_Float64, "ISCE");
-            _zRaster = new isce::io::Raster(outdir + "/z.rdr", width, length, 1,
+            _zRaster = new isce3::io::Raster(outdir + "/z.rdr", width, length, 1,
                 GDT_Float64, "ISCE");
-            _incRaster = new isce::io::Raster(outdir + "/inc.rdr", width, length, 1,
+            _incRaster = new isce3::io::Raster(outdir + "/inc.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
-            _hdgRaster = new isce::io::Raster(outdir + "/hdg.rdr", width, length, 1,
+            _hdgRaster = new isce3::io::Raster(outdir + "/hdg.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
-            _localIncRaster = new isce::io::Raster(outdir + "/localInc.rdr", width, length, 1,
+            _localIncRaster = new isce3::io::Raster(outdir + "/localInc.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
-            _localPsiRaster = new isce::io::Raster(outdir + "/localPsi.rdr", width, length, 1,
+            _localPsiRaster = new isce3::io::Raster(outdir + "/localPsi.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
-            _simRaster = new isce::io::Raster(outdir + "/simamp.rdr", width, length, 1,
+            _simRaster = new isce3::io::Raster(outdir + "/simamp.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
        
             // Optional mask raster
             if (computeMask) { 
-                _maskRaster = new isce::io::Raster(outdir + "/mask.rdr", width, length, 1,
+                _maskRaster = new isce3::io::Raster(outdir + "/mask.rdr", width, length, 1,
                     GDT_Byte, "ISCE");
             } else {
                 _maskRaster = nullptr;
@@ -107,10 +107,10 @@ class isce::geometry::TopoLayers {
         }
 
         // Set rasters (plus mask raster) from externally created rasters
-        void setRasters(isce::io::Raster & xRaster, isce::io::Raster & yRaster,
-                        isce::io::Raster & zRaster, isce::io::Raster & incRaster,
-                        isce::io::Raster & hdgRaster, isce::io::Raster & localIncRaster,
-                        isce::io::Raster & localPsiRaster, isce::io::Raster & simRaster) {
+        void setRasters(isce3::io::Raster & xRaster, isce3::io::Raster & yRaster,
+                        isce3::io::Raster & zRaster, isce3::io::Raster & incRaster,
+                        isce3::io::Raster & hdgRaster, isce3::io::Raster & localIncRaster,
+                        isce3::io::Raster & localPsiRaster, isce3::io::Raster & simRaster) {
             _xRaster = &xRaster;
             _yRaster = &yRaster;
             _zRaster = &zRaster;
@@ -122,11 +122,11 @@ class isce::geometry::TopoLayers {
         }
 
         // Set rasters (plus mask raster) from externally created rasters
-        void setRasters(isce::io::Raster & xRaster, isce::io::Raster & yRaster,
-                        isce::io::Raster & zRaster, isce::io::Raster & incRaster,
-                        isce::io::Raster & hdgRaster, isce::io::Raster & localIncRaster,
-                        isce::io::Raster & localPsiRaster, isce::io::Raster & simRaster,
-                        isce::io::Raster & maskRaster) {
+        void setRasters(isce3::io::Raster & xRaster, isce3::io::Raster & yRaster,
+                        isce3::io::Raster & zRaster, isce3::io::Raster & incRaster,
+                        isce3::io::Raster & hdgRaster, isce3::io::Raster & localIncRaster,
+                        isce3::io::Raster & localPsiRaster, isce3::io::Raster & simRaster,
+                        isce3::io::Raster & maskRaster) {
             _xRaster = &xRaster;
             _yRaster = &yRaster;
             _zRaster = &zRaster;
@@ -261,15 +261,15 @@ class isce::geometry::TopoLayers {
         std::valarray<double> _crossTrack; // internal usage only; not saved to Raster
 
         // Raster pointers for each layer
-        isce::io::Raster * _xRaster;
-        isce::io::Raster * _yRaster;
-        isce::io::Raster * _zRaster;
-        isce::io::Raster * _incRaster;
-        isce::io::Raster * _hdgRaster;
-        isce::io::Raster * _localIncRaster;
-        isce::io::Raster * _localPsiRaster;
-        isce::io::Raster * _simRaster;
-        isce::io::Raster * _maskRaster;
+        isce3::io::Raster * _xRaster;
+        isce3::io::Raster * _yRaster;
+        isce3::io::Raster * _zRaster;
+        isce3::io::Raster * _incRaster;
+        isce3::io::Raster * _hdgRaster;
+        isce3::io::Raster * _localIncRaster;
+        isce3::io::Raster * _localPsiRaster;
+        isce3::io::Raster * _simRaster;
+        isce3::io::Raster * _maskRaster;
 
         // Dimensions
         size_t _length, _width;

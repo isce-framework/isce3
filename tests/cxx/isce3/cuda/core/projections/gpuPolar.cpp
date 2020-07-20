@@ -18,8 +18,8 @@
 
 #include "projtest.h"
 
-isce::cuda::core::PolarStereo gNorth(3413);
-isce::cuda::core::PolarStereo gSouth(3031);
+isce3::cuda::core::PolarStereo gNorth(3413);
+isce3::cuda::core::PolarStereo gSouth(3031);
 
 struct PolarTest : public ::testing::Test {
     virtual void SetUp() {
@@ -134,7 +134,7 @@ polarTest(gNorth, North15, { 1.896312874775227e+00,   1.411713711367596e+00, 1.6
 
 
 
-/*int roundtriptest(int np, isce::core::PolarStereo hemi) {
+/*int roundtriptest(int np, isce3::core::PolarStereo hemi) {
 int N=np;
 cout<<"N="<<N<<endl;
 //Allocate device arrays
@@ -181,8 +181,8 @@ int main(int argc, char **argv) {
 	clock::time_point start,end;
 	std::chrono::duration<double> elapsedg,elapsedc;
 	
-	gpuisce::core::PolarStereo gSouth(3031);
-	isce::core::PolarStereo South(3031);
+	gpuisce3::core::PolarStereo gSouth(3031);
+	isce3::core::PolarStereo South(3031);
 	int np;
 	np=1024*1024*128;
 	struct count{

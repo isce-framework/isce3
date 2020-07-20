@@ -10,10 +10,10 @@
 #include <isce3/core/TimeDelta.h>
 #include <isce3/core/Vector.h>
 
-namespace isce { namespace cuda { namespace core {
+namespace isce3 { namespace cuda { namespace core {
 
 /**
- * CUDA counterpart of isce::core::Orbit
+ * CUDA counterpart of isce3::core::Orbit
  *
  * This class exports a host-side interface for managing and interacting with
  * orbit data residing in device memory. It is not intended for use in device
@@ -24,8 +24,8 @@ public:
 
     Orbit() = default;
 
-    /** Construct from isce::core::Orbit (copy from host to device) */
-    Orbit(const isce::core::Orbit &);
+    /** Construct from isce3::core::Orbit (copy from host to device) */
+    Orbit(const isce3::core::Orbit &);
 
     /**
      * Construct from list of state vectors
@@ -35,8 +35,8 @@ public:
      * \param[in] statevecs State vectors
      * \param[in] interp_method Interpolation method
      */
-    Orbit(const std::vector<isce::core::StateVector> & statevecs,
-          isce::core::OrbitInterpMethod interp_method = isce::core::OrbitInterpMethod::Hermite);
+    Orbit(const std::vector<isce3::core::StateVector> & statevecs,
+          isce3::core::OrbitInterpMethod interp_method = isce3::core::OrbitInterpMethod::Hermite);
 
     /**
      * Construct from list of state vectors and reference epoch
@@ -45,27 +45,27 @@ public:
      * \param[in] reference_epoch Reference epoch
      * \param[in] interp_method Interpolation method
      */
-    Orbit(const std::vector<isce::core::StateVector> & statevecs,
-          const isce::core::DateTime & reference_epoch,
-          isce::core::OrbitInterpMethod interp_method = isce::core::OrbitInterpMethod::Hermite);
+    Orbit(const std::vector<isce3::core::StateVector> & statevecs,
+          const isce3::core::DateTime & reference_epoch,
+          isce3::core::OrbitInterpMethod interp_method = isce3::core::OrbitInterpMethod::Hermite);
 
     /** Export list of state vectors */
-    std::vector<isce::core::StateVector> getStateVectors() const;
+    std::vector<isce3::core::StateVector> getStateVectors() const;
 
     /** Set orbit state vectors */
-    void setStateVectors(const std::vector<isce::core::StateVector> &);
+    void setStateVectors(const std::vector<isce3::core::StateVector> &);
 
     /** Reference epoch (UTC) */
-    const isce::core::DateTime & referenceEpoch() const { return _reference_epoch; }
+    const isce3::core::DateTime & referenceEpoch() const { return _reference_epoch; }
 
     /** Set reference epoch (UTC) */
-    void referenceEpoch(const isce::core::DateTime &);
+    void referenceEpoch(const isce3::core::DateTime &);
 
     /** Interpolation method */
-    isce::core::OrbitInterpMethod interpMethod() const { return _interp_method; }
+    isce3::core::OrbitInterpMethod interpMethod() const { return _interp_method; }
 
     /** Set interpolation method */
-    void interpMethod(isce::core::OrbitInterpMethod interp_method) { _interp_method = interp_method; }
+    void interpMethod(isce3::core::OrbitInterpMethod interp_method) { _interp_method = interp_method; }
 
     /** Time of first state vector relative to reference epoch (s) */
     double startTime() const { return _time[0]; }
@@ -77,13 +77,13 @@ public:
     double endTime() const { return _time[size()-1]; }
 
     /** UTC time of first state vector */
-    isce::core::DateTime startDateTime() const { return _reference_epoch + isce::core::TimeDelta(startTime()); }
+    isce3::core::DateTime startDateTime() const { return _reference_epoch + isce3::core::TimeDelta(startTime()); }
 
     /** UTC time of center of orbit */
-    isce::core::DateTime midDateTime() const { return _reference_epoch + isce::core::TimeDelta(midTime()); }
+    isce3::core::DateTime midDateTime() const { return _reference_epoch + isce3::core::TimeDelta(midTime()); }
 
     /** UTC time of last state vector */
-    isce::core::DateTime endDateTime() const { return _reference_epoch + isce::core::TimeDelta(endTime()); }
+    isce3::core::DateTime endDateTime() const { return _reference_epoch + isce3::core::TimeDelta(endTime()); }
 
     /** Time interval between state vectors (s) */
     double spacing() const { return _time.spacing(); }
@@ -92,22 +92,22 @@ public:
     int size() const { return _time.size(); }
 
     /** Get state vector times relative to reference epoch (s) */
-    const isce::core::Linspace<double> & time() const { return _time; }
+    const isce3::core::Linspace<double> & time() const { return _time; }
 
     /** Get state vector positions in ECEF coordinates (m) */
-    const thrust::device_vector<isce::core::Vec3> & position() const { return _position; }
+    const thrust::device_vector<isce3::core::Vec3> & position() const { return _position; }
 
     /** Get state vector velocities in ECEF coordinates (m/s) */
-    const thrust::device_vector<isce::core::Vec3> & velocity() const { return _velocity; }
+    const thrust::device_vector<isce3::core::Vec3> & velocity() const { return _velocity; }
 
     /** Get the specified state vector time relative to reference epoch (s) */
     double time(int idx) const { return _time[idx]; }
 
     /** Get the specified state vector position in ECEF coordinates (m) */
-    isce::core::Vec3 position(int idx) const { return _position[idx]; }
+    isce3::core::Vec3 position(int idx) const { return _position[idx]; }
 
     /** Get the specified state vector velocity in ECEF coordinates (m/s) */
-    isce::core::Vec3 velocity(int idx) const { return _velocity[idx]; }
+    isce3::core::Vec3 velocity(int idx) const { return _velocity[idx]; }
 
     /**
      * Interpolate platform position and/or velocity
@@ -122,18 +122,18 @@ public:
      * \param[in] border_mode Mode for handling interpolation outside orbit domain
      * \return Error code indicating exit status
      */
-    isce::error::ErrorCode
-    interpolate(isce::core::Vec3* position, isce::core::Vec3* velocity,
+    isce3::error::ErrorCode
+    interpolate(isce3::core::Vec3* position, isce3::core::Vec3* velocity,
                 double t,
-                isce::core::OrbitInterpBorderMode border_mode =
-                        isce::core::OrbitInterpBorderMode::Error) const;
+                isce3::core::OrbitInterpBorderMode border_mode =
+                        isce3::core::OrbitInterpBorderMode::Error) const;
 
 private:
-    isce::core::DateTime _reference_epoch;
-    isce::core::Linspace<double> _time;
-    thrust::device_vector<isce::core::Vec3> _position;
-    thrust::device_vector<isce::core::Vec3> _velocity;
-    isce::core::OrbitInterpMethod _interp_method = isce::core::OrbitInterpMethod::Hermite;
+    isce3::core::DateTime _reference_epoch;
+    isce3::core::Linspace<double> _time;
+    thrust::device_vector<isce3::core::Vec3> _position;
+    thrust::device_vector<isce3::core::Vec3> _velocity;
+    isce3::core::OrbitInterpMethod _interp_method = isce3::core::OrbitInterpMethod::Hermite;
 };
 
 bool operator==(const Orbit &, const Orbit &);

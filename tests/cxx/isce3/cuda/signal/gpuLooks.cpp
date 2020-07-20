@@ -32,7 +32,7 @@ struct gpuLooksTest : public ::testing::Test {
     // complex original data
     std::valarray<std::complex<float>> cpxData;
 
-    isce::cuda::signal::gpuLooks<float> lksObj;
+    isce3::cuda::signal::gpuLooks<float> lksObj;
 
     protected:
         // constructor
