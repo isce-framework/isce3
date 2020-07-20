@@ -9,7 +9,7 @@ from libcpp cimport bool
 from isceextension cimport LUT1d
 from isceextension cimport Raster
 
-cdef extern from "isce/cuda/signal/gpuCrossMul.h" namespace "isce::cuda::signal":
+cdef extern from "isce3/cuda/signal/gpuCrossMul.h" namespace "isce::cuda::signal":
 
     # Class definition
     cdef cppclass gpuCrossmul:

@@ -1,0 +1,170 @@
+#include <cmath>
+#include <limits>
+
+#include <isce3/core/Basis.h>
+#include <isce3/core/Ellipsoid.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/core/Pixel.h>
+#include <isce3/core/Vector.h>
+
+namespace isce { namespace geometry { namespace detail {
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit, class DEMInterpolator>
+CUDA_HOSTDEV isce::error::ErrorCode
+rdr2geo(isce::core::Vec3* llh, double t, double r, double fd,
+        const Orbit& orbit, const DEMInterpolator& dem,
+        const isce::core::Ellipsoid& ellipsoid, double wvl,
+        isce::core::LookSide side, double h0, const Rdr2GeoParams& params)
+{
+    using namespace isce::core;
+    using isce::error::ErrorCode;
+
+    // interpolate orbit at target azimuth time
+    Vec3 pos, vel;
+    const auto status =
+            orbit.interpolate(&pos, &vel, t, OrbitInterpBorderMode::FillNaN);
+    if (status != ErrorCode::Success) {
+        return status;
+    }
+
+    // setup geocentric TCN basis
+    const auto tcnbasis = Basis(pos, vel);
+
+    // compute Doppler factor
+    const auto vmag = vel.norm();
+    const auto dopfact = 0.5 * wvl * fd * r / vmag;
+
+    const auto pixel = Pixel(r, dopfact, 0);
+    return rdr2geo(llh, pixel, tcnbasis, pos, vel, dem, ellipsoid, side, h0,
+                   params);
+}
+
+NVCC_HD_WARNING_DISABLE
+template<class DEMInterpolator>
+CUDA_HOSTDEV isce::error::ErrorCode
+rdr2geo(isce::core::Vec3* llh, const isce::core::Pixel& pixel,
+        const isce::core::Basis& tcnbasis, const isce::core::Vec3& pos,
+        const isce::core::Vec3& vel, const DEMInterpolator& dem,
+        const isce::core::Ellipsoid& ellipsoid, isce::core::LookSide side,
+        double h0, const Rdr2GeoParams& params)
+{
+    using namespace isce::core;
+    using isce::error::ErrorCode;
+
+    // compute platform heading unit vector
+    const auto vhat = vel.normalized();
+
+    // unpack TCN basis vectors
+    const auto& that = tcnbasis.x0();
+    const auto& chat = tcnbasis.x1();
+    const auto& nhat = tcnbasis.x2();
+
+    // pre-compute TCN vector products
+    const auto ndotv = nhat.dot(vhat);
+    const auto vdott = vhat.dot(that);
+
+    // compute major & minor axes of ellipsoid
+    const auto major = ellipsoid.a();
+    const auto minor = major * std::sqrt(1. - ellipsoid.e2());
+
+    // setup orthonormal system at the nadir point
+    const auto sat_dist = pos.norm();
+    const auto eta = [&]() {
+        const auto x = pos[0] / major;
+        const auto y = pos[1] / major;
+        const auto z = pos[2] / minor;
+        return 1. / std::sqrt((x * x) + (y * y) + (z * z));
+    }();
+    const auto radius = eta * sat_dist;
+    const auto height = (1. - eta) * sat_dist;
+
+    // update function - given a target height estimate, compute a new target
+    // LLH estimate
+    auto updateLLH = [&](const double h) {
+        // compute angles
+        const auto a = sat_dist;
+        const auto b = radius + h;
+        const auto cos_theta = 0.5 * (a / pixel.range() + pixel.range() / a -
+                                      (b / a) * (b / pixel.range()));
+        const auto sin_theta = std::sqrt(1. - cos_theta * cos_theta);
+
+        // compute TCN scale factors
+        const auto gamma = pixel.range() * cos_theta;
+        const auto alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
+        const auto beta = [&]() {
+            const auto x = pixel.range() * sin_theta;
+            const auto beta = std::sqrt((x * x) - (alpha * alpha));
+            return (side == LookSide::Right) ? beta : -beta;
+        }();
+
+        // compute vector from satellite to ground
+        const auto delta = alpha * that + beta * chat + gamma * nhat;
+
+        // estimate target LLH
+        const auto xyz = pos + delta;
+        return ellipsoid.xyzToLonLat(xyz);
+    };
+
+    // iterate
+    bool converged = false;
+    auto h = std::isnan(h0) ? height : h0;
+    Vec3 llh_old;
+    for (int i = 0; i < params.maxiter + params.extraiter; ++i) {
+
+        // near nadir test
+        if (height - h >= pixel.range()) {
+            break;
+        }
+
+        // estimate target LLH
+        auto llh_new = updateLLH(h);
+
+        // snap to interpolated DEM height at target lon/lat
+        llh_new[2] = dem.interpolateLonLat(llh_new[0], llh_new[1]);
+
+        // convert to ECEF coords
+        const auto xyz_new = ellipsoid.lonLatToXyz(llh_new);
+
+        // update target height estimate
+        h = xyz_new.norm() - radius;
+
+        // check for convergence
+        const auto r = (pos - xyz_new).norm();
+        const auto dr = std::abs(pixel.range() - r);
+        if (dr < params.tol) {
+            converged = true;
+            break;
+        }
+
+        // in extra iterations, use average of new & old estimated target
+        // position
+        if (i > params.maxiter) {
+            const auto xyz_old = ellipsoid.lonLatToXyz(llh_old);
+            const auto xyz_avg = 0.5 * (xyz_old + xyz_new);
+            llh_new = ellipsoid.xyzToLonLat(xyz_avg);
+            h = xyz_avg.norm() - radius;
+        }
+
+        // save old estimate
+        llh_old = llh_new;
+    }
+
+    /*
+     * XXX this seems innocuous to me but causes a bunch of tests to fail
+     *
+     * // failed to converge - set output to NaN
+     * if (not converged) {
+     *     constexpr static auto nan = std::numeric_limits<double>::quiet_NaN();
+     *     *llh = {nan, nan, nan};
+     *     return 0;
+     * }
+     */
+
+    // final computation - output points exactly at pixel range if converged
+    *llh = updateLLH(h);
+
+    return converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
+}
+
+}}} // namespace isce::geometry::detail

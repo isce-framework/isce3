@@ -1,0 +1,163 @@
+#include <cmath>
+#include <limits>
+
+#include <isce3/core/Ellipsoid.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/core/Vector.h>
+
+namespace isce { namespace geometry { namespace detail {
+
+NVCC_HD_WARNING_DISABLE
+template<class DopplerModel>
+CUDA_HOSTDEV double
+computeDopplerAztimeDiff(double t, double r, const isce::core::Vec3& rvec,
+                         const isce::core::Vec3& vel,
+                         const DopplerModel& doppler, double wvl,
+                         const Geo2RdrParams& params)
+{
+    // compute Doppler
+    const auto dopfact = rvec.dot(vel);
+    const auto fdop = 0.5 * wvl * doppler.eval(t, r);
+
+    // use forward difference to compute Doppler derivative
+    const auto fdopder =
+            (0.5 * wvl * doppler.eval(t, r + params.dr) - fdop) / params.dr;
+
+    // evaluate cost function and its derivative
+    const auto fn = dopfact - fdop * r;
+    const auto c1 = -vel.dot(vel);
+    const auto c2 = (fdop / r) + fdopder;
+    const auto fnprime = c1 + c2 * dopfact;
+
+    const auto dt = fn / fnprime;
+    return dt;
+}
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit>
+CUDA_HOSTDEV isce::error::ErrorCode
+updateAztime(double* t, const Orbit& orbit, const isce::core::Vec3& xyz,
+             isce::core::LookSide side,
+             double rmin = std::numeric_limits<double>::quiet_NaN(),
+             double rmax = std::numeric_limits<double>::quiet_NaN())
+{
+    using namespace isce::core;
+    using isce::error::ErrorCode;
+
+    // compute azimuth time spacing for coarse grid search
+    constexpr static int num_aztime_test = 15;
+    const auto tstart = orbit.startTime();
+    const auto tend = orbit.endTime();
+    const auto dt = (tend - tstart) / (num_aztime_test - 1);
+
+    // find azimuth time with minimum valid range distance to target
+    double r_closest = 1e16;
+    double t_closest = -1000.;
+    for (int k = 0; k < num_aztime_test; ++k) {
+
+        const auto tt = tstart + k * dt;
+        if (tt < tstart or tt > tend) {
+            continue;
+        }
+
+        // interpolate orbit
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, tt, OrbitInterpBorderMode::FillNaN);
+
+        // compute slant range
+        const auto rvec = xyz - pos;
+
+        // check look side (only first time)
+        if (k == 0) {
+            // (Left && positive) || (Right && negative)
+            if ((side == LookSide::Right) xor (rvec.cross(vel).dot(pos) > 0.)) {
+                return ErrorCode::WrongLookSide;
+            }
+        }
+
+        const auto r = rvec.norm();
+
+        // check validity
+        if (not std::isnan(rmin) and r < rmin) {
+            continue;
+        }
+        if (not std::isnan(rmax) and r > rmax) {
+            continue;
+        }
+
+        // update best guess
+        if (r < r_closest) {
+            r_closest = r;
+            t_closest = tt;
+        }
+    }
+
+    // if we did not find a good guess, use tmid as intial guess
+    *t = (t_closest < 0.) ? orbit.midTime() : t_closest;
+    return ErrorCode::Success;
+}
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit, class DopplerModel>
+CUDA_HOSTDEV isce::error::ErrorCode
+geo2rdr(double* t, double* r, const isce::core::Vec3& llh,
+        const isce::core::Ellipsoid& ellipsoid, const Orbit& orbit,
+        const DopplerModel& doppler, double wvl, isce::core::LookSide side,
+        double t0, const Geo2RdrParams& params)
+{
+    using namespace isce::core;
+    using isce::error::ErrorCode;
+
+    // convert LLH to ECEF
+    const auto xyz = ellipsoid.lonLatToXyz(llh);
+
+    // get initial azimuth time guess
+    if (t0 >= orbit.startTime() and t0 <= orbit.endTime()) {
+        *t = t0;
+    } else {
+        // perform a coarse grid search over the orbit's span for the azimuth
+        // time point that minimizes the range to the target
+        const auto status = updateAztime(t, orbit, xyz, side);
+        if (status != ErrorCode::Success) {
+            return status;
+        }
+    }
+
+    // begin iterations
+    double r_old = 0.;
+    for (int i = 0; i < params.maxiter; ++i) {
+
+        // interpolate orbit
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, *t, OrbitInterpBorderMode::FillNaN);
+
+        // compute slant range from satellite to ground point
+        const auto rvec = xyz - pos;
+        *r = rvec.norm();
+
+        // Check look side (only first time)
+        if (i == 0) {
+            // (Left && positive) || (Right && negative)
+            if ((side == LookSide::Right) xor (rvec.cross(vel).dot(pos) > 0.)) {
+                return ErrorCode::WrongLookSide;
+            }
+        }
+
+        // check for convergence
+        if (std::abs(*r - r_old) < params.tol) {
+            return ErrorCode::Success;
+        }
+
+        // update guess for azimuth time
+        const auto dt = computeDopplerAztimeDiff(*t, *r, rvec, vel, doppler,
+                                                 wvl, params);
+        *t -= dt;
+
+        r_old = *r;
+    }
+
+    // if we reach this point, no convergence for specified threshold
+    return ErrorCode::FailedToConverge;
+}
+
+}}} // namespace isce::geometry::detail

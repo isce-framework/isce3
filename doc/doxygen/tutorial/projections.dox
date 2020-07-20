@@ -14,7 +14,7 @@ projections required by NISAR.
 
 In general, one only needs to include the isce::core::Projections headerfile. 
 \code{.cpp}
-#include "isce/core/Projections.h"
+#include "isce3/core/Projections.h"
 \endcode
 
 If one is looking to process data with more general set of projections as part of your workflow, include

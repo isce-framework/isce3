@@ -8,7 +8,7 @@ A higher level interface to FFTW3 library is available in ISCE3 through isce::si
 The following header file is required:
 
 \code{.cpp}
-#include "isce/signal/Signal.h"
+#include "isce3/signal/Signal.h"
 \endcode
 
 \section signalconstruct Constructors
@@ -146,7 +146,7 @@ sig.upsample(data, dataUpsampled, nrows, nfft, oversample, shiftImpact);
 
 \code{.cpp}
 
-#include "isce/signal/Signal.h"
+#include "isce3/signal/Signal.h"
 
 
 int main() {

@@ -14,7 +14,7 @@ from isceextension cimport Product
 from isceextension cimport Raster
 from isceextension cimport Swath
 
-cdef extern from "isce/cuda/image/ResampSlc.h" namespace "isce::cuda::image":
+cdef extern from "isce3/cuda/image/ResampSlc.h" namespace "isce::cuda::image":
 
     # ResampSlc class
     cdef cppclass ResampSlc:

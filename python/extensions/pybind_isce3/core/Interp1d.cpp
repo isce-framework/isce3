@@ -3,9 +3,9 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <valarray>
-#include <isce/core/Interp1d.h>
-#include <isce/core/Kernels.h>
-#include <isce/except/Error.h>
+#include <isce3/core/Interp1d.h>
+#include <isce3/core/Kernels.h>
+#include <isce3/except/Error.h>
 
 namespace py = pybind11;
 

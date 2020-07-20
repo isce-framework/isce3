@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <isce/io/gdal/Dataset.h>
+#include <isce3/io/gdal/Dataset.h>
 
 namespace py = pybind11;
 

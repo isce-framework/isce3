@@ -12,7 +12,7 @@ from Interpolator cimport dataInterpMethod
 from IH5 cimport IGroup
 
 # LUT2d
-cdef extern from "isce/core/LUT2d.h" namespace "isce::core":
+cdef extern from "isce3/core/LUT2d.h" namespace "isce::core":
     cdef cppclass LUT2d[T]:
 
         # Constructors
@@ -33,7 +33,7 @@ cdef extern from "isce/core/LUT2d.h" namespace "isce::core":
         void boundsError(bool val)
 
 # Wrapper around isce::core serialization defined in <isce/core/Serialization.h
-cdef extern from "isce/core/Serialization.h" namespace "isce::core":
+cdef extern from "isce3/core/Serialization.h" namespace "isce::core":
     void loadCalGrid(IGroup & group, const string & dsetName, LUT2d[double] & lut)
     void saveCalGrid(IGroup & group,
                      const string & dsetName,

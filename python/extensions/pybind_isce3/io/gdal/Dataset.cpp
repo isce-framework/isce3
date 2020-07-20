@@ -5,8 +5,8 @@
 #include <memory>
 #include <string>
 
-#include <isce/except/Error.h>
-#include <isce/io/gdal/Raster.h>
+#include <isce3/except/Error.h>
+#include <isce3/io/gdal/Raster.h>
 
 #include "GDALAccess.h"
 #include "GDALDataType.h"

@@ -1,11 +1,11 @@
 #include "Backproject.h"
 
-#include <isce/container/RadarGeometry.h>
-#include <isce/core/Kernels.h>
-#include <isce/except/Error.h>
-#include <isce/focus/Backproject.h>
-#include <isce/focus/DryTroposphereModel.h>
-#include <isce/geometry/DEMInterpolator.h>
+#include <isce3/container/RadarGeometry.h>
+#include <isce3/core/Kernels.h>
+#include <isce3/except/Error.h>
+#include <isce3/focus/Backproject.h>
+#include <isce3/focus/DryTroposphereModel.h>
+#include <isce3/geometry/DEMInterpolator.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;

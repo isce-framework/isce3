@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <isce/focus/Chirp.h>
+#include <isce3/focus/Chirp.h>
 
 using namespace isce::focus;
 namespace py = pybind11;

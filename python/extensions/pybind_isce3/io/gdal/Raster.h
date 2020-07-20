@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <isce/io/gdal/Raster.h>
+#include <isce3/io/gdal/Raster.h>
 
 namespace py = pybind11;
 

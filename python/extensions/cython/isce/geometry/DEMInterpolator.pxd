@@ -9,7 +9,7 @@ from Raster cimport Raster
 from libcpp cimport bool
 
 # DEMInterpolator
-cdef extern from "isce/geometry/DEMInterpolator.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/DEMInterpolator.h" namespace "isce::geometry":
     cdef cppclass DEMInterpolator:
 
         # Constructor

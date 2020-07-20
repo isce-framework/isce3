@@ -1,6 +1,6 @@
 #pragma once
 
-#include <isce/signal/Covariance.h>
+#include <isce3/signal/Covariance.h>
 #include <pybind11/pybind11.h>
 
 template<typename T>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <isce/core/Kernels.h>
+#include <isce3/core/Kernels.h>
 #include <pybind11/pybind11.h>
 
 // "Trampoline" class allowing inheritance in Python

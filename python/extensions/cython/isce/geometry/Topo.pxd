@@ -22,7 +22,7 @@ from Ellipsoid cimport Ellipsoid
 
 from LUT2d cimport LUT2d
 
-cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Topo.h" namespace "isce::geometry":
     cdef cppclass Topo:
 
         # Constructor

@@ -6,8 +6,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-#include <isce/io/IH5.h>
-#include <isce/product/Product.h>
+#include <isce3/io/IH5.h>
+#include <isce3/product/Product.h>
 
 namespace py = pybind11;
 

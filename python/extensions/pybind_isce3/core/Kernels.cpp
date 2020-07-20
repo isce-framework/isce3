@@ -1,6 +1,6 @@
 #include "Kernels.h"
 #include <pybind11/operators.h>
-#include <isce/core/Kernels.h>
+#include <isce3/core/Kernels.h>
 
 template class PyKernel<float>;
 template class PyKernel<double>;

@@ -1,6 +1,6 @@
 #include "Covariance.h"
 
-#include <isce/io/Raster.h>
+#include <isce3/io/Raster.h>
 
 #include <pybind11/stl.h>
 

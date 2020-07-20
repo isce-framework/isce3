@@ -12,8 +12,8 @@
 #include <vector>
 
 // isce::core
-#include "isce/core/Constants.h"
-#include "isce/core/Interpolator.h"
+#include "isce3/core/Constants.h"
+#include "isce3/core/Interpolator.h"
 
 int main() {
 

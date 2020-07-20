@@ -1,0 +1,286 @@
+#ifndef ISCE_IO_GDAL_RASTER_ICC
+#error "Raster.icc is an implementation detail of Raster.h"
+#endif
+
+#include <isce3/except/Error.h>
+
+#include "Buffer.h"
+#include "detail/GDALDataTypeUtil.h"
+
+namespace isce { namespace io { namespace gdal {
+
+namespace detail {
+
+inline
+void checkSingleBand(const Dataset & dataset)
+{
+    if (dataset.bands() == 0) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "dataset contains no raster bands");
+    }
+    if (dataset.bands() > 1) {
+        std::string errmsg = "dataset contains multiple raster bands - "
+            "please specify raster band index";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+}
+
+inline
+void checkValidBand(const Dataset & dataset, int band)
+{
+    if (band < 1 || band > dataset.bands()) {
+        std::string errmsg = "raster band index (" + std::to_string(band) + ") is out of range";
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+    }
+}
+
+}
+
+inline
+Raster::Raster(const std::string & path, GDALAccess access)
+:
+    _dataset(path, access)
+{
+    detail::checkSingleBand(_dataset);
+}
+
+inline
+Raster::Raster(const IDataSet & dataset, GDALAccess access)
+:
+    _dataset(dataset, access)
+{
+    detail::checkSingleBand(_dataset);
+}
+
+inline
+Raster::Raster(const std::string & path, int band, GDALAccess access)
+:
+    _dataset(path, access),
+    _band(band)
+{
+    detail::checkValidBand(_dataset, band);
+}
+
+inline
+Raster::Raster(const IDataSet & dataset, int band, GDALAccess access)
+:
+    _dataset(dataset, access),
+    _band(band)
+{
+    detail::checkValidBand(_dataset, band);
+}
+
+inline
+Raster::Raster(const std::string & path,
+               int width,
+               int length,
+               GDALDataType datatype,
+               const std::string & driver)
+:
+    _dataset(path, width, length, 1, datatype, driver)
+{}
+
+template<typename T>
+inline
+Raster::Raster(const T * data, int width, int length)
+:
+    _dataset(data, width, length, 1)
+{}
+
+template<typename T>
+inline
+Raster::Raster(T * data, int width, int length, GDALAccess access)
+:
+    _dataset(data, width, length, 1, access)
+{}
+
+template<typename T>
+inline
+Raster::Raster(const T * data,
+               int width,
+               int length,
+               std::size_t colstride,
+               std::size_t rowstride)
+:
+    _dataset(data, width, length, 1, colstride, rowstride, 0)
+{}
+
+template<typename T>
+inline
+Raster::Raster(T * data,
+               int width,
+               int length,
+               std::size_t colstride,
+               std::size_t rowstride,
+               GDALAccess access)
+:
+    _dataset(data, width, length, 1, colstride, rowstride, 0, access)
+{}
+
+inline
+GDALDataType Raster::datatype() const
+{
+    return _dataset._dataset->GetRasterBand(_band)->GetRasterDataType();
+}
+
+template<typename T>
+inline
+void Raster::readPixel(T * dst, int col, int row) const
+{
+    return readBlock(dst, col, row, 1, 1);
+}
+
+template<typename T>
+inline
+void Raster::writePixel(const T * src, int col, int row)
+{
+    return writeBlock(src, col, row, 1, 1);
+}
+
+template<typename T>
+inline
+void Raster::readLine(T * dst, int row) const
+{
+    return readLines(dst, row, 1);
+}
+
+template<typename T>
+inline
+void Raster::writeLine(const T * src, int row)
+{
+    return writeLines(src, row, 1);
+}
+
+template<typename T>
+inline
+void Raster::readLines(T * dst, int first_row, int num_rows) const
+{
+    return readBlock(dst, 0, first_row, width(), num_rows);
+}
+
+template<typename T>
+inline
+void Raster::writeLines(const T * src, int first_row, int num_rows)
+{
+    return writeBlock(src, 0, first_row, width(), num_rows);
+}
+
+template<typename T>
+inline
+void Raster::readBlock(T * dst, int first_col, int first_row, int num_cols, int num_rows) const
+{
+    if (!dst) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "destination address may not be null");
+    }
+
+    CPLErr status = readwriteBlock(dst, first_col, first_row, num_cols, num_rows, GF_Read);
+    if (status != CE_None) {
+        throw isce::except::GDALError(ISCE_SRCINFO(), "error while reading from raster");
+    }
+}
+
+template<typename T>
+inline
+void Raster::writeBlock(const T * src, int first_col, int first_row, int num_cols, int num_rows)
+{
+    if (access() == GA_ReadOnly) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "attempted to write to read-only raster");
+    }
+
+    if (!src) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "source address may not be null");
+    }
+
+    CPLErr status = readwriteBlock(const_cast<T *>(src), first_col, first_row, num_cols, num_rows, GF_Write);
+    if (status != CE_None) {
+        throw isce::except::GDALError(ISCE_SRCINFO(), "error while writing to raster");
+    }
+}
+
+template<typename T>
+inline
+void Raster::readAll(T * dst) const
+{
+    return readBlock(dst, 0, 0, width(), length());
+}
+
+template<typename T>
+inline
+void Raster::writeAll(const T * src)
+{
+    return writeBlock(src, 0, 0, width(), length());
+}
+
+inline
+Buffer Raster::memmap()
+{
+    // create the virtual memory mapping if not already mapped
+    if (!_mmap) {
+        _mmap = detail::MemoryMap(get(), access());
+    }
+
+    std::array<int, 2> shape = { length(), width() };
+    std::array<std::size_t, 2> strides = { _mmap.rowstride(), _mmap.colstride() };
+
+    return Buffer(_mmap.data(), datatype(), shape, strides, access());
+}
+
+template<typename T>
+inline
+TypedBuffer<T> Raster::memmap()
+{
+    Buffer buffer = memmap();
+    return buffer.cast<T>();
+}
+
+inline
+Raster::Raster(const Dataset & dataset, int band)
+:
+    _dataset(dataset),
+    _band(band)
+{}
+
+template<typename T>
+inline
+GDALDataType Raster::getIODataType() const
+{
+    return detail::Type2GDALDataType<T>::datatype;
+}
+
+template<>
+inline
+GDALDataType Raster::getIODataType<void>() const
+{
+    return datatype();
+}
+
+template<typename T>
+inline
+CPLErr Raster::readwriteBlock(T * buf,
+                              int first_col,
+                              int first_row,
+                              int num_cols,
+                              int num_rows,
+                              GDALRWFlag rwflag) const
+{
+    GDALDataType gdt = getIODataType<T>();
+    if (gdt == GDT_Unknown) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "type is not mappable to GDALDataType");
+    }
+
+    if (num_cols <= 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "block width must be > 0");
+    }
+
+    if (num_rows <= 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "block length must be > 0");
+    }
+
+    if (first_col < 0 || first_row < 0 || first_col + num_cols > width() || first_row + num_rows > length()) {
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), "out of bounds raster access");
+    }
+
+    return _dataset._dataset->GetRasterBand(_band)->RasterIO(
+            rwflag, first_col, first_row, num_cols, num_rows, buf, num_cols, num_rows, gdt, 0, 0);
+}
+
+}}}

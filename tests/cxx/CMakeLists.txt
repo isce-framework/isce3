@@ -2,14 +2,14 @@
 configure_file(testdata.h testdata.h)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/testdata.h)
 
-include(isce/Sources.cmake)
-list(TRANSFORM TESTFILES PREPEND isce/)
+include(isce3/Sources.cmake)
+list(TRANSFORM TESTFILES PREPEND isce3/)
 
 set(LIBS ${LISCE})
 
 if(WITH_CUDA)
-    include(iscecuda/Sources.cmake)
-    list(TRANSFORM CUDA_TESTFILES PREPEND iscecuda/)
+    include(isce3/cuda/Sources.cmake)
+    list(TRANSFORM CUDA_TESTFILES PREPEND isce3/cuda/)
 
     # Get name of ISCE CUDA library
     include(IsceCuda)
@@ -42,9 +42,9 @@ foreach(FILENAME ${TESTFILES})
     target_link_libraries(${TARGET} PRIVATE ${LIBS} GTest::gtest project_warnings)
 endforeach()
 
-set_tests_properties(test.cxx.isce.geometry.geo2rdr.geo2rdr PROPERTIES
-             DEPENDS test.cxx.isce.geometry.topo.topo)
+set_tests_properties(test.cxx.isce3.geometry.geo2rdr.geo2rdr PROPERTIES
+             DEPENDS test.cxx.isce3.geometry.topo.topo)
 if(WITH_CUDA)
-    set_tests_properties(test.cxx.iscecuda.geometry.geo2rdr.gpuGeo2rdr PROPERTIES
-                 DEPENDS test.cxx.iscecuda.geometry.topo.gpuTopo)
+    set_tests_properties(test.cxx.isce3.cuda.geometry.geo2rdr.gpuGeo2rdr PROPERTIES
+                 DEPENDS test.cxx.isce3.cuda.geometry.topo.gpuTopo)
 endif()

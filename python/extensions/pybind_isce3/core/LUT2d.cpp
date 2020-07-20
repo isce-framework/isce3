@@ -1,10 +1,10 @@
 #include "LUT2d.h"
 
-#include <isce/core/Constants.h>
-#include <isce/core/DateTime.h>
-#include <isce/core/Matrix.h>
-#include <isce/core/Serialization.h>
-#include <isce/except/Error.h>
+#include <isce3/core/Constants.h>
+#include <isce3/core/DateTime.h>
+#include <isce3/core/Matrix.h>
+#include <isce3/core/Serialization.h>
+#include <isce3/except/Error.h>
 
 #include <cstring>
 #include <string>

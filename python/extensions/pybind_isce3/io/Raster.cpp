@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 
 namespace py = pybind11;
 

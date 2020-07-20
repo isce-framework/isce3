@@ -6,8 +6,8 @@
 
 In general, one only needs to include the following headerfiles.
 \code{.cpp}
-#include "isce/core/Orbit.h"
-#include "isce/geometry/geometry.h"
+#include "isce3/core/Orbit.h"
+#include "isce3/geometry/geometry.h"
 \endcode
 
 If one is looking to use this with other features from ISCE, you might need additional appropriate header files.
@@ -18,7 +18,7 @@ isce::core::Orbit is at the heart of all geometric manipulation in ISCE. This is
 
 \code{.cpp}
 
-#include "isce/geometry/geometry.h"
+#include "isce3/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -79,8 +79,8 @@ In this example, we will demonstrate the forward mapping algorithm by using it t
 
 \code{.cpp}
 
-#include "isce/core/LookSide.h"
-#include "isce/geometry/geometry.h"
+#include "isce3/core/LookSide.h"
+#include "isce3/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
 In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.
 
 \code{.cpp}
-#include "isce/core/LookSide.h"
-#include "isce/geometry/geometry.h"
+#include "isce3/core/LookSide.h"
+#include "isce3/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>

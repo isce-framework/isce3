@@ -12,7 +12,7 @@ from GDAL cimport *
 
 from Error cimport raisePyError
 
-cdef extern from "isce/io/Raster.h" namespace "isce::io":
+cdef extern from "isce3/io/Raster.h" namespace "isce::io":
 
     # Raster class
     cdef cppclass Raster:

@@ -13,5 +13,5 @@ cdef extern from "ogr_geometry.h":
 
 
 #Redefinition in shapes.h
-cdef extern from "isce/geometry/Shapes.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Shapes.h" namespace "isce::geometry":
     ctypedef OGRLinearRing Perimeter

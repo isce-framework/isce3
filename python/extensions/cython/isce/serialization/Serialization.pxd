@@ -17,7 +17,7 @@ from IH5 cimport IH5File, IGroup
 from Metadata cimport Metadata
 
 # Wrapper around isce::core serialization defined in <isce/core/Serialization.h
-cdef extern from "isce/core/Serialization.h" namespace "isce::core":
+cdef extern from "isce3/core/Serialization.h" namespace "isce::core":
 
     # XML loading
     void load_archive[T](string metadata, char * objTag, T * obj)
@@ -33,13 +33,13 @@ cdef extern from "isce/core/Serialization.h" namespace "isce::core":
     void loadFromH5(IGroup & group, Metadata & meta, string mode)
 
 # Wrapper around isce::geometry serialization defined in <isce/geometry/Serialization.h
-cdef extern from "isce/geometry/Serialization.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Serialization.h" namespace "isce::geometry":
 
     # XML loading
     void load_archive[T](string metadata, char * objTag, T * obj)
 
 # Wrapper around isce::product serialization defined in <isce/product/Serialization.h
-cdef extern from "isce/product/Serialization.h" namespace "isce::product":
+cdef extern from "isce3/product/Serialization.h" namespace "isce::product":
 
     # Load metadata
     void loadFromH5(IGroup & group, Metadata & meta)

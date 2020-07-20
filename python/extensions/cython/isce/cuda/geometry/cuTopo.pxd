@@ -16,7 +16,7 @@ from isceextension cimport Raster
 from LUT2d cimport LUT2d
 from RadarGridParameters cimport RadarGridParameters
 
-cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
+cdef extern from "isce3/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
     cdef cppclass Topo:
 
         # Constructor

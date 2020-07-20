@@ -1,0 +1,38 @@
+#include <cmath>
+#include <type_traits>
+
+#include <isce3/cuda/math/ComplexMultiply.h>
+
+namespace isce { namespace cuda { namespace core {
+
+template<class Kernel, typename T>
+CUDA_HOSTDEV inline T interp1d(const Kernel& kernel, const T* x, size_t length,
+                               size_t stride, double t, bool periodic)
+{
+    using isce::math::complex_multiply::operator*;
+
+    auto width = static_cast<int>(std::ceil(kernel.width()));
+    auto i0 = (width % 2 == 0) ? static_cast<long>(std::ceil(t))
+                               : static_cast<long>(std::round(t));
+
+    auto low = i0 - width / 2;
+    auto high = low + width;
+
+    if (not periodic and (low < 0 or high >= length)) {
+        return T(0);
+    }
+
+    using U = typename std::common_type<typename Kernel::value_type, T>::type;
+
+    U sum = 0.;
+    for (auto i = low; i < high; ++i) {
+        auto j = (periodic) ? i % length : i;
+        double ti = static_cast<double>(i) - t;
+        auto w = kernel(ti);
+        sum += w * x[j * stride];
+    }
+
+    return static_cast<T>(sum);
+}
+
+}}} // namespace isce::cuda::core

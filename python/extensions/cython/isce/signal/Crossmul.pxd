@@ -8,7 +8,7 @@ from libcpp cimport bool
 from LUT1d cimport LUT1d
 from Raster cimport Raster
 
-cdef extern from "isce/signal/Crossmul.h" namespace "isce::signal":
+cdef extern from "isce3/signal/Crossmul.h" namespace "isce::signal":
 
     # Class definition
     cdef cppclass Crossmul:

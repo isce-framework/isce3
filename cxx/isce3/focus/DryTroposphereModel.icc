@@ -1,0 +1,32 @@
+#include <cmath>
+#include <isce3/core/Constants.h>
+#include <isce3/core/Ellipsoid.h>
+#include <isce3/core/Vector.h>
+
+namespace isce {
+namespace focus {
+
+CUDA_HOSTDEV
+inline double dryTropoDelayTSX(const isce::core::Vec3& p,
+                               const isce::core::Vec3& llh,
+                               const isce::core::Ellipsoid& ellipsoid)
+{
+    constexpr static double c = isce::core::speed_of_light;
+    constexpr static double ZPD = 2.3;
+    constexpr static double H = 6000.;
+
+    // get unit vector from target in the direction of the radar platform
+    auto x = ellipsoid.lonLatToXyz(llh);
+    auto r_hat = (p - x).normalized();
+
+    // get unit vector normal to ellipsoid at target location
+    auto n_hat = ellipsoid.nVector(llh[0], llh[1]).normalized();
+
+    // cosine of the incidence angle at the target location
+    double cos_theta = r_hat.dot(n_hat);
+
+    return 2. * ZPD * std::exp(-llh[2] / H) / (c * cos_theta);
+}
+
+} // namespace focus
+} // namespace isce

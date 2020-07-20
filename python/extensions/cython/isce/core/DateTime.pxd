@@ -8,7 +8,7 @@ from libcpp.string cimport string
 from libcpp cimport bool
 from TimeDelta cimport TimeDelta
 
-cdef extern from "isce/core/DateTime.h" namespace "isce::core":
+cdef extern from "isce3/core/DateTime.h" namespace "isce::core":
     cdef cppclass DateTime:
 
         # Constructors

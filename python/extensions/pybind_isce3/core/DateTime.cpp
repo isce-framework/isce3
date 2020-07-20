@@ -5,7 +5,7 @@
 #include <pybind11/operators.h>
 #include <string>
 
-#include <isce/core/TimeDelta.h>
+#include <isce3/core/TimeDelta.h>
 
 namespace py = pybind11;
 

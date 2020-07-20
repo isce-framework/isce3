@@ -8,8 +8,8 @@
 #include <pybind11/numpy.h>
 #include <string>
 
-#include <isce/except/Error.h>
-#include <isce/io/gdal/Buffer.h>
+#include <isce3/except/Error.h>
+#include <isce3/io/gdal/Buffer.h>
 
 #include "GDALAccess.h"
 #include "GDALDataType.h"

@@ -2,7 +2,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
-#include <isce/core/forward.h>
+#include <isce3/core/forward.h>
 
 namespace py = pybind11;
 

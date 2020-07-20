@@ -1,6 +1,6 @@
 #include "Linspace.h"
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 

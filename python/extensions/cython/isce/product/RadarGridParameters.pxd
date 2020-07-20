@@ -8,7 +8,7 @@ from DateTime cimport DateTime
 from Swath cimport Swath
 from LookSide cimport LookSide
 
-cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
+cdef extern from "isce3/product/RadarGridParameters.h" namespace "isce::product":
     cdef cppclass RadarGridParameters:
 
         # Constructors

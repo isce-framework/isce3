@@ -22,7 +22,7 @@ The following is example code to perform the resampling.
 
 \code{.cpp}
 
-#include <isce/image/ResampSlc.h>
+#include <isce3/image/ResampSlc.h>
 
 int main() {
 
@@ -57,11 +57,11 @@ If the user wishes to account for SLCs with native Doppler frequencies in the az
 \code{.cpp}
 
 // isce::core
-#include <isce/core/Poly2d.h>
+#include <isce3/core/Poly2d.h>
 // isce::product
-#include <isce/product/ImageMode.h>
+#include <isce3/product/ImageMode.h>
 // isce::image
-#include <isce/image/ResampSlc.h>
+#include <isce3/image/ResampSlc.h>
 
 int main() {
 

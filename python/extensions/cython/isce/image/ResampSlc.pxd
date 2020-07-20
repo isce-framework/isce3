@@ -13,7 +13,7 @@ from Product cimport Product
 from Swath cimport Swath
 from Raster cimport Raster
 
-cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
+cdef extern from "isce3/image/ResampSlc.h" namespace "isce::image":
 
     # ResampSlc class
     cdef cppclass ResampSlc:

@@ -20,7 +20,7 @@ from RadarGridParameters cimport RadarGridParameters
 from Ellipsoid cimport Ellipsoid
 from LUT2d cimport LUT2d
 
-cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Geo2rdr.h" namespace "isce::geometry":
 
     # Geo2rdr class
     cdef cppclass Geo2rdr:

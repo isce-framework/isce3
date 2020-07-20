@@ -1,7 +1,7 @@
 #include "DEMInterpolator.h"
 
-#include <isce/core/Constants.h>
-#include <isce/io/Raster.h>
+#include <isce3/core/Constants.h>
+#include <isce3/io/Raster.h>
 #include <Eigen/Dense>
 #include <stdexcept>
 #include <string>

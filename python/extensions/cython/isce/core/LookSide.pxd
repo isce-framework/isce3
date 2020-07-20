@@ -1,7 +1,7 @@
 #cython: language_level=3
 from libcpp.string cimport string
 
-cdef extern from "isce/core/LookSide.h" namespace "isce::core":
+cdef extern from "isce3/core/LookSide.h" namespace "isce::core":
 
     cdef enum LookSide:
         Left "isce::core::LookSide::Left"

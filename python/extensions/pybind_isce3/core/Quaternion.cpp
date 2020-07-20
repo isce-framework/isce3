@@ -5,10 +5,10 @@
 #include <pybind11/stl.h>
 #include <stdexcept>
 
-#include <isce/core/DenseMatrix.h>
-#include <isce/io/IH5.h>
-#include <isce/core/Quaternion.h>
-#include <isce/core/Serialization.h>
+#include <isce3/core/DenseMatrix.h>
+#include <isce3/io/IH5.h>
+#include <isce3/core/Quaternion.h>
+#include <isce3/core/Serialization.h>
 
 using isce::core::Quaternion;
 

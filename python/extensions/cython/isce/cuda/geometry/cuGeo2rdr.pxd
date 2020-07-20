@@ -15,7 +15,7 @@ from isceextension cimport Raster
 from LUT2d cimport LUT2d
 from RadarGridParameters cimport RadarGridParameters
 
-cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry":
+cdef extern from "isce3/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry":
 
     # Geo2rdr class
     cdef cppclass Geo2rdr:

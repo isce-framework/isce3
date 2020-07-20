@@ -1,6 +1,6 @@
 #pragma once
 
-#include <isce/geometry/RTC.h>
+#include <isce3/geometry/RTC.h>
 #include <pybind11/pybind11.h>
 
 using isce::geometry::rtcInputRadiometry;

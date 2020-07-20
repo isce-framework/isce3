@@ -1,13 +1,13 @@
 #include "GeocodeSlc.h"
 
-#include <isce/core/Ellipsoid.h>
-#include <isce/core/LUT2d.h>
-#include <isce/core/Orbit.h>
-#include <isce/io/Raster.h>
-#include <isce/product/RadarGridParameters.h>
-#include <isce/product/GeoGridParameters.h>
+#include <isce3/core/Ellipsoid.h>
+#include <isce3/core/LUT2d.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/io/Raster.h>
+#include <isce3/product/RadarGridParameters.h>
+#include <isce3/product/GeoGridParameters.h>
 
-#include <isce/geocode/geocodeSlc.h>
+#include <isce3/geocode/geocodeSlc.h>
 
 namespace py = pybind11;
 

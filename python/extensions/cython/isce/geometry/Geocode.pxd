@@ -28,7 +28,7 @@ from LookSide cimport LookSide
 from RadarGridParameters cimport RadarGridParameters
 
 
-cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Geocode.h" namespace "isce::geometry":
 
     cdef enum geocodeOutputMode:
         INTERP = 0

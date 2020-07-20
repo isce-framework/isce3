@@ -3,9 +3,9 @@
 #include <stdexcept>
 #include <string>
 
-#include <isce/core/DateTime.h>
-#include <isce/core/LookSide.h>
-#include <isce/product/Product.h>
+#include <isce3/core/DateTime.h>
+#include <isce3/core/LookSide.h>
+#include <isce3/product/Product.h>
 
 namespace py = pybind11;
 

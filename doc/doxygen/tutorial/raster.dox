@@ -10,7 +10,7 @@ to simplify the interface. You will find detailed documentation of all the metho
 
 In general, one only needs to include the isce::io::Raster headerfile. 
 \code{.cpp}
-#include "isce/io/Raster.h"
+#include "isce3/io/Raster.h"
 \endcode
 
 If one is looking to create Rasters as part of your workflow, include appropriate the main GDAL header file.
@@ -88,7 +88,7 @@ to understand HDF5 manipulation at the C++ level:
 
 \code{.cpp}
 //This provides access to our extensions of H5 C++
-#include "isce/io/IH5Dataset.h"
+#include "isce3/io/IH5Dataset.h"
 
 //Create a HDF5 file in write mode
 std::string filename = "example.h5";
@@ -132,7 +132,7 @@ isce::io::Raster object from it as shown below:
 \code{.cpp}
 
 //Header file for the GDAL interface
-#include "isce/io/IH5Dataset.h"  
+#include "isce3/io/IH5Dataset.h"  
 
 //Register custom IH5 Driver
 GDALAllRegister();

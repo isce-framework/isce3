@@ -4,7 +4,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 
 namespace py = pybind11;
 
