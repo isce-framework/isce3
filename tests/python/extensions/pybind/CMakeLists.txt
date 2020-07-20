@@ -16,6 +16,7 @@ geocode/geocodeSlc.py
 geometry/bbox.py
 geometry/dem.py
 geometry/geocode.py
+geometry/rdr2geo.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
@@ -25,7 +26,10 @@ product/swath.py
 )
 
 if(WITH_CUDA)
-    list(APPEND TESTFILES cuda/focus/backproject.py)
+    list(APPEND TESTFILES
+        cuda/focus/backproject.py
+        cuda/geometry/rdr2geo.py
+        )
 endif()
 
 foreach(TESTFILE ${TESTFILES})

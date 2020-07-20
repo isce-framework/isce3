@@ -37,7 +37,7 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
             isce::geometry::Topo(ellps, orbit, doppler, meta) {}
 
         /** Run topo - main entrypoint; internal creation of topo rasters */
-        void topo(isce::io::Raster &, const std::string);
+        void topo(isce::io::Raster &, const std::string &);
 
         /** Run topo with externally created topo rasters */
         void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,

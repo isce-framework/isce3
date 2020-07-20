@@ -23,6 +23,8 @@ void addsubmodule_geometry(py::module & m)
         pyGeocodeCFloat32(geometry, "GeocodeCFloat32");
     py::class_<isce::geometry::Geocode<std::complex<double>>>
         pyGeocodeCFloat64(geometry, "GeocodeCFloat64");
+    py::class_<isce::geometry::Topo>
+        pyRdr2Geo(geometry, "Rdr2Geo");
 
     // forward declare bound enums
     py::enum_<isce::geometry::geocodeMemoryMode>
@@ -40,6 +42,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyGeocodeFloat64);
     addbinding(pyGeocodeCFloat32);
     addbinding(pyGeocodeCFloat64);
+    addbinding(pyRdr2Geo);
     addbinding(pyGeocodeMemoryMode);
     addbinding(pyGeocodeOutputMode);
     addbinding(pyInputRadiometry);

@@ -47,6 +47,8 @@ isce.cpp
 if(WITH_CUDA)
     list(APPEND SRCS
          cuda/cuda.cpp
+         cuda/geometry/geometry.cpp
+         cuda/geometry/rdr2geo.cpp
          cuda/focus/Backproject.cpp
          cuda/focus/focus.cpp
          )

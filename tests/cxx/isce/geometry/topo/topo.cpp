@@ -91,7 +91,7 @@ TEST(TopoTest, CheckResults) {
                 // Accumulate the error (skip outliers)
                 const double currentError = std::abs(testVal - refVal);
                 if (currentError > 5.0) continue;
-                error += std::abs(testVal - refVal);
+                error += currentError;
                 ++count;
             }
         }

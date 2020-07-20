@@ -1,0 +1,17 @@
+#include "geometry.h"
+
+#include "rdr2geo.h"
+
+namespace py = pybind11;
+
+void addsubmodule_cuda_geometry(py::module & m)
+{
+    py::module geometry = m.def_submodule("geometry");
+
+    // forward declare bound classes
+    py::class_<isce::cuda::geometry::Topo>
+        pyRdr2Geo(geometry, "Rdr2Geo");
+
+    // add bindings
+    addbinding(pyRdr2Geo);
+}

@@ -43,7 +43,7 @@ using isce::geometry::TopoLayers;
  * </ul>*/
 void isce::cuda::geometry::Topo::
 topo(Raster & demRaster,
-     const std::string outdir) {
+     const std::string & outdir) {
 
     { // Topo scope for creating output rasters
 
