@@ -22,4 +22,5 @@ echo "TAG: $TAG"
 memcheck=1
 
 # run tests and memory checks
+cd .ci/images/centos
 ./run-isce-tests.sh ${TAG} $memcheck
