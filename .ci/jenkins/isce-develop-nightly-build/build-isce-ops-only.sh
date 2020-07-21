@@ -19,4 +19,5 @@ TAG="$(date -u +%Y%m%d)-NIGHTLY"
 echo "TAG: $TAG"
 
 # create rpm, and install in the minimal base image
+cd .ci/images/centos
 ./build-isce-ops.sh ${TAG} $WORKSPACE
