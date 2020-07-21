@@ -20,4 +20,5 @@ echo "TAG: $TAG"
 
 # use multistage docker build to build isce from source
 # in dev container
+cd .ci/images/centos
 ./build-isce-src.sh ${TAG} $WORKSPACE
