@@ -45,9 +45,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -73,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -100,7 +97,7 @@ Introduction</h1>
 <p class="formulaDsp">
 \[ I^\prime\left(x, y\right) = I\left(x, y, \Delta x, \Delta y\right) \]
 </p>
-<p>where \(I^\prime()\) represents the resampled image, \(I()\) represents the original image, \(x\) and \(y\) are the image coordinates in the output geometry, and \(\Delta x\) and \(\Delta y\) are the offsets between the input and output geometries. For SLC co-registration, in addition to resampling of the complex pixel data, the user may also need to account for non-zero carrier phases in the azimuth direction (e.g., for native Doppler images) and flattening of the complex phase to account for differences in center frequency between the image and a master image. The <a class="el" href="classisce_1_1image_1_1ResampSlc.html">isce::image::ResampSlc</a> class contains all relevant operations for SLC co-registration.</p>
+<p>where \(I^\prime()\) represents the resampled image, \(I()\) represents the original image, \(x\) and \(y\) are the image coordinates in the output geometry, and \(\Delta x\) and \(\Delta y\) are the offsets between the input and output geometries. For SLC co-registration, in addition to resampling of the complex pixel data, the user may also need to account for non-zero carrier phases in the azimuth direction (e.g., for native Doppler images) and flattening of the complex phase to account for differences in center frequency between the image and a master image. The isce3::image::ResampSlc class contains all relevant operations for SLC co-registration.</p>
 <h1><a class="anchor" id="resampmain"></a>
 Example 1: SLC resampling</h1>
 <p>For the basic task of image resampling without carrier phase or flattening considerations, let's look at the following example. Here, we have a crop of an Envisat SLC, azimuth offsets that represent a contraction of the image in the vertical dimension, and range offsets that represent a shearing in the horizontal dimension.</p>
@@ -108,20 +105,20 @@ Example 1: SLC resampling</h1>
 <img src="resamp_demo.png" alt="resamp_demo.png"/>
 </div>
 <p>The following is example code to perform the resampling.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;isce/image/ResampSlc.h&gt;</span></div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;isce3/image/ResampSlc.h&gt;</span></div>
 <div class="line"></div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Instantiate a ResampSlc object</span></div>
-<div class="line">    <a class="code" href="classisce_1_1image_1_1ResampSlc.html">isce::image::ResampSlc</a> resamp;</div>
+<div class="line">    isce3::image::ResampSlc resamp;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Open rasters for input files</span></div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> inputSlc(<span class="stringliteral">&quot;input.slc&quot;</span>);</div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> rgOff(<span class="stringliteral">&quot;range.off&quot;</span>);</div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> azOff(<span class="stringliteral">&quot;azimuth.off&quot;</span>);</div>
+<div class="line">    isce3::io::Raster inputSlc(<span class="stringliteral">&quot;input.slc&quot;</span>);</div>
+<div class="line">    isce3::io::Raster rgOff(<span class="stringliteral">&quot;range.off&quot;</span>);</div>
+<div class="line">    isce3::io::Raster azOff(<span class="stringliteral">&quot;azimuth.off&quot;</span>);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create raster for output resampled SLC</span></div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> outputSlc(<span class="stringliteral">&quot;output.slc&quot;</span>, rgOff.width(), rgOff.length(), 1,</div>
+<div class="line">    isce3::io::Raster outputSlc(<span class="stringliteral">&quot;output.slc&quot;</span>, rgOff.width(), rgOff.length(), 1,</div>
 <div class="line">                               GDT_CFloat32, <span class="stringliteral">&quot;ISCE&quot;</span>);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Re-run resamp</span></div>
@@ -129,29 +126,29 @@ Example 1: SLC resampling</h1>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><p>First, we created <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster</a> objects for all input rasters: the input SLC image, the pixel-by-pixel range offsets, and the pixel-by-pixel azimuth offsets. We then created an output SLC image with the output geometry determined by the either the range or azimuth offset raster. These objects are then passed to a default <a class="el" href="classisce_1_1image_1_1ResampSlc.html">isce::image::ResampSlc</a> instance to perform the resampling. After resampling, we obtain the following image:</p>
+</div><!-- fragment --><p>First, we created isce3::io::Raster objects for all input rasters: the input SLC image, the pixel-by-pixel range offsets, and the pixel-by-pixel azimuth offsets. We then created an output SLC image with the output geometry determined by the either the range or azimuth offset raster. These objects are then passed to a default isce3::image::ResampSlc instance to perform the resampling. After resampling, we obtain the following image:</p>
 <div class="image">
 <img src="resamp_demo_result.png" alt="resamp_demo_result.png"/>
 </div>
 <h1><a class="anchor" id="resampdopp"></a>
 Example 2: SLC resampling with carrier phase and flattening</h1>
 <p>If the user wishes to account for SLCs with native Doppler frequencies in the azimuth direction and flattening with respect to a master SLC, the following code can be used.</p>
-<div class="fragment"><div class="line"><span class="comment">// isce::core</span></div>
-<div class="line"><span class="preprocessor">#include &lt;isce/core/Poly2d.h&gt;</span></div>
-<div class="line"><span class="comment">// isce::product</span></div>
-<div class="line"><span class="preprocessor">#include &lt;isce/product/ImageMode.h&gt;</span></div>
-<div class="line"><span class="comment">// isce::image</span></div>
-<div class="line"><span class="preprocessor">#include &lt;isce/image/ResampSlc.h&gt;</span></div>
+<div class="fragment"><div class="line"><span class="comment">// isce3::core</span></div>
+<div class="line"><span class="preprocessor">#include &lt;isce3/core/Poly2d.h&gt;</span></div>
+<div class="line"><span class="comment">// isce3::product</span></div>
+<div class="line"><span class="preprocessor">#include &lt;isce3/product/ImageMode.h&gt;</span></div>
+<div class="line"><span class="comment">// isce3::image</span></div>
+<div class="line"><span class="preprocessor">#include &lt;isce3/image/ResampSlc.h&gt;</span></div>
 <div class="line"></div>
 <div class="line"><span class="keywordtype">int</span> main() {</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create polynomial for native Doppler</span></div>
 <div class="line">    <span class="comment">// Note: 0th order in azimuth, 2nd order in range</span></div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> doppler(2, 0, 0.0, 0.0, 1.0, 1.0);</div>
+<div class="line">    isce3::core::Poly2d doppler(2, 0, 0.0, 0.0, 1.0, 1.0);</div>
 <div class="line">    doppler.coeffs = {301.35306906319204, -0.04633312447837377, 2.044436266418998e-06};</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create an ImageMode for the input image using Envisat parameters</span></div>
-<div class="line">    isce::product::ImageMode mode;</div>
+<div class="line">    isce3::product::ImageMode mode;</div>
 <div class="line">    <span class="comment">// Set relevant parameters</span></div>
 <div class="line">    mode.wavelength(0.056);</div>
 <div class="line">    mode.startingRange(826988.69);</div>
@@ -159,7 +156,7 @@ Example 2: SLC resampling with carrier phase and flattening</h1>
 <div class="line">    mode.prf(1652.416);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create an ImageMode for the reference master image</span></div>
-<div class="line">    isce::product::ImageMode modeRef;</div>
+<div class="line">    isce3::product::ImageMode modeRef;</div>
 <div class="line">    <span class="comment">// Set relevant parameters for reference</span></div>
 <div class="line">    modeRef.wavelength(0.057);</div>
 <div class="line">    modeRef.startingRange(826991.0);</div>
@@ -167,17 +164,17 @@ Example 2: SLC resampling with carrier phase and flattening</h1>
 <div class="line">    modeRef.prf(1652.416);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Instantiate a ResampSlc object</span></div>
-<div class="line">    <a class="code" href="classisce_1_1image_1_1ResampSlc.html">isce::image::ResampSlc</a> resamp(doppler, mode);</div>
+<div class="line">    isce3::image::ResampSlc resamp(doppler, mode);</div>
 <div class="line">    <span class="comment">// Feed it a reference mode</span></div>
 <div class="line">    resamp.refImageMode(modeRef);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Open rasters for input files</span></div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> inputSlc(<span class="stringliteral">&quot;input.slc&quot;</span>);</div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> rgOff(<span class="stringliteral">&quot;range.off&quot;</span>);</div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> azOff(<span class="stringliteral">&quot;azimuth.off&quot;</span>);</div>
+<div class="line">    isce3::io::Raster inputSlc(<span class="stringliteral">&quot;input.slc&quot;</span>);</div>
+<div class="line">    isce3::io::Raster rgOff(<span class="stringliteral">&quot;range.off&quot;</span>);</div>
+<div class="line">    isce3::io::Raster azOff(<span class="stringliteral">&quot;azimuth.off&quot;</span>);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create raster for output resampled SLC</span></div>
-<div class="line">    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> outputSlc(<span class="stringliteral">&quot;output.slc&quot;</span>, rgOff.width(), rgOff.length(), 1,</div>
+<div class="line">    isce3::io::Raster outputSlc(<span class="stringliteral">&quot;output.slc&quot;</span>, rgOff.width(), rgOff.length(), 1,</div>
 <div class="line">                               GDT_CFloat32, <span class="stringliteral">&quot;ISCE&quot;</span>);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Re-run resamp</span></div>

@@ -1,5 +1,0 @@
-var searchData=
-[
-  ['value_5ftype',['value_type',['../classisce_1_1cuda_1_1core_1_1Kernel.html#aec4666358a671a2af684d7b1a1738809',1,'isce::cuda::core::Kernel']]],
-  ['view_5ftype',['view_type',['../classisce_1_1cuda_1_1core_1_1BartlettKernel.html#a629d6090fc81da554cb924ea3e10b42e',1,'isce::cuda::core::BartlettKernel::view_type()'],['../classisce_1_1cuda_1_1core_1_1LinearKernel.html#a67b706d20897e84d6aeac03aa0a0d29a',1,'isce::cuda::core::LinearKernel::view_type()'],['../classisce_1_1cuda_1_1core_1_1KnabKernel.html#a5b748f80f51327f9c60727943408f6dc',1,'isce::cuda::core::KnabKernel::view_type()'],['../classisce_1_1cuda_1_1core_1_1TabulatedKernelView.html#a171510954b29619e764c87a271889ec8',1,'isce::cuda::core::TabulatedKernelView::view_type()'],['../classisce_1_1cuda_1_1core_1_1TabulatedKernel.html#a9691ceb01ab027b0b3663bc763a433f6',1,'isce::cuda::core::TabulatedKernel::view_type()'],['../classisce_1_1cuda_1_1core_1_1ChebyKernelView.html#ab2ae54b21b17a2c92cb29d0c792ffa6a',1,'isce::cuda::core::ChebyKernelView::view_type()'],['../classisce_1_1cuda_1_1core_1_1ChebyKernel.html#aad8267c2b0408e085e159f3daa97fa94',1,'isce::cuda::core::ChebyKernel::view_type()']]]
-];
