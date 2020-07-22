@@ -140,6 +140,6 @@ function(getpackage_pyre)
     endif()
 endfunction()
 
-function(getpackage_python)
+macro(getpackage_python)
     find_package(Python 3.6 COMPONENTS Interpreter Development)
-endfunction()
+endmacro()
