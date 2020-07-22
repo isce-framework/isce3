@@ -68,7 +68,7 @@ function(getpackage_googletest)
         find_package(GTest 1.10.0 REQUIRED CONFIG)
     endif()
 
-    if(NOT GTEST_FOUND)
+    if(NOT GTest_FOUND)
         set(BUILD_GMOCK   OFF CACHE INTERNAL "")
         set(INSTALL_GTEST OFF CACHE INTERNAL "")
         fetch_extern_repo(gtest
