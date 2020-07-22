@@ -4,7 +4,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 
 namespace py = pybind11;
 
@@ -24,7 +24,7 @@ GDALDataType toGDALDataType(const py::dtype & dt)
     if (dt.kind() == 'c' && dt.itemsize() == 8)  { return GDT_CFloat32; }
     if (dt.kind() == 'c' && dt.itemsize() == 16) { return GDT_CFloat64; }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "dtype is not mappable to GDALDataType");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "dtype is not mappable to GDALDataType");
 }
 
 inline

@@ -1,7 +1,7 @@
 #cython: language_level=3
 #
 #
-cdef extern from "isce/product/GeoGridParameters.h" namespace "isce::product":
+cdef extern from "isce3/product/GeoGridParameters.h" namespace "isce3::product":
     cdef cppclass GeoGridParameters:
         GeoGridParameters() except +
         GeoGridParameters(double geoGridStartX, double geoGridStartY,

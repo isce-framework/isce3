@@ -13,27 +13,27 @@ void addsubmodule_geometry(py::module & m)
     py::module geometry = m.def_submodule("geometry");
 
     // forward declare bound classes
-    py::class_<isce::geometry::DEMInterpolator>
+    py::class_<isce3::geometry::DEMInterpolator>
         pyDEMInterpolator(geometry, "DEMInterpolator");
-    py::class_<isce::geometry::Geocode<float>>
+    py::class_<isce3::geometry::Geocode<float>>
         pyGeocodeFloat32(geometry, "GeocodeFloat32");
-    py::class_<isce::geometry::Geocode<double>>
+    py::class_<isce3::geometry::Geocode<double>>
         pyGeocodeFloat64(geometry, "GeocodeFloat64");
-    py::class_<isce::geometry::Geocode<std::complex<float>>>
+    py::class_<isce3::geometry::Geocode<std::complex<float>>>
         pyGeocodeCFloat32(geometry, "GeocodeCFloat32");
-    py::class_<isce::geometry::Geocode<std::complex<double>>>
+    py::class_<isce3::geometry::Geocode<std::complex<double>>>
         pyGeocodeCFloat64(geometry, "GeocodeCFloat64");
-    py::class_<isce::geometry::Topo>
+    py::class_<isce3::geometry::Topo>
         pyRdr2Geo(geometry, "Rdr2Geo");
 
     // forward declare bound enums
-    py::enum_<isce::geometry::geocodeMemoryMode>
+    py::enum_<isce3::geometry::geocodeMemoryMode>
         pyGeocodeMemoryMode(geometry, "GeocodeMemoryMode");
-    py::enum_<isce::geometry::geocodeOutputMode>
+    py::enum_<isce3::geometry::geocodeOutputMode>
         pyGeocodeOutputMode(geometry, "GeocodeOutputMode");
-    py::enum_<isce::geometry::rtcInputRadiometry>
+    py::enum_<isce3::geometry::rtcInputRadiometry>
         pyInputRadiometry(geometry, "RtcInputRadiometry");
-    py::enum_<isce::geometry::rtcAlgorithm>
+    py::enum_<isce3::geometry::rtcAlgorithm>
         pyRtcAlgorithm(geometry, "RtcAlgorithm");
 
     // add bindings

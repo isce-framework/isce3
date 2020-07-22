@@ -11,7 +11,7 @@ from Metadata cimport Metadata
 from Swath cimport Swath
 from LookSide cimport LookSide
 
-cdef extern from "isce/product/Product.h" namespace "isce::product":
+cdef extern from "isce3/product/Product.h" namespace "isce3::product":
 
     # Product class
     cdef cppclass Product:

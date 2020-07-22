@@ -1,0 +1,29 @@
+#ifndef ISCE_CUDA_CORE_ORBITVIEW_ICC
+#error "OrbitView.icc is an implementation detail of OrbitView.h"
+#endif
+
+#include <isce3/core/detail/InterpolateOrbit.h>
+
+namespace isce3 { namespace cuda { namespace core {
+
+inline
+OrbitView::OrbitView(const Orbit & orbit)
+:
+    _time(orbit.time()),
+    _position(orbit.position().data().get()),
+    _velocity(orbit.velocity().data().get()),
+    _interp_method(orbit.interpMethod())
+{}
+
+CUDA_DEV
+inline
+isce3::error::ErrorCode
+OrbitView::interpolate(isce3::core::Vec3 * position,
+                       isce3::core::Vec3 * velocity,
+                       double t,
+                       isce3::core::OrbitInterpBorderMode border_mode) const
+{
+    return isce3::core::detail::interpolateOrbit(position, velocity, *this, t, border_mode);
+}
+
+}}}

@@ -1,21 +1,21 @@
 #include "Backproject.h"
 
-#include <isce/container/RadarGeometry.h>
-#include <isce/core/Kernels.h>
-#include <isce/except/Error.h>
-#include <isce/focus/Backproject.h>
-#include <isce/focus/DryTroposphereModel.h>
-#include <isce/geometry/DEMInterpolator.h>
+#include <isce3/container/RadarGeometry.h>
+#include <isce3/core/Kernels.h>
+#include <isce3/except/Error.h>
+#include <isce3/focus/Backproject.h>
+#include <isce3/focus/DryTroposphereModel.h>
+#include <isce3/geometry/DEMInterpolator.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-using namespace isce::focus;
+using namespace isce3::focus;
 
-using isce::container::RadarGeometry;
-using isce::core::Kernel;
-using isce::except::InvalidArgument;
-using isce::geometry::DEMInterpolator;
+using isce3::container::RadarGeometry;
+using isce3::core::Kernel;
+using isce3::except::InvalidArgument;
+using isce3::geometry::DEMInterpolator;
 
 void addbinding_backproject(py::module& m)
 {

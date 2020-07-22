@@ -30,7 +30,7 @@ cdef cartesian_t assertUnit(cartesian_t x, double tol=1e-8):
 
 cdef class pyBasis:
     '''
-    Python wrapper for isce::core::Basis
+    Python wrapper for isce3::core::Basis
     '''
 
     cdef Basis c_basis

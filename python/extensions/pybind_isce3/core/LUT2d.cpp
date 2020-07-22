@@ -1,10 +1,10 @@
 #include "LUT2d.h"
 
-#include <isce/core/Constants.h>
-#include <isce/core/DateTime.h>
-#include <isce/core/Matrix.h>
-#include <isce/core/Serialization.h>
-#include <isce/except/Error.h>
+#include <isce3/core/Constants.h>
+#include <isce3/core/DateTime.h>
+#include <isce3/core/Matrix.h>
+#include <isce3/core/Serialization.h>
+#include <isce3/except/Error.h>
 
 #include <cstring>
 #include <string>
@@ -15,18 +15,18 @@
 
 namespace py = pybind11;
 
-using isce::core::LUT2d;
+using isce3::core::LUT2d;
 
 static dataInterpMethod duck_method(py::object method)
 {
-    using isce::core::dataInterpMethod;
-    using isce::core::parseDataInterpMethod;
+    using isce3::core::dataInterpMethod;
+    using isce3::core::parseDataInterpMethod;
     if (py::isinstance<py::str>(method)) {
         return parseDataInterpMethod(py::str(method));
     } else if (py::isinstance<dataInterpMethod>(method)) {
         return method.cast<dataInterpMethod>();
     } else {
-        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                                             "invalid type for interp method");
     }
 }
@@ -44,16 +44,16 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                 {
                     // memcpy because ndarray not auto converted to eigen type for some reason
                     if (py_data.ndim() != 2) {
-                        throw isce::except::RuntimeError(ISCE_SRCINFO(), "buffer object must be 2-D");
+                        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "buffer object must be 2-D");
                     }
-                    isce::core::Matrix<T> data(py_data.shape()[0], py_data.shape()[1]);
+                    isce3::core::Matrix<T> data(py_data.shape()[0], py_data.shape()[1]);
                     std::memcpy(data.data(), py_data.data(), py_data.nbytes());
 
                     // get interp method
                     auto interp_method = duck_method(method);
 
                     // return LUT2d object
-                    return isce::core::LUT2d<T>(xstart, ystart, dx, dy, data, interp_method, b_error);
+                    return isce3::core::LUT2d<T>(xstart, ystart, dx, dy, data, interp_method, b_error);
                 }),
                 py::arg("xstart"),
                 py::arg("ystart"),
@@ -75,16 +75,16 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     std::memcpy(&ycoord[0], py_ycoord.data(), py_ycoord.nbytes());
 
                     if (py_data.ndim() != 2) {
-                        throw isce::except::RuntimeError(ISCE_SRCINFO(), "buffer object must be 2-D");
+                        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "buffer object must be 2-D");
                     }
-                    isce::core::Matrix<T> data(py_data.shape()[0], py_data.shape()[1]);
+                    isce3::core::Matrix<T> data(py_data.shape()[0], py_data.shape()[1]);
                     std::memcpy(data.data(), py_data.data(), py_data.nbytes());
 
                     // get interp method
                     auto interp_method = duck_method(method);
 
                     // return LUT2d object
-                    return isce::core::LUT2d<T>(xcoord, ycoord, data, interp_method, b_error);
+                    return isce3::core::LUT2d<T>(xcoord, ycoord, data, interp_method, b_error);
                 }),
                 py::arg("xcoord"),
                 py::arg("ycoord"),
@@ -97,10 +97,10 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                                        const std::string& dataset_name) {
 
                 auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
-                isce::io::IGroup group(id);
+                isce3::io::IGroup group(id);
 
                 LUT2d<T> lut;
-                isce::core::loadCalGrid(group, dataset_name, lut);
+                isce3::core::loadCalGrid(group, dataset_name, lut);
 
                 return lut;
             },
@@ -110,12 +110,12 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
 
         .def("save_to_h5", [](const LUT2d<T>& self, py::object h5py_group,
                               const std::string& name,
-                              const isce::core::DateTime& epoch,
+                              const isce3::core::DateTime& epoch,
                               const std::string& units) {
 
                 auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
-                isce::io::IGroup group(id);
-                isce::core::saveCalGrid(group, name, self, epoch, units);
+                isce3::io::IGroup group(id);
+                isce3::core::saveCalGrid(group, name, self, epoch, units);
             },
             "Serialize LUT2d to h5py.Group object (axes assumed range/time).",
             py::arg("h5py_group"),

@@ -8,10 +8,10 @@ from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
-# Cython declarations for isce::core objects
+# Cython declarations for isce3::core objects
 from Raster cimport Raster
 
-# Cython declarations for isce::product objects
+# Cython declarations for isce3::product objects
 from Product cimport Product
 
 # Core
@@ -28,7 +28,7 @@ from LookSide cimport LookSide
 from RadarGridParameters cimport RadarGridParameters
 
 
-cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Geocode.h" namespace "isce3::geometry":
 
     cdef enum geocodeOutputMode:
         INTERP = 0

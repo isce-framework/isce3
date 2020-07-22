@@ -18,7 +18,7 @@ from cuTopo cimport *
 
 cdef class pyTopo:
     """
-    Cython wrapper for isce::cuda::geometry::Topo.
+    Cython wrapper for isce3::cuda::geometry::Topo.
 
     Args:
         product (pyProduct):                 Configured Product.

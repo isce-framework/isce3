@@ -1,22 +1,22 @@
 #include "Backproject.h"
 
-#include <isce/container/RadarGeometry.h>
-#include <isce/core/Kernels.h>
-#include <isce/except/Error.h>
-#include <isce/cuda/focus/Backproject.h>
-#include <isce/focus/DryTroposphereModel.h>
-#include <isce/geometry/DEMInterpolator.h>
+#include <isce3/container/RadarGeometry.h>
+#include <isce3/core/Kernels.h>
+#include <isce3/except/Error.h>
+#include <isce3/cuda/focus/Backproject.h>
+#include <isce3/focus/DryTroposphereModel.h>
+#include <isce3/geometry/DEMInterpolator.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-using namespace isce::cuda::focus;
-using namespace isce::except;
+using namespace isce3::cuda::focus;
+using namespace isce3::except;
 
-using isce::container::RadarGeometry;
-using isce::core::Kernel;
-using isce::focus::parseDryTropoModel;
-using isce::geometry::DEMInterpolator;
+using isce3::container::RadarGeometry;
+using isce3::core::Kernel;
+using isce3::focus::parseDryTropoModel;
+using isce3::geometry::DEMInterpolator;
 
 void addbinding_cuda_backproject(py::module& m)
 {

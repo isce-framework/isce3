@@ -9,12 +9,12 @@ from libcpp.string cimport string
 from Cartesian cimport cartesian_t, cartmat_t
 from IH5 cimport IGroup
 
-cdef extern from "isce/core/Attitude.h" namespace "isce::core":
+cdef extern from "isce3/core/Attitude.h" namespace "isce3::core":
     cdef cppclass Attitude:
         cartesian_t ypr(double t)
         cartmat_t rotmat(double t, string)
 
-cdef extern from "isce/core/EulerAngles.h" namespace "isce::core":
+cdef extern from "isce3/core/EulerAngles.h" namespace "isce3::core":
     cdef cppclass EulerAngles(Attitude):
         # Getter functions for attitude angles
         const vector[double] yaw()
@@ -32,8 +32,8 @@ cdef extern from "isce/core/EulerAngles.h" namespace "isce::core":
         # Convert to quaternion
         vector[double] toQuaternionElements(double t)
 
-# Wrapper around isce::core serialization defined in <isce/core/Serialization.h
-cdef extern from "isce/core/Serialization.h" namespace "isce::core":
+# Wrapper around isce3::core serialization defined in <isce/core/Serialization.h
+cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
     # Load attitude data
     void loadEulerAngles "loadFromH5" (IGroup & group, EulerAngles & euler)
     

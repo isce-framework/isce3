@@ -1,21 +1,21 @@
 #include "DEMInterpolator.h"
 
-#include <isce/core/Constants.h>
-#include <isce/io/Raster.h>
+#include <isce3/core/Constants.h>
+#include <isce3/io/Raster.h>
 #include <Eigen/Dense>
 #include <stdexcept>
 #include <string>
 
 namespace py = pybind11;
 
-using DI = isce::geometry::DEMInterpolator;
+using DI = isce3::geometry::DEMInterpolator;
 
 void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
 {
     pyDEMInterpolator
-        .def(py::init<double, isce::core::dataInterpMethod, int>(),
+        .def(py::init<double, isce3::core::dataInterpMethod, int>(),
             py::arg("height") = 0.0,
-            py::arg("method") = isce::core::BILINEAR_METHOD,
+            py::arg("method") = isce3::core::BILINEAR_METHOD,
             py::arg("epsg") = 4326)
         // For convenience allow a string, too.
         .def(py::init([](double h, const std::string & method, int epsg) {
@@ -27,9 +27,9 @@ void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
             py::arg("epsg") = 4326)
 
         .def("load_dem",
-            py::overload_cast<isce::io::Raster&>(&DI::loadDEM))
+            py::overload_cast<isce3::io::Raster&>(&DI::loadDEM))
         .def("load_dem",
-            py::overload_cast<isce::io::Raster&, double, double, double, double>
+            py::overload_cast<isce3::io::Raster&, double, double, double, double>
                 (&DI::loadDEM),
             py::arg("raster"), py::arg("min_x"), py::arg("max_x"),
                 py::arg("min_y"), py::arg("max_y"))
@@ -43,7 +43,7 @@ void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
         .def_property_readonly("have_raster", &DI::haveRaster)
         .def_property("interp_method",
             py::overload_cast<>(&DI::interpMethod, py::const_),
-            py::overload_cast<isce::core::dataInterpMethod>(&DI::interpMethod))
+            py::overload_cast<isce3::core::dataInterpMethod>(&DI::interpMethod))
 
         // Define all these as readonly even though writable in C++ API.
         // Probably better to just convert your data to a GDAL format than try

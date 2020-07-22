@@ -1,14 +1,14 @@
 #include "Linspace.h"
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 
 namespace py = pybind11;
 
-using isce::core::Linspace;
-using isce::except::InvalidArgument;
-using isce::except::OutOfRange;
+using isce3::core::Linspace;
+using isce3::except::InvalidArgument;
+using isce3::except::OutOfRange;
 
 template<typename T>
 void addbinding(py::class_<Linspace<T>>& pyLinspace)

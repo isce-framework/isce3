@@ -2,12 +2,12 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
-#include <isce/core/forward.h>
+#include <isce3/core/forward.h>
 
 namespace py = pybind11;
 
-using isce::core::Ellipsoid;
-using isce::core::Vec3;
+using isce3::core::Ellipsoid;
+using isce3::core::Vec3;
 
 void addbinding(py::class_<Ellipsoid> & pyEllipsoid)
 {

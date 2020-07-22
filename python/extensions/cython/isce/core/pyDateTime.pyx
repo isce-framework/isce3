@@ -13,7 +13,7 @@ from DateTime cimport DateTime
 
 cdef class pyDateTime:
     '''
-    Python wrapper for isce::core::DateTime. 
+    Python wrapper for isce3::core::DateTime. 
     By default, returns GPS time reference - 1970-01-01T00:00:00.
 
     Args:
@@ -24,7 +24,7 @@ cdef class pyDateTime:
 
     def __cinit__(self):
         '''
-        Pre-constructor that creates a C++ isce::core::DateTime object and binds it to a python instance.
+        Pre-constructor that creates a C++ isce3::core::DateTime object and binds it to a python instance.
         '''
         self.c_datetime = new DateTime()
         self.__owner = True

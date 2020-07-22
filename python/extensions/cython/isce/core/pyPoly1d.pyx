@@ -11,7 +11,7 @@ cimport numpy as np
 
 cdef class pyPoly1d:
     '''
-    Python Wrapper for isce::core::Poly1d
+    Python Wrapper for isce3::core::Poly1d
 
     Note:
         Order of polynomial must be set before setting coefficients

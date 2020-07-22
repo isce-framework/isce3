@@ -2,7 +2,7 @@
 
 from Raster cimport Raster
 
-cdef extern from "isce/signal/Looks.h" namespace "isce::signal":
+cdef extern from "isce3/signal/Looks.h" namespace "isce3::signal":
 
     # Class definition
     cdef cppclass Looks[T]:

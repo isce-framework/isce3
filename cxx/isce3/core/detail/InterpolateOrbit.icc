@@ -1,0 +1,195 @@
+#ifndef ISCE_CORE_DETAIL_INTERPOLATEORBIT_ICC
+#error "InterpolateOrbit.icc is an implementation detail of InterpolateOrbit.h"
+#endif
+
+#include <algorithm>
+#include <limits>
+
+namespace isce3 { namespace core { namespace detail {
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+isce3::error::ErrorCode
+interpolateOrbitHermite(Vec3 * position, Vec3 * velocity, const Orbit & orbit, double t)
+{
+    // find index of the first state vector to use to form the interpolant
+    int idx = orbit.time().search(t) - 2;
+    idx = std::min(std::max(idx, 0), orbit.size() - 4);
+
+    double f1[4];
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        f1[i] = t - orbit.time(idx + i);
+    }
+
+    double f0[4];
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        double sum = 0.;
+        PRAGMA_UNROLL
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            sum += 1. / (orbit.time(idx + i) - orbit.time(idx + j));
+        }
+        f0[i] = 1. - 2. * sum * (t - orbit.time(idx + i));
+    }
+
+    double h[4];
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        h[i] = 1.;
+        PRAGMA_UNROLL
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            h[i] *= (t - orbit.time(idx + j)) / (orbit.time(idx + i) - orbit.time(idx + j));
+        }
+    }
+
+    // get interpolated position
+    if (position) {
+        Vec3 pos(0., 0., 0.);
+        PRAGMA_UNROLL
+        for (int i = 0; i < 4; ++i) {
+            pos += h[i] * h[i] * (orbit.position(idx + i) * f0[i] + orbit.velocity(idx + i) * f1[i]);
+        }
+        *position = pos;
+    }
+
+    // if only interpolating position, we can finish here
+    if (!velocity) {
+        return isce3::error::ErrorCode::Success;
+    }
+
+    double hdot[4];
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        hdot[i] = 0.;
+        PRAGMA_UNROLL
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            double prod = 1. / (orbit.time(idx + i) - orbit.time(idx + j));
+            PRAGMA_UNROLL
+            for (int k = 0; k < 4; ++k) {
+                if (k == i || k == j) { continue; }
+                prod *= (t - orbit.time(idx + k)) / (orbit.time(idx + i) - orbit.time(idx + k));
+            }
+            hdot[i] += prod;
+        }
+    }
+
+    double g1[4];
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        g1[i] = h[i] + 2. * hdot[i] * (t - orbit.time(idx + i));
+    }
+
+    double g0[4];
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        double sum = 0.;
+        PRAGMA_UNROLL
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            sum += 1. / (orbit.time(idx + i) - orbit.time(idx + j));
+        }
+        g0[i] = 2. * (f0[i] * hdot[i] - sum * h[i]);
+    }
+
+    // get interpolated velocity
+    Vec3 vel(0., 0., 0.);
+    PRAGMA_UNROLL
+    for (int i = 0; i < 4; ++i) {
+        vel += h[i] * (orbit.position(idx + i) * g0[i] + orbit.velocity(idx + i) * g1[i]);
+    }
+    *velocity = vel;
+
+    return isce3::error::ErrorCode::Success;
+}
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+isce3::error::ErrorCode
+interpolateOrbitLegendre(Vec3 * position, Vec3 * velocity, const Orbit & orbit, double t)
+{
+    // find index of the first state vector to use to form the interpolant
+    int idx = orbit.time().search(t) - 5;
+    idx = std::min(std::max(idx, 0), orbit.size() - 9);
+
+    double trel = 8. * (t - orbit.time(idx)) / (orbit.time(idx + 8) - orbit.time(idx));
+
+    double teller = 1.;
+    PRAGMA_UNROLL
+    for (int i = 0; i < 9; ++i) {
+        teller *= trel - i;
+    }
+
+    if (teller == 0.) {
+        int i = trel;
+        if (position) { *position = orbit.position(idx + i); }
+        if (velocity) { *velocity = orbit.velocity(idx + i); }
+        return isce3::error::ErrorCode::Success;
+    }
+
+    constexpr static double noemer[9] =
+        { 40320.0, -5040.0,  1440.0,
+           -720.0,   576.0,  -720.0,
+           1440.0, -5040.0, 40320.0 };
+
+    Vec3 pos(0., 0., 0.);
+    Vec3 vel(0., 0., 0.);
+    PRAGMA_UNROLL
+    for (int i = 0; i < 9; ++i) {
+        double coeff = (teller / noemer[i]) / (trel - i);
+        pos += coeff * orbit.position(idx + i);
+        vel += coeff * orbit.velocity(idx + i);
+    }
+
+    if (position) { *position = pos; }
+    if (velocity) { *velocity = vel; }
+
+    return isce3::error::ErrorCode::Success;
+}
+
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+isce3::error::ErrorCode
+interpolateOrbit(Vec3 * position,
+                 Vec3 * velocity,
+                 const Orbit & orbit,
+                 double t,
+                 OrbitInterpBorderMode border_mode)
+{
+    // make sure we have enough state vectors to form the interpolant
+    if (orbit.size() < minStateVecs(orbit.interpMethod())) {
+        return isce3::error::ErrorCode::OrbitInterpSizeError;
+    }
+
+    // check if interpolation time is outside orbit domain
+    if (t < orbit.startTime() || t > orbit.endTime()) {
+        if (border_mode == OrbitInterpBorderMode::FillNaN) {
+            constexpr static double nan = std::numeric_limits<double>::quiet_NaN();
+            if (position) { *position = {nan, nan, nan}; }
+            if (velocity) { *velocity = {nan, nan, nan}; }
+        }
+        if (border_mode != OrbitInterpBorderMode::Extrapolate) {
+            return isce3::error::ErrorCode::OrbitInterpDomainError;
+        }
+    }
+
+    // interpolate
+    switch (orbit.interpMethod()) {
+        case OrbitInterpMethod::Hermite :
+            return interpolateOrbitHermite(position, velocity, orbit, t);
+        case OrbitInterpMethod::Legendre :
+            return interpolateOrbitLegendre(position, velocity, orbit, t);
+        default :
+            return isce3::error::ErrorCode::OrbitInterpUnknownMethod;
+    }
+}
+
+}}}

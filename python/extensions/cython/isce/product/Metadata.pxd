@@ -8,7 +8,7 @@ from EulerAngles cimport EulerAngles
 from Orbit cimport Orbit
 from ProcessingInformation cimport ProcessingInformation
 
-cdef extern from "isce/product/Metadata.h" namespace "isce::product":
+cdef extern from "isce3/product/Metadata.h" namespace "isce3::product":
 
     # Metadata class
     cdef cppclass Metadata:

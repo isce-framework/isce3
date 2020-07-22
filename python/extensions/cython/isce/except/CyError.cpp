@@ -1,10 +1,10 @@
 #include "CyError.h"
 #include <Python.h>
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 
 template<typename T>
-void buildError(isce::except::Error<T> err) {
+void buildError(isce3::except::Error<T> err) {
     auto tmp = Py_BuildValue("((s, i, s), s)",
                              err.info.file,
                              err.info.line,
@@ -14,7 +14,7 @@ void buildError(isce::except::Error<T> err) {
 }
 
 void raisePyError() {
-    using namespace isce::except;
+    using namespace isce3::except;
     try {
         throw;
     } catch (LengthError err) {

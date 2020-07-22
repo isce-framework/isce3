@@ -6,7 +6,7 @@
 
 from Cartesian cimport cartesian_t
 
-cdef extern from "isce/core/Basis.h" namespace "isce::core":
+cdef extern from "isce3/core/Basis.h" namespace "isce3::core":
 
     # The Basis class
     cdef cppclass Basis:

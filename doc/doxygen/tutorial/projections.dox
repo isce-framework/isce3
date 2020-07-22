@@ -12,9 +12,9 @@ projections required by NISAR.
 
 \section projinclude Include headers
 
-In general, one only needs to include the isce::core::Projections headerfile. 
+In general, one only needs to include the isce3::core::Projections headerfile. 
 \code{.cpp}
-#include "isce/core/Projections.h"
+#include "isce3/core/Projections.h"
 \endcode
 
 If one is looking to process data with more general set of projections as part of your workflow, include
@@ -27,13 +27,13 @@ ISCE projection objects are created exclusively using the EPSG codes (see <a hre
 
 \code{.cpp}
 //Creates interface to standard WGS84 Lon/Lat system
-isce::core::ProjectionBase *llh = isce::core::createProj(4326);
+isce3::core::ProjectionBase *llh = isce3::core::createProj(4326);
 
 //Creates interface to UTM 20N
-isce::core::ProjectionBase *utm20n = isce::core::createProj(32620);
+isce3::core::ProjectionBase *utm20n = isce3::core::createProj(32620);
 
 //Creates interface to Antarctic Polar Stereographic
-isce::core::ProjectionBase *spolar = isce::core::createProj(3031);
+isce3::core::ProjectionBase *spolar = isce3::core::createProj(3031);
 \endcode
 
 
@@ -46,18 +46,18 @@ Lon/Lat/Hae (radians).
 
 \subsection projfwd Forward transform
 
-This is accomplished via the isce::core::ProjectionBase::fwd method. We refer to transformation of a Lon/Lat/Hae (radians)
+This is accomplished via the isce3::core::ProjectionBase::fwd method. We refer to transformation of a Lon/Lat/Hae (radians)
 to projection of interest as Forward transformation. For example
 
 \code{.cpp}
 //Create interface to Antarctic Polar Stereographic
-isce::core::ProjectionBase *spolar = isce::core::createProj(3031);
+isce3::core::ProjectionBase *spolar = isce3::core::createProj(3031);
 
 //Pick a point to transform - say south pole
-isce::core::cartesian_t spole = {0., -M_PI/2.0, 0.};
+isce3::core::cartesian_t spole = {0., -M_PI/2.0, 0.};
 
 //Transform the point 
-isce::core::cartesian_t xyz;
+isce3::core::cartesian_t xyz;
 spolar->fwd(llh, xyz);
 
 std::cout << "Coordinates in polar coordinates: " << xyz[0] << " " << xyz[1] << " " << xyz[2] << "\n";
@@ -65,18 +65,18 @@ std::cout << "Coordinates in polar coordinates: " << xyz[0] << " " << xyz[1] << 
 
 \subsection projinv Inverse
 
-This is accomplished via the isce::core::ProjectionBase::inv method. We refer to the transformation from projection
+This is accomplished via the isce3::core::ProjectionBase::inv method. We refer to the transformation from projection
 of interest to Lon/Lat/Hae (radians) as Inverse Transformation. For example
 
 \code{.cpp}
 //Create interface to Antarctic Polar Stereographic
-isce::core::ProjectionBase *spolar = isce::core::createProj(3031);
+isce3::core::ProjectionBase *spolar = isce3::core::createProj(3031);
 
 //Pick a point to transform - say south pole
-isce::core::cartesian_t origin = {0., 0., 0.};
+isce3::core::cartesian_t origin = {0., 0., 0.};
 
 //Transform the point 
-isce::core::cartesian_t llh;
+isce3::core::cartesian_t llh;
 spolar->inv(origin, llh);
 
 std::cout << "Coordinates in Lon/Lat/Hae (radians): " << llh[0] << " " << llh[1] << " " << llh[2] << "\n";
@@ -84,8 +84,8 @@ std::cout << "Coordinates in Lon/Lat/Hae (radians): " << llh[0] << " " << llh[1]
 
 \subsection projcomb Transforming between systems
 
-One could use a pair of isce::core::ProjectionBase::fwd and isce::core::ProjectionBase::inv calls to do this
-or directly use isce::core::projTransform.
+One could use a pair of isce3::core::ProjectionBase::fwd and isce3::core::ProjectionBase::inv calls to do this
+or directly use isce3::core::projTransform.
 
 
 \section projadvanced Compatibility with PROJ/ GDAL

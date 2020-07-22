@@ -16,7 +16,7 @@ from GDAL cimport GDALDataType as GDT
 
 cdef class pyRaster:
     '''
-    Python wrapper for isce::core::Raster
+    Python wrapper for isce3::core::Raster
 
     All parameters like dimensions, data types etc must be known at the time of creation.
     Order of parsing keyword arguments is always h5py -> GDAL -> C++ constructor.

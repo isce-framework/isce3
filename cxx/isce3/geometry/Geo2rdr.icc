@@ -1,0 +1,54 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2017-2018
+
+#if !defined(ISCE_GEOMETRY_GEO2RDR_ICC)
+#error "Geo2rdr.icc is an implementation detail of class Geo2rdr"
+#endif
+
+inline
+isce3::geometry::Geo2rdr::
+Geo2rdr(const isce3::product::Product & product,
+        char frequency,
+        bool nativeDoppler)
+:
+    _radarGrid(product, frequency)
+{
+    // Copy orbit and doppler
+    _orbit = product.metadata().orbit();
+    if (nativeDoppler) {
+        _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
+    }
+
+    // Make an ellipsoid manually
+    _ellipsoid = isce3::core::Ellipsoid(isce3::core::EarthSemiMajorAxis,
+                                       isce3::core::EarthEccentricitySquared);
+}
+
+inline
+isce3::geometry::Geo2rdr::
+Geo2rdr(const isce3::core::Ellipsoid & ellipsoid,
+        const isce3::core::Orbit & orbit,
+        const isce3::core::LUT2d<double> & doppler,
+        const isce3::core::Metadata & meta)
+:
+    _ellipsoid(ellipsoid),
+    _orbit(orbit),
+    _doppler(doppler),
+    _radarGrid(meta, orbit.referenceEpoch())
+{}
+
+inline
+isce3::geometry::Geo2rdr::
+Geo2rdr(const isce3::product::RadarGridParameters & radarGrid,
+        const isce3::core::Orbit & orbit,
+        const isce3::core::Ellipsoid & ellipsoid,
+        const isce3::core::LUT2d<double> & doppler)
+:
+    _ellipsoid(ellipsoid),
+    _orbit(orbit),
+    _doppler(doppler),
+    _radarGrid(radarGrid)
+{}

@@ -61,7 +61,7 @@ The Zero Doppler convention is used by ESA and European sensors like ERS, ENVISA
 
 \section forwardgeom Forward transformation - Radar geometry to Map coordinates
 
-The forward geometry transformation is implemented via isce::geometry::Topo module in ISCE.
+The forward geometry transformation is implemented via isce3::geometry::Topo module in ISCE.
 
 This algorithm maps a given Target (T) located at azimuth time \f$ \left( \eta_{dc,T} \right) \f$ and slant range \f$\left( R_{dc,T}\right) \f$ in radar image coordinates to map coordinates \f$\left(X_{map}, Y_{map}, h\left(X_{map}, Y_{map}\right)\right)\f$. This is done using the given Doppler model \f$\left( f_d\left(\eta,R\right)\right)\f$ and a Digital Elevation Model (DEM) \f$ \left(z\left( X, Y\right)\right)\f$ as function of horizontal datum coordinates X, Y. Details of various implementations of the forward mapping algorithm can be found in a number of references (\cite kropatsch1990generation, \cite eineder2003efficient, \cite sansosti2006geometrical, \cite nitti2011impact).
 
@@ -149,7 +149,7 @@ where \f$\hat{v} = \frac{\mathbf{V_{sat}}}{\left| \mathbf{V_{sat}} \right|}\f$ i
 \f]
 
 where \f$L=-1\f$ for right looking imaging geometry and \f$L=+1\f$ for left looking imaging geometry.
-Once \f$ \alpha, \beta\f$ and \f$\gamma\f$ are computd, we can compute the location of the target in Cartesian space \f$\left( \mathbf{T} \right)\f$. The target location can be converted into map coordinates as \f$\left( X_{map}, Y_{map}, z_map\left(X_{map}, Y_{map}\right) \right)\f$ using standard transformations (see isce::core::ProjectionBase).
+Once \f$ \alpha, \beta\f$ and \f$\gamma\f$ are computd, we can compute the location of the target in Cartesian space \f$\left( \mathbf{T} \right)\f$. The target location can be converted into map coordinates as \f$\left( X_{map}, Y_{map}, z_map\left(X_{map}, Y_{map}\right) \right)\f$ using standard transformations (see isce3::core::ProjectionBase).
 
 \subsection deminterp Step 3: DEM interpolation
 

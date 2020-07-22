@@ -1,14 +1,14 @@
 /*! \page tutorial_fft FFT Tutorial
 
 \tableofcontents
-A higher level interface to FFTW3 library is available in ISCE3 through isce::signal::Signal. This templated Signal class allows to compute 1D fft in range or azimuth direction or 2D fft. Signal supports both real and complex data and can be applied on block of data.
+A higher level interface to FFTW3 library is available in ISCE3 through isce3::signal::Signal. This templated Signal class allows to compute 1D fft in range or azimuth direction or 2D fft. Signal supports both real and complex data and can be applied on block of data.
 
 \section fftinclude Include headers
 
 The following header file is required:
 
 \code{.cpp}
-#include "isce/signal/Signal.h"
+#include "isce3/signal/Signal.h"
 \endcode
 
 \section signalconstruct Constructors
@@ -19,13 +19,13 @@ Signal can be isntatiated for a multi-threaded FFT computation or for a signle t
 For computing forward and inverse FFT with signle thread on real or complex float data, one can instatiate Signal as follows:
 
 \code{.cpp}
-isce::signal::Signal<float> sig;
+isce3::signal::Signal<float> sig;
 \endcode
 
 Similarly for double precision real or complex data, one can instantiate an object of Signal as:
 
 \code{.cpp}
-isce::signal::Signal<double> sig;
+isce3::signal::Signal<double> sig;
 \endcode
 
 \subsection signalconstructmulti  Multi-threaded 
@@ -33,7 +33,7 @@ For instantiating Signal to use the multi-threaded FFTW library, one can simply 
 
 \code{.cpp}
 int numThreads = 8;
-isce::signal::Signal<float> sig(numThreads);
+isce3::signal::Signal<float> sig(numThreads);
 \endcode
 
 \section forward Forward FFT 
@@ -70,7 +70,7 @@ sig.forward2DFFT(data, spectrum, width, length);
 \endcode
 
 \subsection forwardfwd Forward transformation
-Once the required FFT plan is created for 1D transform in range or azimuth direction or for 2D transform, then the actual transformation can be done by calling isce::signal::Signal::forward as:
+Once the required FFT plan is created for 1D transform in range or azimuth direction or for 2D transform, then the actual transformation can be done by calling isce3::signal::Signal::forward as:
 
 \code{.cpp}
 sig.forward(data, spectrum);
@@ -103,7 +103,7 @@ sig.inverse2DFFT(spectrum, data, width, length);
 \endcode
 
 \subsection inverseinv Inverse transformation
-Once the required FFT plan is created for 1D transformation in range or azimuth direction or for 2D transformation, then the actual transformation can be done by calling isce::signal::Signal::inverse as:
+Once the required FFT plan is created for 1D transformation in range or azimuth direction or for 2D transformation, then the actual transformation can be done by calling isce3::signal::Signal::inverse as:
 
 \code{.cpp}
 sig.inverse(spectrum, data);
@@ -117,11 +117,11 @@ Assuming the data and spectrum blocks with a shape of (length x width) as introd
 
 \section nfft Length of FFT
 As described in FFTW3 documentation, FFTW is best at handling sizes of the form  \f$2^a\f$  \f$3^b\f$  \f$5^c\f$  \f$7^d\f$  \f$11^e\f$ \f$13^f\f$, where \f$e+f\f$ is either 0 or 1, and the other exponents are arbitrary. Other sizes are computed by means of a slow algorithm.
-Transforms whose sizes are powers of 2 are especially fast. Therefore a user of Signal may use isce::signal::Signal::nextPowerOfTwo to compute the efficient length of signal and zero pad the signal accordingly before setting FFT plans.
+Transforms whose sizes are powers of 2 are especially fast. Therefore a user of Signal may use isce3::signal::Signal::nextPowerOfTwo to compute the efficient length of signal and zero pad the signal accordingly before setting FFT plans.
 
 
 \section upsample Upsampling a signal in range direction
-Signal provides a function isce::signal::Signal::upsample to upsample a block of data in range direction by a given oversampling factor.
+Signal provides a function isce3::signal::Signal::upsample to upsample a block of data in range direction by a given oversampling factor.
 After creating the forward range FFT plan based on the original signal and the inverse range FFT plan based on the upsampled signal, then upsampling can be done by calling the upsample function. For example for a block of signal with shape of (nrows*width) zero padded to (nrows*nfft) where nfft is the next power of 2 for width, then the oversampling of the signal can be done as:
 
 \code{.cpp}
@@ -146,7 +146,7 @@ sig.upsample(data, dataUpsampled, nrows, nfft, oversample, shiftImpact);
 
 \code{.cpp}
 
-#include "isce/signal/Signal.h"
+#include "isce3/signal/Signal.h"
 
 
 int main() {
@@ -161,7 +161,7 @@ int main() {
     size_t nfft;
 
     // instantiate a signal object
-    isce::signal::Signal<double> sig;
+    isce3::signal::Signal<double> sig;
 
     //compute FFT length     
     sig.nextPowerOfTwo(width, nfft);
@@ -198,7 +198,7 @@ int main() {
 }
 \endcode
 
-For more examples see isce::signal::Crossmul and also multiple unit tests in isce/tests/lib/isce/signal.
+For more examples see isce3::signal::Crossmul and also multiple unit tests in isce/tests/lib/isce/signal.
 
 */
 

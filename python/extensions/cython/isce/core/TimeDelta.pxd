@@ -6,7 +6,7 @@
 
 from libcpp cimport bool
 
-cdef extern from "isce/core/TimeDelta.h" namespace "isce::core":
+cdef extern from "isce3/core/TimeDelta.h" namespace "isce3::core":
     cdef cppclass TimeDelta:
 
         # Data members

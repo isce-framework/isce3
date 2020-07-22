@@ -1,0 +1,65 @@
+#ifndef ISCE_IO_GDAL_DETAIL_MEMDATASET_ICC
+#error "MemDataset.icc is an implementation detail of MemDataset.h"
+#endif
+
+#include <cpl_conv.h>
+
+#include <isce3/except/Error.h>
+
+#include "GDALDataTypeUtil.h"
+
+namespace isce3 { namespace io { namespace gdal { namespace detail {
+
+template<typename T>
+inline
+std::string toString(T * ptr)
+{
+    constexpr int maxlen = 64;
+    char buffer[maxlen];
+
+    // print pointer to buffer
+    // get length of resulting string
+    int len = CPLPrintPointer(buffer, ptr, maxlen);
+
+    // check if length may have exceeded buffer size
+    if (len >= maxlen) {
+        std::string errmsg = "string size exceeds buffer length";
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+
+    // need to null-terminate the resulting string
+    buffer[len] = '\0';
+
+    return std::string(buffer);
+}
+
+template<typename T>
+inline
+std::string getMemDatasetName(T * data,
+                              int width,
+                              int length,
+                              int bands,
+                              std::size_t colstride,
+                              std::size_t rowstride,
+                              std::size_t bandstride)
+{
+    GDALDataType datatype = Type2GDALDataType<T>::datatype;
+    if (datatype == GDT_Unknown) {
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "type is not mappable to GDALDataType");
+    }
+    std::string datatype_str = GDALGetDataTypeName(datatype);
+
+    std::string name = "MEM:::";
+    name += "DATAPOINTER=" + toString(data);
+    name += ",PIXELS=" + std::to_string(width);
+    name += ",LINES=" + std::to_string(length);
+    name += ",BANDS=" + std::to_string(bands);
+    name += ",DATATYPE=" + datatype_str;
+    if (colstride)  { name += ",PIXELOFFSET=" + std::to_string(colstride); }
+    if (rowstride)  { name += ",LINEOFFSET=" + std::to_string(rowstride); }
+    if (bandstride) { name += ",BANDOFFSET=" + std::to_string(bandstride); }
+
+    return name;
+}
+
+}}}}

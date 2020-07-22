@@ -14,7 +14,7 @@ from cython.operator cimport dereference as deref
 
 cdef class pyDEMInterpolator:
     '''
-    Cython wrapper for isce::geometry::DEMInterpolator.
+    Cython wrapper for isce3::geometry::DEMInterpolator.
 
     Args:
         refHeight (Optional[float]) : Default reference height for the DEM.

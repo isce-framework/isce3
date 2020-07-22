@@ -6,14 +6,14 @@
 
 ISCE delegates raster data handling to the Geospatial Data Abstraction Library (<a href="https://www.gdal.org">GDAL</a>). 
 Hence, it uses all the conventions defined by the <a href="http://www.gdal.org/gdal_datamodel.html">GDAL data model</a> 
-to simplify the interface. You will find detailed documentation of all the methods available here: isce::io::Raster.
+to simplify the interface. You will find detailed documentation of all the methods available here: isce3::io::Raster.
 
 
 \subsection rastercreate Raster creation
 
 ISCE exposes access to GDAL's raster generation capabilities via it's most general constructor interface
 
-isce::io::Raster(const std::string& fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string& driverName)
+isce3::io::Raster(const std::string& fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string& driverName)
 
 This method provides direct access to 
 GDALGetDriverManager()->GetDriverByName()->Create() methods in C++. This provides users with the capability
@@ -26,7 +26,7 @@ See this <a href="https://www.gdal.org/formats_list.html">table</a> for list of 
 Since, ISCE delegates Raster data access to GDAL, (in theory) users should be able to read in any raster format
 that GDAL supports. A Raster can be easily opened for ReadOnly Access by just passing the filename to the constructor
 
-isce::io::Raster(std::string& fname)
+isce3::io::Raster(std::string& fname)
 
 The same applies to <a href="https://www.gdal.org/gdal_virtual_file_systems.html">virtual file systems</a> supported by GDAL as well. 
 
@@ -36,13 +36,13 @@ The IHDF5 driver is considered a special driver by ISCE and is handled different
 
 <ul>
 <li> GDAL's internal HDF5 driver does not provide write or update capability.
-<li> ISCE includes an easy to use HDF5 interface using isce::io namespace, that can be used to 
+<li> ISCE includes an easy to use HDF5 interface using isce3::io namespace, that can be used to 
 create/ manipulate HDF5 groups and datasets. The documentation for the following classes are useful
 to understand HDF5 manipulation at the C++ level:
 <ol>
-<li>isce::io::IH5File - Extension of <a href="https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_h5_file.html">H5::H5File</a> with simpler interfaces
-<li>isce::io::IDataSet - Extension of <a href="https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_data_set.html">H5::H5DataSet</a> with simpler interfaces
-<li>isce::io::IGroup  - Extension of <a href="https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_group.html">H5::H5Group</a> with simpler interfaces
+<li>isce3::io::IH5File - Extension of <a href="https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_h5_file.html">H5::H5File</a> with simpler interfaces
+<li>isce3::io::IDataSet - Extension of <a href="https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_data_set.html">H5::H5DataSet</a> with simpler interfaces
+<li>isce3::io::IGroup  - Extension of <a href="https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_group.html">H5::H5Group</a> with simpler interfaces
 </ol>
 <li> ISCE then relies on its own custom IHDF5 GDAL driver to read/update existing HDF5 datasets. 
 These HDF5 datasets could have been created by any external software or ISCE using the interfaces listed above.
@@ -173,8 +173,8 @@ could be useful are
 
 \section swathpoint Radar Swath Data - Pixel Is Point
 
-ISCE uses the isce::product::RadarGridParameters data structure to represent the radar swath imaging grid limits.
-Swath imagery uses "Pixel Is Point" convention - i.e, isce::product::RadarGridParameters::sensingStart and 
-isce::product::RadarGridParameters::startingRange represent the time-tag and slant range to the center of the 
+ISCE uses the isce3::product::RadarGridParameters data structure to represent the radar swath imaging grid limits.
+Swath imagery uses "Pixel Is Point" convention - i.e, isce3::product::RadarGridParameters::sensingStart and 
+isce3::product::RadarGridParameters::startingRange represent the time-tag and slant range to the center of the 
 Top-Left pixel in the swath which is always arranged in increasing azimuth time order (rows) and increasing slant range order (columns).
 */

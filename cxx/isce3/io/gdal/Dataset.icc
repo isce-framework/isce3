@@ -1,0 +1,56 @@
+#ifndef ISCE_IO_GDAL_DATASET_ICC
+#error "Dataset.icc is an implementation detail of Dataset.h"
+#endif
+
+#include <isce3/except/Error.h>
+
+#include "detail/MemDataset.h"
+
+namespace isce3 { namespace io { namespace gdal {
+
+template<typename T>
+inline
+Dataset::Dataset(const T * data, int width, int length, int bands)
+:
+    Dataset(const_cast<T *>(data), width, length, bands, GA_ReadOnly)
+{}
+
+template<typename T>
+inline
+Dataset::Dataset(T * data, int width, int length, int bands, GDALAccess access)
+:
+    Dataset(data, width, length, bands, sizeof(T), width * sizeof(T), std::size_t(length) * width * sizeof(T), access)
+{}
+
+template<typename T>
+inline
+Dataset::Dataset(const T * data,
+                 int width,
+                 int length,
+                 int bands,
+                 std::size_t colstride,
+                 std::size_t rowstride,
+                 std::size_t bandstride)
+:
+    Dataset(const_cast<T *>(data), width, length, bands, colstride, rowstride, bandstride, GA_ReadOnly)
+{}
+
+template<typename T>
+inline
+Dataset::Dataset(T * data,
+                 int width,
+                 int length,
+                 int bands,
+                 std::size_t colstride,
+                 std::size_t rowstride,
+                 std::size_t bandstride,
+                 GDALAccess access)
+:
+    Dataset(detail::getMemDatasetName(data, width, length, bands, colstride, rowstride, bandstride), access)
+{
+    if (!data) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), "data pointer may not be null");
+    }
+}
+
+}}}

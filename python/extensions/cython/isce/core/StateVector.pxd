@@ -5,7 +5,7 @@ from libcpp cimport bool
 from Cartesian cimport Vec3
 from DateTime cimport DateTime
 
-cdef extern from "isce/core/StateVector.h" namespace "isce::core":
+cdef extern from "isce3/core/StateVector.h" namespace "isce3::core":
 
     cdef cppclass StateVector:
         StateVector()

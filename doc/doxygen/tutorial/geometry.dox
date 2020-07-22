@@ -6,26 +6,26 @@
 
 In general, one only needs to include the following headerfiles.
 \code{.cpp}
-#include "isce/core/Orbit.h"
-#include "isce/geometry/geometry.h"
+#include "isce3/core/Orbit.h"
+#include "isce3/geometry/geometry.h"
 \endcode
 
 If one is looking to use this with other features from ISCE, you might need additional appropriate header files.
 
 \section geomorbit Orbit
 
-isce::core::Orbit is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.
+isce3::core::Orbit is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.
 
 \code{.cpp}
 
-#include "isce/geometry/geometry.h"
+#include "isce3/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
 
 int main(int argc, char *argv[])
 {
-    isce::core::Orbit orbit;
+    isce3::core::Orbit orbit;
 
     std::ifstream ifid("input_orbit.txt");
     std::string line;
@@ -34,13 +34,13 @@ int main(int argc, char *argv[])
     {
         std::stringstream stream;
         std::string aztime;
-        isce::core::Vec3 pos, vel;
+        isce3::core::Vec3 pos, vel;
 
         stream << line;
         std::cout << line << "\n";
         stream >> aztime >> pos[0] >> pos[1] >> pos[2] >> vel[0] >> vel[1] >> vel[2];
         //Create StateVector Object
-        isce::core::StateVector sv;
+        isce3::core::StateVector sv;
         sv.datetime = aztime;    //ISO-8601 format
         sv.position = pos;
         sv.velocity = vel;
@@ -79,8 +79,8 @@ In this example, we will demonstrate the forward mapping algorithm by using it t
 
 \code{.cpp}
 
-#include "isce/core/LookSide.h"
-#include "isce/geometry/geometry.h"
+#include "isce3/core/LookSide.h"
+#include "isce3/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -88,18 +88,18 @@ In this example, we will demonstrate the forward mapping algorithm by using it t
 int main(int argc, char *argv[])
 {
 
-    isce::core::Orbit orbit;
+    isce3::core::Orbit orbit;
 
     //Read in orbit from file
     ...
 
     //Create WGS84 ellipsoid
-    isce::core::Ellipsoid ellipse(6378137.,.0066943799901);
+    isce3::core::Ellipsoid ellipse(6378137.,.0066943799901);
 
     //Early and late time from radar image metadata
-    std::vector<isce::core::DateTime> timetags;
-    timetags.push_back(isce::core::DateTime("2016-04-08T09:13:55.454821"));
-    timetags.push_back(isce::core::DateTime("2016-04-08T09:14:09.555937"));
+    std::vector<isce3::core::DateTime> timetags;
+    timetags.push_back(isce3::core::DateTime("2016-04-08T09:13:55.454821"));
+    timetags.push_back(isce3::core::DateTime("2016-04-08T09:14:09.555937"));
 
     //Near and far slant range from radar image metadata
     std::vector<double> ranges;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     double wvl = 0.06;
 
     //Look side from metadata
-    auto side = isce::core::LookSide::Right;
+    auto side = isce3::core::LookSide::Right;
 
     //Container to store sets of returned results
     std::vector<double> lats;
@@ -138,13 +138,13 @@ int main(int argc, char *argv[])
             for(int zz=0; zz<zrange.size(); zz++)
             {
                 //To store Lon/Lat/Hae of target
-                isce::core::cartesian_t llh;
+                isce3::core::cartesian_t llh;
 
                 //Constant height DEM
-                isce::geometry::DEMInterpolator constDEM(zrange[zz]);
+                isce3::geometry::DEMInterpolator constDEM(zrange[zz]);
 
                 //Map target to DEM assuming Zero Doppler geometry
-                int status = isce::geometry::rdr2geo(tintp,  //aztime
+                int status = isce3::geometry::rdr2geo(tintp,  //aztime
                                         rng,    //slant range
                                         0.,     //doppler
                                         orbit,
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
                                         5.0e-2, //distance threshold
                                         2,     //primary iterations
                                         0,     //secondary iterations,
-                                        isce::core::Hermite);
+                                        isce3::core::Hermite);
 
                 //Convert to degrees
                 lons.push_back(llh[0] * 180.0/M_PI);
@@ -183,8 +183,8 @@ int main(int argc, char *argv[])
 In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.
 
 \code{.cpp}
-#include "isce/core/LookSide.h"
-#include "isce/geometry/geometry.h"
+#include "isce3/core/LookSide.h"
+#include "isce3/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -192,27 +192,27 @@ In this example, we will demonstrate the inverse mapping algorithm by using it t
 int main(int argc, char *argv[])
 {
 
-    isce::core::Orbit orbit;
+    isce3::core::Orbit orbit;
 
     //Read in orbit from file
     ...
 
     //Create WGS84 ellipsoid
-    isce::core::Ellipsoid ellipse(6378137.,.0066943799901);
+    isce3::core::Ellipsoid ellipse(6378137.,.0066943799901);
 
     //Known targets / corner reflector locations - can be read in from a file
-    std::vector<isce::core::cartesian_t> targets;
-    targets.push_back( isce::core::cartesian_t{{131.55, 32.85, 475.}});
-    targets.push_back( isce::core::cartesian_t{{131.65, 32.95, 150.}});
+    std::vector<isce3::core::cartesian_t> targets;
+    targets.push_back( isce3::core::cartesian_t{{131.55, 32.85, 475.}});
+    targets.push_back( isce3::core::cartesian_t{{131.65, 32.95, 150.}});
 
     //Wavelength
     double wvl = 0.06;
 
     //Look side
-    auto side = isce::core::LookSide::Right;
+    auto side = isce3::core::LookSide::Right;
 
     //We will create a fake product with relevant metadata for use
-    isce::product::ImageMode mode;
+    isce3::product::ImageMode mode;
     std::array<size_t,2> dims{{1500,1000}};
     mode.dataDimensions(dims); //1500 lines x 1000 pixels
     mode.prf(1000.);
@@ -222,13 +222,13 @@ int main(int argc, char *argv[])
     mode.rangePixelSpacing(10.);
     mode.numberAzimuthLooks(10);
     mode.numberRangeLooks(10);
-    isce::core::DateTime t0("2016-04-08T09:13:55.454821");
+    isce3::core::DateTime t0("2016-04-08T09:13:55.454821");
     mode.startAzTime(t0);
-    isce::core::DateTime t1("2016-04-08T09:14:10.454821");
+    isce3::core::DateTime t1("2016-04-08T09:14:10.454821");
     mode.endAzTime(t1);
 
     //Create Doppler polynomial - Zero Doppler for now
-    isce::core::Poly2d dop(0,0,0.,0.,1.,1.);
+    isce3::core::Poly2d dop(0,0,0.,0.,1.,1.);
     dop.setCoeff(0,0,0.);
 
     for (int tt=0; tt<targets.size(); tt++)
@@ -237,12 +237,12 @@ int main(int argc, char *argv[])
         double aztime;
 
         //Convert from degrees to radians
-        isce::core::cartesian_t llh;
+        isce3::core::cartesian_t llh;
         llh[0] = targets[tt][0] * M_PI / 180.0;
         llh[1] = targets[tt][1] * M_PI / 180.0;
         llh[2] = targets[tt][2];
 
-        isce::geometry::geo2rdr( llh,       //Target location
+        isce3::geometry::geo2rdr( llh,       //Target location
                                  ellipse,   //Ellipsoid
                                  orbit,     //Orbit
                                  dop,       //Doppler

@@ -10,7 +10,7 @@ from Matrix cimport valarray
 from LUT2d cimport LUT2d
 from IH5 cimport IGroup
 # LUT1d
-cdef extern from "isce/core/LUT1d.h" namespace "isce::core":
+cdef extern from "isce3/core/LUT1d.h" namespace "isce3::core":
     cdef cppclass LUT1d[T]:
 
         # Constructors
@@ -31,8 +31,8 @@ cdef extern from "isce/core/LUT1d.h" namespace "isce::core":
         # Evaluation
         T eval(double)
 
-# Wrapper around isce::core serialization defined in <isce/core/Serialization.h
-cdef extern from "isce/core/Serialization.h" namespace "isce::core":
+# Wrapper around isce3::core serialization defined in <isce/core/Serialization.h
+cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
     void loadLUT1d "loadFromH5" (IGroup & group, LUT1d[double] & lut, string name_coords, string name_values)
 
 # end of file 

@@ -7,7 +7,7 @@
 from Matrix cimport valarray
 from IH5 cimport IGroup
 
-cdef extern from "isce/product/Swath.h" namespace "isce::product":
+cdef extern from "isce3/product/Swath.h" namespace "isce3::product":
     cdef cppclass Swath:
 
         # Constructors
@@ -64,7 +64,7 @@ cdef extern from "isce/product/Swath.h" namespace "isce::product":
         double processedAzimuthBandwidth() const
         void processedAzimuthBandwidth(double)
 
-cdef extern from "isce/product/Serialization.h" namespace "isce::product":
+cdef extern from "isce3/product/Serialization.h" namespace "isce3::product":
     void loadSwath "loadFromH5" (IGroup & group, Swath & swath, char freq)
 
 # end of file 

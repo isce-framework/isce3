@@ -11,7 +11,7 @@ from LUT2d cimport LUT2d
 from DEMInterpolator cimport DEMInterpolator
 from RadarGridParameters cimport RadarGridParameters
 
-cdef extern from "isce/geometry/boundingbox.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/boundingbox.h" namespace "isce3::geometry":
     Perimeter getGeoPerimeter(RadarGridParameters &,
                               Orbit &,
                               ProjectionBase *,

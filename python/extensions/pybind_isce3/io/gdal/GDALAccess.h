@@ -4,7 +4,7 @@
 #include <pybind11/pybind11.h>
 #include <string>
 
-#include <isce/except/Error.h>
+#include <isce3/except/Error.h>
 
 namespace py = pybind11;
 
@@ -18,5 +18,5 @@ GDALAccess toGDALAccess(char c)
         case 'w' : return GA_Update;
     }
 
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), std::string("unsupported access code '") + c + "'");
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), std::string("unsupported access code '") + c + "'");
 }

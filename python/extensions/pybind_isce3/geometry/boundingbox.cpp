@@ -4,15 +4,15 @@
 #include <ogr_geometry.h>
 #include <string>
 
-#include <isce/core/Orbit.h>
-#include <isce/core/Projections.h>
-#include <isce/geometry/DEMInterpolator.h>
-#include <isce/geometry/boundingbox.h>
-#include <isce/product/RadarGridParameters.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/core/Projections.h>
+#include <isce3/geometry/DEMInterpolator.h>
+#include <isce3/geometry/boundingbox.h>
+#include <isce3/product/RadarGridParameters.h>
 
-using namespace isce::core;
-using namespace isce::geometry;
-using isce::product::RadarGridParameters;
+using namespace isce3::core;
+using namespace isce3::geometry;
+using isce3::product::RadarGridParameters;
 namespace py = pybind11;
 
 void addbinding_boundingbox(py::module& m)

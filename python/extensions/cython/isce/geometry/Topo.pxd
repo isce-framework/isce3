@@ -7,10 +7,10 @@
 from libcpp.string cimport string
 from libcpp cimport bool
 
-# Cython declaration for isce::io objects
+# Cython declaration for isce3::io objects
 from Raster cimport Raster
 
-# Cython declarations for isce::product objects
+# Cython declarations for isce3::product objects
 from Product cimport Product
 
 # Interpolation methods and Orbit
@@ -22,7 +22,7 @@ from Ellipsoid cimport Ellipsoid
 
 from LUT2d cimport LUT2d
 
-cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/Topo.h" namespace "isce3::geometry":
     cdef cppclass Topo:
 
         # Constructor

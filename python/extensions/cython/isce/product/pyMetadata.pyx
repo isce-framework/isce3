@@ -8,7 +8,7 @@ from Metadata cimport Metadata
 
 cdef class pyMetadata:
     """
-    Cython wrapper for isce::product::Metadata.
+    Cython wrapper for isce3::product::Metadata.
 
     Args:
         None

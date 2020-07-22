@@ -12,7 +12,7 @@ from IH5 cimport hid_t, IGroup
 
 cdef class pyLUT2d:
     '''
-    Python wrapper for isce::core::LUT2d
+    Python wrapper for isce3::core::LUT2d
 
     Args:
         x (ndarray or list): X-Coordinates for LUT

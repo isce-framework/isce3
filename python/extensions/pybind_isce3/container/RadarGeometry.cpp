@@ -2,15 +2,15 @@
 
 namespace py = pybind11;
 
-using isce::container::RadarGeometry;
+using isce3::container::RadarGeometry;
 
 void addbinding(py::class_<RadarGeometry>& pyRadarGeometry)
 {
     pyRadarGeometry
         // constructor(s)
-        .def(py::init<const isce::product::RadarGridParameters&,
-                      const isce::core::Orbit&,
-                      const isce::core::LUT2d<double>&>(),
+        .def(py::init<const isce3::product::RadarGridParameters&,
+                      const isce3::core::Orbit&,
+                      const isce3::core::LUT2d<double>&>(),
                 py::arg("radar_grid"),
                 py::arg("orbit"),
                 py::arg("doppler"))

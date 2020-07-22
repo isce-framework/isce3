@@ -11,7 +11,7 @@ from LookSide cimport LookSide, to_string, parseLookSide
 
 cdef class pyRadarGridParameters:
     """
-    Cython wrapper for isce::product::RadarGridParameters.
+    Cython wrapper for isce3::product::RadarGridParameters.
 
     Order of parsing keywords is always Swath -> C++ Constructor -> Default constructor
     """

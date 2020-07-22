@@ -10,7 +10,7 @@ from LUT1d cimport LUT1d
 
 cdef class pyCrossmul:
     '''
-    Python wrapper for isce::signal::Crossmul
+    Python wrapper for isce3::signal::Crossmul
 
     Args:
 

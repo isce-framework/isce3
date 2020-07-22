@@ -12,7 +12,7 @@ from Raster  cimport Raster
 from libcpp.string cimport string
 from libcpp cimport bool
 
-cdef extern from "isce/geometry/RTC.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
 
     cdef enum rtcInputRadiometry:
         BETA_NAUGHT = 0

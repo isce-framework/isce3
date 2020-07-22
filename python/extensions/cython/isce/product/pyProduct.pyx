@@ -9,7 +9,7 @@ from Product cimport Product
 
 cdef class pyProduct:
     """
-    Cython wrapper for isce::product::Product.
+    Cython wrapper for isce3::product::Product.
 
     Args:
         h5file (pyIH5File):                 IH5File for product.
@@ -27,7 +27,7 @@ cdef class pyProduct:
     
     def __cinit__(self, pyIH5File h5file, freq='A'):
         """
-        Constructor that creates a C++ isce::product::Product objects and binds it to
+        Constructor that creates a C++ isce3::product::Product objects and binds it to
         python instance.
         """
         # Create the C++ Product class

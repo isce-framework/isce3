@@ -15,7 +15,7 @@ from LUT2d cimport LUT2d
 from RadarGridParameters cimport RadarGridParameters
 
 
-cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
+cdef extern from "isce3/geometry/geometry.h" namespace "isce3::geometry":
 
     # Map coordinates to radar geometry coordinates transformer
     int geo2rdr(const cartesian_t &,

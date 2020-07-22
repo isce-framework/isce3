@@ -1,0 +1,158 @@
+#ifndef ISCE_FFT_DETAIL_FFTPLANBASE_ICC
+#error "FFTPlanBase.icc is an implementation detail of FFTPlanBase.h"
+#endif
+
+#include <isce3/except/Error.h>
+
+namespace isce3 { namespace fft { namespace detail {
+
+template<int Sign, typename T>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase()
+:
+    _plan(std::make_shared<fftw_plan_t>())
+{}
+
+template<int Sign, typename T>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
+                                  std::complex<T> * in,
+                                  int n,
+                                  int batch,
+                                  unsigned flags,
+                                  int threads)
+:
+    FFTPlanBase(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, Sign, threads)
+{}
+
+template<int Sign, typename T>
+template<int Rank>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
+                                  std::complex<T> * in,
+                                  const int (&n)[Rank],
+                                  int batch,
+                                  unsigned flags,
+                                  int threads)
+:
+    FFTPlanBase(out, in, n, n, 1, product(n), n, 1, product(n), batch, flags, Rank, Sign, threads)
+{}
+
+template<int Sign, typename T>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
+                                  std::complex<T> * in,
+                                  int n,
+                                  int nembed,
+                                  int stride,
+                                  int dist,
+                                  int batch,
+                                  unsigned flags,
+                                  int threads)
+:
+    FFTPlanBase(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, Sign, threads)
+{}
+
+template<int Sign, typename T>
+template<int Rank>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
+                                  std::complex<T> * in,
+                                  const int (&n)[Rank],
+                                  const int (&nembed)[Rank],
+                                  int stride,
+                                  int dist,
+                                  int batch,
+                                  unsigned flags,
+                                  int threads)
+:
+    FFTPlanBase(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, Sign, threads)
+{}
+
+template<int Sign, typename T>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
+                                  std::complex<T> * in,
+                                  int n,
+                                  int inembed,
+                                  int istride,
+                                  int idist,
+                                  int onembed,
+                                  int ostride,
+                                  int odist,
+                                  int batch,
+                                  unsigned flags,
+                                  int threads)
+:
+    FFTPlanBase(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, Sign, threads)
+{}
+
+template<int Sign, typename T>
+template<int Rank>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
+                                  std::complex<T> * in,
+                                  const int (&n)[Rank],
+                                  const int (&inembed)[Rank],
+                                  int istride,
+                                  int idist,
+                                  const int (&onembed)[Rank],
+                                  int ostride,
+                                  int odist,
+                                  int batch,
+                                  unsigned flags,
+                                  int threads)
+:
+    FFTPlanBase(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, Sign, threads)
+{}
+
+template<int Sign, typename T>
+inline
+void FFTPlanBase<Sign, T>::execute() const
+{
+    executePlan(*_plan);
+}
+
+template<int Sign, typename T>
+template<typename U, typename V>
+FFTPlanBase<Sign, T>::FFTPlanBase(U * out,
+                                  V * in,
+                                  const int * n,
+                                  const int * inembed,
+                                  int istride,
+                                  int idist,
+                                  const int * onembed,
+                                  int ostride,
+                                  int odist,
+                                  int batch,
+                                  unsigned flags,
+                                  int rank,
+                                  int sign,
+                                  int threads)
+{
+    // construct shared pointer with custom deleter to destroy the plan
+    _plan = std::shared_ptr<fftw_plan_t>(new fftw_plan_t,
+                [](fftw_plan_t * plan) noexcept {
+                    destroyPlan(*plan);
+                    delete plan;
+                });
+
+    // create plan
+    *_plan = initPlan(rank, n, batch, in, inembed, istride, idist, out, onembed, ostride, odist, sign, flags, threads);
+
+    // make sure plan creation was successful
+    if (!(*_plan)) {
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "FFT plan creation failed");
+    }
+}
+
+template<int N>
+inline
+int product(const int (&arr)[N])
+{
+    int prod = 1;
+    for (auto x : arr) { prod *= x; }
+    return prod;
+}
+
+}}}

@@ -9,7 +9,7 @@ from TimeDelta cimport TimeDelta
 
 cdef class pyTimeDelta:
     '''
-    Python wrapper for isce::core::TimeDelta
+    Python wrapper for isce3::core::TimeDelta
 
     Args:
         dt(:obj:`datetime.timedelta` or float, optional): Input python timedelta object or double precision floating point number
@@ -18,7 +18,7 @@ cdef class pyTimeDelta:
     
     def __cinit__(self):
         '''
-        Pre-constructor that creates a C++ isce::core::TimeDelta object and exposes it in Python.
+        Pre-constructor that creates a C++ isce3::core::TimeDelta object and exposes it in Python.
 
         Note:
             There is no pointer binding for pyTimeDelta. This is meant to be ephemeral and not passed directly to C++ modules.

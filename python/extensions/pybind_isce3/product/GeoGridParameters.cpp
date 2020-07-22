@@ -2,7 +2,7 @@
 
 namespace py = pybind11;
 
-using isce::product::GeoGridParameters;
+using isce3::product::GeoGridParameters;
 
 void addbinding(pybind11::class_<GeoGridParameters> & pyGeoGridParams)
 {

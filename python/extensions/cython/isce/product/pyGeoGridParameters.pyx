@@ -7,7 +7,7 @@ from GeoGridParameters cimport GeoGridParameters
 
 cdef class pyGeoGridParameters:
     """
-    Cython wrapper for isce::product::GeoGridParameters.
+    Cython wrapper for isce3::product::GeoGridParameters.
     """
     cdef GeoGridParameters * c_geogrid
     cdef bool __owner

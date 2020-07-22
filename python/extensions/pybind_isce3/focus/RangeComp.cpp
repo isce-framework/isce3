@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace isce::focus;
+using namespace isce3::focus;
 namespace py = pybind11;
 
 void addbinding(pybind11::enum_<RangeComp::Mode> & pyMode)

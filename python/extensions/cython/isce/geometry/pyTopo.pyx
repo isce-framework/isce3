@@ -15,7 +15,7 @@ from Interpolator cimport dataInterpMethod
 
 cdef class pyTopo:
     """
-    Cython wrapper for isce::geometry::Topo.
+    Cython wrapper for isce3::geometry::Topo.
 
     Args:
         product (pyProduct):                 Configured Product.
