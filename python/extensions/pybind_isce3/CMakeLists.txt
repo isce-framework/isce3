@@ -22,7 +22,6 @@ target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
 target_link_libraries(${ISCEEXTENSION} PUBLIC ${LISCE})
 
 if(WITH_CUDA)
-    include(IsceCuda)
     target_link_libraries(${ISCEEXTENSION} PUBLIC ${LISCECUDA})
 endif()
 

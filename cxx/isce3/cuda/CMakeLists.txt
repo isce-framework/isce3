@@ -1,6 +1,3 @@
-# Get name of ISCE CUDA library
-include(IsceCuda)
-
 include(Sources.cmake)
 include(Headers.cmake)
 
@@ -27,6 +24,13 @@ target_link_libraries(${LISCECUDA} PUBLIC
                       ${CUDART_LIBRARY}
                       ${CUDAFFT_LIBRARY}
                       )
+
+# Specify API version and build version (used to generate name and soname
+# symlinks on Unix systems).
+set_target_properties(${LISCECUDA} PROPERTIES
+    SOVERSION   ${PROJECT_VERSION_MAJOR}
+    VERSION     ${PROJECT_VERSION}
+    )
 
 # Install public headers
 foreach(HEADER ${HEADERS})

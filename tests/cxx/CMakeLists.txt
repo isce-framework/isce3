@@ -12,7 +12,6 @@ if(WITH_CUDA)
     list(TRANSFORM CUDA_TESTFILES PREPEND isce3/cuda/)
 
     # Get name of ISCE CUDA library
-    include(IsceCuda)
     list(APPEND LIBS ${LISCECUDA})
     list(APPEND TESTFILES ${CUDA_TESTFILES})
 endif()

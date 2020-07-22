@@ -50,6 +50,13 @@ foreach(HEADER ${HEADERS})
             COMPONENT   isce_libs)
 endforeach()
 
+# Specify API version and build version (used to generate name and soname
+# symlinks on Unix systems).
+set_target_properties(${LISCE} PROPERTIES
+    SOVERSION   ${PROJECT_VERSION_MAJOR}
+    VERSION     ${PROJECT_VERSION}
+    )
+
 # Install shared library
 install(TARGETS ${LISCE}
         EXPORT isce3-targets

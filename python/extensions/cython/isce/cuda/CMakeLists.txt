@@ -17,7 +17,6 @@ target_include_directories(
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
-include(IsceCuda)
 target_link_libraries(iscecudaextension PUBLIC ${LISCECUDA} ${LISCE} m)
 
 install(

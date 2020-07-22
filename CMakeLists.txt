@@ -13,8 +13,10 @@ if (POLICY CMP0076)
   cmake_policy(SET CMP0076 NEW)
 endif()
 
-project(ISCE VERSION 3.0
-        LANGUAGES CXX)
+project(isce3
+    VERSION   0.1.0
+    LANGUAGES CXX
+    )
 
 find_program(CCACHE ccache)
 if(CCACHE)
@@ -30,7 +32,10 @@ set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
     - \"\" (empty) to use default compilation options")
 
 # add local .cmake directory to CMAKE_MODULE_PATH
-list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/.cmake)
+
+# Set the name for the isce3 C++ library.
+set(LISCE ${PROJECT_NAME})
 
 # import some helper functions
 include(IsceCudaHelper)
@@ -59,10 +64,10 @@ if (WITH_CUDA)
 
     # specify target CUDA device architecture(s)
     set_cuda_arch_flags("${ISCE_CUDA_ARCHS}")
-endif()
 
-# Set the name for the ISCE C++ library
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
+    # Set the name for the isce3 CUDA library.
+    set(LISCECUDA ${PROJECT_NAME}-cuda)
+endif()
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;Coverage" CACHE STRING "" FORCE)
 if(NOT CMAKE_BUILD_TYPE)
