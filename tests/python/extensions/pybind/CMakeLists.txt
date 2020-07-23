@@ -16,6 +16,7 @@ geocode/geocodeSlc.py
 geometry/bbox.py
 geometry/dem.py
 geometry/geocode.py
+geometry/geo2rdr.py
 geometry/rdr2geo.py
 io/gdal/dataset.py
 io/gdal/raster.py
@@ -28,6 +29,7 @@ product/swath.py
 if(WITH_CUDA)
     list(APPEND TESTFILES
         cuda/focus/backproject.py
+        cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py
         )
 endif()
@@ -44,3 +46,10 @@ foreach(TESTFILE ${TESTFILES})
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${DIR})
     set_property(TEST ${TESTNAME} PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${DIR})
 endforeach()
+
+set_tests_properties(test.python.pybind.geometry.geo2rdr PROPERTIES
+             DEPENDS test.python.pybind.geometry.rdr2geo)
+if(WITH_CUDA)
+    set_tests_properties(test.python.pybind.cuda.geometry.geo2rdr PROPERTIES
+                 DEPENDS test.python.pybind.cuda.geometry.rdr2geo)
+endif()

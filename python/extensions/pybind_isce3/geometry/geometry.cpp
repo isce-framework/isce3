@@ -3,6 +3,7 @@
 #include "boundingbox.h"
 #include "DEMInterpolator.h"
 #include "Geocode.h"
+#include "geo2rdr.h"
 #include "rdr2geo.h"
 #include "RTC.h"
 
@@ -23,6 +24,8 @@ void addsubmodule_geometry(py::module & m)
         pyGeocodeCFloat32(geometry, "GeocodeCFloat32");
     py::class_<isce3::geometry::Geocode<std::complex<double>>>
         pyGeocodeCFloat64(geometry, "GeocodeCFloat64");
+    py::class_<isce3::geometry::Geo2rdr>
+        pyGeo2Rdr(geometry, "Geo2Rdr");
     py::class_<isce3::geometry::Topo>
         pyRdr2Geo(geometry, "Rdr2Geo");
 
@@ -42,6 +45,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyGeocodeFloat64);
     addbinding(pyGeocodeCFloat32);
     addbinding(pyGeocodeCFloat64);
+    addbinding(pyGeo2Rdr);
     addbinding(pyRdr2Geo);
     addbinding(pyGeocodeMemoryMode);
     addbinding(pyGeocodeOutputMode);

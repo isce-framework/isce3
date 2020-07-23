@@ -1,15 +1,12 @@
 #include "rdr2geo.h"
 
-#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
-#include <stdexcept>
 #include <string>
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
-#include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
