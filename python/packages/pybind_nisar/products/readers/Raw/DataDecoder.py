@@ -1,5 +1,5 @@
 import logging
-from nisar.types import complex32
+from pybind_nisar.types import complex32
 import numpy as np
 
 # TODO some CSV logger

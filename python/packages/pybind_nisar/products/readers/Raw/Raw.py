@@ -1,7 +1,7 @@
 from .DataDecoder import DataDecoder
 import h5py
 import logging
-from nisar.products.readers import Base
+from pybind_nisar.products.readers import Base
 import numpy as np
 import pyre
 import pybind_isce3 as isce
@@ -94,7 +94,7 @@ class Raw(Base, family='nisar.productreader.raw'):
         return f"{self.ProductPath}/telemetry"
 
     # XXX Base.getOrbit has @pyre.export decorator.  What's that do?
-    # XXX Base uses SLC-specific path and returns Cython object.
+    # XXX L0B doesn't put orbit in MetadataPath
     def getOrbit(self):
         path = f"{self.TelemetryPath}/orbit"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:

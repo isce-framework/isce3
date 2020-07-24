@@ -3,9 +3,9 @@ import logging
 import numpy as np
 from pybind_isce3.core import LUT2d, DateTime, Orbit, Quaternion
 from pybind_isce3.product import RadarGridParameters
-from nisar.h5 import set_string
-from nisar.types import complex32
-from nisar.products.readers.Raw import Raw
+from pybind_nisar.h5 import set_string
+from pybind_nisar.types import complex32
+from pybind_nisar.products.readers.Raw import Raw
 
 log = logging.getLogger("SLCWriter")
 
