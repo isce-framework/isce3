@@ -40,7 +40,7 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
             py::arg("radar_grid"),
             py::arg("orbit"),
             py::arg("ellipsoid"),
-            py::arg("doppler") = {},
+            py::arg("doppler") = isce3::core::LUT2d<double>(),
             py::arg("threshold") = 0.05,
             py::arg("numiter") = 25,
             py::arg("extraiter") = 10,
