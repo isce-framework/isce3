@@ -1,5 +1,5 @@
 import iscetest
-from nisar.workflows import focus
+from pybind_nisar.workflows import focus
 import os
 
 def test_focus():

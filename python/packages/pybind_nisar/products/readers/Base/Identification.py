@@ -14,8 +14,6 @@ class Identification(object):
         self.missionId = None
         self.productType = None
         self.absoluteOrbitNumber = None
-        self.trackNumber = None
-        self.frameNumber = None
         self.lookDirection = None
         self.orbitPassDirection = None
         self.zdStartTime = None
@@ -65,12 +63,6 @@ class Identification(object):
         self.absoluteOrbitNumber = extractScalar(h5grp, 'absoluteOrbitNumber',
                                       int, self.context['info'],
                                       'Absolute orbit number could not be identified')
-        self.trackNumber = extractScalar(h5grp, 'trackNumber',
-                                      int, self.context['info'],
-                                      'Track number could not be identified')
-        self.frameNumber = extractScalar(h5grp, 'frameNumber',
-                                      int, self.context['info'],
-                                      'Frame number could not be identified')
         self.lookDirection = extractScalar(h5grp, 'lookDirection',
                                       bytestring, self.context['error'],
                                       'Look direction could not be identified')

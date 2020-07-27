@@ -4,10 +4,10 @@ import h5py
 import json
 import logging
 from pathlib import Path
-from nisar.products.readers.Raw import Raw
-from nisar.products.writers import SLC
-from nisar.workflows import defaults
-from nisar.types import to_complex32
+from pybind_nisar.products.readers.Raw import Raw
+from pybind_nisar.products.writers import SLC
+from pybind_nisar.workflows import defaults
+from pybind_nisar.types import to_complex32
 import numpy as np
 import pybind_isce3 as isce
 from pybind_isce3.core import DateTime, LUT2d
