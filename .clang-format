@@ -7,7 +7,7 @@ SortIncludes:    true
 # forward.h or main header
 # system headers
 # contrib headers
-# isce headers with angle brackets
+# isce3 headers with angle brackets
 # relative quote includes
 IncludeBlocks:   Regroup
 IncludeCategories:
@@ -15,7 +15,7 @@ IncludeCategories:
     Priority:        0
   - Regex:           '^(<|")(cereal|gtest|pyre|Eigen)/'
     Priority:        2
-  - Regex:           '^<isce/'
+  - Regex:           '^<isce3/'
     Priority:        3
   - Regex:           '^"'
     Priority:        4
