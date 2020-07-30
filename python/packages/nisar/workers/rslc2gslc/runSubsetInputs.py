@@ -40,7 +40,7 @@ def runSubsetInputs(self):
         self._radar_grid_list[frequency] = radar_grid
 
         # Prepare outputList dict
-        if frequency not in state.outputList.keys():
+        if 'frequency' not in state.outputList.keys():
             state.outputList[frequency] = []
 
 # end of file
