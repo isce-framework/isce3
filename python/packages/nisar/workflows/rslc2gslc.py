@@ -135,12 +135,12 @@ class Workflow(object):
         self.userconfig = self.loadYAML(args.run_config_filename)
 
         #Set up the path to store the completed steps 
-        self.state.scratch_path = self.get_value(['runconfig', 'groups', 
+        scratch_path = self.get_value(['runconfig', 'groups', 
             'ProductPathGroup', 'ScratchPath'])
-        self._print("scratch path: ", self.state.scratch_path)
-        os.makedirs(self.state.scratch_path, exist_ok=True)
+        self._print("scratch path: ", scratch_path)
+        os.makedirs(scratch_path, exist_ok=True)
 
-        self.state_folder = os.path.join(self.state.scratch_path,
+        self.state_folder = os.path.join(scratch_path,
             'rslc2gslc_completed_steps')
         self._print("rslc2gslc_completed_steps folder: ", self.state_folder)
         os.makedirs(self.state_folder, exist_ok=True)
@@ -157,6 +157,8 @@ class Workflow(object):
             self.load_state(state_filename=self.current_state_filename)
         else:
             self.state = State()
+
+        self.state.scratch_path = scratch_path
 
         state_counter = 1
 
