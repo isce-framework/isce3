@@ -60,12 +60,8 @@ def cp_h5_meta_data(src_h5, dst_h5, src_path, dst_path=None,
             src_sub_path = os.path.join(src_path, subnode_src)
             node_obj = src_h5[src_sub_path]
 
-            if isinstance(node_obj, h5py.Group):
-                # copy group
-                dst_group.copy(node_obj, subnode_dst)
-            elif isinstance(node_obj, h5py.Dataset):
-                # copy dataset
-                dst_group.create_dataset(subnode_dst, data=node_obj)
+            # copy group/dataset
+            dst_group.copy(node_obj, subnode_dst)
     else:
         # simple group copy of todos
         dst_h5[dst_parent_path].copy(src_group, dst_name)
