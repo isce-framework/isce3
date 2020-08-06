@@ -5,37 +5,61 @@
 // Copyright 2017-2018
 
 #include <cmath>
+#include <cstdint>
+#include <limits>
+#include <type_traits>
+#include <isce3/except/Error.h>
 #include "TimeDelta.h"
 
+using isce3::except::DomainError;
+
 //Normalize function
-void isce3::core::TimeDelta::
-_normalize()
+template <typename T>
+static void _normalize(T& days, T& hours, T& minutes, T& seconds, double& frac)
 {
+    // Written assuming truncation on assignment to ipart.
+    // T=double would be silently wrong.
+    static_assert(std::is_integral<T>::value, "expected integer type");
+    // Likewise T=unsigned would be silently wrong.
+    static_assert(std::is_signed<T>::value, "expected signed integer type");
+    // Fail if seconds doesn't fit in an integer:
+    // int32: 2**31 s ~ 68 years
+    // int64: 2**63 s ~ 10**11 years
+    // Just consider the bounding case where fraction & seconds have same sign.
+    if (std::abs(frac) + std::abs(seconds) >= std::numeric_limits<T>::max()) {
+        throw DomainError(ISCE_SRCINFO(), "Time interval too large (seconds).");
+    }
+    using namespace isce3::core;
     //Adjust fractional part
     {
-        int ipart = frac - (frac < 0);
+        T ipart = frac - (frac < 0);
         frac -= ipart;
         seconds += ipart;
     }
 
     {
-        int ipart = (seconds/MIN_TO_SEC) - (seconds < 0);
+        T ipart = (seconds/MIN_TO_SEC) - (seconds < 0);
         seconds -= ipart * MIN_TO_SEC;
         minutes += ipart;
     }
 
     {
-        int ipart = (minutes/HOUR_TO_MIN) - (minutes < 0);
+        T ipart = (minutes/HOUR_TO_MIN) - (minutes < 0);
         minutes -= ipart * HOUR_TO_MIN;
         hours += ipart;
     }
 
     {
-        int ipart = (hours/DAY_TO_HOUR) - (hours < 0);
+        T ipart = (hours/DAY_TO_HOUR) - (hours < 0);
         hours -= ipart * DAY_TO_HOUR;
         days += ipart;
     }
 
+}
+
+void isce3::core::TimeDelta::_normalize()
+{
+    ::_normalize(days, hours, minutes, seconds, frac);
 }
 
 //Constructors
@@ -54,11 +78,18 @@ isce3::core::TimeDelta::
 TimeDelta() : TimeDelta(0.0) {}
 
 isce3::core::TimeDelta::
-TimeDelta(double ss)
+TimeDelta(const double seconds)
 {
-    int ipart = ss;
-    double fpart = ss - ipart;
-    _init(0,0,0,ipart,fpart);
+    // Careful not to overflow intermediate fields.
+    std::int64_t d{0}, h{0}, m{0}, s{0};
+    double frac = seconds;
+    ::_normalize(d, h, m, s, frac);
+    // At this point only days might overflow.
+    if (d > std::numeric_limits<int>::max()) {
+        throw DomainError(ISCE_SRCINFO(), "Time interval too large (days).");
+    }
+    // Truncate to int.
+    _init(d, h, m, s, frac);
 }
 
 isce3::core::TimeDelta::
@@ -98,7 +129,12 @@ TimeDelta(const TimeDelta & ts)
 double isce3::core::TimeDelta::
 getTotalSeconds() const
 {
-    return days*DAY_TO_SEC + hours * HOUR_TO_SEC + minutes * MIN_TO_SEC + seconds + frac;
+    // Careful to avoid intermediate overflow.
+    using T = std::int64_t;
+    return days * T(DAY_TO_SEC)
+        + hours * T(HOUR_TO_SEC)
+        + minutes * T(MIN_TO_SEC)
+        + T(seconds) + frac;
 }
 
 double isce3::core::TimeDelta::

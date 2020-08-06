@@ -52,11 +52,22 @@ def test_from_dhmsfrac():
     npt.assert_almost_equal( dt.frac, 0.5 )
 
 def test_from_datetime_timedelta():
-    import datetime
-    dt1 = datetime.timedelta(seconds=1.23)
-    dt2 = isce.core.TimeDelta(dt1)
-
-    npt.assert_almost_equal( dt1.total_seconds(), dt2.total_seconds() )
+    from datetime import timedelta
+    cases = [
+        timedelta(seconds=1.32),
+        timedelta(minutes=36),          # breaks int32 microseconds
+        timedelta(hours=1, minutes=15), # breaks uint32 microseconds
+        timedelta(days=365 * 70),       # breaks int32 seconds
+        timedelta(days=365 * 140),      # breaks uint32 seconds
+        timedelta(days=365 * 2e5),      # close to max int64 microseconds
+        timedelta(days=1.23456)         # exercise all fields
+    ]
+    for pytd in cases:
+        iscetd = isce.core.TimeDelta(pytd)
+        # This should be okay for chosen cases (52 bit mantissa in double, all
+        # but first case are integer seconds).
+        npt.assert_almost_equal(iscetd.total_seconds(), pytd.total_seconds(),
+            err_msg=f"case: {pytd}")
 
 def test_comparison():
     dt1 = isce.core.TimeDelta(1.)
