@@ -4,11 +4,12 @@
 // Author: Piyush Agram
 // Copyright 2017-2018
 
+#include "TimeDelta.h"
+
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <isce3/except/Error.h>
-#include "TimeDelta.h"
+#include <limits>
 
 using isce3::except::DomainError;
 
