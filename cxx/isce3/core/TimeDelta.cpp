@@ -230,9 +230,7 @@ operator=(const TimeDelta &ts) {
 isce3::core::TimeDelta &
 isce3::core::TimeDelta::
 operator=(double ss) {
-    int ipart = ss;
-    double fpart = ss - ipart;
-    _init(0, 0, 0, ipart, fpart);
+    _init(0, 0, 0, 0, ss);
     return *this;
 }
 
