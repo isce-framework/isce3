@@ -74,17 +74,57 @@ def validate_config(x):
     return x
 
 
-def check_gpu_enabled(cfg: Struct):
-    use_gpu = cfg.worker.gpu_enabled
-    has_cuda = hasattr(isce, "cuda")
-    # if GPU option was unspecified, default to True if GPU support available
-    if use_gpu is None:
-        return has_cuda
-    if use_gpu and not has_cuda:
-        log.error("GPU processing was requested but not available")
-        # XXX logging an error does not halt execution
-        raise ValueError("GPU processing was requested but not available")
-    return use_gpu
+def check_valid_cuda_device(cfg: Struct):
+    """Validate that the requested CUDA device is supported."""
+    from pybind_isce3.cuda.core import Device, min_compute_capability
+    device = Device(cfg.worker.gpu_id)
+    return device.compute_capability < min_compute_capability()
+
+
+def check_gpu_opts(cfg: Struct):
+    """Validate the specified GPU processing configuration options.
+
+    Returns
+    -------
+    logical
+        Whether to use GPU processing
+
+    Raises
+    ------
+    ValueError
+        If GPU processing was requested but not available or if an invalid CUDA
+        device was requested
+    """
+    # Check if GPU processing was requested.
+    gpu_requested = cfg.worker.gpu_enabled
+
+    # Check if CUDA support is enabled.
+    cuda_available = lambda : hasattr(isce, "cuda")
+
+    # If unspecified, use GPU processing if supported. Otherwise, fall back to
+    # CPU processing.
+    if gpu_requested is None:
+        return cuda_available() and check_valid_cuda_device(cfg)
+
+    # If GPU processing was requested, raise an error if CUDA support is not
+    # available or if the specified device is not valid.
+    if gpu_requested:
+        if not cuda_available():
+            # XXX logging an error does not halt execution
+            errmsg = "GPU processing was requested but not available"
+            log.error(errmsg)
+            raise ValueError(errmsg)
+
+        if not check_valid_cuda_device(cfg):
+            errmsg = "The requested CUDA device has insufficient compute " \
+                     "capability"
+            log.error(errmsg)
+            raise ValueError(errmsg)
+
+        return True
+
+    # GPU processing was not requested.
+    return False
 
 
 def cosine_window(n: int, pedestal: float):
@@ -337,8 +377,14 @@ def focus(runconfig):
     kernel = get_kernel(cfg)
     scale = cfg.processing.encoding_scale_factor
 
-    use_gpu = check_gpu_enabled(cfg)
+    use_gpu = check_gpu_opts(cfg)
     if use_gpu:
+        # Set the current CUDA device.
+        device = isce.cuda.core.Device(cfg.worker.gpu_id)
+        isce.cuda.core.set_device(device)
+
+        log.info(f"Processing using CUDA device {device.id} ({device.name})")
+
         backproject = isce.cuda.focus.backproject
     else:
         backproject = isce.focus.backproject

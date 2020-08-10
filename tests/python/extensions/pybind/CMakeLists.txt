@@ -28,6 +28,8 @@ product/swath.py
 
 if(WITH_CUDA)
     list(APPEND TESTFILES
+        cuda/core/compute_capability.py
+        cuda/core/device.py
         cuda/focus/backproject.py
         cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py

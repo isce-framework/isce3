@@ -2,6 +2,8 @@ set(HEADERS
 container/forward.h
 container/RadarGeometry.h
 container/RadarGeometry.icc
+core/ComputeCapability.h
+core/Device.h
 core/Event.h
 core/forward.h
 core/gpuBasis.h

@@ -48,6 +48,9 @@ isce.cpp
 if(WITH_CUDA)
     list(APPEND SRCS
          cuda/cuda.cpp
+         cuda/core/core.cpp
+         cuda/core/ComputeCapability.cpp
+         cuda/core/Device.cpp
          cuda/geometry/geometry.cpp
          cuda/geometry/geo2rdr.cpp
          cuda/geometry/rdr2geo.cpp

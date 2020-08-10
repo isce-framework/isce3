@@ -1,4 +1,5 @@
 set(SOURCES
+core/Device.cu
 core/Event.cu
 core/gpuBicubicInterpolator.cu
 core/gpuBilinearInterpolator.cu

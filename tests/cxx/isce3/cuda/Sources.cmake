@@ -1,7 +1,9 @@
 set(CUDA_TESTFILES
 container/cuda-radargeometry.cu
 core/ellipsoid/gpuEllipsoid.cu
+core/compute_capability.cpp
 core/cuda-interp1d.cu
+core/device.cpp
 core/interpolator/gpuInterpolator.cpp
 core/lut/gpuLUT1d.cpp
 core/lut/gpuLUT2d.cpp

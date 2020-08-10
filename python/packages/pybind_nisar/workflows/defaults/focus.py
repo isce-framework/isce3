@@ -69,9 +69,13 @@ runconfig:
         # TODO
         qaqc: {}
 
-        # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
+            # Whether or not to use GPU, optional. Defaults to True if available.
             gpu_enabled: null
+
+            # Index of the GPU to use for processing, optional. Defaults to the
+            # first available CUDA device. Ignored if *gpu_enabled* is False.
+            gpu_id: 0
 
         # TODO
         profiler: {}
