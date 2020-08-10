@@ -1,5 +1,6 @@
 #include "TimeDelta.h"
 
+#include <cstdint>
 #include <memory>
 #include <pybind11/chrono.h>
 #include <pybind11/operators.h>
@@ -33,7 +34,7 @@ void addbinding(py::class_<TimeDelta> & pyTimeDelta)
                 py::arg("minutes"),
                 py::arg("seconds"),
                 py::arg("frac"))
-        .def(py::init([](const std::chrono::duration<int, std::micro> & duration)
+        .def(py::init([](const std::chrono::duration<std::int64_t, std::micro> & duration)
                 {
                     return TimeDelta(1e-6 * duration.count());
                 }))

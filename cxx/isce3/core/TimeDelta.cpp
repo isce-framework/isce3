@@ -4,38 +4,62 @@
 // Author: Piyush Agram
 // Copyright 2017-2018
 
-#include <cmath>
 #include "TimeDelta.h"
 
+#include <cmath>
+#include <cstdint>
+#include <isce3/except/Error.h>
+#include <limits>
+
+using isce3::except::DomainError;
+
 //Normalize function
-void isce3::core::TimeDelta::
-_normalize()
+void isce3::core::TimeDelta::_normalize()
 {
+    // Promote fields to avoid intermediate overflows.
+    using T = std::int64_t;
+    T d{days}, h{hours}, m{minutes}, s{seconds};
+    // Fail if seconds doesn't fit in an integer:
+    // int32: 2**31 s ~ 68 years
+    // int64: 2**63 s ~ 10**11 years
+    // Just consider the bounding case where fraction & seconds have same sign.
+    double maxsec = std::abs(frac) + std::fabs(s);
+    if (maxsec >= static_cast<double>(std::numeric_limits<T>::max())) {
+        throw DomainError(ISCE_SRCINFO(), "Time interval too large (seconds).");
+    }
     //Adjust fractional part
     {
-        int ipart = frac - (frac < 0);
-        frac -= ipart;
-        seconds += ipart;
+        T ipart = static_cast<T>(frac - (frac < 0));
+        frac -= static_cast<double>(ipart);
+        s += ipart;
     }
 
     {
-        int ipart = (seconds/MIN_TO_SEC) - (seconds < 0);
-        seconds -= ipart * MIN_TO_SEC;
-        minutes += ipart;
+        T ipart = (s / MIN_TO_SEC) - (s < 0);
+        s -= ipart * MIN_TO_SEC;
+        m += ipart;
     }
 
     {
-        int ipart = (minutes/HOUR_TO_MIN) - (minutes < 0);
-        minutes -= ipart * HOUR_TO_MIN;
-        hours += ipart;
+        T ipart = (m / HOUR_TO_MIN) - (m < 0);
+        m -= ipart * HOUR_TO_MIN;
+        h += ipart;
     }
 
     {
-        int ipart = (hours/DAY_TO_HOUR) - (hours < 0);
-        hours -= ipart * DAY_TO_HOUR;
-        days += ipart;
+        T ipart = (h / DAY_TO_HOUR) - (h < 0);
+        h -= ipart * DAY_TO_HOUR;
+        d += ipart;
     }
-
+    // At this point only days might overflow.
+    if (d > std::numeric_limits<decltype(days)>::max()) {
+        throw DomainError(ISCE_SRCINFO(), "Time interval too large (days).");
+    }
+    // Truncate to storage type.
+    days = static_cast<decltype(days)>(d);
+    hours = static_cast<decltype(hours)>(h);
+    minutes = static_cast<decltype(minutes)>(m);
+    seconds = static_cast<decltype(seconds)>(s);
 }
 
 //Constructors
@@ -56,9 +80,7 @@ TimeDelta() : TimeDelta(0.0) {}
 isce3::core::TimeDelta::
 TimeDelta(double ss)
 {
-    int ipart = ss;
-    double fpart = ss - ipart;
-    _init(0,0,0,ipart,fpart);
+    _init(0,0,0,0,ss);
 }
 
 isce3::core::TimeDelta::
@@ -70,9 +92,7 @@ TimeDelta(int hh, int mm, int ss)
 isce3::core::TimeDelta::
 TimeDelta(int hh, int mm, double ss)
 {
-    int ipart = ss;
-    double fpart = ss - ipart;
-    _init(0,hh,mm,ipart,fpart);
+    _init(0,hh,mm,0,ss);
 }
 
 isce3::core::TimeDelta::
@@ -98,7 +118,21 @@ TimeDelta(const TimeDelta & ts)
 double isce3::core::TimeDelta::
 getTotalSeconds() const
 {
-    return days*DAY_TO_SEC + hours * HOUR_TO_SEC + minutes * MIN_TO_SEC + seconds + frac;
+    // Careful to avoid intermediate overflow. Biggest multiplier
+    // log2(DAY_TO_SEC) is roughly 16 bits, and four adds means a couple extra
+    // bits could be needed. Assuming int is 32 bits, promoting to 64 bits will
+    // be plenty even when `this` is not normalized.
+    //
+    // Conversion of the integer seconds sum to double will lose data when
+    // greater than 2**52 seconds (100 million years)--not too bad.
+    //
+    // Underflow of frac is a bigger problem. You lose nanosecond precision
+    // after a few weeks. Of course, all these caveats are why we have a
+    // TimeDelta and don't just use double everywhere.
+    using T = std::int64_t;
+    return frac +
+           static_cast<double>(days * T(DAY_TO_SEC) + hours * T(HOUR_TO_SEC) +
+                               minutes * T(MIN_TO_SEC) + T(seconds));
 }
 
 double isce3::core::TimeDelta::
@@ -206,9 +240,7 @@ operator=(const TimeDelta &ts) {
 isce3::core::TimeDelta &
 isce3::core::TimeDelta::
 operator=(double ss) {
-    int ipart = ss;
-    double fpart = ss - ipart;
-    _init(0, 0, 0, ipart, fpart);
+    _init(0, 0, 0, 0, ss);
     return *this;
 }
 
