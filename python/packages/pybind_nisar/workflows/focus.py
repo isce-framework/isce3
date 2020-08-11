@@ -78,7 +78,7 @@ def check_valid_cuda_device(cfg: Struct):
     """Validate that the requested CUDA device is supported."""
     from pybind_isce3.cuda.core import Device, min_compute_capability
     device = Device(cfg.worker.gpu_id)
-    return device.compute_capability < min_compute_capability()
+    return device.compute_capability >= min_compute_capability()
 
 
 def check_gpu_opts(cfg: Struct):
