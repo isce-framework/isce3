@@ -128,39 +128,41 @@ class Workflow(object):
             self._print(f'run_config: {args.run_config_filename}')
         self._print('')
 
-
         #Parse yaml
         self.userconfig = self.loadYAML(args.run_config_filename)
         if 'runconfig' in self.userconfig.keys():
             self.userconfig = self.userconfig['runconfig']
         if 'groups' in self.userconfig.keys():
             self.userconfig = self.userconfig['groups']
-        
-        ###Create initial state
-        if args.resume_from_step is not None:
-            self._print(f'resume from step: {args.resume_from_step}')
-            self.load_state(step_number=args.resume_from_step-1)
-        elif (not args.flag_restart and
-               (os.path.islink(self.current_state_filename) or
-                os.path.isfile(self.current_state_filename))):
-            self.load_state(state_filename=self.current_state_filename)
-        else:
-            self.state = State()
-
-        self.state.product_path = self.get_value(['ProductPathGroup', 
-            'ProductPath'])
-        
-        # temporary directory
-        self.state.scratch_path = self.get_value(['ProductPathGroup',
+ 
+        # set scratch path (temporary directory)
+        scratch_path = self.get_value(['ProductPathGroup',
             'ScratchPath'])
-        os.makedirs(self.state.scratch_path, exist_ok=True) 
+        os.makedirs(scratch_path, exist_ok=True) 
 
-        # state folder
-        self.state_folder = os.path.join(self.state.scratch_path,
+        # set state folder
+        self.state_folder = os.path.join(scratch_path,
             'rslc2gcov_completed_steps')  
         os.makedirs(self.state_folder, exist_ok=True)
         self.current_state_filename = os.path.join(
             self.state_folder, 'currentState')
+       
+        ###Create initial state
+        if (args.flag_restart or
+            (args.resume_from_step is not None and
+            args.resume_from_step == 1)):
+           self.state = State() 
+        elif args.resume_from_step is not None:
+            self._print(f'resume from step: {args.resume_from_step}')
+            self.load_state(step_number=args.resume_from_step-1)
+        elif (os.path.islink(self.current_state_filename) or
+                os.path.isfile(self.current_state_filename)):
+            self.load_state(state_filename=self.current_state_filename)
+        else:
+            self.state = State()
+
+        # set state scratch_path
+        self.state.scratch_path = scratch_path
 
         state_counter = 1
 
