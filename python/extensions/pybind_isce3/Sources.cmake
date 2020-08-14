@@ -28,6 +28,8 @@ geometry/geometry.cpp
 geometry/geo2rdr.cpp
 geometry/rdr2geo.cpp
 geometry/RTC.cpp
+image/image.cpp
+image/ResampSlc.cpp
 io/gdal/Dataset.cpp
 io/gdal/GDALAccess.cpp
 io/gdal/GDALDataType.cpp
@@ -56,5 +58,7 @@ if(WITH_CUDA)
          cuda/geometry/rdr2geo.cpp
          cuda/focus/Backproject.cpp
          cuda/focus/focus.cpp
+         cuda/image/image.cpp
+         cuda/image/ResampSlc.cpp
          )
 endif()

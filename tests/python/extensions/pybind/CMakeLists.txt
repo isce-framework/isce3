@@ -18,6 +18,7 @@ geometry/dem.py
 geometry/geocode.py
 geometry/geo2rdr.py
 geometry/rdr2geo.py
+image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
@@ -33,6 +34,7 @@ if(WITH_CUDA)
         cuda/focus/backproject.py
         cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py
+        cuda/image/resamp.py
         )
 endif()
 

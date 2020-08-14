@@ -3,6 +3,7 @@
 #include "core/core.h"
 #include "focus/focus.h"
 #include "geometry/geometry.h"
+#include "image/image.h"
 
 namespace py = pybind11;
 
@@ -13,4 +14,5 @@ void addsubmodule_cuda(py::module& m)
     addsubmodule_cuda_core(m_cuda);
     addsubmodule_cuda_focus(m_cuda);
     addsubmodule_cuda_geometry(m_cuda);
+    addsubmodule_cuda_image(m_cuda);
 }

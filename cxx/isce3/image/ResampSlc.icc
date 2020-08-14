@@ -48,6 +48,30 @@ ResampSlc(const isce3::product::Swath & swath, const isce3::product::Swath & ref
     _setRefDataFromSwath(refSwath);
 }
 
+/** Constructor from an isce3::product::RadarGridParameters (no flattening) */
+isce3::image::ResampSlc::
+ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
+          const isce3::core::LUT2d<double> & doppler, double wvl) :
+          _haveRefData(false), _dopplerLUT(doppler),
+          _startingRange(rdr_grid.startingRange()),
+          _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
+          _sensingStart(rdr_grid.sensingStart()),
+          _prf(rdr_grid.prf()), _wavelength(wvl) {}
+
+/** Constructor from an isce3::product::RadarGridParameters and reference radar grid (flattening) */
+isce3::image::ResampSlc::
+ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
+          const isce3::product::RadarGridParameters & ref_rdr_grid,
+          const isce3::core::LUT2d<double> & doppler,
+          double wvl, double ref_wvl) :
+          _haveRefData(true), _dopplerLUT(doppler),
+          _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
+          _sensingStart(rdr_grid.sensingStart()),
+          _startingRange(rdr_grid.startingRange()),
+          _refRangePixelSpacing(ref_rdr_grid.rangePixelSpacing()),
+          _refStartingRange(ref_rdr_grid.startingRange()),
+          _prf(rdr_grid.prf()), _wavelength(wvl), _refWavelength(ref_wvl) {}
+
 /** Constructor from individual components (no flattening) */
 isce3::image::ResampSlc::
 ResampSlc(const isce3::core::LUT2d<double> & doppler, double startingRange,

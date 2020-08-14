@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Author: Liang Yu
-// Copyright 2018
-
 #pragma once
 
 #include "forward.h"
@@ -26,7 +20,20 @@ class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
                          char frequency = 'A') :
             isce3::image::ResampSlc(product, refProduct, frequency) {}
 
-        // Constructor from individual components (no flattening) 
+        /** Constructor from an isce3::product::RadarGridParameters (no flattening) */
+        inline ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
+                         const isce3::core::LUT2d<double> & doppler,
+                         double wvl) :
+            isce3::image::ResampSlc(rdr_grid, doppler, wvl) {}
+
+        /** Constructor from an isce3::product::RadarGridParameters and reference radar grid (flattening) */
+        inline ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
+                         const isce3::product::RadarGridParameters & ref_rdr_grid,
+                         const isce3::core::LUT2d<double> & doppler,
+                         double wvl, double ref_wvl) :
+            isce3::image::ResampSlc(rdr_grid, ref_rdr_grid, doppler, wvl, ref_wvl) {}
+
+        // Constructor from individual components (no flattening)
         inline ResampSlc(const isce3::core::LUT2d<double> & doppler,
                          double startingRange, double rangePixelSpacing,
                          double sensingStart, double prf, double wvl) :

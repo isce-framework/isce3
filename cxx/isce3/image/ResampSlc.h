@@ -25,6 +25,7 @@
 
 // isce3::product
 #include <isce3/product/Product.h>
+#include <isce3/product/RadarGridParameters.h>
 
 // Definition
 class isce3::image::ResampSlc {
@@ -50,6 +51,17 @@ class isce3::image::ResampSlc {
         /** Constructor from an isce3::product::Swath and reference swath (flattening) */
         inline ResampSlc(const isce3::product::Swath & swath,
                          const isce3::product::Swath & refSwath);
+
+        /** Constructor from an isce3::product::RadarGridParameters (no flattening) */
+        inline ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
+                         const isce3::core::LUT2d<double> & doppler,
+                         double wvl);
+
+        /** Constructor from an isce3::product::RadarGridParameters and reference radar grid (flattening) */
+        inline ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
+                         const isce3::product::RadarGridParameters & ref_rdr_grid,
+                         const isce3::core::LUT2d<double> & doppler,
+                         double wvl, double ref_wvl);
 
         /** Constructor from individual components (no flattening) */
         inline ResampSlc(const isce3::core::LUT2d<double> & doppler,
