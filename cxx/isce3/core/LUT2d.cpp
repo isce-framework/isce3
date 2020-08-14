@@ -121,8 +121,7 @@ eval(double y, double x) const {
     double y_idx = (y - _ystart) / _dy;
 
     // Check bounds or clamp indices to valid values
-    if (_boundsError && (x_idx < 0.0 || y_idx < 0.0
-            || x_idx >= _data.width() || y_idx >= _data.length())) {
+    if (_boundsError && not contains(y, x)) {
         pyre::journal::error_t errorChannel("isce.core.LUT2d");
         errorChannel
             << "Out of bounds LUT2d evaluation at " << y << " " << x

@@ -75,6 +75,15 @@ class isce3::core::LUT2d {
         // Evaluate LUT    
         T eval(double y, double x) const;
 
+        /** Check if point resides in domain of LUT */
+        inline bool contains(double y, double x) const
+        {
+            const auto i = (y - _ystart) / _dy;
+            const auto j = (x - _xstart) / _dx;
+            return (i >= 0.0) && (i < _data.length()) &&
+                   (j >= 0.0) && (j < _data.width());
+        }
+
     private:
         // Flags
         bool _haveData, _boundsError;
