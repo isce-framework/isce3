@@ -27,13 +27,13 @@ if [ "$MEMCHECK" = "0" ]; then
     docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
-          && ctest -j `nproc` --nocompress-output --output-on-failure -T Test || true \
+          && ctest -j `nproc` --no-compress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml .'
 else
     docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
-          && ctest --nocompress-output --output-on-failure -T Test || true \
+          && ctest --no-compress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml . \
           && ctest --no-compress-output --output-on-failure --timeout 10000 -T MemCheck \
                 -E "(iscecuda.core.stream|backproject|workflows)" \

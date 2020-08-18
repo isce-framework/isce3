@@ -57,7 +57,7 @@ $DOCKER run --rm \
 $DOCKER run --rm \
     --volumes-from $CONTAINER \
     isce-ci/tester bash -c \
-    "ctest -j`nproc` -T Test --verbose || true && \
+    "ctest --no-compress-output -j`nproc` -T Test --verbose || true && \
      cp Testing/*/Test.xml ."
 
 

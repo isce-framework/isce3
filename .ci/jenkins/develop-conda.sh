@@ -73,7 +73,7 @@ $DOCKER run --rm \
     $DOCKER_RUN_ARGS \
     --volumes-from $CONTAINER \
     $IMAGE_ID/tester bash -ic \
-    "ctest -j`nproc` -T Test --verbose || true && \
+    "ctest --no-compress-output -j`nproc` -T Test --verbose || true && \
      cp Testing/*/Test.xml ."
 
 
