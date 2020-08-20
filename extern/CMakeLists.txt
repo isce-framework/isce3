@@ -128,13 +128,13 @@ function(getpackage_pybind11)
 endfunction()
 
 function(getpackage_pyre)
-    find_package(pyre 1.9.8 CONFIG)
+    find_package(pyre 1.9.9 CONFIG)
     if(NOT HAVE_PYRE)
         # disable pyre's test suite
         set(BUILD_TESTING OFF)
         fetch_extern_repo(pyre
             GIT_REPOSITORY  https://github.com/pyre/pyre
-            GIT_TAG         v1.9.8
+            GIT_TAG         v1.9.9
             GIT_SHALLOW     TRUE
             )
     endif()
