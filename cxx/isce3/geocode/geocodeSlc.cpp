@@ -140,7 +140,8 @@ void isce3::geocode::geocodeSlc(
                           radarGrid.rangePixelSpacing();
 
             if (rdrY < 0 || rdrX < 0 || rdrY >= radarGrid.length() ||
-                rdrX >= radarGrid.width())
+                rdrX >= radarGrid.width() ||
+                not nativeDoppler.contains(aztime, srange))
                 continue;
 
             localAzimuthFirstLine = std::min(
