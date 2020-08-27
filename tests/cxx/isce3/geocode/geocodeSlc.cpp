@@ -61,8 +61,8 @@ TEST(geocodeTest, TestGeocodeSlc)
             product.metadata().procInfo().dopplerCentroid('A');
 
     // construct a zero 2D LUT
-    isce3::core::Matrix<double> M(imageGridDoppler.width(),
-                                 imageGridDoppler.length());
+    isce3::core::Matrix<double> M(imageGridDoppler.length(),
+                                  imageGridDoppler.width());
 
     M.zeros();
     isce3::core::LUT2d<double> nativeDoppler(
