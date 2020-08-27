@@ -59,7 +59,7 @@ class Workflow(object):
         if os.path.islink(self.current_state_filename):
             os.unlink(self.current_state_filename)
         if os.path.isfile(self.current_state_filename):
-            os.path.remove(self.current_state_filename)
+            os.remove(self.current_state_filename)
         state_relpath = os.path.relpath(state_filename, 
             os.path.dirname(self.current_state_filename))
         os.symlink(state_relpath, self.current_state_filename)
