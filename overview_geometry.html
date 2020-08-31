@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: Radar Geometry Handling in ISCE</title>
+<title>isce3: Radar Geometry Handling in ISCE</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -28,8 +28,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">ISCE
-   &#160;<span id="projectnumber">3.0</span>
+   <div id="projectname">isce3
+   &#160;<span id="projectnumber">0.1.0</span>
    </div>
   </td>
  </tr>
@@ -45,6 +45,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -70,7 +73,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -151,11 +154,11 @@ Zero Doppler Geometry</h2>
 \[ \mathbf{V_{sat}}\left( \eta_{0,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{0,T}\right) \right) = 0 \]
 </p>
 <p>The imaging geometry can be determined independent of the Doppler Centroid and central frequency of the acquisition. The vector from the satellite to target is perpendicular to the instantaneous satellite velocity. Note that in case of the zero Doppler geometry, the azimuth time corresponding to a target can lie outside the interval defined by the imaging aperture. The SAR data still has an azimuth carrier defined by the Doppler Centroid but this piece of information does not affect the geolocation or interpretation of the imaging geometry. This independence between Doppler Centroid and imaging geometry, allows one to mosaic images on the same track processed with different parameters easily.</p>
-<p>The Zero Doppler convention is used by ESA and European sensors like ERS, ENVISAT (<a class="el" href="citelist.html#CITEREF_envisat2007product">[2]</a>, <a class="el" href="citelist.html#CITEREF_small2008guide">[9]</a>), Sentinel-1 <a class="el" href="citelist.html#CITEREF_piantanida2016sentinel">[6]</a> as well as TerraSAR-X and COSMO-SkyMed. The ALOS-2 PALSAR L1.1 product is also produced in Zero Doppler geometry system by JAXA.</p>
+<p>The Zero Doppler convention is used by ESA and European sensors like ERS, ENVISAT (<a class="el" href="citelist.html#CITEREF_envisat2007product">[3]</a>, <a class="el" href="citelist.html#CITEREF_small2008guide">[13]</a>), Sentinel-1 <a class="el" href="citelist.html#CITEREF_piantanida2016sentinel">[10]</a> as well as TerraSAR-X and COSMO-SkyMed. The ALOS-2 PALSAR L1.1 product is also produced in Zero Doppler geometry system by JAXA.</p>
 <h1><a class="anchor" id="forwardgeom"></a>
 Forward transformation - Radar geometry to Map coordinates</h1>
-<p>The forward geometry transformation is implemented via isce3::geometry::Topo module in ISCE.</p>
-<p>This algorithm maps a given Target (T) located at azimuth time \( \left( \eta_{dc,T} \right) \) and slant range \(\left( R_{dc,T}\right) \) in radar image coordinates to map coordinates \(\left(X_{map}, Y_{map}, h\left(X_{map}, Y_{map}\right)\right)\). This is done using the given Doppler model \(\left( f_d\left(\eta,R\right)\right)\) and a Digital Elevation Model (DEM) \( \left(z\left( X, Y\right)\right)\) as function of horizontal datum coordinates X, Y. Details of various implementations of the forward mapping algorithm can be found in a number of references (<a class="el" href="citelist.html#CITEREF_kropatsch1990generation">[4]</a>, <a class="el" href="citelist.html#CITEREF_eineder2003efficient">[1]</a>, <a class="el" href="citelist.html#CITEREF_sansosti2006geometrical">[8]</a>, <a class="el" href="citelist.html#CITEREF_nitti2011impact">[5]</a>).</p>
+<p>The forward geometry transformation is implemented via <a class="el" href="classisce3_1_1geometry_1_1Topo.html" title="Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude...">isce3::geometry::Topo</a> module in ISCE.</p>
+<p>This algorithm maps a given Target (T) located at azimuth time \( \left( \eta_{dc,T} \right) \) and slant range \(\left( R_{dc,T}\right) \) in radar image coordinates to map coordinates \(\left(X_{map}, Y_{map}, h\left(X_{map}, Y_{map}\right)\right)\). This is done using the given Doppler model \(\left( f_d\left(\eta,R\right)\right)\) and a Digital Elevation Model (DEM) \( \left(z\left( X, Y\right)\right)\) as function of horizontal datum coordinates X, Y. Details of various implementations of the forward mapping algorithm can be found in a number of references (<a class="el" href="citelist.html#CITEREF_kropatsch1990generation">[7]</a>, <a class="el" href="citelist.html#CITEREF_eineder2003efficient">[2]</a>, <a class="el" href="citelist.html#CITEREF_sansosti2006geometrical">[12]</a>, <a class="el" href="citelist.html#CITEREF_nitti2011impact">[9]</a>).</p>
 <p>The forward mapping problem is formulated as finding target position \(\mathbf{T}\), such that the following two constraints are satisfied</p>
 <p class="formulaDsp">
 \[ \frac{2 \mathbf{V_{sat}\left(\eta_{dc,T}\right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left(\eta_{dc,T}\right)} \right)}{\lambda \cdot R_{dc,T}} = f_{dc}\left(\eta_{dc,T}, R_{dc,T} \right) \]
@@ -227,10 +230,10 @@ Step 2: Range Doppler Equation Solution</h2>
 <p class="formulaDsp">
 \[ \beta = -L\cdot \sqrt{R_0^2 - \gamma^2 - \alpha^2} \]
 </p>
-<p>where \(L=-1\) for right looking imaging geometry and \(L=+1\) for left looking imaging geometry. Once \( \alpha, \beta\) and \(\gamma\) are computd, we can compute the location of the target in Cartesian space \(\left( \mathbf{T} \right)\). The target location can be converted into map coordinates as \(\left( X_{map}, Y_{map}, z_map\left(X_{map}, Y_{map}\right) \right)\) using standard transformations (see isce3::core::ProjectionBase).</p>
+<p>where \(L=-1\) for right looking imaging geometry and \(L=+1\) for left looking imaging geometry. Once \( \alpha, \beta\) and \(\gamma\) are computd, we can compute the location of the target in Cartesian space \(\left( \mathbf{T} \right)\). The target location can be converted into map coordinates as \(\left( X_{map}, Y_{map}, z_map\left(X_{map}, Y_{map}\right) \right)\) using standard transformations (see <a class="el" href="classisce3_1_1core_1_1ProjectionBase.html" title="Abstract base class for individual projections. ">isce3::core::ProjectionBase</a>).</p>
 <h2><a class="anchor" id="deminterp"></a>
 Step 3: DEM interpolation</h2>
-<p>DEMs are commonly provided in non-Cartesian coordinates (e.g., Lat-Long grid, UTM grid, EASE-2 grid) and contain heights above a geoid (e.g., EGM96 or EGM08). The geometry mapping algorithms presented in this document explicitly assume that the DEMs have been adjusted to represent heights above the representative ellipsoid like WGS84. Standard GIS tools offer numerous methods of interpolating height data (e.g., nearest neighbor, bilinear, and bicubic). We recommend using biquintic interpolation method <a class="el" href="citelist.html#CITEREF_kidner1999s">[3]</a> as this appears to be least susceptible to difference between the DEM resolution and the radar grid resolution to which it is being mapped. Moreover, biquintic polynomials represent the smallest order polynomials that preserve slope information when interpolating across neighboring cells in the DEM.</p>
+<p>DEMs are commonly provided in non-Cartesian coordinates (e.g., Lat-Long grid, UTM grid, EASE-2 grid) and contain heights above a geoid (e.g., EGM96 or EGM08). The geometry mapping algorithms presented in this document explicitly assume that the DEMs have been adjusted to represent heights above the representative ellipsoid like WGS84. Standard GIS tools offer numerous methods of interpolating height data (e.g., nearest neighbor, bilinear, and bicubic). We recommend using biquintic interpolation method <a class="el" href="citelist.html#CITEREF_kidner1999s">[5]</a> as this appears to be least susceptible to difference between the DEM resolution and the radar grid resolution to which it is being mapped. Moreover, biquintic polynomials represent the smallest order polynomials that preserve slope information when interpolating across neighboring cells in the DEM.</p>
 <p>For the forward mapping algorithm, we interpolate the DEM at location \(\left(X_{map}, Y_{map}\right)\) to determine the new \(z_{map}\). This new target location is then transformed into the ECEF coordinate system and the new height estimate \(h_est\) is given by</p>
 <p class="formulaDsp">
 \[ h_{est} = \left| \mathbf{T} \right| - R_c \]
@@ -238,7 +241,7 @@ Step 3: DEM interpolation</h2>
 <p>and \(h_{est}\) becomes the initial height estimate \(h_0\) for the next iteration of the algorithm. When trying to estimate the target location on a reference ellipsoid, the DEM is assumed to be of constant height \(z_{map}\) and the algorithm converges in two or three iterations.</p>
 <h1><a class="anchor" id="inversegeom"></a>
 Inverse transformation - Map coordinates to Radar geometry</h1>
-<p>This algorithm maps a given target ( \(\mathbf{T}\)) located at \(\left (X,Y, z\left(X,Y\right)\right)\) in map coordinates represented by horizontal datum \(\left(X,Y\right)\) to radar images coordinates - azimuth time ( \(\eta\)) and slant range ( \(R\)), using a given Doppler model \(\left(f_d \left(\eta,R\right)\right)\). Different implementations of the Inverse Mapping Algorithm can be found in several references (<a class="el" href="citelist.html#CITEREF_eineder2003efficient">[1]</a>, <a class="el" href="citelist.html#CITEREF_sansosti2006geometrical">[8]</a>, <a class="el" href="citelist.html#CITEREF_nitti2011impact">[5]</a>).</p>
+<p>This algorithm maps a given target ( \(\mathbf{T}\)) located at \(\left (X,Y, z\left(X,Y\right)\right)\) in map coordinates represented by horizontal datum \(\left(X,Y\right)\) to radar images coordinates - azimuth time ( \(\eta\)) and slant range ( \(R\)), using a given Doppler model \(\left(f_d \left(\eta,R\right)\right)\). Different implementations of the Inverse Mapping Algorithm can be found in several references (<a class="el" href="citelist.html#CITEREF_eineder2003efficient">[2]</a>, <a class="el" href="citelist.html#CITEREF_sansosti2006geometrical">[12]</a>, <a class="el" href="citelist.html#CITEREF_nitti2011impact">[9]</a>).</p>
 <p>The ISCE implementation of the algorithm is based on the simple Newton-Raphson method and has three key steps:</p>
 <ol>
 <li>
@@ -255,12 +258,12 @@ Step 1: Orbit interpolation</h2>
 <ol>
 <li>
 <p class="startli"><b>Hermite polynomial interpolation</b><br/>
- A third-order Hermite polynomial can be used to interpolate the orbit information reliably. The Hermite polynomial is constructed using 4 state vectors spanning the azimuth time epoch of interest; and combines position and velocity information for interpolating the state vectors <a class="el" href="citelist.html#CITEREF_sandwell2008accuracy">[7]</a>. Hermite polynomials works better in the scenario when the available state vectors are sampled less frequently than once every 30 seconds.</p>
+ A third-order Hermite polynomial can be used to interpolate the orbit information reliably. The Hermite polynomial is constructed using 4 state vectors spanning the azimuth time epoch of interest; and combines position and velocity information for interpolating the state vectors <a class="el" href="citelist.html#CITEREF_sandwell2008accuracy">[11]</a>. Hermite polynomials works better in the scenario when the available state vectors are sampled less frequently than once every 30 seconds.</p>
 <p class="endli"></p>
 </li>
 <li>
 <b>Legendre polynomial interpolation</b><br/>
- An eighth-order Legendre polynomial can also be used to interpolate the orbit information reliably. The Legendre polynomial is constructed using 9 state vectors spanning the azimuth time epoch of interest; and interpolates the position and velocity arrays independently of each other <a class="el" href="citelist.html#CITEREF_getorbdelft">[10]</a>. This makes it suitable for use with Polar Format Algorithm as well. Legendre polynomial method performs better when the available state vectors are sampled frequently (&lt; 30 secs apart). </li>
+ An eighth-order Legendre polynomial can also be used to interpolate the orbit information reliably. The Legendre polynomial is constructed using 9 state vectors spanning the azimuth time epoch of interest; and interpolates the position and velocity arrays independently of each other <a class="el" href="citelist.html#CITEREF_getorbdelft">[14]</a>. This makes it suitable for use with Polar Format Algorithm as well. Legendre polynomial method performs better when the available state vectors are sampled frequently (&lt; 30 secs apart). </li>
 </ol>
 <p>For most modern SAR sensors, the precise position and velocity vectors in the annotation metadata are consistent with each other and can be reliably interpolated with Hermite polynomials. However, when focusing the L0B data for emergency response, the precise state vectors may not be available. Legendre polynomials are recommended for interpolation of the rapid orbits as it reduces geolocation errors.</p>
 <p>At the start of the algorithm, we pick and initial azimuth time ( \(\eta_g\)) as the first guess. Typically, this is set to the center of the azimuth data block / scene that is being processed. After interpolation, we end up with the initial estimate for satellite position \(\left( \mathbf{R_{sat}\left( \eta_g \right)} \right)\) and satellite velocity \(\left( \mathbf{V_{sat}\left( \eta_g \right)} \right)\).</p>
