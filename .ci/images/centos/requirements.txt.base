@@ -10,3 +10,5 @@ python>=3.6
 ruamel.yaml
 matplotlib
 scipy
+testfixtures
+scikit-image
