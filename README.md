@@ -25,30 +25,30 @@ currently being funded under the NASA-ISRO SAR (NISAR) project.
 - [Contributing](#contributing)
 - [License](#license)
 
-> :warning: **NOTICE**: ISCE is in early development - its
+> :warning: **NOTICE**: ISCE3 is in early development - its
 features and interface are subject to change
 
 ## Installation
 
-- [On Linux](https://github-fn.jpl.nasa.gov/pages/isce-3/isce/install_linux.html)
-- [On macOS](https://github-fn.jpl.nasa.gov/pages/isce-3/isce/install_osx.html)
+- [On Linux](https://isce-framework.github.io/isce3/install_linux.html)
+- [On macOS](https://isce-framework.github.io/isce3/install_osx.html)
 
 ## Getting Started
 
  - [Tutorials](
-https://github-fn.jpl.nasa.gov/pages/isce-3/isce/tutorial_tutorial.html)
+https://isce-framework.github.io/isce3/tutorial_tutorial.html)
  - [Python API Reference](
-https://github-fn.jpl.nasa.gov/pages/isce-3/isce/sphinx/html/index.html)
+https://isce-framework.github.io/isce3/sphinx/html/index.html)
  | [C++ API Reference](
-https://github-fn.jpl.nasa.gov/pages/isce-3/isce/annotated.html)
- - [Examples](https://github-fn.jpl.nasa.gov/isce-3/isce/tree/develop/share)
+https://isce-framework.github.io/isce3/annotated.html)
+ - [Examples](https://github.com/isce-framework/isce3/tree/develop/share)
 
 ## Contributing
 
 Contributions are welcome. Refer to the [contributing guide](CONTRIBUTING.md)
 for tips on getting started and guidelines for contributions. Please let us know
 if you encounter a bug by
-[filing an issue](https://github-fn.jpl.nasa.gov/isce-3/isce/issues).
+[filing an issue](https://github.com/isce-framework/isce3/issues)
 
 ## License
 

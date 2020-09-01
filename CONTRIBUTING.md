@@ -31,12 +31,12 @@ for contributing to the project.
 If you are a first-time contributor, the first thing you should do is fork the
 isce3 repository to create your own copy of the project.
 
-1. Go to https://github-fn.jpl.nasa.gov/isce-3/isce and click on the "Fork"
+1. Go to https://github.com/isce-framework/isce3 and click on the "Fork"
    button.
 1. Clone the forked project to your local computer:
 
     ```sh
-    $ git clone https://github-fn.jpl.nasa.gov/my-user-name/isce
+    $ git clone https://github.com/my-user-name/isce3
     ```
 
 1. Add the `upstream` remote repository. This allows you to track "upstream"
@@ -44,7 +44,7 @@ isce3 repository to create your own copy of the project.
 
     ```sh
     $ cd isce
-    $ git remote add upstream https://github-fn.jpl.nasa.gov/isce-3/isce
+    $ git remote add upstream https://github.com/isce-framework/isce3.git
     ```
 
 Now, `git remote -v` should show two remote repositories: `upstream`, which
@@ -53,17 +53,17 @@ fork.
 
 ```
 $ git remote -v
-origin  git@github-fn.jpl.nasa.gov:my-user-name/isce.git (fetch)
-origin  git@github-fn.jpl.nasa.gov:my-user-name/isce.git (push)
-upstream        git@github-fn.jpl.nasa.gov:isce-3/isce.git (fetch)
-upstream        git@github-fn.jpl.nasa.gov:isce-3/isce.git (push)
+origin          https://github.com/my-user-name/isce3.git (fetch)
+origin          https://github.com/my-user-name/isce3.git (push)
+upstream        https://github.com/isce-framework/isce3.git (fetch)
+upstream        https://github.com/isce-framework/isce3.git (push)
 ```
 
 ### Setting up a development environment
 
 Proceed following the
-[Linux](https://github-fn.jpl.nasa.gov/pages/isce-3/isce/install_linux.html) or
-[macOS](https://github-fn.jpl.nasa.gov/pages/isce-3/isce/install_osx.html)
+[Linux](https://isce-framework.github.io/isce3/install_linux.html) or
+[macOS](https://isce-framework.github.io/isce3/install_osx.html)
 instructions for building from source, using your forked copy of the repository
 instead of the main repo.
 
@@ -143,12 +143,12 @@ the upstream repository.
     ```
 
 1. Go to the GitHub page for your branch
-   (https://github-fn.jpl.nasa.gov/my-user-name/isce/tree/my-branch-name) and
+   (https://github.com/isce-framework/isce3/tree/my-branch-name) and
    click on the "New pull request" button. Write a clear and concise title for
    your PR and include an explanation of the proposed changes before submitting.
 
 You should now be able to view your submission in the list of
-[open PRs](https://github-fn.jpl.nasa.gov/isce-3/isce/pulls).
+[open PRs](https://github.com/isce-framework/isce3/pulls)
 
 Subsequent `git push`es from your feature branch will automatically update the
 PR with new changes.
