@@ -22,7 +22,7 @@ cdef class pyMetadata:
 
     # Cython class members
     cdef pyOrbit py_orbit
-    cdef pyEulerAngles py_attitude
+    cdef pyAttitude py_attitude
     cdef pyProcessingInformation py_procInfo
 
     def __cinit__(self):
@@ -37,10 +37,10 @@ cdef class pyMetadata:
         self.py_orbit = pyOrbit()
         self.py_orbit.c_orbit = self.c_metadata.orbit()
 
-        # Bind the C++ EulerAngles class to the Cython pyEulerAngles instance
-        self.py_attitude = pyEulerAngles()
-        del self.py_attitude.c_eulerangles
-        self.py_attitude.c_eulerangles = &self.c_metadata.attitude()
+        # Bind the C++ Attitude class to the Cython pyAttitude instance
+        self.py_attitude = pyAttitude()
+        del self.py_attitude.c_attitude
+        self.py_attitude.c_attitude = &self.c_metadata.attitude()
         self.py_attitude.__owner = False
 
         # Bind the C++ ProcessingInformation class to the Cython pyProcessingInformation instance
@@ -75,7 +75,7 @@ cdef class pyMetadata:
         new_meta.py_orbit.c_orbit = meta.c_metadata.orbit()
 
         # Bind attitude
-        new_meta.py_attitude.c_eulerangles = &meta.c_metadata.attitude()
+        new_meta.py_attitude.c_attitude = &meta.c_metadata.attitude()
         new_meta.py_attitude.__owner = False
 
         # Bind processing info
@@ -105,15 +105,15 @@ cdef class pyMetadata:
         """
         Get Euler angles attitude.
         """
-        new_attitude = pyEulerAngles.bind(self.py_attitude)
+        new_attitude = pyAttitude.bind(self.py_attitude)
         return new_attitude
 
     @attitude.setter
-    def attitude(self, pyEulerAngles euler):
+    def attitude(self, pyAttitude attitude):
         """
         Set Euler angles attitude.
         """
-        self.c_metadata.attitude(deref(euler.c_eulerangles))
+        self.c_metadata.attitude(deref(attitude.c_attitude))
 
     @property
     def procInfo(self):

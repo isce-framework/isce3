@@ -1,6 +1,7 @@
 set(TESTFILES
 container/rsd.cpp
-core/attitude/euler.cpp
+core/attitude/attitude.cpp
+core/attitude/representations.cpp
 core/cube/cube.cpp
 core/datetime/datetime.cpp
 core/ellipsoid/ellipsoid.cpp

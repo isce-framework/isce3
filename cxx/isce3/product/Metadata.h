@@ -7,7 +7,7 @@
 #pragma once
 
 // isce3::core
-#include <isce3/core/EulerAngles.h>
+#include <isce3/core/Attitude.h>
 #include <isce3/core/Orbit.h>
 
 // isce3::product
@@ -31,13 +31,13 @@ class isce3::product::Metadata {
         inline Metadata(const Metadata &);
 
         /** Get read-only reference to attitude */
-        inline const isce3::core::EulerAngles & attitude() const { return _attitude; }
-    
+        const isce3::core::Attitude & attitude() const { return _attitude; }
+
         /** Get reference to attitude */
-        inline isce3::core::EulerAngles & attitude() { return _attitude; }
+        inline isce3::core::Attitude & attitude() { return _attitude; }
 
         /** Set attitude */
-        inline void attitude(const isce3::core::EulerAngles & att) { _attitude = att; }
+        inline void attitude(const isce3::core::Attitude & att) { _attitude = att; }
 
         /** Get read-only reference to orbit */
         inline const isce3::core::Orbit & orbit() const { return _orbit; };
@@ -56,7 +56,7 @@ class isce3::product::Metadata {
         
     private:
         // Attitude
-        isce3::core::EulerAngles _attitude;
+        isce3::core::Attitude _attitude;
         // Orbit
         isce3::core::Orbit _orbit;
         // ProcessingInformation

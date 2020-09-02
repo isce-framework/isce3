@@ -1,8 +1,11 @@
 #include "core.h"
 
+#include "Attitude.h"
+#include "Basis.h"
 #include "Constants.h"
 #include "DateTime.h"
 #include "Ellipsoid.h"
+#include "EulerAngles.h"
 #include "Interp1d.h"
 #include "Kernels.h"
 #include "Linspace.h"
@@ -11,6 +14,7 @@
 #include "LUT2d.h"
 #include "Orbit.h"
 #include "Quaternion.h"
+#include "StateVector.h"
 #include "TimeDelta.h"
 
 namespace py = pybind11;
@@ -20,13 +24,17 @@ void addsubmodule_core(py::module & m)
     py::module m_core = m.def_submodule("core");
 
     // forward declare bound classes
+    py::class_<isce3::core::Attitude> pyAttitude(m_core, "Attitude");
+    py::class_<isce3::core::Basis> pyBasis(m_core, "Basis");
     py::class_<isce3::core::DateTime> pyDateTime(m_core, "DateTime");
     py::class_<isce3::core::Ellipsoid> pyEllipsoid(m_core, "Ellipsoid");
+    py::class_<isce3::core::EulerAngles> pyEulerAngles(m_core, "EulerAngles");
     py::class_<isce3::core::Linspace<double>> pyLinspace(m_core, "Linspace");
     py::class_<isce3::core::LUT1d<double>> pyLUT1d(m_core, "LUT1d");
     py::class_<isce3::core::LUT2d<double>> pyLUT2d(m_core, "LUT2d");
     py::class_<isce3::core::Orbit> pyOrbit(m_core, "Orbit");
     py::class_<isce3::core::Quaternion> pyQuaternion(m_core, "Quaternion");
+    py::class_<isce3::core::StateVector> pyStateVector(m_core, "StateVector");
     py::class_<isce3::core::TimeDelta> pyTimeDelta(m_core, "TimeDelta");
 
     // Default to double for kernels
@@ -58,14 +66,19 @@ void addsubmodule_core(py::module & m)
 
     // add bindings
     add_constants(m_core);
+    addbinding(pyAttitude);
+    addbinding(pyBasis);
+    addbinding_basis(m_core);
     addbinding(pyDateTime);
     addbinding(pyEllipsoid);
+    addbinding(pyEulerAngles);
     addbinding(pyLinspace);
     addbinding(pyLookSide);
     addbinding(pyLUT1d);
     addbinding(pyLUT2d);
     addbinding(pyOrbit);
     addbinding(pyQuaternion);
+    addbinding(pyStateVector);
     addbinding(pyTimeDelta);
 
     addbinding(pyKernel);

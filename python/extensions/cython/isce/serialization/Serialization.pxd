@@ -8,7 +8,7 @@ from libcpp.string cimport string
 from DateTime cimport DateTime
 from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
-from EulerAngles cimport EulerAngles
+from Attitude cimport Attitude
 from Metadata cimport Metadata
 from Poly2d cimport Poly2d
 from LUT1d cimport LUT1d
@@ -24,7 +24,7 @@ cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
     void load_archive_reference[T](string metadata, char * objTag, T & obj)
 
     # Load attitude data
-    void loadFromH5(IGroup & group, EulerAngles & euler)
+    void loadFromH5(IGroup & group, Attitude & attitude)
 
     # Load Poly2d
     void loadFromH5(IGroup & group, Poly2d & poly, string dtype)

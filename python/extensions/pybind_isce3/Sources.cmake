@@ -2,9 +2,12 @@ set(SRCS
 container/container.cpp
 container/RadarGeometry.cpp
 core/core.cpp
+core/Attitude.cpp
+core/Basis.cpp
 core/Constants.cpp
 core/DateTime.cpp
 core/Ellipsoid.cpp
+core/EulerAngles.cpp
 core/Interp1d.cpp
 core/Kernels.cpp
 core/Linspace.cpp
@@ -13,6 +16,7 @@ core/LUT1d.cpp
 core/LUT2d.cpp
 core/Orbit.cpp
 core/Quaternion.cpp
+core/StateVector.cpp
 core/TimeDelta.cpp
 focus/Backproject.cpp
 focus/Chirp.cpp

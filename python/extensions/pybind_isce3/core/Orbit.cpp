@@ -6,12 +6,14 @@
 #include <pybind11/chrono.h>
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
+#include <pybind11/stl.h>
 
 #include <string>
 #include <utility>
 
 namespace py = pybind11;
 using isce3::core::Orbit;
+using isce3::core::StateVector;
 
 static py::buffer_info toBuffer(const std::vector<isce3::core::Vec3>& buf)
 {
@@ -26,6 +28,8 @@ static py::buffer_info toBuffer(const std::vector<isce3::core::Vec3>& buf)
 void addbinding(py::class_<Orbit> & pyOrbit)
 {
     pyOrbit
+        .def(py::init<std::vector<StateVector>>())
+        .def(py::init<std::vector<StateVector>, isce3::core::DateTime>())
         .def_property_readonly("reference_epoch",
                 py::overload_cast<>(&Orbit::referenceEpoch, py::const_))
         .def_property_readonly("time", py::overload_cast<>(&Orbit::time, py::const_))

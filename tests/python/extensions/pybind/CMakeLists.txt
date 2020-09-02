@@ -1,13 +1,17 @@
 set(TESTFILES
+core/attitude.py
+core/basis.py
 core/constants.py
 core/datetime_.py
 core/ellipsoid.py
+core/euler.py
 core/interp1d.py
 core/linspace.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
 core/quaternion.py
+core/statevector.py
 core/timedelta.py
 focus/backproject.py
 focus/chirp.py

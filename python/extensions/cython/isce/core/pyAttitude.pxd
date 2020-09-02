@@ -5,10 +5,10 @@
 #
 
 from libcpp cimport bool
-from EulerAngles cimport EulerAngles
+from Attitude cimport Attitude
 
-cdef class pyEulerAngles:
-    cdef EulerAngles * c_eulerangles
+cdef class pyAttitude:
+    cdef Attitude * c_attitude
     cdef bool __owner
 
 # end of file

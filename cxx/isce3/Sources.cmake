@@ -1,6 +1,7 @@
 set(SRCS
 core/Attitude.cpp
 core/Baseline.cpp
+core/Basis.cpp
 core/BicubicInterpolator.cpp
 core/BilinearInterpolator.cpp
 core/Constants.cpp

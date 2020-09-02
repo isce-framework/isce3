@@ -1,101 +1,66 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Bryan V. Riel
-// Copyright 2018
-//
-
 #pragma once
+#define EIGEN_MPL2_ONLY
 
 #include "forward.h"
 
-#include "Attitude.h"
+#include <Eigen/Geometry>
 
-/** Data structure for Euler Angle representation of attitude information
- *
- * All angles are stored and returned in radians*/
-class isce3::core::EulerAngles : public isce3::core::Attitude {
+#include "DenseMatrix.h"
+#include "Quaternion.h"
 
-    public:
-        /** Default constructor*/
-        EulerAngles(const std::string yaw_orientation="normal");
+namespace isce3 { namespace core {
 
-        /** Constructor with vectors of time and attitude angles */
-        EulerAngles(const std::vector<double> & time,
-                    const std::vector<double> & yaw,
-                    const std::vector<double> & pitch,
-                    const std::vector<double> & roll,
-                    const std::string yaw_orientation="normal");
+/** Representation of 3-2-1 Euler angle sequence of rotations. */
+class EulerAngles {
+public:
+    /** Construct from yaw, pitch, and roll angles.
+     *
+     * @param[in] y     Yaw angle (axis 3) in radians.
+     * @param[in] p     Pitch angle (axis 2) in radians.
+     * @param[in] r     Roll angle (axis 1) in radians.
+     */
+    EulerAngles(double y, double p, double r) : _yaw(y), _pitch(p), _roll(r) {}
 
-        /** Copy constructor */
-        EulerAngles(const EulerAngles &);
+    /** Construct from rotation matrix. */
+    explicit EulerAngles(const Mat3& R)
+    {
+        // Isn't this abs(cos(pitch))?  Name sy seems odd.
+        const double sy = std::sqrt(R(0, 0) * R(0, 0) + R(1, 0) * R(1, 0));
+        if (sy >= 1.0e-6) {
+            _roll = std::atan2(R(2, 1), R(2, 2));
+            // No extra range vs asin(-R(2,0)) since sy is always positive,
+            // but using atan2 for everything is robust to det(R) != 1.
+            _pitch = std::atan2(-R(2, 0), sy);
+            _yaw = std::atan2(R(1, 0), R(0, 0));
+        } else {
+            _roll = std::atan2(-R(1, 2), R(1, 1));
+            _pitch = std::atan2(-R(2, 0), sy);
+            _yaw = 0.0;
+        }
+    }
 
-        /** Comparison operator */
-        bool operator==(const EulerAngles &) const;
+    /** Construct from quaternion. */
+    EulerAngles(const Quaternion& q);
 
-        /** Assignment operator */
-        EulerAngles & operator=(const EulerAngles &);
+    /** Convert to rotation matrix. */
+    Mat3 toRotationMatrix() const
+    {
+        using namespace Eigen;
+        return (AngleAxisd(yaw(), Vector3d::UnitZ()) *
+                AngleAxisd(pitch(), Vector3d::UnitY()) *
+                AngleAxisd(roll(), Vector3d::UnitX()))
+                .toRotationMatrix();
+    }
 
-        /** Set data after construction */
-        void data(const std::vector<double> & time,
-                  const std::vector<double> & yaw,
-                  const std::vector<double> & pitch,
-                  const std::vector<double> & roll);
+    /** Get yaw in radians. */
+    double yaw() const { return _yaw; }
+    /** Get pitch in radians. */
+    double pitch() const { return _pitch; }
+    /** Get roll in radians. */
+    double roll() const { return _roll; }
 
-        /** Return data vector of time */
-        inline const std::vector<double> & time() const { return _time; }
-
-        /** Return data vector of yaw */
-        inline const std::vector<double> & yaw() const { return _yaw; }
-
-        /** Return data vector of pitch */
-        inline const std::vector<double> & pitch() const { return _pitch; }
-
-        /** Return data vector of roll */
-        inline const std::vector<double> & roll() const { return _roll; }
-    
-        /** Interpolate yaw, pitch and roll at a given time */
-        void ypr(double tintp, double & yaw, double & pitch, double & roll);
-
-        /** Return rotation matrix at a given time with optional angle perturbations */
-        cartmat_t rotmat(double tintp, const std::string,
-                         double dyaw = 0.0, double dpitch = 0.0,
-                         double d2 = 0.0, double d3 = 0.0);
-
-        /** Return equivalent quaternion elements at a given time */
-        std::vector<double> toQuaternionElements(double tintp);
-
-        /** Return equivalent quaternion data structure */
-        Quaternion toQuaternion();
-
-        /** Return T3 rotation matrix around Z-axis */
-        cartmat_t T3(double);
-
-        /** Return T2 rotation matrix around Y-axis */
-        cartmat_t T2(double);
-
-        /** Return T1 rotation matrix around X-axis*/
-        cartmat_t T1(double);
-
-        /** Utility method to convert rotation matrix to Euler angles */
-        static cartesian_t rotmat2ypr(const cartmat_t &);
-
-        /** Get reference epoch */
-        inline const isce3::core::DateTime & refEpoch() const { return _refEpoch; }
-        /** Set reference epoch */
-        inline void refEpoch(const isce3::core::DateTime & epoch) { _refEpoch = epoch; }
-
-        /** Return number of epochs */
-        inline size_t nVectors() const { return _yaw.size(); }
-
-    // Private data members
-    private:
-        // Vectors of time and attitude angles
-        std::vector<double> _time;
-        std::vector<double> _yaw;
-        std::vector<double> _pitch;
-        std::vector<double> _roll;
-
-        // Reference epoch
-        isce3::core::DateTime _refEpoch;
+private:
+    double _yaw, _pitch, _roll;
 };
+
+}} // namespace isce3::core

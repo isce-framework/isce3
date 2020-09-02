@@ -141,10 +141,10 @@ namespace isce3 {
             // Get attitude subgroup
             isce3::io::IGroup attGroup = group.openGroup("attitude");
             // Configure a temporary Euler angles object
-            isce3::core::EulerAngles euler;
-            isce3::core::loadFromH5(attGroup, euler);
+            isce3::core::Attitude attitude;
+            isce3::core::loadFromH5(attGroup, attitude);
             // Save to metadata
-            meta.attitude(euler);
+            meta.attitude(attitude);
 
             // Get processing information subgroup
             isce3::io::IGroup procGroup = group.openGroup("processingInformation/parameters");

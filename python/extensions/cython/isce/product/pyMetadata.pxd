@@ -14,7 +14,7 @@ cdef class pyMetadata:
 
     # Cython class members
     cdef pyOrbit py_orbit
-    cdef pyEulerAngles py_attitude
+    cdef pyAttitude py_attitude
     cdef pyProcessingInformation py_procInfo
    
 # end of file 

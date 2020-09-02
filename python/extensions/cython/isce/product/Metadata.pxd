@@ -4,7 +4,7 @@
 # Copyright 2017-2019
 #
 
-from EulerAngles cimport EulerAngles
+from Attitude cimport Attitude
 from Orbit cimport Orbit
 from ProcessingInformation cimport ProcessingInformation
 
@@ -17,8 +17,8 @@ cdef extern from "isce3/product/Metadata.h" namespace "isce3::product":
         Metadata() except +
 
         # Attitude
-        EulerAngles & attitude()
-        void attitude(const EulerAngles &)
+        Attitude & attitude()
+        void attitude(const Attitude &)
 
         # Orbit
         Orbit & orbit()

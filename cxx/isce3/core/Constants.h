@@ -43,6 +43,9 @@ const double EarthSemiMajorAxis = 6378137.0;
 /** Eccentricity^2 for WGS84 */
 const double EarthEccentricitySquared = 0.0066943799901;
 
+/** Spin rate of Earth used for ECI/ECEF conversions, rad/s */
+constexpr static double EarthSpinRate = 7.292115024135738e-5;
+
 /** Speed of light in vacuum (m/s) */
 constexpr static double speed_of_light = 299792458.0;
 

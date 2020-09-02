@@ -22,21 +22,11 @@ def dopplerCentroid(**kwds):
     from .LUT2d import LUT2d
     return LUT2d(**kwds)
 
-def dopplerEuler(**kwds):
-    """A factory for DopplerEuler"""
-    from .DopplerEuler import DopplerEuler
-
-    return DopplerEuler(**kwds)
-
 def ellipsoid(**kwds):
     """A factory for Ellipsoid"""
     from .Ellipsoid import Ellipsoid
 
     return Ellipsoid(**kwds)
-
-def eulerAngles(**kwds):
-    """A factory for EulerAngles"""
-    from .EulerAngles import EulerAngles
 
 def interpolator(**kwds):
     """A factory for Interpolator"""

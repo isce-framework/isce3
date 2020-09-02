@@ -1,54 +1,80 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Bryan V. Riel
-// Copyright 2018
-//
-
 #pragma once
-
+#define EIGEN_MPL2_ONLY
 #include "forward.h"
 
-#include <string>
 #include <vector>
-#include "Constants.h"
+
+#include <Eigen/Geometry>
+
+#include "Attitude.h"
 #include "DateTime.h"
+#include "Quaternion.h"
+#include "TimeDelta.h"
 
-/** Base class for attitude data representation */
-class isce3::core::Attitude {
+namespace isce3 { namespace core {
 
-    public:
-        enum class Type { EulerAngles_t, Quaternion_t };
+/** Store and interpolate attitude measurements. */
+class Attitude {
 
-        /** Constructor using time attitude representation type*/
-        Attitude(Attitude::Type atype) : _attitude_type(atype) {};
+public:
+    /** Constructor
+     *
+     * @param[in] time          Time tags, seconds since some epoch.
+     *                          Must be strictly increasing.
+     * @param[in] quaternions   Unit quaternions representing antenna to XYZ
+     *                          (ECEF) rotation.
+     * @param[in] epoch         Reference epoch (UTC) for time tags.
+     */
+    Attitude(const std::vector<double>& time,
+             const std::vector<Quaternion>& quaternions, const DateTime& epoch);
 
-        /** Virtual destructor*/
-        virtual ~Attitude();
+    Attitude() = default;
 
-        /** Virtual function to return yaw, pitch, roll */
-        virtual void ypr(double tintp, double& yaw, double& pitch, double& roll) = 0;
+    /** Return quaternion interpolated at requested time. */
+    Quaternion interpolate(double t) const;
 
-        /** Virtual function return rotation matrix with optional perturbations */
-        virtual Mat3 rotmat(double tintp, const std::string, double d0 = 0,
-                            double d1 = 0, double d2 = 0, double d3 = 0) = 0;
+    /** Return data vector of time */
+    const std::vector<double>& time() const { return _time; }
 
-        /** Return type of attitude representation - quaternion or euler angle*/
-        inline Attitude::Type attitudeType()  const { return _attitude_type; }
+    /** Return data vector of quaternions */
+    const std::vector<Quaternion>& quaternions() const { return _quaternions; };
 
-        /** Return yaw orientation - central or normal */
-        inline std::string yawOrientation() const { return _yaw_orientation; }
+    /** Return number of epochs */
+    int size() const { return _time.size(); }
 
-        /** Set yaw orientation - central or normal */
-        inline void yawOrientation(const std::string);
+    /** Get reference epoch (UTC) for time tags. */
+    const DateTime& referenceEpoch() const { return _reference_epoch; }
 
-    // Private data members
-    private:
-        Attitude::Type _attitude_type;
-        std::string _yaw_orientation;
+    /** Set reference epoch (UTC)
+     *
+     * Updates contents of time() so that
+     *      referenceEpoch() + TimeDelta(time()[i])
+     * remains the invariant.
+     */
+    void referenceEpoch(const DateTime& epoch);
+
+    /** Time of first measurement relative to reference epoch (s) */
+    double startTime() const { return _time[0]; }
+
+    /** Time of last measurement relative to reference epoch (s) */
+    double endTime() const { return _time[size() - 1]; }
+
+    /** UTC time of first measurement */
+    DateTime startDateTime() const
+    {
+        return _reference_epoch + TimeDelta(startTime());
+    }
+
+    /** UTC time of last measurement */
+    DateTime endDateTime() const
+    {
+        return _reference_epoch + TimeDelta(endTime());
+    }
+
+private:
+    DateTime _reference_epoch;
+    std::vector<double> _time;
+    std::vector<Quaternion> _quaternions;
 };
 
-// Go ahead and define setYawOrientation here
-void isce3::core::Attitude::yawOrientation(const std::string orientation) {
-    _yaw_orientation = orientation;
-}
+}} // namespace isce3::core

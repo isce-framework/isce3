@@ -10,7 +10,10 @@
 #include <gtest/gtest.h>
 
 // isce3::core
+#include <isce3/core/Attitude.h>
+#include <isce3/core/EulerAngles.h>
 #include <isce3/core/LUT2d.h>
+#include <isce3/core/Quaternion.h>
 
 // isce3::io
 #include <isce3/io/IH5.h>
@@ -51,19 +54,21 @@ TEST(MetadataTest, FromHDF5) {
     ASSERT_NEAR(orbit.velocity(5)[2], -6055.488170, 1.0e-6);
 
     // Get the attitude
-    const isce3::core::EulerAngles & euler = meta.attitude();
+    const auto attitude = meta.attitude();
 
     // Check we have the right number of state vectors
-    ASSERT_EQ(euler.nVectors(), 11);
+    ASSERT_EQ(attitude.size(), 11);
 
     // Check the values of the attitude angles
-    const double rad = M_PI / 180.0;
-    ASSERT_NEAR(euler.yaw()[5], rad*5.0, 1.0e-10);
-    ASSERT_NEAR(euler.pitch()[5], rad*5.0, 1.0e-10);
-    ASSERT_NEAR(euler.roll()[5], rad*5.0, 1.0e-10);
+    const auto q = attitude.quaternions()[5];
+    const auto expected = isce3::core::Quaternion(5, 5, 5, 5);
+    EXPECT_DOUBLE_EQ(q.w(), expected.w());
+    EXPECT_DOUBLE_EQ(q.x(), expected.x());
+    EXPECT_DOUBLE_EQ(q.y(), expected.y());
+    EXPECT_DOUBLE_EQ(q.z(), expected.z());
 
     // Check date of middle vector
-    isce3::core::DateTime dtime = euler.refEpoch() + euler.time()[5];
+    isce3::core::DateTime dtime = attitude.referenceEpoch() + attitude.time()[5];
     ASSERT_EQ(dtime.isoformat(), "2003-02-26T17:55:28.000000000");
 
     // Check the ProcessingInformation

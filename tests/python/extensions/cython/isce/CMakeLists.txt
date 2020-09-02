@@ -1,5 +1,4 @@
 set(TESTFILES
-core/attitude.py
 core/ellipsoid.py
 core/poly1d.py
 core/testdatetime.py

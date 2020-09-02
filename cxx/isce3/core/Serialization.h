@@ -23,13 +23,12 @@
 #include <pyre/journal.h>
 
 // isce3::core
+#include <isce3/core/Attitude.h>
 #include <isce3/core/DateTime.h>
-#include <isce3/core/EulerAngles.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/Metadata.h>
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Poly2d.h>
-#include <isce3/core/Quaternion.h>
 #include <isce3/core/LUT1d.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/StateVector.h>
@@ -239,53 +238,11 @@ inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit)
     isce3::io::saveToH5(group, "interpMethod", interp_method);
 }
 
-// ------------------------------------------------------------------------
-// Serialization for EulerAngles
-// ------------------------------------------------------------------------
-
-/**
- * \brief Load Euler angle data from HDF5 product.
- *
- * @param[in] group         HDF5 group object.
- * @param[in] euler         EulerAngles object to be configured.
- */
-inline void loadFromH5(isce3::io::IGroup & group, EulerAngles & euler)
-{
-    // Create temporary data
-    std::vector<double> time, angles, yaw, pitch, roll;
-    isce3::core::DateTime refEpoch;
-
-    // Load angles
-    isce3::io::loadFromH5(group, "eulerAngles", angles);
-
-    // Load time
-    isce3::io::loadFromH5(group, "time", time);
-
-    // Get the reference epoch
-    refEpoch = isce3::io::getRefEpoch(group, "time");
-
-    // Unpack the angles
-    const double rad = M_PI / 180.0;
-    yaw.resize(time.size());
-    pitch.resize(time.size());
-    roll.resize(time.size());
-    for (size_t i = 0; i < time.size(); ++i) {
-        yaw[i] = rad * angles[i*3 + 0];
-        pitch[i] = rad * angles[i*3 + 1];
-        roll[i] = rad * angles[i*3 + 2];
-    }
-
-    // Save to EulerAngles object
-    euler.data(time, yaw, pitch, roll);
-    euler.refEpoch(refEpoch);
-}
-
 /**
  * \brief Save Euler angle data to HDF5 product.
  *
  * @param[in] group         HDF5 group object.
  * @param[in] euler         EulerAngles object to be save.
- */
 inline void saveToH5(isce3::io::IGroup & group, const EulerAngles & euler)
 {
     // Create vector to store all data (convert angles to degrees)
@@ -305,24 +262,53 @@ inline void saveToH5(isce3::io::IGroup & group, const EulerAngles & euler)
     isce3::io::saveToH5(group, "time", euler.time());
     isce3::io::setRefEpoch(group, "time", euler.refEpoch());
 }
+ */
 
 // ------------------------------------------------------------------------
-// Serialization for Quaternion
+// Serialization for Attitude
 // ------------------------------------------------------------------------
 
-inline void loadFromH5(isce3::io::IGroup & group, Quaternion & qs)
+inline void loadFromH5(isce3::io::IGroup& group, Attitude& att)
 {
-    std::vector<double> time, qvec;
+    // load data from file
+    DateTime epoch = isce3::io::getRefEpoch(group, "time");
+    std::vector<double> time, packed_quat;
     isce3::io::loadFromH5(group, "time", time);
-    isce3::io::loadFromH5(group, "quaternions", qvec);
-    qs.data(time, qvec);
+    isce3::io::loadFromH5(group, "quaternions", packed_quat);
+    // convert quaternion representation
+    int n = packed_quat.size() / 4;
+    std::vector<isce3::core::Quaternion> quat(n);
+    for (int i = 0; i < n; ++i) {
+        const double* q = &packed_quat[i * 4];
+        // XXX Careful to use 4-arg ctor (not array) to avoid mixing up order of
+        // elements.  Want real part followed by bivector part.
+        quat[i] = isce3::core::Quaternion(q[0], q[1], q[2], q[3]);
+    }
+    // use ctor for remaining checks
+    att = isce3::core::Attitude(time, quat, epoch);
 }
 
-inline void saveToH5(isce3::io::IGroup & group, const Quaternion & qs)
+inline void saveToH5(isce3::io::IGroup & group, const Attitude& att)
 {
-    std::array<size_t, 2> dims = {qs.nVectors(), 4};
-    isce3::io::saveToH5(group, "time", qs.time());
-    isce3::io::saveToH5(group, "quaternions", qs.qvec(), dims);
+    // Flatten quaternion vector.
+    int n = att.size();
+    std::vector<double> qflat(n * 4);
+    auto qvec = att.quaternions();
+    for (int i = 0; i < n; ++i) {
+        double *q = &qflat[i * 4];
+        // XXX Don't use internal Quaternion array since it uses a
+        // different storage order!
+        q[0] = qvec[i].w();
+        q[1] = qvec[i].x();
+        q[2] = qvec[i].y();
+        q[3] = qvec[i].z();
+    }
+    // Save to disk.
+    isce3::io::saveToH5(group, "time", att.time());
+    isce3::io::setRefEpoch(group, "time", att.referenceEpoch());
+    std::array<size_t, 2> dims = {static_cast<size_t>(n), 4};
+    isce3::io::saveToH5(group, "quaternions", qflat, dims);
+    // TODO convert and save EulerAngles
 }
 
 // ------------------------------------------------------------------------

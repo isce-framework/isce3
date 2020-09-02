@@ -14,4 +14,5 @@ void add_constants(py::module & core)
         // nicer not to export_values() to parent namespace
 
     core.attr("speed_of_light") = py::float_(isce3::core::speed_of_light);
+    core.attr("earth_spin_rate") = py::float_(isce3::core::EarthSpinRate);
 }
