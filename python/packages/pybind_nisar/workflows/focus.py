@@ -3,7 +3,7 @@ import argparse
 import h5py
 import json
 import logging
-from pathlib import Path
+import os
 from pybind_nisar.products.readers.Raw import Raw
 from pybind_nisar.products.writers import SLC
 from pybind_nisar.workflows import defaults
@@ -359,7 +359,8 @@ def focus(runconfig):
     if len(rawfiles) > 1:
         raise NotImplementedError("mixed-mode processing not yet supported")
 
-    raw = Raw(hdf5file=rawfiles[0])
+    input_raw_path = os.path.abspath(rawfiles[0])
+    raw = Raw(hdf5file=input_raw_path)
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
     try:
@@ -410,10 +411,14 @@ def focus(runconfig):
     polygon = isce.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
                                                   zerodop, dem)
 
-    fn = cfg.ProductPathGroup.SASOutputFile
+    output_slc_path = os.path.abspath(cfg.ProductPathGroup.SASOutputFile)
+
+    output_dir = os.path.dirname(output_slc_path)
+    os.makedirs(output_dir, exist_ok=True)
+
     product = cfg.PrimaryExecutable.ProductType
-    log.info(f"Creating output {product} product {fn}")
-    slc = SLC(fn, mode="w", product=product)
+    log.info(f"Creating output {product} product {output_slc_path}")
+    slc = SLC(output_slc_path, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)
@@ -432,6 +437,10 @@ def focus(runconfig):
         t = og.sensing_start + np.arange(og.length) / og.prf
         r = og.starting_range + np.arange(og.width) * og.range_pixel_spacing
         slc.update_swath(t, og.ref_epoch, r, fc, frequency)
+
+    # Scratch directory for intermediate outputs
+    scratch_dir = os.path.abspath(cfg.ProductPathGroup.ScratchPath)
+    os.makedirs(scratch_dir, exist_ok=True)
 
     # main processing loop
     channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
@@ -459,8 +468,7 @@ def focus(runconfig):
         rc_grid.wavelength = isce.core.speed_of_light / fc
         igeom = isce.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
-        scratch = cfg.ProductPathGroup.ScratchPath
-        fd = tempfile.NamedTemporaryFile(dir=scratch, suffix='.rc')
+        fd = tempfile.NamedTemporaryFile(dir=scratch_dir, suffix='.rc')
         log.info(f"Writing range compressed data to {fd.name}")
         rcfile = Raster(fd.name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
         log.info(f"Range compressed data shape = {rcfile.data.shape}")

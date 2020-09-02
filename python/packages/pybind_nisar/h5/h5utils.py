@@ -13,9 +13,8 @@ def extractScalar(h5grp, key, destType, logger=None, msg=None):
     '''
     Extract data of given type from HDF5 dataset and use logger for reporting.
     '''
-
     try:
-        val = h5grp.get(key)[()]
+        val = h5grp[key][()]
         val = destType(val)
     except KeyError:
         if logger:
@@ -33,7 +32,6 @@ def extractWithIterator(h5grp, key, iterType, logger=None, msg=None):
     '''
     Extract data of given type from HDF5 dataset into a list and use logger for reporting.
     '''
-
     try:
         val = h5grp[key][()]
         val = [iterType(x) for x in val]
