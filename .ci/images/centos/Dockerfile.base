@@ -14,6 +14,7 @@ ENV GOSU_VERSION=1.10
 
 # create user and install latest miniconda
 COPY requirements.txt.base /tmp/requirements.txt
+COPY requirements.txt.forge /tmp/requirements_forge.txt
 RUN set -ex \
  && groupadd -r conda -g $GROUP_ID \
  && useradd -u $USER_ID -r -g conda -d /home/conda -s /bin/bash -m conda \
@@ -38,6 +39,7 @@ RUN set -ex \
  && conda config --set show_channel_urls True \
  && conda update --all --yes \
  && conda install --yes --file /tmp/requirements.txt \
+ && conda install --yes --channel conda-forge --file /tmp/requirements_forge.txt \
  && gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
  && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
  && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64.asc" \
@@ -49,7 +51,8 @@ RUN set -ex \
  && conda clean -tipsy \
  && rm -rf /opt/conda/pkgs \
  && rm -rf /var/cache/yum \
- && rm /tmp/requirements.txt
+ && rm /tmp/requirements.txt \
+ && rm /tmp/requirements_forge.txt
 
 # Add a file for users to source to activate the `conda`
 # environment `root` and the devtoolset compiler. Also

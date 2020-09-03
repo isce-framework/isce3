@@ -1,0 +1,86 @@
+runconfig:
+    name: gslc_workflow_default
+
+    groups:
+        PGENameGroup:
+            PGEName: GSLC_L_PGE
+
+        InputFileGroup:
+            InputFilePath:
+            - to_be_populated_by_test_code
+        DynamicAncillaryFileGroup:
+            DEMFile: to_be_populated_by_test_code
+        ProductPathGroup:
+            # Directory where PGE will place results. Irrelevant to SAS.
+            ProductPath: '.'
+            # Directory where SAS can write temporary data
+            ScratchPath: temp
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
+            SASOutputFile: to_be_populated_by_test_code
+       
+        PrimaryExecutable:
+            ProductType: GSLC
+       
+        DebugLevelGroup:
+            DebugSwitch: false
+
+        Geometry:
+            CycleNumber: 1
+            RelativeOrbitNumber: 1
+            FrameNumber: 1
+            OrbitDirection: Descending
+
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: False
+
+        #adt section - isce3 + pyre workflow
+        processing:
+            input_subset:                 # {optional} List of frequencies to process. Default empty representing all
+                list_of_frequencies:
+                    A: ['HH']
+            dem_download:   #{optional} Only checked when internet access is available
+                source: #{optional} s3 bucket / curl URL / local file
+                top_left:
+                    x:
+                    y:
+                bottom_right:
+                    x:
+                    y:
+            pre_process:   #{optional} do we need this step. Should bandpass filter from 40MHz/20MHz be included
+                filter:
+                    A:
+                        type:
+                        parameters:
+                    B:
+                        type:
+                        parameters:
+
+            geocode:        #{optional} Mechanism to specify output posting and DEM
+                outputEPSG: 4326 #{optional} Same as input DEM if not provided.
+                x_snap: #{optional} To control output grid in same units as output EPSG
+                y_snap: #{optional} To control output grid in same units as output EPSG
+                output_posting:
+                    A:
+                        x_posting:  0.0002   #{required} In same units as output EPSG
+                        y_posting:  8.0e-5   #{required} In same units as output EPSG
+                    B:
+                        x_posting:
+                        y_posting:
+                top_left:     #{optional} Can control with absolute values or with snap values
+                    y_abs: 34.84   #{optional} Set top-left y in same units as output EPSG
+                    x_abs: -115.65   #{optional} Set top-left x in same units as output EPSG
+                bottom_right: #{optional} Can control with absolute values or with snap values
+                    y_abs: 34.8
+                    x_abs: -115.55
+            geo2rdr:
+                threshold: 1.0e-9
+                maxiter: 25
+            blocksize:
+                y: 1000
+            dem_margin: 0.1
+            flatten: True

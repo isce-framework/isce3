@@ -1,10 +1,16 @@
 #include "GeoGridParameters.h"
 
-namespace py = pybind11;
+#include <isce3/core/Constants.h>
+#include <isce3/core/LUT2d.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/io/Raster.h>
+#include <isce3/product/RadarGridParameters.h>
 
 using isce3::product::GeoGridParameters;
 
-void addbinding(pybind11::class_<GeoGridParameters> & pyGeoGridParams)
+namespace py = pybind11;
+
+void addbinding(py::class_<GeoGridParameters> & pyGeoGridParams)
 {
     pyGeoGridParams
         .def(py::init<double, double, double, double, int, int, int>(),
@@ -37,4 +43,72 @@ void addbinding(pybind11::class_<GeoGridParameters> & pyGeoGridParams)
             py::overload_cast<>(&GeoGridParameters::epsg, py::const_),
             py::overload_cast<int>(&GeoGridParameters::epsg))
         ;
+}
+
+void addbinding_bbox_to_geogrid(py::module & m)
+{
+    m.def("bbox_to_geogrid_scaled",
+            &isce3::product::bbox2GeoGridScaled,
+            py::arg("radar_grid"),
+            py::arg("orbit"),
+            py::arg("doppler"),
+            py::arg("dem_raster"),
+            py::arg("spacing_scale") = 1.0,
+            py::arg("min_height") = isce3::core::GLOBAL_MIN_HEIGHT,
+            py::arg("max_height") = isce3::core::GLOBAL_MAX_HEIGHT,
+            py::arg("margin") = 0.0,
+            py::arg("pts_per_edge") = 11,
+            py::arg("threshold") = 1.0e-8,
+            py::arg("numiter") = 15,
+            py::arg("height_threshold") = 100, R"(
+    Create a GeoGridParameters object by using spacing and ESPG from a DEM, and
+    by estimating a bounding box with a radar grid. Spacing adjustable via scalar.
+
+    Arguments:
+        radar_grid          Input RadarGridParameters
+        orbit               Input orbit
+        doppler             Input doppler
+        dem_raster          DEM from which EPSG and spacing is extracted
+        spacing_scale       Scalar increase or decrease geogrid spacing
+        min_height          Height lower bound
+        max_height          Height upper bound
+        margin              Amount to pad estimated bounding box. In decimal degrees.
+        point_per_edge      Number of points to use on each side of radar grid.
+        threshold           Slant range threshold for convergence.
+        numiter             Max number of iterations for converence.
+        height_threshold    Height threshold for convergence.
+            )")
+    .def("bbox_to_geogrid",
+            &isce3::product::bbox2GeoGrid,
+            py::arg("radar_grid"),
+            py::arg("orbit"),
+            py::arg("doppler"),
+            py::arg("dem_raster"),
+            py::arg("spacing_x"),
+            py::arg("spacing_y"),
+            py::arg("min_height") = isce3::core::GLOBAL_MIN_HEIGHT,
+            py::arg("max_height") = isce3::core::GLOBAL_MAX_HEIGHT,
+            py::arg("margin") = 0.0,
+            py::arg("pts_per_edge") = 11,
+            py::arg("threshold") = 1.0e-8,
+            py::arg("numiter") = 15,
+            py::arg("height_threshold") = 100, R"(
+    Create a GeoGridParameters object by using spacing and ESPG from a DEM, and
+    by estimating a bounding box with a radar grid. Spacing adjustable via scalar.
+
+    Arguments:
+        radar_grid          Input RadarGridParameters
+        orbit               Input orbit
+        doppler             Input doppler
+        dem_raster          DEM from which EPSG and spacing is extracted
+        spacing_x           Geogrid spacing in X axis
+        spacing_y           Geogrid spacing in Y axis
+        min_height          Height lower bound
+        max_height          Height upper bound
+        margin              Amount to pad estimated bounding box. In decimal degrees.
+        point_per_edge      Number of points to use on each side of radar grid.
+        threshold           Slant range threshold for convergence.
+        numiter             Max number of iterations for converence.
+        height_threshold    Height threshold for convergence.
+            )");
 }

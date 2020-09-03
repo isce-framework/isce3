@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <isce3/except/Error.h>
+#include <isce3/io/IH5Dataset.h>
 
 namespace py = pybind11;
 
@@ -53,13 +54,22 @@ auto cxx2PyDtype = [](const int dtype)
 void addbinding(py::class_<Raster> & pyRaster)
 {
     pyRaster
-        // read only constructor
-        .def(py::init([](const std::string & path)
+        // update and read-only (default) mode
+        .def(py::init([](const std::string & path, bool update)
             {
-                return Raster(path);
+                if (update) {
+                    // register IH5
+                    if (path.rfind("IH5:::", 0) == 0) {
+                        isce3::io::GDALRegister_IH5();
+                    }
+                    return std::make_unique<Raster>(path, GA_Update);
+                } else {
+                    return std::make_unique<Raster>(path);
+                }
             }),
-            "Open raster in read-only mode",
-            py::arg("path"))
+            "Open raster in update or read-only (default) mode",
+            py::arg("path"),
+            py::arg("update")=false)
         // dataset constructor
         .def(py::init([](const std::string & path, int width, int length, int num_bands,
                         int dtype, const std::string driver_name)
@@ -93,6 +103,8 @@ void addbinding(py::class_<Raster> & pyRaster)
         .def_property_readonly("width", &Raster::width)
         .def_property_readonly("length", &Raster::length)
         .def_property_readonly("num_bands", &Raster::numBands)
+        .def_property_readonly("dx", &Raster::dx)
+        .def_property_readonly("dy", &Raster::dy)
         .def_property_readonly("access", [](Raster & self)
             {
                 return self.access();

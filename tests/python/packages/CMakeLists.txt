@@ -13,6 +13,8 @@ nisar/workflows/crossmul.py
 nisar/workflows/resampSlc.py
 nisar/workflows/geocode.py
 pybind_nisar/workflows/focus.py
+pybind_nisar/workflows/gcov.py
+pybind_nisar/workflows/gslc.py
 )
 
 set(CUDA_TESTFILES

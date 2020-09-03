@@ -46,7 +46,7 @@ def deep_update(d, u):
 
 def load_config(yaml):
     "Load default runconfig, override with user input, and convert to Struct"
-    parser = YAML()
+    parser = YAML(typ='safe')
     cfg = parser.load(defaults.focus.runconfig)
     with open(yaml) as f:
         user = parser.load(f)

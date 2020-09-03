@@ -86,7 +86,7 @@ namespace isce3{
      * @param[in] doppler       LUT2d doppler model
      * @param[in] minHeight     Height lower bound
      * @param[in] maxHeight     Height upper bound
-     * @param[in] margin        Marging to add to estimated bounding box in
+     * @param[in] margin        Margin to add to estimated bounding box in
      * decimal degrees
      * @param[in] pointsPerEge  Number of points to use on each edge of radar
      * grid

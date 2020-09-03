@@ -19,7 +19,9 @@ RUN conda install -q -y \
         pytest \
         sphinx \
         wget \
- && conda install -q -y -c conda-forge ruamel.yaml \
+ && conda install -q -y -c conda-forge \
+        ruamel.yaml \
+        yamale \
  && conda clean --all --yes
 
 ARG SRCDIR

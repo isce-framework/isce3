@@ -67,6 +67,7 @@ matchtemplate/ampcor/correlators/tgtStats.cpp
 matchtemplate/ampcor/dom/Raster.cc
 matchtemplate/ampcor/dom/SLC.cc
 math/Bessel.cpp
+product/GeoGridParameters.cpp
 product/Product.cpp
 product/RadarGridParameters.cpp
 signal/Covariance.cpp

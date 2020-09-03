@@ -167,7 +167,7 @@ class isce3::io::Raster {
 
       //Functions to deal with projections and geotransform information
       /** Return EPSG code corresponding to raster*/
-      int getEPSG();
+      int getEPSG() const;
       /** Set EPSG code*/
       int setEPSG(int code);
       /** Set Raster GeoTransform from buffer, vector, or valarray */
