@@ -95,6 +95,116 @@ def estimate_resolution (x, dt=1.0):
     # Return the distance between -3dB crossings, scaled by the sample spacing.
     return dt * (iright - ileft)
 
+def find_null_to_null(matched_output, num_nulls_main, numSamplesNull):
+	#find mainlobe null locations as sample info
+	#num_nulls_main: num_nulls_main > 1 if mainlobe includes first sidelobes
+	#numSamplesNull: default is Fs/bandwidth, number of samples from null to null
+	#nullLeftIdx: null location left of mainlobe peak
+	#nullRightIdx: null location right of mainlobe peak
+	
+    mainPeakIdx = np.argmax(matched_output)
+    print('mainPeakIdx = ', mainPeakIdx)
+    
+    numSampleSearch = numSamplesNull + 1
+    print('numSampleSearch = ', numSampleSearch)
+    
+    if (num_nulls_main == 1):
+        firstPeakLeftIdx = mainPeakIdx
+        firstPeakRightIdx = mainPeakIdx
+        
+        searchSamplesLeftStop = firstPeakLeftIdx - numSampleSearch
+        searchSamplesRightStop = firstPeakRightIdx + numSampleSearch
+               
+        samplesLeft = matched_output[firstPeakLeftIdx : searchSamplesLeftStop : -1]
+        samplesRight = matched_output[firstPeakRightIdx : searchSamplesRightStop]
+    elif (num_nulls_main == 2):
+        firstPeakLeftIdx = mainPeakIdx - int(1.5 * numSamplesNull)
+        firstPeakRightIdx = mainPeakIdx + int(1.5 * numSamplesNull)
+        
+        searchSamplesLeftStop = firstPeakLeftIdx - numSampleSearch
+        searchSamplesRightStop = firstPeakRightIdx + numSampleSearch
+
+        samplesLeft = matched_output[firstPeakLeftIdx : searchSamplesLeftStop : -1]
+        samplesRight = matched_output[firstPeakRightIdx : searchSamplesRightStop]
+
+    for i in range(numSampleSearch - 1):
+        if (samplesLeft[i] < samplesLeft[i+1]):       
+            nullLeftIdx = firstPeakLeftIdx - i
+            break
+        elif((samplesLeft[i] > samplesLeft[i+1]) and (i == numSampleSearch - 2)):
+            nullLeftIdx = searchSamplesLeftStop
+
+    for k in range(numSampleSearch - 1):
+        if (samplesRight[k] < samplesRight[k+1]):          
+            nullRightIdx = firstPeakRightIdx + k
+            break
+        elif((samplesRight[k] > samplesRight[k+1]) and (k == numSampleSearch - 2)):
+            nullRightIdx = searchSamplesRightStop
+
+    print('searchSamplesLeftStop = ', searchSamplesLeftStop)
+    print('searchSamplesRightStop = ', searchSamplesRightStop)
+        
+    return nullLeftIdx, nullRightIdx
+
+
+def islr_pslr(data_in_linear, Fs=96e6, B=20e6, search_null=False, num_nulls_main=2):
+    #search_null:   if search_null == 1, then apply algorithm to find null locations
+    #               otherwise, specify null locations based on default Fs/B samples,
+    #               i.e, first null is at Fs/B samples from the mainlobe peak
+    #num_nulls_main:  maximum is 2. Mainlobe could include up to 2 nulls.
+    #data_in_linear: Linear Point target range or azimuth cut in amplitude
+    
+    numSamplesNull = int(Fs / B)
+    numLobesTotal = 11.5
+    data_in_pwr_dB = 20*np.log10(np.abs(data_in_linear))
+    data_in_pwr_linear = 10**(data_in_pwr_dB / 10)
+    zmax = np.amax(data_in_pwr_linear)
+    zmax_idx = np.argmax(data_in_pwr_linear)
+    plsr_main_lobe = 1
+    
+    if (search_null == 1):
+        nullMainLeftIdx, nullMainRightIdx = find_null_to_null(data_in_pwr_dB, num_nulls_main, numSamplesNull)
+        nullFirstLeftIdx, nullFirstRightIdx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, numSamplesNull)
+    else:
+        numSampleSearch = int(num_nulls_main * numSamplesNull)
+        nullMainLeftIdx = zmax_idx - numSampleSearch
+        nullMainRightIdx = zmax_idx + numSampleSearch
+		
+        nullFirstLeftIdx = zmax_idx - numSamplesNull
+        nullFirstRightIdx = zmax_idx + numSamplesNull
+
+    if (num_nulls_main == 1):    
+        numSampleSide = int(numLobesTotal * numSamplesNull * 2)
+    elif (num_nulls_main == 2):
+        numSampleSide = int(numLobesTotal * numSamplesNull)
+        
+    sideLobeLeftIdx = zmax_idx - numSampleSide
+    sideLobeRightIdx = zmax_idx + numSampleSide
+
+    #ISLR: Mainlobe could include 2nd null
+    islr_mainlobe = data_in_pwr_linear[nullMainLeftIdx : nullMainRightIdx]
+    
+    islr_sidelobe_range = np.r_[sideLobeLeftIdx : nullMainLeftIdx, nullMainRightIdx + 1 : sideLobeRightIdx]
+    islr_sidelobe = data_in_pwr_linear[islr_sidelobe_range]   
+    
+    pwr_total = np.sum(data_in_pwr_linear)
+    islr_main_pwr = np.sum(islr_mainlobe)
+    islr_side_pwr = np.sum(islr_sidelobe)
+
+    islr_dB = 10*np.log10(islr_side_pwr / islr_main_pwr)
+
+    #PSLR
+    pslr_sidelobe_range = np.r_[sideLobeLeftIdx : nullFirstLeftIdx, nullFirstRightIdx + 1 : sideLobeRightIdx]
+    pslr_main_lobe = data_in_pwr_linear[nullFirstLeftIdx : nullFirstRightIdx]
+    pslr_side_lobe = data_in_pwr_linear[pslr_sidelobe_range]
+    
+    pwr_main_max = np.amax(pslr_main_lobe)
+    pwr_side_max = max(pslr_side_lobe)
+    
+    pslr_dB = 10*np.log10(pwr_side_max / pwr_main_max)
+    
+    return islr_dB, pslr_dB
+	
 
 def dB (x):
     return 20.0 * np.log10 (abs (x))
@@ -126,7 +236,7 @@ def plot_profile (t, x, title=None):
 
 
 def analyze_point_target (slc, i, j, nov=32, plot=False, cuts=False,
-                          chipsize=64):
+                          chipsize=64, fs=96e6, bw=20e6, search_null=False, num_nulls_main=2):
     """Measure point-target attributes.
 
     Inputs:
@@ -166,6 +276,11 @@ def analyze_point_target (slc, i, j, nov=32, plot=False, cuts=False,
     dr = estimate_resolution (rg_slice, 1.0/nov)
     da = estimate_resolution (az_slice, 1.0/nov)
 
+    # Find PSLR and ISLR of range and azimuth cuts
+    numLobesTotal = 11.5
+    dr_islr_dB, dr_pslr_dB = islr_pslr(rg_slice, fs=fs, bw=bw, search_null=search_null, num_nulls_main=num_nulls_main)
+    da_islr_dB, da_pslr_dB = islr_pslr(az_slice, fs=fs, bw=bw, search_null=search_null, num_nulls_main=num_nulls_main)
+    
     d = {
         'magnitude': abs (chipmax),
         'phase': np.angle (chipmax),
@@ -174,12 +289,16 @@ def analyze_point_target (slc, i, j, nov=32, plot=False, cuts=False,
             'offset': jmax-j,
             'phase ramp': fx,
             'resolution': dr,
+            'ISLR': dr_islr_dB,
+            'PSLR': dr_pslr_dB,
         },
         'azimuth': {
             'index': imax,
             'offset': imax-i,
             'phase ramp': fy,
             'resolution': da,
+            'ISLR': da_islr_dB,
+            'PSLR': da_pslr_dB,
         },
     }
 
@@ -230,6 +349,13 @@ def main (argv):
     parser.add_argument ('n', type=int)
     parser.add_argument ('row', type=float)
     parser.add_argument ('column', type=float)
+    parser.add_argument ('-f','--sampling frequency', dest='fs', type=float,
+                         required=False, help='Sampling Frequency of Radar')
+    parser.add_argument ('-b','--bandwidth', dest='bw', type=float,
+                         required=False, help='Bandwidth of Radar')
+    parser.add_argument('-s', '--search mainlobe null', dest='search_null',
+                         action='store_true', default='False', help='Search for mainlobe null or use default mainlobe sample spacing')
+    parser.add_argument ('num_nulls_main', type=int)
     args = parser.parse_args (argv[1:])
 
     n, i, j = [getattr (args,x) for x in ('n', 'row', 'column')]
@@ -241,7 +367,8 @@ def main (argv):
     x = x.reshape ((m,n))
 
     info = analyze_point_target (x, i, j, plot=args.i, cuts=args.cuts,
-                                 chipsize=args.chipsize)
+                                 chipsize=args.chipsize, fs=args.fs, bw=args.bw,
+                                 search_null=args.search_null, num_nulls_main=args.num_nulls_main)
     if args.i:
         info = info[0]
 
