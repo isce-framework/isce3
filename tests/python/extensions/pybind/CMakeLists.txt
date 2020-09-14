@@ -27,6 +27,7 @@ io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
 signal/covariance.py
+signal/crossmul.py
 product/radargridparameters.py
 product/swath.py
 )
@@ -39,6 +40,7 @@ if(WITH_CUDA)
         cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py
         cuda/image/resamp.py
+        cuda/signal/crossmul.py
         )
 endif()
 

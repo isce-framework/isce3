@@ -44,6 +44,7 @@ io/serialization.cpp
 io/io.cpp
 signal/signal.cpp
 signal/Covariance.cpp
+signal/Crossmul.cpp
 product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
@@ -64,5 +65,7 @@ if(WITH_CUDA)
          cuda/focus/focus.cpp
          cuda/image/image.cpp
          cuda/image/ResampSlc.cpp
+         cuda/signal/signal.cpp
+         cuda/signal/Crossmul.cpp
          )
 endif()
