@@ -42,7 +42,7 @@ def run(cfg):
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
     input_radiometry = rtc_dict['input_terrain_radiometry']
-    apply_rtc = output_mode == isce.geometry.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
+    apply_rtc = output_mode == isce.geocode.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
@@ -95,13 +95,13 @@ def run(cfg):
 
         # init Geocode object depending on raster type
         if input_raster_obj.datatype() == gdal.GDT_Float32:
-            geo = isce.geometry.GeocodeFloat32()
+            geo = isce.geocode.GeocodeFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_Float64:
-            geo = isce.geometry.GeocodeFloat64()
+            geo = isce.geocode.GeocodeFloat64()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat32:
-            geo = isce.geometry.GeocodeCFloat32()
+            geo = isce.geocode.GeocodeCFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat64:
-            geo = isce.geometry.GeocodeCFloat64()
+            geo = isce.geocode.GeocodeCFloat64()
         else:
             raise NotImplementedError('Unsupported raster type for geocoding')
 

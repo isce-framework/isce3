@@ -6,8 +6,8 @@ import iscetest
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
 
-geocode_modes = {'interp':isce.geometry.GeocodeOutputMode.INTERP,
-        'area':isce.geometry.GeocodeOutputMode.AREA_PROJECTION}
+geocode_modes = {'interp':isce.geocode.GeocodeOutputMode.INTERP,
+        'area':isce.geocode.GeocodeOutputMode.AREA_PROJECTION}
 input_axis = ['x', 'y']
 
 
@@ -16,7 +16,7 @@ def test_run():
     # load parameters shared across all test runs
     # init geocode object and populate members
     rslc = SLC(hdf5file=os.path.join(iscetest.data, "envisat.h5"))
-    geo_obj = isce.geometry.GeocodeFloat64()
+    geo_obj = isce.geocode.GeocodeFloat64()
     geo_obj.orbit = rslc.getOrbit()
     geo_obj.doppler = rslc.getDopplerCentroid()
     geo_obj.ellipsoid = isce.core.Ellipsoid()

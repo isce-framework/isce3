@@ -15,7 +15,6 @@
 #include <gtest/gtest.h>
 #include <isce3/io/Raster.h>
 #include <isce3/signal/Covariance.h>
-#include <isce3/geometry/Geocode.h>
 #include <isce3/signal/Crossmul.h>
 
 // To create test data
@@ -54,8 +53,6 @@ TEST(Covariance, DualpolRun)
     std::cout << "define covariance obj" << std::endl;
     isce3::signal::Covariance<std::complex<float>> covarianceObj;
     isce3::signal::Crossmul crsmul;
-
-    //isce3::geometry::Geocode<float> geoObj;
 
     std::cout << "end" << std::endl;
 

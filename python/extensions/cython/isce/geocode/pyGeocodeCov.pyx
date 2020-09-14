@@ -18,7 +18,7 @@ from Raster cimport Raster
 from RTC cimport rtcInputRadiometry
 
 from LookSide cimport LookSide
-from Geocode cimport *
+from GeocodeCov cimport *
 
 
 rtc_input_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
@@ -72,7 +72,7 @@ def getRtcAlgorithm(*args, **kwargs):
 
 cdef class pyGeocodeBase:
     """
-    Cython wrapper for isce3::geometry::Geocode.
+    Cython wrapper for isce3::geocode::GeocodeCov.
 
     Args:
         orbit (pyOrbit):                    Orbit instance.

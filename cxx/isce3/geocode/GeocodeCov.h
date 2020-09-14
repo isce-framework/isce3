@@ -1,9 +1,3 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Heresh Fattahi, Gustavo H. X. Shiroma
-// Copyright 2019-
-
 #pragma once
 
 // pyre
@@ -25,10 +19,8 @@
 // isce3::geometry
 #include <isce3/geometry/RTC.h>
 
-#include "geometry.h"
-
 namespace isce3 {
-namespace geometry {
+namespace geocode {
 
 /** Enumeration type to indicate the algorithm used for geocoding */
 enum geocodeOutputMode {
@@ -92,8 +84,8 @@ public:
     geocode(const isce3::product::RadarGridParameters& radar_grid,
             isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
             isce3::io::Raster& dem_raster,
-            isce3::geometry::geocodeOutputMode output_mode =
-                    isce3::geometry::geocodeOutputMode::INTERP,
+            geocodeOutputMode output_mode =
+                    geocodeOutputMode::INTERP,
             double geogrid_upsampling = 1,
             isce3::geometry::rtcInputRadiometry input_radiometry =
                     isce3::geometry::rtcInputRadiometry::BETA_NAUGHT,
@@ -101,7 +93,7 @@ public:
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
             double rtc_geogrid_upsampling = 
                 std::numeric_limits<double>::quiet_NaN(),
-            rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAlgorithm rtc_algorithm = isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -171,15 +163,15 @@ public:
             const isce3::product::RadarGridParameters& radar_grid,
             isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
             isce3::io::Raster& dem_raster,
-            isce3::geometry::geocodeOutputMode output_mode =
-                    isce3::geometry::geocodeOutputMode::AREA_PROJECTION,
+            geocodeOutputMode output_mode =
+                    geocodeOutputMode::AREA_PROJECTION,
             double geogrid_upsampling = 1,
             isce3::geometry::rtcInputRadiometry input_radiometry =
                     isce3::geometry::rtcInputRadiometry::BETA_NAUGHT,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
             double rtc_geogrid_upsampling = 
                 std::numeric_limits<double>::quiet_NaN(),
-            rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAlgorithm rtc_algorithm = isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
             double abs_cal_factor = 1, 
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -268,7 +260,7 @@ private:
             std::vector<double>& a_last, std::vector<double>& r_last,
             std::vector<Vec3>& dem_last,
             const isce3::product::RadarGridParameters& radar_grid,
-            isce3::core::ProjectionBase* proj, DEMInterpolator& dem_interp_block,
+            isce3::core::ProjectionBase* proj, isce3::geometry::DEMInterpolator& dem_interp_block,
             bool flag_direction_line);
 
     template<class T_out>
@@ -288,12 +280,12 @@ private:
               isce3::core::ProjectionBase* proj,
               isce3::core::Matrix<float>& rtc_area,
               isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
-              isce3::geometry::geocodeOutputMode output_mode,
+              geocodeOutputMode output_mode,
               float rtc_min_value, double abs_cal_factor, float clip_min,
               float clip_max, float min_nlooks, float radar_grid_nlooks,
               pyre::journal::info_t& info);
 
-    void _loadDEM(isce3::io::Raster& demRaster, DEMInterpolator& demInterp,
+    void _loadDEM(isce3::io::Raster& demRaster, isce3::geometry::DEMInterpolator& demInterp,
                   isce3::core::ProjectionBase* _proj, int lineStart,
                   int blockLength, int blockWidth, double demMargin);
 
@@ -301,7 +293,7 @@ private:
 
     void _geo2rdr(const isce3::product::RadarGridParameters& radar_grid,
                   double x, double y, double& azimuthTime, double& slantRange,
-                  DEMInterpolator& demInterp, isce3::core::ProjectionBase* proj);
+                  isce3::geometry::DEMInterpolator& demInterp, isce3::core::ProjectionBase* proj);
 
     template<class T_out>
     void
@@ -365,8 +357,8 @@ std::vector<float> getGeoAreaElementMean(
         isce3::geometry::rtcInputRadiometry input_radiometry =
                 isce3::geometry::rtcInputRadiometry::BETA_NAUGHT,
         int exponent = 0,
-        isce3::geometry::geocodeOutputMode output_mode =
-                isce3::geometry::geocodeOutputMode::AREA_PROJECTION,
+        geocodeOutputMode output_mode =
+                geocodeOutputMode::AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         double abs_cal_factor = 1, float radar_grid_nlooks = 1,
@@ -381,15 +373,15 @@ std::vector<float> _getGeoAreaElementMean(
         int x_min, int y_min, isce3::core::Matrix<float>& rtc_area,
         const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& input_raster,
-        isce3::geometry::geocodeOutputMode output_mode =
-                isce3::geometry::geocodeOutputMode::AREA_PROJECTION,
+        geocodeOutputMode output_mode =
+                geocodeOutputMode::AREA_PROJECTION,
         float rtc_min_value = 0, float* out_nlooks = nullptr,
         double abs_cal_factor = 1, float radar_grid_nlooks = 1);
 
-} // namespace geometry
+} // namespace geocode
 } // namespace isce3
 
 // Get inline implementations for Geocode
 #define ISCE_GEOMETRY_GEOCODE_ICC
-#include "Geocode.icc"
+#include "GeocodeCov.icc"
 #undef ISCE_GEOMETRY_GEOCODE_ICC

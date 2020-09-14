@@ -41,7 +41,7 @@ geocode/interpolate.cpp
 geocode/loadDem.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp
-geometry/Geocode.cpp
+geocode/GeocodeCov.cpp
 geometry/geometry.cpp
 geometry/RTC.cpp
 geometry/Topo.cpp

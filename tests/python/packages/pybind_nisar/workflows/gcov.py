@@ -10,8 +10,8 @@ from pybind_nisar.workflows import defaults, gcov, h5_prep, runconfig
 
 import iscetest
 
-geocode_modes = {'interp':isce3.geometry.GeocodeOutputMode.INTERP,
-        'area':isce3.geometry.GeocodeOutputMode.AREA_PROJECTION}
+geocode_modes = {'interp':isce3.geocode.GeocodeOutputMode.INTERP,
+        'area':isce3.geocode.GeocodeOutputMode.AREA_PROJECTION}
 input_axis = ['x', 'y']
 
 def test_run():

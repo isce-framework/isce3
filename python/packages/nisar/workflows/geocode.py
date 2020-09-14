@@ -9,6 +9,7 @@ import numpy as np
 
 import isce3
 from isce3.io.Raster import Raster
+from isce3.geocode import Geocode
 from nisar.products.readers import SLC
 
 def cmdLineParse():
@@ -40,7 +41,7 @@ def cmdLineParse():
 
 def main(opts):
     """
-    Runs isce::geometry::Geocode for any GDAL raster with an associated HDF5 product.
+    Runs isce::geocode::GeocodeCov for any GDAL raster with an associated HDF5 product.
     For example, to geocode a multilooked interferogram, provide the HDF5 product
     for the reference scene which defined the full-resolution radar geometry.
     """
@@ -85,9 +86,9 @@ def main(opts):
     ds = None
 
     # Instantiate Geocode object
-    geo = isce3.geometry.geocode(orbit=orbit,
-            ellipsoid=ellps,
-            inputRaster=input_raster)
+    geo = Geocode(orbit=orbit,
+                  ellipsoid=ellps,
+                  inputRaster=input_raster)
 
     # Set radar grid
     # geo.radarGrid(doppler,

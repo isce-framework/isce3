@@ -29,7 +29,7 @@
 #include "isce3/geometry/Serialization.h"
 #include "isce3/geometry/Topo.h"
 
-#include <isce3/geometry/Geocode.h>
+#include <isce3/geocode/GeocodeCov.h>
 
 std::set<std::string> geocode_mode_set = {"interp", "areaProj"};
 
@@ -95,7 +95,7 @@ TEST(GeocodeTest, RunGeocode) {
     isce3::core::dataInterpMethod method = isce3::core::BIQUINTIC_METHOD;
 
     // Geocode object
-    isce3::geometry::Geocode<double> geoObj;
+    isce3::geocode::Geocode<double> geoObj;
 
     // manually configure geoObj
 
@@ -118,11 +118,11 @@ TEST(GeocodeTest, RunGeocode) {
 
         std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
 
-        isce3::geometry::geocodeOutputMode output_mode;
+        isce3::geocode::geocodeOutputMode output_mode;
         if (geocode_mode_str == "interp")
-            output_mode = isce3::geometry::geocodeOutputMode::INTERP;
+            output_mode = isce3::geocode::geocodeOutputMode::INTERP;
         else
-            output_mode = isce3::geometry::geocodeOutputMode::AREA_PROJECTION;
+            output_mode = isce3::geocode::geocodeOutputMode::AREA_PROJECTION;
 
         // geocoded raster
         isce3::io::Raster geocodedRasterInterpX("x." + geocode_mode_str + ".geo",
@@ -136,11 +136,11 @@ TEST(GeocodeTest, RunGeocode) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        isce3::geometry::geocodeOutputMode output_mode;
+        isce3::geocode::geocodeOutputMode output_mode;
         if (geocode_mode_str == "interp")
-            output_mode = isce3::geometry::geocodeOutputMode::INTERP;
+            output_mode = isce3::geocode::geocodeOutputMode::INTERP;
         else
-            output_mode = isce3::geometry::geocodeOutputMode::AREA_PROJECTION;
+            output_mode = isce3::geocode::geocodeOutputMode::AREA_PROJECTION;
 
         // create another raster for latitude data from Topo
         isce3::io::Raster radarRasterY("y.rdr");

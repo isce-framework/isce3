@@ -12,9 +12,9 @@ rtc_area_mode_dict = {'AREA': rtcAreaMode.AREA,
 rtc_algorithm_dict = {'RTC_DAVID_SMALL': rtcAlgorithm.RTC_DAVID_SMALL,
                       'RTC_AREA_PROJECTION': rtcAlgorithm.RTC_AREA_PROJECTION}
 
-rtc_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
-                        'SINGLE_BLOCK': geocodeMemoryMode.SINGLE_BLOCK,
-                        'BLOCKS_GEOGRID': geocodeMemoryMode.BLOCKS_GEOGRID}
+rtc_memory_mode_dict = {'AUTO': rtcMemoryMode.RTC_AUTO,
+                        'SINGLE_BLOCK': rtcMemoryMode.RTC_SINGLE_BLOCK,
+                        'BLOCKS_GEOGRID': rtcMemoryMode.RTC_BLOCKS_GEOGRID}
 
 
 def enum_dict_decorator(enum_dict, default_key):

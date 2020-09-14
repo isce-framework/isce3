@@ -94,7 +94,7 @@ TEST(geocodeTest, TestGeocodeSlc)
 
     isce3::io::Raster demRaster("zeroHeightDEM.geo");
 
-    isce3::io::Raster inputSlc("x.slc", GA_ReadOnly);
+    isce3::io::Raster inputSlc("xslc", GA_ReadOnly);
 
     isce3::io::Raster geocodedSlc("xslc.geo", geoGridWidth, geoGridLength, 1,
                                  GDT_CFloat32, "ENVI");
@@ -106,7 +106,7 @@ TEST(geocodeTest, TestGeocodeSlc)
                               ellipsoid, thresholdGeo2rdr, numiterGeo2rdr,
                               linesPerBlock, demBlockMargin, flatten);
 
-    isce3::io::Raster inputSlcY("y.slc", GA_ReadOnly);
+    isce3::io::Raster inputSlcY("yslc", GA_ReadOnly);
 
     isce3::io::Raster geocodedSlcY("yslc.geo", geoGridWidth, geoGridLength, 1,
                                   GDT_CFloat32, "ENVI");
@@ -278,12 +278,12 @@ void createTestData()
         yslc[ii] = cpxPhaseY;
     }
 
-    isce3::io::Raster slcRasterX("x.slc", width, length, 1, GDT_CFloat32,
+    isce3::io::Raster slcRasterX("xslc", width, length, 1, GDT_CFloat32,
                                 "ENVI");
 
     slcRasterX.setBlock(xslc, 0, 0, width, length);
 
-    isce3::io::Raster slcRasterY("y.slc", width, length, 1, GDT_CFloat32,
+    isce3::io::Raster slcRasterY("yslc", width, length, 1, GDT_CFloat32,
                                 "ENVI");
 
     slcRasterY.setBlock(yslc, 0, 0, width, length);

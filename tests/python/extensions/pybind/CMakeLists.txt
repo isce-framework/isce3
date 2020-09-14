@@ -17,9 +17,9 @@ focus/backproject.py
 focus/chirp.py
 focus/rangecomp.py
 geocode/geocodeSlc.py
+geocode/geocodeCov.py
 geometry/bbox.py
 geometry/dem.py
-geometry/geocode.py
 geometry/geo2rdr.py
 geometry/rdr2geo.py
 image/resamp.py

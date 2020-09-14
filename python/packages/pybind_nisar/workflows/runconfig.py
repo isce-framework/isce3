@@ -110,20 +110,20 @@ def prep_gcov(cfg):
         geocode_dict['abs_rad_cal'] = 1.0
 
     if geocode_dict['memory_mode'] == 'single_block':
-        geocode_dict['memory_mode'] = isce.geometry.GeocodeMemoryMode.SINGLE_BLOCK
+        geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.SINGLE_BLOCK
     elif geocode_dict['memory_mode'] == 'geogrid':
-        geocode_dict['memory_mode'] = isce.geometry.GeocodeMemoryMode.BLOCKS_GEOGRID
+        geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID
     elif geocode_dict['memory_mode'] == 'geogrid_radargrid':
-        geocode_dict['memory_mode'] = isce.geometry.GeocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID
+        geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID
     else:
-        geocode_dict['memory_mode'] = isce.geometry.GeocodeMemoryMode.AUTO
+        geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.AUTO
 
     if geocode_dict['algorithm_type'] == 'interp':
-        geocode_dict['algorithm_type'] = isce.geometry.GeocodeOutputMode.INTERP
+        geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.INTERP
     elif geocode_dict['algorithm_type'] == 'area_projection':
-        geocode_dict['algorithm_type'] = isce.geometry.GeocodeOutputMode.AREA_PROJECTION
+        geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION
     elif geocode_dict['algorithm_type'] == 'area_projection_gamma_naught':
-        geocode_dict['algorithm_type'] = isce.geometry.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
+        geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
     else:
         raise ValueError(f'Unsupported geocode algorithm: {geocode_dict["algorithm_type"]}')
 

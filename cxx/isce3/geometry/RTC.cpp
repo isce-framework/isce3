@@ -19,7 +19,7 @@
 #include <isce3/core/Projections.h>
 #include <isce3/error/ErrorCode.h>
 #include <isce3/geometry/DEMInterpolator.h>
-#include <isce3/geometry/Geocode.h>
+#include <isce3/geocode/GeocodeCov.h>
 #include <isce3/geometry/boundingbox.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/product/RadarGridParameters.h>

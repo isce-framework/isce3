@@ -1,10 +1,4 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Heresh Fattahi, Gustavo H. X. Shiroma
-// Copyright 2019-
-
-#include "Geocode.h"
+#include "GeocodeCov.h"
 
 #include <algorithm>
 #include <cmath>
@@ -15,17 +9,16 @@
 #include <isce3/geometry/boundingbox.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/signal/Looks.h>
+#include <isce3/geometry/DEMInterpolator.h>
+#include <isce3/geometry/RTC.h>
 #include <limits>
 #include <type_traits>
-
-#include "DEMInterpolator.h"
-#include "RTC.h"
 
 using isce3::core::OrbitInterpBorderMode;
 using isce3::core::Vec3;
 
 namespace isce3 {
-namespace geometry {
+namespace geocode {
 
 template<typename T1, typename T2>
 auto operator*(const std::complex<T1>& lhs, const T2& rhs) {
@@ -72,7 +65,7 @@ void Geocode<T>::updateGeoGrid(
         const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& dem_raster) {
 
-    pyre::journal::info_t info("isce.geometry.Geocode.updateGeoGrid");
+    pyre::journal::info_t info("isce.geocode.GeocodeCov.updateGeoGrid");
 
     if (_epsgOut == 0)
         _epsgOut = dem_raster.getEPSG();
@@ -87,7 +80,7 @@ void Geocode<T>::updateGeoGrid(
         _geoGridLength <= 0 || _geoGridWidth <= 0) {
         std::unique_ptr<isce3::core::ProjectionBase> proj(
                 isce3::core::createProj(_epsgOut));
-        BoundingBox bbox = getGeoBoundingBoxHeightSearch(radar_grid, _orbit,
+        isce3::geometry::BoundingBox bbox = isce3::geometry::getGeoBoundingBoxHeightSearch(radar_grid, _orbit,
                                                          proj.get(), _doppler);
         _geoGridStartX = bbox.MinX;
         if (_geoGridSpacingY < 0)
@@ -136,7 +129,7 @@ void Geocode<T>::geocode(
         isce3::geometry::rtcInputRadiometry input_radiometry, int exponent,
         float rtc_min_value_db, 
         double rtc_geogrid_upsampling,
-        rtcAlgorithm rtc_algorithm,
+        isce3::geometry::rtcAlgorithm rtc_algorithm,
         double abs_cal_factor,
         float clip_min,
         float clip_max,
@@ -212,7 +205,7 @@ void Geocode<T>::geocodeInterp(
             isce3::core::createProj(_epsgOut));
 
     // instantiate the DEMInterpolator
-    DEMInterpolator demInterp;
+    isce3::geometry::DEMInterpolator demInterp;
 
     // Compute number of blocks in the output geocoded grid
     int nBlocks = _geoGridLength / _linesPerBlock;
@@ -426,7 +419,7 @@ void Geocode<T>::_interpolate(isce3::core::Matrix<T_out>& rdrDataBlock,
 
 template<class T>
 void Geocode<T>::_loadDEM(isce3::io::Raster& demRaster,
-                          DEMInterpolator& demInterp,
+                          isce3::geometry::DEMInterpolator& demInterp,
                           isce3::core::ProjectionBase* proj, int lineStart,
                           int blockLength, int blockWidth, double demMargin) {
     // Create projection for DEM
@@ -527,7 +520,7 @@ void Geocode<T>::_loadDEM(isce3::io::Raster& demRaster,
 template<class T>
 void Geocode<T>::_geo2rdr(const isce3::product::RadarGridParameters& radar_grid,
                           double x, double y, double& azimuthTime,
-                          double& slantRange, DEMInterpolator& demInterp,
+                          double& slantRange, isce3::geometry::DEMInterpolator& demInterp,
                           isce3::core::ProjectionBase* proj) {
     // coordinate in the output projection system
     const Vec3 xyz {x, y, 0.0};
@@ -539,7 +532,7 @@ void Geocode<T>::_geo2rdr(const isce3::product::RadarGridParameters& radar_grid,
     llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
 
     // Perform geo->rdr iterations
-    int geostat = geo2rdr(llh, _ellipsoid, _orbit, _doppler, azimuthTime,
+    int geostat = isce3::geometry::geo2rdr(llh, _ellipsoid, _orbit, _doppler, azimuthTime,
                           slantRange, radar_grid.wavelength(),
                           radar_grid.lookSide(), _threshold, _numiter, 1.0e-8);
 
@@ -561,7 +554,7 @@ void Geocode<T>::geocodeAreaProj(
         isce3::geometry::rtcInputRadiometry input_radiometry,
         float rtc_min_value_db, 
         double rtc_geogrid_upsampling,
-        rtcAlgorithm rtc_algorithm,
+        isce3::geometry::rtcAlgorithm rtc_algorithm,
         double abs_cal_factor,
         float clip_min,
         float clip_max,
@@ -574,7 +567,7 @@ void Geocode<T>::geocodeAreaProj(
         geocodeMemoryMode geocode_memory_mode,
         isce3::core::dataInterpMethod interp_method) {
 
-    pyre::journal::info_t info("isce.geometry.Geocode.geocodeAreaProj");
+    pyre::journal::info_t info("isce.geocode.GeocodeCov.geocodeAreaProj");
 
     if (std::isnan(geogrid_upsampling))
         geogrid_upsampling = 1;
@@ -716,7 +709,7 @@ void Geocode<T>::geocodeAreaProj(
                 radar_block_size = radar_grid.length();
             } else {
 
-                radargrid_nblocks = areaProjGetNBlocks(
+                radargrid_nblocks = isce3::geometry::areaProjGetNBlocks(
                         radar_grid.length(), &info, 0, &radar_block_size);
             }
 
@@ -776,13 +769,13 @@ void Geocode<T>::geocodeAreaProj(
     else {
         if (geocode_memory_mode == 
             geocodeMemoryMode::BLOCKS_GEOGRID_AND_RADARGRID) {
-            nblocks = areaProjGetNBlocks(imax, &info, geogrid_upsampling,
+            nblocks = isce3::geometry::areaProjGetNBlocks(imax, &info, geogrid_upsampling,
                                          &block_size_with_upsampling,
                                          &block_size);
         }
         else {
             int min_block_length = 32;
-            nblocks = areaProjGetNBlocks(imax, &info, geogrid_upsampling,
+            nblocks = isce3::geometry::areaProjGetNBlocks(imax, &info, geogrid_upsampling,
                                          &block_size_with_upsampling,
                                          &block_size,
                                          min_block_length);
@@ -862,7 +855,7 @@ void Geocode<T>::_GetRadarPositionVect(
         std::vector<double>& a_vect, std::vector<double>& r_vect,
         std::vector<Vec3>& dem_vect,
         const isce3::product::RadarGridParameters& radar_grid,
-        isce3::core::ProjectionBase* proj, DEMInterpolator& dem_interp_block,
+        isce3::core::ProjectionBase* proj, isce3::geometry::DEMInterpolator& dem_interp_block,
         bool flag_direction_line) {
 
     for (int kk = k_start; kk <= k_end; ++kk) {
@@ -885,7 +878,7 @@ void Geocode<T>::_GetRadarPositionVect(
                      dem_interp_block.interpolateXY(dem_pos_1, dem_pos_2)};
         }
         int converged =
-                geo2rdr(proj->inverse(dem11), _ellipsoid, _orbit, _doppler, a11,
+                isce3::geometry::geo2rdr(proj->inverse(dem11), _ellipsoid, _orbit, _doppler, a11,
                         r11, radar_grid.wavelength(), radar_grid.lookSide(),
                         _threshold, _numiter, 1.0e-8);
         // if it didn't converge, set NaN
@@ -942,7 +935,7 @@ void Geocode<T>::_RunBlock(
         const double dr, double r0, int xbound, int ybound,
         isce3::core::ProjectionBase* proj, isce3::core::Matrix<float>& rtc_area,
         isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
-        isce3::geometry::geocodeOutputMode output_mode,
+        geocodeOutputMode output_mode,
         float rtc_min_value, double abs_cal_factor, float clip_min,
         float clip_max, float min_nlooks, float radar_grid_nlooks,
         pyre::journal::info_t& info)
@@ -992,7 +985,7 @@ void Geocode<T>::_RunBlock(
     }
 
     int ii_0 = block * block_size_with_upsampling;
-    DEMInterpolator dem_interp_block(0, interp_method);
+    isce3::geometry::DEMInterpolator dem_interp_block(0, interp_method);
 
     const double minX = _geoGridStartX;
     const double maxX = _geoGridStartX + _geoGridSpacingX * _geoGridWidth;
@@ -1291,7 +1284,7 @@ void Geocode<T>::_RunBlock(
                         _geoGridSpacingX * (1.0 + jj) / geogrid_upsampling;
                 dem11 = {dem_x1, dem_y1,
                          dem_interp_block.interpolateXY(dem_x1, dem_y1)};
-                converged = geo2rdr(proj->inverse(dem11), _ellipsoid, _orbit,
+                converged = isce3::geometry::geo2rdr(proj->inverse(dem11), _ellipsoid, _orbit,
                                     _doppler, a11, r11, radar_grid.wavelength(),
                                     radar_grid.lookSide(), _threshold, _numiter,
                                     1.0e-8);
@@ -1383,13 +1376,13 @@ void Geocode<T>::_RunBlock(
             else
                 plane_orientation = 1;
 
-            areaProjIntegrateSegment(y00, y01, x00, x01, size_y, size_x, w_arr,
+            isce3::geometry::areaProjIntegrateSegment(y00, y01, x00, x01, size_y, size_x, w_arr,
                                      w_total, plane_orientation);
-            areaProjIntegrateSegment(y01, y11, x01, x11, size_y, size_x, w_arr,
+            isce3::geometry::areaProjIntegrateSegment(y01, y11, x01, x11, size_y, size_x, w_arr,
                                      w_total, plane_orientation);
-            areaProjIntegrateSegment(y11, y10, x11, x10, size_y, size_x, w_arr,
+            isce3::geometry::areaProjIntegrateSegment(y11, y10, x11, x10, size_y, size_x, w_arr,
                                      w_total, plane_orientation);
-            areaProjIntegrateSegment(y10, y00, x10, x00, size_y, size_x, w_arr,
+            isce3::geometry::areaProjIntegrateSegment(y10, y00, x10, x00, size_y, size_x, w_arr,
                                      w_total, plane_orientation);
 
             double nlooks = 0;
@@ -1627,7 +1620,7 @@ std::vector<float> getGeoAreaElementMean(
 
     const double margin_x = std::abs(dx) * 10;
     const double margin_y = std::abs(dy) * 10;
-    DEMInterpolator dem_interp;
+    isce3::geometry::DEMInterpolator dem_interp;
 
     dem_interp.loadDEM(dem_raster, x0 - margin_x, xf + margin_x,
                        std::min(y0, yf) - margin_y,
@@ -1667,7 +1660,7 @@ std::vector<float> getGeoAreaElementMean(
 
         const Vec3 dem11 = {x, y, dem_interp.interpolateXY(x, y)};
         int converged =
-                geo2rdr(proj->inverse(dem11), ellipsoid, orbit, input_dop, a, r,
+                isce3::geometry::geo2rdr(proj->inverse(dem11), ellipsoid, orbit, input_dop, a, r,
                         radar_grid.wavelength(), radar_grid.lookSide(),
                         threshold, num_iter, delta_range);
         if (!converged) {
@@ -1846,7 +1839,7 @@ std::vector<float> _getGeoAreaElementMean(
             y01 = a_vect[0];
             x01 = r_vect[0];
         }
-        areaProjIntegrateSegment(y00 - y_min, y01 - y_min, x00 - x_min,
+        isce3::geometry::areaProjIntegrateSegment(y00 - y_min, y01 - y_min, x00 - x_min,
                                  x01 - x_min, size_y, size_x, w_arr, w_total,
                                  plane_orientation);
     }
@@ -1896,5 +1889,5 @@ std::vector<float> _getGeoAreaElementMean(
 
 
 
-} // namespace geometry
+} // namespace geocode
 } // namespace isce3

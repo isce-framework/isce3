@@ -5,7 +5,7 @@
 #
 
 from libcpp cimport bool
-from Geocode cimport Geocode
+from GeocodeCov cimport Geocode
 from LookSide cimport LookSide
 
 cdef class pyGeocodeBase:

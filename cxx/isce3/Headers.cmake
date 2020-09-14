@@ -79,8 +79,8 @@ geometry/Shapes.h
 geometry/boundingbox.h
 geometry/Geo2rdr.h
 geometry/Geo2rdr.icc
-geometry/Geocode.h
-geometry/Geocode.icc
+geocode/GeocodeCov.h
+geocode/GeocodeCov.icc
 geometry/geometry.h
 geometry/RTC.h
 geometry/Serialization.h

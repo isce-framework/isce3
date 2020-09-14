@@ -1,4 +1,4 @@
-#include "Geocode.h"
+#include "GeocodeCov.h"
 
 #include <isce3/core/Constants.h>
 #include <isce3/geometry/RTC.h>
@@ -8,9 +8,9 @@
 
 namespace py = pybind11;
 
-using isce3::geometry::Geocode;
-using isce3::geometry::geocodeMemoryMode;
-using isce3::geometry::geocodeOutputMode;
+using isce3::geocode::Geocode;
+using isce3::geocode::geocodeMemoryMode;
+using isce3::geocode::geocodeOutputMode;
 using isce3::geometry::rtcInputRadiometry;
 using isce3::geometry::rtcAlgorithm;
 using isce3::core::parseDataInterpMethod;

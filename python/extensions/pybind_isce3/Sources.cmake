@@ -27,7 +27,7 @@ geocode/geocode.cpp
 geocode/GeocodeSlc.cpp
 geometry/boundingbox.cpp
 geometry/DEMInterpolator.cpp
-geometry/Geocode.cpp
+geocode/GeocodeCov.cpp
 geometry/geometry.cpp
 geometry/geo2rdr.cpp
 geometry/rdr2geo.cpp
