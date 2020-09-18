@@ -9,8 +9,8 @@ import gdal
 import h5py
 import numpy as np
 
-from pybind_nisar.products.readers import SLC
 import pybind_isce3 as isce
+from pybind_nisar.products.readers import SLC
 from pybind_nisar.workflows import h5_prep, runconfig
 
 def run(cfg):
@@ -251,5 +251,5 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
 if __name__ == "__main__":
     cfg = runconfig.load('GCOV')
-    h5_prep.run(cfg, 'SLC', 'GCOV')
+    h5_prep.run(cfg, 'GCOV')
     run(cfg)

@@ -9,15 +9,16 @@ import numpy as np
 from osgeo import osr
 
 from pybind_nisar.h5 import cp_h5_meta_data
+from pybind_nisar.products.readers import SLC
 import pybind_isce3 as isce3
 
 
-def run(cfg, src, dst):
-    cp_geocode_meta(cfg, src, dst)
-    prep_ds(cfg, src, dst)
+def run(cfg, dst):
+    cp_geocode_meta(cfg, dst)
+    prep_ds(cfg, dst)
 
 
-def cp_geocode_meta(cfg, src, dst):
+def cp_geocode_meta(cfg, dst):
     '''
     Copies shared data from src HDF5 to GSLC dst
 
@@ -25,8 +26,6 @@ def cp_geocode_meta(cfg, src, dst):
     -----------
     cfg : dict
         Run configuration
-    src : str
-        Name of source node containing data to be copied
     dst : str
         Name of destination node where data is to be copied
     '''
@@ -42,12 +41,14 @@ def cp_geocode_meta(cfg, src, dst):
     except FileNotFoundError:
         pass
 
+    slc = SLC(hdf5file=input_hdf5)
+
     # prelim setup
     common_parent_path = 'science/LSAR'
     src_h5 = h5py.File(input_hdf5, 'r')
-    src_meta_path = f'{src}/metadata'
+    src_meta_path = slc.MetadataPath
     dst_h5 = h5py.File(output_hdf5, 'w', libver='latest', swmr=True)
-    dst_meta_path = f'{dst}/metadata'
+    dst_meta_path = f'{common_parent_path}/{dst}/metadata'
 
     # simple copies of identification, metadata/orbit, metadata/attitude groups
     cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'identification'))
@@ -57,14 +58,12 @@ def cp_geocode_meta(cfg, src, dst):
     dset.attrs["description"] = np.string_(desc)
 
     # copy orbit information group
-    cp_h5_meta_data(src_h5, dst_h5,
-                    os.path.join(common_parent_path, f'{src_meta_path}/orbit'),
-                    os.path.join(common_parent_path, f'{dst_meta_path}/orbit'))
+    cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
+        f'{dst_meta_path}/orbit')
 
     # copy attitudue information group
-    cp_h5_meta_data(src_h5, dst_h5,
-                    os.path.join(common_parent_path, f'{src_meta_path}/attitude'),
-                    os.path.join(common_parent_path, f'{dst_meta_path}/attitude'))
+    cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
+        f'{dst_meta_path}/attitude')
 
     # copy calibration information group
     for freq in freq_pols.keys():
@@ -74,28 +73,26 @@ def cp_geocode_meta(cfg, src, dst):
             continue
         for polarization in pol_list:
             cp_h5_meta_data(src_h5, dst_h5,
-                    os.path.join(common_parent_path,
-                        f'{src_meta_path}/calibrationInformation/{frequency}/{polarization}'),
-                    os.path.join(common_parent_path, 
-                        f'{dst_meta_path}/calibrationInformation/{frequency}/{polarization}'))
+                f'{src_meta_path}/calibrationInformation/{frequency}/{polarization}',
+                f'{dst_meta_path}/calibrationInformation/{frequency}/{polarization}')
 
     # copy processing information group
     cp_h5_meta_data(src_h5, dst_h5,
-                    os.path.join(common_parent_path, f'{src_meta_path}/processingInformation'),
-                    os.path.join(common_parent_path, f'{dst_meta_path}/processingInformation'),
+                    f'{src_meta_path}/processingInformation',
+                    f'{dst_meta_path}/processingInformation',
                     excludes=['l0bGranules', 'demFiles', 'zeroDopplerTime', 'slantRange'])
 
     # copy radar grid information group
     cp_h5_meta_data(src_h5, dst_h5,
-                    os.path.join(common_parent_path, f'{src_meta_path}/geolocationGrid'),
-                    os.path.join(common_parent_path, f'{dst_meta_path}/radarGrid'),
+                    f'{src_meta_path}/geolocationGrid',
+                    f'{dst_meta_path}/radarGrid',
                     renames={'coordinateX':'xCoordinates',
                         'coordinateY':'yCoordinates',
                         'zeroDopplerTime':'zeroDopplerAzimuthTime'})
     
     # copy SLC/COV meta data
     for freq in ['A', 'B']:
-        ds_ref = os.path.join(common_parent_path, f'{src}/swaths/frequency{freq}')
+        ds_ref = f'{slc.SwathPath}/frequency{freq}'
         if ds_ref not in src_h5:
             continue
         cp_h5_meta_data(src_h5, dst_h5, ds_ref,
@@ -111,8 +108,7 @@ def cp_geocode_meta(cfg, src, dst):
                     'processedAzimuthBandwidth':'azimuthBandwidth',
                     'processedRangeBandwidth':'rangeBandwidth'})
 
-    input_grp = dst_h5[os.path.join(common_parent_path,
-            f'{dst_meta_path}/processingInformation/inputs')]
+    input_grp = dst_h5[f'{dst_meta_path}/processingInformation/inputs']
     dset = input_grp.create_dataset("l1SlcGranules", data=np.string_([input_hdf5]))
     desc = f"List of input L1 products used"
     dset.attrs["description"] = np.string_(desc)
@@ -120,7 +116,7 @@ def cp_geocode_meta(cfg, src, dst):
     dst_h5.close()
     src_h5.close()
 
-def prep_ds(cfg, src, dst):
+def prep_ds(cfg, dst):
     '''
     prepare GSLC dataset rasters and ancillary data
     XXX do this with GCOV?
@@ -149,7 +145,7 @@ def prep_ds(cfg, src, dst):
         if dst == 'GSLC':
             for polarization in pol_list:
                 dst_grp = dst_h5[dst_parent_path]
-                _create_datasets(dst_grp, src,
+                _create_datasets(dst_grp,
                         freq, polarization, shape, chunks=(128, 128))
 
         # set GCOV polarization values (diagonal values only)
@@ -161,7 +157,7 @@ def prep_ds(cfg, src, dst):
     dst_h5.close()
 
 
-def _create_datasets(dst_grp, src, frequency, polarization, shape, chunks=(128, 128)):
+def _create_datasets(dst_grp, frequency, polarization, shape, chunks=(128, 128)):
     '''
     create 
     '''
@@ -175,7 +171,7 @@ def _create_datasets(dst_grp, src, frequency, polarization, shape, chunks=(128, 
     else:
         ds = dst_grp.create_dataset(polarization, dtype=ctype, shape=shape)
 
-    ds.attrs['description'] = np.string_(f'Geocoded {src} for {polarization} channel')
+    ds.attrs['description'] = np.string_(f'Geocoded SLC for {polarization} channel')
     ds.attrs['units'] = np.string_('')
 
     ds.attrs['grid_mapping'] = np.string_("projection")

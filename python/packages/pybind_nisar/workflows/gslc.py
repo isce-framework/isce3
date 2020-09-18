@@ -74,5 +74,5 @@ def run(cfg):
 
 if __name__ == "__main__":
     cfg = runconfig.load('GSLC')
-    h5_prep.run(cfg, 'SLC', 'GSLC')
+    h5_prep.run(cfg, 'GSLC')
     run(cfg)
