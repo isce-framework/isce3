@@ -55,9 +55,9 @@ void isce3::signal::Covariance<T>::covariance(
 
     crsmul.azimuthLooks(azimuthLooks);
 
-    crsmul.doCommonAzimuthbandFiltering(false);
+    crsmul.doCommonAzimuthBandFilter(false);
 
-    crsmul.doCommonRangebandFiltering(false);
+    crsmul.doCommonRangeBandFilter(false);
 
     if (_singlePol) {
         crsmul.crossmul(slc[_coPol], slc[_coPol],

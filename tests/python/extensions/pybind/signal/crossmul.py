@@ -19,20 +19,14 @@ def common_crossmul_obj():
     '''
     instantiate and return common crossmul object for both run tests
     '''
-    crossmul = isce.signal.Crossmul()
-
     # make SLC object and extract parameters
     slc_obj = SLC(hdf5file=os.path.join(iscetest.data, 'envisat.h5'))
     dopp = isce.core.LUT1d(slc_obj.getDopplerCentroid())
     prf = slc_obj.getRadarGrid().prf
 
-    # set crossmul parameters
+    crossmul = isce.signal.Crossmul()
     crossmul.set_dopplers(dopp, dopp)
-    crossmul.prf = prf
-    crossmul.common_az_bw = 2000.0
-    crossmul.beta = 0.25
-    crossmul.rg_looks = 1
-    crossmul.az_looks = 1
+    crossmul.set_az_filter(prf, 2000.0, 0.25)
 
     return crossmul
 
@@ -67,15 +61,13 @@ def test_validate_no_filter():
     npt.assert_array_less(data, 1.0e-9)
 
 
-def test_run_filter():
+def test_run_az_filter():
     '''
     run pybind CPU crossmul module with azimuth filtering
     '''
     ref_slc_raster = isce.io.Raster(os.path.join(iscetest.data, 'warped_envisat.slc.vrt'))
 
     crossmul = common_crossmul_obj()
-
-    crossmul.filter_az = True
 
     # prepare output rasters
     width = ref_slc_raster.width
@@ -86,7 +78,7 @@ def test_run_filter():
     crossmul.crossmul(ref_slc_raster, ref_slc_raster, igram, coherence)
 
 
-def test_validate_filter():
+def test_validate_az_filter():
     '''
     make sure pybind CPU crossmul results have zero phase
     '''
@@ -98,7 +90,8 @@ def test_validate_filter():
 
 
 if __name__ == '__main__':
+    test_init()
     test_run_no_filter()
     test_validate_no_filter()
-    test_run_filter()
-    test_validate_filter()
+    test_run_az_filter()
+    test_validate_az_filter()

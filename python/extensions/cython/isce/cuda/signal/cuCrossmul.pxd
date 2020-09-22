@@ -26,8 +26,8 @@ cdef extern from "isce3/cuda/signal/gpuCrossMul.h" namespace "isce3::cuda::signa
         void beta(double)
         void rangeLooks(int)
         void azimuthLooks(int)
-        void doCommonAzimuthBandFiltering(bool)
-        void doCommonRangeBandFiltering(bool)
+        void doCommonAzimuthBandFilter(bool)
+        void doCommonRangeBandFilter(bool)
 
         # Set Doppler profiles from LUT1d objects
         void doppler(LUT1d[double] refDoppler, LUT1d[double] secDoppler)

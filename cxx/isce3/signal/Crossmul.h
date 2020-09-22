@@ -67,52 +67,83 @@ class isce3::signal::Crossmul {
                         size_t ncols);
         
 
-       /** Set doppler LUTs for reference and secondary SLCs*/
+        /** Set doppler LUTs for reference and secondary SLCs*/
         inline void doppler(isce3::core::LUT1d<double>, 
                             isce3::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double);
 
+        /** Get pulse repetition frequency (PRF) */
+        inline double prf() const;
+
         /** Set range sampling frequency  */
         inline void rangeSamplingFrequency(double);
+
+        /** Get range sampling frequency  */
+        inline double rangeSamplingFrequency() const;
 
         /** Set the range bandwidth */
         inline void rangeBandwidth(double);
 
-        /** Range pixel spacing */
+        /** Get the range bandwidth */
+        inline double rangeBandwidth() const;
+
+        /** Set range pixel spacing */
         inline void rangePixelSpacing(double);
+
+        /** Get range pixel spacing */
+        inline double rangePixelSpacing() const;
 
         /** Set Wavelength*/
         inline void wavelength(double);
 
+        /** Get Wavelength*/
+        inline double wavelength() const;
 
         /** Set azimuth common bandwidth */
         inline void commonAzimuthBandwidth(double);
 
+        /** Get azimuth common bandwidth */
+        inline double commonAzimuthBandwidth() const;
+
         /** Set beta parameter for the azimuth common band filter */
         inline void beta(double);
 
+        /** Get beta parameter for the azimuth common band filter */
+        inline double beta() const;
 
         /** Set number of range looks */ 
         inline void rangeLooks(int);
 
+        /** Get number of range looks */ 
+        inline int rangeLooks() const;
+
         /** Set number of azimuth looks */
         inline void azimuthLooks(int);
 
+        /** Get number of azimuth looks */
+        inline int azimuthLooks() const;
+
         /** Set common azimuth band filtering flag */
-        inline void doCommonAzimuthbandFiltering(bool);
+        inline void doCommonAzimuthBandFilter(bool);
+
+        /** Get common azimuth band filtering flag */
+        inline bool doCommonAzimuthBandFilter() const;
 
         /** Set common range band filtering flag */
-        inline void doCommonRangebandFiltering(bool);
+        inline void doCommonRangeBandFilter(bool);
+
+        /** Get common range band filtering flag */
+        inline bool doCommonRangeBandFilter() const;
 
         /** Compute the avergae frequency shift in range direction between two SLCs*/
         inline void rangeFrequencyShift(std::valarray<std::complex<float>> &refAvgSpectrum,
-                                        std::valarray<std::complex<float>> &secAvgSpectrum,
-                                        std::valarray<double> &rangeFrequencies,
-                                        size_t blockRowsData,
-                                        size_t fft_size,
-                                        double &frequencyShift);
+                std::valarray<std::complex<float>> &secAvgSpectrum,
+                std::valarray<double> &rangeFrequencies,
+                size_t blockRowsData,
+                size_t fft_size,
+                double &frequencyShift);
 
         /** estimate the index of the maximum of a vector of data */
         inline void getPeakIndex(std::valarray<float> data, 
@@ -155,10 +186,10 @@ class isce3::signal::Crossmul {
         bool _doMultiLook = false;
 
         // Flag for common azimuth band filtering
-        bool _doCommonAzimuthbandFilter = false;
+        bool _doCommonAzimuthBandFilter = false;
 
         // Flag for common range band filtering
-        bool _doCommonRangebandFilter = false;
+        bool _doCommonRangeBandFilter = false;
 
         // Flag for computing coherence
         bool _computeCoherence = true;

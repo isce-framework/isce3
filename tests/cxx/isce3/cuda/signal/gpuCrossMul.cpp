@@ -74,7 +74,7 @@ TEST(gpuCrossmul, Crossmul)
     crsmul.azimuthLooks(1);
 
     // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthBandFiltering(false);
+    crsmul.doCommonAzimuthBandFilter(false);
 
     // running crossmul
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
@@ -159,7 +159,7 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     crsmul.azimuthLooks(1);
 
     // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthBandFiltering(true);
+    crsmul.doCommonAzimuthBandFilter(true);
 
     // running crossmul
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
