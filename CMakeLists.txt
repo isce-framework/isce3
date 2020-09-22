@@ -99,8 +99,13 @@ AssureOutOfSourceBuilds()
 ####Check CXX Version and Standard to C++17
 CheckCXX()
 
-# Define some utilities for creating cython modules
-include(useCython)
+option(ISCE3_WITH_CYTHON "Enable isce3 cython extension" ON)
+if(ISCE3_WITH_CYTHON)
+    message(DEPRECATION
+        "isce3's cython extension is deprecated and will soon be removed")
+    # Define some utilities for creating cython modules
+    include(useCython)
+endif()
 
 ###Layout same install directory structure as pyre
 include(GNUInstallDirs)
@@ -130,7 +135,9 @@ getpackage_pyre()
 # These packages required only for the python API. getpackage_python() should
 # be executed first in order to ensure a sufficient version of Python is used.
 getpackage_python()
-getpackage_cython()
+if(ISCE3_WITH_CYTHON)
+    getpackage_cython()
+endif()
 getpackage_numpy()
 getpackage_pybind11()
 
