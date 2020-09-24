@@ -65,14 +65,14 @@ void addbinding(py::class_<Crossmul> & pyCrossmul)
         .def("crossmul", py::overload_cast<Raster&, Raster&, Raster&, Raster&, Raster&>(&Crossmul::crossmul),
                 py::arg("ref_slc"),
                 py::arg("sec_slc"),
-                py::arg("rg_offset"),
-                py::arg("coherence"),
-                py::arg("interferogram"))
+                py::arg("range_offset"),
+                py::arg("interferogram"),
+                py::arg("coherence"))
         .def("crossmul", py::overload_cast<Raster&, Raster&, Raster&, Raster&>(&Crossmul::crossmul),
                 py::arg("ref_slc"),
                 py::arg("sec_slc"),
-                py::arg("coherence"),
-                py::arg("interferogram"))
+                py::arg("interferogram"),
+                py::arg("coherence"))
         .def("crossmul", py::overload_cast<Raster&, Raster&, Raster&>(&Crossmul::crossmul),
                 py::arg("ref_slc"),
                 py::arg("sec_slc"),

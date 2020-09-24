@@ -66,13 +66,13 @@ void addbinding(py::class_<gpuCrossmul> & pyCrossmul)
                 py::arg("ref_slc"),
                 py::arg("sec_slc"),
                 py::arg("range_offset"),
-                py::arg("coherence"),
-                py::arg("interferogram"))
+                py::arg("interferogram"),
+                py::arg("coherence"))
         .def("crossmul", py::overload_cast<Raster&, Raster&, Raster&, Raster&>(&gpuCrossmul::crossmul),
                 py::arg("ref_slc"),
                 py::arg("sec_slc"),
-                py::arg("coherence"),
-                py::arg("interferogram"))
+                py::arg("interferogram"),
+                py::arg("coherence"))
         .def("set_dopplers", &gpuCrossmul::doppler,
                 py::arg("ref_doppler"),
                 py::arg("sec_doppler"))
