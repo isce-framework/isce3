@@ -117,7 +117,7 @@ $DOCKER run --rm \
 
 git clone --depth 1 --no-checkout https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/isce-3/pr-docs
 cd pr-docs
-git reset
+git reset &> /dev/null
 
 mkdir -p $ghprbPullId
 cd $ghprbPullId
@@ -127,7 +127,6 @@ docker cp $CONTAINER:$SPHX_DIR .
 mv html/* .
 
 git add .
-git status
 
 git config --local user.name  "gmanipon"
 git config --local user.email "gmanipon@jpl.nasa.gov"
