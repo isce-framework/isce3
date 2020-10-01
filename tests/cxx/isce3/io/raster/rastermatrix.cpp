@@ -143,6 +143,88 @@ TEST_F(RasterTest, setMatrixRaster) {
 }
 
 
+// 
+TEST_F(RasterTest, setGetBlockEMatrix2D) {
+  //Setup geotiff
+  std::string filename = "matrix_getset.tif";
+  SetUp(filename);
+
+  isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
+
+  //Wrap full image into matrix
+  isce3::core::EMatrix2D<int> fullmat(nl, nc);
+  for (int i = 0; i < nl; i++ )
+      for (int j = 0; j < nc; j++ )
+        fullmat(i,j) = i*nc+j;
+
+  //Wrap block into Matrix
+  isce3::core::EMatrix2D<int> blockmat(nby, nbx);
+
+  //Wrap chunk into Matrix
+  isce3::core::EMatrix2D<int> chunkmat(nby+1, nbx+1);
+
+
+  int block_mat_sum = 0;
+  for (int i = 0; i < nby; i++ )
+      for (int j = 0; j < nbx; j++ )
+        block_mat_sum += i*nc+j;
+
+  int chunk_mat_sum = 0;
+  int l_start = nbx;
+  int c_start = nbx;
+  for (int  i = l_start; i < l_start+nby+1; i++ )
+      for (int j = c_start; j < c_start + nbx+1; j++ )
+        chunk_mat_sum += i*nc+j;
+
+  ASSERT_EQ( inc.numBands(), 1 );               // inc must have one band
+  inc.setBlock( fullmat, 0, 0, 1 );     // write full image
+  inc.getBlock( blockmat, 0, 0, 1);        // read upper-left sub-block
+  inc.getBlock( chunkmat, nbx, nbx, 1 );   // read chunk from band 1
+  ASSERT_EQ(blockmat.sum(), block_mat_sum);              // block sum must be equal to nbx*nby
+  ASSERT_EQ(chunkmat.sum(),  chunk_mat_sum);                  // chunk sum
+}
+
+TEST_F(RasterTest, setGetBlockEArray2D) {
+  //Setup geotiff
+  std::string filename = "matrix_getset.tif";
+  SetUp(filename);
+
+  isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
+    
+  //Wrap full image into matrix
+  isce3::core::EArray2D<int> fullmat(nl, nc);
+  for (int i = 0; i < nl; i++ )
+    for (int j = 0; j < nc; j++ )
+        fullmat(i,j) = i*nc+j;
+
+  //Wrap block into Matrix
+  isce3::core::EArray2D<int> blockmat(nby, nbx);
+
+  //Wrap chunk into Matrix
+  isce3::core::EArray2D<int> chunkmat(nby+1, nbx+1);
+
+
+  int block_mat_sum = 0;
+  for (int i = 0; i < nby; i++ )
+      for (int j = 0; j < nbx; j++ )
+          block_mat_sum += i*nc+j;
+
+  int chunk_mat_sum = 0;
+  int l_start = nbx;
+  int c_start = nbx;
+  for (int  i = l_start; i < l_start+nby+1; i++ )
+       for (int j = c_start; j < c_start + nbx+1; j++ )
+          chunk_mat_sum += i*nc+j;
+
+  ASSERT_EQ( inc.numBands(), 1 );               // inc must have one band
+  inc.setBlock( fullmat, 0, 0, 1 );     // write full image
+  inc.getBlock( blockmat, 0, 0, 1);        // read upper-left sub-block
+  inc.getBlock( chunkmat, nbx, nbx, 1 );   // read chunk from band 1
+  ASSERT_EQ( blockmat.sum(), block_mat_sum );              // block sum must be equal to nbx*nby
+  ASSERT_EQ( chunkmat.sum(),  chunk_mat_sum);             // chunk sum
+
+}
+
 // Main
 int main( int argc, char * argv[] ) {
     testing::InitGoogleTest( &argc, argv );
