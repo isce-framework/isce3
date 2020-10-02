@@ -104,7 +104,7 @@ class Raw(Base, family='nisar.productreader.raw'):
     def getAttitude(self):
         path = f"{self.TelemetryPath}/attitude"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
-            q = isce.core.Quaternion.load_from_h5(f[path])
+            q = isce.core.Attitude.load_from_h5(f[path])
         return q
 
     def getRanges(self, frequency='A'):

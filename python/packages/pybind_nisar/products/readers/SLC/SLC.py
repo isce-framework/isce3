@@ -32,7 +32,7 @@ class SLC(Base, family='nisar.productreader.slc'):
 
 
     @property
-    def productPath(self):
+    def ProductPath(self):
         # The product group name should be "RSLC" per the spec. However, early
         # sample products used "SLC" instead, and identification.productType is
         # not reliable, either. We maintain compatibility with both options.

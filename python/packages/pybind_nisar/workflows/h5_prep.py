@@ -45,7 +45,7 @@ def cp_geocode_meta(cfg, dst):
 
     # prelim setup
     common_parent_path = 'science/LSAR'
-    src_h5 = h5py.File(input_hdf5, 'r')
+    src_h5 = h5py.File(input_hdf5, 'r', libver='latest', swmr=True)
     src_meta_path = slc.MetadataPath
     dst_h5 = h5py.File(output_hdf5, 'w', libver='latest', swmr=True)
     dst_meta_path = f'{common_parent_path}/{dst}/metadata'

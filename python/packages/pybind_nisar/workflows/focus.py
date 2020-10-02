@@ -222,7 +222,7 @@ def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
     """Find squint angle given imaging time and range to target.
     """
     p, v = orbit.interpolate(t)
-    R = attitude.rotmat(t)
+    R = attitude.interpolate(t).to_rotation_matrix()
     axis = R[:,0]
     if dem is None:
         dem = isce.geometry.DEMInterpolator()
@@ -254,6 +254,82 @@ def get_dem(cfg: Struct):
     return dem
 
 
+def make_doppler_lut(rawfiles: List[str],
+        az: float = 0.0,
+        orbit: isce.core.Orbit = None,
+        attitude: isce.core.Attitude = None,
+        dem: isce.geometry.DEMInterpolator = None,
+        azimuth_spacing: float = 1.0,
+        range_spacing: float = 1e3,
+        frequency: str = "A",
+        interp_method: str = "bilinear",
+        **rdr2geo):
+    """Generate Doppler look up table (LUT).
+
+    Parameters
+    ----------
+    rawfiles
+        List of NISAR L0B format raw data files.
+    az : optional
+        Complement of the angle between the along-track axis of the antenna and
+        its electrical boresight, in radians.  Zero for non-scanned, flush-
+        mounted antennas like ALOS-1.
+    orbit : optional
+        Path of antenna phase center.  Defaults to orbit in first L0B file.
+    attitude : optional
+        Orientation of antenna.  Defaults to attitude in first L0B file.
+    dem : optional
+        Digital elevation model, height in m above WGS84 ellipsoid. Default=0 m.
+    azimuth_spacing : optional
+        LUT grid spacing in azimuth, in seconds.  Default=1 s.
+    range_spacing : optional
+        LUT grid spacing in range, in meters.  Default=1000 m.
+    frequency : {"A", "B"}, optional
+        Band to use.  Default="A"
+    interp_method : optional
+        LUT interpolation method. Default="bilinear".
+    threshold : optional
+    maxiter : optional
+    extraiter : optional
+        See rdr2geo
+
+    Returns
+    -------
+    fc
+        Center frequency, in Hz, assumed for Doppler calculation.
+    LUT
+        Look up table of Doppler = f(r,t)
+    """
+    # Input wrangling.
+    assert len(rawfiles) > 0, "Need at least one L0B file."
+    assert (azimuth_spacing > 0.0) and (range_spacing > 0.0)
+    raw = Raw(hdf5file=rawfiles[0])
+    if orbit is None:
+        orbit = raw.getOrbit()
+    if attitude is None:
+        attitude = raw.getAttitude()
+    if dem is None:
+        dem = isce.geometry.DEMInterpolator()
+    # Assume look side and center frequency constant across files.
+    side = raw.identification.lookDirection
+    fc = raw.getCenterFrequency(frequency)
+
+    # Now do the actual calculations.
+    wvl = isce.core.speed_of_light / fc
+    epoch, t, r = get_total_grid(rawfiles, azimuth_spacing, range_spacing)
+    t = convert_epoch(t, epoch, orbit.reference_epoch)
+    dop = np.zeros((len(t), len(r)))
+    for i, ti in enumerate(t):
+        _, v = orbit.interpolate(ti)
+        vi = np.linalg.norm(v)
+        for j, rj in enumerate(r):
+            sq = squint(ti, rj, orbit, attitude, side, angle=az, dem=dem,
+                        **rdr2geo)
+            dop[i,j] = squint_to_doppler(sq, wvl, vi)
+    lut = LUT2d(np.asarray(r), t, dop, interp_method, False)
+    return fc, lut
+
+
 def make_doppler(cfg: Struct, frequency='A'):
     log.info("Generating Doppler LUT from pointing")
     orbit = get_orbit(cfg)
@@ -262,24 +338,16 @@ def make_doppler(cfg: Struct, frequency='A'):
     opt = cfg.processing.doppler
     az = np.radians(opt.azimuth_boresight_deg)
     rawfiles = cfg.InputFileGroup.InputFilePath
-    raw = Raw(hdf5file=rawfiles[0])
-    side = raw.identification.lookDirection
-    fc = raw.getCenterFrequency(frequency)
-    wvl = isce.core.speed_of_light / fc
 
-    epoch, t, r = get_total_grid(rawfiles, opt.spacing.azimuth,
-                                 opt.spacing.range)
-    t = convert_epoch(t, epoch, orbit.reference_epoch)
-    dop = np.zeros((len(t), len(r)))
-    for i, ti in enumerate(t):
-        _, v = orbit.interpolate(ti)
-        vi = np.linalg.norm(v)
-        for j, rj in enumerate(r):
-            sq = squint(ti, rj, orbit, attitude, side, angle=az, dem=dem,
-                        **vars(opt.rdr2geo))
-            dop[i,j] = squint_to_doppler(sq, wvl, vi)
-    lut = LUT2d(np.asarray(r), t, dop, opt.interp_method, False)
-    log.info(f"Constructed Doppler LUT for fc={fc} Hz.")
+    fc, lut = make_doppler_lut(rawfiles,
+                               az=az, orbit=orbit, attitude=attitude,
+                               dem=dem, azimuth_spacing=opt.spacing.azimuth,
+                               range_spacing=opt.spacing.range,
+                               frequency=frequency,
+                               interp_method=opt.interp_method,
+                               **vars(opt.rdr2geo))
+
+    log.info(f"Made Doppler LUT for fc={fc} Hz with mean={lut.data.mean()} Hz")
     return fc, lut
 
 
@@ -363,15 +431,8 @@ def focus(runconfig):
     raw = Raw(hdf5file=input_raw_path)
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
-    try:
-        attitude = get_attitude(cfg)
-    except:
-        log.warning("Could not load attitude data.  Assuming zero Doppler.")
-        attitude = None
-        # XXX This makes for zero-sized dimensions in the Doppler metadata.
-        fc_ref, dop_ref = 1.0, isce.core.LUT2d()
-    else:
-        fc_ref, dop_ref = make_doppler(cfg)
+    attitude = get_attitude(cfg)
+    fc_ref, dop_ref = make_doppler(cfg)
     zerodop = isce.core.LUT2d()
     azres = cfg.processing.azcomp.azimuth_resolution
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
@@ -509,6 +570,14 @@ def focus(runconfig):
                 log.debug(f"max(abs(z)) = {np.max(np.abs(z))}")
                 zf = to_complex32(scale * z)
                 acdata.write_direct(zf, dest_sel=block)
+
+        # Raster/GDAL creates a .hdr file we have to clean up manually.
+        hdr = fd.name.replace(".rc", ".hdr")
+        # Careful to avoid race on file deletion.  Use pathlib in Python 3.8+
+        try:
+            os.unlink(hdr)
+        except FileNotFoundError:
+            pass
 
 
 def configure_logging():
