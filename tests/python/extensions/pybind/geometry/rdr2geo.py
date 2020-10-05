@@ -9,6 +9,39 @@ import iscetest
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
 
+
+def test_point():
+    # Subset of tests/cxx/isce3/geometry/geometry/geometry.cpp
+    fn = os.path.join(iscetest.data, "envisat.h5")
+    slc = SLC(hdf5file=fn)
+    orbit = slc.getOrbit()
+    subband = "A"
+    doplut = slc.getDopplerCentroid(frequency=subband)
+    grid = slc.getRadarGrid(frequency=subband)
+
+    # First row of input_data.txt
+    dt = isce.core.DateTime("2003-02-26T17:55:22.976222")
+    r = 826988.6900674499
+    h = 1777.
+
+    dem = isce.geometry.DEMInterpolator(h)
+    t = (dt - orbit.reference_epoch).total_seconds()
+    dop = doplut.eval(t, r)
+    wvl = grid.wavelength
+
+    # native doppler, expect first row of output_data.txt
+    llh = isce.geometry.rdr2geo(t, r, orbit, grid.lookside, dop, wvl, dem)
+    assert np.isclose(np.degrees(llh[0]), -115.44101120961082)
+    assert np.isclose(np.degrees(llh[1]), 35.28794014757191)
+    assert np.isclose(llh[2], 1777.)
+
+    # zero doppler, expect first row of output_data_zerodop.txt
+    llh = isce.geometry.rdr2geo(t, r, orbit, grid.lookside, 0.0, dem=dem)
+    assert np.isclose(np.degrees(llh[0]), -115.43883834023249)
+    assert np.isclose(np.degrees(llh[1]), 35.29610867314526)
+    assert np.isclose(llh[2], 1776.9999999993)
+
+
 def test_run():
     '''
     check if topo runs
@@ -62,8 +95,3 @@ def test_validate():
 
         # check if tolerances met
         assert( mean_err < tols[i_band]), f"band {i_band} mean err fail"
-
-
-if  __name__ == "__main__":
-    test_run()
-    test_validate()
