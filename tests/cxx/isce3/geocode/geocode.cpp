@@ -434,11 +434,6 @@ void createTestData()
     // Load the product
     isce3::product::Product product(file);
 
-    isce3::core::LUT2d<double> nativeDoppler =
-            product.metadata().procInfo().dopplerCentroid('A');
-    isce3::core::LUT2d<double> imageGridDoppler =
-            product.metadata().procInfo().dopplerCentroid('A');
-
     // Create topo instance with native Doppler
     isce3::geometry::Topo topo(product, 'A', true);
 
