@@ -386,7 +386,9 @@ ProjectionBase* isce3::core::createProj(int epsgcode)
     }
     else
     {
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Unknown EPSG code in factory");
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                                          "Unknown EPSG code (in factory): " +
+                                                  std::to_string(epsgcode));
     }
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

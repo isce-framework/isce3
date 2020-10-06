@@ -4,14 +4,11 @@
     <threshold>0.05</threshold>
     <numIterations>25</numIterations>
     <extraIterations>10</extraIterations>
-    <orbitMethod>0</orbitMethod>
-    <!-- 0: sinc, 1: bilinear, 2: bicubic, 3: nearest, 4: biquintic -->
     <demMethod>4</demMethod>
     <epsgOut>4326</epsgOut>
   </Topo>
   <Geo2rdr>
     <threshold>1.0e-9</threshold>
     <numIterations>50</numIterations>
-    <orbitMethod>0</orbitMethod>
   </Geo2rdr>
 </cereal>
