@@ -29,8 +29,7 @@ focus/chirp.cpp
 focus/dry-troposphere-model.cpp
 focus/gaps.cpp
 focus/rangecomp.cpp
-geocode/geocodeSlc.cpp
-geocode/geocodeCov.cpp
+geocode/geocode.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
 geometry/geometry/geometry_constlat.cpp
