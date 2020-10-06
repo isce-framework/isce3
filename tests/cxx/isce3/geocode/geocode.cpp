@@ -21,7 +21,7 @@
 #include <isce3/product/Product.h>
 #include <isce3/product/Serialization.h>
 
-std::set<std::string> geocode_mode_set = {"interp", "areaProj"};
+std::set<std::string> geocode_mode_set = {"interp", "area_proj"};
 
 // Declaration for utility function to read metadata stream from V  RT
 std::stringstream streamFromVRT(const char* filename, int bandNum = 1);
@@ -77,7 +77,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     int epsgcode = 4326;
 
     // The DEM to be used for geocoding
-    isce3::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zero_height_dem_geo.bin");
 
     // input raster in radar coordinates to be geocoded
     isce3::io::Raster radarRasterX("x.rdr");
@@ -116,7 +116,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
             output_mode = isce3::geocode::geocodeOutputMode::AREA_PROJECTION;
 
         // geocoded raster
-        isce3::io::Raster geocodedRasterInterpX("x." + geocode_mode_str + ".geo",
+        isce3::io::Raster geocodedRasterInterpX("x_" + geocode_mode_str + "_geo.bin",
                                                geoGridWidth, geoGridLength, 1,
                                                GDT_Float64, "ENVI");
 
@@ -137,7 +137,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
         isce3::io::Raster radarRasterY("y.rdr");
 
         // create output raster for geocoded latitude
-        isce3::io::Raster geocodedRasterInterpY("y." + geocode_mode_str + ".geo",
+        isce3::io::Raster geocodedRasterInterpY("y_" + geocode_mode_str + "_geo.bin",
                                                geoGridWidth, geoGridLength, 1,
                                                GDT_Float64, "ENVI");
 
@@ -153,8 +153,8 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        isce3::io::Raster xRaster("x." + geocode_mode_str + ".geo");
-        isce3::io::Raster yRaster("y." + geocode_mode_str + ".geo");
+        isce3::io::Raster xRaster("x_" + geocode_mode_str + "_geo.bin");
+        isce3::io::Raster yRaster("y_" + geocode_mode_str + "_geo.bin");
         size_t length = xRaster.length();
         size_t width = xRaster.width();
 
@@ -294,11 +294,11 @@ TEST(GeocodeTest, TestGeocodeSlc)
             geoGridStartX, geoGridStartY, geoGridSpacingX, geoGridSpacingY,
             geoGridWidth, geoGridLength, epsgcode);
 
-    isce3::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zero_height_dem_geo.bin");
 
-    isce3::io::Raster inputSlc("xslc", GA_ReadOnly);
+    isce3::io::Raster inputSlc("xslc_rdr.bin", GA_ReadOnly);
 
-    isce3::io::Raster geocodedSlc("xslc.geo", geoGridWidth, geoGridLength, 1,
+    isce3::io::Raster geocodedSlc("xslc_geo.bin", geoGridWidth, geoGridLength, 1,
                                  GDT_CFloat32, "ENVI");
 
     bool flatten = false;
@@ -308,9 +308,9 @@ TEST(GeocodeTest, TestGeocodeSlc)
                               ellipsoid, thresholdGeo2rdr, numiterGeo2rdr,
                               linesPerBlock, demBlockMargin, flatten);
 
-    isce3::io::Raster inputSlcY("yslc", GA_ReadOnly);
+    isce3::io::Raster inputSlcY("yslc_rdr.bin", GA_ReadOnly);
 
-    isce3::io::Raster geocodedSlcY("yslc.geo", geoGridWidth, geoGridLength, 1,
+    isce3::io::Raster geocodedSlcY("yslc_geo.bin", geoGridWidth, geoGridLength, 1,
                                   GDT_CFloat32, "ENVI");
 
     isce3::geocode::geocodeSlc(geocodedSlcY, inputSlcY, demRaster, radarGrid,
@@ -334,9 +334,9 @@ TEST(GeocodeTest, CheckGeocodeSlcResults)
     // The geocoded latitude and longitude data should be
     // consistent with the geocoded pixel location.
 
-    isce3::io::Raster xRaster("xslc.geo");
+    isce3::io::Raster xRaster("xslc_geo.bin");
 
-    isce3::io::Raster yRaster("yslc.geo");
+    isce3::io::Raster yRaster("yslc_geo.bin");
 
     double* geoTrans = new double[6];
     xRaster.getGeoTransform(geoTrans);
@@ -412,7 +412,7 @@ void createZeroDem()
     demRaster.getGeoTransform(geoTrans);
 
     // create a new Raster same as the demRAster
-    isce3::io::Raster zeroDemRaster("zeroHeightDEM.geo", demRaster);
+    isce3::io::Raster zeroDemRaster("zero_height_dem_geo.bin", demRaster);
     zeroDemRaster.setGeoTransform(geoTrans);
     zeroDemRaster.setEPSG(demRaster.getEPSG());
 
@@ -445,7 +445,7 @@ void createTestData()
     }
 
     // Open DEM raster
-    isce3::io::Raster demRaster("zeroHeightDEM.geo");
+    isce3::io::Raster demRaster("zero_height_dem_geo.bin");
 
     // Run topo
     topo.topo(demRaster, ".");
@@ -475,12 +475,12 @@ void createTestData()
         yslc[ii] = cpxPhaseY;
     }
 
-    isce3::io::Raster slcRasterX("xslc", width, length, 1, GDT_CFloat32,
+    isce3::io::Raster slcRasterX("xslc_rdr.bin", width, length, 1, GDT_CFloat32,
                                 "ENVI");
 
     slcRasterX.setBlock(xslc, 0, 0, width, length);
 
-    isce3::io::Raster slcRasterY("yslc", width, length, 1, GDT_CFloat32,
+    isce3::io::Raster slcRasterY("yslc_rdr.bin", width, length, 1, GDT_CFloat32,
                                 "ENVI");
 
     slcRasterY.setBlock(yslc, 0, 0, width, length);
