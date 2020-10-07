@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <pybind_isce3/core/LookSide.h>
+
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LookSide.h>
@@ -23,15 +25,6 @@ using isce3::geometry::DEMInterpolator;
 using isce3::geometry::Topo;
 
 namespace py = pybind11;
-
-static LookSide duck_look_side(py::object pySide)
-{
-    if (py::isinstance<py::str>(pySide)) {
-        auto s = pySide.cast<std::string>();
-        return parseLookSide(s);
-    }
-    return pySide.cast<LookSide>();
-}
 
 static Rdr2GeoParams handle_r2g_kwargs(py::kwargs kw)
 {

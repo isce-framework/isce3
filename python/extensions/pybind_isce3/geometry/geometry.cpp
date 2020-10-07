@@ -32,6 +32,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyRdr2Geo);
     addbinding(pyInputRadiometry);
     addbinding(pyRtcAlgorithm);
+    addbinding_geo2rdr(geometry);
     addbinding_rdr2geo(geometry);
     addbinding_boundingbox(geometry);
 }
