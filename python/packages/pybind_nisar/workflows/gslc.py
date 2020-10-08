@@ -5,7 +5,7 @@ import osr
 
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import defaults, h5_prep, runconfig
+from pybind_nisar.workflows import h5_prep, runconfig
 
 
 def run(cfg):

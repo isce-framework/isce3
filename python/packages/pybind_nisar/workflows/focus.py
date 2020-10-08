@@ -6,7 +6,6 @@ import logging
 import os
 from pybind_nisar.products.readers.Raw import Raw
 from pybind_nisar.products.writers import SLC
-from pybind_nisar.workflows import defaults
 from pybind_nisar.types import to_complex32
 import numpy as np
 import pybind_isce3 as isce
@@ -47,7 +46,8 @@ def deep_update(d, u):
 def load_config(yaml):
     "Load default runconfig, override with user input, and convert to Struct"
     parser = YAML(typ='safe')
-    cfg = parser.load(defaults.focus.runconfig)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    cfg = parser.load(open(f'{dir_path}/defaults/focus.yaml', 'r'))
     with open(yaml) as f:
         user = parser.load(f)
     deep_update(cfg, user)

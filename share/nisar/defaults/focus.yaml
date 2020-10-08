@@ -1,6 +1,3 @@
-# goofy but portable
-
-runconfig = """
 # Structure inherited from L0 PGEs covers inputs, outputs, and identification.
 runconfig:
     groups:
@@ -234,4 +231,3 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
-"""

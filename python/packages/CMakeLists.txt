@@ -18,6 +18,19 @@ install(
     DIRECTORY pybind_nisar
     DESTINATION ${ISCE_PACKAGESDIR})
 
+##symlink defaults and schemas from install/share to pybind nisar workflows
+set(WORKFLOWS
+  defaults
+  schemas
+)
+foreach(WORKFLOW ${WORKFLOWS})
+    set(ORIG ${CMAKE_INSTALL_PREFIX}/${ISCE_SHAREDIR}/nisar/${WORKFLOW})
+    set(LINK ${CMAKE_INSTALL_PREFIX}/${ISCE_PACKAGESDIR}/pybind_nisar/workflows/${WORKFLOW})
+    INSTALL(CODE "execute_process( \
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${ORIG} ${LINK})" )
+endforeach()
+
+
 # XXX Make RSLC workflow script executable.
 install(
     PROGRAMS    pybind_nisar/workflows/focus.py

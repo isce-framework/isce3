@@ -6,7 +6,7 @@ import h5py
 import numpy as np
 
 import pybind_isce3 as isce3
-from pybind_nisar.workflows import defaults, gcov, h5_prep, runconfig
+from pybind_nisar.workflows import gcov, h5_prep, runconfig
 
 import iscetest
 
@@ -20,7 +20,7 @@ def test_run():
     '''
     # load yaml
     test_yaml = os.path.join(iscetest.data, 'geocode/test_gcov.yaml')
-    cfg = runconfig.load_yaml(test_yaml, defaults.gcov)
+    cfg = runconfig.load_yaml(test_yaml, f'{runconfig.dir()}/defaults/gcov.yaml')
 
     # set input
     input_h5 = os.path.join(iscetest.data, 'envisat.h5')

@@ -15,7 +15,7 @@ def test_run():
     '''
     # load yaml
     test_yaml = os.path.join(iscetest.data, 'geocodeslc/test_gslc.yaml')
-    cfg = runconfig.load_yaml(test_yaml, defaults.gslc)
+    cfg = runconfig.load_yaml(test_yaml, f'{runconfig.dir()}/defaults/gslc.yaml')
 
     # set input
     input_h5 = os.path.join(iscetest.data, 'envisat.h5')

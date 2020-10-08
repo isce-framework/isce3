@@ -1,6 +1,3 @@
-# goofy but portable
-
-runconfig = """
 runconfig:
     name: gcov_workflow_default
 
@@ -52,13 +49,15 @@ runconfig:
         processing:
             # Frequencies and polarisations to be processed
             input_subset:
-                # List of frequencies to process
+                # List of frequencies to process. Default empty representing all
                 list_of_frequencies:
-                    # valid values for polarizations
-                    # empty for all polarizations found in RSLC
+                    # keys for frequency A and B are required.
+                    # valid options for polarizations
+                    # 'all' for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    A:
-                    B:
+                    # empty for no polarizations
+                    A: [HH, HV]
+                    B: [HH, HV]
 
                 # OPTIONAL - If we want full covariance instead of diagonals only. Default False
                 fullcovariance:   False
@@ -115,17 +114,17 @@ runconfig:
                 # If no provided, values will match spacing in provided DEM
                 output_posting:
                     A:
-                        x_posting:
-                        y_posting:
+                        x_posting: 0.005
+                        y_posting: 0.005
                     B:
-                        x_posting:
-                        y_posting:
+                        x_posting: 0.005
+                        y_posting: 0.005
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                y_snap:
+                y_snap: 18000
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                x_snap:
+                x_snap: 18000
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:        
@@ -152,4 +151,3 @@ runconfig:
 
                 # OPTIONAL -
                 correction_type:
-"""

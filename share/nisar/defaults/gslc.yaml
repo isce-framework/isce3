@@ -1,6 +1,3 @@
-# goofy but portable
-
-runconfig = """
 runconfig:
     name: gslc_workflow_default
 
@@ -35,6 +32,7 @@ runconfig:
             DebugSwitch: false
 
         Geometry:
+            # unused by ADT?
             CycleNumber: 1
             RelativeOrbitNumber: 1
             FrameNumber: 1
@@ -55,8 +53,9 @@ runconfig:
                 list_of_frequencies:
                     # keys for frequency A and B are required.
                     # valid options for polarizations
-                    # empty for all polarizations found in RSLC
-                    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+                    #   'all' for processing all polarizations from RSLC
+                    #   [HH, VV, ...] list of polarizations to be processed
+                    #   empty for no polarizations to be processed
                     A:
                     B:
 
@@ -84,10 +83,10 @@ runconfig:
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
                 # OPTIONAL - To control output grid in same units as output EPSG
-                x_snap:
+                x_snap: 100
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                y_snap:
+                y_snap: 100
 
                 # OPTIONAL - Same as input DEM if not provided.
                 outputEPSG:
@@ -96,11 +95,11 @@ runconfig:
                 # If no provided, values will match spacing in provided DEM
                 output_posting:
                     A:
-                        x_posting:
-                        y_posting:
+                        x_posting:  200.0
+                        y_posting:  200.0
                     B:
-                        x_posting:
-                        y_posting:
+                        x_posting:  400.0
+                        y_posting:  200.0
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
@@ -124,4 +123,3 @@ runconfig:
             dem_margin: 0.1
 
             flatten: True
-"""

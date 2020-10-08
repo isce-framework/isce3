@@ -12,7 +12,7 @@ from ruamel.yaml import YAML
 import yamale
 
 import pybind_isce3 as isce
-from pybind_nisar.workflows import defaults, geogrid, schemas
+from pybind_nisar.workflows import geogrid
 
 
 def deep_update(original, update):
@@ -30,6 +30,13 @@ def deep_update(original, update):
     return original
 
 
+def dir():
+    """
+    convenience function that returns file directory
+    """
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 def load(workflow_name):
     '''
     load user provided yaml into run configuration dictionary
@@ -37,11 +44,11 @@ def load(workflow_name):
     # assign default config and yamale schema
     # assume defaults have already been yamale validated
     if workflow_name == 'GCOV':
-        default_cfg = defaults.gcov
-        schema = yamale.make_schema(content=schemas.gcov.schema, parser='ruamel')
+        default_cfg = f'{dir()}/defaults/gcov.yaml'
+        schema = yamale.make_schema(f'{dir()}/schemas/gcov.yaml', parser='ruamel')
     elif workflow_name == 'GSLC':
-        default_cfg = defaults.gslc
-        schema = yamale.make_schema(content=schemas.gslc.schema, parser='ruamel')
+        default_cfg = f'{dir()}/defaults/gslc.yaml'
+        schema = yamale.make_schema(f'{dir()}/schemas/gslc.yaml', parser='ruamel')
     else:
         # quit on unrecognized workflow_name
         raise ValueError(f'Unsupported geocode workflow: {workflow_name}')
@@ -78,7 +85,7 @@ def load_yaml(yaml, default):
     Leading namespaces can be stripped off down the line
     """
     parser = YAML(typ='safe')
-    cfg = parser.load(default.runconfig)
+    cfg = parser.load(open(default, 'r'))
     # remove top
     cfg = cfg['runconfig']['groups']
     with open(yaml) as f_yaml:
