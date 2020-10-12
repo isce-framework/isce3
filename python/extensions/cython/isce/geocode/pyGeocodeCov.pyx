@@ -133,6 +133,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
     def __cinit__(self,
                   pyOrbit orbit,
                   pyEllipsoid ellps,
+                  pyLUT2d doppler=None,
                   double threshold=1.0e-8,
                   int numiter=25,
                   int linesPerBlock=1000,
@@ -143,6 +144,8 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         # Save pointers to ISCE objects
         self.c_orbit = orbit.c_orbit
         self.c_ellipsoid = ellps.c_ellipsoid
+        if doppler is not None:
+            self.c_doppler = doppler.c_lut
 
         # Save geocoding properties
         self.threshold = threshold
@@ -156,6 +159,8 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         # Set properties
         self.c_geocode.orbit(self.c_orbit)
         self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        if doppler is not None:
+            self.c_geocode.doppler(deref(self.c_doppler))
         self.c_geocode.thresholdGeo2rdr(self.threshold)
         self.c_geocode.numiterGeo2rdr(self.numiter)
         self.c_geocode.linesPerBlock(self.linesPerBlock)
@@ -285,6 +290,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
     def __cinit__(self,
                   pyOrbit orbit,
                   pyEllipsoid ellps,
+                  pyLUT2d doppler=None,
                   double threshold=1.0e-8,
                   int numiter=25,
                   int linesPerBlock=1000,
@@ -295,6 +301,8 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         # Save pointers to ISCE objects
         self.c_orbit = orbit.c_orbit
         self.c_ellipsoid = ellps.c_ellipsoid
+        if doppler is not None:
+            self.c_doppler = doppler.c_lut
 
         # Save geocoding properties
         self.threshold = threshold
@@ -308,6 +316,8 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         # Set properties
         self.c_geocode.orbit(self.c_orbit)
         self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        if doppler is not None:
+            self.c_geocode.doppler(deref(self.c_doppler))
         self.c_geocode.thresholdGeo2rdr(self.threshold)
         self.c_geocode.numiterGeo2rdr(self.numiter)
         self.c_geocode.linesPerBlock(self.linesPerBlock)
@@ -438,6 +448,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
     def __cinit__(self,
                   pyOrbit orbit,
                   pyEllipsoid ellps,
+                  pyLUT2d doppler=None,
                   double threshold=1.0e-8,
                   int numiter=25,
                   int linesPerBlock=1000,
@@ -448,6 +459,8 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         # Save pointers to ISCE objects
         self.c_orbit = orbit.c_orbit
         self.c_ellipsoid = ellps.c_ellipsoid
+        if doppler is not None:
+            self.c_doppler = doppler.c_lut
 
         # Save geocoding properties
         self.threshold = threshold
@@ -461,6 +474,8 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         # Set properties
         self.c_geocode.orbit(self.c_orbit)
         self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        if doppler is not None:
+            self.c_geocode.doppler(deref(self.c_doppler))
         self.c_geocode.thresholdGeo2rdr(self.threshold)
         self.c_geocode.numiterGeo2rdr(self.numiter)
         self.c_geocode.linesPerBlock(self.linesPerBlock)
@@ -590,6 +605,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
     def __cinit__(self,
                   pyOrbit orbit,
                   pyEllipsoid ellps,
+                  pyLUT2d doppler=None,
                   double threshold=1.0e-8,
                   int numiter=25,
                   int linesPerBlock=1000,
@@ -600,6 +616,8 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
         # Save pointers to ISCE objects
         self.c_orbit = orbit.c_orbit
         self.c_ellipsoid = ellps.c_ellipsoid
+        if doppler is not None:
+            self.c_doppler = doppler.c_lut
 
         # Save geocoding properties
         self.threshold = threshold
@@ -613,6 +631,8 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
         # Set properties
         self.c_geocode.orbit(self.c_orbit)
         self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        if doppler is not None:
+            self.c_geocode.doppler(deref(self.c_doppler))
         self.c_geocode.thresholdGeo2rdr(self.threshold)
         self.c_geocode.numiterGeo2rdr(self.numiter)
         self.c_geocode.linesPerBlock(self.linesPerBlock)

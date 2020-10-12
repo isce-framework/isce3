@@ -48,6 +48,7 @@ cdef extern from "isce3/geocode/GeocodeCov.h" namespace "isce3::geocode":
         Geocode() except +
 
         # Set options
+        void doppler(LUT2d[double] & doppler)
         void orbit(Orbit & orbit)
         void ellipsoid(Ellipsoid & ellipsoid)
         void thresholdGeo2rdr(double threshold)
