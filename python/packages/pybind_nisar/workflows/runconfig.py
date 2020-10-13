@@ -6,6 +6,7 @@ import argparse
 import os
 
 import h5py
+import journal
 import numpy as np
 import osr
 from ruamel.yaml import YAML
@@ -41,6 +42,11 @@ def load(workflow_name):
     '''
     load user provided yaml into run configuration dictionary
     '''
+    error_channel = journal.error('runconfig.load')
+
+    # process args from terminal
+    args = process_args()
+
     # assign default config and yamale schema
     # assume defaults have already been yamale validated
     if workflow_name == 'GCOV':
@@ -51,16 +57,16 @@ def load(workflow_name):
         schema = yamale.make_schema(f'{dir()}/schemas/gslc.yaml', parser='ruamel')
     else:
         # quit on unrecognized workflow_name
-        raise ValueError(f'Unsupported geocode workflow: {workflow_name}')
-
-    # process args from terminal
-    args = process_args()
+        err_str = f'Unsupported geocode workflow: {workflow_name}'
+        error_channel.log(err_srt)
+        raise ValueError(err_str)
 
     # validate yaml from terminal
     try:
         data = yamale.make_data(args.run_config_path, parser='ruamel')
     except yamale.YamaleError as e:
-        raise yamale.YamaleError(f'Yamale unable to load {workflow_name} runconfig yaml {args.run_config_path} for validation.') from e
+        err_str = f'Yamale unable to load {workflow_name} runconfig yaml {args.run_config_path} for validation.'
+        raise yamale.YamaleError(err_str) from e
     try:
         yamale.validate(schema, data)
     except yamale.YamaleError as e:
@@ -111,6 +117,8 @@ def prep_gcov(cfg):
     Check gcov specific config parameters
     and replace all enum strings with isce3 enum values.
     '''
+    error_channel = journal.error('runconfig.prep_gcov')
+
     geocode_dict = cfg['processing']['geocode']
 
     if geocode_dict['abs_rad_cal'] is None:
@@ -132,7 +140,9 @@ def prep_gcov(cfg):
     elif geocode_dict['algorithm_type'] == 'area_projection_gamma_naught':
         geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
     else:
-        raise ValueError(f'Unsupported geocode algorithm: {geocode_dict["algorithm_type"]}')
+        err_str = f'Unsupported geocode algorithm: {geocode_dict["algorithm_type"]}'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
 
     rtc_dict = cfg['processing']['rtc']
 
@@ -192,18 +202,30 @@ def prep_paths(cfg):
     '''
     make sure input paths is valid
     '''
+    error_channel = journal.info('runconfig.check_common')
+
     # check input file value
     input_path = cfg['InputFileGroup']['InputFilePath']
     if isinstance(input_path, list):
-        if len(input_path) != 1:
-            raise ValueError('More than one input file provided in YAML; only one input file is supported')
+        n_inputs = len(input_path)
+        if n_inputs != 1:
+            if n_inputs > 1:
+                err_str = 'More than one input file provided in YAML; only one input file is supported.'
+            if n_inputs == 0:
+                err_str = 'No input provided; One input file is required.'
+            error_channel.log(err_str)
+            raise ValueError(err_str)
         input_path = input_path[0]
 
     if type(input_path) != str:
-        raise ValueError('String type not provided for path to YAML.')
+        err_str = 'String type not provided for path to YAML.'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
 
     if not os.path.isfile(input_path):
-        raise FileNotFoundError(f"{input_path} input not found.")
+        err_str = f"{input_path} input not found."
+        error_channel.log(err_str)
+        raise FileNotFoundError(err_str)
 
     cfg['InputFileGroup']['InputFilePath'] = input_path
 
@@ -253,6 +275,7 @@ def prep_frequency_and_polarizations(cfg):
     '''
     check frequency and polarizations and fix as needed
     '''
+    error_channel = journal.error('runconfig.prep_frequency_and_polarizations')
     input_path = cfg['InputFileGroup']['InputFilePath']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
@@ -267,21 +290,30 @@ def prep_frequency_and_polarizations(cfg):
             # check if user provided polarizations match RSLC ones
             for usr_pol in freq_pols[freq]:
                 if usr_pol not in rslc_pols:
-                    raise ValueError(f"{usr_pol} invalid; not found in source polarization")
-
+                    err_str = f"{usr_pol} invalid; not found in source polarization"
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
 
 
 def process_args():
     '''
     process args from terminal
     '''
+    error_channel = journal.error('runconfig.process_args')
+
     parser = argparse.ArgumentParser(description='', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('run_config_path', type=str, help='Path to run config file')
 
     args = parser.parse_args()
 
+    # make a journal device that is attached to a file
+    journal.debug.journal.device = "journal.file"
+    journal.debug.journal.device.log = args.run_config_path + ".log"
+
     if not os.path.isfile(args.run_config_path):
-        raise FileNotFoundError(f"{args.run_config_path} not valid")
+        err_str = f"{args.run_config_path} not valid"
+        error_channel.log(err_str)
+        raise FileNotFoundError(err_str)
 
     return args

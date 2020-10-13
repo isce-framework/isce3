@@ -8,14 +8,18 @@ import h5py
 import numpy as np
 from osgeo import osr
 
+import journal
 from pybind_nisar.h5 import cp_h5_meta_data
 from pybind_nisar.products.readers import SLC
 import pybind_isce3 as isce3
 
 
 def run(cfg, dst):
+    info_channel = journal.info("h5_prep.run")
+    info_channel.log('preparing HDF5')
     cp_geocode_meta(cfg, dst)
     prep_ds(cfg, dst)
+    info_channel.log('successfully prepared HDF5')
 
 
 def cp_geocode_meta(cfg, dst):

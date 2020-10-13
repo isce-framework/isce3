@@ -4,9 +4,11 @@ collection of functions for NISAR GCOV workflow
 
 import os
 import tempfile
+import time
 
 import gdal
 import h5py
+import journal
 import numpy as np
 
 import pybind_isce3 as isce
@@ -68,8 +70,14 @@ def run(cfg):
     exponent = 2
     output_dtype = gdal.GDT_Float32
 
+    info_channel = journal.info("gcov.run")
+    error_channel = journal.error("gcov.run")
+    info_channel.log("starting geocode COV")
+
     # XXX only do diagonal elements as spec'd?
+    t_all = time.time()
     for frequency in freq_pols.keys():
+        t_freq = time.time()
 
         # unpack frequency dependent parameters
         radar_grid = slc.getRadarGrid(frequency)
@@ -103,7 +111,9 @@ def run(cfg):
         elif input_raster_obj.datatype() == gdal.GDT_CFloat64:
             geo = isce.geocode.GeocodeCFloat64()
         else:
-            raise NotImplementedError('Unsupported raster type for geocoding')
+            err_str = 'Unsupported raster type for geocoding'
+            error_channel.log(err_str)
+            raise NotImplementedError(err_str)
 
         # inti geocode members
         geo.orbit = slc.getOrbit()
@@ -177,6 +187,11 @@ def run(cfg):
                                fill_value=np.nan,
                                valid_min=0,
                                valid_max=2)
+        t_freq_elapsed = time.time() - t_freq
+        info_channel.log(f'frequency {frequency} ran in {t_freq_elapsed:.3f} seconds')
+
+    t_all_elapsed = time.time() - t_all
+    info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f} seconds")
 
 
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,

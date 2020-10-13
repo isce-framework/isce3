@@ -1,6 +1,8 @@
 import os
+import time
 
 import h5py
+import journal
 import osr
 
 import pybind_isce3 as isce3
@@ -25,7 +27,7 @@ def run(cfg):
     flatten = cfg['processing']['flatten']
     ellipsoid = cfg['processing']['geocode']['ellipsoid']
 
-    # init geocodeSLC params
+    # init parameters shared by frequency A and B
     slc = SLC(hdf5file=input_hdf5)
     orbit = slc.getOrbit()
     dem_raster = isce3.io.Raster(dem_file)
@@ -33,6 +35,10 @@ def run(cfg):
     # Doppler of the image grid (Zero for NISAR)
     image_grid_doppler = isce3.core.LUT2d()
 
+    info_channel = journal.info("gslc.run")
+    info_channel.log("starting geocode SLC")
+
+    t_all = time.time()
     with h5py.File(output_hdf5, 'a') as dst_h5:
         for freq in freq_pols.keys():
             frequency = f"frequency{freq}"
@@ -40,9 +46,11 @@ def run(cfg):
             radar_grid = slc.getRadarGrid(freq)
             geo_grid = geogrids[freq]
 
+            # get doppler centroid
+            native_doppler = slc.getDopplerCentroid(frequency=freq)
+
             for polarization in pol_list:
-                # get doppler centroid
-                native_doppler = slc.getDopplerCentroid(frequency=freq)
+                t_pol = time.time()
 
                 output_dir = os.path.dirname(os.path.abspath(output_hdf5))
                 os.makedirs(output_dir, exist_ok=True)
@@ -70,6 +78,11 @@ def run(cfg):
                 # the rasters need to be deleted
                 del gslc_raster
                 del slc_raster
+                t_pol_elapsed = time.time() - t_pol
+                info_channel.log(f'polarization {polarization} ran in {t_pol_elapsed:.3f} seconds')
+
+    t_all_elapsed = time.time() - t_all
+    info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")
 
 
 if __name__ == "__main__":
