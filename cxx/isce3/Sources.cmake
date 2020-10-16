@@ -72,11 +72,15 @@ product/Product.cpp
 product/RadarGridParameters.cpp
 signal/Covariance.cpp
 signal/Crossmul.cpp
+signal/filter2D.cpp
 signal/Filter.cpp
 signal/Looks.cpp
 signal/NFFT.cpp
 signal/shiftSignal.cpp
 signal/Signal.cpp
+signal/filterKernel.cpp
+signal/decimate.cpp
+signal/convolve.cpp
 unwrap/icu/Grass.cpp
 unwrap/icu/Neutron.cpp
 unwrap/icu/PhaseGrad.cpp

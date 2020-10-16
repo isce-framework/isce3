@@ -8,4 +8,5 @@ namespace isce3 { namespace signal {
     template<class> class Looks;
     template<class> class NFFT;
     template<class> class Signal;
+    template<class> class FilterData;
 }}

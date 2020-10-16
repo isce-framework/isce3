@@ -59,9 +59,12 @@ math/sinc.cpp
 product/serialization/serializeProduct.cpp
 product/serialization/serializeProductMetadata.cpp
 product/radargrid/radargrid.cpp
+signal/convolve.cpp
 signal/covariance.cpp
 signal/crossmul.cpp
+signal/decimate.cpp
 signal/filter.cpp
+signal/filter_data.cpp
 signal/multilook.cpp
 signal/nfft.cpp
 signal/shift_signal.cpp

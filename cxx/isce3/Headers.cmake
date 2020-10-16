@@ -139,6 +139,7 @@ signal/Covariance.icc
 signal/Crossmul.h
 signal/Crossmul.icc
 signal/fftw3cxx.h
+signal/filter2D.h
 signal/Filter.h
 signal/forward.h
 signal/Looks.h
@@ -148,6 +149,9 @@ signal/NFFT.h
 signal/shiftSignal.h
 signal/Signal.h
 signal/Signal.icc
+signal/filterKernel.h
+signal/decimate.h
+signal/convolve.h
 unwrap/icu/ICU.h
 unwrap/icu/ICU.icc
 unwrap/icu/LabelMap.h
