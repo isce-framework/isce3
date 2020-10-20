@@ -32,7 +32,7 @@ def test_run():
     cfg['ProductPathGroup']['ScratchPath'] = '.'
 
     # check and validate semi-valid runconfig. input/output adjusted in loop
-    runconfig.prep_paths(cfg)
+    runconfig.prep_paths(cfg, 'GCOV')
     runconfig.prep_frequency_and_polarizations(cfg)
     runconfig.prep_geocode_cfg(cfg)
     runconfig.prep_gcov(cfg)

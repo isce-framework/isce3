@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import shutil
 
 import h5py
 import numpy as np
@@ -26,7 +25,7 @@ def test_run():
     cfg['DynamicAncillaryFileGroup']['DEMFile'] = dem_path
 
     # check and validate semi-valid runconfig. input/output adjusted in loop
-    runconfig.prep_paths(cfg)
+    runconfig.prep_paths(cfg, 'GSLC')
     runconfig.prep_frequency_and_polarizations(cfg)
     runconfig.prep_geocode_cfg(cfg)
 

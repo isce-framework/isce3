@@ -55,6 +55,9 @@ def load(workflow_name):
     elif workflow_name == 'GSLC':
         default_cfg = f'{dir()}/defaults/gslc.yaml'
         schema = yamale.make_schema(f'{dir()}/schemas/gslc.yaml', parser='ruamel')
+    elif workflow_name == 'INSAR':
+        default_cfg = f'{dir()}/defaults/insar.yaml'
+        schema = yamale.make_schema(f'{dir()}/schemas/insar.yaml', parser='ruamel')
     else:
         # quit on unrecognized workflow_name
         err_str = f'Unsupported geocode workflow: {workflow_name}'
@@ -75,7 +78,7 @@ def load(workflow_name):
     # overwrite default with user provided values
     cfg = load_yaml(args.run_config_path, default_cfg)
 
-    prep_paths(cfg)
+    prep_paths(cfg, workflow_name)
     prep_frequency_and_polarizations(cfg)
     prep_geocode_cfg(cfg)
 
@@ -198,7 +201,7 @@ def _get_epsg_ellipsoid(epsg):
     return ellipsoid
 
 
-def prep_paths(cfg):
+def prep_paths(cfg, workflow_name):
     '''
     make sure input paths is valid
     '''
@@ -206,16 +209,34 @@ def prep_paths(cfg):
 
     # check input file value
     input_path = cfg['InputFileGroup']['InputFilePath']
+
     if isinstance(input_path, list):
         n_inputs = len(input_path)
-        if n_inputs != 1:
-            if n_inputs > 1:
-                err_str = 'More than one input file provided in YAML; only one input file is supported.'
-            if n_inputs == 0:
-                err_str = 'No input provided; One input file is required.'
+        if workflow_name in ['GCOV', 'GSLC']:
+            if n_inputs != 1:
+                err_str = f'{n_inputs} inputs provided. Only one input file is required.'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+        elif workflow_name == 'INSAR':
+            if n_inputs == 2:
+                secondary_path = input_path[1]
+                if not os.path.isfile(secondary_path):
+                    raise ValueError(f'Secondary RSLC not found {secondary_path} ')
+                cfg['InputFileGroup']['SecondaryFilePath'] = secondary_path
+            else:
+                err_str = f"{n_inputs} provided. 2 input files are required."
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+        else:
+            err_str = f'{workflow_name} unsupported'
             error_channel.log(err_str)
             raise ValueError(err_str)
+
         input_path = input_path[0]
+        if not os.path.isfile(input_path):
+            err_str = f'Reference SLC not found {input_path}'
+            error_channel.log(err_str)
+            raise ValueError(err_str)
 
     if type(input_path) != str:
         err_str = 'String type not provided for path to YAML.'
