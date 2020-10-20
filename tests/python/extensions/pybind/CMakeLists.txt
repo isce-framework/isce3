@@ -30,6 +30,7 @@ signal/covariance.py
 signal/crossmul.py
 product/radargridparameters.py
 product/swath.py
+unwrap/icu.py
 )
 
 if(WITH_CUDA)

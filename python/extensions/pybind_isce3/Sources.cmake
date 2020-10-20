@@ -49,6 +49,8 @@ product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
 product/Swath.cpp
+unwrap/unwrap.cpp
+unwrap/ICU.cpp
 isce.cpp
 )
 
