@@ -297,10 +297,10 @@ def addImagery(h5file, ldr, imgfile, pol):
         tstart = datetime.datetime(firstrec.SensorAcquisitionYear, 1, 1) +\
                  datetime.timedelta(days=int(firstrec.SensorAcquisitionDayOfYear-1))
         txgrp = fid.create_group(txgrpstr)
-        time = txgrp.create_dataset('UTCTime', dtype='f', shape=(nLines,))
+        time = txgrp.create_dataset('UTCtime', dtype='f8', shape=(nLines,))
         time.attrs['units'] = "seconds since {0} 00:00:00".format(tstart.strftime('%Y-%m-%d'))
         txgrp.create_dataset('numberOfSubSwaths', data=1)
-        txgrp.create_dataset('radarTime', dtype='f', shape=(nLines,))
+        txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
         txgrp.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(nLines,2))
     else:
@@ -340,7 +340,7 @@ def addImagery(h5file, ldr, imgfile, pol):
             print('Parsing Line number: {0} out of {1}'.format(linnum, nLines))
 
         if firstInPol:
-            txgrp['UTCTime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
+            txgrp['UTCtime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
             txgrp['rangeLineIndex'][linnum-1] = rec.SARImageDataLineNumber
             txgrp['radarTime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
 
@@ -375,7 +375,7 @@ def addImagery(h5file, ldr, imgfile, pol):
 
     if firstInPol:
         #Adjust time records - ALOS provides this only to nearest millisec - not good enough
-        tinp = txgrp['UTCTime'][:]
+        tinp = txgrp['UTCtime'][:]
         prf = freqA['nominalAcquisitionPRF'][()]
         tarr = (tinp - tinp[0]) * 1000
         ref = numpy.arange(tinp.size) / prf
@@ -392,7 +392,7 @@ def addImagery(h5file, ldr, imgfile, pol):
 
         delta = (numpy.argmin(numpy.abs(res)) - 50)*2.0e-5
         print('Start time correction in usec: ', delta*1e6)
-        txgrp['UTCTime'][:] = ref + tinp[0] + delta
+        txgrp['UTCtime'][:] = ref + tinp[0] + delta
 
 
 def computeBoundingPolygon(h5file: str, h: float = 0.0):
