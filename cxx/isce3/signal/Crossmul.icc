@@ -181,7 +181,7 @@ azimuthLooks(int azimuthLooks)
     }
 
     _azimuthLooks = azimuthLooks ;
-    if (_azimuthLooks > 1 or _azimuthLooks > 1) {
+    if (_rangeLooks > 1 or _azimuthLooks > 1) {
         _doMultiLook = true;
     } else {
         _doMultiLook = false;
