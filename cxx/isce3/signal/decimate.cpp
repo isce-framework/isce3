@@ -77,7 +77,7 @@ void isce3::signal::decimate(std::valarray<T>& out, const std::valarray<T>& in,
             size_t rows_decimation, size_t cols_decimation,                    \
             size_t rows_offset, size_t cols_offset);
 
-SPECIALIZE_DECIMATE(float);
-SPECIALIZE_DECIMATE(double);
-SPECIALIZE_DECIMATE(std::complex<float>);
-SPECIALIZE_DECIMATE(std::complex<double>);
+SPECIALIZE_DECIMATE(float)
+SPECIALIZE_DECIMATE(double)
+SPECIALIZE_DECIMATE(std::complex<float>)
+SPECIALIZE_DECIMATE(std::complex<double>)

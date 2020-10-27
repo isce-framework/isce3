@@ -451,7 +451,7 @@ void isce3::signal::convolve2D(
             const isce3::core::EArray2D<double>& kernelColumns,                \
             const isce3::core::EArray2D<double>& kernelRows);
 
-SPECIALIZE_CONVOLVE(double);
-SPECIALIZE_CONVOLVE(std::complex<double>);
-SPECIALIZE_CONVOLVE(float);
-SPECIALIZE_CONVOLVE(std::complex<float>);
+SPECIALIZE_CONVOLVE(double)
+SPECIALIZE_CONVOLVE(std::complex<double>)
+SPECIALIZE_CONVOLVE(float)
+SPECIALIZE_CONVOLVE(std::complex<float>)
