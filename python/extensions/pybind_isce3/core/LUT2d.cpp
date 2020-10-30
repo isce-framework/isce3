@@ -133,8 +133,9 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
         .def_property_readonly("width",     &LUT2d<T>::width)
         .def_property_readonly("interp_method",
             py::overload_cast<>(&LUT2d<T>::interpMethod, py::const_))
-        .def_property_readonly("bounds_error",
-            py::overload_cast<>(&LUT2d<T>::boundsError, py::const_))
+        .def_property("bounds_error",
+            py::overload_cast<>(&LUT2d<T>::boundsError, py::const_),
+            py::overload_cast<bool>(&LUT2d<T>::boundsError))
         .def_property_readonly("data", [](const LUT2d<T>& self) {
             return self.data().map();
         })

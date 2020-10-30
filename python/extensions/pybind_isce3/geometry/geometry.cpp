@@ -25,6 +25,10 @@ void addsubmodule_geometry(py::module & m)
         pyInputRadiometry(geometry, "RtcInputRadiometry");
     py::enum_<isce3::geometry::rtcAlgorithm>
         pyRtcAlgorithm(geometry, "RtcAlgorithm");
+    py::enum_<isce3::geometry::rtcMemoryMode>
+        pyRtcMemoryMode(geometry, "RtcMemoryMode");
+    py::enum_<isce3::geometry::rtcAreaMode>
+        pyRtcAreaMode(geometry, "RtcAreaMode");
 
     // add bindings
     addbinding(pyDEMInterpolator);
@@ -32,6 +36,12 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyRdr2Geo);
     addbinding(pyInputRadiometry);
     addbinding(pyRtcAlgorithm);
+    addbinding(pyRtcMemoryMode);
+    addbinding(pyRtcAreaMode);
+
+    addbinding_apply_rtc(geometry);
+    addbinding_facet_rtc(geometry);
+    addbinding_facet_rtc_bbox(geometry);
     addbinding_geo2rdr(geometry);
     addbinding_rdr2geo(geometry);
     addbinding_boundingbox(geometry);

@@ -95,6 +95,8 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
         .def_property("length",
                 py::overload_cast<>(&RadarGridParameters::length, py::const_),
                 py::overload_cast<const size_t&>(&RadarGridParameters::length))
+        .def("offset_and_resize", &RadarGridParameters::offsetAndResize,
+                py::arg("yoff"), py::arg("xoff"), py::arg("ysize"), py::arg("xsize"))
         .def("multilook", &RadarGridParameters::multilook,
                 py::arg("azlooks"), py::arg("rglooks"))
         .def("slant_range", &RadarGridParameters::slantRange,

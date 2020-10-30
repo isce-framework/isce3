@@ -43,7 +43,6 @@ def run(cfg):
     rtc_algorithm = rtc_dict['algorithm_type']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
-    input_radiometry = rtc_dict['input_terrain_radiometry']
     apply_rtc = output_mode == isce.geocode.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
 
     # unpack geo2rdr parameters
@@ -143,7 +142,7 @@ def run(cfg):
                     dem_raster=dem_raster,
                     output_mode=output_mode,
                     geogrid_upsampling=geogrid_upsampling,
-                    input_radiometry=input_radiometry,
+                    input_radiometry=input_terrain_radiometry,
                     exponent=exponent,
                     rtc_min_val_db=rtc_min_value_db,
                     rtc_algorithm=rtc_algorithm,

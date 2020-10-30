@@ -22,6 +22,7 @@ geometry/bbox.py
 geometry/dem.py
 geometry/geo2rdr.py
 geometry/rdr2geo.py
+geometry/rtc.py
 image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py

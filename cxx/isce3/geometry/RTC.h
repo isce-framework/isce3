@@ -114,7 +114,9 @@ void facetRTC(
 
 /** Generate radiometric terrain correction (RTC) area or area factor
  *
- * @param[in]  product             Product
+ * @param[in]  radarGrid           Radar Grid
+ * @param[in]  orbit               Orbit
+ * @param[in]  input_dop           Doppler LUT
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
  * @param[in]  frequency           Product frequency
@@ -251,10 +253,8 @@ void facetRTCDavidSmall(
  * @param[in]  radarGrid           Radar Grid
  * @param[in]  orbit               Orbit
  * @param[in]  input_dop           Doppler LUT
- *
  * @param[in]  y0                  Starting easting position
  * @param[in]  dy
- * @param[in]  input_dop           Doppler LUT
  * @param[in]  y0                  Starting northing position
  * @param[in]  dy                  Northing step size
  * @param[in]  x0                  Starting easting position

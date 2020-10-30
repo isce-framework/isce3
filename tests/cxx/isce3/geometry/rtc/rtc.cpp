@@ -135,13 +135,13 @@ TEST(TestRTC, CheckResults) {
                         testRaster.length() == refRaster.length());
 
             double square_sum = 0; // sum of square difference
-            int nnan = 0;          // number of NaN pixels
-            int nneg = 0;          // number of negative pixels
+            int n_nan = 0;         // number of NaN pixels
+            int n_npos = 0;        // number of non-positive pixels
 
             // Valarray to hold line of data
             std::valarray<double> test(testRaster.width()),
                     ref(refRaster.width());
-            int nvalid = 0;
+            int n_valid = 0;
             for (size_t i = 0; i < refRaster.length(); i++) {
                 // Get line of data
                 testRaster.getLine(test, i, 1);
@@ -149,30 +149,39 @@ TEST(TestRTC, CheckResults) {
                 // Check each value in the line
                 for (size_t j = 0; j < refRaster.width(); j++) {
                     if (std::isnan(test[j]) or std::isnan(ref[j])) {
-                        nnan++;
+                        n_nan++;
                         continue;
                     }
                     if (ref[j] <= 0 or test[j] <= 0) {
-                        nneg++;
+                        n_npos++;
                         continue;
                     }
-                    nvalid++;
+                    n_valid++;
                     square_sum += pow(test[j] - ref[j], 2);
                 }
             }
+            printf("    ----------------\n");
+            printf("    # total: %d\n", n_valid + n_nan + n_npos);
+            printf("    ----------------\n");
+            printf("    # valid: %d\n", n_valid);
+            printf("    # NaNs: %d\n", n_nan);
+            printf("    # non-positive: %d\n", n_npos);
+            printf("    ----------------\n");
+
+            ASSERT_GT(n_valid, 0);
+
             // Compute average over entire image
-            double rmse = std::sqrt(square_sum / nvalid);
+            double rmse = std::sqrt(square_sum / n_valid);
 
             printf("    RMSE = %g\n", rmse);
-            printf("    nnan = %d\n", nnan);
-            printf("    nneg = %d\n", nneg);
-
+            printf("    ----------------\n");
+            
             // Enforce bound on average pixel-error
             ASSERT_LT(rmse, max_rmse);
 
             // Enforce bound on number of ignored pixels
-            ASSERT_LT(nnan, 1e-4 * refRaster.width() * refRaster.length());
-            ASSERT_LT(nneg, 1e-4 * refRaster.width() * refRaster.length());
+            ASSERT_LT(n_nan, 1e-4 * refRaster.width() * refRaster.length());
+            ASSERT_LT(n_npos, 1e-4 * refRaster.width() * refRaster.length());
         }
     }
 }
