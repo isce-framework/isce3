@@ -5,8 +5,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <isce3/except/Error.h>
-
 namespace isce3 { namespace core {
 
 int Geocent::forward(const Vec3& llh, Vec3& xyz) const

@@ -13,6 +13,7 @@
 #include "LUT1d.h"
 #include "LUT2d.h"
 #include "Orbit.h"
+#include "Projections.h"
 #include "Quaternion.h"
 #include "StateVector.h"
 #include "TimeDelta.h"
@@ -61,6 +62,13 @@ void addsubmodule_core(py::module & m)
     py::class_<ChebyKernel<float>, Kernel<float>>
         pyChebyKernelF32(m_core, "ChebyKernelF32");
 
+    py::class_<ProjectionBase, PyProjectionBase> pyProjectionBase(m_core, "ProjectionBase");
+    py::class_<LonLat> pyLonLat(m_core, "LonLat", pyProjectionBase);
+    py::class_<Geocent> pyGeocent(m_core, "Geocent", pyProjectionBase);
+    py::class_<UTM> pyUTM(m_core, "UTM", pyProjectionBase);
+    py::class_<PolarStereo> pyPolarStereo(m_core, "PolarStereo", pyProjectionBase);
+    py::class_<CEA> pyCEA(m_core, "CEA", pyProjectionBase);
+
     // forward declare bound enums
     py::enum_<isce3::core::LookSide> pyLookSide(m_core, "LookSide");
 
@@ -93,5 +101,13 @@ void addsubmodule_core(py::module & m)
     addbinding(pyTabulatedKernelF32);
     addbinding(pyChebyKernelF32);
 
+    addbinding(pyProjectionBase);
+    addbinding(pyLonLat);
+    addbinding(pyGeocent);
+    addbinding(pyUTM);
+    addbinding(pyPolarStereo);
+    addbinding(pyCEA);
+
     addbinding_interp1d(m_core);
+    addbinding_makeprojection(m_core);
 }

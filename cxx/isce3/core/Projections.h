@@ -7,6 +7,8 @@
 #include "Ellipsoid.h"
 #include "Vector.h"
 
+#include <isce3/except/Error.h>
+
 namespace isce3 { namespace core {
 
 /**
@@ -56,6 +58,24 @@ public:
     virtual int forward(const Vec3& llh, Vec3& xyz) const = 0;
 
     /**
+     * Function for transforming from LLH. This is similar to fwd or
+     * fwd3d in PROJ.4
+     *
+     * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
+     * @returns Coordinates in specified projection system
+     */
+    Vec3 forward(const Vec3& llh) const
+    {
+        Vec3 xyz;
+        const int ret = forward(llh, xyz);
+        if (ret != 0) {
+            throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "Forward projection transformation failed");
+        }
+        return xyz;
+    }
+
+    /**
      * Function for transforming to LLH. This is similar to inv or inv3d in
      * PROJ.4
      *
@@ -69,12 +89,16 @@ public:
      * PROJ.4
      *
      * @param[in] xyz Coordinates in specified projection system
-     * @return Lat/Lon/Height - Lon and Lat are in radians
+     * @returns Lat/Lon/Height - Lon and Lat are in radians
      */
     Vec3 inverse(const Vec3& xyz) const
     {
         Vec3 llh;
-        inverse(xyz, llh);
+        const int ret = inverse(xyz, llh);
+        if (ret != 0) {
+            throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                    "Inverse projection transformation failed");
+        }
         return llh;
     }
 
