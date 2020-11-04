@@ -33,7 +33,7 @@ class isce3::core::LUT2d {
 
         // Deep copy constructor
         inline LUT2d(const LUT2d<T> & lut);
-        
+
         // Deep assignment operator
         inline LUT2d & operator=(const LUT2d<T> & lut);
 
@@ -71,17 +71,22 @@ class isce3::core::LUT2d {
 
         // Set bounds error floag
         inline void boundsError(bool flag) { _boundsError = flag; }
-              
-        // Evaluate LUT    
+
+        // Evaluate LUT
         T eval(double y, double x) const;
 
         /** Check if point resides in domain of LUT */
         inline bool contains(double y, double x) const
         {
-            const auto i = (y - _ystart) / _dy;
-            const auto j = (x - _xstart) / _dx;
-            return (i >= 0.0) && (i < _data.length()) &&
-                   (j >= 0.0) && (j < _data.width());
+            // Treat default-constructed LUT as having infinite extent.
+            if (not _haveData) {
+                return true;
+            }
+
+            const auto i = (x - xStart()) / xSpacing();
+            const auto j = (y - yStart()) / ySpacing();
+            return (i >= 0.0 and i <= width() - 1.0) and
+                   (j >= 0.0 and j <= length() - 1.0);
         }
 
     private:
@@ -130,7 +135,7 @@ class isce3::core::LUT2d {
             }
             return equal;
         }
-        
+
         // Comparison operator for complex
         template <typename U = T, std::enable_if_t<std::is_compound<U>::value, int> = 0>
         inline bool operator==(const isce3::core::LUT2d<T> & other) const {

@@ -84,6 +84,20 @@ public:
     /** Evaluate the LUT from host (test function) */
     T eval_h(double y, double x);
 
+    /** Check if point resides in domain of LUT */
+    CUDA_HOSTDEV bool contains(double y, double x) const
+    {
+        // Treat default-constructed LUT as having infinite extent.
+        if (not _haveData) {
+            return true;
+        }
+
+        const auto i = (x - xStart()) / xSpacing();
+        const auto j = (y - yStart()) / ySpacing();
+        return (i >= 0.0 and i <= width() - 1.0) and
+               (j >= 0.0 and j <= length() - 1.0);
+    }
+
 private:
     // Flags
     bool _haveData;
