@@ -106,12 +106,6 @@ macro(getpackage_hdf5)
     install(TARGETS hdf5 EXPORT isce3-targets)
 endmacro()
 
-# TODO This can be removed in favor of adding "NumPy" to the list of required
-# components in find_package(Python) if/when we upgrade to CMake >= 3.14
-macro(getpackage_numpy)
-    find_package(Numpy REQUIRED)
-endmacro()
-
 macro(getpackage_openmp_optional)
     # Check for OpenMP (optional dependency).
     # If not found, default to an empty placeholder target.
@@ -141,5 +135,5 @@ macro(getpackage_pyre)
 endmacro()
 
 macro(getpackage_python)
-    find_package(Python 3.6 COMPONENTS Interpreter Development)
+    find_package(Python 3.6 REQUIRED COMPONENTS Interpreter Development NumPy)
 endmacro()
