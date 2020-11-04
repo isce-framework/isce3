@@ -44,9 +44,6 @@ install(TARGETS isceextension
         COMPONENT extensions
         )
 
-install(DIRECTORY isce DESTINATION ${ISCE_PACKAGESDIR}/isce3/include/${PKGNAME}
-    FILES_MATCHING PATTERN "*.pxd" PATTERN "*.h")
-
 # Install cuda cython extensions if cuda available
 if (WITH_CUDA)
     add_subdirectory(cuda)

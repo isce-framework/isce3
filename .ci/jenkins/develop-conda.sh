@@ -19,7 +19,7 @@ CONTAINER="isce-build-$BUILD_TAG"
 SRCDIR=/isce-src # source directory
 BLDDIR=/isce-bld # build directory
 PREFIX=/opt/isce # install directory
-DOCDIR=/isce-docs
+DOCDIR=$BLDDIR/docs-output
 
 DOCKER_BUILD_ARGS="\
     --network=host \
@@ -122,10 +122,7 @@ git reset &> /dev/null
 mkdir -p $ghprbPullId
 cd $ghprbPullId
 
-docker cp $CONTAINER:$BLDDIR/doc/. .
-docker cp $CONTAINER:$SPHX_DIR .
-mv html/* .
-
+docker cp $CONTAINER:$DOCDIR/. .
 git add .
 
 git config --local user.name  "gmanipon"

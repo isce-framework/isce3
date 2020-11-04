@@ -24,10 +24,8 @@ set(WORKFLOWS
   schemas
 )
 foreach(WORKFLOW ${WORKFLOWS})
-    set(ORIG ${CMAKE_INSTALL_PREFIX}/${ISCE_SHAREDIR}/nisar/${WORKFLOW})
-    set(LINK ${CMAKE_INSTALL_PREFIX}/${ISCE_PACKAGESDIR}/pybind_nisar/workflows/${WORKFLOW})
-    INSTALL(CODE "execute_process( \
-        COMMAND ${CMAKE_COMMAND} -E create_symlink ${ORIG} ${LINK})" )
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/share/nisar/${WORKFLOW}
+            DESTINATION ${ISCE_PACKAGESDIR}/pybind_nisar/workflows)
 endforeach()
 
 

@@ -171,3 +171,6 @@ configure_package_config_file(
     INSTALL_DESTINATION ${ISCE3_CMAKE_DIR})
 install(FILES ${PROJECT_BINARY_DIR}/isce3-config.cmake
         DESTINATION ${ISCE3_CMAKE_DIR})
+
+# Enables native packaging using CMake/CPack
+include(CPack)

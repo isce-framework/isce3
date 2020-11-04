@@ -133,8 +133,8 @@ function(getpackage_pyre)
         # disable pyre's test suite
         set(BUILD_TESTING OFF)
         fetch_extern_repo(pyre
-            GIT_REPOSITORY  https://github.com/pyre/pyre
-            GIT_TAG         v1.9.9
+            GIT_REPOSITORY  https://github.com/rtburns-jpl/pyre
+            GIT_TAG         v1.9.9-backports
             GIT_SHALLOW     TRUE
             )
     endif()
