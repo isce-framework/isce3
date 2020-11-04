@@ -106,6 +106,8 @@ cmake_dependent_option(ISCE3_FETCH_EIGEN "Fetch Eigen at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_GTEST "Fetch googletest at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
+cmake_dependent_option(ISCE3_FETCH_PYRE "Fetch pyre at build time" ON
+                       "ISCE3_FETCH_DEPS" OFF)
 
 include(.cmake/FetchExternRepo.cmake)
 
