@@ -102,6 +102,8 @@ InitInstallDirLayout()
 
 option(ISCE3_FETCH_DEPS "Fetch external dependencies at build time" ON)
 include(CMakeDependentOption)
+cmake_dependent_option(ISCE3_FETCH_CEREAL "Fetch cereal at build time" ON
+                       "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_EIGEN "Fetch Eigen at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_GTEST "Fetch googletest at build time" ON
