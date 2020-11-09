@@ -34,7 +34,7 @@ set_target_properties(
 
 target_include_directories(
         isceextension PUBLIC
-        ${PYTHON_NUMPY_INCLUDE_DIR}
+        ${Python_NumPy_INCLUDE_DIRS}
 )
 
 target_link_libraries(isceextension PRIVATE ${LISCE})

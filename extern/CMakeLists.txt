@@ -1,4 +1,4 @@
-function(getpackage_cereal)
+macro(getpackage_cereal)
     find_package(Cereal CONFIG)
     if(Cereal_FOUND)
         add_library(Cereal::Cereal INTERFACE IMPORTED)
@@ -19,13 +19,13 @@ function(getpackage_cereal)
 
         install(TARGETS cereal EXPORT isce3-targets)
     endif()
-endfunction()
+endmacro()
 
-function(getpackage_cython)
+macro(getpackage_cython)
     find_package(Cython 0.28.1 REQUIRED)
-endfunction()
+endmacro()
 
-function(getpackage_eigen)
+macro(getpackage_eigen)
     if(ISCE3_FETCH_EIGEN)
         find_package(Eigen3 3.3.7 CONFIG)
     else()
@@ -49,18 +49,18 @@ function(getpackage_eigen)
             $<INSTALL_INTERFACE:include>)
         install(TARGETS eigen EXPORT isce3-targets)
     endif()
-endfunction()
+endmacro()
 
-function(getpackage_fftw)
+macro(getpackage_fftw)
     find_package(FFTW REQUIRED COMPONENTS
         Float Double FloatThreads DoubleThreads)
-endfunction()
+endmacro()
 
-function(getpackage_gdal)
+macro(getpackage_gdal)
     find_package(GDAL 2.3 REQUIRED)
-endfunction()
+endmacro()
 
-function(getpackage_googletest)
+macro(getpackage_googletest)
     # CONFIG mode only - FindGTest.cmake module doesn't provide version checking
     if(ISCE3_FETCH_GTEST)
         find_package(GTest 1.10.0 CONFIG)
@@ -81,9 +81,9 @@ function(getpackage_googletest)
         add_library(GTest::gtest      ALIAS gtest)
         add_library(GTest::gtest_main ALIAS gtest_main)
     endif()
-endfunction()
+endmacro()
 
-function(getpackage_hdf5)
+macro(getpackage_hdf5)
     find_package(HDF5 1.10.2 REQUIRED COMPONENTS CXX)
 
     # check whether the hdf5 library includes parallel support
@@ -104,15 +104,9 @@ function(getpackage_hdf5)
         )
 
     install(TARGETS hdf5 EXPORT isce3-targets)
-endfunction()
+endmacro()
 
-# TODO This can be removed in favor of adding "NumPy" to the list of required
-# components in find_package(Python) if/when we upgrade to CMake >= 3.14
-function(getpackage_numpy)
-    find_package(Numpy REQUIRED)
-endfunction()
-
-function(getpackage_openmp_optional)
+macro(getpackage_openmp_optional)
     # Check for OpenMP (optional dependency).
     # If not found, default to an empty placeholder target.
     find_package(OpenMP OPTIONAL_COMPONENTS CXX)
@@ -121,15 +115,19 @@ function(getpackage_openmp_optional)
         target_link_libraries(OpenMP::OpenMP_CXX_Optional
             INTERFACE OpenMP::OpenMP_CXX)
     endif()
-endfunction()
+endmacro()
 
-function(getpackage_pybind11)
+macro(getpackage_pybind11)
     add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
-endfunction()
+endmacro()
 
-function(getpackage_pyre)
-    find_package(pyre 1.9.9 CONFIG)
-    if(NOT HAVE_PYRE)
+macro(getpackage_pyre)
+    if(ISCE3_FETCH_PYRE)
+        find_package(pyre 1.9.9 CONFIG)
+    else()
+        find_package(pyre 1.9.9 REQUIRED CONFIG)
+    endif()
+    if(NOT pyre_FOUND)
         # disable pyre's test suite
         set(BUILD_TESTING OFF)
         fetch_extern_repo(pyre
@@ -138,8 +136,8 @@ function(getpackage_pyre)
             GIT_SHALLOW     TRUE
             )
     endif()
-endfunction()
+endmacro()
 
 macro(getpackage_python)
-    find_package(Python 3.6 COMPONENTS Interpreter Development)
+    find_package(Python 3.6 REQUIRED COMPONENTS Interpreter Development NumPy)
 endmacro()

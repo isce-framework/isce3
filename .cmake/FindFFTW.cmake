@@ -6,9 +6,7 @@ Be warned that this will only search for FFTW3 libraries.
 
 It sets the following variables:
   FFTW_FOUND                 .. true if FFTW is found on the system
-  FFTW_[component]_LIB_FOUND .. true if the component is found (see below)
   FFTW_LIBRARIES             .. full paths to all found FFTW libraries
-  FFTW_[component]_LIB       .. full path to one component (see below)
   FFTW_INCLUDE_DIRS          .. FFTW include directory paths
 
 The following variables will be checked by the function
@@ -20,17 +18,6 @@ Paths will be searched in the following order:
   PkgConfig paths (if found)
   Library/include installation directories
   Default find_* paths
-
-The following component library locations will be defined (if found):
-  FFTW_FLOAT_LIB
-  FFTW_DOUBLE_LIB
-  FFTW_LONGDOUBLE_LIB
-  FFTW_FLOAT_THREADS_LIB
-  FFTW_DOUBLE_THREADS_LIB
-  FFTW_LONGDOUBLE_THREADS_LIB
-  FFTW_FLOAT_OMP_LIB
-  FFTW_DOUBLE_OMP_LIB
-  FFTW_LONGDOUBLE_OMP_LIB
 
 The following IMPORTED targets will be created (if found):
   FFTW::Float
@@ -129,16 +116,9 @@ foreach(dtype Float Double LongDouble)
             PATH_SUFFIXES lib lib64
             )
 
-        # Tell find_package whether this component was found
-        set(FFTW_${component}_FIND_QUIETLY TRUE)
-        find_package_handle_standard_args(FFTW_${component}
-            HANDLE_COMPONENTS REQUIRED_VARS ${libvar} FFTW_INCLUDE_DIRS)
-        # Also set the value of the legacy library-variable
-        # (Will be set to *-NOTFOUND if not found)
-        set(${libvar} ${FFTW_${component}})
-
         # If the library was found:
         if(${libvar})
+            set(FFTW_${component}_FOUND TRUE)
             # Add it to the list of FFTW libraries
             list(APPEND FFTW_LIBRARIES ${${libvar}})
 
