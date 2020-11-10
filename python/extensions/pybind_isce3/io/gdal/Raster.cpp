@@ -11,6 +11,8 @@
 #include <isce3/except/Error.h>
 #include <isce3/io/gdal/Buffer.h>
 
+#include <pybind_isce3/roarray.h>
+
 #include "GDALAccess.h"
 #include "GDALDataType.h"
 
@@ -147,6 +149,6 @@ void addbinding(py::class_<Raster> & pyRaster)
         .def_property_readonly("y0", &Raster::y0, "Upper edge of upper-most line in projection coordinates")
         .def_property_readonly("dx", &Raster::dx, "Pixel width in projection coordinates")
         .def_property_readonly("dy", &Raster::dy, "Line height in projection coordinates")
-        .def_property_readonly("data", [](Raster & self) { return py::array(toBuffer(self), py::cast(self)); })
+        .def_property_readonly("data", [](Raster & self) { return py::roarray(toBuffer(self), py::cast(self)); })
         ;
 }
