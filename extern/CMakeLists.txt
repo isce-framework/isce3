@@ -1,23 +1,37 @@
 macro(getpackage_cereal)
-    find_package(Cereal CONFIG)
+    if(ISCE3_FETCH_CEREAL)
+        find_package(Cereal CONFIG)
+        if(NOT Cereal_FOUND)
+            include(FetchContent)
+            FetchContent_Declare(cereal
+                GIT_REPOSITORY https://github.com/USCiLab/cereal
+                GIT_TAG v1.3.0
+                GIT_SHALLOW TRUE)
+            FetchContent_GetProperties(cereal)
+            if(NOT cereal_POPULATED)
+                FetchContent_Populate(cereal)
+            endif()
+
+            install(
+                DIRECTORY       ${cereal_SOURCE_DIR}/include/cereal
+                DESTINATION     include
+                FILES_MATCHING  PATTERN *.hpp PATTERN *.h)
+
+            add_library(cereal INTERFACE)
+            add_library(Cereal::Cereal ALIAS cereal)
+            target_include_directories(cereal SYSTEM INTERFACE
+                $<BUILD_INTERFACE:${cereal_SOURCE_DIR}/include>
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+            install(TARGETS cereal EXPORT isce3-targets)
+        endif()
+    else()
+        find_package(Cereal REQUIRED CONFIG)
+    endif()
     if(Cereal_FOUND)
         add_library(Cereal::Cereal INTERFACE IMPORTED)
         set_target_properties(Cereal::Cereal PROPERTIES
             INTERFACE_LINK_LIBRARIES cereal)
-    else()
-        set(CEREAL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/extern/cereal/include)
-        install(
-            DIRECTORY       ${CEREAL_INCLUDE_DIR}/cereal
-            DESTINATION     include
-            FILES_MATCHING  PATTERN *.hpp PATTERN *.h)
-
-        add_library(cereal INTERFACE)
-        add_library(Cereal::Cereal ALIAS cereal)
-        target_include_directories(cereal SYSTEM INTERFACE
-            $<BUILD_INTERFACE:${CEREAL_INCLUDE_DIR}>
-            $<INSTALL_INTERFACE:include>)
-
-        install(TARGETS cereal EXPORT isce3-targets)
     endif()
 endmacro()
 
@@ -124,17 +138,17 @@ endmacro()
 macro(getpackage_pyre)
     if(ISCE3_FETCH_PYRE)
         find_package(pyre 1.9.9 CONFIG)
+        if(NOT pyre_FOUND)
+            # disable pyre's test suite
+            set(BUILD_TESTING OFF)
+            fetch_extern_repo(pyre
+                GIT_REPOSITORY  https://github.com/rtburns-jpl/pyre
+                GIT_TAG         v1.9.9-backports
+                GIT_SHALLOW     TRUE
+                )
+        endif()
     else()
         find_package(pyre 1.9.9 REQUIRED CONFIG)
-    endif()
-    if(NOT pyre_FOUND)
-        # disable pyre's test suite
-        set(BUILD_TESTING OFF)
-        fetch_extern_repo(pyre
-            GIT_REPOSITORY  https://github.com/rtburns-jpl/pyre
-            GIT_TAG         v1.9.9-backports
-            GIT_SHALLOW     TRUE
-            )
     endif()
 endmacro()
 
