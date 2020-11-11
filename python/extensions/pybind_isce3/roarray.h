@@ -11,8 +11,10 @@ namespace pybind11 {
 inline auto roarray(const buffer_info& info, handle base)
 {
     array a{pybind11::dtype(info), info.shape, info.strides, info.ptr, base};
-    detail::array_proxy(a.ptr())->flags &=
-            ~detail::npy_api::NPY_ARRAY_WRITEABLE_;
+    if (info.readonly) {
+        detail::array_proxy(a.ptr())->flags &=
+                ~detail::npy_api::NPY_ARRAY_WRITEABLE_;
+    }
     return a;
 }
 
