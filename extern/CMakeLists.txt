@@ -132,7 +132,18 @@ macro(getpackage_openmp_optional)
 endmacro()
 
 macro(getpackage_pybind11)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/extern/pybind11)
+    if(ISCE3_FETCH_PYBIND11)
+        find_package(pybind11 2.4 CONFIG)
+        if(NOT pybind11_FOUND)
+            fetch_extern_repo(pybind11
+                GIT_REPOSITORY  https://github.com/pybind/pybind11
+                GIT_TAG         v2.5.0
+                GIT_SHALLOW     TRUE
+                )
+        endif()
+    else()
+        find_package(pybind11 2.4 CONFIG REQUIRED)
+    endif()
 endmacro()
 
 macro(getpackage_pyre)
