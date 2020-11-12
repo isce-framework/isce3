@@ -147,6 +147,7 @@ signal/Looks.icc
 signal/multilook.h
 signal/NFFT.h
 signal/shiftSignal.h
+signal/signalUtils.h
 signal/Signal.h
 signal/Signal.icc
 signal/filterKernel.h

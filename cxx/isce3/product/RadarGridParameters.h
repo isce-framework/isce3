@@ -193,6 +193,29 @@ class isce3::product::RadarGridParameters {
                                         refEpoch());
         }
 
+        /** Upsample */
+        inline RadarGridParameters
+        upsample(size_t az_upsampling_factor, size_t rg_upsampling_factor) const
+        {
+            // Check for number of points on edge
+            if ((az_upsampling_factor  == 0) || (rg_upsampling_factor  == 0)) {
+                std::string errstr = "Upsampling factor must be positive. " +
+                                     std::to_string(az_upsampling_factor ) + "Az x" +
+                                     std::to_string(rg_upsampling_factor ) +
+                                     "Rg upsampling requested.";
+                throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
+            }
+
+            // important: differently from multilook(), upsample does not
+            // update _sensingStart or _startingRange
+            return RadarGridParameters(
+                        sensingTime(0.0), wavelength(),
+                        prf() * az_upsampling_factor, slantRange(0.0),
+                        rangePixelSpacing() / (1.0 * rg_upsampling_factor),
+                        lookSide(), length() * az_upsampling_factor,
+                        width() * rg_upsampling_factor, refEpoch());
+        }
+
     // Protected data members can be accessed by derived classes
     protected:
         /** Left or right looking geometry indicator */

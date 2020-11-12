@@ -79,9 +79,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
     // The DEM to be used for geocoding
     isce3::io::Raster demRaster("zero_height_dem_geo.bin");
 
-    // input raster in radar coordinates to be geocoded
-    isce3::io::Raster radarRasterX("x.rdr");
-
     // The interpolation method used for geocoding
     isce3::core::dataInterpMethod method = isce3::core::BIQUINTIC_METHOD;
 
@@ -105,47 +102,215 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoObj.geoGrid(geoGridStartX, geoGridStartY, geoGridSpacingX,
                    geoGridSpacingY, geoGridWidth, geoGridLength, epsgcode);
 
+    isce3::geocode::geocodeOutputMode output_mode;
+
     for (auto geocode_mode_str : geocode_mode_set) {
 
         std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
 
-        isce3::geocode::geocodeOutputMode output_mode;
         if (geocode_mode_str == "interp")
             output_mode = isce3::geocode::geocodeOutputMode::INTERP;
         else
             output_mode = isce3::geocode::geocodeOutputMode::AREA_PROJECTION;
 
-        // geocoded raster
-        isce3::io::Raster geocodedRasterInterpX("x_" + geocode_mode_str + "_geo.bin",
-                                               geoGridWidth, geoGridLength, 1,
-                                               GDT_Float64, "ENVI");
+        for (std::string xy_str : {"x", "y"}) {
 
-        // geocode the longitude data
-        geoObj.geocode(radar_grid, radarRasterX, geocodedRasterInterpX,
-                       demRaster, output_mode);
-    }
+            // input raster in radar coordinates to be geocoded
+            isce3::io::Raster radarRaster(xy_str + ".rdr");
+            std::cout << "geocoding file: " << xy_str + ".rdr" << std::endl;
 
-    for (auto geocode_mode_str : geocode_mode_set) {
+            // output raster
+            isce3::io::Raster geocodedRaster(
+                    xy_str + "_" + geocode_mode_str + "_geo.bin", geoGridWidth,
+                    geoGridLength, 1, GDT_Float64, "ENVI");
 
-        isce3::geocode::geocodeOutputMode output_mode;
-        if (geocode_mode_str == "interp")
-            output_mode = isce3::geocode::geocodeOutputMode::INTERP;
-        else
-            output_mode = isce3::geocode::geocodeOutputMode::AREA_PROJECTION;
+            // run geocode
+            geoObj.geocode(radar_grid, radarRaster, geocodedRaster,
+                            demRaster, output_mode);
+        }
+    } 
 
-        // create another raster for latitude data from Topo
-        isce3::io::Raster radarRasterY("y.rdr");
 
-        // create output raster for geocoded latitude
-        isce3::io::Raster geocodedRasterInterpY("y_" + geocode_mode_str + "_geo.bin",
-                                               geoGridWidth, geoGridLength, 1,
-                                               GDT_Float64, "ENVI");
+    // Geocode object
+    isce3::geocode::Geocode<std::complex<float>> geoComplexObj;
 
-        // geocode the latitude data using the same geocode object
-        geoObj.geocode(radar_grid, radarRasterY, geocodedRasterInterpY,
-                       demRaster, output_mode);
-    }
+    // manually configure geoComplexObj
+    geoComplexObj.orbit(orbit);
+    geoComplexObj.doppler(doppler);
+    geoComplexObj.ellipsoid(ellipsoid);
+    geoComplexObj.thresholdGeo2rdr(threshold);
+    geoComplexObj.numiterGeo2rdr(numiter);
+    geoComplexObj.linesPerBlock(linesPerBlock);
+    geoComplexObj.demBlockMargin(demBlockMargin);
+    geoComplexObj.radarBlockMargin(radarBlockMargin);
+    geoComplexObj.interpolator(method);
+
+    geoComplexObj.geoGrid(geoGridStartX, geoGridStartY, geoGridSpacingX,
+                          geoGridSpacingY, geoGridWidth, geoGridLength,
+                          epsgcode);
+
+    // load complex raster X and Y as a raster vector
+    std::vector<Raster> slc_raster_xyVect = {isce3::io::Raster("xslc_rdr.bin"),
+                                           isce3::io::Raster("yslc_rdr.bin")};
+
+    isce3::io::Raster slc_raster_xy =
+            isce3::io::Raster("xy_slc_rdr.vrt", slc_raster_xyVect);
+
+    // geocode full-covariance
+    output_mode = isce3::geocode::geocodeOutputMode::AREA_PROJECTION;
+
+    isce3::io::Raster geocoded_diag_raster("area_proj_geo_diag.bin", geoGridWidth,
+                                         geoGridLength, 2, GDT_Float32, "ENVI");
+
+    isce3::io::Raster geocoded_off_diag_raster("area_proj_geo_off_diag.bin",
+                                            geoGridWidth, geoGridLength, 1,
+                                            GDT_CFloat32, "ENVI");
+
+    double geogrid_upsampling = 1;
+    bool flag_upsample_radar_grid = false;
+    isce3::geometry::rtcInputRadiometry input_radiometry =
+            isce3::geometry::rtcInputRadiometry::BETA_NAUGHT;
+    int exponent = 0;
+    float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN();
+    double rtc_geogrid_upsampling =
+            std::numeric_limits<double>::quiet_NaN();
+    isce3::geometry::rtcAlgorithm rtc_algorithm =
+            isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
+    double abs_cal_factor = 1;
+    float clip_min = std::numeric_limits<float>::quiet_NaN();
+    float clip_max = std::numeric_limits<float>::quiet_NaN();
+    float min_nlooks = std::numeric_limits<float>::quiet_NaN();
+    float radar_grid_nlooks = 1;
+
+    geoComplexObj.geocode(
+            radar_grid, slc_raster_xy, geocoded_diag_raster, demRaster, output_mode,
+            geogrid_upsampling, flag_upsample_radar_grid, input_radiometry,
+            exponent, rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
+            abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
+            &geocoded_off_diag_raster);
+
+    //  load complex raster containing X conj(Y)
+    isce3::io::Raster slc_x_conj_y_raster("x_conj_y_slc_rdr.bin");
+
+    isce3::io::Raster geocoded_slc_x_conj_y_raster("area_proj_geo_x_conj_y.bin",
+                                                   geoGridWidth, geoGridLength,
+                                                   1, GDT_CFloat32, "ENVI");
+
+    geoComplexObj.geocode(radar_grid, slc_x_conj_y_raster, geocoded_slc_x_conj_y_raster,
+                          demRaster, output_mode);
 }
+
+
+
+TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
+    // The geocoded latitude and longitude data should be
+    // consistent with the geocoded pixel location.
+
+    std::cout << "opening: area_proj_geo_diag.bin" << std::endl;
+    isce3::io::Raster geocoded_diag_raster("area_proj_geo_diag.bin");
+    std::cout << "opening: area_proj_geo_off_diag.bin" << std::endl;
+    isce3::io::Raster geocoded_off_diag_raster("area_proj_geo_off_diag.bin");
+    std::cout << "opening: area_proj_geo_x_conj_y.bin" << std::endl;
+    isce3::io::Raster geocoded_slc_x_conj_y_raster("area_proj_geo_x_conj_y.bin");
+
+    size_t length = geocoded_diag_raster.length();
+    size_t width = geocoded_diag_raster.width();
+
+    float err_x = 0.0;
+    float err_y = 0.0;
+    float err_x_conj_y = 0.0;
+    float max_err_x = 0.0;
+    float max_err_y = 0.0; 
+    float max_err_x_conj_y = 0.0;
+
+    std::valarray<float> geocoded_diag_array_x(length * width);
+    std::valarray<float> geocoded_diag_array_y(length * width);
+    std::valarray<std::complex<float>> geocoded_off_diag_array(length * width);
+    std::valarray<std::complex<float>> slc_x_conj_y_array(length * width);
+
+    geocoded_diag_raster.getBlock(geocoded_diag_array_x, 0, 0, width, length, 1);
+    geocoded_diag_raster.getBlock(geocoded_diag_array_y, 0, 0, width, length, 2);
+    geocoded_off_diag_raster.getBlock(geocoded_off_diag_array, 0, 0, width,
+                                    length);
+    geocoded_slc_x_conj_y_raster.getBlock(slc_x_conj_y_array, 0, 0, width, length);
+
+    double square_sum_x = 0; // sum of square differences
+    int nvalid_x = 0;
+    double square_sum_y = 0; // sum of square differences
+    int nvalid_y = 0;
+    double square_sum_x_conj_y = 0; // sum of square differences
+    int nvalid_x_conj_y = 0;
+
+    for (size_t line = 0; line < length; ++line) {
+        for (size_t pixel = 0; pixel < width; ++pixel) {
+            size_t index = line * width + pixel;
+
+            // < exp(j k x) > = 1
+            if (!isnan(geocoded_diag_array_x[index])) {
+                err_x = geocoded_diag_array_x[index] - 1;
+                square_sum_x += pow(err_x, 2);
+                if (geocoded_diag_array_x[index] > 0) {
+                    nvalid_x++;
+                }
+                if (std::abs(err_x) > max_err_x) {
+                    max_err_x = std::abs(err_x);
+                }
+            }
+
+            // < exp(j k y) > = 1
+            if (!isnan(geocoded_diag_array_y[index])) {
+                err_y = geocoded_diag_array_y[index] - 1;
+                square_sum_y += pow(err_y, 2);
+                if (geocoded_diag_array_y[index] > 0) {
+                    nvalid_y++;
+                }
+                if (std::abs(err_y) > max_err_y) {
+                    max_err_y = std::abs(err_y);
+                }
+            }
+
+            // geocoded off-diag ~= geocoded x conj (y)
+            float norm_off_diag = std::norm(geocoded_off_diag_array[index]);
+            float norm_x_conj_y = std::norm(slc_x_conj_y_array[index]);
+            if (!isnan(norm_off_diag) && !isnan(norm_x_conj_y)) {
+                err_x_conj_y = std::norm(geocoded_off_diag_array[index] -
+                                         slc_x_conj_y_array[index]);
+                square_sum_x_conj_y += pow(err_x_conj_y, 2);
+                if (norm_off_diag > 0 && norm_x_conj_y > 0) {
+                    nvalid_x_conj_y++;
+                }
+                if (err_x_conj_y > max_err_x_conj_y) {
+                    max_err_x_conj_y = std::abs(err_x_conj_y);
+                }
+            }
+        }
+    }
+
+    double rmse_x = std::sqrt(square_sum_x / nvalid_x);
+    double rmse_y = std::sqrt(square_sum_y / nvalid_y);
+    double rmse_x_conj_y = std::sqrt(square_sum_x_conj_y / nvalid_x_conj_y);
+
+    std::cout << "geocode_ full-covariance results: " << std::endl;
+    std::cout << "  nvalid X: " << nvalid_x << std::endl;
+    std::cout << "  nvalid Y: " << nvalid_y << std::endl;
+    std::cout << "  nvalid X conj(Y): " << nvalid_x_conj_y << std::endl;
+    std::cout << "  RMSE X: " << rmse_x << std::endl;
+    std::cout << "  RMSE Y: " << rmse_y << std::endl;
+    std::cout << "  RMSE X conj(Y): " << rmse_x_conj_y << std::endl;
+    std::cout << "  max err X: " << max_err_x << std::endl;
+    std::cout << "  max err Y: " << max_err_y << std::endl;
+    std::cout << "  max err X conj(Y): " << max_err_x_conj_y << std::endl;
+
+    ASSERT_GE(nvalid_x, 800);
+    ASSERT_GE(nvalid_y, 800);
+    ASSERT_GE(nvalid_x_conj_y, 800);
+
+    ASSERT_LT(max_err_x, 1.0e-6);
+    ASSERT_LT(max_err_y, 1.0e-6);
+    ASSERT_LT(max_err_x_conj_y, 1.0e-6);
+
+}
+
 
 TEST(GeocodeTest, CheckGeocodeCovResults) {
     // The geocoded latitude and longitude data should be
@@ -187,18 +352,19 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
 
         for (size_t line = 0; line < length; ++line) {
             for (size_t pixel = 0; pixel < width; ++pixel) {
-                if (!isnan(geoX[line * width + pixel])) {
+                size_t index = line * width + pixel;
+                if (!isnan(geoX[index])) {
                     gridLon = x0 + pixel * dx;
-                    errX = geoX[line * width + pixel] - gridLon;
+                    errX = geoX[index] - gridLon;
                     square_sum_x += pow(errX, 2);
                     nvalid_x++;
                     if (std::abs(errX) > maxErrX) {
                         maxErrX = std::abs(errX);
                     }
                 }
-                if (!isnan(geoY[line * width + pixel])) {
+                if (!isnan(geoY[index])) {
                     gridLat = y0 + line * dy;
-                    errY = geoY[line * width + pixel] - gridLat;
+                    errY = geoY[index] - gridLat;
                     square_sum_y += pow(errY, 2);
                     nvalid_y++;
                     if (std::abs(errY) > maxErrY) {
@@ -212,12 +378,17 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
         double rmse_y = std::sqrt(square_sum_y / nvalid_y);
 
         std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
+        std::cout << "  nvalid X: " << nvalid_x << std::endl;
+        std::cout << "  nvalid Y: " << nvalid_y << std::endl;
         std::cout << "  RMSE X: " << rmse_x << std::endl;
         std::cout << "  RMSE Y: " << rmse_y << std::endl;
         std::cout << "  maxErrX: " << maxErrX << std::endl;
         std::cout << "  maxErrY: " << maxErrY << std::endl;
         std::cout << "  dx: " << dx << std::endl;
         std::cout << "  dy: " << dy << std::endl;
+    
+        ASSERT_GE(nvalid_x, 800);
+        ASSERT_GE(nvalid_y, 800);
 
         if (geocode_mode_str == "interp") {
             // errors with interp algorithm are smaller because topo
@@ -466,6 +637,8 @@ void createTestData()
     yRaster.getBlock(y, 0, 0, width, length);
     y *= M_PI / 180.0;
 
+    std::valarray<std::complex<float>> x_conj_y_slc(width * length);
+
     for (int ii = 0; ii < width * length; ++ii) {
 
         const std::complex<float> cpxPhaseX(std::cos(x[ii]), std::sin(x[ii]));
@@ -473,6 +646,8 @@ void createTestData()
 
         const std::complex<float> cpxPhaseY(std::cos(y[ii]), std::sin(y[ii]));
         yslc[ii] = cpxPhaseY;
+
+        x_conj_y_slc[ii] = cpxPhaseX * std::conj(cpxPhaseY);
     }
 
     isce3::io::Raster slcRasterX("xslc_rdr.bin", width, length, 1, GDT_CFloat32,
@@ -484,4 +659,9 @@ void createTestData()
                                 "ENVI");
 
     slcRasterY.setBlock(yslc, 0, 0, width, length);
+
+    isce3::io::Raster slc_x_conj_y_raster("x_conj_y_slc_rdr.bin", width, length, 1,
+                                      GDT_CFloat32, "ENVI");
+
+    slc_x_conj_y_raster.setBlock(x_conj_y_slc, 0, 0, width, length);
 }

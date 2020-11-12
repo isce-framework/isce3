@@ -27,5 +27,14 @@ template <typename T> struct real <std::complex<T>> { using type = T; };
 template <typename T> struct complx { using type = std::complex<T>; };
 template <typename T> struct complx <std::complex<T>> { using type = std::complex<T>; };
 
+template<typename T>
+struct is_complex : std::false_type {};
+template<typename T>
+struct is_complex<std::complex<T>> : std::true_type {};
+template<typename T>
+static constexpr bool is_complex_v()
+{
+    return is_complex<T>::value;
+}
 
 } // namespace isce3

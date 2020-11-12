@@ -100,7 +100,7 @@ def run(cfg):
 
         nbands = input_raster_obj.num_bands
 
-        # init Geocode object depending on raster type
+        # init Geocode object according to the raster type
         if input_raster_obj.datatype() == gdal.GDT_Float32:
             geo = isce.geocode.GeocodeFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_Float64:
@@ -114,7 +114,7 @@ def run(cfg):
             error_channel.log(err_str)
             raise NotImplementedError(err_str)
 
-        # inti geocode members
+        # init geocode members
         geo.orbit = slc.getOrbit()
         geo.ellipsoid = ellipsoid
         geo.doppler = zero_doppler
@@ -144,7 +144,7 @@ def run(cfg):
                     geogrid_upsampling=geogrid_upsampling,
                     input_radiometry=input_terrain_radiometry,
                     exponent=exponent,
-                    rtc_min_val_db=rtc_min_value_db,
+                    rtc_min_value_db=rtc_min_value_db,
                     rtc_algorithm=rtc_algorithm,
                     abs_cal_factor=abs_cal_factor,
                     clip_min = 0, # backscatter lower linear bound to screen negative values

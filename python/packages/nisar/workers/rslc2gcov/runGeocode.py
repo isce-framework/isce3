@@ -49,6 +49,9 @@ def _runGeocodeFrequency(self, frequency):
         f'temp_rslc2gcov_{frequency}_{time_id}.vrt')
     output_file = os.path.join(state.scratch_path,
         f'temp_rslc2gcov_{frequency}_{time_id}.bin')
+    output_off_diag_file = os.path.join(state.scratch_path,
+        f'temp_rslc2gcov_{frequency}_{time_id}_off_diag.bin')
+
     out_geo_nlooks = os.path.join(state.scratch_path,
         f'temp_geo_nlooks_{time_id}.bin')
     out_geo_rtc = os.path.join(state.scratch_path,
@@ -62,6 +65,10 @@ def _runGeocodeFrequency(self, frequency):
     gdal.BuildVRT(input_temp, raster_ref_list, separate=True)
     input_raster_obj = isce3.pyRaster(input_temp) 
     ellps = isce3.pyEllipsoid()
+
+    # Reading processing parameters
+    flag_fullcovariance = self.get_value(['processing',
+        'input_subset', 'fullcovariance'])
 
     # RTC
     rtc_dict = self.get_value(['processing', 'rtc'])
@@ -84,6 +91,7 @@ def _runGeocodeFrequency(self, frequency):
     clip_max = geocode_dict['clip_max']
     min_nlooks = geocode_dict['min_nlooks']
 
+    flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
     flag_save_dem_vertices = geocode_dict['save_dem_vertices']
@@ -140,7 +148,7 @@ def _runGeocodeFrequency(self, frequency):
     # prepare parameters
     zero_doppler = isce3.pyLUT2d()
 
-    # Instantiate Geocode object depending on raster type
+    # Instantiate Geocode object according to the raster type
     if input_raster_obj.getDatatype() == gdal.GDT_Float32:
         geo = isce3.pyGeocodeFloat(orbit, ellps)
     elif input_raster_obj.getDatatype() == gdal.GDT_Float64:
@@ -208,8 +216,9 @@ def _runGeocodeFrequency(self, frequency):
     if output_dir and not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
-    exponent = 2
     output_dtype = gdal.GDT_Float32
+    output_dtype_off_diag_terms = gdal.GDT_CFloat32
+    exponent = 2
     nbands = input_raster_obj.numBands
 
     if geogrid_upsampling is None:
@@ -226,6 +235,22 @@ def _runGeocodeFrequency(self, frequency):
                                        nbands,
                                        "ENVI")
     geocoded_dict['output_file'] = output_file
+
+    nbands_off_diag_terms = 0
+    out_off_diag_terms_obj = None
+    if flag_fullcovariance:
+        nbands_off_diag_terms = (nbands**2 - nbands) // 2
+        if nbands_off_diag_terms > 0:
+            out_off_diag_terms_obj =  isce3.pyRaster(
+                output_off_diag_file,
+                gdal.GA_Update,
+                output_dtype_off_diag_terms,
+                size_x,
+                size_y,
+                nbands_off_diag_terms,
+                "ENVI")
+            geocoded_dict['output_off_diag_file'] = \
+                output_off_diag_file
 
     if flag_save_nlooks:
         out_geo_nlooks_obj = isce3.pyRaster(out_geo_nlooks,
@@ -349,11 +374,13 @@ def _runGeocodeFrequency(self, frequency):
                 input_raster_obj,
                 output_raster_obj,
                 dem_raster,
+                flag_upsample_radar_grid=flag_upsample_radar_grid,
                 output_mode=output_mode,
                 upsampling=geogrid_upsampling,
                 input_radiometry=input_radiometry,
                 exponent=exponent,
                 radar_grid_nlooks=radar_grid_nlooks,
+                out_off_diag_terms=out_off_diag_terms_obj,
                 out_geo_nlooks=out_geo_nlooks_obj,
                 out_geo_rtc=out_geo_rtc_obj,
                 out_dem_vertices=out_dem_vertices_obj,
@@ -367,6 +394,9 @@ def _runGeocodeFrequency(self, frequency):
     
     if flag_save_rtc:
         del out_geo_rtc_obj
+
+    if flag_fullcovariance:
+        del out_off_diag_terms_obj
 
     if flag_save_dem_vertices:
         del out_dem_vertices_obj
@@ -578,16 +608,36 @@ def _runGeocodeFrequency(self, frequency):
             raise NotImplementedError('Waiting for implementation / Not supported in ISCE3')
 
         # save GCOV diagonal elements
-        cov_elements_list = [p.upper()+p.upper() for p in pol_list]
+        diag_terms_list = [p.upper()+p.upper() for p in pol_list]
         _save_hdf5_dataset(self, 'output_file', hdf5_obj, root_ds,
                            h5_ds_list, geocoded_dict, frequency, yds, xds,
-                           cov_elements_list,
+                           diag_terms_list,
                            standard_name = output_radiometry_str,
                            long_name = output_radiometry_str, 
                            units = 'unitless',
                            fill_value = np.nan, 
                            valid_min = clip_min, 
                            valid_max = clip_max)
+
+
+        # save GCOV off-diagonal elements
+        if flag_fullcovariance:
+            off_diag_terms_list = []
+            for b1, p1 in enumerate(pol_list):
+                for b2, p2 in enumerate(pol_list):
+                    if (b2 <= b1):
+                        continue
+                    off_diag_terms_list.append(p1.upper()+p2.upper())
+
+            _save_hdf5_dataset(self, 'output_off_diag_file', hdf5_obj, root_ds,
+                               h5_ds_list, geocoded_dict, frequency, yds, xds,
+                               off_diag_terms_list,
+                               standard_name = output_radiometry_str,
+                               long_name = output_radiometry_str, 
+                               units = 'unitless',
+                               fill_value = np.nan, 
+                               valid_min = clip_min, 
+                               valid_max = clip_max)
 
         # save nlooks
         _save_hdf5_dataset(self, 'out_geo_nlooks', hdf5_obj, root_ds, 
@@ -697,7 +747,11 @@ def _save_hdf5_dataset(self, name, hdf5_obj, root_ds, h5_ds_list, geocoded_dict,
     ds_filename = geocoded_dict[name]
     if not ds_filename:
         return
+
     gdal_ds = gdal.Open(ds_filename)
+    if gdal_ds is None:
+        print(f'ERROR opening {ds_filename}')
+        return
     nbands = gdal_ds.RasterCount
     for band in range(nbands):
         gdal_band = gdal_ds.GetRasterBand(band+1)

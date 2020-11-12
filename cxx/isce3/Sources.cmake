@@ -77,6 +77,7 @@ signal/Filter.cpp
 signal/Looks.cpp
 signal/NFFT.cpp
 signal/shiftSignal.cpp
+signal/signalUtils.cpp
 signal/Signal.cpp
 signal/filterKernel.cpp
 signal/decimate.cpp
