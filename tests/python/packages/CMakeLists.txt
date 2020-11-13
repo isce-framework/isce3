@@ -15,6 +15,9 @@ nisar/workflows/geocode.py
 pybind_nisar/workflows/focus.py
 pybind_nisar/workflows/gcov.py
 pybind_nisar/workflows/gslc.py
+pybind_nisar/workflows/gpu_check.py
+pybind_nisar/workflows/process_args.py
+pybind_nisar/workflows/rdr2geo.py
 )
 
 set(CUDA_TESTFILES

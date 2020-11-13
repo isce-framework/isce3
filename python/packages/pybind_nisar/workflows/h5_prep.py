@@ -139,7 +139,7 @@ def cp_geocode_meta(cfg, dst):
 
         # copy product specifics
         if is_insar:
-            copy_insar_meta(cfg, src_meta_path, dst, src_h5, dst_h5)
+            copy_insar_meta(cfg, src_meta_path, dst_meta_path, src_h5, dst_h5)
         else:
             copy_gslc_gcov_meta(slc.SwathPath, dst_meta_path, src_h5, dst_h5)
 

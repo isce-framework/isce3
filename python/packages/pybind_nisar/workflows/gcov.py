@@ -13,7 +13,9 @@ import numpy as np
 
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import h5_prep, runconfig
+from pybind_nisar.workflows import h5_prep
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
+from pybind_nisar.workflows.gcov_runconfig import GCOVRunConfig
 
 def run(cfg):
     '''
@@ -36,7 +38,6 @@ def run(cfg):
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
     abs_cal_factor = geocode_dict['abs_rad_cal']
     geogrids = geocode_dict['geogrids']
-    ellipsoid = geocode_dict['ellipsoid']
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
@@ -65,15 +66,15 @@ def run(cfg):
     slc = SLC(hdf5file=input_hdf5)
     dem_raster = isce.io.Raster(dem_file)
     zero_doppler = isce.core.LUT2d()
-
+    epsg = dem_raster.get_epsg()
+    proj = isce.core.make_projection(epsg)
+    ellipsoid = proj.ellipsoid
     exponent = 2
-    output_dtype = gdal.GDT_Float32
 
     info_channel = journal.info("gcov.run")
     error_channel = journal.error("gcov.run")
     info_channel.log("starting geocode COV")
 
-    # XXX only do diagonal elements as spec'd?
     t_all = time.time()
     for frequency in freq_pols.keys():
         t_freq = time.time()
@@ -98,9 +99,7 @@ def run(cfg):
         input_temp = tempfile.NamedTemporaryFile(dir=scratch_path, suffix='.vrt')
         input_raster_obj = isce.io.Raster(input_temp.name, raster_list=input_raster_list)
 
-        nbands = input_raster_obj.num_bands
-
-        # init Geocode object according to the raster type
+        # init Geocode object depending on raster type
         if input_raster_obj.datatype() == gdal.GDT_Float32:
             geo = isce.geocode.GeocodeFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_Float64:
@@ -218,7 +217,7 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     long_name : string, optional
     units : string, optional
     fill_value : float, optional
-    valid_min : float, optional 
+    valid_min : float, optional
     valid_max : float, optional
     '''
     if not os.path.isfile(ds_filename):
@@ -264,6 +263,8 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
 
 if __name__ == "__main__":
-    cfg = runconfig.load('GCOV')
-    h5_prep.run(cfg, 'GCOV')
-    run(cfg)
+    yaml_parser = YamlArgparse()
+    args = yaml_parser.parse()
+    gcov_runcfg = GCOVRunConfig(args)
+    h5_prep.run(gcov_runcfg.cfg, 'GCOV')
+    run(gcov_runcfg.cfg)

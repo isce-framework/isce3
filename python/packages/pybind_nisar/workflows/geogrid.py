@@ -4,6 +4,8 @@ collection of functions for determing and setting geogrid
 
 import numpy as np
 
+import journal
+
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
 
@@ -28,6 +30,8 @@ def create(cfg, frequency):
     bbox = self.slc_obj.computeBoundingBox(epsg=state.epsg)
     for now let's rely on the run config input
     '''
+    error_channel = journal.error('geogrid.create')
+
     # unpack and init
     geocode_dict = cfg['processing']['geocode']
     input_hdf5 = cfg['InputFileGroup']['InputFilePath']
@@ -51,7 +55,11 @@ def create(cfg, frequency):
             spacing_x = dem_raster.dx
             spacing_y = dem_raster.dy
 
-        spacing_y = -1.0 * spacing_y if (spacing_y > 0) else spacing_y
+        # check if spacings supported by ISCE3
+        if spacing_x <= 0 or spacing_y >= 0:
+            err_str = f'dx {spacing_x} <= 0 or dy {spacing_y} >=0 in DEM {dem_file} not supported.'
+            error_channel.log(err_str)
+            raise ValueError(err_str)
 
         # extract other geogrid params from radar grid and orbit constructed bounding box
         geogrid = isce.product.bbox_to_geogrid(slc.getRadarGrid(frequency),
@@ -60,6 +68,12 @@ def create(cfg, frequency):
                                                isce.io.Raster(dem_file),
                                                spacing_x, spacing_y)
     else:
+        if spacing_x == 0.0 or spacing_y == 0.0:
+            err_str = 'spacing_x or spacing_y cannot be 0.0'
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+
+        spacing_x = abs(spacing_x)
         spacing_y = -1.0 * spacing_y if (spacing_y > 0) else spacing_y
         width = _grid_size(x_end, start_x, spacing_x)
         length = _grid_size(y_end, start_y, -1.0*spacing_y)
@@ -85,10 +99,14 @@ def create(cfg, frequency):
     if x_snap is not None or y_snap is not None:
         # check snap values before proceeding
         if x_snap <= 0 or y_snap <= 0:
-            raise ValueError('Snap values must be > 0.')
+            err_str = 'Snap values must be > 0.'
+            error_channel.log(err_str)
+            raise ValueError(err_str)
 
         if x_snap % spacing_x != 0.0 or y_snap % spacing_y != 0:
-            raise ValueError('Snap values must be exact multiples of spacings. i.e. snap % spacing == 0.0')
+            err_str = 'Snap values must be exact multiples of spacings. i.e. snap % spacing == 0.0'
+            error_channel.log(err_str)
+            raise ValueError(err_str)
 
         snap_coord = lambda val, snap, round_func: round_func(float(val) / snap) * snap
         geogrid.start_x = snap_coord(geogrid.start_x, x_snap, np.floor)

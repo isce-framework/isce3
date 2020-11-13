@@ -39,6 +39,9 @@ runconfig:
 
         #adt section - isce3 + pyre workflow
         processing:
+            # flag to keep or delete scratch contents
+            keep_scratch: bool()
+
             # Mechanism to select frequencies and polarizations
             input_subset:
                 # List of frequencies to process. Default empty representing all
@@ -47,6 +50,7 @@ runconfig:
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
                     A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+                    B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
 
             # Only checked when internet access is available
             dem_download:
@@ -66,9 +70,13 @@ runconfig:
                 # Same as input DEM if not provided.
                 outputEPSG: int(required=False)
                
-                # Output posting in same units as output EPSG. Single value or list indicating the output posting for each frequency
+                # Output posting in same units as output EPSG.
+                # If not provided, spacing values will be taken from provided DEM.
                 output_posting:
                     A:
+                        x_posting: num(min=0, required=False)
+                        y_posting: num(min=0, required=False)
+                    B:
                         x_posting: num(min=0, required=False)
                         y_posting: num(min=0, required=False)
 
@@ -131,4 +139,17 @@ runconfig:
 
             # To explicitly use GPU capability if available. Default False
             gpu_enabled: bool(required=False)
+            # Index of the GPU to use for processing, optional. Defaults to the
+            # first available CUDA device. Ignored if *gpu_enabled* is False.
+            gpu_id: int(min=0, required=False)
 
+        # Place holder for user set path to log file.
+        # If not set, log sent to screen or input yaml path derived file
+        logging: include('log_nfo', required=False)
+
+---
+log_nfo:
+    # Path to log file
+    path: str()
+    # Log file write mode. 'a' for append to existing. 'w' for new or overwrite existing.
+    write_mode: enum('a', 'w', required=False)

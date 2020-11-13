@@ -3,11 +3,12 @@ import time
 
 import h5py
 import journal
-import osr
 
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import h5_prep, runconfig
+from pybind_nisar.workflows import h5_prep
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
+from pybind_nisar.workflows.gslc_runconfig import GSLCRunConfig
 
 
 def run(cfg):
@@ -25,12 +26,14 @@ def run(cfg):
     lines_per_block = cfg['processing']['blocksize']['y']
     dem_block_margin = cfg['processing']['dem_margin']
     flatten = cfg['processing']['flatten']
-    ellipsoid = cfg['processing']['geocode']['ellipsoid']
 
     # init parameters shared by frequency A and B
     slc = SLC(hdf5file=input_hdf5)
     orbit = slc.getOrbit()
     dem_raster = isce3.io.Raster(dem_file)
+    epsg = dem_raster.get_epsg()
+    proj = isce3.core.make_projection(epsg)
+    ellipsoid = proj.ellipsoid
 
     # Doppler of the image grid (Zero for NISAR)
     image_grid_doppler = isce3.core.LUT2d()
@@ -86,6 +89,8 @@ def run(cfg):
 
 
 if __name__ == "__main__":
-    cfg = runconfig.load('GSLC')
-    h5_prep.run(cfg, 'GSLC')
-    run(cfg)
+    yaml_parser = YamlArgparse()
+    args = yaml_parser.parse()
+    gslc_runcfg = GSLCRunConfig(args)
+    h5_prep.run(gslc_runcfg.cfg, 'GSLC')
+    run(gslc_runcfg.cfg)

@@ -46,8 +46,15 @@ runconfig:
             # OPTIONAL - To explicitly use GPU capability if available. Default False
             gpu_enabled: False
 
+            # Index of the GPU to use for processing, optional. Defaults to the
+            # first available CUDA device. Ignored if *gpu_enabled* is False.
+            gpu_id: 0
+
         # ADT section - isce3 + pyre workflow
         processing:
+            # flag to keep or delete scratch contents
+            keep_scratch: True
+
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:
@@ -56,6 +63,7 @@ runconfig:
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
                     A:
+                    B:
 
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
@@ -80,9 +88,14 @@ runconfig:
                 outputEPSG:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
-                # If no provided, values will match spacing in provided DEM
+                # If not provided, spacing values will be taken from provided DEM.
+                # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
                     A:
+                        x_posting:
+                        y_posting:
+                    B:
                         x_posting:
                         y_posting:
 

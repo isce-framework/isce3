@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
+import argparse
 import os
-import shutil
-
-import h5py
-import numpy as np
 
 import pybind_isce3 as isce3
-from pybind_nisar.workflows import gcov, h5_prep, runconfig
+from pybind_nisar.workflows import gcov, h5_prep
+from pybind_nisar.workflows.gcov_runconfig import GCOVRunConfig
 
 import iscetest
 
@@ -18,39 +16,31 @@ def test_run():
     '''
     run gcov with same rasters and DEM as geocodeSlc test
     '''
-    # load yaml
     test_yaml = os.path.join(iscetest.data, 'geocode/test_gcov.yaml')
-    cfg = runconfig.load_yaml(test_yaml, f'{runconfig.dir()}/defaults/gcov.yaml')
 
-    # set input
-    input_h5 = os.path.join(iscetest.data, 'envisat.h5')
-    cfg['InputFileGroup']['InputFilePath'] = input_h5
+    # load text then substitude test directory paths since data dir is read only
+    with open(test_yaml) as fh_test_yaml:
+        test_yaml = ''.join(
+                [line.replace('ISCETEST', iscetest.data) for line in fh_test_yaml])
 
-    # reset path to DEM
-    dem_path = os.path.join(iscetest.data, 'geocode/zeroHeightDEM.geo')
-    cfg['DynamicAncillaryFileGroup']['DEMFile'] = dem_path
-    cfg['ProductPathGroup']['ScratchPath'] = '.'
+    # create CLI input namespace with yaml text instead of file path
+    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
 
-    # check and validate semi-valid runconfig. input/output adjusted in loop
-    runconfig.prep_paths(cfg, 'GCOV')
-    runconfig.prep_frequency_and_polarizations(cfg)
-    runconfig.prep_geocode_cfg(cfg)
-    runconfig.prep_gcov(cfg)
+    # init runconfig object
+    runconfig = GCOVRunConfig(args)
+    runconfig.geocode_common_arg_load()
 
     # geocode same rasters as C++/pybind geocodeCov
     for axis in input_axis:
-        # adjust runconfig to match just created raster
-        cfg['InputFileGroup']['InputFilePath'] = input_h5
-
         #  iterate thru geocode modes
         for key, value in geocode_modes.items():
-            cfg['ProductPathGroup']['SASOutputFile'] = f'{axis}_{key}.h5'
+            runconfig.cfg['ProductPathGroup']['SASOutputFile'] = f'{axis}_{key}.h5'
 
             # prepare output hdf5
-            h5_prep.run(cfg, 'GCOV')
+            h5_prep.run(runconfig.cfg, 'GCOV')
 
             # geocode test raster
-            gcov.run(cfg)
+            gcov.run(runconfig.cfg)
 
 
 if __name__ == '__main__':
