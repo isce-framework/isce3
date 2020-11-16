@@ -12,6 +12,7 @@ enum class ErrorCode {
     OrbitInterpUnknownMethod,
     FailedToConverge,
     WrongLookSide,
+    OutOfBoundsLookup,
 };
 
 /** Return a string describing the error code */
