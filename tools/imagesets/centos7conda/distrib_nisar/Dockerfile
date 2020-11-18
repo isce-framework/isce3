@@ -9,12 +9,13 @@ RUN conda install git
 ARG GIT_OAUTH_TOKEN
 RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
- && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/CFChecker
+ && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/CFChecker \
+ && rm -rf QualityAssurance/.git/config \
+ && rm -rf CFChecker/.git/config
 
 FROM $distrib_img
 
-RUN conda install testfixtures \
- && conda install scikit-image
+RUN conda install testfixtures scikit-image
 
 # copy the repo from the intermediate image
 COPY --from=distrib_nisar_tmp /opt/QualityAssurance /opt/QualityAssurance
