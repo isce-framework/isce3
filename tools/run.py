@@ -42,7 +42,7 @@ def run(*, steps, imgset, **kwargs):
     everything = mainsteps + nisarsteps + [
         "dropin",
         "docsbuild",
-        "prdocs"
+        "prdocs",
     ]
 
     # map step names to the imgset's methods
