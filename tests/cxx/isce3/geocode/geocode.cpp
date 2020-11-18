@@ -13,7 +13,6 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/geocode/geocodeSlc.h>
 #include <isce3/geocode/GeocodeCov.h>
-#include <isce3/geometry/Serialization.h>
 #include <isce3/geometry/Topo.h>
 #include <isce3/io/IH5.h>
 #include <isce3/io/Raster.h>
@@ -609,11 +608,11 @@ void createTestData()
     isce3::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
-    {
-        cereal::XMLInputArchive archive(xmlfid);
-        archive(cereal::make_nvp("Topo", topo));
-    }
+    topo.threshold(0.05);
+    topo.numiter(25);
+    topo.extraiter(10);
+    topo.demMethod(isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
+    topo.epsgOut(4326);
 
     // Open DEM raster
     isce3::io::Raster demRaster("zero_height_dem_geo.bin");

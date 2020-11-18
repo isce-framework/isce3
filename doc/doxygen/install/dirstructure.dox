@@ -32,7 +32,6 @@ that contain configuration files for different build and CI systems.
 │   └── sphinx
 ├── extern                      (External dependencies that are built with ISCE)
 │   ├── CMakeLists.txt
-│   ├── cereal
 │   ├── eigen3
 │   ├── googletest
 │   ├── pybind11
@@ -71,7 +70,6 @@ Shown below are the contents of the sub-folders populated by ISCE below the inst
 │   └── pyre.pfg
 ├── include                     (C++ headers)
 │   ├── Eigen
-│   ├── cereal
 │   ├── isce
 │   ├── portinfo                (pyre-specific header file)
 │   └── pyre

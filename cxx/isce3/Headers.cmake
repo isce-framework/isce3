@@ -83,7 +83,6 @@ geocode/GeocodeCov.h
 geocode/GeocodeCov.icc
 geometry/geometry.h
 geometry/RTC.h
-geometry/Serialization.h
 geometry/Topo.h
 geometry/Topo.icc
 geometry/TopoLayers.h

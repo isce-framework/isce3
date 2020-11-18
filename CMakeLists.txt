@@ -102,8 +102,6 @@ InitInstallDirLayout()
 
 option(ISCE3_FETCH_DEPS "Fetch external dependencies at build time" ON)
 include(CMakeDependentOption)
-cmake_dependent_option(ISCE3_FETCH_CEREAL "Fetch cereal at build time" ON
-                       "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_EIGEN "Fetch Eigen at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_GTEST "Fetch googletest at build time" ON
@@ -116,7 +114,6 @@ cmake_dependent_option(ISCE3_FETCH_PYRE "Fetch pyre at build time" ON
 include(.cmake/FetchExternRepo.cmake)
 
 add_subdirectory(extern)
-getpackage_cereal()
 getpackage_eigen()
 getpackage_fftw()
 getpackage_gdal()

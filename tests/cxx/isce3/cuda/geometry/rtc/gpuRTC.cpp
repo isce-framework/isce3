@@ -4,7 +4,6 @@
 #include "isce3/io/IH5.h"
 #include "isce3/io/Raster.h"
 #include "isce3/product/Product.h"
-#include "isce3/geometry/Serialization.h"
 #include "isce3/cuda/geometry/gpuRTC.h"
 
 TEST(TestRTC, RunRTC) {

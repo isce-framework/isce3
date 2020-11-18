@@ -23,7 +23,6 @@ core/Quaternion.cpp
 core/Sinc2dInterpolator.cpp
 core/Spline2dInterpolator.cpp
 core/TimeDelta.cpp
-core/Utilities.cpp
 error/ErrorCode.cpp
 except/Error.cpp
 geometry/boundingbox.cpp

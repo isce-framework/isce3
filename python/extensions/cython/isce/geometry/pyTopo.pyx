@@ -9,7 +9,6 @@ from libcpp cimport bool
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 
-from SerializeGeometry cimport load_archive
 from Topo cimport *
 from Interpolator cimport dataInterpMethod
 
