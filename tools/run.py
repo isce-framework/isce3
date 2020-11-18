@@ -18,15 +18,31 @@ def run(*, steps, imgset, **kwargs):
         "gcovtest",
     ]
 
+    nisarsteps = [
+        "setup",
+        "configure",
+        "build",
+        "test",
+        "makepkg",
+        "makedistrib",
+        "makedistrib_nisar",
+        "fetchdata",
+        "rslctest",
+        "gslctest",
+        "gcovtest",
+    ]
+
     # you can say "all" or "main" for a sequence similar to our CI pipeline
     if steps == ["all"] or steps == ["main"]:
         steps = mainsteps
+    elif steps == ["nisar"]:
+        steps = nisarsteps
 
     # extra helper steps that don't fall under the main  pipeline
-    everything = mainsteps + [
+    everything = mainsteps + nisarsteps + [
         "dropin",
         "docsbuild",
-        "prdocs",
+        "prdocs"
     ]
 
     # map step names to the imgset's methods

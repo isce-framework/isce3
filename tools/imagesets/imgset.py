@@ -1,4 +1,4 @@
-import os, subprocess, sys
+import os, subprocess, sys, shutil
 
 # Global configuration constants
 docker = "docker" # the docker executable
@@ -140,6 +140,20 @@ class ImageSet:
                     {thisdir}/{self.name}/distrib -t nisar-adt/isce3:{self.name}"
         subprocess.check_call(cmd.split())
 
+
+    def makedistrib_nisar(self):
+        """
+        Install package to redistributable isce3 docker image with nisar qa and caltools
+        """
+
+        build_args = f"--build-arg runtime_img=nisar-adt/isce3:{self.name} \
+                       --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN')}"
+        
+        cmd = f"{docker} build {build_args} \
+                {thisdir}/{self.name}/distrib_nisar -t nisar-adt/isce3:{self.name}-nisar"
+        subprocess.check_call(cmd.split())
+
+
     def fetchdata(self):
         """
         Fetch workflow testing data from Artifactory
@@ -185,6 +199,7 @@ class ImageSet:
         self.workflowtest("gslc", "pybind_nisar.workflows.gslc", "_v2")
     def gcovtest(self):
         self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v2")
+
 
     def docsbuild(self):
         """
