@@ -146,7 +146,7 @@ class ImageSet:
         Install package to redistributable isce3 docker image with nisar qa and caltools
         """
 
-        build_args = f"--build-arg runtime_img=nisar-adt/isce3:{self.name} \
+        build_args = f"--build-arg distrib_img=nisar-adt/isce3:{self.name} \
                        --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN')}"
         
         cmd = f"{docker} build {build_args} \

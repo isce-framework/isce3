@@ -1,6 +1,6 @@
-ARG runtime_img
+ARG distrib_img
 # create intermediate image to hide credentials
-FROM $runtime_img as distrib_nisar_tmp
+FROM $distrib_img as distrib_nisar_tmp
 
 # install git
 RUN conda install git
@@ -11,7 +11,7 @@ RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/CFChecker
 
-FROM $runtime_img
+FROM $distrib_img
 
 RUN conda install testfixtures \
  && conda install scikit-image
