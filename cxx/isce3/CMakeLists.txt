@@ -5,7 +5,6 @@ add_library(${LISCE} SHARED ${SRCS})
 SetCoverageOptions(${LISCE})
 
 target_link_libraries(${LISCE} PUBLIC
-    Cereal::Cereal
     Eigen3::Eigen
     GDAL::GDAL
     HDF5::HDF5

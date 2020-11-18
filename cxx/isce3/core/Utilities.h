@@ -209,18 +209,11 @@ namespace isce3 { namespace core {
         return stream.str();
     }
 
-    /** Read metadata from a VRT file and return an std::string
-      * @param[in] filename VRT product filename
-      * @param[in] bandNum Band number to retrieve metadata from 
-      * @param[out] meta std::string containing metadata */
-    std::string stringFromVRT(const char * filename, int bandNum=1);
-
     /** Combined absolute and relative tolerance test 
      * @param[in] first first value
      * @param[in] second second value
      * @param[out] returns comparison result (true or false)
      * */
-
     template <typename T>
     inline bool
     compareFloatingPoint(T first, T second) {

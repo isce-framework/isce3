@@ -23,9 +23,6 @@
 // isce3::product
 #include "isce3/product/Product.h"
 
-// isce3::geometry
-#include "isce3/geometry/Serialization.h"
-
 // isce3::cuda::geometry
 #include "isce3/cuda/geometry/Topo.h"
 
@@ -45,11 +42,11 @@ TEST(GPUTopoTest, RunTopo) {
     isce3::cuda::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
-    {
-    cereal::XMLInputArchive archive(xmlfid);
-    archive(cereal::make_nvp("Topo", topo));
-    }
+    topo.threshold(0.05);
+    topo.numiter(25);
+    topo.extraiter(10);
+    topo.demMethod(isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
+    topo.epsgOut(4326);
 
     // Open DEM raster
     isce3::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");

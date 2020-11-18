@@ -19,10 +19,6 @@ from Metadata cimport Metadata
 # Wrapper around isce3::core serialization defined in <isce/core/Serialization.h
 cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
 
-    # XML loading
-    void load_archive[T](string metadata, char * objTag, T * obj)
-    void load_archive_reference[T](string metadata, char * objTag, T & obj)
-
     # Load attitude data
     void loadFromH5(IGroup & group, Attitude & attitude)
 
@@ -31,12 +27,6 @@ cdef extern from "isce3/core/Serialization.h" namespace "isce3::core":
 
     # Load metadata
     void loadFromH5(IGroup & group, Metadata & meta, string mode)
-
-# Wrapper around isce3::geometry serialization defined in <isce/geometry/Serialization.h
-cdef extern from "isce3/geometry/Serialization.h" namespace "isce3::geometry":
-
-    # XML loading
-    void load_archive[T](string metadata, char * objTag, T * obj)
 
 # Wrapper around isce3::product serialization defined in <isce/product/Serialization.h
 cdef extern from "isce3/product/Serialization.h" namespace "isce3::product":

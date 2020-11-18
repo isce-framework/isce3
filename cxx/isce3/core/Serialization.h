@@ -12,17 +12,10 @@
 
 #include <iostream>
 #include <memory>
-#include <cereal/types/memory.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/archives/xml.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
 
-// pyre
-#include <pyre/journal.h>
-
-// isce3::core
 #include <isce3/core/Attitude.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/Ellipsoid.h>
@@ -33,53 +26,11 @@
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/StateVector.h>
 #include <isce3/core/TimeDelta.h>
-
-// isce3::io
 #include <isce3/io/IH5.h>
 #include <isce3/io/Serialization.h>
 
-//! The isce namespace
 namespace isce3 {
-//! The isce3::core namespace
 namespace core {
-
-// Archiving any isce3::core object by pointer
-template <typename T>
-inline void load_archive(std::string metadata, char * objectTag, T * object)
-{
-    std::stringstream metastream;
-    metastream << metadata;
-    cereal::XMLInputArchive archive(metastream);
-    archive(cereal::make_nvp(objectTag, (*object)));
-}
-
-// Archiving any isce3::core object by reference
-template <typename T>
-inline void load_archive_reference(std::string metadata, char * objectTag, T & object)
-{
-    std::stringstream metastream;
-    metastream << metadata;
-    cereal::XMLInputArchive archive(metastream);
-    archive(cereal::make_nvp(objectTag, object));
-}
-
-// ------------------------------------------------------------------------
-// Serialization for Ellipsoid
-// ------------------------------------------------------------------------
-
-template<class Archive>
-inline void save(Archive & archive, const Ellipsoid & ellps) {
-    archive(cereal::make_nvp("a", ellps.a()), cereal::make_nvp("e2", ellps.e2()));
-}
-
-template<class Archive>
-inline void load(Archive & archive, Ellipsoid & ellps)
-{
-    double a, e2;
-    archive(cereal::make_nvp("a", a), cereal::make_nvp("e2", e2));
-    ellps.a(a);
-    ellps.e2(e2);
-}
 
 /**
  * Load Ellipsoid parameters from HDF5.
@@ -95,28 +46,6 @@ inline void loadFromH5(isce3::io::IGroup & group, Ellipsoid & ellps)
     // Set ellipsoid properties
     ellps.a(ellpsData[0]);
     ellps.e2(ellpsData[1]);
-}
-
-// ------------------------------------------------------------------------
-// Serialization for Orbit
-// ------------------------------------------------------------------------
-
-template <class Archive>
-inline void save(Archive & archive, const Orbit & orbit) {
-    archive(cereal::make_nvp("StateVectors", orbit.getStateVectors()),
-            cereal::make_nvp("InterpMethod", orbit.interpMethod()));
-}
-
-template <class Archive>
-inline void load(Archive & archive, Orbit & orbit)
-{
-    std::vector<StateVector> statevecs;
-    OrbitInterpMethod interp_method;
-    archive(cereal::make_nvp("StateVectors", statevecs),
-            cereal::make_nvp("InterpMethod", interp_method));
-    orbit.referenceEpoch(statevecs.at(0).datetime);
-    orbit.setStateVectors(statevecs);
-    orbit.interpMethod(interp_method);
 }
 
 /**
@@ -311,69 +240,6 @@ inline void saveToH5(isce3::io::IGroup & group, const Attitude& att)
     // TODO convert and save EulerAngles
 }
 
-// ------------------------------------------------------------------------
-// Serialization for Metadata
-// ------------------------------------------------------------------------
-
-template <class Archive>
-inline void save(Archive & archive, const Metadata & meta)
-{
-    archive(cereal::make_nvp("width", meta.width),
-            cereal::make_nvp("length", meta.length),
-            cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
-            cereal::make_nvp("numberAzimuthLooks", meta.numberAzimuthLooks),
-            cereal::make_nvp("slantRangePixelSpacing", meta.slantRangePixelSpacing),
-            cereal::make_nvp("rangeFirstSample", meta.rangeFirstSample),
-            cereal::make_nvp("lookSide", meta.lookSide),
-            cereal::make_nvp("prf", meta.prf),
-            cereal::make_nvp("radarWavelength", meta.radarWavelength),
-            cereal::make_nvp("pegHeading", meta.pegHeading),
-            cereal::make_nvp("pegLatitude", meta.pegLatitude),
-            cereal::make_nvp("pegLongitude", meta.pegLongitude),
-            cereal::make_nvp("chirpSlope", meta.chirpSlope),
-            cereal::make_nvp("antennaLength", meta.antennaLength),
-            cereal::make_nvp("sensingStart", meta.sensingStart.isoformat()));
-}
-
-template <class Archive>
-inline void load(Archive & archive, Metadata & meta)
-{
-    std::string sensingStart;
-    archive(cereal::make_nvp("width", meta.width),
-            cereal::make_nvp("length", meta.length),
-            cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
-            cereal::make_nvp("numberAzimuthLooks", meta.numberAzimuthLooks),
-            cereal::make_nvp("slantRangePixelSpacing", meta.slantRangePixelSpacing),
-            cereal::make_nvp("rangeFirstSample", meta.rangeFirstSample),
-            cereal::make_nvp("lookSide", meta.lookSide),
-            cereal::make_nvp("prf", meta.prf),
-            cereal::make_nvp("radarWavelength", meta.radarWavelength),
-            cereal::make_nvp("pegHeading", meta.pegHeading),
-            cereal::make_nvp("pegLatitude", meta.pegLatitude),
-            cereal::make_nvp("pegLongitude", meta.pegLongitude),
-            cereal::make_nvp("chirpSlope", meta.chirpSlope),
-            cereal::make_nvp("antennaLength", meta.antennaLength),
-            cereal::make_nvp("sensingStart", sensingStart));
-    meta.sensingStart = sensingStart;
-}
-
-// ------------------------------------------------------------------------
-// Serialization for Poly2d
-// ------------------------------------------------------------------------
-
-// Definition for Poly2d
-template <class Archive>
-inline void serialize(Archive & archive, Poly2d & poly)
-{
-    archive(cereal::make_nvp("rangeOrder", poly.rangeOrder),
-            cereal::make_nvp("azimuthOrder", poly.azimuthOrder),
-            cereal::make_nvp("rangeMean", poly.rangeMean),
-            cereal::make_nvp("azimuthMean", poly.azimuthMean),
-            cereal::make_nvp("rangeNorm", poly.rangeNorm),
-            cereal::make_nvp("azimuthNorm", poly.azimuthNorm),
-            cereal::make_nvp("coeffs", poly.coeffs));
-}
-
 /**
  * \brief Load polynomial coefficients from HDF5 product.
  *
@@ -457,43 +323,6 @@ inline void saveCalGrid(isce3::io::IGroup & group,
     isce3::io::saveToH5(group, dsetName, lut.data(), units);
 }
 
-// ------------------------------------------------------------------------
-// Serialization for LUT1d
-// ------------------------------------------------------------------------
-
-// Serialization save method
-template <class Archive, typename T>
-inline void save(Archive & archive, LUT1d<T> const & lut)
-{
-    // Copy LUT data from valarrays to vectors
-    std::vector<double> coords(lut.size());
-    std::vector<T> values(lut.size());
-    auto v_coords = lut.coords();
-    auto v_values = lut.values();
-    coords.assign(std::begin(v_coords), std::end(v_coords));
-    values.assign(std::begin(v_values), std::end(v_values));
-    // Archive
-    archive(cereal::make_nvp("Coords", coords),
-            cereal::make_nvp("Values", values));
-}
-
-// Serialization load method
-template<class Archive, typename T>
-inline void load(Archive & archive, LUT1d<T> & lut)
-{
-    // Create vector for loading results
-    std::vector<double> coords;
-    std::vector<T> values;
-    // Load the archive
-    archive(cereal::make_nvp("Coords", coords),
-            cereal::make_nvp("Values", values));
-    // Copy vector to LUT valarrays
-    std::valarray<double> v_coords(coords.data(), coords.size());
-    std::valarray<T> v_values(values.data(), values.size());
-    lut.coords(v_coords);
-    lut.values(v_values);
-}
-
 /**
  * \brief Load polynomial coefficients from HDF5 product.
  *
@@ -516,47 +345,4 @@ inline void loadFromH5(isce3::io::IGroup & group, LUT1d<T> & lut,
     lut.values(y);
 }
 
-// ------------------------------------------------------------------------
-// Serialization for StateVector
-// ------------------------------------------------------------------------
-
-// Serialization save method
-template<class Archive>
-inline void save(Archive & archive, const StateVector & sv)
-{
-    // Serialize position vector to string as whitespace-delimited values
-    std::stringstream pos_stream;
-    pos_stream << sv.position[0] << " " << sv.position[1] << " " << sv.position[2];
-    std::string position_string = pos_stream.str();
-    // Serialize velocity vector to string as whitespace-delimited values
-    std::stringstream vel_stream;
-    vel_stream << sv.velocity[0] << " " << sv.velocity[1] << " " << sv.velocity[2];
-    std::string velocity_string = vel_stream.str();
-    // Archive
-    archive(cereal::make_nvp("Time", sv.datetime.isoformat()),
-            cereal::make_nvp("Position", position_string),
-            cereal::make_nvp("Velocity", velocity_string));
-}
-
-// Serialization load method
-template<class Archive>
-inline void load(Archive & archive, StateVector & sv)
-{
-    // Make strings for position, velocity, and datetime
-    std::string position_string, velocity_string, datetime_string;
-    // Load the archive
-    archive(cereal::make_nvp("Time", datetime_string),
-            cereal::make_nvp("Position", position_string),
-            cereal::make_nvp("Velocity", velocity_string));
-    // Send datetime string to datetime object parser
-    sv.datetime = datetime_string;
-    // De-serialize position vector from stringstream
-    std::stringstream pos_stream (position_string);
-    pos_stream >> sv.position[0] >> sv.position[1] >> sv.position[2];
-    // De-serialize velocity vector from stringstream
-    std::stringstream vel_stream (velocity_string);
-    vel_stream >> sv.velocity[0] >> sv.velocity[1] >> sv.velocity[2];
-}
-
-}
-}
+}} // namespace isce3::core
