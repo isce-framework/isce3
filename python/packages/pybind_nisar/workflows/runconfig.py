@@ -107,7 +107,7 @@ class RunConfig:
 
     def prep_paths(self):
         '''
-        TODO populate
+        Prepare input and output paths
         '''
         error_channel = journal.error('RunConfig.load')
 
@@ -135,7 +135,7 @@ class RunConfig:
                     error_channel.log(err_str)
                     raise FileNotFoundError(err_str)
             else:
-                err_str = f'{workflow_name} unsupported'
+                err_str = f'{self.workflow_name} unsupported'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
 
@@ -163,15 +163,9 @@ class RunConfig:
         # create output dir (absolute or relative) if it does exist. do nothing if nothing
         output_hdf5 = self.cfg['ProductPathGroup']['SASOutputFile']
         output_dir = os.path.dirname(output_hdf5)
-        if output_dir:
-            try:
-                os.makedirs(output_dir, exist_ok=True)
-            except OSError:
-                err_str = f"Unable to create {output_dir}"
-                error_channel.log(err_str)
-                raise OSError(err_str)
 
-        helpers.check_write_dir(self.cfg['ProductPathGroup']['ScratchPath'])
+        helpers.prep_write_dir(output_dir)
+        helpers.prep_write_dir(self.cfg['ProductPathGroup']['ScratchPath'])
 
 
     def prep_frequency_and_polarizations(self):
@@ -195,14 +189,15 @@ class RunConfig:
             # use all RSLC polarizations if None provided
             if freq_pols[freq] is None:
                 freq_pols[freq] = rslc_pols
+                continue
+
             # use polarizations provided by user
-            else:
-                # check if user provided polarizations match RSLC ones
-                for usr_pol in freq_pols[freq]:
-                    if usr_pol not in rslc_pols:
-                        err_str = f"{usr_pol} invalid; not found in source polarizations."
-                        error_channel.log(err_str)
-                        raise ValueError(err_str)
+            # check if user provided polarizations match RSLC ones
+            for usr_pol in freq_pols[freq]:
+                if usr_pol not in rslc_pols:
+                    err_str = f"{usr_pol} invalid; not found in source polarizations."
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
 
 
     def prep_geocode_cfg(self):

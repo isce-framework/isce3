@@ -63,13 +63,16 @@ def cp_geocode_meta(cfg, dst):
         h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5: 
 
         # simple copies of identification, metadata/orbit, metadata/attitude groups
-        cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification')
+        cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification',
+                        excludes='productType')
 
         # Flag isGeocoded
         ident = dst_h5[f'{common_parent_path}/identification']
         dset = ident.create_dataset('isGeocoded', data=np.string_("True"))
         desc = "Flag to indicate radar geometry or geocoded product"
         dset.attrs["description"] = np.string_(desc)
+
+        ident['productType'] = dst
 
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
@@ -105,12 +108,19 @@ def cp_geocode_meta(cfg, dst):
         desc = "List of input L1 products used"
         dset.attrs["description"] = np.string_(desc)
 
-        # copy calibration information group
+        # copy calibration information group and zeroDopplerTimeSpacing
         excludes = []
         if is_insar:
             excludes = ['nes0', 'elevationAntennaPattern']
         for freq in freq_pols.keys():
             frequency = f'frequency{freq}'
+
+            # copy zeroDopplerTimeSpacing
+            zero_doppler_time_spacing = src_h5[
+                f'{common_parent_path}/SLC/swaths/zeroDopplerTimeSpacing'][...]
+            dst_h5[f'{common_parent_path}/{dst}/grids/{frequency}'
+                   '/zeroDopplerTimeSpacing/'] = zero_doppler_time_spacing
+
             pol_list = freq_pols[freq]
             if pol_list is None:
                 continue
@@ -139,9 +149,9 @@ def cp_geocode_meta(cfg, dst):
 
         # copy product specifics
         if is_insar:
-            copy_insar_meta(cfg, src_meta_path, dst_meta_path, src_h5, dst_h5)
+            copy_insar_meta(cfg, src_meta_path, dst, src_h5, dst_h5)
         else:
-            copy_gslc_gcov_meta(slc.SwathPath, dst_meta_path, src_h5, dst_h5)
+            copy_gslc_gcov_meta(slc.SwathPath, dst, src_h5, dst_h5)
 
 
 def copy_gslc_gcov_meta(src_swath_path, dst, src_h5, dst_h5):
@@ -252,7 +262,7 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
         shape = (geogrids[freq].length, geogrids[freq].width)
         dst_parent_path = os.path.join(common_parent_path, f'{dst}/grids/frequency{freq}')
 
-        _add_geo_info(dst_h5, dst, common_parent_path, freq, geogrids[freq])
+        set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
 
         # GSLC specfics datasets
         if dst == 'GSLC':
@@ -293,7 +303,7 @@ def prep_ds_gunw(cfg, dst, dst_h5):
         dst_h5.create_group(dst_parent_path)
 
         # Add x/yCoordinates, x/yCoordinatesSpacing
-        _add_geo_info(dst_h5, dst, common_parent_path, freq, geogrids[freq])
+        set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
 
         # Add list of polarizations
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
@@ -458,157 +468,173 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     desc = f"List of polarization layers with frequency{frequency}"
     dset.attrs["description"] = np.string_(desc)
 
+def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
 
-def _add_geo_info(hdf5_obj, dst, common_parent_path, frequency, geo_grid):
     epsg_code = geo_grid.epsg
 
     dx = geo_grid.spacing_x
-    x0 = geo_grid.start_x + 0.5 * dx
-    xf = x0 + geo_grid.width * dx
-    x_vect = np.arange(x0, xf, dx, dtype=np.float64)
+    x0 = geo_grid.start_x + 0.5*dx
+    xf = x0 + (geo_grid.width - 1) * dx
+    x_vect = np.linspace(x0, xf, geo_grid.width, dtype=np.float64)
 
     dy = geo_grid.spacing_y
-    y0 = geo_grid.start_y + 0.5 * dy
-    yf = y0 + geo_grid.length * dy
-    y_vect = np.arange(y0, yf, dy, dtype=np.float64)
+    y0 = geo_grid.start_y + 0.5*dy
+    yf = y0 + (geo_grid.length - 1) * dy
+    y_vect = np.linspace(y0, yf - dy, geo_grid.length, dtype=np.float64)
 
-    root_ds = os.path.join(common_parent_path, dst, f'grids/frequency{frequency}')
+    hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
 
-    if dst in ['INSAR']:
-        # Create x/y Coordinates and x/y Spacing
-        h5_ds = os.path.join(root_ds, 'xCoordinates')
-        descr = "CF compliant dimension associated with X coordinate"
+    if epsg_code == 4326:
+        x_coord_units = "degrees_east"
+        y_coord_units = "degrees_north"
+        x_standard_name = "longitude"
+        y_standared_name = "latitude"
+    else:
+        x_coord_units = "meters"
+        y_coord_units = "meters"
+        x_standard_name = "projection_x_coordinate"
+        y_standared_name = "projection_y_coordinate"
 
-        xds = hdf5_obj.create_dataset(h5_ds, data=x_vect)
-        xds.attrs["description"] = np.string_(descr)
-        xds.attrs["units"] = np.string_("meters")
+    # xCoordinateSpacing
+    descr = (f'Nominal spacing in {x_coord_units}'
+             ' between consecutive pixels')
 
-        h5_ds = os.path.join(root_ds, 'yCoordinates')
-        yds = hdf5_obj.create_dataset(h5_ds, data=y_vect)
-        yds.attrs["description"] = np.string_(descr.replace('X', 'Y'))
-        yds.attrs["units"] = np.string_("meters")
+    xds_spacing_name = os.path.join(root_ds, 'xCoordinateSpacing')
+    if xds_spacing_name in hdf5_obj:
+        del hdf5_obj[xds_spacing_name]
+    xds_spacing = hdf5_obj.create_dataset(xds_spacing_name, data=dx)
+    xds_spacing.attrs["description"] = np.string_(descr)
+    xds_spacing.attrs["units"] = np.string_(x_coord_units)
 
-        descr = "Nominal spacing in meters between consecutive pixels"
-        h5_ds = os.path.join(root_ds, 'xCoordinatesSpacing')
-        xdsSp = hdf5_obj.create_dataset(h5_ds, data=dx)
-        xdsSp.attrs["description"] = np.string_(descr)
-        xdsSp.attrs["units"] = np.string_("meters")
+    # yCoordinateSpacing
+    descr = (f'Nominal spacing in {y_coord_units}'
+             ' between consecutive lines')
 
-        h5_ds = os.path.join(root_ds, 'yCoordinatesSpacing')
-        ydsSp = hdf5_obj.create_dataset(h5_ds, data=dy)
-        ydsSp.attrs["description"] = np.string_(descr.replace("pixels", "lines"))
-        ydsSp.attrs["units"] = np.string_("meters")
+    yds_spacing_name = os.path.join(root_ds, 'yCoordinateSpacing')
+    if yds_spacing_name in hdf5_obj:
+        del hdf5_obj[yds_spacing_name]
+    yds_spacing = hdf5_obj.create_dataset(yds_spacing_name, data=dy)
+    yds_spacing.attrs["description"] = np.string_(descr)
+    yds_spacing.attrs["units"] = np.string_(y_coord_units)
+
+    # xCoordinates
+    descr = "CF compliant dimension associated with the X coordinate"
+    xds_name = os.path.join(root_ds, 'xCoordinates')
+    if xds_name in hdf5_obj:
+        del hdf5_obj[xds_name]
+    xds = hdf5_obj.create_dataset(xds_name, data=x_vect)
+    xds.attrs['standard_name'] = np.string_(x_standard_name)
+    xds.attrs["description"] = np.string_(descr)
+    xds.attrs["units"] = np.string_(x_coord_units)
+
+    # yCoordinates
+    descr = "CF compliant dimension associated with the Y coordinate"
+    yds_name = os.path.join(root_ds, 'yCoordinates')
+    if yds_name in hdf5_obj:
+        del hdf5_obj[yds_name]
+    yds = hdf5_obj.create_dataset(yds_name, data=y_vect)
+    yds.attrs['standard_name'] = np.string_(y_standared_name)
+    yds.attrs["description"] = np.string_(descr)
+    yds.attrs["units"] = np.string_(y_coord_units)
+
+    coordinates_list = [xds, yds]
+
+    try:
+        for _ds in coordinates_list:
+            _ds.make_scale()
+    except AttributeError:
+        pass
+
+    # Associate grid mapping with data - projection created later
+    projection_ds_name = os.path.join(root_ds, "projection")
+
+    ###Create a new single int dataset for projections
+    if projection_ds_name in hdf5_obj:
+        del hdf5_obj[projection_ds_name]
+    projds = hdf5_obj.create_dataset(projection_ds_name, (), dtype='i')
+    projds[()] = epsg_code
+
+    # Set up osr for wkt
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(epsg_code)
+
+    ##WGS84 ellipsoid
+    projds.attrs['semi_major_axis'] = 6378137.0
+    projds.attrs['inverse_flattening'] = 298.257223563
+    projds.attrs['ellipsoid'] = np.string_("WGS84")
+
+    ##Additional fields
+    projds.attrs['epsg_code'] = epsg_code
+
+    ##CF 1.7+ requires this attribute to be named "crs_wkt"
+    ##spatial_ref is old GDAL way. Using that for testing only.
+    ##For NISAR replace with "crs_wkt"
+    projds.attrs['spatial_ref'] = np.string_(srs.ExportToWkt())
+
+    ##Here we have handcoded the attributes for the different cases
+    ##Recommended method is to use pyproj.CRS.to_cf() as shown above
+    ##To get complete set of attributes.
+
+    sr = osr.SpatialReference()
+    sr.ImportFromEPSG(epsg_code)
+
+    projds.attrs['grid_mapping_name'] = sr.GetName()
+
+    ###Set up units
+    ###Geodetic latitude / longitude
+    if epsg_code == 4326:
+        # Set up grid mapping
+        projds.attrs['longitude_of_prime_meridian'] = 0.0
+
+        projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LATITUDE_OF_ORIGIN)
+        projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LONGITUDE_OF_ORIGIN)
 
     else:
-        hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
-        # xCoordinates
-        h5_ds = os.path.join(root_ds, 'xCoordinates')  # float64
-        xds = hdf5_obj.create_dataset(h5_ds, data=x_vect)
-
-        # yCoordinates
-        h5_ds = os.path.join(root_ds, 'yCoordinates')  # float64
-        yds = hdf5_obj.create_dataset(h5_ds, data=y_vect)
-
-        try:
-            for _ds in [xds, yds]:
-                _ds.make_scale()
-        except AttributeError:
-            pass
-
-        # Associate grid mapping with data - projection created later
-        h5_ds = os.path.join(root_ds, "projection")
-
-        # Set up osr for wkt
-        srs = osr.SpatialReference()
-        srs.ImportFromEPSG(epsg_code)
-
-        ###Create a new single int dataset for projections
-        projds = hdf5_obj.create_dataset(h5_ds, (), dtype='i')
-        projds[()] = epsg_code
-
-        # h5_ds_list.append(h5_ds)
-
-        ##WGS84 ellipsoid
-        projds.attrs['semi_major_axis'] = 6378137.0
-        projds.attrs['inverse_flattening'] = 298.257223563
-        projds.attrs['ellipsoid'] = np.string_("WGS84")
-
-        ##Additional fields
-        projds.attrs['epsg_code'] = epsg_code
-
-        ##CF 1.7+ requires this attribute to be named "crs_wkt"
-        ##spatial_ref is old GDAL way. Using that for testing only.
-        ##For NISAR replace with "crs_wkt"
-        projds.attrs['spatial_ref'] = np.string_(srs.ExportToWkt())
-
-        ##Here we have handcoded the attributes for the different cases
-        ##Recommended method is to use pyproj.CRS.to_cf() as shown above
-        ##To get complete set of attributes.
-
-        sr = osr.SpatialReference()
-        sr.ImportFromEPSG(epsg_code)
-
-        projds.attrs['grid_mapping_name'] = sr.GetName()
-
-        ###Set up units
-        ###Geodetic latitude / longitude
-        if epsg_code == 4326:
+        ### UTM zones
+        if ((epsg_code > 32600 and
+                epsg_code < 32661) or
+                (epsg_code > 32700 and
+                    epsg_code < 32761)):
             # Set up grid mapping
-            projds.attrs['longitude_of_prime_meridian'] = 0.0
+            projds.attrs['utm_zone_number'] = epsg_code % 100
 
-            # Setup units for x and y
-            xds.attrs['standard_name'] = np.string_("longitude")
-            xds.attrs['units'] = np.string_("degrees_east")
+        ### Polar Stereo North
+        elif epsg_code == 3413:
+            # Set up grid mapping
+            projds.attrs['standard_parallel'] = 70.0
+            projds.attrs['straight_vertical_longitude_from_pole'] = -45.0
 
-            yds.attrs['standard_name'] = np.string_("latitude")
-            yds.attrs['units'] = np.string_("degrees_north")
+        ### Polar Stereo south
+        elif epsg_code == 3031:
+            # Set up grid mapping
+            projds.attrs['standard_parallel'] = -71.0
+            projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
+
+        ### EASE 2 for soil moisture L3
+        elif epsg_code == 6933:
+            # Set up grid mapping
+            projds.attrs['longitude_of_central_meridian'] = 0.0
+            projds.attrs['standard_parallel'] = 30.0
+
+        ### Europe Equal Area for Deformation map (to be implemented in isce3)
+        elif epsg_code == 3035:
+            # Set up grid mapping
+            projds.attrs['standard_parallel'] = -71.0
+            projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
+
         else:
-            ### UTM zones
-            if ((epsg_code > 32600 and
-                 epsg_code < 32661) or
-                    (epsg_code > 32700 and
-                     epsg_code < 32761)):
-                # Set up grid mapping
-                projds.attrs['utm_zone_number'] = epsg_code % 100
+            raise NotImplementedError(f'EPSG {epsg_code} waiting for implementation / not supported in ISCE3')
 
-            ### Polar Stereo North
-            elif epsg_code == 3413:
-                # Set up grid mapping
-                projds.attrs['standard_parallel'] = 70.0
-                projds.attrs['straight_vertical_longitude_from_pole'] = -45.0
+        # Setup common parameters
+        xds.attrs['long_name'] = np.string_("x coordinate of projection")
+        yds.attrs['long_name'] = np.string_("y coordinate of projection")
 
-            ### Polar Stereo south
-            elif epsg_code == 3031:
-                # Set up grid mapping
-                projds.attrs['standard_parallel'] = -71.0
-                projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
+        projds.attrs['false_easting'] = sr.GetProjParm(osr.SRS_PP_FALSE_EASTING)
+        projds.attrs['false_northing'] = sr.GetProjParm(osr.SRS_PP_FALSE_NORTHING)
 
-            ### EASE 2 for soil moisture L3
-            elif epsg_code == 6933:
-                # Set up grid mapping
-                projds.attrs['longitude_of_central_meridian'] = 0.0
-                projds.attrs['standard_parallel'] = 30.0
+        projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LATITUDE_OF_ORIGIN)
+        projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LONGITUDE_OF_ORIGIN)
 
-            ### Europe Equal Area for Deformation map (to be implemented in isce3)
-            elif epsg_code == 3035:
-                # Set up grid mapping
-                projds.attrs['standard_parallel'] = -71.0
-                projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
+    return yds, xds
 
-            else:
-                raise NotImplementedError(f'EPSG {epsg_code} waiting for implementation / not supported in ISCE3')
 
-            # Setup common parameters
-            xds.attrs['standard_name'] = np.string_("projection_x_coordinate")
-            xds.attrs['long_name'] = np.string_("x coordinate of projection")
-            xds.attrs['units'] = np.string_("m")
-
-            yds.attrs['standard_name'] = np.string_("projection_y_coordinate")
-            yds.attrs['long_name'] = np.string_("y coordinate of projection")
-            yds.attrs['units'] = np.string_("m")
-
-            projds.attrs['false_easting'] = sr.GetProjParm(osr.SRS_PP_FALSE_EASTING)
-            projds.attrs['false_northing'] = sr.GetProjParm(osr.SRS_PP_FALSE_NORTHING)
-
-            projds.attrs['latitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LATITUDE_OF_ORIGIN)
-            projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LONGITUDE_OF_ORIGIN)

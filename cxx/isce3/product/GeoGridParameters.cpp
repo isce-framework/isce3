@@ -36,17 +36,14 @@ GeoGridParameters::GeoGridParameters(
     }
 }
 
-GeoGridParameters bbox2GeoGrid(
-        const RadarGridParameters& radar_grid,
-        const isce3::core::Orbit& orbit,
-        const isce3::core::LUT2d<double>& doppler,
-        const isce3::io::Raster& dem_raster,
-        double spacing_x,
-        double spacing_y,
-        double min_height, double max_height,
-        const double margin, const int pointsPerEdge,
-        const double threshold, const int numiter,
-        const double height_threshold)
+GeoGridParameters bbox2GeoGrid(const RadarGridParameters& radar_grid,
+                               const isce3::core::Orbit& orbit,
+                               const isce3::core::LUT2d<double>& doppler,
+                               double spacing_x, double spacing_y, int epsg,
+                               double min_height, double max_height,
+                               const double margin, const int pointsPerEdge,
+                               const double threshold, const int numiter,
+                               const double height_threshold)
 {
     if (spacing_x <= 0) {
         std::string errmsg = "X spacing must be > 0.0";
@@ -58,7 +55,6 @@ GeoGridParameters bbox2GeoGrid(
         throw isce3::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 
-    auto epsg = dem_raster.getEPSG();
 
     // determine bounding box from radar grid
     auto proj = isce3::core::makeProjection(epsg);
@@ -80,14 +76,11 @@ GeoGridParameters bbox2GeoGrid(
 }
 
 GeoGridParameters bbox2GeoGridScaled(
-        const RadarGridParameters& radar_grid,
-        const isce3::core::Orbit& orbit,
+        const RadarGridParameters& radar_grid, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& doppler,
-        const isce3::io::Raster& dem_raster,
-        double spacing_scale,
-        double min_height, double max_height,
-        const double margin, const int pointsPerEdge,
-        const double threshold, const int numiter,
+        const isce3::io::Raster& dem_raster, double spacing_scale, 
+        double min_height, double max_height, const double margin,
+        const int pointsPerEdge, const double threshold, const int numiter,
         const double height_threshold)
 {
     if (spacing_scale <= 0.0) {
@@ -99,12 +92,10 @@ GeoGridParameters bbox2GeoGridScaled(
     auto spacing_x = dem_raster.dx() * spacing_scale;
     auto spacing_y = dem_raster.dy() * spacing_scale;
 
-    return bbox2GeoGrid(radar_grid, orbit,
-            doppler, dem_raster,
-            spacing_x, spacing_y,
-            min_height, max_height,
-            margin, pointsPerEdge,
-            threshold, numiter,
-            height_threshold);
+    int epsg = dem_raster.getEPSG();
+
+    return bbox2GeoGrid(radar_grid, orbit, doppler, spacing_x,
+                        spacing_y, epsg, min_height, max_height, margin,
+                        pointsPerEdge, threshold, numiter, height_threshold);
 }
 }}

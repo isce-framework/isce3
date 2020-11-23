@@ -54,5 +54,5 @@ class Rdr2geoRunConfig(RunConfig):
 
         self.cfg['processing']['input_subset']['list_of_frequencies'] = self.args.freq_pols
 
-        helpers.check_write_dir(self.args.scratch)
+        helpers.prep_write_dir(self.args.scratch)
         self.cfg['ProductPathGroup']['ScratchPath'] = self.args.scratch

@@ -47,10 +47,13 @@ def create(cfg, frequency):
     x_end = geocode_dict['bottom_right']['x_abs']
     y_end = geocode_dict['bottom_right']['y_abs']
 
+    dem_raster = isce.io.Raster(dem_file)
+    if epsg is not None:
+        epsg = dem_raster.get_epsg()
+
     # init geogrid
     if None in [start_x, start_y, spacing_x, spacing_y, epsg, x_end, y_end]:
         # take spacing from DEM
-        dem_raster = isce.io.Raster(dem_file)
         if None in [spacing_x, spacing_y]:
             spacing_x = dem_raster.dx
             spacing_y = dem_raster.dy
@@ -65,8 +68,7 @@ def create(cfg, frequency):
         geogrid = isce.product.bbox_to_geogrid(slc.getRadarGrid(frequency),
                                                slc.getOrbit(),
                                                slc.getDopplerCentroid(frequency=frequency),
-                                               isce.io.Raster(dem_file),
-                                               spacing_x, spacing_y)
+                                               spacing_x, spacing_y, epsg)
     else:
         if spacing_x == 0.0 or spacing_y == 0.0:
             err_str = 'spacing_x or spacing_y cannot be 0.0'

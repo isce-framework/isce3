@@ -4,6 +4,7 @@ collection of useful functions used across workflows
 
 from collections import defaultdict
 import os
+import gdal
 
 import journal
 
@@ -42,18 +43,25 @@ def autovivified_dict():
 WORKFLOW_SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def check_write_dir(dst_path: str):
+def prep_write_dir(dst_path: str):
     '''
     Raise error if given path does not exist or not writeable.
     '''
-    error_channel = journal.error('helpers.check_check_write_dir')
+    if not dst_path:
+        dst_path = '.'
+
+    error_channel = journal.error('helpers.prep_write_dir')
 
     # check if scratch path exists
     dst_path_ok = os.path.isdir(dst_path)
+
     if not dst_path_ok:
-        err_str = f"{dst_path} scratch directory does not exist."
-        error_channel.log(err_str)
-        raise NotADirectoryError(err_str)
+        try:
+            os.makedirs(dst_path, exist_ok=True)
+        except OSError:
+            err_str = f"Unable to create {dst_path}"
+            error_channel.log(err_str)
+            raise OSError(err_str)
 
     # check if path writeable
     write_ok = os.access(dst_path, os.W_OK)
@@ -69,18 +77,12 @@ def check_dem(dem_path: str):
     '''
     error_channel = journal.error('helpers.check_dem')
 
-    if dem_path.startswith('/vsi3') or dem_path.startswith('NETCDF:'):
-        try:
-            gdal.Open(dem_path)
-        except:
-            err_str = f'{dem_path} cannot be opened by GDAL'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-    if not os.path.isfile(dem_path):
-        err_str = f"{dem_path} not valid"
+    try:
+        gdal.Open(dem_path)
+    except:
+        err_str = f'{dem_path} cannot be opened by GDAL'
         error_channel.log(err_str)
-        raise FileNotFoundError(err_str)
+        raise ValueError(err_str)
 
 
 def check_log_dir_writable(log_file_path: str):

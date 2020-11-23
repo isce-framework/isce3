@@ -83,9 +83,9 @@ void addbinding_bbox_to_geogrid(py::module & m)
             py::arg("radar_grid"),
             py::arg("orbit"),
             py::arg("doppler"),
-            py::arg("dem_raster"),
             py::arg("spacing_x"),
             py::arg("spacing_y"),
+            py::arg("epsg"),
             py::arg("min_height") = isce3::core::GLOBAL_MIN_HEIGHT,
             py::arg("max_height") = isce3::core::GLOBAL_MAX_HEIGHT,
             py::arg("margin") = 0.0,
@@ -100,9 +100,9 @@ void addbinding_bbox_to_geogrid(py::module & m)
         radar_grid          Input RadarGridParameters
         orbit               Input orbit
         doppler             Input doppler
-        dem_raster          DEM from which EPSG and spacing is extracted
         spacing_x           Geogrid spacing in X axis
         spacing_y           Geogrid spacing in Y axis
+        epsg                EPSG code
         min_height          Height lower bound
         max_height          Height upper bound
         margin              Amount to pad estimated bounding box. In decimal degrees.
@@ -110,5 +110,5 @@ void addbinding_bbox_to_geogrid(py::module & m)
         threshold           Slant range threshold for convergence.
         numiter             Max number of iterations for converence.
         height_threshold    Height threshold for convergence.
-            )");
+        )");
 }
