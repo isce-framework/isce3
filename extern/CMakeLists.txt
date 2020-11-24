@@ -111,7 +111,7 @@ endmacro()
 
 macro(getpackage_pyre)
     if(ISCE3_FETCH_PYRE)
-        find_package(pyre 1.9.9 CONFIG)
+        find_package(pyre CONFIG)
         if(NOT pyre_FOUND)
             # disable pyre's test suite
             set(BUILD_TESTING OFF)
@@ -122,7 +122,7 @@ macro(getpackage_pyre)
                 )
         endif()
     else()
-        find_package(pyre 1.9.9 REQUIRED CONFIG)
+        find_package(pyre REQUIRED CONFIG)
     endif()
 endmacro()
 

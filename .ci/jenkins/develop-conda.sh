@@ -56,6 +56,7 @@ $DOCKER run --name $CONTAINER \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
                    -DCMAKE_PREFIX_PATH=/usr/local/conda \
                    -DISCE3_FETCH_EIGEN=no \
+                   -DISCE3_FETCH_PYRE=no \
      && make -j`nproc` VERBOSE=y \
      && make install"
 
