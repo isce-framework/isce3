@@ -27,6 +27,7 @@ RUN echo ". $conda_prefix/etc/profile.d/conda.sh" >> /etc/bashrc \
 ENV GDAL_DATA=$conda_prefix/share/gdal
 ENV GDAL_DRIVER_PATH=$conda_prefix/lib/gdalplugins
 ENV PROJ_LIB=$conda_prefix/share/proj
+ENV MPLCONFIGDIR=/tmp
 
 RUN yum install -y \
         cuda-cudart-$CUDA_PKG_VERSION \

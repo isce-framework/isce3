@@ -217,8 +217,7 @@ class ImageSet:
         self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v2")
 
     def workflowqa(self, name):
-        cmd = f"""export MPLCONFIGDIR=/tmp
-                  mkdir -p qa_{name}
+        cmd = f"""mkdir -p qa_{name}
                   time python3 /opt/QualityAssurance/verify_{name}.py --fpdf qa_{name}/graphs.pdf \\
                       --fhdf qa_{name}/stats.h5 --flog qa_{name}/qa.log --validate \\
                       --quality output_{name}/{name}.h5
