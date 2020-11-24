@@ -35,6 +35,9 @@ def run(cfg):
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
 
+    # NISAR RSLC products are always zero doppler
+    grid_doppler = isce3.core.LUT2d()
+
     info_channel = journal.info("rdr2geo.run")
     info_channel.log("starting geocode SLC")
 
@@ -50,19 +53,18 @@ def run(cfg):
     for freq in freq_pols.keys():
         # get frequency specific parameters
         radargrid = slc.getRadarGrid(freq)
-        doppler = slc.getDopplerCentroid(freq)
 
         # create seperate directory within scratch dir for rdr2geo run
-        rdr2geo_scratch_path = scratch_path / f'rdr2geo{freq}'
-        rdr2geo_scratch_path.mkdir(exist_ok=True)
+        rdr2geo_scratch_path = scratch_path / 'rdr2geo' / f'freq{freq}'
+        rdr2geo_scratch_path.mkdir(parents=True, exist_ok=True)
 
         # init CPU or CUDA object accordingly
         if use_gpu:
-            rdr2geo_obj = isce3.cuda.geometry.Rdr2Geo(radargrid, orbit,
-                                                      ellipsoid, doppler)
+            Rdr2Geo = isce3.cuda.geometry.Rdr2Geo
         else:
-            rdr2geo_obj = isce3.geometry.Rdr2Geo(radargrid, orbit, ellipsoid,
-                                                 doppler)
+            Rdr2Geo = isce3.geometry.Rdr2Geo
+
+        rdr2geo_obj = Rdr2Geo(radargrid, orbit, ellipsoid, grid_doppler)
 
         # run
         rdr2geo_obj.topo(dem_raster, str(rdr2geo_scratch_path))

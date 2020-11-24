@@ -8,12 +8,12 @@ runconfig:
         InputFileGroup:
             # REQUIRED - Two NISAR L1B RSLC formatted HDF5 files
             InputFilePath:
-            - ISCETEST/envisat.h5
-            - ISCETEST/envisat.h5
+            - ISCETEST/winnipeg.h5
+            - ISCETEST/winnipeg.h5
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: ISCETEST/srtm_cropped.tif
+            DEMFile: ISCETEST/winnipeg_dem.tif
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -50,6 +50,7 @@ runconfig:
         # ADT section - isce3 + pyre workflow
         processing:
             keep_scratch: True
+            
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:
@@ -104,7 +105,8 @@ runconfig:
                     x_abs: 780669.0
 
             geo2rdr:
-                threshold: 1.0e-8
+                topo_path: '.'
+                threshold: 1.0e-9
                 maxiter: 25
 
             blocksize:

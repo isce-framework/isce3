@@ -18,7 +18,7 @@ def test_rdr2geo_run():
     # load text then substitude test directory paths since data dir is read only
     with open(test_yaml) as fh_test_yaml:
         test_yaml = ''.join(
-                [line.replace('ISCETEST', iscetest.data) for line in fh_test_yaml])
+            [line.replace('ISCETEST', iscetest.data) for line in fh_test_yaml])
     # create CLI input namespace with yaml text instead of file path
     args = argparse.Namespace(run_config_path=test_yaml, rdr2geo='', log_file=False)
 
@@ -61,6 +61,6 @@ def test_rdr2geo_validate():
     # check errors with scratch set to cwd
     scratch_path = '.'
     for fname, dtype, tol in zip(fnames, dtypes, tols):
-        output_file = os.path.join(scratch_path, 'rdr2geoA', fname)
-        ref_file = os.path.join(iscetest.data, 'topo', fname)
+        output_file = os.path.join(scratch_path, 'rdr2geo', 'freqA', fname)
+        ref_file = os.path.join(iscetest.data, 'topo_winnipeg', fname)
         check_error(output_file, ref_file, dtype, tol, 'CPU')

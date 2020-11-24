@@ -38,22 +38,29 @@ class YamlArgparse():
     '''
     Class for parsing Yaml path from CLI
     '''
+
     def __init__(self):
         self.parser = argparse.ArgumentParser(description='',
-                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                              formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
         self.parser.add_argument('run_config_path', type=str, nargs='?',
-                default='', help='Path to run config file')
+                                 default=None, help='Path to run config file')
         self.parser.add_argument('--no-log-file', dest='log_file', action='store_false',
-                default=True, help='Disable logging to file. Log to file on by default.')
+                                 default=True, help='Disable logging to file. Log to file on by default.')
         self.args = argparse.Namespace()
 
     def parse(self):
+        '''
+        Parse args from command line and then check argument validity.
+        '''
         self.args = self.parser.parse_args()
         self.check_run_config_path()
         return self.args
 
     def check_run_config_path(self):
+        '''
+        Check command line argument validity.
+        '''
         error_channel = journal.error('YamlArgparse.check_run_config_path')
 
         # check args here instead of runconfig to start logging to file sooner

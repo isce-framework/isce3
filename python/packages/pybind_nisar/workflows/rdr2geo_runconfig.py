@@ -6,17 +6,17 @@ import journal
 from pybind_nisar.workflows.runconfig import RunConfig
 import pybind_nisar.workflows.helpers as helpers
 
+
 class Rdr2geoRunConfig(RunConfig):
     def __init__(self, args):
         # all insar submodules share a commmon `insar` schema
         super().__init__(args, 'insar')
 
-        if self.args.rdr2geo:
+        if self.args.run_config_path is None:
             self.cli_arg_load()
         else:
             super().load_geocode_yaml_to_dict()
             super().geocode_common_arg_load()
-
 
     def cli_arg_load(self):
         """
@@ -54,5 +54,5 @@ class Rdr2geoRunConfig(RunConfig):
 
         self.cfg['processing']['input_subset']['list_of_frequencies'] = self.args.freq_pols
 
-        helpers.prep_write_dir(self.args.scratch)
+        helpers.check_write_dir(self.args.scratch)
         self.cfg['ProductPathGroup']['ScratchPath'] = self.args.scratch

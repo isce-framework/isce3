@@ -23,7 +23,6 @@ class RunConfig:
         self.cfg = {}
         self.user = {}
 
-
     def load_yaml_to_dict(self):
         """
         Load default runconfig, override with user input, and convert to dict
@@ -42,8 +41,9 @@ class RunConfig:
         # set run config type
         run_config_is_txt = False
         # if newlines then run_config is YAML string (primarily for unit test)
-        if '\n' in self.args.run_config_path:
-            run_config_is_txt = True
+        if self.args.run_config_path is not None:
+            if '\n' in self.args.run_config_path:
+                run_config_is_txt = True
 
         # validate yaml file taken from command line
         try:
@@ -75,7 +75,6 @@ class RunConfig:
         # copy user suppiled config into default config
         helpers.deep_update(self.cfg, self.user)
 
-
     def load_geocode_yaml_to_dict(self):
         '''
         Modify config dict for geocoded related workflows.
@@ -103,7 +102,6 @@ class RunConfig:
         discards = [freq for freq in default_freqs if freq not in user_freqs]
         for discard in discards:
             del default_freqs[discard]
-
 
     def prep_paths(self):
         '''
@@ -164,8 +162,8 @@ class RunConfig:
         output_hdf5 = self.cfg['ProductPathGroup']['SASOutputFile']
         output_dir = os.path.dirname(output_hdf5)
 
-        helpers.prep_write_dir(output_dir)
-        helpers.prep_write_dir(self.cfg['ProductPathGroup']['ScratchPath'])
+        helpers.check_write_dir(output_dir)
+        helpers.check_write_dir(self.cfg['ProductPathGroup']['ScratchPath'])
 
 
     def prep_frequency_and_polarizations(self):
@@ -199,7 +197,6 @@ class RunConfig:
                     error_channel.log(err_str)
                     raise ValueError(err_str)
 
-
     def prep_geocode_cfg(self):
         '''
         check geocode config and initialize as needed
@@ -221,7 +218,6 @@ class RunConfig:
 
         # place geogrids in cfg for later processing
         self.cfg['processing']['geocode']['geogrids'] = geogrids
-
 
     def geocode_common_arg_load(self):
         '''

@@ -110,6 +110,7 @@ runconfig:
                     x_abs:
 
             geo2rdr:
+                # No topo_path provided. Default to ScratchPath.
                 threshold: 1.0e-8
                 maxiter: 25
 
