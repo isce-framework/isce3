@@ -18,18 +18,11 @@ def run(*, steps, imgset, **kwargs):
         "gcovtest",
     ]
 
-    nisarsteps = [
-        "setup",
-        "configure",
-        "build",
-        "test",
-        "makepkg",
-        "makedistrib",
+    nisarsteps = mainsteps + [
         "makedistrib_nisar",
-        "fetchdata",
-        "rslctest",
-        "gslctest",
-        "gcovtest",
+        "rslcqa",
+        "gslcqa",
+        "gcovqa",
     ]
 
     # you can say "all" or "main" for a sequence similar to our CI pipeline
