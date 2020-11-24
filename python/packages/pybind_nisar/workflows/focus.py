@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import argparse
 import h5py
 import json
 import logging
@@ -7,10 +6,13 @@ import os
 from pybind_nisar.products.readers.Raw import Raw
 from pybind_nisar.products.writers import SLC
 from pybind_nisar.types import to_complex32
+from pybind_nisar.workflows import gpu_check
 import numpy as np
 import pybind_isce3 as isce
 from pybind_isce3.core import DateTime, LUT2d
 from pybind_isce3.io.gdal import Raster, GDT_CFloat32
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
+import pybind_nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
 import sys
 import tempfile
@@ -33,16 +35,6 @@ class Struct(object):
             return Struct(value) if isinstance(value, dict) else value
 
 
-# https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
-def deep_update(d, u):
-    for k, v in u.items():
-        if isinstance(v, dict):
-            d[k] = deep_update(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
-
-
 def load_config(yaml):
     "Load default runconfig, override with user input, and convert to Struct"
     parser = YAML(typ='safe')
@@ -50,7 +42,7 @@ def load_config(yaml):
     cfg = parser.load(open(f'{dir_path}/defaults/focus.yaml', 'r'))
     with open(yaml) as f:
         user = parser.load(f)
-    deep_update(cfg, user)
+    helpers.deep_update(cfg, user)
     return Struct(cfg)
 
 
@@ -72,59 +64,6 @@ def validate_config(x):
     # TODO
     log.warning("Skipping input validation.")
     return x
-
-
-def check_valid_cuda_device(cfg: Struct):
-    """Validate that the requested CUDA device is supported."""
-    from pybind_isce3.cuda.core import Device, min_compute_capability
-    device = Device(cfg.worker.gpu_id)
-    return device.compute_capability >= min_compute_capability()
-
-
-def check_gpu_opts(cfg: Struct):
-    """Validate the specified GPU processing configuration options.
-
-    Returns
-    -------
-    logical
-        Whether to use GPU processing
-
-    Raises
-    ------
-    ValueError
-        If GPU processing was requested but not available or if an invalid CUDA
-        device was requested
-    """
-    # Check if GPU processing was requested.
-    gpu_requested = cfg.worker.gpu_enabled
-
-    # Check if CUDA support is enabled.
-    cuda_available = lambda : hasattr(isce, "cuda")
-
-    # If unspecified, use GPU processing if supported. Otherwise, fall back to
-    # CPU processing.
-    if gpu_requested is None:
-        return cuda_available() and check_valid_cuda_device(cfg)
-
-    # If GPU processing was requested, raise an error if CUDA support is not
-    # available or if the specified device is not valid.
-    if gpu_requested:
-        if not cuda_available():
-            # XXX logging an error does not halt execution
-            errmsg = "GPU processing was requested but not available"
-            log.error(errmsg)
-            raise ValueError(errmsg)
-
-        if not check_valid_cuda_device(cfg):
-            errmsg = "The requested CUDA device has insufficient compute " \
-                     "capability"
-            log.error(errmsg)
-            raise ValueError(errmsg)
-
-        return True
-
-    # GPU processing was not requested.
-    return False
 
 
 def cosine_window(n: int, pedestal: float):
@@ -439,7 +378,7 @@ def focus(runconfig):
     kernel = get_kernel(cfg)
     scale = cfg.processing.encoding_scale_factor
 
-    use_gpu = check_gpu_opts(cfg)
+    use_gpu = gpu_check.use_gpu(cfg.worker.gpu_enabled, cfg.worker.gpu_id)
     if use_gpu:
         # Set the current CUDA device.
         device = isce.cuda.core.Device(cfg.worker.gpu_id)
@@ -598,11 +537,10 @@ def configure_logging():
 
 
 def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config")
-    args = parser.parse_args(argv)
+    yaml_parser = YamlArgparse()
+    args = yaml_parser.parse()
     configure_logging()
-    cfg = validate_config(load_config(args.config))
+    cfg = validate_config(load_config(args.run_config_path))
     echofile = cfg.runconfig.groups.ProductPathGroup.SASConfigFile
     if echofile:
         log.info(f"Logging configuration to file {echofile}.")

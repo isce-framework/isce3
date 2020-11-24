@@ -7,17 +7,17 @@ runconfig:
 
         InputFileGroup:
             InputFilePath:
-            - to_be_populated_by_test_code
+            - ISCETEST/envisat.h5
         DynamicAncillaryFileGroup:
-            DEMFile: to_be_populated_by_test_code
+            DEMFile: ISCETEST/geocode/zeroHeightDEM.geo
         ProductPathGroup:
             # Directory where PGE will place results. Irrelevant to SAS.
             ProductPath: '.'
             # Directory where SAS can write temporary data
-            ScratchPath: temp
+            ScratchPath: '.'
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RCOV workflow.
-            SASOutputFile: to_be_populated_by_test_code
+            SASOutputFile: to_be_set_within_test_code
        
         PrimaryExecutable:
             ProductType: GCOV
@@ -75,7 +75,7 @@ runconfig:
                 output_posting:
                     A:
                         x_posting:  0.002   #{required} In same units as output EPSG
-                        y_posting:  -8.0e-4   #{required} In same units as output EPSG
+                        y_posting:  8.0e-4   #{required} In same units as output EPSG
                     B:
                         x_posting:
                         y_posting:
@@ -88,7 +88,8 @@ runconfig:
             geo2rdr:
                 threshold: 1.0e-9
                 maxiter: 25
-            blocksize:
-                y: 1000
             dem_margin: 0.1
-            flatten: False
+
+            noise_correction:
+                apply_correction:
+                correction_type:

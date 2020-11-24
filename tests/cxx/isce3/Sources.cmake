@@ -69,6 +69,7 @@ signal/multilook.cpp
 signal/nfft.cpp
 signal/shift_signal.cpp
 signal/signal.cpp
+signal/signal_utils.cpp
 unwrap/icu/icu.cpp
 unwrap/phass/phass.cpp
 )

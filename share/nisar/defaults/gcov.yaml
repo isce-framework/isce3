@@ -8,22 +8,21 @@ runconfig:
         InputFileGroup:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             InputFilePath:
-            - /home/lyu/proj/pybind_rslc2gcov/SanAnd_05024_18038_006_180730_L090_CX_138_03.h5
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: /home/lyu/proj/pybind_rslc2gcov/SanAnd_05024.dem
+            DEMFile: 
 
         ProductPathGroup:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: /home/lyu/proj/pybind_rslc2gcov
+            ProductPath: 
 
             # Directory where SAS can write temporary data
-            ScratchPath: /home/lyu/proj/pybind_rslc2gcov/temp
+            ScratchPath:
 
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: /home/lyu/proj/pybind_rslc2gcov/GCOV_utm_sas_pge.h5
+            SASOutputFile: 
 
         PrimaryExecutable:
             ProductType: GCOV
@@ -35,7 +34,7 @@ runconfig:
             CycleNumber: 1
             RelativeOrbitNumber: 1
             FrameNumber: 1
-            OrbitDirection: Descending
+            OrbitDirection: 
 
         # TODO OPTIONAL - To setup type of worker
         worker:
@@ -44,6 +43,10 @@ runconfig:
 
             # OPTIONAL - To explicitly use GPU capability if available. Default False
             gpu_enabled: False
+
+            # Index of the GPU to use for processing, optional. Defaults to the
+            # first available CUDA device. Ignored if *gpu_enabled* is False.
+            gpu_id: 0
 
         #adt section - isce3 + pyre workflow
         processing:
@@ -95,6 +98,9 @@ runconfig:
 
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
+
+                output_type: gamma0
+
                 # OPTIONAL -
                 algorithm_type: area_projection
  
@@ -104,27 +110,39 @@ runconfig:
                 # OPTIONAL - Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1
 
-                # OPTIONAL - absolute radiometric correction
+                # OPTIONAL - Absolute radiometric correction
                 abs_rad_cal: 1
+
+                # OPTIONAL - Clip values above threshold
+                clip_max: 5.0
+
+                # OPTIONAL - Clip values below threshold
+                clip_min: 0.0
+
+                # OPTIONAL - Double sampling of the radar-grid
+                # input sampling in the range direction
+                upsample_radargrid: False
 
                 # OPTIONAL - Same as input DEM if not provided.
                 outputEPSG:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
-                # If no provided, values will match spacing in provided DEM
+                # If not provided, spacing values will be taken from provided DEM.
+                # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
                     A:
-                        x_posting: 0.005
-                        y_posting: 0.005
+                        x_posting: 
+                        y_posting: 
                     B:
-                        x_posting: 0.005
-                        y_posting: 0.005
+                        x_posting:
+                        y_posting:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                y_snap: 18000
+                y_snap:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                x_snap: 18000
+                x_snap:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:        
@@ -140,9 +158,9 @@ runconfig:
 
             geo2rdr:
                 threshold: 1.0e-8
-                maxiter: 25
+                maxiter: 100
 
-            dem_margin: 0.1
+            dem_margin:
 
             # OPTIONAL - if noise correction desired (for ISRO)
             noise_correction:

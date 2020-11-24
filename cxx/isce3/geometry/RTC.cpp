@@ -11,6 +11,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <string>
+
 #include <isce3/core/Constants.h>
 #include <isce3/core/DateTime.h>
 #include <isce3/core/DenseMatrix.h>
@@ -18,13 +20,13 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Projections.h>
 #include <isce3/error/ErrorCode.h>
-#include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geocode/GeocodeCov.h>
+#include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/boundingbox.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/product/RadarGridParameters.h>
 #include <isce3/signal/Looks.h>
-#include <string>
+#include <isce3/core/TypeTraits.h>
 
 using isce3::core::cartesian_t;
 using isce3::core::Mat3;
@@ -77,6 +79,15 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
     if (std::isnan(rtc_min_value))
         rtc_min_value = 0;
 
+    /* 
+    Since std::numeric_limits<T>::quiet_NaN() with
+    complex T is (or may be) undefined, we take the "real type"
+    if T (i.e. float or double) to create the NaN value and
+    multiply it by the current pixel so that the output will be
+    real or complex depending on T and will contain NaNs.
+    */
+    using T_real = typename isce3::real<T>::type;
+
     // for each band in the input:
     for (size_t band = 0; band < nbands; ++band) {
         info << "applying RTC to band: " << band + 1 << "/" << nbands
@@ -118,8 +129,8 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
                                 factor = std::sqrt(factor);
                             radar_data_block(i, jj) *= factor;
                         } else {
-                            radar_data_block(i, jj) =
-                                    std::numeric_limits<float>::quiet_NaN();
+                            radar_data_block(i, jj) *=
+                                    std::numeric_limits<T_real>::quiet_NaN();
                         }
                     }
             } else {
@@ -146,8 +157,8 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
                                              radar_data_complex.imag());
                             radar_data_block(i, jj) *= factor;
                         } else
-                            radar_data_block(i, jj) =
-                                    std::numeric_limits<float>::quiet_NaN();
+                            radar_data_block(i, jj) *=
+                                    std::numeric_limits<T_real>::quiet_NaN();
                     }
             }
 
@@ -315,11 +326,11 @@ int areaProjGetNBlocks(int array_length, pyre::journal::info_t* channel,
 
     if (channel != nullptr) {
         *channel << "array length: " << array_length << pyre::journal::endl;
-        *channel << "number of available thread(s): " << n_threads << pyre::journal::endl;
+        *channel << "number of available thread(s): " << n_threads
+                 << pyre::journal::endl;
         *channel << "number of block(s): " << nblocks << pyre::journal::endl;
     }
-    
-    
+
     if (block_length != nullptr) {
         *block_length = _block_length;
         if (channel != nullptr) {
@@ -329,8 +340,10 @@ int areaProjGetNBlocks(int array_length, pyre::journal::info_t* channel,
     }
     if (block_length_with_upsampling != nullptr) {
         *block_length_with_upsampling = _block_length_with_upsampling;
-        *channel << "block length: "
-                 << *block_length_with_upsampling << pyre::journal::endl;
+        if (channel != nullptr) {
+            *channel << "block length: " << *block_length_with_upsampling
+                     << pyre::journal::endl;
+        }
     }
 
     return nblocks;
@@ -1042,7 +1055,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                     start) /
                                    pixazm) -
                         1;
-            if (y_min < -isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+            int margin = AREA_PROJECTION_RADAR_GRID_MARGIN;
+            if (y_min < -margin || 
                     y_min > ybound + 1)
                 continue;
             int x_min = std::floor((std::min(std::min(r00, r01),
@@ -1050,7 +1064,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                     r0) /
                                    dr) -
                         1;
-            if (x_min < -isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN ||
+            if (x_min < -margin ||
                     x_min > xbound + 1)
                 continue;
             int y_max = std::ceil((std::max(std::max(a00, a01),
@@ -1059,7 +1073,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                   pixazm) +
                         1;
             if (y_max > ybound + 1 + 
-                isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                margin || 
                     y_max < -1 || y_max < y_min)
                 continue;
             int x_max = std::ceil((std::max(std::max(r00, r01),
@@ -1067,9 +1081,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                    r0) /
                                   dr) +
                         1;
-            if (x_max > xbound + 1 +
-                isce3::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
-                    x_max < -1 || x_max < x_min)
+            if (x_max > xbound + 1 + margin || x_max < -1 || x_max < x_min)
                 continue;
 
             if (out_geo_vertices != nullptr)

@@ -8,22 +8,21 @@ runconfig:
         InputFileGroup:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             InputFilePath:
-            - /home/lyu/data/NISARA_00914/NISARA_00914_19038_005_190620_L090_CX_129_04.h5
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: /home/lyu/data/NISARA_00914/dem.nc
+            DEMFile: 
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: /home/lyu/proj/pybind_rslc2gslc
+            ProductPath: 
 
             # REQUIRED - Directory where SAS can write temporary data
-            ScratchPath: /home/lyu/proj/pybind_rslc2gslc/temp
+            ScratchPath: 
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: /home/lyu/proj/pybind_rslc2gslc/GSLC_utm_sas_pge.h5
+            SASOutputFile: 
 
         PrimaryExecutable:
             ProductType: GSLC
@@ -36,7 +35,7 @@ runconfig:
             CycleNumber: 1
             RelativeOrbitNumber: 1
             FrameNumber: 1
-            OrbitDirection: Descending
+            OrbitDirection: 
 
         # TODO OPTIONAL - To setup type of worker
         worker:
@@ -45,6 +44,10 @@ runconfig:
 
             # OPTIONAL - To explicitly use GPU capability if available. Default False
             gpu_enabled: False
+
+            # Index of the GPU to use for processing, optional. Defaults to the
+            # first available CUDA device. Ignored if *gpu_enabled* is False.
+            gpu_id: 0
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -92,26 +95,28 @@ runconfig:
                 outputEPSG:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
-                # If no provided, values will match spacing in provided DEM
+                # If not provided, spacing values will be taken from provided DEM.
+                # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
                     A:
-                        x_posting:  200.0
-                        y_posting:  200.0
+                        x_posting:
+                        y_posting:
                     B:
-                        x_posting:  400.0
-                        y_posting:  200.0
+                        x_posting:
+                        y_posting:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
-                    y_abs: 3993122.0
+                    y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
-                    x_abs: 752229.0
+                    x_abs:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
-                    y_abs: 3949557.0
-                    x_abs: 780669.0
+                    y_abs:
+                    x_abs:
 
             geo2rdr:
                 threshold: 1.0e-8
@@ -120,6 +125,6 @@ runconfig:
             blocksize:
                 y: 1000
 
-            dem_margin: 0.1
+            dem_margin:
 
             flatten: True

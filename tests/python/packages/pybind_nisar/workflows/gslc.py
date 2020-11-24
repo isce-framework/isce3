@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
+import argparse
 import os
 
-import h5py
-import numpy as np
-
-from pybind_nisar.workflows import defaults, gslc, h5_prep, runconfig
+from pybind_nisar.workflows import defaults, gslc, h5_prep
+from pybind_nisar.workflows.gslc_runconfig import GSLCRunConfig
 
 import iscetest
 
@@ -12,33 +11,30 @@ def test_run():
     '''
     run gslc with same rasters and DEM as geocodeSlc test
     '''
-    # load yaml
     test_yaml = os.path.join(iscetest.data, 'geocodeslc/test_gslc.yaml')
-    cfg = runconfig.load_yaml(test_yaml, f'{runconfig.dir()}/defaults/gslc.yaml')
 
-    # set input
-    input_h5 = os.path.join(iscetest.data, 'envisat.h5')
-    cfg['InputFileGroup']['InputFilePath'] = input_h5
+    # load text then substitude test directory paths since data dir is read only
+    with open(test_yaml) as fh_test_yaml:
+        test_yaml = ''.join(
+                [line.replace('ISCETEST', iscetest.data) for line in fh_test_yaml])
 
-    # reset path to DEM
-    dem_path = os.path.join(iscetest.data, 'geocode/zeroHeightDEM.geo')
-    cfg['DynamicAncillaryFileGroup']['DEMFile'] = dem_path
+    # create CLI input namespace with yaml text instead of file path
+    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
 
-    # check and validate semi-valid runconfig. input/output adjusted in loop
-    runconfig.prep_paths(cfg, 'GSLC')
-    runconfig.prep_frequency_and_polarizations(cfg)
-    runconfig.prep_geocode_cfg(cfg)
+    # init runconfig object
+    runconfig = GSLCRunConfig(args)
+    runconfig.geocode_common_arg_load()
 
     # geocode same 2 rasters as C++/pybind geocodeSlc
     for xy in ['x', 'y']:
         # adjust runconfig to match just created raster
-        cfg['ProductPathGroup']['SASOutputFile'] = f'{xy}_out.h5'
+        runconfig.cfg['ProductPathGroup']['SASOutputFile'] = f'{xy}_out.h5'
 
         # prepare output hdf5
-        h5_prep.run(cfg, 'GSLC')
+        h5_prep.run(runconfig.cfg, 'GSLC')
 
         # geocode test raster
-        gslc.run(cfg)
+        gslc.run(runconfig.cfg)
 
 
 if __name__ == '__main__':

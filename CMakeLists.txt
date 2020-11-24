@@ -1,17 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-
-# CMP0074 (CMake 3.12+)
-# find_package() uses <PackageName>_ROOT variables.
-# This is helpful for us when using packages non-standard install locations.
-if (POLICY CMP0074)
-  cmake_policy(SET CMP0074 NEW)
-endif()
-# CMP0076 (CMake 3.13+)
-# The target_sources() command converts relative paths to absolute.
-# We're indifferent, so this quiets the warnings.
-if (POLICY CMP0076)
-  cmake_policy(SET CMP0076 NEW)
-endif()
+cmake_minimum_required(VERSION 3.14)
 
 project(isce3
     VERSION   0.1.0
@@ -119,11 +106,14 @@ cmake_dependent_option(ISCE3_FETCH_EIGEN "Fetch Eigen at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_GTEST "Fetch googletest at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
+cmake_dependent_option(ISCE3_FETCH_PYBIND11 "Fetch pybind11 at build time" ON
+                       "ISCE3_FETCH_DEPS" OFF)
+cmake_dependent_option(ISCE3_FETCH_PYRE "Fetch pyre at build time" ON
+                       "ISCE3_FETCH_DEPS" OFF)
 
 include(.cmake/FetchExternRepo.cmake)
 
 add_subdirectory(extern)
-getpackage_cereal()
 getpackage_eigen()
 getpackage_fftw()
 getpackage_gdal()
@@ -138,7 +128,6 @@ getpackage_python()
 if(ISCE3_WITH_CYTHON)
     getpackage_cython()
 endif()
-getpackage_numpy()
 getpackage_pybind11()
 
 add_subdirectory(bin)

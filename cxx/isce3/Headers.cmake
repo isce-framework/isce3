@@ -83,7 +83,6 @@ geocode/GeocodeCov.h
 geocode/GeocodeCov.icc
 geometry/geometry.h
 geometry/RTC.h
-geometry/Serialization.h
 geometry/Topo.h
 geometry/Topo.icc
 geometry/TopoLayers.h
@@ -147,6 +146,7 @@ signal/Looks.icc
 signal/multilook.h
 signal/NFFT.h
 signal/shiftSignal.h
+signal/signalUtils.h
 signal/Signal.h
 signal/Signal.icc
 signal/filterKernel.h

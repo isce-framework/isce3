@@ -23,7 +23,6 @@ core/Quaternion.cpp
 core/Sinc2dInterpolator.cpp
 core/Spline2dInterpolator.cpp
 core/TimeDelta.cpp
-core/Utilities.cpp
 error/ErrorCode.cpp
 except/Error.cpp
 geometry/boundingbox.cpp
@@ -77,6 +76,7 @@ signal/Filter.cpp
 signal/Looks.cpp
 signal/NFFT.cpp
 signal/shiftSignal.cpp
+signal/signalUtils.cpp
 signal/Signal.cpp
 signal/filterKernel.cpp
 signal/decimate.cpp

@@ -202,6 +202,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                 int inputBand = 1,
                 output_mode = None,
                 double upsampling = 1,
+                bool flag_upsample_radar_grid = False,
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
@@ -212,6 +213,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                 float clip_max = NAN,
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
+                out_off_diag_terms = None,
                 out_geo_vertices = None,
                 out_dem_vertices = None,
                 out_geo_nlooks = None,
@@ -229,6 +231,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
+        out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
         out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
@@ -244,6 +247,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                                deref(demRaster.c_raster), 
                                output_mode_enum, 
                                upsampling,
+                               flag_upsample_radar_grid,
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
@@ -254,6 +258,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                                clip_max,
                                min_nlooks,
                                radar_grid_nlooks,
+                               out_off_diag_terms_raster,
                                out_geo_vertices_raster,
                                out_dem_vertices_raster,
                                out_geo_nlooks_raster,
@@ -359,6 +364,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                 int inputBand = 1,
                 output_mode = None,
                 double upsampling = 1,
+                bool flag_upsample_radar_grid = False,
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
@@ -369,6 +375,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                 float clip_max = NAN,
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
+                out_off_diag_terms = None,
                 out_geo_vertices = None,
                 out_dem_vertices = None,
                 out_geo_nlooks = None,
@@ -386,6 +393,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
+        out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
         out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
@@ -401,6 +409,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                                deref(demRaster.c_raster), 
                                output_mode_enum, 
                                upsampling,
+                               flag_upsample_radar_grid,
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
@@ -411,6 +420,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                                clip_max,
                                min_nlooks,
                                radar_grid_nlooks,
+                               out_off_diag_terms_raster,
                                out_geo_vertices_raster,
                                out_dem_vertices_raster,
                                out_geo_nlooks_raster,
@@ -517,6 +527,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                 int inputBand = 1,
                 output_mode = None,
                 double upsampling = 1,
+                bool flag_upsample_radar_grid = False,
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
@@ -527,6 +538,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                 float clip_max = NAN,
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
+                out_off_diag_terms = None,
                 out_geo_vertices = None,
                 out_dem_vertices = None,
                 out_geo_nlooks = None,
@@ -544,6 +556,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
+        out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
         out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
@@ -559,6 +572,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                                deref(demRaster.c_raster), 
                                output_mode_enum, 
                                upsampling,
+                               flag_upsample_radar_grid,
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
@@ -569,6 +583,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                                clip_max,
                                min_nlooks,
                                radar_grid_nlooks,
+                               out_off_diag_terms_raster,
                                out_geo_vertices_raster,
                                out_dem_vertices_raster,
                                out_geo_nlooks_raster,
@@ -674,6 +689,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                 int inputBand = 1,
                 output_mode = None,
                 double upsampling = 1,
+                bool flag_upsample_radar_grid = False,
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
@@ -684,6 +700,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                 float clip_max = NAN,
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
+                out_off_diag_terms = None,
                 out_geo_vertices = None,
                 out_dem_vertices = None,
                 out_geo_nlooks = None,
@@ -701,6 +718,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
+        out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
         out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
@@ -716,6 +734,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                                deref(demRaster.c_raster), 
                                output_mode_enum, 
                                upsampling,
+                               flag_upsample_radar_grid,
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
@@ -726,6 +745,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                                clip_max,
                                min_nlooks,
                                radar_grid_nlooks,
+                               out_off_diag_terms_raster,
                                out_geo_vertices_raster,
                                out_dem_vertices_raster,
                                out_geo_nlooks_raster,
@@ -752,7 +772,6 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
     @property
     def geoGridLength(self):
         return self.c_geocode.geoGridLength()
-
 
 def pyGetGeoAreaElementMean(
         vector[double] x_vect,

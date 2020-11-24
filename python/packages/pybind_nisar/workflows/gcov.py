@@ -13,7 +13,9 @@ import numpy as np
 
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import h5_prep, runconfig
+from pybind_nisar.workflows import h5_prep
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
+from pybind_nisar.workflows.gcov_runconfig import GCOVRunConfig
 
 def run(cfg):
     '''
@@ -24,6 +26,7 @@ def run(cfg):
     input_hdf5 = cfg['InputFileGroup']['InputFilePath']
     output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
+    flag_fullcovariance = cfg['processing']['input_subset']['fullcovariance']
     scratch_path = cfg['ProductPathGroup']['ScratchPath']
 
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
@@ -35,8 +38,12 @@ def run(cfg):
     memory_mode = geocode_dict['memory_mode']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
     abs_cal_factor = geocode_dict['abs_rad_cal']
+    clip_max = geocode_dict['clip_max']
+    clip_min = geocode_dict['clip_min']
     geogrids = geocode_dict['geogrids']
-    ellipsoid = geocode_dict['ellipsoid']
+    flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
+    flag_save_nlooks = geocode_dict['save_nlooks']
+    flag_save_rtc = geocode_dict['save_rtc']
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
@@ -55,7 +62,7 @@ def run(cfg):
     elif input_terrain_radiometry == isce.geometry.RtcInputRadiometry.BETA_NAUGHT:
         output_radiometry_str = 'beta-naught'
     else:
-        output_radiometry_str = 'sigma-naught-ellipsoid'
+        output_radiometry_str = 'sigma-naught-inc-angle'
 
     # unpack pre-processing
     preprocess = cfg['processing']['pre_process']
@@ -65,15 +72,15 @@ def run(cfg):
     slc = SLC(hdf5file=input_hdf5)
     dem_raster = isce.io.Raster(dem_file)
     zero_doppler = isce.core.LUT2d()
-
+    epsg = dem_raster.get_epsg()
+    proj = isce.core.make_projection(epsg)
+    ellipsoid = proj.ellipsoid
     exponent = 2
-    output_dtype = gdal.GDT_Float32
 
     info_channel = journal.info("gcov.run")
     error_channel = journal.error("gcov.run")
     info_channel.log("starting geocode COV")
 
-    # XXX only do diagonal elements as spec'd?
     t_all = time.time()
     for frequency in freq_pols.keys():
         t_freq = time.time()
@@ -95,10 +102,10 @@ def run(cfg):
             input_raster_list.append(temp_raster)
 
         # set paths temporary files
-        input_temp = tempfile.NamedTemporaryFile(dir=scratch_path, suffix='.vrt')
-        input_raster_obj = isce.io.Raster(input_temp.name, raster_list=input_raster_list)
-
-        nbands = input_raster_obj.num_bands
+        input_temp = tempfile.NamedTemporaryFile(
+            dir=scratch_path, suffix='.vrt')
+        input_raster_obj = isce.io.Raster(
+            input_temp.name, raster_list=input_raster_list)
 
         # init Geocode object depending on raster type
         if input_raster_obj.datatype() == gdal.GDT_Float32:
@@ -114,7 +121,7 @@ def run(cfg):
             error_channel.log(err_str)
             raise NotImplementedError(err_str)
 
-        # inti geocode members
+        # init geocode members
         geo.orbit = slc.getOrbit()
         geo.ellipsoid = ellipsoid
         geo.doppler = zero_doppler
@@ -126,14 +133,50 @@ def run(cfg):
                 geogrid.spacing_x, geogrid.spacing_y,
                 geogrid.width, geogrid.length, geogrid.epsg)
 
-        if geogrid_upsampling is None:
-            geogrid_upsampling = 1
-
         # create output raster
-        temp_output = tempfile.NamedTemporaryFile(dir=scratch_path, suffix='.tiff')
+        temp_output = tempfile.NamedTemporaryFile(
+            dir=scratch_path, suffix='.tif')
+
         output_raster_obj = isce.io.Raster(temp_output.name,
-                geogrid.width, geogrid.length, input_raster_obj.num_bands,
+                geogrid.width, geogrid.length, 
+                input_raster_obj.num_bands,
                 gdal.GDT_Float32, 'GTiff')
+
+        nbands_off_diag_terms = 0
+        out_off_diag_terms_obj = None
+        if flag_fullcovariance:
+            nbands = input_raster_obj.num_bands
+            nbands_off_diag_terms = (nbands**2 - nbands) // 2
+            if nbands_off_diag_terms > 0:
+                temp_off_diag = tempfile.NamedTemporaryFile(
+                    dir=scratch_path, suffix='.tif')
+                out_off_diag_terms_obj = isce.io.Raster(
+                    temp_off_diag.name,
+                    geogrid.width, geogrid.length, 
+                    nbands_off_diag_terms, 
+                    gdal.GDT_CFloat32, 'GTiff')
+
+        if flag_save_nlooks:
+            temp_nlooks = tempfile.NamedTemporaryFile(
+                dir=scratch_path, suffix='.tif')
+            out_geo_nlooks_obj = isce.io.Raster(
+                temp_nlooks.name,
+                geogrid.width, geogrid.length, 1,
+                gdal.GDT_Float32, "GTiff")
+        else:
+            temp_nlooks = None
+            out_geo_nlooks_obj = None
+
+        if flag_save_rtc:
+            temp_rtc = tempfile.NamedTemporaryFile(
+                dir=scratch_path, suffix='.tif')
+            out_geo_rtc_obj = isce.io.Raster(
+                temp_rtc.name, 
+                geogrid.width, geogrid.length, 1,
+                gdal.GDT_Float32, "GTiff")
+        else:
+            temp_rtc = None
+            out_geo_rtc_obj = None
 
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
@@ -144,17 +187,31 @@ def run(cfg):
                     geogrid_upsampling=geogrid_upsampling,
                     input_radiometry=input_terrain_radiometry,
                     exponent=exponent,
-                    rtc_min_val_db=rtc_min_value_db,
+                    rtc_min_value_db=rtc_min_value_db,
                     rtc_algorithm=rtc_algorithm,
                     abs_cal_factor=abs_cal_factor,
-                    clip_min = 0, # backscatter lower linear bound to screen negative values
-                    clip_max = 2, # backscatter upper linear bound, ~3dB
+                    flag_upsample_radar_grid=flag_upsample_radar_grid,
+                    clip_min = clip_min,
+                    clip_max = clip_max,
                     radargrid_nlooks=radar_grid_nlooks,
+                    out_off_diag_terms=out_off_diag_terms_obj,
+                    out_geo_nlooks=out_geo_nlooks_obj,
+                    out_geo_rtc=out_geo_rtc_obj,
                     input_rtc=None,
                     output_rtc=None,
                     mem_mode=memory_mode)
 
         del output_raster_obj
+
+        if flag_save_nlooks:
+            del out_geo_nlooks_obj
+    
+        if flag_save_rtc:
+            del out_geo_rtc_obj
+
+        if flag_fullcovariance:
+            # out_off_diag_terms_obj.close_dataset()
+            del out_off_diag_terms_obj
 
         with h5py.File(output_hdf5, 'a') as hdf5_obj:
             hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
@@ -178,14 +235,58 @@ def run(cfg):
             xds = hdf5_obj[os.path.join(root_ds, 'xCoordinates')]
             yds = hdf5_obj[os.path.join(root_ds, 'yCoordinates')]
             cov_elements_list = [p.upper()+p.upper() for p in pol_list]
+
             _save_hdf5_dataset(temp_output.name, hdf5_obj, root_ds,
                                yds, xds, cov_elements_list,
                                standard_name=output_radiometry_str,
                                long_name=output_radiometry_str,
                                units='unitless',
                                fill_value=np.nan,
-                               valid_min=0,
-                               valid_max=2)
+                               valid_min=clip_min,
+                               valid_max=clip_max)
+
+            # save nlooks
+            _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
+                               yds, xds, 'numberOfLooks',
+                               standard_name = 'numberOfLooks',
+                               long_name = 'number of looks', 
+                               units = 'looks',
+                               fill_value = np.nan, 
+                               valid_min = 0)
+
+            # save rtc
+            if flag_save_rtc:
+                _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds, 
+                                   yds, xds, 'areaNormalizationFactor',
+                                   standard_name = 'areaNormalizationFactor',
+                                   long_name = 'RTC area factor', 
+                                   units = 'unitless',
+                                   fill_value = np.nan, 
+                                   valid_min = 0,
+                                   valid_max = 2)
+
+            # save GCOV off-diagonal elements
+            if not flag_fullcovariance:
+                continue
+            off_diag_terms_list = []
+            for b1, p1 in enumerate(pol_list):
+                for b2, p2 in enumerate(pol_list):
+                    if (b2 <= b1):
+                        continue
+                    off_diag_terms_list.append(p1.upper()+p2.upper())
+    
+            _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
+                               yds, xds, off_diag_terms_list,
+                               standard_name = output_radiometry_str,
+                               long_name = output_radiometry_str, 
+                               units = 'unitless',
+                               fill_value = np.nan, 
+                               valid_min = clip_min, 
+                               valid_max = clip_max)
+
+
+
+
         t_freq_elapsed = time.time() - t_freq
         info_channel.log(f'frequency {frequency} ran in {t_freq_elapsed:.3f} seconds')
 
@@ -218,7 +319,7 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     long_name : string, optional
     units : string, optional
     fill_value : float, optional
-    valid_min : float, optional 
+    valid_min : float, optional
     valid_max : float, optional
     '''
     if not os.path.isfile(ds_filename):
@@ -232,7 +333,7 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         if isinstance(ds_name, str):
             h5_ds = os.path.join(root_path, ds_name)
         else:
-            h5_ds = os.path.join(root_path, ds_name[band-1])
+            h5_ds = os.path.join(root_path, ds_name[band])
 
         if h5_ds in h5py_obj:
             del h5py_obj[h5_ds]
@@ -264,6 +365,8 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
 
 if __name__ == "__main__":
-    cfg = runconfig.load('GCOV')
-    h5_prep.run(cfg, 'GCOV')
-    run(cfg)
+    yaml_parser = YamlArgparse()
+    args = yaml_parser.parse()
+    gcov_runcfg = GCOVRunConfig(args)
+    h5_prep.run(gcov_runcfg.cfg, 'GCOV')
+    run(gcov_runcfg.cfg)

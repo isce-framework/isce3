@@ -71,7 +71,7 @@ runconfig:
                 range_looks: int(min=1, required=False)
         
             rtc: # RTC options
-                output_type: enum(Null, 'gamma0', required=False)
+                output_type: enum('gamma0', required=False)
                
                 algorithm_type: enum('area_projection', 'david_small', required=False)
                
@@ -82,7 +82,7 @@ runconfig:
         
             # Mechanism to specify output posting and DEM
             geocode:
-                algorithm_type: enum('area_projection', 'area_projection_gamma_naught', 'interp', required=False)
+                algorithm_type: enum('area_projection', 'interp', required=False)
                
                 memory_mode: enum('auto', 'single_block', 'blocks_geogrid', 'blocks_geogrid_and_radargrid', required=False)
                
@@ -97,11 +97,22 @@ runconfig:
                
                 # Absolute radiometric correction factor
                 abs_rad_cal: num(required=False)
+
+                # Clip values above threshold
+                clip_max: num(required=False)
+
+                # Clip values below threshold
+                clip_min: num(required=False)
+               
+                # Double sampling of the radar-grid
+                # input sampling in the range direction
+                upsample_radargrid: bool(required=False)
                
                 # Same as input DEM if not provided.
-                outputEPSG: int(required=False)
+                outputEPSG: int(min=1024, max=32767, required=False)
                
-                # Output posting in same units as output EPSG. Single value or list indicating the output posting for each frequency
+                # Output posting in same units as output EPSG.
+                # If not provided, spacing values will be taken from provided DEM.
                 output_posting:
                     A:
                         x_posting: num(min=0, required=False)
@@ -109,7 +120,7 @@ runconfig:
                     B:
                         x_posting: num(min=0, required=False)
                         y_posting: num(min=0, required=False)
-               
+
                 # To control output grid in same units as output EPSG
                 x_snap: num(min=0, required=False)
                
@@ -130,11 +141,9 @@ runconfig:
                     # Set bottom-right x in same units as output EPSG
                     x_abs: num(required=False)
 
-            geo2rdr:
-                threshold: num(min=1.0e-9, max=1.0e-3, required=False)
-                maxiter: int(min=10, max=50, required=False)
+            geo2rdr:      include('geo2rdr_options', required=False)
 
-            dem_margin: num()
+            dem_margin: num(required=False)
         
             # If noise correction desired (for ISRO)
             noise_correction:
@@ -149,3 +158,28 @@ runconfig:
            
             # To explicitly use GPU capability if available. Default False
             gpu_enabled: bool(required=False)
+            # Index of the GPU to use for processing, optional. Defaults to the
+            # first available CUDA device. Ignored if *gpu_enabled* is False.
+            gpu_id: int(min=0, required=False)
+
+        QA: include('qa_options', required=False)
+
+        # Place holder for user set path to log file.
+        # If not set, log sent to screen or input yaml path derived file
+        logging: include('log_nfo', required=False)
+
+---
+
+geo2rdr_options:
+    threshold: num(min=1.0e-9, max=1.0e-3, required=False)
+    maxiter: int(min=10, max=50, required=False)
+
+qa_options:
+    validate: bool(required=False)  # enable file format validation
+    quality: bool(required=False)   # produce a data summary
+
+log_nfo:
+    # Path to log file
+    path: str()
+    # Log file write mode. 'a' for append to existing. 'w' for new or overwrite existing.
+    write_mode: enum('a', 'w', required=False)

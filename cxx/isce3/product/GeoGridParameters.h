@@ -101,9 +101,9 @@ protected:
  * @param[in] radar_grid Input RadarGridParameters
  * @param[in] orbit Input orbit
  * @param[in] doppler Input doppler
- * @param[in] dem_raster DEM from which EPSG and spacing is extracted
  * @param[in] dx X spacing for geocoded grid
  * @param[in] dy Y spacing for geocoded grid
+ * @param[in] epsg EPSG code
  * @param[in] min_height Height lower bound
  * @param[in] max_height Height upper bound
  * @param[in] margin Amount to pad estimated bounding box. In decimal degrees.
@@ -112,17 +112,16 @@ protected:
  * @param[in] numiter Max number of iterations for converence.
  * @param[in] height_threshold Height threshold for convergence.
  */
-GeoGridParameters bbox2GeoGrid(const isce3::product::RadarGridParameters& radar_grid,
-        const isce3::core::Orbit& orbit,
-        const isce3::core::LUT2d<double>& doppler,
-        const isce3::io::Raster& dem_raster,
-        double spacing_x,
-        double spacing_y,
-        double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
-        double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
-        const double margin = 0.0, const int points_per_edge = 11,
-        const double threshold = 1.0e-8, const int numiter = 15,
-        const double height_threshold = 100);
+GeoGridParameters
+bbox2GeoGrid(const isce3::product::RadarGridParameters& radar_grid,
+             const isce3::core::Orbit& orbit,
+             const isce3::core::LUT2d<double>& doppler, double spacing_x,
+             double spacing_y, int epsg,
+             double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
+             double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
+             const double margin = 0.0, const int points_per_edge = 11,
+             const double threshold = 1.0e-8, const int numiter = 15,
+             const double height_threshold = 100);
 
 /**
  * Function to create a GeoGridParameters object by using DEM spacing and EPSG, and
@@ -141,14 +140,15 @@ GeoGridParameters bbox2GeoGrid(const isce3::product::RadarGridParameters& radar_
  * @param[in] numiter Max number of iterations for converence.
  * @param[in] height_threshold Height threshold for convergence.
  */
-GeoGridParameters bbox2GeoGridScaled(const isce3::product::RadarGridParameters& radar_grid,
-        const isce3::core::Orbit& orbit,
-        const isce3::core::LUT2d<double>& doppler,
-        const isce3::io::Raster& dem_raster,
-        double spacing_scale = 1.0,
-        double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
-        double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
-        const double margin = 0.0, const int points_per_edge = 11,
-        const double threshold = 1.0e-8, const int numiter = 15,
-        const double height_threshold = 100);
+GeoGridParameters
+bbox2GeoGridScaled(const isce3::product::RadarGridParameters& radar_grid,
+                   const isce3::core::Orbit& orbit,
+                   const isce3::core::LUT2d<double>& doppler,
+                   const isce3::io::Raster& dem_raster,
+                   double spacing_scale = 1.0,
+                   double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
+                   double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
+                   const double margin = 0.0, const int points_per_edge = 11,
+                   const double threshold = 1.0e-8, const int numiter = 15,
+                   const double height_threshold = 100);
 }} // namespace isce3::product

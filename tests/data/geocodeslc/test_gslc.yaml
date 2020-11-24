@@ -7,14 +7,14 @@ runconfig:
 
         InputFileGroup:
             InputFilePath:
-            - to_be_populated_by_test_code
+            - ISCETEST/envisat.h5
         DynamicAncillaryFileGroup:
-            DEMFile: to_be_populated_by_test_code
+            DEMFile: ISCETEST/geocode/zeroHeightDEM.geo
         ProductPathGroup:
             # Directory where PGE will place results. Irrelevant to SAS.
             ProductPath: '.'
             # Directory where SAS can write temporary data
-            ScratchPath: temp
+            ScratchPath: '.'
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             SASOutputFile: to_be_populated_by_test_code
@@ -67,7 +67,7 @@ runconfig:
                 output_posting:
                     A:
                         x_posting:  0.0002   #{required} In same units as output EPSG
-                        y_posting:  8.0e-5   #{required} In same units as output EPSG
+                        y_posting:  8.0e-5  #{required} In same units as output EPSG
                     B:
                         x_posting:
                         y_posting:
