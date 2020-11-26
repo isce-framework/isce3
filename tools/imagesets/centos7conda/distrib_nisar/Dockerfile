@@ -16,6 +16,7 @@ RUN cd /opt \
 FROM $distrib_img
 
 RUN conda install testfixtures scikit-image
+RUN conda install cfunits --channel conda-forge
 
 # copy the repo from the intermediate image
 COPY --from=distrib_nisar_tmp /opt/QualityAssurance /opt/QualityAssurance
@@ -25,4 +26,4 @@ COPY --from=distrib_nisar_tmp /opt/CFChecker /opt/CFChecker
 RUN cd /opt/QualityAssurance \
  && python setup.py install \
  && cd /opt/CFChecker \
- && python setup.py install 
+ && python setup.py install
