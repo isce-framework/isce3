@@ -473,14 +473,14 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     epsg_code = geo_grid.epsg
 
     dx = geo_grid.spacing_x
-    x0 = geo_grid.start_x + 0.5*dx
+    x0 = geo_grid.start_x + 0.5 * dx
     xf = x0 + (geo_grid.width - 1) * dx
     x_vect = np.linspace(x0, xf, geo_grid.width, dtype=np.float64)
 
     dy = geo_grid.spacing_y
-    y0 = geo_grid.start_y + 0.5*dy
+    y0 = geo_grid.start_y + 0.5 * dy
     yf = y0 + (geo_grid.length - 1) * dy
-    y_vect = np.linspace(y0, yf - dy, geo_grid.length, dtype=np.float64)
+    y_vect = np.linspace(y0, yf, geo_grid.length, dtype=np.float64)
 
     hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
 
