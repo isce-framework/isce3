@@ -1,4 +1,4 @@
-import os, subprocess, sys, shutil
+import os, subprocess, sys, shutil, stat
 
 # Global configuration constants
 docker = "docker" # the docker executable
@@ -173,41 +173,38 @@ class ImageSet:
                 subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
                                       cwd = wfdatadir)
 
-    def distribrun(self, name, script, cmd, nisartag=False):
+    def distribrun(self, name, script, log):
         """
         Run a command in the distributable image
         """
-        if nisartag == True:
-          tag = f"{self.name}-nisar"
-        else:
-          tag = self.name
-
         testdir = os.path.abspath(os.path.join(self.datadir, f"test_{name}"))
         startdir = os.getcwd()
         # run script in each test directory
         os.chdir(testdir)
-
-        runcmd = f'''{docker} run \\
-          --rm \\
-          --mount type=bind,source={testdir},target={container_datadir} \\
-          -w {container_datadir} \\
-          -u {os.getuid()}:{os.getgid()} \\
-          -i {self.tty} nisar-adt/isce3:{tag} \\
-          sh -ci "{cmd}"\n'''
-        # write command to script to run
-        scriptpath = os.path.join(testdir, script)
-        f = open(scriptpath, "w")
-        f.write(runcmd)
-        f.close()
-        subprocess.check_call(f"chmod +x {scriptpath}".split())
-        subprocess.call(f"./{script}", shell=True)
+        
+        shutil.copyfile(os.path.join(thisdir, self.name, "scripts", script), script)
+        os.chmod(script, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
+        logfile = open(log, "w")
+        # run command, saving stdout and stderr to logfile
+        subprocess.call([f"./{script} {testdir}"], stdout=logfile, stderr=logfile, shell=True)
+        logfile.close()
+        # print log to screen for easy viewing
+        with open(log, "r") as logfile:
+            print(logfile.read())
         # go back to original directory
         os.chdir(startdir)
 
+    def mkcleandir(self, dirpath):
+        if os.path.exists(dirpath):
+            shutil.rmtree(dirpath)
+        os.mkdir(dirpath)
+
     def workflowtest(self, name, pyname, suffix=""): # hmmmmmmmmm
-        cmd = f"""mkdir -p output_{name} scratch_{name} qa_{name}
-                  python3 -m {pyname} run_config_{name}{suffix}.yaml"""
-        self.distribrun(name, f"run_{name}.sh", cmd)
+        # cleanup old outputs
+        self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"output_{name}"))
+        self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"scratch_{name}"))
+        log = os.path.join(f"output_{name}", "stdouterr.log")
+        self.distribrun(name, f"run_{name}.sh", log)
 
     def rslctest(self):
         self.workflowtest("rslc", "pybind_nisar.workflows.focus")
@@ -217,12 +214,9 @@ class ImageSet:
         self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v2")
 
     def workflowqa(self, name):
-        cmd = f"""mkdir -p qa_{name}
-                  time python3 /opt/QualityAssurance/verify_{name}.py --fpdf qa_{name}/graphs.pdf \\
-                      --fhdf qa_{name}/stats.h5 --flog qa_{name}/qa.log --validate \\
-                      --quality output_{name}/{name}.h5
-                  time python3 /opt/CFChecker/src/cfchecker/cfchecks.py output_{name}/{name}.h5""" 
-        self.distribrun(name, f"qa_{name}.sh", cmd, nisartag=True)
+        self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
+        log = os.path.join(f"qa_{name}", "stdouterr.log")
+        self.distribrun(name, f"qa_{name}.sh", log)
 
     def rslcqa(self):
         self.workflowqa("rslc")
