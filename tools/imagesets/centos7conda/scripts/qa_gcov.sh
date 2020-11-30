@@ -20,7 +20,7 @@ docker run \
           -u $UID:$(id -g) \
           -i --tty nisar-adt/isce3:centos7conda-nisar \
           sh -ci "mkdir -p qa_gcov
-                  time python3 /opt/QualityAssurance/verify_gcov.py --fpdf qa_gcov/graphs.pdf \
+                  time python3 verify_gcov.py --fpdf qa_gcov/graphs.pdf \
                       --fhdf qa_gcov/stats.h5 --flog qa_gcov/qa.log --validate \
                       --quality output_gcov/gcov.h5
-                  time python3 /opt/CFChecker/src/cfchecker/cfchecks.py output_gcov/gcov.h5"
+                  time python3 cfchecks.py output_gcov/gcov.h5"
