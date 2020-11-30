@@ -10,8 +10,9 @@ ARG GIT_OAUTH_TOKEN
 RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/CFChecker \
- && cd QualityAssurance && git checkout v1.1.0-ER && rm -rf .git && cd .. \
- && cd CFChecker && git checkout v1.1.0-ER && rm -rf .git && cd ..  
+ && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/calTools \
+ && cd QualityAssurance && git checkout b4b1e84bad257b3f9af0d274bb63e7da1db27eb7 && rm -rf .git && cd .. \
+ && cd CFChecker && git checkout 6a8304bb2a5727a3be5410b7b16503ca8d57dbab && rm -rf .git && cd ..  
 
 FROM $distrib_img
 

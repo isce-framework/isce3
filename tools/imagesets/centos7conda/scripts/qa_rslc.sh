@@ -20,7 +20,7 @@ docker run \
           -u $UID:$(id -g) \
           -i --tty nisar-adt/isce3:centos7conda-nisar \
           sh -ci "mkdir -p qa_rslc
-                  time python3 /opt/QualityAssurance/verify_rslc.py --fpdf qa_rslc/graphs.pdf \
+                  time verify_rslc.py --fpdf qa_rslc/graphs.pdf \
                       --fhdf qa_rslc/stats.h5 --flog qa_rslc/qa.log --validate \
                       --quality output_rslc/rslc.h5
-                  time python3 /opt/CFChecker/src/cfchecker/cfchecks.py output_rslc/rslc.h5"
+                  time cfchecks.py output_rslc/rslc.h5"
