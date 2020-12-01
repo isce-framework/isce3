@@ -173,24 +173,42 @@ class ImageSet:
                 subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
                                       cwd = wfdatadir)
 
-    def distribrun(self, name, script, log):
+    def distribrun(self, name, cmd, log=None, nisarimg=False):
         """
         Run a command in the distributable image
         """
         testdir = os.path.abspath(os.path.join(self.datadir, f"test_{name}"))
         startdir = os.getcwd()
-        # run script in each test directory
+        # run command in each test directory
         os.chdir(testdir)
-        
-        shutil.copyfile(os.path.join(thisdir, self.name, "scripts", script), script)
-        os.chmod(script, stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR)
-        logfile = open(log, "w")
-        # run command, saving stdout and stderr to logfile
-        subprocess.call([f"./{script} {testdir}"], stdout=logfile, stderr=logfile, shell=True)
-        logfile.close()
-        # print log to screen for easy viewing
-        with open(log, "r") as logfile:
-            print(logfile.read())
+        # save stdout and stderr to logfile if specified
+        if log != None:
+            logfh = open(log, "w")
+        else:
+            logfh = None
+
+        if nisarimg:
+            tag = self.name + "-nisar"
+        else:
+            tag = self.name
+
+        runcmd = f"{docker} run \
+          --mount type=bind,source={testdir},target={container_datadir} \
+          -w {container_datadir} \
+          -u {os.getuid()}:{os.getgid()} \
+          --rm -i {self.tty} nisar-adt/isce3:{tag} sh -ci"  
+        if log != None: 
+            # save command in logfile
+            logfh.write("++ " + subprocess.list2cmdline(runcmd.split() + [cmd]) + "\n")
+            logfh.flush()
+        subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.PIPE)
+
+        if log != None:
+            logfh.close()
+            # print log to screen for easy viewing
+            with open(log, "r") as logfh:
+                print(logfh.read())
+
         # go back to original directory
         os.chdir(startdir)
 
@@ -204,7 +222,10 @@ class ImageSet:
         self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"output_{name}"))
         self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"scratch_{name}"))
         log = os.path.join(f"output_{name}", "stdouterr.log")
-        self.distribrun(name, f"run_{name}.sh", log)
+        script = f"""
+            python3 -m {pyname} run_config_{name}{suffix}.yaml
+            """
+        self.distribrun(name, script, log)
 
     def rslctest(self):
         self.workflowtest("rslc", "pybind_nisar.workflows.focus")
@@ -216,7 +237,14 @@ class ImageSet:
     def workflowqa(self, name):
         self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
         log = os.path.join(f"qa_{name}", "stdouterr.log")
-        self.distribrun(name, f"qa_{name}.sh", log)
+        script = f"""
+            time verify_{name}.py --fpdf qa_{name}/graphs.pdf \
+                --fhdf qa_{name}/stats.h5 --flog qa_{name}/qa.log --validate \
+                --quality output_{name}/{name}.h5
+            time cfchecks.py output_{name}/{name}.h5
+            echo ""
+            """
+        self.distribrun(name, script, log, nisarimg=True)
 
     def rslcqa(self):
         self.workflowqa("rslc")
