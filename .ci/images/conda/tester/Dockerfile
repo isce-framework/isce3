@@ -17,6 +17,7 @@ RUN conda install -q -y \
         h5py \
         numpy \
         pytest \
+        shapely \
         sphinx \
         wget \
  && conda install -q -y -c conda-forge \

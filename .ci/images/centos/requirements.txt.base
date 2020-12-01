@@ -12,3 +12,4 @@ matplotlib
 scipy
 testfixtures
 scikit-image
+shapely

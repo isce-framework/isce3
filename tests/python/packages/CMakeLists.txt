@@ -13,6 +13,7 @@ nisar/workflows/crossmul.py
 nisar/workflows/resampSlc.py
 nisar/workflows/geocode.py
 pybind_nisar/workflows/focus.py
+pybind_nisar/workflows/stage_dem.py
 pybind_nisar/workflows/gcov.py
 pybind_nisar/workflows/geo2rdr.py
 pybind_nisar/workflows/gslc.py
