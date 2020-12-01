@@ -232,7 +232,7 @@ class ImageSet:
     def gslctest(self):
         self.workflowtest("gslc", "pybind_nisar.workflows.gslc", "_v2")
     def gcovtest(self):
-        self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v2")
+        self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v3")
 
     def workflowqa(self, name):
         self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
