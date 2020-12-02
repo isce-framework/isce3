@@ -16,6 +16,12 @@ container_datadir = f"/tmp/data"
 docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
 
+# Create directory, removing old directory if it exists already
+def mkcleandir(dirpath):
+    if os.path.exists(dirpath):
+        shutil.rmtree(dirpath)
+    os.mkdir(dirpath)
+
 # A set of docker images suitable for building and running isce3
 class ImageSet:
     # images in the set, in the order they should be built
@@ -212,15 +218,12 @@ class ImageSet:
         # go back to original directory
         os.chdir(startdir)
 
-    def mkcleandir(self, dirpath):
-        if os.path.exists(dirpath):
-            shutil.rmtree(dirpath)
-        os.mkdir(dirpath)
+
 
     def workflowtest(self, name, pyname, suffix=""): # hmmmmmmmmm
         # cleanup old outputs
-        self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"output_{name}"))
-        self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"scratch_{name}"))
+        mkcleandir(os.path.join(self.datadir, f"test_{name}", f"output_{name}"))
+        mkcleandir(os.path.join(self.datadir, f"test_{name}", f"scratch_{name}"))
         log = os.path.join(f"output_{name}", "stdouterr.log")
         script = f"""
             python3 -m {pyname} run_config_{name}{suffix}.yaml
@@ -235,7 +238,7 @@ class ImageSet:
         self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v3")
 
     def workflowqa(self, name):
-        self.mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
+        mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
         log = os.path.join(f"qa_{name}", "stdouterr.log")
         script = f"""
             time verify_{name}.py --fpdf qa_{name}/graphs.pdf \
