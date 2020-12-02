@@ -188,7 +188,7 @@ class ImageSet:
         # run command in each test directory
         os.chdir(testdir)
         # save stdout and stderr to logfile if specified
-        if log != None:
+        if log is not None:
             logfh = open(log, "w")
         else:
             logfh = None
@@ -203,13 +203,13 @@ class ImageSet:
           -w {container_datadir} \
           -u {os.getuid()}:{os.getgid()} \
           --rm -i {self.tty} nisar-adt/isce3:{tag} sh -ci"  
-        if log != None: 
+        if log is not None: 
             # save command in logfile
             logfh.write("++ " + subprocess.list2cmdline(runcmd.split() + [cmd]) + "\n")
             logfh.flush()
         subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.PIPE)
 
-        if log != None:
+        if log is not None:
             logfh.close()
             # print log to screen for easy viewing
             with open(log, "r") as logfh:
