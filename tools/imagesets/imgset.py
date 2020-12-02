@@ -184,12 +184,10 @@ class ImageSet:
         Run a command in the distributable image
         """
         testdir = os.path.abspath(os.path.join(self.datadir, f"test_{name}"))
-        startdir = os.getcwd()
-        # run command in each test directory
-        os.chdir(testdir)
+        logpath = os.path.join(testdir, log)
         # save stdout and stderr to logfile if specified
         if log is not None:
-            logfh = open(log, "w")
+            logfh = open(logpath, "w")
         else:
             logfh = None
 
@@ -212,13 +210,8 @@ class ImageSet:
         if log is not None:
             logfh.close()
             # print log to screen for easy viewing
-            with open(log, "r") as logfh:
+            with open(logpath, "r") as logfh:
                 print(logfh.read())
-
-        # go back to original directory
-        os.chdir(startdir)
-
-
 
     def workflowtest(self, name, pyname, suffix=""): # hmmmmmmmmm
         """
