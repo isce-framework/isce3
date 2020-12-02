@@ -32,7 +32,7 @@ def run(*, steps, imgset, **kwargs):
         steps = nisarsteps
 
     # extra helper steps that don't fall under the main  pipeline
-    everything = mainsteps + nisarsteps + [
+    everything = nisarsteps + [
         "dropin",
         "docsbuild",
         "prdocs",
