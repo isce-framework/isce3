@@ -221,6 +221,18 @@ class ImageSet:
 
 
     def workflowtest(self, name, pyname, suffix=""): # hmmmmmmmmm
+        """
+        Run the specified workflow using the distrib image.
+        
+        Parameters
+        -------------
+        name : str
+            Workflow name (e.g. "rslc")
+        pyname : str
+            Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
+        suffix : str, optional
+            Optional runconfig filename suffix
+        """
         # cleanup old outputs
         mkcleandir(os.path.join(self.datadir, f"test_{name}", f"output_{name}"))
         mkcleandir(os.path.join(self.datadir, f"test_{name}", f"scratch_{name}"))
@@ -238,6 +250,14 @@ class ImageSet:
         self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v3")
 
     def workflowqa(self, name):
+        """
+        Run QA and CF compliance checking for the specified workflow using the NISAR distrib image.
+        
+        Parameters
+        -------------
+        name : str
+            Workflow name (e.g. "rslc")
+        """
         mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
         log = os.path.join(f"qa_{name}", "stdouterr.log")
         script = f"""
