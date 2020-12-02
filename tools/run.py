@@ -18,12 +18,21 @@ def run(*, steps, imgset, **kwargs):
         "gcovtest",
     ]
 
+    nisarsteps = mainsteps + [
+        "makedistrib_nisar",
+        "rslcqa",
+        "gslcqa",
+        "gcovqa",
+    ]
+
     # you can say "all" or "main" for a sequence similar to our CI pipeline
     if steps == ["all"] or steps == ["main"]:
         steps = mainsteps
+    elif steps == ["nisar"]:
+        steps = nisarsteps
 
     # extra helper steps that don't fall under the main  pipeline
-    everything = mainsteps + [
+    everything = nisarsteps + [
         "dropin",
         "docsbuild",
         "prdocs",

@@ -27,7 +27,7 @@ workflowdata = [
         "test_gcov",
         "GSLC_GCOV_test_SanAnd",
         [
-            "run_config_gcov_v2.yaml",
+            "run_config_gcov_v3.yaml",
             "input/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5",
             "input/nisar-dem/EPSG32610/EPSG32610.vrt",
             "input/nisar-dem/EPSG32610/N4000E0400.tif",
