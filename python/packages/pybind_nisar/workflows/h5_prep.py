@@ -36,7 +36,7 @@ def cp_geocode_meta(cfg, dst):
     dst : str
         Name of destination node where data is to be copied
     '''
-    is_insar = dst == 'INSAR'
+    is_insar = dst in ['GUNW', 'RUNW', 'RIFG']
 
     # unpack
     output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
@@ -149,7 +149,7 @@ def cp_geocode_meta(cfg, dst):
 
         # copy product specifics
         if is_insar:
-            copy_insar_meta(cfg, src_meta_path, dst, src_h5, dst_h5)
+            copy_insar_meta(cfg, src_meta_path, dst_meta_path, src_h5, dst_h5)
         else:
             copy_gslc_gcov_meta(slc.SwathPath, dst, src_h5, dst_h5)
 
@@ -300,7 +300,6 @@ def prep_ds_gunw(cfg, dst, dst_h5):
         shape = (geogrids[freq].length, geogrids[freq].width)
 
         dst_parent_path = os.path.join(common_parent_path, f'{dst}/grids/frequency{freq}')
-        dst_h5.create_group(dst_parent_path)
 
         # Add x/yCoordinates, x/yCoordinatesSpacing
         set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
@@ -417,21 +416,27 @@ def prep_ds_gunw(cfg, dst, dst_h5):
                      descr=descr.replace('Perpendicular', 'Parallel'), units="meters")
 
     for freq in freq_pols.keys():
+        dst_cal_group = f'{dst_cal}/frequency{freq}'
+
         descr = "Bulk along track time offset used to align reference and secondary image"
-        _create_datasets(dst_h5[dst_cal], [0], np.float32, 'bulkAlongTrackTimeOffset',
+        _create_datasets(dst_h5[dst_cal_group], [0], np.float32, 'bulkAlongTrackTimeOffset',
                          descr=np.string_(descr), units="seconds")
-        _create_datasets(dst_h5[dst_cal], [0], np.float32, 'bulkSlantRangeOffset',
+        _create_datasets(dst_h5[dst_cal_group], [0], np.float32, 'bulkSlantRangeOffset',
                          descr=np.string_(descr.replace('along track', 'slant range')), units="seconds")
+
+        dst_common_group = f'{dst_proc}/common/frequency{freq}'
+        dst_h5.create_group(dst_common_group)
+
         descr = " Common Doppler bandwidth used for processing the interferogram"
-        _create_datasets(dst_h5[os.path.join(dst_proc, 'common')], [0], np.float32, 'DopplerBandwidth',
+        _create_datasets(dst_h5[dst_common_group], [0], np.float32, 'DopplerBandwidth',
                          descr=descr, units="Hz")
         descr = f" 2D LUT of Doppler Centroid for frequency {freq}"
-        _create_datasets(dst_h5[os.path.join(dst_proc, 'common')], shape, ctype, "dopplerCentroid",
+        _create_datasets(dst_h5[dst_common_group], shape, ctype, "dopplerCentroid",
                          descr=descr, units="Hz")
         descr = "Number of looks applied in along track direction"
-        _create_datasets(dst_h5[os.path.join(dst_proc, 'common')], [0], np.float32, 'numberOfAzimuthLooks',
+        _create_datasets(dst_h5[dst_common_group], [0], np.float32, 'numberOfAzimuthLooks',
                          descr=descr, units="unitless")
-        _create_datasets(dst_h5[os.path.join(dst_proc, 'common')], [0], np.float32, 'numberOfRangeLooks',
+        _create_datasets(dst_h5[dst_common_group], [0], np.float32, 'numberOfRangeLooks',
                          descr=descr.replace("along track", "slant range"), units="unitless")
 
 

@@ -15,8 +15,8 @@ class Rdr2geoRunConfig(RunConfig):
         if self.args.run_config_path is None:
             self.cli_arg_load()
         else:
-            super().load_geocode_yaml_to_dict()
-            super().geocode_common_arg_load()
+            self.load_geocode_yaml_to_dict()
+            self.geocode_common_arg_load()
 
     def cli_arg_load(self):
         """

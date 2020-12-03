@@ -18,6 +18,7 @@ pybind_nisar/workflows/gcov.py
 pybind_nisar/workflows/geo2rdr.py
 pybind_nisar/workflows/gslc.py
 pybind_nisar/workflows/gpu_check.py
+pybind_nisar/workflows/insar.py
 pybind_nisar/workflows/process_args.py
 pybind_nisar/workflows/rdr2geo.py
 pybind_nisar/workflows/resample_slc.py
