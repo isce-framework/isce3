@@ -27,4 +27,4 @@ RUN curl -OSsL https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-
 
 # Centos 8 EPEL cython is too old (0.28.x)
 # Get 0.29.x from pip
-RUN pip3 install cython
+RUN pip3 install cython shapely
