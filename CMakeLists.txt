@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(isce3
-    VERSION   0.1.0
+    VERSION   0.1.1
     LANGUAGES CXX
     )
 
