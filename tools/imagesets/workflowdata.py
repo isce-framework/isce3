@@ -1,37 +1,37 @@
 # yuck!
 workflowdata = [
     (
-        # local subdir (i.e. the one used for local testing)
-        "test_rslc",
-        # remote subdir (will be stripped in destination)
-        "RSLC_test_REE1",
+        # remote subdir, also name in local data dir
+        "L0B_RRSD_REE1",
         # files to grab
         [
-            "run_config_rslc.yaml",
-            "input/REE_L0B_out17.h5",
+            "REE_L0B_out17.h5",
+            "README.txt",
         ],
     ),
     # and so forth
     (
-        "test_gslc",
-        "GSLC_GCOV_test_SanAnd",
+        "L1_RSLC_UAVSAR_SanAnd1",
         [
-            "run_config_gslc_v2.yaml",
-            "input/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5",
-            "input/nisar-dem/EPSG32610/EPSG32610.vrt",
-            "input/nisar-dem/EPSG32610/N4000E0400.tif",
-            "input/nisar-dem/EPSG32610/N4000E0600.tif",
-        ],
-    ),
-    (
-        "test_gcov",
-        "GSLC_GCOV_test_SanAnd",
-        [
-            "run_config_gcov_v3.yaml",
-            "input/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5",
-            "input/nisar-dem/EPSG32610/EPSG32610.vrt",
-            "input/nisar-dem/EPSG32610/N4000E0400.tif",
-            "input/nisar-dem/EPSG32610/N4000E0600.tif",
+            "SanAnd_05024_18038_006_180730_L090_CX_129_05.h5",
+            "nisar-dem/EPSG32610/EPSG32610.vrt",
+            "nisar-dem/EPSG32610/N4000E0400.tif",
+            "nisar-dem/EPSG32610/N4000E0600.tif",
+            "README.txt",
         ],
     ),
 ]
+
+# dictionaries definining mappig of workflow tests to data
+# each key is the test name, value is the corresponding data
+rslctestdict = {
+    "RSLC_REE1": "L0B_RRSD_REE1",
+    }
+    
+gslctestdict = {
+    "GSLC_UAVSAR_SanAnd1": "L1_RSLC_UAVSAR_SanAnd1",
+    }
+
+gcovtestdict = {
+    "GCOV_UAVSAR_SanAnd1": "L1_RSLC_UAVSAR_SanAnd1",
+    }
