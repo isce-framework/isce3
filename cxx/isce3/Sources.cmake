@@ -71,8 +71,10 @@ product/Product.cpp
 product/RadarGridParameters.cpp
 signal/Covariance.cpp
 signal/Crossmul.cpp
+signal/CrossMultiply.cpp
 signal/filter2D.cpp
 signal/Filter.cpp
+signal/flatten.cpp
 signal/Looks.cpp
 signal/NFFT.cpp
 signal/shiftSignal.cpp

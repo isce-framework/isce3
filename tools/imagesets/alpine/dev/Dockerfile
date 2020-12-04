@@ -16,4 +16,5 @@ RUN apk add --no-cache \
         python3-dev \
         py3-numpy-dev \
         py3-pytest \
+        py3-shapely \
  && echo
