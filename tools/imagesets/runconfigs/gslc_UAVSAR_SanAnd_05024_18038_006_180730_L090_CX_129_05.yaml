@@ -8,11 +8,11 @@ runconfig:
         InputFileGroup:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             InputFilePath:
-            - input_L1_RSLC_UAVSAR_SanAnd1/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5
+            - input_L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L1_RSLC_UAVSAR_SanAnd1/nisar-dem/EPSG32610/EPSG32610.vrt
+            DEMFile: input_L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05/nisar-dem/EPSG32610/EPSG32610.vrt
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
