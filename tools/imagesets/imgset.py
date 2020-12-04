@@ -186,10 +186,23 @@ class ImageSet:
     def distribrun(self, testdir, cmd, log=None, dataname=None, nisarimg=False):
         """
         Run a command in the distributable image
+
+        Parameters
+        -------------
+        testdir : str
+            Test directory to run Docker command in
+        cmd : str
+            Command to run inside Docker
+        log : str, optional
+            Path of log file for saving standard out and standard error
+        dataname : str, optional
+            Test input data (e.g. "L0B_RRSD_REE1")
+        nisarimg : boolean, optional
+            Use NISAR distributable image
         """
-        logpath = pjoin(testdir, log)
         # save stdout and stderr to logfile if specified
         if log is not None:
+            logpath = pjoin(testdir, log)
             logfh = open(logpath, "w")
         else:
             logfh = None
@@ -233,7 +246,7 @@ class ImageSet:
         testname : str
             Workflow test name (e.g. "RSLC_REE1")
         dataname : str
-            Data name needed for test (e.g. "L0B_RRSD_REE1")
+            Test input data (e.g. "L0B_RRSD_REE1")
         pyname : str
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
         """
@@ -252,19 +265,16 @@ class ImageSet:
         self.distribrun(testdir, script, log, dataname=dataname)
 
     def rslctest(self):
-        # each key is test
-        for key in rslctestdict.keys():
-            self.workflowtest("rslc", key, rslctestdict[key], "pybind_nisar.workflows.focus")
+        for testname, dataname in rslctestdict.items():
+            self.workflowtest("rslc", testname, dataname, "pybind_nisar.workflows.focus")
             
     def gslctest(self):
-        # each key is test
-        for key in gslctestdict.keys():
-            self.workflowtest("gslc", key, gslctestdict[key], "pybind_nisar.workflows.gslc")
+        for testname, dataname in gslctestdict.items():
+            self.workflowtest("gslc", testname, dataname, "pybind_nisar.workflows.gslc")
     
     def gcovtest(self):
-        # each key is test
-        for key in gcovtestdict.keys():
-            self.workflowtest("gcov", key, gcovtestdict[key], "pybind_nisar.workflows.gcov")
+        for testname, dataname in gcovtestdict.items():
+            self.workflowtest("gcov", testname, dataname, "pybind_nisar.workflows.gcov")
 
     def workflowqa(self, wfname, testname):
         """
@@ -274,6 +284,8 @@ class ImageSet:
         -------------
         wfname : str
             Workflow name (e.g. "rslc")
+        testname: str
+            Workflow test name (e.g. "RSLC_REE1")
         """
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         mkcleandir(pjoin(testdir, f"qa_{wfname}"))
@@ -288,14 +300,14 @@ class ImageSet:
         self.distribrun(testdir, script, log, nisarimg=True)
 
     def rslcqa(self):
-        for key in rslctestdict.keys():
-            self.workflowqa("rslc", key)
+        for testname in rslctestdict:
+            self.workflowqa("rslc", testname)
     def gslcqa(self):
-        for key in gslctestdict.keys():
-            self.workflowqa("gslc", key)
+        for testname in gslctestdict:
+            self.workflowqa("gslc", testname)
     def gcovqa(self):
-        for key in gcovtestdict.keys():
-            self.workflowqa("gcov", key)
+        for testname in gcovtestdict:
+            self.workflowqa("gcov", testname)
 
     def docsbuild(self):
         """
