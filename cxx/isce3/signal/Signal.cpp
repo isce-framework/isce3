@@ -1,10 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Author: Heresh Fattahi
-// Copyright 2018-
-//
-
 #include "Signal.h"
 #include <iostream>
 #include "fftw3cxx.h"
@@ -1028,10 +1021,63 @@ upsample(std::valarray<std::complex<T>> &signal,
 
 }
 
+/**
+ *   @param[in] signal input block of data
+ *   @param[out] signalUpsampled output block of oversampled data
+ *   @param[in] shiftImpact a linear phase term equivalent to a constant shift
+ *   in time domain
+ */
+template<class T>
+void isce3::signal::Signal<T>::upsample(
+        isce3::core::EArray2D<std::complex<T>>& signal,
+        isce3::core::EArray2D<std::complex<T>>& signalUpsampled,
+        const isce3::core::EArray2D<std::complex<T>>& shiftImpact)
+{
 
+    // number of rows which are the same before and after upsampling in range
+    int nrows = signal.rows();
 
+    // number of columns in the original signal
+    int fft_size = signal.cols();
 
+    // number of columns of upsampled data
+    int columns = signalUpsampled.cols();
 
+    // temporary storage for the spectrum before and after the shift
+    isce3::core::EArray2D<std::complex<T>> spectrum(nrows, fft_size);
+    isce3::core::EArray2D<std::complex<T>> spectrumShifted(nrows, columns);
+
+    spectrumShifted = std::complex<T>(0.0, 0.0);
+
+    // forward fft in range
+    pimpl->_plan_fwd.execute_dft(signal.data(), spectrum.data());
+
+    // spectrum /= fft_size;
+    // shift the spectrum
+    // The spectrum has values from begining to fft_size index for each line. We
+    // want to put the spectrum in correct ouput locations such that the
+    // spectrum of the sampled data has values from 0 to fft_size/2 and from
+    // upsampleFactor*fft_size - fft_size/2 to the end. For a 1D example:
+    //      spectrum = [1,2,3,4,5,6,0,0,0,0,0,0]
+    //  becomes:
+    //      spectrumShifted = [1,2,3,0,0,0,0,0,0,4,5,6]
+    //
+
+    spectrumShifted.block(0, 0, nrows, (fft_size + 1) / 2) =
+            spectrum.block(0, 0, nrows, (fft_size + 1) / 2);
+    spectrumShifted.block(0, columns - fft_size / 2, nrows, fft_size / 2) =
+            spectrum.block(0, (fft_size + 1) / 2, nrows, fft_size / 2);
+
+    if (shiftImpact.rows() != 0)
+        spectrumShifted *= shiftImpact;
+
+    // inverse fft to get the upsampled signal
+    pimpl->_plan_inv.execute_dft(spectrumShifted.data(),
+                                 signalUpsampled.data());
+
+    // Normalize
+    signalUpsampled /= fft_size;
+}
 
 /**
 *   @param[in] signal input block of 2D data

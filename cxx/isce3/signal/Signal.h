@@ -14,6 +14,7 @@
 #include <valarray>
 
 #include <isce3/core/Constants.h>
+#include <isce3/core/EMatrix.h>
 
 /** A class to handle 2D FFT or 1D FFT in range or azimuth directions 
  */
@@ -346,8 +347,14 @@ class isce3::signal::Signal {
                     int rows, int fft_size, int oversampleFactor,
                     std::valarray<std::complex<T>> shiftImpact);
 
-
-
+        /** \brief upsampling a basebanded block of data in range (columns)
+         * direction and shifting the upsampled signal by a constant. The shift
+         * is applied by an inout linear phase term in frequency domain.
+         */
+        void upsample(
+                isce3::core::EArray2D<std::complex<T>>& signal,
+                isce3::core::EArray2D<std::complex<T>>& signalUpsampled,
+                const isce3::core::EArray2D<std::complex<T>>& shiftImpact = {});
 
         /** \brief 2D upsampling a block of 2D data */
         void upsample2D(std::valarray<std::complex<T>> &signal,

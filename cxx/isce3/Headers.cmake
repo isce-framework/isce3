@@ -137,9 +137,11 @@ signal/Covariance.h
 signal/Covariance.icc
 signal/Crossmul.h
 signal/Crossmul.icc
+signal/CrossMultiply.h
 signal/fftw3cxx.h
 signal/filter2D.h
 signal/Filter.h
+signal/flatten.h
 signal/forward.h
 signal/Looks.h
 signal/Looks.icc
