@@ -19,11 +19,6 @@ container_testdir = f"/tmp/test"
 docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
 
-# Create directory, removing old directory if it exists already
-def mkcleandir(dirpath):
-    if os.path.exists(dirpath):
-        shutil.rmtree(dirpath)
-    os.mkdir(dirpath)
 
 # A set of docker images suitable for building and running isce3
 class ImageSet:
@@ -251,10 +246,8 @@ class ImageSet:
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
         """
         testdir = os.path.abspath(pjoin(self.testdir, testname))
-        # cleanup old outputs
-        mkcleandir(testdir)
-        os.mkdir(pjoin(testdir, f"output_{wfname}"))
-        os.mkdir(pjoin(testdir, f"scratch_{wfname}"))
+        os.makedirs(pjoin(testdir, f"output_{wfname}"), exist_ok=True)
+        os.makedirs(pjoin(testdir, f"scratch_{wfname}"), exist_ok=True)
         # copy test runconfig to test directory
         shutil.copyfile(pjoin(runconfigdir, f"{testname}.yaml"), 
                         pjoin(testdir, f"runconfig_{wfname}.yaml"))
@@ -288,7 +281,7 @@ class ImageSet:
             Workflow test name (e.g. "RSLC_REE1")
         """
         testdir = os.path.abspath(pjoin(self.testdir, testname))
-        mkcleandir(pjoin(testdir, f"qa_{wfname}"))
+        os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
         script = f"""
             time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
