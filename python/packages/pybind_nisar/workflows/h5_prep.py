@@ -60,11 +60,14 @@ def cp_geocode_meta(cfg, dst):
     dst_meta_path = f'{common_parent_path}/{dst}/metadata'
 
     with h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
-        h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5: 
+            h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
 
         # simple copies of identification, metadata/orbit, metadata/attitude groups
+        identification_excludes = 'productType'
+        if is_insar:
+            identification_excludes = ['productType', 'listOfFrequencies']
         cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification',
-                        excludes='productType')
+                        excludes=identification_excludes)
 
         # Flag isGeocoded
         ident = dst_h5[f'{common_parent_path}/identification']
@@ -76,19 +79,19 @@ def cp_geocode_meta(cfg, dst):
 
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
-            f'{dst_meta_path}/orbit')
+                        f'{dst_meta_path}/orbit')
 
         # copy attitude information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
-            f'{dst_meta_path}/attitude')
+                        f'{dst_meta_path}/attitude')
 
         # copy radar grid information group
         cp_h5_meta_data(src_h5, dst_h5,
                         f'{src_meta_path}/geolocationGrid',
                         f'{dst_meta_path}/radarGrid',
-                        renames={'coordinateX':'xCoordinates',
-                            'coordinateY':'yCoordinates',
-                            'zeroDopplerTime':'zeroDopplerAzimuthTime'})
+                        renames={'coordinateX': 'xCoordinates',
+                                 'coordinateY': 'yCoordinates',
+                                 'zeroDopplerTime': 'zeroDopplerAzimuthTime'})
 
         # Copy common metadata
         # TODO check differences in processingInformation
@@ -140,8 +143,8 @@ def cp_geocode_meta(cfg, dst):
         # copy processingInformation
         excludes = ['nes0', 'elevationAntennaPattern']
         if is_insar:
-            excludes=['frequencyA', 'frequencyB', 'azimuthChirpWeighting',
-                    'effectiveVelocity', 'rangeChirpWeighting', 'slantRange', 'zeroDopplerTime']
+            excludes = ['frequencyA', 'frequencyB', 'azimuthChirpWeighting',
+                        'effectiveVelocity', 'rangeChirpWeighting', 'slantRange', 'zeroDopplerTime']
         cp_h5_meta_data(src_h5, dst_h5,
                         os.path.join(src_meta_path, 'processingInformation/parameters'),
                         os.path.join(dst_meta_path, 'processingInformation/parameters'),
@@ -194,7 +197,6 @@ def copy_insar_meta(cfg, src_meta_path, dst_meta_path, src_h5, dst_h5):
     src_proc = os.path.join(src_meta_path, 'processingInformation/parameters')
 
     # Create groups in processing Information
-
     dst_h5.create_group(os.path.join(dst_proc, 'common'))
     dst_h5.create_group(os.path.join(dst_proc, 'reference'))
     dst_h5.create_group(os.path.join(dst_proc, 'secondary'))
@@ -217,12 +219,12 @@ def copy_insar_meta(cfg, src_meta_path, dst_meta_path, src_h5, dst_h5):
                     os.path.join(dst_meta_path, 'radarGrid/secondarySlantRange'))
     cp_h5_meta_data(src2_h5, dst_h5, os.path.join(src_meta_path, 'geolocationGrid/zeroDopplerTime'),
                     os.path.join(dst_meta_path, 'radarGrid/secondaryZeroDopplerAzimuthTime'))
-    
+
     # Update these attribute with a description
     descr = "Slant range of corresponding pixels in secondary image"
-    dst_h5[os.path.join(dst_meta_path, 'radarGrid/secondarySlantRange')].attrs["description"]=descr
+    dst_h5[os.path.join(dst_meta_path, 'radarGrid/secondarySlantRange')].attrs["description"] = descr
     descr = "Zero Doppler azimuth time of corresponding pixel in secondary image"
-    dst_h5[os.path.join(dst_meta_path, 'radarGrid/secondaryZeroDopplerAzimuthTime')].attrs["description"]=descr
+    dst_h5[os.path.join(dst_meta_path, 'radarGrid/secondaryZeroDopplerAzimuthTime')].attrs["description"] = descr
 
 
 def prep_ds(cfg, dst):
@@ -295,6 +297,12 @@ def prep_ds_gunw(cfg, dst, dst_h5):
     # Create datasets in the ouput hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
 
+    # Create list of frequencies
+    id_group = dst_h5['science/LSAR/identification']
+    descr = "List of frequency layers available in the product"
+    dset = id_group.create_dataset('listOfFrequencies', data=np.string_(list(freq_pols.keys())))
+    dset.attrs["description"] = descr
+
     for freq in freq_pols.keys():
         pol_list = freq_pols[freq]
         shape = (geogrids[freq].length, geogrids[freq].width)
@@ -312,8 +320,10 @@ def prep_ds_gunw(cfg, dst, dst_h5):
         _create_datasets(dst_h5[dst_parent_path], [0], np.float32, "centerFrequency",
                          descr=descr, units="Hz")
         descr = "Number of swaths of continuous imagery, due to gaps"
-        _create_datasets(dst_h5[dst_parent_path], [0], np.float32, "numberOfSubSwaths",
-                         descr=descr, units="Hz")
+        id_group = dst_h5[dst_parent_path]
+        id_group.create_dataset("numberOfSubSwaths", data=int(1))
+        id_group.attrs["description"] = np.string_(descr)
+        id_group.attrs["units"] = np.string_(" ")
 
         dst_path_intf = os.path.join(dst_parent_path, 'interferogram')
         dst_path_offs = os.path.join(dst_parent_path, 'pixelOffsets')
@@ -372,7 +382,7 @@ def prep_ds_gunw(cfg, dst, dst_h5):
                          descr=descr, units="unitless")
         descr = "Method used for generating pixel offsets"
         _create_datasets(dst_h5[dst_path_offs], [9], np.string_, 'crossCorrelationMethod',
-        descr=descr, units=None)
+                         descr=descr, units=None)
 
         for pol in pol_list:
             intf_path = os.path.join(dst_path_intf, f'{pol}')
@@ -404,7 +414,7 @@ def prep_ds_gunw(cfg, dst, dst_h5):
             _create_datasets(dst_h5[offs_path], shape, ctype, 'correlation',
                              descr=descr, units="unitless")
 
-    # add datasets in metadata	
+    # add datasets in metadata
     dst_cal = os.path.join(common_parent_path, f'{dst}/metadata/calibrationInformation')
     dst_proc = os.path.join(common_parent_path, f'{dst}/metadata/processingInformation/parameters')
     dst_grid = os.path.join(common_parent_path, f'{dst}/metadata/radarGrid')
@@ -473,8 +483,8 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     desc = f"List of polarization layers with frequency{frequency}"
     dset.attrs["description"] = np.string_(desc)
 
-def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
 
+def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     epsg_code = geo_grid.epsg
 
     dx = geo_grid.spacing_x
@@ -597,9 +607,9 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     else:
         ### UTM zones
         if ((epsg_code > 32600 and
-                epsg_code < 32661) or
+             epsg_code < 32661) or
                 (epsg_code > 32700 and
-                    epsg_code < 32761)):
+                 epsg_code < 32761)):
             # Set up grid mapping
             projds.attrs['utm_zone_number'] = epsg_code % 100
 
@@ -641,5 +651,3 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
         projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(osr.SRS_PP_LONGITUDE_OF_ORIGIN)
 
     return yds, xds
-
-
