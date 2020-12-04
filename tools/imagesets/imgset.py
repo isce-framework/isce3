@@ -292,8 +292,8 @@ class ImageSet:
         script = f"""
             time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
                 --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                --quality output_{wfname}/gunw.h5
-            time cfchecks.py output_{wfname}/gunw.h5
+                --quality output_{wfname}/{wfname}.h5
+            time cfchecks.py output_{wfname}/{wfname}.h5
             echo ""
             """
         self.distribrun(testdir, script, log, nisarimg=True)
@@ -313,6 +313,10 @@ class ImageSet:
     def insarqa(self):
         """
         Run QA and CF compliance checking for InSAR workflow using the NISAR distrib image.
+
+        InSAR QA is a special case since the workflow name is not the product name. 
+        Also, the --quality flag in verify_gunw.py cannot be used at the moment since
+        gunw file does not contain any science data.
         """
         wfname = "insar"
         for testname in insartestdict:
@@ -322,8 +326,8 @@ class ImageSet:
             script = f"""
                 time verify_gunw.py --fpdf qa_{wfname}/graphs.pdf \
                     --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                    output_{wfname}/{wfname}.h5
-                #time cfchecks.py output_{wfname}/gunw.h5
+                    output_{wfname}/gunw.h5
+                time cfchecks.py output_{wfname}/gunw.h5
                 echo ""
                 """
             self.distribrun(testdir, script, log, nisarimg=True)
