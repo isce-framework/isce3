@@ -1,5 +1,5 @@
 import os, subprocess, sys, shutil, stat
-from .workflowdata import rslctestdict, gslctestdict, gcovtestdict
+from .workflowdata import rslctestdict, gslctestdict, gcovtestdict, insartestdict
 pjoin = os.path.join
 
 # Global configuration constants
@@ -190,8 +190,8 @@ class ImageSet:
             Command to run inside Docker
         log : str, optional
             Path of log file for saving standard out and standard error
-        dataname : str, optional
-            Test input data (e.g. "L0B_RRSD_REE1")
+        dataname : str or list, optional
+            Test input data as str or list (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2")
         nisarimg : boolean, optional
             Use NISAR distributable image
         """
@@ -207,11 +207,13 @@ class ImageSet:
         else:
             tag = self.name
 
+        datamount = ""
         if dataname is not None:
-            datadir = os.path.abspath(pjoin(self.datadir, dataname))          
-            datamount = f"--mount type=bind,source={datadir},target={container_testdir}/input_{dataname}"
-        else:
-            datamount = ""
+            if type(dataname) is not list:
+                dataname = [dataname]
+            for data in dataname:
+                datadir = os.path.abspath(pjoin(self.datadir, data))          
+                datamount += f"--mount type=bind,source={datadir},target={container_testdir}/input_{data} "
 
         runcmd = f"{docker} run \
           --mount type=bind,source={testdir},target={container_testdir} {datamount} \
@@ -269,6 +271,10 @@ class ImageSet:
         for testname, dataname in gcovtestdict.items():
             self.workflowtest("gcov", testname, dataname, "pybind_nisar.workflows.gcov")
 
+    def insartest(self):
+        for testname, dataname in insartestdict.items():
+            self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
+
     def workflowqa(self, wfname, testname):
         """
         Run QA and CF compliance checking for the specified workflow using the NISAR distrib image.
@@ -286,8 +292,8 @@ class ImageSet:
         script = f"""
             time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
                 --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                --quality output_{wfname}/{wfname}.h5
-            time cfchecks.py output_{wfname}/{wfname}.h5
+                --quality output_{wfname}/gunw.h5
+            time cfchecks.py output_{wfname}/gunw.h5
             echo ""
             """
         self.distribrun(testdir, script, log, nisarimg=True)
@@ -295,13 +301,33 @@ class ImageSet:
     def rslcqa(self):
         for testname in rslctestdict:
             self.workflowqa("rslc", testname)
+
     def gslcqa(self):
         for testname in gslctestdict:
             self.workflowqa("gslc", testname)
+
     def gcovqa(self):
         for testname in gcovtestdict:
             self.workflowqa("gcov", testname)
 
+    def insarqa(self):
+        """
+        Run QA and CF compliance checking for InSAR workflow using the NISAR distrib image.
+        """
+        wfname = "insar"
+        for testname in insartestdict:
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
+            log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
+            script = f"""
+                time verify_gunw.py --fpdf qa_{wfname}/graphs.pdf \
+                    --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
+                    output_{wfname}/{wfname}.h5
+                #time cfchecks.py output_{wfname}/gunw.h5
+                echo ""
+                """
+            self.distribrun(testdir, script, log, nisarimg=True)
+        
     def docsbuild(self):
         """
         Build documentation using Doxygen + Sphinx

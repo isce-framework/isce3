@@ -16,6 +16,7 @@ def run(*, steps, imgset, **kwargs):
         "rslctest",
         "gslctest",
         "gcovtest",
+        "insartest",
     ]
 
     nisarsteps = mainsteps + [
@@ -23,6 +24,7 @@ def run(*, steps, imgset, **kwargs):
         "rslcqa",
         "gslcqa",
         "gcovqa",
+        "insarqa",
     ]
 
     # you can say "all" or "main" for a sequence similar to our CI pipeline
