@@ -58,11 +58,11 @@ def run(cfg):
     maxiter = geo2rdr_dict['maxiter']
 
     if apply_rtc:
-        output_radiometry_str = "gamma-naught"
+        output_radiometry_str = 'radar backscatter gamma0'
     elif input_terrain_radiometry == isce.geometry.RtcInputRadiometry.BETA_NAUGHT:
-        output_radiometry_str = 'beta-naught'
+        output_radiometry_str = 'radar backscatter beta0'
     else:
-        output_radiometry_str = 'sigma-naught-inc-angle'
+        output_radiometry_str = 'radar backscatter sigma0'
 
     # unpack pre-processing
     preprocess = cfg['processing']['pre_process']
@@ -238,32 +238,25 @@ def run(cfg):
 
             _save_hdf5_dataset(temp_output.name, hdf5_obj, root_ds,
                                yds, xds, cov_elements_list,
-                               standard_name=output_radiometry_str,
                                long_name=output_radiometry_str,
-                               units='unitless',
-                               fill_value=np.nan,
+                               units='',
                                valid_min=clip_min,
                                valid_max=clip_max)
 
             # save nlooks
             _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
                                yds, xds, 'numberOfLooks',
-                               standard_name = 'numberOfLooks',
                                long_name = 'number of looks', 
-                               units = 'looks',
-                               fill_value = np.nan, 
+                               units = '',
                                valid_min = 0)
 
             # save rtc
             if flag_save_rtc:
                 _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds, 
                                    yds, xds, 'areaNormalizationFactor',
-                                   standard_name = 'areaNormalizationFactor',
                                    long_name = 'RTC area factor', 
-                                   units = 'unitless',
-                                   fill_value = np.nan, 
-                                   valid_min = 0,
-                                   valid_max = 2)
+                                   units = '',
+                                   valid_min = 0)
 
             # save GCOV off-diagonal elements
             if not flag_fullcovariance:
@@ -277,10 +270,8 @@ def run(cfg):
     
             _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                                yds, xds, off_diag_terms_list,
-                               standard_name = output_radiometry_str,
                                long_name = output_radiometry_str, 
-                               units = 'unitless',
-                               fill_value = np.nan, 
+                               units = '',
                                valid_min = clip_min, 
                                valid_max = clip_max)
 

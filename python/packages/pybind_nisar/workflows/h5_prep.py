@@ -500,15 +500,15 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
 
     if epsg_code == 4326:
-        x_coord_units = "degrees_east"
-        y_coord_units = "degrees_north"
+        x_coord_units = "degree_east"
+        y_coord_units = "degree_north"
         x_standard_name = "longitude"
-        y_standared_name = "latitude"
+        y_standard_name = "latitude"
     else:
-        x_coord_units = "meters"
-        y_coord_units = "meters"
+        x_coord_units = "m"
+        y_coord_units = "m"
         x_standard_name = "projection_x_coordinate"
-        y_standared_name = "projection_y_coordinate"
+        y_standard_name = "projection_y_coordinate"
 
     # xCoordinateSpacing
     descr = (f'Nominal spacing in {x_coord_units}'
@@ -538,7 +538,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     if xds_name in hdf5_obj:
         del hdf5_obj[xds_name]
     xds = hdf5_obj.create_dataset(xds_name, data=x_vect)
-    xds.attrs['standard_name'] = np.string_(x_standard_name)
+    xds.attrs['standard_name'] = x_standard_name
     xds.attrs["description"] = np.string_(descr)
     xds.attrs["units"] = np.string_(x_coord_units)
 
@@ -548,7 +548,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     if yds_name in hdf5_obj:
         del hdf5_obj[yds_name]
     yds = hdf5_obj.create_dataset(yds_name, data=y_vect)
-    yds.attrs['standard_name'] = np.string_(y_standared_name)
+    yds.attrs['standard_name'] = y_standard_name
     yds.attrs["description"] = np.string_(descr)
     yds.attrs["units"] = np.string_(y_coord_units)
 

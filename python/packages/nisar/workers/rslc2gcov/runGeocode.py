@@ -505,10 +505,10 @@ def _runGeocodeFrequency(self, frequency):
 
             #Setup units for x and y 
             xds.attrs['standard_name'] = np.string_("longitude")
-            xds.attrs['units'] = np.string_("degrees_east")
+            xds.attrs['units'] = np.string_("degree_east")
 
             yds.attrs['standard_name'] = np.string_("latitude")
-            yds.attrs['units'] = np.string_("degrees_north")
+            yds.attrs['units'] = np.string_("degree_north")
 
         ### UTM zones
         elif ((self.state.output_epsg > 32600 and 
