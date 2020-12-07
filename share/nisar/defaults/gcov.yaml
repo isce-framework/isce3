@@ -109,6 +109,12 @@ runconfig:
 
                 # OPTIONAL - Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1
+               
+                # Save the number of looks used to compute GCOV
+                save_nlooks: True
+               
+                # Save the RTC area factor used to compute GCOV
+                save_rtc: True
 
                 # OPTIONAL - Absolute radiometric correction
                 abs_rad_cal: 1

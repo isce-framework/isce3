@@ -424,7 +424,9 @@ def focus(runconfig):
         slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, polygon=polygon,
         track=cfg.Geometry.RelativeOrbitNumber,
-        frame=cfg.Geometry.FrameNumber)
+        frame=cfg.Geometry.FrameNumber,
+        start_time=ogrid["A"].sensing_datetime(0),
+        end_time=ogrid["A"].sensing_datetime(ogrid["A"].length - 1))
 
     # store metadata for each frequency
     dop = dict()
