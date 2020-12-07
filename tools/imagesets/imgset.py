@@ -224,7 +224,7 @@ class ImageSet:
             # save command in logfile
             logfh.write("++ " + subprocess.list2cmdline(runcmd.split() + [cmd]) + "\n")
             logfh.flush()
-        subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.PIPE)
+        subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.STDOUT)
 
         if log is not None:
             logfh.close()
@@ -290,11 +290,10 @@ class ImageSet:
         os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
         script = f"""
+            time cfchecks.py output_{wfname}/{wfname}.h5
             time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
                 --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
                 --quality output_{wfname}/{wfname}.h5
-            time cfchecks.py output_{wfname}/{wfname}.h5
-            echo ""
             """
         self.distribrun(testdir, script, log, nisarimg=True)
 
@@ -324,11 +323,10 @@ class ImageSet:
             os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
             log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
             script = f"""
+                time cfchecks.py output_{wfname}/gunw.h5
                 time verify_gunw.py --fpdf qa_{wfname}/graphs.pdf \
                     --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
                     output_{wfname}/gunw.h5
-                time cfchecks.py output_{wfname}/gunw.h5
-                echo ""
                 """
             self.distribrun(testdir, script, log, nisarimg=True)
         
