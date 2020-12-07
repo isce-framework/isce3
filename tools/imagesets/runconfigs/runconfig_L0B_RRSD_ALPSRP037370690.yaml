@@ -1,14 +1,9 @@
 runconfig: 
-    name: NISAR_L1-L-RSLC_RUNCONFIG    
-
     groups:
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
-
         InputFileGroup:
             # REQUIRED List of NISAR raw data products in L0B format.
             InputFilePath:
-            - input_L0B_RRSD_REE1/REE_L0B_out17.h5      
+            - input_L0B_RRSD_ALPSRP037370690/ALPSRP037370690.L0B.h5
         DynamicAncillaryFileGroup:
             # Digital elevation model, optional.
             DEMFile: null
@@ -40,7 +35,7 @@ runconfig:
             ProductPath: output_rslc
             # Directory where SAS can write temporary data
             ScratchPath: scratch_rslc
-            # SAS writes output product to the following file. PGE may rename.
+            # SAS writes output_rslc product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: output_rslc/rslc.h5
             SASConfigFile: output_rslc/rslc_config.yaml
@@ -63,12 +58,29 @@ runconfig:
             output_grid:
                 # Azimuth bounds of output SLC, optional.
                 # Defaults to extent of raw data minus sythetic aperture and
-                start_time: 2021-07-01T03:20:03.461103958
-                end_time: 2021-07-01T03:20:03.539283375
-                # Range bounds of output SLC in meters, optional.
-                # Defaults to entire fully focused swath.
-                start_range: 967124.5530972595
-                end_range: 967930.2453281345
+                # shifted by squint.
+                # 128
+                # start_time: 2006-10-07T06:10:05.473295634
+                # end_time: 2006-10-07T06:10:05.542038921
+                # # Range bounds of output SLC in meters, optional.
+                # # Defaults to entire fully focused swath.
+                # start_range: 751863.3552474803
+                # end_range: 752462.3952474804
+                # 256
+                # start_time: 2006-10-07T06:10:05.442352522
+                # end_time: 2006-10-07T06:10:05.579839095
+                # start_range: 751563.8348427379
+                # end_range: 752761.914842738
+                # 512
+                start_time: 2006-10-07T06:10:05.373609235
+                end_time: 2006-10-07T06:10:05.648582382
+                start_range: 750964.794842738
+                end_range: 753360.9548427379
+                # 2048
+                # start_time: 2006-10-07T06:10:04.961207692
+                # end_time: 2006-10-07T06:10:06.060983925
+                # start_range: 747366.1955147379
+                # end_range: 756959.554170738
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
                 output_prf: null
@@ -96,7 +108,7 @@ runconfig:
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
-                azimuth_boresight_deg: 0.0
+                azimuth_boresight_deg: 0.9
                 # How to interpolate between samples in the LUT.
                 interp_method: bilinear
                 # Postings for generated Doppler lookup table.
@@ -126,8 +138,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 64
-                    azimuth: 64
+                    range: 128
+                    azimuth: 128
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
                 kernel:
@@ -172,7 +184,7 @@ runconfig:
             # Default is 1.0.
             # The largest representable float16 value is 65504.
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.
-            encoding_scale_factor: 1e-8
+            encoding_scale_factor: 1e-2
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:

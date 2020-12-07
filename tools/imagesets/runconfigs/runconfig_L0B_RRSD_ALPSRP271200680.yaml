@@ -1,0 +1,60 @@
+runconfig:
+    groups:
+        InputFileGroup:
+            # REQUIRED List of NISAR raw data products in L0B format.
+            InputFilePath:
+            - ./input_L0B_RRSD_ALPSRP271200680/ALPSRP271200680.L0B.h5
+
+        ProductPathGroup:
+            # Directory where SAS can write temporary data
+            ScratchPath: ./scratch_rslc
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
+            SASOutputFile: ./output_rslc/rslc.h5
+            # Echo processor config (including defaults) to file.
+            SASConfigFile: ./output_rslc/rslc_config.yaml
+        
+        PrimaryExecutable:
+            # Handy to set to "SLC" until other ISCE tools updated.
+            ProductType: RSLC
+
+        # To populate track/frame in identification group.
+        Geometry:
+            RelativeOrbitNumber: 1
+            FrameNumber: 1
+
+        worker:
+            gpu_enabled: True
+        
+        processing:
+            output_grid:
+                # Full scene
+                start_time: 2011-02-26T06:18:07.0
+                end_time: 2011-02-26T06:18:19.0
+                start_range: 846567.0
+                end_range: 890973.75784125
+                output_prf: 1520.0
+        
+            # Range spectral window, optional.  Defaults to no weighting.
+            range_window:
+                # Kaiser or Cosine
+                kind: Kaiser
+                # Shape parameter. For Kaiser, 0 <= shape < Inf.
+                # For Cosine, 0 <= shape <= 1
+                shape: 1.8
+ 
+            doppler:
+                # Offset between quaternion frame and antenna boresight in degrees.
+                # TBD This will likely be parameter in a separate cal file.
+                azimuth_boresight_deg: 0.0
+
+            dry_troposphere_model: nodelay
+        
+            # Scale factor to apply to data before float16 encoding, optional.
+            # The largest representable float16 value is 65504.
+            # NOTE This is ad-hoc until the processor is radiometrically calibrated.
+            encoding_scale_factor: 1e-2
+        
+            dem:
+                # Height (in meters) to use if DEM unavailable.
+                reference_height: 661.0

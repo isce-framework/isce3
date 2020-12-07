@@ -8,11 +8,11 @@ runconfig:
         InputFileGroup:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             InputFilePath:
-            - input_L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5
+            - input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/SanAnd_05518_12128_008_121105_L090_CX_143_02.h5
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05/nisar-dem/EPSG32610/EPSG32610.vrt
+            DEMFile: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/dem.tif
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -99,14 +99,14 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
-                    y_abs: 4047500.0
+                    y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
-                    x_abs: 577500.0
+                    x_abs:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
-                    y_abs: 4017500.0
-                    x_abs: 605000.0
+                    y_abs:
+                    x_abs:
 
             geo2rdr:
                 threshold: 1.0e-9
