@@ -153,5 +153,7 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 }
                 return out + ")";
         })
+        .def("sensing_datetime", &RadarGridParameters::sensingDateTime,
+                py::arg("line") = 0);
         ;
 }

@@ -192,9 +192,10 @@ class SLC(h5py.File):
                                             " (roll, pitch, yaw)")
 
     def copy_identification(self, raw: Raw, track: int = 0, frame: int = 0,
-                            polygon: str = None):
+                            polygon: str = None, start_time: DateTime = None,
+                            end_time: DateTime = None):
         """Copy the identification metadata from a L0B product.  Bounding
-        polygon will be updated if not None.
+        polygon and start/end time will be updated if not None.
         """
         log.info(f"Populating identification based on {raw.filename}")
         # Most parameters are just copies of input ID.
@@ -222,3 +223,15 @@ class SLC(h5py.File):
             d.attrs["ogr_geometry"] = np.string_("polygon")
         else:
             log.warning("SLC bounding polygon not updated.  Using L0B polygon.")
+        # Start/end time can be customized via runconfig and generally are
+        # different anyway due to reskew.
+        if start_time is not None:
+            d = set_string(g, "zeroDopplerStartTime", start_time.isoformat())
+            d.attrs["description"] = np.string_("Azimuth start time of product")
+        else:
+            log.warning("SLC start time not updated.  Using L0B start time.")
+        if end_time is not None:
+            d = set_string(g, "zeroDopplerEndTime", end_time.isoformat())
+            d.attrs["description"] = np.string_("Azimuth stop time of product")
+        else:
+            log.warning("SLC end time not updated.  Using L0B end time.")
