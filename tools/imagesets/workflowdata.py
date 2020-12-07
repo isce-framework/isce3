@@ -49,6 +49,13 @@ workflowdata = [
         ]
     ),
     (
+        "L0B_RRSD_REE_CALTOOL",
+        [
+            "L0B_RRSD_REE_CALTOOL.h5", 
+            "README.txt",
+        ]
+    ),    
+    (
         "L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F",
         [
             "S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F.h5",
@@ -115,9 +122,9 @@ workflowdata = [
 # each key is the test name, value is the corresponding data
 rslctestdict = {
     "rslc_REE1": "L0B_RRSD_REE1",
-    #"rslc_REE2": "L0B_RRSD_REE2", # ~1.5 hour test on GPU, QA memory error
-    #"rslc_DIST1": "L0B_RRSD_DIST1",
-    #"rslc_DIST2": "L0B_RRSD_DIST2",
+    "rslc_REE2": "L0B_RRSD_REE2", # ~1.5 hour test on GPU, QA memory error
+    "rslc_DIST1": "L0B_RRSD_DIST1",
+    "rslc_DIST2": "L0B_RRSD_DIST2",
     #"rslc_ALPSRP037370690": "L0B_RRSD_ALPSRP037370690", # missing "Absolute orbit number"
     #"rslc_ALPSRP271200680": "L0B_RRSD_ALPSRP271200680", # missing "Absolute orbit number"
     }
@@ -143,8 +150,8 @@ gcovtestdict = {
     "gcov_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03":
         "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
     # lowercase polarization error
-    #"gcov_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F":
-    #    "L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F",
+    "gcov_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F":
+        "L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F",
     "gcov_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03":
         "L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
     "gcov_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02":
