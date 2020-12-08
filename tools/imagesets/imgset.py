@@ -1,5 +1,5 @@
 import os, subprocess, sys, shutil, stat
-from .workflowdata import rslctestdict, gslctestdict, gcovtestdict, insartestdict
+from .workflowdata import rslctestdict, gslctestdict, gcovtestdict, insartestdict, caltooltestdict
 pjoin = os.path.join
 
 # Global configuration constants
@@ -255,7 +255,7 @@ class ImageSet:
                         pjoin(testdir, f"runconfig_{wfname}.yaml"))
         log = pjoin(testdir, f"output_{wfname}", "stdouterr.log")
         script = f"""
-            python3 -m {pyname} runconfig_{wfname}.yaml
+            time python3 -m {pyname} runconfig_{wfname}.yaml
             """
         self.distribrun(testdir, script, log, dataname=dataname)
 
@@ -274,6 +274,16 @@ class ImageSet:
     def insartest(self):
         for testname, dataname in insartestdict.items():
             self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
+
+    def caltooltest(self):
+        for testname, dataname in caltooltestdict.items():
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
+            log = pjoin(testdir, f"output_noiseest", "stdouterr.log")
+            script = f"""
+                time noise_evd_estimate.py -i input_L0B_RRSD_REE_CALTOOL/L0B_RRSD_REE_CALTOOL.h5 -r
+                """
+            self.distribrun(testdir, script, log, dataname=dataname, nisarimg=True)
 
     def workflowqa(self, wfname, testname):
         """

@@ -25,6 +25,7 @@ def run(*, steps, imgset, **kwargs):
         "gslcqa",
         "gcovqa",
         "insarqa",
+        "caltooltest",
     ]
 
     # you can say "all" or "main" for a sequence similar to our CI pipeline
