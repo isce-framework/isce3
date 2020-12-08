@@ -2,9 +2,6 @@ import subprocess
 
 import numpy.testing as npt
 
-import pybind_nisar.workflows.yaml_argparse as yaml_argparse
-import pybind_nisar.workflows.rdr2geo_argparse as rdr2geo_argparse
-
 import iscetest
 
 
@@ -13,18 +10,18 @@ def test_cli_interface():
     run YAML and CLI success and failures
     '''
     # test YAML run success. iscetest.data write only so log file off.
-    process_args_path = yaml_argparse.__file__
-    cmd = f'python {process_args_path} {iscetest.data}/insar_test.yaml'
+    cmd = f'python3 -m pybind_nisar.workflows.yaml_argparse \
+            {iscetest.data}/insar_test.yaml --no-log-file'
     proc = subprocess.run(cmd.split())
 
     # test YAML run fail with bad path
-    cmd = f'python {process_args_path} {iscetest.data}/no_here.yaml'
+    cmd = f'python3 -m pybind_nisar.workflows.yaml_argparse \
+            {iscetest.data}/no_here.yaml --no-log-file'
     with npt.assert_raises(subprocess.CalledProcessError):
         proc = subprocess.check_output(cmd.split())
 
     # test simulated CLI success
-    process_args_path = rdr2geo_argparse.__file__
-    cmd = f'python {process_args_path} --rdr2geo \
+    cmd = f'python3 -m pybind_nisar.workflows.rdr2geo_argparse \
         --input-h5 {iscetest.data}/envisat.h5 \
         --dem {iscetest.data}/srtm_cropped.tif \
         --scratch . \
