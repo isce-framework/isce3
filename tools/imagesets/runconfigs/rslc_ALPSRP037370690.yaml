@@ -109,7 +109,7 @@ runconfig:
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
-                azimuth_boresight_deg: 0.9
+                azimuth_boresight_deg: 0.0
                 # How to interpolate between samples in the LUT.
                 interp_method: bilinear
                 # Postings for generated Doppler lookup table.
