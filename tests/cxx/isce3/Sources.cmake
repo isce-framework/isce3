@@ -28,6 +28,7 @@ focus/bistatic-delay.cpp
 focus/chirp.cpp
 focus/dry-troposphere-model.cpp
 focus/gaps.cpp
+focus/presum.cpp
 focus/rangecomp.cpp
 geocode/geocode.cpp
 geometry/dem/dem.cpp

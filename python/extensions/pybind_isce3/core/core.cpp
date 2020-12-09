@@ -49,6 +49,8 @@ void addsubmodule_core(py::module & m)
         pyKnabKernel(m_core, "KnabKernel");
     py::class_<NFFTKernel<double>, Kernel<double>>
         pyNFFTKernel(m_core, "NFFTKernel");
+    py::class_<AzimuthKernel<double>, Kernel<double>>
+        pyAzimuthKernel(m_core, "AzimuthKernel");
     py::class_<TabulatedKernel<double>, Kernel<double>>
         pyTabulatedKernel(m_core, "TabulatedKernel");
     py::class_<ChebyKernel<double>, Kernel<double>>
@@ -94,6 +96,7 @@ void addsubmodule_core(py::module & m)
     addbinding(pyLinearKernel);
     addbinding(pyKnabKernel);
     addbinding(pyNFFTKernel);
+    addbinding(pyAzimuthKernel);
     addbinding(pyTabulatedKernel);
     addbinding(pyChebyKernel);
 

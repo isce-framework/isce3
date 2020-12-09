@@ -23,6 +23,7 @@ focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
 focus/focus.cpp
+focus/PresumWeights.cpp
 focus/RangeComp.cpp
 geocode/geocode.cpp
 geocode/GeocodeSlc.cpp

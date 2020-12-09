@@ -28,6 +28,9 @@ template <typename T>
 void addbinding(pybind11::class_<isce3::core::KnabKernel<T>, isce3::core::Kernel<T>> &);
 
 template <typename T>
+void addbinding(pybind11::class_<isce3::core::AzimuthKernel<T>, isce3::core::Kernel<T>> &);
+
+template <typename T>
 void addbinding(pybind11::class_<isce3::core::NFFTKernel<T>, isce3::core::Kernel<T>> &);
 
 void addbinding(pybind11::class_<isce3::core::TabulatedKernel<float>, isce3::core::Kernel<float>> &);

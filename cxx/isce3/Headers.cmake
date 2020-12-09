@@ -68,6 +68,8 @@ focus/Chirp.h
 focus/DryTroposphereModel.h
 focus/DryTroposphereModel.icc
 focus/GapMask.h
+focus/PresumWeights.h
+focus/PresumWeights.icc
 focus/RangeComp.h
 geocode/baseband.h
 geocode/geocodeSlc.h

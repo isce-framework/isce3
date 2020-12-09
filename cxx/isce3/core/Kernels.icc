@@ -89,6 +89,24 @@ T NFFTKernel<T>::operator()(double t) const
 }
 
 /*
+ * Azimuth autocorrelation
+ */
+template<typename T>
+T AzimuthKernel<T>::operator()(double t) const
+{
+    const double x = std::abs(t * 2 / this->_halfwidth);
+    if (x > 2.0) {
+        return T(0.0);
+    }
+    // Use Horner's method to save a few multiplies.
+    if (x < 1.0) {
+        return x * x * (0.75 * x - 1.5) + 1.0;
+    }
+    // else 1 <= abs(x) <= 2
+    return x * (x * (-0.25 * x + 1.5) - 3.0) + 2.0;
+}
+
+/*
  * Tabulated kernel.
  */
 

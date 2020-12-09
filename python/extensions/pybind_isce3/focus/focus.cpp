@@ -3,6 +3,7 @@
 #include "Backproject.h"
 #include "Chirp.h"
 #include "DryTroposphereModel.h"
+#include "PresumWeights.h"
 #include "RangeComp.h"
 
 namespace py = pybind11;
@@ -23,5 +24,6 @@ void addsubmodule_focus(py::module & m)
 
     addbinding_backproject(m_focus);
     addbinding_chirp(m_focus);
+    addbinding_get_presum_weights(m_focus);
     addbinding(pyRangeComp);
 }
