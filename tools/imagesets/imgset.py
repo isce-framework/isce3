@@ -1,4 +1,7 @@
 import os, subprocess, sys, shutil, stat
+# see no evil
+from .workflowdata import workflowdata, rslctestdict, gslctestdict, gcovtestdict, insartestdict, caltooltestdict
+pjoin = os.path.join
 
 # Global configuration constants
 docker = "docker" # the docker executable
@@ -8,19 +11,15 @@ blddir = "/bld" # mount location in container of build directory
 # Path setup for convenience
 thisdir = os.path.dirname(__file__)
 projsrcdir = f"{thisdir}/../.." # XXX
+runconfigdir = f"{thisdir}/runconfigs"
 
-art_base = "https://cae-artifactory.jpl.nasa.gov/artifactory/general-develop/gov/nasa/jpl/nisar/adt/test"
-container_datadir = f"/tmp/data"
+art_base = "https://cae-artifactory.jpl.nasa.gov/artifactory/general-develop/gov/nasa/jpl/nisar/adt/data"
+container_testdir = f"/tmp/test"
 
 # Query docker info
 docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
 
-# Create directory, removing old directory if it exists already
-def mkcleandir(dirpath):
-    if os.path.exists(dirpath):
-        shutil.rmtree(dirpath)
-    os.mkdir(dirpath)
 
 # A set of docker images suitable for building and running isce3
 class ImageSet:
@@ -48,7 +47,8 @@ class ImageSet:
     def __init__(self, name, *, projblddir):
         self.name = name
         self.projblddir = projblddir
-        self.datadir = projblddir + "/workflow_testdata_tmp"
+        self.datadir = projblddir + "/workflow_testdata_tmp/data"
+        self.testdir = projblddir + "/workflow_testdata_tmp/test"
         self.build_args = f'''
             --network=host
         ''' + " ".join(f"--build-arg {x}_img={self.imgname(x)}" for x in self.imgs)
@@ -166,27 +166,37 @@ class ImageSet:
         TODO use a properly cached download e.g. via DVC
         """
 
-        # see no evil
-        from .workflowdata import workflowdata
 
         # Download files, preserving relative directory hierarchy
-        for (local_subdir, remote_subdir, fetchfiles) in workflowdata:
-            wfdatadir = f"{self.datadir}/{local_subdir}"
+        for testname, fetchfiles in workflowdata.items():
+            wfdatadir = f"{self.datadir}/{testname}"
             os.makedirs(wfdatadir, exist_ok=True)
             for fname in fetchfiles:
-                url = f"{art_base}/{remote_subdir}/{fname}"
+                url = f"{art_base}/{testname}/{fname}"
                 print("Fetching file:", url)
                 subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
                                       cwd = wfdatadir)
 
-    def distribrun(self, name, cmd, log=None, nisarimg=False):
+    def distribrun(self, testdir, cmd, log=None, dataname=None, nisarimg=False):
         """
         Run a command in the distributable image
+
+        Parameters
+        -------------
+        testdir : str
+            Test directory to run Docker command in
+        cmd : str
+            Command to run inside Docker
+        log : str, optional
+            Path of log file for saving standard out and standard error
+        dataname : str or list, optional
+            Test input data as str or list (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2")
+        nisarimg : boolean, optional
+            Use NISAR distributable image
         """
-        testdir = os.path.abspath(os.path.join(self.datadir, f"test_{name}"))
-        logpath = os.path.join(testdir, log)
         # save stdout and stderr to logfile if specified
         if log is not None:
+            logpath = pjoin(testdir, log)
             logfh = open(logpath, "w")
         else:
             logfh = None
@@ -196,16 +206,24 @@ class ImageSet:
         else:
             tag = self.name
 
+        datamount = ""
+        if dataname is not None:
+            if type(dataname) is not list:
+                dataname = [dataname]
+            for data in dataname:
+                datadir = os.path.abspath(pjoin(self.datadir, data))          
+                datamount += f"--mount type=bind,source={datadir},target={container_testdir}/input_{data} "
+
         runcmd = f"{docker} run \
-          --mount type=bind,source={testdir},target={container_datadir} \
-          -w {container_datadir} \
+          --mount type=bind,source={testdir},target={container_testdir} {datamount} \
+          -w {container_testdir} \
           -u {os.getuid()}:{os.getgid()} \
           --rm -i {self.tty} nisar-adt/isce3:{tag} sh -ci"  
         if log is not None: 
             # save command in logfile
             logfh.write("++ " + subprocess.list2cmdline(runcmd.split() + [cmd]) + "\n")
             logfh.flush()
-        subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.PIPE)
+        subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.STDOUT)
 
         if log is not None:
             logfh.close()
@@ -213,62 +231,117 @@ class ImageSet:
             with open(logpath, "r") as logfh:
                 print(logfh.read())
 
-    def workflowtest(self, name, pyname, suffix=""): # hmmmmmmmmm
+    def workflowtest(self, wfname, testname, dataname, pyname): # hmmmmmmmmm
         """
-        Run the specified workflow using the distrib image.
+        Run the specified workflow test using the distrib image.
         
         Parameters
         -------------
-        name : str
+        wfname : str
             Workflow name (e.g. "rslc")
+        testname : str
+            Workflow test name (e.g. "RSLC_REE1")
+        dataname : str
+            Test input data (e.g. "L0B_RRSD_REE1")
         pyname : str
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
-        suffix : str, optional
-            Optional runconfig filename suffix
         """
-        # cleanup old outputs
-        mkcleandir(os.path.join(self.datadir, f"test_{name}", f"output_{name}"))
-        mkcleandir(os.path.join(self.datadir, f"test_{name}", f"scratch_{name}"))
-        log = os.path.join(f"output_{name}", "stdouterr.log")
+        print(f"Running test {testname}\n\n")
+        testdir = os.path.abspath(pjoin(self.testdir, testname))
+        os.makedirs(pjoin(testdir, f"output_{wfname}"), exist_ok=True)
+        os.makedirs(pjoin(testdir, f"scratch_{wfname}"), exist_ok=True)
+        # copy test runconfig to test directory
+        shutil.copyfile(pjoin(runconfigdir, f"{testname}.yaml"), 
+                        pjoin(testdir, f"runconfig_{wfname}.yaml"))
+        log = pjoin(testdir, f"output_{wfname}", "stdouterr.log")
         script = f"""
-            python3 -m {pyname} run_config_{name}{suffix}.yaml
+            time python3 -m {pyname} runconfig_{wfname}.yaml
             """
-        self.distribrun(name, script, log)
+        self.distribrun(testdir, script, log, dataname=dataname)
 
     def rslctest(self):
-        self.workflowtest("rslc", "pybind_nisar.workflows.focus")
+        for testname, dataname in rslctestdict.items():
+            self.workflowtest("rslc", testname, dataname, "pybind_nisar.workflows.focus")
+            
     def gslctest(self):
-        self.workflowtest("gslc", "pybind_nisar.workflows.gslc", "_v2")
+        for testname, dataname in gslctestdict.items():
+            self.workflowtest("gslc", testname, dataname, "pybind_nisar.workflows.gslc")
+    
     def gcovtest(self):
-        self.workflowtest("gcov", "pybind_nisar.workflows.gcov", "_v3")
+        for testname, dataname in gcovtestdict.items():
+            self.workflowtest("gcov", testname, dataname, "pybind_nisar.workflows.gcov")
 
-    def workflowqa(self, name):
+    def insartest(self):
+        for testname, dataname in insartestdict.items():
+            self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
+
+    def caltooltest(self):
+        print(f"Running test {testname}\n\n")
+        for testname, dataname in caltooltestdict.items():
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
+            log = pjoin(testdir, f"output_noiseest", "stdouterr.log")
+            script = f"""
+                time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} -r
+                """
+            self.distribrun(testdir, script, log, dataname=dataname, nisarimg=True)
+
+    def workflowqa(self, wfname, testname):
         """
         Run QA and CF compliance checking for the specified workflow using the NISAR distrib image.
         
         Parameters
         -------------
-        name : str
+        wfname : str
             Workflow name (e.g. "rslc")
+        testname: str
+            Workflow test name (e.g. "RSLC_REE1")
         """
-        mkcleandir(os.path.join(self.datadir, f"test_{name}", f"qa_{name}"))
-        log = os.path.join(f"qa_{name}", "stdouterr.log")
+        print(f"Running qa on test {testname}\n\n")
+        testdir = os.path.abspath(pjoin(self.testdir, testname))
+        os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
+        log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
         script = f"""
-            time verify_{name}.py --fpdf qa_{name}/graphs.pdf \
-                --fhdf qa_{name}/stats.h5 --flog qa_{name}/qa.log --validate \
-                --quality output_{name}/{name}.h5
-            time cfchecks.py output_{name}/{name}.h5
-            echo ""
+            time cfchecks.py output_{wfname}/{wfname}.h5
+            time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
+                --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
+                --quality output_{wfname}/{wfname}.h5
             """
-        self.distribrun(name, script, log, nisarimg=True)
+        self.distribrun(testdir, script, log, nisarimg=True)
 
     def rslcqa(self):
-        self.workflowqa("rslc")
-    def gslcqa(self):
-        self.workflowqa("gslc")
-    def gcovqa(self):
-        self.workflowqa("gcov")
+        for testname in rslctestdict:
+            self.workflowqa("rslc", testname)
 
+    def gslcqa(self):
+        for testname in gslctestdict:
+            self.workflowqa("gslc", testname)
+
+    def gcovqa(self):
+        for testname in gcovtestdict:
+            self.workflowqa("gcov", testname)
+
+    def insarqa(self):
+        """
+        Run QA and CF compliance checking for InSAR workflow using the NISAR distrib image.
+
+        InSAR QA is a special case since the workflow name is not the product name. 
+        Also, the --quality flag in verify_gunw.py cannot be used at the moment since
+        gunw file does not contain any science data.
+        """
+        wfname = "insar"
+        for testname in insartestdict:
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
+            log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
+            script = f"""
+                time cfchecks.py output_{wfname}/gunw.h5
+                time verify_gunw.py --fpdf qa_{wfname}/graphs.pdf \
+                    --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
+                    output_{wfname}/gunw.h5
+                """
+            self.distribrun(testdir, script, log, nisarimg=True)
+        
     def docsbuild(self):
         """
         Build documentation using Doxygen + Sphinx
