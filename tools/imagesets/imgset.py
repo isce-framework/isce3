@@ -276,7 +276,7 @@ class ImageSet:
             self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
 
     def caltooltest(self):
-        print(f"Running calTools test {testname}\n")
+        print(f"Running calTools test for noise_evd_estimate\n")
         for testname, dataname in caltooltestdict.items():
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
