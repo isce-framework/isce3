@@ -212,10 +212,10 @@ class ImageSet:
                 dataname = [dataname]
             for data in dataname:
                 datadir = os.path.abspath(pjoin(self.datadir, data))          
-                datamount += f"--mount type=bind,source={datadir},target={container_testdir}/input_{data} "
+                datamount += f"-v {datadir}:{container_testdir}/input_{data}:ro "
 
         runcmd = f"{docker} run \
-          --mount type=bind,source={testdir},target={container_testdir} {datamount} \
+          -v {testdir}:{container_testdir} {datamount} \
           -w {container_testdir} \
           -u {os.getuid()}:{os.getgid()} \
           --rm -i {self.tty} nisar-adt/isce3:{tag} sh -ci"  
@@ -246,7 +246,7 @@ class ImageSet:
         pyname : str
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
         """
-        print(f"Running test {testname}\n\n")
+        print(f"Running workflow test {testname}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"output_{wfname}"), exist_ok=True)
         os.makedirs(pjoin(testdir, f"scratch_{wfname}"), exist_ok=True)
@@ -276,7 +276,7 @@ class ImageSet:
             self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
 
     def caltooltest(self):
-        print(f"Running test {testname}\n\n")
+        print(f"Running calTools test for noise_evd_estimate\n")
         for testname, dataname in caltooltestdict.items():
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
@@ -297,7 +297,7 @@ class ImageSet:
         testname: str
             Workflow test name (e.g. "RSLC_REE1")
         """
-        print(f"Running qa on test {testname}\n\n")
+        print(f"Running workflow QA on test {testname}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
