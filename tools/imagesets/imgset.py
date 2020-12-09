@@ -1,5 +1,6 @@
 import os, subprocess, sys, shutil, stat
-from .workflowdata import rslctestdict, gslctestdict, gcovtestdict, insartestdict, caltooltestdict
+# see no evil
+from .workflowdata import workflowdata, rslctestdict, gslctestdict, gcovtestdict, insartestdict, caltooltestdict
 pjoin = os.path.join
 
 # Global configuration constants
@@ -165,11 +166,9 @@ class ImageSet:
         TODO use a properly cached download e.g. via DVC
         """
 
-        # see no evil
-        from .workflowdata import workflowdata
 
         # Download files, preserving relative directory hierarchy
-        for (testname, fetchfiles) in workflowdata:
+        for testname, fetchfiles in workflowdata.items():
             wfdatadir = f"{self.datadir}/{testname}"
             os.makedirs(wfdatadir, exist_ok=True)
             for fname in fetchfiles:
@@ -247,6 +246,7 @@ class ImageSet:
         pyname : str
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
         """
+        print(f"Running test {testname}\n\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"output_{wfname}"), exist_ok=True)
         os.makedirs(pjoin(testdir, f"scratch_{wfname}"), exist_ok=True)
@@ -276,12 +276,13 @@ class ImageSet:
             self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
 
     def caltooltest(self):
+        print(f"Running test {testname}\n\n")
         for testname, dataname in caltooltestdict.items():
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
             log = pjoin(testdir, f"output_noiseest", "stdouterr.log")
             script = f"""
-                time noise_evd_estimate.py -i input_L0B_RRSD_REE_CALTOOL/L0B_RRSD_REE_CALTOOL.h5 -r
+                time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} -r
                 """
             self.distribrun(testdir, script, log, dataname=dataname, nisarimg=True)
 
@@ -296,6 +297,7 @@ class ImageSet:
         testname: str
             Workflow test name (e.g. "RSLC_REE1")
         """
+        print(f"Running qa on test {testname}\n\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
