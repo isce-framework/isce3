@@ -212,10 +212,10 @@ class ImageSet:
                 dataname = [dataname]
             for data in dataname:
                 datadir = os.path.abspath(pjoin(self.datadir, data))          
-                datamount += f"--mount type=bind,source={datadir},target={container_testdir}/input_{data},readonly "
+                datamount += f"-v {datadir}:{container_testdir}/input_{data}:ro "
 
         runcmd = f"{docker} run \
-          --mount type=bind,source={testdir},target={container_testdir} {datamount} \
+          -v {testdir}:{container_testdir} {datamount} \
           -w {container_testdir} \
           -u {os.getuid()}:{os.getgid()} \
           --rm -i {self.tty} nisar-adt/isce3:{tag} sh -ci"  
