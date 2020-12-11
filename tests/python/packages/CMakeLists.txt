@@ -58,6 +58,8 @@ set_tests_properties(test.python.pkg.nisar.workflows.geocode PROPERTIES
 
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.pybind_nisar.workflows.rdr2geo)
+set_tests_properties(test.python.pkg.pybind_nisar.workflows.resample_slc PROPERTIES
+             DEPENDS test.python.pkg.pybind_nisar.workflows.geo2rdr)
 
 if(WITH_CUDA)
     set_tests_properties(test.python.pkg.nisar.workflows.cuGeo2rdr PROPERTIES

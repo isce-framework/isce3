@@ -23,10 +23,10 @@ runconfig:
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            SASOutputFile: str()
+            SASOutputFile: list(str(), min=1, max=3)
 
         PrimaryExecutable:
-            ProductType: enum('GUNW', 'RIFG', 'RUNW')
+            ProductType: list(enum('GUNW', 'RIFG', 'RUNW'), min=1, max=3)
 
         DebugLevelGroup:
             DebugSwitch: bool()

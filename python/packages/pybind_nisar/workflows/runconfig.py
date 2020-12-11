@@ -158,13 +158,29 @@ class RunConfig:
         # ensure validity of DEM inputs
         helpers.check_dem(self.cfg['DynamicAncillaryFileGroup']['DEMFile'])
 
-        # create output dir (absolute or relative) if it does exist. do nothing if nothing
+        # check if each product type has an output
         output_hdf5 = self.cfg['ProductPathGroup']['SASOutputFile']
-        output_dir = os.path.dirname(output_hdf5)
+        dst = self.cfg['PrimaryExecutable']['ProductType']
+        if isinstance(output_hdf5, list) and isinstance(dst, list):
+            if len(output_hdf5) != len(dst):
+                err_str = "Number of product types not equal number of outputs"
+                error_channel.log(err_str)
+                raise ValueError(err_str)
 
-        helpers.check_write_dir(output_dir)
+            # check each output is unique
+            if len(output_hdf5) != len(set(output_hdf5)):
+                err_str = "Each product type does not have its own unique output"
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+
+        # create output dir (absolute or relative) if it does exist. do nothing if nothing
+        if not isinstance(output_hdf5, list):
+            output_hdf5 = [output_hdf5]
+        for output_product in output_hdf5:
+            output_dir = os.path.dirname(output_product)
+            helpers.check_write_dir(output_dir)
+
         helpers.check_write_dir(self.cfg['ProductPathGroup']['ScratchPath'])
-
 
     def prep_frequency_and_polarizations(self):
         '''

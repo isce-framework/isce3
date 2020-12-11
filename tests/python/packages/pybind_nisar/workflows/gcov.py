@@ -37,7 +37,7 @@ def test_run():
             runconfig.cfg['ProductPathGroup']['SASOutputFile'] = f'{axis}_{key}.h5'
 
             # prepare output hdf5
-            h5_prep.run(runconfig.cfg, 'GCOV')
+            h5_prep.run(runconfig.cfg)
 
             # geocode test raster
             gcov.run(runconfig.cfg)

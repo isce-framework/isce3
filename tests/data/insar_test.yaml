@@ -24,10 +24,10 @@ runconfig:
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: to_be_populated_by_test_code
+            SASOutputFile: [to_be_populated_by_test_code]
 
         PrimaryExecutable:
-            ProductType: GUNW
+            ProductType: [GUNW]
 
         DebugLevelGroup:
             DebugSwitch: false

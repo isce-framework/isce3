@@ -128,6 +128,7 @@ def check_mode_directory_tree(parent_dir: str, mode: str, frequency_list: list):
     if not mode_dir.is_dir():
         err_str = f"{str(mode_dir)} not a valid path"
         error_channel.log(err_str)
+        raise NotADirectoryError(err_str)
 
     # check number frequencies
     n_frequencies = len(frequency_list)
@@ -145,7 +146,7 @@ def check_mode_directory_tree(parent_dir: str, mode: str, frequency_list: list):
 
         # check if mode-directory exists
         freq_dir = mode_dir / f'freq{freq}'
-        if not mode_dir.is_dir():
+        if not freq_dir.is_dir():
             err_str = f"{str(freq_dir)} not a valid path"
             error_channel.log(err_str)
             raise NotADirectoryError(err_str)

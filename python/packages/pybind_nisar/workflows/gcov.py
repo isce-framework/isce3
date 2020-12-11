@@ -359,5 +359,5 @@ if __name__ == "__main__":
     yaml_parser = YamlArgparse()
     args = yaml_parser.parse()
     gcov_runcfg = GCOVRunConfig(args)
-    h5_prep.run(gcov_runcfg.cfg, 'GCOV')
+    h5_prep.run(gcov_runcfg.cfg)
     run(gcov_runcfg.cfg)

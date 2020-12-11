@@ -92,5 +92,5 @@ if __name__ == "__main__":
     yaml_parser = YamlArgparse()
     args = yaml_parser.parse()
     gslc_runcfg = GSLCRunConfig(args)
-    h5_prep.run(gslc_runcfg.cfg, 'GSLC')
+    h5_prep.run(gslc_runcfg.cfg)
     run(gslc_runcfg.cfg)

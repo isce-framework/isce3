@@ -23,10 +23,9 @@ def run(cfg):
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran partial INSAR in {t_all_elapsed:.3f} seconds")
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     yaml_parser = YamlArgparse()
     args = yaml_parser.parse()
     insar_runcfg = InsarRunConfig(args)
-    h5_prep.run(insar_runcfg.cfg, 'GUNW')
+    h5_prep.run(insar_runcfg.cfg)
     run(insar_runcfg.cfg)
