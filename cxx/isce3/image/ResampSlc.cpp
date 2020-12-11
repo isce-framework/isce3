@@ -1,36 +1,30 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Joshua Cohen, Bryan V. Riel
-// Copyright 2017-2018
-//
+#include "ResampSlc.h"
 
 #include <algorithm>
-#include <iostream>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 
-// pyre
 #include <pyre/journal.h>
 
-// isce3::core
 #include <isce3/core/Constants.h>
 
-// isce3::image
-#include "ResampSlc.h"
 #include "Tile.h"
+
+namespace isce3 { namespace image {
 
 using isce3::io::Raster;
 
-// Alternative generic resamp entry point: use filenames to internally create rasters
-void isce3::image::ResampSlc::
-resamp(const std::string & inputFilename,          // filename of input SLC
-       const std::string & outputFilename,         // filename of output resampled SLC
-       const std::string & rgOffsetFilename,       // filename of range offsets
-       const std::string & azOffsetFilename,       // filename of azimuth offsets
-       int inputBand, bool flatten, bool isComplex, int rowBuffer,
-       int chipSize) {
-
+// Alternative generic resamp entry point: use filenames to internally create
+// rasters
+void ResampSlc::resamp(
+        const std::string& inputFilename,    // filename of input SLC
+        const std::string& outputFilename,   // filename of output resampled SLC
+        const std::string& rgOffsetFilename, // filename of range offsets
+        const std::string& azOffsetFilename, // filename of azimuth offsets
+        int inputBand, bool flatten, bool isComplex, int rowBuffer,
+        int chipSize)
+{
     // Make input rasters
     Raster inputSlc(inputFilename, GA_ReadOnly);
     Raster rgOffsetRaster(rgOffsetFilename, GA_ReadOnly);
@@ -39,26 +33,28 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     // Make output raster; geometry defined by offset rasters
     const int outLength = rgOffsetRaster.length();
     const int outWidth = rgOffsetRaster.width();
-    Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32, "ISCE");
+    Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32,
+                     "ISCE");
 
     // Call generic resamp
-    resamp(inputSlc, outputSlc, rgOffsetRaster, azOffsetRaster, inputBand, flatten,
-           isComplex, rowBuffer, chipSize);
+    resamp(inputSlc, outputSlc, rgOffsetRaster, azOffsetRaster, inputBand,
+           flatten, isComplex, rowBuffer, chipSize);
 }
 
 // Generic resamp entry point from externally created rasters
-void isce3::image::ResampSlc::
-resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
-       isce3::io::Raster & rgOffsetRaster, isce3::io::Raster & azOffsetRaster,
-       int inputBand, bool flatten, bool isComplex, int rowBuffer,
-       int chipSize) {
-
+void ResampSlc::resamp(isce3::io::Raster& inputSlc,
+                       isce3::io::Raster& outputSlc,
+                       isce3::io::Raster& rgOffsetRaster,
+                       isce3::io::Raster& azOffsetRaster, int inputBand,
+                       bool flatten, bool isComplex, int rowBuffer,
+                       int chipSize)
+{
     // Check if data are not complex
     if (!isComplex) {
         std::cout << "Real data interpolation not implemented yet.\n";
         return;
     }
-        
+
     // Set the band number for input SLC
     _inputBand = inputBand;
     // Cache width of SLC image
@@ -69,13 +65,12 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
     const int outWidth = rgOffsetRaster.width();
 
     // Initialize resampling methods
-    _prepareInterpMethods(isce3::core::SINC_METHOD, chipSize-1);
-   
+    _prepareInterpMethods(isce3::core::SINC_METHOD, chipSize - 1);
+
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
-    std::cout<< 
-        "Resampling using " << nTiles << " tiles of " << _linesPerTile 
-        << " lines per tile\n";
+    std::cout << "Resampling using " << nTiles << " tiles of " << _linesPerTile
+              << " lines per tile\n";
     // Start timer
     auto timerStart = std::chrono::steady_clock::now();
 
@@ -94,35 +89,36 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
         }
 
         // Initialize offsets tiles
-        isce3::image::Tile<float> azOffTile, rgOffTile;
-        _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster,
-                               azOffTile, rgOffTile, outWidth);
+        Tile<float> azOffTile, rgOffTile;
+        _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster, azOffTile,
+                               rgOffTile, outWidth);
 
         // Get corresponding image indices
         std::cout << "Reading in image data for tile " << tileCount << "\n";
-        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2); 
-    
+        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer,
+                        chipSize / 2);
+
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << "\n";
-        _transformTile(tile, outputSlc, rgOffTile, azOffTile, inLength, flatten, chipSize);
+        _transformTile(tile, outputSlc, rgOffTile, azOffTile, inLength, flatten,
+                       chipSize);
     }
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
-    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
-        timerEnd - timerStart).count();
+    const double elapsed =
+            1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+                             timerEnd - timerStart)
+                             .count();
     std::cout << "Elapsed processing time: " << elapsed << " sec\n";
 }
 
 // Initialize and read azimuth and range offsets
-void isce3::image::ResampSlc::
-_initializeOffsetTiles(Tile_t & tile,
-                       Raster & azOffsetRaster,
-                       Raster & rgOffsetRaster,
-                       isce3::image::Tile<float> & azOffTile,
-                       isce3::image::Tile<float> & rgOffTile,
-                       int outWidth) {
-
+void ResampSlc::_initializeOffsetTiles(Tile_t& tile, Raster& azOffsetRaster,
+                                       Raster& rgOffsetRaster,
+                                       Tile<float>& azOffTile,
+                                       Tile<float>& rgOffTile, int outWidth)
+{
     // Copy size properties and initialize azimuth offset tiles
     azOffTile.width(outWidth);
     azOffTile.rowStart(tile.rowStart());
@@ -139,7 +135,7 @@ _initializeOffsetTiles(Tile_t & tile,
     rgOffTile.lastImageRow(tile.rowEnd());
     rgOffTile.allocate();
 
-    // Read in block of range and azimuth offsets 
+    // Read in block of range and azimuth offsets
     azOffsetRaster.getBlock(&azOffTile[0], 0, azOffTile.rowStart(),
                             azOffTile.width(), azOffTile.length());
     rgOffsetRaster.getBlock(&rgOffTile[0], 0, rgOffTile.rowStart(),
@@ -147,10 +143,10 @@ _initializeOffsetTiles(Tile_t & tile,
 }
 
 // Initialize tile bounds
-void isce3::image::ResampSlc::
-_initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float> & azOffTile,
-                int outLength, int rowBuffer, int chipHalf) {
-
+void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
+                                const Tile<float>& azOffTile, int outLength,
+                                int rowBuffer, int chipHalf)
+{
     // Cache geometry values
     const int inLength = inputSlc.length();
     const int inWidth = inputSlc.width();
@@ -162,7 +158,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float
     for (int i = 0; i < std::min(rowBuffer, azOffTile.length()); ++i) {
         for (int j = 0; j < outWidth; ++j) {
             // Get azimuth offset for pixel
-            const double azOff = azOffTile(i,j);
+            const double azOff = azOffTile(i, j);
             // Skip null values
             if (azOff < -5.0e5 || std::isnan(azOff)) {
                 continue;
@@ -170,7 +166,8 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float
                 haveOffsets = true;
             }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() - chipHalf);
+            const int imageLine = static_cast<int>(
+                    i + azOff + azOffTile.rowStart() - chipHalf);
             // Update minimum row index
             tile.firstImageRow(std::min(tile.firstImageRow(), imageLine));
         }
@@ -185,18 +182,20 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float
     // Compute maximum row index needed from input image
     tile.lastImageRow(0);
     haveOffsets = false;
-    for (int i = std::max(azOffTile.length() - rowBuffer, 0); i < azOffTile.length(); ++i) {
+    for (int i = std::max(azOffTile.length() - rowBuffer, 0);
+         i < azOffTile.length(); ++i) {
         for (int j = 0; j < outWidth; ++j) {
             // Get azimuth offset for pixel
-            const double azOff = azOffTile(i,j);
-            // Skip null values 
+            const double azOff = azOffTile(i, j);
+            // Skip null values
             if (azOff < -5.0e5 || std::isnan(azOff)) {
                 continue;
             } else {
                 haveOffsets = true;
             }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() + chipHalf);
+            const int imageLine = static_cast<int>(
+                    i + azOff + azOffTile.rowStart() + chipHalf);
             // Update maximum row index
             tile.lastImageRow(std::max(tile.lastImageRow(), imageLine));
         }
@@ -207,11 +206,12 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float
     } else {
         tile.lastImageRow(inLength);
     }
-    
+
     // Tile will allocate memory for itself
     tile.allocate();
 
-    // Read in tile.length() lines of data from the input image to the image block
+    // Read in tile.length() lines of data from the input image to the image
+    // block
     inputSlc.getBlock(&tile[0], 0, tile.firstImageRow(), tile.width(),
                       tile.length(), _inputBand);
 
@@ -220,24 +220,22 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce3::image::Tile<float
         for (int j = 0; j < inWidth; j++) {
             // Evaluate the pixel's carrier phase
             const double phase = modulo_f(
-                  _rgCarrier.eval(tile.firstImageRow() + i, j) 
-                + _azCarrier.eval(tile.firstImageRow() + i, j), 2.0*M_PI);
+                    _rgCarrier.eval(tile.firstImageRow() + i, j) +
+                            _azCarrier.eval(tile.firstImageRow() + i, j),
+                    2.0 * M_PI);
             // Remove the carrier
             std::complex<float> cpxPhase(std::cos(phase), -std::sin(phase));
-            tile(i,j) *= cpxPhase;
+            tile(i, j) *= cpxPhase;
         }
     }
 }
 
 // Interpolate tile to perform transformation
-void isce3::image::ResampSlc::
-_transformTile(Tile_t & tile,
-               Raster & outputSlc,
-               const isce3::image::Tile<float> & rgOffTile,
-               const isce3::image::Tile<float> & azOffTile,
-               int inLength, bool flatten,
-               int chipSize) {
-
+void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
+                               const Tile<float>& rgOffTile,
+                               const Tile<float>& azOffTile, int inLength,
+                               bool flatten, int chipSize)
+{
     // Cache geometry values
     const int inWidth = tile.width();
     const int outWidth = azOffTile.width();
@@ -254,95 +252,97 @@ _transformTile(Tile_t & tile,
 
     // From this point on, transformation is multithreaded
     int tileLine = 0;
-    #pragma omp parallel shared(imgOut)
+    _Pragma("omp parallel shared(imgOut)")
     {
 
-    // set half chip size
-    // Allocate matrix for working sinc chip
-    isce3::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
+        // set half chip size
+        // Allocate matrix for working sinc chip
+        isce3::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
 
-    // Loop over lines to perform interpolation
-    for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
+        // Loop over lines to perform interpolation
+        for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
-        // Compute current azimuth time
-        const double az = az0 + i / _prf;
+            // Compute current azimuth time
+            const double az = az0 + i / _prf;
 
-        // Loop over width
-        #pragma omp for
-        for (int j = 0; j < outWidth; ++j) {
+            // Loop over width
+            _Pragma("omp for") for (int j = 0; j < outWidth; ++j)
+            {
 
-            // Unpack offsets (units of bins)
-            const float azOff = azOffTile(tileLine, j);
-            const float rgOff = rgOffTile(tileLine, j);
+                // Unpack offsets (units of bins)
+                const float azOff = azOffTile(tileLine, j);
+                const float rgOff = rgOffTile(tileLine, j);
 
-            // Break into fractional and integer parts
-            const int intAz = static_cast<int>(i + azOff);
-            const int intRg = static_cast<int>(j + rgOff);
-            const double fracAz = i + azOff - intAz;
-            const double fracRg = j + rgOff - intRg;
-           
-            // Check bounds
-            if ((intAz < chipHalf) || (intAz >= (inLength - chipHalf)))
-                continue;
-            if ((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)))
-                continue;
+                // Break into fractional and integer parts
+                const int intAz = static_cast<int>(i + azOff);
+                const int intRg = static_cast<int>(j + rgOff);
+                const double fracAz = i + azOff - intAz;
+                const double fracRg = j + rgOff - intRg;
 
-            // Evaluate Doppler polynomial
-            const double rng = R0 + j * dR;
-            const double dop = _dopplerLUT.eval(az, rng) * 2*M_PI / _prf;
+                // Check bounds
+                if ((intAz < chipHalf) || (intAz >= (inLength - chipHalf)))
+                    continue;
+                if ((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)))
+                    continue;
 
-            // Doppler to be added back. Simultaneously evaluate carrier that needs to
-            // be added back after interpolation
-            double phase = (dop * fracAz) 
-                + _rgCarrier.eval(i + azOff, j + rgOff) 
-                + _azCarrier.eval(i + azOff, j + rgOff);
+                // Evaluate Doppler polynomial
+                const double rng = R0 + j * dR;
+                const double dop = _dopplerLUT.eval(az, rng) * 2 * M_PI / _prf;
 
-            // Flatten the carrier phase if requested
-            if (flatten && _haveRefData) {
-                phase += ((4. * (M_PI / _wavelength)) * 
-                    ((_startingRange - _refStartingRange) 
-                    + (j * (_rangePixelSpacing - _refRangePixelSpacing)) 
-                    + (rgOff * _rangePixelSpacing))) + ((4.0 * M_PI 
-                    * (_refStartingRange + (j * _refRangePixelSpacing))) 
-                    * ((1.0 / _refWavelength) - (1.0 / _wavelength)));
-            }
-            // Modulate by 2*PI
-            phase = modulo_f(phase, 2.0*M_PI);
-            
-            // Read data chip without the carrier phases
-            for (int ii = 0; ii < chipSize; ++ii) {
-                // Row to read from
-                const int chipRow = intAz - tile.firstImageRow() + ii - chipHalf;
-                // Carrier phase
-                const double phase = dop * (ii - 4.0);
-                const std::complex<float> cval(std::cos(phase), -std::sin(phase));
-                // Set the data values after removing doppler in azimuth
-                for (int jj = 0; jj < chipSize; ++jj) {
-                    // Column to read from
-                    const int chipCol = intRg + jj - chipHalf;
-                    chip(ii,jj) = tile(chipRow,chipCol) * cval;
+                // Doppler to be added back. Simultaneously evaluate carrier
+                // that needs to be added back after interpolation
+                double phase = (dop * fracAz) +
+                               _rgCarrier.eval(i + azOff, j + rgOff) +
+                               _azCarrier.eval(i + azOff, j + rgOff);
+
+                // Flatten the carrier phase if requested
+                if (flatten && _haveRefData) {
+                    phase += ((4. * (M_PI / _wavelength)) *
+                              ((_startingRange - _refStartingRange) +
+                               (j *
+                                (_rangePixelSpacing - _refRangePixelSpacing)) +
+                               (rgOff * _rangePixelSpacing))) +
+                             ((4.0 * M_PI *
+                               (_refStartingRange +
+                                (j * _refRangePixelSpacing))) *
+                              ((1.0 / _refWavelength) - (1.0 / _wavelength)));
                 }
-            }
+                // Modulate by 2*PI
+                phase = modulo_f(phase, 2.0 * M_PI);
 
-            // Interpolate chip
-            const std::complex<float> cval = _interp->interpolate(
-                isce3::core::SINC_HALF + fracRg, isce3::core::SINC_HALF + fracAz, chip
-            );
+                // Read data chip without the carrier phases
+                for (int ii = 0; ii < chipSize; ++ii) {
+                    // Row to read from
+                    const int chipRow =
+                            intAz - tile.firstImageRow() + ii - chipHalf;
+                    // Carrier phase
+                    const double phase = dop * (ii - 4.0);
+                    const std::complex<float> cval(std::cos(phase),
+                                                   -std::sin(phase));
+                    // Set the data values after removing doppler in azimuth
+                    for (int jj = 0; jj < chipSize; ++jj) {
+                        // Column to read from
+                        const int chipCol = intRg + jj - chipHalf;
+                        chip(ii, jj) = tile(chipRow, chipCol) * cval;
+                    }
+                }
 
-            // Add doppler to interpolated value and save
-            imgOut[tileLine*outWidth + j] = cval * std::complex<float>(
-                std::cos(phase), std::sin(phase)
-            );
+                // Interpolate chip
+                const std::complex<float> cval = _interp->interpolate(
+                        isce3::core::SINC_HALF + fracRg,
+                        isce3::core::SINC_HALF + fracAz, chip);
 
-        } // end for over width
+                // Add doppler to interpolated value and save
+                imgOut[tileLine * outWidth + j] =
+                        cval *
+                        std::complex<float>(std::cos(phase), std::sin(phase));
 
-        // Update input line counter
-        #pragma omp single
-        {
-        ++tileLine;
-        }
+            } // end for over width
 
-    } // end for over length
+            // Update input line counter
+            _Pragma("omp single") { ++tileLine; }
+
+        } // end for over length
 
     } // end multithreaded block
 
@@ -350,4 +350,4 @@ _transformTile(Tile_t & tile,
     outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);
 }
 
-// end of file
+}} // namespace isce3::image
