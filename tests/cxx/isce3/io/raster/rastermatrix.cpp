@@ -24,7 +24,7 @@ class RasterTest : public ::testing::Test {
         const uint nbx = 5;      // block side length in x 
         const uint nby = 7;      //block size length in y 
 
-    void SetUp(const std::string &filename) {
+    void initTestRaster(const std::string &filename) {
         std::remove( filename.c_str());
         isce3::io::Raster inc = isce3::io::Raster( filename, nc,
                                     nl, 1, GDT_Float32, "GTiff");
@@ -50,7 +50,7 @@ class RasterTest : public ::testing::Test {
 TEST_F(RasterTest, setBlockMatrix) {
     //Setup geotiff
     std::string filename = "matrix_gtiff.tif";
-    SetUp(filename);
+    initTestRaster(filename);
 
     isce3::io::Raster inc = isce3::io::Raster( filename, GA_ReadOnly);
     std::valarray<int> block( nbx*nby );                           // 1d valarray for 2d blocks
@@ -72,7 +72,7 @@ TEST_F(RasterTest, setBlockMatrix) {
 TEST_F(RasterTest, setGetBlockMatrix) {
     //Setup geotiff
     std::string filename = "matrix_getset.tif";
-    SetUp(filename);
+    initTestRaster(filename);
 
     isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
     std::valarray<int> fullimg( 1, nc*nl );       // ones
@@ -147,7 +147,7 @@ TEST_F(RasterTest, setMatrixRaster) {
 TEST_F(RasterTest, setGetBlockEMatrix2D) {
   //Setup geotiff
   std::string filename = "matrix_getset.tif";
-  SetUp(filename);
+  initTestRaster(filename);
 
   isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
 
@@ -187,7 +187,7 @@ TEST_F(RasterTest, setGetBlockEMatrix2D) {
 TEST_F(RasterTest, setGetBlockEArray2D) {
   //Setup geotiff
   std::string filename = "matrix_getset.tif";
-  SetUp(filename);
+  initTestRaster(filename);
 
   isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
     
