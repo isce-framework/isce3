@@ -22,7 +22,7 @@ void addsubmodule_geometry(py::module & m)
 
     // forward declare bound enums
     py::enum_<isce3::geometry::rtcInputRadiometry>
-        pyInputRadiometry(geometry, "RtcInputRadiometry");
+        pyInputRadiometry(geometry, "RtcInputTerrainRadiometry");
     py::enum_<isce3::geometry::rtcAlgorithm>
         pyRtcAlgorithm(geometry, "RtcAlgorithm");
     py::enum_<isce3::geometry::rtcMemoryMode>

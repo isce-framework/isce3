@@ -71,10 +71,10 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
     int width = input_raster.width();
     int length = input_raster.length();
 
-    int min_block_length = 32;
-    int block_size;
-    int nblocks = areaProjGetNBlocks(length, &info, 0,
-                                     &block_size, nullptr, min_block_length);
+    int block_length;
+    int nblocks;
+    areaProjGetNBlocks(length, width, nbands, sizeof(T), &info, 1,
+                       &block_length, nullptr, &nblocks);
 
     if (std::isnan(rtc_min_value))
         rtc_min_value = 0;
@@ -97,27 +97,27 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
         #pragma omp parallel for schedule(dynamic)
         for (int block = 0; block < nblocks; ++block) {
 
-            int effective_block_size = block_size;
-            if (block * block_size + effective_block_size > length - 1) {
-                effective_block_size = length - block * block_size;
+            int effective_block_length = block_length;
+            if (block * block_length + effective_block_length > length - 1) {
+                effective_block_length = length - block * block_length;
             }
 
-            isce3::core::Matrix<float> rtc_ratio(effective_block_size, width);
-            #pragma omp critical
+            isce3::core::Matrix<float> rtc_ratio(effective_block_length, width);
+#pragma omp critical
             {
-                input_rtc.getBlock(rtc_ratio.data(), 0, block * block_size,
-                                   width, effective_block_size, 1);
+                input_rtc.getBlock(rtc_ratio.data(), 0, block * block_length,
+                                   width, effective_block_length, 1);
             }
 
-            isce3::core::Matrix<T> radar_data_block(block_size, width);
+            isce3::core::Matrix<T> radar_data_block(block_length, width);
             if (!flag_complex_to_real_squared) {
                 #pragma omp critical
                 {
                     input_raster.getBlock(radar_data_block.data(), 0,
-                                          block * block_size, width,
-                                          effective_block_size, band + 1);
+                                          block * block_length, width,
+                                          effective_block_length, band + 1);
                 }
-                for (int i = 0; i < effective_block_size; ++i)
+                for (int i = 0; i < effective_block_length; ++i)
                     for (int jj = 0; jj < width; ++jj) {
                         float rtc_ratio_value = rtc_ratio(i, jj);
                         if (!std::isnan(rtc_ratio_value) &&
@@ -135,14 +135,14 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
                     }
             } else {
                 isce3::core::Matrix<std::complex<T>> radar_data_block_complex(
-                        block_size, width);
-                #pragma omp critical
+                        block_length, width);
+#pragma omp critical
                 {
                     input_raster.getBlock(radar_data_block_complex.data(), 0,
-                                          block * block_size, width,
-                                          effective_block_size, band + 1);
+                                          block * block_length, width,
+                                          effective_block_length, band + 1);
                 }
-                for (int i = 0; i < effective_block_size; ++i)
+                for (int i = 0; i < effective_block_length; ++i)
                     for (int jj = 0; jj < width; ++jj) {
                         float rtc_ratio_value = rtc_ratio(i, jj);
                         if (!std::isnan(rtc_ratio_value) &&
@@ -166,8 +166,8 @@ void _applyRTC(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
 #pragma omp critical
             {
                 output_raster.setBlock(radar_data_block.data(), 0,
-                                       block * block_size, width,
-                                       effective_block_size, band + 1);
+                                       block * block_length, width,
+                                       effective_block_length, band + 1);
             }
         }
     }
@@ -178,7 +178,7 @@ void applyRTC(const isce3::product::RadarGridParameters& radar_grid,
               const isce3::core::LUT2d<double>& input_dop,
               isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
               isce3::io::Raster& output_raster,
-              rtcInputRadiometry input_radiometry, int exponent,
+              rtcInputRadiometry input_terrain_radiometry, int exponent,
               rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
               double geogrid_upsampling, float rtc_min_value_db,
               double abs_cal_factor, float radar_grid_nlooks,
@@ -218,7 +218,7 @@ void applyRTC(const isce3::product::RadarGridParameters& radar_grid,
 
         info << "calculating RTC..." << pyre::journal::endl;
         facetRTC(radar_grid, orbit, input_dop, dem_raster, *rtc_raster,
-                 input_radiometry, rtc_area_mode, rtc_algorithm,
+                 input_terrain_radiometry, rtc_area_mode, rtc_algorithm,
                  geogrid_upsampling, rtc_min_value_db, radar_grid_nlooks,
                  out_nlooks, rtc_memory_mode);
     } else {
@@ -297,47 +297,135 @@ computeUpsamplingFactor(const DEMInterpolator& dem_interp,
     return upsampling_factor;
 }
 
-int areaProjGetNBlocks(int array_length, pyre::journal::info_t* channel,
-                       int upsampling, 
-                       int* block_length_with_upsampling, 
-                       int* block_length,
-                       int min_block_length, int max_block_length)
+std::string getNbytesStr(long long nbytes)
+{
+    std::string nbytes_str;
+    if (nbytes < std::pow(2, 10))
+        nbytes_str = std::to_string(nbytes) + "B";
+    else if (nbytes < std::pow(2, 20))
+        nbytes_str = std::to_string((int) std::ceil(nbytes / std::pow(2, 10))) +
+                     "KB";
+    else if (nbytes < std::pow(2, 30))
+        nbytes_str = std::to_string((int) std::ceil(nbytes / std::pow(2, 20))) +
+                     "MB";
+    else
+        nbytes_str = std::to_string((int) std::ceil(nbytes / std::pow(2, 30))) +
+                     "GB";
+    return nbytes_str;
+}
+
+void areaProjGetNBlocks(const int array_length, const int array_width,
+                        const int nbands, const size_t type_size,
+                        pyre::journal::info_t* channel, const double upsampling,
+                        int* block_length_with_upsampling, int* block_length,
+                        int* nblocks_y, int* block_width_with_upsampling,
+                        int* block_width, int* nblocks_x,
+                        const int min_block_size, const int max_block_size,
+                        const int nblocks_per_thread)
 {
 
+    int _nblocks_x, _nblocks_y;
+    int min_block_length, max_block_length;
+    int min_block_width = 1, max_block_width = 1;
+
+    int _block_length, _block_length_with_upsampling;
+    int _block_width = 1, _block_width_with_upsampling = 1;
+
+    // set initial values
+    bool flag_2d =
+            (block_width != nullptr || block_width_with_upsampling != nullptr ||
+             nblocks_x != nullptr);
     auto n_threads = _omp_thread_count();
-    auto nblocks = 4 * n_threads;
-    auto min_block_length_eff = std::min(array_length, min_block_length);
-
-    // limiting block size
-    int _block_length_with_upsampling = std::min(
-            max_block_length,
-            std::max(min_block_length_eff,
-                     (int) std::ceil(((float) array_length) / nblocks)));
-
-    int _block_length = _block_length_with_upsampling;
-
-    // snap (_block_length_with_upsampling multiple of upsampling)
-    if (upsampling > 0) {
-        _block_length = _block_length_with_upsampling / upsampling;
-        _block_length_with_upsampling = _block_length * upsampling;
+    if (!flag_2d) {
+        min_block_length = min_block_size / (nbands * array_width * type_size);
+        max_block_length = max_block_size / (nbands * array_width * type_size);
+        _nblocks_y = nblocks_per_thread * n_threads;
+    } else {
+        min_block_length = std::sqrt(min_block_size / (nbands * type_size));
+        max_block_length = std::sqrt(max_block_size / (nbands * type_size));
+        min_block_width = min_block_length;
+        max_block_width = max_block_length;
+        _nblocks_y = std::sqrt(nblocks_per_thread * n_threads);
+        _nblocks_x = std::sqrt(nblocks_per_thread * n_threads);
     }
 
-    nblocks = std::ceil(((float) array_length) / _block_length_with_upsampling);
+    // set nblocks and block size (Y-axis)
+    _nblocks_y = std::max(_nblocks_y, 1);
+    _block_length_with_upsampling =
+            std::ceil(((float) array_length) / _nblocks_y);
+    _block_length_with_upsampling =
+            std::max(_block_length_with_upsampling, min_block_length);
+    _block_length_with_upsampling =
+            std::min(_block_length_with_upsampling, max_block_length);
+    _block_length_with_upsampling =
+            std::min(_block_length_with_upsampling, array_length);
+
+    // set nblocks and block size (X-axis)
+    if (flag_2d) {
+        _nblocks_x = std::max(_nblocks_x, 1);
+        _block_width_with_upsampling =
+                std::ceil(((float) array_width) / _nblocks_x);
+        _block_width_with_upsampling =
+                std::max(_block_width_with_upsampling, min_block_width);
+        _block_width_with_upsampling =
+                std::min(_block_width_with_upsampling, max_block_width);
+        _block_width_with_upsampling =
+                std::min(_block_width_with_upsampling, array_width);
+    }
+
+    // snap (_block_length_with_upsampling multiple of upsampling)
+    _block_length = _block_length_with_upsampling / upsampling;
+    _block_length_with_upsampling = _block_length * upsampling;
+
+    if (flag_2d) {
+        _block_width = _block_width_with_upsampling / upsampling;
+        _block_width_with_upsampling = _block_width * upsampling;
+    }
+
+    // update nblocks
+    _nblocks_y =
+            std::ceil(((float) array_length) / _block_length_with_upsampling);
+    if (flag_2d)
+        _nblocks_x =
+                std::ceil(((float) array_width) / _block_width_with_upsampling);
+
+    if (nblocks_x != nullptr)
+        *nblocks_x = _nblocks_x;
+    if (nblocks_y != nullptr)
+        *nblocks_y = _nblocks_y;
 
     if (channel != nullptr) {
         *channel << "array length: " << array_length << pyre::journal::endl;
+        *channel << "array width: " << array_width << pyre::journal::endl;
         *channel << "number of available thread(s): " << n_threads
                  << pyre::journal::endl;
-        *channel << "number of block(s): " << nblocks << pyre::journal::endl;
+
+        if (!flag_2d)
+            *channel << "number of block(s): " << _nblocks_y
+                     << pyre::journal::endl;
+        else {
+            *channel << "number of block(s): "
+                     << " " << _nblocks_y << " x " << _nblocks_x
+                     << " (Y x X) = " << _nblocks_y * _nblocks_x
+                     << pyre::journal::endl;
+        }
     }
 
     if (block_length != nullptr) {
         *block_length = _block_length;
-        if (channel != nullptr) {
+        if (upsampling != 1 && channel != nullptr) {
             *channel << "block length (without upsampling): " << *block_length
                      << pyre::journal::endl;
         }
     }
+    if (block_width != nullptr) {
+        *block_width = _block_width;
+        if (upsampling != 1 && channel != nullptr) {
+            *channel << "block width (without upsampling): " << *block_width
+                     << pyre::journal::endl;
+        }
+    }
+
     if (block_length_with_upsampling != nullptr) {
         *block_length_with_upsampling = _block_length_with_upsampling;
         if (channel != nullptr) {
@@ -346,12 +434,32 @@ int areaProjGetNBlocks(int array_length, pyre::journal::info_t* channel,
         }
     }
 
-    return nblocks;
+    if (block_width_with_upsampling != nullptr) {
+        *block_width_with_upsampling = _block_width_with_upsampling;
+        if (channel != nullptr) {
+            *channel << "block width: " << *block_width_with_upsampling
+                     << pyre::journal::endl;
+        }
+    }
+
+    if (channel != nullptr) {
+
+        long long block_size_bytes =
+                ((static_cast<long long>(_block_length_with_upsampling)) *
+                 _block_width_with_upsampling * nbands * type_size);
+
+        std::string block_size_bytes_str = getNbytesStr(block_size_bytes);
+        if (nbands > 1)
+            block_size_bytes_str += " (" + std::to_string(nbands) + " bands)";
+
+        *channel << "block size: " << block_size_bytes_str
+                 << pyre::journal::endl;
+    }
 }
 
 void facetRTC(isce3::product::Product& product, isce3::io::Raster& dem_raster,
               isce3::io::Raster& output_raster, char frequency,
-              bool native_doppler, rtcInputRadiometry input_radiometry,
+              bool native_doppler, rtcInputRadiometry input_terrain_radiometry,
               rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
               double geogrid_upsampling, float rtc_min_value_db,
               size_t nlooks_az, size_t nlooks_rg, isce3::io::Raster* out_nlooks,
@@ -370,7 +478,7 @@ void facetRTC(isce3::product::Product& product, isce3::io::Raster& dem_raster,
     int radar_grid_nlooks = nlooks_az * nlooks_rg;
 
     facetRTC(radar_grid_ml, orbit, dop, dem_raster, output_raster,
-             input_radiometry, rtc_area_mode, rtc_algorithm, geogrid_upsampling,
+             input_terrain_radiometry, rtc_area_mode, rtc_algorithm, geogrid_upsampling,
              rtc_min_value_db, radar_grid_nlooks, out_nlooks, rtc_memory_mode);
 }
 
@@ -378,7 +486,7 @@ void facetRTC(const isce3::product::RadarGridParameters& radar_grid,
               const isce3::core::Orbit& orbit,
               const isce3::core::LUT2d<double>& input_dop,
               isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
-              rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
+              rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
               rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
               float rtc_min_value_db, float radar_grid_nlooks,
               isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
@@ -409,7 +517,7 @@ void facetRTC(const isce3::product::RadarGridParameters& radar_grid,
         std::swap(y0, yf);
 
     facetRTC(dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
-             x0, dx, geogrid_length, geogrid_width, epsg, input_radiometry,
+             x0, dx, geogrid_length, geogrid_width, epsg, input_terrain_radiometry,
              rtc_area_mode, rtc_algorithm, geogrid_upsampling, rtc_min_value_db,
              radar_grid_nlooks, nullptr, nullptr, out_nlooks, rtc_memory_mode,
              interp_method, threshold, num_iter, delta_range);
@@ -421,7 +529,7 @@ void facetRTC(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
               const isce3::core::LUT2d<double>& input_dop, const double y0,
               const double dy, const double x0, const double dx,
               const int geogrid_length, const int geogrid_width, const int epsg,
-              rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
+              rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
               rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
               float rtc_min_value_db, float radar_grid_nlooks,
               isce3::io::Raster* out_geo_vertices,
@@ -434,7 +542,7 @@ void facetRTC(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
     if (rtc_algorithm == rtcAlgorithm::RTC_AREA_PROJECTION) {
         facetRTCAreaProj(
                 dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
-                x0, dx, geogrid_length, geogrid_width, epsg, input_radiometry,
+                x0, dx, geogrid_length, geogrid_width, epsg, input_terrain_radiometry,
                 rtc_area_mode, geogrid_upsampling, rtc_min_value_db,
                 radar_grid_nlooks, out_geo_vertices, out_geo_grid, out_nlooks,
                 rtc_memory_mode, interp_method, threshold, num_iter, 
@@ -442,7 +550,7 @@ void facetRTC(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
     } else {
         facetRTCDavidSmall(dem_raster, output_raster, radar_grid, orbit,
                            input_dop, y0, dy, x0, dx, geogrid_length,
-                           geogrid_width, epsg, input_radiometry, rtc_area_mode,
+                           geogrid_width, epsg, input_terrain_radiometry, rtc_area_mode,
                            geogrid_upsampling);
     }
 }
@@ -452,11 +560,11 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               isce3::core::Matrix<double>& w_arr, double& nlooks,
                               int plane_orientation)
 {
-
     // if line is vertical or out of boundaries, return
     if (x2 == x1 || (x1 < 0 && x2 < 0) ||
         (x1 >= width - 1 && x2 >= width - 1) || (y1 < 0 && y2 < 0) ||
-        (y1 >= length - 1 && y2 >= length - 1))
+        (y1 >= length - 1 && y2 >= length - 1) || std::isnan(y1) ||
+        std::isnan(y2) || std::isnan(x1) || std::isnan(x2))
         return;
 
     double slope = (y2 - y1) / (x2 - x1);
@@ -481,6 +589,7 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
     const double x_increment_margin = 0.000001;
 
     while (x_start < x_end) {
+
         const double y_start = slope * x_start + offset;
         const double y_start_next = slope * (x_start + x_increment_margin) + offset;
         const int x_index = std::floor(x_start);
@@ -549,14 +658,17 @@ void _addArea(double area, isce3::core::Matrix<float>& out_array,
         for (int jj = 0; jj < size_x; ++jj) {
             double w = w_arr(ii, jj) - w_arr_out(ii, jj);
             w_arr(ii, jj) = 0;
+
             if (w == 0 || w * area < 0)
                 continue;
             int y = ii + y_min;
             int x = jj + x_min;
+
             if (x < 0 || y < 0 || y >= length || x >= width)
                 continue;
             if (out_nlooks_array.data() != nullptr) {
-                const auto out_nlooks = radar_grid_nlooks * std::abs(w * (nlooks - nlooks_out));
+                const auto out_nlooks =
+                        radar_grid_nlooks * std::abs(w * (nlooks - nlooks_out));
                 _Pragma("omp atomic")
                 out_nlooks_array(y, x) += out_nlooks;
             }
@@ -600,7 +712,7 @@ void facetRTCDavidSmall(isce3::io::Raster& dem_raster,
                         const double y0, const double dy, const double x0,
                         const double dx, const int geogrid_length,
                         const int geogrid_width, const int epsg,
-                        rtcInputRadiometry input_radiometry,
+                        rtcInputRadiometry input_terrain_radiometry,
                         rtcAreaMode rtc_area_mode, double upsample_factor) {
 
     pyre::journal::info_t info("isce.geometry.facetRTCDavidSmall");
@@ -610,7 +722,7 @@ void facetRTCDavidSmall(isce3::io::Raster& dem_raster,
     const isce3::core::Ellipsoid& ellps = proj->ellipsoid();
 
     print_parameters(info, radar_grid, y0, dy, x0, dx, geogrid_length,
-                     geogrid_width, input_radiometry, rtc_area_mode,
+                     geogrid_width, input_terrain_radiometry, rtc_area_mode,
                      upsample_factor);
 
     const double yf = y0 + geogrid_length * dy;
@@ -817,7 +929,7 @@ void facetRTCDavidSmall(isce3::io::Raster& dem_raster,
     dem_interp.computeHeightStats(max_hgt, avg_hgt, info);
     DEMInterpolator flat_interp(avg_hgt);
 
-    if (input_radiometry == rtcInputRadiometry::SIGMA_NAUGHT_ELLIPSOID) {
+    if (input_terrain_radiometry == rtcInputRadiometry::SIGMA_NAUGHT_ELLIPSOID) {
         // Compute the flat earth incidence angle correction
         #pragma omp parallel for schedule(dynamic) collapse(2)
         for (size_t i = 0; i < radar_grid.length(); ++i) {
@@ -875,7 +987,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                double delta_range, isce3::core::Matrix<float>& out_array,
                isce3::core::Matrix<float>& out_nlooks_array,
                isce3::core::ProjectionBase* proj, rtcAreaMode rtc_area_mode,
-               rtcInputRadiometry input_radiometry, float radar_grid_nlooks) {
+               rtcInputRadiometry input_terrain_radiometry, float radar_grid_nlooks) {
 
     auto side = radar_grid.lookSide();
 
@@ -1084,20 +1196,27 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             if (x_max > xbound + 1 + margin || x_max < -1 || x_max < x_min)
                 continue;
 
-            if (out_geo_vertices != nullptr)
-            {
+            if (out_geo_vertices != nullptr) {
+
+                // if first (top) line, save top right
                 if (i == 0) {
                     out_geo_vertices_a(i, jj + 1) = (a01 - start) / pixazm;
                     out_geo_vertices_r(i, jj + 1) = (a01 - r0) / dr;
                 }
+
+                // if first (top left) pixel, save top left pixel
                 if (i == 0 && jj == 0) {
                     out_geo_vertices_a(i, jj) = (a00 - start) / pixazm;
                     out_geo_vertices_r(i, jj) = (r00 - r0) / dr;
                 }
+
+                // if first (left) column, save lower left
                 if (jj == 0) {
                     out_geo_vertices_a((i + 1), jj) = (a10 - start) / pixazm;
                     out_geo_vertices_r((i + 1), jj) = (r10 - r0) / dr;
                 }
+
+                // save lower left pixel
                 out_geo_vertices_a((i + 1), jj + 1) = (a11 - start) / pixazm;
                 out_geo_vertices_r((i + 1), jj + 1) = (r11 - r0) / dr;
             }
@@ -1152,7 +1271,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                 divisor = (radar_grid.rangePixelSpacing() * vel.norm() *
                            radar_grid.azimuthTimeInterval());
 
-            if (input_radiometry ==
+            if (input_terrain_radiometry ==
                 rtcInputRadiometry::SIGMA_NAUGHT_ELLIPSOID) {
                 const double costheta = xyz_c.dot(lookXYZ) / xyz_c.norm();
 
@@ -1265,7 +1384,7 @@ void facetRTCAreaProj(
         const isce3::core::LUT2d<double>& input_dop, const double y0,
         const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width, const int epsg,
-        rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
+        rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
         double geogrid_upsampling, float rtc_min_value_db,
         float radar_grid_nlooks,
         isce3::io::Raster* out_geo_vertices, isce3::io::Raster* out_geo_grid,
@@ -1291,7 +1410,7 @@ void facetRTCAreaProj(
     const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
 
     print_parameters(info, radar_grid, y0, dy, x0, dx, geogrid_length,
-                     geogrid_width, input_radiometry, rtc_area_mode,
+                     geogrid_width, input_terrain_radiometry, rtc_area_mode,
                      geogrid_upsampling, rtc_min_value_db);
 
     // start (az) and r0 at the outer edge of the first pixel:
@@ -1308,8 +1427,8 @@ void facetRTCAreaProj(
     const int jmax = geogrid_width * geogrid_upsampling;
 
     // Output raster
-    isce3::core::Matrix<float> out_array(radar_grid.length(),
-                                        radar_grid.width());
+    using T = float;
+    isce3::core::Matrix<T> out_array(radar_grid.length(), radar_grid.width());
     out_array.fill(0);
     isce3::core::Matrix<float> out_nlooks_array;
     if (out_nlooks != nullptr) {
@@ -1319,34 +1438,35 @@ void facetRTCAreaProj(
 
     const int progress_block = imax * jmax / 100;
     int numdone = 0;
-    int min_block_length = 32;
-    int block_size, block_size_with_upsampling;
+    int block_length, block_length_with_upsampling;
 
     int nblocks;
 
     if (rtc_memory_mode == rtcMemoryMode::RTC_SINGLE_BLOCK) {
         nblocks = 1;
-        block_size_with_upsampling = imax;
-        block_size = geogrid_length;
+        block_length_with_upsampling = imax;
+        block_length = geogrid_length;
     } else {
-        nblocks = areaProjGetNBlocks(imax, &info, geogrid_upsampling,
-                                     &block_size_with_upsampling, &block_size,
-                                     min_block_length);
+        const int out_nbands = 1;
+        areaProjGetNBlocks(imax, jmax, out_nbands, sizeof(T), &info,
+                           geogrid_upsampling, &block_length_with_upsampling,
+                           &block_length, &nblocks);
     }
 
-    info << "block size: " << block_size << pyre::journal::endl;
-    info << "block size (with upsampling): " << block_size_with_upsampling
+    info << "block length: " << block_length << pyre::journal::endl;
+    info << "block length (with upsampling): " << block_length_with_upsampling
          << pyre::journal::endl;
 
 #pragma omp parallel for schedule(dynamic)
     for (int block = 0; block < nblocks; ++block) {
-        _RunBlock(jmax, block_size, block_size_with_upsampling, block, numdone,
-                  progress_block, geogrid_upsampling, interp_method, dem_raster,
-                  out_geo_vertices, out_geo_grid, start, pixazm, dr, r0, xbound,
-                  ybound, y0, dy, x0, dx, geogrid_length, geogrid_width,
-                  radar_grid, input_dop, ellipsoid, orbit, threshold, num_iter,
-                  delta_range, out_array, out_nlooks_array, proj.get(),
-                  rtc_area_mode, input_radiometry, radar_grid_nlooks);
+        _RunBlock(jmax, block_length, block_length_with_upsampling, block,
+                  numdone, progress_block, geogrid_upsampling, interp_method,
+                  dem_raster, out_geo_vertices, out_geo_grid, start, pixazm, dr,
+                  r0, xbound, ybound, y0, dy, x0, dx, geogrid_length,
+                  geogrid_width, radar_grid, input_dop, ellipsoid, orbit,
+                  threshold, num_iter, delta_range, out_array, out_nlooks_array,
+                  proj.get(), rtc_area_mode, input_terrain_radiometry,
+                  radar_grid_nlooks);
     }
 
     printf("\rRTC progress: 100%%\n");
@@ -1391,22 +1511,22 @@ void facetRTCAreaProj(
                              radar_grid.length());
 }
 
-/** Convert enum input_radiometry to string */
-std::string get_input_radiometry_str(rtcInputRadiometry input_radiometry) {
-    std::string input_radiometry_str;
-    switch (input_radiometry) {
+/** Convert enum input_terrain_radiometry to string */
+std::string get_input_terrain_radiometry_str(rtcInputRadiometry input_terrain_radiometry) {
+    std::string input_terrain_radiometry_str;
+    switch (input_terrain_radiometry) {
     case rtcInputRadiometry::BETA_NAUGHT:
-        input_radiometry_str = "beta-naught";
+        input_terrain_radiometry_str = "beta-naught";
         break;
     case rtcInputRadiometry::SIGMA_NAUGHT_ELLIPSOID:
-        input_radiometry_str = "sigma-naught";
+        input_terrain_radiometry_str = "sigma-naught";
         break;
     default:
         std::string error_message =
                 "ERROR invalid radiometric terrain radiometry";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
     }
-    return input_radiometry_str;
+    return input_terrain_radiometry_str;
 }
 
 /** Convert enum output_mode to string */
@@ -1446,19 +1566,19 @@ void print_parameters(pyre::journal::info_t& channel,
                       const double y0, const double dy, const double x0,
                       const double dx, const int geogrid_length,
                       const int geogrid_width,
-                      rtcInputRadiometry input_radiometry,
+                      rtcInputRadiometry input_terrain_radiometry,
                       rtcAreaMode rtc_area_mode, double geogrid_upsampling,
                       float rtc_min_value_db) {
     double yf = y0 + geogrid_length * dy;
 
-    std::string input_radiometry_str =
-            get_input_radiometry_str(input_radiometry);
+    std::string input_terrain_radiometry_str =
+            get_input_terrain_radiometry_str(input_terrain_radiometry);
     std::string rtc_area_mode_str = get_rtc_area_mode_str(rtc_area_mode);
 
     double ymax = std::max(y0, yf);
     double ymin = std::min(y0, yf);
 
-    channel << "input radiometry: " << input_radiometry_str
+    channel << "input radiometry: " << input_terrain_radiometry_str
             << pyre::journal::newline
             << "RTC area mode (area/area factor): " << rtc_area_mode_str
             << pyre::journal::newline

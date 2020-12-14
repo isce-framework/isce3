@@ -28,6 +28,10 @@ enum rtcMemoryMode {
     RTC_BLOCKS_GEOGRID = 2,
 };
 
+
+constexpr static int AP_DEFAULT_MIN_BLOCK_SIZE = 1 << 18; // 256KB
+constexpr static int AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 30; // 1GB
+
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
 enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
 
@@ -43,7 +47,7 @@ enum rtcAlgorithm { RTC_DAVID_SMALL = 0, RTC_AREA_PROJECTION = 1 };
  * @param[in]  input_raster        Input raster
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
- * @param[in]  input_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
  * @param[in]  exponent            Exponent to be applied to the input data. The
  * value 0 indicates that the the exponent is based on the data type of the
  *  input raster (1 for real and 2 for complex rasters).
@@ -86,7 +90,7 @@ void applyRTC(
  * @param[out] output_raster       Output raster
  * @param[in]  frequency           Product frequency
  * @param[in]  native_doppler      Use native doppler
- * @param[in]  input_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
  * RTC_AREA_PROJECTION)
@@ -120,7 +124,7 @@ void facetRTC(
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
  * @param[in]  frequency           Product frequency
- * @param[in]  input_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
  * RTC_AREA_PROJECTION)
@@ -152,7 +156,7 @@ void facetRTC(
         rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
 /** Generate radiometric terrain correction (RTC) area or area factor
  *
@@ -170,7 +174,7 @@ void facetRTC(
  * @param[in]  geogrid_width       Geographic width (number of pixels) in
  * the Easting direction
  * @param[in]  epsg                Output geographic grid EPSG
- * @param[in]  input_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
  * RTC_AREA_PROJECTION)
@@ -211,7 +215,7 @@ void facetRTC(
         rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
 /** Generate radiometric terrain correction (RTC) area or area factor using the
  * David Small algorithm
@@ -230,7 +234,7 @@ void facetRTC(
  * @param[in]  geogrid_width       Geographic width (number of pixels) in
  * the Easting direction
  * @param[in]  epsg                Output geographic grid EPSG
- * @param[in]  input_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * */
@@ -264,7 +268,7 @@ void facetRTCDavidSmall(
  * @param[in]  geogrid_width       Geographic width (number of pixels) in
  * the Easting direction
  * @param[in]  epsg                Output geographic grid EPSG
- * @param[in]  input_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor. Radar
@@ -302,20 +306,47 @@ void facetRTCAreaProj(
         rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
                               isce3::core::Matrix<double>& w_arr,
                               double& w_total, int plane_orientation);
 
-int areaProjGetNBlocks(int array_length,
-                       pyre::journal::info_t* channel = nullptr,
-                       int upsampling = 0,
-                       int* block_length_with_upsampling = nullptr, 
-                       int* block_length = nullptr,
-                       int min_block_length = std::pow(2, 8),  // 256
-                       int max_block_length = std::pow(2, 10)); // 1024
+std::string getNbytesStr(long long nbytes);
+
+/** Set the block size (in X and Y) to be processed by each thread
+ *
+ * @param[in]  array_length        Length of the data to be processed
+ * @param[in]  array_width         Width of the data to be processed
+ * @param[in]  nbands              Number of the bands to be processed
+ * @param[in]  type_size           Type size of the data to be processed
+ * @param[in]  channel             Pyre info channel
+ * @param[in]  upsampling          Data upsampling
+ * @param[out] block_length_with_upsampling Upsampled block length
+ * @param[out] block_length                 Block length
+ * @param[out] nblock_y                     Number of blocks in the Y direction
+ * @param[out] block_width_with_upsampling  Upsampled block width
+ * @param[out] block_width                  Block width
+ * @param[out] nblock_x                     Number of blocks in the X direction
+ * @param[in]  min_block_size               Minimum block size in Bytes (per thread)
+ * @param[in]  max_block_size               Maximum block size in Bytes (per thread)
+ * @param[in]  nblocks_per_thread           Target number of blocks per thread
+ */
+void areaProjGetNBlocks(const int array_length, const int array_width,
+                        const int nbands = 1,
+                        const size_t type_size = 4, // Float32
+                        pyre::journal::info_t* channel = nullptr,
+                        const double upsampling = 1,
+                        int* block_length_with_upsampling = nullptr,
+                        int* block_length = nullptr,
+                        int* nblock_y = nullptr,
+                        int* block_width_with_upsampling = nullptr,
+                        int* block_width = nullptr,
+                        int* nblock_x = nullptr,
+                        const int min_block_size = AP_DEFAULT_MIN_BLOCK_SIZE, // 256KB
+                        const int max_block_size = AP_DEFAULT_MAX_BLOCK_SIZE, // 1GB
+                        const int nblocks_per_thread = 4);
 
 double
 computeUpsamplingFactor(const DEMInterpolator& dem_interp,
@@ -327,7 +358,7 @@ double computeFacet(isce3::core::Vec3 xyz_center, isce3::core::Vec3 xyz_left,
                     double p1, double& p3, double divisor,
                     bool clockwise_direction);
 
-std::string get_input_radiometry_str(rtcInputRadiometry input_radiometry);
+std::string get_input_terrain_radiometry_str(rtcInputRadiometry input_terrain_radiometry);
 std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode);
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm);
 
@@ -336,7 +367,7 @@ void print_parameters(
         const isce3::product::RadarGridParameters& radar_grid, const double y0,
         const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width,
-        rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
+        rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
         double geogrid_upsampling,
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN());
 } // namespace geometry

@@ -84,7 +84,7 @@ runconfig:
             geocode:
                 algorithm_type: enum('area_projection', 'interp', required=False)
                
-                memory_mode: enum('auto', 'single_block', 'blocks_geogrid', 'blocks_geogrid_and_radargrid', required=False)
+                memory_mode: enum('auto', 'single_block', 'BLOCKS_GEOGRID', 'BLOCKS_GEOGRID_AND_RADARGRID', required=False)
                
                 # Processing upsampling factor on top of the input geogrid
                 geogrid_upsampling: int(required=False)

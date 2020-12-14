@@ -20,6 +20,7 @@
 #include <isce3/geometry/RTC.h>
 
 namespace isce3 { namespace geocode {
+
 /** Enumeration type to indicate the algorithm used for geocoding */
 enum geocodeOutputMode {
     INTERP = 0,
@@ -47,7 +48,7 @@ public:
      * @param[in]  output_mode         Geocode method
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  input_radiometry    Terrain radiometry of the input raster
+     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
      * @param[in]  exponent            Exponent to be applied to the input data.
      * The value 0 indicates that the the exponent is based on the data type of
      * the input raster (1 for real and 2 for complex rasters).
@@ -79,6 +80,8 @@ public:
      * @param[in]  in_rtc               Input RTC area factor (in slant-range).
      * @param[out] out_rtc              Output RTC area factor (in slant-range).
      * @param[in]  geocode_memory_mode  Select memory mode
+     * @param[in]  min_block_size       Minimum block size (per thread)
+     * @param[in]  max_block_size       Maximum block size (per thread)
      * @param[in]  interp_method        Data interpolation method
      */
     void
@@ -88,7 +91,7 @@ public:
             geocodeOutputMode output_mode = geocodeOutputMode::INTERP,
             double geogrid_upsampling = 1,
             bool flag_upsample_radar_grid = false,
-            isce3::geometry::rtcInputRadiometry input_radiometry =
+            isce3::geometry::rtcInputRadiometry input_terrain_radiometry =
                     isce3::geometry::rtcInputRadiometry::BETA_NAUGHT,
             int exponent = 0,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
@@ -109,6 +112,10 @@ public:
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
             geocodeMemoryMode geocode_memory_mode = geocodeMemoryMode::AUTO,
+            const int min_block_size =
+                    isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
+            const int max_block_size =
+                    isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
             isce3::core::dataInterpMethod interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
@@ -134,7 +141,7 @@ public:
      * @param[in]  output_mode         Output mode
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  input_radiometry    Terrain radiometry of the input raster
+     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit are ignored.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
@@ -162,6 +169,8 @@ public:
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
      * @param[in]  interp_method       Data interpolation method
+     * @param[in]  min_block_size      Minimum block size (per thread)
+     * @param[in]  max_block_size      Maximum block size (per thread)
      * @param[in]  geocode_memory_mode Select memory mode
      */
     template<class T_out>
@@ -172,7 +181,7 @@ public:
             geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
             double geogrid_upsampling = 1,
             bool flag_upsample_radar_grid = false,
-            isce3::geometry::rtcInputRadiometry input_radiometry =
+            isce3::geometry::rtcInputRadiometry input_terrain_radiometry =
                     isce3::geometry::rtcInputRadiometry::BETA_NAUGHT,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
             double rtc_geogrid_upsampling =
@@ -192,6 +201,10 @@ public:
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
             geocodeMemoryMode geocode_memory_mode = geocodeMemoryMode::AUTO,
+            const int min_block_size =
+                    isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
+            const int max_block_size =
+                    isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
             isce3::core::dataInterpMethod interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
@@ -284,9 +297,10 @@ private:
     _runBlock(const isce3::product::RadarGridParameters& radar_grid,
               bool is_radar_grid_single_block,
               std::vector<std::unique_ptr<isce3::core::Matrix<T2>>>& rdrData,
-              const int jmax, int block_size, int block_size_with_upsampling,
-              int block, int& numdone, int progress_block,
-              double geogrid_upsampling, int nbands, int nbands_off_diag_terms,
+              int block_size_y, int block_size_with_upsampling_y, int block_y,
+              int block_size_x, int block_size_with_upsampling_x, int block_x,
+              int& numdone, int progress_block, double geogrid_upsampling,
+              int nbands, int nbands_off_diag_terms,
               isce3::core::dataInterpMethod interp_method,
               isce3::io::Raster& dem_raster,
               isce3::io::Raster* out_off_diag_terms,
@@ -309,8 +323,6 @@ private:
                   isce3::core::ProjectionBase* _proj, int lineStart,
                   int blockLength, int blockWidth, double demMargin);
 
-    std::string _get_nbytes_str(long nbytes);
-
     void _geo2rdr(const isce3::product::RadarGridParameters& radar_grid,
                   double x, double y, double& azimuthTime, double& slantRange,
                   isce3::geometry::DEMInterpolator& demInterp,
@@ -329,8 +341,9 @@ private:
     isce3::core::Ellipsoid _ellipsoid;
 
     // Optimization options
-    double _threshold;
-    int _numiter;
+
+    double _threshold = 1e-8;
+    int _numiter = 100;
     size_t _linesPerBlock = 1000;
 
     // radar grids parameters
@@ -368,14 +381,13 @@ private:
     isce3::core::dataInterpMethod _interp_method =
             isce3::core::dataInterpMethod::BIQUINTIC_METHOD;
 };
-
 std::vector<float> getGeoAreaElementMean(
         const std::vector<double>& x_vect, const std::vector<double>& y_vect,
         const isce3::product::RadarGridParameters& radar_grid,
         const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& input_dop,
         isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
-        isce3::geometry::rtcInputRadiometry input_radiometry =
+        isce3::geometry::rtcInputRadiometry input_terrain_radiometry =
                 isce3::geometry::rtcInputRadiometry::BETA_NAUGHT,
         int exponent = 0,
         geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
@@ -385,7 +397,7 @@ std::vector<float> getGeoAreaElementMean(
         float* out_nlooks = nullptr,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
 template<typename T>
 std::vector<float> _getGeoAreaElementMean(

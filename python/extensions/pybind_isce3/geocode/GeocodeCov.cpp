@@ -26,7 +26,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
             .def_property("ellipsoid", nullptr, &Geocode<T>::ellipsoid)
             .def_property("threshold_geo2rdr", nullptr,
                           &Geocode<T>::thresholdGeo2rdr)
-            .def_property("num_iter_geo2rdr", nullptr,
+            .def_property("numiter_geo2rdr", nullptr,
                           &Geocode<T>::numiterGeo2rdr)
             .def_property("lines_per_block", nullptr,
                           &Geocode<T>::linesPerBlock)
@@ -65,7 +65,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                             geocodeOutputMode::AREA_PROJECTION_GAMMA_NAUGHT,
                     py::arg("geogrid_upsampling") = 1,
                     py::arg("flag_upsample_radar_grid") = false,
-                    py::arg("input_radiometry") =
+                    py::arg("input_terrain_radiometry") =
                             rtcInputRadiometry::BETA_NAUGHT,
                     py::arg("exponent") = 0,
                     py::arg("rtc_min_value_db") =
@@ -89,7 +89,11 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("out_geo_rtc") = nullptr,
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
-                    py::arg("mem_mode") = geocodeMemoryMode::AUTO,
+                    py::arg("memory_mode") = geocodeMemoryMode::AUTO,
+                    py::arg("min_block_size") =
+                            isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
+                    py::arg("max_block_size") =
+                            isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
                     py::arg("interp_mode") = isce3::core::BIQUINTIC_METHOD);
 }
 

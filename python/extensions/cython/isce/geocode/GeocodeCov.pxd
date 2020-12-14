@@ -79,7 +79,7 @@ cdef extern from "isce3/geocode/GeocodeCov.h" namespace "isce3::geocode":
                      geocodeOutputMode output_mode_enum,
                      double upsampling, 
                      bool flag_upsample_radar_grid,
-                     rtcInputRadiometry input_radiometry,
+                     rtcInputRadiometry input_terrain_radiometry,
                      int exponent,
                      float rtc_min_value_db,
                      double rtc_upsampling,

@@ -101,7 +101,39 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoObj.geoGrid(geoGridStartX, geoGridStartY, geoGridSpacingX,
                    geoGridSpacingY, geoGridWidth, geoGridLength, epsgcode);
 
+    // populate optional parameters
+    double geogrid_upsampling = 1;
+    bool flag_upsample_radar_grid = false;
+    isce3::geometry::rtcInputRadiometry input_terrain_radiometry =
+            isce3::geometry::rtcInputRadiometry::BETA_NAUGHT;
+    int exponent = 0;
+    float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN();
+    double rtc_geogrid_upsampling =
+            std::numeric_limits<double>::quiet_NaN();
+    isce3::geometry::rtcAlgorithm rtc_algorithm =
+            isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
+    double abs_cal_factor = 1;
+    float clip_min = std::numeric_limits<float>::quiet_NaN();
+    float clip_max = std::numeric_limits<float>::quiet_NaN();
+    float min_nlooks = std::numeric_limits<float>::quiet_NaN();
+    float radar_grid_nlooks = 1;
+
+    isce3::io::Raster* out_geo_vertices = nullptr;
+    isce3::io::Raster* out_dem_vertices = nullptr;
+    isce3::io::Raster* out_geo_nlooks = nullptr;
+    isce3::io::Raster* out_geo_rtc = nullptr;
+    isce3::io::Raster* input_rtc = nullptr;
+    isce3::io::Raster* output_rtc = nullptr;
+    isce3::geocode::geocodeMemoryMode geocode_memory_mode_1 =
+            isce3::geocode::geocodeMemoryMode::BLOCKS_GEOGRID;
+    isce3::geocode::geocodeMemoryMode geocode_memory_mode_2 =
+            isce3::geocode::geocodeMemoryMode::BLOCKS_GEOGRID_AND_RADARGRID;
+
     isce3::geocode::geocodeOutputMode output_mode;
+
+    // test small block size
+    const int min_block_size = 16;
+    const int max_block_size = isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE;
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
@@ -124,11 +156,20 @@ TEST(GeocodeTest, TestGeocodeCov) {
                     geoGridLength, 1, GDT_Float64, "ENVI");
 
             // run geocode
-            geoObj.geocode(radar_grid, radarRaster, geocodedRaster,
-                            demRaster, output_mode);
+            geoObj.geocode(radar_grid, radarRaster, geocodedRaster, demRaster,
+                           output_mode, geogrid_upsampling,
+                           flag_upsample_radar_grid, input_terrain_radiometry,
+                           exponent, rtc_min_value_db, rtc_geogrid_upsampling,
+                           rtc_algorithm, abs_cal_factor, clip_min, clip_max,
+                           min_nlooks, radar_grid_nlooks,
+                           nullptr, out_geo_vertices,
+                           out_dem_vertices, out_geo_nlooks, out_geo_rtc,
+                           input_rtc, output_rtc, geocode_memory_mode_1,
+                           min_block_size, max_block_size);
         }
     } 
 
+    // Test generation of full-covariance elements and block processing
 
     // Geocode object
     isce3::geocode::Geocode<std::complex<float>> geoComplexObj;
@@ -165,28 +206,15 @@ TEST(GeocodeTest, TestGeocodeCov) {
                                             geoGridWidth, geoGridLength, 1,
                                             GDT_CFloat32, "ENVI");
 
-    double geogrid_upsampling = 1;
-    bool flag_upsample_radar_grid = false;
-    isce3::geometry::rtcInputRadiometry input_radiometry =
-            isce3::geometry::rtcInputRadiometry::BETA_NAUGHT;
-    int exponent = 0;
-    float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN();
-    double rtc_geogrid_upsampling =
-            std::numeric_limits<double>::quiet_NaN();
-    isce3::geometry::rtcAlgorithm rtc_algorithm =
-            isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
-    double abs_cal_factor = 1;
-    float clip_min = std::numeric_limits<float>::quiet_NaN();
-    float clip_max = std::numeric_limits<float>::quiet_NaN();
-    float min_nlooks = std::numeric_limits<float>::quiet_NaN();
-    float radar_grid_nlooks = 1;
-
     geoComplexObj.geocode(
-            radar_grid, slc_raster_xy, geocoded_diag_raster, demRaster, output_mode,
-            geogrid_upsampling, flag_upsample_radar_grid, input_radiometry,
-            exponent, rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-            abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
-            &geocoded_off_diag_raster);
+            radar_grid, slc_raster_xy, geocoded_diag_raster, demRaster,
+            output_mode, geogrid_upsampling, flag_upsample_radar_grid,
+            input_terrain_radiometry, exponent, rtc_min_value_db,
+            rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor, clip_min,
+            clip_max, min_nlooks, radar_grid_nlooks, &geocoded_off_diag_raster,
+            out_geo_vertices, out_dem_vertices, out_geo_nlooks, out_geo_rtc,
+            input_rtc, output_rtc, geocode_memory_mode_2, min_block_size,
+            max_block_size);
 
     //  load complex raster containing X conj(Y)
     isce3::io::Raster slc_x_conj_y_raster("x_conj_y_slc_rdr.bin");

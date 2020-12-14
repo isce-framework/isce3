@@ -324,14 +324,14 @@ def _runGeocodeFrequency(self, frequency):
     # input terrain radiometry
     if (input_terrain_radiometry is not None and
            'sigma' in input_terrain_radiometry):
-        input_radiometry = 'sigma-naught-ellipsoid'
+        input_terrain_radiometry = 'sigma-naught-ellipsoid'
     else:
-        input_radiometry = 'beta-naught'
+        input_terrain_radiometry = 'beta-naught'
 
     if flag_apply_rtc:
         output_radiometry_str = 'gamma-naught'
     else:
-        output_radiometry_str = input_radiometry 
+        output_radiometry_str = input_terrain_radiometry 
 
     # number of looks
     radar_grid_nlooks = state.nlooks_az * state.nlooks_rg
@@ -377,7 +377,7 @@ def _runGeocodeFrequency(self, frequency):
                 flag_upsample_radar_grid=flag_upsample_radar_grid,
                 output_mode=output_mode,
                 upsampling=geogrid_upsampling,
-                input_radiometry=input_radiometry,
+                input_terrain_radiometry=input_terrain_radiometry,
                 exponent=exponent,
                 radar_grid_nlooks=radar_grid_nlooks,
                 out_off_diag_terms=out_off_diag_terms_obj,

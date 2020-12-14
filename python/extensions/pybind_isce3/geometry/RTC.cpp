@@ -56,7 +56,7 @@ void addbinding_apply_rtc(pybind11::module& m)
            py::arg("input_raster"),
            py::arg("dem_raster"),
            py::arg("output_raster"),
-           py::arg("input_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
+           py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
            py::arg("exponent") = 0,
            py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
            py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
@@ -85,7 +85,7 @@ void addbinding_apply_rtc(pybind11::module& m)
                   Input DEM raster
               output_raster : isce3.io.Raster
                   Output raster (output)
-              input_radiometry : isce3.geometry.RtcInputRadiometry, optional
+              input_terrain_radiometry : isce3.geometry.RtcInputTerrainRadiometry, optional
                   Terrain radiometry of the input raster
               exponent : int, optional
                   Exponent to be applied to the input data. The
@@ -131,7 +131,7 @@ void addbinding_facet_rtc(pybind11::module& m)
                   &isce3::geometry::facetRTC),
           py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
           py::arg("dem"), py::arg("output_raster"),
-          py::arg("input_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
+          py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
           py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
           py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
           py::arg("geogrid_upsampling") =
@@ -160,7 +160,7 @@ void addbinding_facet_rtc(pybind11::module& m)
                  Output raster (output)
              frequency : optional
                  Product frequency
-             input_radiometry : isce3.geometry.RtcInputRadiometry, optional
+             input_terrain_radiometry : isce3.geometry.RtcInputTerrainRadiometry, optional
                  Terrain radiometry of the input raster
              rtc_area_mode : isce3.geometry.RtcAreaMode, optional
                  RTC area mode
@@ -208,7 +208,7 @@ void addbinding_facet_rtc_bbox(pybind11::module& m)
           py::arg("orbit"), py::arg("input_dop"), py::arg("y0"), py::arg("dy"),
           py::arg("x0"), py::arg("dx"), py::arg("geogrid_length"),
           py::arg("geogrid_width"), py::arg("epsg"),
-          py::arg("input_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
+          py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
           py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
           py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
           py::arg("geogrid_upsampling") =
@@ -251,7 +251,7 @@ void addbinding_facet_rtc_bbox(pybind11::module& m)
                  Geographic width (number of pixels) in the easting direction
              epsg : int
                  Output geographic grid EPSG
-             input_radiometry : isce3.geometry.RtcInputRadiometry, optional
+             input_terrain_radiometry : isce3.geometry.RtcInputTerrainRadiometry, optional
                  Terrain radiometry of the input raster
              rtc_area_mode : isce3.geometry.RtcAreaMode, optional
                  RTC area mode

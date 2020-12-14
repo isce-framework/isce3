@@ -21,7 +21,7 @@ from LookSide cimport LookSide
 from GeocodeCov cimport *
 
 
-rtc_input_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
+rtc_input_terrain_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
                              'SIGMA_NAUGHT_ELLIPSOID': rtcInputRadiometry.SIGMA_NAUGHT_ELLIPSOID}
 
 geocode_output_mode_dict = {'INTERP': geocodeOutputMode.INTERP,
@@ -52,8 +52,8 @@ def enum_dict_decorator(enum_dict, default_key):
         return wrapper
     return decorated
 
-@enum_dict_decorator(rtc_input_radiometry_dict, 'SIGMA_NAUGHT_ELLIPSOID')
-def getRtcInputRadiometry(*args, **kwargs):
+@enum_dict_decorator(rtc_input_terrain_radiometry_dict, 'SIGMA_NAUGHT_ELLIPSOID')
+def getRtcInputTerrainRadiometry(*args, **kwargs):
     pass
 
 @enum_dict_decorator(geocode_output_mode_dict, 'INTERP')
@@ -203,7 +203,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                 output_mode = None,
                 double upsampling = 1,
                 bool flag_upsample_radar_grid = False,
-                input_radiometry = None,
+                input_terrain_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
                 double rtc_upsampling = NAN,
@@ -226,7 +226,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         """
 
         output_mode_enum = getOutputMode(output_mode)
-        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
@@ -248,7 +248,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                                output_mode_enum, 
                                upsampling,
                                flag_upsample_radar_grid,
-                               rtc_input_radiometry, 
+                               rtc_input_terrain_radiometry, 
                                exponent,
                                rtc_min_value_db,
                                rtc_upsampling,
@@ -365,7 +365,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                 output_mode = None,
                 double upsampling = 1,
                 bool flag_upsample_radar_grid = False,
-                input_radiometry = None,
+                input_terrain_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
                 double rtc_upsampling = NAN,
@@ -388,7 +388,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         """
 
         output_mode_enum = getOutputMode(output_mode)
-        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
@@ -410,7 +410,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                                output_mode_enum, 
                                upsampling,
                                flag_upsample_radar_grid,
-                               rtc_input_radiometry, 
+                               rtc_input_terrain_radiometry, 
                                exponent,
                                rtc_min_value_db,
                                rtc_upsampling,
@@ -528,7 +528,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                 output_mode = None,
                 double upsampling = 1,
                 bool flag_upsample_radar_grid = False,
-                input_radiometry = None,
+                input_terrain_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
                 double rtc_upsampling = NAN,
@@ -551,7 +551,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         """
 
         output_mode_enum = getOutputMode(output_mode)
-        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
@@ -573,7 +573,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                                output_mode_enum, 
                                upsampling,
                                flag_upsample_radar_grid,
-                               rtc_input_radiometry, 
+                               rtc_input_terrain_radiometry, 
                                exponent,
                                rtc_min_value_db,
                                rtc_upsampling,
@@ -690,7 +690,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                 output_mode = None,
                 double upsampling = 1,
                 bool flag_upsample_radar_grid = False,
-                input_radiometry = None,
+                input_terrain_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
                 double rtc_upsampling = NAN,
@@ -713,7 +713,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
         """
 
         output_mode_enum = getOutputMode(output_mode)
-        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
         # RTC algorithm
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
@@ -735,7 +735,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                                output_mode_enum, 
                                upsampling,
                                flag_upsample_radar_grid,
-                               rtc_input_radiometry, 
+                               rtc_input_terrain_radiometry, 
                                exponent,
                                rtc_min_value_db,
                                rtc_upsampling,
@@ -781,7 +781,7 @@ def pyGetGeoAreaElementMean(
         pyLUT2d doppler,
         pyRaster input_raster,
         pyRaster dem_raster, 
-        input_radiometry=None,
+        input_terrain_radiometry=None,
         int exponent = 0,
         output_mode = None,
         dem_upsampling = NAN,
@@ -790,7 +790,7 @@ def pyGetGeoAreaElementMean(
         radar_grid_nlooks = 1):
 
     # input radiometry
-    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+    rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
     # output mode
     output_mode_enum = getOutputMode(output_mode)
@@ -803,7 +803,7 @@ def pyGetGeoAreaElementMean(
         deref(doppler.c_lut),
         deref(input_raster.c_raster),
         deref(dem_raster.c_raster),
-        rtc_input_radiometry,
+        rtc_input_terrain_radiometry,
         exponent,
         output_mode_enum,
         dem_upsampling,

@@ -45,7 +45,7 @@ def test_rtc():
     # doppler = isce3.core.LUT2d()
 
     # list input parameters
-    inputRadiometry = isce3.geometry.RtcInputRadiometry.BETA_NAUGHT
+    inputRadiometry = isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
 
     rtc_area_mode = isce3.geometry.RtcAreaMode.AREA_FACTOR
  

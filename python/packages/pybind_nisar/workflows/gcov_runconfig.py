@@ -67,9 +67,9 @@ class GCOVRunConfig(RunConfig):
             rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_DAVID_SMALL
 
         if rtc_dict['input_terrain_radiometry'] == "sigma0":
-            rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputRadiometry.SIGMA_NAUGHT_ELLIPSOID
+            rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
         else:
-            rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputRadiometry.BETA_NAUGHT
+            rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
 
         if rtc_dict['rtc_min_value_db'] is None:
             rtc_dict['rtc_min_value_db'] = np.nan

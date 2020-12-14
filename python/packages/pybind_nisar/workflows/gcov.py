@@ -59,7 +59,7 @@ def run(cfg):
 
     if apply_rtc:
         output_radiometry_str = 'radar backscatter gamma0'
-    elif input_terrain_radiometry == isce.geometry.RtcInputRadiometry.BETA_NAUGHT:
+    elif input_terrain_radiometry == isce.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
         output_radiometry_str = 'radar backscatter beta0'
     else:
         output_radiometry_str = 'radar backscatter sigma0'
@@ -126,7 +126,7 @@ def run(cfg):
         geo.ellipsoid = ellipsoid
         geo.doppler = zero_doppler
         geo.threshold_geo2rdr = threshold
-        geo.num_iter_geo2rdr = maxiter
+        geo.numiter_geo2rdr = maxiter
         geo.dem_block_margin = dem_margin
 
         geo.geogrid(geogrid.start_x, geogrid.start_y,
@@ -185,7 +185,7 @@ def run(cfg):
                     dem_raster=dem_raster,
                     output_mode=output_mode,
                     geogrid_upsampling=geogrid_upsampling,
-                    input_radiometry=input_terrain_radiometry,
+                    input_terrain_radiometry=input_terrain_radiometry,
                     exponent=exponent,
                     rtc_min_value_db=rtc_min_value_db,
                     rtc_algorithm=rtc_algorithm,
@@ -199,7 +199,7 @@ def run(cfg):
                     out_geo_rtc=out_geo_rtc_obj,
                     input_rtc=None,
                     output_rtc=None,
-                    mem_mode=memory_mode)
+                    memory_mode=memory_mode)
 
         del output_raster_obj
 
