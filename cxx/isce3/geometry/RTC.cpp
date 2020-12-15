@@ -217,10 +217,10 @@ void applyRTC(const isce3::product::RadarGridParameters& radar_grid,
             rtc_raster = output_rtc;
 
         info << "calculating RTC..." << pyre::journal::endl;
-        facetRTC(radar_grid, orbit, input_dop, dem_raster, *rtc_raster,
-                 input_terrain_radiometry, rtc_area_mode, rtc_algorithm,
-                 geogrid_upsampling, rtc_min_value_db, radar_grid_nlooks,
-                 out_nlooks, rtc_memory_mode);
+        computeRtc(radar_grid, orbit, input_dop, dem_raster, *rtc_raster,
+                   input_terrain_radiometry, rtc_area_mode, rtc_algorithm,
+                   geogrid_upsampling, rtc_min_value_db, radar_grid_nlooks,
+                   out_nlooks, rtc_memory_mode);
     } else {
         info << "reading pre-computed RTC..." << pyre::journal::endl;
         rtc_raster = input_rtc;
@@ -457,13 +457,15 @@ void areaProjGetNBlocks(const int array_length, const int array_width,
     }
 }
 
-void facetRTC(isce3::product::Product& product, isce3::io::Raster& dem_raster,
-              isce3::io::Raster& output_raster, char frequency,
-              bool native_doppler, rtcInputRadiometry input_terrain_radiometry,
-              rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
-              double geogrid_upsampling, float rtc_min_value_db,
-              size_t nlooks_az, size_t nlooks_rg, isce3::io::Raster* out_nlooks,
-              rtcMemoryMode rtc_memory_mode) {
+void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
+                isce3::io::Raster& output_raster, char frequency,
+                bool native_doppler,
+                rtcInputRadiometry input_terrain_radiometry,
+                rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+                double geogrid_upsampling, float rtc_min_value_db,
+                size_t nlooks_az, size_t nlooks_rg,
+                isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode)
+{
 
     isce3::core::Orbit orbit = product.metadata().orbit();
     isce3::product::RadarGridParameters radar_grid(product, frequency);
@@ -477,21 +479,24 @@ void facetRTC(isce3::product::Product& product, isce3::io::Raster& dem_raster,
 
     int radar_grid_nlooks = nlooks_az * nlooks_rg;
 
-    facetRTC(radar_grid_ml, orbit, dop, dem_raster, output_raster,
-             input_terrain_radiometry, rtc_area_mode, rtc_algorithm, geogrid_upsampling,
-             rtc_min_value_db, radar_grid_nlooks, out_nlooks, rtc_memory_mode);
+    computeRtc(radar_grid_ml, orbit, dop, dem_raster, output_raster,
+               input_terrain_radiometry, rtc_area_mode, rtc_algorithm,
+               geogrid_upsampling, rtc_min_value_db, radar_grid_nlooks,
+               out_nlooks, rtc_memory_mode);
 }
 
-void facetRTC(const isce3::product::RadarGridParameters& radar_grid,
-              const isce3::core::Orbit& orbit,
-              const isce3::core::LUT2d<double>& input_dop,
-              isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
-              rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
-              rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
-              float rtc_min_value_db, float radar_grid_nlooks,
-              isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
-              isce3::core::dataInterpMethod interp_method, double threshold,
-              int num_iter, double delta_range) {
+void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
+                const isce3::core::Orbit& orbit,
+                const isce3::core::LUT2d<double>& input_dop,
+                isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
+                rtcInputRadiometry input_terrain_radiometry,
+                rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+                double geogrid_upsampling, float rtc_min_value_db,
+                float radar_grid_nlooks, isce3::io::Raster* out_nlooks,
+                rtcMemoryMode rtc_memory_mode,
+                isce3::core::dataInterpMethod interp_method, double threshold,
+                int num_iter, double delta_range)
+{
 
     double geotransform[6];
     dem_raster.getGeoTransform(geotransform);
@@ -516,42 +521,43 @@ void facetRTC(const isce3::product::RadarGridParameters& radar_grid,
     if (dy < 0)
         std::swap(y0, yf);
 
-    facetRTC(dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
-             x0, dx, geogrid_length, geogrid_width, epsg, input_terrain_radiometry,
-             rtc_area_mode, rtc_algorithm, geogrid_upsampling, rtc_min_value_db,
-             radar_grid_nlooks, nullptr, nullptr, out_nlooks, rtc_memory_mode,
-             interp_method, threshold, num_iter, delta_range);
+    computeRtc(dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
+               x0, dx, geogrid_length, geogrid_width, epsg,
+               input_terrain_radiometry, rtc_area_mode, rtc_algorithm,
+               geogrid_upsampling, rtc_min_value_db, radar_grid_nlooks, nullptr,
+               nullptr, out_nlooks, rtc_memory_mode, interp_method, threshold,
+               num_iter, delta_range);
 }
 
-void facetRTC(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
-              const isce3::product::RadarGridParameters& radar_grid,
-              const isce3::core::Orbit& orbit,
-              const isce3::core::LUT2d<double>& input_dop, const double y0,
-              const double dy, const double x0, const double dx,
-              const int geogrid_length, const int geogrid_width, const int epsg,
-              rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
-              rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
-              float rtc_min_value_db, float radar_grid_nlooks,
-              isce3::io::Raster* out_geo_vertices,
-              isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_nlooks,
-              rtcMemoryMode rtc_memory_mode,
-              isce3::core::dataInterpMethod interp_method, double threshold,
-              int num_iter, double delta_range)
+void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
+                const isce3::product::RadarGridParameters& radar_grid,
+                const isce3::core::Orbit& orbit,
+                const isce3::core::LUT2d<double>& input_dop, const double y0,
+                const double dy, const double x0, const double dx,
+                const int geogrid_length, const int geogrid_width,
+                const int epsg, rtcInputRadiometry input_terrain_radiometry,
+                rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+                double geogrid_upsampling, float rtc_min_value_db,
+                float radar_grid_nlooks, isce3::io::Raster* out_geo_vertices,
+                isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_nlooks,
+                rtcMemoryMode rtc_memory_mode,
+                isce3::core::dataInterpMethod interp_method, double threshold,
+                int num_iter, double delta_range)
 {
 
     if (rtc_algorithm == rtcAlgorithm::RTC_AREA_PROJECTION) {
-        facetRTCAreaProj(
-                dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
-                x0, dx, geogrid_length, geogrid_width, epsg, input_terrain_radiometry,
-                rtc_area_mode, geogrid_upsampling, rtc_min_value_db,
-                radar_grid_nlooks, out_geo_vertices, out_geo_grid, out_nlooks,
-                rtc_memory_mode, interp_method, threshold, num_iter, 
-                delta_range);
-    } else {
-        facetRTCDavidSmall(dem_raster, output_raster, radar_grid, orbit,
+        computeRtcAreaProj(dem_raster, output_raster, radar_grid, orbit,
                            input_dop, y0, dy, x0, dx, geogrid_length,
-                           geogrid_width, epsg, input_terrain_radiometry, rtc_area_mode,
-                           geogrid_upsampling);
+                           geogrid_width, epsg, input_terrain_radiometry,
+                           rtc_area_mode, geogrid_upsampling, rtc_min_value_db,
+                           radar_grid_nlooks, out_geo_vertices, out_geo_grid,
+                           out_nlooks, rtc_memory_mode, interp_method,
+                           threshold, num_iter, delta_range);
+    } else {
+        computeRtcBilinearDistribution(
+                dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
+                x0, dx, geogrid_length, geogrid_width, epsg,
+                input_terrain_radiometry, rtc_area_mode, geogrid_upsampling);
     }
 }
 
@@ -704,18 +710,18 @@ double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
     return area;
 }
 
-void facetRTCDavidSmall(isce3::io::Raster& dem_raster,
-                        isce3::io::Raster& output_raster,
-                        const isce3::product::RadarGridParameters& radar_grid,
-                        const isce3::core::Orbit& orbit,
-                        const isce3::core::LUT2d<double>& input_dop,
-                        const double y0, const double dy, const double x0,
-                        const double dx, const int geogrid_length,
-                        const int geogrid_width, const int epsg,
-                        rtcInputRadiometry input_terrain_radiometry,
-                        rtcAreaMode rtc_area_mode, double upsample_factor) {
+void computeRtcBilinearDistribution(
+        isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
+        const isce3::product::RadarGridParameters& radar_grid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& input_dop, const double y0,
+        const double dy, const double x0, const double dx,
+        const int geogrid_length, const int geogrid_width, const int epsg,
+        rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
+        double upsample_factor)
+{
 
-    pyre::journal::info_t info("isce.geometry.facetRTCDavidSmall");
+    pyre::journal::info_t info("isce.geometry.computeRtcBilinearDistribution");
 
     std::unique_ptr<isce3::core::ProjectionBase> proj(
             isce3::core::createProj(epsg));
@@ -1377,7 +1383,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
     }
 }
 
-void facetRTCAreaProj(
+void computeRtcAreaProj(
         isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radar_grid,
         const isce3::core::Orbit& orbit,
@@ -1386,16 +1392,17 @@ void facetRTCAreaProj(
         const int geogrid_length, const int geogrid_width, const int epsg,
         rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
         double geogrid_upsampling, float rtc_min_value_db,
-        float radar_grid_nlooks,
-        isce3::io::Raster* out_geo_vertices, isce3::io::Raster* out_geo_grid,
-        isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
+        float radar_grid_nlooks, isce3::io::Raster* out_geo_vertices,
+        isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_nlooks,
+        rtcMemoryMode rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
-        int num_iter, double delta_range) {
+        int num_iter, double delta_range)
+{
     /*
       Description of the area projection algorithm can be found in Geocode.cpp
     */
 
-    pyre::journal::info_t info("isce.geometry.facetRTCAreaProj");
+    pyre::journal::info_t info("isce.geometry.computeRtcAreaProj");
 
     if (std::isnan(geogrid_upsampling))
         geogrid_upsampling = 2;
@@ -1547,8 +1554,8 @@ std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode) {
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm) {
     std::string rtc_algorithm_str;
     switch (rtc_algorithm) {
-    case rtcAlgorithm::RTC_DAVID_SMALL:
-        rtc_algorithm_str = "David Small";
+    case rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION:
+        rtc_algorithm_str = "Bilinear distribution (D. Small))";
         break;
     case rtcAlgorithm::RTC_AREA_PROJECTION:
         rtc_algorithm_str = "Area projection";

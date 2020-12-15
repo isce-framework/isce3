@@ -33,7 +33,7 @@ geocode_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
                             'BLOCKS_GEOGRID': geocodeMemoryMode.BLOCKS_GEOGRID,
                             'BLOCKS_GEOGRID_AND_RADARGRID': geocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID}
 
-rtc_algorithm_dict = {'RTC_DAVID_SMALL': rtcAlgorithm.RTC_DAVID_SMALL,
+rtc_algorithm_dict = {'RTC_BILINEAR_DISTRIBUTION': rtcAlgorithm.RTC_BILINEAR_DISTRIBUTION,
                       'RTC_AREA_PROJECTION': rtcAlgorithm.RTC_AREA_PROJECTION}
 
 def enum_dict_decorator(enum_dict, default_key):

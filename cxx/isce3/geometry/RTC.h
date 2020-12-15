@@ -35,9 +35,9 @@ constexpr static int AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 30; // 1GB
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
 enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
 
-/**Enumeration type to select RTC algorithm (RTC_DAVID_SMALL or
+/**Enumeration type to select RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION) */
-enum rtcAlgorithm { RTC_DAVID_SMALL = 0, RTC_AREA_PROJECTION = 1 };
+enum rtcAlgorithm { RTC_BILINEAR_DISTRIBUTION = 0, RTC_AREA_PROJECTION = 1 };
 
 /** Apply radiometric terrain correction (RTC) over an input raster
  *
@@ -47,12 +47,13 @@ enum rtcAlgorithm { RTC_DAVID_SMALL = 0, RTC_AREA_PROJECTION = 1 };
  * @param[in]  input_raster        Input raster
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
- * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+ * raster
  * @param[in]  exponent            Exponent to be applied to the input data. The
  * value 0 indicates that the the exponent is based on the data type of the
  *  input raster (1 for real and 2 for complex rasters).
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
- * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
+ * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor. Radar
@@ -90,9 +91,10 @@ void applyRTC(
  * @param[out] output_raster       Output raster
  * @param[in]  frequency           Product frequency
  * @param[in]  native_doppler      Use native doppler
- * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+ * raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
- * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
+ * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor. Radar
@@ -103,7 +105,7 @@ void applyRTC(
  * @param[in]  rtc_memory_mode     Select memory mode
  * looks associated with the geogrid will be saved
  * */
-void facetRTC(
+void computeRtc(
         isce3::product::Product& product, isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster, char frequency = 'A',
         bool native_doppler = false,
@@ -124,9 +126,10 @@ void facetRTC(
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
  * @param[in]  frequency           Product frequency
- * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+ * raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
- * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
+ * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor. Radar
@@ -142,7 +145,7 @@ void facetRTC(
  * @param[in] delta_range          Step size used for computing derivative of
  * doppler
  * */
-void facetRTC(
+void computeRtc(
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         isce3::io::Raster& dem, isce3::io::Raster& output_raster,
@@ -151,8 +154,7 @@ void facetRTC(
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
-        float radar_grid_nlooks = 1,
-        isce3::io::Raster* out_nlooks = nullptr,
+        float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
         rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
@@ -174,9 +176,10 @@ void facetRTC(
  * @param[in]  geogrid_width       Geographic width (number of pixels) in
  * the Easting direction
  * @param[in]  epsg                Output geographic grid EPSG
- * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+ * raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
- * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
+ * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor. Radar
@@ -196,13 +199,12 @@ void facetRTC(
  * @param[in] delta_range          Step size used for computing derivative of
  * doppler
  * */
-void facetRTC(
+void computeRtc(
         isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
-        const int geogrid_length, const int geogrid_width,
-        const int epsg,
+        const int geogrid_length, const int geogrid_width, const int epsg,
         rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
@@ -218,7 +220,7 @@ void facetRTC(
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
 /** Generate radiometric terrain correction (RTC) area or area factor using the
- * David Small algorithm
+ * Bilinear Distribution (D. Small) algorithm @cite small2011.
  *
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
@@ -234,17 +236,17 @@ void facetRTC(
  * @param[in]  geogrid_width       Geographic width (number of pixels) in
  * the Easting direction
  * @param[in]  epsg                Output geographic grid EPSG
- * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+ * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+ * raster
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
  * */
-void facetRTCDavidSmall(
+void computeRtcBilinearDistribution(
         isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
-        const int geogrid_length, const int geogrid_width,
-        const int epsg,
+        const int geogrid_length, const int geogrid_width, const int epsg,
         rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN());
@@ -288,13 +290,12 @@ void facetRTCDavidSmall(
  * @param[in] delta_range          Step size used for computing derivative of
  * doppler
  * */
-void facetRTCAreaProj(
+void computeRtcAreaProj(
         isce3::io::Raster& dem, isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
-        const int geogrid_length, const int geogrid_width,
-        const int epsg,
+        const int geogrid_length, const int geogrid_width, const int epsg,
         rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),

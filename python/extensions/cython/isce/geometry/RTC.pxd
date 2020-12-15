@@ -23,7 +23,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
         AREA_FACTOR = 1
     
     cdef enum rtcAlgorithm:
-        RTC_DAVID_SMALL = 0
+        RTC_BILINEAR_DISTRIBUTION = 0
         RTC_AREA_PROJECTION = 1
 
     cdef enum rtcMemoryMode:
@@ -50,7 +50,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   Raster * output_rtc_raster,
                   rtcMemoryMode memory_mode_enum)  except +
 
-    void facetRTC(RadarGridParameters& radar_grid, 
+    void computeRtc(RadarGridParameters& radar_grid, 
                   Orbit& orbit,
                   LUT2d[double]& dop,
                   Raster& dem_raster, 
@@ -64,7 +64,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   Raster * out_nlooks_raster,
                   rtcMemoryMode memory_mode_enum)  except +
 
-    void facetRTC(Raster& dem_raster, 
+    void computeRtc(Raster& dem_raster, 
                   Raster& out_raster,
                   RadarGridParameters& radar_grid, 
                   Orbit& orbit,
@@ -87,7 +87,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   Raster * out_nlooks_raster,
                   rtcMemoryMode memory_mode_enum)  except +
 
-    void facetRTC(Product& product, 
+    void computeRtc(Product& product, 
                   Raster& dem_raster, 
                   Raster& out_raster,
                   char frequency,

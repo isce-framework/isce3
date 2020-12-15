@@ -76,7 +76,7 @@ runconfig:
                 output_type: gamma0
 
                 # OPTIONAL - Choices:
-                # "david_small" (default)
+                # "bilinear_distribution" (default)
                 # "area_projection"
                 algorithm_type: area_projection
 

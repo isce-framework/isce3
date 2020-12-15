@@ -270,69 +270,73 @@ namespace isce3 { namespace cuda {
 
     namespace geometry {
 
-        void facetRTC(isce3::product::Product& product,
-                      isce3::io::Raster& dem,
-                      isce3::io::Raster& out_raster,
-                      char frequency) {
+void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem,
+                isce3::io::Raster& out_raster, char frequency)
+{
 
-            isce3::core::Ellipsoid ellps_h;
-            isce3::core::Orbit orbit_h(product.metadata().orbit());
-            isce3::product::RadarGridParameters radarGrid(product, frequency);
-            isce3::geometry::Topo topo_h(product, frequency, true);
-            const isce3::core::LookSide lookDirection = product.lookSide();
+    isce3::core::Ellipsoid ellps_h;
+    isce3::core::Orbit orbit_h(product.metadata().orbit());
+    isce3::product::RadarGridParameters radarGrid(product, frequency);
+    isce3::geometry::Topo topo_h(product, frequency, true);
+    const isce3::core::LookSide lookDirection = product.lookSide();
 
-            // Initialize other ISCE objects
-            isce3::core::Peg peg;
-            isce3::core::Pegtrans ptm;
-            ptm.radarToXYZ(ellps_h, peg);
+    // Initialize other ISCE objects
+    isce3::core::Peg peg;
+    isce3::core::Pegtrans ptm;
+    ptm.radarToXYZ(ellps_h, peg);
 
-            const double start_h = radarGrid.sensingStart();
-            const double   end   = radarGrid.sensingStop();
-            const double pixazm_h = (end - start_h) / radarGrid.length(); // azimuth difference per pixel
-            const double r0_h = radarGrid.startingRange();
-            const double dr_h = radarGrid.rangePixelSpacing();
-            const float xbound_h = radarGrid.width()  - 1.;
-            const float ybound_h = radarGrid.length() - 1.;
-            checkCudaErrors(cudaMemcpyToSymbol(start,  &start_h, sizeof(start_h)));
-            checkCudaErrors(cudaMemcpyToSymbol(pixazm, &pixazm_h, sizeof(pixazm_h)));
-            checkCudaErrors(cudaMemcpyToSymbol(r0, &r0_h, sizeof(r0_h)));
-            checkCudaErrors(cudaMemcpyToSymbol(dr, &dr_h, sizeof(dr_h)));
-            checkCudaErrors(cudaMemcpyToSymbol(xbound, &xbound_h, sizeof(xbound_h)));
-            checkCudaErrors(cudaMemcpyToSymbol(ybound, &ybound_h, sizeof(ybound_h)));
+    const double start_h = radarGrid.sensingStart();
+    const double end = radarGrid.sensingStop();
+    const double pixazm_h = (end - start_h) /
+                            radarGrid.length(); // azimuth difference per pixel
+    const double r0_h = radarGrid.startingRange();
+    const double dr_h = radarGrid.rangePixelSpacing();
+    const float xbound_h = radarGrid.width() - 1.;
+    const float ybound_h = radarGrid.length() - 1.;
+    checkCudaErrors(cudaMemcpyToSymbol(start, &start_h, sizeof(start_h)));
+    checkCudaErrors(cudaMemcpyToSymbol(pixazm, &pixazm_h, sizeof(pixazm_h)));
+    checkCudaErrors(cudaMemcpyToSymbol(r0, &r0_h, sizeof(r0_h)));
+    checkCudaErrors(cudaMemcpyToSymbol(dr, &dr_h, sizeof(dr_h)));
+    checkCudaErrors(cudaMemcpyToSymbol(xbound, &xbound_h, sizeof(xbound_h)));
+    checkCudaErrors(cudaMemcpyToSymbol(ybound, &ybound_h, sizeof(ybound_h)));
 
-            // Output raster
-            auto out = std::make_unique<float[]>(radarGrid.size());
-            float* out_d;
-            checkCudaErrors(cudaMalloc(&out_d, radarGrid.size() * sizeof(float)));
+    // Output raster
+    auto out = std::make_unique<float[]>(radarGrid.size());
+    float* out_d;
+    checkCudaErrors(cudaMalloc(&out_d, radarGrid.size() * sizeof(float)));
 
-            // ------------------------------------------------------------------------
-            // Main code: decompose DEM into facets, compute RDC coordinates
-            // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // Main code: decompose DEM into facets, compute RDC coordinates
+    // ------------------------------------------------------------------------
 
-            // Create CPU-only  objects
-            isce3::geometry::DEMInterpolator dem_interp_h(0, isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
-            topo_h.computeDEMBounds(dem, dem_interp_h, 0, radarGrid.length()); // determine DEM bounds
+    // Create CPU-only  objects
+    isce3::geometry::DEMInterpolator dem_interp_h(
+            0, isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
+    topo_h.computeDEMBounds(dem, dem_interp_h, 0,
+                            radarGrid.length()); // determine DEM bounds
 
-            const float upsample_factor = computeUpsamplingFactor(dem_interp_h, ellps_h, radarGrid.rangePixelSpacing());
+    const float upsample_factor = computeUpsamplingFactor(
+            dem_interp_h, ellps_h, radarGrid.rangePixelSpacing());
 
-            float max_hgt, avg_hgt;
-            pyre::journal::info_t info("gpuRTC");
-            dem_interp_h.computeHeightStats(max_hgt, avg_hgt, info);
-            isce3::cuda::geometry::gpuDEMInterpolator flat_interp(avg_hgt);
+    float max_hgt, avg_hgt;
+    pyre::journal::info_t info("gpuRTC");
+    dem_interp_h.computeHeightStats(max_hgt, avg_hgt, info);
+    isce3::cuda::geometry::gpuDEMInterpolator flat_interp(avg_hgt);
 
-            // Create hostside device objects
-            isce3::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
-            isce3::core::Ellipsoid ellps(ellps_h);
-            isce3::cuda::core::Orbit orbit(orbit_h);
+    // Create hostside device objects
+    isce3::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
+    isce3::core::Ellipsoid ellps(ellps_h);
+    isce3::cuda::core::Orbit orbit(orbit_h);
 
-            // Convert LUT2d doppler to LUT1d
-            isce3::core::LUT1d<double> dop_h(product.metadata().procInfo().dopplerCentroid(frequency));
-            isce3::cuda::core::gpuLUT1d<double> dop(dop_h);
+    // Convert LUT2d doppler to LUT1d
+    isce3::core::LUT1d<double> dop_h(
+            product.metadata().procInfo().dopplerCentroid(frequency));
+    isce3::cuda::core::gpuLUT1d<double> dop(dop_h);
 
-            const size_t xmax = dem_interp.width()  * upsample_factor;
-            const size_t ymax = dem_interp.length() * upsample_factor;
+    const size_t xmax = dem_interp.width() * upsample_factor;
+    const size_t ymax = dem_interp.length() * upsample_factor;
 
-            dem_interp.initProjInterp();
+    dem_interp.initProjInterp();
 
 #define BLOCK_X 16
 #define BLOCK_Y 16
@@ -365,6 +369,6 @@ namespace isce3 { namespace cuda {
             checkCudaErrors(cudaMemcpy(&out[0], out_d, radarGrid.size() * sizeof(float),
                                        cudaMemcpyDeviceToHost));
             out_raster.setBlock(&out[0], 0, 0, radarGrid.width(), radarGrid.length());
-        }
+}
     }
 }}

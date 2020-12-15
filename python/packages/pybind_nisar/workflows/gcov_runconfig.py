@@ -60,11 +60,11 @@ class GCOVRunConfig(RunConfig):
             raise ValueError(err_str)
 
 
-        # only 2 RTC algorithms supported: david-small (default) & area-projection
+        # only 2 RTC algorithms supported: bilinear_distribution (default) & area-projection
         if rtc_dict['algorithm_type'] == "area_projection":
             rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
         else:
-            rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_DAVID_SMALL
+            rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION
 
         if rtc_dict['input_terrain_radiometry'] == "sigma0":
             rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID

@@ -25,9 +25,9 @@ void addbinding(py::enum_<rtcInputRadiometry> & pyInputRadiometry)
 void addbinding(py::enum_<rtcAlgorithm> & pyAlgorithm)
 {
     pyAlgorithm
-        .value("RTC_DAVID_SMALL", rtcAlgorithm::RTC_DAVID_SMALL)
-        .value("RTC_AREA_PROJECTION", rtcAlgorithm::RTC_AREA_PROJECTION)
-        ;
+            .value("RTC_BILINEAR_DISTRIBUTION",
+                   rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION)
+            .value("RTC_AREA_PROJECTION", rtcAlgorithm::RTC_AREA_PROJECTION);
 }
 
 void addbinding(py::enum_<rtcMemoryMode> & pyMemoryMode)
@@ -128,7 +128,7 @@ void addbinding_facet_rtc(pybind11::module& m)
                   isce3::geometry::rtcAreaMode, rtcAlgorithm, double, float,
                   float, isce3::io::Raster*, isce3::geometry::rtcMemoryMode,
                   isce3::core::dataInterpMethod, double, int, double>(
-                  &isce3::geometry::facetRTC),
+                  &isce3::geometry::computeRtc),
           py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
           py::arg("dem"), py::arg("output_raster"),
           py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
@@ -203,11 +203,11 @@ void addbinding_facet_rtc_bbox(pybind11::module& m)
                   float, isce3::io::Raster*, isce3::io::Raster*,
                   isce3::io::Raster*, isce3::geometry::rtcMemoryMode,
                   isce3::core::dataInterpMethod, double, int, double>(
-                  &isce3::geometry::facetRTC),
-          py::arg("dem_raster"), py::arg("output_raster"), py::arg("radar_grid"),
-          py::arg("orbit"), py::arg("input_dop"), py::arg("y0"), py::arg("dy"),
-          py::arg("x0"), py::arg("dx"), py::arg("geogrid_length"),
-          py::arg("geogrid_width"), py::arg("epsg"),
+                  &isce3::geometry::computeRtc),
+          py::arg("dem_raster"), py::arg("output_raster"),
+          py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
+          py::arg("y0"), py::arg("dy"), py::arg("x0"), py::arg("dx"),
+          py::arg("geogrid_length"), py::arg("geogrid_width"), py::arg("epsg"),
           py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
           py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
           py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,

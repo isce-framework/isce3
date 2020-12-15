@@ -48,7 +48,8 @@ public:
      * @param[in]  output_mode         Geocode method
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+     * raster
      * @param[in]  exponent            Exponent to be applied to the input data.
      * The value 0 indicates that the the exponent is based on the data type of
      * the input raster (1 for real and 2 for complex rasters).
@@ -56,8 +57,8 @@ public:
      * Radar data with RTC area factor below this limit are ignored.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
      * direction) used to compute the radiometric terrain correction RTC.
-     * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
-     * RTC_AREA_PROJECTION)
+     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
+     * or RTC_AREA_PROJECTION)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -66,7 +67,7 @@ public:
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute
      * out_geo_nlooks.
-     * @param[out] out_off_diag_terms  Output raster containing the 
+     * @param[out] out_off_diag_terms  Output raster containing the
      * off-diagonal terms of the covariance matrix.
      * @param[out] out_geo_vertices      Raster to which the radar-grid
      * positions (range and azimuth) of the geogrid pixels vertices will be
@@ -141,13 +142,14 @@ public:
      * @param[in]  output_mode         Output mode
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input raster
+     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
+     * raster
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit are ignored.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
      * direction) used to compute the radiometric terrain correction RTC.
-     * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
-     * RTC_AREA_PROJECTION)
+     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
+     * or RTC_AREA_PROJECTION)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -155,7 +157,7 @@ public:
      * below this limit will be set to NaN
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute out_nlooks.
-     * @param[out] out_off_diag_terms  Output raster containing the 
+     * @param[out] out_off_diag_terms  Output raster containing the
      * off-diagonal terms of the covariance matrix.
      * @param[out] out_geo_vertices       Raster to which the radar-grid
      * positions (range and azimuth) of the geogrid pixels vertices will be

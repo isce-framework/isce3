@@ -58,12 +58,12 @@ runconfig:
 
             rtc:                                # {optional} RTC options
                 output_type: gamma0               # {optional} Choices: “None” (to turn off RTC) or “gamma0”
-                algorithm_type: area_projection   # {optional} Choices: "area-projection" (default) and "David-Small"
+                algorithm_type: area_projection   # {optional} Choices: "area_projection" (default) and "bilinear_distribution"
                 input_terrain_radiometry: sigma0  # {optional} Choices: "beta0" and "sigma0"
                 rtc_min_value_db: -30             # {optional} Minimum RTC area factor in dB
 
             geocode:        #{optional} Mechanism to specify output posting and DEM
-                algorithm_type: area_projection # {optional} Choices: "area-projection" (default) and "interp"
+                algorithm_type: area_projection # {optional} Choices: "area_projection" (default) and "interp"
                 memory_mode: auto                # {optional} Choices: "auto", "single-block" "blocks-geogrid", and "blocks-geogrid-and-radargrid"
                 geogrid_upsampling: 1      # {optional} Processing upsampling factor on top of the input geogrid
                 save_nlooks: True          # {optional} Save the number of looks used to compute GCOV

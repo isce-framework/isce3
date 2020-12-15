@@ -12,7 +12,7 @@ radar_grid_str_list = ['cropped', 'multilooked']
 
 # Create list of rtcAlgorithms
 rtc_algorithm_list = [
-        isce3.geometry.RtcAlgorithm.RTC_DAVID_SMALL,
+        isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION,
         isce3.geometry.RtcAlgorithm.RTC_AREA_PROJECTION]
 
 def test_rtc():
@@ -64,12 +64,12 @@ def test_rtc():
             # test removed because it requires high geogrid upsampling (too
             # slow)
             if (rtc_algorithm ==
-                        isce3.geometry.RtcAlgorithm.RTC_DAVID_SMALL and
+                        isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION and
                 radar_grid_str == 'cropped'):
                 continue
             elif (rtc_algorithm ==
-                       isce3.geometry.RtcAlgorithm.RTC_DAVID_SMALL):
-                filename = './rtc_david_small_' + radar_grid_str + '.bin'
+                       isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION):
+                filename = './rtc_bilinear_distribution_' + radar_grid_str + '.bin'
             else:
                 filename = './rtc_area_proj_' + radar_grid_str + '.bin'
             
@@ -94,13 +94,13 @@ def test_rtc():
             # test removed because it requires high geogrid upsampling (too
             # slow)
             if (rtc_algorithm ==
-                        isce3.geometry.RtcAlgorithm.RTC_DAVID_SMALL and
+                        isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION and
                 radar_grid_str == 'cropped'):
                 continue
             elif (rtc_algorithm ==
-                       isce3.geometry.RtcAlgorithm.RTC_DAVID_SMALL):
+                       isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION):
                 max_rmse = 0.7
-                filename = './rtc_david_small_' + radar_grid_str + '.bin'
+                filename = './rtc_bilinear_distribution_' + radar_grid_str + '.bin'
             else:
                 max_rmse = 0.1
                 filename = './rtc_area_proj_' + radar_grid_str + '.bin'

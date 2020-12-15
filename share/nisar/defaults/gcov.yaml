@@ -84,7 +84,7 @@ runconfig:
             # OPTIONAL - to control behavior of RTC module
             rtc:
                 # OPTIONAL - Choices:
-                # "david_small" (default)
+                # "bilinear_distribution" (default)
                 # "area_projection"
                 algorithm_type: area_projection
 

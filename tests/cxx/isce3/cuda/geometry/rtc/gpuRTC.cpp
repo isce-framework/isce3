@@ -20,7 +20,7 @@ TEST(TestRTC, RunRTC) {
                                 GDT_Float32, "ENVI");
  
     // Call RTC
-    isce3::cuda::geometry::facetRTC(product, dem, out_raster, 'A');
+    isce3::cuda::geometry::computeRtc(product, dem, out_raster, 'A');
 }
 
 TEST(TestRTC, CheckResults) {

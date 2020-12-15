@@ -73,7 +73,7 @@ runconfig:
             rtc: # RTC options
                 output_type: enum('gamma0', required=False)
                
-                algorithm_type: enum('area_projection', 'david_small', required=False)
+                algorithm_type: enum('area_projection', 'bilinear_distribution', required=False)
                
                 input_terrain_radiometry: enum('beta0', 'sigma0', required=False)
                

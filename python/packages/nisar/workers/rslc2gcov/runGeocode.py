@@ -350,9 +350,8 @@ def _runGeocodeFrequency(self, frequency):
         kwargs['memory_mode'] = memory_mode
 
     if (rtc_algorithm_type is not None and
-        ('DAVID' in rtc_algorithm_type.upper() or
-         'SMALL' in rtc_algorithm_type.upper())):
-        kwargs['rtc_algorithm'] = 'RTC_DAVID_SMALL'
+        'BILINEAR' in rtc_algorithm_type.upper()):
+        kwargs['rtc_algorithm'] = 'RTC_BILINEAR_DISTRIBUTION'
     elif rtc_algorithm_type is not None:
         kwargs['rtc_algorithm'] = 'RTC_AREA_PROJECTION'
 

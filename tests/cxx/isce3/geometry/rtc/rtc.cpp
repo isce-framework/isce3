@@ -13,7 +13,7 @@ std::set<std::string> radar_grid_str_set = {"cropped", "multilooked"};
 
 // Create set of rtcAlgorithms
 std::set<isce3::geometry::rtcAlgorithm> rtc_algorithm_set = {
-        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL,
+        isce3::geometry::rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION,
         isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION};
 
 TEST(TestRTC, RunRTC) {
@@ -68,13 +68,14 @@ TEST(TestRTC, RunRTC) {
             std::string filename;
             // test removed because it requires high geogrid upsampling (too
             // slow)
-            if (rtc_algorithm ==
-                        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
+            if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                         RTC_BILINEAR_DISTRIBUTION &&
                 radar_grid_str == "cropped") {
                 continue;
-            } else if (rtc_algorithm ==
-                       isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
-                filename = "./rtc_david_small_" + radar_grid_str + ".bin";
+            } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                                RTC_BILINEAR_DISTRIBUTION) {
+                filename = "./rtc_bilinear_distribution_" + radar_grid_str +
+                           ".bin";
             } else {
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
             }
@@ -86,9 +87,9 @@ TEST(TestRTC, RunRTC) {
                                         "ENVI");
 
             // Call RTC
-            isce3::geometry::facetRTC(radar_grid, orbit, dop, dem, out_raster,
-                                     inputRadiometry, rtc_area_mode,
-                                     rtc_algorithm, geogrid_upsampling);
+            isce3::geometry::computeRtc(radar_grid, orbit, dop, dem, out_raster,
+                                        inputRadiometry, rtc_area_mode,
+                                        rtc_algorithm, geogrid_upsampling);
         }
     }
 }
@@ -105,14 +106,15 @@ TEST(TestRTC, CheckResults) {
 
             // test removed because it requires high geogrid upsampling (too
             // slow)
-            if (rtc_algorithm ==
-                        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
+            if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                         RTC_BILINEAR_DISTRIBUTION &&
                 radar_grid_str == "cropped") {
                 continue;
-            } else if (rtc_algorithm ==
-                       isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
+            } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                                RTC_BILINEAR_DISTRIBUTION) {
                 max_rmse = 0.7;
-                filename = "./rtc_david_small_" + radar_grid_str + ".bin";
+                filename = "./rtc_bilinear_distribution_" + radar_grid_str +
+                           ".bin";
             } else {
                 max_rmse = 0.1;
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
