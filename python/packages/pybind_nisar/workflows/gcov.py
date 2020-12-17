@@ -66,7 +66,9 @@ def run(cfg):
 
     # unpack pre-processing
     preprocess = cfg['processing']['pre_process']
-    radar_grid_nlooks = preprocess['range_looks'] * preprocess['azimuth_looks']
+    rg_look = preprocess['range_looks']
+    az_look = preprocess['azimuth_looks']
+    radar_grid_nlooks = rg_look * az_look
 
     # init parameters shared between frequencyA and frequencyB sub-bands
     slc = SLC(hdf5file=input_hdf5)
@@ -87,6 +89,8 @@ def run(cfg):
 
         # unpack frequency dependent parameters
         radar_grid = slc.getRadarGrid(frequency)
+        if radar_grid_nlooks > 1:
+            radar_grid = radar_grid.multilook(az_look, rg_look)
         geogrid = geogrids[frequency]
         pol_list = freq_pols[frequency]
 
