@@ -36,6 +36,7 @@ def check_error(f_test, dtype, tol, test_type):
     # Retrieve data
 
     test = np.fromfile(f_test, dtype=dtype).astype('float64')
+    test = np.ma.masked_array(test, mask=np.abs(test) > 999.0)
 
     # Calculate average error
     error = np.nansum(test * test)

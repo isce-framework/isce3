@@ -127,7 +127,7 @@ public:
                  double azshift=0.0, double rgshift=0.0);
 
     /** NoData Value*/
-    const double NULL_VALUE = std::numeric_limits<double>::quiet_NaN();
+    const double NULL_VALUE =  -1000000.0;
 
     // Getters for isce objects
 

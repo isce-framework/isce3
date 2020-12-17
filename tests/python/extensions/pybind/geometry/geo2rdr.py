@@ -85,8 +85,11 @@ def test_validate():
         test_ds = gdal.Open(test_output, gdal.GA_ReadOnly)
         test_arr = test_ds.GetRasterBand(1).ReadAsArray()
 
+        # mask bad values
+        test_arr = np.ma.masked_array(test_arr, mask=np.abs(test_arr) > 999.0)
+
         # accumulate error
-        test_err = np.nansum(test_arr*test_arr)
+        test_err = np.sum(test_arr*test_arr)
 
         assert( test_err < 1e-9 ), f"{test_output} accumulated error fail"
 

@@ -62,13 +62,12 @@ TEST(Geo2rdrTest, CheckResults) {
             double rgoff, azoff;
             rgoffRaster.getValue(rgoff, j, i);
             azoffRaster.getValue(azoff, j, i);
-            // Skip null values
-            if (not std::isnan(rgoff)) {
-                rg_error += rgoff*rgoff;
-            }
-            if (not std::isnan(azoff)) {
-                az_error += azoff*azoff;
-            }
+            // Accumulate error
+            if (std::abs(rgoff) > 999.0 || std::abs(azoff) > 999.0)
+                continue;
+            // Accumulate error
+            rg_error += rgoff*rgoff;
+            az_error += azoff*azoff;
         }
     }
     // Check errors; azimuth errors tend to be a little larger
