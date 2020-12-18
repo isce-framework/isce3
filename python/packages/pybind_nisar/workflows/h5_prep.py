@@ -14,33 +14,48 @@ from pybind_nisar.h5 import cp_h5_meta_data
 from pybind_nisar.products.readers import SLC
 
 
-def run(cfg):
+def run(cfg: dict) -> dict:
     '''
     Copy metadata from src hdf5 and prepare datasets
+    Returns dict of output path(s); used for InSAR workflow
     '''
     info_channel = journal.info("h5_prep.run")
     info_channel.log('preparing HDF5')
 
-    output_paths = cfg['ProductPathGroup']['SASOutputFile']
-    product_types = cfg['PrimaryExecutable']['ProductType']
+    output_path = cfg['ProductPathGroup']['SASOutputFile']
+    scratch = cfg['ProductPathGroup']['ScratchPath']
+    product_type = cfg['PrimaryExecutable']['ProductType']
 
-    # if output is string, insert into list
-    output_paths = cfg['ProductPathGroup']['SASOutputFile']
-    if not isinstance(output_paths, list):
-        output_paths = [output_paths]
+    # dict keying product type with list with possible product type(s)
+    insar_products = ['RIFG', 'RUNW', 'GUNW', 'POLAR']
+    product_dict = {'POLAR':insar_products[:-1],
+                    'GUNW':insar_products[:-1],
+                    'RUNW':insar_products[:-2],
+                    'RIFG':[insar_products[0]],
+                    'GCOV':['GCOV'],
+                    'GSLC':['GSLC']}
 
-    # if product type is string, insert into list
-    product_types = cfg['PrimaryExecutable']['ProductType']
-    if not isinstance(product_types, list):
-        product_types = [product_types]
+    # dict keying product type to dict of product type key(s) to output(s)
+    # following lambda creates subproduct specific output path
+    insar_path = lambda out_path, product :\
+            os.path.join(os.path.dirname(out_path), product+'_'+os.path.basename(out_path))
+    h5_paths = {'POLAR':dict(zip(insar_products[:-1],
+                                 [insar_path(output_path, product) for product in insar_products[:-1]])),
+                'GUNW':{'RIFG':f'{scratch}/RIFG.h5', 'RUNW':f'{scratch}/RUNW.h5', 'GUNW':output_path},
+                'RUNW':{'RIFG':f'{scratch}/RIFG.h5', 'RUNW':output_path},
+                'RIFG':{'RIFG':output_path},
+                'GCOV':{'GCOV':output_path},
+                'GSLC':{'GSLC':output_path}}
 
-    # Create HDF5 for each product type
-    for output_path, product_type in zip(output_paths, product_types):
-        cp_geocode_meta(cfg, output_path, product_type)
-        prep_ds(cfg, output_path, product_type)
+
+    for sub_prod_type in product_dict[product_type]:
+        out_path = h5_paths[product_type][sub_prod_type]
+        cp_geocode_meta(cfg, out_path, sub_prod_type)
+        prep_ds(cfg, out_path, sub_prod_type)
 
     info_channel.log('successfully prepared HDF5')
 
+    return h5_paths[product_type]
 
 def cp_geocode_meta(cfg, output_hdf5, dst):
     '''
@@ -147,7 +162,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         if dst == 'GUNW':
             exclude_args = ['frequencyA', 'frequencyB', 'azimuthChirpWeighting',
                             'effectiveVelocity', 'rangeChirpWeighting', 'slantRange', 'zeroDopplerTime']
-        elif (dst == 'RUNW' or dst == 'RIFG'):
+        elif dst in ['RUNW', 'RIFG']:
             exclude_args = ['frequencyA', 'frequencyB',
                             'azimuthChirpWeighting',
                             'effectiveVelocity', 'rangeChirpWeighting']
@@ -340,9 +355,6 @@ def prep_ds_insar(cfg, dst, dst_h5):
     for freq in freq_pols.keys():
         pol_list = freq_pols[freq]
 
-        grid_swath = 'grids'
-        shape = (geogrids[freq].length, geogrids[freq].width)
-
         if dst in ['RUNW', 'RIFG']:
             grid_swath = 'swaths'
 
@@ -352,7 +364,10 @@ def prep_ds_insar(cfg, dst, dst_h5):
             src_h5 = h5py.File(input_h5, 'r', libver='latest', swmr=True)
             dset = src_h5[os.path.join(common_parent_path, f'SLC/swaths/frequency{freq}/HH')]
             az_lines, rg_cols = dset.shape
-            shape = (int(az_lines / az_looks), int(rg_cols / rg_looks))
+            shape = (az_lines // az_looks, rg_cols // rg_looks)
+        else:
+            grid_swath = 'grids'
+            shape = (geogrids[freq].length, geogrids[freq].width)
 
         # Create grid or swath group depending on product
         dst_h5[os.path.join(common_parent_path, f'{dst}')].create_group(grid_swath)
@@ -500,8 +515,14 @@ def prep_ds_insar(cfg, dst, dst_h5):
                                      descr=descr, units=" ")
             else:
                 descr = f"Interferogram between {pol} layers"
-                _create_datasets(dst_h5[intf_path], shape, np.complex64, f"{pol}", chunks=(128, 128),
+                _create_datasets(dst_h5[intf_path], shape, np.complex64, "wrappedPhase",
+                                 chunks=(128, 128),
                                  descr=descr, units="radians")
+                if (az_looks, rg_looks) != (1,1):
+                    descr = f"Coherence between {pol} layers"
+                    _create_datasets(dst_h5[intf_path], shape, np.float32, "phaseSigmaCoherence",
+                                     chunks=(128, 128),
+                                     descr=descr, units=None)
 
             # Add pixel offset datasets
             descr = f"Along track offset for {pol} layer"

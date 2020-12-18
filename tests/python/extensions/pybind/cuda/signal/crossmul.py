@@ -59,7 +59,7 @@ def test_validate_no_filter():
 
     # check if interferometric phase is very small (should be zero)
     # not as small as CPU due to A*conj(A) in CUDA not yielding 0.0e0 imag component
-    npt.assert_array_less(data, 1.0e-7)
+    npt.assert_array_less(data, 1.0e-6)
 
 
 def test_run_az_filter():
@@ -88,7 +88,7 @@ def test_validate_az_filter():
 
     # check if interferometric phase is very small (should be zero)
     # not as small as CPU due to A*conj(A) in CUDA not yielding 0.0e0 imag component
-    npt.assert_allclose(data, 0., atol=1.0e-7)
+    npt.assert_allclose(data, 0., atol=1.0e-6)
 
 
 if __name__ == '__main__':

@@ -8,12 +8,12 @@ runconfig:
         InputFileGroup:
             # REQUIRED - Two NISAR L1B RSLC formatted HDF5 files
             InputFilePath:
-            - ISCETEST/winnipeg.h5
-            - ISCETEST/winnipeg.h5
+            - @ISCETEST@/winnipeg.h5
+            - @ISCETEST@/winnipeg.h5
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: ISCETEST/winnipeg_dem.tif
+            DEMFile: @ISCETEST@/winnipeg_dem.tif
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -24,10 +24,10 @@ runconfig:
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: [to_be_populated_by_test_code]
+            SASOutputFile: @TEST_OUTPUT@
 
         PrimaryExecutable:
-            ProductType: [GUNW]
+            ProductType: @TEST_PRODUCT_TYPES@
 
         DebugLevelGroup:
             DebugSwitch: false
@@ -114,8 +114,6 @@ runconfig:
 
             dem_margin: 0.1
 
-            flatten: True
-
             resample:
                 lines_per_tile: 1
 
@@ -132,7 +130,7 @@ runconfig:
                 algorithm: frequency                # {optional} Algorithm for cross-correlation computation (spatial
 
             crossmul:
-                beta: 0.25
-                azimuth_bandwidth: 75
+                coregistered_slc_path: @ISCETEST@/winnipeg.h5
                 range_looks: 11
                 azimuth_looks: 11
+                flatten: False

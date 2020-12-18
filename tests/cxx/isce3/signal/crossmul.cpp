@@ -95,7 +95,7 @@ TEST(Crossmul, RunCrossmul)
           }
       }
 
-      ASSERT_LT(max_err, 1.0e-9);
+      ASSERT_LT(max_err, 1.0e-6);
 }
 
 TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
@@ -179,7 +179,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-9);
+    ASSERT_LT(max_err, 1.0e-6);
 }
          
 

@@ -14,7 +14,19 @@ class InsarRunConfig(Geo2rdrRunConfig):
         '''
         Check submodule paths from YAML
         '''
+        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
+
+        # for each submodule check if user path for input data assigned
+        # if not assigned, assume it'll be in scratch
         if 'topo_path' not in self.cfg['processing']['geo2rdr']:
-            self.cfg['processing']['geo2rdr']['topo_path'] = self.cfg['ProductPathGroup']['ScratchPath']
+            self.cfg['processing']['geo2rdr']['topo_path'] = scratch_path
         if 'offset_dir' not in self.cfg['processing']['resample']:
-            self.cfg['processing']['resample']['offset_dir'] = self.cfg['ProductPathGroup']['ScratchPath']
+            self.cfg['processing']['resample']['offset_dir'] = scratch_path
+        if 'coregistered_slc_path' not in self.cfg['processing']['crossmul']:
+            self.cfg['processing']['crossmul']['coregistered_slc_path'] = scratch_path
+        flatten = self.cfg['processing']['crossmul']['flatten']
+        if flatten:
+            if isinstance(flatten, bool):
+                self.cfg['processing']['crossmul']['flatten'] = scratch_path
+        else:
+            self.cfg['processing']['crossmul']['flatten'] = None

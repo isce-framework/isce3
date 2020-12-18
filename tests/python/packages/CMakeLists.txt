@@ -12,6 +12,7 @@ nisar/workflows/geo2rdr.py
 nisar/workflows/crossmul.py
 nisar/workflows/resampSlc.py
 nisar/workflows/geocode.py
+pybind_nisar/workflows/crossmul.py
 pybind_nisar/workflows/focus.py
 pybind_nisar/workflows/stage_dem.py
 pybind_nisar/workflows/gcov.py
@@ -60,6 +61,8 @@ set_tests_properties(test.python.pkg.pybind_nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.pybind_nisar.workflows.rdr2geo)
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.resample_slc PROPERTIES
              DEPENDS test.python.pkg.pybind_nisar.workflows.geo2rdr)
+set_tests_properties(test.python.pkg.pybind_nisar.workflows.crossmul PROPERTIES
+             DEPENDS test.python.pkg.pybind_nisar.workflows.resample_slc)
 
 if(WITH_CUDA)
     set_tests_properties(test.python.pkg.nisar.workflows.cuGeo2rdr PROPERTIES

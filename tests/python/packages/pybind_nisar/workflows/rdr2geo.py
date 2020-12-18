@@ -17,10 +17,12 @@ def test_rdr2geo_run():
     test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
     # load text then substitude test directory paths since data dir is read only
     with open(test_yaml) as fh_test_yaml:
-        test_yaml = ''.join(
-            [line.replace('ISCETEST', iscetest.data) for line in fh_test_yaml])
+        test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data).\
+                replace('@TEST_OUTPUT@', 'rifg.h5').\
+                replace('@TEST_PRODUCT_TYPES@', 'RIFG')
+
     # create CLI input namespace with yaml text instead of file path
-    args = argparse.Namespace(run_config_path=test_yaml, rdr2geo='', log_file=False)
+    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
 
     # init runconfig object
     runconfig = Rdr2geoRunConfig(args)

@@ -23,10 +23,12 @@ runconfig:
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            SASOutputFile: list(str(), min=1, max=3)
+            # In POLAR mode, GUNW, RIFG, and RUNW will be prepended to SASOutputFile
+            SASOutputFile: str()
 
         PrimaryExecutable:
-            ProductType: list(enum('GUNW', 'RIFG', 'RUNW'), min=1, max=3)
+            # POLAR will produce full GUNW, RIFG, and RUNW HDF5 products
+            ProductType: enum('GUNW', 'RIFG', 'RUNW', 'POLAR')
 
         DebugLevelGroup:
             DebugSwitch: bool()
@@ -108,8 +110,6 @@ runconfig:
 
             dem_margin: num(required=False)
 
-            flatten: bool()
-
             resample:
                 lines_per_tile: int(min=1, required=False)
 
@@ -125,11 +125,7 @@ runconfig:
                 method: enum('complex', 'amplitude')
                 algorithm: enum('frequency','spatial')
 
-            crossmul:
-                beta: num(min=0, max=1, required=False)
-                azimuth_bandwidth: num(required=False)
-                range_looks: int(min=1,  required=False)
-                azimuth_looks: int(min=1,  required=False)
+            crossmul: include('crossmul_options', required=False)
 
         # To setup type of worker
         worker:
@@ -147,6 +143,29 @@ runconfig:
         logging: include('log_nfo', required=False)
 
 ---
+crossmul_options:
+    # Path to HDF5 file or directory with coregistered SLCs
+    # If directory then the following directory tree is required:
+    # coregistered_slc_path
+    # └── coregistered_secondary
+    #      └── freq(A,B)
+    #          └── (HH, HV, VH, VV)
+    #              └── coregistered_secondary.slc
+    coregistered_slc_path: str(required=False)
+    range_looks: int(min=1,  required=False)
+    azimuth_looks: int(min=1,  required=False)
+    # Flatten is False disables flatten
+    # Flatten is True runs flatten and sets data directory to scratch
+    # Flatten is str assumes value is path to data directory
+    # Data directory contains range offset rasters
+    # The following directory tree is required:
+    # flatten
+    # └── geo2rdr
+    #     └── freq(A,B)
+    #         └── range.off
+    # Flatten defaults to True
+    flatten: any(bool(), str(min=1))
+
 geo2rdr_options:
     threshold: num(min=1.0e-9, max=1.0e-3, required=False)
     maxiter: int(min=10, max=50, required=False)

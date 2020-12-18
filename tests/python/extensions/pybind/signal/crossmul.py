@@ -58,7 +58,7 @@ def test_validate_no_filter():
     data = np.angle(np.fromfile('igram.int', dtype=np.complex64))
 
     # check if interferometric phase is very small (should be zero)
-    npt.assert_array_less(data, 1.0e-9)
+    npt.assert_array_less(data, 1.0e-6)
 
 
 def test_run_az_filter():
@@ -86,7 +86,7 @@ def test_validate_az_filter():
     data = np.angle(np.fromfile('igram_az.int', dtype=np.complex64))
 
     # check if interferometric phase is very small (should be zero)
-    npt.assert_array_less(data, 1.0e-9)
+    npt.assert_array_less(data, 1.0e-6)
 
 
 if __name__ == '__main__':

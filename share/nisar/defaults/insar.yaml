@@ -119,8 +119,6 @@ runconfig:
 
             dem_margin:
 
-            flatten: True
-
             resample:
                 lines_per_tile: 1
 
@@ -137,7 +135,6 @@ runconfig:
                 algorithm: frequency                # {optional} Algorithm for cross-correlation computation (spatial
 
             crossmul:
-                beta: 0.25
-                azimuth_bandwidth: 75
                 range_looks: 11
                 azimuth_looks: 11
+                flatten: True

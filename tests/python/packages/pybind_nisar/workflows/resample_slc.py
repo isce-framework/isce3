@@ -19,8 +19,9 @@ def test_resample_slc_run():
 
     # Load text and substitute directory path
     with open(test_yaml) as fh_test_yaml:
-        test_yaml = ''.join(
-            [line.replace('ISCETEST', iscetest.data) for line in fh_test_yaml])
+        test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data).\
+                replace('@TEST_OUTPUT@', 'rifg.h5').\
+                replace('@TEST_PRODUCT_TYPES@', 'RIFG')
 
     # create CLI input namespace
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)

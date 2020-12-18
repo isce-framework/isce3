@@ -7,9 +7,9 @@ runconfig:
 
         InputFileGroup:
             InputFilePath:
-            - ISCETEST/envisat.h5
+            - @ISCETEST@/envisat.h5
         DynamicAncillaryFileGroup:
-            DEMFile: ISCETEST/geocode/zeroHeightDEM.geo
+            DEMFile: @ISCETEST@/geocode/zeroHeightDEM.geo
         ProductPathGroup:
             # Directory where PGE will place results. Irrelevant to SAS.
             ProductPath: '.'

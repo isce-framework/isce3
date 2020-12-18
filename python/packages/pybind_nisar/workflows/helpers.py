@@ -7,9 +7,11 @@ import os
 import pathlib
 
 import gdal
+import h5py
 
 import journal
 
+from pybind_nisar.products.readers import SLC
 
 def deep_update(original, update):
     '''
@@ -103,15 +105,15 @@ def check_log_dir_writable(log_file_path: str):
         raise PermissionError(err_str)
 
 
-def check_mode_directory_tree(parent_dir: str, mode: str, frequency_list: list):
+def check_mode_directory_tree(parent_dir: str, mode: str, frequency_list: list, pols: dict = {}):
     '''
     Checks existence parent directory and sub-directories.
     Sub-directories made from mode sub_dir + frequency_list.
     Expected directory tree:
     outdir/
     └── mode/
-       ├── freqA/
-       └── freqB/
+        └── freq(A,B)
+            └── (HH, HV, VH, VV)
     '''
     error_channel = journal.error('helpers.check_directory_tree')
 
@@ -150,3 +152,69 @@ def check_mode_directory_tree(parent_dir: str, mode: str, frequency_list: list):
             err_str = f"{str(freq_dir)} not a valid path"
             error_channel.log(err_str)
             raise NotADirectoryError(err_str)
+
+        # if no polarizations given continue to check next frequency
+        if not pols:
+            continue
+
+        # check if frequency in polarization dict
+        if freq not in pols:
+            err_str = f"No key in polarization dict for frequency: {freq}"
+            err_channel.log(err_str)
+            raise KeyError(err_str)
+
+        # check if polarization directory exists
+        for pol in pols[freq]:
+            pol_dir = freq_dir / pol
+            if not pol_dir.is_dir():
+                err_str = f"{str(pol_dir)} not a valid path"
+                error_channel.log(err_str)
+                raise NotADirectoryError(err_str)
+
+
+def check_hdf5_freq_pols(h5_path: str, freq_pols: dict):
+    '''
+    Check if frequency (keys) and polarizations (items) exist in HDF5
+    Expected HDF5 structure:
+    swath or grid group/
+    └── freq(A,B) group
+        └── (HH, HV, VH, VV) dataset
+    '''
+    error_channel = journal.error('helpers.check_hdf5_freq_pols')
+
+    # attempt to open HDF5
+    try:
+        h5_obj = h5py.File(h5_path, 'r', libver='latest', swmr=True)
+    except:
+        err_str = f"h5py unable to open {h5_path}"
+        err_channel.log(err_str)
+        raise ValueError(err_str)
+
+    # use with to ensure h5_obj closes
+    with h5_obj:
+        slc = SLC(hdf5file=h5_path)
+        if slc.productType.startswith('G'):
+            group_path = slc.GridPath
+        else:
+            group_path = slc.SwathPath
+
+        # get swath/grid group from hdf5
+        group = h5_obj[group_path]
+
+        # check if frequencies in group
+        for freq in freq_pols:
+            freq_str = f"frequency{freq}"
+            if freq_str not in group:
+                err_str = f"{freq} not found in swath/grid group of {h5_path}"
+                err_channel.log(err_str)
+                raise ValueError(err_str)
+
+            # get frequency group from swath/grid group
+            freq_group = group[freq_str]
+
+            # check if polarizations in group
+            for pol in freq_pols[freq]:
+                if pol not in freq_group:
+                    err_str = f"{pol} not found in {freq} group of swath/grid group of {h5_path}"
+                    err_channel.log(err_str)
+                    raise ValueError(err_str)

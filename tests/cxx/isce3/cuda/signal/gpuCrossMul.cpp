@@ -95,7 +95,7 @@ TEST(gpuCrossmul, Crossmul)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-7);
+    ASSERT_LT(max_err, 1.0e-6);
 }
 
 
@@ -180,7 +180,7 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-7);
+    ASSERT_LT(max_err, 1.0e-6);
 }
 
 
