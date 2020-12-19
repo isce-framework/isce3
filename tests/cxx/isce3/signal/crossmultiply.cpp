@@ -46,7 +46,7 @@ TEST(CrossMultiply, RunCrossMultiply)
 
     EXPECT_EQ(crossmulObj.nrows(), length);
     EXPECT_EQ(crossmulObj.ncols(), width);
-    EXPECT_EQ(crossmulObj.upsample(), upsample);
+    EXPECT_EQ(crossmulObj.upsample_factor(), upsample);
     EXPECT_GE(crossmulObj.fftsize(), width);
 
     // form the interferogram
@@ -110,7 +110,7 @@ TEST(CrossMultiply, FlattenInterferogram)
 
     EXPECT_EQ(crossmulObj.nrows(), length);
     EXPECT_EQ(crossmulObj.ncols(), width);
-    EXPECT_EQ(crossmulObj.upsample(), upsample);
+    EXPECT_EQ(crossmulObj.upsample_factor(), upsample);
     EXPECT_GE(crossmulObj.fftsize(), width);
 
     // form the interferogram and flatten it

@@ -28,7 +28,7 @@ public:
 
     int ncols() const { return _ncols; }
 
-    int upsample() const { return _upsample; }
+    int upsample_factor() const { return _upsampleFactor; }
 
     int fftsize() const { return _fftsize; }
 
@@ -43,15 +43,17 @@ public:
      * \param[in]  ref_slc       Reference SLC
      * \param[in]  sec_slc       Secondary SLC
      */
-    void
-    crossmultiply(isce3::core::EArray2D<std::complex<float>>& out_ifgram,
-                  const isce3::core::EArray2D<std::complex<float>>& ref_slc,
-                  const isce3::core::EArray2D<std::complex<float>>& sec_slc);
+    void crossmultiply(
+            Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> out_ifgram,
+            const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>&
+                    ref_slc,
+            const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>&
+                    sec_slc);
 
 private:
     int _nrows;
     int _ncols;
-    int _upsample;
+    int _upsampleFactor;
     int _fftsize;
 
     isce3::core::EArray2D<std::complex<float>> _ref_slc;

@@ -2,9 +2,10 @@
 
 #include <isce3/except/Error.h>
 
-void isce3::signal::flatten(isce3::core::EArray2D<std::complex<float>>& ifgram,
-                            const isce3::core::EArray2D<double>& range_offset,
-                            double range_spacing, double wavelength)
+void isce3::signal::flatten(
+        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> ifgram,
+        const Eigen::Ref<const isce3::core::EArray2D<double>>& range_offset,
+        double range_spacing, double wavelength)
 {
     if (range_offset.rows() != ifgram.rows()) {
         throw isce3::except::DomainError(

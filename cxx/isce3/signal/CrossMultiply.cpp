@@ -22,7 +22,7 @@ CrossMultiply::CrossMultiply(int nrows, int ncols, int upsample)
           }
           return ncols;
       }()),
-      _upsample([=]() {
+      _upsampleFactor([=]() {
           if (upsample < 1) {
               throw isce3::except::DomainError(ISCE_SRCINFO(),
                                                "upsampling factor must be > 0");
@@ -32,23 +32,25 @@ CrossMultiply::CrossMultiply(int nrows, int ncols, int upsample)
       _fftsize(isce3::fft::nextFastPower(ncols)), _ref_slc(_nrows, _fftsize),
       _sec_slc(_nrows, _fftsize), _ref_slc_spec(_nrows, _fftsize),
       _sec_slc_spec(_nrows, _fftsize),
-      _ref_slc_up(_nrows, _fftsize * _upsample),
-      _sec_slc_up(_nrows, _fftsize * _upsample),
-      _ref_slc_up_spec(_nrows, _fftsize * _upsample),
-      _sec_slc_up_spec(_nrows, _fftsize * _upsample),
-      _ifgram_up(_nrows, _fftsize * _upsample)
+      _ref_slc_up(_nrows, _fftsize * _upsampleFactor),
+      _sec_slc_up(_nrows, _fftsize * _upsampleFactor),
+      _ref_slc_up_spec(_nrows, _fftsize * _upsampleFactor),
+      _sec_slc_up_spec(_nrows, _fftsize * _upsampleFactor),
+      _ifgram_up(_nrows, _fftsize * _upsampleFactor)
 {
     // make forward and inverse fft plans
     _signal.forwardRangeFFT(_ref_slc.data(), _ref_slc_spec.data(), _fftsize,
                             _nrows);
     _signal.inverseRangeFFT(_ref_slc_up_spec.data(), _ref_slc_up.data(),
-                            _fftsize * _upsample, _nrows);
+                            _fftsize * _upsampleFactor, _nrows);
 }
 
 void CrossMultiply::crossmultiply(
-        isce3::core::EArray2D<std::complex<float>>& ifgram,
-        const isce3::core::EArray2D<std::complex<float>>& ref_slc,
-        const isce3::core::EArray2D<std::complex<float>>& sec_slc)
+        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> ifgram,
+        const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>&
+                ref_slc,
+        const Eigen::Ref<const isce3::core::EArray2D<std::complex<float>>>&
+                sec_slc)
 {
     // sanity checks
     if (ref_slc.rows() != _nrows) {
@@ -81,7 +83,7 @@ void CrossMultiply::crossmultiply(
                 ISCE_SRCINFO(), "Number of columns in output interferogram "
                                 "must be the same as the instance ncols.");
     }
-    if (_upsample == 1) {
+    if (_upsampleFactor == 1) {
 
         ifgram = ref_slc * sec_slc.conjugate();
 
@@ -101,8 +103,8 @@ void CrossMultiply::crossmultiply(
 
         // look down by the upsample factor in range
         ifgram = isce3::signal::multilookSummed(
-                _ifgram_up.block(0, 0, _nrows, _ncols * _upsample), 1,
-                _upsample);
+                _ifgram_up.block(0, 0, _nrows, _ncols * _upsampleFactor), 1,
+                _upsampleFactor);
     }
 }
 

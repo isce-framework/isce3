@@ -32,6 +32,7 @@ io/gdal/raster.py
 io/raster.py
 signal/covariance.py
 signal/crossmul.py
+signal/crossmultiply.py
 product/radargridparameters.py
 product/swath.py
 unwrap/icu.py

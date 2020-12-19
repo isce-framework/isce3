@@ -47,6 +47,8 @@ io/io.cpp
 signal/signal.cpp
 signal/Covariance.cpp
 signal/Crossmul.cpp
+signal/CrossMultiply.cpp
+signal/flatten.cpp
 product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
