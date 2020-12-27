@@ -25,7 +25,7 @@ class Geo2rdrRunConfig(RunConfig):
         """
         error_channel = journal.error('Geo2rdrRunConfig.cli_arg_load')
 
-        self.cfg = defaultdict(helpers.autovivified_dict)
+        self.cfg = helpers.autovivified_dict
 
         # Valid input h5?
         if os.path.isfile(self.args.input_h5):

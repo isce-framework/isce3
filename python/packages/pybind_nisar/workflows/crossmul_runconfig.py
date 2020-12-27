@@ -111,7 +111,7 @@ class CrossmulRunConfig(RunConfig):
         # if flatten path provided check directory tree
         self.cfg['processing']['crossmul']['flatten'] = False
         if self.args.flatten_path is not None:
-            helpers.check_mode_directory_tree(self.args.flatten, 'geo2rdr', frequencies)
+            helpers.check_mode_directory_tree(self.args.flatten_path, 'geo2rdr', frequencies)
             self.cfg['processing']['crossmul']['flatten'] = self.args.flatten_path
 
     def yaml_check(self):

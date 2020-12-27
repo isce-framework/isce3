@@ -127,6 +127,9 @@ runconfig:
 
             crossmul: include('crossmul_options', required=False)
 
+            # Required for RUNW and full InSAR
+            phase_unwrap: include('icu_options', required=False)
+
         # To setup type of worker
         worker:
             # To prevent downloading DEM / other data automatically. Default True
@@ -143,6 +146,28 @@ runconfig:
         logging: include('log_nfo', required=False)
 
 ---
+icu_options:
+    crossmul_path: str(required=False)
+    seed: int(min=0, required=False)
+    buffer_lines: int(min=1, required=False)
+    overlap_lines: int(min=1, required=False)
+    use_phase_gradient_neutron: bool(required=False)
+    use_intensity_neutron: bool(required=False)
+    phase_gradient_window_size: int(min=1, required=False)
+    neutron_phase_gradient_threshold: num(min=0, required=False)
+    neutron_intensity_threshold: num(min=0, required=False)
+    max_intensity_correlation_threshold: num(required=False)
+    trees_number: int(min=1, required=False)
+    max_branch_length: int(min=1, required=False)
+    pixel_spacing_ratio: num(required=False)
+    initial_correlation_threshold: num(min=0, max=1, required=False)
+    max_correlation_threshold: num(max=1, required=False)
+    correlation_threshold_increments: num(min=0, max=1, required=False)
+    min_tile_area: num(required=False)
+    bootstrap_lines: int(min=1, required=False)
+    min_overlap_area: int(min=0, required=False)
+    phase_variance_threshold: num(min=0, required=False)
+
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
     # If directory then the following directory tree is required:

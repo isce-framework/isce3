@@ -2,7 +2,7 @@ import time
 
 import journal
 
-from pybind_nisar.workflows import h5_prep, rdr2geo, geo2rdr, resample_slc, crossmul
+from pybind_nisar.workflows import h5_prep, rdr2geo, geo2rdr, resample_slc, crossmul, unwrap
 from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 from pybind_nisar.workflows.insar_runconfig import InsarRunConfig
 
@@ -20,6 +20,7 @@ def run(cfg, out_paths):
     geo2rdr.run(cfg)
     resample_slc.run(cfg)
     crossmul.run(cfg, out_paths['RIFG'])
+    unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran partial INSAR in {t_all_elapsed:.3f} seconds")

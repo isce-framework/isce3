@@ -134,3 +134,6 @@ runconfig:
                 range_looks: 11
                 azimuth_looks: 11
                 flatten: False
+
+            phase_unwrap:
+                crossmul_path: @ISCETEST@/winnipeg.h5

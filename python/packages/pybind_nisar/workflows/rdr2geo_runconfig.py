@@ -24,7 +24,7 @@ class Rdr2geoRunConfig(RunConfig):
         """
         error_channel = journal.error('Rdr2geoRunConfig.cli_arg_load')
 
-        self.cfg = defaultdict(helpers.autovivified_dict)
+        self.cfg = helpers.autovivified_dict
 
         # input h5 valid?
         if os.path.isfile(self.args.input_h5):

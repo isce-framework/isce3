@@ -23,6 +23,7 @@ pybind_nisar/workflows/insar.py
 pybind_nisar/workflows/process_args.py
 pybind_nisar/workflows/rdr2geo.py
 pybind_nisar/workflows/resample_slc.py
+pybind_nisar/workflows/unwrap.py
 )
 
 set(CUDA_TESTFILES

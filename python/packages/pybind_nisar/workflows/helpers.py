@@ -160,7 +160,7 @@ def check_mode_directory_tree(parent_dir: str, mode: str, frequency_list: list, 
         # check if frequency in polarization dict
         if freq not in pols:
             err_str = f"No key in polarization dict for frequency: {freq}"
-            err_channel.log(err_str)
+            error_channel.log(err_str)
             raise KeyError(err_str)
 
         # check if polarization directory exists
@@ -187,34 +187,37 @@ def check_hdf5_freq_pols(h5_path: str, freq_pols: dict):
         h5_obj = h5py.File(h5_path, 'r', libver='latest', swmr=True)
     except:
         err_str = f"h5py unable to open {h5_path}"
-        err_channel.log(err_str)
+        error_channel.log(err_str)
         raise ValueError(err_str)
 
     # use with to ensure h5_obj closes
     with h5_obj:
-        slc = SLC(hdf5file=h5_path)
-        if slc.productType.startswith('G'):
-            group_path = slc.GridPath
+        product_type = h5_obj['/science/LSAR/identification/productType'][()].decode('UTF-8')
+        if product_type.startswith('G'):
+            grid_type = 'grids'
         else:
-            group_path = slc.SwathPath
+            grid_type = 'swaths'
+        grid_path = f'/science/LSAR/{product_type}/{grid_type}'
 
         # get swath/grid group from hdf5
-        group = h5_obj[group_path]
+        grid_group = h5_obj[grid_path]
 
         # check if frequencies in group
         for freq in freq_pols:
             freq_str = f"frequency{freq}"
-            if freq_str not in group:
+            if freq_str not in grid_group:
                 err_str = f"{freq} not found in swath/grid group of {h5_path}"
-                err_channel.log(err_str)
+                error_channel.log(err_str)
                 raise ValueError(err_str)
 
             # get frequency group from swath/grid group
-            freq_group = group[freq_str]
+            freq_group = grid_group[freq_str]
+            if 'interferogram' in freq_group:
+                freq_group = freq_group['interferogram']
 
             # check if polarizations in group
             for pol in freq_pols[freq]:
                 if pol not in freq_group:
                     err_str = f"{pol} not found in {freq} group of swath/grid group of {h5_path}"
-                    err_channel.log(err_str)
+                    error_channel.log(err_str)
                     raise ValueError(err_str)

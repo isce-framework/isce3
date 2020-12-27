@@ -111,7 +111,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         dset.attrs["description"] = np.string_(desc)
 
         # Assign productType
-        ident['productType'] = dst
+        ident['productType'] = np.string_(dst)
 
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
