@@ -135,7 +135,7 @@ class isce3::geometry::DEMInterpolator {
         /** Get EPSG code for input DEM */
         inline int epsgCode() const { return _epsgcode; }
         /** Set EPSG code for input DEM */
-        inline void epsgCode(int epsgcode) { _epsgcode = epsgcode; }
+        void epsgCode(int epsgcode);
 
         /** Get interpolator method enum */
         inline isce3::core::dataInterpMethod interpMethod() const {

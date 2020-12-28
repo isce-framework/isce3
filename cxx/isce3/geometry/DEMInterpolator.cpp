@@ -20,6 +20,12 @@ isce3::geometry::DEMInterpolator::
     }
 }
 
+/** Set EPSG code for input DEM */
+void isce3::geometry::DEMInterpolator::epsgCode(int epsgcode) {
+    _epsgcode = epsgcode;
+    _proj = isce3::core::createProj(epsgcode);
+}
+
 // Load DEM subset into memory
 /** @param[in] demRaster input DEM raster to subset
   * @param[in] minLon Longitude of western edge of bounding box
