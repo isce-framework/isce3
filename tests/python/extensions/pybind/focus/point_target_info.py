@@ -156,8 +156,8 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5,
     """
     
     numSamplesNull = int(np.round(fs_bw_ratio))
-    data_in_pwr_dB = 20*np.log10(np.abs(data_in_linear))
-    data_in_pwr_linear = 10**(data_in_pwr_dB / 10)
+    data_in_pwr_linear = np.abs(data_in_linear)**2
+    data_in_pwr_dB = 10 * np.log10(data_in_pwr_linear)
     zmax_idx = np.argmax(data_in_pwr_linear)
     plsr_main_lobe = 1
     
