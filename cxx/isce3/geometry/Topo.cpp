@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Author: Bryan V. Riel, Joshua Cohen
-// Copyright 2017-2018
-
 #include "Topo.h"
 
 #include <algorithm>
@@ -52,7 +46,6 @@ Topo(const isce3::product::Product & product,
     // Make an ellipsoid manually
     _ellipsoid = isce3::core::Ellipsoid(isce3::core::EarthSemiMajorAxis,
                                        isce3::core::EarthEccentricitySquared);
-    _lookSide = product.lookSide();
 
     // Adjust block length based in input SLC length
     _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
@@ -225,7 +218,7 @@ topo(Raster & demRaster, TopoLayers & layers)
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(
                     pixel, TCNbasis, pos, vel, _ellipsoid, demInterp, llh,
-                    _lookSide, _threshold, _numiter, _extraiter);
+                    _radarGrid.lookSide(), _threshold, _numiter, _extraiter);
                 totalconv += geostat;
 
                 // Save data in output arrays
@@ -345,8 +338,8 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid,
-                                      demInterp, llh, _lookSide, _threshold,
-                                      _numiter, _extraiter);
+                                      demInterp, llh, _radarGrid.lookSide(), 
+                                      _threshold, _numiter, _extraiter);
                 totalconv += geostat;
 
                 // Save data in output arrays
@@ -380,48 +373,13 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
          << pyre::journal::newline;
 }
 
-/**
- * Main entry point for the module; internal creation of topo rasters
- *
- * This is the main topo driver. The pixel-by-pixel output file names are fixed
- * for now <ul> <li> x.rdr - X coordinate in requested projection system (meters
- * or degrees) <li> y.rdr - Y cooordinate in requested projection system (meters
- * or degrees) <li> z.rdr - Height above ellipsoid (meters) <li> inc.rdr -
- * Incidence angle (degrees) computed from vertical at target <li> hdg.rdr -
- * Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
- * <li> localInc.rdr - Local incidence angle (degrees) at target
- * <li> locaPsi.rdr - Local projection angle (degrees) at target
- * <li> simamp.rdr - Simulated amplitude image.
- * </ul>
- *
- * @param[in] demRaster input DEM raster
- * @param[in] outdir  directory to write outputs to
- */
+
 void isce3::geometry::Topo::topo(isce3::io::Raster& demRaster,
                                 const std::string& outdir) {
     _topo(demRaster, outdir);
 }
 
-/**
- * Run topo with externally created topo rasters; generate mask
- *
- * @param[in] demRaster input DEM raster
- * @param[in] xRaster output raster for X coordinate in requested projection
- * system (meters or degrees)
- * @param[in] yRaster output raster for Y cooordinate in requested projection
- * system (meters or degrees)
- * @param[in] zRaster output raster for height above ellipsoid (meters)
- * @param[in] incRaster output raster for incidence angle (degrees) computed
- * from vertical at target
- * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
- * anti-clockwise from EAST (Right hand rule)
- * @param[in] localIncRaster output raster for local incidence angle (degrees)
- * at target
- * @param[in] localPsiRaster output raster for local projection angle (degrees)
- * at target
- * @param[in] simRaster output raster for simulated amplitude image.
- * @param[in] maskRaster output raster for layover/shadow mask.
- */
+
 void isce3::geometry::Topo::topo(
         isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
         isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
@@ -432,25 +390,7 @@ void isce3::geometry::Topo::topo(
           localIncRaster, localPsiRaster, simRaster, maskRaster);
 }
 
-/**
- * Run topo with externally created topo rasters; generate mask
- *
- * @param[in] demRaster input DEM raster
- * @param[in] xRaster output raster for X coordinate in requested projection
- * system (meters or degrees)
- * @param[in] yRaster output raster for Y cooordinate in requested projection
- * system (meters or degrees)
- * @param[in] zRaster output raster for height above ellipsoid (meters)
- * @param[in] incRaster output raster for incidence angle (degrees) computed
- * from vertical at target
- * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
- * anti-clockwise from EAST (Right hand rule)
- * @param[in] localIncRaster output raster for local incidence angle (degrees)
- * at target
- * @param[in] localPsiRaster output raster for local projection angle (degrees)
- * at target
- * @param[in] simRaster output raster for simulated amplitude image.
- */
+
 void isce3::geometry::Topo::topo(
         isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
         isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
@@ -461,48 +401,13 @@ void isce3::geometry::Topo::topo(
           localIncRaster, localPsiRaster, simRaster);
 }
 
-/**
- * Main entry point for the module; internal creation of topo rasters
- *
- * This is the main topo driver. The pixel-by-pixel output file names are fixed
- * for now <ul> <li> x.rdr - X coordinate in requested projection system (meters
- * or degrees) <li> y.rdr - Y cooordinate in requested projection system (meters
- * or degrees) <li> z.rdr - Height above ellipsoid (meters) <li> inc.rdr -
- * Incidence angle (degrees) computed from vertical at target <li> hdg.rdr -
- * Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
- * <li> localInc.rdr - Local incidence angle (degrees) at target
- * <li> locaPsi.rdr - Local projection angle (degrees) at target
- * <li> simamp.rdr - Simulated amplitude image.
- * </ul>
- *
- * @param[in] demInterp input DEM interpolator
- * @param[in] outdir  directory to write outputs to
- */
+
 void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
                                 const std::string& outdir) {
     _topo(demInterp, outdir);
 }
 
-/**
- * Run topo with externally created topo rasters; generate mask
- *
- * @param[in] demInterp input DEM interpolator
- * @param[in] xRaster output raster for X coordinate in requested projection
- * system (meters or degrees)
- * @param[in] yRaster output raster for Y cooordinate in requested projection
- * system (meters or degrees)
- * @param[in] zRaster output raster for height above ellipsoid (meters)
- * @param[in] incRaster output raster for incidence angle (degrees) computed
- * from vertical at target
- * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
- * anti-clockwise from EAST (Right hand rule)
- * @param[in] localIncRaster output raster for local incidence angle (degrees)
- * at target
- * @param[in] localPsiRaster output raster for local projection angle (degrees)
- * at target
- * @param[in] simRaster output raster for simulated amplitude image.
- * @param[in] maskRaster output raster for layover/shadow mask.
- */
+
 void isce3::geometry::Topo::topo(
         isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster& xRaster,
         isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
@@ -513,25 +418,7 @@ void isce3::geometry::Topo::topo(
           localIncRaster, localPsiRaster, simRaster, maskRaster);
 }
 
-/**
- * Run topo with externally created topo rasters; generate mask
- *
- * @param[in] demInterp input DEM interpolator
- * @param[in] xRaster output raster for X coordinate in requested projection
- * system (meters or degrees)
- * @param[in] yRaster output raster for Y cooordinate in requested projection
- * system (meters or degrees)
- * @param[in] zRaster output raster for height above ellipsoid (meters)
- * @param[in] incRaster output raster for incidence angle (degrees) computed
- * from vertical at target
- * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
- * anti-clockwise from EAST (Right hand rule)
- * @param[in] localIncRaster output raster for local incidence angle (degrees)
- * at target
- * @param[in] localPsiRaster output raster for local projection angle (degrees)
- * at target
- * @param[in] simRaster output raster for simulated amplitude image.
- */
+
 void isce3::geometry::Topo::topo(
         isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster& xRaster,
         isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
@@ -647,7 +534,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
                 DEMInterpolator constDEM(testHeights[k]);
                 // Run radar->geo for 1 iteration
                 rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid, constDEM, llh,
-                        _lookSide, _threshold, 1, 0);
+                        _radarGrid.lookSide(), _threshold, 1, 0);
             }
 
             Vec3 enu = {0., 0., 0.};
@@ -704,7 +591,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     const Vec3 satToGround = targetXYZ - pos;
 
     // Compute cross-track range
-    if (_lookSide == isce3::core::LookSide::Right) {
+    if (_radarGrid.lookSide() == isce3::core::LookSide::Right) {
         layers.crossTrack(line, bin, satToGround.dot(TCNbasis.x1()));
     } else {
         layers.crossTrack(line, bin, -satToGround.dot(TCNbasis.x1()));
@@ -743,7 +630,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
     // Calculate psi angle between image plane and local slope
     Vec3 n_imghat = satToGround.cross(vel).normalized();
-    if (_lookSide == isce3::core::LookSide::Left) {
+    if (_radarGrid.lookSide() == isce3::core::LookSide::Left) {
         n_imghat *= -1.0;
     }
     Vec3 n_img_enu = xyz2enu.dot(n_imghat);

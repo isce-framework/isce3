@@ -1,9 +1,3 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Bryan Riel, Joshua Cohen
-// Copyright 2017-2018
-
 #pragma once
 
 #include "forward.h"
@@ -50,7 +44,6 @@ public:
      * @param[in] radarGrid RadarGridParameters object
      * @param[in] orbit     Orbit object
      * @param[in] ellipsoid Ellipsoid object
-     * @param[in] lookSide  look direction of the radar
      * @param[in] doppler   LUT2d doppler model
      */
     Topo(const isce3::product::RadarGridParameters & radarGrid,
@@ -150,9 +143,6 @@ public:
     void decimaldegMargin(double deg) { _margin = deg; }
 
     // Get topo processing options
-
-    /** Get lookSide used for processing */
-    isce3::core::LookSide lookSide() const { return _lookSide; }
 
     /** Get distance convergence threshold used for processing */
     double threshold() const { return _threshold; }
@@ -430,8 +420,6 @@ private:
     double _margin = 0.15;        //Margin for bounding box in decimal degrees
     size_t _linesPerBlock = 1000; //Block size for processing
     bool _computeMask = true;     //Flag for generating shadow-layover mask
-
-    isce3::core::LookSide _lookSide;
 
     isce3::core::dataInterpMethod _demMethod;
 
