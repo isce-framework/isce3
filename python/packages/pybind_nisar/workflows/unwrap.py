@@ -1,5 +1,5 @@
 '''
-Wrapper for phase unwrapping 
+Wrapper for phase unwrapping
 '''
 
 import pathlib
@@ -43,7 +43,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     t_all = time.time()
 
-    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
+    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5,\
+        h5py.File(crossmul_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
             src_freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
             dst_freq_group_path = src_freq_group_path.replace('RIFG', 'RUNW')
@@ -52,35 +53,41 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 src_pol_group_path = f'{src_freq_group_path}/interferogram/{pol}'
                 dst_pol_group_path = f'{dst_freq_group_path}/interferogram/{pol}'
 
-                # create igram and correlation rasters
+                # Prepare igram input raster
                 igram_path = f'HDF5:{crossmul_path}:/' \
                              f'{src_pol_group_path}/wrappedPhase'
+                igram_raster = isce3.io.Raster(igram_path)
+
+                # Prepare correlation input raster
                 corr_path = f'HDF5:{crossmul_path}:/' \
                             f'{src_pol_group_path}/phaseSigmaCoherence'
+                corr_raster = isce3.io.Raster(corr_path)
 
-        # Get igram and correlation
-        igram_raster = isce3.io.Raster(igram_path)
-        corr_raster = isce3.io.Raster(corr_path)
+                # Create unwrapped interferogram output raster
+                uigram_path = f'{dst_pol_group_path}/unwrappedPhase'
+                uigram_dataset = dst_h5[uigram_path]
+                uigram_raster = isce3.io.Raster(f"IH5:::ID={uigram_dataset.id.id}".encode("utf-8"),
+                                                update=True)
 
-        # Create unwrapped interferogram and connected components
-        uigram_path = f'{dst_pol_group_path}/unwrappedPhase'
-        conn_comp_path = f'{dst_pol_group_path}/connectedComponents'
-        uigram_dataset = dst_h5[uigram_path]
-        conn_comp_dataset = dst_h5[conn_comp_path]
+                # Create connected components output raster
+                conn_comp_path = f'{dst_pol_group_path}/connectedComponents'
+                conn_comp_dataset = dst_h5[conn_comp_path]
+                conn_comp_raster = isce3.io.Raster(f"IH5:::ID={conn_comp_dataset.id.id}".encode("utf-8"),
+                                                   update=True)
+                if 'seed' in unwrap_args:
+                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
+                                      corr_raster, seed=unwrap_args['seed'])
+                else:
+                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
+                                      corr_raster)
 
-        uigram_raster = isce3.io.Raster(f"IH5:::ID={uigram_dataset.id.id}".encode("utf-8"),
-                                        update=True)
-        conn_comp_raster = isce3.io.Raster(f"IH5:::ID={conn_comp_dataset.id.id}".encode("utf-8"),
-                                           update=True)
-        if 'seed' in unwrap_args:
-            unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
-                              corr_raster, seed=unwrap_args['seed'])
-        else:
-            unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
-                              corr_raster)
-        del uigram_raster
-        del conn_comp_raster
+                # Copy phase sigma coherence from RIFG
+                dst_coh_comp_path = f'{dst_pol_group_path}/phaseSigmaCoherence'
+                src_coh_comp_path = f'{src_pol_group_path}/phaseSigmaCoherence'
+                dst_h5[dst_coh_comp_path][:, :] = src_h5[src_coh_comp_path][()]
 
+                del uigram_raster
+                del conn_comp_raster
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran phase unwrapping in {t_all_elapsed:.3f} seconds")
