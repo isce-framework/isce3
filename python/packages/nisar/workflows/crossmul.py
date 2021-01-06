@@ -2,7 +2,7 @@
 # Author: Liang Yu
 # Copyright 2019-
 import os
-import gdal
+from osgeo import gdal
 import argparse
 import warnings
 

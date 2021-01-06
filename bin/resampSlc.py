@@ -4,7 +4,7 @@
 # Copyright 2019-
 
 import os
-import gdal
+from osgeo import gdal
 import argparse
 from nisar.products.readers import SLC
 from isce3.image.ResampSlc import ResampSlc

@@ -3,7 +3,7 @@
 import argparse
 import os
 import json
-import gdal
+from osgeo import gdal
 import numpy as np
 from osgeo import ogr
 from osgeo import osr

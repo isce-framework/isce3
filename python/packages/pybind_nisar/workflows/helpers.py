@@ -6,7 +6,7 @@ from collections import defaultdict
 import os
 import pathlib
 
-import gdal
+from osgeo import gdal
 import h5py
 
 import journal
