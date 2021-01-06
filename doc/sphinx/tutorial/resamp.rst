@@ -22,7 +22,7 @@ The following is example code to perform the resampling.
 .. code-block:: python
 
     import isceextension
-    import gdal
+    from osgeo import gdal
     
     # Instantiate a ResampSlc object
     resamp = isceextension.pyResampSlc()
@@ -55,7 +55,7 @@ If the user wishes to account for SLCs with native Doppler frequencies in the az
 .. code-block:: python
 
     import isceextension
-    import gdal
+    from osgeo import gdal
     
     # Create a polynomial for native Doppler
     # Note: 0th order in azimuth, 2nd order in range
@@ -105,7 +105,7 @@ As we saw in the raster tutorials, rasters can be created from NumPy arrays via 
     import isceextension
     import numpy as np
     from osgeo import gdal_array
-    import gdal
+    from osgeo import gdal
     
     # Instantiate a ResampSlc object
     resamp = isceextension.pyResampSlc()

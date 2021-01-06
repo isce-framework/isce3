@@ -3,7 +3,7 @@
 # Author: Liang Yu
 # Copyright 2020
 
-import gdal
+from osgeo import gdal
 import numpy as np
 import os
 import iscetest

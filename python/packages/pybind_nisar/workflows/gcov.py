@@ -6,7 +6,7 @@ import os
 import tempfile
 import time
 
-import gdal
+from osgeo import gdal
 import h5py
 import journal
 import numpy as np

@@ -4,7 +4,7 @@ wrapper for resample
 
 import pathlib
 import time
-import gdal
+from osgeo import gdal
 
 import journal
 

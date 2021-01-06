@@ -2,7 +2,7 @@
   
 import numpy as np
 import argparse
-import gdal
+from osgeo import gdal
 import sys
 import os
 import isce3
