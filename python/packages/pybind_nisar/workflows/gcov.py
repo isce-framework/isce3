@@ -50,7 +50,7 @@ def run(cfg):
     rtc_algorithm = rtc_dict['algorithm_type']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
-    apply_rtc = output_mode == isce.geocode.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
+    apply_rtc = output_mode == isce.geocode.GeocodeOutputMode.AREA_PROJECTION_WITH_RTC
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']

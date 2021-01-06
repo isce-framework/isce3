@@ -21,8 +21,8 @@ void addsubmodule_geometry(py::module & m)
         pyRdr2Geo(geometry, "Rdr2Geo");
 
     // forward declare bound enums
-    py::enum_<isce3::geometry::rtcInputRadiometry>
-        pyInputRadiometry(geometry, "RtcInputTerrainRadiometry");
+    py::enum_<isce3::geometry::rtcInputTerrainRadiometry>
+        pyinputTerrainRadiometry(geometry, "RtcInputTerrainRadiometry");
     py::enum_<isce3::geometry::rtcAlgorithm>
         pyRtcAlgorithm(geometry, "RtcAlgorithm");
     py::enum_<isce3::geometry::rtcMemoryMode>
@@ -34,7 +34,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyDEMInterpolator);
     addbinding(pyGeo2Rdr);
     addbinding(pyRdr2Geo);
-    addbinding(pyInputRadiometry);
+    addbinding(pyinputTerrainRadiometry);
     addbinding(pyRtcAlgorithm);
     addbinding(pyRtcMemoryMode);
     addbinding(pyRtcAreaMode);

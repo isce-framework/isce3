@@ -53,7 +53,7 @@ class GCOVRunConfig(RunConfig):
                 not flag_apply_rtc):
             geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION
         elif geocode_dict['algorithm_type'] == 'area_projection':
-            geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT
+            geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION_WITH_RTC
         else:
             err_str = f'Unsupported geocode algorithm: {geocode_dict["algorithm_type"]}'
             error_channel.log(err_str)

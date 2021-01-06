@@ -15,18 +15,18 @@ from libc.math cimport NAN
 from GDAL cimport GDALDataType as GDT
 
 from Raster cimport Raster
-from RTC cimport rtcInputRadiometry
+from RTC cimport rtcInputTerrainRadiometry
 
 from LookSide cimport LookSide
 from GeocodeCov cimport *
 
 
-rtc_input_terrain_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
-                             'SIGMA_NAUGHT_ELLIPSOID': rtcInputRadiometry.SIGMA_NAUGHT_ELLIPSOID}
+rtc_input_terrain_radiometry_dict = {'BETA_NAUGHT': rtcInputTerrainRadiometry.BETA_NAUGHT,
+                             'SIGMA_NAUGHT_ELLIPSOID': rtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID}
 
 geocode_output_mode_dict = {'INTERP': geocodeOutputMode.INTERP,
                             'AREA_PROJECTION': geocodeOutputMode.AREA_PROJECTION,
-                            'AREA_PROJECTION_GAMMA_NAUGHT': geocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT}
+                            'AREA_PROJECTION_WITH_RTC': geocodeOutputMode.AREA_PROJECTION_WITH_RTC}
 
 geocode_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
                             'SINGLE_BLOCK': geocodeMemoryMode.SINGLE_BLOCK,
@@ -214,8 +214,8 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_off_diag_terms = None,
-                out_geo_vertices = None,
-                out_dem_vertices = None,
+                out_geo_rdr = None,
+                out_geo_dem = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
@@ -232,8 +232,8 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
         out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
-        out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_dem_vertices_raster = _getRaster(out_dem_vertices)
+        out_geo_rdr_raster = _getRaster(out_geo_rdr)
+        out_geo_dem_raster = _getRaster(out_geo_dem)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
@@ -259,8 +259,8 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                                min_nlooks,
                                radar_grid_nlooks,
                                out_off_diag_terms_raster,
-                               out_geo_vertices_raster,
-                               out_dem_vertices_raster,
+                               out_geo_rdr_raster,
+                               out_geo_dem_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -376,8 +376,8 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_off_diag_terms = None,
-                out_geo_vertices = None,
-                out_dem_vertices = None,
+                out_geo_rdr = None,
+                out_geo_dem = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
@@ -394,8 +394,8 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
         out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
-        out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_dem_vertices_raster = _getRaster(out_dem_vertices)
+        out_geo_rdr_raster = _getRaster(out_geo_rdr)
+        out_geo_dem_raster = _getRaster(out_geo_dem)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
@@ -421,8 +421,8 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                                min_nlooks,
                                radar_grid_nlooks,
                                out_off_diag_terms_raster,
-                               out_geo_vertices_raster,
-                               out_dem_vertices_raster,
+                               out_geo_rdr_raster,
+                               out_geo_dem_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -539,8 +539,8 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_off_diag_terms = None,
-                out_geo_vertices = None,
-                out_dem_vertices = None,
+                out_geo_rdr = None,
+                out_geo_dem = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
@@ -557,8 +557,8 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
         out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
-        out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_dem_vertices_raster = _getRaster(out_dem_vertices)
+        out_geo_rdr_raster = _getRaster(out_geo_rdr)
+        out_geo_dem_raster = _getRaster(out_geo_dem)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
@@ -584,8 +584,8 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                                min_nlooks,
                                radar_grid_nlooks,
                                out_off_diag_terms_raster,
-                               out_geo_vertices_raster,
-                               out_dem_vertices_raster,
+                               out_geo_rdr_raster,
+                               out_geo_dem_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -701,8 +701,8 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                 float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_off_diag_terms = None,
-                out_geo_vertices = None,
-                out_dem_vertices = None,
+                out_geo_rdr = None,
+                out_geo_dem = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
@@ -719,8 +719,8 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
         rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
 
         out_off_diag_terms_raster = _getRaster(out_off_diag_terms)
-        out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_dem_vertices_raster = _getRaster(out_dem_vertices)
+        out_geo_rdr_raster = _getRaster(out_geo_rdr)
+        out_geo_dem_raster = _getRaster(out_geo_dem)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
@@ -746,8 +746,8 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                                min_nlooks,
                                radar_grid_nlooks,
                                out_off_diag_terms_raster,
-                               out_geo_vertices_raster,
-                               out_dem_vertices_raster,
+                               out_geo_rdr_raster,
+                               out_geo_dem_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,

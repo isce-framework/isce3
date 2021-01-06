@@ -104,8 +104,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
     // populate optional parameters
     double geogrid_upsampling = 1;
     bool flag_upsample_radar_grid = false;
-    isce3::geometry::rtcInputRadiometry input_terrain_radiometry =
-            isce3::geometry::rtcInputRadiometry::BETA_NAUGHT;
+    isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
+            isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT;
     int exponent = 0;
     float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN();
     double rtc_geogrid_upsampling =
@@ -118,8 +118,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
     float min_nlooks = std::numeric_limits<float>::quiet_NaN();
     float radar_grid_nlooks = 1;
 
-    isce3::io::Raster* out_geo_vertices = nullptr;
-    isce3::io::Raster* out_dem_vertices = nullptr;
+    isce3::io::Raster* out_geo_rdr = nullptr;
+    isce3::io::Raster* out_geo_dem = nullptr;
     isce3::io::Raster* out_geo_nlooks = nullptr;
     isce3::io::Raster* out_geo_rtc = nullptr;
     isce3::io::Raster* input_rtc = nullptr;
@@ -162,8 +162,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
                            exponent, rtc_min_value_db, rtc_geogrid_upsampling,
                            rtc_algorithm, abs_cal_factor, clip_min, clip_max,
                            min_nlooks, radar_grid_nlooks,
-                           nullptr, out_geo_vertices,
-                           out_dem_vertices, out_geo_nlooks, out_geo_rtc,
+                           nullptr, out_geo_rdr,
+                           out_geo_dem, out_geo_nlooks, out_geo_rtc,
                            input_rtc, output_rtc, geocode_memory_mode_1,
                            min_block_size, max_block_size);
         }
@@ -212,7 +212,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
             input_terrain_radiometry, exponent, rtc_min_value_db,
             rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor, clip_min,
             clip_max, min_nlooks, radar_grid_nlooks, &geocoded_off_diag_raster,
-            out_geo_vertices, out_dem_vertices, out_geo_nlooks, out_geo_rtc,
+            out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
             input_rtc, output_rtc, geocode_memory_mode_2, min_block_size,
             max_block_size);
 

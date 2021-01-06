@@ -172,7 +172,7 @@ declare() const {
 void isce3::geometry::DEMInterpolator::
 computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) {
     // Announce myself
-    info << "Computing DEM statistics" << pyre::journal::newline << pyre::journal::newline;
+    info << "Computing DEM statistics" << pyre::journal::newline;
     // If we don't have a DEM, just use reference height
     if (!_haveRaster) {
         maxValue = _refHeight;

@@ -20,7 +20,7 @@ from Ellipsoid cimport Ellipsoid
 from Orbit cimport Orbit
 from LUT2d cimport LUT2d
 from Interpolator cimport dataInterpMethod
-from RTC cimport rtcInputRadiometry, rtcAlgorithm
+from RTC cimport rtcInputTerrainRadiometry, rtcAlgorithm
 
 from LookSide cimport LookSide
 
@@ -33,7 +33,7 @@ cdef extern from "isce3/geocode/GeocodeCov.h" namespace "isce3::geocode":
     cdef enum geocodeOutputMode:
         INTERP = 0
         AREA_PROJECTION = 1
-        AREA_PROJECTION_GAMMA_NAUGHT = 2
+        AREA_PROJECTION_WITH_RTC = 2
 
     cdef enum geocodeMemoryMode:
         AUTO = 0
@@ -79,7 +79,7 @@ cdef extern from "isce3/geocode/GeocodeCov.h" namespace "isce3::geocode":
                      geocodeOutputMode output_mode_enum,
                      double upsampling, 
                      bool flag_upsample_radar_grid,
-                     rtcInputRadiometry input_terrain_radiometry,
+                     rtcInputTerrainRadiometry input_terrain_radiometry,
                      int exponent,
                      float rtc_min_value_db,
                      double rtc_upsampling,
@@ -90,8 +90,8 @@ cdef extern from "isce3/geocode/GeocodeCov.h" namespace "isce3::geocode":
                      float min_nlooks,
                      float radar_grid_nlooks,
                      Raster * out_off_diag_terms,
-                     Raster * out_geo_vertices,
-                     Raster * out_dem_vertices,
+                     Raster * out_geo_rdr,
+                     Raster * out_geo_dem,
                      Raster * out_geo_nlooks,
                      Raster * out_geo_rtc,
                      Raster * input_rtc,
@@ -113,7 +113,7 @@ cdef extern from "isce3/geocode/GeocodeCov.h" namespace "isce3::geocode":
         LUT2d[double]& dop,
         Raster& input_raster,
         Raster& dem_raster, 
-        rtcInputRadiometry inputRadiometry,
+        rtcInputTerrainRadiometry inputTerrainRadiometry,
         int exponent,
         geocodeOutputMode output_mode,
         double dem_upsampling,

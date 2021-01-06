@@ -14,7 +14,7 @@ from libcpp cimport bool
 
 cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
 
-    cdef enum rtcInputRadiometry:
+    cdef enum rtcInputTerrainRadiometry:
         BETA_NAUGHT = 0
         SIGMA_NAUGHT_ELLIPSOID = 1
 
@@ -31,13 +31,13 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
         RTC_SINGLE_BLOCK = 1
         RTC_BLOCKS_GEOGRID = 2
 
-    void applyRTC(RadarGridParameters& radar_grid, 
+    void applyRtc(RadarGridParameters& radar_grid, 
                   Orbit& orbit,
                   LUT2d[double]& dop,
                   Raster& input_raster,
                   Raster& dem_raster, 
                   Raster& out_raster,
-                  rtcInputRadiometry inputRadiometry,
+                  rtcInputTerrainRadiometry inputTerrainRadiometry,
                   int exponent,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
@@ -55,7 +55,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   LUT2d[double]& dop,
                   Raster& dem_raster, 
                   Raster& out_raster,
-                  rtcInputRadiometry inputRadiometry,
+                  rtcInputTerrainRadiometry inputTerrainRadiometry,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,
@@ -76,13 +76,13 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   int geogrid_length,
                   int geogrid_width,
                   int epsg,
-                  rtcInputRadiometry inputRadiometry,
+                  rtcInputTerrainRadiometry inputTerrainRadiometry,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,
                   float rtc_min_value_db,
                   float radar_grid_nlooks,
-                  Raster * out_geo_vertices_raster,
+                  Raster * out_geo_rdr_raster,
                   Raster * out_geo_grid_raster,
                   Raster * out_nlooks_raster,
                   rtcMemoryMode memory_mode_enum)  except +
@@ -92,7 +92,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   Raster& out_raster,
                   char frequency,
                   bool native_doppler,
-                  rtcInputRadiometry inputRadiometry,
+                  rtcInputTerrainRadiometry inputTerrainRadiometry,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,

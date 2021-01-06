@@ -9,16 +9,16 @@
 
 namespace py = pybind11;
 
-using isce3::geometry::rtcInputRadiometry;
+using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcAlgorithm;
 using isce3::geometry::rtcMemoryMode;
 using isce3::geometry::rtcAreaMode;
 
-void addbinding(py::enum_<rtcInputRadiometry> & pyInputRadiometry)
+void addbinding(py::enum_<rtcInputTerrainRadiometry> & pyinputTerrainRadiometry)
 {
-    pyInputRadiometry
-        .value("BETA_NAUGHT", rtcInputRadiometry::BETA_NAUGHT)
-        .value("SIGMA_NAUGHT_ELLIPSOID", rtcInputRadiometry::SIGMA_NAUGHT_ELLIPSOID)
+    pyinputTerrainRadiometry
+        .value("BETA_NAUGHT", rtcInputTerrainRadiometry::BETA_NAUGHT)
+        .value("SIGMA_NAUGHT_ELLIPSOID", rtcInputTerrainRadiometry::SIGMA_NAUGHT_ELLIPSOID)
         ;
 }
 
@@ -49,14 +49,14 @@ void addbinding(py::enum_<rtcAreaMode> & pyAreaMode)
 
 void addbinding_apply_rtc(pybind11::module& m)
 {
-    m.def("apply_rtc", &isce3::geometry::applyRTC,
+    m.def("apply_rtc", &isce3::geometry::applyRtc,
            py::arg("radar_grid"),
            py::arg("orbit"),
            py::arg("input_dop"),
            py::arg("input_raster"),
            py::arg("dem_raster"),
            py::arg("output_raster"),
-           py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
+           py::arg("input_terrain_radiometry") = rtcInputTerrainRadiometry::BETA_NAUGHT,
            py::arg("exponent") = 0,
            py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
            py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
@@ -124,14 +124,14 @@ void addbinding_facet_rtc(pybind11::module& m)
           py::overload_cast<
                   const isce3::product::RadarGridParameters&,
                   const isce3::core::Orbit&, const isce3::core::LUT2d<double>&,
-                  isce3::io::Raster&, isce3::io::Raster&, rtcInputRadiometry,
+                  isce3::io::Raster&, isce3::io::Raster&, rtcInputTerrainRadiometry,
                   isce3::geometry::rtcAreaMode, rtcAlgorithm, double, float,
                   float, isce3::io::Raster*, isce3::geometry::rtcMemoryMode,
                   isce3::core::dataInterpMethod, double, int, double>(
                   &isce3::geometry::computeRtc),
           py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
           py::arg("dem"), py::arg("output_raster"),
-          py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
+          py::arg("input_terrain_radiometry") = rtcInputTerrainRadiometry::BETA_NAUGHT,
           py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
           py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
           py::arg("geogrid_upsampling") =
@@ -198,7 +198,7 @@ void addbinding_facet_rtc_bbox(pybind11::module& m)
                   const isce3::product::RadarGridParameters&,
                   const isce3::core::Orbit&, const isce3::core::LUT2d<double>&,
                   const double, const double, const double, const double,
-                  const int, const int, const int, rtcInputRadiometry,
+                  const int, const int, const int, rtcInputTerrainRadiometry,
                   isce3::geometry::rtcAreaMode, rtcAlgorithm, double, float,
                   float, isce3::io::Raster*, isce3::io::Raster*,
                   isce3::io::Raster*, isce3::geometry::rtcMemoryMode,
@@ -208,14 +208,14 @@ void addbinding_facet_rtc_bbox(pybind11::module& m)
           py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
           py::arg("y0"), py::arg("dy"), py::arg("x0"), py::arg("dx"),
           py::arg("geogrid_length"), py::arg("geogrid_width"), py::arg("epsg"),
-          py::arg("input_terrain_radiometry") = rtcInputRadiometry::BETA_NAUGHT,
+          py::arg("input_terrain_radiometry") = rtcInputTerrainRadiometry::BETA_NAUGHT,
           py::arg("rtc_area_mode") = isce3::geometry::rtcAreaMode::AREA_FACTOR,
           py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
           py::arg("geogrid_upsampling") =
                   std::numeric_limits<double>::quiet_NaN(),
           py::arg("rtc_min_value_db") = std::numeric_limits<float>::quiet_NaN(),
           py::arg("radar_grid_nlooks") = 1,
-          py::arg("out_geo_vertices") = nullptr,
+          py::arg("out_geo_rdr") = nullptr,
           py::arg("out_geo_grid") = nullptr, py::arg("out_nlooks") = nullptr,
           py::arg("rtc_memory_mode") = isce3::geometry::rtcMemoryMode::RTC_AUTO,
           py::arg("interp_method") =
@@ -265,7 +265,7 @@ void addbinding_facet_rtc_bbox(pybind11::module& m)
              radar_grid_nlooks : float, optional
                  Radar grid number of looks. This
               parameters determines the multilooking factor used to compute out_nlooks.
-             out_geo_vertices : isce3.io.Raster, optional
+             out_geo_rdr : isce3.io.Raster, optional
                  Raster to which the radar-grid positions
               (range and azimuth) of the geogrid pixels vertices will be saved (output).
              out_geo_grid : isce3.io.Raster, optional

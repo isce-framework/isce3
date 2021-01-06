@@ -56,10 +56,10 @@ def _runGeocodeFrequency(self, frequency):
         f'temp_geo_nlooks_{time_id}.bin')
     out_geo_rtc = os.path.join(state.scratch_path,
         f'temp_geo_rtc_{time_id}.bin')
-    out_dem_vertices = os.path.join(state.scratch_path,
-        f'temp_dem_vertices_{time_id}.bin')
-    out_geo_vertices = os.path.join(state.scratch_path,
-        f'temp_geo_vertices_{time_id}.bin')
+    out_geo_dem = os.path.join(state.scratch_path,
+        f'temp_geo_dem_{time_id}.bin')
+    out_geo_rdr = os.path.join(state.scratch_path,
+        f'temp_geo_rdr_{time_id}.bin')
 
     # build input VRT
     gdal.BuildVRT(input_temp, raster_ref_list, separate=True)
@@ -94,8 +94,8 @@ def _runGeocodeFrequency(self, frequency):
     flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
-    flag_save_dem_vertices = geocode_dict['save_dem_vertices']
-    flag_save_geo_vertices = geocode_dict['save_geo_vertices']
+    flag_save_geo_dem = geocode_dict['save_geo_dem']
+    flag_save_geo_rdr = geocode_dict['save_geo_rdr']
     
     # Geogrid
     state.output_epsg = geocode_dict['outputEPSG']
@@ -276,29 +276,29 @@ def _runGeocodeFrequency(self, frequency):
     else:
         out_geo_rtc_obj = None
 
-    if flag_save_dem_vertices:
-        out_dem_vertices_obj = isce3.pyRaster(out_dem_vertices,
+    if flag_save_geo_dem:
+        out_geo_dem_obj = isce3.pyRaster(out_geo_dem,
                                               gdal.GA_Update,
                                               gdal.GDT_Float32,
                                               size_x + 1,
                                               size_y + 1,
                                               1,
                                               "ENVI")
-        geocoded_dict['out_dem_vertices'] = out_dem_vertices
+        geocoded_dict['out_geo_dem'] = out_geo_dem
     else:
-        out_dem_vertices_obj = None
+        out_geo_dem_obj = None
 
-    if flag_save_geo_vertices:
-        out_geo_vertices_obj = isce3.pyRaster(out_geo_vertices,
+    if flag_save_geo_rdr:
+        out_geo_rdr_obj = isce3.pyRaster(out_geo_rdr,
                                             gdal.GA_Update,
                                             gdal.GDT_Float32,
                                             size_x + 1,
                                             size_y + 1,
                                             2,
                                             "ENVI")
-        geocoded_dict['out_geo_vertices'] = out_geo_vertices
+        geocoded_dict['out_geo_rdr'] = out_geo_rdr
     else:
-        out_geo_vertices_obj = None
+        out_geo_rdr_obj = None
     
 
     # Run geocoding
@@ -382,8 +382,8 @@ def _runGeocodeFrequency(self, frequency):
                 out_off_diag_terms=out_off_diag_terms_obj,
                 out_geo_nlooks=out_geo_nlooks_obj,
                 out_geo_rtc=out_geo_rtc_obj,
-                out_dem_vertices=out_dem_vertices_obj,
-                out_geo_vertices=out_geo_vertices_obj,
+                out_geo_dem=out_geo_dem_obj,
+                out_geo_rdr=out_geo_rdr_obj,
                 **kwargs)
 
     del output_raster_obj
@@ -397,11 +397,11 @@ def _runGeocodeFrequency(self, frequency):
     if flag_fullcovariance:
         del out_off_diag_terms_obj
 
-    if flag_save_dem_vertices:
-        del out_dem_vertices_obj
+    if flag_save_geo_dem:
+        del out_geo_dem_obj
 
-    if flag_save_geo_vertices:
-        del out_geo_vertices_obj
+    if flag_save_geo_rdr:
+        del out_geo_rdr_obj
 
     self._print(f'removing temporary file: {input_temp}')
     _remove(input_temp)
@@ -660,8 +660,8 @@ def _runGeocodeFrequency(self, frequency):
                             valid_min = 0,
                             valid_max = 2)
 
-        if ('out_dem_vertices' in geocoded_dict or 
-            'out_geo_vertices' in  geocoded_dict):
+        if ('out_geo_dem' in geocoded_dict or 
+            'out_geo_rdr' in  geocoded_dict):
 
             # X and Y coordinates
             geotransform = self.state.geotransform_dict[frequency]
@@ -697,7 +697,7 @@ def _runGeocodeFrequency(self, frequency):
                 pass
 
             # save geo grid
-            _save_hdf5_dataset(self, 'out_dem_vertices', hdf5_obj, root_ds, 
+            _save_hdf5_dataset(self, 'out_geo_dem', hdf5_obj, root_ds, 
                             h5_ds_list, geocoded_dict, frequency, 
                             yds_vertices, xds_vertices, 
                             'interpolatedDem',
@@ -709,7 +709,7 @@ def _runGeocodeFrequency(self, frequency):
                             valid_max = 9000)
 
             # save geo vertices
-            _save_hdf5_dataset(self, 'out_geo_vertices', hdf5_obj, root_ds, 
+            _save_hdf5_dataset(self, 'out_geo_rdr', hdf5_obj, root_ds, 
                             h5_ds_list, geocoded_dict, frequency, 
                             yds_vertices, xds_vertices,
                             ['vertices_a', 'vertices_r'])

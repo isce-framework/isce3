@@ -16,7 +16,7 @@ namespace isce3 { namespace geometry {
 /**
  * Enumeration type to indicate input terrain radiometry (for RTC)
  */
-enum rtcInputRadiometry {
+enum rtcInputTerrainRadiometry {
     BETA_NAUGHT = 0,
     SIGMA_NAUGHT_ELLIPSOID = 1,
 };
@@ -68,12 +68,12 @@ enum rtcAlgorithm { RTC_BILINEAR_DISTRIBUTION = 0, RTC_AREA_PROJECTION = 1 };
  * @param[out] output_rtc          Output RTC area factor
  * @param[in]  rtc_memory_mode     Select memory mode
  * */
-void applyRTC(
+void applyRtc(
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster,
-        rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
+        rtcInputTerrainRadiometry inputTerrainRadiometry = rtcInputTerrainRadiometry::BETA_NAUGHT,
         int exponent = 0, rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
@@ -109,7 +109,7 @@ void computeRtc(
         isce3::product::Product& product, isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster, char frequency = 'A',
         bool native_doppler = false,
-        rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
+        rtcInputTerrainRadiometry inputTerrainRadiometry = rtcInputTerrainRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
@@ -149,7 +149,7 @@ void computeRtc(
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         isce3::io::Raster& dem, isce3::io::Raster& output_raster,
-        rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
+        rtcInputTerrainRadiometry inputTerrainRadiometry = rtcInputTerrainRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
@@ -186,7 +186,7 @@ void computeRtc(
  * data with RTC area factor below this limit are ignored.
  * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
  * parameters determines the multilooking factor used to compute out_nlooks.
- * @param[out] out_geo_vertices    Raster to which the radar-grid positions
+ * @param[out] out_geo_rdr    Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels center will be saved.
@@ -205,13 +205,13 @@ void computeRtc(
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width, const int epsg,
-        rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
+        rtcInputTerrainRadiometry inputTerrainRadiometry = rtcInputTerrainRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1,
-        isce3::io::Raster* out_geo_vertices = nullptr,
+        isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_nlooks = nullptr,
         rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
@@ -247,7 +247,7 @@ void computeRtcBilinearDistribution(
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width, const int epsg,
-        rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
+        rtcInputTerrainRadiometry inputTerrainRadiometry = rtcInputTerrainRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN());
 
@@ -277,7 +277,7 @@ void computeRtcBilinearDistribution(
  * data with RTC area factor below this limit are ignored.
  * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
  * parameters determines the multilooking factor used to compute out_nlooks.
- * @param[out] out_geo_vertices       Raster to which the radar-grid positions
+ * @param[out] out_geo_rdr       Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels center will be saved.
@@ -296,12 +296,12 @@ void computeRtcAreaProj(
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width, const int epsg,
-        rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
+        rtcInputTerrainRadiometry inputTerrainRadiometry = rtcInputTerrainRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1,
-        isce3::io::Raster* out_geo_vertices = nullptr,
+        isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_nlooks = nullptr,
         rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
@@ -359,7 +359,7 @@ double computeFacet(isce3::core::Vec3 xyz_center, isce3::core::Vec3 xyz_left,
                     double p1, double& p3, double divisor,
                     bool clockwise_direction);
 
-std::string get_input_terrain_radiometry_str(rtcInputRadiometry input_terrain_radiometry);
+std::string get_input_terrain_radiometry_str(rtcInputTerrainRadiometry input_terrain_radiometry);
 std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode);
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm);
 
@@ -368,7 +368,7 @@ void print_parameters(
         const isce3::product::RadarGridParameters& radar_grid, const double y0,
         const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width,
-        rtcInputRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
+        rtcInputTerrainRadiometry input_terrain_radiometry, rtcAreaMode rtc_area_mode,
         double geogrid_upsampling,
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN());
 } // namespace geometry
