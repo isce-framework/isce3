@@ -96,9 +96,23 @@ void setOutputTopoLayers(const Vec3& targetLLH,
     enu = xyz2enu.dot(satToGround);
     const double cosalpha = std::abs(enu[2]) / enu.norm();
 
-    // LOS vectors
+    // Incidence angle
     layers.inc(index, std::acos(cosalpha) * degrees);
-    layers.hdg(index, (std::atan2(-enu[1], -enu[0]) - (0.5*M_PI)) * degrees);
+
+    // Heading considering zero-Doppler grid and anti-clock. ref. starting from the East
+    double heading;
+    if (lookSide == LookSide::Left) {
+        heading = (std::atan2(enu[1], enu[0]) - (0.5*M_PI)) * degrees;
+    } else {
+        heading = (std::atan2(enu[1], enu[0]) + (0.5*M_PI)) * degrees;
+    }
+
+    if (heading > 180) {
+        heading -= 360;
+    } else if (heading < -180) {
+        heading += 360;
+    }
+    layers.hdg(index, heading);
 
     // East-west slope using central difference
     double aa = demInterp.interpolateXY(x - demInterp.deltaX(), y);
