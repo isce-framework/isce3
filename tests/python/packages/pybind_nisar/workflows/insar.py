@@ -5,6 +5,7 @@ import numpy as np
 
 from pybind_nisar.workflows import h5_prep, insar
 from pybind_nisar.workflows.insar_runconfig import InsarRunConfig
+from pybind_nisar.workflows.persistence import Persistence
 
 import iscetest
 
@@ -32,7 +33,9 @@ def test_insar_run():
 
     out_paths = h5_prep.run(insar_runcfg.cfg)
 
-    insar.run(insar_runcfg.cfg, out_paths)
+    persist = Persistence(restart=True)
+
+    insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
 
 if __name__ == "__main__":
     test_insar_run()

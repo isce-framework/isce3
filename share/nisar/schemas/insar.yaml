@@ -69,6 +69,14 @@ runconfig:
 
             # Mechanism to specify output posting and DEM
             geocode:
+                # Required for geocode standalone
+                runw_path: str(required=False)
+
+                # DEM interpolation method. BILINEAR is default.
+                interp_method: enum('BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
+
+                datasets: include('gunw_datasets', required=False)
+
                 # Same as input DEM if not provided.
                 outputEPSG: int(min=1024, max=32767, required=False)
                
@@ -202,3 +210,8 @@ log_nfo:
     path: str()
     # Log file write mode. 'a' for append to existing. 'w' for new or overwrite existing.
     write_mode: enum('a', 'w', required=False)
+
+gunw_datasets:
+    connectedComponents: bool(required=False)
+    phaseSigmaCoherence: bool(required=False)
+    unwrappedPhase: bool(required=False)

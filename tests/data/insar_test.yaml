@@ -73,6 +73,8 @@ runconfig:
 
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
+                runw_path: runw.h5
+
                 # OPTIONAL - To control output grid in same units as output EPSG
                 x_snap:
 

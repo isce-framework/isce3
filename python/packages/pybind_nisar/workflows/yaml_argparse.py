@@ -47,6 +47,8 @@ class YamlArgparse():
                                  default=None, help='Path to run config file')
         self.parser.add_argument('--no-log-file', dest='log_file', action='store_false',
                                  default=True, help='Disable logging to file. Log to file on by default.')
+        self.parser.add_argument('--restart', action='store_true', default=False,
+                                 help='Restart the InSAR workflow from the beginning and ignore the previous run. False by default.')
         self.args = argparse.Namespace()
 
     def parse(self):

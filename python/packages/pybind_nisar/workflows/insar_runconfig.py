@@ -42,3 +42,16 @@ class InsarRunConfig(Geo2rdrRunConfig):
         # if phase_unwrap fields not in yaml
         if self.cfg['processing']['phase_unwrap'] is None:
            self.cfg['processing']['phase_unwrap'] = {}
+
+        if 'interp_method' not in self.cfg['processing']['geocode']:
+            self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
+
+        # create empty dict if geocode_datasets not in geocode
+        if 'datasets' not in self.cfg['processing']['geocode']:
+            self.cfg['processing']['geocode']['datasets'] = {}
+
+        # default to True for datasets not found
+        gunw_datasets = ["connectedComponents", "phaseSigmaCoherence", "unwrappedPhase"]
+        for gunw_dataset in gunw_datasets:
+            if gunw_dataset not in self.cfg['processing']['geocode']:
+                self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True

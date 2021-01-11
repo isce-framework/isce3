@@ -53,7 +53,7 @@ def run(cfg: dict) -> dict:
         cp_geocode_meta(cfg, out_path, sub_prod_type)
         prep_ds(cfg, out_path, sub_prod_type)
 
-    info_channel.log('successfully prepared HDF5')
+    info_channel.log('successfully ran h5_prep')
 
     return h5_paths[product_type]
 
