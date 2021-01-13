@@ -199,7 +199,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     are populated with dummy values.
     """
     ident.create_dataset('diagnosticModeFlag', data=numpy.string_("False"))
-    ident.create_dataset('isGeocoded', data=numpy.string_("True"))
+    ident.create_dataset('isGeocoded', data=numpy.string_("False"))
     ident.create_dataset('listOfFrequencies', data=numpy.string_(["A"]))
     ident.create_dataset('lookDirection', data = numpy.string_("Right"))
     ident.create_dataset('missionId', data=numpy.string_("ALOS"))
