@@ -138,4 +138,4 @@ if __name__ == "__main__":
         out_paths['RUNW'] = geocode_insar_runconfig.cfg['processing']['geocode']['runw_path']
 
     # Run geocode
-    run(geocode_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"])
+    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"])

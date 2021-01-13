@@ -22,6 +22,14 @@ class Persistence():
         if not restart:
             self.read_log()
 
+        if self.run:
+            info_channel = journal.info("persistence.init")
+            info_channel.log("Possible steps to be run:")
+            for step in self.insar_steps:
+                info_channel.log(f"{step}: {self.run_steps[step]}")
+        else:
+            info_channel.log("No steps to be (re)run.")
+
     def read_log(self):
         '''
         determine state of last run to determine this runs steps

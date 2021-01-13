@@ -70,7 +70,7 @@ set_tests_properties(test.python.pkg.pybind_nisar.workflows.crossmul PROPERTIES
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.geocode_insar PROPERTIES
              DEPENDS "test.python.pkg.pybind_nisar.workflows.rdr2geo;test.python.pkg.pybind_nisar.workflows.unwrap")
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.insar PROPERTIES
-             DEPENDS test.python.pkg.pybind_nisar.workflows.insar_geocode)
+             DEPENDS test.python.pkg.pybind_nisar.workflows.geocode_insar)
 
 if(WITH_CUDA)
     set_tests_properties(test.python.pkg.nisar.workflows.cuGeo2rdr PROPERTIES

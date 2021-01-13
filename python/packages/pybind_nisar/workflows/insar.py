@@ -17,22 +17,22 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     t_all = time.time()
 
-    if (run_steps['rdr2geo']):
+    if run_steps['rdr2geo']:
         rdr2geo.run(cfg)
 
-    if (run_steps['geo2rdr']):
+    if run_steps['geo2rdr']:
         geo2rdr.run(cfg)
 
-    if (run_steps['resample']):
+    if run_steps['resample']:
         resample_slc.run(cfg)
 
-    if (run_steps['crossmul']):
+    if run_steps['crossmul']:
         crossmul.run(cfg, out_paths['RIFG'])
 
-    if (run_steps['unwrap']):
+    if run_steps['unwrap']:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
-    if (run_steps['geocode']):
+    if run_steps['geocode']:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
 
     t_all_elapsed = time.time() - t_all
@@ -48,15 +48,13 @@ if __name__ == "__main__":
 
     # determine what steps if any need to be rerun
     persist = Persistence(args.restart)
-    print(persist.run)
-    print(persist.run_steps)
 
     # run InSAR workflow
-    '''
     if persist.run:
         # prepare HDF5 if needed
         if persist.run_steps['h5_prep']:
             out_paths = h5_prep.run(insar_runcfg.cfg)
+        else:
+            _, out_paths = h5_prep.get_products_and_paths(insar_runcfg.cfg)
 
         run(insar_runcfg.cfg, out_paths, persist.run_steps)
-    '''
