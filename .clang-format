@@ -32,7 +32,7 @@ AccessModifierOffset: -4
 IndentCaseLabels:           false
 IndentWrappedFunctionNames: false
 BreakInheritanceList: AfterColon
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: DontAlign
 AlwaysBreakTemplateDeclarations: Yes
 
 PointerAlignment: Left
