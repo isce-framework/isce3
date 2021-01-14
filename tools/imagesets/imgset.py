@@ -231,7 +231,7 @@ class ImageSet:
             with open(logpath, "r") as logfh:
                 print(logfh.read())
 
-    def workflowtest(self, wfname, testname, dataname, pyname): # hmmmmmmmmm
+    def workflowtest(self, wfname, testname, dataname, pyname, arg=""): # hmmmmmmmmm
         """
         Run the specified workflow test using the distrib image.
         
@@ -245,6 +245,8 @@ class ImageSet:
             Test input data (e.g. "L0B_RRSD_REE1")
         pyname : str
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
+        arg : str, optional
+            Additional command line argument(s) to pass to the workflow
         """
         print(f"Running workflow test {testname}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
@@ -255,7 +257,7 @@ class ImageSet:
                         pjoin(testdir, f"runconfig_{wfname}.yaml"))
         log = pjoin(testdir, f"output_{wfname}", "stdouterr.log")
         script = f"""
-            time python3 -m {pyname} runconfig_{wfname}.yaml
+            time python3 -m {pyname} {arg} runconfig_{wfname}.yaml
             """
         self.distribrun(testdir, script, log, dataname=dataname)
 
@@ -273,7 +275,7 @@ class ImageSet:
 
     def insartest(self):
         for testname, dataname in insartestdict.items():
-            self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar")
+            self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar", arg="--restart")
 
     def caltooltest(self):
         print(f"Running calTools test for noise_evd_estimate\n")
@@ -335,10 +337,10 @@ class ImageSet:
             os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
             log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
             script = f"""
-                time cfchecks.py output_{wfname}/gunw.h5
+                time cfchecks.py output_{wfname}/GUNW_gunw.h5
                 time verify_gunw.py --fpdf qa_{wfname}/graphs.pdf \
                     --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                    output_{wfname}/gunw.h5
+                    output_{wfname}/GUNW_gunw.h5
                 """
             self.distribrun(testdir, script, log, nisarimg=True)
         

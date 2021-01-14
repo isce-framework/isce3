@@ -27,7 +27,7 @@ runconfig:
             SASOutputFile: output_insar/gunw.h5
 
         PrimaryExecutable:
-            ProductType: GUNW
+            ProductType: POLAR
 
         DebugLevelGroup:
             DebugSwitch: false
@@ -95,14 +95,14 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
-                    y_abs: 3993122.0
+                    y_abs: 
                     # OPTIONAL - Set top-left x in same units as output EPSG
-                    x_abs: 752229.0
+                    x_abs:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
-                    y_abs: 3949557.0
-                    x_abs: 780669.0
+                    y_abs:
+                    x_abs:
 
             geo2rdr: 
                 threshold: 1e-8
@@ -112,8 +112,6 @@ runconfig:
                 y: 1000
 
             dem_margin: 0.1
-
-            flatten: True
 
             resample:
                 lines_per_tile: 100
@@ -131,8 +129,11 @@ runconfig:
                 algorithm: frequency                # {optional} Algorithm for cross-correlation computation (spatial
 
             crossmul:
-                beta: 0.25
-                azimuth_bandwidth: 75
+                flatten: True
                 range_looks: 11
                 azimuth_looks: 11
+
+            phase_unwrap:
+                crossmul_path: 
+                buffer_lines: 1000
 

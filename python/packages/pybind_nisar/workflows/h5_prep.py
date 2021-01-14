@@ -19,6 +19,7 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
     '''
     output_path = cfg['ProductPathGroup']['SASOutputFile']
     scratch = cfg['ProductPathGroup']['ScratchPath']
+    product_type = cfg['PrimaryExecutable']['ProductType']
 
     # dict keying product type with list with possible product type(s)
     insar_products = ['RIFG', 'RUNW', 'GUNW', 'POLAR']
@@ -41,7 +42,7 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
                 'GCOV':{'GCOV':output_path},
                 'GSLC':{'GSLC':output_path}}
 
-    return product_dict, h5_paths
+    return product_dict[product_type], h5_paths[product_type]
 
 def run(cfg: dict) -> dict:
     '''
@@ -53,15 +54,14 @@ def run(cfg: dict) -> dict:
 
     product_dict, h5_paths = get_products_and_paths(cfg)
 
-    product_type = cfg['PrimaryExecutable']['ProductType']
-    for sub_prod_type in product_dict[product_type]:
-        out_path = h5_paths[product_type][sub_prod_type]
+    for sub_prod_type in product_dict:
+        out_path = h5_paths[sub_prod_type]
         cp_geocode_meta(cfg, out_path, sub_prod_type)
         prep_ds(cfg, out_path, sub_prod_type)
 
     info_channel.log('successfully ran h5_prep')
 
-    return h5_paths[product_type]
+    return h5_paths
 
 def cp_geocode_meta(cfg, output_hdf5, dst):
     '''

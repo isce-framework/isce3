@@ -22,8 +22,8 @@ class Persistence():
         if not restart:
             self.read_log()
 
+        info_channel = journal.info("persistence.init")
         if self.run:
-            info_channel = journal.info("persistence.init")
             info_channel.log("Possible steps to be run:")
             for step in self.insar_steps:
                 info_channel.log(f"{step}: {self.run_steps[step]}")
