@@ -4,6 +4,7 @@ Analyze a point target in a complex*8 file.
 """
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 
 desc = __doc__
 
@@ -95,75 +96,76 @@ def estimate_resolution (x, dt=1.0):
     # Return the distance between -3dB crossings, scaled by the sample spacing.
     return dt * (iright - ileft)
 
-def find_null_to_null(matched_output, mainPeakIdx, num_nulls_main, numSamplesNull):
-    """
-    find mainlobe null locations as sample info
-    num_nulls_main: num_nulls_main > 1 if mainlobe includes first sidelobes
-    numSamplesNull: default is Fs/bandwidth, number of samples from null to null
-    nullLeftIdx: null location left of mainlobe peak
-    nullRightIdx: null location right of mainlobe peak
-    """
+def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_peak_idx):
+    #find mainlobe null locations as sample info
+    #num_nulls_main: num_nulls_main > 1 if mainlobe includes first sidelobes
+    #num_samples_null: default is Fs/bandwidth, number of samples from null to null
+    #nullLeftIdx: null location left of mainlobe peak
+    #nullRightIdx: null location right of mainlobe peak
     
     #Search at least 1 sample beyond expected null
-    numSampleSearch = numSamplesNull + 2
+    num_samples_search = num_samples_null + 2
     
-    if (num_peaks_main == 1):
-        first_peak_left_idx = mainPeakIdx
-        first_peak_right_idx = mainPeakIdx
+    if (num_nulls_main == 1):
+        first_peak_left_idx = main_peak_idx
+        first_peak_right_idx = main_peak_idx
         
-        search_samples_left_stop = first_peak_left_idx - numSampleSearch
-        search_samples_right_stop = first_peak_right_idx + numSampleSearch
+        search_samples_left_stop = first_peak_left_idx - num_samples_search
+        search_samples_right_stop = first_peak_right_idx + num_samples_search
                
         samples_left = matched_output[first_peak_left_idx : search_samples_left_stop : -1]
         samples_right = matched_output[first_peak_right_idx : search_samples_right_stop] 
-    elif (num_peaks_main == 2):
-        first_peak_left_idx = mainPeakIdx - int(np.round(1.5 * numSamplesNull))
-        first_peak_right_idx = mainPeakIdx + int(np.round(1.5 * numSamplesNull))
+    elif (num_nulls_main == 2):
+        first_peak_left_idx = main_peak_idx - int(np.round(1.5 * num_samples_null))
+        first_peak_right_idx = main_peak_idx + int(np.round(1.5 * num_samples_null))
         
-        search_samples_left_stop = first_peak_left_idx - numSampleSearch
-        search_samples_right_stop = first_peak_right_idx + numSampleSearch
+        search_samples_left_stop = first_peak_left_idx - num_samples_search
+        search_samples_right_stop = first_peak_right_idx + num_samples_search
 
         samples_left = matched_output[first_peak_left_idx : search_samples_left_stop : -1]
         samples_right = matched_output[first_peak_right_idx : search_samples_right_stop]
-
+    else:
+        raise Exception("The variable num_nulls_main cannot be greater than 2.")
+    
     #Search for left null
-    for i in range(numSampleSearch - 1):
+    for i in range(num_samples_search - 1):
         if (samples_left[i] < samples_left[i+1]):          
             null_left_idx = first_peak_left_idx - i
             break
         elif((samples_left[i] > samples_left[i+1])):
-            null_left_idx = first_peak_left_idx - (numSampleSearch - 1)
+            null_left_idx = first_peak_left_idx - (num_samples_search - 1)
             
     #Search for right null
-    for k in range(numSampleSearch - 1):
+    for k in range(num_samples_search - 1):
         if (samples_right[k] < samples_right[k+1]):         
             null_right_idx = first_peak_right_idx + k
             break
         elif((samples_right[k] > samples_right[k+1])):
-            null_right_idx = first_peak_right_idx + (numSampleSearch - 1)
+            null_right_idx = first_peak_right_idx + (num_samples_search - 1)
     
     return null_left_idx, null_right_idx
 
 def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5, search_null=False):
-    """
-    fs_bw_ratio: sampling frequency to bandwidth ratio
-    search_null:   if search_null == 1, then apply algorithm to find null locations
-                   otherwise, specify null locations based on default Fs/B samples,
-                   i.e, first null is at Fs/B samples from the mainlobe peak
-    num_nulls_main:  maximum is 2. Mainlobe could include up to 2 nulls.
-    num_lobes: total number of lobes for ISLR computation, if num_nulls_main=2,default is 12.5. Otherwise, default is 11.5.
-    data_in_linear: Linear Point target range or azimuth cut in amplitude
-    """
-    
-    numSamplesNull = int(np.round(fs_bw_ratio))
+    #fs_bw_ratio: sampling frequency to bandwidth ratio
+    #search_null:   if search_null == 1, then apply algorithm to find null locations
+    #               otherwise, specify null locations based on default Fs/B samples,
+    #               i.e, first null is at Fs/B samples from the mainlobe peak
+    #num_nulls_main:  maximum is 2. Mainlobe could include up to 2 nulls.
+    #num_lobes: total number of lobes for ISLR computation, if num_nulls_main=2,default is 12.5. Otherwise, default is 11.5.
+    #data_in_linear: Linear Point target range or azimuth cut in complex numbers
+
+    num_samples_null = int(np.round(fs_bw_ratio))
     data_in_pwr_linear = np.abs(data_in_linear)**2
-    data_in_pwr_dB = 10 * np.log10(data_in_pwr_linear)
+    data_in_pwr_dB = 10*np.log10(data_in_pwr_linear)
     zmax_idx = np.argmax(data_in_pwr_linear)
     plsr_main_lobe = 1
     
     if search_null:
-        null_main_left_idx, null_main_right_idx = find_null_to_null(data_in_pwr_dB, zmax_idx, num_nulls_main, num_samples_null)
-        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, zmax_idx, plsr_main_lobe, num_samples_null)
+        null_main_left_idx, null_main_right_idx = find_null_to_null(data_in_pwr_dB, num_nulls_main, num_samples_null, zmax_idx)
+        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, num_samples_null, zmax_idx)
+		
+        num_samples_sidelobe = zmax_idx - null_first_left_idx
+        num_samples_side_total = int(num_lobes * num_samples_sidelobe)
     else:
         num_samples_search = int(num_nulls_main * num_samples_null)
         null_main_left_idx = zmax_idx - num_samples_search
@@ -171,10 +173,11 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5,
 		
         null_first_left_idx = zmax_idx - num_samples_null
         null_first_right_idx = zmax_idx + num_samples_null
-
-    num_samples_side = int(num_lobes * num_samples_null)    
-    sidelobe_left_idx = zmax_idx - num_samples_side
-    sidelobe_right_idx = zmax_idx + num_samples_side
+		
+        num_samples_side_total = int(num_lobes * num_samples_null)
+  
+    sidelobe_left_idx = null_first_left_idx - num_samples_side_total
+    sidelobe_right_idx = null_first_right_idx + num_samples_side_total
 
     #ISLR: Mainlobe could include 2nd null
     islr_mainlobe = data_in_pwr_linear[null_main_left_idx : null_main_right_idx]
@@ -254,6 +257,7 @@ def analyze_point_target (slc, i, j, nov=32, plot=False, cuts=False,
         Dictionary of point target attributes.  If plot=true then return the
         dictionary and a list of figures.
     """
+
     chip_i0, chip_j0, chip = get_chip (slc, i, j, nchip=chipsize)
 
     chip, fx, fy = oversample (chip, nov=nov, return_slopes=True)
