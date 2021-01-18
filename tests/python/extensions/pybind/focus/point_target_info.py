@@ -4,7 +4,6 @@ Analyze a point target in a complex*8 file.
 """
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 
 desc = __doc__
 
