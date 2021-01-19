@@ -39,6 +39,7 @@ geometry/geometry/geometry_equator.cpp
 geometry/rtc/rtc.cpp
 geometry/topo/topo.cpp
 geometry/bbox/geoperimeter_equator.cpp
+geometry/metadata_cubes/metadata_cubes.cpp
 image/resampslc/resampslc.cpp
 io/gdal/buffer.cpp
 io/gdal/gdal-dataset.cpp

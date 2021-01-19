@@ -686,10 +686,11 @@ void _addArea(double area, isce3::core::Matrix<float>& out_array,
 }
 
 double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
-                    Vec3 lookXYZ, double p1, double& p3, double divisor,
-                    bool clockwise_direction) {
+                    Vec3 target_to_sensor_xyz, double p1, double& p3,
+                    double divisor, bool clockwise_direction)
+{
     const Vec3 normal_facet = normalPlane(xyz_center, xyz_left, xyz_right);
-    double cos_inc_facet = normal_facet.dot(lookXYZ);
+    double cos_inc_facet = normal_facet.dot(target_to_sensor_xyz);
 
     p3 = (xyz_center - xyz_right).norm();
 
@@ -873,11 +874,11 @@ void computeRtcBilinearDistribution(
             if (status != isce3::error::ErrorCode::Success)
                 continue;
 
-            const Vec3 lookXYZ = (xyz_plat - xyz_mid).normalized();
+            const Vec3 target_to_sensor_xyz = (xyz_plat - xyz_mid).normalized();
 
             // Compute dot product between each facet and look vector
-            double cos_inc_facet_1 = lookXYZ.dot(normal_facet_1);
-            double cos_inc_facet_2 = lookXYZ.dot(normal_facet_2);
+            double cos_inc_facet_1 = target_to_sensor_xyz.dot(normal_facet_1);
+            double cos_inc_facet_2 = target_to_sensor_xyz.dot(normal_facet_2);
             if (dy < 0) {
                 cos_inc_facet_1 *= -1;
                 cos_inc_facet_2 *= -1;
@@ -1266,7 +1267,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             const Vec3 xyz10 = ellipsoid.lonLatToXyz(proj->inverse(dem10));
             const Vec3 xyz01 = ellipsoid.lonLatToXyz(proj->inverse(dem01));
             const Vec3 xyz11 = ellipsoid.lonLatToXyz(proj->inverse(dem11));
-            const Vec3 xyz_c = ellipsoid.lonLatToXyz(proj->inverse(dem_c));
+            const Vec3 target_llh = proj->inverse(dem_c);
+            const Vec3 xyz_c = ellipsoid.lonLatToXyz(target_llh);
 
             // Calculate look vector
             isce3::core::cartesian_t xyz_plat, vel;
@@ -1275,7 +1277,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             if (status != isce3::error::ErrorCode::Success)
                 continue;
 
-            const Vec3 lookXYZ = (xyz_plat - xyz_c).normalized();
+            const Vec3 target_to_sensor_xyz = (xyz_plat - xyz_c).normalized();
 
             // Prepare call to computeFacet()
             double p00_c = (xyz00 - xyz_c).norm();
@@ -1286,11 +1288,18 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
 
             if (input_terrain_radiometry ==
                 rtcInputTerrainRadiometry::SIGMA_NAUGHT_ELLIPSOID) {
-                const double costheta = xyz_c.dot(lookXYZ) / xyz_c.norm();
+
+                // Computation in ENU coordinates around target
+                const Mat3 xyz2enu =
+                        Mat3::xyzToEnu(target_llh[1], target_llh[0]);
+                const Vec3 target_to_sensor_enu =
+                        xyz2enu.dot(target_to_sensor_xyz);
+                const double cos_inc = std::abs(target_to_sensor_enu[2]) /
+                                       target_to_sensor_enu.norm();
 
                 // Compute incidence angle components
-                const double sintheta = std::sqrt(1. - costheta * costheta);
-                divisor /= sintheta;
+                const double sin_inc = std::sqrt(1. - cos_inc * cos_inc);
+                divisor /= sin_inc;
             }
 
             bool clockwise_direction = (dem_interp_block.deltaY() > 0);
@@ -1327,8 +1336,9 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                                      w_arr_1, nlooks_1, plane_orientation);
 
             // Compute the area (first facet)
-            double area = computeFacet(xyz_c, xyz00, xyz01, lookXYZ, p00_c,
-                                       p01_c, divisor, clockwise_direction);
+            double area =
+                    computeFacet(xyz_c, xyz00, xyz01, target_to_sensor_xyz,
+                                 p00_c, p01_c, divisor, clockwise_direction);
             // Add area to output grid
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
                      radar_grid.length(), radar_grid.width(), x_min, y_min,
@@ -1336,8 +1346,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                      x00, x01, y_c, y00, y01, plane_orientation);
 
             // Compute the area (second facet)
-            area = computeFacet(xyz_c, xyz01, xyz11, lookXYZ, p01_c, p11_c,
-                                divisor, clockwise_direction);
+            area = computeFacet(xyz_c, xyz01, xyz11, target_to_sensor_xyz,
+                                p01_c, p11_c, divisor, clockwise_direction);
 
             // Add area to output grid
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
@@ -1346,8 +1356,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                      x01, x11, y_c, y01, y11, plane_orientation);
 
             // Compute the area (third facet)
-            area = computeFacet(xyz_c, xyz11, xyz10, lookXYZ, p11_c, p10_c,
-                                divisor, clockwise_direction);
+            area = computeFacet(xyz_c, xyz11, xyz10, target_to_sensor_xyz,
+                                p11_c, p10_c, divisor, clockwise_direction);
 
             // Add area to output grid
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
@@ -1356,8 +1366,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                      x11, x10, y_c, y11, y10, plane_orientation);
 
             // Compute the area (fourth facet)
-            area = computeFacet(xyz_c, xyz10, xyz00, lookXYZ, p10_c, p00_c,
-                                divisor, clockwise_direction);
+            area = computeFacet(xyz_c, xyz10, xyz00, target_to_sensor_xyz,
+                                p10_c, p00_c, divisor, clockwise_direction);
 
             // Add area to output grid
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,

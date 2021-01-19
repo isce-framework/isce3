@@ -88,6 +88,7 @@ geometry/RTC.h
 geometry/Topo.h
 geometry/Topo.icc
 geometry/TopoLayers.h
+geometry/metadataCubes.h
 image/forward.h
 image/ResampSlc.h
 image/ResampSlc.icc

@@ -44,6 +44,7 @@ geocode/GeocodeCov.cpp
 geometry/geometry.cpp
 geometry/RTC.cpp
 geometry/Topo.cpp
+geometry/metadataCubes.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
 io/gdal/detail/MemoryMap.cpp

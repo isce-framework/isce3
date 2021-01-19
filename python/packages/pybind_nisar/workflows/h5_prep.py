@@ -12,6 +12,7 @@ from osgeo import osr
 import journal
 from pybind_nisar.h5 import cp_h5_meta_data
 from pybind_nisar.products.readers import SLC
+import pybind_isce3 as isce3
 
 def get_products_and_paths(cfg: dict) -> (dict, dict):
     '''
@@ -128,12 +129,13 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         if is_geocoded:
             cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
                             f'{dst_meta_path}/attitude')
-            cp_h5_meta_data(src_h5, dst_h5,
-                            f'{src_meta_path}/geolocationGrid',
-                            f'{dst_meta_path}/radarGrid',
-                            renames={'coordinateX': 'xCoordinates',
-                                     'coordinateY': 'yCoordinates',
-                                     'zeroDopplerTime': 'zeroDopplerAzimuthTime'})
+            if dst != 'GCOV':
+                cp_h5_meta_data(src_h5, dst_h5,
+                                f'{src_meta_path}/geolocationGrid',
+                                f'{dst_meta_path}/radarGrid',
+                                renames={'coordinateX': 'xCoordinates',
+                                        'coordinateY': 'yCoordinates',
+                                        'zeroDopplerTime': 'zeroDopplerAzimuthTime'})
         else:
             # RUNW and RIFG have no attitude group and have geolocation grid
             cp_h5_meta_data(src_h5, dst_h5,
@@ -785,7 +787,8 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     dset.attrs["description"] = np.string_(desc)
 
 
-def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
+def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = False):
+
     epsg_code = geo_grid.epsg
 
     dx = geo_grid.spacing_x
@@ -796,7 +799,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     dy = geo_grid.spacing_y
     y0 = geo_grid.start_y + 0.5 * dy
     yf = y0 + (geo_grid.length - 1) * dy
-    y_vect = np.linspace(y0, yf, geo_grid.length, dtype=np.float64)
+    y_vect = np.linspace(y0, yf - dy, geo_grid.length, dtype=np.float64)
 
     hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
 
@@ -812,9 +815,12 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
         y_standard_name = "projection_y_coordinate"
 
     # xCoordinateSpacing
-    descr = (f'Nominal spacing in {x_coord_units}'
-             ' between consecutive pixels')
-
+    if not flag_cube:
+        descr = (f'Nominal spacing in {x_coord_units}'
+                 ' between consecutive pixels')
+    else:
+        descr = ('X coordinate values corresponding'
+                 ' to the radar grid')
     xds_spacing_name = os.path.join(root_ds, 'xCoordinateSpacing')
     if xds_spacing_name in hdf5_obj:
         del hdf5_obj[xds_spacing_name]
@@ -824,9 +830,12 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     xds_spacing.attrs["long_name"] = np.string_("x coordinate spacing")
 
     # yCoordinateSpacing
-    descr = (f'Nominal spacing in {y_coord_units}'
-             ' between consecutive lines')
-
+    if not flag_cube:
+        descr = (f'Nominal spacing in {y_coord_units}'
+                 ' between consecutive lines')
+    else:
+        descr = ('Y coordinate values corresponding'
+                 ' to the radar grid')
     yds_spacing_name = os.path.join(root_ds, 'yCoordinateSpacing')
     if yds_spacing_name in hdf5_obj:
         del hdf5_obj[yds_spacing_name]
@@ -858,6 +867,18 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
     yds.attrs["long_name"] = np.string_("y coordinate")
 
     coordinates_list = [xds, yds]
+
+    # zCoordinates
+    if z_vect is not None:
+        descr = "Height values above WGS84 Ellipsoid corresponding to the radar grid"
+        zds_name = os.path.join(root_ds, 'heightAboveEllipsoid')
+        if zds_name in hdf5_obj:
+            del hdf5_obj[zds_name]
+        zds = hdf5_obj.create_dataset(zds_name, data=z_vect)
+        zds.attrs['standard_name'] = np.string_("height_above_reference_ellipsoid")
+        yds.attrs["description"] = np.string_(descr)
+        zds.attrs['units'] = np.string_("m")
+        coordinates_list.append(zds)
 
     try:
         for _ds in coordinates_list:
@@ -960,4 +981,109 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid):
         projds.attrs['longitude_of_projection_origin'] = sr.GetProjParm(
             osr.SRS_PP_LONGITUDE_OF_ORIGIN)
 
+    if z_vect is not None:
+        return zds, yds, xds
     return yds, xds
+
+
+def add_radar_grid_cubes_to_hdf5(fid, cube_group_name, geogrid, heights, radar_grid,
+                                 orbit, native_doppler, grid_doppler,
+                                 threshold_geo2rdr = 1e-8,
+                                 numiter_geo2rdr = 100, delta_range = 1e-8):
+    if cube_group_name not in fid:
+        cube_group = fid.create_group(cube_group_name)
+    else:
+        cube_group = fid[cube_group_name]
+
+    cube_shape = [len(heights), geogrid.length, geogrid.width]
+
+    zds, yds, xds = set_get_geo_info(fid, cube_group_name, geogrid, z_vect=heights, 
+                                     flag_cube=True)
+
+    slant_range_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'slantRange', np.float64, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    azimuth_time_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    incidence_angle_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'incidenceAngle', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'losUnitVectorX', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'losUnitVectorY', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+    elevation_angle_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'elevationAngle', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds)
+
+    isce3.geometry.make_radar_grid_cubes(radar_grid,
+                                         geogrid,
+                                         heights,
+                                         orbit,
+                                         native_doppler,
+                                         grid_doppler,
+                                         slant_range_raster,
+                                         azimuth_time_raster,
+                                         incidence_angle_raster,
+                                         los_unit_vector_x_raster,
+                                         los_unit_vector_y_raster,
+                                         along_track_unit_vector_x_raster,
+                                         along_track_unit_vector_y_raster,
+                                         elevation_angle_raster,
+                                         threshold_geo2rdr,
+                                         numiter_geo2rdr,
+                                         delta_range)
+
+def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
+                             zds=None, yds=None, xds=None, standard_name=None,
+                             long_name=None, units=None, fill_value=None,
+                             valid_min=None, valid_max=None):
+
+    # remove dataset if it already exists
+    if ds_name in group:
+        del group[ds_name]
+
+    # create dataset
+    dset = group.create_dataset(ds_name, dtype=np.float64, shape=shape)
+
+    if zds is not None:
+        dset.dims[0].attach_scale(zds)
+    if yds is not None:
+        dset.dims[1].attach_scale(yds)
+    if xds is not None:
+        dset.dims[2].attach_scale(xds)
+
+    dset.attrs['grid_mapping'] = np.string_("projection")
+
+    if standard_name is not None:
+        dset.attrs['standard_name'] = np.string_(standard_name)
+
+    if long_name is not None:
+        dset.attrs['long_name'] = np.string_(long_name)
+
+    if units is not None:
+        dset.attrs['units'] = np.string_(units)
+
+    if fill_value is not None:
+        dset.attrs.create('_FillValue', data=fill_value)
+
+    if valid_min is not None:
+        dset.attrs.create('valid_min', data=valid_min)
+
+    if valid_max is not None:
+        dset.attrs.create('valid_max', data=valid_max)
+
+    # Construct the cube rasters directly from HDF5 dataset
+    raster = isce3.io.Raster(f"IH5:::ID={dset.id.id}".encode("utf-8"), update=True)
+
+    return raster
+

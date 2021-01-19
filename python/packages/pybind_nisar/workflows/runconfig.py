@@ -7,6 +7,7 @@ import os
 import journal
 from ruamel.yaml import YAML
 import yamale
+import numpy as np
 
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
@@ -218,6 +219,54 @@ class RunConfig:
         # place geogrids in cfg for later processing
         self.cfg['processing']['geocode']['geogrids'] = geogrids
 
+    def prep_cubes_geocode_cfg(self):
+        '''
+        check cubes geocode config and initialize as needed
+
+        radar_grid_cubes is an optional group. If not provided,
+        the geocode group should be used, but with different X and Y
+        spacing defaults
+        '''
+        geocode_dict = self.cfg['processing']['geocode']
+
+        # check for user provided EPSG and grab geocode group EPSG if not provided
+
+        if self.cfg['processing']['radar_grid_cubes']['outputEPSG'] is None: 
+            cubes_epsg = geocode_dict['outputEPSG']
+        else:
+            cubes_epsg = self.cfg['processing']['radar_grid_cubes']['outputEPSG']
+
+        self.cfg['processing']['radar_grid_cubes']['outputEPSG'] = cubes_epsg
+
+        if not self.cfg['processing']['radar_grid_cubes']['heights']:
+            self.cfg['processing']['radar_grid_cubes']['heights'] = \
+                list(np.arange(-1000, 9001, 500))
+
+        if cubes_epsg == 4326:
+            # lat/lon
+            default_cube_geogrid_spacing_x = 0.005
+            default_cube_geogrid_spacing_y = -0.005
+        else:
+            # meters
+            default_cube_geogrid_spacing_x = 500
+            default_cube_geogrid_spacing_y = -500
+
+        radar_grid_cubes_dict = self.cfg['processing']['radar_grid_cubes']
+        self.cfg['processing']['radar_grid_cubes']['outputEPSG'] = cubes_epsg
+
+        # build geogrid
+        frequency_ref = 'A'
+        frequency_group = None
+        cubes_geogrid = geogrid.create(
+            self.cfg, frequency_group = frequency_group, 
+            frequency = frequency_ref,
+            geocode_dict = radar_grid_cubes_dict,
+            default_spacing_x = default_cube_geogrid_spacing_x,
+            default_spacing_y = default_cube_geogrid_spacing_y)
+
+        # place geogrid in cfg for later processing
+        self.cfg['processing']['radar_grid_cubes']['geogrid'] = cubes_geogrid
+
     def geocode_common_arg_load(self):
         '''
         Workflows needing geocoding
@@ -225,3 +274,5 @@ class RunConfig:
         self.prep_paths()
         self.prep_frequency_and_polarizations()
         self.prep_geocode_cfg()
+        if self.workflow_name == 'gcov':
+            self.prep_cubes_geocode_cfg()

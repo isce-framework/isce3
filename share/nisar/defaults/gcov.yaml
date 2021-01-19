@@ -162,6 +162,41 @@ runconfig:
                     y_abs:
                     x_abs:
 
+            radar_grid_cubes: 
+    
+                # # List heights in meters
+                heights: 
+
+                # OPTIONAL - Same as the geocode group outputEPSG if not provided
+                outputEPSG:
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # If not provided, spacing values will be taken from geocode group
+                # parameters.
+                # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
+                output_posting:
+                    x_posting: 
+                    y_posting: 
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                y_snap:
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                x_snap:
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                top_left:        
+                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    y_abs:
+                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    x_abs:
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                bottom_right:
+                    y_abs:
+                    x_abs:                    
+
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 100

@@ -5,6 +5,7 @@
 #include "geo2rdr.h"
 #include "rdr2geo.h"
 #include "RTC.h"
+#include "metadataCubes.h"
 
 namespace py = pybind11;
 
@@ -45,4 +46,5 @@ void addsubmodule_geometry(py::module & m)
     addbinding_geo2rdr(geometry);
     addbinding_rdr2geo(geometry);
     addbinding_boundingbox(geometry);
+    addbinding_metadata_cubes(geometry);
 }

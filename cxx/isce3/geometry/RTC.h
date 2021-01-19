@@ -355,9 +355,9 @@ computeUpsamplingFactor(const DEMInterpolator& dem_interp,
                         const isce3::core::Ellipsoid& ellps);
 
 double computeFacet(isce3::core::Vec3 xyz_center, isce3::core::Vec3 xyz_left,
-                    isce3::core::Vec3 xyz_right, isce3::core::Vec3 lookXYZ,
-                    double p1, double& p3, double divisor,
-                    bool clockwise_direction);
+                    isce3::core::Vec3 xyz_right,
+                    isce3::core::Vec3 target_to_sensor_xyz, double p1,
+                    double& p3, double divisor, bool clockwise_direction);
 
 std::string get_input_terrain_radiometry_str(rtcInputTerrainRadiometry input_terrain_radiometry);
 std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode);

@@ -34,6 +34,7 @@ geometry/geometry.cpp
 geometry/geo2rdr.cpp
 geometry/rdr2geo.cpp
 geometry/RTC.cpp
+geometry/metadataCubes.cpp
 image/image.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp

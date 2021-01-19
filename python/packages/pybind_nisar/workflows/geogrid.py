@@ -21,8 +21,23 @@ def _grid_size(stop, start, sz):
     return int(np.ceil(np.abs((stop-start)/sz)))
 
 
-def create(cfg, frequency):
+def create(cfg, frequency_group = None, frequency = None,
+           geocode_dict = None,
+           default_spacing_x = None, default_spacing_y = None):
     '''
+    - frequency_group is the name of the sub-group that
+    holds the fields x_posting and y_posting, which is usually
+    the frequency groups "A" or "B". If these fields
+    are direct member of the output_posting group, e.g 
+    for radar_grid_cubes, the frequency_group should be left
+     as None.
+    - frequency is the frequency name, if not provided, it will be
+    the same as the frequency_group.
+    - geocode_dict overwrites the default geocode_dict from 
+    processing.geocode
+    - default_spacing_x is default pixel spacing in the X-direction
+    - default_spacing_y is default pixel spacing in the Y-direction
+
     For production we only fix epsgcode and snap value and will
     rely on the rslc product metadta to compute the bounding box of the geocoded products
     there is a place holder in SLC product for compute Bounding box
@@ -33,7 +48,9 @@ def create(cfg, frequency):
     error_channel = journal.error('geogrid.create')
 
     # unpack and init
-    geocode_dict = cfg['processing']['geocode']
+    if geocode_dict is None:
+        geocode_dict = cfg['processing']['geocode']
+
     input_hdf5 = cfg['InputFileGroup']['InputFilePath']
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
     slc = SLC(hdf5file=input_hdf5)
@@ -42,8 +59,17 @@ def create(cfg, frequency):
     epsg = geocode_dict['outputEPSG']
     start_x = geocode_dict['top_left']['x_abs']
     start_y = geocode_dict['top_left']['y_abs']
-    spacing_x = geocode_dict['output_posting'][frequency]['x_posting']
-    spacing_y = geocode_dict['output_posting'][frequency]['y_posting']
+
+    if frequency is None:
+        frequency = frequency_group
+
+    if frequency_group is None:
+        spacing_x = geocode_dict['output_posting']['x_posting']
+        spacing_y = geocode_dict['output_posting']['y_posting']
+    else:
+        spacing_x = geocode_dict['output_posting'][frequency_group]['x_posting']
+        spacing_y = geocode_dict['output_posting'][frequency_group]['y_posting']
+    
     end_x = geocode_dict['bottom_right']['x_abs']
     end_y = geocode_dict['bottom_right']['y_abs']
 
@@ -56,9 +82,15 @@ def create(cfg, frequency):
         assert spacing_y > 0.0
         spacing_y = -1.0 * spacing_y
 
-    # init geogrid
-    if None in [start_x, start_y, spacing_x, spacing_y, epsg, end_x, end_y]:
+    # copy X spacing from default X spacing (if applicable)
+    if spacing_x is None and default_spacing_x is not None:
+        spacing_x = default_spacing_x
 
+    # copy Y spacing from default Y spacing (if applicable)
+    if spacing_y is None and default_spacing_y is not None:
+        spacing_y = default_spacing_y
+
+    if spacing_x is None or spacing_y is None:
         dem_raster = isce.io.Raster(dem_file)
 
         # copy X spacing from DEM
@@ -70,7 +102,7 @@ def create(cfg, frequency):
                 err_str = f'Expected positive pixel spacing in the X/longitude direction'
                 err_str += f' for DEM {dem_file}. Actual value: {spacing_x}.'
                 error_channel.log(err_str)
-                raise ValueError(err_str)
+                raise ValueError(err_str)   
 
         # copy Y spacing from DEM
         if spacing_y is None:
@@ -82,6 +114,14 @@ def create(cfg, frequency):
                 err_str += f' for DEM {dem_file}. Actual value: {spacing_y}.'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
+
+    if spacing_x == 0.0 or spacing_y == 0.0:
+        err_str = 'spacing_x or spacing_y cannot be 0.0'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    # init geogrid
+    if None in [start_x, start_y, epsg, end_x, end_y]:
 
         # extract other geogrid params from radar grid and orbit constructed bounding box
         geogrid = isce.product.bbox_to_geogrid(slc.getRadarGrid(frequency),
@@ -114,11 +154,6 @@ def create(cfg, frequency):
                                          geogrid.spacing_y))
 
     else:
-        if spacing_x == 0.0 or spacing_y == 0.0:
-            err_str = 'spacing_x or spacing_y cannot be 0.0'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
         width = _grid_size(end_x, start_x, spacing_x)
         length = _grid_size(end_y, start_y, -1.0*spacing_y)
 

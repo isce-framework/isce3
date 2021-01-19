@@ -36,6 +36,51 @@ GeoGridParameters::GeoGridParameters(
     }
 }
 
+std::string to_string(const GeoGridParameters& geogrid)
+{
+    std::string ret_str = "start X: " + std::to_string(geogrid.startX()) + "\n";
+    ret_str += "end X: " +
+               std::to_string(geogrid.startX() +
+                              geogrid.spacingX() * geogrid.width()) +
+               "\n";
+    ret_str += "start Y: " + std::to_string(geogrid.startY()) + "\n";
+    ret_str += "end Y: " +
+               std::to_string(geogrid.startY() +
+                              geogrid.spacingY() * geogrid.length()) +
+               "\n";
+    ret_str += "spacing X: " + std::to_string(geogrid.spacingX()) + "\n";
+    ret_str += "spacing Y: " + std::to_string(geogrid.spacingY()) + "\n";
+    ret_str += "width: " + std::to_string(geogrid.width()) + "\n";
+    ret_str += "length: " + std::to_string(geogrid.length()) + "\n";
+    ret_str += "epsg: " + std::to_string(geogrid.epsg()) + "\n";
+    return ret_str;
+}
+
+std::ostream& operator<<(std::ostream& out, const GeoGridParameters& geogrid)
+{
+    return out << to_string(geogrid);
+}
+
+void GeoGridParameters::print() const
+{
+
+    pyre::journal::info_t info("isce.product.GeoGridParameters");
+
+    std::string ret_str = to_string(*this);
+    std::string delimiter = "\n";
+
+    // remove last delimiter
+    ret_str.erase(ret_str.length() - 1 - delimiter.length(), std::string::npos);
+
+    // substitute "\n" by pyre::journal::newline
+    size_t pos = 0;
+    while ((pos = ret_str.find(delimiter)) != std::string::npos) {
+        info << ret_str.substr(0, pos) << pyre::journal::newline;
+        ret_str.erase(0, pos + delimiter.length());
+    }
+    info << ret_str << pyre::journal::endl;
+}
+
 GeoGridParameters bbox2GeoGrid(const RadarGridParameters& radar_grid,
                                const isce3::core::Orbit& orbit,
                                const isce3::core::LUT2d<double>& doppler,

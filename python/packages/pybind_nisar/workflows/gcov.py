@@ -11,9 +11,10 @@ import h5py
 import journal
 import numpy as np
 
-import pybind_isce3 as isce
+import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
 from pybind_nisar.workflows import h5_prep
+from pybind_nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 from pybind_nisar.workflows.gcov_runconfig import GCOVRunConfig
 
@@ -29,6 +30,9 @@ def run(cfg):
     flag_fullcovariance = cfg['processing']['input_subset']['fullcovariance']
     scratch_path = cfg['ProductPathGroup']['ScratchPath']
 
+    radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
+    radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
+    
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
     dem_margin = cfg['processing']['dem_margin']
 
@@ -50,7 +54,7 @@ def run(cfg):
     rtc_algorithm = rtc_dict['algorithm_type']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
-    apply_rtc = output_mode == isce.geocode.GeocodeOutputMode.AREA_PROJECTION_WITH_RTC
+    apply_rtc = output_mode == isce3.geocode.GeocodeOutputMode.AREA_PROJECTION_WITH_RTC
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
@@ -59,7 +63,7 @@ def run(cfg):
 
     if apply_rtc:
         output_radiometry_str = 'radar backscatter gamma0'
-    elif input_terrain_radiometry == isce.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
+    elif input_terrain_radiometry == isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
         output_radiometry_str = 'radar backscatter beta0'
     else:
         output_radiometry_str = 'radar backscatter sigma0'
@@ -72,10 +76,16 @@ def run(cfg):
 
     # init parameters shared between frequencyA and frequencyB sub-bands
     slc = SLC(hdf5file=input_hdf5)
-    dem_raster = isce.io.Raster(dem_file)
-    zero_doppler = isce.core.LUT2d()
+    dem_raster = isce3.io.Raster(dem_file)
+    native_doppler = slc.getDopplerCentroid()
+    '''
+    bounds error are turned off for the native Doppler because of
+    some issue when computing geo2rdr() in makeRadarGridCubes().
+    ''' 
+    native_doppler.bounds_error = False
+    zero_doppler = isce3.core.LUT2d()
     epsg = dem_raster.get_epsg()
-    proj = isce.core.make_projection(epsg)
+    proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
     exponent = 2
 
@@ -85,6 +95,7 @@ def run(cfg):
 
     t_all = time.time()
     for frequency in freq_pols.keys():
+
         t_freq = time.time()
 
         # unpack frequency dependent parameters
@@ -102,31 +113,33 @@ def run(cfg):
         input_raster_list = []
         for pol in pol_list:
             raster_ref = f'HDF5:"{input_hdf5}":/{slc.slcPath(frequency, pol)}'
-            temp_raster = isce.io.Raster(raster_ref)
+            temp_raster = isce3.io.Raster(raster_ref)
             input_raster_list.append(temp_raster)
 
         # set paths temporary files
         input_temp = tempfile.NamedTemporaryFile(
             dir=scratch_path, suffix='.vrt')
-        input_raster_obj = isce.io.Raster(
+        input_raster_obj = isce3.io.Raster(
             input_temp.name, raster_list=input_raster_list)
 
         # init Geocode object depending on raster type
         if input_raster_obj.datatype() == gdal.GDT_Float32:
-            geo = isce.geocode.GeocodeFloat32()
+            geo = isce3.geocode.GeocodeFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_Float64:
-            geo = isce.geocode.GeocodeFloat64()
+            geo = isce3.geocode.GeocodeFloat64()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat32:
-            geo = isce.geocode.GeocodeCFloat32()
+            geo = isce3.geocode.GeocodeCFloat32()
         elif input_raster_obj.datatype() == gdal.GDT_CFloat64:
-            geo = isce.geocode.GeocodeCFloat64()
+            geo = isce3.geocode.GeocodeCFloat64()
         else:
             err_str = 'Unsupported raster type for geocoding'
             error_channel.log(err_str)
             raise NotImplementedError(err_str)
 
+        orbit = slc.getOrbit()
+
         # init geocode members
-        geo.orbit = slc.getOrbit()
+        geo.orbit = orbit
         geo.ellipsoid = ellipsoid
         geo.doppler = zero_doppler
         geo.threshold_geo2rdr = threshold
@@ -134,14 +147,14 @@ def run(cfg):
         geo.dem_block_margin = dem_margin
 
         geo.geogrid(geogrid.start_x, geogrid.start_y,
-                geogrid.spacing_x, geogrid.spacing_y,
-                geogrid.width, geogrid.length, geogrid.epsg)
+                    geogrid.spacing_x, geogrid.spacing_y,
+                    geogrid.width, geogrid.length, geogrid.epsg)
 
         # create output raster
         temp_output = tempfile.NamedTemporaryFile(
             dir=scratch_path, suffix='.tif')
 
-        output_raster_obj = isce.io.Raster(temp_output.name,
+        output_raster_obj = isce3.io.Raster(temp_output.name,
                 geogrid.width, geogrid.length, 
                 input_raster_obj.num_bands,
                 gdal.GDT_Float32, 'GTiff')
@@ -154,7 +167,7 @@ def run(cfg):
             if nbands_off_diag_terms > 0:
                 temp_off_diag = tempfile.NamedTemporaryFile(
                     dir=scratch_path, suffix='.tif')
-                out_off_diag_terms_obj = isce.io.Raster(
+                out_off_diag_terms_obj = isce3.io.Raster(
                     temp_off_diag.name,
                     geogrid.width, geogrid.length, 
                     nbands_off_diag_terms, 
@@ -163,7 +176,7 @@ def run(cfg):
         if flag_save_nlooks:
             temp_nlooks = tempfile.NamedTemporaryFile(
                 dir=scratch_path, suffix='.tif')
-            out_geo_nlooks_obj = isce.io.Raster(
+            out_geo_nlooks_obj = isce3.io.Raster(
                 temp_nlooks.name,
                 geogrid.width, geogrid.length, 1,
                 gdal.GDT_Float32, "GTiff")
@@ -174,7 +187,7 @@ def run(cfg):
         if flag_save_rtc:
             temp_rtc = tempfile.NamedTemporaryFile(
                 dir=scratch_path, suffix='.tif')
-            out_geo_rtc_obj = isce.io.Raster(
+            out_geo_rtc_obj = isce3.io.Raster(
                 temp_rtc.name, 
                 geogrid.width, geogrid.length, 1,
                 gdal.GDT_Float32, "GTiff")
@@ -263,31 +276,45 @@ def run(cfg):
                                    valid_min = 0)
 
             # save GCOV off-diagonal elements
-            if not flag_fullcovariance:
-                continue
-            off_diag_terms_list = []
-            for b1, p1 in enumerate(pol_list):
-                for b2, p2 in enumerate(pol_list):
-                    if (b2 <= b1):
-                        continue
-                    off_diag_terms_list.append(p1.upper()+p2.upper())
+            if flag_fullcovariance:
+                off_diag_terms_list = []
+                for b1, p1 in enumerate(pol_list):
+                    for b2, p2 in enumerate(pol_list):
+                        if (b2 <= b1):
+                            continue
+                        off_diag_terms_list.append(p1.upper()+p2.upper())
     
-            _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
-                               yds, xds, off_diag_terms_list,
-                               long_name = output_radiometry_str, 
-                               units = '',
-                               valid_min = clip_min, 
-                               valid_max = clip_max)
+                _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
+                                   yds, xds, off_diag_terms_list,
+                                   long_name = output_radiometry_str, 
+                                   units = '',
+                                   valid_min = clip_min, 
+                                   valid_max = clip_max)
 
+            t_freq_elapsed = time.time() - t_freq
+            info_channel.log(f'frequency {frequency} ran in {t_freq_elapsed:.3f} seconds')
 
+            if frequency.upper() == 'B':
+                continue
 
+            cube_geogrid = isce3.product.GeoGridParameters(
+                start_x=radar_grid_cubes_geogrid.start_x,
+                start_y=radar_grid_cubes_geogrid.start_y,
+                spacing_x=radar_grid_cubes_geogrid.spacing_x,
+                spacing_y=radar_grid_cubes_geogrid.spacing_y,
+                width=int(radar_grid_cubes_geogrid.width),
+                length=int(radar_grid_cubes_geogrid.length),
+                epsg=radar_grid_cubes_geogrid.epsg)
 
-        t_freq_elapsed = time.time() - t_freq
-        info_channel.log(f'frequency {frequency} ran in {t_freq_elapsed:.3f} seconds')
+            cube_group_name = '/science/LSAR/GCOV/metadata/radarGrid'
 
-    t_all_elapsed = time.time() - t_all
-    info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f} seconds")
+            add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, 
+                                         cube_geogrid, radar_grid_cubes_heights, 
+                                         radar_grid, orbit, native_doppler, 
+                                         zero_doppler, threshold, maxiter)
 
+        t_all_elapsed = time.time() - t_all
+        info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f} seconds")
 
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
                        yds, xds, ds_name, standard_name=None,

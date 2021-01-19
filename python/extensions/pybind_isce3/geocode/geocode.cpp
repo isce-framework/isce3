@@ -1,7 +1,7 @@
 #include "geocode.h"
 
-#include "GeocodeSlc.h"
 #include "GeocodeCov.h"
+#include "GeocodeSlc.h"
 
 namespace py = pybind11;
 
@@ -34,6 +34,5 @@ void addsubmodule_geocode(py::module & m)
     addbinding(pyGeocodeCFloat64);
     addbinding(pyGeocodeMemoryMode);
     addbinding(pyGeocodeOutputMode);
-
 
 }

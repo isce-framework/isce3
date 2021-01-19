@@ -1,13 +1,20 @@
 #pragma once
-#include <limits>
-
-#include <isce3/core/Constants.h>
 #include <isce3/core/forward.h>
 #include <isce3/io/forward.h>
+
+#include <limits>
+
+#include <pyre/journal.h>
+
+#include <isce3/core/Constants.h>
 
 #include "RadarGridParameters.h"
 
 namespace isce3 { namespace product {
+
+std::string to_string(const GeoGridParameters& geogrid);
+
+std::ostream& operator<<(std::ostream& out, const GeoGridParameters& geogrid);
 
 class GeoGridParameters {
 public:
@@ -28,6 +35,11 @@ public:
     GeoGridParameters(double geoGridStartX, double geoGridStartY,
                              double geoGridSpacingX, double geoGridSpacingY,
                              int width, int length, int epsgcode);
+
+    /**
+     * Print GeoGridParameters attributes
+     */
+    void print() const;
 
     /** Set start x position for geocoded grid */
     void startX(double x0) { _startX = x0; }
