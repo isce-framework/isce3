@@ -271,8 +271,8 @@ void _compareArrays(isce3::core::Matrix<T>& topo_array,
         ASSERT_TRUE(max_abs_error < 1e-6);
     } else if (flag_geo) {
         // geo and double
-        ASSERT_TRUE(rmse < 1e-11);
-        ASSERT_TRUE(max_abs_error < 1e-10);
+        ASSERT_TRUE(rmse < 1e-7);
+        ASSERT_TRUE(max_abs_error < 1e-6);
     } else {
         // slant-range and double
         ASSERT_TRUE(rmse < 1e-15);
