@@ -1,4 +1,5 @@
 set(TESTFILES
+config.py
 core/attitude.py
 core/basis.py
 core/constants.py

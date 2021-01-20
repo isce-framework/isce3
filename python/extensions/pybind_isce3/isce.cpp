@@ -1,5 +1,7 @@
 #include <pybind11/pybind11.h>
 
+#include <isce3/config.h>
+
 #include "container/container.h"
 #include "core/core.h"
 #include "focus/focus.h"
@@ -17,6 +19,7 @@
 
 PYBIND11_MODULE(pybind_isce3, m) {
     m.doc() = "InSAR Scientific Computing Environment (ISCE)";
+    m.attr("__version__") = isce3::version_string;
 
     addsubmodule_core(m);
     addsubmodule_geometry(m);

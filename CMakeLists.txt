@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 
+include(${CMAKE_CURRENT_LIST_DIR}/.cmake/Isce3Version.cmake)
+isce3_get_version(ISCE3_VERSION_COMPONENTS ISCE3_VERSION_FULL)
+
 project(isce3
-    VERSION   0.1.1
+    VERSION   ${ISCE3_VERSION_COMPONENTS}
     LANGUAGES CXX
     )
 
@@ -54,6 +57,11 @@ if (WITH_CUDA)
 
     # Set the name for the isce3 CUDA library.
     set(LISCECUDA ${PROJECT_NAME}-cuda)
+
+    # For access from code
+    set(ISCE3_WITH_CUDA_BOOL 1)
+else()
+    set(ISCE3_WITH_CUDA_BOOL 0)
 endif()
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;Coverage" CACHE STRING "" FORCE)

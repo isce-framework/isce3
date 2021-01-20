@@ -1,6 +1,9 @@
 include(Sources.cmake)
 include(Headers.cmake)
 
+configure_file(config.h.in config.h @ONLY)
+configure_file(config.cpp.in config.cpp @ONLY)
+list(APPEND SRCS ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
 add_library(${LISCE} SHARED ${SRCS})
 SetCoverageOptions(${LISCE})
 
@@ -31,7 +34,8 @@ target_compile_features(${LISCE} INTERFACE
     )
 
 target_include_directories(${LISCE} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/..>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
     )
 
@@ -48,6 +52,9 @@ foreach(HEADER ${HEADERS})
             DESTINATION include/isce3/${DIR}
             COMPONENT   isce_libs)
 endforeach()
+install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/config.h
+        DESTINATION include/isce3/
+        COMPONENT   isce_libs)
 
 # Specify API version and build version (used to generate name and soname
 # symlinks on Unix systems).
