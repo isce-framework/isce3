@@ -1,7 +1,7 @@
 import argparse
 import os
 
-import gdal
+from osgeo import gdal
 import h5py
 import numpy as np
 
