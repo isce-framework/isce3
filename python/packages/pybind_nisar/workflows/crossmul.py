@@ -87,12 +87,12 @@ def run(cfg: dict, output_hdf5: str = None):
                     raster_str = f'HDF5:{sec_hdf5}:/{sec_slc.slcPath(freq, pol)}'
                 else:
                     raster_str = str(coregistered_slc_path /\
-                            f'resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
+                                     f'resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
 
                 sec_slc_raster = isce3.io.Raster(raster_str)
 
                 # access the HDF5 dataset for a given frequency and polarization
-                dataset_path = f'{pol_group_path}/wrappedPhase'
+                dataset_path = f'{pol_group_path}/wrappedInterferogram'
                 igram_dataset = dst_h5[dataset_path]
 
                 # Construct the output ratster directly from HDF5 dataset
@@ -102,7 +102,7 @@ def run(cfg: dict, output_hdf5: str = None):
                 # call crossmul with coherence if multilooked
                 if crossmul.range_looks > 1 or crossmul.az_looks > 1:
                     # access the HDF5 dataset for a given frequency and polarization
-                    dataset_path = f'{pol_group_path}/phaseSigmaCoherence'
+                    dataset_path = f'{pol_group_path}/coherenceMagnitude'
                     coherence_dataset = dst_h5[dataset_path]
 
                     # Construct the output ratster directly from HDF5 dataset
@@ -125,6 +125,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran crossmul in {t_all_elapsed:.3f} seconds")
+
 
 if __name__ == "__main__":
     '''

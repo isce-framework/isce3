@@ -213,5 +213,5 @@ log_nfo:
 
 gunw_datasets:
     connectedComponents: bool(required=False)
-    phaseSigmaCoherence: bool(required=False)
+    coherenceMagnitude: bool(required=False)
     unwrappedPhase: bool(required=False)

@@ -69,7 +69,7 @@ class GeocodeInsarRunConfig(RunConfig):
             raise ValueError(err_str)
 
         self.cfg['processing']['geocode']['datasets']['connectedComponents'] = not self.args.no_connected_components
-        self.cfg['processing']['geocode']['datasets']['phaseSigmaCoherence'] = not self.args.no_phase_sigma
+        self.cfg['processing']['geocode']['datasets']['coherenceMagnitude'] = not self.args.no_coherence
         self.cfg['processing']['geocode']['datasets']['unwrappedPhase'] = not self.args.no_unwrapped_phase
 
         # check frequency and polarization dict prior to dict assignment
@@ -88,7 +88,7 @@ class GeocodeInsarRunConfig(RunConfig):
                     raise ValueError(err_str)
 
         interp_method = self.args.interp_method
-        if interp_method not in ['BILINEAR', 'BICUBIC', 'NEAREST','BIQUINTIC']:
+        if interp_method not in ['BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC']:
             err_str = f"{interp_method} invalid interpolator. Valid options: 'BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC'"
             error_channel.log(err_str)
             raise ValueError(err_str)
@@ -123,7 +123,7 @@ class GeocodeInsarRunConfig(RunConfig):
             self.cfg['processing']['geocode']['datasets'] = {}
 
         # default to True for datasets not found
-        gunw_datasets = ["connectedComponents", "phaseSigmaCoherence", "unwrappedPhase"]
+        gunw_datasets = ["connectedComponents", "coherenceMagnitude", "unwrappedPhase"]
         for gunw_dataset in gunw_datasets:
             if gunw_dataset not in self.cfg['processing']['geocode']:
                 self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True

@@ -72,7 +72,7 @@ class UnwrapRunConfig(RunConfig):
             raise ValueError(err_str)
 
         # Valid phase gradient window size?
-        if self.args.pha_grad_win >=1 :
+        if self.args.pha_grad_win >=1:
             self.cfg['processing']['phase_unwrap']['phase_gradient_window_size'] = self.args.pha_grad_win
         else:
             err_str = f"{self.args.pha_grad_win} needs to be greater than 0"

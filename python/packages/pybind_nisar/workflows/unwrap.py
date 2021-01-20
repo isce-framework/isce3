@@ -44,7 +44,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     t_all = time.time()
 
     with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5,\
-        h5py.File(crossmul_path, 'r', libver='latest', swmr=True) as src_h5:
+         h5py.File(crossmul_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
             src_freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
             dst_freq_group_path = src_freq_group_path.replace('RIFG', 'RUNW')
@@ -55,12 +55,12 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
                 # Prepare igram input raster
                 igram_path = f'HDF5:{crossmul_path}:/' \
-                             f'{src_pol_group_path}/wrappedPhase'
+                             f'{src_pol_group_path}/wrappedInterferogram'
                 igram_raster = isce3.io.Raster(igram_path)
 
                 # Prepare correlation input raster
                 corr_path = f'HDF5:{crossmul_path}:/' \
-                            f'{src_pol_group_path}/phaseSigmaCoherence'
+                            f'{src_pol_group_path}/coherenceMagnitude'
                 corr_raster = isce3.io.Raster(corr_path)
 
                 # Create unwrapped interferogram output raster
@@ -82,8 +82,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                       corr_raster)
 
                 # Copy phase sigma coherence from RIFG
-                dst_coh_comp_path = f'{dst_pol_group_path}/phaseSigmaCoherence'
-                src_coh_comp_path = f'{src_pol_group_path}/phaseSigmaCoherence'
+                dst_coh_comp_path = f'{dst_pol_group_path}/coherenceMagnitude'
+                src_coh_comp_path = f'{src_pol_group_path}/coherenceMagnitude'
                 dst_h5[dst_coh_comp_path][:, :] = src_h5[src_coh_comp_path][()]
 
                 del uigram_raster

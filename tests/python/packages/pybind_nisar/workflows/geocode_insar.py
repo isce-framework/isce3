@@ -36,7 +36,7 @@ def test_geocode_run():
     out_paths = h5_prep.run(runconfig.cfg)
 
     # insert rdr2geo outputs into RUNW HDF5
-    rdr2geo_dict = {'x':'unwrappedPhase', 'y':'phaseSigmaCoherence'}
+    rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude'}
     runw_product_path = 'science/LSAR/RUNW/swaths/frequencyA/interferogram/HH'
     az_looks = runconfig.cfg['processing']['crossmul']['azimuth_looks']
     rg_looks = runconfig.cfg['processing']['crossmul']['range_looks']
@@ -59,6 +59,7 @@ def test_geocode_run():
     # run geocodeing of runw
     geocode_insar.run(runconfig.cfg, out_paths['RUNW'], out_paths['GUNW'])
 
+
 def test_geocode_validate():
     '''
     validate generated geocode data
@@ -72,7 +73,7 @@ def test_geocode_validate():
     product_path = 'science/LSAR/GUNW/grids/frequencyA/interferogram/HH'
     with h5py.File(path_gunw, 'r', libver='latest', swmr=True) as h:
         # iterate over axis
-        rdr2geo_dict = {'x':'unwrappedPhase', 'y':'phaseSigmaCoherence'}
+        rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude'}
         for axis, ds_name in rdr2geo_dict.items():
             # get dataset as masked array
             ds_path = f'{product_path}/{ds_name}'
@@ -102,11 +103,12 @@ def test_geocode_validate():
             # check max error
             max_err = np.nanmax(err)
             # 1e-4 is ~11m
-            assert( max_err < 1e-4 ), f'{axis}-axis max error fail'
+            assert(max_err < 1e-4), f'{axis}-axis max error fail'
 
             # check RMSE
             rmse = np.sqrt(np.sum(err**2) / np.count_nonzero(~geo_arr.mask))
-            assert( rmse  < rmse_err_threshold ), f'{axis}-axis RMSE fail'
+            assert(rmse < rmse_err_threshold), f'{axis}-axis RMSE fail'
+
 
 if __name__ == "__main__":
     test_geocode_run()

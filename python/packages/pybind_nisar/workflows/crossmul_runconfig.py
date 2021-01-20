@@ -93,7 +93,7 @@ class CrossmulRunConfig(RunConfig):
             elif os.path.isdir(self.args.sec_raster):
                 # check if directory has all the frequencies and polarizations
                 helpers.check_mode_directory_tree(self.args.sec_raster,
-                        'coregistered_secondary', frequencies, freq_pols)
+                                                  'coregistered_secondary', frequencies, freq_pols)
             else:
                 err_str = f"{self.args.sec_raster} not a valid file or directory"
                 error_channel.log(err_str)
