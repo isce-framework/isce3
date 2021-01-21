@@ -24,25 +24,25 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
     product_type = cfg['PrimaryExecutable']['ProductType']
 
     # dict keying product type with list with possible product type(s)
-    insar_products = ['RIFG', 'RUNW', 'GUNW', 'POLAR']
-    product_dict = {'POLAR': insar_products[:-1],
-                    'GUNW': insar_products[:-1],
-                    'RUNW': insar_products[:-2],
-                    'RIFG': [insar_products[0]],
-                    'GCOV': ['GCOV'],
-                    'GSLC': ['GSLC']}
+    insar_products = ['RIFG', 'RUNW', 'GUNW']
+    product_dict = {'POLAR':insar_products,
+                    'GUNW':insar_products,
+                    'RUNW':insar_products[:-1],
+                    'RIFG':[insar_products[0]],
+                    'GCOV':['GCOV'],
+                    'GSLC':['GSLC']}
 
     # dict keying product type to dict of product type key(s) to output(s)
     # following lambda creates subproduct specific output path
     insar_path = lambda out_path, product:\
             os.path.join(os.path.dirname(out_path), product+'_'+os.path.basename(out_path))
-    h5_paths = {'POLAR': dict(zip(insar_products[:-1],
-                                 [insar_path(output_path, product) for product in insar_products[:-1]])),
-                'GUNW': {'RIFG': f'{scratch}/RIFG.h5', 'RUNW': f'{scratch}/RUNW.h5', 'GUNW': output_path},
-                'RUNW': {'RIFG': f'{scratch}/RIFG.h5', 'RUNW': output_path},
-                'RIFG': {'RIFG': output_path},
-                'GCOV': {'GCOV': output_path},
-                'GSLC': {'GSLC': output_path}}
+    h5_paths = {'POLAR':dict(zip(insar_products,
+                                 [insar_path(output_path, product) for product in insar_products])),
+                'GUNW':{'RIFG':f'{scratch}/RIFG.h5', 'RUNW':f'{scratch}/RUNW.h5', 'GUNW':output_path},
+                'RUNW':{'RIFG':f'{scratch}/RIFG.h5', 'RUNW':output_path},
+                'RIFG':{'RIFG':output_path},
+                'GCOV':{'GCOV':output_path},
+                'GSLC':{'GSLC':output_path}}
 
     return product_dict[product_type], h5_paths[product_type]
 

@@ -15,27 +15,34 @@ def test_insar_run():
     '''
 
     # load yaml file
-    test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
+    path_test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
 
-    # Load text and substitute directory path
-    with open(test_yaml) as fh_test_yaml:
-        test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data).\
-                replace('@TEST_OUTPUT@', 'insar.h5').\
-                replace('@TEST_PRODUCT_TYPES@', 'GUNW')
+    for prod_type in ['RIFG', 'RUNW', 'GUNW']:
+        test_output = f'{prod_type}.h5'
 
-    # create CLI input namespace
-    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
+        # Load text and substitute directory path
+        with open(path_test_yaml) as fh_test_yaml:
+            test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data).\
+                    replace('@TEST_OUTPUT@', test_output).\
+                    replace('@TEST_PRODUCT_TYPES@', prod_type)
 
-    # Initialize runconfig object
-    insar_runcfg = InsarRunConfig(args)
-    insar_runcfg.geocode_common_arg_load()
-    insar_runcfg.yaml_check()
+        # create CLI input namespace
+        args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
 
-    out_paths = h5_prep.run(insar_runcfg.cfg)
+        # Initialize runconfig object
+        insar_runcfg = InsarRunConfig(args)
+        insar_runcfg.geocode_common_arg_load()
+        insar_runcfg.yaml_check()
 
-    persist = Persistence(restart=True)
+        out_paths = h5_prep.run(insar_runcfg.cfg)
 
-    insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
+        persist = Persistence(restart=True)
+
+        # run insar for prod_type
+        insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
+
+        # check if test_output exists
+        assert os.path.isfile(test_output), f"{test_output} for {prod_type} not found."
 
 if __name__ == "__main__":
     test_insar_run()

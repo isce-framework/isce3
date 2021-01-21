@@ -29,10 +29,10 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['crossmul']:
         crossmul.run(cfg, out_paths['RIFG'])
 
-    if run_steps['unwrap']:
+    if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
-    if run_steps['geocode']:
+    if run_steps['geocode'] and 'GUNW' in out_paths:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
 
     t_all_elapsed = time.time() - t_all
