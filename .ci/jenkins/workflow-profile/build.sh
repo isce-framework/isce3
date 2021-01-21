@@ -12,9 +12,6 @@ echo "GIT_OAUTH_TOKEN: $GIT_OAUTH_TOKEN"
 TAG="$(date -u +%Y%m%d)-WFPROFILE"
 echo "TAG: $TAG"
 
-# prune docker
-docker system prune -f
-
 # build base and dev images
 cd .ci/images/centos
 ./build-base.sh ${TAG}
