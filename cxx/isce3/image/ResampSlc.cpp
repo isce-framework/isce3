@@ -285,8 +285,14 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                 if ((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)))
                     continue;
 
-                // Evaluate Doppler polynomial
+                // Slant range at j index 
                 const double rng = R0 + j * dR;
+                
+                // Check if the Doppler LUT covers the current position
+                if (not _dopplerLUT.contains(az, rng))
+                    continue;
+
+                // Evaluate Doppler polynomial
                 const double dop = _dopplerLUT.eval(az, rng) * 2 * M_PI / _prf;
 
                 // Doppler to be added back. Simultaneously evaluate carrier
