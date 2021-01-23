@@ -96,11 +96,19 @@ def estimate_resolution (x, dt=1.0):
     return dt * (iright - ileft)
 
 def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_peak_idx):
-    #find mainlobe null locations as sample info
-    #num_nulls_main: num_nulls_main > 1 if mainlobe includes first sidelobes
-    #num_samples_null: default is Fs/bandwidth, number of samples from null to null
-    #nullLeftIdx: null location left of mainlobe peak
-    #nullRightIdx: null location right of mainlobe peak
+    """Compute mainlobe null locations as sample index for ISLR and PSLR.
+
+    Parameters:
+    -----------
+    matched_output: complex array, Range or Azimuth cuts
+    num_nulls_main: int, num_nulls_main = 2 if mainlobe includes first sidelobes
+    num_samples_null: float, default is Fs/bandwidth, number of samples from null to null
+
+    Returns:
+    --------
+    nullLeftIdx: null location left of mainlobe peak
+    nullRightIdx: null location right of mainlobe peak
+    """
     
     #Search at least 1 sample beyond expected null
     num_samples_search = num_samples_null + 2
@@ -145,14 +153,27 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
     return null_left_idx, null_right_idx
 
 def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5, search_null=False):
-    #fs_bw_ratio: sampling frequency to bandwidth ratio
-    #search_null:   if search_null == 1, then apply algorithm to find null locations
-    #               otherwise, specify null locations based on default Fs/B samples,
-    #               i.e, first null is at Fs/B samples from the mainlobe peak
-    #num_nulls_main:  maximum is 2. Mainlobe could include up to 2 nulls.
-    #num_lobes: total number of lobes for ISLR computation, if num_nulls_main=2,default is 12.5. Otherwise, default is 11.5.
-    #data_in_linear: Linear Point target range or azimuth cut in complex numbers
+    """Compute point target integrated sidelobe ratio (ISLR) and peak to sidelobe ratio (PSLR).
+    
+    Parameters:
+    -----------
+    fs_bw_ratio: float, optional, sampling frequency to bandwidth ratio
+    search_null: if search_null is True, then apply algorithm to find mainlobe null locations
+        for ISLR computation. Otherwise, specify null locations based on default Fs/B samples,
+        i.e, mainlobe null is located at Fs/B samples from the peak of mainlobe
+        PSLR Exception: mainlobe does not include first sidelobe, search is always
+        conducted to find the locations of first null regardless of search_null parameter.
+    num_nulls_main: int, optional maximum is 2. Mainlobe could include up to 2 nulls.
+    num_lobes: float, optional total number of sidelobes for ISLR computation,
+        if num_nulls_main=2,default is 12. If num_nulls_main=1, default is 11.
+    data_in_linear: complex array, Linear Point target range or azimuth cut in complex numbers
 
+    Returns:
+    --------
+    1. islr_dB: float, ISLR in dB
+    2. pslr_dB: float, PSLR in dB
+    """
+    
     num_samples_null = int(np.round(fs_bw_ratio))
     data_in_pwr_linear = np.abs(data_in_linear)**2
     data_in_pwr_dB = 10*np.log10(data_in_pwr_linear)
