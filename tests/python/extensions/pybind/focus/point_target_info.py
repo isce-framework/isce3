@@ -181,7 +181,7 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5,
     #ISLR: Mainlobe could include 2nd null
     islr_mainlobe = data_in_pwr_linear[null_main_left_idx : null_main_right_idx + 1]
     
-    islr_sidelobe_range = np.r_[sidelobe_left_idx : null_main_left_idx, null_main_right_idx + 1 : sidelobe_right_idx]
+    islr_sidelobe_range = np.r_[sidelobe_left_idx : null_main_left_idx, null_main_right_idx + 1 : sidelobe_right_idx + 1]
     islr_sidelobe = data_in_pwr_linear[islr_sidelobe_range]   
     
     pwr_total = np.sum(data_in_pwr_linear)
