@@ -62,7 +62,9 @@ template void addbinding(py::class_<KnabKernel<double>, Kernel<double>> & pyKern
 template <typename T>
 void addbinding(py::class_<AzimuthKernel<T>, Kernel<T>> & pyKernel)
 {
-    pyKernel.doc() = "SAR azimuth autocorrelation function.";
+    pyKernel.doc() = "SAR azimuth autocorrelation function."
+        " Scale argument is typically antenna length L if working in distance"
+        " units or L/v if working in time units.";
     pyKernel.def(py::init<double>(), py::arg("scale"));
 }
 

@@ -357,6 +357,117 @@ def get_kernel(cfg: Struct):
     return table
 
 
+def verify_uniform_pri(t: np.ndarray, atol=0.0, rtol=0.001):
+    """Return True if pulse interval is uniform (within given absolute and
+    relative tolerances).
+    """
+    assert atol >= 0.0
+    assert rtol >= 0.0
+    dt = np.diff(t)
+    pri = np.mean(dt)
+    return np.allclose(dt, pri, atol=atol, rtol=rtol)
+
+
+def resample(raw: np.ndarray, t: np.ndarray,
+             grid: isce.product.RadarGridParameters, swaths: np.ndarray,
+             orbit: isce.core.Orbit, doppler: isce.core.LUT2d, L=12.0,
+             fn="regridded.c8"):
+    """
+    Fill gaps and resample raw data to uniform grid using BLU method.
+
+    Parameters
+    ----------
+    raw : array-like [complex float32, rows=pulses, cols=range bins]
+        Decoded raw data.
+    t : np.ndarray [float64]
+        Pulse times (seconds since orbit/grid epoch).
+    grid : isce3.product.RadarGridParameters
+        Raw data grid.  Output will have same parameters.
+    swaths : np.ndarray [int]
+        Valid subswath samples, dims = (ns, nt, 2) where ns is the number of
+        sub-swaths, nt is the number of pulses, and the trailing dimension is
+        the [start, stop) indices of the sub-swath.
+    orbit : isce3.core.Orbit
+        Orbit.  Used to determine velocity for scaling autocorrelation function.
+    doppler : isce3.core.LUT2d [double]
+        Raw data Doppler look up table.  Must be valid over entire grid.
+    L : float
+        Antenna azimuth dimension, in meters.  Used for scaling sinc antenna
+        pattern model for azimuth autocorrelation function.
+    fn : string, optional
+        Filename for output memory map.
+
+    Returns
+    -------
+    regridded : array-like [complex float32, rows=pulses, cols=range bins]
+        Gridded, gap-free raw data.
+    """
+    assert raw.shape == (grid.length, grid.width)
+    assert len(t) == raw.shape[0]
+    assert grid.ref_epoch == orbit.reference_epoch
+    # Compute uniform time samples for given raw data grid
+    out_times = t[0] + np.arange(grid.length) / grid.prf
+    # Ranges are the same.
+    r = grid.starting_range + grid.range_pixel_spacing * np.arange(grid.width)
+    regridded = np.memmap(fn, mode="w+", shape=grid.shape, dtype=np.complex64)
+    for i, tout in enumerate(out_times):
+        # Get velocity for scaling autocorrelation function.  Won't change much
+        # but update every pulse to avoid artifacts across images.
+        v = np.linalg.norm(orbit.interpolate(tout)[1])
+        acor = isce.core.AzimuthKernel(L / v)
+        # Figure out what pulses are in play by computing weights without mask.
+        # TODO All we really need is offset and len(weights)... maybe refactor.
+        offset, weights = isce.focus.get_presum_weights(acor, t, tout)
+        nw = len(weights)
+        # Compute valid data mask (transposed).
+        # NOTE Could store the whole mask instead of recomputing blocks.
+        mask = np.zeros((grid.width, nw), dtype=bool)
+        for iw in range(nw):
+            it = offset + iw
+            for swath in swaths:
+                start, end = swath[it]
+                mask[start:end, iw] = True
+        # The pattern of missing samples in any given column can change
+        # depending on the gap structure.  Recomputing weights is expensive,
+        # though, so compute a hash we can use to cache the unique weight
+        # vectors.
+        twiddle = 1 << np.arange(nw)
+        ids = mask.dot(twiddle)  # NOTE in C++ you'd just OR the bits
+        # Compute weights for each unique mask pattern.
+        lut = dict()
+        for uid in np.unique(ids):
+            # Invert the hash to get the mask back
+            valid = (uid & twiddle).astype(bool)
+            # Pull out valid times for this mask config and compute weights.
+            tj = t[offset:offset+nw][valid]
+            joff, jwgt = isce.focus.get_presum_weights(acor, tj, tout)
+            assert joff == 0
+            # Now insert zeros where data is invalid to get full-length weights.
+            jwgt_full = np.zeros_like(weights)
+            jwgt_full[valid] = jwgt
+            lut[uid] = jwgt_full
+        # Fill weights for entire block using look up table.
+        w = isce.focus.fill_weights(ids, lut)
+        # Read raw data.
+        block = np.s_[offset:offset+nw, :]
+        x = raw[block]
+        # Compute Doppler deramp.  Zero phase at tout means no need to re-ramp.
+        trel = t[offset:offset+nw] - tout
+        fd = doppler.eval(tout, r)
+        deramp = np.exp(-2j * np.pi * trel[:, None] * fd[None, :])
+        # compute weighted sum of deramped pulses.
+        regridded[i, :] = (w * deramp * x).sum(axis=0)
+    return regridded
+
+
+def delete_safely(filename):
+    # Careful to avoid race on file deletion.  Use pathlib in Python 3.8+
+    try:
+        os.unlink(filename)
+    except FileNotFoundError:
+        pass
+
+
 def focus(runconfig):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -450,10 +561,39 @@ def focus(runconfig):
         log.info(f"Processing frequency{frequency} {pol}")
         rawdata = raw.getRawDataset(frequency, pol)
         log.info(f"Raw data shape = {rawdata.shape}")
-        _, raw_grid = raw.getRadarGrid(frequency, tx=pol[0])
+        raw_times, raw_grid = raw.getRadarGrid(frequency, tx=pol[0])
         fc = raw.getCenterFrequency(frequency)
         na = cfg.processing.rangecomp.block_size.azimuth
         nr = rawdata.shape[1]
+        swaths = raw.getSubSwaths(frequency, tx=pol[0])
+        log.info(f"Number of sub-swaths = {swaths.shape[0]}")
+
+        def temp(suffix):
+            return tempfile.NamedTemporaryFile(dir=scratch_dir, suffix=suffix,
+                delete=cfg.processing.delete_tempfiles)
+
+        rawfd = temp("_raw.c8")
+        log.info(f"Decoding raw data to memory map {rawfd.name}.")
+        raw_mm = np.memmap(rawfd, mode="w+", shape=rawdata.shape,
+            dtype=np.complex64)
+        for pulse in range(0, rawdata.shape[0], na):
+            block = np.s_[pulse:pulse+na, :]
+            z = rawdata[block]
+            # Remove NaNs.  TODO could incorporate into gap mask.
+            z[np.isnan(z)] = 0.0
+            raw_mm[block] = z
+
+        if verify_uniform_pri(raw_times):
+            log.info("Uniform PRF, using raw data directly.")
+            regridded, regridfd = raw_mm, rawfd
+        else:
+            regridfd = temp("_regrid.c8")
+            log.info(f"Resampling non-uniform raw data to {regridfd.name}.")
+            regridded = resample(raw_mm, raw_times, raw_grid, swaths, orbit,
+                                 dop[frequency], fn=regridfd,
+                                 L=cfg.processing.nominal_antenna_size.azimuth)
+
+        del raw_mm, rawfd
 
         log.info("Generating chirp")
         chirp = get_chirp(cfg, raw, frequency)
@@ -470,7 +610,7 @@ def focus(runconfig):
         rc_grid.wavelength = isce.core.speed_of_light / fc
         igeom = isce.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
-        fd = tempfile.NamedTemporaryFile(dir=scratch_dir, suffix='.rc')
+        fd = temp("_rc.c8")
         log.info(f"Writing range compressed data to {fd.name}")
         rcfile = Raster(fd.name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
         log.info(f"Range compressed data shape = {rcfile.data.shape}")
@@ -478,10 +618,9 @@ def focus(runconfig):
         for pulse in range(0, rawdata.shape[0], na):
             log.info(f"Range compressing block at pulse {pulse}")
             block = np.s_[pulse:pulse+na, :]
-            # TODO fill invalid data during presum.
-            ps = rawdata[block]
-            ps[np.isnan(ps)] = 0.0
-            rc.rangecompress(rcfile.data[block], ps)
+            rc.rangecompress(rcfile.data[block], regridded[block])
+
+        del regridded, regridfd
 
         acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape)
 
@@ -514,11 +653,8 @@ def focus(runconfig):
 
         # Raster/GDAL creates a .hdr file we have to clean up manually.
         hdr = fd.name.replace(".rc", ".hdr")
-        # Careful to avoid race on file deletion.  Use pathlib in Python 3.8+
-        try:
-            os.unlink(hdr)
-        except FileNotFoundError:
-            pass
+        if cfg.processing.delete_tempfiles:
+            delete_safely(hdr)
 
 
 def configure_logging():

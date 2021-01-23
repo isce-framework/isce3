@@ -216,6 +216,9 @@ runconfig:
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.
             encoding_scale_factor: 1.0
 
+            # Whether to delete scratch files.  Default is True.
+            delete_tempfiles: True
+
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:

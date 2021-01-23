@@ -33,6 +33,7 @@ focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
 focus/GapMask.cpp
+focus/Presum.cpp
 focus/RangeComp.cpp
 geocode/baseband.cpp
 geocode/geocodeSlc.cpp

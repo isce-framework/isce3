@@ -138,6 +138,19 @@ eval(double y, double x) const {
     return value;
 }
 
+template<typename T>
+Eigen::Matrix<T, Eigen::Dynamic, 1> isce3::core::LUT2d<T>::
+eval(double y, const Eigen::Ref<const Eigen::VectorXd>& x) const
+{
+    const auto n = x.size();
+    Eigen::Matrix<T, Eigen::Dynamic, 1> out(n);
+    _Pragma("omp parallel for")
+    for (long i = 0; i < n; ++i) {
+        out(i) = eval(y, x(i));
+    }
+    return out;
+}
+
 template <typename T>
 void
 isce3::core::LUT2d<T>::

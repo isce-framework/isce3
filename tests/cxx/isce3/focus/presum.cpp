@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <isce3/core/Kernels.h>
-#include <isce3/focus/PresumWeights.h>
+#include <isce3/focus/Presum.h>
 
 
 TEST(Presum, Domain)

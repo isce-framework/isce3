@@ -2,6 +2,7 @@
 import numpy as np
 import pybind_isce3 as isce3
 
+
 def test_presum_weights():
     n = 31
     rng = np.random.default_rng(12345)
@@ -14,3 +15,16 @@ def test_presum_weights():
     i = slice(offset, offset + len(w))
     assert all(abs(t[i] - tout) <= L)
 
+
+def test_fill_weights():
+    lut = {
+        123: np.array([1, 2, 3.]),
+        456: np.array([4, 5, 6.]),
+        789: np.array([7, 8, 9.]),
+    }
+    nr = 1000
+    ids = np.random.choice(list(lut.keys()), nr)
+    weights = isce3.focus.fill_weights(ids, lut)
+    i = 0
+    # This function just accelerates this particular dict lookup.
+    assert all(weights[:, i] == lut[ids[i]])

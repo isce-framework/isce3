@@ -1,16 +1,21 @@
-#include "PresumWeights.h"
+#include "Presum.h"
 
 #include <isce3/core/Kernels.h>
 #include <isce3/except/Error.h>
-#include <isce3/focus/PresumWeights.h>
+#include <isce3/focus/Presum.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
+#include <isce3/core/LUT2d.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/product/RadarGridParameters.h>
 
 namespace py = pybind11;
 using namespace isce3::focus;
 using isce3::core::Kernel;
 
-void addbinding_get_presum_weights(pybind11::module& m)
+void addbindings_presum(pybind11::module& m)
 {
     m.def("get_presum_weights",
         [](const Kernel<double>& acorr,
@@ -44,5 +49,7 @@ void addbinding_get_presum_weights(pybind11::module& m)
             weights.dot(x[offset:offset + len(weights)])
         )",
         py::arg("acorr"), py::arg("t"), py::arg("tout")
-    );
+    )
+    .def("fill_weights", &fillWeights)
+    ;
 }

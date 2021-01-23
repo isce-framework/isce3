@@ -7,6 +7,7 @@
 
 #include "forward.h"
 
+#include <Eigen/Dense>
 #include <valarray>
 #include "Constants.h"
 #include "Matrix.h"
@@ -74,6 +75,9 @@ class isce3::core::LUT2d {
 
         // Evaluate LUT
         T eval(double y, double x) const;
+
+        Eigen::Matrix<T, Eigen::Dynamic, 1>
+        eval(double y, const Eigen::Ref<const Eigen::VectorXd>& x) const;
 
         /** Check if point resides in domain of LUT */
         inline bool contains(double y, double x) const

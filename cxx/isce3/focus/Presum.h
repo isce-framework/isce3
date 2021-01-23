@@ -3,6 +3,8 @@
 
 #include <isce3/core/forward.h>
 #include <Eigen/Dense>
+#include <unordered_map>
+#include <vector>
 
 namespace isce3 { namespace focus {
 
@@ -51,6 +53,18 @@ getPresumWeights(const KernelType& acorr,
                  const std::vector<double>& xin, double xout,
                  long* offset);
 
-}}
 
-#include "PresumWeights.icc"
+/** Populate a matrix of weights using a look up table (Python accelerator)
+ *
+ * @param[in] ids Vector of keys (length nr)
+ * @param[in] lut Lookup table of weight vectors (each of length nw)
+ * @returns Matrix, shape (nw, nr)
+ */
+Eigen::MatrixXd fillWeights(
+        const Eigen::Ref<const Eigen::Array<long, Eigen::Dynamic, 1>>& ids,
+        const std::unordered_map<long, const Eigen::Ref<const Eigen::VectorXd>>&
+                lut);
+
+}} // namespace isce3::focus
+
+#include "Presum.icc"
