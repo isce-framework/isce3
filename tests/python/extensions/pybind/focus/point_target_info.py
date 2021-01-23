@@ -191,7 +191,7 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5,
     islr_dB = 10*np.log10(islr_side_pwr / islr_main_pwr)
 
     #PSLR
-    pslr_sidelobe_range = np.r_[sidelobe_left_idx : null_first_left_idx, null_first_right_idx + 1 : sidelobe_right_idx]
+    pslr_sidelobe_range = np.r_[sidelobe_left_idx : null_first_left_idx, null_first_right_idx + 1 : sidelobe_right_idx + 1]
     pslr_main_lobe = data_in_pwr_linear[null_first_left_idx : null_first_right_idx]
     pslr_side_lobe = data_in_pwr_linear[pslr_sidelobe_range]
     
