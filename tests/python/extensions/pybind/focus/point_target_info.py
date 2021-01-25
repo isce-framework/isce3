@@ -135,24 +135,22 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
         raise Exception("The variable num_nulls_main cannot be greater than 2.")
     
     #Search for left null
-    for i in range(num_samples_search - 1):
-        if (samples_left[i] < samples_left[i+1]):          
-            null_left_idx = first_peak_left_idx - i
-            break
-        elif((samples_left[i] > samples_left[i+1])):
-            null_left_idx = first_peak_left_idx - (num_samples_search - 1)
+    diffsign_left = np.sign(np.diff(samples_left))
+    if np.any(diffsign_left == 1):
+        null_left_idx = first_peak_left_idx - np.where(diffsign_left[:-1] + diffsign_left[1:] == 0)[0][0] - 1
+    else:
+        null_left_idx = first_peak_left_idx - num_samples_null
             
     #Search for right null
-    for k in range(num_samples_search - 1):
-        if (samples_right[k] < samples_right[k+1]):         
-            null_right_idx = first_peak_right_idx + k
-            break
-        elif((samples_right[k] > samples_right[k+1])):
-            null_right_idx = first_peak_right_idx + (num_samples_search - 1)
+    diffsign_right = np.sign(np.diff(samples_right))
+    if np.any(diffsign_right == -1):
+        null_right_idx = first_peak_right_idx + np.where(diffsign_right[:-1] + diffsign_right[1:] == 0)[0][0] + 1
+    else:
+        null_right_idx = first_peak_right_idx + num_samples_null
     
     return null_left_idx, null_right_idx
 
-def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5, search_null=False):
+def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, search_null=False):
     """Compute point target integrated sidelobe ratio (ISLR) and peak to sidelobe ratio (PSLR).
     
     Parameters:
@@ -185,16 +183,15 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5,
         null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, num_samples_null, zmax_idx)
 		
         num_samples_sidelobe = zmax_idx - null_first_left_idx
-        num_samples_side_total = int(num_lobes * num_samples_sidelobe)
+        num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
     else:
         num_samples_search = int(num_nulls_main * num_samples_null)
         null_main_left_idx = zmax_idx - num_samples_search
         null_main_right_idx = zmax_idx + num_samples_search
-		
-        null_first_left_idx = zmax_idx - num_samples_null
-        null_first_right_idx = zmax_idx + num_samples_null
-		
-        num_samples_side_total = int(num_lobes * num_samples_null)
+
+        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, num_samples_null, zmax_idx)
+        num_samples_sidelobe = zmax_idx - null_first_left_idx
+        num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
   
     sidelobe_left_idx = null_first_left_idx - num_samples_side_total
     sidelobe_right_idx = null_first_right_idx + num_samples_side_total
@@ -254,7 +251,7 @@ def plot_profile (t, x, title=None):
 
 
 def analyze_point_target (slc, i, j, nov=32, plot=False, cuts=False,
-                          chipsize=64, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12.5, search_null=False):
+                          chipsize=64, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, search_null=False):
     """Measure point-target attributes.
 
     Inputs:
@@ -372,8 +369,8 @@ def main (argv):
                          required=False, help='nisar oversampling ratio')
     parser.add_argument ('--mlobe-nulls', type=int, default=2,
                          required=False, help='number of nulls in mainlobe, default=2')
-    parser.add_argument ('--num-lobes', type=float, default=12.5,
-                         required=False, help='total number of lobes, including mainlobe, default=12.5')
+    parser.add_argument ('--num-lobes', type=float, default=12,
+                         required=False, help='total number of lobes, including mainlobe, default=12')
     parser.add_argument('-s', '--search-null',
                          action='store_true', default='False', help='Search for mainlobe null or use default mainlobe sample spacing')
     args = parser.parse_args (argv[1:])
