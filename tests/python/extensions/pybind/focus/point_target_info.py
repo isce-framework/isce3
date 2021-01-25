@@ -185,7 +185,7 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, s
         num_samples_sidelobe = zmax_idx - null_first_left_idx
         num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
     else:
-        num_samples_search = int(num_nulls_main * num_samples_null)
+        num_samples_search = int(np.round(num_nulls_main * fs_bw_ratio))
         null_main_left_idx = zmax_idx - num_samples_search
         null_main_right_idx = zmax_idx + num_samples_search
 
