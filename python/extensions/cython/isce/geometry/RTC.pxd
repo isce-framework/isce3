@@ -18,6 +18,10 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
         BETA_NAUGHT = 0
         SIGMA_NAUGHT_ELLIPSOID = 1
 
+    cdef enum rtcOutputTerrainRadiometry:
+        SIGMA_NAUGHT = 0
+        GAMMA_NAUGHT = 1
+
     cdef enum rtcAreaMode:
         AREA = 0
         AREA_FACTOR = 1
@@ -38,12 +42,15 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   Raster& dem_raster, 
                   Raster& out_raster,
                   rtcInputTerrainRadiometry inputTerrainRadiometry,
+                  rtcOutputTerrainRadiometry output_terrain_radiometry,
                   int exponent,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,
                   float rtc_min_value_db,
                   double abs_cal_factor,
+                  float clip_min,
+                  float clip_max,
                   float radar_grid_nlooks,
                   Raster * out_nlooks_raster,
                   Raster * input_rtc_raster,
@@ -56,6 +63,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   Raster& dem_raster, 
                   Raster& out_raster,
                   rtcInputTerrainRadiometry inputTerrainRadiometry,
+                  rtcOutputTerrainRadiometry output_terrain_radiometry,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,
@@ -77,6 +85,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   int geogrid_width,
                   int epsg,
                   rtcInputTerrainRadiometry inputTerrainRadiometry,
+                  rtcOutputTerrainRadiometry output_terrain_radiometry,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,
@@ -93,6 +102,7 @@ cdef extern from "isce3/geometry/RTC.h" namespace "isce3::geometry":
                   char frequency,
                   bool native_doppler,
                   rtcInputTerrainRadiometry inputTerrainRadiometry,
+                  rtcOutputTerrainRadiometry output_terrain_radiometry,
                   rtcAreaMode rtc_area_mode,
                   rtcAlgorithm rtc_algorithm,
                   double dem_upsampling,

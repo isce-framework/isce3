@@ -13,10 +13,11 @@
 
 // isce3::core
 #include <isce3/core/forward.h>
+#include <isce3/io/forward.h>
+
 #include <isce3/core/Constants.h>
 #include <isce3/core/Interpolator.h>
-
-#include <isce3/io/forward.h>
+#include <isce3/error/ErrorCode.h>
 
 // DEMInterpolator declaration
 class isce3::geometry::DEMInterpolator {
@@ -56,9 +57,8 @@ class isce3::geometry::DEMInterpolator {
         ~DEMInterpolator();
 
         /** Read in subset of data from a DEM with a supported projection */
-        void loadDEM(isce3::io::Raster &demRaster,
-                     double minX, double maxX,
-                     double minY, double maxY);
+        isce3::error::ErrorCode loadDEM(isce3::io::Raster& demRaster,
+                double minX, double maxX, double minY, double maxY);
 
         /** Read in entire DEM with a supported projection */
         void loadDEM(isce3::io::Raster &demRaster);
@@ -136,6 +136,9 @@ class isce3::geometry::DEMInterpolator {
         inline int epsgCode() const { return _epsgcode; }
         /** Set EPSG code for input DEM */
         void epsgCode(int epsgcode);
+
+        /** Get Pointer to a ProjectionBase */
+        inline isce3::core::ProjectionBase* proj() const { return _proj; }
 
         /** Get interpolator method enum */
         inline isce3::core::dataInterpMethod interpMethod() const {

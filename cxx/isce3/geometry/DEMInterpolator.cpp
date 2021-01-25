@@ -28,15 +28,17 @@ void isce3::geometry::DEMInterpolator::epsgCode(int epsgcode) {
 
 // Load DEM subset into memory
 /** @param[in] demRaster input DEM raster to subset
-  * @param[in] minLon Longitude of western edge of bounding box
-  * @param[in] maxLon Longitude of eastern edge of bounding box
-  * @param[in] minLat Latitude of southern edge of bounding box
-  * @param[in] maxLat Latitude of northern edge of bounding box
-  *
-  * Loads a DEM subset given the extents of a bounding box */
-void isce3::geometry::DEMInterpolator::
-loadDEM(isce3::io::Raster & demRaster, double minX, double maxX,
-        double minY, double maxY) {
+ * @param[in] minLon Longitude of western edge of bounding box
+ * @param[in] maxLon Longitude of eastern edge of bounding box
+ * @param[in] minLat Latitude of southern edge of bounding box
+ * @param[in] maxLat Latitude of northern edge of bounding box
+ * @returns Error code
+ *
+ * Loads a DEM subset given the extents of a bounding box */
+isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
+        isce3::io::Raster& demRaster, double minX, double maxX, double minY,
+        double maxY)
+{
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Geometry");
@@ -92,9 +94,18 @@ loadDEM(isce3::io::Raster & demRaster, double minX, double maxX,
     _deltax = deltaX;
     _deltay = deltaY;
 
-    // Resize memory
+    // Get DEMInterpolator width and length
     const int width = xend - xstart;
     const int length = yend - ystart;
+
+    // If DEM has no valid points, escape
+    if (width <= 0 || length <= 0) {
+        warning << "The requested area is outside DEM limits"
+                << pyre::journal::endl;
+        return isce3::error::ErrorCode::OutOfBoundsDem;
+    }
+
+    // Resize memory
     _dem.resize(length, width);
 
     // Read in the DEM
@@ -105,8 +116,9 @@ loadDEM(isce3::io::Raster & demRaster, double minX, double maxX,
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;
-}
 
+    return isce3::error::ErrorCode::Success;
+}
 
 // Load DEM into memory
 /** @param[in] demRaster input DEM raster to subset

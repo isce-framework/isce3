@@ -15,6 +15,7 @@ std::string getErrorString(ErrorCode status)
             return "interpolation point outside orbit domain";
         case ErrorCode::OrbitInterpUnknownMethod:
             return "unexpected orbit interpolation method";
+        case ErrorCode::OutOfBoundsDem: return "out of bounds DEM";
         case ErrorCode::FailedToConverge:
             return "optimization routine failed to converge within the maximum "
                    "number of iterations";

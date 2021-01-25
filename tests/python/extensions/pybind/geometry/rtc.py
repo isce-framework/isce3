@@ -44,8 +44,9 @@ def test_rtc():
     doppler.bounds_error = False
     # doppler = isce3.core.LUT2d()
 
-    # list input parameters
-    inputTerrainRadiometry = isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
+    # set input parameters
+    input_terrain_radiometry = isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
+    output_terrain_radiometry = isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
     rtc_area_mode = isce3.geometry.RtcAreaMode.AREA_FACTOR
  
@@ -81,9 +82,12 @@ def test_rtc():
                                          'ENVI')
 
             # Call RTC
-            isce3.geometry.facet_rtc(radar_grid, orbit, doppler, dem_obj, out_raster,
-                                     inputTerrainRadiometry, rtc_area_mode,
-                                     rtc_algorithm, geogrid_upsampling)
+            isce3.geometry.compute_rtc(radar_grid, orbit, doppler, dem_obj, 
+                                       out_raster,
+                                       input_terrain_radiometry, 
+                                       output_terrain_radiometry,
+                                       rtc_area_mode,
+                                       rtc_algorithm, geogrid_upsampling)
                                 
             del out_raster
 

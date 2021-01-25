@@ -48,6 +48,9 @@ TEST(TestRTC, RunRTC) {
     isce3::geometry::rtcInputTerrainRadiometry inputTerrainRadiometry =
             isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT;
 
+    isce3::geometry::rtcOutputTerrainRadiometry outputTerrainRadiometry =
+            isce3::geometry::rtcOutputTerrainRadiometry::GAMMA_NAUGHT;
+
     isce3::geometry::rtcAreaMode rtc_area_mode =
             isce3::geometry::rtcAreaMode::AREA_FACTOR;
 
@@ -88,8 +91,8 @@ TEST(TestRTC, RunRTC) {
 
             // Call RTC
             isce3::geometry::computeRtc(radar_grid, orbit, dop, dem, out_raster,
-                                        inputTerrainRadiometry, rtc_area_mode,
-                                        rtc_algorithm, geogrid_upsampling);
+                    inputTerrainRadiometry, outputTerrainRadiometry,
+                    rtc_area_mode, rtc_algorithm, geogrid_upsampling);
         }
     }
 }
