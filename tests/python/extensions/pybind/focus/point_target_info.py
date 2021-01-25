@@ -143,7 +143,7 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
             
     #Search for right null
     diffsign_right = np.sign(np.diff(samples_right))
-    if np.any(diffsign_right == -1):
+    if np.any(diffsign_right == 1):
         null_right_idx = first_peak_right_idx + np.where(diffsign_right[:-1] + diffsign_right[1:] == 0)[0][0] + 1
     else:
         null_right_idx = first_peak_right_idx + num_samples_null
