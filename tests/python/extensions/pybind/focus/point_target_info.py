@@ -95,14 +95,14 @@ def estimate_resolution (x, dt=1.0):
     # Return the distance between -3dB crossings, scaled by the sample spacing.
     return dt * (iright - ileft)
 
-def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_peak_idx):
+def find_null_to_null(matched_output, num_nulls_main, fs_bw_ratio, main_peak_idx):
     """Compute mainlobe null locations as sample index for ISLR and PSLR.
 
     Parameters:
     -----------
     matched_output: complex array, Range or Azimuth cuts
     num_nulls_main: int, num_nulls_main = 2 if mainlobe includes first sidelobes
-    num_samples_null: float, default is Fs/bandwidth, number of samples from null to null
+    fs_bw_ratio: float, Fsampling/bandwidth
 
     Returns:
     --------
@@ -111,6 +111,7 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
     """
     
     #Search at least 1 sample beyond expected null
+    num_samples_null = int(np.round(fs_bw_ratio))
     num_samples_search = num_samples_null + 2
     
     if (num_nulls_main == 1):
@@ -123,8 +124,8 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
         samples_left = matched_output[first_peak_left_idx : search_samples_left_stop : -1]
         samples_right = matched_output[first_peak_right_idx : search_samples_right_stop] 
     elif (num_nulls_main == 2):
-        first_peak_left_idx = main_peak_idx - int(np.round(1.5 * num_samples_null))
-        first_peak_right_idx = main_peak_idx + int(np.round(1.5 * num_samples_null))
+        first_peak_left_idx = main_peak_idx - int(np.round(1.5 * fs_bw_ratio))
+        first_peak_right_idx = main_peak_idx + int(np.round(1.5 * fs_bw_ratio))
         
         search_samples_left_stop = first_peak_left_idx - num_samples_search
         search_samples_right_stop = first_peak_right_idx + num_samples_search
@@ -133,7 +134,7 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
         samples_right = matched_output[first_peak_right_idx : search_samples_right_stop]
     else:
         raise Exception("The variable num_nulls_main cannot be greater than 2.")
-    
+
     #Search for left null
     diffsign_left = np.sign(np.diff(samples_left))
     if np.any(diffsign_left == 1):
@@ -143,7 +144,7 @@ def find_null_to_null(matched_output, num_nulls_main, num_samples_null, main_pea
             
     #Search for right null
     diffsign_right = np.sign(np.diff(samples_right))
-    if np.any(diffsign_right == 1):
+    if np.any(diffsign_right == -1):
         null_right_idx = first_peak_right_idx + np.where(diffsign_right[:-1] + diffsign_right[1:] == 0)[0][0] + 1
     else:
         null_right_idx = first_peak_right_idx + num_samples_null
@@ -172,15 +173,14 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, s
     2. pslr_dB: float, PSLR in dB
     """
     
-    num_samples_null = int(np.round(fs_bw_ratio))
     data_in_pwr_linear = np.abs(data_in_linear)**2
     data_in_pwr_dB = 10*np.log10(data_in_pwr_linear)
     zmax_idx = np.argmax(data_in_pwr_linear)
     plsr_main_lobe = 1
     
     if search_null:
-        null_main_left_idx, null_main_right_idx = find_null_to_null(data_in_pwr_dB, num_nulls_main, num_samples_null, zmax_idx)
-        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, num_samples_null, zmax_idx)
+        null_main_left_idx, null_main_right_idx = find_null_to_null(data_in_pwr_dB, num_nulls_main, fs_bw_ratio, zmax_idx)
+        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, fs_bw_ratio, zmax_idx)
 		
         num_samples_sidelobe = zmax_idx - null_first_left_idx
         num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
@@ -189,7 +189,7 @@ def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, s
         null_main_left_idx = zmax_idx - num_samples_search
         null_main_right_idx = zmax_idx + num_samples_search
 
-        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, num_samples_null, zmax_idx)
+        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, fs_bw_ratio, zmax_idx)
         num_samples_sidelobe = zmax_idx - null_first_left_idx
         num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
   
