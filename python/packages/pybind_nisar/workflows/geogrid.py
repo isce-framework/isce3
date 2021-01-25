@@ -126,7 +126,7 @@ def create(cfg, frequency_group = None, frequency = None,
         # extract other geogrid params from radar grid and orbit constructed bounding box
         geogrid = isce.product.bbox_to_geogrid(slc.getRadarGrid(frequency),
                                                slc.getOrbit(),
-                                               slc.getDopplerCentroid(frequency=frequency),
+                                               isce.core.LUT2d(),
                                                spacing_x, spacing_y, epsg)
 
         # restore runconfig start_x (if provided)
