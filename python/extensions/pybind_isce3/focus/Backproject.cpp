@@ -79,8 +79,8 @@ void addbinding_backproject(py::module& m)
             if (geo2rdr_params.contains("maxiter")) {
                 g2rparams.maxiter = py::int_(geo2rdr_params["maxiter"]);
             }
-            if (geo2rdr_params.contains("dr")) {
-                g2rparams.delta_range = py::float_(geo2rdr_params["dr"]);
+            if (geo2rdr_params.contains("delta_range")) {
+                g2rparams.delta_range = py::float_(geo2rdr_params["delta_range"]);
             }
 
             backproject(out_data, out_geometry, in_data, in_geometry, dem, fc,
