@@ -8,7 +8,8 @@ from pathlib import Path
 import json
 
 from ...focus.backproject import load_h5
-from ...focus.point_target_info import analyze_point_target, tofloatvals
+from pybind_nisar.workflows import point_target_info
+from point_target_info import analyze_point_target, tofloatvals
 
 c = isce.core.speed_of_light
 
