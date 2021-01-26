@@ -42,6 +42,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
     crossmul.range_looks = cfg['processing']['crossmul']['range_looks']
     crossmul.az_looks = cfg['processing']['crossmul']['azimuth_looks']
+    crossmul.oversample = cfg['processing']['crossmul']['oversample']
 
     # check if user provided path to raster(s) is a file or directory
     coregistered_slc_path = pathlib.Path(cfg['processing']['crossmul']['coregistered_slc_path'])

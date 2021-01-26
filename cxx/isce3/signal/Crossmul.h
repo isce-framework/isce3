@@ -72,70 +72,76 @@ class isce3::signal::Crossmul {
                             isce3::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
-        inline void prf(double);
+        inline void prf(double prf) { _prf = prf; }
 
         /** Get pulse repetition frequency (PRF) */
-        inline double prf() const;
+        inline double prf() const { return _prf; }
 
         /** Set range sampling frequency  */
-        inline void rangeSamplingFrequency(double);
+        inline void rangeSamplingFrequency(double rgSamplingFreq) { _rangeSamplingFrequency = rgSamplingFreq; }
 
         /** Get range sampling frequency  */
-        inline double rangeSamplingFrequency() const;
+        inline double rangeSamplingFrequency() const { return _rangeSamplingFrequency; }
 
         /** Set the range bandwidth */
-        inline void rangeBandwidth(double);
+        inline void rangeBandwidth(double rngBandwidth) { _rangeBandwidth = rngBandwidth; }
 
         /** Get the range bandwidth */
-        inline double rangeBandwidth() const;
+        inline double rangeBandwidth() const {return _rangeBandwidth; }
 
         /** Set range pixel spacing */
-        inline void rangePixelSpacing(double);
+        inline void rangePixelSpacing(double rgPxlSpacing) { _rangePixelSpacing = rgPxlSpacing; }
 
         /** Get range pixel spacing */
-        inline double rangePixelSpacing() const;
+        inline double rangePixelSpacing() const { return _rangePixelSpacing; }
 
         /** Set Wavelength*/
-        inline void wavelength(double);
+        inline void wavelength(double wvl) { _wavelength = wvl; }
 
         /** Get Wavelength*/
-        inline double wavelength() const;
+        inline double wavelength() const { return _wavelength; }
 
         /** Set azimuth common bandwidth */
-        inline void commonAzimuthBandwidth(double);
+        inline void commonAzimuthBandwidth(double azBandwidth) {_commonAzimuthBandwidth = azBandwidth; }
 
         /** Get azimuth common bandwidth */
-        inline double commonAzimuthBandwidth() const;
+        inline double commonAzimuthBandwidth() const { return _commonAzimuthBandwidth; }
 
         /** Set beta parameter for the azimuth common band filter */
-        inline void beta(double);
+        inline void beta(double beta) { _beta = beta; }
 
         /** Get beta parameter for the azimuth common band filter */
-        inline double beta() const;
+        inline double beta() const { return _beta; }
 
         /** Set number of range looks */ 
         inline void rangeLooks(int);
 
         /** Get number of range looks */ 
-        inline int rangeLooks() const;
+        inline int rangeLooks() const { return _rangeLooks; }
 
         /** Set number of azimuth looks */
         inline void azimuthLooks(int);
 
         /** Get number of azimuth looks */
-        inline int azimuthLooks() const;
+        inline int azimuthLooks() const { return _azimuthLooks; }
 
         /** Set common azimuth band filtering flag */
-        inline void doCommonAzimuthBandFilter(bool);
+        inline void doCommonAzimuthBandFilter(bool doAzBandFilter) { _doCommonAzimuthBandFilter = doAzBandFilter; }
 
         /** Get common azimuth band filtering flag */
-        inline bool doCommonAzimuthBandFilter() const;
+        inline bool doCommonAzimuthBandFilter() const { return _doCommonAzimuthBandFilter; }
 
         /** Set common range band filtering flag */
-        inline void doCommonRangeBandFilter(bool);
+        inline void doCommonRangeBandFilter(bool doRgBandFilter) { _doCommonRangeBandFilter = doRgBandFilter; }
 
         /** Get common range band filtering flag */
-        inline bool doCommonRangeBandFilter() const;
+        inline bool doCommonRangeBandFilter() const { return _doCommonRangeBandFilter; }
+
+        /** Set oversample */
+        inline void oversample(size_t oversamp) { _oversample = oversamp; }
+
+        /** Get oversample */
+        inline size_t oversample() const { return _oversample; }
 
         /** Compute the avergae frequency shift in range direction between two SLCs*/
         inline void rangeFrequencyShift(std::valarray<std::complex<float>> &refAvgSpectrum,
@@ -198,7 +204,7 @@ class isce3::signal::Crossmul {
         size_t blockRows = 8192;
 
         // upsampling factor
-        size_t oversample = 1;
+        size_t _oversample = 1;
 
         
 };

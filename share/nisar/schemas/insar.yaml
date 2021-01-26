@@ -198,6 +198,7 @@ crossmul_options:
     #         └── range.off
     # Flatten defaults to True
     flatten: any(bool(), str(min=1))
+    oversample: int(min=1, required=False)
 
 geo2rdr_options:
     threshold: num(min=1.0e-9, max=1.0e-3, required=False)

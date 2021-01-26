@@ -113,5 +113,8 @@ void addbinding(py::class_<Crossmul> & pyCrossmul)
         .def_property("filter_rg",
                 py::overload_cast<>(&Crossmul::doCommonRangeBandFilter, py::const_),
                 py::overload_cast<bool>(&Crossmul::doCommonRangeBandFilter))
+        .def_property("oversample",
+                py::overload_cast<>(&Crossmul::oversample, py::const_),
+                py::overload_cast<size_t>(&Crossmul::oversample))
         ;
 }

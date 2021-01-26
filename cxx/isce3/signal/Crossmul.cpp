@@ -159,19 +159,19 @@ crossmul(isce3::io::Raster& referenceSLC,
     std::valarray<std::complex<float>> secSpectrum(fft_size*blockRows);
 
     // upsampled spectrum of the block of reference SLC
-    std::valarray<std::complex<float>> refSpectrumUpsampled(oversample*fft_size*blockRows);
+    std::valarray<std::complex<float>> refSpectrumUpsampled(_oversample*fft_size*blockRows);
 
     // upsampled spectrum of the block of secondary SLC
-    std::valarray<std::complex<float>> secSpectrumUpsampled(oversample*fft_size*blockRows);
+    std::valarray<std::complex<float>> secSpectrumUpsampled(_oversample*fft_size*blockRows);
 
     // upsampled block of reference SLC 
-    std::valarray<std::complex<float>> refSlcUpsampled(oversample*fft_size*blockRows);
+    std::valarray<std::complex<float>> refSlcUpsampled(_oversample*fft_size*blockRows);
 
     // upsampled block of secondary SLC
-    std::valarray<std::complex<float>> secSlcUpsampled(oversample*fft_size*blockRows);
+    std::valarray<std::complex<float>> secSlcUpsampled(_oversample*fft_size*blockRows);
 
     // upsampled interferogram
-    std::valarray<std::complex<float>> ifgramUpsampled(oversample*ncols*blockRows);
+    std::valarray<std::complex<float>> ifgramUpsampled(_oversample*ncols*blockRows);
 
     // full resolution interferogram
     std::valarray<std::complex<float>> ifgram(ncols*blockRows);
@@ -190,17 +190,17 @@ crossmul(isce3::io::Raster& referenceSLC,
 
     // make forward and inverse fft plans for the reference SLC 
     refSignal.forwardRangeFFT(refSlc, refSpectrum, fft_size, blockRows);
-    refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, fft_size*oversample, blockRows);
+    refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, fft_size*_oversample, blockRows);
 
     // make forward and inverse fft plans for the secondary SLC
     secSignal.forwardRangeFFT(secSlc, secSpectrum, fft_size, blockRows);
-    secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, fft_size*oversample, blockRows);
+    secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, fft_size*_oversample, blockRows);
 
     // looking down the upsampled interferogram may shift the samples by a fraction of a pixel
     // depending on the oversample factor. predicting the impact of the shift in frequency domain 
     // which is a linear phase allows to account for it during the upsampling process
-    std::valarray<std::complex<float>> shiftImpact(oversample*fft_size*blockRows);
-    lookdownShiftImpact(oversample,  fft_size, 
+    std::valarray<std::complex<float>> shiftImpact(_oversample*fft_size*blockRows);
+    lookdownShiftImpact(_oversample,  fft_size,
                         blockRows, shiftImpact);
 
     //filter objects which will be used for azimuth and range common band filtering
@@ -316,42 +316,50 @@ crossmul(isce3::io::Raster& referenceSLC,
                                 
         }
 
-        if (_computeCoherence) {
-            looksObj.ncols(fft_size);
-            // refAmplitudeLooked = sum(abs(refSlc)^2)
-            looksObj.multilook(refSlc, refAmplitudeLooked, 2);
-            looksObj.multilook(secSlc, secAmplitudeLooked, 2);
-        }
-
         // upsample the reference and secondary SLCs
-        if (oversample == 1) {
+        if (_oversample == 1) {
             refSlcUpsampled = refSlc;
             secSlcUpsampled = secSlc;
         } else {
             refSignal.upsample(refSlc, refSlcUpsampled, blockRows, fft_size,
-                               oversample, shiftImpact);
+                               _oversample, shiftImpact);
             secSignal.upsample(secSlc, secSlcUpsampled, blockRows, fft_size,
-                               oversample, shiftImpact);
+                               _oversample, shiftImpact);
+        }
+
+        if (_computeCoherence) {
+            // refAmplitudeLooked = sum(abs(refSlc)^2)
+            if (_oversample == 1) {
+                looksObj.ncols(fft_size);
+                looksObj.multilook(refSlc, refAmplitudeLooked, 2);
+                looksObj.multilook(secSlc, secAmplitudeLooked, 2);
+            } else {
+                // update looksObj so SlcUpsampled can be mulitlooked
+                looksObj.ncols(_oversample*fft_size);
+                looksObj.colsLooks(_oversample*_rangeLooks);
+                looksObj.multilook(refSlcUpsampled, refAmplitudeLooked, 2);
+                looksObj.multilook(secSlcUpsampled, secAmplitudeLooked, 2);
+            }
         }
 
         // Compute oversampled interferogram data
         #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++) {
-            for (size_t col = 0; col < oversample*ncols; col++) {
-                ifgramUpsampled[line*(oversample*ncols) + col] = 
-                        refSlcUpsampled[line*(oversample*fft_size) + col]*
-                        std::conj(secSlcUpsampled[line*(oversample*fft_size) + col]);
+            for (size_t col = 0; col < _oversample*ncols; col++) {
+                ifgramUpsampled[line*(_oversample*ncols) + col] =
+                        refSlcUpsampled[line*(_oversample*fft_size) + col]*
+                        std::conj(secSlcUpsampled[line*(_oversample*fft_size) + col]);
             }
         }
 
         // Reclaim the extra oversample looks across
-        float ov = oversample;
+        float ov = _oversample;
         #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++) {
             for (size_t col = 0; col < ncols; col++) {
                 std::complex<float> sum = 0;
-                for (size_t j=0; j< oversample; j++)
-                    sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample];
+                for (size_t j=0; j< _oversample; j++)
+                    sum += ifgramUpsampled[line*(ncols*_oversample) + j + col*_oversample];
                 ifgram[line*ncols + col] = sum/ov;            
             }
         }
@@ -360,6 +368,7 @@ crossmul(isce3::io::Raster& referenceSLC,
         if (_doMultiLook) {
 
             looksObj.ncols(ncols);
+            looksObj.colsLooks(_rangeLooks);
             looksObj.multilook(ifgram, ifgramMultiLooked);
             interferogram.setBlock(ifgramMultiLooked, 0, rowStart/_azimuthLooks,
                         ncols/_rangeLooks, blockRowsData/_azimuthLooks);

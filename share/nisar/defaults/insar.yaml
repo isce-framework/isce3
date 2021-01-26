@@ -138,3 +138,4 @@ runconfig:
                 range_looks: 11
                 azimuth_looks: 11
                 flatten: True
+                oversample: 2

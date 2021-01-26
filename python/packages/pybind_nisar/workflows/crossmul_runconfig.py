@@ -27,35 +27,42 @@ class CrossmulRunConfig(RunConfig):
         self.cfg = helpers.autovivified_dict()
 
         # ref hdf5 valid?
-        if os.path.isfile(self.args.ref_hdf5):
-            self.cfg['InputFileGroup']['InputFilePath'] = self.args.ref_hdf5
-        else:
+        if not os.path.isfile(self.args.ref_hdf5):
             err_str = f"{self.args.ref_hdf5} not a valid path"
             error_channel.log(err_str)
             raise FileNotFoundError(err_str)
 
+        self.cfg['InputFileGroup']['InputFilePath'] = self.args.ref_hdf5
+
         # sec hdf5 valid?
         if os.path.isfile(self.args.sec_hdf5):
-            self.cfg['InputFileGroup']['SecondaryFilePath'] = self.args.sec_hdf5
-        else:
             err_str = f"{self.args.sec_hdf5} not a valid path"
             error_channel.log(err_str)
             raise FileNotFoundError(err_str)
 
+        self.cfg['InputFileGroup']['SecondaryFilePath'] = self.args.sec_hdf5
+
         # multilooks valid?
         if self.args.azimuth_looks >= 1:
-            self.cfg['processing']['crossmul']['azimuth_looks'] = self.args.azimuth_looks
-        else:
             err_str = f"azimuth look of {self.args.azimuth_looks} must be >= 1"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
+        self.cfg['processing']['crossmul']['azimuth_looks'] = self.args.azimuth_looks
+
         if self.args.range_looks >= 1:
-            self.cfg['processing']['crossmul']['range_looks'] = self.args.range_looks
-        else:
             err_str = f"range look of {self.args.range_looks} must be >= 1"
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        self.cfg['processing']['crossmul']['range_looks'] = self.args.range_looks
+
+        if self.args.oversample < 1:
+            err_str = f"range look of {self.args.oversample} must be >= 1"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+
+        self.cfg['processing']['crossmul']['oversample'] = self.args.oversample
 
         # check frequency and polarization dict prior to dict assignment
         freq_pols = self.args.freq_pols
@@ -161,3 +168,6 @@ class CrossmulRunConfig(RunConfig):
             helpers.check_mode_directory_tree(flatten, 'geo2rdr', frequencies)
         else:
             self.cfg['processing']['crossmul']['flatten'] = None
+
+        if 'oversample' not in self.cfg['processing']['crossmul']:
+            self.cfg['processing']['crossmul']['oversample'] = 2
