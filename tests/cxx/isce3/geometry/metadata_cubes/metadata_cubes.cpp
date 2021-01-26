@@ -37,8 +37,7 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
                     isce3::io::Raster& along_track_unit_vector_y_raster,
                     isce3::io::Raster& elevation_angle_raster)
 {
-    std::unique_ptr<isce3::core::ProjectionBase> proj(
-            isce3::core::createProj(geogrid.epsg()));
+    auto proj = isce3::core::makeProjection(geogrid.epsg());
 
     const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
 
@@ -241,7 +240,7 @@ void _compareArrays(isce3::core::Matrix<T>& topo_array,
 
             sum_topo += topo_array(i, j);
             sum_cube += cube_array(i, j);
-
+            
             nvalid += 1;
             square_error_sum += std::pow(error, 2);
             max_abs_error = std::max(max_abs_error, std::abs(error));
@@ -504,8 +503,7 @@ TEST(radarGridCubeTest, testRadarGridCube)
 
         // 3. Compare results with topo
 
-        std::unique_ptr<isce3::core::ProjectionBase> proj(
-                isce3::core::createProj(epsg));
+        auto proj = isce3::core::makeProjection(epsg);
 
         isce3::core::Ellipsoid ellipsoid = proj->ellipsoid();
 
@@ -675,8 +673,139 @@ TEST(radarGridCubeTest, testRadarGridCube)
     }
 }
 
-int main(int argc, char* argv[])
-{
+
+TEST(metadataCubesTest, testMetadataCubes) {
+
+    // Open the HDF5 product
+    // std::string h5file(TESTDATA_DIR "envisat.h5");
+    std::string h5file(TESTDATA_DIR "winnipeg.h5");
+    isce3::io::IH5File file(h5file);
+
+    // Load the product
+    isce3::product::Product product(file);
+
+    // Create radar grid parameter
+    char frequency = 'A';
+    isce3::product::RadarGridParameters radar_grid(product, frequency);
+
+    // Create orbit and Doppler LUTs
+    isce3::core::Orbit orbit = product.metadata().orbit();
+
+    isce3::core::LUT2d<double> zero_doppler;
+
+    double threshold_geo2rdr = 1e-8;
+    int numiter_geo2rdr = 25;
+    double delta_range = 1e-6;
+    int epsg = 4326;
+
+    std::vector<double> heights = {0.0, 1000.0};
+
+    int length = radar_grid.length();
+    int width = radar_grid.width();
+
+    isce3::io::Raster coordinate_x_raster("coordinateX.bin", width, length,
+                                          heights.size(), GDT_Float64, "ENVI");
+    isce3::io::Raster coordinate_y_raster("coordinateY.bin", width, length,
+                                          heights.size(), GDT_Float64, "ENVI");
+    isce3::io::Raster incidence_angle_raster("incidenceAngle.bin", width,
+                                             length, heights.size(),
+                                             GDT_Float32, "ENVI");
+    isce3::io::Raster los_unit_vector_x_raster("losUnitVectorX.bin", width,
+                                               length, heights.size(),
+                                               GDT_Float32, "ENVI");
+    isce3::io::Raster los_unit_vector_y_raster("losUnitVectorY.bin", width,
+                                               length, heights.size(),
+                                               GDT_Float32, "ENVI");
+    isce3::io::Raster along_track_unit_vector_x_raster(
+            "alongTrackUnitVectorX.bin", width, length, heights.size(),
+            GDT_Float32, "ENVI");
+    isce3::io::Raster along_track_unit_vector_y_raster(
+            "alongTrackUnitVectorY.bin", width, length, heights.size(),
+            GDT_Float32, "ENVI");
+    isce3::io::Raster elevation_angle_raster("elevationAngle.bin", width,
+                                             length, heights.size(),
+                                             GDT_Float64, "ENVI");
+
+    // Make cubes
+    isce3::geometry::makeGeolocationGridCubes(
+            radar_grid, heights, orbit, zero_doppler, zero_doppler, epsg,
+            &coordinate_x_raster, &coordinate_y_raster, &incidence_angle_raster,
+            &los_unit_vector_x_raster, &los_unit_vector_y_raster,
+            &along_track_unit_vector_x_raster, &along_track_unit_vector_y_raster,
+            &elevation_angle_raster, threshold_geo2rdr, numiter_geo2rdr,
+            delta_range);
+
+    auto proj = isce3::core::makeProjection(epsg);
+
+    const isce3::core::Ellipsoid &ellipsoid = proj->ellipsoid();
+    
+    // create reference values from topo
+    isce3::geometry::Topo topo(radar_grid,
+                              orbit,
+                              ellipsoid,
+                              zero_doppler);
+
+    topo.epsgOut(4326);
+
+    if (radar_grid.lookSide() == isce3::core::LookSide::Right) {
+        std::cout << "look side: Right" << std::endl;
+    } else {
+        std::cout << "look side: Left" << std::endl;
+    }
+
+    for (std::size_t layer_counter = 0; layer_counter < heights.size();
+         ++layer_counter) {
+        std::cout << "preparing DEM interpolator for height: "
+                  << heights[layer_counter] << std::endl;
+        isce3::geometry::DEMInterpolator dem(heights[layer_counter]);
+
+        // UAVSAR (NISAR) Winipeg
+        dem.epsgCode(4326);
+        dem.xStart(-98.444);
+        dem.yStart(49.991);
+        dem.deltaX(0.0002);
+        dem.deltaY(-0.0002);
+        dem.length(3240);
+        dem.width(3805);
+
+        const std::string outdir = ".";
+        std::cout << "running topo for height: " << heights[layer_counter]
+                  << std::endl;
+        topo.topo(dem, outdir);
+        std::cout << "... done running topo for height: "
+                  << heights[layer_counter] << std::endl;
+
+        _compareCubeLayer<float>("inc.rdr", "incidenceAngle.bin",
+                                  layer_counter);
+        _compareCubeLayer<double>("x.rdr", "coordinateX.bin",
+                                  layer_counter);
+        _compareCubeLayer<double>("y.rdr", "coordinateY.bin",
+                                  layer_counter);
+
+        /*
+        Uncomment these lines after the estimation of the heading angle
+        from topo is updated. Topo currently derives the heading angle 
+        from the look vector instead of deriving it from the velocity
+        vector. This result in a low accuracy that cannot be used to
+        evaluate the metadata cubes.
+
+         bool flag_along_track_vector = true;
+        _compareHeading<float>("hdg.rdr", "alongTrackUnitVectorX.bin",
+                               "alongTrackUnitVectorY.bin", layer_counter,
+                               radar_grid,
+                               flag_along_track_vector);
+        
+        _compareHeading<float>("hdg.rdr", "losUnitVectorX.bin",
+                               "losUnitVectorY.bin", layer_counter,
+                               radar_grid);
+        */
+        
+                               
+    }
+}
+
+
+int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -2,19 +2,21 @@
 
 #include <iostream>
 
-#include <pyre/journal.h>
-
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Matrix.h>
-#include <isce3/core/Orbit.h>
 #include <isce3/core/Projections.h>
+#include <isce3/core/LUT2d.h>
+#include <isce3/core/Orbit.h>
+#include <isce3/io/Raster.h>
 #include <isce3/error/ErrorCode.h>
 #include <isce3/geometry/geometry.h>
-#include <isce3/geometry/metadataCubes.h>
-#include <isce3/io/Raster.h>
+#include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/product/GeoGridParameters.h>
+#include <isce3/product/RadarGridParameters.h>
+#include <isce3/geometry/metadataCubes.h>
 
-namespace isce3 { namespace geometry {
+namespace isce3 {
+namespace geometry {
 
 
 template<class T>
@@ -31,8 +33,21 @@ getNanArray(isce3::io::Raster* raster,
 }
 
 template<class T>
+static isce3::core::Matrix<T>
+getNanArrayRadarGrid(isce3::io::Raster* raster,
+              const isce3::product::RadarGridParameters& radar_grid)
+{
+    isce3::core::Matrix<T> data_array;
+        if (raster != nullptr) {            
+            data_array.resize(radar_grid.length(), radar_grid.width());
+        }
+    data_array.fill(std::numeric_limits<T>::quiet_NaN());
+    return data_array;
+}
+
+template<class T>
 static void writeArray(isce3::io::Raster* raster,
-                       isce3::core::Matrix<T>& data_array, int height_count)
+        isce3::core::Matrix<T>& data_array, int height_count)
 {
     if (raster == nullptr) {
         return;
@@ -262,8 +277,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
 #pragma omp parallel for
     for (int height_count = 0; height_count < heights.size(); ++height_count) {
 
-        std::unique_ptr<isce3::core::ProjectionBase> proj(
-                isce3::core::createProj(geogrid.epsg()));
+        auto proj = isce3::core::makeProjection(geogrid.epsg());
 
         const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
 
@@ -420,4 +434,149 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
 }
 
 
-}} // namespace isce3::geometry
+
+void makeGeolocationGridCubes(
+        const isce3::product::RadarGridParameters& radar_grid,
+        const std::vector<double>& heights, const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& native_doppler,
+        const isce3::core::LUT2d<double>& grid_doppler, const int epsg,
+        isce3::io::Raster* coordinate_x_raster,
+        isce3::io::Raster* coordinate_y_raster,
+        isce3::io::Raster* incidence_angle_raster,
+        isce3::io::Raster* los_unit_vector_x_raster,
+        isce3::io::Raster* los_unit_vector_y_raster,
+        isce3::io::Raster* along_track_unit_vector_x_raster,
+        isce3::io::Raster* along_track_unit_vector_y_raster,
+        isce3::io::Raster* elevation_angle_raster,
+        const double threshold_geo2rdr, const int numiter_geo2rdr,
+        const double delta_range)
+{
+
+    pyre::journal::info_t info("isce.geometry.makeGeolocationGridCubes");
+    info << "cube height: " << heights.size() << pyre::journal::endl;
+
+    info << "cube length: " << radar_grid.length() << pyre::journal::newline;
+    info << "cube width: " << radar_grid.width() << pyre::journal::endl;
+    info << "EPSG: " << epsg << pyre::journal::endl;
+
+    #pragma omp parallel for
+    for (int height_count = 0; height_count < heights.size(); ++height_count) {
+
+        auto proj = isce3::core::makeProjection(epsg);
+                
+        const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
+
+        auto coordinate_x_array = 
+                getNanArrayRadarGrid<double>(coordinate_x_raster, radar_grid);
+        auto coordinate_y_array =
+                getNanArrayRadarGrid<double>(coordinate_y_raster, radar_grid);
+        auto incidence_angle_array =
+                getNanArrayRadarGrid<float>(incidence_angle_raster, radar_grid);
+        auto los_unit_vector_x_array =
+                getNanArrayRadarGrid<float>(los_unit_vector_x_raster, radar_grid);
+        auto los_unit_vector_y_array =
+                getNanArrayRadarGrid<float>(los_unit_vector_y_raster, radar_grid);
+        auto along_track_unit_vector_x_array =
+                getNanArrayRadarGrid<float>(along_track_unit_vector_x_raster, radar_grid);
+        auto along_track_unit_vector_y_array =
+                getNanArrayRadarGrid<float>(along_track_unit_vector_y_raster, radar_grid);
+        auto elevation_angle_array =
+                getNanArrayRadarGrid<float>(elevation_angle_raster, radar_grid);
+
+        auto height = heights[height_count];
+        double native_azimuth_time = radar_grid.sensingMid();
+        double native_slant_range = radar_grid.midRange();
+
+        for (int i = 0; i < radar_grid.length(); ++i) {
+            double az_time = radar_grid.sensingTime(i);
+            for (int j = 0; j < radar_grid.width(); ++j) {
+                double slant_range = radar_grid.slantRange(j);
+                Vec3 target_llh;
+                isce3::geometry::DEMInterpolator dem_interpolator(height, epsg);
+
+                /*
+                Get target position (target_llh) considering grid Doppler
+                */
+                if (!grid_doppler.contains(az_time, slant_range)) {
+                    continue;
+                }
+                double fd = grid_doppler.eval(az_time, slant_range);
+                target_llh[2] = height;
+
+                auto converged =
+                        rdr2geo(az_time, slant_range, fd, orbit, ellipsoid,
+                                dem_interpolator, target_llh,
+                                radar_grid.wavelength(),
+                                radar_grid.lookSide(), threshold_geo2rdr,
+                                numiter_geo2rdr, delta_range);
+
+                // Check convergence
+                if (!converged) {
+                    continue;
+                }
+
+                // Get target position in the output proj system
+                isce3::core::Vec3 target_proj = proj->forward(target_llh);
+
+                if (coordinate_x_raster != nullptr) {
+                    coordinate_x_array(i, j) = target_proj[0];
+                }
+                if (coordinate_y_raster != nullptr) {
+                    coordinate_y_array(i, j) = target_proj[1];
+                }
+
+                // If nothing else to save, skip
+                if (incidence_angle_raster == nullptr &&
+                    los_unit_vector_x_raster == nullptr &&
+                    los_unit_vector_y_raster == nullptr &&
+                    along_track_unit_vector_x_raster == nullptr &&
+                    along_track_unit_vector_y_raster == nullptr &&
+                    elevation_angle_raster == nullptr) {
+                    continue;
+                }
+
+                /*
+                To retrieve platform position (considering
+                native Doppler), estimate native_azimuth_time 
+                */
+                converged = geo2rdr(target_llh, ellipsoid, orbit, native_doppler,
+                        native_azimuth_time, native_slant_range,
+                        radar_grid.wavelength(), radar_grid.lookSide(),
+                        threshold_geo2rdr, numiter_geo2rdr, delta_range);
+
+                // Check convergence
+                if (!converged) {
+                    native_azimuth_time = radar_grid.sensingMid();
+                    native_slant_range = radar_grid.midRange();
+                    continue;
+                }
+
+                writeVectorDerivedCubes(
+                        i, j, native_azimuth_time, target_llh, target_proj,
+                        orbit, ellipsoid, proj.get(),
+                        incidence_angle_raster, incidence_angle_array,
+                        los_unit_vector_x_raster, los_unit_vector_x_array,
+                        los_unit_vector_y_raster, los_unit_vector_y_array,
+                        along_track_unit_vector_x_raster,
+                        along_track_unit_vector_x_array,
+                        along_track_unit_vector_y_raster,
+                        along_track_unit_vector_y_array, elevation_angle_raster,
+                        elevation_angle_array);
+            }
+        }
+        writeArray(coordinate_x_raster, coordinate_x_array, height_count);
+        writeArray(coordinate_y_raster, coordinate_y_array, height_count);
+        writeArray(incidence_angle_raster, incidence_angle_array, height_count);
+        writeArray(los_unit_vector_x_raster, los_unit_vector_x_array,
+                   height_count);
+        writeArray(los_unit_vector_y_raster, los_unit_vector_y_array,
+                   height_count);
+        writeArray(along_track_unit_vector_x_raster,
+                   along_track_unit_vector_x_array, height_count);
+        writeArray(along_track_unit_vector_y_raster,
+                   along_track_unit_vector_y_array, height_count);
+        writeArray(elevation_angle_raster, elevation_angle_array, height_count);
+    }
+}
+}
+}

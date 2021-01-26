@@ -551,6 +551,11 @@ def focus(runconfig):
         r = og.starting_range + np.arange(og.width) * og.range_pixel_spacing
         slc.update_swath(t, og.ref_epoch, r, fc, frequency)
 
+    freq = raw.frequencies[0]
+    slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
+                             epsg=4326, dem=dem,
+                             **vars(cfg.processing.azcomp.geo2rdr))
+
     # Scratch directory for intermediate outputs
     scratch_dir = os.path.abspath(cfg.ProductPathGroup.ScratchPath)
     os.makedirs(scratch_dir, exist_ok=True)

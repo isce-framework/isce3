@@ -3,9 +3,11 @@ import logging
 import numpy as np
 from pybind_isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
 from pybind_isce3.product import RadarGridParameters
+from pybind_isce3.geometry import DEMInterpolator
 from pybind_nisar.h5 import set_string
 from pybind_nisar.types import complex32
 from pybind_nisar.products.readers.Raw import Raw
+from pybind_nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 
 log = logging.getLogger("SLCWriter")
 
@@ -235,3 +237,31 @@ class SLC(h5py.File):
             d.attrs["description"] = np.string_("Azimuth stop time of product")
         else:
             log.warning("SLC end time not updated.  Using L0B end time.")
+
+
+    def set_geolocation_grid(self, orbit: Orbit, grid: RadarGridParameters,
+                             doppler: LUT2d, epsg=4326, dem=DEMInterpolator(),
+                             threshold=1e-8, maxiter=50, delta_range=10.0):
+        log.info(f"Creating geolocationGrid.")
+        # TODO Get DEM stats.  Until then just span all Earthly values.
+        heights = np.linspace(-500, 9000, 20)
+        # Figure out decimation factors that give < 500 m spacing.
+        max_spacing = 500.
+        t = (grid.sensing_mid +
+             (grid.ref_epoch - orbit.reference_epoch).total_seconds())
+        _, v = orbit.interpolate(t)
+        dx = np.linalg.norm(v) / grid.prf
+        tskip = int(np.floor(max_spacing / dx))
+        rskip = int(np.floor(max_spacing / grid.range_pixel_spacing))
+        grid = grid[::tskip, ::rskip]
+
+        group_name = f"{self.root.name}/metadata/geolocationGrid"
+        rslc_doppler = LUT2d()  # RSLCs are zero-Doppler by definition
+        # Change spelling of geo2rdr params
+        tol = dict(
+            threshold_geo2rdr = threshold,
+            numiter_geo2rdr = maxiter,
+            delta_range = delta_range,
+        )
+        add_geolocation_grid_cubes_to_hdf5(self, group_name, grid, heights,
+            orbit, doppler, rslc_doppler, epsg, **tol)

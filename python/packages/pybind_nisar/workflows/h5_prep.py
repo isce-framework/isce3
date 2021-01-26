@@ -827,38 +827,48 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = Fal
         x_standard_name = "projection_x_coordinate"
         y_standard_name = "projection_y_coordinate"
 
-    # xCoordinateSpacing
+    # EPSG
+    descr = ("EPSG code corresponding to coordinate system used" +
+             " for representing radar grid")
+    epsg_dataset_name = os.path.join(root_ds, 'epsg')
+    if epsg_dataset_name in hdf5_obj:
+        del hdf5_obj[epsg_dataset_name]
+    epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name, 
+                                           data=np.array(epsg_code, "i4"))
+    epsg_dataset.attrs["description"] = np.string_(descr)
+    epsg_dataset.attrs["units"] = ""
+    epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
+
     if not flag_cube:
+
+        # xCoordinateSpacing
         descr = (f'Nominal spacing in {x_coord_units}'
                  ' between consecutive pixels')
+        xds_spacing_name = os.path.join(root_ds, 'xCoordinateSpacing')
+        if xds_spacing_name in hdf5_obj:
+            del hdf5_obj[xds_spacing_name]
+        xds_spacing = hdf5_obj.create_dataset(xds_spacing_name, data=dx)
+        xds_spacing.attrs["description"] = np.string_(descr)
+        xds_spacing.attrs["units"] = np.string_(x_coord_units)
+        xds_spacing.attrs["long_name"] = np.string_("x coordinate spacing")
+
+        # yCoordinateSpacing
+        descr = (f'Nominal spacing in {y_coord_units}'
+                 ' between consecutive lines')
+        yds_spacing_name = os.path.join(root_ds, 'yCoordinateSpacing')
+        if yds_spacing_name in hdf5_obj:
+            del hdf5_obj[yds_spacing_name]
+        yds_spacing = hdf5_obj.create_dataset(yds_spacing_name, data=dy)
+        yds_spacing.attrs["description"] = np.string_(descr)
+        yds_spacing.attrs["units"] = np.string_(y_coord_units)
+        yds_spacing.attrs["long_name"] = np.string_("y coordinates spacing")
+
+    # xCoordinates
+    if not flag_cube:
+        descr = "CF compliant dimension associated with the X coordinate"
     else:
         descr = ('X coordinate values corresponding'
                  ' to the radar grid')
-    xds_spacing_name = os.path.join(root_ds, 'xCoordinateSpacing')
-    if xds_spacing_name in hdf5_obj:
-        del hdf5_obj[xds_spacing_name]
-    xds_spacing = hdf5_obj.create_dataset(xds_spacing_name, data=dx)
-    xds_spacing.attrs["description"] = np.string_(descr)
-    xds_spacing.attrs["units"] = np.string_(x_coord_units)
-    xds_spacing.attrs["long_name"] = np.string_("x coordinate spacing")
-
-    # yCoordinateSpacing
-    if not flag_cube:
-        descr = (f'Nominal spacing in {y_coord_units}'
-                 ' between consecutive lines')
-    else:
-        descr = ('Y coordinate values corresponding'
-                 ' to the radar grid')
-    yds_spacing_name = os.path.join(root_ds, 'yCoordinateSpacing')
-    if yds_spacing_name in hdf5_obj:
-        del hdf5_obj[yds_spacing_name]
-    yds_spacing = hdf5_obj.create_dataset(yds_spacing_name, data=dy)
-    yds_spacing.attrs["description"] = np.string_(descr)
-    yds_spacing.attrs["units"] = np.string_(y_coord_units)
-    yds_spacing.attrs["long_name"] = np.string_("y coordinates spacing")
-
-    # xCoordinates
-    descr = "CF compliant dimension associated with the X coordinate"
     xds_name = os.path.join(root_ds, 'xCoordinates')
     if xds_name in hdf5_obj:
         del hdf5_obj[xds_name]
@@ -869,7 +879,12 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = Fal
     xds.attrs["long_name"] = np.string_("x coordinate")
 
     # yCoordinates
-    descr = "CF compliant dimension associated with the Y coordinate"
+    if not flag_cube:
+        descr = "CF compliant dimension associated with the Y coordinate"
+    else:
+        descr = ('Y coordinate values corresponding'
+                 ' to the radar grid')
+
     yds_name = os.path.join(root_ds, 'yCoordinates')
     if yds_name in hdf5_obj:
         del hdf5_obj[yds_name]
@@ -999,44 +1014,73 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = Fal
     return yds, xds
 
 
-def add_radar_grid_cubes_to_hdf5(fid, cube_group_name, geogrid, heights, radar_grid,
+def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights, radar_grid,
                                  orbit, native_doppler, grid_doppler,
                                  threshold_geo2rdr = 1e-8,
                                  numiter_geo2rdr = 100, delta_range = 1e-8):
-    if cube_group_name not in fid:
-        cube_group = fid.create_group(cube_group_name)
+    if cube_group_name not in hdf5_obj:
+        cube_group = hdf5_obj.create_group(cube_group_name)
     else:
-        cube_group = fid[cube_group_name]
+        cube_group = hdf5_obj[cube_group_name]
 
     cube_shape = [len(heights), geogrid.length, geogrid.width]
 
-    zds, yds, xds = set_get_geo_info(fid, cube_group_name, geogrid, z_vect=heights, 
+    zds, yds, xds = set_get_geo_info(hdf5_obj, cube_group_name, geogrid, z_vect=heights, 
                                      flag_cube=True)
-
+   
+    # seconds since ref epoch
+    ref_epoch = radar_grid.ref_epoch
+    ref_epoch_str = ref_epoch.isoformat().replace('T', ' ')
+    az_coord_units = f'seconds since {ref_epoch_str}' 
+    
     slant_range_raster = _get_raster_from_hdf5_ds(
         cube_group, 'slantRange', np.float64, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='slant-range', 
+        descr='', 
+        units='meter')
     azimuth_time_raster = _get_raster_from_hdf5_ds(
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='zero-Doppler azimuth time', 
+        descr='Zero doppler azimuth time in seconds', 
+        units=az_coord_units)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='incidence angle', 
+        descr='Incidence angle is defined as angle between LOS vector and normal at the target', 
+        units='degrees')
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='LOS unit vector X', 
+        descr='East component of unit vector of LOS from target to sensor', 
+        units='')
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='LOS unit vector Y', 
+        descr='North component of unit vector of LOS from target to sensor', 
+        units='')
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='Along-track unit vector X', 
+        descr='East component of unit vector along ground track', 
+        units='')
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='Along-track unit vector Y', 
+        descr='North component of unit vector along ground track', 
+        units='')
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds)
+        zds = zds, yds = yds, xds = xds,
+        long_name='Elevation angle', 
+        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor', 
+        units='degrees')
 
     isce3.geometry.make_radar_grid_cubes(radar_grid,
                                          geogrid,
@@ -1058,7 +1102,8 @@ def add_radar_grid_cubes_to_hdf5(fid, cube_group_name, geogrid, heights, radar_g
 
 def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
                              zds=None, yds=None, xds=None, standard_name=None,
-                             long_name=None, units=None, fill_value=None,
+                             long_name=None, descr=None,
+                             units=None, fill_value=None,
                              valid_min=None, valid_max=None):
 
     # remove dataset if it already exists
@@ -1083,6 +1128,9 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
     if long_name is not None:
         dset.attrs['long_name'] = np.string_(long_name)
 
+    if descr is not None:
+        dset.attrs["description"] = np.string_(descr)
+
     if units is not None:
         dset.attrs['units'] = np.string_(units)
 
@@ -1100,3 +1148,164 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
 
     return raster
 
+def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid, heights, 
+                                       orbit, native_doppler, grid_doppler,
+                                       epsg, threshold_geo2rdr=1e-8,
+                                       numiter_geo2rdr = 100, delta_range = 1e-8):
+    if cube_group_name not in hdf5_obj:
+        cube_group = hdf5_obj.create_group(cube_group_name)
+    else:
+        cube_group = hdf5_obj[cube_group_name]
+
+    cube_shape = [len(heights), radar_grid.length, radar_grid.width]
+
+    xds, yds, zds = set_create_geolocation_grid_coordinates(
+        hdf5_obj, cube_group_name, radar_grid, heights, epsg)
+
+    if epsg == 4326:
+        x_coord_units = "degree_east"
+        y_coord_units = "degree_north" 
+    else:
+        x_coord_units = "meter"
+        y_coord_units = "meter"
+
+    coordinate_x_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'coordinateX', np.float64, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='Coordinate X', 
+        descr='X coordinate in specified EPSG code', 
+        units=x_coord_units)
+    coordinate_y_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'coordinateY', np.float64, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='Coordinate Y', 
+        descr='Y coordinate in specified EPSG code', 
+        units=y_coord_units)
+    incidence_angle_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'incidenceAngle', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='incidence angle', 
+        descr='Incidence angle is defined as angle between LOS vector and normal at the target', 
+        units='degrees')
+    los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'losUnitVectorX', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='LOS unit vector X', 
+        descr='East component of unit vector of LOS from target to sensor', 
+        units='')
+    los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'losUnitVectorY', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='LOS unit vector Y', 
+        descr='North component of unit vector of LOS from target to sensor', 
+        units='')
+    along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='Along-track unit vector X', 
+        descr='East component of unit vector along ground track', 
+        units='')
+    along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='Along-track unit vector Y', 
+        descr='North component of unit vector along ground track', 
+        units='')
+    elevation_angle_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'elevationAngle', np.float32, cube_shape,
+        zds = zds, yds = yds, xds = xds,
+        long_name='Elevation angle', 
+        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor', 
+        units='degrees')
+
+    isce3.geometry.make_geolocation_cubes(radar_grid,
+                                          heights,
+                                          orbit,
+                                          native_doppler,
+                                          grid_doppler,
+                                          epsg,
+                                          coordinate_x_raster,
+                                          coordinate_y_raster,
+                                          incidence_angle_raster,
+                                          los_unit_vector_x_raster,
+                                          los_unit_vector_y_raster,
+                                          along_track_unit_vector_x_raster,
+                                          along_track_unit_vector_y_raster,
+                                          elevation_angle_raster,
+                                          threshold_geo2rdr,
+                                          numiter_geo2rdr,
+                                          delta_range)
+
+def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
+                                            z_vect, epsg):
+ 
+    rg_0 = radar_grid.starting_range
+    d_rg = radar_grid.range_pixel_spacing
+
+    rg_f = rg_0 + (radar_grid.width - 1) * d_rg
+    rg_vect = np.linspace(rg_0, rg_f, radar_grid.width, dtype=np.float64)
+
+    az_0 = radar_grid.sensing_start
+    d_az = 1.0 / radar_grid.prf
+
+    az_f = az_0 + (radar_grid.length - 1) * d_az
+    az_vect = np.linspace(az_0, az_f - d_az, radar_grid.length,
+                          dtype=np.float64)
+
+    hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
+
+    rg_coord_units = "meters"
+
+    # seconds since ref epoch
+    ref_epoch = radar_grid.ref_epoch
+    ref_epoch_str = ref_epoch.isoformat().replace('T', ' ')
+    az_coord_units = f'seconds since {ref_epoch_str}'
+
+    coordinates_list = []
+
+    # EPSG
+    descr = ("EPSG code corresponding to coordinate system used" +
+             " for representing geolocation grid")
+    epsg_dataset_name = os.path.join(root_ds, 'epsg')
+    if epsg_dataset_name in hdf5_obj:
+        del hdf5_obj[epsg_dataset_name]
+    epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name,
+                                           data=np.array(epsg, "i4"))
+    epsg_dataset.attrs["description"] = np.string_(descr)
+    epsg_dataset.attrs["units"] = ""
+    epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
+
+    # Slant range 
+    descr = "Slant range dimension corresponding to calibration records"
+    rg_dataset_name = os.path.join(root_ds, 'slantRange')
+    if rg_dataset_name in hdf5_obj:
+        del hdf5_obj[rg_dataset_name]
+    rg_dataset = hdf5_obj.create_dataset(rg_dataset_name, data=rg_vect)
+    rg_dataset.attrs["description"] = np.string_(descr)
+    rg_dataset.attrs["units"] = np.string_(rg_coord_units)
+    rg_dataset.attrs["long_name"] = np.string_("slant-range")
+    coordinates_list.append(rg_dataset)
+
+    # Zero-doppler time
+    descr = "Zero doppler time dimension corresponding to calibration records"
+    az_dataset_name = os.path.join(root_ds, 'zeroDopplerTime')
+    if az_dataset_name in hdf5_obj:
+        del hdf5_obj[az_dataset_name]
+    az_dataset = hdf5_obj.create_dataset(az_dataset_name, data=az_vect)
+    az_dataset.attrs["description"] = np.string_(descr)
+    az_dataset.attrs["units"] = np.string_(az_coord_units)
+    az_dataset.attrs["long_name"] = np.string_("zero-Doppler time")
+    coordinates_list.append(az_dataset)
+
+    # Height above reference ellipsoid
+    descr = "Height values above WGS84 Ellipsoid corresponding to the location grid"
+    height_dataset_name = os.path.join(root_ds, 'heightAboveEllipsoid')
+    if height_dataset_name in hdf5_obj:
+        del hdf5_obj[height_dataset_name]
+    height_dataset = hdf5_obj.create_dataset(height_dataset_name, data=z_vect)
+    height_dataset.attrs['standard_name'] = np.string_("height_above_reference_ellipsoid")
+    height_dataset.attrs["description"] = np.string_(descr)
+    height_dataset.attrs['units'] = np.string_("m")
+    coordinates_list.append(height_dataset)
+
+    return coordinates_list
