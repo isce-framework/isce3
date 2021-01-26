@@ -31,9 +31,25 @@ foreach(WORKFLOW ${WORKFLOWS})
 endforeach()
 
 
-# XXX Make RSLC workflow script executable.
-install(
-    PROGRAMS    pybind_nisar/workflows/focus.py
+# XXX Make workflow scripts executable.
+set (list_of_exe
+     pybind_nisar/workflows/crossmul.py
+     pybind_nisar/workflows/focus.py
+     pybind_nisar/workflows/geo2rdr.py
+     pybind_nisar/workflows/geocode_insar.py
+     pybind_nisar/workflows/gcov.py
+     pybind_nisar/workflows/gslc.py
+     pybind_nisar/workflows/insar.py
+     pybind_nisar/workflows/rdr2geo.py
+     pybind_nisar/workflows/resample_slc.py
+     pybind_nisar/workflows/stage_dem.py
+     pybind_nisar/workflows/unwrap.py)
+
+foreach(script ${list_of_exe})
+    install(
+    PROGRAMS    ${script}
     DESTINATION ${ISCE_PACKAGESDIR}
-    RENAME      pybind_nisar/workflows/focus.py
+    RENAME      ${script}
     )
+endforeach()
+

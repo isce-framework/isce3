@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 collection of functions for NISAR geocode workflow
 """
