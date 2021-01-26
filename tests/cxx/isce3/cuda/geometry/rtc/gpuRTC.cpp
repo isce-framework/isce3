@@ -4,7 +4,6 @@
 #include "isce3/io/IH5.h"
 #include "isce3/io/Raster.h"
 #include "isce3/product/Product.h"
-#include "isce3/geometry/Serialization.h"
 #include "isce3/cuda/geometry/gpuRTC.h"
 
 TEST(TestRTC, RunRTC) {
@@ -21,7 +20,7 @@ TEST(TestRTC, RunRTC) {
                                 GDT_Float32, "ENVI");
  
     // Call RTC
-    isce3::cuda::geometry::facetRTC(product, dem, out_raster, 'A');
+    isce3::cuda::geometry::computeRtc(product, dem, out_raster, 'A');
 }
 
 TEST(TestRTC, CheckResults) {

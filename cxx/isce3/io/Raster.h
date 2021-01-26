@@ -165,9 +165,17 @@ class isce3::io::Raster {
       template<typename T> void    getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band = 1);
       template<typename T> void    setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band = 1);
 
+      /** Read/write block of data from given band to/from EArray2D<T> */
+      template<typename T> void getBlock(isce3::core::EArray2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+      template<typename T> void setBlock(isce3::core::EArray2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+
+      /** Read/write block of data from given band to/from EArray2D<T> */
+      template<typename T> void getBlock(isce3::core::EMatrix2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+      template<typename T> void setBlock(isce3::core::EMatrix2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+
       //Functions to deal with projections and geotransform information
       /** Return EPSG code corresponding to raster*/
-      int getEPSG();
+      int getEPSG() const;
       /** Set EPSG code*/
       int setEPSG(int code);
       /** Set Raster GeoTransform from buffer, vector, or valarray */

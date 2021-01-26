@@ -3,7 +3,7 @@
 #!/usr/bin/env python3
 
 import os
-import gdal
+from osgeo import gdal
 import osr
 import time
 import h5py

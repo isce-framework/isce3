@@ -19,7 +19,7 @@ CONTAINER="isce-build-$BUILD_TAG"
 SRCDIR=/isce-src # source directory
 BLDDIR=/isce-bld # build directory
 PREFIX=/opt/isce # install directory
-DOCDIR=/isce-docs
+DOCDIR=$BLDDIR/docs-output
 
 DOCKER_BUILD_ARGS="\
     --network=host \
@@ -56,6 +56,7 @@ $DOCKER run --name $CONTAINER \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
                    -DCMAKE_PREFIX_PATH=/usr/local/conda \
                    -DISCE3_FETCH_EIGEN=no \
+                   -DISCE3_FETCH_PYRE=no \
      && make -j`nproc` VERBOSE=y \
      && make install"
 
@@ -117,17 +118,13 @@ $DOCKER run --rm \
 
 git clone --depth 1 --no-checkout https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/isce-3/pr-docs
 cd pr-docs
-git reset
+git reset &> /dev/null
 
 mkdir -p $ghprbPullId
 cd $ghprbPullId
 
-docker cp $CONTAINER:$BLDDIR/doc/. .
-docker cp $CONTAINER:$SPHX_DIR .
-mv html/* .
-
+docker cp $CONTAINER:$DOCDIR/. .
 git add .
-git status
 
 git config --local user.name  "gmanipon"
 git config --local user.email "gmanipon@jpl.nasa.gov"

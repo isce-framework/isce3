@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
+import argparse
+import datetime
+import glob
+import h5py
+import numpy
+import os
+from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
+import pybind_isce3 as isce3
+from pybind_nisar.products.readers.Raw import Raw
+from pybind_nisar.workflows.focus import make_doppler_lut
 
 def cmdLineParse():
     '''
     Command line parser.
     '''
-    import argparse
-    import os
-
     parser = argparse.ArgumentParser(description="Package ALOS L0 stripmap data into NISAR L0B HDF5")
     parser.add_argument('-i', '--indir', dest='indir', type=str,
                         help="Folder containing one ALOS L0 module",
@@ -14,7 +21,7 @@ def cmdLineParse():
     parser.add_argument('-o', '--outh5', dest='outh5', type=str,
                         help="Name of output file. If not provided, will be determined from ALOS granule",
                         default=None)
-    parser.add_argument('-d', '--debug', dest='deug', action='store_true',
+    parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help="Use more rigorous parser to check magic bytes aggresively",
                         default=False)
 
@@ -31,9 +38,6 @@ def getALOSFilenames(indir):
     '''
     Parse the contents of a given directory to separate out leader and image files.
     '''
-    import glob
-    import os
-
     filenames = {}
 
     ##First look for the leader file
@@ -69,7 +73,6 @@ def parseLeaderFile(filenames):
     Parse leader file and check values against polarizations.
     '''
 
-    from isce3.stripmap.readers.l0raw.ALOS.CEOS import LeaderFile
     try:
         ldr = LeaderFile.LeaderFile(filenames['leaderfile'])
     except AssertionError as msg:
@@ -85,23 +88,118 @@ def parseLeaderFile(filenames):
     return ldr
 
 
-def constructNISARHDF5(args, ldr):
-    '''
-    Build skeleton of HDF5 file using leader file information.
-    '''
-    import h5py
-    import numpy
-    import os
-    import datetime
+def alos_quaternion(t, euler_ypr_deg, orbit):
+    """Convert ALOS attitude (body to TCN(ECI)) to quaternion (body to XYZ(ECF))
 
-    #Open file for writing
-    fid = h5py.File(args.outh5, 'w-')
-    lsar = fid.create_group('/science/LSAR')
+    t               Time (datetime.datetime)
+    euler_ypr_deg   (yaw, pitch, roll) Euler sequence (in degrees)
+    orbit           Orbit ephemeris (isce3.core.Orbit)
+    """
+    ti = (t - orbit.reference_epoch).total_seconds()
+    pos, vel = orbit.interpolate(ti)
 
-    ##Fill up Identification
-    ident = lsar.create_group('identification')
+    # ALOS format doc doesn't really describe coordinate frames.
+    # Assuming body to TCN, given in inertial frame.
+    vel_eci = isce3.core.velocity_eci(pos, vel)
+
+    # Based on the following reference I assume local vertical is geocentric
+    # (does not depend on latitude or Ellipsoid).
+    # https://issfd.org/ISSFD_2011/S12-Orbit.Dynamics.3-ODY3/S12_P5_ISSFD22_PF_068.pdf
+    tcn2xyz = isce3.core.Basis(pos, vel_eci).asarray()
+
+    yaw, pitch, roll = numpy.radians(euler_ypr_deg)
+    body2tcn = isce3.core.EulerAngles(yaw, pitch, roll).to_rotation_matrix()
+    body2xyz = tcn2xyz.dot(body2tcn)
+    return isce3.core.Quaternion(body2xyz)
+
+
+def get_alos_orbit(ldr: LeaderFile.LeaderFile) -> isce3.core.Orbit:
+    hdr = ldr.platformPosition.header
+    tref = datetime.datetime(hdr.YearOfDataPoint, hdr.MonthOfDataPoint,
+                             hdr.DayOfDataPoint)
+    t0, dt = hdr.SecondsOfDay, hdr.TimeIntervalBetweenDataPointsInSec
+    times, svs = [], []
+    for i, sv in enumerate(ldr.platformPosition.statevectors):
+        t = t0 + i * dt * 1.0
+        times.append(t)
+        timestamp = isce3.core.DateTime(tref) + isce3.core.TimeDelta(seconds=t)
+        svs.append(isce3.core.StateVector(
+            datetime = timestamp,
+            position = [sv.PositionXInm, sv.PositionYInm, sv.PositionZInm],
+            velocity = [sv.VelocityXInmpers, sv.VelocityYInmpers, sv.VelocityZInmpers]
+        ))
+    # Use tref as epoch, not time of first sample.
+    return isce3.core.Orbit(svs, isce3.core.DateTime(tref))
+
+
+def set_h5_orbit(group: h5py.Group, orbit: isce3.core.Orbit):
+    orbit.save_to_h5(group)
+    # orbitType and acceleration not used/contained in Orbit object
+    group.create_dataset('orbitType', data=numpy.string_('DOE'))
+    dset = group.create_dataset("acceleration",
+                                data=numpy.zeros_like(orbit.velocity))
+    dset.attrs["units"] = numpy.string_("meters per second squared")
+    dset.attrs["description"] = numpy.string_("GPS state vector acceleration")
+
+
+def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
+                    orbit: isce3.core.Orbit):
+    """Read attitude from LeaderFile and write to NISAR HDF5 group.
+    Assumes orbit.reference_epoch is in same year as attitude data.
+    """
+    assert len(ldr.attitude.statevectors) > 0
+    # ASF has no ALOS data crossing New Years in its archive, but check anyway
+    # that day of year doesn't roll over.
+    days = [sv.DayOfYear for sv in ldr.attitude.statevectors]
+    assert all(numpy.diff(days) >= 0), "Unexpected roll over in day of year."
+
+    times = []  # time stamps, seconds rel orbit epoch
+    rpys = []   # (roll, pitch, yaw) Euler angle tuples, degrees
+    qs = []     # (q0,q1,q2,q3) quaternion arrays
+    for sv in ldr.attitude.statevectors:
+        dt = isce3.core.TimeDelta(datetime.timedelta(
+            days = sv.DayOfYear - 1,
+            seconds = 0.001 * sv.MillisecondsOfDay))
+        t = isce3.core.DateTime(orbit.reference_epoch.year, 1, 1) + dt
+        rpy = (sv.RollInDegrees, sv.PitchInDegrees, sv.YawInDegrees)
+        rpys.append(rpy)
+        # Use time reference as orbit.
+        times.append((t - orbit.reference_epoch).total_seconds())
+        q = alos_quaternion(t, rpy[::-1], orbit)
+        qs.append([q.w, q.x, q.y, q.z])
+
+    # Write to HDF5.  isce3.core.Quaternion.save_to_h5 doesn't really cut it,
+    # so don't bother constructing it.
+    ds = group.create_dataset("angularVelocity", data=numpy.zeros((len(qs), 3)))
+    ds.attrs["description"] = numpy.string_(
+        "Attitude angular velocity vectors (wx, wy, wz)")
+    ds.attrs["units"] = numpy.string_("radians per second")
+
+    ds = group.create_dataset("attitudeType", data=numpy.string_("Custom"))
+    ds.attrs["description"] = numpy.string_("PrOE (or) NOE (or) MOE (or) Custom")
+
+    ds = group.create_dataset("eulerAngles", data=numpy.array(rpys))
+    ds.attrs["description"] = numpy.string_("Attitude Euler angles (roll, pitch, yaw")
+    ds.attrs["units"] = numpy.string_("degrees")
+
+    ds = group.create_dataset("quaternions", data=numpy.array(qs))
+    ds.attrs["description"] = numpy.string_("Attitude quaternions (q0, q1, q2, q3)")
+    ds.attrs["units"] = numpy.string_("unitless")
+
+    ds = group.create_dataset("time", data=numpy.array(times))
+    ds.attrs["description"] = numpy.string_(
+        "Time vector record. This record contains the time")
+    ds.attrs["units"] = numpy.string_(
+        f"seconds since {orbit.reference_epoch.isoformat()}")
+
+
+def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
+    """Populate L0B identification data.  Fields in
+    {"boundingPolygon"," zeroDopplerStartTime", "zeroDopplerEndTime"}
+    are populated with dummy values.
+    """
     ident.create_dataset('diagnosticModeFlag', data=numpy.string_("False"))
-    ident.create_dataset('isGeocoded', data=numpy.string_("True"))
+    ident.create_dataset('isGeocoded', data=numpy.string_("False"))
     ident.create_dataset('listOfFrequencies', data=numpy.string_(["A"]))
     ident.create_dataset('lookDirection', data = numpy.string_("Right"))
     ident.create_dataset('missionId', data=numpy.string_("ALOS"))
@@ -109,50 +207,47 @@ def constructNISARHDF5(args, ldr):
     ident.create_dataset('processingType', data=numpy.string_("repackaging"))
     ident.create_dataset('productType', data=numpy.string_("RRSD"))
     ident.create_dataset('productVersion', data=numpy.string_("0.1"))
+    ident.create_dataset('absoluteOrbitNumber', data=numpy.array(0, dtype='u4'))
+    # shape = numberOfObservations
+    ident.create_dataset("plannedObservationId", data=numpy.string_(["0"]))
+    ident.create_dataset("isUrgentObservation", data=numpy.string_(["False"]))
+    # shape = numberOfDatatakes
+    ident.create_dataset("plannedDatatakeId", data=numpy.string_(["0"]))
+    # Will override these three later.
+    ident.create_dataset("boundingPolygon", data=numpy.string_("POLYGON EMPTY"))
+    ident.create_dataset("zeroDopplerStartTime", data=numpy.string_(
+        "2007-01-01 00:00:00.0000000"))
+    ident.create_dataset("zeroDopplerEndTime", data=numpy.string_(
+        "2007-01-01 00:00:01.0000000"))
 
 
-    ##Start populating metadata parts
-    rrsd = lsar.create_group('RRSD')
-    inps = rrsd.create_group('metadata/processingInformation/inputs')
-    inps.create_dataset('l0aGranules', data=numpy.string_([os.path.basename(args.indir)]))
+def constructNISARHDF5(args, ldr):
+    '''
+    Build skeleton of HDF5 file using leader file information.
+    '''
+    with h5py.File(args.outh5, 'w-') as fid:
+        lsar = fid.create_group('/science/LSAR')
+        ##Fill up Identification
+        ident = lsar.create_group('identification')
+        populateIdentification(ident, ldr)
 
-    #Start populating telemetry
-    orbit = rrsd.create_group('telemetry/orbit')
-    orbit.create_dataset('orbitType', data=numpy.string_('DOE'))
-    tref = datetime.datetime(ldr.platformPosition.header.YearOfDataPoint,
-                           ldr.platformPosition.header.MonthOfDataPoint,
-                           ldr.platformPosition.header.DayOfDataPoint)
+        ##Start populating metadata parts
+        rrsd = lsar.create_group('RRSD')
+        inps = rrsd.create_group('metadata/processingInformation/inputs')
+        inps.create_dataset('l0aGranules', data=numpy.string_([os.path.basename(args.indir)]))
 
-    t0 = ldr.platformPosition.header.SecondsOfDay
-    dt = ldr.platformPosition.header.TimeIntervalBetweenDataPointsInSec
+        #Start populating telemetry
+        orbit_group = rrsd.create_group('telemetry/orbit')
+        orbit = get_alos_orbit(ldr)
+        set_h5_orbit(orbit_group, orbit)
+        attitude_group = rrsd.create_group("telemetry/attitude")
+        getset_attitude(attitude_group, ldr, orbit)
 
-    pos = []
-    vel = []
-    times = []
-
-    for ind, sv in enumerate(ldr.platformPosition.statevectors):
-        times.append(t0 + ind * dt * 1.0)
-        pos.append([sv.PositionXInm, sv.PositionYInm, sv.PositionZInm])
-        vel.append([sv.VelocityXInmpers, sv.VelocityYInmpers, sv.VelocityZInmpers])
-
-    time = orbit.create_dataset('time', data=numpy.array(times))
-    time.attrs['units'] = "seconds since {0}".format(tref.strftime('%Y-%m-%d 00:00:00'))
-    orbit.create_dataset('position', data=numpy.array(pos))
-    orbit.create_dataset('velocity', data=numpy.array(vel))
-
-
-    #Close the file
-    fid.close()
 
 def addImagery(h5file, ldr, imgfile, pol):
     '''
     Populate swaths segment of HDF5 file.
     '''
-    import datetime
-    import h5py
-    import numpy
-    import os
-    from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile
 
     #Speed of light - expose in isce3
     SOL = 299792458.0
@@ -202,10 +297,10 @@ def addImagery(h5file, ldr, imgfile, pol):
         tstart = datetime.datetime(firstrec.SensorAcquisitionYear, 1, 1) +\
                  datetime.timedelta(days=int(firstrec.SensorAcquisitionDayOfYear-1))
         txgrp = fid.create_group(txgrpstr)
-        time = txgrp.create_dataset('UTCTime', dtype='f', shape=(nLines,))
+        time = txgrp.create_dataset('UTCtime', dtype='f8', shape=(nLines,))
         time.attrs['units'] = "seconds since {0} 00:00:00".format(tstart.strftime('%Y-%m-%d'))
         txgrp.create_dataset('numberOfSubSwaths', data=1)
-        txgrp.create_dataset('radarTime', dtype='f', shape=(nLines,))
+        txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
         txgrp.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(nLines,2))
     else:
@@ -245,7 +340,7 @@ def addImagery(h5file, ldr, imgfile, pol):
             print('Parsing Line number: {0} out of {1}'.format(linnum, nLines))
 
         if firstInPol:
-            txgrp['UTCTime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
+            txgrp['UTCtime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
             txgrp['rangeLineIndex'][linnum-1] = rec.SARImageDataLineNumber
             txgrp['radarTime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
 
@@ -280,7 +375,7 @@ def addImagery(h5file, ldr, imgfile, pol):
 
     if firstInPol:
         #Adjust time records - ALOS provides this only to nearest millisec - not good enough
-        tinp = txgrp['UTCTime'][:]
+        tinp = txgrp['UTCtime'][:]
         prf = freqA['nominalAcquisitionPRF'][()]
         tarr = (tinp - tinp[0]) * 1000
         ref = numpy.arange(tinp.size) / prf
@@ -297,14 +392,53 @@ def addImagery(h5file, ldr, imgfile, pol):
 
         delta = (numpy.argmin(numpy.abs(res)) - 50)*2.0e-5
         print('Start time correction in usec: ', delta*1e6)
-        txgrp['UTCTime'][:] = ref + tinp[0] + delta
+        txgrp['UTCtime'][:] = ref + tinp[0] + delta
+
+
+def computeBoundingPolygon(h5file: str, h: float = 0.0):
+    """Compute bounding polygon given (an otherwise complete) NISAR L0B product.
+    Uses a fixed height in lieu of a digital elevation model.
+    """
+    dem = isce3.geometry.DEMInterpolator(h)
+    raw = Raw(hdf5file=h5file)
+    orbit = raw.getOrbit()
+    _, grid = raw.getRadarGrid()
+    fc, doppler = make_doppler_lut([h5file], az=0.0)
+    # Make sure we don't accidentally have an inconsistent wavelength.
+    assert numpy.isclose(grid.wavelength, isce3.core.speed_of_light / fc)
+    return isce3.geometry.get_geo_perimeter_wkt(grid, orbit, doppler, dem)
+
+
+def finalizeIdentification(h5file: str):
+    """Add identification fields that depend on swath information:
+    {"boundingPolygon"," zeroDopplerStartTime", "zeroDopplerEndTime"}
+    """
+    # NOTE Need complete product to use product reader class, so assume we've
+    # already populated dummy values.
+    epoch, t = Raw(hdf5file=h5file).getPulseTimes()
+    t0 = (epoch + isce3.core.TimeDelta(t[0])).isoformat()
+    t1 = (epoch + isce3.core.TimeDelta(t[-1])).isoformat()
+    poly = computeBoundingPolygon(h5file)
+
+    with h5py.File(h5file, 'r+') as fid:
+        ident = fid["/science/LSAR/identification"]
+        # Unlink datasets and create new ones to avoid silent truncation.
+        del ident["boundingPolygon"]
+        del ident["zeroDopplerStartTime"]
+        del ident["zeroDopplerEndTime"]
+        def additem(name, value, description):
+            ds = ident.create_dataset(name, data=numpy.string_(value))
+            ds.attrs["description"] = numpy.string_(description)
+        additem("boundingPolygon", poly,
+            "OGR compatible WKT representation of bounding polygon of the image")
+        additem("zeroDopplerStartTime", t0, "Azimuth start time of product")
+        additem("zeroDopplerEndTime", t1, "Azimuth stop time of product")
+
 
 def process(args=None):
     '''
     Main processing workflow.
     '''
-    import os
-
     #Discover file names
     filenames = getALOSFilenames(args.indir)
 
@@ -327,6 +461,8 @@ def process(args=None):
     for pol in ['HH', 'HV', 'VV', 'VH']:
         if pol in filenames:
             addImagery(args.outh5, leader, filenames[pol], pol)
+
+    finalizeIdentification(args.outh5)
 
 
 if __name__ == "__main__":

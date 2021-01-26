@@ -8,6 +8,8 @@
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
+#include <pybind_isce3/roarray.h>
+
 #include <string>
 #include <utility>
 
@@ -34,10 +36,10 @@ void addbinding(py::class_<Orbit> & pyOrbit)
                 py::overload_cast<>(&Orbit::referenceEpoch, py::const_))
         .def_property_readonly("time", py::overload_cast<>(&Orbit::time, py::const_))
         .def_property_readonly("position", [](const Orbit & self) {
-            return py::array{toBuffer(self.position()), py::cast(self)};
+            return py::roarray(toBuffer(self.position()), py::cast(self));
         })
         .def_property_readonly("velocity", [](const Orbit & self) {
-            return py::array{toBuffer(self.velocity()), py::cast(self)};
+            return py::roarray(toBuffer(self.velocity()), py::cast(self));
         })
 
         .def_static("load_from_h5", [](py::object h5py_group) {

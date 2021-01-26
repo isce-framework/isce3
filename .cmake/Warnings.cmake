@@ -26,6 +26,8 @@ function(set_warnings target)
         -Wdouble-promotion # warn if float is implicit promoted to double
         -Wformat=2 # warn on security issues around functions that format output
                    # (ie printf)
+        -Werror=switch # turn warnings controlled by -Wswitch into errors
+        -Werror=reorder # turn warnings controlled by -Wreorder into errors
         )
 
     set(CLANG_WARNINGS "")

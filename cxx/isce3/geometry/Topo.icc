@@ -22,8 +22,6 @@ Topo(const isce3::product::RadarGridParameters & radarGrid,
     _doppler(doppler),
     _radarGrid(radarGrid)
 {
-    // Other data
-    _lookSide = radarGrid.lookSide();
 
     // Adjust block length based on input length of the radarGrid
     _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
@@ -39,9 +37,6 @@ Topo(const isce3::core::Ellipsoid & ellipsoid, const isce3::core::Orbit & orbit,
     _doppler(doppler),
     _radarGrid(meta, orbit.referenceEpoch())
 {
-    // Other data
-    _lookSide = meta.lookSide;
-
     // Adjust block length based in input SLC length
     _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
 }

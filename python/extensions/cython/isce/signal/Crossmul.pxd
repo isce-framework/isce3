@@ -25,8 +25,8 @@ cdef extern from "isce3/signal/Crossmul.h" namespace "isce3::signal":
         void beta(double)
         void rangeLooks(int)
         void azimuthLooks(int)
-        void doCommonAzimuthbandFiltering(bool)
-        void doCommonRangebandFiltering(bool)
+        void doCommonAzimuthBandFilter(bool)
+        void doCommonRangeBandFilter(bool)
 
         # Set Doppler profiles from LUT1d objects
         void doppler(LUT1d[double] refDoppler, LUT1d[double] secDoppler)

@@ -38,7 +38,12 @@ foreach(FILENAME ${TESTFILES})
 
     unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
-    target_link_libraries(${TARGET} PRIVATE ${LIBS} GTest::gtest project_warnings)
+    target_link_libraries(${TARGET} PRIVATE
+        ${LIBS}
+        GTest::gtest
+        OpenMP::OpenMP_CXX_Optional
+        project_warnings
+        )
 endforeach()
 
 set_tests_properties(test.cxx.isce3.geometry.geo2rdr.geo2rdr PROPERTIES

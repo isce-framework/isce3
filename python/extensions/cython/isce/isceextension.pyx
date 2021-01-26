@@ -54,16 +54,17 @@ include "image/pyResampSlc.pyx"
 include "signal/pyCrossmul.pyx"
 include "signal/pyLooks.pyx"
 
-include "geocode/pygeocodeSlc.pyx"
-
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
 include "geometry/pyRTC.pyx"
-include "geometry/pyGeocode.pyx"
 include "geometry/pyDEMInterpolator.pyx"
 include "geometry/pyBoundingbox.pyx"
+
+# Include geocode extensions
+include "geocode/pygeocodeSlc.pyx"
+include "geocode/pyGeocodeCov.pyx"
 
 # The separate serialization routines
 include "serialization/serialize.pyx"

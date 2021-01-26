@@ -13,17 +13,22 @@ def extractScalar(h5grp, key, destType, logger=None, msg=None):
     '''
     Extract data of given type from HDF5 dataset and use logger for reporting.
     '''
+    def handle_message(err: str):
+        """Append input message and log it if possible.
+        """
+        errmsg = err if msg is None else err + msg
+        if logger is not None:
+            logger.log(errmsg)
+        return errmsg
+
     try:
         val = h5grp[key][()]
         val = destType(val)
-    except KeyError:
-        if logger:
-            logger.log('{0} not found at {1}'.format(key, h5grp.name))
-    except:
+    except KeyError as e:
+        raise KeyError(handle_message(f'{key} not found at {h5grp.name}')) from e
+    except Exception as e:
         errmsg = 'Something went wrong when trying to parse {0}/{1} \n'.format(h5grp.name, key)
-        if msg is not None:
-            errmsg += msg
-        raise ValueError(errmsg)
+        raise ValueError(handle_message(errmsg)) from e
 
     return val
 

@@ -37,7 +37,6 @@ TEST(AttitudeTest, CheckArchive) {
     ASSERT_EQ(attitude.size(), 11);
 
     // Check the values of the attitude angles
-    const double rad = M_PI / 180.0;
     const auto q = attitude.quaternions()[5];
     const auto expected = isce3::core::Quaternion(5, 5, 5, 5);
     EXPECT_DOUBLE_EQ(q.w(), expected.w());

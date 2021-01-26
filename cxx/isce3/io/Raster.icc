@@ -412,6 +412,19 @@ void isce3::io::Raster::getBlock(isce3::core::Matrix<T> &mat, size_t xidx, size_
     getBlock(mat.data(), xidx, yidx, mat.width(), mat.length(), band);
 }
 
+// Get a block of data starting from given x/y position in band to EArray2D<T>
+template<typename T>
+void isce3::io::Raster::getBlock(isce3::core::EArray2D<T> &mat, size_t xidx, size_t yidx,
+                                  size_t band) {
+      getBlock(mat.data(), xidx, yidx, mat.cols(), mat.rows(), band);
+}
+
+// Get a block of data starting from given x/y position in band to EMatrix2D<T>
+template<typename T>
+void isce3::io::Raster::getBlock(isce3::core::EMatrix2D<T> &mat, size_t xidx, size_t yidx,
+                                    size_t band) {
+      getBlock(mat.data(), xidx, yidx, mat.cols(), mat.rows(), band);
+}
 
 /**
  * @param[in] buffer Raw pointer to buffer
@@ -462,6 +475,20 @@ template<typename T>
 void isce3::io::Raster::setBlock(isce3::core::Matrix<T>& mat, size_t xidx, size_t yidx,
                                 size_t band) {
     setBlock(mat.data(), xidx, yidx, mat.width(), mat.length(), band);
+}
+
+// Set a block of data for given x/y position and band from EArray2D<T>
+template<typename T>
+void isce3::io::Raster::setBlock(isce3::core::EArray2D<T>& mat, size_t xidx, size_t yidx,
+                                  size_t band) {
+      setBlock(mat.data(), xidx, yidx, mat.cols(), mat.rows(), band);
+}
+
+// Set a block of data for given x/y position and band from EMatrix2D<T>
+template<typename T>
+void isce3::io::Raster::setBlock(isce3::core::EMatrix2D<T>& mat, size_t xidx, size_t yidx,
+                                    size_t band) {
+      setBlock(mat.data(), xidx, yidx, mat.cols(), mat.rows(), band);
 }
 
 

@@ -1,100 +1,102 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
+// Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++
+// equivalent
+#define modulo_f(a, b) fmod(fmod(a, b) + (b), (b))
 
-#if !defined(ISCE_IMAGE_RESAMPSLC_ICC)
-#error "ResampSlc.icc is an implementation detail of class ResampSlc"
-#endif
+namespace isce3 { namespace image {
 
-// Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++ equivalent
-#define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
-
-/** Constructor from an isce3::product::Product */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::product::Product & product, char frequency) : 
-          ResampSlc(product.swath(frequency)) {
+// Constructor from an isce3::product::Product
+inline ResampSlc::ResampSlc(const isce3::product::Product& product,
+                            char frequency)
+    : ResampSlc(product.swath(frequency))
+{
     // Set the doppler
     _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
     // Save the filename
     _filename = product.filename();
 }
 
-/** Constructor from an isce3::product::Product and reference product (flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::product::Product & product,
-          const isce3::product::Product & refProduct,
-          char frequency) :
-          ResampSlc(product.swath(frequency),
-                    refProduct.swath(frequency)) {
+// Constructor from an isce3::product::Product and reference product
+// (flattening)
+inline ResampSlc::ResampSlc(const isce3::product::Product& product,
+                            const isce3::product::Product& refProduct,
+                            char frequency)
+    : ResampSlc(product.swath(frequency), refProduct.swath(frequency))
+{
     // Set the doppler
     _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
     // Save the filename
     _filename = product.filename();
 }
 
-/** Constructor from an isce3::product::Swath (no flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::product::Swath & swath) : _haveRefData(false) {
+// Constructor from an isce3::product::Swath (no flattening)
+inline ResampSlc::ResampSlc(const isce3::product::Swath& swath)
+    : _haveRefData(false)
+{
     // Set radar parameters
     _setDataFromSwath(swath);
 }
 
-/** Constructor from an isce3::product::Swath and reference swath (flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::product::Swath & swath, const isce3::product::Swath & refSwath) :
-          _haveRefData(true) {
+// Constructor from an isce3::product::Swath and reference swath (flattening)
+inline ResampSlc::ResampSlc(const isce3::product::Swath& swath,
+                            const isce3::product::Swath& refSwath)
+    : _haveRefData(true)
+{
     // Set radar parameters
     _setDataFromSwath(swath);
     // Set reference radar parameters
     _setRefDataFromSwath(refSwath);
 }
 
-/** Constructor from an isce3::product::RadarGridParameters (no flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
-          const isce3::core::LUT2d<double> & doppler, double wvl) :
-          _haveRefData(false), _dopplerLUT(doppler),
-          _startingRange(rdr_grid.startingRange()),
-          _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
-          _sensingStart(rdr_grid.sensingStart()),
-          _prf(rdr_grid.prf()), _wavelength(wvl) {}
+// Constructor from an isce3::product::RadarGridParameters (no flattening)
+inline ResampSlc::ResampSlc(const isce3::product::RadarGridParameters& rdr_grid,
+                            const isce3::core::LUT2d<double>& doppler,
+                            double wvl)
+    : _haveRefData(false), _dopplerLUT(doppler),
+      _startingRange(rdr_grid.startingRange()),
+      _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
+      _sensingStart(rdr_grid.sensingStart()), _prf(rdr_grid.prf()),
+      _wavelength(wvl)
+{}
 
-/** Constructor from an isce3::product::RadarGridParameters and reference radar grid (flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
-          const isce3::product::RadarGridParameters & ref_rdr_grid,
-          const isce3::core::LUT2d<double> & doppler,
-          double wvl, double ref_wvl) :
-          _haveRefData(true), _dopplerLUT(doppler),
-          _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
-          _sensingStart(rdr_grid.sensingStart()),
-          _startingRange(rdr_grid.startingRange()),
-          _refRangePixelSpacing(ref_rdr_grid.rangePixelSpacing()),
-          _refStartingRange(ref_rdr_grid.startingRange()),
-          _prf(rdr_grid.prf()), _wavelength(wvl), _refWavelength(ref_wvl) {}
+// Constructor from an isce3::product::RadarGridParameters and reference radar
+// grid (flattening)
+inline ResampSlc::ResampSlc(
+        const isce3::product::RadarGridParameters& rdr_grid,
+        const isce3::product::RadarGridParameters& ref_rdr_grid,
+        const isce3::core::LUT2d<double>& doppler, double wvl, double ref_wvl)
+    : _haveRefData(true), _dopplerLUT(doppler),
+      _startingRange(rdr_grid.startingRange()),
+      _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
+      _sensingStart(rdr_grid.sensingStart()), _prf(rdr_grid.prf()),
+      _wavelength(wvl), _refStartingRange(ref_rdr_grid.startingRange()),
+      _refRangePixelSpacing(ref_rdr_grid.rangePixelSpacing()),
+      _refWavelength(ref_wvl)
+{}
 
-/** Constructor from individual components (no flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::core::LUT2d<double> & doppler, double startingRange,
-          double rangePixelSpacing, double sensingStart, double prf, double wvl) :
-          _haveRefData(false), _dopplerLUT(doppler), _startingRange(startingRange),
-          _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
-          _prf(prf), _wavelength(wvl) {}
+// Constructor from individual components (no flattening)
+inline ResampSlc::ResampSlc(const isce3::core::LUT2d<double>& doppler,
+                            double startingRange, double rangePixelSpacing,
+                            double sensingStart, double prf, double wvl)
+    : _haveRefData(false), _dopplerLUT(doppler), _startingRange(startingRange),
+      _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
+      _prf(prf), _wavelength(wvl)
+{}
 
-/** Constructor from individual components (flattening) */
-isce3::image::ResampSlc::
-ResampSlc(const isce3::core::LUT2d<double> & doppler, double startingRange,
-          double rangePixelSpacing, double sensingStart, double prf, double wvl,
-          double refStartingRange, double refRangePixelSpacing, double refWvl) :
-          _haveRefData(true), _dopplerLUT(doppler), _startingRange(startingRange),
-          _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
-          _prf(prf), _wavelength(wvl), _refStartingRange(refStartingRange),
-          _refRangePixelSpacing(refRangePixelSpacing), _refWavelength(refWvl) {}
+// Constructor from individual components (flattening)
+inline ResampSlc::ResampSlc(const isce3::core::LUT2d<double>& doppler,
+                            double startingRange, double rangePixelSpacing,
+                            double sensingStart, double prf, double wvl,
+                            double refStartingRange,
+                            double refRangePixelSpacing, double refWvl)
+    : _haveRefData(true), _dopplerLUT(doppler), _startingRange(startingRange),
+      _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
+      _prf(prf), _wavelength(wvl), _refStartingRange(refStartingRange),
+      _refRangePixelSpacing(refRangePixelSpacing), _refWavelength(refWvl)
+{}
 
 // Set radar parameters from an isce3::product::Swath
-/** @param[in] swath            Input isce3::product::Swath */
-void
-isce3::image::ResampSlc::
-_setDataFromSwath(const isce3::product::Swath & swath) {
+inline void ResampSlc::_setDataFromSwath(const isce3::product::Swath& swath)
+{
     _startingRange = swath.slantRange()[0];
     _rangePixelSpacing = swath.rangePixelSpacing();
     _sensingStart = swath.zeroDopplerTime()[0];
@@ -103,102 +105,82 @@ _setDataFromSwath(const isce3::product::Swath & swath) {
 }
 
 // Set reference radar parameters from an isce3::product::Swath (for flattening)
-/** @param[in] swath            Input isce3::product::Swath */
-void
-isce3::image::ResampSlc::
-_setRefDataFromSwath(const isce3::product::Swath & swath) {
+inline void ResampSlc::_setRefDataFromSwath(const isce3::product::Swath& swath)
+{
     _refStartingRange = swath.slantRange()[0];
     _refRangePixelSpacing = swath.rangePixelSpacing();
     _refWavelength = swath.processedWavelength();
 }
 
 // Get range carrier polynomial
-isce3::core::Poly2d
-isce3::image::ResampSlc::
-rgCarrier() const {
-    return _rgCarrier;
-}
+inline isce3::core::Poly2d ResampSlc::rgCarrier() const { return _rgCarrier; }
 
 // Set range carrier polynomial
-void isce3::image::ResampSlc::
-rgCarrier(const isce3::core::Poly2d & lut) {
+inline void ResampSlc::rgCarrier(const isce3::core::Poly2d& lut)
+{
     _rgCarrier = lut;
 }
 
 // Get azimuth carrier polynomial
-isce3::core::Poly2d
-isce3::image::ResampSlc::
-azCarrier() const {
-    return _azCarrier;
-}
+inline isce3::core::Poly2d ResampSlc::azCarrier() const { return _azCarrier; }
 
 // Set azimuth carrier polynomial
-void isce3::image::ResampSlc::
-azCarrier(const isce3::core::Poly2d & lut) {
+inline void ResampSlc::azCarrier(const isce3::core::Poly2d& lut)
+{
     _azCarrier = lut;
 }
 
 // Get read-only reference to Doppler LUT
-const isce3::core::LUT2d<double> &
-isce3::image::ResampSlc::
-doppler() const {
+inline const isce3::core::LUT2d<double>& ResampSlc::doppler() const
+{
     return _dopplerLUT;
 }
 
 // Get reference to Doppler LUT
-isce3::core::LUT2d<double> &
-isce3::image::ResampSlc::
-doppler() {
-    return _dopplerLUT;
-}
+inline isce3::core::LUT2d<double>& ResampSlc::doppler() { return _dopplerLUT; }
 
 // Set Doppler LUT
-void isce3::image::ResampSlc::
-doppler(const isce3::core::LUT2d<double> & lut) {
+inline void ResampSlc::doppler(const isce3::core::LUT2d<double>& lut)
+{
     _dopplerLUT = lut;
 }
 
 // Set reference product
-void isce3::image::ResampSlc::
-referenceProduct(const isce3::product::Product & refProduct, char frequency) {
+inline void
+ResampSlc::referenceProduct(const isce3::product::Product& refProduct,
+                            char frequency)
+{
     _setRefDataFromSwath(refProduct.swath(frequency));
     _haveRefData = true;
 }
 
 // Announce my properties to the world
-void isce3::image::ResampSlc::
-declare(int inLength, int inWidth,
-    int outLength, int outWidth) const {
+inline void ResampSlc::declare(int inLength, int inWidth, int outLength,
+                               int outWidth) const
+{
     // Make info channel
     pyre::journal::info_t channel("isce.core.ResampSlc");
     // Basic info
     channel << pyre::journal::newline
             << "Resample one image to another image coordinates >>"
             << pyre::journal::newline << pyre::journal::newline;
-    channel << "Input Image Dimensions:  " << inLength << " lines, "
-            << inWidth << " pixels" 
-            << pyre::journal::newline;
+    channel << "Input Image Dimensions:  " << inLength << " lines, " << inWidth
+            << " pixels" << pyre::journal::newline;
     channel << "Output Image Dimensions: " << outLength << " lines, "
-            << outWidth << " pixels"
-            << pyre::journal::newline << pyre::journal::newline;
+            << outWidth << " pixels" << pyre::journal::newline
+            << pyre::journal::newline;
     channel << "Complex data interpolation" << pyre::journal::newline;
 }
 
 // Get the number of lines per tile
-size_t isce3::image::ResampSlc::
-linesPerTile() const {
-    return _linesPerTile;
-}
+inline size_t ResampSlc::linesPerTile() const { return _linesPerTile; }
 
 // Set the number of lines per tile
-void isce3::image::ResampSlc::
-linesPerTile(size_t value) {
-    _linesPerTile = value;
-}
+inline void ResampSlc::linesPerTile(size_t value) { _linesPerTile = value; }
 
 // Compute number of tiles given a specified nominal tile size
-int isce3::image::ResampSlc::
-_computeNumberOfTiles(int outLength, int linesPerTile) {
+inline int ResampSlc::_computeNumberOfTiles(int outLength, int linesPerTile)
+{
     // Compute floor(nTiles)
     int nTiles = outLength / linesPerTile;
     // See if there are any leftover lines to add an extra tile
@@ -210,10 +192,11 @@ _computeNumberOfTiles(int outLength, int linesPerTile) {
 }
 
 // Prepare interpolation pointer
-inline void isce3::image::ResampSlc::
-_prepareInterpMethods(isce3::core::dataInterpMethod, int sinc_len) {
+inline void ResampSlc::_prepareInterpMethods(isce3::core::dataInterpMethod,
+                                             int sinc_len)
+{
     _interp = new isce3::core::Sinc2dInterpolator<std::complex<float>>(
-                  sinc_len, isce3::core::SINC_SUB);
+            sinc_len, isce3::core::SINC_SUB);
 }
 
-// end of file
+}} // namespace isce3::image

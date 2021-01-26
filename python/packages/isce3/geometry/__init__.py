@@ -18,12 +18,6 @@ def geo2rdr(**kwds):
 
     return Geo2rdr(**kwds)
 
-def geocode(**kwds):
-    """A factory for Geocode"""
-    from .Geocode import Geocode
-
-    return Geocode(**kwds)
-
 def deminterpolator(**kwds):
     """A factory for DEMInterpolator"""
     from .DEMInterpolator import DEMInterpolator

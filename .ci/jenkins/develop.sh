@@ -105,7 +105,6 @@ git clone --single-branch --branch gh-pages --no-checkout \
     https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/isce-3/isce tmp
 mv tmp/.git .
 git add .
-git status
 
 git config --local user.name  "gmanipon"
 git config --local user.email "gmanipon@jpl.nasa.gov"

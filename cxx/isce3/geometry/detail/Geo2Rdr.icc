@@ -9,19 +9,28 @@ namespace isce3 { namespace geometry { namespace detail {
 
 NVCC_HD_WARNING_DISABLE
 template<class DopplerModel>
-CUDA_HOSTDEV double
-computeDopplerAztimeDiff(double t, double r, const isce3::core::Vec3& rvec,
+CUDA_HOSTDEV isce3::error::ErrorCode
+computeDopplerAztimeDiff(double* dt, double t, double r,
+                         const isce3::core::Vec3& rvec,
                          const isce3::core::Vec3& vel,
-                         const DopplerModel& doppler, double wvl,
-                         const Geo2RdrParams& params)
+                         const DopplerModel& doppler, double wvl, double dr)
 {
+    using isce3::error::ErrorCode;
+
+    // Check for out-of-bounds LUT evaluation (LUT2d's internal handling of
+    // out-of-bounds lookup is not thread-safe)
+    if (doppler.boundsError()) {
+        if (not(doppler.contains(t, r) and doppler.contains(t, r + dr))) {
+            return ErrorCode::OutOfBoundsLookup;
+        }
+    }
+
     // compute Doppler
     const auto dopfact = rvec.dot(vel);
     const auto fdop = 0.5 * wvl * doppler.eval(t, r);
 
     // use forward difference to compute Doppler derivative
-    const auto fdopder =
-            (0.5 * wvl * doppler.eval(t, r + params.dr) - fdop) / params.dr;
+    const auto fdopder = (0.5 * wvl * doppler.eval(t, r + dr) - fdop) / dr;
 
     // evaluate cost function and its derivative
     const auto fn = dopfact - fdop * r;
@@ -29,8 +38,12 @@ computeDopplerAztimeDiff(double t, double r, const isce3::core::Vec3& rvec,
     const auto c2 = (fdop / r) + fdopder;
     const auto fnprime = c1 + c2 * dopfact;
 
-    const auto dt = fn / fnprime;
-    return dt;
+    // set output value
+    if (dt) {
+        *dt = fn / fnprime;
+    }
+
+    return ErrorCode::Success;
 }
 
 NVCC_HD_WARNING_DISABLE
@@ -149,10 +162,14 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
         }
 
         // update guess for azimuth time
-        const auto dt = computeDopplerAztimeDiff(*t, *r, rvec, vel, doppler,
-                                                 wvl, params);
-        *t -= dt;
+        double dt;
+        const auto status = computeDopplerAztimeDiff(&dt, *t, *r, rvec, vel,
+                                                     doppler, wvl, params.dr);
+        if (status != ErrorCode::Success) {
+            return status;
+        }
 
+        *t -= dt;
         r_old = *r;
     }
 

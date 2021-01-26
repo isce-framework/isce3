@@ -1,0 +1,236 @@
+# This is a Yamale schema (see https://github.com/23andMe/Yamale) for
+# validating run config files for the NISAR RSLC PGE.
+#
+runconfig:
+  name: str()
+  groups:
+    PGENameGroup:
+      PGEName: enum('RSLC_L_PGE')
+    InputFileGroup:
+      # REQUIRED List of NISAR raw data products in L0B format
+      InputFilePath: list(str(), min=1)
+    ## The SAS will function without the following ancillary files but will produce
+    ## products that do not meet all requirements.  These files are expected to
+    ## be provided in routine processing.  The R1 SAS has not implemented any
+    ## functionality using these files.  Implementation planned for R2.
+    DynamicAncillaryFileGroup:
+      # Digital elevation model, optional.
+      DEMFile: str(required=False)
+      # Refined orbit, optional.
+      # Defaults to orbit within L0B product.
+      Orbit: str(required=False)
+      # Refined pointing, optional.
+      # Defaults to attitude within L0B product.
+      Pointing: str(required=False)
+      # External calibration data, optional.
+      # Defaults to no extra calibration gain, phase, delay, etc.
+      ExternalCalibration: str(required=False)
+      # Internal calibration tables, optional.
+      # If not provided, no secondary elevation antenna pattern correction.
+      InternalCalibration: str(required=False)
+      # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
+      # If not provided, no polarimetric calibration performed.
+      PolarimetricCalibration: str(required=False)
+      # Pre- and post-data take calibration data products, optional.
+      BookendCalibration: str(required=False)
+      # Antenna pattern data, optional.
+      # Defaults to sinc^4 pattern using nominal antenna dimensions.
+      AntennaPattern: str(required=False)
+      # Chirp replica file, optional.
+      # If absent will generate LFM chirp using parameters in L0B product.
+      Waveform: str(required=False)
+    ProductPathGroup:
+      # Directory where PGE will place results
+      ProductPath: str()
+      # Directory where SAS can write temporary data
+      ScratchPath: str()
+      # Intermediate file name.  SAS writes output product to the following file
+      # before it gets renamed by the PGE wrapper.
+      # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
+      SASOutputFile: str()
+      SASConfigFile: str()
+      ProductCounter: int(min=1, max=999)
+    PrimaryExecutable:
+      ProductType: str()
+      CompositeReleaseID: regex(r'\w\d\d\d\d\d', name='CRID')
+      ProcessingType: enum('PR', 'UR') # production, urgent response
+      MissionId: enum('NISAR')
+      ProductAccuracy: enum('P', 'M', 'N', 'F', 'T')
+      CoverageIndicator: enum('F', 'P')
+    DebugLevelGroup:
+      DebugSwitch: bool()
+    Geometry:
+      CycleNumber: int(min=1, max=999)
+      RelativeOrbitNumber: int(min=1, max=173)
+      FrameNumber: int(min=1, max=176)
+      OrbitDirection: enum('Descending', 'Ascending')
+    worker:
+      # Whether or not to use GPU, optional. Defaults to True if available.
+      gpu_enabled: bool(required=False)
+      # Index of the GPU to use for processing, optional. Defaults to the
+      # first available CUDA device. Ignored if *gpu_enabled* is False.
+      gpu_id: int(min=0, required=False)
+
+    processing:
+      output_grid:
+        # Azimuth bounds of output SLC, required by the PGE
+        start_time: timestamp()
+        end_time: timestamp()
+
+        # Range bounds of output SLC in meters, optional.
+        # Defaults to entire fully focused swath.
+        start_range: num(required=False)
+        end_range: num(required=False)
+
+        # Output grid azimuth sample rate in Hz, optional.
+        # Defaults to input PRF.
+        output_prf: num(required=False)
+
+        # Interval for azimuth grid alignment in seconds. See docs.
+        # Typically want 1 second and integer PRF (in Hz). Will not
+        # override user-provided start_time.
+        time_snap_interval: num(required=False)
+
+      # Range spectral window, optional.  Defaults to no weighting.
+      range_window: include('spectral_window', required=False)
+
+      # Azimuth spectral window, optional.  Defaults to no weighting.
+      azimuth_window: include('spectral_window', required=False)
+
+      # Range filter parameters for mixed-mode cases.
+      range_common_band_filter:
+        # Stop-band attenuation in dB
+        attenuation: num(min=0.0)
+        # Transition width as a fraction of output bandwidth.
+        width: num(min=0.0, max=1.0)
+
+      doppler:
+        # Offset between quaternion frame and antenna boresight in degrees.
+        # TBD This will likely be parameter in a separate cal file.
+        azimuth_boresight_deg: num(required=False)
+
+        # How to interpolate between samples in the LUT.
+        interp_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+        # Postings for generated Doppler lookup table.
+        spacing:
+          # Lookup table range spacing in m
+          range: num(min=0.0)
+          # Lookup table Azimuth spacing in s
+          azimuth: num(min=0.0)
+
+        rdr2geo:
+          # Slant range convergence threshold (m): float (default: 1e-8)
+          threshold: num(min=0.0, required=False)
+          # Max number of primary iterations: int (default: 25)
+          maxiter: int(min=1, required=False)
+          # Max number of secondary iterations: int (default: 15)
+          extraiter: int(min=1, required=False)
+
+      # Settings for range compression algorithm.
+      rangecomp:
+        # Convolution output mode: valid, full, or same (default: full)
+        mode: enum('valid', 'full', 'same', required=False)
+
+        # Range compression will always process the full pulse, so the
+        # range dimension will be ignored.
+        block_size:
+          range: int(min=0)
+          azimuth: int(min=1)
+
+      # Settings for azimuth compression algorithm.
+      azcomp:
+        # Azimuth compression can be tiled arbitrarily, though
+        # dimensions will affect runtime.
+        block_size:
+          range: int(min=0)
+          azimuth: int(min=1)
+
+        # Desired azimuth resolution in meters.
+        azimuth_resolution: num(min=0.0)
+
+        kernel:
+          # Knab or NFFT
+          type: enum('Knab', 'NFFT')
+          # Length = 1+2*halfWidth
+          halfwidth: num(min=0.0)
+          # Transform padding ratio for NFFT method.
+          approx_oversample: num(min=0.0)
+
+          fit: enum('Cheby', 'Table', required=False)
+          fit_order: int(min=1)
+
+        rdr2geo:
+          # Slant range convergence threshold (m): float (default: 1e-8)
+          threshold: num(min=0.0, required=False)
+          # Max number of primary iterations: int (default: 25)
+          maxiter: int(min=1, required=False)
+          # Max number of secondary iterations: int (default: 15)
+          extraiter: int(min=1, required=False)
+
+        geo2rdr:
+          # Slant range convergence threshold (m): float (default: 1e-8)
+          threshold: num(min=0.0, required=False)
+          # Max number of iterations: int (default: 50)
+          maxiter: int(min=1, required=False)
+          # Step size for computing numerical gradient of Doppler (m): float
+          # (default: 10.)
+          delta_range: num(min=0.0, required=False)
+
+      dry_troposphere_model: enum('nodelay', 'tsx', required=False)
+
+      # Digital Elevation Model
+      dem:
+        # Height (in meters) to use if DEM file unavailable.
+        reference_height: num(required=False)
+
+        # How to interpolate the digital elevation model.  One of
+        # nearest, bilinear, bicubic, biquintic, or sinc
+        interp_method: enum('nearest', 'bilinear', 'bicubic', 'biquintic', 'sinc', required=False)
+
+      # Nominal antenna dimensions to use for BLU, EAP, etc. when no
+      # antenna pattern input file is provided or its contents are
+      # unsuitable. Each dimension has units of meters and is assumed
+      # 12.0 m if unspecified.
+      nominal_antenna_size:
+        range: num(min=0.0, required=False)
+        azimuth: num(min=0.0, required=False)
+
+      # Scale factor to apply to data before float16 encoding, optional.
+      # Default is 1.0.
+      # The largest representable float16 value is 65504.
+      # NOTE This is ad-hoc until the processor is radiometrically calibrated.
+      encoding_scale_factor: num(required=False)
+
+      # Whether to delete scratch files.  Default is True.
+      delete_tempfiles: bool(required=False)
+
+      # Processing stage switches, mostly for debug.
+      # Any missing stages assumed True
+      is_enabled:
+        # radio frequency interference mitigation
+        rfi_removal: bool(required=False)
+        # azimuth resampling and gap-filling
+        presum_blu: bool(required=False)
+        # range compression
+        rangecomp: bool(required=False)
+        # elevation antenna pattern correction
+        eap: bool(required=False)
+        # R^4 spreading loss correction
+        range_cor: bool(required=False)
+        # azimuth compression
+        azcomp: bool(required=False)
+
+    # The PGE wrapper uses the QA group to control whether or not to run the QA SAS
+    # program and which QA option(s) to enable. By default the QA SAS is not run.
+    QA: include('qa_options', required=False)
+---
+spectral_window:
+  kind: enum('Kaiser', 'Cosine', required=False)
+  # Shape parameter. For Kaiser, 0 <= shape < Inf.
+  # For Cosine, 0 <= shape <= 1
+  shape: num(min=0.0, required=False)
+
+qa_options:
+  validate: bool()  # enable file format validation
+  quality: bool()   # produce a data summary

@@ -14,7 +14,6 @@
 
 // isce3::core
 #include "isce3/core/Constants.h"
-#include "isce3/core/Serialization.h"
 
 // isce3::io
 #include "isce3/io/IH5.h"
@@ -24,7 +23,6 @@
 #include "isce3/product/Product.h"
 
 // isce3::geometry
-#include "isce3/geometry/Serialization.h"
 #include "isce3/geometry/Topo.h"
 
 // Declaration for utility function to read metadata stream from VRT
@@ -43,11 +41,11 @@ TEST(TopoTest, RunTopo) {
     isce3::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
-    {
-    cereal::XMLInputArchive archive(xmlfid);
-    archive(cereal::make_nvp("Topo", topo));
-    }
+    topo.threshold(0.05);
+    topo.numiter(25);
+    topo.extraiter(10);
+    topo.demMethod(isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
+    topo.epsgOut(4326);
 
     // Open DEM raster
     isce3::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");

@@ -4,7 +4,7 @@
 # Copyright 2019-
 
 import argparse
-import gdal
+from osgeo import gdal
 import numpy as np
 import os
 import warnings

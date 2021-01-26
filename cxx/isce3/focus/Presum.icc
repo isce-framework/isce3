@@ -1,0 +1,71 @@
+
+#include <isce3/core/TypeTraits.h>
+#include <isce3/except/Error.h>
+#include <Eigen/Dense>
+
+namespace isce3 { namespace focus {
+
+template<typename KernelType>
+auto
+getPresumWeights(const KernelType& acorr,
+                 const Eigen::Ref<const Eigen::VectorXd>& xin, double xout,
+                 long* offset)
+{
+    // Sanity check: autocorrelation function is real-valued by definition.
+    using KT = typename KernelType::value_type;
+    static_assert(not isce3::is_complex<KT>());
+
+    // Make sure we can store offset.
+    if (offset == nullptr) {
+        throw isce3::except::InvalidArgument(
+                ISCE_SRCINFO(), "no storage provided for index offset");
+    }
+
+    // Find time samples where autocorrelation function is nonzero.
+    const double hw = 0.5 * acorr.width();
+    const auto xend = xin.data() + xin.size();
+    auto first = std::lower_bound(xin.data(), xend, xout - hw);
+    auto last = std::upper_bound(first, xend, xout + hw);
+
+    // Convert iterator to index.
+    const long offset_ = std::distance(xin.data(), first);
+
+    // Allocate temporary storage.
+    auto n = std::distance(first, last);
+    using Mat = Eigen::Matrix<KT, Eigen::Dynamic, Eigen::Dynamic>;
+    using Vec = Eigen::Matrix<KT, Eigen::Dynamic, 1>;
+    Mat g(n, n);
+    Vec r(n);
+
+    // Compute the autocorrelation matrix and right-hand-side vector.
+    for (int i = 0; i < n; ++i) {
+        const auto xi = xin[offset_ + i];
+        for (int j = i; j < n; ++j) {  // NOTE j=i for lower half
+            const auto xj = xin[offset_ + j];
+            // Hermitian matrix, and LDLT only requires that we fill lower half.
+            g(j, i) = acorr(xj - xi);
+        }
+        r(i) = acorr(xout - xi);
+    }
+
+    // Solve with Cholesky decomposition since covariance matrix is always
+    // positive semi-definite (called LDLT in Eigen).
+    Vec w = g.ldlt().solve(r);
+
+    *offset = offset_;
+    return w;
+}
+
+
+// STL overload
+template<typename KernelType>
+auto
+getPresumWeights(const KernelType& acorr,
+                 const std::vector<double>& xin, double xout,
+                 long* offset)
+{
+    Eigen::Map<const Eigen::VectorXd> xmap(xin.data(), xin.size());
+    return getPresumWeights(acorr, xmap, xout, offset);
+}
+
+}}

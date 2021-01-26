@@ -1,4 +1,5 @@
 set(TESTFILES
+config.py
 core/attitude.py
 core/basis.py
 core/constants.py
@@ -6,29 +7,37 @@ core/datetime_.py
 core/ellipsoid.py
 core/euler.py
 core/interp1d.py
+core/kernels.py
 core/linspace.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
+core/projections.py
 core/quaternion.py
 core/statevector.py
 core/timedelta.py
 focus/backproject.py
 focus/chirp.py
+focus/presum.py
 focus/rangecomp.py
 geocode/geocodeSlc.py
+geocode/geocodeCov.py
+geocode/radar_grid_cube.py
 geometry/bbox.py
 geometry/dem.py
-geometry/geocode.py
 geometry/geo2rdr.py
 geometry/rdr2geo.py
+geometry/rtc.py
 image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
 signal/covariance.py
+signal/crossmul.py
+signal/crossmultiply.py
 product/radargridparameters.py
 product/swath.py
+unwrap/icu.py
 )
 
 if(WITH_CUDA)
@@ -39,6 +48,7 @@ if(WITH_CUDA)
         cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py
         cuda/image/resamp.py
+        cuda/signal/crossmul.py
         )
 endif()
 

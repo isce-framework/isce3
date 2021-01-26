@@ -1,9 +1,7 @@
 #include <gtest/gtest.h>
 #include <isce3/core/Constants.h>
 #include <isce3/core/Orbit.h>
-#include <isce3/core/Serialization.h>
 #include <isce3/geometry/RTC.h>
-#include <isce3/geometry/Serialization.h>
 #include <isce3/io/IH5.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/Product.h>
@@ -15,7 +13,7 @@ std::set<std::string> radar_grid_str_set = {"cropped", "multilooked"};
 
 // Create set of rtcAlgorithms
 std::set<isce3::geometry::rtcAlgorithm> rtc_algorithm_set = {
-        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL,
+        isce3::geometry::rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION,
         isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION};
 
 TEST(TestRTC, RunRTC) {
@@ -47,8 +45,8 @@ TEST(TestRTC, RunRTC) {
     dop.boundsError(false);
 
     // Set input parameters
-    isce3::geometry::rtcInputRadiometry inputRadiometry =
-            isce3::geometry::rtcInputRadiometry::BETA_NAUGHT;
+    isce3::geometry::rtcInputTerrainRadiometry inputTerrainRadiometry =
+            isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT;
 
     isce3::geometry::rtcAreaMode rtc_area_mode =
             isce3::geometry::rtcAreaMode::AREA_FACTOR;
@@ -70,13 +68,14 @@ TEST(TestRTC, RunRTC) {
             std::string filename;
             // test removed because it requires high geogrid upsampling (too
             // slow)
-            if (rtc_algorithm ==
-                        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
+            if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                         RTC_BILINEAR_DISTRIBUTION &&
                 radar_grid_str == "cropped") {
                 continue;
-            } else if (rtc_algorithm ==
-                       isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
-                filename = "./rtc_david_small_" + radar_grid_str + ".bin";
+            } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                                RTC_BILINEAR_DISTRIBUTION) {
+                filename = "./rtc_bilinear_distribution_" + radar_grid_str +
+                           ".bin";
             } else {
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
             }
@@ -88,9 +87,9 @@ TEST(TestRTC, RunRTC) {
                                         "ENVI");
 
             // Call RTC
-            isce3::geometry::facetRTC(radar_grid, orbit, dop, dem, out_raster,
-                                     inputRadiometry, rtc_area_mode,
-                                     rtc_algorithm, geogrid_upsampling);
+            isce3::geometry::computeRtc(radar_grid, orbit, dop, dem, out_raster,
+                                        inputTerrainRadiometry, rtc_area_mode,
+                                        rtc_algorithm, geogrid_upsampling);
         }
     }
 }
@@ -107,14 +106,15 @@ TEST(TestRTC, CheckResults) {
 
             // test removed because it requires high geogrid upsampling (too
             // slow)
-            if (rtc_algorithm ==
-                        isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL &&
+            if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                         RTC_BILINEAR_DISTRIBUTION &&
                 radar_grid_str == "cropped") {
                 continue;
-            } else if (rtc_algorithm ==
-                       isce3::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
+            } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                                RTC_BILINEAR_DISTRIBUTION) {
                 max_rmse = 0.7;
-                filename = "./rtc_david_small_" + radar_grid_str + ".bin";
+                filename = "./rtc_bilinear_distribution_" + radar_grid_str +
+                           ".bin";
             } else {
                 max_rmse = 0.1;
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
@@ -135,13 +135,13 @@ TEST(TestRTC, CheckResults) {
                         testRaster.length() == refRaster.length());
 
             double square_sum = 0; // sum of square difference
-            int nnan = 0;          // number of NaN pixels
-            int nneg = 0;          // number of negative pixels
+            int n_nan = 0;         // number of NaN pixels
+            int n_npos = 0;        // number of non-positive pixels
 
             // Valarray to hold line of data
             std::valarray<double> test(testRaster.width()),
                     ref(refRaster.width());
-            int nvalid = 0;
+            int n_valid = 0;
             for (size_t i = 0; i < refRaster.length(); i++) {
                 // Get line of data
                 testRaster.getLine(test, i, 1);
@@ -149,30 +149,39 @@ TEST(TestRTC, CheckResults) {
                 // Check each value in the line
                 for (size_t j = 0; j < refRaster.width(); j++) {
                     if (std::isnan(test[j]) or std::isnan(ref[j])) {
-                        nnan++;
+                        n_nan++;
                         continue;
                     }
                     if (ref[j] <= 0 or test[j] <= 0) {
-                        nneg++;
+                        n_npos++;
                         continue;
                     }
-                    nvalid++;
+                    n_valid++;
                     square_sum += pow(test[j] - ref[j], 2);
                 }
             }
+            printf("    ----------------\n");
+            printf("    # total: %d\n", n_valid + n_nan + n_npos);
+            printf("    ----------------\n");
+            printf("    # valid: %d\n", n_valid);
+            printf("    # NaNs: %d\n", n_nan);
+            printf("    # non-positive: %d\n", n_npos);
+            printf("    ----------------\n");
+
+            ASSERT_GT(n_valid, 0);
+
             // Compute average over entire image
-            double rmse = std::sqrt(square_sum / nvalid);
+            double rmse = std::sqrt(square_sum / n_valid);
 
             printf("    RMSE = %g\n", rmse);
-            printf("    nnan = %d\n", nnan);
-            printf("    nneg = %d\n", nneg);
-
+            printf("    ----------------\n");
+            
             // Enforce bound on average pixel-error
             ASSERT_LT(rmse, max_rmse);
 
             // Enforce bound on number of ignored pixels
-            ASSERT_LT(nnan, 1e-4 * refRaster.width() * refRaster.length());
-            ASSERT_LT(nneg, 1e-4 * refRaster.width() * refRaster.length());
+            ASSERT_LT(n_nan, 1e-4 * refRaster.width() * refRaster.length());
+            ASSERT_LT(n_npos, 1e-4 * refRaster.width() * refRaster.length());
         }
     }
 }

@@ -14,13 +14,3 @@ def get_test_cfg():
 def test_focus():
     cfg = get_test_cfg()
     focus.focus(cfg)
-
-def test_invalid_device():
-    import pybind_isce3 as isce3
-
-    if hasattr(isce3, "cuda"):
-        cfg = get_test_cfg()
-        cfg.runconfig.groups.worker.gpu_enabled = True
-        cfg.runconfig.groups.worker.gpu_id = -1
-        with npt.assert_raises(ValueError):
-            focus.focus(cfg)

@@ -74,7 +74,7 @@ TEST(Crossmul, RunCrossmul)
     crsmul.azimuthLooks(1);
 
     // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthbandFiltering(false);
+    crsmul.doCommonAzimuthBandFilter(false);
 
     // running crossmul
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
@@ -95,7 +95,7 @@ TEST(Crossmul, RunCrossmul)
           }
       }
 
-      ASSERT_LT(max_err, 1.0e-9);
+      ASSERT_LT(max_err, 1.0e-6);
 }
 
 TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
@@ -158,7 +158,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     crsmul.azimuthLooks(1);
 
     // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthbandFiltering(true);
+    crsmul.doCommonAzimuthBandFilter(true);
 
     // running crossmul
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
@@ -179,7 +179,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-9);
+    ASSERT_LT(max_err, 1.0e-6);
 }
          
 

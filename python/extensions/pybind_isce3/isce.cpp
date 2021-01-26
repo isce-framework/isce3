@@ -1,5 +1,7 @@
 #include <pybind11/pybind11.h>
 
+#include <isce3/config.h>
+
 #include "container/container.h"
 #include "core/core.h"
 #include "focus/focus.h"
@@ -9,6 +11,7 @@
 #include "io/io.h"
 #include "signal/signal.h"
 #include "product/product.h"
+#include "unwrap/unwrap.h"
 
 #ifdef ISCE3_CUDA
 #include "cuda/cuda.h"
@@ -16,16 +19,18 @@
 
 PYBIND11_MODULE(pybind_isce3, m) {
     m.doc() = "InSAR Scientific Computing Environment (ISCE)";
+    m.attr("__version__") = isce3::version_string;
 
     addsubmodule_core(m);
-    addsubmodule_geocode(m);
     addsubmodule_geometry(m);
+    addsubmodule_geocode(m);
     addsubmodule_image(m);
     addsubmodule_io(m);
     addsubmodule_signal(m);
     addsubmodule_product(m);
     addsubmodule_container(m);
     addsubmodule_focus(m);
+    addsubmodule_unwrap(m);
 
 #ifdef ISCE3_CUDA
     addsubmodule_cuda(m);

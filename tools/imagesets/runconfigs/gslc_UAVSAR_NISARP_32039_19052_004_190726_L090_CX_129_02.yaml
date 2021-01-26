@@ -1,0 +1,138 @@
+runconfig:
+    name: NISAR_L2-L-GSLC_RUNCONFIG
+
+    groups:
+        PGENameGroup:
+            PGEName: GSLC_L_PGE
+
+        InputFileGroup:
+            # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
+            InputFilePath:
+            - input_L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02/NISARP_32039_19052_004_190726_L090_CX_129_02.h5
+
+        DynamicAncillaryFileGroup:
+            # REQUIRED - Use the provided DEM as input
+            DEMFile: input_L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02/nisar-dem/EPSG32617/EPSG32617.vrt
+
+        ProductPathGroup:
+            # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
+            ProductPath: output_gslc
+
+            # REQUIRED - Directory where SAS can write temporary data
+            ScratchPath: scratch_gslc
+
+            # REQUIRED - SAS writes output product to the following file. PGE may rename.
+            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
+            SASOutputFile: output_gslc/gslc.h5
+
+        PrimaryExecutable:
+            ProductType: GSLC
+
+        DebugLevelGroup:
+            DebugSwitch: false
+
+        Geometry:
+            # unused by ADT?
+            CycleNumber: 1
+            RelativeOrbitNumber: 001
+            FrameNumber: 150
+            OrbitDirection: Descending
+
+
+
+        # ADT section - isce3 + pyre workflow
+        processing:
+            input_subset:
+                # Frequencies and polarisations to be processed
+                list_of_frequencies:
+                    # keys for frequency A and B are required.
+                    # valid options for polarizations
+                    #   'all' for processing all polarizations from RSLC
+                    #   [HH, VV, ...] list of polarizations to be processed
+                    #   empty for no polarizations to be processed
+                    # REQUIRED - In same units as output EPSG
+                    A: [HH, HV]
+                    B: [VV, VH]
+
+            # TODO OPTIONAL - Only checked when internet access is available
+            dem_download:
+                # OPTIONAL - s3 bucket / curl URL / local file
+                source: None
+                top_left:
+                    x:
+                    y:
+                bottom_right:
+                    x:
+                    y:
+
+            # OPTIONAL - do we need this step. Should bandpass filter from 40MHz/20MHz be included
+            pre_process:
+                filter:
+                    A:
+                        type:
+                        parameters:
+                    B:
+                        type:
+                        parameters:
+
+            # OPTIONAL - Mechanism to specify output posting and DEM
+            geocode:
+                # OPTIONAL - To control output grid in same units as output EPSG
+                x_snap: 80
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                y_snap: 100
+
+                # OPTIONAL - Same as input DEM if not provided.
+                outputEPSG:
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # If no provided, values will match spacing in provided DEM
+                output_posting:
+                    A:
+                        x_posting:  10.0
+                        y_posting:  5.0
+                    B:
+                        x_posting:  40.0
+                        y_posting:  5.0
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                top_left:
+                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    y_abs: 3927057.0
+                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    x_abs: 228619.0
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                bottom_right:
+                    y_abs: 3853070.0
+                    x_abs: 298741.0
+
+            geo2rdr:
+                threshold: 1.0e-9
+                # OPTIONAL - Max number of primary iterations: int (default: 25)
+                maxiter: 25
+
+            # the core module processes the data block by block to mange memory for large datasets
+            blocksize:
+                # number of lines in northing direction of a block of the geocoded grid 
+                y: 2000
+                # number of lines in easting direction of a block of the geocoded grid
+                #x:  # currently not implemented
+
+            # extra margin in [degrees]. Margin of the DEM block relative to block of the geocoded grid 
+            dem_margin: 0.1
+
+            # flag to flatten output GSLC
+            flatten: True
+
+        # OPTIONAL - To setup type of worker
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: False
+            # TODO
+            #gpu_id: 0
+

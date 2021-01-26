@@ -139,7 +139,7 @@ isce3::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& r
 /** Uses GDAL's inbuilt OSRFindMatches to determine the EPSG code
  * from the WKT representation of the projection system. This is
  * designed to work with GDAL 2.3+*/
-int isce3::io::Raster::getEPSG()
+int isce3::io::Raster::getEPSG() const
 {
     //Extract WKT string corresponding to the dataset
     const char* pszProjection = GDALGetProjectionRef(_dataset);

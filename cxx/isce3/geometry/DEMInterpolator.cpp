@@ -20,6 +20,12 @@ isce3::geometry::DEMInterpolator::
     }
 }
 
+/** Set EPSG code for input DEM */
+void isce3::geometry::DEMInterpolator::epsgCode(int epsgcode) {
+    _epsgcode = epsgcode;
+    _proj = isce3::core::createProj(epsgcode);
+}
+
 // Load DEM subset into memory
 /** @param[in] demRaster input DEM raster to subset
   * @param[in] minLon Longitude of western edge of bounding box
@@ -166,7 +172,7 @@ declare() const {
 void isce3::geometry::DEMInterpolator::
 computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) {
     // Announce myself
-    info << "Computing DEM statistics" << pyre::journal::newline << pyre::journal::newline;
+    info << "Computing DEM statistics" << pyre::journal::newline;
     // If we don't have a DEM, just use reference height
     if (!_haveRaster) {
         maxValue = _refHeight;

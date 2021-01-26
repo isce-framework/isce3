@@ -65,36 +65,3 @@ def loadMetadata(pyIGroup group, pyMetadata meta):
         None
     """
     loadFromH5(group.c_igroup, deref(meta.c_metadata))
-
-# --------------------------------------------------------------------------------
-# Serialization functions for isce3::geometry objects
-# --------------------------------------------------------------------------------
-
-def loadTopo(pyTopo topo, metadata):
-    """
-    Load Topo parameters from XML string.
-    
-    Args:
-        topo (pyTopo):                          pyTopo instance.
-        metadata (str):                         XML metadata string.
-
-    Return:
-        None
-    """
-    load_archive[Topo](<string> pyStringToBytes(metadata), 'Topo', topo.c_topo)
-
-def loadGeo2rdr(pyGeo2rdr geo, metadata):
-    """
-    Load Geo2rdr parameters from XML string.
-    
-    Args:
-        geo (pyGeo2rdr):                        pyTopo instance.
-        metadata (str):                         XML metadata string.
-
-    Return:
-        None
-    """
-    load_archive[Geo2rdr](pyStringToBytes(metadata), 'Geo2rdr', geo.c_geo2rdr)
-   
-
-# end of file
