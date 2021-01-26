@@ -1694,7 +1694,7 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
     assert(geogrid.length() > 0);
     assert(geogrid.width() > 0);
     assert(geogrid_upsampling > 0);
-    assert(geogrid.spacingY < 0);
+    assert(geogrid.spacingY() < 0);
 
     // Ellipsoid being used for processing
     std::unique_ptr<isce3::core::ProjectionBase> proj(
