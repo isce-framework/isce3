@@ -22,6 +22,7 @@ pybind_nisar/workflows/gpu_check.py
 pybind_nisar/workflows/geocode_insar.py
 pybind_nisar/workflows/insar.py
 pybind_nisar/workflows/process_args.py
+pybind_nisar/workflows/point_target_info.py
 pybind_nisar/workflows/rdr2geo.py
 pybind_nisar/workflows/resample_slc.py
 pybind_nisar/workflows/unwrap.py
