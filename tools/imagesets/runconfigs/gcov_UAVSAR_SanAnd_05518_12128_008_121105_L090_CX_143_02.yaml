@@ -154,3 +154,8 @@ runconfig:
             # TODO
             #gpu_id: 0
 
+        # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
+        logging: 
+            path: output_gcov/gcov.log
+            write_mode: 'w'
+

@@ -152,5 +152,10 @@ runconfig:
             # OPTIONAL - To explicitly use GPU capability if available. Default False
             gpu_enabled: False
             # TODO
-            #gpu_id: 0
+            #gpu_id: 0            
+
+        # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
+        logging: 
+            path: output_gcov/gcov.log
+            write_mode: 'w'
 

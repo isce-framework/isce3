@@ -38,14 +38,6 @@ runconfig:
             FrameNumber: 1
             OrbitDirection: Descending
 
-        # TODO OPTIONAL - To setup type of worker
-        worker:
-            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
-            internet_access: False
-
-            # OPTIONAL - To explicitly use GPU capability if available. Default False
-            gpu_enabled: False
-
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -136,4 +128,17 @@ runconfig:
             phase_unwrap:
                 crossmul_path: 
                 buffer_lines: 1000
+
+        # TODO OPTIONAL - To setup type of worker
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: False
+
+        # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
+        logging: 
+            path: output_insar/insar.log
+            write_mode: 'w'
 

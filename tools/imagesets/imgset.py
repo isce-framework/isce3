@@ -1,6 +1,6 @@
-import os, subprocess, sys, shutil, stat
+import os, subprocess, sys, shutil, stat, logging
 # see no evil
-from .workflowdata import workflowdata, rslctestdict, gslctestdict, gcovtestdict, insartestdict, caltooltestdict
+from .workflowdata import workflowdata, workflowtests
 pjoin = os.path.join
 
 # Global configuration constants
@@ -20,6 +20,34 @@ container_testdir = f"/tmp/test"
 docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
 
+def run_with_logging(cmd, logger, checkrun=True, printlog=True):
+    """
+    Run command as a subprocess and log the standard streams (stdout & stderr) to
+    the specified logger.
+
+    Parameters
+    -------------
+    cmd : list
+        Command in list of strings
+    logger : logger
+        Python logger to log output, could be to standard out or a file
+    checkrun : Boolean (optional)
+        Exit if run returns non-zero status
+    """
+    logger.propagate = printlog
+    # save command
+    logger.info("++ " + subprocess.list2cmdline(cmd) + "\n")
+    pipe = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    with pipe.stdout:
+        for line in iter(pipe.stdout.readline, b''): # b'\n'-separated lines
+            decoded = line.decode("utf-8")
+            # remove newline character so the log does not contain extra blank lines
+            if str.endswith(decoded, '\n'):
+                decoded = decoded[:-1]
+            logger.info(decoded)
+    rc = pipe.poll()
+    if checkrun and (rc != 0):
+        sys.exit(rc)
 
 # A set of docker images suitable for building and running isce3
 class ImageSet:
@@ -44,7 +72,19 @@ class ImageSet:
         """
         self.docker_run("dev", cmd)
 
-    def __init__(self, name, *, projblddir):
+    def __init__(self, name, *, projblddir, printlog=False):
+        """
+        A set of docker images for building and testing isce3/nisar distributables.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the image set (e.g. "centos7", "alpine"). Used for tagging images
+        projblddir : str
+            Path to the binary directory on the host where build artifacts are written
+        printlog : boolean
+            Print workflow test and qa logs to console in real-time
+        """
         self.name = name
         self.projblddir = projblddir
         self.datadir = projblddir + "/workflow_testdata_tmp/data"
@@ -75,6 +115,9 @@ class ImageSet:
         # Use nvidia runtime if available
         if "nvidia" in docker_runtimes:
             self.run_args += " --runtime=nvidia"
+
+        logging.basicConfig(format='', level=logging.INFO)
+        self.printlog = printlog    
 
     def cmake_args(self):
         return [f"-D{key}={value}" for key, value in self.cmake_defs.items()] \
@@ -149,7 +192,8 @@ class ImageSet:
 
     def makedistrib_nisar(self):
         """
-        Install package to redistributable isce3 docker image with nisar qa and caltools
+        Install package to redistributable isce3 docker image with nisar qa and 
+        noise estimator caltool
         """
 
         build_args = f"--build-arg distrib_img=nisar-adt/isce3:{self.name} \
@@ -177,7 +221,7 @@ class ImageSet:
                 subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
                                       cwd = wfdatadir)
 
-    def distribrun(self, testdir, cmd, log=None, dataname=None, nisarimg=False):
+    def distribrun(self, testdir, cmd, logfile=None, dataname=None, nisarimg=False, checkrun=True):
         """
         Run a command in the distributable image
 
@@ -187,24 +231,26 @@ class ImageSet:
             Test directory to run Docker command in
         cmd : str
             Command to run inside Docker
-        log : str, optional
-            Path of log file for saving standard out and standard error
+        logfile : str, optional
+            File name (relative to testdir) of log file for saving standard out and standard error
         dataname : str or list, optional
             Test input data as str or list (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2")
         nisarimg : boolean, optional
             Use NISAR distributable image
         """
         # save stdout and stderr to logfile if specified
-        if log is not None:
-            logpath = pjoin(testdir, log)
-            logfh = open(logpath, "w")
+        logger = logging.getLogger(name=f'workflow.{os.path.basename(testdir)}')
+        if logfile is None:
+            hdlr = logging.StreamHandler(sys.stdout)
         else:
-            logfh = None
-
+            hdlr = logging.FileHandler(pjoin(testdir, logfile), mode='w')
+        logger.addHandler(hdlr)
+       
         if nisarimg:
             tag = self.name + "-nisar"
         else:
             tag = self.name
+        img = 'nisar-adt/isce3:' + tag
 
         datamount = ""
         if dataname is not None:
@@ -218,18 +264,8 @@ class ImageSet:
           -v {testdir}:{container_testdir} {datamount} \
           -w {container_testdir} \
           -u {os.getuid()}:{os.getgid()} \
-          --rm -i {self.tty} nisar-adt/isce3:{tag} sh -ci"  
-        if log is not None: 
-            # save command in logfile
-            logfh.write("++ " + subprocess.list2cmdline(runcmd.split() + [cmd]) + "\n")
-            logfh.flush()
-        subprocess.check_call(runcmd.split() + [cmd], stdout=logfh, stderr=subprocess.STDOUT)
-
-        if log is not None:
-            logfh.close()
-            # print log to screen for easy viewing
-            with open(logpath, "r") as logfh:
-                print(logfh.read())
+          --rm -i {self.tty} {img} sh -ci"  
+        run_with_logging(runcmd.split() + [cmd], logger, checkrun=checkrun, printlog=self.printlog)
 
     def workflowtest(self, wfname, testname, dataname, pyname, arg=""): # hmmmmmmmmm
         """
@@ -248,7 +284,7 @@ class ImageSet:
         arg : str, optional
             Additional command line argument(s) to pass to the workflow
         """
-        print(f"Running workflow test {testname}\n")
+        print(f"\nRunning workflow test {testname}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"output_{wfname}"), exist_ok=True)
         os.makedirs(pjoin(testdir, f"scratch_{wfname}"), exist_ok=True)
@@ -259,34 +295,54 @@ class ImageSet:
         script = f"""
             time python3 -m {pyname} {arg} runconfig_{wfname}.yaml
             """
-        self.distribrun(testdir, script, log, dataname=dataname)
+        self.distribrun(testdir, script, logfile=log, dataname=dataname)
 
-    def rslctest(self):
-        for testname, dataname in rslctestdict.items():
+    def rslctest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['rslc'].items()
+        for testname, dataname in tests:
             self.workflowtest("rslc", testname, dataname, "pybind_nisar.workflows.focus")
             
-    def gslctest(self):
-        for testname, dataname in gslctestdict.items():
+    def gslctest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['gslc'].items()
+        for testname, dataname in tests:
             self.workflowtest("gslc", testname, dataname, "pybind_nisar.workflows.gslc")
     
-    def gcovtest(self):
-        for testname, dataname in gcovtestdict.items():
+    def gcovtest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['gcov'].items()
+        for testname, dataname in tests:
             self.workflowtest("gcov", testname, dataname, "pybind_nisar.workflows.gcov")
 
-    def insartest(self):
-        for testname, dataname in insartestdict.items():
+    def insartest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['insar'].items()
+        for testname, dataname in tests:
             self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar", arg="--restart")
 
-    def caltooltest(self):
-        print(f"Running calTools test for noise_evd_estimate\n")
-        for testname, dataname in caltooltestdict.items():
+    def noisesttest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['noisest'].items()
+        for testname, dataname in tests:
+            print(f"\nRunning calTool noise estimate test for {testname}\n")
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
             log = pjoin(testdir, f"output_noiseest", "stdouterr.log")
             script = f"""
                 time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} -r
                 """
-            self.distribrun(testdir, script, log, dataname=dataname, nisarimg=True)
+            self.distribrun(testdir, script, logfile=log, dataname=dataname, nisarimg=True)
+
+    def mintests(self):
+        """
+        Only run first test from each workflow
+        """
+        self.rslctest(tests=list(workflowtests['rslc'].items())[:1])
+        self.gslctest(tests=list(workflowtests['gslc'].items())[:1])
+        self.gcovtest(tests=list(workflowtests['gcov'].items())[:1])
+        self.insartest(tests=list(workflowtests['insar'].items())[:1])
+        self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
 
     def workflowqa(self, wfname, testname):
         """
@@ -299,31 +355,38 @@ class ImageSet:
         testname: str
             Workflow test name (e.g. "RSLC_REE1")
         """
-        print(f"Running workflow QA on test {testname}\n")
+        print(f"\nRunning workflow QA on test {testname}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
+        verifycmd = f"""time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
+                --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
+                --quality output_{wfname}/{wfname}.h5"""
+        # prepare script, removing extra white space
         script = f"""
             time cfchecks.py output_{wfname}/{wfname}.h5
-            time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
-                --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                --quality output_{wfname}/{wfname}.h5
-            """
-        self.distribrun(testdir, script, log, nisarimg=True)
+            """ + " ".join(verifycmd.split())
+        self.distribrun(testdir, script, logfile=log, nisarimg=True)
 
-    def rslcqa(self):
-        for testname in rslctestdict:
+    def rslcqa(self, tests=None):
+        if tests is None:
+            tests = workflowtests['rslc'].keys()
+        for testname in tests:
             self.workflowqa("rslc", testname)
 
-    def gslcqa(self):
-        for testname in gslctestdict:
+    def gslcqa(self, tests=None):
+        if tests is None:
+            tests = workflowtests['gslc'].keys()
+        for testname in tests:
             self.workflowqa("gslc", testname)
 
-    def gcovqa(self):
-        for testname in gcovtestdict:
+    def gcovqa(self, tests=None):
+        if tests is None:
+            tests = workflowtests['gcov'].keys()
+        for testname in tests:
             self.workflowqa("gcov", testname)
 
-    def insarqa(self):
+    def insarqa(self, tests=None):
         """
         Run QA and CF compliance checking for InSAR workflow using the NISAR distrib image.
 
@@ -332,18 +395,38 @@ class ImageSet:
         gunw file does not contain any science data.
         """
         wfname = "insar"
-        for testname in insartestdict:
+        if tests is None:
+            tests = workflowtests['insar'].keys()
+        for testname in tests:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
-            os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
-            log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
-            script = f"""
-                time cfchecks.py output_{wfname}/GUNW_gunw.h5
-                time verify_gunw.py --fpdf qa_{wfname}/graphs.pdf \
-                    --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                    output_{wfname}/GUNW_gunw.h5
-                """
-            self.distribrun(testdir, script, log, nisarimg=True)
-        
+            # run QA for each of the InSAR products
+            for product in ['rifg', 'runw', 'gunw']:
+                print(f"\nRunning workflow QA on InSAR test {testname} product {product.upper()}\n")
+                qadir = pjoin(testdir, f"qa_{product}")
+                os.makedirs(qadir, exist_ok=True)
+                log = pjoin(qadir,f"stdouterr.log")
+                script = f"""
+                    time cfchecks.py output_{wfname}/{product.upper()}_gunw.h5
+                    """
+                if product == 'gunw':
+                    verifycmd = f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
+                        --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
+                        output_{wfname}/{product.upper()}_gunw.h5"""
+                    # add to script while removing extra white space
+                    script += " ".join(verifycmd.split())
+                    self.distribrun(testdir, script, logfile=log, nisarimg=True)
+                else:
+                    self.distribrun(testdir, script, logfile=log, nisarimg=True, checkrun=False)
+       
+    def minqa(self):
+        """
+        Only run qa for first test in each workflow
+        """
+        self.rslcqa(tests=list(workflowtests['rslc'].keys())[:1])
+        self.gslcqa(tests=list(workflowtests['gslc'].keys())[:1])
+        self.gcovqa(tests=list(workflowtests['gcov'].keys())[:1])
+        self.insarqa(tests=list(workflowtests['insar'].keys())[:1])
+
     def docsbuild(self):
         """
         Build documentation using Doxygen + Sphinx
@@ -394,3 +477,14 @@ class ImageSet:
             git commit -m "PR {pr_id} ({build_url})" \
                     && git push -q || echo "no changes committed"
         """])
+
+
+    def tartests(self):
+        """
+        Tar up test directories for delivery
+        """
+        for workflow in workflowtests:
+            for test in workflowtests[workflow]:
+                print(f"\ntarring workflow test {test}\n")
+                subprocess.check_call(f"tar cvzf {test}.tar.gz {test}".split(), cwd=self.testdir)
+

@@ -21,11 +21,11 @@ def run(*, steps, imgset, **kwargs):
 
     nisarsteps = mainsteps + [
         "makedistrib_nisar",
+        "noisesttest",
         "rslcqa",
         "gslcqa",
         "gcovqa",
         "insarqa",
-        "caltooltest",
     ]
 
     # you can say "all" or "main" for a sequence similar to our CI pipeline
@@ -39,6 +39,9 @@ def run(*, steps, imgset, **kwargs):
         "dropin",
         "docsbuild",
         "prdocs",
+        "mintests",
+        "minqa",
+        "tartests",
     ]
 
     # map step names to the imgset's methods
@@ -58,5 +61,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--imgset", default="centos7conda")
     parser.add_argument("-B", "--projblddir", default=f"{projsrcdir}/build-docker")
+    parser.add_argument("-p", "--printlog", action='store_true')
     parser.add_argument("steps", nargs="+")
     run(**vars(parser.parse_args()))
