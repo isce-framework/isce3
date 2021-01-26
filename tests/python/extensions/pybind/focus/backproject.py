@@ -7,7 +7,8 @@ from iscetest import data as test_data_dir
 from pathlib import Path
 import json
 
-from .point_target_info import analyze_point_target, tofloatvals
+from pybind_nisar.workflows.point_target_info import (analyze_point_target,
+                                                      tofloatvals)
 
 c = isce.core.speed_of_light
 
