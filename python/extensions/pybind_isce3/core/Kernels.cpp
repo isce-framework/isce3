@@ -58,6 +58,19 @@ void addbinding(py::class_<KnabKernel<T>, Kernel<T>> & pyKernel)
 template void addbinding(py::class_<KnabKernel<float>, Kernel<float>> & pyKernel);
 template void addbinding(py::class_<KnabKernel<double>, Kernel<double>> & pyKernel);
 
+// Azimuth autocorrelation
+template <typename T>
+void addbinding(py::class_<AzimuthKernel<T>, Kernel<T>> & pyKernel)
+{
+    pyKernel.doc() = "SAR azimuth autocorrelation function."
+        " Scale argument is typically antenna length L if working in distance"
+        " units or L/v if working in time units.";
+    pyKernel.def(py::init<double>(), py::arg("scale"));
+}
+
+template void addbinding(py::class_<AzimuthKernel<float>, Kernel<float>> & pyKernel);
+template void addbinding(py::class_<AzimuthKernel<double>, Kernel<double>> & pyKernel);
+
 // NFFT
 template <typename T>
 void addbinding(py::class_<NFFTKernel<T>, Kernel<T>> & pyKernel)

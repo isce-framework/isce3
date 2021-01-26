@@ -7,7 +7,7 @@ isce.minor := 0
 # isce consists of python packages
 isce.packages := isce.pkg
 # libraries
-isce.libraries := isce.lib cereal.lib
+isce.libraries := isce.lib
 # python extensions
 isce.extensions := isce.cython
 # and test suites
@@ -24,7 +24,6 @@ isce.lib.root := lib/isce/
 isce.lib.stem := isce
 isce.lib.libstem := isce-$(isce.major).$(isce.minor)
 isce.lib.extern := gdal hdf5 mpi fftw pyre
-isce.lib.prerequisites := cereal.lib
 isce.lib.c++.flags += $($(compiler.c++).std.c++17)
 
 # the isce extension that's built with cython
@@ -34,10 +33,6 @@ isce.cython.root := extensions/cython/isce/
 isce.cython.stem := isceextension
 isce.cython.capsule :=
 isce.cython.extern := isce.lib gdal hdf5 mpi numpy pyre python
-
-# the cereal lib meta-data
-cereal.lib.root := contrib/cereal/include/cereal/
-cereal.lib.stem := cereal
 
 # external package configuration
 fftw.flavor := 3 3_threads 3f 3f_threads

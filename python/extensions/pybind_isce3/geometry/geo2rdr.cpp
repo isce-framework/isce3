@@ -1,15 +1,25 @@
 #include "geo2rdr.h"
 
+#include <pybind11/eigen.h>
+#include <pybind11/numpy.h>
+#include <stdexcept>
 #include <string>
+#include <utility>
+
+#include <pybind_isce3/core/LookSide.h>
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/core/Vector.h>
+#include <isce3/focus/Backproject.h>
+#include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
 using isce3::geometry::Geo2rdr;
+using isce3::geometry::geo2rdr;
 
 namespace py = pybind11;
 
@@ -52,4 +62,55 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
                 py::overload_cast<>(&Geo2rdr::numiter, py::const_),
                 py::overload_cast<int>(&Geo2rdr::numiter))
         ;
+}
+
+void addbinding_geo2rdr(pybind11::module& m)
+{
+    const isce3::focus::Geo2RdrParams defaults;
+    m.def("geo2rdr",
+        [](const Vec3& lon_lat_height, const Ellipsoid& ellipsoid, const Orbit& orbit,
+            const LUT2d<double>& doppler, double wavelength, py::object py_side,
+            double threshold, int maxiter, double delta_range) {
+                auto side = duck_look_side(py_side);
+                double aztime, slant_range;
+                int converged = geo2rdr(
+                        lon_lat_height, ellipsoid, orbit, doppler,
+                        aztime, slant_range,
+                        wavelength, side,
+                        threshold, maxiter, delta_range);
+                if (!converged)
+                    throw std::runtime_error("geo2rdr failed to converge");
+                return std::make_pair(aztime, slant_range);
+        },
+        py::arg("lon_lat_height"),
+        py::arg("elliposid")=Ellipsoid(),
+        py::arg("orbit"),
+        py::arg("doppler"),
+        py::arg("wavelength"),
+        py::arg("side"),
+        py::arg("threshold")=defaults.threshold,
+        py::arg("maxiter")=defaults.maxiter,
+        py::arg("delta_range")=defaults.delta_range,
+        R"(
+    This is the elementary transformation from map geometry to radar geometry.
+    The transformation is applicable for a single lon/lat/h coordinate (i.e., a
+    single point target).
+
+    Arguments:
+        lon_lat_height  Lon/Lat/Hae of target of interest
+        ellipsoid       Ellipsoid object
+        orbit           Orbit object
+        doppler         LUT2d Doppler model
+        wavelength      Radar wavelength
+        side            Left or Right
+        threshold       azimuth time convergence threshold in meters
+        maxiter         Maximum number of Newton-Raphson iterations
+        delta_range     Step size used for computing derivative of doppler
+
+    Returns:
+        aztime          azimuth time of input Lon/Lat/Hae w.r.t reference
+                        epoch of the orbit
+        slantRange      slant range to input Lon/Lat/Hae
+        )"
+        );
 }

@@ -24,7 +24,7 @@ class RasterTest : public ::testing::Test {
         const uint nbx = 5;      // block side length in x 
         const uint nby = 7;      //block size length in y 
 
-    void SetUp(const std::string &filename) {
+    void initTestRaster(const std::string &filename) {
         std::remove( filename.c_str());
         isce3::io::Raster inc = isce3::io::Raster( filename, nc,
                                     nl, 1, GDT_Float32, "GTiff");
@@ -50,7 +50,7 @@ class RasterTest : public ::testing::Test {
 TEST_F(RasterTest, setBlockMatrix) {
     //Setup geotiff
     std::string filename = "matrix_gtiff.tif";
-    SetUp(filename);
+    initTestRaster(filename);
 
     isce3::io::Raster inc = isce3::io::Raster( filename, GA_ReadOnly);
     std::valarray<int> block( nbx*nby );                           // 1d valarray for 2d blocks
@@ -72,7 +72,7 @@ TEST_F(RasterTest, setBlockMatrix) {
 TEST_F(RasterTest, setGetBlockMatrix) {
     //Setup geotiff
     std::string filename = "matrix_getset.tif";
-    SetUp(filename);
+    initTestRaster(filename);
 
     isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
     std::valarray<int> fullimg( 1, nc*nl );       // ones
@@ -142,6 +142,88 @@ TEST_F(RasterTest, setMatrixRaster) {
   ASSERT_EQ( blockmat(nby-1,nbx-1), -4);
 }
 
+
+// 
+TEST_F(RasterTest, setGetBlockEMatrix2D) {
+  //Setup geotiff
+  std::string filename = "matrix_getset.tif";
+  initTestRaster(filename);
+
+  isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
+
+  //Wrap full image into matrix
+  isce3::core::EMatrix2D<int> fullmat(nl, nc);
+  for (int i = 0; i < nl; i++ )
+      for (int j = 0; j < nc; j++ )
+        fullmat(i,j) = i*nc+j;
+
+  //Wrap block into Matrix
+  isce3::core::EMatrix2D<int> blockmat(nby, nbx);
+
+  //Wrap chunk into Matrix
+  isce3::core::EMatrix2D<int> chunkmat(nby+1, nbx+1);
+
+
+  int block_mat_sum = 0;
+  for (int i = 0; i < nby; i++ )
+      for (int j = 0; j < nbx; j++ )
+        block_mat_sum += i*nc+j;
+
+  int chunk_mat_sum = 0;
+  int l_start = nbx;
+  int c_start = nbx;
+  for (int  i = l_start; i < l_start+nby+1; i++ )
+      for (int j = c_start; j < c_start + nbx+1; j++ )
+        chunk_mat_sum += i*nc+j;
+
+  ASSERT_EQ( inc.numBands(), 1 );               // inc must have one band
+  inc.setBlock( fullmat, 0, 0, 1 );     // write full image
+  inc.getBlock( blockmat, 0, 0, 1);        // read upper-left sub-block
+  inc.getBlock( chunkmat, nbx, nbx, 1 );   // read chunk from band 1
+  ASSERT_EQ(blockmat.sum(), block_mat_sum);              // block sum must be equal to nbx*nby
+  ASSERT_EQ(chunkmat.sum(),  chunk_mat_sum);                  // chunk sum
+}
+
+TEST_F(RasterTest, setGetBlockEArray2D) {
+  //Setup geotiff
+  std::string filename = "matrix_getset.tif";
+  initTestRaster(filename);
+
+  isce3::io::Raster inc = isce3::io::Raster(filename, GA_Update);
+    
+  //Wrap full image into matrix
+  isce3::core::EArray2D<int> fullmat(nl, nc);
+  for (int i = 0; i < nl; i++ )
+    for (int j = 0; j < nc; j++ )
+        fullmat(i,j) = i*nc+j;
+
+  //Wrap block into Matrix
+  isce3::core::EArray2D<int> blockmat(nby, nbx);
+
+  //Wrap chunk into Matrix
+  isce3::core::EArray2D<int> chunkmat(nby+1, nbx+1);
+
+
+  int block_mat_sum = 0;
+  for (int i = 0; i < nby; i++ )
+      for (int j = 0; j < nbx; j++ )
+          block_mat_sum += i*nc+j;
+
+  int chunk_mat_sum = 0;
+  int l_start = nbx;
+  int c_start = nbx;
+  for (int  i = l_start; i < l_start+nby+1; i++ )
+       for (int j = c_start; j < c_start + nbx+1; j++ )
+          chunk_mat_sum += i*nc+j;
+
+  ASSERT_EQ( inc.numBands(), 1 );               // inc must have one band
+  inc.setBlock( fullmat, 0, 0, 1 );     // write full image
+  inc.getBlock( blockmat, 0, 0, 1);        // read upper-left sub-block
+  inc.getBlock( chunkmat, nbx, nbx, 1 );   // read chunk from band 1
+  ASSERT_EQ( blockmat.sum(), block_mat_sum );              // block sum must be equal to nbx*nby
+  ASSERT_EQ( chunkmat.sum(),  chunk_mat_sum);             // chunk sum
+
+}
 
 // Main
 int main( int argc, char * argv[] ) {

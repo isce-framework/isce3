@@ -13,7 +13,7 @@ IncludeBlocks:   Regroup
 IncludeCategories:
   - Regex:           '^.*forward\.h'
     Priority:        0
-  - Regex:           '^(<|")(cereal|gtest|pyre|Eigen)/'
+  - Regex:           '^(<|")(gtest|pyre|Eigen)/'
     Priority:        2
   - Regex:           '^<isce3/'
     Priority:        3
@@ -32,7 +32,7 @@ AccessModifierOffset: -4
 IndentCaseLabels:           false
 IndentWrappedFunctionNames: false
 BreakInheritanceList: AfterColon
-AlignAfterOpenBracket: Align
+AlignAfterOpenBracket: DontAlign
 AlwaysBreakTemplateDeclarations: Yes
 
 PointerAlignment: Left

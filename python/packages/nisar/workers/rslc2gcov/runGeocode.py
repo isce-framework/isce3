@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import gdal
+from osgeo import gdal
 import osr
 import time
 import h5py
@@ -49,19 +49,26 @@ def _runGeocodeFrequency(self, frequency):
         f'temp_rslc2gcov_{frequency}_{time_id}.vrt')
     output_file = os.path.join(state.scratch_path,
         f'temp_rslc2gcov_{frequency}_{time_id}.bin')
+    output_off_diag_file = os.path.join(state.scratch_path,
+        f'temp_rslc2gcov_{frequency}_{time_id}_off_diag.bin')
+
     out_geo_nlooks = os.path.join(state.scratch_path,
         f'temp_geo_nlooks_{time_id}.bin')
     out_geo_rtc = os.path.join(state.scratch_path,
         f'temp_geo_rtc_{time_id}.bin')
-    out_dem_vertices = os.path.join(state.scratch_path,
-        f'temp_dem_vertices_{time_id}.bin')
-    out_geo_vertices = os.path.join(state.scratch_path,
-        f'temp_geo_vertices_{time_id}.bin')
+    out_geo_dem = os.path.join(state.scratch_path,
+        f'temp_geo_dem_{time_id}.bin')
+    out_geo_rdr = os.path.join(state.scratch_path,
+        f'temp_geo_rdr_{time_id}.bin')
 
     # build input VRT
     gdal.BuildVRT(input_temp, raster_ref_list, separate=True)
     input_raster_obj = isce3.pyRaster(input_temp) 
     ellps = isce3.pyEllipsoid()
+
+    # Reading processing parameters
+    flag_fullcovariance = self.get_value(['processing',
+        'input_subset', 'fullcovariance'])
 
     # RTC
     rtc_dict = self.get_value(['processing', 'rtc'])
@@ -84,10 +91,11 @@ def _runGeocodeFrequency(self, frequency):
     clip_max = geocode_dict['clip_max']
     min_nlooks = geocode_dict['min_nlooks']
 
+    flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
-    flag_save_dem_vertices = geocode_dict['save_dem_vertices']
-    flag_save_geo_vertices = geocode_dict['save_geo_vertices']
+    flag_save_geo_dem = geocode_dict['save_geo_dem']
+    flag_save_geo_rdr = geocode_dict['save_geo_rdr']
     
     # Geogrid
     state.output_epsg = geocode_dict['outputEPSG']
@@ -140,7 +148,7 @@ def _runGeocodeFrequency(self, frequency):
     # prepare parameters
     zero_doppler = isce3.pyLUT2d()
 
-    # Instantiate Geocode object depending on raster type
+    # Instantiate Geocode object according to the raster type
     if input_raster_obj.getDatatype() == gdal.GDT_Float32:
         geo = isce3.pyGeocodeFloat(orbit, ellps)
     elif input_raster_obj.getDatatype() == gdal.GDT_Float64:
@@ -208,8 +216,9 @@ def _runGeocodeFrequency(self, frequency):
     if output_dir and not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
-    exponent = 2
     output_dtype = gdal.GDT_Float32
+    output_dtype_off_diag_terms = gdal.GDT_CFloat32
+    exponent = 2
     nbands = input_raster_obj.numBands
 
     if geogrid_upsampling is None:
@@ -226,6 +235,22 @@ def _runGeocodeFrequency(self, frequency):
                                        nbands,
                                        "ENVI")
     geocoded_dict['output_file'] = output_file
+
+    nbands_off_diag_terms = 0
+    out_off_diag_terms_obj = None
+    if flag_fullcovariance:
+        nbands_off_diag_terms = (nbands**2 - nbands) // 2
+        if nbands_off_diag_terms > 0:
+            out_off_diag_terms_obj =  isce3.pyRaster(
+                output_off_diag_file,
+                gdal.GA_Update,
+                output_dtype_off_diag_terms,
+                size_x,
+                size_y,
+                nbands_off_diag_terms,
+                "ENVI")
+            geocoded_dict['output_off_diag_file'] = \
+                output_off_diag_file
 
     if flag_save_nlooks:
         out_geo_nlooks_obj = isce3.pyRaster(out_geo_nlooks,
@@ -251,29 +276,29 @@ def _runGeocodeFrequency(self, frequency):
     else:
         out_geo_rtc_obj = None
 
-    if flag_save_dem_vertices:
-        out_dem_vertices_obj = isce3.pyRaster(out_dem_vertices,
+    if flag_save_geo_dem:
+        out_geo_dem_obj = isce3.pyRaster(out_geo_dem,
                                               gdal.GA_Update,
                                               gdal.GDT_Float32,
                                               size_x + 1,
                                               size_y + 1,
                                               1,
                                               "ENVI")
-        geocoded_dict['out_dem_vertices'] = out_dem_vertices
+        geocoded_dict['out_geo_dem'] = out_geo_dem
     else:
-        out_dem_vertices_obj = None
+        out_geo_dem_obj = None
 
-    if flag_save_geo_vertices:
-        out_geo_vertices_obj = isce3.pyRaster(out_geo_vertices,
+    if flag_save_geo_rdr:
+        out_geo_rdr_obj = isce3.pyRaster(out_geo_rdr,
                                             gdal.GA_Update,
                                             gdal.GDT_Float32,
                                             size_x + 1,
                                             size_y + 1,
                                             2,
                                             "ENVI")
-        geocoded_dict['out_geo_vertices'] = out_geo_vertices
+        geocoded_dict['out_geo_rdr'] = out_geo_rdr
     else:
-        out_geo_vertices_obj = None
+        out_geo_rdr_obj = None
     
 
     # Run geocoding
@@ -299,14 +324,14 @@ def _runGeocodeFrequency(self, frequency):
     # input terrain radiometry
     if (input_terrain_radiometry is not None and
            'sigma' in input_terrain_radiometry):
-        input_radiometry = 'sigma-naught-ellipsoid'
+        input_terrain_radiometry = 'sigma-naught-ellipsoid'
     else:
-        input_radiometry = 'beta-naught'
+        input_terrain_radiometry = 'beta-naught'
 
     if flag_apply_rtc:
         output_radiometry_str = 'gamma-naught'
     else:
-        output_radiometry_str = input_radiometry 
+        output_radiometry_str = input_terrain_radiometry 
 
     # number of looks
     radar_grid_nlooks = state.nlooks_az * state.nlooks_rg
@@ -325,9 +350,8 @@ def _runGeocodeFrequency(self, frequency):
         kwargs['memory_mode'] = memory_mode
 
     if (rtc_algorithm_type is not None and
-        ('DAVID' in rtc_algorithm_type.upper() or
-         'SMALL' in rtc_algorithm_type.upper())):
-        kwargs['rtc_algorithm'] = 'RTC_DAVID_SMALL'
+        'BILINEAR' in rtc_algorithm_type.upper()):
+        kwargs['rtc_algorithm'] = 'RTC_BILINEAR_DISTRIBUTION'
     elif rtc_algorithm_type is not None:
         kwargs['rtc_algorithm'] = 'RTC_AREA_PROJECTION'
 
@@ -349,15 +373,17 @@ def _runGeocodeFrequency(self, frequency):
                 input_raster_obj,
                 output_raster_obj,
                 dem_raster,
+                flag_upsample_radar_grid=flag_upsample_radar_grid,
                 output_mode=output_mode,
                 upsampling=geogrid_upsampling,
-                input_radiometry=input_radiometry,
+                input_terrain_radiometry=input_terrain_radiometry,
                 exponent=exponent,
                 radar_grid_nlooks=radar_grid_nlooks,
+                out_off_diag_terms=out_off_diag_terms_obj,
                 out_geo_nlooks=out_geo_nlooks_obj,
                 out_geo_rtc=out_geo_rtc_obj,
-                out_dem_vertices=out_dem_vertices_obj,
-                out_geo_vertices=out_geo_vertices_obj,
+                out_geo_dem=out_geo_dem_obj,
+                out_geo_rdr=out_geo_rdr_obj,
                 **kwargs)
 
     del output_raster_obj
@@ -368,11 +394,14 @@ def _runGeocodeFrequency(self, frequency):
     if flag_save_rtc:
         del out_geo_rtc_obj
 
-    if flag_save_dem_vertices:
-        del out_dem_vertices_obj
+    if flag_fullcovariance:
+        del out_off_diag_terms_obj
 
-    if flag_save_geo_vertices:
-        del out_geo_vertices_obj
+    if flag_save_geo_dem:
+        del out_geo_dem_obj
+
+    if flag_save_geo_rdr:
+        del out_geo_rdr_obj
 
     self._print(f'removing temporary file: {input_temp}')
     _remove(input_temp)
@@ -475,10 +504,10 @@ def _runGeocodeFrequency(self, frequency):
 
             #Setup units for x and y 
             xds.attrs['standard_name'] = np.string_("longitude")
-            xds.attrs['units'] = np.string_("degrees_east")
+            xds.attrs['units'] = np.string_("degree_east")
 
             yds.attrs['standard_name'] = np.string_("latitude")
-            yds.attrs['units'] = np.string_("degrees_north")
+            yds.attrs['units'] = np.string_("degree_north")
 
         ### UTM zones
         elif ((self.state.output_epsg > 32600 and 
@@ -578,16 +607,36 @@ def _runGeocodeFrequency(self, frequency):
             raise NotImplementedError('Waiting for implementation / Not supported in ISCE3')
 
         # save GCOV diagonal elements
-        cov_elements_list = [p.upper()+p.upper() for p in pol_list]
+        diag_terms_list = [p.upper()+p.upper() for p in pol_list]
         _save_hdf5_dataset(self, 'output_file', hdf5_obj, root_ds,
                            h5_ds_list, geocoded_dict, frequency, yds, xds,
-                           cov_elements_list,
+                           diag_terms_list,
                            standard_name = output_radiometry_str,
                            long_name = output_radiometry_str, 
                            units = 'unitless',
                            fill_value = np.nan, 
                            valid_min = clip_min, 
                            valid_max = clip_max)
+
+
+        # save GCOV off-diagonal elements
+        if flag_fullcovariance:
+            off_diag_terms_list = []
+            for b1, p1 in enumerate(pol_list):
+                for b2, p2 in enumerate(pol_list):
+                    if (b2 <= b1):
+                        continue
+                    off_diag_terms_list.append(p1.upper()+p2.upper())
+
+            _save_hdf5_dataset(self, 'output_off_diag_file', hdf5_obj, root_ds,
+                               h5_ds_list, geocoded_dict, frequency, yds, xds,
+                               off_diag_terms_list,
+                               standard_name = output_radiometry_str,
+                               long_name = output_radiometry_str, 
+                               units = 'unitless',
+                               fill_value = np.nan, 
+                               valid_min = clip_min, 
+                               valid_max = clip_max)
 
         # save nlooks
         _save_hdf5_dataset(self, 'out_geo_nlooks', hdf5_obj, root_ds, 
@@ -611,8 +660,8 @@ def _runGeocodeFrequency(self, frequency):
                             valid_min = 0,
                             valid_max = 2)
 
-        if ('out_dem_vertices' in geocoded_dict or 
-            'out_geo_vertices' in  geocoded_dict):
+        if ('out_geo_dem' in geocoded_dict or 
+            'out_geo_rdr' in  geocoded_dict):
 
             # X and Y coordinates
             geotransform = self.state.geotransform_dict[frequency]
@@ -648,7 +697,7 @@ def _runGeocodeFrequency(self, frequency):
                 pass
 
             # save geo grid
-            _save_hdf5_dataset(self, 'out_dem_vertices', hdf5_obj, root_ds, 
+            _save_hdf5_dataset(self, 'out_geo_dem', hdf5_obj, root_ds, 
                             h5_ds_list, geocoded_dict, frequency, 
                             yds_vertices, xds_vertices, 
                             'interpolatedDem',
@@ -660,7 +709,7 @@ def _runGeocodeFrequency(self, frequency):
                             valid_max = 9000)
 
             # save geo vertices
-            _save_hdf5_dataset(self, 'out_geo_vertices', hdf5_obj, root_ds, 
+            _save_hdf5_dataset(self, 'out_geo_rdr', hdf5_obj, root_ds, 
                             h5_ds_list, geocoded_dict, frequency, 
                             yds_vertices, xds_vertices,
                             ['vertices_a', 'vertices_r'])
@@ -697,7 +746,11 @@ def _save_hdf5_dataset(self, name, hdf5_obj, root_ds, h5_ds_list, geocoded_dict,
     ds_filename = geocoded_dict[name]
     if not ds_filename:
         return
+
     gdal_ds = gdal.Open(ds_filename)
+    if gdal_ds is None:
+        print(f'ERROR opening {ds_filename}')
+        return
     nbands = gdal_ds.RasterCount
     for band in range(nbands):
         gdal_band = gdal_ds.GetRasterBand(band+1)

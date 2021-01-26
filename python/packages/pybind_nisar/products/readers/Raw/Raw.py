@@ -104,7 +104,7 @@ class Raw(Base, family='nisar.productreader.raw'):
     def getAttitude(self):
         path = f"{self.TelemetryPath}/attitude"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
-            q = isce.core.Quaternion.load_from_h5(f[path])
+            q = isce.core.Attitude.load_from_h5(f[path])
         return q
 
     def getRanges(self, frequency='A'):
@@ -156,3 +156,23 @@ class Raw(Base, family='nisar.productreader.raw'):
         grid = isce.product.RadarGridParameters(
             t[0], wvl, prf, r[0], r.spacing, side, nt, len(r), epoch)
         return t, grid
+
+
+    def getSubSwaths(self, frequency='A', tx='H'):
+        """Get an array of indices denoting where raw data are valid (e.g., not
+        within a transmit gap).  Shape is (ns, nt, 2) where ns is the number of
+        sub-swaths and nt is the number of pulse times.  Each pair of numbers
+        indicates the [start, end) valid samples.
+        """
+        txpath = self.TransmitPath(frequency, tx)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            name = find_case_insensitive(f[txpath], "UTCTime")
+            ns = f[txpath]["numberOfSubSwaths"][()]
+            ss1 = f[txpath]["validSamplesSubSwath1"][:]
+            nt = ss1.shape[0]
+            swaths = np.zeros((ns, nt, 2), dtype=int)
+            swaths[0, ...] = ss1
+            for i in range(1, ns):
+                name = f"validSamplesSubSwath{i+1}"
+                swaths[i, ...] = f[txpath][name][:]
+        return swaths

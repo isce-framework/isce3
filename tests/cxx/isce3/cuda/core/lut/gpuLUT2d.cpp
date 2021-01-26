@@ -1,6 +1,3 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -50,7 +47,7 @@ TEST(LUT2dTest, Evaluation) {
 
     // Create gpuLUT2d
     isce3::cuda::core::gpuLUT2d<double> gpuLUT(lut);
-    
+
     // Loop over test points
     double error = 0.0;
     for (size_t i = 0; i < N_pts; ++i) {
@@ -120,9 +117,43 @@ void loadInterpData(isce3::core::Matrix<double> & M) {
     }
 }
 
+TEST(LUT2dTest, Contains)
+{
+    using T = float;
+
+    {
+        const double x0 = 0.;
+        const double dx = 0.5;
+        const size_t width = 3;
+
+        const double y0 = 10.;
+        const double dy = 0.25;
+        const size_t length = 5;
+
+        const auto data = isce3::core::Matrix<T>(length, width);
+        const auto lut2d = isce3::core::LUT2d<T>(x0, y0, dx, dy, data);
+
+        const auto gpulut2d = isce3::cuda::core::gpuLUT2d<T>(lut2d);
+
+        EXPECT_TRUE(gpulut2d.contains(10.5, 0.5));
+
+        EXPECT_FALSE(gpulut2d.contains(9.9, 0.5));
+        EXPECT_FALSE(gpulut2d.contains(11.1, 0.5));
+        EXPECT_FALSE(gpulut2d.contains(10.5, -0.1));
+        EXPECT_FALSE(gpulut2d.contains(10.5, 1.1));
+    }
+
+    {
+        // Default-constructed LUT has infinite extent.
+        const isce3::core::LUT2d<T> lut2d;
+        const auto gpulut2d = isce3::cuda::core::gpuLUT2d<T>(lut2d);
+        const double bigval = 1e9;
+        EXPECT_TRUE(gpulut2d.contains(bigval, bigval));
+        EXPECT_TRUE(gpulut2d.contains(-bigval, -bigval));
+    }
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-// end of file

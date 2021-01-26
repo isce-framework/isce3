@@ -1,0 +1,8 @@
+cmake
+cython
+eigen
+git
+gxx_linux-64
+ninja
+pytest
+shapely

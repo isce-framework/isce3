@@ -34,7 +34,7 @@ set_target_properties(
 
 target_include_directories(
         isceextension PUBLIC
-        ${PYTHON_NUMPY_INCLUDE_DIR}
+        ${Python_NumPy_INCLUDE_DIRS}
 )
 
 target_link_libraries(isceextension PRIVATE ${LISCE})
@@ -43,9 +43,6 @@ install(TARGETS isceextension
         DESTINATION ${ISCE_PACKAGESDIR}/isce3/extensions
         COMPONENT extensions
         )
-
-install(DIRECTORY isce DESTINATION ${ISCE_PACKAGESDIR}/isce3/include/${PKGNAME}
-    FILES_MATCHING PATTERN "*.pxd" PATTERN "*.h")
 
 # Install cuda cython extensions if cuda available
 if (WITH_CUDA)

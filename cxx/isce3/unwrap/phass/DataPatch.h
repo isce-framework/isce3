@@ -266,10 +266,12 @@ template <class type> inline void DataPatch<type>::dump (char *filename)
     for (int pixel = actual_start_pixel; pixel < actual_nr_pixels; pixel++)
       if (fwrite ((void*)&data_lines [line][pixel], sizeof(type), 1, fp) != 1) {
         cerr << "DataPatch::dump: error on writing: " << filename << endl;
-        return;
+        goto cleanup;
       }
   }
   cerr << "DataPatch::dump: number of pixels: " << actual_nr_pixels << endl;
+cleanup:
+  fclose(fp);
 }
 //------------------------------------------------------------------------------
 template <class type> inline void DataPatch<type>::write (char *filename, int append)
@@ -293,10 +295,11 @@ template <class type> inline void DataPatch<type>::write (char *filename, int ap
     for (int pixel = actual_start_pixel; pixel < actual_nr_pixels; pixel++)
       if (fwrite ((void*)&data_lines [line][pixel], sizeof(type), 1, fp) != 1) {
         cerr << "DataPatch::write: error on writing: " << filename << endl;
-        return;
+        goto cleanup;
       }
   }
-  //cerr << "DataPatch::write: number of pixels: " << actual_nr_pixels << endl;
+  cerr << "DataPatch::write: number of pixels: " << actual_nr_pixels << endl;
+cleanup:
   fclose(fp);
 }
 
@@ -315,10 +318,12 @@ template <class type> inline void DataPatch<type>::dumpall (char *filename)
     for (int pixel = 0; pixel < nr_pixels; pixel++)
       if (fwrite ((void*)&data_lines [line][pixel], sizeof(type), 1, fp) != 1) {
         cerr << "DataPatch::dump: error on writing: " << filename << endl;
-        return;
+        goto cleanup;
       }
   }
   cerr << "DataPatch::dumpall: number of pixels: " <<  nr_pixels << endl;
+cleanup:
+  fclose(fp);
 }
 
 //------------------------------------------------------------------------------

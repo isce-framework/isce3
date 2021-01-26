@@ -15,6 +15,7 @@ core/LookSide.cpp
 core/LUT1d.cpp
 core/LUT2d.cpp
 core/Orbit.cpp
+core/Projections.cpp
 core/Quaternion.cpp
 core/StateVector.cpp
 core/TimeDelta.cpp
@@ -22,16 +23,18 @@ focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
 focus/focus.cpp
+focus/Presum.cpp
 focus/RangeComp.cpp
 geocode/geocode.cpp
 geocode/GeocodeSlc.cpp
 geometry/boundingbox.cpp
 geometry/DEMInterpolator.cpp
-geometry/Geocode.cpp
+geocode/GeocodeCov.cpp
 geometry/geometry.cpp
 geometry/geo2rdr.cpp
 geometry/rdr2geo.cpp
 geometry/RTC.cpp
+geometry/metadataCubes.cpp
 image/image.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
@@ -44,10 +47,15 @@ io/serialization.cpp
 io/io.cpp
 signal/signal.cpp
 signal/Covariance.cpp
+signal/Crossmul.cpp
+signal/CrossMultiply.cpp
+signal/flatten.cpp
 product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
 product/Swath.cpp
+unwrap/unwrap.cpp
+unwrap/ICU.cpp
 isce.cpp
 )
 
@@ -64,5 +72,7 @@ if(WITH_CUDA)
          cuda/focus/focus.cpp
          cuda/image/image.cpp
          cuda/image/ResampSlc.cpp
+         cuda/signal/signal.cpp
+         cuda/signal/Crossmul.cpp
          )
 endif()

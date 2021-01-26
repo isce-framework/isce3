@@ -2,4 +2,5 @@
 *~
 extensions/isce/core/export/
 *.swp
-build/
+build*/
+*.rpm

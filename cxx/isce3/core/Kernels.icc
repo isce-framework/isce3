@@ -36,7 +36,7 @@ T _sampling_window(T t, T halfwidth, T bandwidth)
     const T c = M_PI * halfwidth * (1.0 - bandwidth);
     const T tf = t / halfwidth;
     std::complex<T> y = sqrt((std::complex<T>) (1.0 - tf * tf));
-    T window = real(cosh(c * y) / cosh(c));
+    T window = std::real<T>(cosh(c * y) / cosh(c));
     if (!std::isfinite(window)) {
         throw RuntimeError(ISCE_SRCINFO(), "Invalid window parameters.");
     }
@@ -86,6 +86,24 @@ T NFFTKernel<T>::operator()(double t) const
         out = std::sin(_b * x) / x;
     }
     return _scale * out;
+}
+
+/*
+ * Azimuth autocorrelation
+ */
+template<typename T>
+T AzimuthKernel<T>::operator()(double t) const
+{
+    const double x = std::abs(t * 2 / this->_halfwidth);
+    if (x > 2.0) {
+        return T(0.0);
+    }
+    // Use Horner's method to save a few multiplies.
+    if (x < 1.0) {
+        return x * x * (0.75 * x - 1.5) + 1.0;
+    }
+    // else 1 <= abs(x) <= 2
+    return x * (x * (-0.25 * x + 1.5) - 3.0) + 2.0;
 }
 
 /*

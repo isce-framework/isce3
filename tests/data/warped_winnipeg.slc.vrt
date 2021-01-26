@@ -1,0 +1,9 @@
+<VRTDataset rasterXSize="250" rasterYSize="250">
+    <VRTRasterBand band="1" dataType="CFloat32" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">warped_winnipeg.slc</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>8</PixelOffset>
+        <LineOffset>2000</LineOffset>
+    </VRTRasterBand>
+</VRTDataset>

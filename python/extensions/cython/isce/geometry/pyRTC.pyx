@@ -3,18 +3,18 @@ from cython.operator cimport dereference as deref
 from RTC cimport *
 from libc.math cimport NAN
 
-rtc_input_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
-                             'SIGMA_NAUGHT_ELLIPSOID': rtcInputRadiometry.SIGMA_NAUGHT_ELLIPSOID}
+rtc_input_terrain_radiometry_dict = {'BETA_NAUGHT': rtcInputTerrainRadiometry.BETA_NAUGHT,
+                             'SIGMA_NAUGHT_ELLIPSOID': rtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID}
         
 rtc_area_mode_dict = {'AREA': rtcAreaMode.AREA,
                       'AREA_FACTOR': rtcAreaMode.AREA_FACTOR}
 
-rtc_algorithm_dict = {'RTC_DAVID_SMALL': rtcAlgorithm.RTC_DAVID_SMALL,
+rtc_algorithm_dict = {'RTC_BILINEAR_DISTRIBUTION': rtcAlgorithm.RTC_BILINEAR_DISTRIBUTION,
                       'RTC_AREA_PROJECTION': rtcAlgorithm.RTC_AREA_PROJECTION}
 
-rtc_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
-                        'SINGLE_BLOCK': geocodeMemoryMode.SINGLE_BLOCK,
-                        'BLOCKS_GEOGRID': geocodeMemoryMode.BLOCKS_GEOGRID}
+rtc_memory_mode_dict = {'AUTO': rtcMemoryMode.RTC_AUTO,
+                        'SINGLE_BLOCK': rtcMemoryMode.RTC_SINGLE_BLOCK,
+                        'BLOCKS_GEOGRID': rtcMemoryMode.RTC_BLOCKS_GEOGRID}
 
 
 def enum_dict_decorator(enum_dict, default_key):
@@ -33,8 +33,8 @@ def enum_dict_decorator(enum_dict, default_key):
         return wrapper
     return decorated
 
-@enum_dict_decorator(rtc_input_radiometry_dict, 'SIGMA_NAUGHT_ELLIPSOID')
-def getRtcInputRadiometry(*args, **kwargs):
+@enum_dict_decorator(rtc_input_terrain_radiometry_dict, 'SIGMA_NAUGHT_ELLIPSOID')
+def getRtcInputTerrainRadiometry(*args, **kwargs):
     pass
 
 @enum_dict_decorator(rtc_area_mode_dict, 'RTC_AREA_FACTOR')
@@ -55,7 +55,7 @@ def pyApplyRTC(pyRadarGridParameters radarGrid,
                pyRaster input_raster,
                pyRaster dem_raster, 
                out_rtc, 
-               input_radiometry=None,
+               input_terrain_radiometry=None,
                int exponent = 0,
                rtc_area_mode = None,
                rtc_algorithm = None,
@@ -69,7 +69,7 @@ def pyApplyRTC(pyRadarGridParameters radarGrid,
                memory_mode = 'AUTO'):
 
     # input radiometry
-    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+    rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
     # RTC area mode
     rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
@@ -89,13 +89,13 @@ def pyApplyRTC(pyRadarGridParameters radarGrid,
 
     memory_mode_enum = getMemoryMode(memory_mode)
   
-    applyRTC(deref(radarGrid.c_radargrid),
+    applyRtc(deref(radarGrid.c_radargrid),
              orbit.c_orbit,
              deref(doppler.c_lut),
              deref(input_raster.c_raster),
              deref(dem_raster.c_raster),
              deref(out_raster),
-             rtc_input_radiometry,
+             rtc_input_terrain_radiometry,
              exponent,
              rtc_area_mode_obj,
              rtc_algorithm_obj,
@@ -113,7 +113,7 @@ def pyRTC(pyRadarGridParameters radarGrid,
           pyLUT2d doppler,
           pyRaster dem_raster, 
           out_rtc,
-          input_radiometry = None,
+          input_terrain_radiometry = None,
           rtc_area_mode = None,
           rtc_algorithm = None,
           dem_upsampling = NAN,
@@ -123,7 +123,7 @@ def pyRTC(pyRadarGridParameters radarGrid,
           memory_mode = 'AUTO'):
 
     # input radiometry
-    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+    rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
     # RTC area mode
     rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
@@ -143,12 +143,12 @@ def pyRTC(pyRadarGridParameters radarGrid,
     
     memory_mode_enum = getMemoryMode(memory_mode)
   
-    facetRTC(deref(radarGrid.c_radargrid),
+    computeRtc(deref(radarGrid.c_radargrid),
              orbit.c_orbit,
              deref(doppler.c_lut),
              deref(dem_raster.c_raster),
              deref(out_raster),
-             rtc_input_radiometry,
+             rtc_input_terrain_radiometry,
              rtc_area_mode_obj,
              rtc_algorithm_obj,
              dem_upsampling,
@@ -169,19 +169,19 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
               int geogrid_length,
               int geogrid_width,
               int epsg,
-              input_radiometry = None,
+              input_terrain_radiometry = None,
               rtc_area_mode = None,
               rtc_algorithm = None,
               dem_upsampling = NAN,
               rtc_min_value_db = NAN,
               float radar_grid_nlooks = 1,
-              out_geo_vertices = None,
+              out_geo_rdr = None,
               out_geo_grid = None,
               out_nlooks = None,
               memory_mode = 'AUTO'):
 
     # input radiometry
-    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+    rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
     # RTC area mode
     rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
@@ -192,7 +192,7 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
     # other attributes
     width = dem_raster.width
     length = dem_raster.length 
-    out_geo_vertices_raster = _getRaster(out_geo_vertices)
+    out_geo_rdr_raster = _getRaster(out_geo_rdr)
     out_geo_grid_raster = _getRaster(out_geo_grid)
     out_nlooks_raster = _getRaster(out_nlooks)
     out_raster = _getRaster(out_rtc)
@@ -202,7 +202,7 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
 
     memory_mode_enum = getMemoryMode(memory_mode)
 
-    facetRTC(deref(dem_raster.c_raster),
+    computeRtc(deref(dem_raster.c_raster),
              deref(out_raster),
              deref(radarGrid.c_radargrid),
              orbit.c_orbit,
@@ -214,13 +214,13 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
              geogrid_length,
              geogrid_width,
              epsg,
-             rtc_input_radiometry,
+             rtc_input_terrain_radiometry,
              rtc_area_mode_obj,
              rtc_algorithm_obj,
              dem_upsampling,
              rtc_min_value_db,
              radar_grid_nlooks,
-             out_geo_vertices_raster,
+             out_geo_rdr_raster,
              out_geo_grid_raster,
              out_nlooks_raster,
              memory_mode_enum)
@@ -231,7 +231,7 @@ def pyRTCProd(pyProduct prod,
               out_rtc,
               char frequency = b'A',
               bool native_doppler = False,
-              input_radiometry = None,
+              input_terrain_radiometry = None,
               rtc_area_mode = None,
               rtc_algorithm = None,
               dem_upsampling = NAN,
@@ -242,7 +242,7 @@ def pyRTCProd(pyProduct prod,
               memory_mode = 'AUTO'):
 
     # input radiometry
-    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+    rtc_input_terrain_radiometry = getRtcInputTerrainRadiometry(input_terrain_radiometry)
 
     # RTC area mode
     rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
@@ -262,12 +262,12 @@ def pyRTCProd(pyProduct prod,
 
     memory_mode_enum = getMemoryMode(memory_mode) 
 
-    facetRTC(deref(prod.c_product),
+    computeRtc(deref(prod.c_product),
              deref(dem_raster.c_raster),
              deref(out_raster),
              frequency,
              native_doppler,
-             rtc_input_radiometry,
+             rtc_input_terrain_radiometry,
              rtc_area_mode_obj,
              rtc_algorithm_obj,
              dem_upsampling,

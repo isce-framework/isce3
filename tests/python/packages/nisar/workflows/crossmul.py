@@ -41,7 +41,7 @@ def testCpuCrossmul():
     # check resulting interferogram has 0 phase
     igram = np.fromfile(opts.intFilePath, dtype=np.complex64)
     max_err = np.max(np.abs(np.angle(igram)))
-    assert(max_err < 1e09)
+    assert(max_err < 1e-6)
 
 
 if __name__ == '__main__':

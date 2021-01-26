@@ -205,7 +205,7 @@ class Base(pyre.component,
                 root = os.path.join(folder, 'frequency{0}'.format(freq))
                 polList = extractWithIterator(fid[root], 'listOfPolarizations', bytestring,
                                               msg='Could not determine polarization for frequency{0}'.format(freq))
-                self.polarizations[freq] = polList
+                self.polarizations[freq] = [p.upper() for p in polList]
 
         return
 

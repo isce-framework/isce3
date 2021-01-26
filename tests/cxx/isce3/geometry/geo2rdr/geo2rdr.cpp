@@ -23,7 +23,6 @@
 #include "isce3/product/Product.h"
 
 // isce3::geometry
-#include "isce3/geometry/Serialization.h"
 #include "isce3/geometry/Geo2rdr.h"
 
 TEST(Geo2rdrTest, RunGeo2rdr) {
@@ -39,11 +38,8 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce3::geometry::Geo2rdr geo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
-    {
-    cereal::XMLInputArchive archive(xmlfid);
-    archive(cereal::make_nvp("Geo2rdr", geo));
-    }
+    geo.threshold(1e-9);
+    geo.numiter(50);
 
     // Open topo raster from topo unit test
     isce3::io::Raster topoRaster("../topo/topo.vrt");
@@ -66,7 +62,7 @@ TEST(Geo2rdrTest, CheckResults) {
             double rgoff, azoff;
             rgoffRaster.getValue(rgoff, j, i);
             azoffRaster.getValue(azoff, j, i);
-            // Skip null values
+            // Accumulate error
             if (std::abs(rgoff) > 999.0 || std::abs(azoff) > 999.0)
                 continue;
             // Accumulate error

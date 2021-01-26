@@ -18,6 +18,8 @@ namespace isce3 { namespace core {
 template<typename T>
 class Kernel {
 public:
+    using value_type = T;
+
     Kernel(double width) : _halfwidth(fabs(width / 2.0)) {}
 
     /** Virtual destructor (allow destruction of base Kernel pointer) */
@@ -107,6 +109,23 @@ private:
     int _fft_size;
     T _scale;
     T _b;
+};
+
+/** Nominal SAR azimuth autocorrelation function.
+ *  Inverse Fourier transform of a sinc^4 pattern,
+ *  described in @cite villano2013.
+ */
+template<typename T>
+class AzimuthKernel : public Kernel<T> {
+public:
+    /** Constructor.
+     *
+     * @param[in] scale Typically antenna length L if working in distance units,
+     *                  or L/v if working in time units.
+     */
+    AzimuthKernel(double scale) : Kernel<T>(2 * scale) {}  // non-zero on 2L
+
+    T operator()(double x) const override;
 };
 
 /** Tabulated Kernel */

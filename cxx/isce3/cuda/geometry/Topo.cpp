@@ -218,7 +218,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
         // Run Topo on the GPU for this block
         isce3::cuda::geometry::runGPUTopo(
-            ellipsoid, orbit, doppler, demInterp, layers, lineStart, this->lookSide(),
+            ellipsoid, orbit, doppler, demInterp, layers, lineStart, radarGrid.lookSide(),
             this->epsgOut(), radarGrid.sensingStart(),
             radarGrid.wavelength(), radarGrid.prf(), radarGrid.startingRange(),
             radarGrid.rangePixelSpacing(), this->threshold(), this->numiter(), this->extraiter(),

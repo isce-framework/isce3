@@ -1,5 +1,7 @@
 #include "ErrorCode.h"
 
+#include <isce3/except/Error.h>
+
 namespace isce3 { namespace error {
 
 std::string getErrorString(ErrorCode status)
@@ -18,9 +20,11 @@ std::string getErrorString(ErrorCode status)
                    "number of iterations";
         case ErrorCode::WrongLookSide:
             return "wrong look side";
-        default:
-            return "unknown error code";
+        case ErrorCode::OutOfBoundsLookup:
+            return "out of bounds LUT lookup";
     }
+
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unknown error code");
 }
 
 }} // namespace isce3::error

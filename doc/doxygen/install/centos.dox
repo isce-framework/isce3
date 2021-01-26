@@ -1,15 +1,16 @@
-/*! \page install_linux Installing ISCE on Centos 7.5 / Ubuntu 18.04
+/*! \page install_linux Installing ISCE3 on Linux
 
 \tableofcontents
 
-ISCE has the following dependencies
+ISCE3 has the following dependencies
 <ol>
-<li> C++ compiler - gcc-6 or above
+<li> C++ compiler - GCC 7.5 or above
 <li> Python 3.6 or above
+<li> Eigen 3.3.7 or above
 <li> Numpy and Cython
 <li> GDAL 2.3 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
-<li> cmake 3.12 or above
+<li> CMake 3.14 or above
 <li> CUDA 9.0 or above (for GPU-based processing)
 <li> ruamel.yaml
 </ol>
@@ -21,180 +22,80 @@ Optional dependencies for unit testing and documentation generation are
 <li> doxygen (for documenting C++ code)
 </ol>
 
-As of Jan 2020, Centos 7.5 is the operational OS for the NISAR processing system and this is <br> 
-probably the most tested set of instructions. The instructions for Centos 7.5 / Ubuntu 18.04 <br>
-are more or less the same except for the parts specific to using the standard package managers <br>
-to install compilers and some basic packages. 
+Note that some of our prerequisites are more recent than those provided by
+stable releases of common Linux distributions such as CentOS and Ubuntu.
+As such, we typically prefer to install these dependencies using the
+<a href="https://docs.conda.io/projects/conda/en/latest/">
+conda package manager</a>, as it happens to provide suitable versions of all
+the packages we need.
 
-We will install all dependencies under a folder called ${ISCEHOME} in the instructions below. <br>
-Our overall strategy for directory layouts is as follows:
+A simple strategy for directory layouts which will be used here is as follows:
 
 <table>
 <caption id="directory_structure">Assumed directory structure for installation</caption>
 <tr><th>Path<th>Description
-<tr><td>${ISCEHOME}/python/miniconda3<td>Miniconda3 installation directory
-<tr><td>${ISCEHOME}/tools/isce/src <td>git checkout location/ unpacked tarball location of ISCE source
-<tr><td>${ISCEHOME}/tools/isce/build <td>cmake build location
-<tr><td>${ISCEHOME}/tools/isce/install <td>cmake install location 
-<tr><td>${ISCEHOME}/tools/gcc7<td>Directory for gcc7 compiled from source (Only for Centos 7.5)
+<tr><td>${ISCEHOME}/conda <td>Miniconda3 installation directory
+<tr><td>${ISCEHOME}/isce3 <td>git checkout location
+<tr><td>${ISCEHOME}/isce3/build <td>CMake build directory
+<tr><td>${ISCEHOME}/isce3/build/install <td>CMake install prefix
 </table>
 
-
-Note that ${ISCEHOME} in these can be any directory on your machine. You can even use your home <br>
-folder as the base for your directory structure.
+Note that ${ISCEHOME} in these can be any directory on your machine.
+You can even use your home folder as the base for your directory structure.
 
 \section linuxpack Installing packages using builtin package manager
 
-\subsection centosyum yum on Centos 7.5
+If you have access to a system with an Nvidia GPU which does not have the
+CUDA Toolkit installed, consider asking your system administrator to install
+it so that you can benefit from ISCE3's enhanced GPU processing capabilities.
 
-This section only applies to installation on Centos 7.5. The following packages and their dependencies <br>
-should be installed using "yum".
-<ol>
-<li>curl
-<li>sudo
-<li>bzip2
-<li>zip
-</ol>
+If you would like to install the CUDA Toolkit on your own system, check for
+available CUDA packages from your Linux distribution's package manager or refer
+to the <a href=
+"https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html">
+CUDA Installation Guide</a>.
 
-If CUDA support is desired, install the following set of packages with yum as well:
-<ol>
-<li>cuda-libraries-dev-10.1 
-<li>cuda-nvml-dev-10.1
-<li>cuda-minimal-build-10.1
-<li>cuda-command-line-tools-10.1
-</ol>
+\section conda Installing Conda and Python packages
 
-
-\subsubsection centosgcc7 gcc7 on Centos7.5
-Centos 7.5 is a fairly old distribution and attempts to guarantee backward compatibility. 
-As a result, the gcc/g++ compilers that are included with this distribution do not support <br>
-gcc's dual ABI. Hence, you will have to build a gcc compiler ( version > 6) manually for use. 
-
-<ol>
-<li> If you are within JPL, you can get a version of gcc7 here: 
-<a href="https://github-fn.jpl.nasa.gov/NISAR-ADT/gcc7/releases/download/v0.0.1/gcc7.tar.gz"> https://github-fn.jpl.nasa.gov/NISAR-ADT/gcc7/releases/download/v0.0.1/gcc7.tar.gz </a>. 
-
-
-<li> Untar the contents of this file to ${ISCEHOME}/tools/gcc7 
-\verbatim
-tar xzv gcc7.tar.gz -C ${ISCEHOME}/tools
-\endverbatim
-
-
-\subsection ubuntuapt apt-get on Ubuntu 18.04
-
-This section only applies to installation on Ubuntu 18.04. The following packages and their <br>
-dependencies should be installed using "apt-get".
-
-<ol>
-<li>gnupg2
-<li>curl
-<li>ca-certificates
-<li>bzip2
-<li>zip
-<li>gcc-6
-<li>g++-6
-</ol>
-
-If CUDA support is desired, install the following set of packages with apt-get as well:
-<ol>
-<li>nvidia-cuda-toolkit
-</ol>
-
-\section conda Installing Anaconda and Python packages
-
-In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda</a> for installing <br>
-Python dependencies. We will install Python3 to the location ${ISCEHOME}/python/miniconda3. 
+In this set of instructions, we rely on
+<a href="https://docs.conda.io/projects/conda/en/latest/">
+the conda package manager</a> for installing Python dependencies.
+Downloads and installation instructions can be found
+<a href="https://docs.conda.io/en/latest/miniconda.html">here</a>.
 
 <ol>
 <li> We will list all the required packages in a text file called "requirements.txt" located under ${ISCEHOME}/python. <br>
 The contents of the requirements.txt file is shown below:
 
-\verbatim
+\include tools/imagesets/centos7conda/runtime/requirements.txt.main.runtime
+\include tools/imagesets/centos7conda/dev/requirements.txt.main.dev
+\include tools/imagesets/centos7conda/runtime/requirements.txt.forge.runtime
+\include tools/imagesets/centos7conda/dev/requirements.txt.forge.dev
 
-cmake
-cython
-gdal
-git
-h5py
-libgdal
-pytest
-numpy
-fftw
-scipy
-pyproj
-matplotlib
-pandas
-sphinx
-ruamel.yaml
-
-\endverbatim
-
-<li> We can then install Anaconda and these requirements as shown below:
+<li> We can then install these requirements as shown below:
 \code{.sh}
-> cd ${ISCEHOME}/python
-> curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh
-> bash miniconda.sh -b -p ${ISCEHOME}/python/miniconda3
-> touch ${ISCEHOME}/python/miniconda3/conda-meta/pinned
-> export PATH=${ISCEHOME}/python/miniconda3/bin:$PATH
-> export LD_LIBRARY_PATH=${ISCEHOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
-> conda config --set show_channel_urls True
 > conda update --all
-> conda install --file ${ISCEHOME}/python/requirements.txt
+  conda create -n ISCE3 -y
+  conda activate ISCE3
+  conda install -c conda-forge --file ${ISCEHOME}/python/requirements.txt
 \endcode
 
 
-<li> (Optional) On some systems, it may be necessary to activate the conda root environment <br>
-in order to export important environment variables used by make, cmake, etc. <br>
-To activate the environment, use:
-\verbatim
-> . ${ISCEHOME}/python/miniconda3/bin/activate root
-\endverbatim
-</ol>
+\section isce3linux Install ISCE3 from source
 
-\section isce3linux Install ISCE from source
+In this section we will walk through the directory setup and build system
+instructions for building and installing ISCE3 with CMake.
 
-In this section we will walk through the directory setup and build system instructions for installing ISCE.
-ISCE can be built with 2 different build systems 
-<ol>
-<li> <a href="https://github.com/aivazis/config">mm</a>
-<li><a href="https://cmake.org/">cmake</a>. 
-</ol>
-
-In this set of instructions, we focus on cmake as it is already available via standard package managers.
-
-\subsection isce3targit Step 1: Get latest version of ISCE source
-
-\subsubsection isce3git  Option 1: Checkout latest version from git
+\subsection isce3git Step 1: Get latest version of ISCE3 source
 
 <ol>
 <li> Ensure that you are in the source folder
 \code{.sh}
-> cd ${ISCEHOME}/tools/isce/src
+> cd ${ISCEHOME}/
 \endcode
 <li> Check out the latest version of the source code from git
 \code{.sh}
-> git clone https://github-fn.jpl.nasa.gov/isce-3/isce
-\endcode
-<li> Ensure you are building the branch that you want to use. <br>
-For example, if you want to build the <b>develop</b> branch
-\code{.sh}
-> cd isce
-> git checkout develop
-\endcode
-</ol>
-
-
-\subsubsection isce3tar Option 2: Get the latest tarball 
-
-<ol>
-<li> Ensure that you are in the source folder
-\code{.sh}
-> cd ${ISCEHOME}/tools/isce/src
-\endcode
-<li> Unpack the tarball.
-\code{.sh}
-> tar xjbf isce.tar.bz2
+> git clone https://github-fn.jpl.nasa.gov/isce-3/isce isce3
 \endcode
 </ol>
 
@@ -202,66 +103,58 @@ For example, if you want to build the <b>develop</b> branch
 \subsection isce3build Step 2: Build the software
 
 <ol>
-<li> For our cmake build, we follow the practice of building outside of the source parent directory.<br>
+<li> For our CMake build, we follow the practice of building outside of the source parent directory.<br>
 To that end, we first create a temporary build directory:
 \code{.sh}
-> cd ${ISCEHOME}/tools/isce
+> cd ${ISCEHOME}/isce3
 > mkdir build
 > cd build
 \endcode
 
-<li> Ensure that you have activated the scl environment (Centos), conda and set <br>
-environment variables needed by pyre following instructions provided above. 
-
-Note: for some operating systems, if you wish to build the CUDA extensions, you may need to run
+Note: if you wish to build the CUDA extensions and CMake does not find
+your CUDA compiler, you can specify its location via
 \code{.sh}
 export CUDACXX=/usr/local/cuda/bin/nvcc
 \endcode
 
-<li> Run cmake with the correct inputs and compiler flags 
+<li> Run CMake configuration with the correct inputs and compiler flags
 \code{.sh}
 
-> CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install ${ISCEHOME}/tools/isce/src/isce
+> cmake .. \
+    -DCMAKE_CUDA_HOST_COMPILER=$CXX \
+    -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
+    -DCMAKE_INSTALL_PREFIX=install
 
 \endcode
 
-or 
+We leave it to the user to determine which GCC to assign to
+`-DCMAKE_CUDA_HOST_COMPILER`. Please refer to the System Requirements section
+of the  Installation Guide Linux in your version of CUDA's
+[Online Documentation](https://developer.nvidia.com/cuda-toolkit-archive).
 
-\code{.sh}
-
-> CC=${ISCEHOME}/tools/gcc7/bin/gcc CXX=${ISCEHOME}/tools/gcc7/bin/g++ \
-  cmake -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install \
-        ${ISCEHOME}/tools/isce/src/isce
-
-\endcode
-
-
-Other optional arguments can be added to the cmake line
+Other optional arguments can be added to the CMake line
 <table>
     <caption id="cmake_options">Additional cmake options</caption>
     <tr><th>Option <th>Description
     <tr><td>-DWITH_CUDA=OFF<td>Do not attempt to detect CUDA support
                                (default "Auto" will auto-detect CUDA toolchain,
                                 but can be explicitly required/ignored with ON/OFF)
-    <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE \<br>
-                        -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" \<br>
-                        -DCMAKE_BUILD_TYPE=Debug<td>  
-    <tr><td>Run tests with "-T memcheck" to check for memory leaks.
-    <tr><td>valgrind needs to be installed.
-    <tr><td>-DPYTHON_EXECUTABLE:FILENAME=<path_to_python_exe><td>Pass this argument if installing to a 
-    python virtual environment
-    <tr><td>-DCMAKE_BUILD_TYPE=RelWithDebInfo<td>Build with optimization flags with release.
-    Default is to build in debug mode
+    <tr><td>-DPython_EXECUTABLE=<path_to_python_exe><td>Specify this if CMake detects
+    the wrong python installation
+    <tr><td>-DCMAKE_BUILD_TYPE=Debug<td>Build with minimal optimization and full debugging info.
+    Default is RelWithDebInfo - a balanced combination of debugging and optimization.
 </table>
 
-Following env variables can also be used to control cmake behavior. Use these settings
-if cmake fails to identify the right compilers or install locations of dependencies.
+The following env variables can also be used as hints for CMake's auto-detection.
+Use these settings if cmake fails to identify the right compilers or install locations of dependencies.
+Note that if you previously ran CMake and want to change these values, the old values have been cached,
+so you need to delete CMakeCache.txt from the build dir so they are recomputed.
 <table>
     <caption id="cmake_env_options">Additional environment variables impacting cmake</caption>
     <tr><th>Variable<th>Description
     <tr><td>CC <td>Path to the C compiler
     <tr><td>CXX <td>Path to the C++ compiler
-    <tr><td>GDAL_ROOT <td> Path to location of gdal installation. With anaconda, ${ISCEHOME}/python/miniconda3.
+    <tr><td>GDAL_ROOT <td> Path to location of gdal installation. With anaconda, $CONDA_PREFIX
 </table>
 
 <li> Build the software
@@ -269,7 +162,14 @@ if cmake fails to identify the right compilers or install locations of dependenc
 > make VERBOSE=ON
 \endcode
 
-<li> Run the unit tests to ensure that software was built correctly
+<li> Install the software to your specified CMAKE_INSTALL_PREFIX
+\code{.sh}
+> make install
+\endcode
+
+<li> Run the unit tests to ensure that software was built and installed correctly
+
+Note that our python packages must be installed before they can be tested.
 \code{.sh}
 > ctest
 \endcode
@@ -277,54 +177,19 @@ if cmake fails to identify the right compilers or install locations of dependenc
 
 \subsection isce3install Step 3: Install and set environment variables
 
+If you're developing ISCE3 as a regular user and installing to a non-system
+CMAKE_INSTALL_PREFIX, you will need to define the following environment
+variables to be able to use the libraries and python packages.
+
 <ol>
-<li> Ensure that you are in the build folder
-\code{.sh}
-> cd ${ISCEHOME}/tools/isce/build
-\endcode 
-
-<li> Install the software
-\code{.sh}
-> make install
-\endcode
-
 <li> Setup the environment variables.
-
 <table>
-    <caption id="env_vars">Environment variables to set after installing ISCE</caption>
+    <caption id="env_vars">Environment variables to set after installing ISCE3</caption>
     <tr><th>Variable<th>Setting<th>Description
-    <tr><td>PATH<td>$PATH:${ISCEHOME}/tools/isce/install/bin<td>For executables installed by ISCE
-    <tr><td>PYTHONPATH<td>$PYTHONPATH:${ISCEHOME}/tools/isce/install/packages<td>ISCE python package
-    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:${ISCEHOME}/tools/isce/install/lib<td>Shared libraries built by ISCE
+    <tr><td>PATH<td>$PATH:${ISCEHOME}/isce3/build/install/bin<td>For executables installed by ISCE3
+    <tr><td>PYTHONPATH<td>$PYTHONPATH:${ISCEHOME}/isce3/build/install/packages<td>ISCE3 python package
+    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:${ISCEHOME}/isce3/build/install/lib:${ISCEHOME}/isce3/build/install/lib64<td>Shared libraries built by ISCE3
 </table>
-
-We also recommend setting these environment variables in your appropriate `.bashrc` or `.bash_profile` <br>
-file to avoid having to set them for each new session. For example:
-
-\code{.sh}
-# .bash_profile
-
-# Get the aliases and functions
-if [ -f ~/.bashrc ]; then
-. ~/.bashrc
-fi
-
-# User specific environment and startup programs
-
-# miniconda3
-export PATH=${ISCEHOME}/python/miniconda3/bin:$PATH
-export LD_LIBRARY_PATH=${ISCEHOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
-
-# cuda compiler
-export CUDACXX=/usr/local/cuda/bin/nvcc
-# cuda host compiler
-export CUDAHOSTCXX=/usr/bin/gcc-6
-
-# isce
-export PATH=$PATH:${ISCEHOME}/tools/isce/install/bin
-export PYTHONPATH=$PYTHONPATH:${ISCEHOME}/tools/isce/install/packages
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${ISCEHOME}/tools/isce/install/lib
-\endcode
 
 </ol>
 

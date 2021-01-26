@@ -1,1 +1,5 @@
 *.icc linguist-language=C++
+
+# CMake template files
+*.h.in linguist-language=C++
+*.cpp.in linguist-language=C++

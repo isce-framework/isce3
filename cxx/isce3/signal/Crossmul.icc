@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+#include <isce3/except/Error.h>
+
 /** @param[in] refSlcDoppler 2D Doppler polynomial for refernce SLC
 *   @param[in] secSlcDoppler 2D Doppler polynomial for secondary SLC
 */
@@ -33,12 +35,28 @@ prf(double prf)
     _prf = prf;
 }
 
+/** @param[out] prf pulse repetition interval
+*/
+double isce3::signal::Crossmul::
+prf() const
+{
+    return _prf;
+}
+
 /** @param[in] rngSamplingFreq range sampling frequency
 */
 void isce3::signal::Crossmul::
 rangeSamplingFrequency(double rngSamplingFreq)
 {
     _rangeSamplingFrequency = rngSamplingFreq;
+}
+
+/** @param[out] rngSamplingFreq range sampling frequency
+*/
+double isce3::signal::Crossmul::
+rangeSamplingFrequency() const
+{
+    return _rangeSamplingFrequency;
 }
 
 /** @param[in] rngBandwidth range bandwidth
@@ -50,6 +68,15 @@ rangeBandwidth(double rngBandwidth)
 
 }
 
+/** @param[out] rngBandwidth range bandwidth
+*/
+double isce3::signal::Crossmul::
+rangeBandwidth() const
+{
+    return _rangeBandwidth;
+
+}
+
 /** @param[in] rngPixelSpacing range pixel spacing
 */
 void isce3::signal::Crossmul::
@@ -58,6 +85,13 @@ rangePixelSpacing(double rngPixelSpacing)
     _rangePixelSpacing = rngPixelSpacing;
 }
 
+/** @param[out] rngPixelSpacing range pixel spacing
+*/
+double isce3::signal::Crossmul::
+rangePixelSpacing() const
+{
+    return _rangePixelSpacing;
+}
 
 /** @param[in] wvl radar wavelength
 */
@@ -65,6 +99,14 @@ void isce3::signal::Crossmul::
 wavelength(double wvl)
 {
     _wavelength = wvl;
+}
+
+/** @param[out] wvl radar wavelength
+*/
+double isce3::signal::Crossmul::
+wavelength() const
+{
+    return _wavelength;
 }
 
 /** @param[in] commonAzimuthBandwidth common azimuth bandwidth
@@ -75,12 +117,28 @@ commonAzimuthBandwidth(double commonAzimuthBandwidth)
     _commonAzimuthBandwidth = commonAzimuthBandwidth ;
 }
 
+/** @param[out] commonAzimuthBandwidth common azimuth bandwidth
+*/
+double isce3::signal::Crossmul::
+commonAzimuthBandwidth() const
+{
+    return _commonAzimuthBandwidth;
+}
+
 /** @param[in] beta parameter for the azimuth common band filter design
 */
 void isce3::signal::Crossmul::
 beta(double par)
 {
-    _beta = par ;
+    _beta = par;
+}
+
+/** @param[in] beta parameter for the azimuth common band filter design
+*/
+double isce3::signal::Crossmul::
+beta() const
+{
+    return _beta;
 
 }
 
@@ -89,8 +147,26 @@ beta(double par)
 void isce3::signal::Crossmul::
 rangeLooks(int rangeLooks)
 {
+    // make sure provided range multilook is non-negative
+    if (rangeLooks < 1) {
+        std::string error_msg = "ERROR crossmul range multilook < 1";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
     _rangeLooks = rangeLooks ;
-    _doMultiLook = true;
+    if (_rangeLooks > 1 or _azimuthLooks > 1) {
+        _doMultiLook = true;
+    } else {
+        _doMultiLook = false;
+    }
+}
+
+/** @param[out] rangeLooks number of looks in range direction
+*/
+int isce3::signal::Crossmul::
+rangeLooks() const
+{
+    return _rangeLooks;
 }
 
 /** @param[in] azimuthLooks number of looks in azimuth direction
@@ -98,23 +174,56 @@ rangeLooks(int rangeLooks)
 void isce3::signal::Crossmul::
 azimuthLooks(int azimuthLooks)
 {
+    // make sure provided azimuth multilook is non-negative
+    if (azimuthLooks < 1) {
+        std::string error_msg = "ERROR crossmul azimuth multilook < 1";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
     _azimuthLooks = azimuthLooks ;
-    _doMultiLook = true;
+    if (_rangeLooks > 1 or _azimuthLooks > 1) {
+        _doMultiLook = true;
+    } else {
+        _doMultiLook = false;
+    }
+}
+
+/** @param[out] azimuthLooks number of looks in azimuth direction
+*/
+int isce3::signal::Crossmul::
+azimuthLooks() const
+{
+    return _azimuthLooks;
 }
 
 /** @param[in] flag to mark if common azimuth band filtering should be applied
 */
 void isce3::signal::Crossmul::
-doCommonAzimuthbandFiltering(bool flag )
+doCommonAzimuthBandFilter(bool flag )
 {
-    _doCommonAzimuthbandFilter = flag ;
+    _doCommonAzimuthBandFilter = flag ;
+}
+
+/** @param[out] flag to mark if common azimuth band filtering should be applied
+*/
+bool isce3::signal::Crossmul::
+doCommonAzimuthBandFilter() const
+{
+    return _doCommonAzimuthBandFilter;
 }
 
 /** @param[in] flag to mark if common range band filtering should be applied */
 void isce3::signal::Crossmul::
-doCommonRangebandFiltering(bool flag )
+doCommonRangeBandFilter(bool flag )
 {
-    _doCommonRangebandFilter = flag ;
+    _doCommonRangeBandFilter = flag ;
+}
+
+/** @param[out] flag to mark if common range band filtering should be applied */
+bool isce3::signal::Crossmul::
+doCommonRangeBandFilter() const
+{
+    return _doCommonRangeBandFilter;
 }
 
 /** @param[in] refSpectrum the spectrum of a block of a complex data

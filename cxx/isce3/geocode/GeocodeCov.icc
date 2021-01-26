@@ -1,0 +1,3 @@
+#if !defined(ISCE_GEOMETRY_GEOCODE_ICC)
+#error "Geocode.icc is an implementation detail of class Geocode"
+#endif

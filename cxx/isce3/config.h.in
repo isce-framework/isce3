@@ -1,0 +1,15 @@
+#pragma once
+
+#include <string>
+
+#define ISCE3_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define ISCE3_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define ISCE3_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+#define ISCE3_WITH_CUDA @ISCE3_WITH_CUDA_BOOL@
+
+namespace isce3 {
+
+extern std::string version_string;
+
+} // namespace isce3

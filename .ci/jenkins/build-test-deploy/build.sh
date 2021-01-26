@@ -43,7 +43,7 @@ cd isce/
 git config user.name "gmanipon"
 git config user.email "gmanipon@jpl.nasa.gov"
 git rm -rf .
-mv ../doc/* .
+mv ../docs-output/* .
 touch .nojekyll
 git add .
 git status

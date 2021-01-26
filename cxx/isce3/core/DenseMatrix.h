@@ -51,6 +51,12 @@ public:
      *  @param[in] lon Longitude in radians
      *  @param[out] enumat Matrix with rotation matrix */
     CUDA_HOSTDEV static Mat3 xyzToEnu(double lat, double lon);
+
+    /** Compute ENU basis inverse transformation matrix
+     *  @param[in] lat Latitude in radians
+     *  @param[in] lon Longitude in radians
+     *  @param[out] enumat Matrix with rotation matrix */
+    CUDA_HOSTDEV static Mat3 enuToXyz(double lat, double lon);
 };
 
 template<int N, typename T>
@@ -60,6 +66,16 @@ CUDA_HOSTDEV Mat3 DenseMatrix<N, T>::xyzToEnu(double lat, double lon) {
     return Mat3 {{{         -sin(lon),           cos(lon),       0.},
                   {-sin(lat)*cos(lon), -sin(lat)*sin(lon), cos(lat)},
                   { cos(lat)*cos(lon),  cos(lat)*sin(lon), sin(lat)}}};
+}
+
+template<int N, typename T>
+CUDA_HOSTDEV Mat3 DenseMatrix<N, T>::enuToXyz(double lat, double lon)
+{
+    using std::cos;
+    using std::sin;
+    return Mat3 {{{-sin(lon), -sin(lat) * cos(lon), cos(lat) * cos(lon)},
+                  {cos(lon), -sin(lat) * sin(lon), cos(lat) * sin(lon)},
+                  {0, cos(lat), sin(lat)}}};
 }
 
 }}

@@ -77,7 +77,7 @@ cdef class pyCrossmul:
 
             # Set the dopplers
             self.c_crossmul.doppler(c_refdoppler1d, c_secdoppler1d)
-            self.c_crossmul.doCommonAzimuthBandFiltering(True)
+            self.c_crossmul.doCommonAzimuthBandFilter(True)
 
             # Set the PRF
             self.c_crossmul.prf(prf)
@@ -105,7 +105,7 @@ cdef class pyCrossmul:
 
         # If range offset raster provided, run crossmul with range commonband filtering
         if rngOffset is not None:
-            self.c_crossmul.doCommonRangeBandFiltering(True)
+            self.c_crossmul.doCommonRangeBandFilter(True)
             self.c_crossmul.crossmul(
                 deref(referenceSLC.c_raster),
                 deref(secondarySLC.c_raster),

@@ -7,6 +7,9 @@
 // header file
 #include "boundingbox.h"
 
+// cassert for assert()
+#include <cassert>
+
 // pyre::journal
 #include <pyre/journal.h>
 
@@ -201,7 +204,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBox(
                 perimeter = getGeoPerimeter(radarGrid, orbit, proj, doppler,
                                             constDEM, pointsPerEdge, threshold,
                                             numiter);
-            } catch (isce3::except::OutOfRange) {
+            } catch (const isce3::except::OutOfRange&) {
                 continue;
             }
         } else {
@@ -249,15 +252,17 @@ static bool _isValid(isce3::geometry::BoundingBox bbox) {
 
 static isce3::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(
         const isce3::product::RadarGridParameters& radarGrid,
-        const isce3::core::Orbit& orbit, const isce3::core::ProjectionBase* proj,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::ProjectionBase* proj,
         const isce3::core::LUT2d<double>& doppler, double min_height,
         double max_height, const double margin, const int pointsPerEdge,
         const double threshold, const int numiter,
-        bool find_lowest_valid_height, 
+        bool find_lowest_valid_height,
         isce3::geometry::BoundingBox bbox_best_solution_from_other_end,
-        const double height_threshold) {
+        const double height_threshold)
+{
 
-    // Check input arguments 
+    // Check input arguments
     if (max_height < min_height) {
         std::string errstr = "max_height <  min_height";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
@@ -277,9 +282,9 @@ static isce3::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(
             pointsPerEdge, threshold, numiter, true);
 
     if (mid_height - min_height < height_threshold && _isValid(bbox_mid)) {
-            return bbox_mid;
+        return bbox_mid;
     } else if (mid_height - min_height < height_threshold) {
-        return bbox_best_solution_from_other_end; 
+        return bbox_best_solution_from_other_end;
     }
 
     double new_min_height, new_max_height;
@@ -307,7 +312,6 @@ static isce3::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(
     return bbox_result;
 }
 
-
 isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::ProjectionBase* proj,
@@ -327,14 +331,25 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
         throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
     }
 
+    assert(max_height >= min_height);
+
     // Initialize data structure for final output
     const double margin_zero = 0;
 
-    // Get perimeter for constant height
+    // Get BBox for min_height
     BoundingBox bbox_min = getGeoBoundingBox(
             radarGrid, orbit, proj, doppler, {min_height}, margin_zero,
             pointsPerEdge, threshold, numiter, true);
 
+    if (max_height == min_height && !_isValid(bbox_min)) {
+        std::string errstr = "Bounding box not found for given parameters.";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
+    } 
+    else if (max_height == min_height) {
+        return bbox_min;
+    }
+
+    // Get BBox for max_height
     BoundingBox bbox_max = getGeoBoundingBox(
             radarGrid, orbit, proj, doppler, {max_height}, margin_zero,
             pointsPerEdge, threshold, numiter, true);
@@ -352,8 +367,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
                 radarGrid, orbit, proj, doppler, min_height, max_height,
                 margin_zero, pointsPerEdge, threshold, numiter,
                 find_lowest_valid_height, bbox_min, height_threshold);
-    }
-    else if (!_isValid(bbox_min) && _isValid(bbox_max)) {
+    } else if (!_isValid(bbox_min) && _isValid(bbox_max)) {
         // only upper height is valid
 
         Vec3 sat_pos_mid, vel_mid, satLLH;

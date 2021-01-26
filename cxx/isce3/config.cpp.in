@@ -1,0 +1,3 @@
+#include "config.h"
+
+std::string isce3::version_string = "@ISCE3_VERSION_FULL@";

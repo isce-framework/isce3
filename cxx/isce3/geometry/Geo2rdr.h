@@ -25,6 +25,8 @@
 #include <isce3/product/Product.h>
 #include <isce3/product/RadarGridParameters.h>
 
+#include <limits>
+
 // Declaration
 namespace isce3 {
     namespace geometry {
@@ -125,7 +127,7 @@ public:
                  double azshift=0.0, double rgshift=0.0);
 
     /** NoData Value*/
-    const double NULL_VALUE = -1.0e6;
+    const double NULL_VALUE =  -1000000.0;
 
     // Getters for isce objects
 

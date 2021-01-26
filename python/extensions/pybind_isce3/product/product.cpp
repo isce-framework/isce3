@@ -19,4 +19,5 @@ void addsubmodule_product(py::module & m)
     addbinding(pyGeoGridParameters);
     addbinding(pyRadarGridParameters);
     addbinding(pySwath);
+    addbinding_bbox_to_geogrid(m_product);
 }

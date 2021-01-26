@@ -39,7 +39,7 @@ crossmul(isce3::io::Raster& referenceSLC,
 {
 
     _computeCoherence = false;
-    _doCommonRangebandFilter = false;
+    _doCommonRangeBandFilter = false;
 
     isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
     isce3::io::Raster coherence("/vsimem/dummyCoh", 1, 1, 1, GDT_Float32, "ENVI");
@@ -65,7 +65,7 @@ crossmul(isce3::io::Raster& referenceSLC,
         isce3::io::Raster& coherence)
 {
 
-    _doCommonRangebandFilter = false;
+    _doCommonRangeBandFilter = false;
     isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
     crossmul(referenceSLC, 
             secondarySLC,
@@ -109,7 +109,7 @@ crossmul(isce3::io::Raster& referenceSLC,
     isce3::signal::Looks<float> looksObj;
 
     // setting the parameters of the multi-looking oject
-    if (_doMultiLook){
+    if (_doMultiLook) {
         // Making sure that the number of rows in each block (blockRows) 
         // to be an integer number of azimuth looks.
         blockRows = (blockRows/_azimuthLooks)*_azimuthLooks;
@@ -215,7 +215,7 @@ crossmul(isce3::io::Raster& referenceSLC,
     // storage for azimuth spectrum used by filter
     std::valarray<std::complex<float>> refAzimuthSpectrum(fft_size*blockRows);
 
-    if (_doCommonAzimuthbandFilter){
+    if (_doCommonAzimuthBandFilter) {
         // construct azimuth common band filter for a block of data
         azimuthFilter.constructAzimuthCommonbandFilter(_refDoppler, 
                                             _secDoppler, 
@@ -258,7 +258,7 @@ crossmul(isce3::io::Raster& referenceSLC,
         // This will change once we have the functionality to 
         // get a block of data directly in to a slice
         std::valarray<std::complex<float>> dataLine(ncols);
-        for (size_t line = 0; line < blockRowsData; ++line){
+        for (size_t line = 0; line < blockRowsData; ++line) {
             referenceSLC.getLine(dataLine, rowStart + line);
             refSlc[std::slice(line*fft_size, ncols, 1)] = dataLine;
             secondarySLC.getLine(dataLine, rowStart + line);
@@ -268,13 +268,13 @@ crossmul(isce3::io::Raster& referenceSLC,
         //secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
    
         //commaon azimuth band-pass filter the reference and secondary SLCs
-        if (_doCommonAzimuthbandFilter){
+        if (_doCommonAzimuthBandFilter) {
             azimuthFilter.filter(refSlc, refAzimuthSpectrum);
             azimuthFilter.filter(secSlc, refAzimuthSpectrum);
         }
 
         // common range band-pass filtering
-        if (_doCommonRangebandFilter) {
+        if (_doCommonRangeBandFilter) {
 
             // Some diagnostic messages to make sure everything has been configured
             std::cout << " - range pixel spacing: " << _rangePixelSpacing << std::endl;
@@ -282,14 +282,14 @@ crossmul(isce3::io::Raster& referenceSLC,
 
             // Read range offsets
             std::valarray<double> offsetLine(ncols);
-            for (size_t line = 0; line < blockRowsData; ++line){
+            for (size_t line = 0; line < blockRowsData; ++line) {
                 rngOffsetRaster.getLine(offsetLine, rowStart + line);
                 rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
             }
 
             #pragma omp parallel for
-            for (size_t line = 0; line < blockRowsData; ++line){
-                for (size_t col = 0; col < ncols; ++col){
+            for (size_t line = 0; line < blockRowsData; ++line) {
+                for (size_t col = 0; col < ncols; ++col) {
                     double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
                     geometryIfgram[line*fft_size + col] = std::complex<float> (std::cos(phase), std::sin(phase));
                     geometryIfgramConj[line*fft_size + col] = std::complex<float> (std::cos(phase), 
@@ -336,8 +336,8 @@ crossmul(isce3::io::Raster& referenceSLC,
 
         // Compute oversampled interferogram data
         #pragma omp parallel for
-        for (size_t line = 0; line < blockRowsData; line++){
-            for (size_t col = 0; col < oversample*ncols; col++){
+        for (size_t line = 0; line < blockRowsData; line++) {
+            for (size_t col = 0; col < oversample*ncols; col++) {
                 ifgramUpsampled[line*(oversample*ncols) + col] = 
                         refSlcUpsampled[line*(oversample*fft_size) + col]*
                         std::conj(secSlcUpsampled[line*(oversample*fft_size) + col]);
@@ -347,8 +347,8 @@ crossmul(isce3::io::Raster& referenceSLC,
         // Reclaim the extra oversample looks across
         float ov = oversample;
         #pragma omp parallel for
-        for (size_t line = 0; line < blockRowsData; line++){
-            for (size_t col = 0; col < ncols; col++){
+        for (size_t line = 0; line < blockRowsData; line++) {
+            for (size_t col = 0; col < ncols; col++) {
                 std::complex<float> sum = 0;
                 for (size_t j=0; j< oversample; j++)
                     sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample];
@@ -357,7 +357,7 @@ crossmul(isce3::io::Raster& referenceSLC,
         }
 
         // Take looks down (summing columns)
-        if (_doMultiLook){
+        if (_doMultiLook) {
 
             looksObj.ncols(ncols);
             looksObj.multilook(ifgram, ifgramMultiLooked);
@@ -366,7 +366,7 @@ crossmul(isce3::io::Raster& referenceSLC,
 
             if (_computeCoherence) {
                 #pragma omp parallel for
-                for (size_t i = 0; i< ifgramMultiLooked.size(); ++i){
+                for (size_t i = 0; i< ifgramMultiLooked.size(); ++i) {
                     coherence[i] = std::abs(ifgramMultiLooked[i])/
                             std::sqrt(refAmplitudeLooked[i]*secAmplitudeLooked[i]);
                 }
@@ -417,7 +417,7 @@ lookdownShiftImpact(size_t oversample, size_t fft_size, size_t blockRows,
 
     // compute the frequency response of the subpixel shift in range direction
     std::valarray<std::complex<float>> shiftImpactLine(oversample*fft_size);
-    for (size_t col=0; col<shiftImpactLine.size(); ++col){
+    for (size_t col=0; col<shiftImpactLine.size(); ++col) {
         double phase = -1.0*shift*2.0*M_PI*rangeFrequencies[col];
         shiftImpactLine[col] = std::complex<float> (std::cos(phase),
                                                     std::sin(phase));
@@ -425,7 +425,7 @@ lookdownShiftImpact(size_t oversample, size_t fft_size, size_t blockRows,
 
     // The impact is the same for each range line. Therefore copying the line
     // for the block
-    for (size_t line = 0; line < blockRows; ++line){
+    for (size_t line = 0; line < blockRows; ++line) {
             shiftImpact[std::slice(line*fft_size*oversample, fft_size*oversample, 1)] = shiftImpactLine;
     }
 }
@@ -502,7 +502,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
 
     // add/remove half geometrical phase to/from reference and secondary SLCs
     #pragma omp parallel for
-    for (size_t i = 0; i < vectorLength; ++i){
+    for (size_t i = 0; i < vectorLength; ++i) {
 
         // Half phase due to baseline separation obtained from range difference
         // from reference and secondary antennas to the target (i.e., range

@@ -1,7 +1,7 @@
 import h5py
 import logging
 import numpy as np
-from pybind_isce3.core import LUT2d, DateTime, Orbit, Quaternion
+from pybind_isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
 from pybind_isce3.product import RadarGridParameters
 from pybind_nisar.h5 import set_string
 from pybind_nisar.types import complex32
@@ -160,7 +160,7 @@ class SLC(h5py.File):
             " WGS84 G1762 reference frame")
         d.attrs["units"] = np.string_("meters per second squared")
 
-    def set_attitude(self, attitude: Quaternion, epoch: DateTime, type="Custom"):
+    def set_attitude(self, attitude: Attitude, epoch: DateTime, type="Custom"):
         log.info("Writing attitude to SLC")
         g = self.root.require_group("metadata/attitude")
         d = g.require_dataset("attitudeType", (), "S10", data=np.string_(type))
@@ -179,22 +179,23 @@ class SLC(h5py.File):
         d.attrs["units"] = np.string_("radians per second")
         d.attrs["description"] = np.string_("Attitude angular velocity vectors"
                                             " (wx, wy, wz)")
-        q = attitude.qvec
-        d = g.require_dataset("quaternions", q.shape, q.dtype, data=q)
+        qv = np.array([[q.w, q.x, q.y, q.z] for q in attitude.quaternions])
+        d = g.require_dataset("quaternions", qv.shape, qv.dtype, data=qv)
         d.attrs["units"] = np.string_("unitless")
         d.attrs["description"] = np.string_("Attitude quaternions"
                                             " (q0, q1, q2, q3)")
-        ypr = np.array([attitude.ypr(t) for t in attitude.time])
-        rpy = ypr[:,::-1]
+        rpy = np.asarray([[e.roll, e.pitch, e.yaw] for e in
+            [EulerAngles(q) for q in attitude.quaternions]])
         d = g.require_dataset("eulerAngles", rpy.shape, rpy.dtype, data=rpy)
         d.attrs["units"] = np.string_("radians")
         d.attrs["description"] = np.string_("Attitude Euler angles"
                                             " (roll, pitch, yaw)")
 
     def copy_identification(self, raw: Raw, track: int = 0, frame: int = 0,
-                            polygon: str = None):
+                            polygon: str = None, start_time: DateTime = None,
+                            end_time: DateTime = None):
         """Copy the identification metadata from a L0B product.  Bounding
-        polygon will be updated if not None.
+        polygon and start/end time will be updated if not None.
         """
         log.info(f"Populating identification based on {raw.filename}")
         # Most parameters are just copies of input ID.
@@ -222,3 +223,15 @@ class SLC(h5py.File):
             d.attrs["ogr_geometry"] = np.string_("polygon")
         else:
             log.warning("SLC bounding polygon not updated.  Using L0B polygon.")
+        # Start/end time can be customized via runconfig and generally are
+        # different anyway due to reskew.
+        if start_time is not None:
+            d = set_string(g, "zeroDopplerStartTime", start_time.isoformat())
+            d.attrs["description"] = np.string_("Azimuth start time of product")
+        else:
+            log.warning("SLC start time not updated.  Using L0B start time.")
+        if end_time is not None:
+            d = set_string(g, "zeroDopplerEndTime", end_time.isoformat())
+            d.attrs["description"] = np.string_("Azimuth stop time of product")
+        else:
+            log.warning("SLC end time not updated.  Using L0B end time.")

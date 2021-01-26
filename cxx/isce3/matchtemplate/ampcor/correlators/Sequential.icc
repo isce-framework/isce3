@@ -320,7 +320,7 @@ _detect(const cell_type * cArena, size_type refDim, size_type tgtDim) const -> v
 
     // all done
     return rArena;
-};
+}
 
 
 

@@ -1,20 +1,10 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14)
 
-# CMP0074 (CMake 3.12+)
-# find_package() uses <PackageName>_ROOT variables.
-# This is helpful for us when using packages non-standard install locations.
-if (POLICY CMP0074)
-  cmake_policy(SET CMP0074 NEW)
-endif()
-# CMP0076 (CMake 3.13+)
-# The target_sources() command converts relative paths to absolute.
-# We're indifferent, so this quiets the warnings.
-if (POLICY CMP0076)
-  cmake_policy(SET CMP0076 NEW)
-endif()
+include(${CMAKE_CURRENT_LIST_DIR}/.cmake/Isce3Version.cmake)
+isce3_get_version(ISCE3_VERSION_COMPONENTS ISCE3_VERSION_FULL)
 
 project(isce3
-    VERSION   0.1.0
+    VERSION   ${ISCE3_VERSION_COMPONENTS}
     LANGUAGES CXX
     )
 
@@ -67,6 +57,11 @@ if (WITH_CUDA)
 
     # Set the name for the isce3 CUDA library.
     set(LISCECUDA ${PROJECT_NAME}-cuda)
+
+    # For access from code
+    set(ISCE3_WITH_CUDA_BOOL 1)
+else()
+    set(ISCE3_WITH_CUDA_BOOL 0)
 endif()
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;Coverage" CACHE STRING "" FORCE)
@@ -99,8 +94,13 @@ AssureOutOfSourceBuilds()
 ####Check CXX Version and Standard to C++17
 CheckCXX()
 
-# Define some utilities for creating cython modules
-include(useCython)
+option(ISCE3_WITH_CYTHON "Enable isce3 cython extension" ON)
+if(ISCE3_WITH_CYTHON)
+    message(DEPRECATION
+        "isce3's cython extension is deprecated and will soon be removed")
+    # Define some utilities for creating cython modules
+    include(useCython)
+endif()
 
 ###Layout same install directory structure as pyre
 include(GNUInstallDirs)
@@ -114,11 +114,14 @@ cmake_dependent_option(ISCE3_FETCH_EIGEN "Fetch Eigen at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
 cmake_dependent_option(ISCE3_FETCH_GTEST "Fetch googletest at build time" ON
                        "ISCE3_FETCH_DEPS" OFF)
+cmake_dependent_option(ISCE3_FETCH_PYBIND11 "Fetch pybind11 at build time" ON
+                       "ISCE3_FETCH_DEPS" OFF)
+cmake_dependent_option(ISCE3_FETCH_PYRE "Fetch pyre at build time" ON
+                       "ISCE3_FETCH_DEPS" OFF)
 
 include(.cmake/FetchExternRepo.cmake)
 
 add_subdirectory(extern)
-getpackage_cereal()
 getpackage_eigen()
 getpackage_fftw()
 getpackage_gdal()
@@ -130,8 +133,9 @@ getpackage_pyre()
 # These packages required only for the python API. getpackage_python() should
 # be executed first in order to ensure a sufficient version of Python is used.
 getpackage_python()
-getpackage_cython()
-getpackage_numpy()
+if(ISCE3_WITH_CYTHON)
+    getpackage_cython()
+endif()
 getpackage_pybind11()
 
 add_subdirectory(bin)
@@ -164,3 +168,6 @@ configure_package_config_file(
     INSTALL_DESTINATION ${ISCE3_CMAKE_DIR})
 install(FILES ${PROJECT_BINARY_DIR}/isce3-config.cmake
         DESTINATION ${ISCE3_CMAKE_DIR})
+
+# Enables native packaging using CMake/CPack
+include(CPack)

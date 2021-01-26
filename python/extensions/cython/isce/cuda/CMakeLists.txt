@@ -13,7 +13,7 @@ set_target_properties(iscecudaextension PROPERTIES
 
 target_include_directories(
         iscecudaextension PUBLIC
-        ${PYTHON_NUMPY_INCLUDE_DIR}
+        ${Python_NumPy_INCLUDE_DIRS}
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
