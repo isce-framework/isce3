@@ -1,4 +1,5 @@
 import iscetest
+import numpy as np
 import numpy.testing as npt
 from pybind_nisar.workflows import point_target_info as pt
 
