@@ -657,7 +657,7 @@ def focus(runconfig):
                 acdata.write_direct(zf, dest_sel=block)
 
         # Raster/GDAL creates a .hdr file we have to clean up manually.
-        hdr = fd.name.replace(".rc", ".hdr")
+        hdr = fd.name.replace(".c8", ".hdr")
         if cfg.processing.delete_tempfiles:
             delete_safely(hdr)
 
