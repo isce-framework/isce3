@@ -1,13 +1,13 @@
-# based on https://github.com/lefticus/cppbestpractices
-
 function(set_warnings target)
-    option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
-    if(WARNINGS_AS_ERRORS)
-        set(maybe_werror -Werror)
+
+    set(CXX_WARNINGS "")
+
+    option(ISCE3_WITH_WERROR "Treat all compiler warnings as errors" OFF)
+    if(ISCE3_WITH_WERROR)
+        list(APPEND CXX_WARNINGS -Werror)
     endif()
 
-    set(CXX_WARNINGS
-        ${maybe_werror}
+    set(CXX_CANDIDATE_WARNINGS
         -Wall
         -Wextra # reasonable and standard
         -Wshadow # warn the user if a variable declaration shadows one from a
@@ -28,21 +28,15 @@ function(set_warnings target)
                    # (ie printf)
         -Werror=switch # turn warnings controlled by -Wswitch into errors
         -Werror=reorder # turn warnings controlled by -Wreorder into errors
-        )
 
-    set(CLANG_WARNINGS "")
-
-    set(GCC_WARNINGS
         -Wnull-dereference # warn if a null dereference is detected
         -Wmisleading-indentation # warn if identation implies blocks where
                                  # blocks do not exist
         -Wduplicated-cond # warn if if / else chain has duplicated conditions
         -Wlogical-op # warn about logical operations being used where bitwise
                      # were probably wanted
-        )
 
-    # These should be fixed eventually but currently spew output
-    list(APPEND CXX_WARNINGS
+        # These should be fixed eventually but currently spew output
         -Wno-conversion
         -Wno-sign-conversion
         -Wno-float-conversion
@@ -50,39 +44,32 @@ function(set_warnings target)
         -Wno-sign-compare
         -Wno-old-style-cast
         -Wno-shadow
-        )
-
-    set(CUDA_WARNINGS
-        ${CXX_WARNINGS}
-        -Wno-pedantic
-        )
-
-    list(APPEND GCC_WARNINGS
         -Wno-useless-cast # warn if you perform a cast to the same type
-        )
-    list(APPEND CLANG_WARNINGS
         -Wno-mismatched-tags
         -Wno-shorten-64-to-32
         -Wno-implicit-int-conversion
         -Wno-implicit-float-conversion
         )
 
-    # Use compiler-specific warnings
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        list(APPEND CXX_WARNINGS ${CLANG_WARNINGS})
-    else()
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
-            # warn if if / else branches have duplicated code
-            #list(APPEND GCC_WARNINGS -Wduplicated-branches)
+    set(langs CXX)
+    if(CMAKE_CUDA_COMPILER)
+        list(APPEND langs CUDA)
+        set(CUDA_CANDIDATE_WARNINGS ${CXX_CANDIDATE_WARNINGS})
+        if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+            list(TRANSFORM CUDA_CANDIDATE_WARNINGS PREPEND -Xcompiler=)
         endif()
-        list(APPEND CXX_WARNINGS ${GCC_WARNINGS})
     endif()
 
-    list(TRANSFORM CUDA_WARNINGS PREPEND -Xcompiler=)
-
-    target_compile_options(${target} INTERFACE
-        $<$<COMPILE_LANGUAGE:CXX>:  ${CXX_WARNINGS}>
-        $<$<COMPILE_LANGUAGE:CUDA>:${CUDA_WARNINGS}>
-        )
-
+    # Check all the flags, and add any that are supported to the compile-line.
+    include(CheckCompilerFlag)
+    foreach(lang ${langs})
+        foreach(warning ${${lang}_CANDIDATE_WARNINGS})
+            check_compiler_flag(${lang} ${warning} ${lang}_FLAG_${warning})
+            if(${lang}_FLAG_${warning})
+                list(APPEND ${lang}_WARNINGS "${warning}")
+            endif()
+        endforeach()
+        target_compile_options(${target} INTERFACE
+            $<$<COMPILE_LANGUAGE:${lang}>:${${lang}_WARNINGS}>)
+    endforeach()
 endfunction()

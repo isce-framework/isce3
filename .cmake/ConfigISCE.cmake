@@ -12,6 +12,11 @@ function(AssureOutOfSourceBuilds)
     endif()
 endfunction()
 
+# Backport modules from CMake 3.19
+if(CMAKE_VERSION VERSION_LESS 3.19)
+    list(APPEND CMAKE_MODULE_PATH
+        "${PROJECT_SOURCE_DIR}/.cmake/kitware-cmake/3.19")
+endif()
 
 # Check that compiler supports C++17
 # (Only checks GCC and Clang currently)
