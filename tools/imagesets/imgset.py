@@ -248,7 +248,7 @@ class ImageSet:
         """
         # save stdout and stderr to logfile if specified
         if loghdlrname is None:
-            loghdlrname = f'workflow.{os.path.basename(testdir)}'
+            loghdlrname = f'wftest.{os.path.basename(testdir)}'
         logger = logging.getLogger(name=loghdlrname)
         if logfile is None:
             hdlr = logging.StreamHandler(sys.stdout)
@@ -304,7 +304,8 @@ class ImageSet:
         log = pjoin(testdir, f"output_{wfname}", "stdouterr.log")
         cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}.yaml"]
         try:
-            self.distribrun(testdir, cmd, logfile=log, dataname=dataname)
+            self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
+                            loghdlrname=f'wftest.{os.path.basename(testdir)}')
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow test {testname} failed") from e
 
@@ -343,7 +344,8 @@ class ImageSet:
             cmd = [f"""time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} \
                                                   -r -c 10 -o output_noisest/noise_est_output_bcal.txt"""]
             try: 
-                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True)
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
+                                loghdlrname=f'wftest.{os.path.basename(testdir)}')
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool noise estimate test {testname} failed") from e
 
@@ -359,7 +361,8 @@ class ImageSet:
                                    input_{dataname}/{workflowdata[dataname][0]} 512 256 256 \
                                    --fs-bw-ratio 2 --mlobe-nulls 2 --search-null > output_pta/pta.json"""]
             try:
-                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True)
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
+                                loghdlrname=f'wftest.{os.path.basename(testdir)}')
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool point target analyzer tool test {testname} failed") from e
 
@@ -394,7 +397,8 @@ class ImageSet:
                     --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
                     --quality output_{wfname}/{wfname}.h5"""]
         try:
-            self.distribrun(testdir, cmd, logfile=log, nisarimg=True)
+            self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
+                            loghdlrname=f'wfqa.{os.path.basename(testdir)}')
         except subprocess.CalledProcessError as e:
             if testname in ['rslc_REE2', 'gslc_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03',
                             'gslc_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02',
@@ -456,7 +460,7 @@ class ImageSet:
                                        output_{wfname}/{product.upper()}_gunw.h5""")
                 try:
                     self.distribrun(testdir, cmd, logfile=log, nisarimg=True, 
-                                    loghdlrname=f'workflow.{os.path.basename(testdir)}.{product}')
+                                    loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
                 except subprocess.CalledProcessError as e:
                     if product == 'gunw':
                         raise RuntimeError(f"Workflow QA on InSAR test {testname} product {product.upper()} failed\n") from e
