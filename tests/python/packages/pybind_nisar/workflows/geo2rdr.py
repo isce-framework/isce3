@@ -55,7 +55,7 @@ def test_geo2rdr_validate():
     # Get files to compare
     fnames = ['azimuth.off', 'range.off']
     dtypes = [np.float32, np.float32]
-    tols = [1.0e-9, 1.0e-9]
+    tols = [1.0e-8, 1.0e-8]
 
     # Check errors
     scratch_path = '.'
