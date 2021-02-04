@@ -11,9 +11,9 @@ RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/CFChecker \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/calTools \
- && cd /opt/QualityAssurance && git checkout 71e5f94a5fae37c3e0e7487c76baca3256035b95 && rm -rf .git \
- && cd /opt/CFChecker && git checkout ce16a9ee55efba9a3be131a92e4c81a05e72323b && rm -rf .git \
- && cd /opt/calTools && git checkout 1f006205ebef6b2e24136cc09374ca0c0d13f9fb && rm -rf .git 
+ && cd /opt/QualityAssurance && git checkout R1.1 && rm -rf .git \
+ && cd /opt/CFChecker && git checkout R1.1 && rm -rf .git \
+ && cd /opt/calTools && git checkout R1.1 && rm -rf .git 
 
 FROM $distrib_img
 

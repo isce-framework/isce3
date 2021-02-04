@@ -50,15 +50,9 @@ runconfig:
         Geometry:
             RelativeOrbitNumber: 1
             FrameNumber: 1
-        # TODO
-        archive: {}
-        # TODO
-        qaqc: {}
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True
-        # TODO
-        profiler: {}
         processing:
             output_grid:
                 # Azimuth bounds of output SLC, optional.

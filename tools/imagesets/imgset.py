@@ -1,4 +1,4 @@
-import os, subprocess, sys, shutil, stat, logging
+import os, subprocess, sys, shutil, stat, logging, shlex
 # see no evil
 from .workflowdata import workflowdata, workflowtests
 pjoin = os.path.join
@@ -20,24 +20,30 @@ container_testdir = f"/tmp/test"
 docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
 
-def run_with_logging(cmd, logger, checkrun=True, printlog=True):
+def run_with_logging(dockercall, cmd, logger, printlog=True):
     """
     Run command as a subprocess and log the standard streams (stdout & stderr) to
     the specified logger.
 
     Parameters
     -------------
+    dockercall : str
+        Docker call and parameters to run commands with
     cmd : list
-        Command in list of strings
+        List of command(s) to run in Docker
     logger : logger
         Python logger to log output, could be to standard out or a file
-    checkrun : Boolean (optional)
-        Exit if run returns non-zero status
+    printlog : boolean, optional
+        Print log to console
     """
     logger.propagate = printlog
-    # save command
-    logger.info("++ " + subprocess.list2cmdline(cmd) + "\n")
-    pipe = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    # remove extra whitespace
+    normalize = lambda s: subprocess.list2cmdline(shlex.split(s))
+    # format command string for logging
+    cmdstr = normalize(dockercall) + ' "\n' + ''.join(f'{"":<6}{normalize(c)}\n' for c in cmd) + '"'
+    # save command to log
+    logger.info("++ " + cmdstr + "\n")
+    pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     with pipe.stdout:
         for line in iter(pipe.stdout.readline, b''): # b'\n'-separated lines
             decoded = line.decode("utf-8")
@@ -45,9 +51,9 @@ def run_with_logging(cmd, logger, checkrun=True, printlog=True):
             if str.endswith(decoded, '\n'):
                 decoded = decoded[:-1]
             logger.info(decoded)
-    rc = pipe.poll()
-    if checkrun and (rc != 0):
-        sys.exit(rc)
+    ret = pipe.poll()
+    if ret != 0:
+        raise subprocess.CalledProcessError(ret, cmdstr)
 
 # A set of docker images suitable for building and running isce3
 class ImageSet:
@@ -82,7 +88,7 @@ class ImageSet:
             Name of the image set (e.g. "centos7", "alpine"). Used for tagging images
         projblddir : str
             Path to the binary directory on the host where build artifacts are written
-        printlog : boolean
+        printlog : boolean, optional
             Print workflow test and qa logs to console in real-time
         """
         self.name = name
@@ -221,7 +227,7 @@ class ImageSet:
                 subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
                                       cwd = wfdatadir)
 
-    def distribrun(self, testdir, cmd, logfile=None, dataname=None, nisarimg=False, checkrun=True):
+    def distribrun(self, testdir, cmd, logfile=None, dataname=None, nisarimg=False, loghdlrname=None):
         """
         Run a command in the distributable image
 
@@ -229,17 +235,21 @@ class ImageSet:
         -------------
         testdir : str
             Test directory to run Docker command in
-        cmd : str
-            Command to run inside Docker
+        cmd : list
+            List of command(s) to run inside Docker
         logfile : str, optional
             File name (relative to testdir) of log file for saving standard out and standard error
         dataname : str or list, optional
             Test input data as str or list (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2")
         nisarimg : boolean, optional
             Use NISAR distributable image
+        loghdlername : str, optional
+            Name for logger file handler
         """
         # save stdout and stderr to logfile if specified
-        logger = logging.getLogger(name=f'workflow.{os.path.basename(testdir)}')
+        if loghdlrname is None:
+            loghdlrname = f'workflow.{os.path.basename(testdir)}'
+        logger = logging.getLogger(name=loghdlrname)
         if logfile is None:
             hdlr = logging.StreamHandler(sys.stdout)
         else:
@@ -260,12 +270,12 @@ class ImageSet:
                 datadir = os.path.abspath(pjoin(self.datadir, data))          
                 datamount += f"-v {datadir}:{container_testdir}/input_{data}:ro "
 
-        runcmd = f"{docker} run \
-          -v {testdir}:{container_testdir} {datamount} \
-          -w {container_testdir} \
-          -u {os.getuid()}:{os.getgid()} \
-          --rm -i {self.tty} {img} sh -ci"  
-        run_with_logging(runcmd.split() + [cmd], logger, checkrun=checkrun, printlog=self.printlog)
+        dockercall = f"{docker} run \
+            -v {testdir}:{container_testdir} {datamount} \
+            -w {container_testdir} \
+            -u {os.getuid()}:{os.getgid()} \
+            --rm -i {self.tty} {img} sh -ci"  
+        run_with_logging(dockercall, cmd, logger, printlog=self.printlog)
 
     def workflowtest(self, wfname, testname, dataname, pyname, arg=""): # hmmmmmmmmm
         """
@@ -292,10 +302,11 @@ class ImageSet:
         shutil.copyfile(pjoin(runconfigdir, f"{testname}.yaml"), 
                         pjoin(testdir, f"runconfig_{wfname}.yaml"))
         log = pjoin(testdir, f"output_{wfname}", "stdouterr.log")
-        script = f"""
-            time python3 -m {pyname} {arg} runconfig_{wfname}.yaml
-            """
-        self.distribrun(testdir, script, logfile=log, dataname=dataname)
+        cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}.yaml"]
+        try:
+            self.distribrun(testdir, cmd, logfile=log, dataname=dataname)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Workflow test {testname} failed") from e
 
     def rslctest(self, tests=None):
         if tests is None:
@@ -325,14 +336,32 @@ class ImageSet:
         if tests is None:
             tests = workflowtests['noisest'].items()
         for testname, dataname in tests:
-            print(f"\nRunning calTool noise estimate test for {testname}\n")
+            print(f"\nRunning CalTool noise estimate test {testname}\n")
             testdir = os.path.abspath(pjoin(self.testdir, testname))
-            os.makedirs(pjoin(testdir, f"output_noiseest"), exist_ok=True)
-            log = pjoin(testdir, f"output_noiseest", "stdouterr.log")
-            script = f"""
-                time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} -r
-                """
-            self.distribrun(testdir, script, logfile=log, dataname=dataname, nisarimg=True)
+            os.makedirs(pjoin(testdir, f"output_noisest"), exist_ok=True)
+            log = pjoin(testdir, f"output_noisest", "stdouterr.log")
+            cmd = [f"""time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} \
+                                                  -r -c 10 -o output_noisest/noise_est_output_bcal.txt"""]
+            try: 
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"CalTool noise estimate test {testname} failed") from e
+
+    def ptatest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['pta'].items()
+        for testname, dataname in tests:
+            print(f"\nRunning CalTool point target analyzer test {testname}\n")
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            os.makedirs(pjoin(testdir, f"output_pta"), exist_ok=True)
+            log = pjoin(testdir, f"output_pta", "stdouterr.log")
+            cmd = [f"""time python -m pybind_nisar.workflows.point_target_info \
+                                   input_{dataname}/{workflowdata[dataname][0]} 512 256 256 \
+                                   --fs-bw-ratio 2 --mlobe-nulls 2 --search-null > output_pta/pta.json"""]
+            try:
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True)
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"CalTool point target analyzer tool test {testname} failed") from e
 
     def mintests(self):
         """
@@ -343,6 +372,7 @@ class ImageSet:
         self.gcovtest(tests=list(workflowtests['gcov'].items())[:1])
         self.insartest(tests=list(workflowtests['insar'].items())[:1])
         self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
+        self.ptatest(tests=list(workflowtests['pta'].items())[:1])
 
     def workflowqa(self, wfname, testname):
         """
@@ -359,14 +389,28 @@ class ImageSet:
         testdir = os.path.abspath(pjoin(self.testdir, testname))
         os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
-        verifycmd = f"""time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
-                --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                --quality output_{wfname}/{wfname}.h5"""
-        # prepare script, removing extra white space
-        script = f"""
-            time cfchecks.py output_{wfname}/{wfname}.h5
-            """ + " ".join(verifycmd.split())
-        self.distribrun(testdir, script, logfile=log, nisarimg=True)
+        cmd = [f"time cfchecks.py output_{wfname}/{wfname}.h5",
+               f"""time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
+                    --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
+                    --quality output_{wfname}/{wfname}.h5"""]
+        try:
+            self.distribrun(testdir, cmd, logfile=log, nisarimg=True)
+        except subprocess.CalledProcessError as e:
+            if testname in ['rslc_REE2', 'gslc_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03',
+                            'gslc_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02',
+                            'gslc_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02',
+                            'gslc_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02']:
+                # Don't exit workflow QA when it fails due to known memory issue reading large files
+                # QA tests that fail on both nisar-adt-dev-1 and nisar-adt-dev-2:
+                #     rslc_REE2
+                #     gslc_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02
+                #     gslc_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02
+                # Extra QA tests that fail on nisar-adt-dev-2:
+                #     gslc_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03
+                #     gslc_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02
+                print(f"Known failure running workflow QA on test {testname}")
+            else:
+                raise RuntimeError(f"Workflow QA on test {testname} failed") from e
 
     def rslcqa(self, tests=None):
         if tests is None:
@@ -405,18 +449,20 @@ class ImageSet:
                 qadir = pjoin(testdir, f"qa_{product}")
                 os.makedirs(qadir, exist_ok=True)
                 log = pjoin(qadir,f"stdouterr.log")
-                script = f"""
-                    time cfchecks.py output_{wfname}/{product.upper()}_gunw.h5
-                    """
+                cmd = [f"time cfchecks.py output_{wfname}/{product.upper()}_gunw.h5"]
                 if product == 'gunw':
-                    verifycmd = f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
-                        --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
-                        output_{wfname}/{product.upper()}_gunw.h5"""
-                    # add to script while removing extra white space
-                    script += " ".join(verifycmd.split())
-                    self.distribrun(testdir, script, logfile=log, nisarimg=True)
-                else:
-                    self.distribrun(testdir, script, logfile=log, nisarimg=True, checkrun=False)
+                    cmd.append(f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
+                                       --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
+                                       output_{wfname}/{product.upper()}_gunw.h5""")
+                try:
+                    self.distribrun(testdir, cmd, logfile=log, nisarimg=True, 
+                                    loghdlrname=f'workflow.{os.path.basename(testdir)}.{product}')
+                except subprocess.CalledProcessError as e:
+                    if product == 'gunw':
+                        raise RuntimeError(f"Workflow QA on InSAR test {testname} product {product.upper()} failed\n") from e
+                    else:
+                        # do not exit since CF checker errors are expected
+                        print(f"Found known errors running CF Checker on InSAR test {testname} product {product.upper()}\n")
        
     def minqa(self):
         """

@@ -1,122 +1,87 @@
-runconfig: 
+# Structure inherited from L0 PGEs covers inputs, outputs, and identification.
+runconfig:
     groups:
         InputFileGroup:
             # REQUIRED List of NISAR raw data products in L0B format.
             InputFilePath:
-            - input_L0B_RRSD_ALPSRP037370690/ALPSRP037370690.L0B.h5
+            - input_L0B_RRSD_REE_NISAR_dithered/L0B_RRSD_REE_NISAR_dithered.h5
+
         DynamicAncillaryFileGroup:
-            # Digital elevation model, optional.
-            DEMFile: null
-            # Refined orbit, optional.
-            # Defaults to orbit within L0B product.
-            Orbit: null
-            # Refined pointing, optional.
-            # Defaults to attitude within L0B product.
-            Pointing: null
-            # External calibration data, optional.
-            # Defaults to no extra calibration gain, phase, delay, etc.
-            ExternalCalibration: null
-            # Internal calibration tables, optional.
-            # If not provided, no secondary elevation antenna pattern correction.
-            InternalCalibration: null
-            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-            # If not provided, no polarimetric calibration performed.
-            PolarimetricCalibration: null
-            # Pre- and post-data take calibration data products, optional.
-            BookendCalibration: null
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
-            AntennaPattern: null
-            # Chirp replica file, optional.
-            # If absent will generate LFM chirp using parameters in L0B product.
-            Waveform: null
+            AntennaPattern: L0B_RRSD_REE_NISAR_dithered/REE_ANTPAT_DATA.h5
+
         ProductPathGroup:
-            # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_rslc
             # Directory where SAS can write temporary data
             ScratchPath: scratch_rslc
-            # SAS writes output_rslc product to the following file. PGE may rename.
+            # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: output_rslc/rslc.h5
+            # Echo processor config (including defaults) to file.
             SASConfigFile: output_rslc/rslc_config.yaml
+
         PrimaryExecutable:
-            # Handy to set to "SLC" until other ISCE tools updated.
             ProductType: RSLC
+
         Geometry:
             RelativeOrbitNumber: 1
-            FrameNumber: 1
-        # TODO
-        archive: {}
-        # TODO
-        qaqc: {}
+            FrameNumber: 150
+
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True
-        # TODO
-        profiler: {}
+
         processing:
             output_grid:
-                # Azimuth bounds of output SLC, optional.
-                # Defaults to extent of raw data minus sythetic aperture and
-                # shifted by squint.
-                # 128
-                # start_time: 2006-10-07T06:10:05.473295634
-                # end_time: 2006-10-07T06:10:05.542038921
-                # # Range bounds of output SLC in meters, optional.
-                # # Defaults to entire fully focused swath.
-                # start_range: 751863.3552474803
-                # end_range: 752462.3952474804
-                # 256
-                # start_time: 2006-10-07T06:10:05.442352522
-                # end_time: 2006-10-07T06:10:05.579839095
-                # start_range: 751563.8348427379
-                # end_range: 752761.914842738
-                # 512
-                start_time: 2006-10-07T06:10:05.373609235
-                end_time: 2006-10-07T06:10:05.648582382
-                start_range: 750964.794842738
-                end_range: 753360.9548427379
-                # 2048
-                # start_time: 2006-10-07T06:10:04.961207692
-                # end_time: 2006-10-07T06:10:06.060983925
-                # start_range: 747366.1955147379
-                # end_range: 756959.554170738
+                # 4096x512
+                start_time: 2021-07-01T03:20:02.255669013
+                end_time: 2021-07-01T03:20:04.738093255
+                start_range: 960279.2582747354
+                end_range: 963477.0444934021
+                # 128x128
+                #start_time: 2021-07-01T03:20:03.458093255
+                #end_time: 2021-07-01T03:20:03.535669013
+                #start_range: 961478.4281067355
+                #end_range: 962277.8746614021
+
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: null
-                # Interval for azimuth grid alignment in seconds. See docs.
-                # Typically want 1 second and integer PRF (in Hz). Will not
-                # override user-provided start_time.
-                time_snap_interval: 1.0
+                output_prf: null # 1300.0
+
             # Range spectral window, optional.  Defaults to no weighting.
             range_window:
                 # Kaiser or Cosine
                 kind: Kaiser
-                # Shape parameter. For Kaiser, 0 <= shape < Inf.
-                # For Cosine, 0 <= shape <= 1
+                # Shape parameter. For Kaiser, 0 <= shape < Inf.  For Cosine, 0 <= shape <= 1
                 shape: 3.0
+
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
                 kind: Kaiser
                 shape: 0.0
+
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
                 # Stop-band attenuation in dB
                 attenuation: 40.0
                 # Transition width as a fraction of output bandwidth.
                 width: 0.15
+
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
-                azimuth_boresight_deg: 0.9
+                azimuth_boresight_deg: 0.0
+
                 # How to interpolate between samples in the LUT.
                 interp_method: bilinear
+
                 # Postings for generated Doppler lookup table.
                 spacing:
                     # Lookup table range spacing in m
                     range: 2000.0
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
+
                 rdr2geo:
                     # Slant range convergence threshold (m): float (default: 1e-8)
                     threshold: 1e-8
@@ -124,24 +89,29 @@ runconfig:
                     maxiter: 25
                     # Max number of secondary iterations: int (default: 15)
                     extraiter: 15
+
             # Settings for range compression algorithm.
             rangecomp:
                 # Convolution output mode: {"valid", "full", "same"} (default: "full")
                 mode: full
-                # Range compression will always process the full pulse, so the
-                # range dimension will be ignored.
+
+                # Range compression will always process the full pulse, so the range
+                # dimension will be ignored.
                 block_size:
                     range: 0
                     azimuth: 1024
+
             # Settings for azimuth compression algorithm.
             azcomp:
-                # Azimuth compression can be tiled arbitrarily, though
-                # dimensions will affect runtime.
+                # Azimuth compression can be tiled arbitrarily, though dimensions will
+                # affect runtime.
                 block_size:
-                    range: 128
-                    azimuth: 128
+                    range: 0
+                    azimuth: 1024
+
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
+
                 kernel:
                     # Knab or NFFT
                     type: Knab
@@ -149,8 +119,10 @@ runconfig:
                     halfwidth: 4
                     # Transform padding ratio for NFFT method.
                     approx_oversample: 1.7
+
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
+
                 rdr2geo:
                     # Slant range convergence threshold (m): float (default: 1e-8)
                     threshold: 1e-8
@@ -158,6 +130,7 @@ runconfig:
                     maxiter: 25
                     # Max number of secondary iterations: int (default: 15)
                     extraiter: 15
+
                 geo2rdr:
                     # Slant range convergence threshold (m): float (default: 1e-8)
                     threshold: 1e-8
@@ -166,25 +139,33 @@ runconfig:
                     # Step size for computing numerical gradient of Doppler (m): float
                     # (default: 10.)
                     delta_range: 10.
-            dry_troposphere_model: nodelay
+
+            dry_troposphere_model: nodelay # TSX
+
             dem:
                 # Height (in meters) to use if DEM unavailable.
-                reference_height: 661.0
+                reference_height: 0.0
+
                 # How to interpolate the digital elevation model.  One of
                 # nearest, bilinear, bicubic, biquintic, or sinc
                 interp_method: biquintic
-            # Nominal antenna dimensions to use for BLU, EAP, etc. when no
-            # antenna pattern input file is provided or its contents are
-            # unsuitable. Each dimension has units of meters and is assumed
-            # 12.0 m if unspecified.
+
+            # Nominal antenna dimensions to use for BLU, EAP, etc. when no antenna
+            # pattern input file is provided or its contents are unsuitable.
+            # Each dimension has units of meters and is assumed 12.0 m if unspecified.
             nominal_antenna_size:
                 range: 12.0
                 azimuth: 12.0
+
             # Scale factor to apply to data before float16 encoding, optional.
             # Default is 1.0.
             # The largest representable float16 value is 65504.
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.
-            encoding_scale_factor: 1e-2
+            encoding_scale_factor: 1e-8
+
+            # Whether to delete temporary files. default=True
+            delete_tempfiles: True
+
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:

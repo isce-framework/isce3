@@ -22,6 +22,7 @@ def run(*, steps, imgset, **kwargs):
     nisarsteps = mainsteps + [
         "makedistrib_nisar",
         "noisesttest",
+        "ptatest",
         "rslcqa",
         "gslcqa",
         "gcovqa",

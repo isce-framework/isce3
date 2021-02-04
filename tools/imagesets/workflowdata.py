@@ -42,9 +42,21 @@ workflowdata = {
             "README.txt",
         ],
     
-        "L0B_RRSD_REE_CALTOOL":
+        "L0B_RRSD_REE_NISAR_dithered":
         [
-            "L0B_RRSD_REE_CALTOOL.h5", 
+             "L0B_RRSD_REE_NISAR_dithered.h5",
+             "REE_ANTPAT_DATA.h5",
+             "README.txt",
+        ],
+
+        "L0B_RRSD_REE_NOISEST1":
+        [
+            "L0B_RRSD_REE_NOISEST1.h5", 
+            "README.txt",
+        ],
+        "L0B_RRSD_REE_PTA1":
+        [
+            "L0B_RRSD_REE_PTA1.c8",
             "README.txt",
         ],
     
@@ -102,6 +114,20 @@ workflowdata = {
             "nisar-dem/EPSG32617/N3800E0200.tif",
             "README.txt",
         ],
+
+        "L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02":
+        [
+            "Snjoaq_14511_18034_014_180720_L090_CX_143_02.h5",
+            "dem.tif",
+            "README.txt",
+        ],
+
+        "L1_RSLC_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02":
+        [
+            "Snjoaq_14511_18044_015_180814_L090_CX_143_02.h5",
+            "dem.tif",
+            "README.txt",
+        ],
     }
 
 # dictionaries definining mappig of workflow tests to data
@@ -110,6 +136,7 @@ workflowtests = {
     'rslc': {"rslc_" + name: "L0B_RRSD_" + name for name in [
         "REE1",
         "REE2",
+        "REE_NISAR_dithered",
         "DIST1",
         "DIST2",
         "ALPSRP037370690",
@@ -122,6 +149,8 @@ workflowtests = {
         "UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
         "UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
         "UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02",
+        "UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02",
+        "UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02",
     ]},
     
     'gcov': {"gcov_" + name: "L1_RSLC_" + name for name in [
@@ -131,6 +160,8 @@ workflowtests = {
         "S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F",
         "UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
         "UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02",
+        "UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02",
+        "UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02",
     ]},
     
     'insar': {
@@ -144,9 +175,18 @@ workflowtests = {
                 "L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
                 "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02",
             ],
+        "insar_UAVSAR_Snjoaq_14511_18034-014_18044-015_143":
+            [
+                "L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02",
+                "L1_RSLC_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02",
+            ],
     },
     
     'noisest': {"noisest_" + name: "L0B_RRSD_" + name for name in [
-        "REE_CALTOOL",
+        "REE_NOISEST1",
+    ]},
+
+    'pta': {"pta_" + name: "L0B_RRSD_" + name for name in [
+        "REE_PTA1",
     ]},
 }    
