@@ -5,7 +5,6 @@ configure_file(config.h.in config.h @ONLY)
 configure_file(config.cpp.in config.cpp @ONLY)
 list(APPEND SRCS ${CMAKE_CURRENT_BINARY_DIR}/config.cpp)
 add_library(${LISCE} SHARED ${SRCS})
-SetCoverageOptions(${LISCE})
 
 target_link_libraries(${LISCE} PUBLIC
     Eigen3::Eigen

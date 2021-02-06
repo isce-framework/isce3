@@ -4,7 +4,6 @@ set_source_files_properties(
 )
 
 cython_add_module(isceextension isceextension.pyx)
-SetCoverageOptions(isceextension)
 
 # These need to be exposed to the derived cuda extension
 include_directories(

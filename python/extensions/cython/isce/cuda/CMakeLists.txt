@@ -4,7 +4,6 @@ set_source_files_properties(
 )
 
 cython_add_module(iscecudaextension iscecudaextension.pyx)
-SetCoverageOptions(iscecudaextension)
 
 # Override output shared object name to place in desired location
 set_target_properties(iscecudaextension PROPERTIES

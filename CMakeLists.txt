@@ -64,22 +64,13 @@ else()
     set(ISCE3_WITH_CUDA_BOOL 0)
 endif()
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;Coverage" CACHE STRING "" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "" FORCE)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 if(NOT CMAKE_BUILD_TYPE IN_LIST CMAKE_CONFIGURATION_TYPES)
     message(FATAL_ERROR "Unsupported build type '${CMAKE_BUILD_TYPE}' "
                         "(must be one of ${CMAKE_CONFIGURATION_TYPES})")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL Coverage)
-    message("Compiling with code coverage reporting.")
-    include(CodeCoverage)
-else()
-    # Define a dummy function so we don't have to keep checking BUILD_TYPE
-    function(SetCoverageOptions target)
-    endfunction()
 endif()
 
 ###Ensure tracking is own for testing
