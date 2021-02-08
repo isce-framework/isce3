@@ -851,9 +851,9 @@ void Geocode<T>::geocodeAreaProj(
     std::unique_ptr<isce3::core::ProjectionBase> proj(
             isce3::core::createProj(_epsgOut));
 
+    // start (az) and r0 at the outer edge of the first pixel:
     const double pixazm = radar_grid.azimuthTimeInterval();
     const double start = radar_grid.sensingStart() - 0.5 * pixazm;
-
     const double dr = radar_grid.rangePixelSpacing();
     double r0 = radar_grid.startingRange() - 0.5 * dr;
 
@@ -1546,7 +1546,7 @@ void Geocode<T>::_runBlock(
             if (x_max > xbound + 1 + margin || x_max < -1 || x_max < x_min)
                 continue;
 
-            if (std::isnan(a00) || std::isnan(a10) || std::isnan(a10) ||
+            if (std::isnan(a00) || std::isnan(a01) || std::isnan(a10) ||
                 std::isnan(a11)) {
                 continue;
             }

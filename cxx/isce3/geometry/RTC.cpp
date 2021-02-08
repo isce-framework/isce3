@@ -1424,7 +1424,7 @@ void _RunBlock(const int jmax, const int block_size,
                 dem_last[jj+1] = dem11;
             }
 
-            if (std::isnan(a00) || std::isnan(a10) || std::isnan(a10) ||
+            if (std::isnan(a00) || std::isnan(a01) || std::isnan(a10) ||
                     std::isnan(a11)) {
                 continue;
             }
@@ -1714,7 +1714,7 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
     }
     info << "output EPSG: " << geogrid.epsg() << pyre::journal::endl;
     info << "reproject DEM (0: false, 1: true): "
-         << std::to_string(geogrid.epsg() == dem_raster.getEPSG())
+         << std::to_string(geogrid.epsg() != dem_raster.getEPSG())
          << pyre::journal::newline;
 
     // start (az) and r0 at the outer edge of the first pixel:
