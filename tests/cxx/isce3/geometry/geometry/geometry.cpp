@@ -88,7 +88,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit)
     for (size_t i = 0; i < aztimes.size(); ++i) {
 
         // Make azimuth time in seconds
-        isce3::core::DateTime azDate = aztimes[i];
+        isce3::core::DateTime azDate(aztimes[i]);     
         const double azTime =
                 (azDate - orbit.referenceEpoch()).getTotalSeconds();
 
