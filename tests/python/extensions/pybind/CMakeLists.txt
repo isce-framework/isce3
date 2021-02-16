@@ -39,6 +39,8 @@ signal/crossmultiply.py
 product/radargridparameters.py
 product/swath.py
 unwrap/icu.py
+geometry/ltpcoordinates.py
+geometry/pntintersect.py
 )
 
 if(WITH_CUDA)

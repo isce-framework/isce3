@@ -10,20 +10,23 @@
 #include <cmath>
 #include <cstdio>
 #include <limits>
+#include <utility>
+
+#include <pyre/journal.h>
 
 #include <isce3/core/Basis.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
+#include <isce3/core/LookSide.h>
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Peg.h>
 #include <isce3/core/Pixel.h>
 #include <isce3/core/Poly2d.h>
 #include <isce3/core/Projections.h>
 #include <isce3/core/Vector.h>
+#include <isce3/except/Error.h>
 #include <isce3/geometry/DEMInterpolator.h>
-#include <isce3/core/LookSide.h>
 #include <isce3/product/RadarGridParameters.h>
-#include <pyre/journal.h>
 
 #include "detail/Geo2Rdr.h"
 #include "detail/Rdr2Geo.h"
@@ -33,35 +36,32 @@ using namespace isce3::core;
 using isce3::error::ErrorCode;
 using isce3::product::RadarGridParameters;
 
-int isce3::geometry::
-rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
-        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
-        double wvl, LookSide side, double threshold, int maxIter, int extraIter)
+int isce3::geometry::rdr2geo(double aztime, double slantRange, double doppler,
+        const Orbit& orbit, const Ellipsoid& ellipsoid,
+        const DEMInterpolator& demInterp, Vec3& targetLLH, double wvl,
+        LookSide side, double threshold, int maxIter, int extraIter)
 {
     double h0 = targetLLH[2];
     detail::Rdr2GeoParams params = {threshold, maxIter, extraIter};
-    auto status =
-            detail::rdr2geo(&targetLLH, aztime, slantRange, doppler, orbit,
-                            demInterp, ellipsoid, wvl, side, h0, params);
+    auto status = detail::rdr2geo(&targetLLH, aztime, slantRange, doppler,
+            orbit, demInterp, ellipsoid, wvl, side, h0, params);
     return (status == ErrorCode::Success);
 }
 
-int isce3::geometry::
-rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3& vel,
-        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
-        Vec3 & targetLLH, LookSide side, double threshold, int maxIter, int extraIter)
+int isce3::geometry::rdr2geo(const Pixel& pixel, const Basis& TCNbasis,
+        const Vec3& pos, const Vec3& vel, const Ellipsoid& ellipsoid,
+        const DEMInterpolator& demInterp, Vec3& targetLLH, LookSide side,
+        double threshold, int maxIter, int extraIter)
 {
     double h0 = targetLLH[2];
     detail::Rdr2GeoParams params = {threshold, maxIter, extraIter};
     auto status = detail::rdr2geo(&targetLLH, pixel, TCNbasis, pos, vel,
-                                  demInterp, ellipsoid, side, h0, params);
+            demInterp, ellipsoid, side, h0, params);
     return (status == ErrorCode::Success);
 }
 
-
-int isce3::geometry::
-rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
-        double range, const DEMInterpolator& dem, Vec3& targetXYZ,
+int isce3::geometry::rdr2geo(const Vec3& radarXYZ, const Vec3& axis,
+        double angle, double range, const DEMInterpolator& dem, Vec3& targetXYZ,
         LookSide side, double threshold, int maxIter, int extraIter)
 {
     if (range <= 0.0)
@@ -71,29 +71,29 @@ rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
     // Generate TCN basis using the given axis as the velocity.
     Basis tcn(radarXYZ, axis);
     // Construct "doppler factor" with desired angle.
-    Pixel pix{range, range * sin(angle), 0};
-    Vec3 llh{0,0,0}; // XXX Initialize height guess of 0 m.
+    Pixel pix {range, range * sin(angle), 0};
+    Vec3 llh {0, 0, 0}; // XXX Initialize height guess of 0 m.
     int converged = isce3::geometry::rdr2geo(pix, tcn, radarXYZ, axis, ell, dem,
-                                    llh, side, threshold, maxIter, extraIter);
+            llh, side, threshold, maxIter, extraIter);
     if (converged)
         ell.lonLatToXyz(llh, targetXYZ);
     return converged;
 }
 
-
-template <class T>
-double isce3::geometry::
-    _compute_doppler_aztime_diff(Vec3 dr, Vec3 satvel,
-                                 T &doppler, double wavelength,
-                                 double aztime, double slantRange,
-                                 double deltaRange) {
+template<class T>
+double isce3::geometry::_compute_doppler_aztime_diff(Vec3 dr, Vec3 satvel,
+        T& doppler, double wavelength, double aztime, double slantRange,
+        double deltaRange)
+{
 
     // Compute doppler
     const double dopfact = dr.dot(satvel);
     const double fdop = doppler.eval(aztime, slantRange) * 0.5 * wavelength;
     // Use forward difference to compute doppler derivative
-    const double fdopder = (doppler.eval(aztime, slantRange + deltaRange) * 0.5 * wavelength - fdop)
-                         / deltaRange;
+    const double fdopder =
+            (doppler.eval(aztime, slantRange + deltaRange) * 0.5 * wavelength -
+                    fdop) /
+            deltaRange;
 
     // Evaluate cost function and its derivative
     const double fn = dopfact - fdop * slantRange;
@@ -106,14 +106,11 @@ double isce3::geometry::
     return aztime_diff;
 }
 
-namespace isce3::geometry {
-namespace {
-int
-_update_aztime(const Orbit & orbit,
-               Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
-               LookSide side, double & aztime, double & slantRange,
-               double rangeMin = std::numeric_limits<double>::quiet_NaN(),
-               double rangeMax = std::numeric_limits<double>::quiet_NaN())
+namespace isce3::geometry { namespace {
+int _update_aztime(const Orbit& orbit, Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
+        LookSide side, double& aztime, double& slantRange,
+        double rangeMin = std::numeric_limits<double>::quiet_NaN(),
+        double rangeMax = std::numeric_limits<double>::quiet_NaN())
 {
 
     Vec3 dr;
@@ -139,15 +136,16 @@ _update_aztime(const Orbit & orbit,
         aztime = tstart + k * delta_t;
         if (aztime < orbit.startTime() || aztime > orbit.endTime())
             continue;
-        orbit.interpolate(&satpos, &satvel, aztime,
-                          OrbitInterpBorderMode::FillNaN);
+        orbit.interpolate(
+                &satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
         // Compute slant range
         dr = inputXYZ - satpos;
 
         // Check look side (only first time)
         if (k == 0) {
             // (Left && positive) || (Right && negative)
-            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+            if ((side == LookSide::Right) ^
+                    (dr.cross(satvel).dot(satpos) > 0)) {
                 return error; // wrong look side
             }
         }
@@ -173,15 +171,13 @@ _update_aztime(const Orbit & orbit,
         aztime = aztime_closest;
     return !error;
 }
-} // anonymous namespace
-} // isce3::geometry
+}} // namespace isce3::geometry::
 
-
-int isce3::geometry::
-geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const Poly2d & doppler, double & aztime, double & slantRange,
-        double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
-        LookSide side, double threshold, int maxIter, double deltaRange)
+int isce3::geometry::geo2rdr(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
+        const Orbit& orbit, const Poly2d& doppler, double& aztime,
+        double& slantRange, double wavelength, double startingRange,
+        double rangePixelSpacing, size_t rwidth, LookSide side,
+        double threshold, int maxIter, double deltaRange)
 {
 
     Vec3 satpos, satvel, inputXYZ, dr;
@@ -197,8 +193,8 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     const double rangeMax = rangeMin + rangePixelSpacing * (rwidth - 1);
 
     int converged = 1;
-    int error = _update_aztime(orbit, satpos, satvel, inputXYZ, side,
-                               aztime, slantRange, rangeMin, rangeMax);
+    int error = _update_aztime(orbit, satpos, satvel, inputXYZ, side, aztime,
+            slantRange, rangeMin, rangeMax);
     if (error)
         return !converged;
 
@@ -207,7 +203,8 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     for (int i = 0; i < maxIter; ++i) {
 
         // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolate(&satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
+        orbit.interpolate(
+                &satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
 
         // Compute slant range from satellite to ground point
         dr = inputXYZ - satpos;
@@ -215,7 +212,8 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         // Check look side (only first time)
         if (i == 0) {
             // (Left && positive) || (Right && negative)
-            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+            if ((side == LookSide::Right) ^
+                    (dr.cross(satvel).dot(satpos) > 0)) {
                 return !converged; // wrong look side
             }
         }
@@ -228,10 +226,8 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
             slantRange_old = slantRange;
 
         // Update guess for azimuth time
-        double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
-                                                          doppler, wavelength,
-                                                          aztime,
-                                                          slantRange, deltaRange);
+        double aztime_diff = _compute_doppler_aztime_diff(dr, satvel, doppler,
+                wavelength, aztime, slantRange, deltaRange);
 
         aztime -= aztime_diff;
     }
@@ -239,35 +235,24 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     return !converged;
 }
 
-int isce3::geometry::
-geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const LUT2d<double> & doppler, double & aztime, double & slantRange,
-        double wavelength, LookSide side, double threshold, int maxIter,
-        double deltaRange)
+int isce3::geometry::geo2rdr(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
+        const Orbit& orbit, const LUT2d<double>& doppler, double& aztime,
+        double& slantRange, double wavelength, LookSide side, double threshold,
+        int maxIter, double deltaRange)
 {
     double t0 = aztime;
     detail::Geo2RdrParams params = {threshold, maxIter, deltaRange};
-    auto status =
-            detail::geo2rdr(&aztime, &slantRange, inputLLH, ellipsoid, orbit,
-                            doppler, wavelength, side, t0, params);
+    auto status = detail::geo2rdr(&aztime, &slantRange, inputLLH, ellipsoid,
+            orbit, doppler, wavelength, side, t0, params);
     return (status == ErrorCode::Success);
 }
 
 // Utility function to compute geographic bounds for a radar grid
-void isce3::geometry::
-computeDEMBounds(const Orbit & orbit,
-                 const Ellipsoid & ellipsoid,
-                 const LUT2d<double> & doppler,
-                 const RadarGridParameters & radarGrid,
-                 size_t xoff,
-                 size_t yoff,
-                 size_t xsize,
-                 size_t ysize,
-                 double margin,
-                 double & min_lon,
-                 double & min_lat,
-                 double & max_lon,
-                 double & max_lat)
+void isce3::geometry::computeDEMBounds(const Orbit& orbit,
+        const Ellipsoid& ellipsoid, const LUT2d<double>& doppler,
+        const RadarGridParameters& radarGrid, size_t xoff, size_t yoff,
+        size_t xsize, size_t ysize, double margin, double& min_lon,
+        double& min_lat, double& max_lon, double& max_lat)
 {
     // Initialize geographic bounds
     min_lon = 1.0e64;
@@ -284,7 +269,8 @@ computeDEMBounds(const Orbit & orbit,
     const int askip = std::max((int) ysize / 10, 1);
     const int rskip = xsize / 10;
 
-    // Construct vectors of range/azimuth indices traversing the perimeter of the radar frame
+    // Construct vectors of range/azimuth indices traversing the perimeter of
+    // the radar frame
 
     // Top edge
     std::vector<int> azInd, rgInd;
@@ -319,8 +305,8 @@ computeDEMBounds(const Orbit & orbit,
 
         // Get state vector
         Vec3 xyzsat, velsat;
-        orbit.interpolate(&xyzsat, &velsat, tline,
-                          OrbitInterpBorderMode::FillNaN);
+        orbit.interpolate(
+                &xyzsat, &velsat, tline, OrbitInterpBorderMode::FillNaN);
         // Save state vector
         const Vec3 pos = xyzsat;
         const Vec3 vel = velsat;
@@ -336,8 +322,9 @@ computeDEMBounds(const Orbit & orbit,
         // Get proper slant range and Doppler factor
         const size_t rbin = rgInd[i];
         const double rng = radarGrid.slantRange(rbin);
-        const double dopfact = (0.5 * radarGrid.wavelength() * (doppler.eval(tline, rng) /
-                                satVmag)) * rng;
+        const double dopfact = (0.5 * radarGrid.wavelength() *
+                                       (doppler.eval(tline, rng) / satVmag)) *
+                               rng;
 
         // Store in Pixel object
         Pixel pixel(rng, dopfact, rbin);
@@ -374,7 +361,118 @@ computeDEMBounds(const Orbit & orbit,
     max_lon += margin;
     min_lat -= margin;
     max_lat += margin;
+}
 
+Vec3 isce3::geometry::nedVector(double lon, double lat, const Vec3& vel)
+{
+    const double coslat {std::cos(lat)};
+    const double sinlat {std::sin(lat)};
+    const double coslon {std::cos(lon)};
+    const double sinlon {std::sin(lon)};
+    Vec3 vned;
+    vned(0) = -sinlat * coslon * vel(0) - sinlat * sinlon * vel(1) +
+              coslat * vel(2);
+    vned(1) = -sinlon * vel(0) + coslon * vel(1);
+    vned(2) = -coslat * coslon * vel(0) - coslat * sinlon * vel(1) -
+              sinlat * vel(2);
+    return vned;
+}
+
+Vec3 isce3::geometry::nwuVector(double lon, double lat, const Vec3& vel)
+{
+    auto nwu {nedVector(lon, lat, vel)};
+    nwu.tail(2) *= -1.0;
+    return nwu;
+}
+
+Vec3 isce3::geometry::enuVector(double lon, double lat, const Vec3& vel)
+{
+    auto enu {nedVector(lon, lat, vel)};
+    enu(2) *= -1.0;
+    std::swap(enu(0), enu(1));
+    return enu;
+}
+
+double isce3::geometry::heading(double lon, double lat, const Vec3& vel)
+{
+    const double coslat {std::cos(lat)};
+    const double sinlat {std::sin(lat)};
+    const double coslon {std::cos(lon)};
+    const double sinlon {std::sin(lon)};
+    return std::atan2(-sinlon * vel(0) + coslon * vel(1),
+            -sinlat * coslon * vel(0) - sinlat * sinlon * vel(1) +
+                    coslat * vel(2));
+}
+
+/**
+ * @internal
+ * A helper function to get "D" value in NED vector from ECEF vector
+ * at a certain geodetic location.
+ * @param[in] lon : geodetic longitude in radians
+ * @param[in] lat : geodetic latitude in radians
+ * @param[in] vec : 3-D Vec3 in ECEF coordinate
+ * @return a double scalar representing the Down value in NED vector
+ */
+static double _downVal(double lon, double lat, const Vec3& vec)
+{
+    auto uvec {vec.normalized()};
+    const double coslat {std::cos(lat)};
+    const double sinlat {std::sin(lat)};
+    const double coslon {std::cos(lon)};
+    const double sinlon {std::sin(lon)};
+    return (-coslat * coslon * uvec(0) - coslat * sinlon * uvec(1) -
+            sinlat * uvec(2));
+}
+
+double isce3::geometry::slantRangeFromLookVec(
+        const Vec3& pos, const Vec3& lkvec, const Ellipsoid& ellips)
+{
+    if (lkvec.isZero())
+        throw isce3::except::InvalidArgument(
+                ISCE_SRCINFO(), "Input lookvector must be non-zero vector!");
+    const auto b1 {ellips.b()};
+    const auto a2 {ellips.a() * ellips.a()};
+    const auto b2 {b1 * b1};
+    auto nlkvec {lkvec.normalized()};
+    double tmpa =
+            nlkvec.head(2).squaredNorm() / a2 + nlkvec(2) * nlkvec(2) / b2;
+    double tmpb =
+            nlkvec.head(2).dot(pos.head(2)) / a2 + nlkvec(2) * pos(2) / b2;
+    double tmpc = pos.head(2).squaredNorm() / a2 + pos(2) * pos(2) / b2 - 1.0;
+    double tmpx = tmpb * tmpb - tmpa * tmpc;
+    if (tmpx < 0.0)
+        throw isce3::except::RuntimeError(
+                ISCE_SRCINFO(), "Bad inputs results in negative square root!");
+    double sr = -(tmpb + std::sqrt(tmpx)) / tmpa;
+    if (!(sr > 0.0))
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad inputs results in non-positive slant range!");
+    return sr;
+}
+
+std::pair<int, double> isce3::geometry::srPosFromLookVecDem(double& sr,
+        Vec3& tg_pos, Vec3& llh, const Vec3& sc_pos, const Vec3& lkvec,
+        double dem_hgt, double hgt_err, int num_iter, const Ellipsoid& ellips)
+{
+    if (hgt_err <= 0.0 || num_iter <= 0)
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Height Error and number of iteration "
+                "must be non-zero positive values!");
+    sr = slantRangeFromLookVec(sc_pos, lkvec, ellips);
+    int cnt {0};
+    double abs_hgt_dif;
+    do {
+        tg_pos = sr * lkvec + sc_pos;
+        llh = ellips.xyzToLonLat(tg_pos);
+        auto hgt_dif {dem_hgt - llh(2)};
+        sr += hgt_dif / _downVal(llh(0), llh(1), tg_pos);
+        abs_hgt_dif = std::abs(hgt_dif);
+        ++cnt;
+    } while (cnt < num_iter && abs_hgt_dif > hgt_err);
+    if (cnt == num_iter && abs_hgt_dif > hgt_err)
+        std::cerr << "Warning: reached max iterations " << cnt
+                  << " with height error " << abs_hgt_dif << " (m)!\n";
+    return std::make_pair(cnt, abs_hgt_dif);
 }
 
 // end of file

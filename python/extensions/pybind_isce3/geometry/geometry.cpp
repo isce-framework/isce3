@@ -6,6 +6,8 @@
 #include "geo2rdr.h"
 #include "metadataCubes.h"
 #include "rdr2geo.h"
+#include "ltpcoordinates.h"
+#include "pntintersect.h"
 
 namespace py = pybind11;
 
@@ -50,4 +52,6 @@ void addsubmodule_geometry(py::module & m)
     addbinding_rdr2geo(geometry);
     addbinding_boundingbox(geometry);
     addbinding_metadata_cubes(geometry);
+    addbinding_ltp_coordinates(geometry);
+    addbinding_pnt_intersect(geometry);
 }

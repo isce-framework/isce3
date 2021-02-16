@@ -31,13 +31,7 @@ class isce3::core::Ellipsoid {
         /* Empty constructor - default to Earth WGS-84 ellipsoid */ 
         CUDA_HOSTDEV
         Ellipsoid() : Ellipsoid(EarthSemiMajorAxis, EarthEccentricitySquared) {}
-        /// @endcond
-
-        /** Copy constructor*/
-        Ellipsoid(const Ellipsoid & ellps) : _a(ellps.a()), _e2(ellps.e2()) {}
-
-        /** Overloaded assignment operator */
-        inline Ellipsoid& operator=(const Ellipsoid&);
+        /// @endcond    
 
         /** Return semi-major axis */
         CUDA_HOSTDEV
@@ -107,18 +101,14 @@ class isce3::core::Ellipsoid {
 
         /** Estimate azimuth angle and look angle for a given LOS vector*/
         void getImagingAnglesAtPlatform(const cartesian_t &pos,const cartesian_t &vel,
-                     const cartesian_t &los, double &azi, double &look) const;
+                     const cartesian_t &los, double &azi, double &look) const;   
 
     private:
         double _a;
         double _e2;
+
 };
 
-isce3::core::Ellipsoid& isce3::core::Ellipsoid::operator=(const Ellipsoid &rhs) {
-    _a = rhs.a();
-    _e2 = rhs.e2();
-    return *this;
-}
 
 /** @param[in] lat Latitude in radians
  *
