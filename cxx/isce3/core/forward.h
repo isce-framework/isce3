@@ -50,6 +50,7 @@ namespace isce3 {
         using Vec3 = Vector<3>;
         using cartmat_t   = Mat3;
         using cartesian_t = Vec3;
+	using Vec4 = Vector<4>;
 
         // enum types
         enum class LookSide;

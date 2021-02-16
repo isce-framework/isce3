@@ -1,5 +1,6 @@
 set(TESTFILES
 container/rsd.cpp
+core/attitude/quaternion_euler.cpp
 core/attitude/attitude.cpp
 core/attitude/representations.cpp
 core/cube/cube.cpp
