@@ -12,6 +12,7 @@
 #include "signal/signal.h"
 #include "product/product.h"
 #include "unwrap/unwrap.h"
+#include "antenna/antenna.h"
 
 #ifdef ISCE3_CUDA
 #include "cuda/cuda.h"
@@ -31,6 +32,7 @@ PYBIND11_MODULE(pybind_isce3, m) {
     addsubmodule_container(m);
     addsubmodule_focus(m);
     addsubmodule_unwrap(m);
+    addsubmodule_antenna(m);
 
 #ifdef ISCE3_CUDA
     addsubmodule_cuda(m);

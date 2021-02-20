@@ -1,0 +1,128 @@
+namespace isce3 { namespace antenna {
+
+inline typename Frame::Vec3_t Frame::sphToCart(
+        double el_theta, double az_phi) const
+{
+    Vec3_t vec;
+    switch (_grid_type) {
+    case SphGridType::EL_AND_AZ: {
+        double theta {std::sqrt(el_theta * el_theta + az_phi * az_phi)};
+        double phi {std::atan2(az_phi, el_theta)};
+        double sin_theta {std::sin(theta)};
+        vec << sin_theta * std::cos(phi), sin_theta * std::sin(phi),
+                std::cos(theta);
+        return vec;
+    }
+
+    case SphGridType::EL_OVER_AZ: {
+        double cos_az {std::cos(az_phi)};
+        vec << std::sin(el_theta) * cos_az, std::sin(az_phi),
+                std::cos(el_theta) * cos_az;
+        return vec;
+    }
+
+    case SphGridType::AZ_OVER_EL: {
+        double cos_el {std::cos(el_theta)};
+        vec << std::sin(el_theta), cos_el * std::sin(az_phi),
+                cos_el * std::cos(az_phi);
+        return vec;
+    }
+
+    case SphGridType::THETA_PHI: {
+        double sin_el {std::sin(el_theta)};
+        vec << sin_el * std::cos(az_phi), sin_el * std::sin(az_phi),
+                std::cos(el_theta);
+        return vec;
+    }
+    }
+    throw isce3::except::RuntimeError(
+            ISCE_SRCINFO(), "Unknown Spherical Grid Type!");
+}
+
+inline std::vector<typename Frame::Vec3_t> Frame::sphToCart(
+        const std::vector<double>& el_theta,
+        const std::vector<double>& az_phi) const
+{
+    auto size {el_theta.size()};
+    if (size != az_phi.size())
+        throw isce3::except::LengthError(
+                ISCE_SRCINFO(), "Size mismatch between two angle containers!");
+    std::vector<Vec3_t> vec;
+    vec.reserve(size);
+    for (decltype(size) idx = 0; idx < size; ++idx)
+        vec.push_back(sphToCart(el_theta[idx], az_phi[idx]));
+    return vec;
+}
+
+inline std::vector<typename Frame::Vec3_t> Frame::sphToCart(
+        const std::vector<double>& el_theta, double az_phi) const
+{
+    auto size {el_theta.size()};
+    std::vector<Vec3_t> vec;
+    vec.reserve(size);
+    for (const auto& el_tht : el_theta)
+        vec.push_back(sphToCart(el_tht, az_phi));
+    return vec;
+}
+
+inline std::vector<typename Frame::Vec3_t> Frame::sphToCart(
+        double el_theta, const std::vector<double>& az_phi) const
+{
+    auto size {az_phi.size()};
+    std::vector<Vec3_t> vec;
+    vec.reserve(size);
+    for (const auto& azphi : az_phi)
+        vec.push_back(sphToCart(el_theta, azphi));
+    return vec;
+}
+
+inline typename Frame::Vec2_t Frame::cartToSph(Vec3_t vec) const
+{
+    vec.normalize();
+    Vec2_t v_elaz;
+    switch (_grid_type) {
+    case SphGridType::EL_AND_AZ:
+        double theta, phi;
+        theta = std::acos(vec(2));
+        phi = std::atan2(vec(1), vec(0));
+        v_elaz << theta * std::cos(phi), theta * std::sin(phi);
+        return v_elaz;
+
+    case SphGridType::EL_OVER_AZ:
+        v_elaz << std::atan2(vec(0), vec(2)), std::asin(vec(1));
+        return v_elaz;
+
+    case SphGridType::AZ_OVER_EL:
+        v_elaz << std::asin(vec(0)), std::atan2(vec(1), vec(2));
+        return v_elaz;
+
+    case SphGridType::THETA_PHI:
+        v_elaz << std::acos(vec(2)), std::atan2(vec(1), vec(0));
+        return v_elaz;
+    }
+    throw isce3::except::RuntimeError(
+            ISCE_SRCINFO(), "Unknown Spherical Grid Type!");
+}
+
+inline std::vector<typename Frame::Vec2_t> Frame::cartToSph(
+        std::vector<Vec3_t> vec) const
+{
+    std::vector<Vec2_t> vec2;
+    vec2.reserve(vec.size());
+    for (const auto& val3 : vec)
+        vec2.push_back(cartToSph(val3));
+    return vec2;
+}
+
+// non-member regular  functions
+inline bool operator==(const Frame& lhs, const Frame& rhs)
+{
+    return (lhs.gridType() == rhs.gridType());
+}
+
+inline bool operator!=(const Frame& lhs, const Frame& rhs)
+{
+    return !(lhs == rhs);
+}
+
+}} // namespace isce3::antenna

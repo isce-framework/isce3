@@ -1,4 +1,9 @@
 set(HEADERS
+antenna/forward.h
+antenna/Frame.h
+antenna/Frame.icc
+antenna/SphGridType.h
+antenna/SphGridType.icc
 container/forward.h
 container/RadarGeometry.h
 container/RadarGeometry.icc

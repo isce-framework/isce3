@@ -1,4 +1,5 @@
 set(TESTFILES
+antenna/frame.cpp
 container/rsd.cpp
 core/attitude/quaternion_euler.cpp
 core/attitude/attitude.cpp

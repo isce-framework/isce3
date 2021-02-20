@@ -41,6 +41,7 @@ product/swath.py
 unwrap/icu.py
 geometry/ltpcoordinates.py
 geometry/pntintersect.py
+antenna/frame.py
 )
 
 if(WITH_CUDA)

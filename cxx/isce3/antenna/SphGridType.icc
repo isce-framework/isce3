@@ -1,0 +1,37 @@
+namespace isce3 { namespace antenna {
+
+inline SphGridType gridTypeFromStr(std::string str)
+{
+    auto upperStr {[](std::string& str) {
+        std::transform(str.begin(), str.end(), str.begin(),
+                [](unsigned char c) -> unsigned char {
+                    return std::toupper(c);
+                });
+    }};
+    upperStr(str);
+    if (str == "EL_AND_AZ")
+        return SphGridType::EL_AND_AZ;
+    if (str == "THETA_PHI")
+        return SphGridType::THETA_PHI;
+    if (str == "EL_OVER_AZ")
+        return SphGridType::EL_OVER_AZ;
+    if (str == "AZ_OVER_EL")
+        return SphGridType::AZ_OVER_EL;
+    throw isce3::except::InvalidArgument(
+            ISCE_SRCINFO(), "Bad string for spherical grid type");
+}
+
+inline std::string toStr(SphGridType grid_type)
+{
+    switch (grid_type) {
+    case SphGridType::THETA_PHI: return std::string {"THETA_PHI"};
+
+    case SphGridType::EL_OVER_AZ: return std::string {"EL_OVER_AZ"};
+
+    case SphGridType::AZ_OVER_EL: return std::string {"AZ_OVER_EL"};
+
+    default: return std::string {"EL_AND_AZ"};
+    }
+}
+
+}} // namespace isce3::antenna
