@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Author: Liang Yu
-// Copyright 2019
-
 #include "gpuCrossMul.h"
 
 #include "gpuFilter.h"
@@ -13,10 +7,7 @@
 #include <isce3/signal/Signal.h>
 #include <isce3/cuda/except/Error.h>
 
-// debug includes
-#include <fstream>
-#include <iostream>
-#include <stdio.h>
+#include <climits>
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
@@ -24,24 +15,25 @@
 output
     thrust::complex *ifgram (n_cols*n_rows)
 input
-    thrust::complex *refSlcUp ((oversample*n_ff)t*n_rows)
+    thrust::complex *refSlcUp ((oversample*n_fft)*n_rows)
     thrust::complex *secSlcUp
-    int n_rows
-    int n_cols
-    int n_fft
-    int oversample
+    size_t n_rows
+    size_t n_cols
+    size_t n_fft
+    int oversample_i
+    float oversampe_f
 */
 template <typename T>
 __global__ void interferogram_g(thrust::complex<T> *ifgram,
-        thrust::complex<T> *refSlcUp,
-        thrust::complex<T> *secSlcUp,
-        int n_rows,
-        int n_cols,
-        int n_fft,
+        const thrust::complex<T>* __restrict__ refSlcUp,
+        const thrust::complex<T>* __restrict__ secSlcUp,
+        size_t n_rows,
+        size_t n_cols,
+        size_t n_fft,
         int oversample_i,
         T oversample_f)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
     // make sure index within ifgram size bounds
     if (i < n_rows * n_cols) {
@@ -53,7 +45,6 @@ __global__ void interferogram_g(thrust::complex<T> *ifgram,
             auto ref_val = refSlcUp[i_row*oversample_i*n_fft + i_col];
             auto sec_val_conj = conj(secSlcUp[i_row*oversample_i*n_fft + i_col]);
             ifgram[i] += ref_val * sec_val_conj;
-            auto wtf = ref_val * sec_val_conj;
         }
         ifgram[i] /= oversample_f;
     }
@@ -75,12 +66,12 @@ input:
     n_elements:     total number of elements. m x n
 */
 template <typename T>
-__global__ void calculate_coherence_g<T>(T *ref_amp_to_coh,
-        T *sec_amp,
-        thrust::complex<T> *igram,
-        int n_elements)
+__global__ void calculate_coherence_g(T *ref_amp_to_coh,
+        const T* __restrict__ sec_amp,
+        const thrust::complex<T>* __restrict__ igram,
+        size_t n_elements)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
     // make sure index within ifgram size bounds
     // overwrite existing amplitude value as it's never used again
@@ -90,18 +81,51 @@ __global__ void calculate_coherence_g<T>(T *ref_amp_to_coh,
 }
 
 
+template <class T>
+__global__ void flatten(thrust::complex<T> *ifg,
+        const double* __restrict__ rg_offset,
+        double offset_phase,
+        size_t n_elements)
+{
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+
+    if (i < n_elements) {
+        // offset_phase = 4.0 * M_PI * range_spacing / wavelength
+        auto range_offset_phase = offset_phase * rg_offset[i];
+        thrust::complex<T> shift(std::cos(range_offset_phase), -std::sin(range_offset_phase));
+        ifg[i] *= shift;
+    }
+}
+
+
 /** Set number of range looks */
 void isce3::cuda::signal::gpuCrossmul::
 rangeLooks(int rngLks) {
+    if (rngLks < 1) {
+        std::string error_msg = "ERROR CUDA crossmul range multilook < 1";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
     _rangeLooks = rngLks;
-    _doMultiLook = true;
+    if (_azimuthLooks > 1 or _rangeLooks > 1)
+        _doMultiLook = true;
+    else
+        _doMultiLook = false;
 }
 
 /** Set number of azimuth looks */
 void isce3::cuda::signal::gpuCrossmul::
 azimuthLooks(int azLks) {
+    if (azLks < 1) {
+        std::string error_msg = "ERROR CUDA crossmul azimuth multilook < 1";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
     _azimuthLooks = azLks;
-    _doMultiLook = true;
+    if (_azimuthLooks > 1 or _rangeLooks > 1)
+        _doMultiLook = true;
+    else
+        _doMultiLook = false;
 }
 
 void isce3::cuda::signal::gpuCrossmul::
@@ -110,343 +134,6 @@ doppler(isce3::core::LUT1d<double> refDoppler,
 {
     _refDoppler = refDoppler;
     _secDoppler = secDoppler;
-}
-
-
-void isce3::cuda::signal::gpuCrossmul::
-crossmul(isce3::io::Raster& referenceSLC,
-        isce3::io::Raster& secondarySLC,
-        isce3::io::Raster& interferogram,
-        isce3::io::Raster& coherence)
-{
-    _doCommonRangeBandFilter = false;
-    isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
-    crossmul(referenceSLC,
-            secondarySLC,
-            rngOffsetRaster,
-            interferogram,
-            coherence);
-
-}
-
-void isce3::cuda::signal::gpuCrossmul::
-crossmul(isce3::io::Raster& referenceSLC,
-        isce3::io::Raster& secondarySLC,
-        isce3::io::Raster& rngOffsetRaster,
-        isce3::io::Raster& interferogram,
-        isce3::io::Raster& coherenceRaster)
-{
-    size_t nrows = referenceSLC.length();
-    size_t ncols = referenceSLC.width();
-
-    // setting the parameters of the multi-looking oject
-    if (_doMultiLook) {
-        // Making sure that the number of rows in each block (blockRows)
-        // to be an integer number of azimuth looks.
-        blockRows = (blockRows/_azimuthLooks)*_azimuthLooks;
-    }
-
-    size_t blockRowsMultiLooked = blockRows/_azimuthLooks;
-    size_t ncolsMultiLooked = ncols/_rangeLooks;
-
-    // number of blocks to process
-    size_t nblocks = nrows / blockRows;
-    if (nblocks == 0) {
-        nblocks = 1;
-    } else if (nrows % (nblocks * blockRows) != 0) {
-        nblocks += 1;
-    }
-
-    // signal object for upsampling
-    isce3::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
-    isce3::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
-
-    // Compute FFT size (power of 2)
-    size_t nfft;
-    signalNoUpsample.nextPowerOfTwo(ncols, nfft);
-
-    // set upsampling FFT plans
-    signalNoUpsample.rangeFFT(nfft, blockRows);
-    signalUpsample.rangeFFT(nfft*oversample, blockRows);
-
-    // set not upsampled parameters
-    auto n_slc = nfft*blockRows;
-    auto slc_size = n_slc * sizeof(thrust::complex<float>);
-
-    // storage for a block of reference SLC data
-    std::valarray<std::complex<float>> refSlc(n_slc);
-    thrust::complex<float> *d_refSlc;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlc), slc_size));
-
-    // storage for a block of secondary SLC data
-    std::valarray<std::complex<float>> secSlc(n_slc);
-    thrust::complex<float> *d_secSlc;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlc), slc_size));
-
-    // set upsampled parameters
-    auto n_slcUpsampled = oversample * nfft * blockRows;
-    auto slcUpsampled_size = n_slcUpsampled * sizeof(thrust::complex<float>);
-
-    // upsampled block of reference SLC
-    std::valarray<std::complex<float>> refSlcUpsampled(n_slcUpsampled);
-    thrust::complex<float> *d_refSlcUpsampled;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcUpsampled), slcUpsampled_size));
-
-    // upsampled block of secondary SLC
-    thrust::complex<float> *d_secSlcUpsampled;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
-
-    // shift impact
-    std::valarray<std::complex<float>> shiftImpact(n_slcUpsampled);
-    thrust::complex<float> *d_shiftImpact;
-    lookdownShiftImpact(oversample,
-            nfft,
-            blockRows,
-            shiftImpact);
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_shiftImpact), slcUpsampled_size));
-    checkCudaErrors(cudaMemcpy(d_shiftImpact, &shiftImpact[0], slcUpsampled_size, cudaMemcpyHostToDevice));
-
-    // interferogram
-    auto n_ifgram = ncols * blockRows;
-    auto ifgram_size = n_ifgram * sizeof(thrust::complex<float>);
-    std::valarray<std::complex<float>> ifgram(n_ifgram);
-    thrust::complex<float> *d_ifgram;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram), ifgram_size));
-
-    // range offset
-    std::valarray<double> rngOffset(ncols*blockRows);
-    thrust::complex<double> *d_rngOffset;
-    auto rngOffset_size = ncols*nrows*sizeof(double);
-    if (_doCommonRangeBandFilter) {
-        // only malloc if we're using...
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_rngOffset), rngOffset_size));
-    }
-
-    // multilooked products container and parameters
-    std::valarray<std::complex<float>> ifgram_mlook(0);
-    std::valarray<float> coherence(0);
-    int n_mlook = blockRowsMultiLooked*ncolsMultiLooked;
-    auto mlook_size = n_mlook*sizeof(float);
-
-    // CUDA device memory allocation
-    thrust::complex<float> *d_ifgram_mlook;
-    float *d_ref_amp_mlook;
-    float *d_sec_amp_mlook;
-
-    if (_doMultiLook) {
-        ifgram_mlook.resize(n_mlook);
-        coherence.resize(n_mlook);
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram_mlook), 2*mlook_size)); // 2* because imaginary
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ref_amp_mlook), mlook_size));
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_sec_amp_mlook), mlook_size));
-    }
-
-    // filter objects
-    isce3::cuda::signal::gpuAzimuthFilter<float> azimuthFilter;
-    isce3::cuda::signal::gpuRangeFilter<float> rangeFilter;
-
-    // determine block layout
-    dim3 block(THRD_PER_BLOCK);
-    dim3 grid_hi((refSlc.size()*oversample+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
-    dim3 grid_reg((refSlc.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
-    dim3 grid_lo((blockRowsMultiLooked*ncolsMultiLooked+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
-
-    // configure azimuth filter
-    if (_doCommonAzimuthBandFilter) {
-        azimuthFilter.constructAzimuthCommonbandFilter(
-                _refDoppler,
-                _secDoppler,
-                _commonAzimuthBandwidth,
-                _prf,
-                _beta,
-                nfft, 
-                blockRows);
-    }
-
-    // loop over all blocks
-    for (size_t i_block = 0; i_block < nblocks; ++i_block) {
-        std::cout << "i_block: " << i_block+1 << " of " << nblocks << std::endl;
-        // start row for this block
-        size_t rowStart;
-        rowStart = i_block * blockRows;
-
-        //number of lines of data in this block. blockRowsData<= blockRows
-        //Note that blockRows is fixed number of lines
-        //blockRowsData might be less than or equal to blockRows.
-        //e.g. if nrows = 512, and blockRows = 100, then
-        //blockRowsData for last block will be 12
-        size_t blockRowsData;
-        if ((rowStart + blockRows) > nrows) {
-            blockRowsData = nrows - rowStart;
-        } else {
-            blockRowsData = blockRows;
-        }
-
-        // fill the valarray with zero before getting the block of the data
-        refSlc = 0;
-        secSlc = 0;
-        refSlcUpsampled = 0;
-        ifgram = 0;
-
-        // get a block of reference and secondary SLC data
-        // and a block of range offsets
-        // This will change once we have the functionality to
-        // get a block of data directly in to a slice
-        std::valarray<std::complex<float>> dataLine(ncols);
-        for (size_t line = 0; line < blockRowsData; ++line){
-            referenceSLC.getLine(dataLine, rowStart + line);
-            refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
-            secondarySLC.getLine(dataLine, rowStart + line);
-            secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
-        }
-        checkCudaErrors(cudaMemcpy(d_refSlc, &refSlc[0], slc_size, cudaMemcpyHostToDevice));
-        checkCudaErrors(cudaMemcpy(d_secSlc, &secSlc[0], slc_size, cudaMemcpyHostToDevice));
-
-        // apply azimuth filter (do inplace)
-        if (_doCommonAzimuthBandFilter) {
-            azimuthFilter.filter(d_refSlc);
-            azimuthFilter.filter(d_secSlc);
-        }
-
-        // apply range filter (do inplace)
-        if (_doCommonRangeBandFilter) {
-            // Read range offsets
-            std::valarray<double> offsetLine(ncols);
-            for (size_t line = 0; line < blockRowsData; ++line){
-                rngOffsetRaster.getLine(offsetLine, rowStart + line);
-                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
-            }
-            checkCudaErrors(cudaMemcpy(d_rngOffset, &rngOffset[0], rngOffset_size, cudaMemcpyHostToDevice));
-
-            rangeFilter.filterCommonRangeBand(
-                    reinterpret_cast<float *>(&d_refSlc),
-                    reinterpret_cast<float *>(&d_secSlc),
-                    reinterpret_cast<float *>(&d_rngOffset));
-        }
-
-        // upsample reference and secondary. done on device
-        upsample(signalNoUpsample,
-                signalUpsample,
-                d_refSlc,
-                d_refSlcUpsampled,
-                d_shiftImpact);
-        upsample(signalNoUpsample,
-                signalUpsample,
-                d_secSlc,
-                d_secSlcUpsampled,
-                d_shiftImpact);
-
-        // run kernels to compute oversampled interforgram
-        // refSignal overwritten with upsampled interferogram
-        // reduce from nfft*oversample*blockRows to ncols*blockRows
-        float oversample_f = float(oversample);
-        interferogram_g<<<grid_reg, block>>>(
-                d_ifgram,
-                d_refSlcUpsampled,
-                d_secSlcUpsampled,
-                nrows, ncols, nfft, oversample, oversample_f);
-
-        // Check for any kernel errors
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaDeviceSynchronize());
-
-        if (_doMultiLook) {
-
-            // reduce ncols*nrow to ncolsMultiLooked*blockRowsMultiLooked
-            multilooks_g<<<grid_lo, block>>>(
-                    d_ifgram_mlook,
-                    d_ifgram,
-                    ncols,                          // n columns hi res
-                    ncolsMultiLooked,               // n cols lo res
-                    _azimuthLooks,                  // col resize factor of hi to lo
-                    _rangeLooks,                    // col resize factor of hi to lo
-                    n_mlook,                        // number of lo res elements
-                    float(_azimuthLooks*_rangeLooks));
-
-            // Check for any kernel errors
-            checkCudaErrors(cudaPeekAtLastError());
-            checkCudaErrors(cudaDeviceSynchronize());
-
-            // get data to HOST
-            checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, mlook_size*2, cudaMemcpyDeviceToHost));
-
-            interferogram.setBlock(ifgram_mlook, 0, rowStart/_azimuthLooks,
-                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
-
-            // write reduce+abs and set blocks
-            multilooks_power_g<<<grid_lo, block>>>(
-                    d_ref_amp_mlook,
-                    d_refSlc,
-                    2,
-                    ncols,
-                    ncolsMultiLooked,
-                    _azimuthLooks,                  // row resize factor of hi to lo
-                    _rangeLooks,                    // col resize factor of hi to lo
-                    n_mlook,                        // number of lo res elements
-                    float(_azimuthLooks*_rangeLooks));
-
-            // Check for any kernel errors
-            checkCudaErrors(cudaPeekAtLastError());
-            checkCudaErrors(cudaDeviceSynchronize());
-
-            multilooks_power_g<<<grid_lo, block>>>(
-                    d_sec_amp_mlook,
-                    d_secSlc,
-                    2,
-                    ncols,
-                    ncolsMultiLooked,
-                    _azimuthLooks,                  // row resize factor of hi to lo
-                    _rangeLooks,                    // col resize factor of hi to lo
-                    n_mlook,                        // number of lo res elements
-                    float(_azimuthLooks*_rangeLooks));
-
-            // Check for any kernel errors
-            checkCudaErrors(cudaPeekAtLastError());
-            checkCudaErrors(cudaDeviceSynchronize());
-
-            // perform coherence calculation in place overwriting d_ifgram_mlook
-            calculate_coherence_g<<<grid_lo, block>>>(d_ref_amp_mlook,
-                    d_sec_amp_mlook,
-                    d_ifgram_mlook,
-                    ifgram_mlook.size());
-
-            // Check for any kernel errors
-            checkCudaErrors(cudaPeekAtLastError());
-            checkCudaErrors(cudaDeviceSynchronize());
-
-            // get data to HOST from overwritten multilooked reference amplitude
-            checkCudaErrors(cudaMemcpy(&coherence[0], d_ref_amp_mlook, mlook_size, cudaMemcpyDeviceToHost));
-
-            // set blocks accordingly
-            coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
-                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
-
-        } else {
-            // get data to HOST
-            checkCudaErrors(cudaMemcpy(&ifgram[0], d_ifgram, ifgram_size, cudaMemcpyDeviceToHost));
-
-            // set the block of interferogram
-            interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
-        }
-
-    }
-
-    // liberate all device memory
-    checkCudaErrors(cudaFree(d_refSlc));
-    checkCudaErrors(cudaFree(d_secSlc));
-    checkCudaErrors(cudaFree(d_refSlcUpsampled));
-    checkCudaErrors(cudaFree(d_secSlcUpsampled));
-    checkCudaErrors(cudaFree(d_shiftImpact));
-    checkCudaErrors(cudaFree(d_ifgram));
-    if (_doCommonRangeBandFilter) {
-        checkCudaErrors(cudaFree(d_rngOffset));
-    }
-    if (_doMultiLook) {
-        checkCudaErrors(cudaFree(d_ifgram_mlook));
-        checkCudaErrors(cudaFree(d_ref_amp_mlook));
-        checkCudaErrors(cudaFree(d_sec_amp_mlook));
-    }
-
 }
 
 
@@ -483,8 +170,7 @@ void lookdownShiftImpact(size_t oversample,
     // a liner phase in frequency domain, we compute the impact in frequency domain.
 
     // the constant shift based on the oversampling factor
-    double shift = 0.0;
-    shift = (1.0 - 1.0/oversample)/2.0;
+    double shift = (1.0 - 1.0/oversample)/2.0;
 
     // compute the frequency response of the subpixel shift in range direction
     std::valarray<std::complex<float>> shiftImpactLine(oversample*nfft);
@@ -500,17 +186,376 @@ void lookdownShiftImpact(size_t oversample,
     }
 }
 
-/*
-forced instantiation
-   */
 
-template __global__
-void interferogram_g<float>(thrust::complex<float> *ifgram,
-        thrust::complex<float> *refSlcUp,
-        thrust::complex<float> *secSlcUp,
-        int n_rows,
-        int n_cols,
-        int n_fft,
-        int oversample_i,
-        float oversample_f);
+void isce3::cuda::signal::gpuCrossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& interferogram)
+{
+    _doCommonRangeBandFilter = false;
+    isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
+    isce3::io::Raster coherence("/vsimem/dummyCoh", 1, 1, 1, GDT_Float32, "ENVI");
+    crossmul(referenceSLC,
+            secondarySLC,
+            rngOffsetRaster,
+            interferogram,
+            coherence);
 
+}
+
+
+void isce3::cuda::signal::gpuCrossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& interferogram,
+        isce3::io::Raster& coherence)
+{
+    _doCommonRangeBandFilter = false;
+    isce3::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
+    crossmul(referenceSLC,
+            secondarySLC,
+            rngOffsetRaster,
+            interferogram,
+            coherence);
+
+}
+
+void isce3::cuda::signal::gpuCrossmul::
+crossmul(isce3::io::Raster& referenceSLC,
+        isce3::io::Raster& secondarySLC,
+        isce3::io::Raster& rngOffsetRaster,
+        isce3::io::Raster& interferogram,
+        isce3::io::Raster& coherenceRaster) const
+{
+    size_t nrows = referenceSLC.length();
+    size_t ncols = referenceSLC.width();
+
+    if (ncols > INT_MAX)
+        throw isce3::except::LengthError(ISCE_SRCINFO(), "ncols > INT_MAX");
+
+    // setting the parameters of the multi-looking oject
+    size_t rowsPerBlock = _rowsPerBlock;
+    if (_doMultiLook) {
+        // Making sure that the number of rows in each block (rowsPerBlock)
+        // to be an integer number of azimuth looks.
+        rowsPerBlock = (_rowsPerBlock/_azimuthLooks)*_azimuthLooks;
+    }
+
+    if (rowsPerBlock > INT_MAX)
+        throw isce3::except::LengthError(ISCE_SRCINFO(), "rowsPerBlock > INT_MAX");
+
+    size_t blockRowsMultiLooked = rowsPerBlock/_azimuthLooks;
+    size_t ncolsMultiLooked = ncols/_rangeLooks;
+
+    // number of blocks to process
+    size_t nblocks = nrows / rowsPerBlock;
+    if (nblocks == 0) {
+        nblocks = 1;
+    } else if (nrows % (nblocks * rowsPerBlock) != 0) {
+        nblocks += 1;
+    }
+
+    // signal object for upsampling
+    isce3::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
+    isce3::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
+
+    // Compute FFT size (power of 2)
+    size_t nfft;
+    signalNoUpsample.nextPowerOfTwo(ncols, nfft);
+
+    if (nfft > INT_MAX)
+        throw isce3::except::LengthError(ISCE_SRCINFO(), "nfft > INT_MAX");
+    if (_oversample * nfft > INT_MAX)
+        throw isce3::except::LengthError(ISCE_SRCINFO(), "_oversample * nfft > INT_MAX");
+
+    // set upsampling FFT plans
+    signalNoUpsample.rangeFFT(nfft, rowsPerBlock);
+    signalUpsample.rangeFFT(nfft*_oversample, rowsPerBlock);
+
+    // set not upsampled parameters
+    auto n_slc = nfft*rowsPerBlock;
+    auto slc_size = n_slc * sizeof(thrust::complex<float>);
+
+    // storage for a block of reference SLC data
+    std::valarray<std::complex<float>> refSlc(n_slc);
+    thrust::complex<float> *d_refSlc;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlc), slc_size));
+
+    // storage for a block of secondary SLC data
+    std::valarray<std::complex<float>> secSlc(n_slc);
+    thrust::complex<float> *d_secSlc;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlc), slc_size));
+
+    // set upsampled parameters
+    auto n_slcUpsampled = _oversample * nfft * rowsPerBlock;
+    auto slcUpsampled_size = n_slcUpsampled * sizeof(thrust::complex<float>);
+
+    // upsampled block of reference SLC
+    std::valarray<std::complex<float>> refSlcUpsampled(n_slcUpsampled);
+    thrust::complex<float> *d_refSlcUpsampled;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcUpsampled), slcUpsampled_size));
+
+    // upsampled block of secondary SLC
+    thrust::complex<float> *d_secSlcUpsampled;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
+
+    // shift impact
+    std::valarray<std::complex<float>> shiftImpact(n_slcUpsampled);
+    thrust::complex<float> *d_shiftImpact;
+    lookdownShiftImpact(_oversample,
+            nfft,
+            rowsPerBlock,
+            shiftImpact);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_shiftImpact), slcUpsampled_size));
+    checkCudaErrors(cudaMemcpy(d_shiftImpact, &shiftImpact[0], slcUpsampled_size, cudaMemcpyHostToDevice));
+
+    // interferogram
+    auto n_ifgram = ncols * rowsPerBlock;
+    auto ifgram_size = n_ifgram * sizeof(thrust::complex<float>);
+    std::valarray<std::complex<float>> ifgram(n_ifgram);
+    thrust::complex<float> *d_ifgram;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram), ifgram_size));
+
+    // range offset
+    std::valarray<double> rngOffset(n_ifgram);
+    double *d_rngOffset;
+    auto rngOffset_size = n_ifgram*sizeof(double);
+    if (_doCommonRangeBandFilter) {
+        // only malloc if we're using...
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_rngOffset), rngOffset_size));
+    }
+
+    // multilooked products container and parameters
+    std::valarray<std::complex<float>> ifgram_mlook(0);
+    std::valarray<float> coherence(0);
+    auto n_mlook = blockRowsMultiLooked * ncolsMultiLooked;
+    auto mlook_size = n_mlook*sizeof(float);
+
+    // CUDA device memory allocation
+    thrust::complex<float> *d_ifgram_mlook;
+    float *d_ref_amp_mlook;
+    float *d_sec_amp_mlook;
+
+    if (_doMultiLook) {
+        ifgram_mlook.resize(n_mlook);
+        coherence.resize(n_mlook);
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram_mlook), 2*mlook_size)); // 2* because imaginary
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ref_amp_mlook), mlook_size));
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_sec_amp_mlook), mlook_size));
+    }
+
+    // filter objects
+    isce3::cuda::signal::gpuAzimuthFilter<float> azimuthFilter;
+
+    // determine block layout
+    dim3 block(THRD_PER_BLOCK);
+    dim3 grid_hi((refSlc.size()*_oversample+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid_reg((refSlc.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid_lo((blockRowsMultiLooked*ncolsMultiLooked+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+
+    // configure azimuth filter
+    if (_doCommonAzimuthBandFilter) {
+        azimuthFilter.constructAzimuthCommonbandFilter(
+                _refDoppler,
+                _secDoppler,
+                _commonAzimuthBandwidth,
+                _prf,
+                _beta,
+                nfft, 
+                rowsPerBlock);
+    }
+
+    // loop over all blocks
+    for (size_t i_block = 0; i_block < nblocks; ++i_block) {
+        std::cout << "i_block: " << i_block+1 << " of " << nblocks << std::endl;
+        // start row for this block
+        size_t rowStart;
+        rowStart = i_block * rowsPerBlock;
+
+        //number of lines of data in this block. rowsThisBlock<= rowsPerBlock
+        //Note that rowsPerBlock is fixed number of lines
+        //rowsThisBlock might be less than or equal to rowsPerBlock.
+        //e.g. if nrows = 512, and rowsPerBlock = 100, then
+        //rowsThisBlock for last block will be 12
+        size_t rowsThisBlock;
+        if ((rowStart + rowsPerBlock) > nrows) {
+            rowsThisBlock = nrows - rowStart;
+        } else {
+            rowsThisBlock = rowsPerBlock;
+        }
+
+        // fill the valarray with zero before getting the block of the data
+        refSlc = 0;
+        secSlc = 0;
+        refSlcUpsampled = 0;
+        ifgram = 0;
+
+        // get a block of reference and secondary SLC data
+        // and a block of range offsets
+        // This will change once we have the functionality to
+        // get a block of data directly in to a slice
+        std::valarray<std::complex<float>> dataLine(ncols);
+        for (size_t line = 0; line < rowsThisBlock; ++line){
+            referenceSLC.getLine(dataLine, rowStart + line);
+            refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+            secondarySLC.getLine(dataLine, rowStart + line);
+            secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+        }
+        checkCudaErrors(cudaMemcpy(d_refSlc, &refSlc[0], slc_size, cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(d_secSlc, &secSlc[0], slc_size, cudaMemcpyHostToDevice));
+
+        // apply azimuth filter (do inplace)
+        if (_doCommonAzimuthBandFilter) {
+            azimuthFilter.filter(d_refSlc);
+            azimuthFilter.filter(d_secSlc);
+        }
+
+        auto oversample_f = static_cast<float>(_oversample);
+        if (_oversample > 1) {
+            // upsample reference and secondary. done on device
+            upsample(signalNoUpsample,
+                    signalUpsample,
+                    d_refSlc,
+                    d_refSlcUpsampled,
+                    d_shiftImpact);
+            upsample(signalNoUpsample,
+                    signalUpsample,
+                    d_secSlc,
+                    d_secSlcUpsampled,
+                    d_shiftImpact);
+
+            // run kernels to compute oversampled interforgram
+            // refSignal overwritten with upsampled interferogram
+            // reduce from nfft*oversample*rowsPerBlock to ncols*rowsPerBlock
+            interferogram_g<<<grid_reg, block>>>(
+                    d_ifgram,
+                    d_refSlcUpsampled,
+                    d_secSlcUpsampled,
+                    rowsThisBlock, ncols, nfft, _oversample, oversample_f);
+        } else {
+            interferogram_g<<<grid_reg, block>>>(
+                    d_ifgram,
+                    d_refSlc,
+                    d_secSlc,
+                    rowsThisBlock, ncols, nfft, _oversample, oversample_f);
+        }
+
+        // Check for any kernel errors
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+
+        // flatten post interferogram - ala CrossMultipy + Flatten
+        if (_doCommonRangeBandFilter) {
+            // Read range offsets
+            std::valarray<double> offsetLine(ncols);
+            for (size_t line = 0; line < rowsThisBlock; ++line){
+                rngOffsetRaster.getLine(offsetLine, rowStart + line);
+                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
+            }
+            checkCudaErrors(cudaMemcpy(d_rngOffset, &rngOffset[0], rngOffset_size, cudaMemcpyHostToDevice));
+
+            double offset_phase = 4.0*M_PI*_rangePixelSpacing/_wavelength;
+            flatten<<<grid_reg, block>>>(d_ifgram,
+                    d_rngOffset,
+                    offset_phase,
+                    rowsThisBlock*ncols);
+        }
+
+        if (_doMultiLook) {
+
+            // reduce ncols*nrow to ncolsMultiLooked*blockRowsMultiLooked
+            multilooks_g<<<grid_lo, block>>>(
+                    d_ifgram_mlook,
+                    d_ifgram,
+                    ncols,                          // n columns hi res
+                    ncolsMultiLooked,               // n cols lo res
+                    _azimuthLooks,                  // col resize factor of hi to lo
+                    _rangeLooks,                    // col resize factor of hi to lo
+                    n_mlook,                        // number of lo res elements
+                    float(_azimuthLooks*_rangeLooks));
+
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            // get data to HOST
+            checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, mlook_size*2, cudaMemcpyDeviceToHost));
+
+            interferogram.setBlock(ifgram_mlook, 0, rowStart/_azimuthLooks,
+                        ncols/_rangeLooks, rowsThisBlock/_azimuthLooks);
+
+            // write reduce+abs and set blocks
+            multilooks_power_g<<<grid_lo, block>>>(
+                    d_ref_amp_mlook,
+                    d_refSlc,
+                    2,
+                    nfft,
+                    ncolsMultiLooked,
+                    _azimuthLooks,                  // row resize factor of hi to lo
+                    _rangeLooks,                    // col resize factor of hi to lo
+                    n_mlook,                        // number of lo res elements
+                    float(_azimuthLooks*_rangeLooks));
+
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            multilooks_power_g<<<grid_lo, block>>>(
+                    d_sec_amp_mlook,
+                    d_secSlc,
+                    2,
+                    nfft,
+                    ncolsMultiLooked,
+                    _azimuthLooks,                  // row resize factor of hi to lo
+                    _rangeLooks,                    // col resize factor of hi to lo
+                    n_mlook,                        // number of lo res elements
+                    float(_azimuthLooks*_rangeLooks));
+
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            // perform coherence calculation in place overwriting d_ifgram_mlook
+            calculate_coherence_g<<<grid_lo, block>>>(d_ref_amp_mlook,
+                    d_sec_amp_mlook,
+                    d_ifgram_mlook,
+                    ifgram_mlook.size());
+
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            // get data to HOST from overwritten multilooked reference amplitude
+            checkCudaErrors(cudaMemcpy(&coherence[0], d_ref_amp_mlook, mlook_size, cudaMemcpyDeviceToHost));
+
+            // set blocks accordingly
+            coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
+                        ncols/_rangeLooks, rowsThisBlock/_azimuthLooks);
+
+        } else {
+            // get data to HOST
+            checkCudaErrors(cudaMemcpy(&ifgram[0], d_ifgram, ifgram_size, cudaMemcpyDeviceToHost));
+
+            // set the block of interferogram
+            interferogram.setBlock(ifgram, 0, rowStart, ncols, rowsThisBlock);
+        }
+
+    }
+
+    // liberate all device memory
+    checkCudaErrors(cudaFree(d_refSlc));
+    checkCudaErrors(cudaFree(d_secSlc));
+    checkCudaErrors(cudaFree(d_refSlcUpsampled));
+    checkCudaErrors(cudaFree(d_secSlcUpsampled));
+    checkCudaErrors(cudaFree(d_shiftImpact));
+    checkCudaErrors(cudaFree(d_ifgram));
+    if (_doCommonRangeBandFilter) {
+        checkCudaErrors(cudaFree(d_rngOffset));
+    }
+    if (_doMultiLook) {
+        checkCudaErrors(cudaFree(d_ifgram_mlook));
+        checkCudaErrors(cudaFree(d_ref_amp_mlook));
+        checkCudaErrors(cudaFree(d_sec_amp_mlook));
+    }
+
+}

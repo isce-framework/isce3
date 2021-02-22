@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Source Author: Liang Yu
-// Copyright 2019
-
 #include "gpuLooks.h"
 #include <isce3/cuda/except/Error.h>
 
@@ -279,71 +273,77 @@ input:
  */
 template <typename T>
 __global__ void multilooks_g(T *lo_res,
-        T *hi_res,
-        int n_cols_hi,
-        int n_cols_lo,
+        const T* __restrict__ hi_res,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
     if (i < sz_lo) {
-        int i_lo_row = i / n_cols_lo;
-        int i_lo_col = i % n_cols_lo;
+        auto i_lo_row = i / n_cols_lo;
+        auto i_lo_col = i % n_cols_lo;
 
-        // loop over contributing lo_res rows
+        // init mlook accumulation to 0
+        T accumulation = 0.0;
+
+        // loop over contributing hi_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
-            int i_hi_row = i_blk_row + i_lo_row*row_resize;
-            // loop over contributing lo_res columns
+            auto i_hi_row = i_blk_row + i_lo_row * row_resize;
+            // loop over contributing hi_res columns
             for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
                 // get lo_res col index
-                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                auto i_hi_col = i_blk_col + i_lo_col * col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
+                auto i_hi = i_hi_row * n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
-                lo_res[i] += hi_res[i_hi];
+                accumulation += hi_res[i_hi];
             }
         }
-        lo_res[i] /= blk_sz;
+        lo_res[i] = accumulation / blk_sz;
     }
 }
 
 template <typename T>
 __global__ void multilooks_g(thrust::complex<T> *lo_res,
-        thrust::complex<T> *hi_res,
-        int n_cols_hi,
-        int n_cols_lo,
+        const thrust::complex<T>* __restrict__ hi_res,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
     if (i < sz_lo) {
-        int i_lo_row = i / n_cols_lo;
-        int i_lo_col = i % n_cols_lo;
+        auto i_lo_row = i / n_cols_lo;
+        auto i_lo_col = i % n_cols_lo;
 
-        // loop over contributing lo_res rows
+        // init mlook accumulation to 0
+        thrust::complex<T> accumulation(0.0, 0.0);
+
+        // loop over contributing hi_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
-            int i_hi_row = i_blk_row + i_lo_row*row_resize;
-            // loop over contributing lo_res columns
+            auto i_hi_row = i_blk_row + i_lo_row * row_resize;
+            // loop over contributing hi_res columns
             for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
                 // get lo_res col index
-                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                auto i_hi_col = i_blk_col + i_lo_col * col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
+                auto i_hi = i_hi_row * n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
-                lo_res[i] += hi_res[i_hi];
+                accumulation += hi_res[i_hi];
             }
         }
+        lo_res[i] = accumulation / blk_sz;
     }
 }
-
 
 /*
    accumulate then average from hi res to lo res
@@ -359,78 +359,83 @@ input:
  */
 template <typename T>
 __global__ void multilooks_no_data_g(T *lo_res,
-        T *hi_res,
+        const T* __restrict__ hi_res,
         T no_data_value,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / n_cols_lo;
-        int i_lo_col = i % n_cols_lo;
+        auto i_lo_row = i / n_cols_lo;
+        auto i_lo_col = i % n_cols_lo;
 
-        //
+        T accumulation = 0;
         int n_no_val = 0;
 
-        // loop over contributing lo_res rows
+        // loop over contributing hi_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
-            int i_hi_row = i_blk_row + i_lo_row*row_resize;
-            // loop over contributing lo_res columns
+            auto i_hi_row = i_blk_row + i_lo_row * row_resize;
+            // loop over contributing hi_res columns
             for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
                 // get lo_res col index
-                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                auto i_hi_col = i_blk_col + i_lo_col * col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
+                auto i_hi = i_hi_row * n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 T hi_res_pixel_value = hi_res[i_hi];
                 if (hi_res_pixel_value != no_data_value)
-                    lo_res[i] += hi_res_pixel_value;
+                    accumulation += hi_res_pixel_value;
                 else
                     ++n_no_val;
             }
         }
-        lo_res[i] /= (blk_sz - n_no_val);
+        lo_res[i] = accumulation / (blk_sz - n_no_val);
     }
 }
 
 template <class T>
 __global__ void multilooks_no_data_g(thrust::complex<T> *lo_res,
-        thrust::complex<T> *hi_res,
+        const thrust::complex<T>* __restrict__ hi_res,
         thrust::complex<T> no_data_value,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / n_cols_lo;
-        int i_lo_col = i % n_cols_lo;
+        auto i_lo_row = i / n_cols_lo;
+        auto i_lo_col = i % n_cols_lo;
 
-        // loop over contributing lo_res rows
+        thrust::complex<T> accumulation(0.0, 0.0);
+        int n_no_val = 0;
+
+        // loop over contributing hi_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
-            int i_hi_row = i_blk_row + i_lo_row*row_resize;
-            // loop over contributing lo_res columns
+            auto i_hi_row = i_blk_row + i_lo_row * row_resize;
+            // loop over contributing hi_res columns
             for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
                 // get lo_res col index
-                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                auto i_hi_col = i_blk_col + i_lo_col * col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
+                auto i_hi = i_hi_row * n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 thrust::complex<T> hi_res_pixel_value = hi_res[i_hi];
-                if (hi_res_pixel_value != no_data_value) {
-                    lo_res[i] += hi_res_pixel_value;
-                }
+                if (hi_res_pixel_value != no_data_value)
+                    accumulation += hi_res_pixel_value;
+                else
+                    ++n_no_val;
             }
         }
+        lo_res[i] = accumulation / (blk_sz - n_no_val);
     }
 }
 
@@ -448,40 +453,41 @@ input:
  */
 template <typename T>
 __global__ void multilooks_weighted_g(T *lo_res,
-         T *hi_res,
-         T* weights,
-         int n_cols_hi,
-         int n_cols_lo,
+         const T* __restrict__ hi_res,
+         const T* __restrict__ weights,
+         size_t n_cols_hi,
+         size_t n_cols_lo,
          int row_resize,
          int col_resize,
-         int sz_lo)
+         size_t sz_lo)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / n_cols_lo;
-        int i_lo_col = i % n_cols_lo;
+        auto i_lo_row = i / n_cols_lo;
+        auto i_lo_col = i % n_cols_lo;
 
+        T accumulation = 0;
         T sum_weight = 0;
         // loop over contributing hi_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
-            int i_hi_row = i_blk_row + i_lo_row*row_resize;
-            // loop over contributing lo_res columns
+            auto i_hi_row = i_blk_row + i_lo_row * row_resize;
+            // loop over contributing hi_res columns
             for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
                 // get lo_res col index
-                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                auto i_hi_col = i_blk_col + i_lo_col * col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
+                auto i_hi = i_hi_row * n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
-                lo_res[i] += hi_res[i_hi];
+                accumulation += hi_res[i_hi];
                 sum_weight += weights[i_hi];
             }
         }
 
         if (sum_weight > 0) {
-            lo_res[i] /= weights[i];
+            lo_res[i] = accumulation / sum_weight;
         } else {
-            lo_res[i] = 0.;
+            lo_res[i] = 0.0;
         }
     }
 }
@@ -500,34 +506,38 @@ input:
  */
 template <typename T>
 __global__ void multilooks_power_g(T *lo_res,
-        thrust::complex<T> *hi_res,
+        const thrust::complex<T>* __restrict__ hi_res,
         int power,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / n_cols_lo;
-        int i_lo_col = i % n_cols_lo;
+        auto i_lo_row = i / n_cols_lo;
+        auto i_lo_col = i % n_cols_lo;
 
-        // loop over contributing lo_res rows
+        // init mlook accumulation to 0
+        T accumulation = 0.0;
+
+        // loop over contributing hi_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
-            int i_hi_row = i_blk_row + i_lo_row*row_resize;
-            // loop over contributing lo_res columns
+            auto i_hi_row = i_blk_row + i_lo_row * row_resize;
+            // loop over contributing hi_res columns
             for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
                 // get lo_res col index
-                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                auto i_hi_col = i_blk_col + i_lo_col * col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
+                auto i_hi = i_hi_row * n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
-                lo_res[i] += pow(abs(hi_res[i_hi]), power);
+                accumulation += pow(abs(hi_res[i_hi]), power);
             }
         }
+        lo_res[i] = accumulation / blk_sz;
     }
 }
 
@@ -538,54 +548,54 @@ template class gpuLooks<float>;
 
 template __global__ void
 multilooks_g<float>(float *lo_res,
-        float *hi_res,
-        int n_cols_hi,
-        int n_cols_lo,
+        const float* __restrict__ hi_res,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         float blk_sz);
 
 template __global__ void
 multilooks_g<float>(thrust::complex<float> *lo_res,
-        thrust::complex<float> *hi_res,
-        int n_cols_hi,
-        int n_cols_lo,
+        const thrust::complex<float>* __restrict__ hi_res,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         float blk_sz);
 
 template __global__ void
 multilooks_no_data_g<float>(float *lo_res,
-        float *hi_res,
+        const float* __restrict__ hi_res,
         float no_data_value,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         float blk_sz);
 
 template __global__ void
 multilooks_no_data_g<float>(thrust::complex<float> *lo_res,
-        thrust::complex<float> *hi_res,
+        const thrust::complex<float>* __restrict__ hi_res,
         thrust::complex<float> no_data_value,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         float blk_sz);
 
 template __global__ void
 multilooks_power_g<float>(float *lo_res,
-        thrust::complex<float> *hi_res,
+        const thrust::complex<float>* __restrict__ hi_res,
         int power,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         float blk_sz);
 

@@ -169,5 +169,6 @@ class CrossmulRunConfig(RunConfig):
         else:
             self.cfg['processing']['crossmul']['flatten'] = None
 
+        # oversample CPU-only capability for now
         if 'oversample' not in self.cfg['processing']['crossmul']:
             self.cfg['processing']['crossmul']['oversample'] = 2

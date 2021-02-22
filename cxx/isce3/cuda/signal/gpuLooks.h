@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Source Author: Liang Yu
-// Copyright 2019
-
 #pragma once
 
 #include "forward.h"
@@ -79,63 +73,63 @@ class isce3::cuda::signal::gpuLooks {
 
 template<class T>
 CUDA_GLOBAL void multilooks_g(T *lo_res,
-        T *hi_res,
-        int n_cols_hi,
-        int n_cols_lo,
+        const T* __restrict__ hi_res,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz);
 
 template<class T>
 CUDA_GLOBAL void multilooks_g(thrust::complex<T> *lo_res,
-        thrust::complex<T> *hi_res,
-        int n_cols_hi,
-        int n_cols_lo,
+        const thrust::complex<T>* __restrict__ hi_res,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz);
 
 template<class T>
 CUDA_GLOBAL void multilooks_no_data_g(T *lo_res,
-        T *hi_res,
+        const T* __restrict__ hi_res,
         T no_data_value,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz);
 
 template<class T>
 CUDA_GLOBAL void multilooks_no_data_g(thrust::complex<T> *lo_res,
-        thrust::complex<T> *hi_res,
+        const thrust::complex<T>* __restrict__ hi_res,
         thrust::complex<T> no_data_value,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz);
 
 template<class T>
 CUDA_GLOBAL void multilooks_weighted_g(T *lo_res,
-        T *hi_res,
-        T* weights,
-        int n_cols_hi,
-        int n_cols_lo,
+        const T* __restrict__ hi_res,
+        const T* __restrict__ weights,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo);
+        size_t sz_lo);
 
 template<class T>
 CUDA_GLOBAL void multilooks_power_g(T *lo_res,
-        thrust::complex<T> *hi_res,
+        const thrust::complex<T>* __restrict__ hi_res,
         int power,
-        int n_cols_hi,
-        int n_cols_lo,
+        size_t n_cols_hi,
+        size_t n_cols_lo,
         int row_resize,
         int col_resize,
-        int sz_lo,
+        size_t sz_lo,
         T blk_sz);

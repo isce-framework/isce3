@@ -11,7 +11,7 @@ import journal
 
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import h5_prep
+from pybind_nisar.workflows import h5_prep, gpu_check
 from pybind_nisar.workflows.crossmul_argparse import CrossmulArgparse
 from pybind_nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 
@@ -39,8 +39,18 @@ def run(cfg: dict, output_hdf5: str = None):
     info_channel = journal.info("crossmul.run")
     info_channel.log("starting crossmultipy")
 
-    # for now only use CPU
-    crossmul = isce3.signal.Crossmul()
+    # check if gpu ok to use
+    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                cfg['worker']['gpu_id'])
+    if use_gpu:
+        # Set the current CUDA device.
+        device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
+        isce3.cuda.core.set_device(device)
+        crossmul = isce3.cuda.signal.Crossmul()
+    else:
+        crossmul = isce3.signal.Crossmul()
+        # oversample currently CPU only
+        crossmul.oversample = cfg['processing']['crossmul']['oversample']
 
     crossmul.range_looks = cfg['processing']['crossmul']['range_looks']
     crossmul.az_looks = cfg['processing']['crossmul']['azimuth_looks']

@@ -151,9 +151,9 @@ TEST_F(gpuLooksTest, MultilookPower)
     lksObj.multilook(cpxData, ampLooked, p) ;
 
     // check the first element of the multi-looked amplitude
-    ASSERT_NEAR(ampLooked[0], 9, 1.0e-6);
+    ASSERT_NEAR(ampLooked[0], 1, 1.0e-6);
     // check the last element of the multi-looked amplitude
-    ASSERT_NEAR(ampLooked[widthLooked*lengthLooked-1], 9, 1.0e-6);
+    ASSERT_NEAR(ampLooked[widthLooked*lengthLooked-1], 1, 1.0e-6);
 }
 
 

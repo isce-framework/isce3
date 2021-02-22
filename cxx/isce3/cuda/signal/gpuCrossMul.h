@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Author: Liang Yu
-// Copyright 2018-
-
 #pragma once
 
 #include "forward.h"
@@ -21,6 +15,10 @@ class isce3::cuda::signal::gpuCrossmul {
 
         void crossmul(isce3::io::Raster& referenceSLC,
                 isce3::io::Raster& secondarySLC,
+                isce3::io::Raster& interferogram);
+
+        void crossmul(isce3::io::Raster& referenceSLC,
+                isce3::io::Raster& secondarySLC,
                 isce3::io::Raster& interferogram,
                 isce3::io::Raster& coherence);
 
@@ -28,7 +26,7 @@ class isce3::cuda::signal::gpuCrossmul {
                 isce3::io::Raster& secondarySLC,
                 isce3::io::Raster& rngOffsetRaster,
                 isce3::io::Raster& interferogram,
-                isce3::io::Raster& coherenceRaster);
+                isce3::io::Raster& coherenceRaster) const;
 
        /** Set doppler LUTs for reference and secondary SLCs*/
         void doppler(isce3::core::LUT1d<double>,
@@ -143,29 +141,8 @@ class isce3::cuda::signal::gpuCrossmul {
         bool _doCommonRangeBandFilter = false;
 
         // number of lines per block
-        size_t blockRows = 8192;
+        size_t _rowsPerBlock = 8192;
 
         // upsampling factor
-        size_t oversample = 1;
+        size_t _oversample = 1;
 };
-
-void lookdownShiftImpact(size_t oversample,
-        size_t nfft,
-        size_t blockRows,
-        std::valarray<std::complex<float>> &shiftImpact);
-
-template <class T>
-CUDA_GLOBAL void interferogram_g(thrust::complex<T> *ifgram,
-        thrust::complex<T> *refSlcUp,
-        thrust::complex<T> *secSlcUp,
-        int n_rows,
-        int n_cols,
-        int n_fft,
-        int oversample_i,
-        T oversample_f);
-
-template <class T>
-CUDA_GLOBAL void calculate_coherence_g(T *ref_amp,
-        T *sec_amp,
-        thrust::complex<T> *ifgram_mlook,
-        int n_elements);

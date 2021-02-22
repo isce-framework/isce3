@@ -138,4 +138,5 @@ runconfig:
                 range_looks: 11
                 azimuth_looks: 11
                 flatten: True
+                # CPU only for now
                 oversample: 2
