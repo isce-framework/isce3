@@ -85,12 +85,9 @@ AssureOutOfSourceBuilds()
 ####Check CXX Version and Standard to C++17
 CheckCXX()
 
-option(ISCE3_WITH_CYTHON "Enable isce3 cython extension" ON)
+option(ISCE3_WITH_CYTHON "Enable isce3 cython extension" OFF)
 if(ISCE3_WITH_CYTHON)
-    message(DEPRECATION
-        "isce3's cython extension is deprecated and will soon be removed")
-    # Define some utilities for creating cython modules
-    include(useCython)
+    message(ERROR "isce3's cython extension has been removed!")
 endif()
 
 ###Layout same install directory structure as pyre
@@ -124,9 +121,6 @@ getpackage_pyre()
 # These packages required only for the python API. getpackage_python() should
 # be executed first in order to ensure a sufficient version of Python is used.
 getpackage_python()
-if(ISCE3_WITH_CYTHON)
-    getpackage_cython()
-endif()
 getpackage_pybind11()
 
 add_subdirectory(bin)

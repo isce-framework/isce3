@@ -1,7 +1,3 @@
-macro(getpackage_cython)
-    find_package(Cython 0.28.1 REQUIRED)
-endmacro()
-
 macro(getpackage_eigen)
     if(ISCE3_FETCH_EIGEN)
         find_package(Eigen3 3.3.7 CONFIG)

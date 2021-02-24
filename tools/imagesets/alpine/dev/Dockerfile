@@ -4,7 +4,6 @@ FROM $runtime_img
 RUN apk add --no-cache \
         bash \
         cmake \
-        cython \
         eigen-dev \
         fftw-dev \
         g++ \

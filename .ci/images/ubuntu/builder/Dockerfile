@@ -3,7 +3,6 @@ FROM nvidia/cuda:10.1-devel-ubuntu19.04
 # get prereqs
 RUN apt-get update && apt-get install -y \
         cmake \
-        cython3 \
         fftw3-dev \
         git \
         libeigen3-dev \

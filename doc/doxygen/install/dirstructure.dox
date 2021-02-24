@@ -38,7 +38,7 @@ that contain configuration files for different build and CI systems.
 │   └── pyre
 ├── python                      (Python bindings for ISCE)
 │   ├── CMakeLists.txt              
-│   ├── extensions                  - C++ extensions using cython, pybind11 etc
+│   ├── extensions                  - C++ extensions using pybind11
 │   └── packages                    - Pure python packages
 └── tests                       (Unit tests)
     ├── CMakeLists.txt

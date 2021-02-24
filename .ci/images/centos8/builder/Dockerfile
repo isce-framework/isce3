@@ -9,7 +9,6 @@ RUN yum install -y \
 
 RUN conda install -y \
         cmake \
-        cython \
         fftw \
         gdal \
         git \

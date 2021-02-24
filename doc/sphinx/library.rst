@@ -1,8 +1,5 @@
 :orphan:
 
-.. title:: Cython
-
-
 ISCE's Library Interface 
 ==========================
 

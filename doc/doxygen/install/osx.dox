@@ -6,7 +6,7 @@ ISCE has the following dependencies
 <ol>
 <li> C++ compiler - gcc-6/ clang-6.0 or above
 <li> Python 3.6 or above
-<li> Numpy and Cython
+<li> Numpy
 <li> GDAL 2.3 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
 <li> cmake 3.12 or above
@@ -46,12 +46,7 @@ We present instructions with clang here to ensure compatibility with most binari
 <li>sudo port install hdf5
 <li>sudo port install py37-numpy 
 <li>sudo port install py37-scipy
-<li>sudo port install py37-cython
 <li>sudo port install py37-pytest
-<ul>
-<li>sudo ln -s /opt/local/bin/cython-3.7 /opt/local/bin/cython3
-<li>The link reproduces the environment that we usually get on linux machines
-</ul>
 <li>sudo port install py37-h5py
 <li>sudo port install proj
 <li>sudo port install gdal +curl +expat +geos +hdf5 +openjpeg
