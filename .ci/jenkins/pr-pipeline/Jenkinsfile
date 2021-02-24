@@ -6,47 +6,81 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '10'))
   }
   agent any
-  parameters {
-    credentials(name: 'GIT_OAUTH_TOKEN',
-                defaultValue: '76f208dd-33bd-4a08-86d3-f0f38ddb95da',
-                description: 'ID of Github-FN OAuth token.',
-                credentialType: 'com.cloudbees.plugins.credentials.impl.StringCredentialsImpl',
-                required: true)
+  environment {
+    // Personal Access Token (PAT) for authenticating github-fn transactions
+    // for the CI server. Secret credentials are managed via the Jenkins UI.
+    RTBURNS_PAT = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
   }
   stages {
-    stage("Build ISCEv3 docker image") {
-      agent any
+    stage("Set up Docker images with ISCE3 build prereqs") {
       steps {
-        echo "Build ISCEv3 docker image"
-        echo "WORKSPACE: ${WORKSPACE}"
-        withCredentials([string(credentialsId: params.GIT_OAUTH_TOKEN,
-                                variable: 'git_oauth_token')]) {
-          sh label: "Build ISCEv3 docker image", script: """
-            GIT_OAUTH_TOKEN=$git_oauth_token
-            bash .ci/jenkins/PR-isce-develop/build.sh
-          """
-          stash includes: '.ci/images/centos/cppcheck.xml', name: 'cppcheck_file'
-          stash includes: '.ci/images/centos/*.xml', name: 'ctest_files'
+        sh "/usr/local/bin/python3 tools/run.py setup"
+      }
+    }
+    stage("Configure ISCE3") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py configure"
+      }
+    }
+    stage("Build ISCE3") {
+      parallel {
+        stage("Compile ISCE3 source") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py build"
+          }
+        }
+        stage("Build and deploy ISCE3 documentation") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py docsbuild"
+            sh "/usr/local/bin/python3 tools/run.py prdocs"
+          }
         }
       }
     }
+    stage("Run ISCE3 unit tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py test"
+      }
+    }
+    stage("Build ISCE3 redistributable image") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py makepkg"
+        sh "/usr/local/bin/python3 tools/run.py makedistrib"
+      }
+    }
+    /*
+    XXX Workflow tests are disabled in this job until we adopt a large file
+    management solution w/ caching (e.g. git-lfs). Disk utilization is
+    currently too high and causes the CI server to crash.
+    stage("Fetch workflow test data") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py fetchdata"
+      }
+    }
+    stage("Run workflow tests") {
+      parallel {
+        stage("Run RSLC test") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py rslctest"
+          }
+        }
+        stage("Run GSLC test") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py gslctest"
+          }
+        }
+        stage("Run GCOV test") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py gcovtest"
+          }
+        }
+      }
+    }
+    */
   }
   post {
     always {
-      echo "Cleaning up workspace"
-      deleteDir()
-
-      echo "Publishing Cppcheck results"
-      echo "WORKSPACE: ${WORKSPACE}"
-      unstash 'cppcheck_file'
-      publishCppcheck (
-        pattern: ".ci/images/centos/cppcheck.xml",
-        ignoreBlankFiles: true,
-        allowNoReport: true
-      )
-
       echo "Publishing xUnit test result report"
-      unstash 'ctest_files'
       xunit (
         thresholds: [
           skipped (
@@ -60,7 +94,7 @@ pipeline {
         ],
         tools: [
           CTest (
-            pattern: '.ci/images/centos/*.xml',
+            pattern: 'build-docker/Testing/*/Test.xml',
             skipNoTestFiles: false,
             failIfNotNew: true,
             deleteOutputFiles: true,
@@ -68,9 +102,10 @@ pipeline {
           )
         ]
       )
+      deleteDir()
     }
     success {
-      echo 'I succeeeded!'
+      echo 'I succeeded!'
     }
     unstable {
       echo 'I am unstable :/'

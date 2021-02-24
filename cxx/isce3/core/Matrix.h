@@ -31,9 +31,9 @@ class isce3::core::Matrix {
 
         // Dependent types
         using view_t = typename grid_t::view_type;
-        using shape_t = typename layout_t::shape_type;
-        using slice_t = typename layout_t::slice_type;
-        using packing_t = typename layout_t::packing_type;
+        using shape_t = index_t;
+        using packing_t = pyre::grid::packing_t<2>;
+        using slice_t = pyre::grid::slice_t<index_t, packing_t>;
 
     public:
         /** Default constructor */

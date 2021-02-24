@@ -5,13 +5,11 @@ FROM $runtime_img
 RUN set -ex \
  && yum update -y \
  && yum install -y \
-        cuda-cudart-dev-$CUDA_PKG_VERSION \
-        cuda-cufft-dev-$CUDA_PKG_VERSION \
+        cuda-cudart-devel-$CUDA_PKG_VERSION \
         cuda-nvcc-$CUDA_PKG_VERSION \
+        libcufft-devel-$CUDA_PKG_VERSION \
         doxygen \
-        ninja \
         rpm-build \
-        sphinx \
  && yum clean all \
  && rm -rf /var/cache/yum \
  && rm -rf /var/cache/yum

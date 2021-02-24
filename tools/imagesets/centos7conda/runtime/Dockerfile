@@ -1,7 +1,9 @@
-FROM nvidia/cuda:9.2-base-centos7
+FROM nvidia/cuda:11.0-base-centos7
 
+# Trying to install a package that doesn't exist should be an error.
 RUN yum update -y \
  && yum clean all \
+ && echo 'skip_missing_names_on_install=False' >> /etc/yum.conf \
  && rm -rf /var/cache/yum
 
 # install latest miniconda
@@ -29,8 +31,10 @@ ENV GDAL_DRIVER_PATH=$conda_prefix/lib/gdalplugins
 ENV PROJ_LIB=$conda_prefix/share/proj
 ENV MPLCONFIGDIR=/tmp
 
+ENV CUDA_PKG_VERSION 11-0
+
 RUN yum install -y \
         cuda-cudart-$CUDA_PKG_VERSION \
-        cuda-cufft-$CUDA_PKG_VERSION \
+        libcufft-$CUDA_PKG_VERSION \
  && yum clean all \
  && rm -rf /var/cache/yum
