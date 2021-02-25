@@ -19,17 +19,17 @@ if(CMAKE_VERSION VERSION_LESS 3.19)
 endif()
 
 # Check that compiler supports C++17
-# (Only checks GCC and Clang currently)
+# (Only checks GCC and AppleClang currently)
 function(CheckCXX)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
             message(FATAL_ERROR
-                "Insufficient GCC version - requires 6.0 or greater")
+                "Insufficient GCC version - requires 7.0 or greater")
         endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
             message(FATAL_ERROR
-                "Insufficient Clang version - requires 5.0 or greater")
+                "Insufficient AppleClang version - requires 5.0 or greater")
         endif()
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     else()
@@ -37,12 +37,19 @@ function(CheckCXX)
             "Unsupported compiler detected - courageously continuing")
     endif()
 
-    # Require C++17 (no extensions) for host code
+    if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+        if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11)
+            message(FATAL_ERROR
+                "NVCC 11+ required - detected ${CMAKE_CUDA_COMPILER_VERSION}")
+        endif()
+        # TODO: Can we check the CUDA host compiler here? We require GCC 7+
+    endif()
+
+    # Require C++17 (no extensions) for all C++ and CUDA code
     set(CMAKE_CXX_STANDARD            17 PARENT_SCOPE)
     set(CMAKE_CXX_STANDARD_REQUIRED   ON PARENT_SCOPE)
     set(CMAKE_CXX_EXTENSIONS         OFF PARENT_SCOPE)
-    # Require C++14 (no extensions) for device code
-    set(CMAKE_CUDA_STANDARD           14 PARENT_SCOPE)
+    set(CMAKE_CUDA_STANDARD           17 PARENT_SCOPE)
     set(CMAKE_CUDA_STANDARD_REQUIRED  ON PARENT_SCOPE)
     set(CMAKE_CUDA_EXTENSIONS        OFF PARENT_SCOPE)
 

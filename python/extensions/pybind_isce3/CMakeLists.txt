@@ -6,15 +6,6 @@ include(Sources.cmake)
 set(ISCEEXTENSION pybind_isce3)
 pybind11_add_module(${ISCEEXTENSION} ${SRCS})
 
-# required c++ standard
-# XXX nominally, c++17 is experimentally supported but it produces a long list
-# XXX of awful compilation errors for me (w/ g++ v6.1)
-set_target_properties(${ISCEEXTENSION}
-    PROPERTIES
-        CXX_STANDARD 14
-        CXX_STANDARD_REQUIRED ON
-    )
-
 # include path
 target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
 
