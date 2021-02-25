@@ -1,3 +1,2 @@
 cmake>=3.13
-cython
 pytest

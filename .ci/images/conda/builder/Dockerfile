@@ -3,7 +3,6 @@ FROM isce-ci-conda/base
 # get prereqs
 RUN conda install -q -y \
         cmake>=3.12 \
-        cython \
         eigen \
         fftw \
         gdal \

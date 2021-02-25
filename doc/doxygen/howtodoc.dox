@@ -113,14 +113,14 @@ xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
 
 Doxygen interprets CUDA code in the same manner as C/C++. Use the same style guidelines as regular C++ code for documenting the CUDA code.
 
-\section docpy Cython/Python Documentation
+\section docpy Python Documentation
 
 Developers are expected to document their functions using <a href="http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google Style docstrings</a>. ISCE uses sphinx with the autodoc, autosummary and napoleon extensions. We will base our examples on the code from pyEllipsoid.pyx file in the extensions folder of the source tree. 
 
 
 \subsection docpyfunc Functions
 
-Cython/Python docstrings must clearly include sections for Args and Returns. Each of the Args entries must include a python type expected by the function. Note that in case of Cython, the type could also be optionally included as a part of the function signature in the input arguments. However, the python type should always be included in the docstrings.
+Python docstrings must clearly include sections for Args and Returns. Each of the Args entries must include a python type expected by the function. The python type should always be included in the docstrings.
 
 \subsubsection docpyfunczero No return values
 

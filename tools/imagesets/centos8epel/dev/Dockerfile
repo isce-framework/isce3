@@ -25,6 +25,5 @@ RUN curl -OSsL https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-
  && bash cmake-*.sh --prefix=/usr --skip-license \
  && rm cmake-*.sh
 
-# Centos 8 EPEL cython is too old (0.28.x)
-# Get 0.29.x from pip
-RUN pip3 install cython shapely
+# Centos 8 EPEL shapely is too old
+RUN pip3 install shapely

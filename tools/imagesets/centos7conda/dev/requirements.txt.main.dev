@@ -1,5 +1,4 @@
 cmake
-cython
 eigen
 git
 ninja
