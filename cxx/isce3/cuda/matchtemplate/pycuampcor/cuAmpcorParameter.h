@@ -10,6 +10,7 @@
 #define __CUAMPCORPARAMETER_H
 
 #include <string>
+#include <vector>
 
 /// Class container for all parameters
 ///
@@ -31,6 +32,14 @@
 
 class cuAmpcorParameter{
 public:
+
+    // TODO this is to avoid memory issues due to copying the non-owning pointers
+    // we should use RAII ownership so these can be trivially defaulted
+    cuAmpcorParameter(const cuAmpcorParameter&) = delete;
+    cuAmpcorParameter& operator=(const cuAmpcorParameter&) = delete;
+    cuAmpcorParameter(cuAmpcorParameter&&) = delete;
+    cuAmpcorParameter& operator=(cuAmpcorParameter&&) = delete;
+
     int algorithm;      ///< Cross-correlation algorithm: 0=freq domain (default) 1=time domain
     int deviceID;       ///< Targeted GPU device ID: use -1 to auto select
     int nStreams;       ///< Number of streams to asynchonize data transfers and compute kernels
@@ -104,24 +113,24 @@ public:
 
     int referenceStartPixelDown0;    ///< first starting pixel in reference image (down)
     int referenceStartPixelAcross0;  ///< first starting pixel in reference image (across)
-    int *referenceStartPixelDown;    ///< reference starting pixels for each window (down)
-    int *referenceStartPixelAcross;  ///< reference starting pixels for each window (across)
-    int *secondaryStartPixelDown;    ///< secondary starting pixels for each window (down)
-    int *secondaryStartPixelAcross;  ///< secondary starting pixels for each window (across)
+    std::vector<int> referenceStartPixelDown;    ///< reference starting pixels for each window (down)
+    std::vector<int> referenceStartPixelAcross;  ///< reference starting pixels for each window (across)
+    std::vector<int> secondaryStartPixelDown;    ///< secondary starting pixels for each window (down)
+    std::vector<int> secondaryStartPixelAcross;  ///< secondary starting pixels for each window (across)
     int grossOffsetDown0;       ///< gross offset static component (down)
     int grossOffsetAcross0;     ///< gross offset static component (across)
-    int *grossOffsetDown;		///< Gross offsets between reference and secondary windows (down)
-    int *grossOffsetAcross;     ///< Gross offsets between reference and secondary windows (across)
+    std::vector<int> grossOffsetDown;		///< Gross offsets between reference and secondary windows (down)
+    std::vector<int> grossOffsetAcross;     ///< Gross offsets between reference and secondary windows (across)
     int mergeGrossOffset;       ///< whether to merge gross offsets into the final offsets
 
-    int *referenceChunkStartPixelDown;    ///< reference starting pixels for each chunk (down)
-    int *referenceChunkStartPixelAcross;  ///< reference starting pixels for each chunk (across)
-    int *secondaryChunkStartPixelDown;    ///< secondary starting pixels for each chunk (down)
-    int *secondaryChunkStartPixelAcross;  ///< secondary starting pixels for each chunk (across)
-    int *referenceChunkHeight;   ///< reference chunk height
-    int *referenceChunkWidth;    ///< reference chunk width
-    int *secondaryChunkHeight;   ///< secondary chunk height
-    int *secondaryChunkWidth;    ///< secondary chunk width
+    std::vector<int> referenceChunkStartPixelDown;    ///< reference starting pixels for each chunk (down)
+    std::vector<int> referenceChunkStartPixelAcross;  ///< reference starting pixels for each chunk (across)
+    std::vector<int> secondaryChunkStartPixelDown;    ///< secondary starting pixels for each chunk (down)
+    std::vector<int> secondaryChunkStartPixelAcross;  ///< secondary starting pixels for each chunk (across)
+    std::vector<int> referenceChunkHeight;   ///< reference chunk height
+    std::vector<int> referenceChunkWidth;    ///< reference chunk width
+    std::vector<int> secondaryChunkHeight;   ///< secondary chunk height
+    std::vector<int> secondaryChunkWidth;    ///< secondary chunk width
     int maxReferenceChunkHeight, maxReferenceChunkWidth; ///< max reference chunk size
     int maxSecondaryChunkHeight, maxSecondaryChunkWidth; ///< max secondary chunk size
 
@@ -137,9 +146,6 @@ public:
 
     // Allocate various arrays after the number of Windows is given
     void allocateArrays();
-    // Deallocate arrays on exit
-    void deallocateArrays();
-
 
     // Three methods to set reference/secondary starting pixels and gross offsets from input reference start pixel(s) and gross offset(s)
     // 1 (int *, int *, int *, int *): varying reference start pixels and gross offsets

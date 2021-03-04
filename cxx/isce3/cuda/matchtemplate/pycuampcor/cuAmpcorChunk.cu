@@ -267,11 +267,11 @@ void cuAmpcorChunk::loadReferenceChunk()
     int width = param->referenceChunkWidth[idxChunk];  // number of pixels along width
 
     //use cpu to compute the starting positions for each window
-    getRelativeOffset(ChunkOffsetDown->hostData, param->referenceStartPixelDown, param->referenceChunkStartPixelDown[idxChunk]);
+    getRelativeOffset(ChunkOffsetDown->hostData, &param->referenceStartPixelDown[0], param->referenceChunkStartPixelDown[idxChunk]);
     // copy the positions to gpu
     ChunkOffsetDown->copyToDevice(stream);
     // same for the across direction
-    getRelativeOffset(ChunkOffsetAcross->hostData, param->referenceStartPixelAcross, param->referenceChunkStartPixelAcross[idxChunk]);
+    getRelativeOffset(ChunkOffsetAcross->hostData, &param->referenceStartPixelAcross[0], param->referenceChunkStartPixelAcross[idxChunk]);
     ChunkOffsetAcross->copyToDevice(stream);
 
     // check whether the image is complex (e.g., SLC) or real( e.g. TIFF)
@@ -320,9 +320,9 @@ void cuAmpcorChunk::loadSecondaryChunk()
 {
 
     //copy to a batch format (nImages, height, width)
-    getRelativeOffset(ChunkOffsetDown->hostData, param->secondaryStartPixelDown, param->secondaryChunkStartPixelDown[idxChunk]);
+    getRelativeOffset(ChunkOffsetDown->hostData, &param->secondaryStartPixelDown[0], param->secondaryChunkStartPixelDown[idxChunk]);
     ChunkOffsetDown->copyToDevice(stream);
-    getRelativeOffset(ChunkOffsetAcross->hostData, param->secondaryStartPixelAcross, param->secondaryChunkStartPixelAcross[idxChunk]);
+    getRelativeOffset(ChunkOffsetAcross->hostData, &param->secondaryStartPixelAcross[0], param->secondaryChunkStartPixelAcross[idxChunk]);
     ChunkOffsetAcross->copyToDevice(stream);
 
     if(secondaryImage->isComplex())

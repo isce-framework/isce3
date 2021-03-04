@@ -111,43 +111,24 @@ void cuAmpcorParameter::setupParameters()
 
 void cuAmpcorParameter::allocateArrays()
 {
-    int arraySize = numberWindows*sizeof(int);
-    grossOffsetDown = (int *)malloc(arraySize);
-    grossOffsetAcross = (int *)malloc(arraySize);
-    referenceStartPixelDown = (int *)malloc(arraySize);
-    referenceStartPixelAcross =  (int *)malloc(arraySize);
-    secondaryStartPixelDown = (int *)malloc(arraySize);
-    secondaryStartPixelAcross =  (int *)malloc(arraySize);
+    int arraySize = numberWindows;
+    grossOffsetDown.resize(arraySize);
+    grossOffsetAcross.resize(arraySize);
+    referenceStartPixelDown.resize(arraySize);
+    referenceStartPixelAcross.resize(arraySize);
+    secondaryStartPixelDown.resize(arraySize);
+    secondaryStartPixelAcross.resize(arraySize);
 
-    int arraySizeChunk = numberChunks*sizeof(int);
-    referenceChunkStartPixelDown = (int *)malloc(arraySizeChunk);
-    referenceChunkStartPixelAcross = (int *)malloc(arraySizeChunk);
-    secondaryChunkStartPixelDown = (int *)malloc(arraySizeChunk);
-    secondaryChunkStartPixelAcross = (int *)malloc(arraySizeChunk);
-    referenceChunkHeight = (int *)malloc(arraySizeChunk);
-    referenceChunkWidth = (int *)malloc(arraySizeChunk);
-    secondaryChunkHeight = (int *)malloc(arraySizeChunk);
-    secondaryChunkWidth = (int *)malloc(arraySizeChunk);
+    int arraySizeChunk = numberChunks;
+    referenceChunkStartPixelDown.resize(arraySizeChunk);
+    referenceChunkStartPixelAcross.resize(arraySizeChunk);
+    secondaryChunkStartPixelDown.resize(arraySizeChunk);
+    secondaryChunkStartPixelAcross.resize(arraySizeChunk);
+    referenceChunkHeight.resize(arraySizeChunk);
+    referenceChunkWidth.resize(arraySizeChunk);
+    secondaryChunkHeight.resize(arraySizeChunk);
+    secondaryChunkWidth.resize(arraySizeChunk);
 }
-
-void cuAmpcorParameter::deallocateArrays()
-{
-    free(grossOffsetDown);
-    free(grossOffsetAcross);
-    free(referenceStartPixelDown);
-    free(referenceStartPixelAcross);
-    free(secondaryStartPixelDown);
-    free(secondaryStartPixelAcross);
-    free(referenceChunkStartPixelDown);
-    free(referenceChunkStartPixelAcross);
-    free(secondaryChunkStartPixelDown);
-    free(secondaryChunkStartPixelAcross);
-    free(referenceChunkHeight);
-    free(referenceChunkWidth);
-    free(secondaryChunkHeight);
-    free(secondaryChunkWidth);
-}
-
 
 /// Set starting pixels for reference and secondary windows from arrays
 /// set also gross offsets between reference and secondary windows
@@ -331,8 +312,5 @@ void cuAmpcorParameter::checkPixelInImageRange()
 }
 
 
-cuAmpcorParameter::~cuAmpcorParameter()
-{
-    deallocateArrays();
-}
+cuAmpcorParameter::~cuAmpcorParameter() {}
 // end of file
