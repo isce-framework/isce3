@@ -13,6 +13,7 @@ pybind_nisar/workflows/point_target_info.py
 pybind_nisar/workflows/rdr2geo.py
 pybind_nisar/workflows/resample_slc.py
 pybind_nisar/workflows/unwrap.py
+pybind_nisar/workflows/antenna_parser.py
 )
 
 foreach(TESTFILE ${TESTFILES})
