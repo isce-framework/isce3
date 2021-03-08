@@ -14,6 +14,7 @@ using isce3::geocode::geocodeMemoryMode;
 using isce3::geocode::geocodeOutputMode;
 using isce3::geometry::rtcAlgorithm;
 using isce3::geometry::rtcInputTerrainRadiometry;
+using isce3::geometry::rtcOutputTerrainRadiometry;
 using isce3::io::Raster;
 using isce3::product::RadarGridParameters;
 
@@ -62,11 +63,14 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("radar_grid"), py::arg("input_raster"),
                     py::arg("output_raster"), py::arg("dem_raster"),
                     py::arg("output_mode") =
-                            geocodeOutputMode::AREA_PROJECTION_WITH_RTC,
+                            geocodeOutputMode::AREA_PROJECTION,
                     py::arg("geogrid_upsampling") = 1,
                     py::arg("flag_upsample_radar_grid") = false,
+                    py::arg("flag_apply_rtc") = false,
                     py::arg("input_terrain_radiometry") =
                             rtcInputTerrainRadiometry::BETA_NAUGHT,
+                    py::arg("output_terrain_radiometry") =
+                            rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
                     py::arg("exponent") = 0,
                     py::arg("rtc_min_value_db") =
                             std::numeric_limits<float>::quiet_NaN(),
@@ -100,9 +104,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
 void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeMode)
 {
     pyGeocodeMode.value("INTERP", geocodeOutputMode::INTERP)
-            .value("AREA_PROJECTION", geocodeOutputMode::AREA_PROJECTION)
-            .value("AREA_PROJECTION_WITH_RTC",
-                   geocodeOutputMode::AREA_PROJECTION_WITH_RTC);
+            .value("AREA_PROJECTION", geocodeOutputMode::AREA_PROJECTION);
 };
 
 void addbinding(pybind11::enum_<geocodeMemoryMode>& pyGeocodeMemoryMode)

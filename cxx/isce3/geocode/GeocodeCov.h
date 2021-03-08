@@ -25,7 +25,6 @@ namespace isce3 { namespace geocode {
 enum geocodeOutputMode {
     INTERP = 0,
     AREA_PROJECTION = 1,
-    AREA_PROJECTION_WITH_RTC = 2
 };
 
 /** Enumeration type to indicate memory management */
@@ -48,8 +47,9 @@ public:
      * @param[in]  output_mode         Geocode method
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
-     * raster
+     * @param[in]  flag_apply_rtc      Apply radiometric terrain correction (RTC)
+     * @param[in]  input_terrain_radiometry  Input terrain radiometry
+     * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  exponent            Exponent to be applied to the input data.
      * The value 0 indicates that the the exponent is based on the data type of
      * the input raster (1 for real and 2 for complex rasters).
@@ -89,11 +89,15 @@ public:
     geocode(const isce3::product::RadarGridParameters& radar_grid,
             isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
             isce3::io::Raster& dem_raster,
-            geocodeOutputMode output_mode = geocodeOutputMode::INTERP,
+            geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
             double geogrid_upsampling = 1,
             bool flag_upsample_radar_grid = false,
+            bool flag_apply_rtc = false,
             isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
                     isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT,
+            isce3::geometry::rtcOutputTerrainRadiometry
+                    output_terrain_radiometry = isce3::geometry::
+                            rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             int exponent = 0,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
             double rtc_geogrid_upsampling =
@@ -142,8 +146,9 @@ public:
      * @param[in]  output_mode         Output mode
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  input_terrain_radiometry    Terrain radiometry of the input
-     * raster
+     * @param[in]  flag_apply_rtc      Apply radiometric terrain correction (RTC)
+     * @param[in]  input_terrain_radiometry  Input terrain radiometry
+     * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit are ignored.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
@@ -183,8 +188,12 @@ public:
             geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
             double geogrid_upsampling = 1,
             bool flag_upsample_radar_grid = false,
+            bool flag_apply_rtc = false,
             isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
                     isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT,
+            isce3::geometry::rtcOutputTerrainRadiometry
+                    output_terrain_radiometry = isce3::geometry::
+                            rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
             double rtc_geogrid_upsampling =
                     std::numeric_limits<double>::quiet_NaN(),
@@ -312,9 +321,9 @@ private:
               isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
               const double start, const double pixazm, const double dr,
               double r0, isce3::core::ProjectionBase* proj,
-              isce3::core::Matrix<float>& rtc_area,
+              bool flag_apply_rtc, isce3::core::Matrix<float>& rtc_area,
               isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
-              geocodeOutputMode output_mode, float rtc_min_value,
+              float rtc_min_value,
               double abs_cal_factor, float clip_min, float clip_max,
               float min_nlooks, float radar_grid_nlooks,
               bool flag_upsample_radar_grid,
@@ -390,8 +399,11 @@ std::vector<float> getGeoAreaElementMean(
         const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& input_dop,
         isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
+        bool flag_apply_rtc,
         isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
                 isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT,
+        isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry = 
+                isce3::geometry::rtcOutputTerrainRadiometry::GAMMA_NAUGHT,  
         int exponent = 0,
         geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
@@ -405,10 +417,10 @@ std::vector<float> getGeoAreaElementMean(
 template<typename T>
 std::vector<float> _getGeoAreaElementMean(
         const std::vector<double>& r_vect, const std::vector<double>& a_vect,
-        int x_min, int y_min, isce3::core::Matrix<float>& rtc_area,
+        int x_min, int y_min, bool flag_apply_rtc,
+        isce3::core::Matrix<float>& rtc_area,
         const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& input_raster,
-        geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
         float rtc_min_value = 0, float* out_nlooks = nullptr,
         double abs_cal_factor = 1, float radar_grid_nlooks = 1);
 

@@ -41,6 +41,7 @@ def run(cfg):
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
     output_mode = geocode_dict['algorithm_type']
+    flag_apply_rtc = geocode_dict['apply_rtc']
     memory_mode = geocode_dict['memory_mode']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
     abs_cal_factor = geocode_dict['abs_rad_cal']
@@ -53,17 +54,21 @@ def run(cfg):
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
+    output_terrain_radiometry = rtc_dict['output_type']
     rtc_algorithm = rtc_dict['algorithm_type']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
-    apply_rtc = output_mode == isce3.geocode.GeocodeOutputMode.AREA_PROJECTION_WITH_RTC
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
     threshold = geo2rdr_dict['threshold']
     maxiter = geo2rdr_dict['maxiter']
 
-    if apply_rtc:
+    if (flag_apply_rtc and output_terrain_radiometry == 
+            isce3.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT):
+        output_radiometry_str = "radar backscatter sigma0"
+    elif (flag_apply_rtc and output_terrain_radiometry == 
+            isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT):
         output_radiometry_str = 'radar backscatter gamma0'
     elif input_terrain_radiometry == isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
         output_radiometry_str = 'radar backscatter beta0'
@@ -204,7 +209,9 @@ def run(cfg):
                     dem_raster=dem_raster,
                     output_mode=output_mode,
                     geogrid_upsampling=geogrid_upsampling,
+                    flag_apply_rtc=flag_apply_rtc,
                     input_terrain_radiometry=input_terrain_radiometry,
+                    output_terrain_radiometry=output_terrain_radiometry,
                     exponent=exponent,
                     rtc_min_value_db=rtc_min_value_db,
                     rtc_algorithm=rtc_algorithm,
@@ -248,7 +255,7 @@ def run(cfg):
             h5_ds = os.path.join(root_ds, 'radiometricTerrainCorrectionFlag')
             if h5_ds in hdf5_obj:
                 del hdf5_obj[h5_ds]
-            dset = hdf5_obj.create_dataset(h5_ds, data=bool(apply_rtc))
+            dset = hdf5_obj.create_dataset(h5_ds, data=bool(flag_apply_rtc))
 
             # save GCOV diagonal elements
             xds = hdf5_obj[os.path.join(root_ds, 'xCoordinates')]

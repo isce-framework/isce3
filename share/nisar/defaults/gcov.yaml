@@ -82,7 +82,13 @@ runconfig:
                range_looks:   1
 
             # OPTIONAL - to control behavior of RTC module
+            # (only applicable if geocode.apply_rtc is True)
             rtc:
+                # OPTIONAL - Choices:
+                # "gamma0" (default)
+                # "sigma0"
+                output_type: gamma0
+
                 # OPTIONAL - Choices:
                 # "bilinear_distribution" (default)
                 # "area_projection"
@@ -91,7 +97,7 @@ runconfig:
                 # OPTIONAL - Choices:
                 # "beta0" (default)
                 # "sigma0"
-                input_terrain_radiometry: sigma0
+                input_terrain_radiometry: beta0
 
                 # OPTIONAL - Minimum RTC area factor in dB
                 rtc_min_value_db: -30
@@ -99,10 +105,10 @@ runconfig:
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
 
-                output_type: gamma0
-
                 # OPTIONAL -
                 algorithm_type: area_projection
+
+                apply_rtc: True
  
                 # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_radargrid", and "auto" (default)
                 memory_mode:

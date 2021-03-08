@@ -106,6 +106,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
     bool flag_upsample_radar_grid = false;
     isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
             isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT;
+    isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry =
+        isce3::geometry::rtcOutputTerrainRadiometry::GAMMA_NAUGHT;
     int exponent = 0;
     float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN();
     double rtc_geogrid_upsampling =
@@ -117,6 +119,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     float clip_max = std::numeric_limits<float>::quiet_NaN();
     float min_nlooks = std::numeric_limits<float>::quiet_NaN();
     float radar_grid_nlooks = 1;
+    bool flag_apply_rtc = false;
 
     isce3::io::Raster* out_geo_rdr = nullptr;
     isce3::io::Raster* out_geo_dem = nullptr;
@@ -158,8 +161,10 @@ TEST(GeocodeTest, TestGeocodeCov) {
             // run geocode
             geoObj.geocode(radar_grid, radarRaster, geocodedRaster, demRaster,
                            output_mode, geogrid_upsampling,
-                           flag_upsample_radar_grid, input_terrain_radiometry,
-                           exponent, rtc_min_value_db, rtc_geogrid_upsampling,
+                           flag_upsample_radar_grid, flag_apply_rtc,
+                           input_terrain_radiometry,
+                           output_terrain_radiometry, exponent,
+                           rtc_min_value_db, rtc_geogrid_upsampling,
                            rtc_algorithm, abs_cal_factor, clip_min, clip_max,
                            min_nlooks, radar_grid_nlooks,
                            nullptr, out_geo_rdr,
@@ -209,8 +214,10 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoComplexObj.geocode(
             radar_grid, slc_raster_xy, geocoded_diag_raster, demRaster,
             output_mode, geogrid_upsampling, flag_upsample_radar_grid,
-            input_terrain_radiometry, exponent, rtc_min_value_db,
-            rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor, clip_min,
+            flag_apply_rtc,
+            input_terrain_radiometry, output_terrain_radiometry, 
+            exponent, rtc_min_value_db, rtc_geogrid_upsampling,
+            rtc_algorithm, abs_cal_factor, clip_min,
             clip_max, min_nlooks, radar_grid_nlooks, &geocoded_off_diag_raster,
             out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
             input_rtc, output_rtc, geocode_memory_mode_2, min_block_size,

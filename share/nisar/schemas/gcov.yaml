@@ -71,18 +71,24 @@ runconfig:
                 range_looks: int(min=1, required=False)
         
             rtc: # RTC options
-                output_type: enum('gamma0', required=False)
+
+                # RTC output type: empty value to turn off the RTC
+                # The output_type defaults to "gamma0" if the key is absent
+                output_type: enum('gamma0', 'sigma0', required=False)
                
                 algorithm_type: enum('area_projection', 'bilinear_distribution', required=False)
                
                 input_terrain_radiometry: enum('beta0', 'sigma0', required=False)
-               
+              
                 # Minimum RTC area factor in dB
                 rtc_min_value_db: num(required=False)
         
             # Mechanism to specify output posting and DEM
             geocode:
                 algorithm_type: enum('area_projection', 'interp', required=False)
+
+                # Apply RTC
+                apply_rtc: bool(required=False)
                
                 memory_mode: enum('auto', 'single_block', 'BLOCKS_GEOGRID', 'BLOCKS_GEOGRID_AND_RADARGRID', required=False)
                

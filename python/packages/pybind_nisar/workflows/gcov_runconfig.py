@@ -44,27 +44,21 @@ class GCOVRunConfig(RunConfig):
             geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.AUTO
 
         rtc_output_type = rtc_dict['output_type']
-        flag_apply_rtc =  (rtc_output_type and
-                           'gamma' in rtc_output_type)
+        if rtc_output_type == 'sigma0':
+            rtc_dict['output_type'] = isce.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT
+        else:
+            rtc_dict['output_type'] = isce.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
         if geocode_dict['algorithm_type'] == 'interp':
             geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.INTERP
-        elif (geocode_dict['algorithm_type'] == 'area_projection' and 
-                not flag_apply_rtc):
+        else:
             geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION
-        elif geocode_dict['algorithm_type'] == 'area_projection':
-            geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION_WITH_RTC
-        else:
-            err_str = f'Unsupported geocode algorithm: {geocode_dict["algorithm_type"]}'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
 
-
-        # only 2 RTC algorithms supported: bilinear_distribution (default) & area-projection
-        if rtc_dict['algorithm_type'] == "area_projection":
-            rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
-        else:
+        # only 2 RTC algorithms supported: area_projection (default) & bilinear_distribution
+        if rtc_dict['algorithm_type'] == "bilinear_distribution":
             rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION
+        else:
+            rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
 
         if rtc_dict['input_terrain_radiometry'] == "sigma0":
             rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
