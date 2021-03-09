@@ -18,13 +18,7 @@
 cuAmpcorController::cuAmpcorController()
 {
     // create a new set of parameters
-    param = new cuAmpcorParameter();
-}
-
-// destructor
-cuAmpcorController::~cuAmpcorController()
-{
-    delete param;
+    param.reset(new cuAmpcorParameter());
 }
 
 
@@ -85,7 +79,7 @@ void cuAmpcorController::runAmpcor()
         // create each stream
         checkCudaErrors(cudaStreamCreate(&streams[ist]));
         // create the chunk processor for each stream
-        chunk[ist]= new cuAmpcorChunk(param, referenceImage, secondaryImage,
+        chunk[ist]= new cuAmpcorChunk(param.get(), referenceImage, secondaryImage,
             offsetImageRun, snrImageRun, covImageRun,
             streams[ist]);
 

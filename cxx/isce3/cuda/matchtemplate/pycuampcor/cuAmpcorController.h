@@ -15,16 +15,16 @@
 #ifndef CU_AMPCOR_CONTROLLER_H
 #define CU_AMPCOR_CONTROLLER_H
 
+#include <memory>
+
 // dependencies
 #include "cuAmpcorParameter.h"
 
 class cuAmpcorController {
 public:
-    cuAmpcorParameter *param;  ///< the parameter set
+    std::unique_ptr<cuAmpcorParameter> param;  ///< the parameter set
     // constructor
     cuAmpcorController();
-    // destructor
-    ~cuAmpcorController();
     // run interface
     void runAmpcor();
 };
