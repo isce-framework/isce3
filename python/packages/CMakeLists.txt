@@ -1,9 +1,16 @@
-##pybind nisar package
-file(COPY pybind_nisar
-     DESTINATION ${ISCE_BUILDPACKAGESDIR})
-install(
-    DIRECTORY pybind_nisar
-    DESTINATION ${ISCE_PACKAGESDIR})
+# Python packages
+set(PYPKGS
+    isce3
+    pybind_nisar
+    )
+
+foreach(PYPKG ${PYPKGS})
+    # Copy package directory to the binary directory for testing.
+    file(COPY ${PYPKG} DESTINATION ${ISCE_BUILDPACKAGESDIR})
+
+    # Install package directory.
+    install(DIRECTORY ${PYPKG} DESTINATION ${ISCE_PACKAGESDIR})
+endforeach()
 
 ##symlink defaults and schemas from install/share to pybind nisar workflows
 set(WORKFLOWS
