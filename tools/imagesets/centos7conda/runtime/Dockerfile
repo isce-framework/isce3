@@ -14,14 +14,11 @@ RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64
  && rm miniconda.sh
 ENV PATH="$conda_prefix/bin:$PATH"
 
-# Prefer installing from main, as forge is slow to resolve dependencies.
-COPY requirements.txt.main.runtime  /tmp/requirements.txt.main
-COPY requirements.txt.forge.runtime /tmp/requirements.txt.forge
-RUN conda install --yes -c main        --file /tmp/requirements.txt.main  \
- && conda install --yes -c conda-forge --file /tmp/requirements.txt.forge \
+COPY spec-file.txt /tmp/spec-file.txt
+RUN conda install --yes --file /tmp/spec-file.txt \
  && conda clean -tipsy \
- && rm -rf $conda_prefix/pkgs \
- && rm /tmp/requirements.txt.{main,forge}
+ && rm -rf /opt/conda/pkgs \
+ && rm /tmp/spec-file.txt
 
 # set up conda environment
 RUN echo ". $conda_prefix/etc/profile.d/conda.sh" >> /etc/bashrc \
