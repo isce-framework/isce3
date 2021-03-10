@@ -10,7 +10,7 @@ ISCE3 has the following dependencies
 <li> Numpy
 <li> GDAL 2.3 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
-<li> CMake 3.14 or above
+<li> CMake 3.18 or above
 <li> CUDA 9.0 or above (for GPU-based processing)
 <li> ruamel.yaml
 </ol>

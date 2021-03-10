@@ -9,7 +9,7 @@ ISCE has the following dependencies
 <li> Numpy
 <li> GDAL 2.3 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
-<li> cmake 3.12 or above
+<li> CMake 3.18 or above
 <li> ruamel yaml for python3.7
 </ol>
 
