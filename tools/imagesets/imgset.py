@@ -101,7 +101,7 @@ class ImageSet:
 
         self.cmake_defs = {
             "WITH_CUDA": "YES",
-            "ISCE3_FETCH_EIGEN": "NO",
+            "ISCE3_FETCH_DEPS": "NO",
             "CPACK_PACKAGE_FILE_NAME": "isce3",
         }
         self.cmake_extra_args = []
