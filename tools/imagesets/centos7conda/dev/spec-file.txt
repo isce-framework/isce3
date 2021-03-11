@@ -29,6 +29,7 @@ https://conda.anaconda.org/conda-forge/linux-64/freexl-1.0.5-h516909a_1002.tar.b
 https://conda.anaconda.org/conda-forge/linux-64/gcc_impl_linux-64-9.3.0-h70c0ae5_18.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/geos-3.9.1-h9c3ff4c_2.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/giflib-5.2.1-h36c2ea0_2.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/gtest-1.10.0-h4bd325d_7.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/icu-68.1-h58526e2_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/jpeg-9d-h36c2ea0_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/json-c-0.15-h98cffda_0.tar.bz2
@@ -62,6 +63,7 @@ https://conda.anaconda.org/conda-forge/linux-64/yaml-0.2.5-h516909a_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/zlib-1.2.11-h516909a_1010.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/gcc_linux-64-9.3.0-hf25ea35_30.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/gettext-0.19.8.1-h0b5b191_1005.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/gmock-1.10.0-h4bd325d_7.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/gxx_impl_linux-64-9.3.0-hd87eabc_18.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/hdf4-4.2.13-h10796ff_1004.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-8_openblas.tar.bz2
