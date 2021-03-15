@@ -203,7 +203,7 @@ class ImageSet:
         """
 
         build_args = f"--build-arg distrib_img=nisar-adt/isce3:{self.name} \
-                       --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN')}"
+                       --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN').strip()}"
         
         cmd = f"{docker} build {build_args} \
                 {thisdir}/{self.name}/distrib_nisar -t nisar-adt/isce3:{self.name}-nisar"
@@ -219,10 +219,33 @@ class ImageSet:
 
         # Download files, preserving relative directory hierarchy
         for testname, fetchfiles in workflowdata.items():
-            wfdatadir = f"{self.datadir}/{testname}"
+            wfdatadir = pjoin(self.datadir, dataset)
             os.makedirs(wfdatadir, exist_ok=True)
             for fname in fetchfiles:
                 url = f"{art_base}/{testname}/{fname}"
+                print("Fetching file:", url)
+                subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
+                                      cwd = wfdatadir)
+
+    def fetchmindata(self):
+        """
+        Fetch minimum set of workflow test data from Artifactory so mintests can be exercised
+        TODO use a properly cached download e.g. via DVC
+        """
+
+        mindata = ["L0B_RRSD_REE1",
+                   "L0B_RRSD_REE_NOISEST1",
+                   "L0B_RRSD_REE_PTA1",
+                   "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
+                   "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
+                   "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
+                  ]
+        # Download files, preserving relative directory hierarchy
+        for dataset in mindata:
+            wfdatadir = pjoin(self.datadir, dataset)
+            os.makedirs(wfdatadir, exist_ok=True)
+            for fname in workflowdata[dataset]:
+                url = f"{art_base}/{dataset}/{fname}"
                 print("Fetching file:", url)
                 subprocess.check_call(f"curl -f --create-dirs -o {fname} -O {url} ".split(),
                                       cwd = wfdatadir)

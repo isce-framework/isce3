@@ -1,0 +1,141 @@
+#!groovy
+
+pipeline {
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+  }
+  agent any
+  environment {
+    // Personal Access Token (PAT) for authenticating github-fn transactions
+    // for the CI server. Secret credentials are managed via the Jenkins UI.
+    RTBURNS_PAT = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
+    GIT_OAUTH_TOKEN = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
+  }
+  stages {
+    stage("Set up Docker images with ISCE3 build prereqs") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py setup"
+      }
+    }
+    stage("Configure ISCE3") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py configure"
+      }
+    }
+    stage("Build ISCE3") {
+      parallel {
+        stage("Compile ISCE3 source") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py build"
+          }
+        }
+        stage("Build and deploy ISCE3 documentation") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py docsbuild"
+            // sh "/usr/local/bin/python3 tools/run.py prdocs"
+          }
+        }
+      }
+    }
+    stage("Run ISCE3 unit tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py test"
+      }
+    }
+    stage("Build ISCE3 redistributable image") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py makepkg"
+        sh "/usr/local/bin/python3 tools/run.py makedistrib"
+      }
+    }
+    /*
+    XXX Full workflow tests are disabled in this job until we adopt a large file
+    management solution w/ caching (e.g. git-lfs). Disk utilization is
+    currently too high and causes the CI server to crash.
+    stage("Fetch workflow test data") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py fetchdata"
+      }
+    }
+    stage("Run workflow tests") {
+      parallel {
+        stage("Run RSLC test") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py rslctest"
+          }
+        }
+        stage("Run GSLC test") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py gslctest"
+          }
+        }
+        stage("Run GCOV test") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py gcovtest"
+          }
+        }
+      }
+    }
+    */
+    stage("Fetch minimum workflow test data") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py fetchmindata"
+      }
+    }
+    stage("Install NISAR QA and CalTools") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py makedistrib_nisar"
+      }
+    }
+    stage("Run minimum workflow tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py mintests"
+      }
+    }
+    stage("Run qa for minimum workflow tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py minqa"
+      }
+    }
+  }
+  post {
+    always {
+      echo "Publishing xUnit test result report"
+      xunit (
+        thresholds: [
+          skipped (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          ),
+          failed (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          )
+        ],
+        tools: [
+          CTest (
+            pattern: 'build-docker/Testing/*/Test.xml',
+            skipNoTestFiles: false,
+            failIfNotNew: true,
+            deleteOutputFiles: true,
+            stopProcessingIfError: true
+          )
+        ]
+      )
+      deleteDir()
+    }
+    success {
+      echo 'I succeeded!'
+    }
+    unstable {
+      echo 'I am unstable :/'
+    }
+    failure {
+      echo 'I failed :('
+    }
+    changed {
+      echo 'Things were different before...'
+    }
+  }
+}

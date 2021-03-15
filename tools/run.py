@@ -40,6 +40,7 @@ def run(*, steps, imgset, **kwargs):
         "dropin",
         "docsbuild",
         "prdocs",
+        "fetchmindata",
         "mintests",
         "minqa",
         "tartests",
