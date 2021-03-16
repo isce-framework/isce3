@@ -14,13 +14,10 @@ RUN set -ex \
  && rm -rf /var/cache/yum \
  && rm -rf /var/cache/yum
 
-# Prefer installing from main, as forge is slow to resolve dependencies.
-COPY requirements.txt.main.dev  /tmp/requirements.txt.main
-COPY requirements.txt.forge.dev /tmp/requirements.txt.forge
-RUN conda install --yes -c main        --file /tmp/requirements.txt.main  \
- && conda install --yes -c conda-forge --file /tmp/requirements.txt.forge \
+COPY spec-file.txt /tmp/spec-file.txt
+RUN conda install --yes --file /tmp/spec-file.txt \
  && conda clean -tipsy \
  && rm -rf /opt/conda/pkgs \
- && rm /tmp/requirements.txt.{main,forge}
+ && rm /tmp/spec-file.txt
 
 ENV CUDAHOSTCXX=x86_64-conda_cos6-linux-gnu-g++

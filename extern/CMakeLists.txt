@@ -69,14 +69,15 @@ macro(getpackage_hdf5)
 
     # XXX This target is defined as INTERFACE rather than IMPORTED so it can be
     # exported in order to save downstream projects from having to redefine it.
-    add_library(hdf5 INTERFACE)
-    add_library(HDF5::HDF5 ALIAS hdf5)
-    set_target_properties(hdf5 PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}"
-        INTERFACE_LINK_LIBRARIES      "${HDF5_CXX_LIBRARIES}"
-        )
-
-    install(TARGETS hdf5 EXPORT isce3-targets)
+    if(NOT TARGET HDF5::HDF5)
+        add_library(hdf5 INTERFACE)
+        add_library(HDF5::HDF5 ALIAS hdf5)
+        set_target_properties(hdf5 PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${HDF5_INCLUDE_DIRS}"
+            INTERFACE_LINK_LIBRARIES      "${HDF5_CXX_LIBRARIES}"
+            )
+        install(TARGETS hdf5 EXPORT isce3-targets)
+    endif()
 endmacro()
 
 macro(getpackage_openmp_optional)

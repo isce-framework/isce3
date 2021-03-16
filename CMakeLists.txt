@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.18)
 
 include(${CMAKE_CURRENT_LIST_DIR}/.cmake/Isce3Version.cmake)
 isce3_get_version(ISCE3_VERSION_COMPONENTS ISCE3_VERSION_FULL)
