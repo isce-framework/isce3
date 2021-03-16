@@ -77,6 +77,8 @@ if(WITH_CUDA)
          cuda/focus/focus.cpp
          cuda/image/image.cpp
          cuda/image/ResampSlc.cpp
+         cuda/matchtemplate/matchtemplate.cpp
+         cuda/matchtemplate/pycuampcor.cpp
          cuda/signal/signal.cpp
          cuda/signal/Crossmul.cpp
          )
