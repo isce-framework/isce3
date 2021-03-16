@@ -60,3 +60,14 @@ After some local development, you can just rerun the build step - CMake will onl
 ```sh
 ./tools/run.py build
 ```
+
+#### Updating conda specfiles
+
+See [Building identical conda environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#building-identical-conda-environments)
+
+- Create a fresh conda environment
+- Install runtime dependencies from requirements.txt
+- `conda list --explicit > runtime/spec-file.txt`
+- Install dev dependencies from requirements.txt
+- `conda list --explicit > dev/spec-file.txt`
+- Make sure the dev dependencies are a superset of the runtime dependencies
