@@ -49,8 +49,6 @@ def run(cfg: dict, output_hdf5: str = None):
         crossmul = isce3.cuda.signal.Crossmul()
     else:
         crossmul = isce3.signal.Crossmul()
-        # oversample currently CPU only
-        crossmul.oversample = cfg['processing']['crossmul']['oversample']
 
     crossmul.range_looks = cfg['processing']['crossmul']['range_looks']
     crossmul.az_looks = cfg['processing']['crossmul']['azimuth_looks']

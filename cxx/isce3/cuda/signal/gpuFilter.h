@@ -132,7 +132,4 @@ template<class T>
 __global__ void phaseShift_g(thrust::complex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements);
 
 template<class T>
-__global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter, int n_elements);
-
-template<class T>
 __global__ void sumSpectrum_g(thrust::complex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);

@@ -26,7 +26,7 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
-    float *d_data;
+    thrust::complex<float> *d_data;
 
     // reserve memory for a block of data
     std::valarray<std::complex<float>> data(width*blockLength);
@@ -76,7 +76,7 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
-    double *d_data;
+    thrust::complex<double> *d_data;
 
     // reserve memory for a block of data
     std::valarray<std::complex<double>> data(width*blockLength);
@@ -126,7 +126,7 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
-    float *d_data;
+    thrust::complex<float> *d_data;
 
     // reserve memory for a block of data
     std::valarray<std::complex<float>> data(width*blockLength);
@@ -176,7 +176,7 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
 
     int width = inputSlc.width();
     int blockLength = inputSlc.length();
-    double *d_data;
+    thrust::complex<double> *d_data;
 
     // reserve memory for a block of data
     std::valarray<std::complex<double>> data(width*blockLength);
@@ -339,7 +339,7 @@ TEST(gpuSignal, upsampleDouble)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-14);
+    ASSERT_LT(max_err, 1.0e-9);
     ASSERT_LT(max_err_u, 1.0e-9);
 }
 
@@ -347,7 +347,7 @@ TEST(gpuSignal, FFT2D)
 {
     int width = 12;
     int length = 10;
-    double *d_data;
+    thrust::complex<double> *d_data;
 
     //
     int blockLength = length;

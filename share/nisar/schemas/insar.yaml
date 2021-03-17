@@ -198,7 +198,6 @@ crossmul_options:
     #         └── range.off
     # Flatten defaults to True
     flatten: any(bool(), str(min=1))
-    # CPU only for now
     oversample: int(min=1, required=False)
 
 geo2rdr_options:

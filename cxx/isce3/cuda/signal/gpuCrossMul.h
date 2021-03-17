@@ -98,6 +98,12 @@ class isce3::cuda::signal::gpuCrossmul {
         /** Get common range band filtering flag */
         inline bool doCommonRangeBandFilter() const {return _doCommonRangeBandFilter;};
 
+        /** Set oversample*/
+        inline void oversample(size_t v) {_oversample = v;};
+
+        /** Get oversample*/
+        inline size_t oversample() const {return _oversample;};
+
     private:
         //Doppler LUT for the refernce SLC
         isce3::core::LUT1d<double> _refDoppler;

@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Source Author: Liang Yu
-// Copyright 2019
-
 #include "gpuFilter.h"
 #include "isce3/io/Raster.h"
 #include <isce3/cuda/except/Error.h>
@@ -11,6 +5,15 @@
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
 using isce3::cuda::signal::gpuFilter;
+
+template<class T>
+__global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter, int n_elements)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i < n_elements) {
+        signal[i] *= filter[i];
+    }
+}
 
 template<class T>
 gpuFilter<T>::~gpuFilter()
@@ -33,9 +36,9 @@ filter(gpuSignal<T> &signal)
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(signal.getDevicePtr()),
-            reinterpret_cast<thrust::complex<T> *>(&_d_filter),
-            n_signal_elements);
+    filter_g<<<grid, block>>>(signal.getDevicePtr(),
+                              _d_filter,
+                              n_signal_elements);
 
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -48,7 +51,7 @@ template<class T>
 void gpuFilter<T>::
 filter(thrust::complex<T> *data)
 {
-    _signal.forwardDevMem(reinterpret_cast<T *>(data));
+    _signal.forwardDevMem(data);
 
     auto n_signal_elements = _signal.getNumElements();
 
@@ -57,12 +60,12 @@ filter(thrust::complex<T> *data)
     dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     filter_g<<<grid, block>>>(data,
-            reinterpret_cast<thrust::complex<T> *>(_d_filter),
-            n_signal_elements);
+                              _d_filter,
+                              n_signal_elements);
 
     checkCudaErrors(cudaDeviceSynchronize());
 
-    _signal.inverseDevMem(reinterpret_cast<T *>(data));
+    _signal.inverseDevMem(data);
 }
 
 
@@ -83,9 +86,9 @@ filter(std::valarray<std::complex<T>> &signal,
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(_signal.getDevicePtr()),
-            reinterpret_cast<thrust::complex<T> *>(&_d_filter),
-            signal.size());
+    filter_g<<<grid, block>>>(_signal.getDevicePtr(),
+                              _d_filter,
+                              signal.size());
 
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -133,15 +136,6 @@ __global__ void phaseShift_g<float>(thrust::complex<float> *slc,
         float phase = 4.0*M_PI*pxlSpace*range[i]/wavelength;
         thrust::complex<float> complex_phase(cosf(phase/wave_div), conj*sinf(phase/wave_div));
         slc[i] *= complex_phase;
-    }
-}
-
-template<class T>
-__global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter, int n_elements)
-{
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < n_elements) {
-        signal[i] *= filter[i];
     }
 }
 

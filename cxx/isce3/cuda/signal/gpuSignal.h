@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Source Author: Liang Yu
-// Copyright 2019
-
 #pragma once
 
 #include "forward.h"
@@ -84,8 +78,13 @@ class isce3::cuda::signal::gpuSignal {
         void forward(std::valarray<std::complex<T>> &input,
                      std::valarray<std::complex<T>> &output);
 
-        void forwardDevMem(T *input, T *output);
-        void forwardDevMem(T *dataInPlace);
+        void forwardDevMem(thrust::complex<float> *input,
+                           thrust::complex<float> *output);
+
+        void forwardDevMem(thrust::complex<double> *input,
+                           thrust::complex<double> *output);
+
+        void forwardDevMem(thrust::complex<T> *dataInPlace);
 
         /** inverse transforms using existing device memory **/
         void inverse();
@@ -103,8 +102,13 @@ class isce3::cuda::signal::gpuSignal {
         void inverse(std::valarray<std::complex<T>> &input,
                      std::valarray<std::complex<T>> &output);
 
-        void inverseDevMem(T *input, T *output);
-        void inverseDevMem(T *dataInPlace);
+        void inverseDevMem(thrust::complex<float> *input,
+                           thrust::complex<float> *output);
+
+        void inverseDevMem(thrust::complex<double> *input,
+                           thrust::complex<double> *output);
+
+        void inverseDevMem(thrust::complex<T> *dataInPlace);
 
         /** upsample **/
         void upsample(std::valarray<std::complex<T>> &input,
@@ -123,7 +127,7 @@ class isce3::cuda::signal::gpuSignal {
         int getColumns() {return _columns;};
         int getNumElements() {return _n_elements;};
 
-        T* getDevicePtr() {return _d_data;};
+        thrust::complex<T>* getDevicePtr() {return _d_data;};
 
     private:
         cufftHandle _plan;
@@ -145,28 +149,9 @@ class isce3::cuda::signal::gpuSignal {
         int _columns;
 
         // device memory pointers
-        T *_d_data;
+        thrust::complex<T> *_d_data;
         bool _d_data_set;
 };
-
-/** FFT shift on device
- */
-template<class T>
-CUDA_GLOBAL void rangeShift_g(thrust::complex<T> *data_lo_res,
-        thrust::complex<T> *data_hi_res,
-        int n_rows,
-        int n_cols_lo,
-        int n_cols_hi);
-
-/** FFT shift on device
- */
-template<class T>
-CUDA_GLOBAL void rangeShiftImpactMult_g(thrust::complex<T> *data_lo_res,
-        thrust::complex<T> *data_hi_res,
-        thrust::complex<T> *impact_shift,
-        int n_rows,
-        int n_cols_lo,
-        int n_cols_hi);
 
 template<class T>
 void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
@@ -193,12 +178,3 @@ void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output,
         std::valarray<std::complex<T>> &shiftImpact);
-
-/** normalize in-place on device
- * TODO use cufft store callback as alternative? requires some gpuCrossMul refactor
- * https://stackoverflow.com/questions/14441142/scaling-in-inverse-fft-by-cufft
- */
-template<class T>
-CUDA_GLOBAL void normalize_g(thrust::complex<T> *data,
-        T normalization,
-        size_t n_elements);

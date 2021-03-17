@@ -15,13 +15,13 @@
 output
     thrust::complex *ifgram (n_cols*n_rows)
 input
-    thrust::complex *refSlcUp ((oversample*n_fft)*n_rows)
+    thrust::complex *refSlcUp ((oversample*n_fft)*n_rows) nfft >= where ncols
     thrust::complex *secSlcUp
     size_t n_rows
     size_t n_cols
     size_t n_fft
-    int oversample_i
-    float oversampe_f
+    int oversample_int
+    float oversample_float
 */
 template <typename T>
 __global__ void interferogram_g(thrust::complex<T> *ifgram,
@@ -30,23 +30,37 @@ __global__ void interferogram_g(thrust::complex<T> *ifgram,
         size_t n_rows,
         size_t n_cols,
         size_t n_fft,
-        int oversample_i,
-        T oversample_f)
+        int oversample_int,
+        T oversample_float)
 {
+    // get 1-d interferogram index
     const auto i = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 
     // make sure index within ifgram size bounds
     if (i < n_rows * n_cols) {
+        // break up 1-d index into 2-d index
         auto i_row = i / n_cols;
         auto i_col = i % n_cols;
 
-        ifgram[i] = thrust::complex<T>(0.0, 0.0);
-        for (int j = 0; j < oversample_i; ++j) {
-            auto ref_val = refSlcUp[i_row*oversample_i*n_fft + i_col];
-            auto sec_val_conj = conj(secSlcUp[i_row*oversample_i*n_fft + i_col]);
-            ifgram[i] += ref_val * sec_val_conj;
+        // local accumulation variable
+        auto accumulation = thrust::complex<T>(0.0, 0.0);
+
+        // accumulate crossmultiplied oversampled pixels
+        // oversample_int > 0 so crossmultiply will always be calculated
+        for (int j = 0; j < oversample_int; ++j) {
+            // get 1-d, maybe oversampled, index based on 2-d index
+            // i_row * n_fft + i_col = 1-d index w/o oversampling
+            // oversample_int * (..) = first 1-d index w/ oversampling
+            // (...) + j = j-th oversampled index
+            auto i_up = oversample_int * (i_row * n_fft + i_col) + j;
+
+            // get values from SLC rasters and crossmultiply
+            auto ref_val = refSlcUp[i_up];
+            auto sec_val_conj = thrust::conj(secSlcUp[i_up]);
+            accumulation += ref_val * sec_val_conj;
         }
-        ifgram[i] /= oversample_f;
+        // normalize by oversample factor
+        ifgram[i] = accumulation / oversample_float;
     }
 }
 
@@ -203,7 +217,6 @@ crossmul(isce3::io::Raster& referenceSLC,
 
 }
 
-
 void isce3::cuda::signal::gpuCrossmul::
 crossmul(isce3::io::Raster& referenceSLC,
         isce3::io::Raster& secondarySLC,
@@ -277,14 +290,14 @@ crossmul(isce3::io::Raster& referenceSLC,
     auto slc_size = n_slc * sizeof(thrust::complex<float>);
 
     // storage for a block of reference SLC data
-    std::valarray<std::complex<float>> refSlc(n_slc);
-    thrust::complex<float> *d_refSlc;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlc), slc_size));
+    std::valarray<std::complex<float>> refSlcOrig(n_slc);
+    thrust::complex<float> *d_refSlcOrig;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcOrig), slc_size));
 
     // storage for a block of secondary SLC data
-    std::valarray<std::complex<float>> secSlc(n_slc);
-    thrust::complex<float> *d_secSlc;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlc), slc_size));
+    std::valarray<std::complex<float>> secSlcOrig(n_slc);
+    thrust::complex<float> *d_secSlcOrig;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcOrig), slc_size));
 
     // set upsampled parameters
     auto n_slcUpsampled = _oversample * nfft * rowsPerBlock;
@@ -293,13 +306,16 @@ crossmul(isce3::io::Raster& referenceSLC,
     // upsampled block of reference SLC
     std::valarray<std::complex<float>> refSlcUpsampled(n_slcUpsampled);
     thrust::complex<float> *d_refSlcUpsampled;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcUpsampled), slcUpsampled_size));
+    if (_oversample > 1)
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcUpsampled), slcUpsampled_size));
 
     // upsampled block of secondary SLC
     thrust::complex<float> *d_secSlcUpsampled;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
+    if (_oversample > 1)
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
 
-    // shift impact
+    // calculate and copy to device shiftImpact frequency responce (a linear phase)
+    // to a sub-pixel shift in time domain introduced by upsampling followed by downsampling
     std::valarray<std::complex<float>> shiftImpact(n_slcUpsampled);
     thrust::complex<float> *d_shiftImpact;
     lookdownShiftImpact(_oversample,
@@ -349,8 +365,8 @@ crossmul(isce3::io::Raster& referenceSLC,
 
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
-    dim3 grid_hi((refSlc.size()*_oversample+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
-    dim3 grid_reg((refSlc.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid_hi((refSlcOrig.size()*_oversample+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid_reg((refSlcOrig.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
     dim3 grid_lo((blockRowsMultiLooked*ncolsMultiLooked+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // configure azimuth filter
@@ -385,8 +401,8 @@ crossmul(isce3::io::Raster& referenceSLC,
         }
 
         // fill the valarray with zero before getting the block of the data
-        refSlc = 0;
-        secSlc = 0;
+        refSlcOrig = 0;
+        secSlcOrig = 0;
         refSlcUpsampled = 0;
         ifgram = 0;
 
@@ -397,17 +413,17 @@ crossmul(isce3::io::Raster& referenceSLC,
         std::valarray<std::complex<float>> dataLine(ncols);
         for (size_t line = 0; line < rowsThisBlock; ++line){
             referenceSLC.getLine(dataLine, rowStart + line);
-            refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+            refSlcOrig[std::slice(line*nfft, ncols, 1)] = dataLine;
             secondarySLC.getLine(dataLine, rowStart + line);
-            secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+            secSlcOrig[std::slice(line*nfft, ncols, 1)] = dataLine;
         }
-        checkCudaErrors(cudaMemcpy(d_refSlc, &refSlc[0], slc_size, cudaMemcpyHostToDevice));
-        checkCudaErrors(cudaMemcpy(d_secSlc, &secSlc[0], slc_size, cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(d_refSlcOrig, &refSlcOrig[0], slc_size, cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(d_secSlcOrig, &secSlcOrig[0], slc_size, cudaMemcpyHostToDevice));
 
         // apply azimuth filter (do inplace)
         if (_doCommonAzimuthBandFilter) {
-            azimuthFilter.filter(d_refSlc);
-            azimuthFilter.filter(d_secSlc);
+            azimuthFilter.filter(d_refSlcOrig);
+            azimuthFilter.filter(d_secSlcOrig);
         }
 
         auto oversample_f = static_cast<float>(_oversample);
@@ -415,18 +431,15 @@ crossmul(isce3::io::Raster& referenceSLC,
             // upsample reference and secondary. done on device
             upsample(signalNoUpsample,
                     signalUpsample,
-                    d_refSlc,
+                    d_refSlcOrig,
                     d_refSlcUpsampled,
                     d_shiftImpact);
             upsample(signalNoUpsample,
                     signalUpsample,
-                    d_secSlc,
+                    d_secSlcOrig,
                     d_secSlcUpsampled,
                     d_shiftImpact);
 
-            // run kernels to compute oversampled interforgram
-            // refSignal overwritten with upsampled interferogram
-            // reduce from nfft*oversample*rowsPerBlock to ncols*rowsPerBlock
             interferogram_g<<<grid_reg, block>>>(
                     d_ifgram,
                     d_refSlcUpsampled,
@@ -435,8 +448,8 @@ crossmul(isce3::io::Raster& referenceSLC,
         } else {
             interferogram_g<<<grid_reg, block>>>(
                     d_ifgram,
-                    d_refSlc,
-                    d_secSlc,
+                    d_refSlcOrig,
+                    d_secSlcOrig,
                     rowsThisBlock, ncols, nfft, _oversample, oversample_f);
         }
 
@@ -469,7 +482,7 @@ crossmul(isce3::io::Raster& referenceSLC,
                     d_ifgram,
                     ncols,                          // n columns hi res
                     ncolsMultiLooked,               // n cols lo res
-                    _azimuthLooks,                  // col resize factor of hi to lo
+                    _azimuthLooks,                  // row resize factor of hi to lo
                     _rangeLooks,                    // col resize factor of hi to lo
                     n_mlook,                        // number of lo res elements
                     float(_azimuthLooks*_rangeLooks));
@@ -484,32 +497,58 @@ crossmul(isce3::io::Raster& referenceSLC,
             interferogram.setBlock(ifgram_mlook, 0, rowStart/_azimuthLooks,
                         ncols/_rangeLooks, rowsThisBlock/_azimuthLooks);
 
-            // write reduce+abs and set blocks
-            multilooks_power_g<<<grid_lo, block>>>(
-                    d_ref_amp_mlook,
-                    d_refSlc,
-                    2,
-                    nfft,
-                    ncolsMultiLooked,
-                    _azimuthLooks,                  // row resize factor of hi to lo
-                    _rangeLooks,                    // col resize factor of hi to lo
-                    n_mlook,                        // number of lo res elements
-                    float(_azimuthLooks*_rangeLooks));
+            if (_oversample > 1) {
+                // write reduce+abs and set blocks
+                multilooks_power_g<<<grid_lo, block>>>(
+                        d_ref_amp_mlook,
+                        d_refSlcUpsampled,
+                        2,
+                        _oversample*nfft,               // n columns hi res
+                        ncolsMultiLooked,               // n columns lo res
+                        _azimuthLooks,                  // row resize factor of hi to lo
+                        _oversample*_rangeLooks,        // col resize factor of hi to lo
+                        n_mlook,                        // number of lo res elements
+                        float(_oversample*_azimuthLooks*_rangeLooks));
+            } else {
+                multilooks_power_g<<<grid_lo, block>>>(
+                        d_ref_amp_mlook,
+                        d_refSlcOrig,
+                        2,
+                        _oversample*nfft,               // n columns hi res
+                        ncolsMultiLooked,               // n columns lo res
+                        _azimuthLooks,                  // row resize factor of hi to lo
+                        _oversample*_rangeLooks,        // col resize factor of hi to lo
+                        n_mlook,                        // number of lo res elements
+                        float(_oversample*_azimuthLooks*_rangeLooks));
+            }
 
             // Check for any kernel errors
             checkCudaErrors(cudaPeekAtLastError());
             checkCudaErrors(cudaDeviceSynchronize());
 
-            multilooks_power_g<<<grid_lo, block>>>(
-                    d_sec_amp_mlook,
-                    d_secSlc,
-                    2,
-                    nfft,
-                    ncolsMultiLooked,
-                    _azimuthLooks,                  // row resize factor of hi to lo
-                    _rangeLooks,                    // col resize factor of hi to lo
-                    n_mlook,                        // number of lo res elements
-                    float(_azimuthLooks*_rangeLooks));
+            if (_oversample > 1) {
+                multilooks_power_g<<<grid_lo, block>>>(
+                        d_sec_amp_mlook,
+                        d_secSlcUpsampled,
+                        2,
+                        _oversample*nfft,
+                        ncolsMultiLooked,
+                        _azimuthLooks,                  // row resize factor of hi to lo
+                        _oversample*_rangeLooks,        // col resize factor of hi to lo
+                        n_mlook,                        // number of lo res elements
+                        float(_oversample*_azimuthLooks*_rangeLooks));
+            } else {
+                multilooks_power_g<<<grid_lo, block>>>(
+                        d_sec_amp_mlook,
+                        d_secSlcOrig,
+                        2,
+                        _oversample*nfft,
+                        ncolsMultiLooked,
+                        _azimuthLooks,                  // row resize factor of hi to lo
+                        _oversample*_rangeLooks,        // col resize factor of hi to lo
+                        n_mlook,                        // number of lo res elements
+                        float(_oversample*_azimuthLooks*_rangeLooks));
+            }
 
             // Check for any kernel errors
             checkCudaErrors(cudaPeekAtLastError());
@@ -543,10 +582,12 @@ crossmul(isce3::io::Raster& referenceSLC,
     }
 
     // liberate all device memory
-    checkCudaErrors(cudaFree(d_refSlc));
-    checkCudaErrors(cudaFree(d_secSlc));
-    checkCudaErrors(cudaFree(d_refSlcUpsampled));
-    checkCudaErrors(cudaFree(d_secSlcUpsampled));
+    checkCudaErrors(cudaFree(d_refSlcOrig));
+    checkCudaErrors(cudaFree(d_secSlcOrig));
+    if (_oversample > 1) {
+        checkCudaErrors(cudaFree(d_refSlcUpsampled));
+        checkCudaErrors(cudaFree(d_secSlcUpsampled));
+    }
     checkCudaErrors(cudaFree(d_shiftImpact));
     checkCudaErrors(cudaFree(d_ifgram));
     if (_doCommonRangeBandFilter) {

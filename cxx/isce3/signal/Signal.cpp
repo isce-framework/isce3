@@ -998,7 +998,7 @@ upsample(std::valarray<std::complex<T>> &signal,
     //
 
     #pragma omp parallel for
-    for (size_t column = 0; column<fft_size/2; ++column)
+    for (size_t column = 0; column<(fft_size+1)/2; ++column)
         spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, fft_size)];
 
     #pragma omp parallel for

@@ -114,5 +114,8 @@ void addbinding(py::class_<gpuCrossmul> & pyCrossmul)
         .def_property("filter_rg",
                 py::overload_cast<>(&gpuCrossmul::doCommonRangeBandFilter, py::const_),
                 py::overload_cast<bool>(&gpuCrossmul::doCommonRangeBandFilter))
+        .def_property("oversample",
+                py::overload_cast<>(&gpuCrossmul::oversample, py::const_),
+                py::overload_cast<size_t>(&gpuCrossmul::oversample))
         ;
 }

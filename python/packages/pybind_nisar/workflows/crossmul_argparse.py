@@ -33,7 +33,7 @@ class CrossmulArgparse(YamlArgparse):
         self.parser.add_argument('--range-looks', dest='range_looks', type=int, default=1,
                                  help='Range looks')
         self.parser.add_argument('--oversample', dest='oversample', type=int, default=2,
-                                 help='Oversample factor. CPU only for now.')
+                                 help='Oversample factor')
         self.parser.add_argument('--frequencies-polarizations', dest='freq_pols',
                                  action=StoreDictKeyPair, nargs='+', metavar="KEY=VAL",
                                  help='''Frequencies and polarizations to use.
