@@ -1,5 +1,6 @@
 #include "signal.h"
 
+#include "convolve2D.h"
 #include "Covariance.h"
 #include "CrossMultiply.h"
 #include "Crossmul.h"
@@ -24,4 +25,8 @@ void addsubmodule_signal(py::module & m)
     addbinding(pyCrossmul);
     addbinding(pyCrossMultiply);
     addbinding_flatten(m_signal);
+    addbinding_convolve2D<float>(m_signal);
+    addbinding_convolve2D<std::complex<float>>(m_signal);
+    addbinding_convolve2D<double>(m_signal);
+    addbinding_convolve2D<std::complex<double>>(m_signal);
 }

@@ -33,6 +33,7 @@ image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
+signal/convolve2D.py
 signal/covariance.py
 signal/crossmul.py
 signal/crossmultiply.py
