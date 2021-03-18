@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='utf-8'?>
+<radarPointing>
+  <productInformation>
+    <productName>NISAR_ANC_L_PR_FRP_20210114T023357_20200107T200000_20200109T040000</productName>
+    <mission>NISAR</mission>
+    <validityStartDateTime>2020-01-07T20:00:00</validityStartDateTime>
+    <validityEndDateTime>2020-01-09T04:00:00</validityEndDateTime>
+    <fileClass>Test</fileClass>
+    <fileType>FRP</fileType>
+    <creator>NASA JPL</creator>
+    <creationDateTime>2021-01-14T02:33:57.547520</creationDateTime>
+  </productInformation>
+  <LSAR>
+    <radarPointingStateVectorList count="10">
+      <radarPointingStateVector index="1">
+        <utc>2020-01-07T20:00:00</utc>
+        <roll>-0.6457081417495419</roll>
+        <pitch>0.001398760112229801</pitch>
+        <yaw>1.5697422973092137</yaw>
+        <q0>0.45998636868613685</q0>
+        <q1>0.8484777808560364</q1>
+        <q2>0.2604469244480131</q2>
+        <q3>-0.02579526239696106</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="2">
+        <utc>2020-01-07T20:00:01</utc>
+        <roll>-0.6457082357320937</roll>
+        <pitch>0.0013966873285031834</pitch>
+        <yaw>1.56974385895192</yaw>
+        <q0>0.46031535338895463</q0>
+        <q1>0.8483862072201784</q1>
+        <q2>0.26013727118041524</q2>
+        <q3>-0.026061829862272068</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="3">
+        <utc>2020-01-07T20:00:02</utc>
+        <roll>-0.6457083225750708</roll>
+        <pitch>0.0013946167258813244</pitch>
+        <yaw>1.5697454189676887</yaw>
+        <q0>0.46064424123610703</q0>
+        <q1>0.848294362825532</q1>
+        <q2>0.2598275841825737</q2>
+        <q3>-0.026328378459064716</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="4">
+        <utc>2020-01-07T20:00:03</utc>
+        <roll>-0.6457084155535049</roll>
+        <pitch>0.001392541161273757</pitch>
+        <yaw>1.5697469827093893</yaw>
+        <q0>0.46097303216847363</q0>
+        <q1>0.8482022476809679</q1>
+        <q2>0.25951786356037376</q2>
+        <q3>-0.026594908073106494</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="5">
+        <utc>2020-01-07T20:00:04</utc>
+        <roll>-0.6457084957779009</roll>
+        <pitch>0.0013904611131749993</pitch>
+        <yaw>1.569748549857765</yaw>
+        <q0>0.46130172612701786</q0>
+        <q1>0.8481098617954342</q1>
+        <q2>0.2592081094196022</q2>
+        <q3>-0.026861418590215513</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="6">
+        <utc>2020-01-07T20:00:05</utc>
+        <roll>-0.6457085924112703</roll>
+        <pitch>0.0013883550254227123</pitch>
+        <yaw>1.5697501365908249</yaw>
+        <q0>0.4616303230527267</q0>
+        <q1>0.8480172051779915</q1>
+        <q2>0.25889832186595574</q2>
+        <q3>-0.027127909896180857</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="7">
+        <utc>2020-01-07T20:00:06</utc>
+        <roll>-0.6457086856447454</roll>
+        <pitch>0.0013862513498051777</pitch>
+        <yaw>1.5697517215146415</yaw>
+        <q0>0.46195882288646645</q0>
+        <q1>0.847924277837868</q1>
+        <q2>0.25858850100511505</q2>
+        <q3>-0.02739438187672999</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="8">
+        <utc>2020-01-07T20:00:07</utc>
+        <roll>-0.6457087747620623</roll>
+        <pitch>0.0013841327533615703</pitch>
+        <yaw>1.5697533176903113</yaw>
+        <q0>0.46228722556915264</q0>
+        <q1>0.847831079784391</q1>
+        <q2>0.25827864694266167</q2>
+        <q3>-0.027660834417580382</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="9">
+        <utc>2020-01-07T20:00:08</utc>
+        <roll>-0.6457088614413605</roll>
+        <pitch>0.0013820105542763858</pitch>
+        <yaw>1.569754916586475</yaw>
+        <q0>0.4626155310417434</q0>
+        <q1>0.8477376110269874</q1>
+        <q2>0.25796875978409056</q2>
+        <q3>-0.027927267404464606</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="10">
+        <utc>2020-01-07T20:00:09</utc>
+        <roll>-0.6457089578199849</roll>
+        <pitch>0.0013798794032847958</pitch>
+        <yaw>1.5697565222072347</yaw>
+        <q0>0.46294373924510057</q0>
+        <q1>0.8476438715752446</q1>
+        <q2>0.25765883963485936</q2>
+        <q3>-0.028193680723036463</q3>
+        <quality>PREDICT</quality>
+      </radarPointingStateVector>
+    </radarPointingStateVectorList>
+  </LSAR>
+</radarPointing>

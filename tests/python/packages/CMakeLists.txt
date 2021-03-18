@@ -1,4 +1,6 @@
 set(TESTFILES
+pybind_nisar/products/readers/attitude.py
+pybind_nisar/products/readers/orbit.py
 pybind_nisar/workflows/crossmul.py
 pybind_nisar/workflows/focus.py
 pybind_nisar/workflows/stage_dem.py
