@@ -9,8 +9,8 @@
 #include <isce3/signal/convolve.h>
 #include <isce3/signal/decimate.h>
 
-void check_kernels(std::valarray<double>& kernel_columns,
-                   std::valarray<double>& kernel_rows)
+void check_kernels(const std::valarray<double>& kernel_columns,
+                   const std::valarray<double>& kernel_rows)
 {
 
     size_t ncols_kernel = kernel_columns.size();
@@ -128,8 +128,8 @@ void setup_block_parameters(const int nrows, const int blockRows,
 template<typename T>
 void isce3::signal::filter2D(isce3::io::Raster& output_raster,
                              isce3::io::Raster& input_raster,
-                             std::valarray<double>& kernel_columns,
-                             std::valarray<double>& kernel_rows, int block_rows)
+                             const std::valarray<double>& kernel_columns,
+                             const std::valarray<double>& kernel_rows, int block_rows)
 {
 
     bool do_decimate = false;
@@ -164,8 +164,8 @@ template<typename T>
 void isce3::signal::filter2D(isce3::io::Raster& output_raster,
                              isce3::io::Raster& input_raster,
                              isce3::io::Raster& mask_raster,
-                             std::valarray<double>& kernel_columns,
-                             std::valarray<double>& kernel_rows, int block_rows)
+                             const std::valarray<double>& kernel_columns,
+                             const std::valarray<double>& kernel_rows, int block_rows)
 {
 
     std::cout << "A mask is provided. The input will be masked before filtering"
@@ -188,8 +188,8 @@ template<typename T>
 void isce3::signal::filter2D(isce3::io::Raster& output_raster,
                              isce3::io::Raster& input_raster,
                              isce3::io::Raster& mask_raster,
-                             std::valarray<double>& kernel_columns,
-                             std::valarray<double>& kernel_rows,
+                             const std::valarray<double>& kernel_columns,
+                             const std::valarray<double>& kernel_rows,
                              const bool do_decimate, const bool mask_data,
                              int block_rows)
 {
@@ -334,18 +334,18 @@ void isce3::signal::filter2D(isce3::io::Raster& output_raster,
     template void isce3::signal::filter2D<T>(                                  \
             isce3::io::Raster & output_raster,                                 \
             isce3::io::Raster & input_raster,                                  \
-            std::valarray<double> & kernel_columns,                            \
-            std::valarray<double> & kernel_rows, int block_rows);              \
+            const std::valarray<double> & kernel_columns,                      \
+            const std::valarray<double> & kernel_rows, int block_rows);        \
     template void isce3::signal::filter2D<T>(                                  \
             isce3::io::Raster & output_raster,                                 \
             isce3::io::Raster & input_raster, isce3::io::Raster & mask_raster, \
-            std::valarray<double> & kernel_columns,                            \
-            std::valarray<double> & kernel_rows, int block_rows);              \
+            const std::valarray<double> & kernel_columns,                      \
+            const std::valarray<double> & kernel_rows, int block_rows);        \
     template void isce3::signal::filter2D<T>(                                  \
             isce3::io::Raster & output_raster,                                 \
             isce3::io::Raster & input_raster, isce3::io::Raster & mask_raster, \
-            std::valarray<double> & kernel_columns,                            \
-            std::valarray<double> & kernel_rows, const bool do_decimate,       \
+            const std::valarray<double> & kernel_columns,                      \
+            const std::valarray<double> & kernel_rows, const bool do_decimate, \
             const bool mask, int block_rows)
 
 SPECIALIZE_FILTER(float);

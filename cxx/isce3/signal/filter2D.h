@@ -16,8 +16,8 @@ namespace isce3 { namespace signal {
  */
 template<typename T>
 void filter2D(isce3::io::Raster& output_raster, isce3::io::Raster& input_raster,
-              std::valarray<double>& kernel_columns,
-              std::valarray<double>& kernel_rows, int block_rows = 1000);
+              const std::valarray<double>& kernel_columns,
+              const std::valarray<double>& kernel_rows, int block_rows = 1000);
 
 /**
  * filters real or complex data by convolving two 1D separable kernels in
@@ -32,8 +32,8 @@ void filter2D(isce3::io::Raster& output_raster, isce3::io::Raster& input_raster,
 template<typename T>
 void filter2D(isce3::io::Raster& output_raster, isce3::io::Raster& input_raster,
               isce3::io::Raster& mask_raster,
-              std::valarray<double>& kernel_columns,
-              std::valarray<double>& kernel_rows, int block_rows = 1000);
+              const std::valarray<double>& kernel_columns,
+              const std::valarray<double>& kernel_rows, int block_rows = 1000);
 
 /**
  * filters real or complex data by convolving two 1D separable kernels in
@@ -50,8 +50,8 @@ void filter2D(isce3::io::Raster& output_raster, isce3::io::Raster& input_raster,
 template<typename T>
 void filter2D(isce3::io::Raster& output_raster, isce3::io::Raster& input_raster,
               isce3::io::Raster& mask_raster,
-              std::valarray<double>& kernel_columns,
-              std::valarray<double>& kernel_rows, const bool do_decimate,
+              const std::valarray<double>& kernel_columns,
+              const std::valarray<double>& kernel_rows, const bool do_decimate,
               const bool mask = true, int block_rows = 1000);
 
 }} // namespace isce3::signal
