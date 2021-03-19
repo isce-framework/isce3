@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 #
 
 def cp_h5_meta_data(src_h5, dst_h5, src_path, dst_path=None,
-        excludes=None, renames=None): 
+        excludes=None, renames=None, flag_overwrite=False): 
     '''
     Copy HDF5 node contents
 
@@ -60,11 +60,21 @@ def cp_h5_meta_data(src_h5, dst_h5, src_path, dst_path=None,
             src_sub_path = os.path.join(src_path, subnode_src)
             node_obj = src_h5[src_sub_path]
 
+            # if flag_overwrite, delete exising dataset
+            if flag_overwrite and subnode_dst in dst_group:
+                del dst_group[subnode_dst]
+
             # copy group/dataset
             dst_group.copy(node_obj, subnode_dst)
     else:
+        dst_group = dst_h5[dst_parent_path]
+
+        # if flag_overwrite, delete exising dataset
+        if flag_overwrite and dst_name in dst_group:
+            del dst_group[dst_name]
+
         # simple group copy of todos
-        dst_h5[dst_parent_path].copy(src_group, dst_name)
+        dst_group.copy(src_group, dst_name)
 
 
 # end of file

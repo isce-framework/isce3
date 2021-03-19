@@ -116,6 +116,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # Flag isGeocoded
         ident = dst_h5[f'{common_parent_path}/identification']
         is_geocoded = dst in ['GCOV', 'GSLC', 'GUNW']
+        if 'isGeocoded' in ident:
+            del ident['isGeocoded']
         dset = ident.create_dataset('isGeocoded',
                                     data=np.string_(str(is_geocoded)))
         desc = "Flag to indicate radar geometry or geocoded product"
@@ -248,7 +250,8 @@ def copy_gslc_gcov_meta(src_swath_path, dst, src_h5, dst_h5):
                                   'listOfPolarizations'],
                         renames={'processedCenterFrequency': 'centerFrequency',
                                  'processedAzimuthBandwidth': 'azimuthBandwidth',
-                                 'processedRangeBandwidth': 'rangeBandwidth'})
+                                 'processedRangeBandwidth': 'rangeBandwidth'},
+                        flag_overwrite=True)
 
 
 def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):

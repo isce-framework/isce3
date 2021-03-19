@@ -45,19 +45,26 @@ namespace isce3 {
 
             // Load effective velocity LUT
             isce3::core::LUT2d<double> lut;
-            isce3::core::loadCalGrid(group, "effectiveVelocity", lut);
-            proc.effectiveVelocity(lut);
+            if (isce3::io::exists(group, "effectiveVelocity")) {
+                isce3::core::loadCalGrid(group, "effectiveVelocity", lut);
+                proc.effectiveVelocity(lut); 
+            }
 
-            // Load azimuth FM rate and Doppler centroid for primary frequency (A)
-            isce3::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
-            proc.azimuthFMRate(lut, 'A');
+            if (isce3::io::exists(group, "frequencyA/azimuthFMRate")) {
+                // Load azimuth FM rate and Doppler centroid for primary frequency (A)
+                isce3::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
+                proc.azimuthFMRate(lut, 'A');
+            }
             isce3::core::loadCalGrid(group, "frequencyA/dopplerCentroid", lut);
             proc.dopplerCentroid(lut, 'A');
 
             // Check for existence of secondary frequencies
             if (isce3::io::exists(group, "frequencyB")) {
-                isce3::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
-                proc.azimuthFMRate(lut, 'B');
+
+                if (isce3::io::exists(group, "frequencyB/azimuthFMRate")) {
+                    isce3::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
+                    proc.azimuthFMRate(lut, 'B');
+                }
                 isce3::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
                 proc.dopplerCentroid(lut, 'B');
             }
