@@ -64,7 +64,7 @@ Downloads and installation instructions can be found
 <a href="https://docs.conda.io/en/latest/miniconda.html">here</a>.
 
 <ol>
-<li> We will list all the required packages in a text file called "requirements.txt" located under ${ISCEHOME}/python. <br>
+<li> First, create a list of all the required packages in a text file called "requirements.txt" located under ${ISCEHOME}/python. <br>
 The contents of the requirements.txt file is shown below:
 
 \include tools/imagesets/centos7conda/runtime/requirements.txt.main.runtime
