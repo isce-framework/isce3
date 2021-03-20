@@ -67,7 +67,7 @@ void addbinding_ltp_coordinates(py::module& m)
 
     m.def("nwu_vector", &geom::nwuVector, py::arg("lon"), py::arg("lat"),
             py::arg("vector"), R"(
-    Get unit NWU(north,west,down) velocity or unit vector from ECEF
+    Get unit NWU(north,west,up) velocity or unit vector from ECEF
     velocity or unit vector at a certain geodetic location of spacecraft.
 
     Parameters
@@ -101,7 +101,7 @@ void addbinding_ltp_coordinates(py::module& m)
 
     m.def("enu_vector", &geom::enuVector, py::arg("lon"), py::arg("lat"),
             py::arg("vector"), R"(
-    Get unit ENU(north,west,down) velocity or unit vector from ECEF
+    Get unit ENU(east,north,up) velocity or unit vector from ECEF
     velocity or unit vector at a certain geodetic location of spacecraft.
 
     Parameters

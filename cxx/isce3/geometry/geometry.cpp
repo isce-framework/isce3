@@ -452,19 +452,28 @@ double isce3::geometry::slantRangeFromLookVec(
 
 std::pair<int, double> isce3::geometry::srPosFromLookVecDem(double& sr,
         Vec3& tg_pos, Vec3& llh, const Vec3& sc_pos, const Vec3& lkvec,
-        double dem_hgt, double hgt_err, int num_iter, const Ellipsoid& ellips)
+        const DEMInterpolator& dem_interp, double hgt_err, int num_iter,
+        const Ellipsoid& ellips)
 {
     if (hgt_err <= 0.0 || num_iter <= 0)
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "Height Error and number of iteration "
                 "must be non-zero positive values!");
-    sr = slantRangeFromLookVec(sc_pos, lkvec, ellips);
+
+    // form a new ellipsoid whose radii adjusted by mean height
+    const auto mean_hgt = dem_interp.meanHeight();
+    const auto a_new = ellips.a() + mean_hgt;
+    const auto b_new = ellips.b() + mean_hgt;
+    const auto e2_new = 1.0 - (b_new * b_new) / (a_new * a_new);
+    // initial guess of slant range per new ellipsoid
+    sr = slantRangeFromLookVec(sc_pos, lkvec, Ellipsoid(a_new, e2_new));
     int cnt {0};
     double abs_hgt_dif;
     do {
         tg_pos = sr * lkvec + sc_pos;
         llh = ellips.xyzToLonLat(tg_pos);
-        auto hgt_dif {dem_hgt - llh(2)};
+        auto dem_hgt = dem_interp.interpolateLonLat(llh(0), llh(1));
+        auto hgt_dif = dem_hgt - llh(2);
         sr += hgt_dif / _downVal(llh(0), llh(1), tg_pos);
         abs_hgt_dif = std::abs(hgt_dif);
         ++cnt;

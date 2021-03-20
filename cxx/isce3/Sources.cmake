@@ -1,4 +1,5 @@
 set(SRCS
+antenna/geometryfunc.cpp
 core/Attitude.cpp
 core/Baseline.cpp
 core/Basis.cpp

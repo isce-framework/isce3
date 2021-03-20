@@ -1,5 +1,6 @@
 set(HEADERS
 antenna/forward.h
+antenna/geometryfunc.h
 antenna/Frame.h
 antenna/Frame.icc
 antenna/SphGridType.h

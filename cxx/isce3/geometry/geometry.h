@@ -20,6 +20,7 @@
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
+#include <isce3/geometry/DEMInterpolator.h>
 
 // Declaration
 namespace isce3 {
@@ -290,8 +291,8 @@ double slantRangeFromLookVec(const isce3::core::Vec3& pos,
  * @param[in] sc_pos : Spacecraft position in ECEF (x,y,z) all in (m)
  * @param[in] lkvec : look unit vector in ECEF, looking from spacecraft
  * towards the planet.
- * @param[in] dem_hgt (optional) : Desired DEM height (m) above the
- * reference ellipsoid
+ * @param[in] dem_interp (optional) : DEMInterpolator object wrt to
+ * reference ellipsoid. Default is global 0.0 (m) height.
  * @param[in] hgt_err (optional) : Max error in height estimation (m)
  * between desired input height and final output height.
  * @param[in] num_iter (optional) : Max number of iterations in height
@@ -299,7 +300,7 @@ double slantRangeFromLookVec(const isce3::core::Vec3& pos,
  * @param[in] ellips (optional) : Ellipsoid object. Default is
  * WGS84 reference ellipsoid.
  * @return a pair of <int,double> scalars for number of iterations and
- * height errors, respectively.
+ * absolute height error, respectively.
  * @exception InvalidArgument, RuntimeError
  * See section 6.1 of reference
  * @cite ReeTechDesDoc
@@ -307,8 +308,8 @@ double slantRangeFromLookVec(const isce3::core::Vec3& pos,
 std::pair<int, double> srPosFromLookVecDem(double& sr,
         isce3::core::Vec3& tg_pos, isce3::core::Vec3& llh,
         const isce3::core::Vec3& sc_pos, const isce3::core::Vec3& lkvec,
-        double dem_hgt = 0.0, double hgt_err = 0.5, int num_iter = 10,
-        const isce3::core::Ellipsoid& ellips = {});
+        const DEMInterpolator& dem_interp = {}, double hgt_err = 0.5,
+        int num_iter = 10, const isce3::core::Ellipsoid& ellips = {});
 
 } // namespace geometry
 } // namespace isce3

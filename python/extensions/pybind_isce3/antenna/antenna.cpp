@@ -2,6 +2,7 @@
 
 #include "Frame.h"
 #include "SphGridType.h"
+#include "geometryfunc.h"
 
 namespace py = pybind11;
 
@@ -21,4 +22,7 @@ void addsubmodule_antenna(py::module & m)
     // call addbinding for adding above pybind class/enums
     addbinding(pyFrame);
     addbinding(pySphGridType);
+
+    // for modules with pure functions
+    addbinding_geometryfunc(m_antenna);
 }

@@ -1,6 +1,7 @@
 set(SRCS
 antenna/antenna.cpp
 antenna/Frame.cpp
+antenna/geometryfunc.cpp
 antenna/SphGridType.cpp
 container/container.cpp
 container/RadarGeometry.cpp

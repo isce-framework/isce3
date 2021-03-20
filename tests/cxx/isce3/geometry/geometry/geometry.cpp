@@ -33,9 +33,8 @@
 
 // Declaration for utility function to read test data
 void loadTestData(std::vector<std::string>& aztimes,
-                  std::vector<double>& ranges, std::vector<double>& heights,
-                  std::vector<double>& ref_data,
-                  std::vector<double>& ref_zerodop);
+        std::vector<double>& ranges, std::vector<double>& heights,
+        std::vector<double>& ref_data, std::vector<double>& ref_zerodop);
 
 struct GeometryTest : public ::testing::Test {
 
@@ -88,7 +87,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit)
     for (size_t i = 0; i < aztimes.size(); ++i) {
 
         // Make azimuth time in seconds
-        isce3::core::DateTime azDate(aztimes[i]);     
+        isce3::core::DateTime azDate(aztimes[i]);
         const double azTime =
                 (azDate - orbit.referenceEpoch()).getTotalSeconds();
 
@@ -102,9 +101,9 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit)
         isce3::core::cartesian_t targetLLH = {0.0, 0.0, heights[i]};
 
         // Run rdr2geo
-        int stat = isce3::geometry::rdr2geo(
-                azTime, ranges[i], dopval, orbit, ellipsoid, dem, targetLLH,
-                swath.processedWavelength(), lookSide, 1.0e-8, 25, 15);
+        int stat = isce3::geometry::rdr2geo(azTime, ranges[i], dopval, orbit,
+                ellipsoid, dem, targetLLH, swath.processedWavelength(),
+                lookSide, 1.0e-8, 25, 15);
 
         // Check
         ASSERT_EQ(stat, 1);
@@ -113,9 +112,9 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit)
         ASSERT_NEAR(targetLLH[2], ref_data[3 * i + 2], 1.0e-8);
 
         // Run again with zero doppler
-        stat = isce3::geometry::rdr2geo(
-                azTime, ranges[i], 0.0, orbit, ellipsoid, dem, targetLLH,
-                swath.processedWavelength(), lookSide, 1.0e-8, 25, 15);
+        stat = isce3::geometry::rdr2geo(azTime, ranges[i], 0.0, orbit,
+                ellipsoid, dem, targetLLH, swath.processedWavelength(),
+                lookSide, 1.0e-8, 25, 15);
         // Check
         ASSERT_EQ(stat, 1);
         ASSERT_NEAR(degrees * targetLLH[0], ref_zerodop[3 * i], 1.0e-8);
@@ -129,14 +128,14 @@ TEST_F(GeometryTest, GeoToRdr)
 
     // Make a test LLH
     const double radians = M_PI / 180.0;
-    isce3::core::cartesian_t llh = {-115.72466801139711 * radians,
-                                    34.65846532785868 * radians, 1772.0};
+    isce3::core::cartesian_t llh = {
+            -115.72466801139711 * radians, 34.65846532785868 * radians, 1772.0};
 
     // Run geo2rdr
     double aztime, slantRange;
     int stat = isce3::geometry::geo2rdr(llh, ellipsoid, orbit, doppler, aztime,
-                                        slantRange, swath.processedWavelength(),
-                                        lookSide, 1.0e-10, 50, 10.0);
+            slantRange, swath.processedWavelength(), lookSide, 1.0e-10, 50,
+            10.0);
     // Convert azimuth time to a date
     isce3::core::DateTime azdate = orbit.referenceEpoch() + aztime;
 
@@ -147,8 +146,8 @@ TEST_F(GeometryTest, GeoToRdr)
     // Run geo2rdr again with zero doppler
     isce3::core::LUT2d<double> zeroDoppler;
     stat = isce3::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler, aztime,
-                                    slantRange, swath.processedWavelength(),
-                                    lookSide, 1.0e-10, 50, 10.0);
+            slantRange, swath.processedWavelength(), lookSide, 1.0e-10, 50,
+            10.0);
     azdate = orbit.referenceEpoch() + aztime;
 
     ASSERT_EQ(stat, 1);
@@ -161,7 +160,7 @@ TEST(Geometry, SrLkvHeadDemNed)
     using namespace isce3::geometry;
     // common vars and constants
     isce3::core::Ellipsoid wgs84(6378137.0, 0.0066943799901);
-    const double abs_err {1e-6};
+    const double abs_err {1e-4};
     const double d2r {M_PI / 180.0};
     const double r2d {1.0 / d2r};
     const double dem_hgt {800.0}; // (m)
@@ -198,11 +197,11 @@ TEST(Geometry, SrLkvHeadDemNed)
     -2721427.049702467397,
     -4128335.733102159109,
     4016565.662138461601;
-  //(rad,rad,m)
+  //(deg,deg,m)
   est_loc_llh <<  
-    -123.393143079459*d2r,
-    39.275724954068*d2r,
-    799.750535967638;
+    -123.3931,
+    39.2757,
+    799.7505;
   //(m/s,m/s,m/s)
   est_sc_vel_ned << 
     7340.716338644244,
@@ -224,35 +223,37 @@ TEST(Geometry, SrLkvHeadDemNed)
     // "srPosFromLookVecDem" method
     isce3::core::Vec3 loc_ecf, loc_llh;
     double sr_dem;
-    auto hgt_info {srPosFromLookVecDem(sr_dem, loc_ecf, loc_llh, sc_pos_ecf,
-                                       pnt_ecf, dem_hgt, hgt_err, num_iter,
-                                       wgs84)};
+    auto hgt_info = srPosFromLookVecDem(sr_dem, loc_ecf, loc_llh, sc_pos_ecf,
+            pnt_ecf, DEMInterpolator(dem_hgt), hgt_err, num_iter, wgs84);
     EXPECT_LE(hgt_info.first, num_iter)
             << "Wrong number of itration for DEM height";
     EXPECT_LE(hgt_info.second, hgt_err) << "Wrong height error for DEM height";
-    EXPECT_NEAR(sr_dem, 979117.2294552785, abs_err)
-            << "Wrong slant range at DEM height";
-    EXPECT_NEAR((loc_ecf - est_loc_ecf).cwiseAbs().maxCoeff(), 0.0, abs_err)
+    EXPECT_NEAR(sr_dem, 979117.2, hgt_err) << "Wrong slant range at DEM height";
+    EXPECT_NEAR((loc_ecf - est_loc_ecf).cwiseAbs().maxCoeff(), 0.0, hgt_err)
             << "Wrong ECEF location at DEM height";
-    EXPECT_NEAR((loc_llh - est_loc_llh).cwiseAbs().maxCoeff(), 0.0, abs_err)
-            << "Wrong LLH location at DEM height";
+    EXPECT_NEAR(
+            (r2d * loc_llh.head(2) - est_loc_llh.head(2)).cwiseAbs().maxCoeff(),
+            0.0, abs_err)
+            << "Wrong (Lon,lat) location at DEM height";
+    EXPECT_NEAR(std::abs(loc_llh(2) - est_loc_llh(2)), 0.0, hgt_err)
+            << "Wrong (Lon,lat) location at DEM height";
 
     // "necVector" , "nuwVector" , "enuVector"  methods
     auto sc_vel_ned {nedVector(sc_pos_llh(0), sc_pos_llh(1), sc_vel_ecf)};
-    EXPECT_NEAR((sc_vel_ned - est_sc_vel_ned).cwiseAbs().maxCoeff(), 0.0,
-                abs_err)
+    EXPECT_NEAR(
+            (sc_vel_ned - est_sc_vel_ned).cwiseAbs().maxCoeff(), 0.0, abs_err)
             << "Wrong S/C Vel in NED";
     auto sc_vel_nwu {nwuVector(sc_pos_llh(0), sc_pos_llh(1), sc_vel_ecf)};
     isce3::core::Vec3 est_sc_vel_nwu {est_sc_vel_ned};
     est_sc_vel_nwu.tail(2) *= -1;
-    EXPECT_NEAR((sc_vel_nwu - est_sc_vel_nwu).cwiseAbs().maxCoeff(), 0.0,
-                abs_err)
+    EXPECT_NEAR(
+            (sc_vel_nwu - est_sc_vel_nwu).cwiseAbs().maxCoeff(), 0.0, abs_err)
             << "Wrong S/C Vel in NWU";
     auto sc_vel_enu {enuVector(sc_pos_llh(0), sc_pos_llh(1), sc_vel_ecf)};
     isce3::core::Vec3 est_sc_vel_enu;
     est_sc_vel_enu << est_sc_vel_ned(1), est_sc_vel_ned(0), -est_sc_vel_ned(2);
-    EXPECT_NEAR((sc_vel_enu - est_sc_vel_enu).cwiseAbs().maxCoeff(), 0.0,
-                abs_err)
+    EXPECT_NEAR(
+            (sc_vel_enu - est_sc_vel_enu).cwiseAbs().maxCoeff(), 0.0, abs_err)
             << "Wrong S/C Vel in ENU";
 }
 
@@ -264,9 +265,8 @@ int main(int argc, char* argv[])
 
 // Load test data
 void loadTestData(std::vector<std::string>& aztimes,
-                  std::vector<double>& ranges, std::vector<double>& heights,
-                  std::vector<double>& ref_data,
-                  std::vector<double>& ref_zerodop)
+        std::vector<double>& ranges, std::vector<double>& heights,
+        std::vector<double>& ref_data, std::vector<double>& ref_zerodop)
 {
 
     // Load azimuth times and slant ranges

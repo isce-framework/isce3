@@ -45,6 +45,7 @@ unwrap/phass.py
 geometry/ltpcoordinates.py
 geometry/pntintersect.py
 antenna/frame.py
+antenna/geometryfunc.py
 )
 
 if(WITH_CUDA)

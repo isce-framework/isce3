@@ -5,6 +5,7 @@ import numpy.testing as npt
 
 from pybind_isce3 import geometry as geom
 from pybind_isce3.core import Ellipsoid as ellips
+from pybind_isce3.geometry import DEMInterpolator as DEMInterp
 
 
 class TestIntersect:
@@ -64,7 +65,7 @@ class TestIntersect:
         # estimates from function under test
         out = geom.sr_pos_from_lookvec_dem(self._sc_pos_ecef,
                                            pnt_ecef_dem,
-                                           self._tg_pos_llh[-1])
+                                           DEMInterp(self._tg_pos_llh[-1]))
 
         npt.assert_array_less(out["iter_info"], (10, 0.5))
 
@@ -81,22 +82,22 @@ class TestIntersect:
         # height within default accuracy = 0.5
         npt.assert_allclose(out["pos_llh"][-1],
                             self._tg_pos_llh[-1],
-                            rtol=0.5, atol=0.5)
+                            rtol=0.5*self._rtol, atol=0.5)
 
         # test exception for bad input for iteration params
         with npt.assert_raises(ValueError):
             out = geom.sr_pos_from_lookvec_dem(self._sc_pos_ecef,
                                                pnt_ecef_dem,
-                                               self._tg_pos_llh[-1],
+                                               DEMInterp(self._tg_pos_llh[-1]),
                                                num_iter=0)
 
         # test exception for bad input value "zero look vector"
         with npt.assert_raises(ValueError):
             out = geom.sr_pos_from_lookvec_dem(self._sc_pos_ecef,
                                                0.0*pnt_ecef_dem,
-                                               self._tg_pos_llh[-1])
+                                               DEMInterp(self._tg_pos_llh[-1]))
         # test exception for bad slant range
         with npt.assert_raises(RuntimeError):
             out = geom.sr_pos_from_lookvec_dem(self._sc_pos_ecef,
                                                -1*pnt_ecef_dem,
-                                               self._tg_pos_llh[-1])
+                                               DEMInterp(self._tg_pos_llh[-1]))
