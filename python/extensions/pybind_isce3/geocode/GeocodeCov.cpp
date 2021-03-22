@@ -35,14 +35,16 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                           &Geocode<T>::demBlockMargin)
             .def_property("radar_block_margin", nullptr,
                           &Geocode<T>::radarBlockMargin)
-            .def_property("interpolator", nullptr,
-                          [](Geocode<T>& self, std::string& method) {
+            .def_property("data_interpolator", 
+                py::overload_cast<>(&Geocode<T>::dataInterpolator, 
+                                    py::const_),
+               [](Geocode<T>& self, std::string& method) {
                               // get interp method
-                              auto interp_method =
+                              auto data_interpolator =
                                       parseDataInterpMethod(method);
 
                               // set interp method
-                              self.interpolator(interp_method);
+                              self.dataInterpolator(data_interpolator);
                           })
             .def_property_readonly("geogrid_start_x",
                                    &Geocode<T>::geoGridStartX)
@@ -98,7 +100,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                             isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
                     py::arg("max_block_size") =
                             isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
-                    py::arg("interp_mode") = isce3::core::BIQUINTIC_METHOD);
+                    py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD);
 }
 
 void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeMode)

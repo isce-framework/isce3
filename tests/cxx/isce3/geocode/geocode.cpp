@@ -94,7 +94,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoObj.linesPerBlock(linesPerBlock);
     geoObj.demBlockMargin(demBlockMargin);
     geoObj.radarBlockMargin(radarBlockMargin);
-    geoObj.interpolator(method);
+    geoObj.dataInterpolator(method);
 
     isce3::product::RadarGridParameters radar_grid(swath, lookSide);
 
@@ -188,7 +188,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoComplexObj.linesPerBlock(linesPerBlock);
     geoComplexObj.demBlockMargin(demBlockMargin);
     geoComplexObj.radarBlockMargin(radarBlockMargin);
-    geoComplexObj.interpolator(method);
+    geoComplexObj.dataInterpolator(method);
 
     geoComplexObj.geoGrid(geoGridStartX, geoGridStartY, geoGridSpacingX,
                           geoGridSpacingY, geoGridWidth, geoGridLength,

@@ -145,7 +145,7 @@ void Geocode<T>::geocode(
         isce3::io::Raster* out_geo_rtc, isce3::io::Raster* input_rtc,
         isce3::io::Raster* output_rtc, geocodeMemoryMode geocode_memory_mode,
         const int min_block_size, const int max_block_size,
-        isce3::core::dataInterpMethod interp_method)
+        isce3::core::dataInterpMethod dem_interp_method)
 {
     bool flag_complex_to_real = isce3::signal::verifyComplexToRealCasting(
             input_raster, output_raster, exponent);
@@ -171,7 +171,7 @@ void Geocode<T>::geocode(
                 radar_grid_nlooks, out_off_diag_terms, out_geo_rdr,
                 out_geo_dem, out_geo_nlooks, out_geo_rtc, input_rtc,
                 output_rtc, geocode_memory_mode, min_block_size,
-                max_block_size, interp_method);
+                max_block_size, dem_interp_method);
     else if (std::is_same<T, double>::value ||
              std::is_same<T, std::complex<double>>::value)
         geocodeAreaProj<double>(
@@ -184,7 +184,7 @@ void Geocode<T>::geocode(
                 radar_grid_nlooks, out_off_diag_terms, out_geo_rdr,
                 out_geo_dem, out_geo_nlooks, out_geo_rtc, input_rtc,
                 output_rtc, geocode_memory_mode, min_block_size,
-                max_block_size, interp_method);
+                max_block_size, dem_interp_method);
     else
         geocodeAreaProj<float>(
                 radar_grid, input_raster, output_raster, dem_raster,
@@ -196,7 +196,7 @@ void Geocode<T>::geocode(
                 radar_grid_nlooks, out_off_diag_terms, out_geo_rdr,
                 out_geo_dem, out_geo_nlooks, out_geo_rtc, input_rtc,
                 output_rtc, geocode_memory_mode, min_block_size,
-                max_block_size, interp_method);
+                max_block_size, dem_interp_method);
 }
 
 template<class T>
@@ -211,7 +211,7 @@ void Geocode<T>::geocodeInterp(
     auto start_time = std::chrono::high_resolution_clock::now();
 
     std::unique_ptr<isce3::core::Interpolator<T_out>> interp {
-            isce3::core::createInterpolator<T_out>(_interp_method)};
+            isce3::core::createInterpolator<T_out>(_data_interp_method)};
 
     // number of bands in the input raster
     int nbands = inputRaster.numBands();
@@ -723,7 +723,7 @@ void Geocode<T>::geocodeAreaProj(
         isce3::io::Raster* out_geo_rtc, isce3::io::Raster* input_rtc,
         isce3::io::Raster* output_rtc, geocodeMemoryMode geocode_memory_mode,
         const int min_block_size, const int max_block_size,
-        isce3::core::dataInterpMethod interp_method)
+        isce3::core::dataInterpMethod dem_interp_method)
 {
 
     if (std::isnan(geogrid_upsampling))
@@ -752,7 +752,7 @@ void Geocode<T>::geocodeAreaProj(
                 upsampled_radar_grid_nlooks, out_off_diag_terms, out_geo_rdr, 
                 out_geo_dem, out_geo_nlooks, out_geo_rtc, input_rtc, output_rtc,
                 geocode_memory_mode, min_block_size, max_block_size,
-                interp_method);
+                dem_interp_method);
         return;
     }
     pyre::journal::info_t info("isce.geometry.Geocode.geocodeAreaProj");
@@ -841,7 +841,7 @@ void Geocode<T>::geocodeAreaProj(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_geogrid_upsampling,
                     rtc_min_value_db, radar_grid_nlooks, nullptr, nullptr,
-                    nullptr, rtc_memory_mode, interp_method, _threshold,
+                    nullptr, rtc_memory_mode, dem_interp_method, _threshold,
                     _numiter, 1.0e-8);
         } else {
             info << "reading pre-computed RTC..." << pyre::journal::newline;
@@ -961,7 +961,7 @@ void Geocode<T>::geocodeAreaProj(
                         block_size_y, block_size_with_upsampling_y, block_y,
                         block_size_x, block_size_with_upsampling_x, block_x,
                         numdone, progress_block, geogrid_upsampling, nbands,
-                        nbands_off_diag_terms, interp_method, dem_raster,
+                        nbands_off_diag_terms, dem_interp_method, dem_raster,
                         out_off_diag_terms, out_geo_rdr, out_geo_dem,
                         out_geo_nlooks, out_geo_rtc, start, pixazm, dr, r0,
                         proj.get(), flag_apply_rtc,
@@ -980,7 +980,7 @@ void Geocode<T>::geocodeAreaProj(
                         block_size_y, block_size_with_upsampling_y, block_y,
                         block_size_x, block_size_with_upsampling_x, block_x,
                         numdone, progress_block, geogrid_upsampling, nbands,
-                        nbands_off_diag_terms, interp_method, dem_raster,
+                        nbands_off_diag_terms, dem_interp_method, dem_raster,
                         out_off_diag_terms, out_geo_rdr, out_geo_dem,
                         out_geo_nlooks, out_geo_rtc, start, pixazm, dr, r0,
                         proj.get(), flag_apply_rtc,
@@ -1117,7 +1117,7 @@ void Geocode<T>::_runBlock(
         int block_size_x, int block_size_with_upsampling_x, int block_x,
         long long& numdone, const long long& progress_block, 
         double geogrid_upsampling, int nbands,
-        int nbands_off_diag_terms, isce3::core::dataInterpMethod interp_method,
+        int nbands_off_diag_terms, isce3::core::dataInterpMethod dem_interp_method,
         isce3::io::Raster& dem_raster, isce3::io::Raster* out_off_diag_terms,
         isce3::io::Raster* out_geo_rdr,
         isce3::io::Raster* out_geo_dem, isce3::io::Raster* out_geo_nlooks,
@@ -1192,7 +1192,7 @@ void Geocode<T>::_runBlock(
     int ii_0 = block_y * block_size_with_upsampling_y;
     int jj_0 = block_x * block_size_with_upsampling_x;
 
-    isce3::geometry::DEMInterpolator dem_interp_block(0, interp_method);
+    isce3::geometry::DEMInterpolator dem_interp_block(0, dem_interp_method);
 
     double minX = _geoGridStartX +
                   (((double) jj_0) / geogrid_upsampling * _geoGridSpacingX);
@@ -1915,7 +1915,7 @@ std::vector<float> getGeoAreaElementMean(
         isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry,  
         int exponent, geocodeOutputMode output_mode, double geogrid_upsampling,
         float rtc_min_value_db, double abs_cal_factor, float radar_grid_nlooks,
-        float* out_nlooks, isce3::core::dataInterpMethod interp_method,
+        float* out_nlooks, isce3::core::dataInterpMethod dem_interp_method,
         double threshold, int num_iter, double delta_range)
 {
 
@@ -2065,7 +2065,7 @@ std::vector<float> getGeoAreaElementMean(
                 *rtc_raster_unique_ptr.get(), input_terrain_radiometry,
                 output_terrain_radiometry, rtc_area_mode, rtc_algorithm,
                 geogrid_upsampling * 2, rtc_min_value_db, radar_grid_nlooks,
-                nullptr, rtc_memory_mode, interp_method, threshold, num_iter,
+                nullptr, rtc_memory_mode, dem_interp_method, threshold, num_iter,
                 delta_range);
 
         rtc_area.resize(radar_grid_cropped.length(),

@@ -539,7 +539,7 @@ TEST(radarGridCubeTest, testRadarGridCube)
         geo_obj.linesPerBlock(1000);
         geo_obj.demBlockMargin(0.1);
         geo_obj.radarBlockMargin(100);
-        geo_obj.interpolator(method);
+        geo_obj.dataInterpolator(method);
 
         geo_obj.geoGrid(x0, y0, dx, dy, width, length, epsg);
 

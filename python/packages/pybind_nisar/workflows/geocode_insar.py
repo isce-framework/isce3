@@ -60,7 +60,7 @@ def run(cfg, runw_hdf5, output_hdf5):
     geo.numiter_geo2rdr = iteration_geo2rdr
     geo.dem_block_margin = dem_block_margin
     geo.lines_per_block = lines_per_block
-    geo.interpolator = interp_method
+    geo.data_interpolator = interp_method
 
     t_all = time.time()
     with h5py.File(output_hdf5, "a") as dst_h5:

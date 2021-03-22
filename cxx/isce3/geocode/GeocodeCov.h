@@ -83,7 +83,7 @@ public:
      * @param[in]  geocode_memory_mode  Select memory mode
      * @param[in]  min_block_size       Minimum block size (per thread)
      * @param[in]  max_block_size       Maximum block size (per thread)
-     * @param[in]  interp_method        Data interpolation method
+     * @param[in]  dem_interp_method   DEM interpolation method
      */
     void
     geocode(const isce3::product::RadarGridParameters& radar_grid,
@@ -121,7 +121,7 @@ public:
                     isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
             const int max_block_size =
                     isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
-            isce3::core::dataInterpMethod interp_method =
+            isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     /** Geocode using the interpolation algorithm.
@@ -175,7 +175,7 @@ public:
      * geo-coordinates).
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
-     * @param[in]  interp_method       Data interpolation method
+     * @param[in]  dem_interp_method   DEM interpolation method
      * @param[in]  min_block_size      Minimum block size (per thread)
      * @param[in]  max_block_size      Maximum block size (per thread)
      * @param[in]  geocode_memory_mode Select memory mode
@@ -216,7 +216,7 @@ public:
                     isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
             const int max_block_size =
                     isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
-            isce3::core::dataInterpMethod interp_method =
+            isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     /** Set the output geogrid
@@ -241,10 +241,15 @@ public:
     void updateGeoGrid(const isce3::product::RadarGridParameters& radar_grid,
                        isce3::io::Raster& dem_raster);
 
-    // Set interpolator
-    void interpolator(isce3::core::dataInterpMethod method)
+    // Get/set data interpolator
+    isce3::core::dataInterpMethod dataInterpolator() const 
+    { 
+            return _data_interp_method; 
+    }
+
+    void dataInterpolator(isce3::core::dataInterpMethod method)
     {
-        _interp_method = method;
+        _data_interp_method = method;
     }
 
     void doppler(isce3::core::LUT2d<double> doppler) { _doppler = doppler; }
@@ -313,7 +318,7 @@ private:
               long long& numdone, const long long& progress_block, 
               double geogrid_upsampling,
               int nbands, int nbands_off_diag_terms,
-              isce3::core::dataInterpMethod interp_method,
+              isce3::core::dataInterpMethod dem_interp_method,
               isce3::io::Raster& dem_raster,
               isce3::io::Raster* out_off_diag_terms,
               isce3::io::Raster* out_geo_rdr,
@@ -390,7 +395,7 @@ private:
     int _radarBlockMargin;
 
     // interpolator
-    isce3::core::dataInterpMethod _interp_method =
+    isce3::core::dataInterpMethod _data_interp_method =
             isce3::core::dataInterpMethod::BIQUINTIC_METHOD;
 };
 std::vector<float> getGeoAreaElementMean(
@@ -410,7 +415,7 @@ std::vector<float> getGeoAreaElementMean(
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         double abs_cal_factor = 1, float radar_grid_nlooks = 1,
         float* out_nlooks = nullptr,
-        isce3::core::dataInterpMethod interp_method =
+        isce3::core::dataInterpMethod dem_interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 

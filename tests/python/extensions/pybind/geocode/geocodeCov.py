@@ -25,7 +25,7 @@ def test_run():
     geo_obj.lines_per_block = 1000
     geo_obj.dem_block_margin = 1e-1
     geo_obj.radar_block_margin = 10
-    geo_obj.interpolator = 'biquintic'
+    geo_obj.data_interpolator = 'biquintic'
 
     # prepare geogrid
     geogrid_start_x = -115.6
