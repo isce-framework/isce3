@@ -37,7 +37,7 @@ function(CheckCXX)
             "Unsupported compiler detected - courageously continuing")
     endif()
 
-    if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+    if(ISCE3_WITH_CUDA AND CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
         if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11)
             message(FATAL_ERROR
                 "NVCC 11+ required - detected ${CMAKE_CUDA_COMPILER_VERSION}")
