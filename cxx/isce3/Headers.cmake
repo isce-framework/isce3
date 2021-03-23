@@ -89,6 +89,7 @@ geometry/Geo2rdr.h
 geometry/Geo2rdr.icc
 geocode/GeocodeCov.h
 geocode/GeocodeCov.icc
+geocode/GeocodePolygon.h
 geometry/geometry.h
 geometry/RTC.h
 geometry/Topo.h

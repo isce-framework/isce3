@@ -103,7 +103,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD);
 }
 
-void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeMode)
+
+
+void addbinding(pybind11::enum_<geocodeOutputMode> & pyGeocodeMode)
 {
     pyGeocodeMode.value("INTERP", geocodeOutputMode::INTERP)
             .value("AREA_PROJECTION", geocodeOutputMode::AREA_PROJECTION);
@@ -122,5 +124,4 @@ template void addbinding(py::class_<Geocode<float>>&);
 template void addbinding(py::class_<Geocode<double>>&);
 template void addbinding(py::class_<Geocode<std::complex<float>>>&);
 template void addbinding(py::class_<Geocode<std::complex<double>>>&);
-
 // end of file

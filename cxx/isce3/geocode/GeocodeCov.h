@@ -220,14 +220,14 @@ public:
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     /** Set the output geogrid
-     * @param[in]  geoGridStartY       Starting lat/northing position
-     * @param[in]  geoGridSpacingY     Lat/northing step size
-     * @param[in]  geoGridStartX       Starting lon/easting position
-     * @param[in]  geoGridSpacingX     Lon/easting step size
+     * @param[in]  geoGridStartY       Starting Lat/Northing position
+     * @param[in]  geoGridSpacingY     Lat/Northing step size
+     * @param[in]  geoGridStartX       Starting Lon/Easting position
+     * @param[in]  geoGridSpacingX     Lon/Easting step size
      * @param[in]  geogrid_width       Geographic width (number of pixels) in
-     * the lon/easting direction
+     * the Lon/Easting direction
      * @param[in]  geogrid_length      Geographic length (number of pixels) in
-     * the lat/northing direction
+     * the Lat/Northing direction
      * @param[in]  epsgcode            Output geographic grid EPSG
      */
     void geoGrid(double geoGridStartX, double geoGridStartY,
@@ -398,38 +398,9 @@ private:
     isce3::core::dataInterpMethod _data_interp_method =
             isce3::core::dataInterpMethod::BIQUINTIC_METHOD;
 };
-std::vector<float> getGeoAreaElementMean(
-        const std::vector<double>& x_vect, const std::vector<double>& y_vect,
-        const isce3::product::RadarGridParameters& radar_grid,
-        const isce3::core::Orbit& orbit,
-        const isce3::core::LUT2d<double>& input_dop,
-        isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
-        bool flag_apply_rtc,
-        isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
-                isce3::geometry::rtcInputTerrainRadiometry::BETA_NAUGHT,
-        isce3::geometry::rtcOutputTerrainRadiometry output_terrain_radiometry = 
-                isce3::geometry::rtcOutputTerrainRadiometry::GAMMA_NAUGHT,  
-        int exponent = 0,
-        geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
-        double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
-        float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
-        double abs_cal_factor = 1, float radar_grid_nlooks = 1,
-        float* out_nlooks = nullptr,
-        isce3::core::dataInterpMethod dem_interp_method =
-                isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
-
-template<typename T>
-std::vector<float> _getGeoAreaElementMean(
-        const std::vector<double>& r_vect, const std::vector<double>& a_vect,
-        int x_min, int y_min, bool flag_apply_rtc,
-        isce3::core::Matrix<float>& rtc_area,
-        const isce3::product::RadarGridParameters& radar_grid,
-        isce3::io::Raster& input_raster,
-        float rtc_min_value = 0, float* out_nlooks = nullptr,
-        double abs_cal_factor = 1, float radar_grid_nlooks = 1);
 
 }} // namespace isce3::geocode
+
 
 // Get inline implementations for Geocode
 #define ISCE_GEOMETRY_GEOCODE_ICC

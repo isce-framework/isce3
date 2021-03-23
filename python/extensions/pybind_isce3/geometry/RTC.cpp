@@ -96,9 +96,9 @@ void addbinding_apply_rtc(pybind11::module& m)
               output_raster : isce3.io.Raster
                   Output raster (output)
               input_terrain_radiometry : isce3.geometry.RtcInputTerrainRadiometry, optional
-                  Terrain radiometry of the input raster
+                  Input terrain radiometry
               output_terrain_radiometry : isce3.geometry.RtcOutputTerrainRadiometry, optional
-                 Terrain radiometry of the input raster
+                  Output terrain radiometry
               exponent : int, optional
                   Exponent to be applied to the input data. The
                value 0 indicates that the the exponent is based on the

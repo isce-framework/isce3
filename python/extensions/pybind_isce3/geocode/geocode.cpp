@@ -1,6 +1,7 @@
 #include "geocode.h"
 
 #include "GeocodeCov.h"
+#include "GeocodePolygon.h"
 #include "GeocodeSlc.h"
 
 namespace py = pybind11;
@@ -21,6 +22,15 @@ void addsubmodule_geocode(py::module & m)
     py::class_<isce3::geocode::Geocode<std::complex<double>>>
         pyGeocodeCFloat64(geocode, "GeocodeCFloat64");
 
+    py::class_<isce3::geocode::GeocodePolygon<float>>
+        pyGeocodePolygonFloat32(geocode, "GeocodePolygonFloat32");
+    py::class_<isce3::geocode::GeocodePolygon<double>>
+        pyGeocodePolygonFloat64(geocode, "GeocodePolygonFloat64");
+    py::class_<isce3::geocode::GeocodePolygon<std::complex<float>>>
+        pyGeocodePolygonCFloat32(geocode, "GeocodePolygonCFloat32");
+    py::class_<isce3::geocode::GeocodePolygon<std::complex<double>>>
+        pyGeocodePolygonCFloat64(geocode, "GeocodePolygonCFloat64");
+
     // forward declare bound enums
     py::enum_<isce3::geocode::geocodeMemoryMode>
         pyGeocodeMemoryMode(geocode, "GeocodeMemoryMode");
@@ -32,6 +42,12 @@ void addsubmodule_geocode(py::module & m)
     addbinding(pyGeocodeFloat64);
     addbinding(pyGeocodeCFloat32);
     addbinding(pyGeocodeCFloat64);
+
+    addbinding(pyGeocodePolygonFloat32);
+    addbinding(pyGeocodePolygonFloat64);
+    addbinding(pyGeocodePolygonCFloat32);
+    addbinding(pyGeocodePolygonCFloat64);
+
     addbinding(pyGeocodeMemoryMode);
     addbinding(pyGeocodeOutputMode);
 
