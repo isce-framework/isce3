@@ -77,6 +77,11 @@ class isce3::product::Swath {
         /** Set nominal acquisition PRF */
         inline void nominalAcquisitionPRF(double f) { _nominalAcquisitionPRF = f; }
 
+        /** Get time spacing of raster grid */
+        inline double zeroDopplerTimeSpacing() const { return _zeroDopplerTimeSpacing; }
+        /** Set time spacing of raster grid */
+        inline void zeroDopplerTimeSpacing(double dt) { _zeroDopplerTimeSpacing = dt; }
+
         /** Get scene center along track spacing */
         inline double sceneCenterAlongTrackSpacing() const {
             return _sceneCenterAlongTrackSpacing;
@@ -123,7 +128,8 @@ class isce3::product::Swath {
         double _processedCenterFrequency;
         double _acquiredRangeBandwidth;
         double _processedRangeBandwidth;
-        double _nominalAcquisitionPRF;
+        double _nominalAcquisitionPRF;      // acquired
+        double _zeroDopplerTimeSpacing;     // processed
         double _sceneCenterAlongTrackSpacing;
         double _sceneCenterGroundRangeSpacing;
         double _processedAzimuthBandwidth;

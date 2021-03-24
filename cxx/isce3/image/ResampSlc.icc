@@ -100,7 +100,7 @@ inline void ResampSlc::_setDataFromSwath(const isce3::product::Swath& swath)
     _startingRange = swath.slantRange()[0];
     _rangePixelSpacing = swath.rangePixelSpacing();
     _sensingStart = swath.zeroDopplerTime()[0];
-    _prf = swath.nominalAcquisitionPRF();
+    _prf = 1.0 / swath.zeroDopplerTimeSpacing();
     _wavelength = swath.processedWavelength();
 }
 

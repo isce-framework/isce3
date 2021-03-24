@@ -54,6 +54,9 @@ void addbinding(pybind11::class_<Swath> & pySwath)
         .def_property("nominal_acquisition_prf",
                 py::overload_cast<>(&Swath::nominalAcquisitionPRF, py::const_),
                 py::overload_cast<double>(&Swath::nominalAcquisitionPRF))
+        .def_property("zero_doppler_time_spacing",
+                py::overload_cast<>(&Swath::zeroDopplerTimeSpacing, py::const_),
+                py::overload_cast<double>(&Swath::zeroDopplerTimeSpacing))
         .def_property("scene_center_along_track_spacing",
                 py::overload_cast<>(&Swath::sceneCenterAlongTrackSpacing, py::const_),
                 py::overload_cast<double>(&Swath::sceneCenterAlongTrackSpacing))

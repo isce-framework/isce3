@@ -14,7 +14,7 @@ RadarGridParameters(const Swath & swath, isce3::core::LookSide lookSide) :
     _lookSide(lookSide),
     _sensingStart(swath.zeroDopplerTime()[0]),
     _wavelength(swath.processedWavelength()),
-    _prf(swath.nominalAcquisitionPRF()),
+    _prf(1.0 / swath.zeroDopplerTimeSpacing()),
     _startingRange(swath.slantRange()[0]),
     _rangePixelSpacing(swath.rangePixelSpacing()),
     _rlength(swath.lines()),

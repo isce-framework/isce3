@@ -113,6 +113,9 @@ namespace isce3 {
             isce3::io::loadFromH5(fgroup, "nominalAcquisitionPRF", value);
             swath.nominalAcquisitionPRF(value);
 
+            isce3::io::loadFromH5(group, "zeroDopplerTimeSpacing", value);
+            swath.zeroDopplerTimeSpacing(value);
+
             isce3::io::loadFromH5(fgroup, "sceneCenterGroundRangeSpacing", value);
             swath.sceneCenterGroundRangeSpacing(value);
 
