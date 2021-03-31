@@ -55,6 +55,53 @@ class SLC(h5py.File):
         g.require_dataset("effectiveVelocity", v.shape, v.dtype, data=v)
         fg.require_dataset("azimuthFMRate", v.shape, v.dtype, data=v)
         # TODO weighting, ref height
+        if "rangeChirpWeighting" not in g:
+            g.require_dataset("rangeChirpWeighting", v.shape, np.float32, 
+                              data=v)
+        if "referenceTerrainHeight" not in g:
+            ref_terrain_height = np.zeros((v.shape[0]))
+            g.require_dataset("referenceTerrainHeight", (v.shape[0]), 
+                              np.float32, data=ref_terrain_height)
+
+        # TODO populate processingInformation/algorithms
+        algorithms_ds = self.root.require_group("metadata/processingInformation/algorithms")
+        algorithms_dataset_list = ["ISCEVersion", 
+                                   "SWSTCorrection", 
+                                   "azimuthCompression", 
+                                   "azimuthPresumming", 
+                                   "dopplerCentroidEstimation", 
+                                   "driftCompensator", 
+                                   "elevationAntennaPatternCorrection", 
+                                   "internalCalibration", 
+                                   "patchProcessing", 
+                                   "postProcessing", 
+                                   "rangeCellMigration", 
+                                   "rangeCompression", 
+                                   "rangeDependentGainCorrection", 
+                                   "rangeReferenceFunctionGenerator", 
+                                   "rangeSpreadingLossCorrection", 
+                                   "secondaryRangeCompression"]
+
+        for algorithm in algorithms_dataset_list:
+            if algorithm in g:
+                continue
+            algorithms_ds.require_dataset(algorithm, (), 'S27',
+                                          data=np.string_("")) 
+
+        # TODO populate processingInformation/inputs
+        inputs_ds = self.root.require_group("metadata/processingInformation/inputs")
+        inputs_dataset_list = ["l0bGranules",
+                               "orbitFiles",
+                               "attitudeFiles",
+                               "auxcalFiles",
+                               "configFiles",
+                               "demFiles"]
+
+        for inp in inputs_dataset_list:
+            if inp in g:
+                continue
+            inputs_ds.require_dataset(inp, (), 'S1', data=np.string_("")) 
+
 
     def swath(self, frequency="A") -> h5py.Group:
         return self.root.require_group(f"swaths/frequency{frequency}")
@@ -265,3 +312,68 @@ class SLC(h5py.File):
         )
         add_geolocation_grid_cubes_to_hdf5(self, group_name, grid, heights,
             orbit, doppler, rslc_doppler, epsg, **tol)
+
+
+    def add_calibration_section(self, frequency, pol, 
+                                az_time_orig_vect: np.array, 
+                                epoch: DateTime, 
+                                slant_range_orig_vect: np.array):
+        assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
+
+        calibration_section_sampling = 50
+        g = self.root.require_group("metadata/calibrationInformation")
+
+        if "zeroDopplerTime" in g:
+            t = g['zeroDopplerTime']
+        else:
+            t = az_time_orig_vect[0:-1:calibration_section_sampling]
+            d = g.require_dataset("zeroDopplerTime", t.shape, t.dtype, data=t)
+            d.attrs["units"] = np.string_(time_units(epoch))
+            d.attrs["description"] = np.string_(
+                "CF compliant dimension associated with azimuth time")
+
+        if "slantRange" in g:
+            r = g['slantRange']
+        else:
+            r = slant_range_orig_vect[0:-1:calibration_section_sampling]
+            d = g.require_dataset("slantRange", r.shape, r.dtype, data=r)
+            d.attrs["units"] = np.string_("meters")
+            d.attrs["description"] = np.string_("CF compliant dimension associated"
+                                                " with slant range")
+
+        dummy_array = np.ones((t.size, r.size), dtype=np.float32)
+
+        if "geometry/beta0" not in g:
+            d = g.require_dataset(f"geometry/beta0", dummy_array.shape, 
+                                  np.float32, data=dummy_array)
+            d.attrs["description"] = np.string_(
+                "2D LUT to convert DN to beta 0 assuming as a function"
+                 " of zero doppler time and slant range")
+
+        if "geometry/sigma0" not in g:
+            d = g.require_dataset(f"geometry/sigma0", dummy_array.shape, 
+                                  np.float32, data=dummy_array)
+            d.attrs["description"] = np.string_(
+                "2D LUT to convert DN to sigma 0 assuming as a function"
+                 " of zero doppler time and slant range")
+
+
+        if "geometry/gamma0" not in g:
+            d = g.require_dataset(f"geometry/gamma0", dummy_array.shape, 
+                                  np.float32, data=dummy_array)
+            d.attrs["description"] = np.string_(
+                "2D LUT to convert DN to gamma 0 as a function of zero"
+                " doppler time and slant range")
+
+        d = g.require_dataset(
+            f"frequency{frequency}/{pol}/elevationAntennaPattern", 
+            dummy_array.shape, np.float32, data=dummy_array)
+        d.attrs["description"] = np.string_(
+            "Complex two-way elevation antenna pattern")
+
+        dummy_array = np.zeros((t.size, r.size))
+        d = g.require_dataset(
+            f"frequency{frequency}/{pol}/nes0", 
+            dummy_array.shape, np.float32, data=dummy_array)
+        d.attrs["description"] = np.string_(
+            "Thermal noise equivalent sigma0")

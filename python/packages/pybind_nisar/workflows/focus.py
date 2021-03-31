@@ -551,6 +551,11 @@ def focus(runconfig):
         r = og.starting_range + np.arange(og.width) * og.range_pixel_spacing
         slc.update_swath(t, og.ref_epoch, r, fc, frequency)
 
+        # add calibration section
+        for pol in raw.polarizations[frequency]:
+            slc.add_calibration_section(frequency, pol, t,
+                                        orbit.reference_epoch, r)
+
     freq = raw.frequencies[0]
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
                              epsg=4326, dem=dem,
