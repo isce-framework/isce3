@@ -153,7 +153,8 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
 
     // Run geo2rdr on gpu
     double aztime, slantRange;
-    int stat = isce3::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler,
+    auto doppler_1d = isce3::core::avgLUT2dToLUT1d<double>(doppler);
+    int stat = isce3::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler_1d,
         aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
     isce3::core::DateTime azdate = refEpoch + aztime;

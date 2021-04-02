@@ -32,6 +32,7 @@
 __constant__ double start, r0, pixazm, dr;
 __constant__ float xbound, ybound;
 
+using isce3::core::avgLUT2dToLUT1d;
 using isce3::core::OrbitInterpBorderMode;
 using isce3::core::Vec3;
 using isce3::core::Mat3;
@@ -330,7 +331,7 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem,
 
     // Convert LUT2d doppler to LUT1d
     isce3::core::LUT1d<double> dop_h(
-            product.metadata().procInfo().dopplerCentroid(frequency));
+            avgLUT2dToLUT1d(product.metadata().procInfo().dopplerCentroid(frequency)));
     isce3::cuda::core::gpuLUT1d<double> dop(dop_h);
 
     const size_t xmax = dem_interp.width() * upsample_factor;

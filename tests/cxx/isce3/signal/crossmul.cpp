@@ -14,12 +14,13 @@
 #include <isce3/product/Product.h>
 #include <isce3/product/Serialization.h>
 
+using isce3::core::avgLUT2dToLUT1d;
 
 TEST(Crossmul, RunCrossmul)
 {
-    //This test creates an interferogram between an SLC and itself and checks if the 
+    //This test creates an interferogram between an SLC and itself and checks if the
     //interferometric phase is zero.
-    
+
     //a raster object for the reference SLC
     isce3::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
@@ -34,7 +35,7 @@ TEST(Crossmul, RunCrossmul)
 
     // HDF5 file with required metadata
     std::string h5file(TESTDATA_DIR "envisat.h5");
-    
+
     //H5 object
     isce3::io::IH5File file(h5file);
 
@@ -43,7 +44,8 @@ TEST(Crossmul, RunCrossmul)
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT1d<double> dop1 =
+        avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
@@ -52,7 +54,7 @@ TEST(Crossmul, RunCrossmul)
     // get the pulse repetition frequency (PRF)
     double prf = swath.nominalAcquisitionPRF();
 
-    //instantiate the Crossmul class  
+    //instantiate the Crossmul class
     isce3::signal::Crossmul crsmul;
 
     // set Doppler polynomials for refernce and secondary SLCs
@@ -63,7 +65,7 @@ TEST(Crossmul, RunCrossmul)
 
     // set commonAzimuthBandwidth
     crsmul.commonAzimuthBandwidth(2000.0);
-    
+
     // set beta parameter for cosine filter in commonAzimuthBandwidth filter
     crsmul.beta(0.25);
 
@@ -86,7 +88,7 @@ TEST(Crossmul, RunCrossmul)
     interferogram.getBlock(data, 0, 0, width, length);
 
     // check if the interferometric phase is zero
-    double err = 0.0;   
+    double err = 0.0;
     double max_err = 0.0;
     for ( size_t i = 0; i < data.size(); ++i ) {
           err = std::arg(data[i]);
@@ -127,7 +129,8 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT1d<double> dop1 =
+        avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
@@ -181,7 +184,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
 
     ASSERT_LT(max_err, 1.0e-6);
 }
-         
+
 
 
 int main(int argc, char * argv[]) {

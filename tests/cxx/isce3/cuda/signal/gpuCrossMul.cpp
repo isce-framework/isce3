@@ -14,6 +14,7 @@
 
 #include "isce3/cuda/signal/gpuCrossMul.h"
 
+using isce3::core::avgLUT2dToLUT1d;
 
 TEST(gpuCrossmul, Crossmul)
 {
@@ -43,7 +44,8 @@ TEST(gpuCrossmul, Crossmul)
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    const isce3::core::LUT1d<double> dop1 =
+        avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
@@ -127,7 +129,8 @@ TEST(gpuCrossmul, MultilookCrossmul)
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT1d<double> dop1 =
+        avgLUT2dToLUT1d(product.metadata().procInfo().dopplerCentroid('A'));
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
@@ -212,7 +215,8 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce3::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce3::core::LUT1d<double> dop1 =
+        avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first

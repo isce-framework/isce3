@@ -21,7 +21,7 @@ def common_crossmul_obj():
     '''
     # make SLC object and extract parameters
     slc_obj = SLC(hdf5file=os.path.join(iscetest.data, 'envisat.h5'))
-    dopp = isce.core.LUT1d(slc_obj.getDopplerCentroid())
+    dopp = isce.core.avg_lut2d_to_lut1d(slc_obj.getDopplerCentroid())
     prf = slc_obj.getRadarGrid().prf
 
     crossmul = isce.signal.Crossmul()

@@ -1,103 +1,8 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Source Author: Bryan Riel
-// Copyright 2017-2018
-//
-
 #if !defined(ISCE_CORE_LUT1D_ICC)
 #error "LUT1d.icc is an implementation detail of class LUT1d"
 #endif
 
 #include <pyre/journal.h>
-
-// Constructor from an LUT2d (values averaged in y-direction)
-/** @param[in] lut2d LUT2d to copy data from */
-template <typename T>
-isce3::core::LUT1d<T>::
-LUT1d(const isce3::core::LUT2d<T> & lut2d) {
-
-    // Check if LUT2d has actual data; if not, just store reference value
-    if (!lut2d.haveData()) {
-        _haveData = false;
-        _refValue = lut2d.refValue();
-        return;
-    }
-
-    // Get a reference to the LUT2d data
-    const isce3::core::Matrix<T> & data = lut2d.data();
-
-    // Initialize working valarrays for computing mean along y-direction
-    std::valarray<double> values(lut2d.width()), count(lut2d.width());
-    values = 0.0;
-    count = 0.0;
-
-    // Compute sum along columns (y-direction)
-    for (size_t i = 0; i < lut2d.length(); ++i) {
-        for (size_t j = 0; j < lut2d.width(); ++j) {
-            values[j] += data(i,j);
-            count[j] += 1.0;
-        }
-    }
-
-    // Compute final coordinates and values
-    std::valarray<double> coords(lut2d.width());
-    for (size_t j = 0; j < lut2d.width(); ++j) {
-        coords[j] = lut2d.xStart() + j * lut2d.xSpacing();
-        values[j] /= count[j];
-    }
-
-    // Save results
-    _coords = coords;
-    _values = values;
-    _extrapolate = true;
-    _haveData = true;
-    _refValue = lut2d.refValue();
-}
-
-// Assignment operator from an LUT2d (values averaged in y-direction)
-/** @param[in] lut2d LUT2d to copy data from */
-template <typename T>
-isce3::core::LUT1d<T> &
-isce3::core::LUT1d<T>::
-operator=(const LUT2d<T> & lut2d) {
-
-    // Check if LUT2d has actual data; if not, just store reference value
-    if (!lut2d.haveData()) {
-        _haveData = false;
-        _refValue = lut2d.refValue();
-        return *this;
-    }
-
-    // Get a reference to the LUT2d data 
-    const isce3::core::Matrix<T> & data = lut2d.data();
-    
-    // Initialize working valarrays for computing mean along y-direction
-    std::valarray<double> values(lut2d.width()), count(lut2d.width());
-    values = 0.0;
-    count = 0.0;
-    
-    // Compute sum along columns (y-direction)
-    for (size_t i = 0; i < lut2d.length(); ++i) {
-        for (size_t j = 0; j < lut2d.width(); ++j) {
-            values[j] += data(i,j);
-            count[j] += 1.0;
-        }
-    }
-    
-    // Compute final coordinates and values
-    std::valarray<double> coords(lut2d.width());
-    for (size_t j = 0; j < lut2d.width(); ++j) {
-        coords[j] = lut2d.xStart() + j * lut2d.xSpacing();
-        values[j] /= count[j];
-    }
-    
-    // Save results
-    _coords = coords;
-    _values = values;
-    _extrapolate = true;
-    return *this;
-}
 
 /** @param[in] x Point to evaluate the LUT
   * @param[out] result Interpolated value */
@@ -179,7 +84,7 @@ eval(double x) const {
     // The indices of the x bounds
     const int j0 = high - 1;
     const int j1 = high;
-    
+
     // Get coordinates at bounds
     double x1 = _coords[j0];
     double x2 = _coords[j1];
@@ -189,4 +94,50 @@ eval(double x) const {
     return result;
 }
 
-// end of file
+template <typename T>
+isce3::core::LUT1d<T>
+isce3::core::avgLUT2dToLUT1d(const isce3::core::LUT2d<T> & lut2d,
+                          const int axis) {
+    if (axis != 0 && axis != 1) {
+        std::string error_msg = "ERROR axis not equal to 0 or 1";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    // Check if LUT2d has actual data; if not, just return LUT1d with reference value
+    if (!lut2d.haveData()) {
+        return isce3::core::LUT1d<T>(lut2d.refValue());
+    }
+
+    // Determine lut1d size and number of elements to sum
+    const auto lut1d_size = (axis == 0) ? lut2d.width() : lut2d.length();
+    const double n_to_sum_f = (axis == 0) ? static_cast<double>(lut2d.length()) :
+                                            static_cast<double>(lut2d.width());
+
+    // Get a reference to the LUT2d data
+    const Matrix<T> & data = lut2d.data();
+
+    // Compute sum and average
+    isce3::core::EArray2D<double> ea_values;
+    if (axis == 0)
+        // Sum along rows (x-direction)
+        ea_values = data.map().colwise().sum();
+    else
+        // Sum along columns (y-direction)
+        ea_values = data.map().rowwise().sum();
+    ea_values /= n_to_sum_f;
+
+    // Initialize working valarrays for computing mean along y-direction
+    std::valarray<double> values(0.0, lut1d_size);
+    std::copy(ea_values.data(), ea_values.data() + ea_values.size(), begin(values));
+
+    // Compute final coordinates and values
+    std::valarray<double> coords(lut1d_size);
+    for (size_t j = 0; j < lut1d_size; ++j) {
+        if (axis == 0)
+            coords[j] = lut2d.xStart() + j * lut2d.xSpacing();
+        else
+            coords[j] = lut2d.yStart() + j * lut2d.ySpacing();
+    }
+
+    return isce3::core::LUT1d<T>(coords, values, true);
+}

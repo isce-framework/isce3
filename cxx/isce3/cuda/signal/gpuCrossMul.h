@@ -28,9 +28,21 @@ class isce3::cuda::signal::gpuCrossmul {
                 isce3::io::Raster& interferogram,
                 isce3::io::Raster& coherenceRaster) const;
 
-       /** Set doppler LUTs for reference and secondary SLCs*/
-        void doppler(isce3::core::LUT1d<double>,
-                isce3::core::LUT1d<double>);
+        /** Set doppler LUTs for reference and secondary SLCs*/
+        void doppler(isce3::core::LUT1d<double> refDoppler,
+                isce3::core::LUT1d<double> secDoppler);
+
+        /** Set reference doppler */
+        inline void refDoppler(isce3::core::LUT1d<double> refDopp) {_refDoppler = refDopp;};
+
+        /** Get reference doppler */
+        inline const isce3::core::LUT1d<double> & refDoppler() const {return _refDoppler;};
+
+        /** Set secondary doppler */
+        inline void secDoppler(isce3::core::LUT1d<double> secDopp) {_secDoppler = secDopp;};
+
+        /** Get secondary doppler */
+        inline const isce3::core::LUT1d<double> & secDoppler() const {return _secDoppler;};
 
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double p_r_f) {_prf = p_r_f;};

@@ -80,6 +80,12 @@ void addbinding(py::class_<Crossmul> & pyCrossmul)
         .def("set_dopplers", &Crossmul::doppler,
                 py::arg("ref_doppler"),
                 py::arg("sec_doppler"))
+        .def_property("ref_doppler",
+                py::overload_cast<>(&Crossmul::refDoppler, py::const_),
+                py::overload_cast<isce3::core::LUT1d<double>>(&Crossmul::refDoppler))
+        .def_property("sec_doppler",
+                py::overload_cast<>(&Crossmul::secDoppler, py::const_),
+                py::overload_cast<isce3::core::LUT1d<double>>(&Crossmul::secDoppler))
         .def_property("prf",
                 py::overload_cast<>(&Crossmul::prf, py::const_),
                 py::overload_cast<double>(&Crossmul::prf))

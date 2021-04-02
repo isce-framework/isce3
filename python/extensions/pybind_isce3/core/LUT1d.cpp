@@ -18,8 +18,6 @@ void addbinding(py::class_<LUT1d<T>> &pyLUT1d)
                 py::arg("coords"),
                 py::arg("values"),
                 py::arg("extraploate")=true)
-        .def(py::init<const isce3::core::LUT2d<T>&>(),
-                py::arg("lut2d"))
         .def_property_readonly("size", &LUT1d<T>::size)
         .def("coordinates", (std::valarray<double>& (LUT1d<T>::*)()) &LUT1d<T>::coords,
                 "coords getter")

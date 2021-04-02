@@ -12,6 +12,7 @@
 #include "LookSide.h"
 #include "LUT1d.h"
 #include "LUT2d.h"
+#include "avgLUT2dToLUT1d.h"
 #include "Orbit.h"
 #include "Projections.h"
 #include "Quaternion.h"
@@ -112,5 +113,6 @@ void addsubmodule_core(py::module & m)
     addbinding(pyCEA);
 
     addbinding_interp1d(m_core);
+    addbinding_avgLUT2dToLUT1d(m_core);
     addbinding_makeprojection(m_core);
 }

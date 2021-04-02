@@ -36,8 +36,8 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     const isce3::product::Swath & swath = product.swath('A');
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
-    isce3::core::LUT2d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
-    isce3::core::LUT2d<double> dop2 = dop1;
+    auto dop1 = isce3::core::avgLUT2dToLUT1d<double>(product.metadata().procInfo().dopplerCentroid('A'));
+    auto dop2 = dop1;
 
     // get pulase repetition frequency (prf)
     double prf = swath.nominalAcquisitionPRF();

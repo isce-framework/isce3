@@ -66,8 +66,8 @@ def run(cfg: dict, output_hdf5: str = None):
     with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
         for freq, pol_list in freq_pols.items():
             # get 2d doppler, discard azimuth dependency, and set crossmul dopplers
-            ref_dopp = isce3.core.LUT1d(ref_slc.getDopplerCentroid(frequency=freq))
-            sec_dopp = isce3.core.LUT1d(sec_slc.getDopplerCentroid(frequency=freq))
+            ref_dopp = isce3.core.avg_lut2d_to_lut1d(ref_slc.getDopplerCentroid(frequency=freq))
+            sec_dopp = isce3.core.avg_lut2d_to_lut1d(sec_slc.getDopplerCentroid(frequency=freq))
             crossmul.set_dopplers(ref_dopp, sec_dopp)
 
             freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'

@@ -71,6 +71,18 @@ class isce3::signal::Crossmul {
         inline void doppler(isce3::core::LUT1d<double>, 
                             isce3::core::LUT1d<double>);
 
+        /** Set dopplers LUT for reference SLC */
+        inline void refDoppler(isce3::core::LUT1d<double> refDopp) { _refDoppler = refDopp; }
+
+        /** Get doppler LUT for reference SLC */
+        inline const isce3::core::LUT1d<double> & refDoppler() const { return _refDoppler; }
+
+        /** Set dopplers LUT for secondary SLC */
+        inline void secDoppler(isce3::core::LUT1d<double> secDopp) { _secDoppler = secDopp; }
+
+        /** Get doppler LUT for secondary SLC */
+        inline const isce3::core::LUT1d<double> & secDoppler() const { return _secDoppler; }
+
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double prf) { _prf = prf; }
 

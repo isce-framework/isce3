@@ -81,6 +81,12 @@ void addbinding(py::class_<gpuCrossmul> & pyCrossmul)
         .def("set_dopplers", &gpuCrossmul::doppler,
                 py::arg("ref_doppler"),
                 py::arg("sec_doppler"))
+        .def_property("ref_doppler",
+                py::overload_cast<>(&gpuCrossmul::refDoppler, py::const_),
+                py::overload_cast<isce3::core::LUT1d<double>>(&gpuCrossmul::refDoppler))
+        .def_property("sec_doppler",
+                py::overload_cast<>(&gpuCrossmul::secDoppler, py::const_),
+                py::overload_cast<isce3::core::LUT1d<double>>(&gpuCrossmul::secDoppler))
         .def_property("prf",
                 py::overload_cast<>(&gpuCrossmul::prf, py::const_),
                 py::overload_cast<double>(&gpuCrossmul::prf))

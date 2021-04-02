@@ -111,7 +111,7 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << std::endl;
         gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier, 
-                _dopplerLUT, interp, inWidth, inLength, this->startingRange(),
+                isce3::core::avgLUT2dToLUT1d<double>(_dopplerLUT), interp, inWidth, inLength, this->startingRange(),
                 this->rangePixelSpacing(), this->prf(), this->wavelength(),
                 this->refStartingRange(), this->refRangePixelSpacing(),
                 this->refWavelength(), flatten, chipSize);

@@ -74,7 +74,7 @@ geo2rdr(isce3::io::Raster & topoRaster,
     // Cache ISCE objects (use public interface of parent isce3::geometry::Geo2rdr class)
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
-    const LUT1d<double> doppler(this->doppler());
+    const LUT1d<double> doppler = isce3::core::avgLUT2dToLUT1d<double>(this->doppler());
     const RadarGridParameters & radarGrid = this->radarGridParameters();
 
     // Cache sensing start in seconds since reference epoch

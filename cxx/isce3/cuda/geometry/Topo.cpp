@@ -159,7 +159,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
     // Cache ISCE objects (use public interface of parent isce3::geometry::Topo class)
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
-    const LUT1d<double> doppler(this->doppler());
+    const LUT1d<double> doppler = isce3::core::avgLUT2dToLUT1d<double>(this->doppler());
     const RadarGridParameters & radarGrid = this->radarGridParameters();
 
     // Create and start a timer

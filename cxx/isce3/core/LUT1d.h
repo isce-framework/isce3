@@ -1,20 +1,17 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Source Author: Bryan Riel
-// Copyright 2017-2018
-//
-
 #pragma once
 
 #include "forward.h"
+#include <isce3/core/EMatrix.h>
+#include <isce3/except/Error.h>
 
 #include <valarray>
+
+namespace isce3::core {
 
 /** Data structure to hold a 1D Lookup table.
  *  Suitable for storing data of the form y = f(x)*/
 template <typename T>
-class isce3::core::LUT1d {
+class LUT1d {
 
     public:
         /** Default constructor */
@@ -34,19 +31,19 @@ class isce3::core::LUT1d {
             _values.resize(size);
         }
 
-        /** Constructor with coordinates and values 
+        /** Constructor with coordinates and values
           * @param[in] coords Valarray for coordinates of LUT
           * @param[in] values Valarray for values of LUT
           * @param[in] extrapolate Flag for allowing extrapolation beyond bounds */
         inline LUT1d(const std::valarray<double> & coords, const std::valarray<T> & values,
-                     bool extrapolate = false) : 
+                     bool extrapolate = false) :
                      _haveData(true),
                      _refValue(values[0]),
                      _coords(coords),
                      _values(values),
                      _extrapolate{extrapolate} {}
 
-        /** Copy constructor. 
+        /** Copy constructor.
           * @param[in] lut LUT1d object to copy from */
         inline LUT1d(const LUT1d<T> & lut) :
             _haveData(lut.haveData()),
@@ -55,7 +52,7 @@ class isce3::core::LUT1d {
             _values(lut.values()),
             _extrapolate(lut.extrapolate()) {}
 
-        /** Assignment operator. 
+        /** Assignment operator.
           * @param[in] lut LUT1d object to assign from */
         inline LUT1d & operator=(const LUT1d<T> & lut) {
             _haveData = lut.haveData();
@@ -66,41 +63,35 @@ class isce3::core::LUT1d {
             return *this;
         }
 
-        /** Constructor from an LUT2d (values averaged in y-direction) */
-        inline LUT1d(const LUT2d<T> & lut2d);
-
-        /** Assignment operator from an LUT2d (values averaged in y-direction) */
-        inline LUT1d & operator=(const LUT2d<T> & lut2d);
-
         /** Get a reference to the coordinates
           * @param[out] coords Reference to valarray for coordinates */
         inline std::valarray<double> & coords() { return _coords; }
 
-        /** Get a read-only reference to the coordinates 
+        /** Get a read-only reference to the coordinates
           * @param[out] coords Copy of valarray for coordinates */
         inline const std::valarray<double> & coords() const { return _coords; }
 
-        /** Set the coordinates 
-          * @param[in] c Input valarray for coordinates */ 
+        /** Set the coordinates
+          * @param[in] c Input valarray for coordinates */
         inline void coords(const std::valarray<double> & c) { _coords = c; }
 
         /** Get a reference to the coordinates
           * @param[out] values Reference to valarray for values */
         inline std::valarray<T> & values() { return _values; }
 
-        /** Get a read-only reference to the values 
+        /** Get a read-only reference to the values
           * @param[out] values Copy of valarray for values */
         inline const std::valarray<T> & values() const { return _values; }
 
-        /** Set the values 
+        /** Set the values
           * @param[in] v Input valarray for values */
         inline void values(const std::valarray<T> & v) { _values = v; }
 
-        /** Get extrapolate flag 
+        /** Get extrapolate flag
           * @param[out] flag Extrapolation flag */
         inline bool extrapolate() const { return _extrapolate; }
 
-        /** Set extrapolate flag 
+        /** Set extrapolate flag
           * @param[in] flag Extrapolation flag */
         inline void extrapolate(bool flag) { _extrapolate = flag; }
 
@@ -110,7 +101,7 @@ class isce3::core::LUT1d {
         /** Get reference value */
         inline T refValue() const { return _refValue; }
 
-        /** Get size of LUT 
+        /** Get size of LUT
           * @param[out] size Size (number of coordinates) of LUT */
         inline size_t size() const { return _coords.size(); }
 
@@ -125,6 +116,15 @@ class isce3::core::LUT1d {
         std::valarray<T> _values;
         bool _extrapolate;
 };
+
+/** Convert LUT2d to LUT1d by averaging along rows or columns
+  * @param[out] lut1d LUT1d resulting from averaged LUT2d
+  * @param[in] lut2d LUT2d to be converted
+  * @param[in] axis Int Axis to be averaged. 0 for columns and 1 rows */
+template <typename T>
+LUT1d<T> avgLUT2dToLUT1d(const LUT2d<T> & lut2d, const int axis = 0);
+
+} // namespace isce3::core
 
 // Get inline implementations for LUT1d
 #define ISCE_CORE_LUT1D_ICC

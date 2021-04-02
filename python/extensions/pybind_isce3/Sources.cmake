@@ -18,6 +18,7 @@ core/Linspace.cpp
 core/LookSide.cpp
 core/LUT1d.cpp
 core/LUT2d.cpp
+core/avgLUT2dToLUT1d.cpp
 core/Orbit.cpp
 core/Projections.cpp
 core/Quaternion.cpp
