@@ -299,8 +299,15 @@ void GeocodePolygon<T>::_getPolygonMean(
              << pyre::journal::endl;
         assert(output_off_diag_terms->numBands() == nbands_off_diag_terms);
         _info << "full covariance: true" << pyre::journal::endl;
-        assert(is_complex_t<T>());
-        assert(GDALDataTypeIsComplex(output_off_diag_terms->dtype()));
+        if (!GDALDataTypeIsComplex(input_raster.dtype())){
+            std::string error_msg = "Input raster must be complex to"
+                                    " generate full-covariance matrix";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+        }
+        if (!GDALDataTypeIsComplex(output_off_diag_terms->dtype())){
+            std::string error_msg = "Off-diagonal raster must be complex";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+        }
     } else {
         _info << "nbands: " << nbands << pyre::journal::endl;
         _info << "full covariance: false" << pyre::journal::endl;

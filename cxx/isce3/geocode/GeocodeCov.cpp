@@ -728,8 +728,15 @@ void Geocode<T>::geocodeAreaProj(
              << pyre::journal::newline;
         assert(out_off_diag_terms->numBands() == nbands_off_diag_terms);
         info << "full covariance: true" << pyre::journal::newline;
-        assert(isce3::is_complex<T>());
-        assert(GDALDataTypeIsComplex(out_off_diag_terms->dtype()));
+        if (!GDALDataTypeIsComplex(input_raster.dtype())){
+            std::string error_msg = "Input raster must be complex to"
+                                    " generate full-covariance matrix";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+        }
+        if (!GDALDataTypeIsComplex(out_off_diag_terms->dtype())){
+            std::string error_msg = "Off-diagonal raster must be complex";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+        }
     } else {
         info << "nbands: " << nbands << pyre::journal::newline;
         info << "full covariance: false" << pyre::journal::newline;
