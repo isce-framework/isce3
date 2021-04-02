@@ -27,6 +27,7 @@
 
 #include "snaphu.h"
 
+namespace isce3::unwrap {
 
 /* static (local) function prototypes */
 static
@@ -2788,3 +2789,5 @@ int CalcInitMaxFlow(paramT *params, void **costs, long nrow, long ncol){
   }
   return(0);
 }
+
+} // namespace isce3::unwrap

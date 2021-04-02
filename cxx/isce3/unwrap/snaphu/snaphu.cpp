@@ -26,8 +26,9 @@
 #include <sys/resource.h>
 
 #include "snaphu.h"
+#include "snaphu_unwrap.h"
 
-
+namespace isce3::unwrap {
 
 /* global (external) variable definitions */
 
@@ -66,7 +67,7 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 /* main program for snaphu */
 /***************************/
 
-int main(int argc, char **argv){
+void snaphuUnwrap(const std::string& configfile){
 
   /* variable declarations */
   infileT infiles[1];
@@ -90,8 +91,8 @@ int main(int argc, char **argv){
   SetDefaults(infiles,outfiles,params);
   ReadConfigFile(DEF_SYSCONFFILE,infiles,outfiles,&linelen,params);
 
-  /* parse the command line inputs */
-  ProcessArgs(argc,argv,infiles,outfiles,&linelen,params);
+  /* read input config file */
+  ReadConfigFile(configfile.data(),infiles,outfiles,&linelen,params);
 
   /* set verbose output if specified */
   SetVerboseOut(params);
@@ -106,7 +107,7 @@ int main(int argc, char **argv){
   CheckParams(infiles,outfiles,linelen,nlines,params);
 
   /* log the runtime parameters */
-  WriteConfigLogFile(argc,argv,infiles,outfiles,linelen,params);
+  WriteConfigLogFile(infiles,outfiles,linelen,params);
 
   /* unwrap, forming tiles and reassembling if necessary */
   Unwrap(infiles,outfiles,params,linelen,nlines);
@@ -116,7 +117,7 @@ int main(int argc, char **argv){
   DisplayElapsedTime(tstart,cputimestart);
   exit(NORMAL_EXIT);
 
-} /* end of main() */
+} /* end of snaphuUnwrap() */
 
 
 /* function: Unwrap()
@@ -756,3 +757,5 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
   return(0);
 
 } /* end of UnwrapTile() */
+
+} // namespace isce3::unwrap

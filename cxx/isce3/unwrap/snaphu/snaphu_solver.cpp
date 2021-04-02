@@ -27,6 +27,7 @@
 
 #include "snaphu.h"
 
+namespace isce3::unwrap {
 
 /* static variables local this file */
 
@@ -3732,3 +3733,5 @@ signed char ClipFlow(signed char **residue, short **flows,
   return(FALSE);
 
 }
+
+} // namespace isce3::unwrap

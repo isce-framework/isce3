@@ -27,6 +27,7 @@
 
 #include "snaphu.h"
 
+namespace isce3::unwrap {
 
 /* static (local) function prototypes */
 static
@@ -230,332 +231,6 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   return(0);
 
 }
-
-
-/* function: ProcessArgs()
- * -----------------------
- * Parses command line inputs passed to main().
- */
-int ProcessArgs(int argc, char *argv[], infileT *infiles, outfileT *outfiles,
-                long *linelenptr, paramT *params){
-
-  long i,j;
-  signed char noarg_exit;
-
-  /* required inputs */
-  noarg_exit=FALSE;
-  StrNCopy(infiles->infile,"",MAXSTRLEN);
-  *linelenptr=0;
-
-  /* loop over inputs */
-  if(argc<2){                             /* catch zero arguments in */
-    fprintf(sp1,OPTIONSHELPBRIEF);
-    exit(ABNORMAL_EXIT);
-  }
-  for(i=1;i<argc;i++){                  
-    /* if argument is an option */
-    if(argv[i][0]=='-'){   
-      if(strlen(argv[i])==1){
-        fflush(NULL);
-        fprintf(sp0,"invalid command line argument -\n");
-        exit(ABNORMAL_EXIT);
-      }else if(argv[i][1]!='-'){
-        for(j=1;j<strlen(argv[i]);j++){
-          if(argv[i][j]=='h'){
-            fprintf(sp1,OPTIONSHELPFULL);
-            exit(ABNORMAL_EXIT);
-          }else if(argv[i][j]=='u'){
-            params->unwrapped=TRUE;
-          }else if(argv[i][j]=='t'){
-            params->costmode=TOPO;
-          }else if(argv[i][j]=='d'){
-            params->costmode=DEFO;
-          }else if(argv[i][j]=='s'){
-            params->costmode=SMOOTH;
-            params->defomax=0.0;
-          }else if(argv[i][j]=='q'){
-            params->eval=TRUE;
-            params->unwrapped=TRUE;
-          }else if(argv[i][j]=='C'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              
-              /* parse argument as configuration line */
-              ParseConfigLine(argv[i],"command line",0,
-                              infiles,outfiles,linelenptr,params);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='f'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              
-              /* read user-supplied configuration file */
-              ReadConfigFile(argv[i],infiles,outfiles,linelenptr,params);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='o'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(outfiles->outfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='c'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->corrfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='m'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->magfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='M'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->bytemaskfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='a'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->ampfile,argv[i],MAXSTRLEN);
-              params->amplitude=TRUE;
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='A'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->ampfile,argv[i],MAXSTRLEN);
-              params->amplitude=FALSE;
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='e'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->estfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='w'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(infiles->weightfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='g'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(outfiles->conncompfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='G'){
-            params->regrowconncomps=TRUE;
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(outfiles->conncompfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='b'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              if(StringToDouble(argv[i],&(params->bperp)) || !(params->bperp)){
-                fflush(NULL);
-                fprintf(sp0,"option -%c requires non-zero decimal argument\n",
-                        argv[i-1][j]);
-                exit(ABNORMAL_EXIT);
-              }
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='p'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              if(StringToDouble(argv[i],&(params->p))){
-                fflush(NULL);
-                fprintf(sp0,"option -%c requires decimal argument\n",
-                        argv[i-1][j]);
-                exit(ABNORMAL_EXIT);
-              }
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else if(argv[i][j]=='i'){
-            params->initonly=TRUE;
-          }else if(argv[i][j]=='S'){
-            params->onetilereopt=TRUE;
-          }else if(argv[i][j]=='k'){
-            params->rmtmptile=FALSE;
-            params->rmtileinit=FALSE;
-          }else if(argv[i][j]=='n'){
-            params->costmode=NOSTATCOSTS;
-          }else if(argv[i][j]=='v'){
-            params->verbose=TRUE;
-          }else if(argv[i][j]=='l'){
-            if(++i<argc && j==strlen(argv[i-1])-1){
-              StrNCopy(outfiles->logfile,argv[i],MAXSTRLEN);
-              break;
-            }else{
-              noarg_exit=TRUE;
-            }
-          }else{
-            fflush(NULL);
-            fprintf(sp0,"unrecognized option -%c\n",argv[i][j]);
-            exit(ABNORMAL_EXIT);
-          }
-          if(noarg_exit){
-            fflush(NULL);
-            fprintf(sp0,"option -%c requires an argument\n",argv[i-1][j]);
-            exit(ABNORMAL_EXIT);
-          }
-        }
-      }else{
-        /* argument is a "--" option */
-        if(!strcmp(argv[i],"--costinfile")){
-          if(++i<argc){
-            StrNCopy(infiles->costinfile,argv[i],MAXSTRLEN);
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--costoutfile")){
-          if(++i<argc){
-            StrNCopy(outfiles->costoutfile,argv[i],MAXSTRLEN);
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--debug") || !strcmp(argv[i],"--dumpall")){
-          params->dumpall=TRUE;
-        }else if(!strcmp(argv[i],"--mst")){
-          params->initmethod=MSTINIT;
-        }else if(!strcmp(argv[i],"--mcf")){
-          params->initmethod=MCFINIT;
-        }else if(!strcmp(argv[i],"--aa")){
-          if(i+2<argc){
-            StrNCopy(infiles->ampfile,argv[++i],MAXSTRLEN);
-            StrNCopy(infiles->ampfile2,argv[++i],MAXSTRLEN);
-            infiles->ampfileformat=FLOAT_DATA;
-            params->amplitude=TRUE;
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--AA")){
-          if(++i+1<argc){
-            StrNCopy(infiles->ampfile,argv[i++],MAXSTRLEN);
-            StrNCopy(infiles->ampfile2,argv[i],MAXSTRLEN);
-            infiles->ampfileformat=FLOAT_DATA;
-            params->amplitude=FALSE;
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--tile")){
-          if(++i+3<argc){
-            if(StringToLong(argv[i++],&(params->ntilerow))
-               || StringToLong(argv[i++],&(params->ntilecol))
-               || StringToLong(argv[i++],&(params->rowovrlp))
-               || StringToLong(argv[i],&(params->colovrlp))){
-              fflush(NULL);
-              fprintf(sp0,"option %s requires four integer arguments\n",
-                      argv[i-4]);
-              exit(ABNORMAL_EXIT);
-            }
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--piece")){
-          if(++i+3<argc){
-            if(StringToLong(argv[i++],&(params->piecefirstrow))
-               || StringToLong(argv[i++],&(params->piecefirstcol))
-               || StringToLong(argv[i++],&(params->piecenrow))
-               || StringToLong(argv[i],&(params->piecencol))){
-              fflush(NULL);
-              fprintf(sp0,"option %s requires four integer arguments\n",
-                      argv[i-4]);
-              exit(ABNORMAL_EXIT);
-            }
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--nproc")){
-          if(++i<argc){
-            if(StringToLong(argv[i],&(params->nthreads))){
-              fflush(NULL);
-              fprintf(sp0,"option %s requires an integer arguemnt\n",
-                      argv[i-1]);
-              exit(ABNORMAL_EXIT);
-            }
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--tiledir")){
-          if(++i<argc){
-            StrNCopy(params->tiledir,argv[i],MAXSTRLEN);
-          }else{
-            noarg_exit=TRUE;
-          }
-        }else if(!strcmp(argv[i],"--assemble")){
-          params->assembleonly=TRUE;
-        }else if(!strcmp(argv[i],"--copyright") || !strcmp(argv[i],"--info")){
-          fprintf(sp1,COPYRIGHT);
-          exit(ABNORMAL_EXIT);    
-        }else if(!strcmp(argv[i],"--help")){
-          fflush(NULL);
-          fprintf(sp1,OPTIONSHELPFULL);
-          exit(ABNORMAL_EXIT);    
-        }else{
-          fflush(NULL);
-          fprintf(sp0,"unrecognized option %s\n",argv[i]);
-          exit(ABNORMAL_EXIT);
-        }
-        if(noarg_exit){
-          fflush(NULL);
-          fprintf(sp0,"incorrect number of arguments for option %s\n",
-                  argv[i-1]);
-          exit(ABNORMAL_EXIT);
-        }
-      }
-    }else{                                
-      /* argument is not an option */
-      if(!strlen(infiles->infile)){
-        StrNCopy(infiles->infile,argv[i],MAXSTRLEN);
-      }else if(*linelenptr==0){
-        if(StringToLong(argv[i],linelenptr) || *linelenptr<=0){
-          fflush(NULL);
-          fprintf(sp0,"line length must be positive integer\n");
-          exit(ABNORMAL_EXIT);
-        }         
-      }else{
-        fflush(NULL);
-        fprintf(sp0,"multiple input files: %s and %s\n",
-                infiles->infile,argv[i]);
-        exit(ABNORMAL_EXIT);
-      }
-    }
-  } /* end for loop over arguments */
-
-  /* check to make sure we have required arguments */
-  if(!strlen(infiles->infile) || !(*linelenptr)){
-    fflush(NULL);
-    fprintf(sp0,"not enough input arguments.  type %s -h for help\n",
-            PROGRAMNAME);
-    exit(ABNORMAL_EXIT);
-  }
-
-  /* done */
-  return(0);
-
-} /* end of ProcessArgs */
 
 
 /* function: CheckParams()
@@ -1706,12 +1381,11 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
  * information.  The log file is in a format compatible to be used as
  * a configuration file.  
  */
-int WriteConfigLogFile(int argc, char *argv[], infileT *infiles, 
+int WriteConfigLogFile(infileT *infiles, 
                        outfileT *outfiles, long linelen, paramT *params){
 
   FILE *fp;
   time_t t[1];
-  long k;
   char buf[MAXSTRLEN], *ptr;
   char hostnamestr[MAXSTRLEN];
 
@@ -1741,10 +1415,6 @@ int WriteConfigLogFile(int argc, char *argv[], infileT *infiles,
       fprintf(fp,"# Current working directory: %s\n",buf);
     }else{
       fprintf(fp,"# Could not determine current working directory\n");
-    }
-    fprintf(fp,"# Command line call:");
-    for(k=0;k<argc;k++){
-      fprintf(fp," %s",argv[k]);
     }
     fprintf(fp,"\n\n");
 
@@ -3602,3 +3272,5 @@ int ParseFilename(char *filename, char *path, char *basename){
   return(0);
 
 }
+
+} // namespace isce3::unwrap

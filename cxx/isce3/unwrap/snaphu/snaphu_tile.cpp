@@ -27,7 +27,7 @@
 
 #include "snaphu.h"
 
-
+namespace isce3::unwrap {
 
 /* static (local) function prototypes */
 static
@@ -4257,4 +4257,4 @@ int ConnCompSizeNPixCompare(const void *ptr1, const void *ptr2){
   return(((conncompsizeT *)ptr2)->npix-((conncompsizeT *)ptr1)->npix);
 }
 
-
+} // namespace isce3::unwrap

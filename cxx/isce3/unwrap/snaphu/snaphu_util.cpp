@@ -27,7 +27,7 @@
 
 #include "snaphu.h"
 
-
+namespace isce3::unwrap {
 
 /* static (local) function prototypes */
 static
@@ -1291,3 +1291,4 @@ int LongCompare(const void *c1, const void *c2){
   return((*((long *)c1))-(*((long *)c2)));
 }
 
+} // namespace isce3::unwrap

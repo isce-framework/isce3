@@ -8,6 +8,7 @@
 
 *************************************************************************/
 
+namespace isce3::unwrap {
 
 /**********************/
 /* defined constants  */
@@ -911,13 +912,11 @@ int LongCompare(const void *c1, const void *c2);
 /* functions in snaphu_io.c */
 
 int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params);
-int ProcessArgs(int argc, char *argv[], infileT *infiles, outfileT *outfiles,
-                long *ncolptr, paramT *params);
 int CheckParams(infileT *infiles, outfileT *outfiles, 
                 long linelen, long nlines, paramT *params);
 int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
                    long *ncolptr, paramT *params);
-int WriteConfigLogFile(int argc, char *argv[], infileT *infiles, 
+int WriteConfigLogFile(infileT *infiles, 
                        outfileT *outfiles, long linelen, paramT *params);
 long GetNLines(infileT *infiles, long linelen, paramT *params);
 int WriteOutputFile(float **mag, float **unwrappedphase, char *outfile, 
@@ -994,8 +993,4 @@ extern void (*CalcCost)(void **, long, long, long, long, long,
                         paramT *, long *, long *);
 extern long (*EvalCost)(void **, short **, long, long, long, paramT *);
 
-/* end of snaphu.h */
-
-
-
-
+} // namespace isce3::unwrap

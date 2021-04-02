@@ -193,4 +193,5 @@ unwrap/phass/RegionMap.h
 unwrap/phass/Seed.h
 unwrap/phass/sort.h
 unwrap/snaphu/snaphu.h
+unwrap/snaphu/snaphu_unwrap.h
 )
