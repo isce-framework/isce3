@@ -1,4 +1,5 @@
 set(TESTFILES
+isce3/unwrap/snaphu.py
 nisar/products/readers/attitude.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
