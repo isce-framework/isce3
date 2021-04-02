@@ -30,15 +30,15 @@
 
 /* static (local) function prototypes */
 static
-int ParseConfigLine(char *buf, char *conffile, long nlines,
+int ParseConfigLine(char *buf, const char *conffile, long nlines,
                     infileT *infiles, outfileT *outfiles,
                     long *linelenptr, paramT *params);
 static
-int LogStringParam(FILE *fp, char *key, char *value);
+int LogStringParam(FILE *fp, const char *key, char *value);
 static
-int LogBoolParam(FILE *fp, char *key, signed char boolvalue);
+int LogBoolParam(FILE *fp, const char *key, signed char boolvalue);
 static
-int LogFileFormat(FILE *fp, char *key, signed char fileformat);
+int LogFileFormat(FILE *fp, const char *key, signed char fileformat);
 static
 int WriteAltLineFile(float **mag, float **phase, char *outfile, 
                      long nrow, long ncol);
@@ -1144,7 +1144,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
  * --------------------------
  * Read in parameter values from a file, overriding existing parameters.
  */
-int ReadConfigFile(char *conffile, infileT *infiles, outfileT *outfiles,
+int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
                    long *linelenptr, paramT *params){
 
   int parsestatus;
@@ -1227,7 +1227,7 @@ int ReadConfigFile(char *conffile, infileT *infiles, outfileT *outfiles,
  * Parse config line from passed buffer.
  */
 static
-int ParseConfigLine(char *buf, char *conffile, long nlines,
+int ParseConfigLine(char *buf, const char *conffile, long nlines,
                     infileT *infiles, outfileT *outfiles,
                     long *linelenptr, paramT *params){
 
@@ -2016,7 +2016,7 @@ int WriteConfigLogFile(int argc, char *argv[], infileT *infiles,
  * pair.
  */
 static
-int LogStringParam(FILE *fp, char *key, char *value){
+int LogStringParam(FILE *fp, const char *key, char *value){
 
   /* see if we were passed a zero length value string */
   if(strlen(value)){
@@ -2035,7 +2035,7 @@ int LogStringParam(FILE *fp, char *key, char *value){
  * pair.
  */
 static
-int LogBoolParam(FILE *fp, char *key, signed char boolvalue){
+int LogBoolParam(FILE *fp, const char *key, signed char boolvalue){
 
   if(boolvalue){
     fprintf(fp,"%s  TRUE\n",key);
@@ -2051,7 +2051,7 @@ int LogBoolParam(FILE *fp, char *key, signed char boolvalue){
  * file format pair.
  */
 static
-int LogFileFormat(FILE *fp, char *key, signed char fileformat){
+int LogFileFormat(FILE *fp, const char *key, signed char fileformat){
   
   if(fileformat==COMPLEX_DATA){
     fprintf(fp,"%s  COMPLEX_DATA\n",key);
@@ -2214,7 +2214,7 @@ int WriteAltSampFile(float **arr1, float **arr2, char *outfile,
   float *outline;
   char realoutfile[MAXSTRLEN];
 
-  outline=MAlloc(2*ncol*sizeof(float));
+  outline=(float *)MAlloc(2*ncol*sizeof(float));
   fp=OpenOutputFile(outfile,realoutfile);
   for(row=0; row<nrow; row++){
     for(col=0;col<ncol;col++){

@@ -1561,7 +1561,7 @@ float *BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr,
   /* build lookup table */
   dnominc=params->dnomincangle;
   tablesize=(long )floor((nomincmax-nominc0)/dnominc)+1;
-  dzrcrittable=MAlloc(tablesize*sizeof(float));
+  dzrcrittable=(float *)MAlloc(tablesize*sizeof(float));
   nominc=nominc0;
   for(k=0;k<tablesize;k++){
     dzrcrittable[k]=(float )SolveDZRCrit(sin(nominc),cos(nominc),params,

@@ -246,7 +246,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
   InitTree(source,nodes,boundary,nodesupp,ground,ngroundarcs,bkts,nflow,
            incrcosts,nrow,ncol,params);
   apexlistlen=INITARRSIZE;
-  apexlist=MAlloc(apexlistlen*sizeof(nodeT *));
+  apexlist=(nodeT **)MAlloc(apexlistlen*sizeof(nodeT *));
   groupcounter=2;
   ipivots=0;
   inondegen=0;
@@ -706,7 +706,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
             /* make sure we have enough memory for the apex list */
             if(groupcounter-apexlistbase+1>apexlistlen){
               apexlistlen=1.5*(groupcounter-apexlistbase+1); 
-              apexlist=ReAlloc(apexlist,apexlistlen*sizeof(nodeT *));
+              apexlist=(nodeT **)ReAlloc(apexlist,apexlistlen*sizeof(nodeT *));
             }
         
             /* set the apex list */
@@ -1061,7 +1061,7 @@ void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
   if(violation<0){
     if((*candidatebagnextptr)>=(*candidatebagsizeptr)){
       (*candidatebagsizeptr)+=CANDIDATEBAGSTEP;
-      (*candidatebagptr)=ReAlloc(*candidatebagptr,
+      (*candidatebagptr)=(candidateT *)ReAlloc(*candidatebagptr,
                                  (*candidatebagsizeptr)*sizeof(candidateT));
     }
     (*candidatebagptr)[*candidatebagnextptr].violation=violation;
@@ -2410,9 +2410,9 @@ int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr,
   *ncycleptr=0;
   *nflowptr=1;
   *candidatebagsizeptr=INITARRSIZE;
-  *candidatebagptr=MAlloc(*candidatebagsizeptr*sizeof(candidateT));
+  *candidatebagptr=(candidateT *)MAlloc(*candidatebagsizeptr*sizeof(candidateT));
   *candidatelistsizeptr=INITARRSIZE;
-  *candidatelistptr=MAlloc(*candidatelistsizeptr*sizeof(candidateT));
+  *candidatelistptr=(candidateT *)MAlloc(*candidatelistsizeptr*sizeof(candidateT));
   if(ground!=NULL){
     *nflowdoneptr=0;
     *mostflowptr=Short2DRowColAbsMax(flows,nrow,ncol);
@@ -2435,7 +2435,7 @@ int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr,
   }
 
   /* set up buckets for TreeSolve (MSTInitFlows() has local set of buckets) */
-  *bktsptr=MAlloc(sizeof(bucketT));
+  *bktsptr=(bucketT *)MAlloc(sizeof(bucketT));
   if(ground!=NULL){
     (*bktsptr)->minind=-LRound((params->maxcost+1)*(nrow+ncol)
                                *NEGBUCKETFRACTION);
@@ -2959,8 +2959,8 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
     /* get more memory for source list if needed */
     if(++nsource>nsourcelistmem){
       nsourcelistmem+=NSOURCELISTMEMINCR;
-      sourcelist=ReAlloc(sourcelist,nsourcelistmem*sizeof(nodeT *));
-      nconnectedarr=ReAlloc(nconnectedarr,nsourcelistmem*sizeof(long));
+      sourcelist=(nodeT **)ReAlloc(sourcelist,nsourcelistmem*sizeof(nodeT *));
+      nconnectedarr=(long *)ReAlloc(nconnectedarr,nsourcelistmem*sizeof(long));
     }
       
     /* store source in list */
@@ -2981,8 +2981,8 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
         /* get more memory for source list if needed */
         if(++nsource>nsourcelistmem){
           nsourcelistmem+=NSOURCELISTMEMINCR;
-          sourcelist=ReAlloc(sourcelist,nsourcelistmem*sizeof(nodeT *));
-          nconnectedarr=ReAlloc(nconnectedarr,nsourcelistmem*sizeof(long));
+          sourcelist=(nodeT **)ReAlloc(sourcelist,nsourcelistmem*sizeof(nodeT *));
+          nconnectedarr=(long *)ReAlloc(nconnectedarr,nsourcelistmem*sizeof(long));
         }
           
         /* store source in list */

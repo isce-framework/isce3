@@ -389,8 +389,8 @@ int GrowRegions(void **costs, short **flows, long nrow, long ncol,
   bucketT bkts[1];
   void **growregionscosts;
   tileparamT temptileparams[1];
-  void (*tempcalccostfnptr)();      
-  long (*tempevalcostfnptr)();      
+  decltype(CalcCost) tempcalccostfnptr;      
+  decltype(EvalCost) tempevalcostfnptr;      
 
   
   /* initialize stack structures to zero for good measure */

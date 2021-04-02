@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 #include <signal.h>
 #include <limits.h>
 #include <float.h>
@@ -653,11 +653,7 @@ signed char NonNegDataArray(float **arr, long nrow, long ncol){
  */
 signed char IsFinite(double d){
 
-#ifdef SNAPHU_USE_FINITE
-  return(finite(d));
-#else
-  return(isfinite(d));
-#endif
+  return(std::isfinite(d));
   /* return(!(isnan(d) || isinf(d))); */
   /* return(TRUE) */
 }

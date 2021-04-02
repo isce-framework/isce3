@@ -915,7 +915,7 @@ int ProcessArgs(int argc, char *argv[], infileT *infiles, outfileT *outfiles,
                 long *ncolptr, paramT *params);
 int CheckParams(infileT *infiles, outfileT *outfiles, 
                 long linelen, long nlines, paramT *params);
-int ReadConfigFile(char *conffile, infileT *infiles, outfileT *outfiles,
+int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
                    long *ncolptr, paramT *params);
 int WriteConfigLogFile(int argc, char *argv[], infileT *infiles, 
                        outfileT *outfiles, long linelen, paramT *params);
