@@ -116,6 +116,12 @@ class isce3::cuda::signal::gpuCrossmul {
         /** Get oversample*/
         inline size_t oversample() const {return _oversample;};
 
+        /** Set rowsPerBlock*/
+        inline void rowsPerBlock(size_t v) {_rowsPerBlock = v;};
+
+        /** Get rowsPerBlock*/
+        inline size_t rowsPerBlock() const {return _rowsPerBlock;};
+
     private:
         //Doppler LUT for the refernce SLC
         isce3::core::LUT1d<double> _refDoppler;

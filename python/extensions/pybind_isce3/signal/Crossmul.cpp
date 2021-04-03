@@ -122,5 +122,8 @@ void addbinding(py::class_<Crossmul> & pyCrossmul)
         .def_property("oversample",
                 py::overload_cast<>(&Crossmul::oversample, py::const_),
                 py::overload_cast<size_t>(&Crossmul::oversample))
+        .def_property("rows_per_block",
+                py::overload_cast<>(&Crossmul::blockRows, py::const_),
+                py::overload_cast<size_t>(&Crossmul::blockRows))
         ;
 }

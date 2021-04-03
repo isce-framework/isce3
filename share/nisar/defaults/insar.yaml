@@ -11,11 +11,11 @@ runconfig:
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: 
+            DEMFile:
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: 
+            ProductPath:
 
             # REQUIRED - Directory where SAS can write temporary data
             ScratchPath:
@@ -34,7 +34,7 @@ runconfig:
             CycleNumber: 1
             RelativeOrbitNumber: 1
             FrameNumber: 1
-            OrbitDirection: 
+            OrbitDirection:
 
         # TODO OPTIONAL - To setup type of worker
         worker:
@@ -100,13 +100,13 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
-                    y_abs: 
+                    y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
-                    x_abs: 
+                    x_abs:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
-                    y_abs: 
+                    y_abs:
                     x_abs:
 
             geo2rdr:
@@ -139,3 +139,4 @@ runconfig:
                 azimuth_looks: 11
                 flatten: True
                 oversample: 2
+                rows_per_block: 8192

@@ -64,6 +64,13 @@ class CrossmulRunConfig(RunConfig):
 
         self.cfg['processing']['crossmul']['oversample'] = self.args.oversample
 
+        if self.args.rows_per_block < 1:
+            err_str = f"range look of {self.args.rows_per_block} must be >= 1"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+
+        self.cfg['processing']['crossmul']['rows_per_block'] = self.args.rows_per_block
+
         # check frequency and polarization dict prior to dict assignment
         freq_pols = self.args.freq_pols
         for k, vals in freq_pols.items():

@@ -34,6 +34,8 @@ class CrossmulArgparse(YamlArgparse):
                                  help='Range looks')
         self.parser.add_argument('--oversample', dest='oversample', type=int, default=2,
                                  help='Oversample factor')
+        self.parser.add_argument('--rows_per_block', dest='rows_per_block', type=int, default=8192,
+                                 help='Rows per block per SLCs to be processed at a time')
         self.parser.add_argument('--frequencies-polarizations', dest='freq_pols',
                                  action=StoreDictKeyPair, nargs='+', metavar="KEY=VAL",
                                  help='''Frequencies and polarizations to use.

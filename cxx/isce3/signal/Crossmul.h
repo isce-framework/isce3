@@ -15,7 +15,7 @@
 
 /** \brief Intereferogram generation by cross-multiplication of reference and secondary SLCs.
  *
- *  The secondary SLC must be on the same image grid as the reference SLC, 
+ *  The secondary SLC must be on the same image grid as the reference SLC,
  */
 class isce3::signal::Crossmul {
     public:
@@ -23,7 +23,7 @@ class isce3::signal::Crossmul {
         Crossmul() {};
 
         ~Crossmul() {};
-        
+
         /*
         void Crossmul(const isce3::product::Product& referenceSLC,
                     const isce3::product::Product& secondarySLC,
@@ -39,7 +39,7 @@ class isce3::signal::Crossmul {
                     isce3::io::Raster& coherence);
 
         /** \brief Run crossmul */
-        void crossmul(isce3::io::Raster& referenceSLC, 
+        void crossmul(isce3::io::Raster& referenceSLC,
                     isce3::io::Raster& secondarySLC,
                     isce3::io::Raster& interferogram,
                     isce3::io::Raster& coherence);
@@ -65,10 +65,10 @@ class isce3::signal::Crossmul {
                         isce3::signal::Filter<float> &rngFilter,
                         size_t blockRows,
                         size_t ncols);
-        
+
 
         /** Set doppler LUTs for reference and secondary SLCs*/
-        inline void doppler(isce3::core::LUT1d<double>, 
+        inline void doppler(isce3::core::LUT1d<double>,
                             isce3::core::LUT1d<double>);
 
         /** Set dopplers LUT for reference SLC */
@@ -125,10 +125,10 @@ class isce3::signal::Crossmul {
         /** Get beta parameter for the azimuth common band filter */
         inline double beta() const { return _beta; }
 
-        /** Set number of range looks */ 
+        /** Set number of range looks */
         inline void rangeLooks(int);
 
-        /** Get number of range looks */ 
+        /** Get number of range looks */
         inline int rangeLooks() const { return _rangeLooks; }
 
         /** Set number of azimuth looks */
@@ -155,6 +155,12 @@ class isce3::signal::Crossmul {
         /** Get oversample */
         inline size_t oversample() const { return _oversample; }
 
+        /** Set blockRows */
+        inline void blockRows(size_t blockRows) { _blockRows = blockRows; }
+
+        /** Get blockRows */
+        inline size_t blockRows() const { return _blockRows; }
+
         /** Compute the avergae frequency shift in range direction between two SLCs*/
         inline void rangeFrequencyShift(std::valarray<std::complex<float>> &refAvgSpectrum,
                 std::valarray<std::complex<float>> &secAvgSpectrum,
@@ -164,7 +170,7 @@ class isce3::signal::Crossmul {
                 double &frequencyShift);
 
         /** estimate the index of the maximum of a vector of data */
-        inline void getPeakIndex(std::valarray<float> data, 
+        inline void getPeakIndex(std::valarray<float> data,
                                 size_t &peakIndex);
 
     private:
@@ -182,7 +188,7 @@ class isce3::signal::Crossmul {
 
         // range signal bandwidth
         double _rangeBandwidth;
-        
+
         // range pixel spacing
         double _rangePixelSpacing;
 
@@ -213,12 +219,12 @@ class isce3::signal::Crossmul {
         bool _computeCoherence = true;
 
         // number of lines per block
-        size_t blockRows = 8192;
+        size_t _blockRows = 8192;
 
         // upsampling factor
         size_t _oversample = 1;
 
-        
+
 };
 
 // Get inline implementations for Crossmul
