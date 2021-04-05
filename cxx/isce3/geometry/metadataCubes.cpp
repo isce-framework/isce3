@@ -101,12 +101,12 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
 
     // Create target-to-sat vector in ECEF
     const isce3::core::Vec3 look_vector_xyz =
-            (target_xyz - sat_xyz).normalized();
+            (sat_xyz - target_xyz).normalized();
 
     // Compute elevation angle calculated in ECEF (geocentric)
     if (elevation_angle_raster != nullptr) {
         const double cos_elevation =
-                sat_xyz.dot(-look_vector_xyz) / sat_xyz.norm();
+                sat_xyz.dot(look_vector_xyz) / sat_xyz.norm();
         elevation_angle_array(i, j) = std::acos(cos_elevation) * 180.0 / M_PI;
     }
 
@@ -167,7 +167,7 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
 
         // Compute target-to-sat vector (proj)
         const isce3::core::Vec3 look_vector_proj =
-                (target_proj - sat_proj).normalized();
+                (sat_proj - target_proj).normalized();
 
         // LOS unit vector X (proj)
         if (los_unit_vector_x_raster != nullptr) {

@@ -70,15 +70,15 @@ void addbinding_metadata_cubes(py::module & m)
                   Incidence angle (in degrees wrt ellipsoid normal at target) 
                   cube raster
               los_unit_vector_x_raster : isce3.io.Raster, optional
-                  LOS unit vector X cube raster
+                  LOS (target-to-sensor) unit vector X cube raster
               los_unit_vector_y_raster : isce3.io.Raster, optional
-                  LOS unit vector Y cube raster
+                  LOS (target-to-sensor) unit vector Y cube raster
               along_track_unit_vector_x_raster : isce3.io.Raster, optional
                   Along-track unit vector X raster
               along_track_unit_vector_y_raster : isce3.io.Raster, optional
                   Along-track unit vector Y raster
               elevation_angle_raster : isce3.io.Raster, optional
-                  Elevation angle (in degrees wrt geocentric nadir) cube raster
+                  Elevation angle (in degrees wrt geodedic nadir) cube raster
               threshold_geo2rdr : double, optional
                   Range threshold for geo2rdr
               numiter_geo2rdr : int, optional
@@ -152,15 +152,15 @@ void addbinding_metadata_cubes(py::module & m)
                   Incidence angle (in degrees wrt ellipsoid normal at target) 
                   cube raster
               los_unit_vector_x_raster : isce3.io.Raster, optional
-                  LOS unit vector X cube raster
+                  LOS (target-to-sensor) unit vector X cube raster
               los_unit_vector_y_raster : isce3.io.Raster, optional
-                  LOS unit vector Y cube raster
+                  LOS (target-to-sensor) unit vector Y cube raster
               along_track_unit_vector_x_raster : isce3.io.Raster, optional
                   Along-track unit vector X raster
               along_track_unit_vector_y_raster : isce3.io.Raster, optional
                   Along-track unit vector Y raster
               elevation_angle_raster : isce3.io.Raster, optional
-                  Elevation angle (in degrees wrt geocentric nadir) cube raster
+                  Elevation angle (in degrees wrt geodedic nadir) cube raster
               threshold_geo2rdr : double, optional
                   Range threshold for geo2rdr
               numiter_geo2rdr : int, optional

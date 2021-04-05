@@ -22,10 +22,14 @@ namespace isce3 { namespace geometry {
  * @param[in]  proj                             Output projection
  * @param[out] incidence_angle_raster           Incidence angle cube raster
  * @param[out] incidence_angle_array            Incidence angle cube array
- * @param[out] los_unit_vector_x_raster         LOS unit vector X cube raster
- * @param[out] los_unit_vector_x_array          LOS unit vector X cube array
- * @param[out] los_unit_vector_y_raster         LOS unit vector Y cube raster
- * @param[out] los_unit_vector_y_array          LOS unit vector Y cube array
+ * @param[out] los_unit_vector_x_raster         LOS (target-to-sensor) unit 
+ * vector X cube raster
+ * @param[out] los_unit_vector_x_array          LOS (target-to-sensor) unit 
+ * vector X cube array
+ * @param[out] los_unit_vector_y_raster         LOS (target-to-sensor) unit 
+ * vector Y cube raster
+ * @param[out] los_unit_vector_y_array          LOS (target-to-sensor) unit 
+ * vector Y cube array
  * @param[out] along_track_unit_vector_x_raster Along-track unit vector X raster
  * @param[out] along_track_unit_vector_x_array  Along-track unit vector X array
  * @param[out] along_track_unit_vector_y_raster Along-track unit vector Y raster
@@ -90,14 +94,16 @@ static inline void writeVectorDerivedCubes(
  * cube raster
  * @param[out] incidence_angle_raster      Incidence angle (in degrees wrt 
  * ellipsoid normal at target) cube raster
- * @param[out] los_unit_vector_x_raster    LOS unit vector X cube raster
- * @param[out] los_unit_vector_y_raster    LOS unit vector Y cube raster
+ * @param[out] los_unit_vector_x_raster    LOS (target-to-sensor) unit vector
+ * X cube raster
+ * @param[out] los_unit_vector_y_raster    LOS (target-to-sensor) unit vector
+ * Y cube raster
  * @param[out] along_track_unit_vector_x_raster Along-track unit vector X 
  * cube raster
  * @param[out] along_track_unit_vector_y_raster Along-track unit vector Y 
  * cube raster
  * @param[out] elevation_angle_raster      Elevation angle (in degrees wrt 
- * geocentric nadir) cube raster
+ * geodedic nadir) cube raster
  * @param[in]  threshold_geo2rdr           Range threshold for geo2rdr
  * @param[in]  numiter_geo2rdr             Geo2rdr maximum number of iterations
  * @param[in]  delta_range                 Step size used for computing
@@ -154,17 +160,20 @@ void makeRadarGridCubes(
  * @param[out] coordinate_y_raster       Geolocation coordinage Y raster
  * @param[out] incidence_angle_raster    Incidence angle (in degrees wrt 
  * ellipsoid normal at target) cube raster
- * @param[out] los_unit_vector_x_raster  LOS unit vector X cube raster
- * @param[out] los_unit_vector_y_raster  LOS unit vector Y cube raster
+ * @param[out] los_unit_vector_x_raster    LOS (target-to-sensor) unit vector
+ * X cube raster
+ * @param[out] los_unit_vector_y_raster    LOS (target-to-sensor) unit vector
+ * Y cube raster
  * @param[out] along_track_unit_vector_x_raster Along-track unit vector X 
  * cube raster
  * @param[out] along_track_unit_vector_y_raster Along-track unit vector Y 
  * cube raster
  * @param[out] elevation_angle_raster    Elevation angle (in degrees wrt 
- * geocentric nadir) cube raster
+ * geodedic nadir) cube raster
  * @param[in]  threshold_geo2rdr         Range threshold for geo2rdr
  * @param[in]  numiter_geo2rdr           Geo2rdr maximum number of iterations
- * @param[in]  delta_range               Step size used for computing derivative of doppler
+ * @param[in]  delta_range               Step size used for computing
+ * derivative of doppler
  */
 void makeGeolocationGridCubes(
         const isce3::product::RadarGridParameters& radar_grid,

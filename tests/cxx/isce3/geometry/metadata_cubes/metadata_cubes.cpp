@@ -136,10 +136,10 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
             los_unit_test[1] = los_unit_vector_y_array(i, j);
             /*
             Obtain height term considering that the vector is unitary
-            the lign-of-sight vector points downwards (i.e. height term
-            is negative)
+            the lign-of-sight vector points upwards (i.e. height term
+            is positive) from the target to the sensor.
             */
-            los_unit_test[2] = -std::sqrt(
+            los_unit_test[2] = std::sqrt(
                     std::max(0.0, 1.0 - std::pow(los_unit_test[0], 2) -
                                           std::pow(los_unit_test[1], 2)));
 
@@ -149,13 +149,13 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
                 // For epsg == 4326, vectors are given in ENU
                 const isce3::core::Vec3 los_xyz_test =
                         enu2xyz.dot(los_unit_test).normalized();
-                sat_xyz_test = target_xyz - slant_range_test * los_xyz_test;
+                sat_xyz_test = target_xyz + slant_range_test * los_xyz_test;
 
             } else {
                 const isce3::core::Vec3 look_vector_test =
                         slant_range_test * los_unit_test;
                 const isce3::core::Vec3 sat_proj_test =
-                        target_proj - look_vector_test;
+                        target_proj + look_vector_test;
                 sat_llh_test = proj->inverse(sat_proj_test);
                 sat_xyz_test = ellipsoid.lonLatToXyz(sat_llh_test);
             }
