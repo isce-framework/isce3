@@ -71,12 +71,12 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
     if (geogrid.epsg() == 4326) {
         slant_range_error_threshold = 1e-16;
         incidence_angle_error_threshold = 1e-5;
-        sat_position_error_threshold = 1e-7;
+        sat_position_error_threshold = 1e-3;
         vel_unit_error_threshold = 1e-3;
     } else {
         slant_range_error_threshold = 1e-16;
         incidence_angle_error_threshold = 1e-5;
-        sat_position_error_threshold = 1e-5;
+        sat_position_error_threshold = 1e-3;
         vel_unit_error_threshold = 1e-3;
     }
 
@@ -144,33 +144,34 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
                                           std::pow(los_unit_test[1], 2)));
 
             // 3. Estimate platform position
-            isce3::core::Vec3 sat_xyz_test, sat_llh_test;
+            isce3::core::Vec3 sat_xyz_test, sat_llh_test, los_xyz_test;
             if (proj->code() == 4326) {
                 // For epsg == 4326, vectors are given in ENU
-                const isce3::core::Vec3 los_xyz_test =
+                los_xyz_test =
                         enu2xyz.dot(los_unit_test).normalized();
                 sat_xyz_test = target_xyz + slant_range_test * los_xyz_test;
 
             } else {
-                const isce3::core::Vec3 look_vector_test =
-                        slant_range_test * los_unit_test;
-                const isce3::core::Vec3 sat_proj_test =
-                        target_proj + look_vector_test;
-                sat_llh_test = proj->inverse(sat_proj_test);
-                sat_xyz_test = ellipsoid.lonLatToXyz(sat_llh_test);
+                const isce3::core::Vec3 target_to_sat_next_proj =
+                        target_proj + los_unit_test;
+                const isce3::core::Vec3 target_to_sat_next_llh = 
+                        proj->inverse(target_to_sat_next_proj);
+                const isce3::core::Vec3 target_to_sat_next_xyz = 
+                        ellipsoid.lonLatToXyz(target_to_sat_next_llh);
+                los_xyz_test = 
+                        (target_to_sat_next_xyz - target_xyz).normalized();
+                sat_xyz_test = target_xyz + slant_range_test * los_xyz_test;
             }
 
-            /* 3. Evaluate platform position from LOS vector and slant-range
+            /* 
+            3. Evaluate platform position from LOS vector and slant-range
             distance extracted from metadata cubes (errors are multiplied).
-            Absolute values are large, therefore they are normalized
-            for comparison */
-            double error_norm = std::sqrt(std::pow(sat_xyz_test.norm(), 2) +
-                                          std::pow(sat_xyz.norm(), 2));
-            ASSERT_NEAR(sat_xyz_test[0] / error_norm, sat_xyz[0] / error_norm,
+            */
+            ASSERT_NEAR(sat_xyz_test[0], sat_xyz[0],
                         sat_position_error_threshold);
-            ASSERT_NEAR(sat_xyz_test[1] / error_norm, sat_xyz[1] / error_norm,
+            ASSERT_NEAR(sat_xyz_test[1], sat_xyz[1],
                         sat_position_error_threshold);
-            ASSERT_NEAR(sat_xyz_test[2] / error_norm, sat_xyz[2] / error_norm,
+            ASSERT_NEAR(sat_xyz_test[2], sat_xyz[2],
                         sat_position_error_threshold);
 
             // 4. Estimate velocity from cube along-track vector

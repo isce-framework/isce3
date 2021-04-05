@@ -105,12 +105,21 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
 
     // Compute elevation angle calculated in ECEF (geocentric)
     if (elevation_angle_raster != nullptr) {
-        const double cos_elevation =
-                sat_xyz.dot(look_vector_xyz) / sat_xyz.norm();
+
+        // Get platform position in llh (sat_llh)
+        const isce3::core::Vec3 sat_llh = ellipsoid.xyzToLonLat(sat_xyz);
+
+        // Get target-to-sat vector in ENU around the platform
+        const isce3::core::Mat3 xyz2enu_sat =
+                isce3::core::Mat3::xyzToEnu(sat_llh[1], sat_llh[0]);
+        const isce3::core::Vec3 look_vector_enu_sat =
+                xyz2enu_sat.dot(look_vector_xyz).normalized();
+        const double cos_elevation = look_vector_enu_sat[2];
         elevation_angle_array(i, j) = std::acos(cos_elevation) * 180.0 / M_PI;
+
     }
 
-    // Get target-to-sat vector in ENU (local)
+    // Get target-to-sat vector in ENU around the target
     const isce3::core::Mat3 xyz2enu =
             isce3::core::Mat3::xyzToEnu(target_llh[1], target_llh[0]);
     const isce3::core::Vec3 look_vector_enu =
@@ -158,16 +167,15 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
 
     } else {
 
-        /*
-        Get platform position in llh (sat_llh) and in output proj
-        coordinates (sat_proj)
-        */
-        const isce3::core::Vec3 sat_llh = ellipsoid.xyzToLonLat(sat_xyz);
-        isce3::core::Vec3 sat_proj = proj->forward(sat_llh);
-
-        // Compute target-to-sat vector (proj)
+        // Compute target-to-sat vector (proj) around the target
+        const isce3::core::Vec3 target_to_sat_next_xyz = 
+            target_xyz + look_vector_xyz;
+        const isce3::core::Vec3 target_to_sat_next_llh = 
+            ellipsoid.xyzToLonLat(target_to_sat_next_xyz);
+        isce3::core::Vec3 target_to_sat_next_proj = 
+            proj->forward(target_to_sat_next_llh);
         const isce3::core::Vec3 look_vector_proj =
-                (sat_proj - target_proj).normalized();
+                (target_to_sat_next_proj - target_proj).normalized();
 
         // LOS unit vector X (proj)
         if (los_unit_vector_x_raster != nullptr) {
