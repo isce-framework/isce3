@@ -468,6 +468,14 @@ def delete_safely(filename):
         pass
 
 
+def get_range_deramp(grid: isce.product.RadarGridParameters) -> np.ndarray:
+    """Compute the phase ramp required to shift a backprojected grid to
+    baseband in range.
+    """
+    r = grid.starting_range + grid.range_pixel_spacing * np.arange(grid.width)
+    return np.exp(-1j * 4 * np.pi / grid.wavelength * r)
+
+
 def focus(runconfig):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -643,6 +651,8 @@ def focus(runconfig):
         if not cfg.processing.is_enabled.azcomp:
             continue
 
+        deramp = get_range_deramp(ogrid[frequency])
+
         for i in range(0, ogrid[frequency].length, na):
             # h5py doesn't follow usual slice rules, raises exception
             # if dest_sel slices extend past dataset shape.
@@ -658,6 +668,7 @@ def focus(runconfig):
                             kernel, atmos, vars(cfg.processing.azcomp.rdr2geo),
                             vars(cfg.processing.azcomp.geo2rdr))
                 log.debug(f"max(abs(z)) = {np.max(np.abs(z))}")
+                z *= deramp[None, j:jmax]
                 zf = to_complex32(scale * z)
                 acdata.write_direct(zf, dest_sel=block)
 
