@@ -31,13 +31,6 @@ runconfig:
         DebugLevelGroup:
             DebugSwitch: false
 
-        Geometry:
-            CycleNumber: 1
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-            OrbitDirection: Descending
-
-
         #adt section - isce3 + pyre workflow
         processing:
             # OPTIONAL - Frequencies and polarisations to be processed

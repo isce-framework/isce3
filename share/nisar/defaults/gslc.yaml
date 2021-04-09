@@ -30,13 +30,6 @@ runconfig:
         DebugLevelGroup:
             DebugSwitch: false
 
-        Geometry:
-            # unused by ADT?
-            CycleNumber: 1
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-            OrbitDirection: 
-
         # TODO OPTIONAL - To setup type of worker
         worker:
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True

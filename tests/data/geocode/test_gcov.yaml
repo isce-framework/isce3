@@ -25,12 +25,6 @@ runconfig:
         DebugLevelGroup:
             DebugSwitch: false
 
-        Geometry:
-            CycleNumber: 1
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-            OrbitDirection: Descending
-
         worker:
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
             internet_access: False

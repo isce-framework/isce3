@@ -31,12 +31,6 @@ runconfig:
         DebugLevelGroup:
             DebugSwitch: bool()
        
-        Geometry:
-            CycleNumber: int(min=1, max=999)
-            RelativeOrbitNumber: int(min=1, max=173)
-            FrameNumber: int(min=1, max=176)
-            OrbitDirection: enum('Descending', 'Ascending')
-       
         #adt section - isce3 + pyre workflow
         processing:
             # Mechanism to select frequencies and polarizations

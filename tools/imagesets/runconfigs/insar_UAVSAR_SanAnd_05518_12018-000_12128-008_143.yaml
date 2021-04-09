@@ -32,13 +32,6 @@ runconfig:
         DebugLevelGroup:
             DebugSwitch: false
 
-        Geometry:
-            CycleNumber: 1
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-            OrbitDirection: Descending
-
-
         # ADT section - isce3 + pyre workflow
         processing:
             keep_scratch: True

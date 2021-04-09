@@ -31,15 +31,6 @@ runconfig:
         DebugLevelGroup:
             DebugSwitch: false
 
-        Geometry:
-            # unused by ADT?
-            CycleNumber: 1
-            RelativeOrbitNumber: 001
-            FrameNumber: 150
-            OrbitDirection: Descending
-
-
-
         # ADT section - isce3 + pyre workflow
         processing:
             input_subset:
