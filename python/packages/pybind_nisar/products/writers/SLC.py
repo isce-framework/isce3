@@ -60,7 +60,7 @@ class SLC(h5py.File):
                               data=v)
         if "referenceTerrainHeight" not in g:
             ref_terrain_height = np.zeros((v.shape[0]))
-            g.require_dataset("referenceTerrainHeight", (v.shape[0]), 
+            g.require_dataset("referenceTerrainHeight", (v.shape[0],), 
                               np.float32, data=ref_terrain_height)
 
         # TODO populate processingInformation/algorithms
