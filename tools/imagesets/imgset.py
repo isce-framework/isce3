@@ -219,7 +219,7 @@ class ImageSet:
 
         # Download files, preserving relative directory hierarchy
         for testname, fetchfiles in workflowdata.items():
-            wfdatadir = pjoin(self.datadir, dataset)
+            wfdatadir = pjoin(self.datadir, testname)
             os.makedirs(wfdatadir, exist_ok=True)
             for fname in fetchfiles:
                 url = f"{art_base}/{testname}/{fname}"
