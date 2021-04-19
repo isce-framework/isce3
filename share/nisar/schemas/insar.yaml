@@ -124,8 +124,8 @@ runconfig:
                 search_azimuth: int(min=8, max=32, required=False)
                 zoom: int(min=2, max=16, required=False)
                 correlation_surface_ovs: int(min=2, max=128, required=False)
-                method: enum('complex', 'amplitude')
-                algorithm: enum('frequency','spatial')
+                method: enum('complex', 'amplitude', required=False)
+                algorithm: enum('frequency','spatial', required=False)
 
             crossmul: include('crossmul_options', required=False)
 
