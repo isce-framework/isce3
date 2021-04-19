@@ -116,6 +116,9 @@ runconfig:
                 # Save the RTC area factor used to compute GCOV
                 save_rtc: True
 
+                # Save interpolated DEM used to compute GCOV
+                save_dem: False
+
                 # OPTIONAL - Absolute radiometric correction
                 abs_rad_cal: 1
 

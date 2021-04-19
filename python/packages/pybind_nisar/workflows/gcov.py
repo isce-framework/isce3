@@ -19,6 +19,7 @@ from pybind_nisar.workflows import h5_prep
 from pybind_nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 from pybind_nisar.workflows.gcov_runconfig import GCOVRunConfig
+from pybind_nisar.workflows.h5_prep import set_get_geo_info
 
 def run(cfg):
     '''
@@ -51,6 +52,7 @@ def run(cfg):
     flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
+    flag_save_dem = geocode_dict['save_dem']
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
@@ -202,6 +204,25 @@ def run(cfg):
             temp_rtc = None
             out_geo_rtc_obj = None
 
+        if flag_save_dem:
+            temp_interpolated_dem = tempfile.NamedTemporaryFile(
+                dir=scratch_path, suffix='.tif')
+            if (output_mode == 
+                    isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
+                interpolated_dem_width = geogrid.width + 1
+                interpolated_dem_length = geogrid.length + 1
+            else:
+                interpolated_dem_width = geogrid.width
+                interpolated_dem_length = geogrid.length
+            out_geo_dem_obj = isce3.io.Raster(
+                temp_interpolated_dem.name, 
+                interpolated_dem_width, 
+                interpolated_dem_length, 1,
+                gdal.GDT_Float32, "GTiff")
+        else:
+            temp_interpolated_dem = None
+            out_geo_dem_obj = None 
+
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
                     input_raster=input_raster_obj,
@@ -223,6 +244,7 @@ def run(cfg):
                     out_off_diag_terms=out_off_diag_terms_obj,
                     out_geo_nlooks=out_geo_nlooks_obj,
                     out_geo_rtc=out_geo_rtc_obj,
+                    out_geo_dem=out_geo_dem_obj,
                     input_rtc=None,
                     output_rtc=None,
                     memory_mode=memory_mode)
@@ -234,6 +256,9 @@ def run(cfg):
     
         if flag_save_rtc:
             del out_geo_rtc_obj
+
+        if flag_save_dem:
+            del out_geo_dem_obj
 
         if flag_fullcovariance:
             # out_off_diag_terms_obj.close_dataset()
@@ -283,6 +308,35 @@ def run(cfg):
                                    long_name = 'RTC area factor', 
                                    units = '',
                                    valid_min = 0)
+
+            # save interpolated DEM
+            if flag_save_dem:
+
+                '''
+                The DEM is interpolated over the geogrid pixels vertices
+                rather than the pixels centers.
+                '''
+                if (output_mode == 
+                    isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
+                    dem_geogrid = isce3.product.GeoGridParameters(
+                        start_x=geogrid.start_x - geogrid.spacing_x / 2,
+                        start_y=geogrid.start_y - geogrid.spacing_y / 2,
+                        spacing_x=geogrid.spacing_x,
+                        spacing_y=geogrid.spacing_y,
+                        width=int(geogrid.width) + 1,
+                        length=int(geogrid.length) + 1,
+                        epsg=geogrid.epsg)
+                    yds_dem, xds_dem = \
+                        set_get_geo_info(hdf5_obj, root_ds, dem_geogrid)
+                else:
+                    yds_dem = yds
+                    xds_dem = xds
+
+                _save_hdf5_dataset(temp_interpolated_dem.name, hdf5_obj, 
+                                   root_ds, yds_dem, xds_dem, 
+                                   'interpolatedDem',
+                                   long_name='Interpolated DEM', 
+                                   units='')
 
             # save GCOV off-diagonal elements
             if flag_fullcovariance:
