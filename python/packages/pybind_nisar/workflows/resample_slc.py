@@ -6,15 +6,14 @@ wrapper for resample
 
 import pathlib
 import time
-from osgeo import gdal
 
 import journal
-
 import pybind_isce3 as isce3
+from osgeo import gdal
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import runconfig, gpu_check
-from pybind_nisar.workflows.resample_slc_argparse import ResampleSlcArgparse
+from pybind_nisar.workflows import gpu_check, runconfig
 from pybind_nisar.workflows.resample_slc_runconfig import ResampleSlcRunConfig
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def run(cfg):
@@ -102,7 +101,7 @@ if __name__ == "__main__":
     '''
 
     # load command line args
-    resample_slc_parser = ResampleSlcArgparse()
+    resample_slc_parser = YamlArgparse()
     args = resample_slc_parser.parse()
 
     # Get a runconfig dictionary from command line args

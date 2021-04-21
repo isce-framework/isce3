@@ -8,12 +8,12 @@ import time
 
 import h5py
 import journal
-
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
 from pybind_nisar.workflows import h5_prep
-from pybind_nisar.workflows.geocode_insar_argparse import GeocodeInsarArgparse
-from pybind_nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
+from pybind_nisar.workflows.geocode_insar_runconfig import \
+    GeocodeInsarRunConfig
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def run(cfg, runw_hdf5, output_hdf5):
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     """
 
     # load command line args
-    geocode_insar_parser = GeocodeInsarArgparse()
+    geocode_insar_parser = YamlArgparse()
     args = geocode_insar_parser.parse()
 
     # Get a runconfig dictionary from command line args

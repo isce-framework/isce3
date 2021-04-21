@@ -5,16 +5,14 @@ wrapper for rdr2geo
 '''
 
 import pathlib
-import sys
 import time
 
 import journal
-
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import runconfig, gpu_check
-from pybind_nisar.workflows.rdr2geo_argparse import Rdr2geoArgparse
+from pybind_nisar.workflows import gpu_check, runconfig
 from pybind_nisar.workflows.rdr2geo_runconfig import Rdr2geoRunConfig
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def run(cfg):
@@ -80,7 +78,7 @@ if __name__ == "__main__":
     run rdr2geo from command line
     '''
     # load command line args
-    rdr2geo_parser = Rdr2geoArgparse()
+    rdr2geo_parser = YamlArgparse()
     args = rdr2geo_parser.parse()
     # get a runconfig dict from command line args
     rdr2geo_runconfig = Rdr2geoRunConfig(args)

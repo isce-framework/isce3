@@ -8,12 +8,11 @@ import pathlib
 import time
 
 import journal
-
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows import runconfig, gpu_check
-from pybind_nisar.workflows.geo2rdr_argparse import Geo2rdrArgparse
+from pybind_nisar.workflows import gpu_check, runconfig
 from pybind_nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def run(cfg):
@@ -93,7 +92,7 @@ if __name__ == "__main__":
     '''
 
     # load command line args
-    geo2rdr_parser = Geo2rdrArgparse()
+    geo2rdr_parser = YamlArgparse()
     args = geo2rdr_parser.parse()
 
     # Get a runconfig dictionary from command line args

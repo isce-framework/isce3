@@ -1,10 +1,9 @@
 import os
 
 import journal
-
 import pybind_isce3 as isce
-from pybind_nisar.workflows.runconfig import RunConfig
 import pybind_nisar.workflows.helpers as helpers
+from pybind_nisar.workflows.runconfig import RunConfig
 
 
 class GeocodeInsarRunConfig(RunConfig):
@@ -12,86 +11,10 @@ class GeocodeInsarRunConfig(RunConfig):
         # all insar submodules share a commmon `insar` schema
         super().__init__(args, 'insar')
 
-        if self.args.run_config_path is None:
-            self.cli_arg_load()
-        else:
+        if self.args.run_config_path is not None:
             self.load_geocode_yaml_to_dict()
             self.geocode_common_arg_load()
             self.yaml_check()
-
-    def cli_arg_load(self):
-        """
-        Load user provided command line args into minimal cfg dict
-        """
-        error_channel = journal.error('GeocodeInsarRunConfig.cli_arg_load')
-
-        # rslc h5 valid?
-        if os.path.isfile(self.args.rslc_h5):
-            self.cfg['InputFileGroup']['InputFilePath'] = self.args.rslc_h5
-        else:
-            err_str = f"{self.args.rslc_h5} not a valid path"
-            error_channel.log(err_str)
-            raise FileNotFoundError(err_str)
-
-        # runw h5 valid?
-        if not os.path.isfile(self.args.runw_h5):
-            err_str = f"{self.args.runw_h5} not a valid path"
-            error_channel.log(err_str)
-            raise FileNotFoundError(err_str)
-
-        # check dem validity. if invalid check_dem raises error.
-        helpers.check_dem(self.args.dem)
-        self.cfg['DynamicAncillaryFileGroup']['DEMFile'] = self.args.dem
-
-        # multilooks valid?
-        az_looks = self.args.azimuth_looks
-        if az_looks >= 1:
-            if az_looks > 1 and az_looks % 2 == 0:
-                err_str = f"azimuth looks = {az_looks} not an odd integer."
-                error_channel.log(err_str)
-                raise ValueError(err_str)
-            self.cfg['processing']['crossmul']['azimuth_looks'] = az_looks
-        else:
-            err_str = f"azimuth looks = {az_looks} not >= 1"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        rg_looks = self.args.range_looks
-        if rg_looks >= 1:
-            if rg_looks > 1 and rg_looks % 2 == 0:
-                err_str = f"range looks = {rg_looks} not an odd integer."
-                error_channel.log(err_str)
-                raise ValueError(err_str)
-            self.cfg['processing']['crossmul']['range_looks'] = rg_looks
-        else:
-            err_str = f"range look = {rg_looks} not >= 1"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        self.cfg['processing']['geocode']['datasets']['connectedComponents'] = not self.args.no_connected_components
-        self.cfg['processing']['geocode']['datasets']['coherenceMagnitude'] = not self.args.no_coherence
-        self.cfg['processing']['geocode']['datasets']['unwrappedPhase'] = not self.args.no_unwrapped_phase
-
-        # check frequency and polarization dict prior to dict assignment
-        freq_pols = self.args.freq_pols
-        for k, vals in freq_pols.items():
-            # check if frequency key is valid
-            if k not in ['A', 'B']:
-                err_str = f"frequency {k} not valid"
-                error_channel.log(err_str)
-                raise ValueError(err_str)
-            # check if polarization values are valid
-            for val in vals:
-                if val not in ['HH', 'VV', 'HV', 'VH']:
-                    err_str = f"polarization {val} not valid"
-                    error_channel.log(err_str)
-                    raise ValueError(err_str)
-
-        interp_method = self.args.interp_method
-        if interp_method not in ['BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC']:
-            err_str = f"{interp_method} invalid interpolator. Valid options: 'BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC'"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
 
     def yaml_check(self):
         '''

@@ -9,11 +9,10 @@ import time
 
 import h5py
 import journal
-
 import pybind_isce3 as isce3
 from pybind_nisar.workflows import h5_prep
-from pybind_nisar.workflows.unwrap_argparse import UnwrapArgparse
 from pybind_nisar.workflows.unwrap_runconfig import UnwrapRunConfig
+from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def run(cfg: dict, input_hdf5: str, output_hdf5: str):
@@ -45,8 +44,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     t_all = time.time()
 
-    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5,\
-         h5py.File(crossmul_path, 'r', libver='latest', swmr=True) as src_h5:
+    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5, \
+            h5py.File(crossmul_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
             src_freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
             dst_freq_group_path = src_freq_group_path.replace('RIFG', 'RUNW')
@@ -68,19 +67,23 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 # Create unwrapped interferogram output raster
                 uigram_path = f'{dst_pol_group_path}/unwrappedPhase'
                 uigram_dataset = dst_h5[uigram_path]
-                uigram_raster = isce3.io.Raster(f"IH5:::ID={uigram_dataset.id.id}".encode("utf-8"),
-                                                update=True)
+                uigram_raster = isce3.io.Raster(
+                    f"IH5:::ID={uigram_dataset.id.id}".encode("utf-8"),
+                    update=True)
 
                 # Create connected components output raster
                 conn_comp_path = f'{dst_pol_group_path}/connectedComponents'
                 conn_comp_dataset = dst_h5[conn_comp_path]
-                conn_comp_raster = isce3.io.Raster(f"IH5:::ID={conn_comp_dataset.id.id}".encode("utf-8"),
-                                                   update=True)
+                conn_comp_raster = isce3.io.Raster(
+                    f"IH5:::ID={conn_comp_dataset.id.id}".encode("utf-8"),
+                    update=True)
                 if 'seed' in unwrap_args:
-                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
+                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster,
+                                      igram_raster,
                                       corr_raster, seed=unwrap_args['seed'])
                 else:
-                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
+                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster,
+                                      igram_raster,
                                       corr_raster)
 
                 # Copy phase sigma coherence from RIFG
@@ -92,7 +95,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 del conn_comp_raster
 
     t_all_elapsed = time.time() - t_all
-    info_channel.log(f"Successfully ran phase unwrapping in {t_all_elapsed:.3f} seconds")
+    info_channel.log(
+        f"Successfully ran phase unwrapping in {t_all_elapsed:.3f} seconds")
 
 
 def write_unwrap_attributes(unwrap, info):
@@ -106,7 +110,8 @@ def write_unwrap_attributes(unwrap, info):
     info.log(f"Phase gradient window size: {unwrap.phase_grad_win_size}")
     info.log(f"Phase gradient threshold: {unwrap.neut_phase_grad_thr}")
     info.log(f"Neutron intensity threshold: {unwrap.neut_intensity_thr}")
-    info.log(f"Maximum intesity correlation threshold: {unwrap.neut_correlation_thr}")
+    info.log(
+        f"Maximum intesity correlation threshold: {unwrap.neut_correlation_thr}")
     info.log(f"Number of trees: {unwrap.trees_number}")
     info.log(f"Maximum branch length: {unwrap.max_branch_length}")
     info.log(f"Pixel spacing ratio: {unwrap.ratio_dxdy}")
@@ -173,7 +178,7 @@ if __name__ == "__main__":
     '''
 
     # Load command line args
-    unwrap_parser = UnwrapArgparse()
+    unwrap_parser = YamlArgparse()
     args = unwrap_parser.parse()
 
     # Get a runconfig dictionary from command line args
@@ -187,7 +192,8 @@ if __name__ == "__main__":
     if args.run_config_path is None:
         rifg = args.crossmul
     else:
-        rifg = unwrap_runconfig.cfg['processing']['phase_unwrap']['crossmul_path']
+        rifg = unwrap_runconfig.cfg['processing']['phase_unwrap'][
+            'crossmul_path']
 
     # Run phase unwrapping
     run(unwrap_runconfig.cfg, rifg, out_paths['RUNW'])
