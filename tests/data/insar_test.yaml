@@ -114,16 +114,15 @@ runconfig:
                 lines_per_tile: 1
 
             dense_offsets:
-                window_range: 64                    # {optional} Cross-correlation window size in range direction
-                window_azimuth: 64                  # {optional} Cross-correlation window size in azimuth direction
-                search_range: 20                    # {optional} Cross-correlation search window size in range direction
-                search_azimuth: 20                  # {optional} Cross-correlation search window size in azimuth direction
-                skip_range: 8                       # {optional} Cross-correlation skip window size in range direction
-                skip_azimuth: 8                     # {optional} Cross-correlation skip window in azimuth direction
-                zoom: 8                             # {optional} Zoom in window for cross-correlation surface
-                correlation_surface_ovs: 32         # {optional} Oversampling factor for the cross-correlation surface
-                method: amplitude                   # {optional} Cross-correlation method (complex or amplitude)
-                algorithm: frequency                # {optional} Algorithm for cross-correlation computation (spatial
+                window_range: 64                                            # {optional} Cross-correlation window size in range direction
+                window_azimuth: 64                                          # {optional} Cross-correlation window size in azimuth direction
+                half_search_range: 20                                       # {optional} Cross-correlation search window size in range direction
+                half_search_azimuth: 20                                     # {optional} Cross-correlation search window size in azimuth direction
+                skip_range: 8                                               # {optional} Cross-correlation skip window size in range direction
+                skip_azimuth: 8                                             # {optional} Cross-correlation skip window in azimuth direction
+                correlation_surface_zoom: 8                                 # {optional} Zoom in window for cross-correlation surface
+                correlation_surface_oversampling_factor: 32                 # {optional} Oversampling factor for the cross-correlation surface
+                correlation_surface_oversampling_method: 'sinc'             # {optional} Cross-correlation method (complex or amplitude)
 
             crossmul:
                 coregistered_slc_path: @ISCETEST@/winnipeg.h5

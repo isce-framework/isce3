@@ -4,15 +4,14 @@ HDF5 for GSLC, GCOV, GUNW, RIFG, and RUNW
 """
 
 import os
+
 import h5py
-import numpy as np
-
-from osgeo import osr
-
 import journal
+import numpy as np
+import pybind_isce3 as isce3
+from osgeo import osr
 from pybind_nisar.h5 import cp_h5_meta_data
 from pybind_nisar.products.readers import SLC
-import pybind_isce3 as isce3
 
 
 def get_products_and_paths(cfg: dict) -> (dict, dict):
@@ -25,24 +24,27 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
 
     # dict keying product type with list with possible product type(s)
     insar_products = ['RIFG', 'RUNW', 'GUNW']
-    product_dict = {'POLAR':insar_products,
-                    'GUNW':insar_products,
-                    'RUNW':insar_products[:-1],
-                    'RIFG':[insar_products[0]],
-                    'GCOV':['GCOV'],
-                    'GSLC':['GSLC']}
+    product_dict = {'POLAR': insar_products,
+                    'GUNW': insar_products,
+                    'RUNW': insar_products[:-1],
+                    'RIFG': [insar_products[0]],
+                    'GCOV': ['GCOV'],
+                    'GSLC': ['GSLC']}
 
     # dict keying product type to dict of product type key(s) to output(s)
     # following lambda creates subproduct specific output path
-    insar_path = lambda out_path, product:\
-            os.path.join(os.path.dirname(out_path), product+'_'+os.path.basename(out_path))
-    h5_paths = {'POLAR':dict(zip(insar_products,
-                                 [insar_path(output_path, product) for product in insar_products])),
-                'GUNW':{'RIFG':f'{scratch}/RIFG.h5', 'RUNW':f'{scratch}/RUNW.h5', 'GUNW':output_path},
-                'RUNW':{'RIFG':f'{scratch}/RIFG.h5', 'RUNW':output_path},
-                'RIFG':{'RIFG':output_path},
-                'GCOV':{'GCOV':output_path},
-                'GSLC':{'GSLC':output_path}}
+    insar_path = lambda out_path, product: \
+        os.path.join(os.path.dirname(out_path),
+                     product + '_' + os.path.basename(out_path))
+    h5_paths = {'POLAR': dict(zip(insar_products,
+                                  [insar_path(output_path, product) for product
+                                   in insar_products])),
+                'GUNW': {'RIFG': f'{scratch}/RIFG.h5',
+                         'RUNW': f'{scratch}/RUNW.h5', 'GUNW': output_path},
+                'RUNW': {'RIFG': f'{scratch}/RIFG.h5', 'RUNW': output_path},
+                'RIFG': {'RIFG': output_path},
+                'GCOV': {'GCOV': output_path},
+                'GSLC': {'GSLC': output_path}}
 
     return product_dict[product_type], h5_paths[product_type]
 
@@ -104,7 +106,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     dst_meta_path = f'{common_parent_path}/{dst}/metadata'
 
     with h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
-         h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
+            h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
 
         # Copy of identification
         identification_excludes = 'productType'
@@ -139,8 +141,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                                 f'{src_meta_path}/geolocationGrid',
                                 f'{dst_meta_path}/radarGrid',
                                 renames={'coordinateX': 'xCoordinates',
-                                        'coordinateY': 'yCoordinates',
-                                        'zeroDopplerTime': 'zeroDopplerAzimuthTime'})
+                                         'coordinateY': 'yCoordinates',
+                                         'zeroDopplerTime': 'zeroDopplerAzimuthTime'})
         else:
             # RUNW and RIFG have no attitude group and have geolocation grid
             cp_h5_meta_data(src_h5, dst_h5,
@@ -382,6 +384,20 @@ def prep_ds_insar(cfg, dst, dst_h5):
     rg_looks = cfg['processing']['crossmul']['range_looks']
     az_looks = cfg['processing']['crossmul']['azimuth_looks']
 
+    # Extract dense offsets parameters
+    rg_chip = cfg['processing']['dense_offsets']['window_range']
+    az_chip = cfg['processing']['dense_offsets']['window_azimuth']
+    rg_search = 2 * cfg['processing']['dense_offsets']['half_search_range']
+    az_search = 2 * cfg['processing']['dense_offsets']['half_search_azimuth']
+    rg_skip = cfg['processing']['dense_offsets']['skip_range']
+    az_skip = cfg['processing']['dense_offsets']['skip_azimuth']
+    corr_ovs = cfg['processing']['dense_offsets'][
+        'correlation_surface_oversampling_factor']
+    offset_width = cfg['processing']['dense_offsets']['offset_width']
+    offset_length = cfg['processing']['dense_offsets']['offset_length']
+    gross_offset_range = cfg['processing']['dense_offsets']['gross_offset_range']
+    gross_offset_azimuth = cfg['processing']['dense_offsets']['gross_offset_azimuth']
+
     # Create datasets in the ouput hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
 
@@ -394,21 +410,43 @@ def prep_ds_insar(cfg, dst, dst_h5):
 
     for freq in freq_pols.keys():
         pol_list = freq_pols[freq]
+        # Get SLC dimension for that frequency
+        input_h5 = cfg['InputFileGroup']['InputFilePath']
+        src_h5 = h5py.File(input_h5, 'r', libver='latest', swmr=True)
+
+        # Take size of first available polarization
+        dset = src_h5[os.path.join(common_parent_path,
+                                   f'SLC/swaths/frequency{freq}/{pol_list[0]}')]
+        az_lines, rg_cols = dset.shape
 
         if dst in ['RUNW', 'RIFG']:
             grid_swath = 'swaths'
-
-            # Get SLC dimensions for that frequency
-            # TO DO (R2): define different shape for offset layer
-            input_h5 = cfg['InputFileGroup']['InputFilePath']
-            src_h5 = h5py.File(input_h5, 'r', libver='latest', swmr=True)
-            dset = src_h5[os.path.join(common_parent_path,
-                                       f'SLC/swaths/frequency{freq}/HH')]
-            az_lines, rg_cols = dset.shape
             shape = (az_lines // az_looks, rg_cols // rg_looks)
+
+            # Compute dimensions for pixel offsets in radar coordinates
+            if cfg['processing']['dense_offsets']['margin'] is not None:
+                margin = cfg['processing']['dense_offsets']['margin']
+            else:
+                margin = 0
+
+            if (gross_offset_range is not None) and (gross_offset_azimuth is not None):
+                margin = max(margin, np.abs(gross_offset_range), np.abs(gross_offset_azimuth))
+
+            margin_rg = 2 * margin + rg_search + rg_chip
+            margin_az = 2 * margin + az_search + az_chip
+
+            # If not assigned by user, compute offset length/width
+            # using dense offsets parameters
+            if offset_length is None:
+                offset_length = (az_lines - margin_az) // az_skip
+            if offset_width is None:
+                offset_width = (rg_cols - margin_rg) // rg_skip
+
+            shape_offset = (offset_length, offset_width)
         else:
             grid_swath = 'grids'
             shape = (geogrids[freq].length, geogrids[freq].width)
+            shape_offset = shape
 
         # Create grid or swath group depending on product
         dst_h5[os.path.join(common_parent_path, f'{dst}')].create_group(
@@ -425,8 +463,10 @@ def prep_ds_insar(cfg, dst, dst_h5):
             doppler_time = src_h5['science/LSAR/SLC/swaths/zeroDopplerTime'][()]
 
             # TO DO: This is valid for odd number of looks. For R1 extend this to even number of looks
-            idx_rg = np.arange(int(len(slant_range) / rg_looks) * rg_looks)[::rg_looks] + int(rg_looks / 2)
-            idx_az = np.arange(int(len(doppler_time) / az_looks) * az_looks)[::az_looks] + int(az_looks / 2)
+            idx_rg = np.arange(int(len(slant_range) / rg_looks) * rg_looks)[
+                     ::rg_looks] + int(rg_looks / 2)
+            idx_az = np.arange(int(len(doppler_time) / az_looks) * az_looks)[
+                     ::az_looks] + int(az_looks / 2)
 
             descr = "CF compliant dimension associated with slant range"
             id_group = dst_h5[os.path.join(common_parent_path,
@@ -495,15 +535,15 @@ def prep_ds_insar(cfg, dst, dst_h5):
                          long_name="zero doppler time spacing")
 
         if dst in ['RIFG', 'RUNW']:
-           descr = "Slant range spacing of offset grid"
-           _create_datasets(dst_h5[dst_path_offs], [0], np.float64,
-                           'slantRangeSpacing',
-                            descr=descr, units="meters", data=1,
-                            long_name="slant range spacing")
-           descr = "Along track spacing of the offset grid"
-           _create_datasets(dst_h5[dst_path_offs], [0], np.float32,
-                            'zeroDopplerTimeSpacing',
-                             descr=descr, units="seconds", data=1,
+            descr = "Slant range spacing of offset grid"
+            _create_datasets(dst_h5[dst_path_offs], [0], np.float64,
+                             'slantRangeSpacing',
+                             descr=descr, units="meters", data=rg_skip,
+                             long_name="slant range spacing")
+            descr = "Along track spacing of the offset grid"
+            _create_datasets(dst_h5[dst_path_offs], [0], np.float32,
+                             'zeroDopplerTimeSpacing',
+                             descr=descr, units="seconds", data=az_skip,
                              long_name="zero doppler time spacing")
 
         if dst in ['RIFG', 'RUNW']:
@@ -606,19 +646,18 @@ def prep_ds_insar(cfg, dst, dst_h5):
                                      descr=descr, units=None,
                                      long_name='coherence magnitude')
 
-            # Add pixel offset datasets
             descr = f"Along track offset for {pol} layer"
-            _create_datasets(dst_h5[offs_path], shape, np.float32,
+            _create_datasets(dst_h5[offs_path], shape_offset, np.float32,
                              'alongTrackOffset',
                              descr=descr, units="meters",
                              long_name='along track offset')
-            _create_datasets(dst_h5[offs_path], shape, np.float32,
+            _create_datasets(dst_h5[offs_path], shape_offset, np.float32,
                              'slantRangeOffset',
                              descr=descr.replace("Along track", "Slant range"),
                              units="meters",
                              long_name='slant range offset')
             descr = " Quality metric"
-            _create_datasets(dst_h5[offs_path], shape, np.float32,
+            _create_datasets(dst_h5[offs_path], shape_offset, np.float32,
                              'quality',
                              descr=descr, units=" ", long_name='quality')
 
@@ -698,37 +737,37 @@ def prep_ds_insar(cfg, dst, dst_h5):
         descr = "Along track window size for cross-correlation"
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'alongTrackWindowSize',
-                         descr=descr, units=" ", data=1,
+                         descr=descr, units=" ", data=az_chip,
                          long_name='along track window size')
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'slantRangeWindowSize',
                          descr=descr.replace("Along track", "Slant range"),
-                         units=" ", data=1,
+                         units=" ", data=rg_chip,
                          long_name="slant range window size")
         descr = "Along track skip window size for cross-correlation"
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'alongTrackSkipWindowSize',
-                         descr=descr, units=" ", data=1,
+                         descr=descr, units=" ", data=az_skip,
                          long_name='along track skip window size')
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'slantRangeSkipWindowSize',
                          descr=descr.replace("Along track ", "Slant range"),
-                         units=" ", data=1,
+                         units=" ", data=rg_skip,
                          long_name="slant range skip window size")
         descr = "Along track search window size for cross-correlation"
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'alongTrackSearchWindowSize',
-                         descr=descr, units=" ", data=1,
+                         descr=descr, units=" ", data=az_search,
                          long_name="along track skip window size")
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'slantRangeSearchWindowSize',
                          descr=descr.replace("Along track ", "Slant range"),
-                         units=" ", data=1,
+                         units=" ", data=rg_search,
                          long_name="slant range search window size")
         descr = "Oversampling factor of the cross-correlation surface"
         _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
                          'correlationSurfaceOversampling',
-                         descr=descr, units=" ", data=1,
+                         descr=descr, units=" ", data=corr_ovs,
                          long_name='correlation surface oversampling')
         descr = "Method used for generating pixel offsets"
         _create_datasets(dst_h5[dst_common_offs], [9], np.string_,
@@ -803,8 +842,7 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     dset.attrs["description"] = np.string_(desc)
 
 
-def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = False):
-
+def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
     epsg_code = geo_grid.epsg
 
     dx = geo_grid.spacing_x
@@ -836,7 +874,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = Fal
     epsg_dataset_name = os.path.join(root_ds, 'epsg')
     if epsg_dataset_name in hdf5_obj:
         del hdf5_obj[epsg_dataset_name]
-    epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name, 
+    epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name,
                                            data=np.array(epsg_code, "i4"))
     epsg_dataset.attrs["description"] = np.string_(descr)
     epsg_dataset.attrs["units"] = ""
@@ -906,7 +944,8 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = Fal
         if zds_name in hdf5_obj:
             del hdf5_obj[zds_name]
         zds = hdf5_obj.create_dataset(zds_name, data=z_vect)
-        zds.attrs['standard_name'] = np.string_("height_above_reference_ellipsoid")
+        zds.attrs['standard_name'] = np.string_(
+            "height_above_reference_ellipsoid")
         yds.attrs["description"] = np.string_(descr)
         zds.attrs['units'] = np.string_("m")
         coordinates_list.append(zds)
@@ -1017,10 +1056,11 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect = None, flag_cube = Fal
     return yds, xds
 
 
-def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights, radar_grid,
+def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights,
+                                 radar_grid,
                                  orbit, native_doppler, grid_doppler,
-                                 threshold_geo2rdr = 1e-8,
-                                 numiter_geo2rdr = 100, delta_range = 1e-8):
+                                 threshold_geo2rdr=1e-8,
+                                 numiter_geo2rdr=100, delta_range=1e-8):
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)
     else:
@@ -1028,61 +1068,62 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights, ra
 
     cube_shape = [len(heights), geogrid.length, geogrid.width]
 
-    zds, yds, xds = set_get_geo_info(hdf5_obj, cube_group_name, geogrid, z_vect=heights, 
+    zds, yds, xds = set_get_geo_info(hdf5_obj, cube_group_name, geogrid,
+                                     z_vect=heights,
                                      flag_cube=True)
-   
+
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
     ref_epoch_str = ref_epoch.isoformat().replace('T', ' ')
-    az_coord_units = f'seconds since {ref_epoch_str}' 
-    
+    az_coord_units = f'seconds since {ref_epoch_str}'
+
     slant_range_raster = _get_raster_from_hdf5_ds(
         cube_group, 'slantRange', np.float64, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='slant-range', 
-        descr='', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='slant-range',
+        descr='',
         units='meter')
     azimuth_time_raster = _get_raster_from_hdf5_ds(
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='zero-Doppler azimuth time', 
-        descr='Zero doppler azimuth time in seconds', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='zero-Doppler azimuth time',
+        descr='Zero doppler azimuth time in seconds',
         units=az_coord_units)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='incidence angle', 
-        descr='Incidence angle is defined as angle between LOS vector and normal at the target', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='incidence angle',
+        descr='Incidence angle is defined as angle between LOS vector and normal at the target',
         units='degrees')
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='LOS unit vector X', 
-        descr='East component of unit vector of LOS from target to sensor', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='LOS unit vector X',
+        descr='East component of unit vector of LOS from target to sensor',
         units='')
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='LOS unit vector Y', 
-        descr='North component of unit vector of LOS from target to sensor', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='LOS unit vector Y',
+        descr='North component of unit vector of LOS from target to sensor',
         units='')
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Along-track unit vector X', 
-        descr='East component of unit vector along ground track', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Along-track unit vector X',
+        descr='East component of unit vector along ground track',
         units='')
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Along-track unit vector Y', 
-        descr='North component of unit vector along ground track', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Along-track unit vector Y',
+        descr='North component of unit vector along ground track',
         units='')
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Elevation angle', 
-        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Elevation angle',
+        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor',
         units='degrees')
 
     isce3.geometry.make_radar_grid_cubes(radar_grid,
@@ -1103,12 +1144,12 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights, ra
                                          numiter_geo2rdr,
                                          delta_range)
 
+
 def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
                              zds=None, yds=None, xds=None, standard_name=None,
                              long_name=None, descr=None,
                              units=None, fill_value=None,
                              valid_min=None, valid_max=None):
-
     # remove dataset if it already exists
     if ds_name in group:
         del group[ds_name]
@@ -1147,14 +1188,17 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
         dset.attrs.create('valid_max', data=valid_max)
 
     # Construct the cube rasters directly from HDF5 dataset
-    raster = isce3.io.Raster(f"IH5:::ID={dset.id.id}".encode("utf-8"), update=True)
+    raster = isce3.io.Raster(f"IH5:::ID={dset.id.id}".encode("utf-8"),
+                             update=True)
 
     return raster
 
-def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid, heights, 
+
+def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
+                                       heights,
                                        orbit, native_doppler, grid_doppler,
                                        epsg, threshold_geo2rdr=1e-8,
-                                       numiter_geo2rdr = 100, delta_range = 1e-8):
+                                       numiter_geo2rdr=100, delta_range=1e-8):
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)
     else:
@@ -1167,58 +1211,58 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid, he
 
     if epsg == 4326:
         x_coord_units = "degree_east"
-        y_coord_units = "degree_north" 
+        y_coord_units = "degree_north"
     else:
         x_coord_units = "meter"
         y_coord_units = "meter"
 
     coordinate_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'coordinateX', np.float64, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Coordinate X', 
-        descr='X coordinate in specified EPSG code', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Coordinate X',
+        descr='X coordinate in specified EPSG code',
         units=x_coord_units)
     coordinate_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'coordinateY', np.float64, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Coordinate Y', 
-        descr='Y coordinate in specified EPSG code', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Coordinate Y',
+        descr='Y coordinate in specified EPSG code',
         units=y_coord_units)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='incidence angle', 
-        descr='Incidence angle is defined as angle between LOS vector and normal at the target', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='incidence angle',
+        descr='Incidence angle is defined as angle between LOS vector and normal at the target',
         units='degrees')
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='LOS unit vector X', 
-        descr='East component of unit vector of LOS from target to sensor', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='LOS unit vector X',
+        descr='East component of unit vector of LOS from target to sensor',
         units='')
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='LOS unit vector Y', 
-        descr='North component of unit vector of LOS from target to sensor', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='LOS unit vector Y',
+        descr='North component of unit vector of LOS from target to sensor',
         units='')
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Along-track unit vector X', 
-        descr='East component of unit vector along ground track', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Along-track unit vector X',
+        descr='East component of unit vector along ground track',
         units='')
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Along-track unit vector Y', 
-        descr='North component of unit vector along ground track', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Along-track unit vector Y',
+        descr='North component of unit vector along ground track',
         units='')
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
-        zds = zds, yds = yds, xds = xds,
-        long_name='Elevation angle', 
-        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor', 
+        zds=zds, yds=yds, xds=xds,
+        long_name='Elevation angle',
+        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor',
         units='degrees')
 
     isce3.geometry.make_geolocation_cubes(radar_grid,
@@ -1239,9 +1283,9 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid, he
                                           numiter_geo2rdr,
                                           delta_range)
 
+
 def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
                                             z_vect, epsg):
- 
     rg_0 = radar_grid.starting_range
     d_rg = radar_grid.range_pixel_spacing
 
@@ -1278,7 +1322,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     epsg_dataset.attrs["units"] = ""
     epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
 
-    # Slant range 
+    # Slant range
     descr = "Slant range dimension corresponding to calibration records"
     rg_dataset_name = os.path.join(root_ds, 'slantRange')
     if rg_dataset_name in hdf5_obj:

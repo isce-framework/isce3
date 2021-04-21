@@ -25,7 +25,8 @@ def test_insar_run():
             test_yaml = fh_test_yaml.read().replace('@ISCETEST@',
                                                     iscetest.data). \
                 replace('@TEST_OUTPUT@', test_output). \
-                replace('@TEST_PRODUCT_TYPES@', prod_type)
+                replace('@TEST_PRODUCT_TYPES@', prod_type). \
+                replace('gpu_enabled: False', 'gpu_enabled: True')
 
         # create CLI input namespace
         args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
@@ -38,7 +39,6 @@ def test_insar_run():
         out_paths = h5_prep.run(insar_runcfg.cfg)
 
         persist = Persistence(restart=True)
-        persist.run_steps['dense_offsets'] = False
 
         # run insar for prod_type
         insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)

@@ -18,6 +18,13 @@ pybind_nisar/workflows/unwrap.py
 pybind_nisar/workflows/antenna_parser.py
 )
 
+if(WITH_CUDA)
+    list(APPEND TESTFILES
+            pybind_nisar/workflows/dense_offsets.py
+            pybind_nisar/workflows/cuda_insar.py
+        )
+endif()
+
 foreach(TESTFILE ${TESTFILES})
     get_filename_component(NAMEWE ${TESTFILE} NAME_WE)
     get_filename_component(DIR ${TESTFILE} DIRECTORY)
@@ -35,6 +42,10 @@ set_tests_properties(test.python.pkg.pybind_nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.pybind_nisar.workflows.rdr2geo)
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.resample_slc PROPERTIES
              DEPENDS test.python.pkg.pybind_nisar.workflows.geo2rdr)
+if(WITH_CUDA)
+    set_tests_properties(test.python.pkg.pybind_nisar.workflows.dense_offsets PROPERTIES
+                 DEPENDS test.python.pkg.pybind_nisar.workflows.cuda_insar)
+endif()
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.crossmul PROPERTIES
              DEPENDS test.python.pkg.pybind_nisar.workflows.resample_slc)
 # using rdr2geo outputs as RUNW rasters to confirm geocode run

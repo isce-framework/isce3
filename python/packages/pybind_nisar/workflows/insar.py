@@ -1,11 +1,13 @@
+#!/usr/bin/env python3
 import time
 
 import journal
-
-from pybind_nisar.workflows import h5_prep, rdr2geo, geo2rdr, resample_slc, crossmul, unwrap, geocode_insar
+from pybind_nisar.workflows import (crossmul, dense_offsets, geo2rdr,
+                                    geocode_insar, h5_prep, rdr2geo,
+                                    resample_slc, unwrap)
+from pybind_nisar.workflows.insar_runconfig import InsarRunConfig
 from pybind_nisar.workflows.persistence import Persistence
 from pybind_nisar.workflows.yaml_argparse import YamlArgparse
-from pybind_nisar.workflows.insar_runconfig import InsarRunConfig
 
 
 def run(cfg: dict, out_paths: dict, run_steps: dict):
@@ -26,6 +28,9 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['resample']:
         resample_slc.run(cfg)
 
+    if run_steps['dense_offsets']:
+        dense_offsets.run(cfg)
+
     if run_steps['crossmul']:
         crossmul.run(cfg, out_paths['RIFG'])
 
@@ -37,6 +42,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran INSAR in {t_all_elapsed:.3f} seconds")
+
 
 if __name__ == "__main__":
     # parse CLI input

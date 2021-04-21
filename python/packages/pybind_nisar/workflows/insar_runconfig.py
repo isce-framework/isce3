@@ -1,7 +1,5 @@
-import journal
-
-import pybind_isce3 as isce
 from pybind_nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
+
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -24,8 +22,13 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if 'offset_dir' not in self.cfg['processing']['resample']:
             self.cfg['processing']['resample']['offset_dir'] = scratch_path
 
+        if self.cfg['processing']['dense_offsets']['coregistered_slc_path'] is None:
+            self.cfg['processing']['dense_offsets'][
+                'coregistered_slc_path'] = scratch_path
+
         if 'coregistered_slc_path' not in self.cfg['processing']['crossmul']:
-            self.cfg['processing']['crossmul']['coregistered_slc_path'] = scratch_path
+            self.cfg['processing']['crossmul'][
+                'coregistered_slc_path'] = scratch_path
 
         flatten = self.cfg['processing']['crossmul']['flatten']
         if flatten:
@@ -37,11 +40,11 @@ class InsarRunConfig(Geo2rdrRunConfig):
         # set to empty dict and default unwrap values will be used
         # if phase_unwrap fields not in yaml
         if 'phase_unwrap' not in self.cfg['processing']:
-           self.cfg['processing']['phase_unwrap'] = {}
+            self.cfg['processing']['phase_unwrap'] = {}
 
         # if phase_unwrap fields not in yaml
         if self.cfg['processing']['phase_unwrap'] is None:
-           self.cfg['processing']['phase_unwrap'] = {}
+            self.cfg['processing']['phase_unwrap'] = {}
 
         if 'interp_method' not in self.cfg['processing']['geocode']:
             self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
@@ -51,7 +54,9 @@ class InsarRunConfig(Geo2rdrRunConfig):
             self.cfg['processing']['geocode']['datasets'] = {}
 
         # default to True for datasets not found
-        gunw_datasets = ["connectedComponents", "coherenceMagnitude", "unwrappedPhase"]
+        gunw_datasets = ["connectedComponents", "coherenceMagnitude",
+                         "unwrappedPhase"]
         for gunw_dataset in gunw_datasets:
             if gunw_dataset not in self.cfg['processing']['geocode']:
-                self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True
+                self.cfg['processing']['geocode']['datasets'][
+                    gunw_dataset] = True
