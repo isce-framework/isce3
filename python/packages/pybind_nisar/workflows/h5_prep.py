@@ -8,8 +8,10 @@ import os
 import h5py
 import journal
 import numpy as np
-import pybind_isce3 as isce3
+
 from osgeo import osr
+
+import pybind_isce3 as isce3
 from pybind_nisar.h5 import cp_h5_meta_data
 from pybind_nisar.products.readers import SLC
 
@@ -108,6 +110,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     with h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
             h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
 
+        dst_h5.attrs['Conventions'] = np.string_("CF-1.8")
+
         # Copy of identification
         identification_excludes = 'productType'
         if is_insar:
@@ -136,7 +140,9 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         if is_geocoded:
             cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
                             f'{dst_meta_path}/attitude')
-            if dst != 'GCOV':
+            if dst not in ['GCOV', 'GSLC']:
+                # the lines below should be deleted after radar-grid
+                # cubes are added to all L2 workflows
                 cp_h5_meta_data(src_h5, dst_h5,
                                 f'{src_meta_path}/geolocationGrid',
                                 f'{dst_meta_path}/radarGrid',
@@ -354,18 +360,20 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
         dst_parent_path = os.path.join(common_parent_path,
                                        f'{dst}/grids/frequency{freq}')
 
-        set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
+        yds, xds = set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
 
         # GSLC specfics datasets
         if dst == 'GSLC':
             for polarization in pol_list:
                 dst_grp = dst_h5[dst_parent_path]
-                descr = 'Geocoded RSLC for {polarization} channel'
+                long_name = f'geocoded single-look complex image {polarization}'
+                descr = f'Geocoded SLC image ({polarization})'
                 _create_datasets(dst_grp, shape, ctype, polarization,
-                                 descr=descr, units=None, grids="projection")
+                                 descr=descr, units='', grids="projection",
+                                 long_name=long_name, yds=yds, xds=xds)
 
         # set GCOV polarization values (diagonal values only)
-        if dst == 'GCOV':
+        elif dst == 'GCOV':
             pol_list = [(p + p).upper() for p in pol_list]
 
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
@@ -793,8 +801,8 @@ def prep_ds_insar(cfg, dst, dst_h5):
 
 def _create_datasets(dst_grp, shape, ctype, dataset_name,
                      chunks=(128, 128), descr=None, units=None, grids=None,
-                     data=None,
-                     standard_name=None, long_name=None):
+                     data=None, standard_name=None, long_name=None,
+                     yds=None, xds=None):
     if len(shape) == 1:
         if ctype == np.string_:
             ds = dst_grp.create_dataset(dataset_name,
@@ -821,6 +829,12 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
 
     if long_name is not None:
         ds.attrs['long_name'] = np.string_(long_name)
+
+    if yds is not None:
+        ds.dims[0].attach_scale(yds)
+
+    if xds is not None:
+        ds.dims[1].attach_scale(xds)
 
 
 def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
@@ -868,20 +882,19 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
         x_standard_name = "projection_x_coordinate"
         y_standard_name = "projection_y_coordinate"
 
-    # EPSG
-    descr = ("EPSG code corresponding to coordinate system used" +
-             " for representing radar grid")
-    epsg_dataset_name = os.path.join(root_ds, 'epsg')
-    if epsg_dataset_name in hdf5_obj:
-        del hdf5_obj[epsg_dataset_name]
-    epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name,
-                                           data=np.array(epsg_code, "i4"))
-    epsg_dataset.attrs["description"] = np.string_(descr)
-    epsg_dataset.attrs["units"] = ""
-    epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
-
-    if not flag_cube:
-
+    if flag_cube:
+        # EPSG
+        descr = ("EPSG code corresponding to coordinate system used" +
+                 " for representing radar grid")
+        epsg_dataset_name = os.path.join(root_ds, 'epsg')
+        if epsg_dataset_name in hdf5_obj:
+            del hdf5_obj[epsg_dataset_name]
+        epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name, 
+                                               data=np.array(epsg_code, "i4"))
+        epsg_dataset.attrs["description"] = np.string_(descr)
+        epsg_dataset.attrs["units"] = ""
+        epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
+    else:
         # xCoordinateSpacing
         descr = (f'Nominal spacing in {x_coord_units}'
                  ' between consecutive pixels')

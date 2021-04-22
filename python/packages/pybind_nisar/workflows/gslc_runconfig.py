@@ -20,11 +20,7 @@ class GSLCRunConfig(RunConfig):
             Default margin as the length of 50 pixels
             (max of X and Y pixel spacing).
             '''
-            print('slc geocode_dict (before): ', 
-                   self.cfg['processing']['dem_margin'])
             dem_file = self.cfg['DynamicAncillaryFileGroup']['DEMFile']
             dem_raster = isce.io.Raster(dem_file)
             dem_margin = 50 * max([dem_raster.dx, dem_raster.dy])
             self.cfg['processing']['dem_margin'] = dem_margin
-            print('slc geocode_dict (after): ', 
-                   self.cfg['processing']['dem_margin'])

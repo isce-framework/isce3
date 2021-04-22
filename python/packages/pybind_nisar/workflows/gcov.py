@@ -376,8 +376,8 @@ def run(cfg):
                                          radar_grid, orbit, native_doppler, 
                                          zero_doppler, threshold, maxiter)
 
-        t_all_elapsed = time.time() - t_all
-        info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f} seconds")
+    t_all_elapsed = time.time() - t_all
+    info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f} seconds")
 
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
                        yds, xds, ds_name, standard_name=None,
