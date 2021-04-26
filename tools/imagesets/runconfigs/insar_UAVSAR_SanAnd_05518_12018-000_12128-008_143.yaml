@@ -102,16 +102,8 @@ runconfig:
                 lines_per_tile: 100
 
             dense_offsets:
-                window_range: 64                    # {optional} Cross-correlation window size in range direction
-                window_azimuth: 64                  # {optional} Cross-correlation window size in azimuth direction
-                search_range: 20                    # {optional} Cross-correlation search window size in range direction
-                search_azimuth: 20                  # {optional} Cross-correlation search window size in azimuth direction
-                skip_range: 8                       # {optional} Cross-correlation skip window size in range direction
-                skip_azimuth: 8                     # {optional} Cross-correlation skip window in azimuth direction
-                zoom: 8                             # {optional} Zoom in window for cross-correlation surface
-                correlation_surface_ovs: 32         # {optional} Oversampling factor for the cross-correlation surface
-                method: amplitude                   # {optional} Cross-correlation method (complex or amplitude)
-                algorithm: frequency                # {optional} Algorithm for cross-correlation computation (spatial
+                # OPTIONAL - Flag to enable/disable dense offsets estimation. Default True
+                enabled: False
 
             crossmul:
                 flatten: True
@@ -128,7 +120,7 @@ runconfig:
             internet_access: False
 
             # OPTIONAL - To explicitly use GPU capability if available. Default False
-            gpu_enabled: False
+            gpu_enabled: True
 
         # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
         logging: 

@@ -114,6 +114,7 @@ runconfig:
                 lines_per_tile: 1
 
             dense_offsets:
+                enabled: True
                 window_range: 64                                            # {optional} Cross-correlation window size in range direction
                 window_azimuth: 64                                          # {optional} Cross-correlation window size in azimuth direction
                 half_search_range: 20                                       # {optional} Cross-correlation search window size in range direction

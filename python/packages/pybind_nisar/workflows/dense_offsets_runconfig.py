@@ -48,3 +48,4 @@ class DenseOffsetsRunConfig(RunConfig):
                                               frequencies, freq_pols)
         else:
             helpers.check_hdf5_freq_pols(coregistered_slc_path, freq_pols)
+

@@ -28,7 +28,8 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['resample']:
         resample_slc.run(cfg)
 
-    if run_steps['dense_offsets']:
+    if (run_steps['dense_offsets']) and \
+            (cfg['processing']['dense_offsets']['enabled']):
         dense_offsets.run(cfg)
 
     if run_steps['crossmul']:

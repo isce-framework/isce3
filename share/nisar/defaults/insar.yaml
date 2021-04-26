@@ -117,6 +117,8 @@ runconfig:
                 lines_per_tile: 1
 
             dense_offsets:
+                # Flag to enable/disable dense offsets estimation
+                enabled: True
                 # Path to HDF5 file or directory with geometry-coregistered SLCs.
                 # Not required as we allow the use of intermediate outputs from
                 # the previous InSAR module, which is not user-specified
