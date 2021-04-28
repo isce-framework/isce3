@@ -178,7 +178,7 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
             py::arg("extraiter") = 10,
             py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
             py::arg("epsg_out") = 4326,
-            py::arg("compute_mask") = false)
+            py::arg("compute_mask") = true)
         .def("topo", py::overload_cast<isce3::io::Raster &, const std::string &>
                 (&Topo::topo),
                 py::arg("dem_raster"),
