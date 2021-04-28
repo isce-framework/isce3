@@ -8,6 +8,7 @@ import time
 
 import h5py
 import journal
+import pathlib
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
 from pybind_nisar.workflows import h5_prep
@@ -34,6 +35,7 @@ def run(cfg, runw_hdf5, output_hdf5):
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     gunw_datasets = cfg["processing"]["geocode"]["datasets"]
+    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
 
     slc = SLC(hdf5file=ref_hdf5)
 
@@ -67,9 +69,9 @@ def run(cfg, runw_hdf5, output_hdf5):
         for freq in freq_pols.keys():
             pol_list = freq_pols[freq]
 
-            radar_grid = slc.getRadarGrid(freq)
+            radar_grid_slc = slc.getRadarGrid(freq)
             if az_looks > 1 or rg_looks > 1:
-                radar_grid = radar_grid.multilook(az_looks, rg_looks)
+                radar_grid_multilook = radar_grid_slc.multilook(az_looks, rg_looks)
             geo_grid = geogrids[freq]
             geo.geogrid(
                 geo_grid.start_x,
@@ -80,24 +82,39 @@ def run(cfg, runw_hdf5, output_hdf5):
                 geo_grid.length,
                 geo_grid.epsg,
             )
+            src_freq_path = f"/science/LSAR/RUNW/swaths/frequency{freq}/interferogram"
+            dst_freq_path = f"/science/LSAR/GUNW/grids/frequency{freq}/interferogram"
 
             for pol in pol_list:
-                src_group_path = f"/science/LSAR/RUNW/swaths/frequency{freq}/interferogram/{pol}"
-                dst_group_path = f"/science/LSAR/GUNW/grids/frequency{freq}/interferogram/{pol}"
+                src_group_path = f"{src_freq_path}/{pol}"
+                dst_group_path = f"{dst_freq_path}/{pol}"
 
                 # iterate over key: dataset name value: bool flag to perform geocode
                 for dataset_name, geocode_this_dataset in gunw_datasets.items():
                     if not geocode_this_dataset:
                         continue
 
-                    # prepare input raster
-                    input_raster_str = (
-                        f"HDF5:{runw_hdf5}:/{src_group_path}/{dataset_name}"
-                    )
-                    input_raster = isce3.io.Raster(input_raster_str)
+                    if (dataset_name == "layoverShadowMask"):
+                        # prepare input raster
+                        raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'mask.rdr'
+                        input_raster = isce3.io.Raster(str(raster_ref))
+                       
+                        # access the HDF5 dataset for layover shadow mask
+                        dataset_path = f"{dst_freq_path}/layoverShadowMask"
+                        geo.data_interpolator = 'NEAREST'
+                        radar_grid = radar_grid_slc
+                    else:  
+                        # prepare input raster
+                        input_raster_str = (
+                            f"HDF5:{runw_hdf5}:/{src_group_path}/{dataset_name}"
+                        )
+                        input_raster = isce3.io.Raster(input_raster_str)
 
-                    # access the HDF5 dataset for a given frequency and pol
-                    dataset_path = f"{dst_group_path}/{dataset_name}"
+                        # access the HDF5 dataset for a given frequency and pol
+                        dataset_path = f"{dst_group_path}/{dataset_name}"
+                        geo.data_interpolator = interp_method
+                        radar_grid = radar_grid_multilook
+
                     geocoded_dataset = dst_h5[dataset_path]
 
                     # Construct the output ratster directly from HDF5 dataset

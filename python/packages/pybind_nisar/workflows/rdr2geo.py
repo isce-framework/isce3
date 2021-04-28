@@ -65,7 +65,7 @@ def run(cfg):
             Rdr2Geo = isce3.geometry.Rdr2Geo
 
         rdr2geo_obj = Rdr2Geo(radargrid, orbit, ellipsoid, grid_doppler)
-
+        rdr2geo_obj.compute_mask = True
         # run
         rdr2geo_obj.topo(dem_raster, str(rdr2geo_scratch_path))
 
