@@ -671,7 +671,7 @@ def prep_ds_insar(cfg, dst, dst_h5):
 
         # Adding layover-shadow mask
         if dst in ['GUNW']:
-            descr = f"Layover Shadow mask for layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
+            descr = f"Layover Shadow mask for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
             _create_datasets(dst_h5[dst_path_intf], shape, np.byte,
                              'layoverShadowMask',
                              descr=descr, units=" ", grids=grids_val,
