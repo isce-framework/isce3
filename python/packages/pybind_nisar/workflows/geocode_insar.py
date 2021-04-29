@@ -100,7 +100,6 @@ def run(cfg, runw_hdf5, output_hdf5):
                         input_raster = isce3.io.Raster(str(raster_ref))
                        
                         # access the HDF5 dataset for layover shadow mask
-                        dataset_path = f"{dst_freq_path}/layoverShadowMask"
                         geo.data_interpolator = 'NEAREST'
                         radar_grid = radar_grid_slc
                     else:  
@@ -111,10 +110,10 @@ def run(cfg, runw_hdf5, output_hdf5):
                         input_raster = isce3.io.Raster(input_raster_str)
 
                         # access the HDF5 dataset for a given frequency and pol
-                        dataset_path = f"{dst_group_path}/{dataset_name}"
                         geo.data_interpolator = interp_method
                         radar_grid = radar_grid_multilook
 
+                    dataset_path = f"{dst_group_path}/{dataset_name}"
                     geocoded_dataset = dst_h5[dataset_path]
 
                     # Construct the output ratster directly from HDF5 dataset
