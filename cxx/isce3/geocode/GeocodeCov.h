@@ -241,6 +241,29 @@ public:
     void updateGeoGrid(const isce3::product::RadarGridParameters& radar_grid,
                        isce3::io::Raster& dem_raster);
 
+    constexpr static long long DEFAULT_MAX_BLOCK_SIZE = 1 << 29; // 512MB
+    /** Compute the number of blocks and their length for block processing
+     * in the length direction
+     *
+     * @param[in]  array_length        Length of the data to be processed
+     * @param[in]  array_width         Width of the data to be processed
+     * @param[in]  nbands              Number of the bands to be processed
+     * @param[in]  type_size           Type size of the data to be processed
+     * @param[in]  channel             Pyre info channel
+     * @param[out] block_length        Block length
+     * @param[out] nblock_y            Number of blocks in the Y direction
+     * @param[in]  max_block_size      Maximum block size in Bytes (per thread)
+     */
+    void getBlocksNumberAndLength(const int array_length, 
+                                  const int array_width,
+                                  const int nbands = 1,
+                                  const size_t type_size = 4, // Float32
+                                  pyre::journal::info_t* channel = nullptr, 
+                                  int* block_length = nullptr, 
+                                  int* nblock_y = nullptr,
+                                  const long long max_block_size = 
+                                  DEFAULT_MAX_BLOCK_SIZE);
+
     // Get/set data interpolator
     isce3::core::dataInterpMethod dataInterpolator() const 
     { 

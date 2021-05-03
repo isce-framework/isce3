@@ -86,6 +86,57 @@ void Geocode<T>::geoGrid(double geoGridStartX, double geoGridStartY,
     _epsgOut = epsgcode;
 }
 
+
+void getBlocksNumberAndLength(const int array_length, const int array_width,
+                              const int nbands, const size_t type_size,
+                              pyre::journal::info_t* channel, 
+                              int* block_length, int* nblocks_y, 
+                              const long long max_block_size) {
+
+    const int max_block_length = max_block_size / 
+        (nbands * array_width * type_size);
+
+    int _block_length = std::min(array_length, max_block_length);
+
+    // update nblocks
+    int _nblocks_y = std::ceil((static_cast<float>(array_length)) / _block_length);
+
+    if (nblocks_y != nullptr)
+        *nblocks_y = _nblocks_y;
+
+    if (channel != nullptr) {
+        *channel << "array length: " << array_length << pyre::journal::newline;
+        *channel << "array width: " << array_width << pyre::journal::newline;
+        *channel << "number of block(s): " << _nblocks_y
+                 << pyre::journal::newline;
+    }
+
+    if (block_length != nullptr) {
+        *block_length = _block_length;
+        if (channel != nullptr) {
+            *channel << "block length: " << *block_length
+                     << pyre::journal::newline;
+            *channel << "block width: " << array_width
+                     << pyre::journal::newline;
+        }
+    }
+
+    if (channel != nullptr) {
+
+        long long block_size_bytes =
+                ((static_cast<long long>(_block_length)) *
+                 array_width * nbands * type_size);
+
+        std::string block_size_bytes_str = geometry::getNbytesStr(block_size_bytes);
+        if (nbands > 1)
+            block_size_bytes_str += " (" + std::to_string(nbands) + " bands)";
+
+        *channel << "block size: " << block_size_bytes_str
+                 << pyre::journal::endl;
+    }
+}
+
+
 template<class T>
 void Geocode<T>::geocode(
         const isce3::product::RadarGridParameters& radar_grid,
@@ -597,23 +648,91 @@ void _getUpsampledBlock(
 {
     int nbands = input_raster.numBands();
     rdrData.reserve(nbands);
+    bool flag_parallel_radargrid_read = geocode_memory_mode ==
+            geocodeMemoryMode::BLOCKS_GEOGRID_AND_RADARGRID;
     for (int band = 0; band < nbands; ++band) {
-        if (geocode_memory_mode !=
-            geocodeMemoryMode::BLOCKS_GEOGRID_AND_RADARGRID) {
+        if (!flag_parallel_radargrid_read) {
             info << "reading input raster band: " << band + 1
                  << pyre::journal::endl;
         }
+
         rdrData.emplace_back(
                 std::make_unique<isce3::core::Matrix<T_out>>(size_y, size_x));
-        if (!flag_upsample_radar_grid && std::is_same<T, T_out>::value) {
-#pragma omp critical
+
+        if (!flag_upsample_radar_grid && std::is_same<T, T_out>::value &&
+                !flag_parallel_radargrid_read) {
+            /*
+            Enter here if:
+                1. No upsampling is required;
+                2. No type convertion is required (input and output have same
+                   types);
+                3. Not parallel (which allows messages to be printed to stdout).
+            */
+
+            int radargrid_nblocks, radar_block_length;
+            const int max_block_size = 1 << 28; // 256MB
+            isce3::geocode::getBlocksNumberAndLength(size_y, size_x, 1, sizeof(T),
+                   nullptr, &radar_block_length, &radargrid_nblocks,
+                   max_block_size);
+
+            for (size_t block = 0; block < (size_t) radargrid_nblocks;
+                 ++block) {
+
+                int this_radar_block_length = radar_block_length;
+                if ((block + 1) * radar_block_length > size_y) {
+                    this_radar_block_length = size_y % radar_block_length;
+                }
+                if (radargrid_nblocks > 1) {
+                    std::cout << "reading band " << band + 1 << " progress: " 
+                              << static_cast<int>((100.0 * block) / radargrid_nblocks) 
+                              << "% \r";
+                    std::cout.flush();
+                }
+                auto ptr = rdrData[band]->data();
+                input_raster.getBlock(ptr + 
+                                      block * radar_block_length * size_x, 
+                                      xidx, block * radar_block_length + yidx, size_x,
+                                      this_radar_block_length, band + 1);
+            }
+
+            if (radargrid_nblocks > 1) {
+                std::cout << "reading band " << band + 1 
+                          << " progress: 100%" << std::endl;
+            }
+        } 
+        else if (!flag_upsample_radar_grid && std::is_same<T, T_out>::value) {
+            /*
+            Enter here if:
+                1. No upsampling is required;
+                2. No type convertion is required (input and output have same 
+                   types);
+                3. Is parallel (which does not allow messages to be printed to
+                   stdout).
+            */
+            _Pragma("omp critical")
+            {
             input_raster.getBlock(rdrData[band]->data(), xidx, yidx, size_x,
                                   size_y, band + 1);
-        } else if (!flag_upsample_radar_grid) {
+            }    
+        } 
+        else if (!flag_upsample_radar_grid) {
+            /*
+            Enter here if:
+                1. No upsampling is required;
+                2. Type convertion is required (input and output have different 
+                   types).
+            */
             isce3::core::Matrix<T> radar_data_in(size_y, size_x);
-#pragma omp critical
-            input_raster.getBlock(radar_data_in.data(), xidx, yidx, size_x,
-                                  size_y, band + 1);
+            if (flag_parallel_radargrid_read) {
+                _Pragma("omp critical")
+                {
+                input_raster.getBlock(radar_data_in.data(), xidx, yidx, size_x,
+                                       size_y, band + 1);
+                }
+            } else {
+                input_raster.getBlock(radar_data_in.data(), xidx, yidx, size_x,
+                                       size_y, band + 1);
+            }
 
             /*
             Iteratively converts input pixel (ptr_1) to output pixel (ptr_2).
@@ -630,10 +749,20 @@ void _getUpsampledBlock(
                 _convertToOutputType(*ptr_1++, *ptr_2++);
             }
         } else if (flag_upsample_radar_grid && !isce3::is_complex<T>()) {
+            /*
+            Enter here if:
+                1. Upsampling is required;
+                2. Input is not complex.
+            */
             std::string error_msg = "radar-grid upsampling is only available";
             error_msg += " for complex inputs";
             throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
         } else {
+            /*
+            Enter here if:
+                1. Upsampling is required;
+                2. Input is complex.
+            */
             int radargrid_nblocks, radar_block_size;
             if (geocode_memory_mode == geocodeMemoryMode::SINGLE_BLOCK ||
                 geocode_memory_mode ==

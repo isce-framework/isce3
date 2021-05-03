@@ -426,7 +426,8 @@ void areaProjGetNBlocks(const int array_length, const int array_width,
                         int* block_length_with_upsampling, int* block_length,
                         int* nblocks_y, int* block_width_with_upsampling,
                         int* block_width, int* nblocks_x,
-                        const int min_block_size, const int max_block_size,
+                        const int min_block_size, 
+                        const long long max_block_size,
                         const int nblocks_per_thread)
 {
 
@@ -458,7 +459,7 @@ void areaProjGetNBlocks(const int array_length, const int array_width,
     // set nblocks and block size (Y-axis)
     _nblocks_y = std::max(_nblocks_y, 1);
     _block_length_with_upsampling =
-            std::ceil(((float) array_length) / _nblocks_y);
+            std::ceil((static_cast<float>(array_length)) / _nblocks_y);
     _block_length_with_upsampling =
             std::max(_block_length_with_upsampling, min_block_length);
     _block_length_with_upsampling =
@@ -470,7 +471,7 @@ void areaProjGetNBlocks(const int array_length, const int array_width,
     if (flag_2d) {
         _nblocks_x = std::max(_nblocks_x, 1);
         _block_width_with_upsampling =
-                std::ceil(((float) array_width) / _nblocks_x);
+                std::ceil((static_cast<float>(array_width)) / _nblocks_x);
         _block_width_with_upsampling =
                 std::max(_block_width_with_upsampling, min_block_width);
         _block_width_with_upsampling =

@@ -38,7 +38,7 @@ enum rtcMemoryMode {
 };
 
 constexpr static int AP_DEFAULT_MIN_BLOCK_SIZE = 1 << 22; // 4MB
-constexpr static int AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 30; // 1GB
+constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 30; // 1GB
 
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
 enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
@@ -378,7 +378,7 @@ void areaProjGetNBlocks(const int array_length, const int array_width,
         int* block_width_with_upsampling = nullptr, int* block_width = nullptr,
         int* nblock_x = nullptr,
         const int min_block_size = AP_DEFAULT_MIN_BLOCK_SIZE,
-        const int max_block_size = AP_DEFAULT_MAX_BLOCK_SIZE,
+        const long long max_block_size = AP_DEFAULT_MAX_BLOCK_SIZE,
         const int nblocks_per_thread = 4);
 
 double
