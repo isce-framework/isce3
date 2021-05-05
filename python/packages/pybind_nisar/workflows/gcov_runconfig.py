@@ -49,10 +49,13 @@ class GCOVRunConfig(RunConfig):
         else:
             rtc_dict['output_type'] = isce.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
-        if geocode_dict['algorithm_type'] == 'interp':
-            geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.INTERP
+
+        geocode_algorithm = self.cfg['processing']['geocode']['algorithm_type']
+        if geocode_algorithm == "area_projection":
+            output_mode = isce.geocode.GeocodeOutputMode.AREA_PROJECTION
         else:
-            geocode_dict['algorithm_type'] = isce.geocode.GeocodeOutputMode.AREA_PROJECTION
+            output_mode = isce.geocode.GeocodeOutputMode.INTERP
+        geocode_dict['output_mode'] = output_mode
 
         # only 2 RTC algorithms supported: area_projection (default) & bilinear_distribution
         if rtc_dict['algorithm_type'] == "bilinear_distribution":
@@ -77,3 +80,25 @@ class GCOVRunConfig(RunConfig):
             dem_raster = isce.io.Raster(dem_file)
             dem_margin = 50 * max([dem_raster.dx, dem_raster.dy])
             self.cfg['processing']['dem_margin'] = dem_margin
+
+        # Update the DEM interpolation method
+        dem_interp_method = \
+            self.cfg['processing']['dem_interpolation_method']
+
+        if dem_interp_method == 'biquintic':
+            dem_interp_method_enum = isce.core.DataInterpMethod.BIQUINTIC
+        elif (dem_interp_method == 'sinc'):
+            dem_interp_method_enum = isce.core.DataInterpMethod.SINC
+        elif (dem_interp_method == 'bilinear'):
+            dem_interp_method_enum = isce.core.DataInterpMethod.BILINEAR
+        elif (dem_interp_method == 'bicubic'):
+            dem_interp_method_enum = isce.core.DataInterpMethod.BICUBIC
+        elif (dem_interp_method == 'nearest'):
+            dem_interp_method_enum = isce.core.DataInterpMethod.NEAREST
+        else:
+            err_msg = ('ERROR invalid DEM interpolation method:'
+                       f' {dem_interp_method}')
+            raise ValueError(err_msg)
+
+        self.cfg['processing']['dem_interpolation_method_enum'] = \
+            dem_interp_method_enum

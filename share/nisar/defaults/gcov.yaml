@@ -206,6 +206,8 @@ runconfig:
 
             dem_margin:
 
+            dem_interpolation_method: biquintic
+
             # OPTIONAL - if noise correction desired (for ISRO)
             noise_correction:
                 # OPTIONAL -

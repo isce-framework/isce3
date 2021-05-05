@@ -79,12 +79,12 @@ runconfig:
         
             # Mechanism to specify output posting and DEM
             geocode:
-                algorithm_type: enum('area_projection', 'interp', required=False)
+                algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
                 # Apply RTC
                 apply_rtc: bool(required=False)
                
-                memory_mode: enum('auto', 'single_block', 'BLOCKS_GEOGRID', 'BLOCKS_GEOGRID_AND_RADARGRID', required=False)
+                memory_mode: enum('auto', 'single_block', 'blocks_geogrid', 'blocks_geogrid_and_radargrid', required=False)
                
                 # Processing upsampling factor on top of the input geogrid
                 geogrid_upsampling: int(required=False)
@@ -149,7 +149,9 @@ runconfig:
             geo2rdr:      include('geo2rdr_options', required=False)
 
             dem_margin: num(required=False)
-        
+
+            dem_interpolation_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
             # If noise correction desired (for ISRO)
             noise_correction:
                 apply_correction: bool(required=False)

@@ -36,12 +36,15 @@ def run(cfg):
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
     
+    # DEM parameters
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
     dem_margin = cfg['processing']['dem_margin']
+    dem_interp_method_enum = cfg['processing']['dem_interpolation_method_enum']
 
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
-    output_mode = geocode_dict['algorithm_type']
+    geocode_algorithm = geocode_dict['algorithm_type']
+    output_mode = geocode_dict['output_mode']
     flag_apply_rtc = geocode_dict['apply_rtc']
     memory_mode = geocode_dict['memory_mode']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
@@ -155,6 +158,10 @@ def run(cfg):
         geo.numiter_geo2rdr = maxiter
         geo.dem_block_margin = dem_margin
 
+        # set data interpolator based on the geocode algorithm
+        if output_mode == isce3.geocode.GeocodeOutputMode.INTERP:
+            geo.data_interpolator = geocode_algorithm
+
         geo.geogrid(geogrid.start_x, geogrid.start_y,
                     geogrid.spacing_x, geogrid.spacing_y,
                     geogrid.width, geogrid.length, geogrid.epsg)
@@ -247,6 +254,7 @@ def run(cfg):
                     out_geo_dem=out_geo_dem_obj,
                     input_rtc=None,
                     output_rtc=None,
+                    dem_interp_method=dem_interp_method_enum,
                     memory_mode=memory_mode)
 
         del output_raster_obj

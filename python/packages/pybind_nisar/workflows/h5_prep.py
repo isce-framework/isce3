@@ -93,6 +93,13 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     if is_insar:
         secondary_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
 
+    if dst == "GCOV":
+        dem_interp_method = cfg['processing']['dem_interpolation_method']
+        geocode_algorithm = cfg['processing']['geocode']['algorithm_type']
+    else:
+        dem_interp_method = None
+        geocode_algorithm = None
+
     # Remove existing HDF5 and start from scratch
     try:
         os.remove(output_hdf5)
@@ -159,6 +166,17 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         cp_h5_meta_data(src_h5, dst_h5,
                         f'{src_meta_path}/processingInformation/algorithms',
                         f'{dst_meta_path}/processingInformation/algorithms')
+
+        if dst == "GCOV":
+            algorithms_ds = (dst_meta_path +
+                             'processingInformation/algorithms/geocoding')
+            dst_h5.require_dataset(algorithms_ds, (), "S27", 
+                data=np.string_(geocode_algorithm))
+
+            algorithms_ds = (dst_meta_path +
+                             'processingInformation/algorithms/demInterpolation')
+            dst_h5.require_dataset(algorithms_ds, (), "S27", 
+                data=np.string_(dem_interp_method))
 
         # copy processingInformation/inputs group
         exclude_args = ['l0bGranules', 'demFiles']
