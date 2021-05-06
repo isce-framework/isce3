@@ -147,20 +147,31 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         if is_geocoded:
             cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
                             f'{dst_meta_path}/attitude')
-            if dst not in ['GCOV', 'GSLC']:
+            if dst != 'GCOV':
                 # the lines below should be deleted after radar-grid
                 # cubes are added to all L2 workflows
+                yds = dst_h5.create_dataset(f'{dst_meta_path}/radarGrid/yCoordinates',
+                    data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])                 
+                xds = dst_h5.create_dataset(f'{dst_meta_path}/radarGrid/xCoodinates',
+                    data = src_h5[f'{src_meta_path}/geolocationGrid/slantRange'])
                 cp_h5_meta_data(src_h5, dst_h5,
                                 f'{src_meta_path}/geolocationGrid',
                                 f'{dst_meta_path}/radarGrid',
-                                renames={'coordinateX': 'xCoordinates',
-                                         'coordinateY': 'yCoordinates',
-                                         'zeroDopplerTime': 'zeroDopplerAzimuthTime'})
+                                renames={'coordinateX': 'slantRange',
+                                         'coordinateY': 'zeroDopplerAzimuthTime'},
+                                excludes=['slantRange', 'zeroDopplerTime'],
+                                attach_scales_list = [yds, xds])
         else:
             # RUNW and RIFG have no attitude group and have geolocation grid
+            yds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/zeroDopplerTime',
+                    data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])                 
+            xds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/slantRange',
+                    data = src_h5[f'{src_meta_path}/geolocationGrid/slantRange'])
             cp_h5_meta_data(src_h5, dst_h5,
                             f'{src_meta_path}/geolocationGrid',
-                            f'{dst_meta_path}/geolocationGrid')
+                            f'{dst_meta_path}/geolocationGrid',
+                            excludes=['zeroDopplerTime', 'slantRange'],
+                            attach_scales_list = [yds, xds])
 
         # copy processingInformation/algorithms group (common across products)
         cp_h5_meta_data(src_h5, dst_h5,

@@ -31,7 +31,7 @@ namespace isce3{
     * @param[in] numiter       Max number of iterations for convergence
     *
     * The outputs of this method is an OGRLinearRing.
-    * Transformer from radar geometry coordinates to map coordiantes with a DEM
+    * Transformer from radar geometry coordinates to map coordinates with a DEM
     * The sequence of walking the perimeter is always in the following order :
     * <ul>
     * <li> Start at Early Time, Near Range edge. Always the first point of the polygon.
