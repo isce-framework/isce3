@@ -1,4 +1,4 @@
-import os, subprocess, sys, shutil, stat, logging, shlex
+import os, subprocess, sys, shutil, stat, logging, shlex, getpass
 # see no evil
 from .workflowdata import workflowdata, workflowtests
 pjoin = os.path.join
@@ -65,11 +65,31 @@ class ImageSet:
 
     cpack_generator = "RPM"
 
-    def imgname(self, img):
-        return f"nisar-adt/isce3dev:{self.name}-{img}" # labels used for above images
+    def imgname(self, repomod="", tagmod=""):
+        """
+        Return unique Docker image name per Jenkins run, uses Jenkins environment variables
+        JOB_NAME and EXECUTOR_NUMBER
+
+        Parameters
+        ----------
+        repomod : str, optional
+            Modifier to nominal Docker repository name
+        tagmod : str, optional
+            Modifier to nominal Docker tag name
+            
+        """
+        if tagmod != "":
+            tagmod = "-" + tagmod
+        try:
+            gitmod = '-' + subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode('ascii').strip()
+        except:
+            gitmod = ""
+        return f"nisar-adt/isce3{repomod}:{self.name}{tagmod}" \
+               + f"-{getpass.getuser()}{gitmod}" 
 
     def docker_run(self, img, cmd):
-        runcmd = f"{docker} run {self.run_args} --rm -i {self.tty} {self.imgname(img)} bash -ci"
+        runcmd = f"{docker} run {self.run_args} --rm -i {self.tty} " \
+                 + f"{self.imgname(repomod='dev', tagmod=img)} bash -ci"
         subprocess.check_call(runcmd.split() + [cmd])
 
     def docker_run_dev(self, cmd):
@@ -97,7 +117,7 @@ class ImageSet:
         self.testdir = projblddir + "/workflow_testdata_tmp/test"
         self.build_args = f'''
             --network=host
-        ''' + " ".join(f"--build-arg {x}_img={self.imgname(x)}" for x in self.imgs)
+        ''' + " ".join(f"--build-arg {x}_img={self.imgname(repomod='dev', tagmod=x)}" for x in self.imgs)
 
         self.cmake_defs = {
             "WITH_CUDA": "YES",
@@ -135,7 +155,8 @@ class ImageSet:
         (should not change often, so these will usually be cached)
         """
         for img in self.imgs:
-            cmd = f"{docker} build {self.build_args} {thisdir}/{self.name}/{img} -t {self.imgname(img)}"
+            cmd = f"{docker} build {self.build_args} {thisdir}/{self.name}/{img}" \
+                  + f" -t {self.imgname(repomod='dev', tagmod=img)}"
             subprocess.check_call(cmd.split())
 
     def configure(self):
@@ -192,7 +213,7 @@ class ImageSet:
         squash_arg = "--squash" if "Experimental: true" in docker_info else ""
 
         cmd = f"{docker} build {self.build_args} {squash_arg} \
-                    {thisdir}/{self.name}/distrib -t nisar-adt/isce3:{self.name}"
+                    {thisdir}/{self.name}/distrib -t {self.imgname()}"
         subprocess.check_call(cmd.split())
 
 
@@ -202,11 +223,11 @@ class ImageSet:
         noise estimator caltool
         """
 
-        build_args = f"--build-arg distrib_img=nisar-adt/isce3:{self.name} \
+        build_args = f"--build-arg distrib_img={self.imgname()} \
                        --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN').strip()}"
         
         cmd = f"{docker} build {build_args} \
-                {thisdir}/{self.name}/distrib_nisar -t nisar-adt/isce3:{self.name}-nisar"
+                {thisdir}/{self.name}/distrib_nisar -t {self.imgname(tagmod='nisar')}"
         subprocess.check_call(cmd.split())
 
 
@@ -280,10 +301,9 @@ class ImageSet:
         logger.addHandler(hdlr)
        
         if nisarimg:
-            tag = self.name + "-nisar"
+            img = self.imgname(tagmod="nisar")
         else:
-            tag = self.name
-        img = 'nisar-adt/isce3:' + tag
+            img = self.imgname()
 
         datamount = ""
         if dataname is not None:
@@ -560,4 +580,3 @@ class ImageSet:
             for test in workflowtests[workflow]:
                 print(f"\ntarring workflow test {test}\n")
                 subprocess.check_call(f"tar cvzf {test}.tar.gz {test}".split(), cwd=self.testdir)
-
