@@ -102,6 +102,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
                    geoGridSpacingY, geoGridWidth, geoGridLength, epsgcode);
 
     // populate optional parameters
+    bool flag_az_baseband_doppler = false;
+    bool flatten = false;
     double geogrid_upsampling = 1;
     bool flag_upsample_radar_grid = false;
     isce3::geometry::rtcInputTerrainRadiometry input_terrain_radiometry =
@@ -127,6 +129,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::Raster* out_geo_rtc = nullptr;
     isce3::io::Raster* input_rtc = nullptr;
     isce3::io::Raster* output_rtc = nullptr;
+    isce3::io::Raster* phase_screen_raster = nullptr;
+    isce3::io::Raster* offset_az_raster = nullptr;
+    isce3::io::Raster* offset_rg_raster = nullptr;
     isce3::geocode::geocodeMemoryMode geocode_memory_mode_1 =
             isce3::geocode::geocodeMemoryMode::BLOCKS_GEOGRID;
     isce3::geocode::geocodeMemoryMode geocode_memory_mode_2 =
@@ -160,16 +165,18 @@ TEST(GeocodeTest, TestGeocodeCov) {
 
             // run geocode
             geoObj.geocode(radar_grid, radarRaster, geocodedRaster, demRaster,
-                           output_mode, geogrid_upsampling,
+                           output_mode, flag_az_baseband_doppler, flatten,
+                           geogrid_upsampling, 
                            flag_upsample_radar_grid, flag_apply_rtc,
-                           input_terrain_radiometry,
-                           output_terrain_radiometry, exponent,
+                           input_terrain_radiometry, 
+                           output_terrain_radiometry, exponent, 
                            rtc_min_value_db, rtc_geogrid_upsampling,
                            rtc_algorithm, abs_cal_factor, clip_min, clip_max,
-                           min_nlooks, radar_grid_nlooks,
-                           nullptr, out_geo_rdr,
-                           out_geo_dem, out_geo_nlooks, out_geo_rtc,
-                           input_rtc, output_rtc, geocode_memory_mode_1,
+                           min_nlooks, radar_grid_nlooks, nullptr,
+                           out_geo_rdr, out_geo_dem, out_geo_nlooks,
+                           out_geo_rtc, input_rtc, output_rtc,
+                           phase_screen_raster, offset_az_raster,
+                           offset_rg_raster, geocode_memory_mode_1,
                            min_block_size, max_block_size);
         }
     } 
@@ -213,14 +220,17 @@ TEST(GeocodeTest, TestGeocodeCov) {
 
     geoComplexObj.geocode(
             radar_grid, slc_raster_xy, geocoded_diag_raster, demRaster,
-            output_mode, geogrid_upsampling, flag_upsample_radar_grid,
-            flag_apply_rtc,
+            output_mode, flag_az_baseband_doppler, flatten, 
+            geogrid_upsampling, flag_upsample_radar_grid, 
+            flag_apply_rtc, 
             input_terrain_radiometry, output_terrain_radiometry, 
-            exponent, rtc_min_value_db, rtc_geogrid_upsampling,
-            rtc_algorithm, abs_cal_factor, clip_min,
-            clip_max, min_nlooks, radar_grid_nlooks, &geocoded_off_diag_raster,
-            out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
-            input_rtc, output_rtc, geocode_memory_mode_2, min_block_size,
+            exponent, rtc_min_value_db, rtc_geogrid_upsampling, 
+            rtc_algorithm, abs_cal_factor, clip_min, 
+            clip_max, min_nlooks, radar_grid_nlooks, &geocoded_off_diag_raster, 
+            out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc, 
+            input_rtc, output_rtc,
+            phase_screen_raster, offset_az_raster, offset_rg_raster,
+            geocode_memory_mode_2, min_block_size,
             max_block_size);
 
     //  load complex raster containing X conj(Y)
@@ -352,8 +362,14 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        isce3::io::Raster xRaster("x_" + geocode_mode_str + "_geo.bin");
-        isce3::io::Raster yRaster("y_" + geocode_mode_str + "_geo.bin");
+        std::string x_raster_str = "x_" + geocode_mode_str + "_geo.bin";
+        std::string y_raster_str = "y_" + geocode_mode_str + "_geo.bin";
+        std::cout << "evaluating files:" << std::endl
+                  << "     " << x_raster_str << std::endl
+                  << "     " << y_raster_str << std::endl;
+
+        isce3::io::Raster xRaster(x_raster_str);
+        isce3::io::Raster yRaster(y_raster_str);
         size_t length = xRaster.length();
         size_t width = xRaster.width();
 

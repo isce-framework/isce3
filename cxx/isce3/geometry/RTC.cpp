@@ -1125,7 +1125,7 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     auto elapsed_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start_time);
     float elapsed_time = ((float) elapsed_time_milliseconds.count()) / 1e3;
-    info << "elapsed time (RTC-BI) [s]: " << elapsed_time << pyre::journal::endl;    
+    info << "elapsed time (RTC-BI) [s]: " << elapsed_time << pyre::journal::endl;
 }
 
 isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,

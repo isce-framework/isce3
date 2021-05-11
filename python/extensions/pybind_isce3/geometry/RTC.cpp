@@ -181,8 +181,6 @@ void addbinding_compute_rtc(pybind11::module& m)
                  Input DEM raster
              output_raster : isce3.io.Raster
                  Output raster (output)
-             frequency : optional
-                 Product frequency
              input_terrain_radiometry : isce3.geometry.RtcInputTerrainRadiometry, optional
                  Terrain radiometry of the input raster
              output_terrain_radiometry : isce3.geometry.RtcOutputTerrainRadiometry, optional

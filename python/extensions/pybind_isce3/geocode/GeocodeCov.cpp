@@ -6,6 +6,8 @@
 #include <isce3/geometry/RTC.h>
 #include <isce3/io/Raster.h>
 
+#include <pybind11/stl.h>
+
 namespace py = pybind11;
 
 using isce3::core::parseDataInterpMethod;
@@ -24,6 +26,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
     pyGeocode.def(py::init<>())
             .def_property("orbit", nullptr, &Geocode<T>::orbit)
             .def_property("doppler", nullptr, &Geocode<T>::doppler)
+            .def_property("native_doppler", nullptr, &Geocode<T>::nativeDoppler)
             .def_property("ellipsoid", nullptr, &Geocode<T>::ellipsoid)
             .def_property("threshold_geo2rdr", nullptr,
                           &Geocode<T>::thresholdGeo2rdr)
@@ -66,6 +69,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("output_raster"), py::arg("dem_raster"),
                     py::arg("output_mode") =
                             geocodeOutputMode::AREA_PROJECTION,
+                    py::arg("flag_az_baseband_doppler") = false,
+                    py::arg("flatten") = false,
                     py::arg("geogrid_upsampling") = 1,
                     py::arg("flag_upsample_radar_grid") = false,
                     py::arg("flag_apply_rtc") = false,
@@ -93,6 +98,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("out_geo_dem") = nullptr,
                     py::arg("out_geo_nlooks") = nullptr,
                     py::arg("out_geo_rtc") = nullptr,
+                    py::arg("phase_screen") = nullptr,
+                    py::arg("offset_az_raster") = nullptr,
+                    py::arg("offset_rg_raster") = nullptr,
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
                     py::arg("memory_mode") = geocodeMemoryMode::AUTO,
@@ -103,11 +111,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD);
 }
 
-
-
-void addbinding(pybind11::enum_<geocodeOutputMode> & pyGeocodeMode)
+void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeOutputMode)
 {
-    pyGeocodeMode.value("INTERP", geocodeOutputMode::INTERP)
+    pyGeocodeOutputMode.value("INTERP", geocodeOutputMode::INTERP)
             .value("AREA_PROJECTION", geocodeOutputMode::AREA_PROJECTION);
 };
 

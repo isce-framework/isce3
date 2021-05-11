@@ -5,10 +5,11 @@ isce3::geometry::DEMInterpolator
 isce3::geocode::loadDEM(isce3::io::Raster& demRaster,
                        const isce3::product::GeoGridParameters& geoGrid,
                        int lineStart, int blockLength, int blockWidth,
-                       double demMargin)
+                       double demMargin, 
+                       isce3::core::dataInterpMethod demInterpMethod)
 {
     // DEM interpolator
-    isce3::geometry::DEMInterpolator demInterp;
+    isce3::geometry::DEMInterpolator demInterp(0, demInterpMethod);
 
     // the epsg code of the input DEM
     int epsgcode = demRaster.getEPSG();

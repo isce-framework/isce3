@@ -145,7 +145,6 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
  * @param[in]  input_dop           Doppler LUT
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
- * @param[in]  frequency           Product frequency
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
  * @param[in]  output_terrain_radiometry Output terrain radiometry
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
