@@ -178,7 +178,7 @@ runconfig:
 ---
 radar_grid_cubes_options:
 
-    # List heights in meters
+    # List of heights in meters
     heights: list(num(), required=False)
 
     # Same as input DEM if not provided.

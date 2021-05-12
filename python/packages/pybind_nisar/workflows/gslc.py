@@ -9,6 +9,7 @@ import journal
 import pybind_isce3 as isce3
 from pybind_nisar.products.readers import SLC
 from pybind_nisar.workflows import h5_prep
+from pybind_nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 from pybind_nisar.workflows.gslc_runconfig import GSLCRunConfig
 
@@ -22,6 +23,8 @@ def run(cfg):
     output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     geogrids = cfg['processing']['geocode']['geogrids']
+    radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
+    radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
     threshold_geo2rdr = cfg['processing']['geo2rdr']['threshold']
     iteration_geo2rdr = cfg['processing']['geo2rdr']['maxiter']
@@ -85,6 +88,31 @@ def run(cfg):
                 del slc_raster
                 t_pol_elapsed = time.time() - t_pol
                 info_channel.log(f'polarization {polarization} ran in {t_pol_elapsed:.3f} seconds')
+
+            if freq.upper() == 'B':
+                continue
+
+            cube_geogrid = isce3.product.GeoGridParameters(
+                start_x=radar_grid_cubes_geogrid.start_x,
+                start_y=radar_grid_cubes_geogrid.start_y,
+                spacing_x=radar_grid_cubes_geogrid.spacing_x,
+                spacing_y=radar_grid_cubes_geogrid.spacing_y,
+                width=int(radar_grid_cubes_geogrid.width),
+                length=int(radar_grid_cubes_geogrid.length),
+                epsg=radar_grid_cubes_geogrid.epsg)
+
+            cube_group_name = '/science/LSAR/GSLC/metadata/radarGrid'
+
+            native_doppler.bounds_error = False
+            '''
+            The native-Doppler LUT bounds error is turned off to
+            computer cubes values outside radar-grid boundaries
+            '''
+            add_radar_grid_cubes_to_hdf5(dst_h5, cube_group_name, 
+                                         cube_geogrid, radar_grid_cubes_heights, 
+                                         radar_grid, orbit, native_doppler, 
+                                         image_grid_doppler, threshold_geo2rdr, 
+                                         iteration_geo2rdr)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")

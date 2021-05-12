@@ -104,6 +104,7 @@ runconfig:
                     # Set bottom-right x in same units as output EPSG
                     x_abs: num(required=False)
 
+            radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
 
@@ -246,6 +247,40 @@ crossmul_options:
     flatten: any(bool(), str(min=1))
     oversample: int(min=1, required=False)
     rows_per_block: int(min=1, required=False)
+
+radar_grid_cubes_options:
+
+    # List of heights in meters
+    heights: list(num(), required=False)
+
+    # Same as input DEM if not provided.
+    outputEPSG: int(min=1024, max=32767, required=False)
+               
+    # Output posting in same units as output EPSG.
+    # If not provided, spacing values will be taken from provided DEM.
+    output_posting:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
+
+    # To control output grid in same units as output EPSG
+    x_snap: num(min=0, required=False)
+               
+    # To control output grid in same units as output EPSG
+    y_snap: num(min=0, required=False)
+               
+    top_left:    
+        # Set top-left y in same units as output EPSG
+        y_abs: num(required=False)
+       
+        # Set top-left x in same units as output EPSG
+        x_abs: num(required=False)
+               
+    bottom_right:  
+        # Set bottom-right y in same units as output EPSG
+        y_abs: num(required=False)
+       
+        # Set bottom-right x in same units as output EPSG
+        x_abs: num(required=False)
 
 geo2rdr_options:
     threshold: num(min=1.0e-9, max=1.0e-3, required=False)

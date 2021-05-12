@@ -167,7 +167,7 @@ runconfig:
 
             radar_grid_cubes: 
     
-                # # List heights in meters
+                # List of heights in meters
                 heights: 
 
                 # OPTIONAL - Same as the geocode group outputEPSG if not provided

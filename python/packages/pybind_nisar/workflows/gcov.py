@@ -89,12 +89,6 @@ def run(cfg):
     # init parameters shared between frequencyA and frequencyB sub-bands
     slc = SLC(hdf5file=input_hdf5)
     dem_raster = isce3.io.Raster(dem_file)
-    native_doppler = slc.getDopplerCentroid()
-    '''
-    bounds error are turned off for the native Doppler because of
-    some issue when computing geo2rdr() in makeRadarGridCubes().
-    ''' 
-    native_doppler.bounds_error = False
     zero_doppler = isce3.core.LUT2d()
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)
@@ -378,7 +372,12 @@ def run(cfg):
                 epsg=radar_grid_cubes_geogrid.epsg)
 
             cube_group_name = '/science/LSAR/GCOV/metadata/radarGrid'
-
+            native_doppler = slc.getDopplerCentroid()
+            '''
+            The native-Doppler LUT bounds error is turned off to
+            computer cubes values outside radar-grid boundaries
+            '''
+            native_doppler.bounds_error = False
             add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, 
                                          cube_geogrid, radar_grid_cubes_heights, 
                                          radar_grid, orbit, native_doppler, 

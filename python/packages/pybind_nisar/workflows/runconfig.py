@@ -274,5 +274,4 @@ class RunConfig:
         self.prep_paths()
         self.prep_frequency_and_polarizations()
         self.prep_geocode_cfg()
-        if self.workflow_name == 'gcov':
-            self.prep_cubes_geocode_cfg()
+        self.prep_cubes_geocode_cfg()
