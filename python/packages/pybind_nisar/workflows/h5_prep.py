@@ -26,7 +26,7 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
 
     # dict keying product type with list with possible product type(s)
     insar_products = ['RIFG', 'RUNW', 'GUNW']
-    product_dict = {'POLAR': insar_products,
+    product_dict = {'RIFG_RUNW_GUNW': insar_products,
                     'GUNW': insar_products,
                     'RUNW': insar_products[:-1],
                     'RIFG': [insar_products[0]],
@@ -38,7 +38,7 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
     insar_path = lambda out_path, product: \
         os.path.join(os.path.dirname(out_path),
                      product + '_' + os.path.basename(out_path))
-    h5_paths = {'POLAR': dict(zip(insar_products,
+    h5_paths = {'RIFG_RUNW_GUNW': dict(zip(insar_products,
                                   [insar_path(output_path, product) for product
                                    in insar_products])),
                 'GUNW': {'RIFG': f'{scratch}/RIFG.h5',

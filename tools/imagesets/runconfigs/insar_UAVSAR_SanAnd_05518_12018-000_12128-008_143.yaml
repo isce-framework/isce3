@@ -27,7 +27,7 @@ runconfig:
             SASOutputFile: output_insar/gunw.h5
 
         PrimaryExecutable:
-            ProductType: POLAR
+            ProductType: RIFG_RUNW_GUNW
 
         DebugLevelGroup:
             DebugSwitch: false

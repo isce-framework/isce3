@@ -23,12 +23,12 @@ runconfig:
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            # In POLAR mode, GUNW, RIFG, and RUNW will be prepended to SASOutputFile
+            # In INSAR mode, GUNW, RIFG, and RUNW will be prepended to SASOutputFile
             SASOutputFile: str()
 
         PrimaryExecutable:
-            # POLAR will produce full GUNW, RIFG, and RUNW HDF5 products
-            ProductType: enum('GUNW', 'RIFG', 'RUNW', 'POLAR')
+            # RIFG_RUNW_GUNW will produce all three InSAR products
+            ProductType: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW')
 
         DebugLevelGroup:
             DebugSwitch: bool()
