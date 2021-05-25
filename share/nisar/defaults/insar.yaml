@@ -212,6 +212,59 @@ runconfig:
                 # Number of offset estimates to process in batch along azimuth
                 windows_batch_azimuth: 1
 
+            rubbersheet:
+                # Path to dense offsets outputs (offsets, snr, covariance).
+                # Not required as InSAR workflow allows using intermediate outputs
+                # from previous steps (not user-specified)
+                dense_offsets_path:
+                # Path to geo2rdr offsets
+                geo2rdr_offsets_path:
+                # Flag to enable/disable rubbersheet step
+                enabled: True
+                # Metric used to identify offsets outliers
+                culling_metric: median_filter
+                # Size of median and moving average filter in range. Median filter is used
+                # for offset outlier identification. Moving average is used to smooth the
+                # culled offset field prior to interferogram formation
+                median_filter_size_range: 9
+                # Size of median and moving average filter in azimuth (see above)
+                median_filter_size_azimuth: 9
+                # Threshold for outlier identification. Depends on "culling_metric".
+                # SNR: offsets with SNR below threshold are identified as outliers
+                # Covariance: offsets with range/azimuth covariance above threshold are outliers
+                # Median filter: offsets with median absolute deviation above thresholds are outliers
+                threshold: 0.5
+                # Flag to enable mask refinement The intent of this refinement is to remove
+                # noisy spots on 1-2 pixels after the first outlier identification.
+                # The refinement is performed by thresholding the median absolute deviation of
+                # the offsets where outlier locations have been filled with zeros
+                mask_refine_enabled: True
+                # Threshold for outlier refinement mask computation
+                mask_refine_threshold: 0.5
+                # Size of median filter in range and azimuth for outlier mask refinement
+                mask_refine_filter_size: 3
+                # Method to fill data holes left by outliers culling:
+                # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
+                # nearest_neighbor: Fill holes with nearest neighbor interpolation
+                outlier_filling_method: fill_smoothed
+                fill_smoothed:
+                    # Number of fill smoothed iterations
+                    iterations: 1
+                    # Size of the neighborhood to look for smoothed values
+                    kernel_size: 3
+                # Interpolation method. Interpolation is used to fill residual outlier
+                # holes if present
+                interpolation_method: linear
+                # It is good practice to filter the offsets prior to interferogram
+                # formation to reduce noise. We expose: no_filter: do not filter the offsets/
+                # degrade offsets resolution. median_filter, boxcar_filter (moving average),
+                # gaussian_filter
+                offsets_filter: boxcar
+                boxcar:
+                    # Filter size (median/boxcar) in slant range
+                    filter_size_range: 5
+                    filter_size_azimuth: 5
+
             crossmul:
                 range_looks: 11
                 azimuth_looks: 11

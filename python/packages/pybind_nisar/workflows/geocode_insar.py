@@ -98,6 +98,12 @@ def run(cfg, runw_hdf5, output_hdf5):
                     if not geocode_this_dataset:
                         continue
 
+                    if dataset_name in ['alongTrackOffset','slantRangeOffset']:
+                        src_group_path = f"/science/LSAR/RUNW/swaths/frequency{freq}/pixelOffsets/{pol}"
+                        dst_group_path = f"/science/LSAR/GUNW/grids/frequency{freq}/pixelOffsets/{pol}"
+
+                    # prepare input raster
+
                     if (dataset_name == "layoverShadowMask"):
                         # prepare input raster
                         raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'mask.rdr'
@@ -118,6 +124,7 @@ def run(cfg, runw_hdf5, output_hdf5):
                         geo.data_interpolator = interp_method
                         radar_grid = radar_grid_multilook
                         dataset_path = f"{dst_group_path}/{dataset_name}"
+
 
                     geocoded_dataset = dst_h5[dataset_path]
 
@@ -166,6 +173,7 @@ def run(cfg, runw_hdf5, output_hdf5):
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
+
 
 
 if __name__ == "__main__":

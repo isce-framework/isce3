@@ -14,6 +14,7 @@ pybind_nisar/workflows/process_args.py
 pybind_nisar/workflows/point_target_info.py
 pybind_nisar/workflows/rdr2geo.py
 pybind_nisar/workflows/resample_slc.py
+pybind_nisar/workflows/rubbersheet.py
 pybind_nisar/workflows/unwrap.py
 pybind_nisar/workflows/antenna_parser.py
 )
@@ -21,6 +22,7 @@ pybind_nisar/workflows/antenna_parser.py
 if(WITH_CUDA)
     list(APPEND TESTFILES
             pybind_nisar/workflows/dense_offsets.py
+            pybind_nisar/workflows/rubbersheet.py
             pybind_nisar/workflows/cuda_insar.py
         )
 endif()
@@ -44,6 +46,8 @@ set_tests_properties(test.python.pkg.pybind_nisar.workflows.resample_slc PROPERT
              DEPENDS test.python.pkg.pybind_nisar.workflows.geo2rdr)
 if(WITH_CUDA)
     set_tests_properties(test.python.pkg.pybind_nisar.workflows.dense_offsets PROPERTIES
+                 DEPENDS test.python.pkg.pybind_nisar.workflows.cuda_insar)
+    set_tests_properties(test.python.pkg.pybind_nisar.workflows.rubbersheet PROPERTIES
                  DEPENDS test.python.pkg.pybind_nisar.workflows.cuda_insar)
 endif()
 set_tests_properties(test.python.pkg.pybind_nisar.workflows.crossmul PROPERTIES

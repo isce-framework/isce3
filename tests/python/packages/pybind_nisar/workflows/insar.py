@@ -40,6 +40,10 @@ def test_insar_run():
         persist = Persistence(restart=True)
         persist.run_steps['dense_offsets'] = False
 
+        # No CPU dense_offsets at the moment. Turn off
+        # rubbersheet otherwise insar.py will fail
+        persist.run_steps['rubbersheet'] = False
+
         # run insar for prod_type
         insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
 

@@ -119,6 +119,8 @@ runconfig:
 
             dense_offsets: include('dense_offsets_options', required=False)
 
+            rubbersheet: include('rubbersheet_options', required=False)
+
             crossmul: include('crossmul_options', required=False)
 
             # Required for RUNW and full InSAR
@@ -222,6 +224,70 @@ dense_offsets_options:
     windows_batch_range: int(min=1, required=False)
     # Number of offset estimates to process in batch along azimuth
     windows_batch_azimuth: int(min=1, required=False)
+
+rubbersheet_options:
+    # Path to dense offsets outputs (offsets, snr, covariance).
+    # Not required as InSAR workflow allows using intermediate outputs
+    # from previous steps (not user-specified)
+    dense_offsets_path: str(required=False)
+    # Path to geo2rdr offset path
+    geo2rdr_offsets_path: str(required=False)
+    # Flag to enable/disable rubbersheet step
+    enabled: bool(required=False)
+    # Metric used to identify offsets outliers
+    culling_metric: enum('snr', 'median_filter', 'covariance', required=False)
+    # Size of median filter in range. Median filter is used
+    # for offset outlier identification.
+    median_filter_size_range: int(min=3, required=False)
+    # Size of median filter in azimuth (see above)
+    median_filter_size_azimuth: int(min=3, required=False)
+    # Threshold for outlier identification. Depends on "culling_metric".
+    # SNR: offsets with SNR below threshold are identified as outliers
+    # Covariance: offsets with range/azimuth covariance above threshold are outliers
+    # Median filter: offsets with median absolute deviation above thresholds are outliers
+    threshold: num(min=0, required=False)
+    # Flag to enable mask refinement The intent of this refinement is to remove
+    # noisy spots on 1-2 pixels after the first outlier identification.
+    # The refinement is performed by thresholding the median absolute deviation of
+    # the offsets where outlier locations have been filled with zeros
+    mask_refine_enabled: bool(required=False)
+    # Threshold for outlier refinement mask computation
+    mask_refine_threshold: num(min=0, required=False)
+    # Size of median filter in range and azimuth for outlier mask refinement
+    mask_refine_filter_size: int(min=3, max=7, required=False)
+    # Method to fill data holes left by outliers culling:
+    # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
+    # nearest_neighbor: Fill holes with nearest neighbor interpolation
+    outlier_filling_method: enum('fill_smoothed', 'nearest_neighbor', required=False)
+    # Fill smoothed option
+    fill_smoothed: include('fill_smoothed_options', required=False)
+    # Interpolation method. Interpolation is used to fill residual
+    # outlier holes (if present)
+    interpolation_method: enum('nearest', 'linear', 'cubic', required=False)
+    # It is good practice to filter the offsets prior to interferogram
+    # formation to reduce noise. We expose: no_filter: do not filter the offsets/
+    # degrade offsets resolution. median_filter, boxcar_filter (moving average),
+    # gaussian_filter
+    offsets_filter: enum('none', 'median', 'boxcar', 'gaussian', required=False)
+    median: include('offset_filter_options', required=False)
+    boxcar: include('offset_filter_options', required=False)
+    gaussian: include('gaussian_filter_options', required=False)
+
+fill_smoothed_options:
+    # Number of fill smoothed iterations
+    iterations: int(min=1, required=False)
+    # Size of neighborhood where to look for smoothed values
+    kernel_size: int(min=3, required=False)
+
+offset_filter_options:
+    # Filter size (median/boxcar) in slant range
+    filter_size_range: int(min=3, required=False)
+    # Filter size (median/boxcar) in azimuth
+    filter_size_azimuth: int(min=3, required=False)
+
+gaussian_filter_options:
+    # Gaussian filter standard deviation
+    sigma: int(min=0, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs

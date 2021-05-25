@@ -46,7 +46,8 @@ class GeocodeInsarRunConfig(RunConfig):
             self.cfg['processing']['geocode']['datasets'] = {}
 
         # default to True for datasets not found
-        gunw_datasets = ["connectedComponents", "coherenceMagnitude", "unwrappedPhase", "layoverShadowMask"]
+        gunw_datasets = ["connectedComponents", "coherenceMagnitude", "unwrappedPhase",
+                         "alongTrackOffset", "slantRangeOffset", "layoverShadowMask"]
         for gunw_dataset in gunw_datasets:
             if gunw_dataset not in self.cfg['processing']['geocode']:
                 self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True
