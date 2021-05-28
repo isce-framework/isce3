@@ -9,11 +9,15 @@ core/gpuPoly2d.cu
 core/gpuProjections.cu
 core/gpuSinc2dInterpolator.cu
 core/gpuSpline2dInterpolator.cu
+core/InterpolatorHandle.cu
 core/Orbit.cu
+core/ProjectionBaseHandle.cu
 core/Stream.cu
 except/Error.cpp
 focus/Backproject.cu
 fft/detail/CufftWrapper.cu
+geocode/Geocode.cu
+geocode/MaskedMinMax.cu
 geometry/Geo2rdr.cpp
 geometry/gpuDEMInterpolator.cu
 geometry/gpuGeo2rdr.cu

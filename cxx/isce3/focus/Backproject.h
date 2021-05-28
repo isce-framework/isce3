@@ -2,6 +2,8 @@
 
 #include <isce3/container/forward.h>
 #include <isce3/core/forward.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 #include <isce3/geometry/forward.h>
 
 #include <complex>
@@ -10,18 +12,6 @@
 
 namespace isce3 {
 namespace focus {
-
-struct Rdr2GeoParams {
-    double threshold = 1e-8;
-    int maxiter = 25;
-    int extraiter = 15;
-};
-
-struct Geo2RdrParams {
-    double threshold = 1e-8;
-    int maxiter = 50;
-    double delta_range = 10.;
-};
 
 /**
  * Focus in azimuth via time-domain backprojection
@@ -47,8 +37,8 @@ void backproject(std::complex<float>* out,
                  double ds,
                  const isce3::core::Kernel<float>& kernel,
                  DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
-                 const Rdr2GeoParams& r2g_params = {},
-                 const Geo2RdrParams& g2r_params = {});
+                 const isce3::geometry::detail::Rdr2GeoParams& r2g_params = {},
+                 const isce3::geometry::detail::Geo2RdrParams& g2r_params = {});
 
 } // namespace focus
 } // namespace isce3

@@ -132,7 +132,7 @@ rdr2geo(isce3::core::Vec3* llh, const isce3::core::Pixel& pixel,
         // check for convergence
         const auto r = (pos - xyz_new).norm();
         const auto dr = std::abs(pixel.range() - r);
-        if (dr < params.tol) {
+        if (dr < params.threshold) {
             converged = true;
             break;
         }

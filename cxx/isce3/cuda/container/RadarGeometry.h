@@ -73,6 +73,9 @@ public:
     /** Get radar look side */
     LookSide lookSide() const { return radarGrid().lookSide(); }
 
+    /** Get radar wavelength */
+    double wavelength() const { return radarGrid().wavelength(); }
+
 private:
     RadarGridParameters _radar_grid;
     DeviceOrbit _orbit;

@@ -11,13 +11,13 @@ namespace isce3 { namespace geometry { namespace detail {
 /** \internal Root-finding configuration parameters for geo2rdr */
 struct Geo2RdrParams {
     /** \internal Absolute slant range convergence tolerance (m) */
-    double tol = 1e-8;
+    double threshold = 1e-8;
 
     /** \internal Maximum number of Newton-Raphson iterations */
     int maxiter = 50;
 
     /** \internal Step size for computing numerical gradient of Doppler (m) */
-    double dr = 10.;
+    double delta_range = 10.;
 };
 
 /**

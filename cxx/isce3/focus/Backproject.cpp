@@ -68,8 +68,8 @@ void backproject(std::complex<float>* out,
                  double ds,
                  const Kernel<float>& kernel,
                  DryTroposphereModel dry_tropo_model,
-                 const Rdr2GeoParams& r2g_params,
-                 const Geo2RdrParams& g2r_params)
+                 const isce3::geometry::detail::Rdr2GeoParams& r2g_params,
+                 const isce3::geometry::detail::Geo2RdrParams& g2r_params)
 {
     static constexpr double c = isce3::core::speed_of_light;
     static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();

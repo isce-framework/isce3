@@ -53,6 +53,7 @@ if(WITH_CUDA)
         cuda/core/compute_capability.py
         cuda/core/device.py
         cuda/focus/backproject.py
+        cuda/geocode/geocode.py
         cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py
         cuda/image/resamp.py

@@ -19,6 +19,7 @@ core/stream/stream.cu
 except/checkCudaErrors.cu
 fft/cuda-fft.cu
 fft/cuda-fftplan.cu
+geocode/MaskedMinMax.cu
 geometry/geo2rdr/gpuGeo2rdr.cpp
 geometry/geometry/gpuGeometry.cpp
 geometry/topo/gpuTopo.cpp

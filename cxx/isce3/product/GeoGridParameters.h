@@ -6,6 +6,7 @@
 
 #include <pyre/journal.h>
 
+#include <isce3/core/Common.h>
 #include <isce3/core/Constants.h>
 
 #include "RadarGridParameters.h"
@@ -63,25 +64,25 @@ public:
     void epsg(int e) { _epsg = e; };
 
     /** Get start x position for geocoded grid */
-    double startX() const { return _startX; };
+    CUDA_HOSTDEV constexpr double startX() const { return _startX; };
 
     /** Get start y position for geocoded grid */
-    double startY() const { return _startY; };
+    CUDA_HOSTDEV constexpr double startY() const { return _startY; };
 
     /** Get x spacing for geocoded grid */
-    double spacingX() const { return _spacingX; };
+    CUDA_HOSTDEV constexpr double spacingX() const { return _spacingX; };
 
     /** Get y spacing for geocoded grid */
-    double spacingY() const { return _spacingY; };
+    CUDA_HOSTDEV constexpr double spacingY() const { return _spacingY; };
 
     /** Get number of pixels in east-west/x direction for geocoded grid */
-    int width() const { return _width; };
+    CUDA_HOSTDEV constexpr int width() const { return _width; };
 
     /** Get number of pixels in north-south/y direction for geocoded grid */
-    int length() const { return _length; };
+    CUDA_HOSTDEV constexpr int length() const { return _length; };
 
     /** Get epsg code for geocoded grid */
-    int epsg() const { return _epsg; };
+    CUDA_HOSTDEV constexpr int epsg() const { return _epsg; };
 
 protected:
     /** start X position for the geocoded grid */

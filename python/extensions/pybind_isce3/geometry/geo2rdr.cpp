@@ -15,6 +15,7 @@
 #include <isce3/core/Vector.h>
 #include <isce3/focus/Backproject.h>
 #include <isce3/geometry/geometry.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
@@ -66,7 +67,7 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
 
 void addbinding_geo2rdr(pybind11::module& m)
 {
-    const isce3::focus::Geo2RdrParams defaults;
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("geo2rdr",
         [](const Vec3& lon_lat_height, const Ellipsoid& ellipsoid, const Orbit& orbit,
             const LUT2d<double>& doppler, double wavelength, py::object py_side,

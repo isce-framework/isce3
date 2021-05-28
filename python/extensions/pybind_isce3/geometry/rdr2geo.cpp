@@ -17,10 +17,11 @@
 #include <isce3/focus/Backproject.h> // TODO better place for defaults
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
-using isce3::focus::Rdr2GeoParams;
+using isce3::geometry::detail::Rdr2GeoParams;
 using isce3::geometry::DEMInterpolator;
 using isce3::geometry::Topo;
 
