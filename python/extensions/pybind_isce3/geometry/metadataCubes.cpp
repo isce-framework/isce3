@@ -14,6 +14,7 @@ void addbinding_metadata_cubes(py::module & m)
     m.def("make_radar_grid_cubes", &isce3::geometry::makeRadarGridCubes,
           py::arg("radar_grid"), py::arg("geogrid"), py::arg("heights"),
           py::arg("orbit"), py::arg("native_doppler"), py::arg("grid_doppler"),
+          py::arg("epsg_los_and_along_track_vectors") = 0,
           py::arg("slant_range_raster") = nullptr,
           py::arg("azimuth_time_raster") = nullptr,
           py::arg("incidence_angle_raster") = nullptr,
@@ -45,8 +46,9 @@ void addbinding_metadata_cubes(py::module & m)
              high-resolution maps of the corresponding radar geometry variable.
 
              The line-of-sight (LOS) and along-track unit vectors are referenced to
-             the projection defined by the geogrid EPSG code. In case the EPSG code
-             is equal to 4326, ENU coordinates wrt targets are used instead.
+             the projection defined by the epsg_los_and_along_track_vectors code. 
+             In the case of ENU, i.e. epsg_los_and_along_track_vectors equals to 0 
+             or 4326, ENU coordinates are computed wrt targets.
 
         Parameters
         ----------
@@ -62,6 +64,9 @@ void addbinding_metadata_cubes(py::module & m)
                   Native image Doppler
               grid_doppler : isce3.core.LUT2d
                   Grid Doppler
+              epsg_los_and_along_track_vectors : int, optional
+                  EPSG code for LOS and along-track unit vectors 
+                  (0 or 4326 for ENU coordinates)
               slant_range_raster : isce3.io.Raster, optional
                   Slant-range (in meters) cube raster
               azimuth_time_raster : isce3.io.Raster, optional
@@ -95,6 +100,7 @@ void addbinding_metadata_cubes(py::module & m)
         py::arg("native_doppler"),
         py::arg("grid_doppler"),
         py::arg("epsg"),
+        py::arg("epsg_los_and_along_track_vectors") = 0, 
         py::arg("coordinate_x_raster") = nullptr,
         py::arg("coordinate_y_raster") = nullptr,
         py::arg("incidence_angle_raster") = nullptr,
@@ -127,8 +133,9 @@ void addbinding_metadata_cubes(py::module & m)
            high-resolution maps of the corresponding radar geometry variable.
 
            The line-of-sight (LOS) and along-track unit vectors are referenced to
-           the projection defined by the EPSG code. In case the EPSG code
-           is equal to 4326, ENU coordinates wrt targets are used instead.
+           the projection defined by the epsg_los_and_along_track_vectors code. 
+           In the case of ENU, i.e. epsg_los_and_along_track_vectors equals to 0 
+           or 4326, ENU coordinates are computed wrt targets.
 
         Parameters
         ----------
@@ -144,6 +151,9 @@ void addbinding_metadata_cubes(py::module & m)
                   Grid Doppler
               epsg : int
                   Output geolocation EPSG
+              epsg_los_and_along_track_vectors : int, optional
+                  EPSG code for LOS and along-track unit vectors 
+                  (0 or 4326 for ENU coordinates)
               coordinate_x_raster : isce3.io.Raster, optional
                  Geolocation coordinate X raster
               coordinate_y_raster : isce3.io.Raster, optional

@@ -19,7 +19,8 @@ namespace isce3 { namespace geometry {
  * projection system
  * @param[in]  orbit                            Reference orbit
  * @param[in]  ellipsoid                        Reference ellipsoid
- * @param[in]  proj                             Output projection
+ * @param[in]  proj_los_and_along_track_vectors ProjectionBase object for 
+ * representing LOS and along-track unit vectors
  * @param[out] incidence_angle_raster           Incidence angle cube raster
  * @param[out] incidence_angle_array            Incidence angle cube array
  * @param[out] los_unit_vector_x_raster         LOS (target-to-sensor) unit 
@@ -42,7 +43,7 @@ static inline void writeVectorDerivedCubes(
         const double native_azimuth_time, const isce3::core::Vec3& target_llh,
         const isce3::core::Vec3& target_proj, const isce3::core::Orbit& orbit,
         const isce3::core::Ellipsoid& ellipsoid,
-        const isce3::core::ProjectionBase* proj,
+        const isce3::core::ProjectionBase* proj_los_and_along_track_vectors,
         isce3::io::Raster* incidence_angle_raster,
         isce3::core::Matrix<float>& incidence_angle_array,
         isce3::io::Raster* los_unit_vector_x_raster,
@@ -78,8 +79,9 @@ static inline void writeVectorDerivedCubes(
  * high-resolution maps of the corresponding radar geometry variable.
  * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
- * the projection defined by the geogrid EPSG code. In case the EPSG code
- * is equal to 4326, ENU coordinates wrt targets are used instead.
+ * the projection defined by the epsg_los_and_along_track_vectors code. 
+ * In the case of ENU, i.e. epsg_los_and_along_track_vectors equals to 0 
+ * or 4326, ENU coordinates are computed wrt targets.
  *
  * @param[in]  radar_grid                  Radar grid
  * @param[in]  geogrid                     Geogrid to be
@@ -87,7 +89,9 @@ static inline void writeVectorDerivedCubes(
  * @param[in]  heights                     Cube heights [m]
  * @param[in]  orbit                       Reference orbit
  * @param[in]  native_doppler              Native image Doppler
- * @param[in]  grid_doppler                Grid Doppler.
+ * @param[in]  grid_doppler                Grid Doppler
+ * @param[in]  epsg_los_and_along_track_vectors EPSG code for LOS and 
+ * along-track unit vectors (0 or 4326 for ENU coordinates)
  * @param[out] slant_range_raster          Slant-range (in meters) 
  * cube raster
  * @param[out] azimuth_time_raster         Azimuth time (in seconds) 
@@ -115,6 +119,7 @@ void makeRadarGridCubes(
         const std::vector<double>& heights, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& native_doppler,
         const isce3::core::LUT2d<double>& grid_doppler,
+        const int epsg_los_and_along_track_vectors = 0,
         isce3::io::Raster* slant_range_raster = nullptr,
         isce3::io::Raster* azimuth_time_raster = nullptr,
         isce3::io::Raster* incidence_angle_raster = nullptr,
@@ -147,8 +152,9 @@ void makeRadarGridCubes(
  * high-resolution maps of the corresponding radar geometry variable.
  * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
- * the projection defined by the EPSG code. In case the EPSG code
- * is equal to 4326, ENU coordinates wrt targets are used instead.
+ * the projection defined by the epsg_los_and_along_track_vectors code. 
+ * In the case of ENU, i.e. epsg_los_and_along_track_vectors equals to 0 
+ * or 4326, ENU coordinates are computed wrt targets.
  *
  * @param[in]  radar_grid                Cube radar grid
  * @param[in]  heights                   Cube heights
@@ -156,6 +162,8 @@ void makeRadarGridCubes(
  * @param[in]  native_doppler            Native image Doppler
  * @param[in]  grid_doppler              Grid Doppler.
  * @param[in]  epsg                      Output geolocation EPSG
+ * @param[in]  epsg_los_and_along_track_vectors EPSG code for LOS and 
+ * along-track unit vectors (0 or 4326 for ENU coordinates)
  * @param[out] coordinate_x_raster       Geolocation coordinate X raster
  * @param[out] coordinate_y_raster       Geolocation coordinage Y raster
  * @param[out] incidence_angle_raster    Incidence angle (in degrees wrt 
@@ -180,7 +188,7 @@ void makeGeolocationGridCubes(
         const std::vector<double>& heights, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& native_doppler,
         const isce3::core::LUT2d<double>& grid_doppler,
-        const int epsg,
+        const int epsg, const int epsg_los_and_along_track_vectors = 0,
         isce3::io::Raster* coordinate_x_raster = nullptr,
         isce3::io::Raster* coordinate_y_raster = nullptr,
         isce3::io::Raster* incidence_angle_raster = nullptr,

@@ -1092,11 +1092,12 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
     return yds, xds
 
 
-def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights,
-                                 radar_grid,
-                                 orbit, native_doppler, grid_doppler,
+def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, 
+                                 heights, radar_grid, orbit, 
+                                 native_doppler, grid_doppler,
                                  threshold_geo2rdr=1e-8,
-                                 numiter_geo2rdr=100, delta_range=1e-8):
+                                 numiter_geo2rdr=100, delta_range=1e-8,
+                                 epsg_los_and_along_track_vectors=0):
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)
     else:
@@ -1105,8 +1106,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights,
     cube_shape = [len(heights), geogrid.length, geogrid.width]
 
     zds, yds, xds = set_get_geo_info(hdf5_obj, cube_group_name, geogrid,
-                                     z_vect=heights,
-                                     flag_cube=True)
+                                     z_vect=heights, flag_cube=True)
 
     # seconds since ref epoch
     ref_epoch = radar_grid.ref_epoch
@@ -1168,6 +1168,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, heights,
                                          orbit,
                                          native_doppler,
                                          grid_doppler,
+                                         epsg_los_and_along_track_vectors,
                                          slant_range_raster,
                                          azimuth_time_raster,
                                          incidence_angle_raster,
@@ -1231,10 +1232,11 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
 
 
 def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
-                                       heights,
-                                       orbit, native_doppler, grid_doppler,
-                                       epsg, threshold_geo2rdr=1e-8,
-                                       numiter_geo2rdr=100, delta_range=1e-8):
+                                       heights, orbit, native_doppler, 
+                                       grid_doppler, epsg,
+                                       threshold_geo2rdr=1e-8,
+                                       numiter_geo2rdr=100, delta_range=1e-8, 
+                                       epsg_los_and_along_track_vectors=0):
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)
     else:
@@ -1307,6 +1309,7 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
                                           native_doppler,
                                           grid_doppler,
                                           epsg,
+                                          epsg_los_and_along_track_vectors,
                                           coordinate_x_raster,
                                           coordinate_y_raster,
                                           incidence_angle_raster,

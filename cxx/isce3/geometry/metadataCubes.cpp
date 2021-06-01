@@ -64,7 +64,7 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
         const isce3::core::Vec3& target_llh,
         const isce3::core::Vec3& target_proj, const isce3::core::Orbit& orbit,
         const isce3::core::Ellipsoid& ellipsoid,
-        const isce3::core::ProjectionBase* proj,
+        const isce3::core::ProjectionBase* proj_los_and_along_track_vectors,
         isce3::io::Raster* incidence_angle_raster,
         isce3::core::Matrix<float>& incidence_angle_array,
         isce3::io::Raster* los_unit_vector_x_raster,
@@ -132,8 +132,8 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
     }
 
 
-    // If lat/lon, compute vectors in ENU coordinates around target
-    if (proj->code() == 4326) {
+    // If null, compute vectors in ENU coordinates around target
+    if (proj_los_and_along_track_vectors == nullptr) {
 
         // LOS unit vector X (ENU)
         if (los_unit_vector_x_raster != nullptr) {
@@ -173,7 +173,7 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
         const isce3::core::Vec3 target_to_sat_next_llh = 
             ellipsoid.xyzToLonLat(target_to_sat_next_xyz);
         isce3::core::Vec3 target_to_sat_next_proj = 
-            proj->forward(target_to_sat_next_llh);
+            proj_los_and_along_track_vectors->forward(target_to_sat_next_llh);
         const isce3::core::Vec3 look_vector_proj =
                 (target_to_sat_next_proj - target_proj).normalized();
 
@@ -233,11 +233,13 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
         // Compute velocity vector (proj)
         const isce3::core::Vec3 sat_next_llh =
                 ellipsoid.xyzToLonLat(sat_next_xyz);
-        const isce3::core::Vec3 sat_next_proj = proj->forward(sat_next_llh);
+        const isce3::core::Vec3 sat_next_proj = 
+            proj_los_and_along_track_vectors->forward(sat_next_llh);
 
         const isce3::core::Vec3 sat_previous_llh =
                 ellipsoid.xyzToLonLat(sat_xyz_previous);
-        const isce3::core::Vec3 sat_previous_proj = proj->forward(sat_previous_llh);
+        const isce3::core::Vec3 sat_previous_proj = 
+            proj_los_and_along_track_vectors->forward(sat_previous_llh);
 
         const isce3::core::Vec3 along_track_unit_vector =
                 (sat_next_proj - sat_previous_proj).normalized();
@@ -262,6 +264,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                         const isce3::core::Orbit& orbit,
                         const isce3::core::LUT2d<double>& native_doppler,
                         const isce3::core::LUT2d<double>& grid_doppler,
+                        const int epsg_los_and_along_track_vectors,
                         isce3::io::Raster* slant_range_raster,
                         isce3::io::Raster* azimuth_time_raster,
                         isce3::io::Raster* incidence_angle_raster,
@@ -286,6 +289,12 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
     for (int height_count = 0; height_count < heights.size(); ++height_count) {
 
         auto proj = isce3::core::makeProjection(geogrid.epsg());
+        std::unique_ptr<ProjectionBase>
+            proj_los_and_along_track_vectors =
+                (epsg_los_and_along_track_vectors == 0 or
+                 epsg_los_and_along_track_vectors == 4326) ?
+                 nullptr :
+                 isce3::core::makeProjection(epsg_los_and_along_track_vectors);
 
         const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
 
@@ -377,10 +386,10 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
 
                 isce3::geometry::writeVectorDerivedCubes(
                         i, j, native_azimuth_time, target_llh, target_proj,
-                        orbit, ellipsoid, proj.get(), incidence_angle_raster,
-                        incidence_angle_array, los_unit_vector_x_raster,
-                        los_unit_vector_x_array, los_unit_vector_y_raster,
-                        los_unit_vector_y_array,
+                        orbit, ellipsoid, proj_los_and_along_track_vectors.get(), 
+                        incidence_angle_raster, incidence_angle_array, 
+                        los_unit_vector_x_raster, los_unit_vector_x_array, 
+                        los_unit_vector_y_raster, los_unit_vector_y_array,
                         along_track_unit_vector_x_raster,
                         along_track_unit_vector_x_array,
                         along_track_unit_vector_y_raster,
@@ -448,6 +457,7 @@ void makeGeolocationGridCubes(
         const std::vector<double>& heights, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& native_doppler,
         const isce3::core::LUT2d<double>& grid_doppler, const int epsg,
+        const int epsg_los_and_along_track_vectors,
         isce3::io::Raster* coordinate_x_raster,
         isce3::io::Raster* coordinate_y_raster,
         isce3::io::Raster* incidence_angle_raster,
@@ -471,8 +481,14 @@ void makeGeolocationGridCubes(
     for (int height_count = 0; height_count < heights.size(); ++height_count) {
 
         auto proj = isce3::core::makeProjection(epsg);
-                
         const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
+
+        std::unique_ptr<ProjectionBase>
+            proj_los_and_along_track_vectors =
+                (epsg_los_and_along_track_vectors == 0 or
+                 epsg_los_and_along_track_vectors == 4326) ?
+                 nullptr :
+                 isce3::core::makeProjection(epsg_los_and_along_track_vectors);
 
         auto coordinate_x_array = 
                 getNanArrayRadarGrid<double>(coordinate_x_raster, radar_grid);
@@ -561,7 +577,7 @@ void makeGeolocationGridCubes(
 
                 writeVectorDerivedCubes(
                         i, j, native_azimuth_time, target_llh, target_proj,
-                        orbit, ellipsoid, proj.get(),
+                        orbit, ellipsoid, proj_los_and_along_track_vectors.get(),
                         incidence_angle_raster, incidence_angle_array,
                         los_unit_vector_x_raster, los_unit_vector_x_array,
                         los_unit_vector_y_raster, los_unit_vector_y_array,
