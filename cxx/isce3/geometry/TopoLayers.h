@@ -1,15 +1,10 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Bryan V. Riel, Joshua Cohen
-// Copyright 2017-2018
-
 #pragma once
 
 #include "forward.h"
 
 #include <valarray>
 #include <string>
+
 #include <isce3/io/Raster.h>
 
 class isce3::geometry::TopoLayers {
@@ -89,9 +84,9 @@ class isce3::geometry::TopoLayers {
                 GDT_Float32, "ISCE");
             _simRaster = new isce3::io::Raster(outdir + "/simamp.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
-       
+
             // Optional mask raster
-            if (computeMask) { 
+            if (computeMask) {
                 _maskRaster = new isce3::io::Raster(outdir + "/mask.rdr", width, length, 1,
                     GDT_Byte, "ISCE");
             } else {
@@ -149,36 +144,36 @@ class isce3::geometry::TopoLayers {
         std::valarray<float> & sim() { return _sim; }
         std::valarray<short> & mask() { return _mask; }
         std::valarray<double> & crossTrack() { return _crossTrack; }
-        
+
         // Set values for a single index
         void x(size_t row, size_t col, double value) {
             _x[row*_width+col] = value;
         }
-        
+
         void y(size_t row, size_t col, double value) {
             _y[row*_width + col] = value;
         }
-        
+
         void z(size_t row, size_t col, double value) {
             _z[row*_width + col] = value;
         }
-        
+
         void inc(size_t row, size_t col, float value) {
             _inc[row*_width + col] = value;
         }
-        
+
         void hdg(size_t row, size_t col, float value) {
             _hdg[row*_width + col] = value;
         }
-        
+
         void localInc(size_t row, size_t col, float value) {
             _localInc[row*_width + col] = value;
         }
-        
+
         void localPsi(size_t row, size_t col, float value) {
             _localPsi[row*_width + col] = value;
         }
-    
+
         void sim(size_t row, size_t col, float value) {
             _sim[row*_width + col] = value;
         }
@@ -195,31 +190,31 @@ class isce3::geometry::TopoLayers {
         double x(size_t row, size_t col) const {
             return _x[row*_width+col];
         }
-        
+
         double y(size_t row, size_t col) const {
             return _y[row*_width + col];
         }
-        
+
         double z(size_t row, size_t col) const {
             return _z[row*_width + col];
         }
-        
+
         float inc(size_t row, size_t col) const {
             return _inc[row*_width + col];
         }
-        
+
         float hdg(size_t row, size_t col) const {
             return _hdg[row*_width + col];
         }
-        
+
         float localInc(size_t row, size_t col) const {
             return _localInc[row*_width + col];
         }
-        
+
         float localPsi(size_t row, size_t col) const {
             return _localPsi[row*_width + col];
         }
-    
+
         float sim(size_t row, size_t col) const {
             return _sim[row*_width + col];
         }
@@ -233,20 +228,8 @@ class isce3::geometry::TopoLayers {
         }
 
         // Write data with rasters
-        void writeData(size_t xidx, size_t yidx) {
-            _xRaster->setBlock(_x, xidx, yidx, _width, _length);
-            _yRaster->setBlock(_y, xidx, yidx, _width, _length);
-            _zRaster->setBlock(_z, xidx, yidx, _width, _length);
-            _incRaster->setBlock(_inc, xidx, yidx, _width, _length);
-            _hdgRaster->setBlock(_hdg, xidx, yidx, _width, _length);
-            _localIncRaster->setBlock(_localInc, xidx, yidx, _width, _length);
-            _localPsiRaster->setBlock(_localPsi, xidx, yidx, _width, _length);
-            _simRaster->setBlock(_sim, xidx, yidx, _width, _length);
-            if (_maskRaster) {
-                _maskRaster->setBlock(_mask, xidx, yidx, _width, _length);
-            }
-        }
-        
+        void writeData(size_t xidx, size_t yidx);
+
     private:
         // The valarrays for the actual data
         std::valarray<double> _x;
@@ -277,4 +260,5 @@ class isce3::geometry::TopoLayers {
         // Directory for placing rasters
         std::string _topodir;
         bool _haveRasters;
+
 };
