@@ -38,6 +38,7 @@ signal/covariance.py
 signal/crossmul.py
 signal/crossmultiply.py
 signal/filter2D.py
+product/generic_product.py
 product/radargridparameters.py
 product/swath.py
 unwrap/icu.py

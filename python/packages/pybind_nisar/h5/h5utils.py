@@ -41,12 +41,16 @@ def extractWithIterator(h5grp, key, iterType, logger=None, msg=None):
         val = h5grp[key][()]
         val = [iterType(x) for x in val]
     except KeyError:
+        errmsg = '{0} not found at {1}'.format(key, h5grp.name)
         if logger:
-            logger.log('{0} not found at {1}'.format(key, h5grp.name))
+            logger.log(errmsg)
+        raise KeyError(errmsg)
     except:
         errmsg = 'Something went wrong when trying to parse {0}/{1} \n'.format(h5grp.name, key)
         if msg is not None:
             errmsg += msg
+        if logger:
+            logger.log(errmsg)
         raise ValueError(errmsg)
 
     return val

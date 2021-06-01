@@ -4,6 +4,7 @@ import logging
 from pybind_nisar.products.readers import Base
 import numpy as np
 import pyre
+import journal
 import pybind_isce3 as isce
 import re
 
@@ -34,6 +35,9 @@ class Raw(Base, family='nisar.productreader.raw'):
         '''
         log.info(f"Reading L0B file {kwds['hdf5file']}")
         super().__init__(**kwds)
+
+        # Set error channel
+        self.error_channel = journal.error('Raw')
 
     def parsePolarizations(self):
         '''

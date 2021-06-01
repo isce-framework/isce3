@@ -2,9 +2,50 @@
 
 import h5py
 import os
+import journal
 import pyre
 import pybind_isce3 as isce3
 from ..protocols import ProductReader
+
+
+def get_hdf5_file_root_path(filename: str, root_path: str = None) -> str:
+    '''
+    Return root path from HDF5 file. If a root path is provided as
+    a parameter and it exists, it will have precedence over the 
+    root path from the HDF5 file
+
+    Parameters
+    ----------
+    filename : str
+        HDF5 filename
+    root_path : str
+        Preliminary root path to check (e.g., XSAR, PSAR) before default root 
+        path list
+
+    Returns
+    -------
+    str
+        Root path from HDF5 file
+
+    '''
+
+    error_channel = journal.error('get_hdf5_file_root_path')
+
+    SCIENCE_PATH = '/science/'
+    NISAR_FREQ_BAND_LIST = ['SSAR', 'LSAR']
+    with h5py.File(filename, 'r', libver='latest', swmr=True) as f:
+        if root_path is not None and root_path in f:
+            return root_path
+        science_group = f[SCIENCE_PATH]
+        for freq_band in NISAR_FREQ_BAND_LIST:
+            if freq_band not in science_group:
+                continue
+            return SCIENCE_PATH + freq_band
+
+    error_msg = ("HDF5 could not find NISAR frequency"
+                 f" band group LSAR or SSAR in file: {filename}")
+
+    error_channel.log(error_msg)
 
 class Base(pyre.component,
            family='nisar.productreader.base',
@@ -17,13 +58,13 @@ class Base(pyre.component,
     _CFPath = pyre.properties.str(default='/')
     _CFPath.doc = 'Absolute path to scan for CF convention metadata'
 
-    _RootPath = pyre.properties.str(default='/science/LSAR')
+    _RootPath = pyre.properties.str(default=None)
     _RootPath.doc = 'Absolute path to SAR data from L-SAR/S-SAR'
 
     _IdentificationPath = pyre.properties.str(default='identification')
     _IdentificationPath.doc = 'Absolute path ath to unique product identification information'
 
-    _ProductType = pyre.properties.str(default='SLC')
+    _ProductType = pyre.properties.str(default=None)
     _ProductType.doc = 'The type of the product.'
 
     _MetadataPath = pyre.properties.str(default='metadata')
@@ -41,10 +82,19 @@ class Base(pyre.component,
     productValidationType = pyre.properties.str(default='BASE')
     productValidationType.doc = 'Validation tag to compare identification information against to ensure that the right product type is being used.'
 
-    def __init__(self, hdf5file='None', **kwds):
+    def __init__(self, hdf5file=None, **kwds):
         '''
         Constructor.
         '''
+
+        # Set error channel
+        self.error_channel = journal.error('Base')
+
+        # Check hdf5file
+        if hdf5file is None:
+            err_str = f"Please provide an input HDF5 file"
+            self.error_channel.log(err_str)
+
         # Filename
         self.filename = hdf5file
 
@@ -55,8 +105,12 @@ class Base(pyre.component,
         self.polarizations = {}
 
         self.populateIdentification()
-        #For now, Needs to be an assertion check in the future
-        self.identification.productType = self.productValidationType
+
+        self.identification.productType = self._ProductType
+
+        if self._ProductType is None:
+            return
+
         self.parsePolarizations()
 
     @pyre.export
@@ -141,28 +195,6 @@ class Base(pyre.component,
 
         return slantRange
 
-
-    def getSlcDataset(self, frequency, polarization):
-        '''
-        Return SLC dataset of given frequency and polarization from hdf5 file
-        '''
-
-        # TODO add checks for (1) file open error (2) path check
-        slcDataset = None
-
-        # open H5 with swmr mode enabled
-        fid = h5py.File(self.filename, 'r', libver='latest', swmr=True)
-
-        # build path the desired dataset
-        dsPath = self.slcPath(frequency, polarization)
-
-        # get dataset
-        slcDataset = fid[dsPath]
-
-        # return dataset
-        return slcDataset
-
-
     def parsePolarizations(self):
         '''
         Parse HDF5 and identify polarization channels available for each frequency.
@@ -195,6 +227,9 @@ class Base(pyre.component,
 
     @property
     def RootPath(self):
+        if self._RootPath is None:
+            self._RootPath = get_hdf5_file_root_path(
+                self.filename)
         return self._RootPath
 
     @property
@@ -254,13 +289,5 @@ class Base(pyre.component,
         Compute the bounding box as a polygon in given projection system.
         '''
         raise NotImplementedError
-
-    def slcPath(self, frequency, polarization):
-        '''
-        return path to hdf5 dataset of given frequency and polarization
-        '''
-        datasetPath = os.path.join(self.SwathPath, f'frequency{frequency}', polarization)
-        return datasetPath
-
 
 # end of file
