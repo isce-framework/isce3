@@ -1131,15 +1131,15 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
 isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         const double minX, const double maxX, const double minY,
         const double maxY, DEMInterpolator* dem_interp_block,
-        isce3::core::ProjectionBase* proj, const double margin_x,
-        const double margin_y)
+        isce3::core::ProjectionBase* proj, const int dem_margin_x_in_pixels,
+        const int dem_margin_y_in_pixels)
 {
 
-    Vec3 geogrid_min_xy = {minX - margin_x, std::min(minY, maxY) - margin_y, 0};
-    Vec3 geogrid_max_xy = {maxX + margin_x, std::max(minY, maxY) + margin_y, 0};
+    Vec3 geogrid_min_xy = {minX, std::min(minY, maxY), 0};
+    Vec3 geogrid_max_xy = {maxX, std::max(minY, maxY), 0};
     double min_x, max_x, min_y, max_y;
 
-    if (proj->code() == dem_raster.getEPSG()) {
+    if (proj == nullptr || proj->code() == dem_raster.getEPSG()) {
 
         Vec3 dem_min_xy, dem_max_xy;
 
@@ -1153,9 +1153,9 @@ isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         std::unique_ptr<isce3::core::ProjectionBase> dem_proj(
                 isce3::core::createProj(dem_raster.getEPSG()));
         auto p1_llh = proj->inverse({geogrid_min_xy[0], geogrid_min_xy[1], 0});
-        auto p2_llh = proj->inverse({geogrid_max_xy[0], geogrid_max_xy[1], 0});
-        auto p3_llh = proj->inverse({geogrid_min_xy[0], geogrid_min_xy[1], 0});
-        auto p4_llh = proj->inverse({geogrid_max_xy[0], geogrid_max_xy[1], 0});
+        auto p2_llh = proj->inverse({geogrid_min_xy[0], geogrid_max_xy[1], 0});
+        auto p3_llh = proj->inverse({geogrid_max_xy[0], geogrid_min_xy[1], 0});
+        auto p4_llh = proj->inverse({geogrid_max_xy[0], geogrid_max_xy[1], 0});;
 
         Vec3 p1_xy, p2_xy, p3_xy, p4_xy;
 
@@ -1172,6 +1172,14 @@ isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         max_y = std::max(
                 std::max(p1_xy[1], p2_xy[1]), std::max(p3_xy[1], p4_xy[1]));
     }
+
+    float margin_x = dem_margin_x_in_pixels * dem_raster.dx();
+    float margin_y = dem_margin_y_in_pixels * std::abs(dem_raster.dy());
+
+    min_x -= margin_x;
+    max_x += margin_x;
+    min_y -= margin_y;
+    max_y += margin_y;
 
     isce3::error::ErrorCode error_code;
     _Pragma("omp critical")
@@ -1250,9 +1258,6 @@ void _RunBlock(const int jmax, const int block_size,
             (geogrid.spacingY() * (ii_0 + this_block_size_with_upsampling)) /
                     geogrid_upsampling;
 
-    double margin_x;
-    double margin_y;
-
     if (geogrid.epsg() == dem_raster.getEPSG()) {
         GetDemCoords = GetDemCoordsSameEpsg;
 
@@ -1260,11 +1265,11 @@ void _RunBlock(const int jmax, const int block_size,
         GetDemCoords = GetDemCoordsDiffEpsg;
     }
 
-    margin_x = std::abs(geogrid.spacingX()) * 100;
-    margin_y = std::abs(geogrid.spacingY()) * 100;
+    const int dem_margin_in_pixels = 100;
 
     auto error_code = loadDemFromProj(dem_raster, minX, maxX, minY, maxY,
-            &dem_interp_block, proj, margin_x, margin_y);
+            &dem_interp_block, proj, dem_margin_in_pixels, 
+            dem_margin_in_pixels);
 
     if (error_code != isce3::error::ErrorCode::Success) {
         return;

@@ -337,11 +337,26 @@ inline isce3::core::Vec3 GetDemCoordsDiffEpsg(double x, double y,
         const DEMInterpolator& dem_interp,
         isce3::core::ProjectionBase* input_proj);
 
+/** Load DEM raster into a DEMInterpolator object around a given bounding box
+ * in the same or different coordinate system as the DEM raster
+ *
+ * @param[in]  dem_raster              DEM raster
+ * @param[in]  minX                    Minimum X/easting position
+ * @param[in]  maxX                    Maximum X/easting position
+ * @param[in]  minY                    Minimum Y/northing position
+ * @param[in]  maxY                    Maximum Y/northing position
+ * @param[out] dem_interp_block        DEM interpolation object
+ * @param[in]  proj                    Projection object (nullptr to use same
+ * DEM projection)
+ * @param[in]  dem_margin_x_in_pixels  DEM X/easting margin in pixels
+ * @param[in]  dem_margin_y_in_pixels  DEM Y/northing margin in pixels
+ */
 isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         const double minX, const double maxX, const double minY,
         const double maxY, DEMInterpolator* dem_interp_block,
-        isce3::core::ProjectionBase* proj, const double margin_x,
-        const double margin_y);
+        isce3::core::ProjectionBase* proj = nullptr, 
+        const int dem_margin_x_in_pixels = 50,
+        const int dem_margin_y_in_pixels = 50);
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
