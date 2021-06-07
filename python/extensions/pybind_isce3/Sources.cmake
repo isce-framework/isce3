@@ -77,7 +77,7 @@ if(WITH_CUDA)
          cuda/core/ComputeCapability.cpp
          cuda/core/Device.cpp
          cuda/geocode/geocode.cpp
-         cuda/geocode/Geocode.cpp
+         cuda/geocode/cuGeocode.cpp
          cuda/geometry/geometry.cpp
          cuda/geometry/geo2rdr.cpp
          cuda/geometry/rdr2geo.cpp

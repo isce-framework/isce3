@@ -1,4 +1,4 @@
-#include "Geocode.h"
+#include "cuGeocode.h"
 
 #include <gdal_priv.h>
 

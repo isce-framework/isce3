@@ -1,6 +1,6 @@
 #include "geocode.h"
 
-#include "Geocode.h"
+#include "cuGeocode.h"
 
 namespace py = pybind11;
 
