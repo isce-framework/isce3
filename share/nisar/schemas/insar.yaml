@@ -137,6 +137,8 @@ runconfig:
             # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: int(min=0, required=False)
 
+        QA: include('qa_options', required=False)
+
         # Place holder for user set path to log file.
         # If not set, log sent to screen or input yaml path derived file
         logging: include('log_nfo', required=False)
@@ -364,3 +366,10 @@ gunw_datasets:
     connectedComponents: bool(required=False)
     coherenceMagnitude: bool(required=False)
     unwrappedPhase: bool(required=False)
+
+
+qa_options:
+    # Enabled file format validation
+    validate: bool(required=False)
+    # Produce a data summary
+    quality: bool(required=False)
