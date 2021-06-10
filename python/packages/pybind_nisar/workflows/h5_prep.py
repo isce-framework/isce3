@@ -122,9 +122,22 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # Copy of identification
         identification_excludes = 'productType'
         if is_insar:
-            identification_excludes = ['productType', 'listOfFrequencies']
+            identification_excludes = ['productType', 'listOfFrequencies',
+                                       'zeroDopplerStartTime', 'zeroDopplerEndTime']
         cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification',
                         excludes=identification_excludes)
+        # If insar, create reference/secondary zeroDopplerStartEndTime
+        if is_insar:
+            # Open secondary hdf5 to copy information
+            with h5py.File(secondary_hdf5, 'r', libver='latest', swmr=True) as sec_src_h5:
+                src_dataset = ['zeroDopplerStartTime', 'zeroDopplerEndTime']
+                dst_dataset = ['referenceZeroDopplerStartTime', 'referenceZeroDopplerEndTime']
+                for src_data, dst_data in zip(src_dataset, dst_dataset):
+                    cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification/{src_data}',
+                                    f'{common_parent_path}/identification/{dst_data}')
+                    dst_data = dst_data.replace('reference', 'secondary')
+                    cp_h5_meta_data(sec_src_h5, dst_h5, f'{common_parent_path}/identification/{src_data}',
+                                    f'{common_parent_path}/identification/{dst_data}')
 
         # Flag isGeocoded
         ident = dst_h5[f'{common_parent_path}/identification']
@@ -144,10 +157,9 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                         f'{dst_meta_path}/orbit')
 
         # copy attitude information group
-        if is_geocoded:
-            cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
-                            f'{dst_meta_path}/attitude')
-        else:
+        cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
+                        f'{dst_meta_path}/attitude')
+        if dst in ['RIFG', 'RUNW']:
             # RUNW and RIFG have no attitude group and have geolocation grid
             yds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/zeroDopplerTime',
                     data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])                 
@@ -176,15 +188,10 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                 data=np.string_(dem_interp_method))
 
         # copy processingInformation/inputs group
-        exclude_args = ['l0bGranules', 'demFiles']
-        if not is_geocoded:
-            exclude_args = ['attitudeFiles', 'auxcalFiles',
-                            'l0bGranules', 'orbitFiles']
-
         cp_h5_meta_data(src_h5, dst_h5,
                         f'{src_meta_path}/processingInformation/inputs',
                         f'{dst_meta_path}/processingInformation/inputs',
-                        excludes=exclude_args)
+                        excludes=['l0bGranules'])
 
         # Create l1SlcGranules
         inputs = [input_hdf5]
