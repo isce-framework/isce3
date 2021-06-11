@@ -116,7 +116,6 @@ runconfig:
             resample:
                 lines_per_tile: int(min=1, required=False)
 
-
             dense_offsets: include('dense_offsets_options', required=False)
 
             rubbersheet: include('rubbersheet_options', required=False)
@@ -124,7 +123,21 @@ runconfig:
             crossmul: include('crossmul_options', required=False)
 
             # Required for RUNW and full InSAR
-            phase_unwrap: include('icu_options', required=False)
+            phase_unwrap:
+                # Path to HDF5 file or directory containing the input interferogram
+                # and coherence (normalized magnitude of complex correlation) rasters
+                # Not required as we allow the use of intermediate outputs from
+                # the previous InSAR module, which is not user-specified.
+                # Required for running stand-alone phase unwrapping
+                crossmul_path: str(required=False)
+                # Increments to correlation threshold
+                correlation_threshold_increments: num(min=0, max=1, required=False)
+                # Unwrapping algorithm to use
+                algorithm: enum('icu', 'phass', required=False)
+                # ICU unwrapping options
+                icu: include('icu_options', required=False)
+                # Phass unwrapping options
+                phass: include('phass_options', required=False)
 
         # To setup type of worker
         worker:
@@ -145,26 +158,52 @@ runconfig:
 
 ---
 icu_options:
-    crossmul_path: str(required=False)
+    # Seed point to initialize ICU algorithm
     seed: int(min=0, required=False)
+    # Number of lines in buffer to process simultaneously
     buffer_lines: int(min=1, required=False)
+    # Number of overlapping lines for each data block
     overlap_lines: int(min=1, required=False)
+    # Flag to activate neutrons based on phase gradient metric
     use_phase_gradient_neutron: bool(required=False)
+    # Flag to activate neutron based on reference RSLC intensity
     use_intensity_neutron: bool(required=False)
+    # Square window size for phase gradient computation
     phase_gradient_window_size: int(min=1, required=False)
+    # Threshold value for phase gradient neutrons (radian)
     neutron_phase_gradient_threshold: num(min=0, required=False)
+    # Threshold value for intensity neutron (sigma above mean)
     neutron_intensity_threshold: num(min=0, required=False)
+    # Threshold on the maximum level of intensity for intensity neutron
     max_intensity_correlation_threshold: num(required=False)
+    # Maximum number of tree realizations
     trees_number: int(min=1, required=False)
+    # Maximum extent for each tree branch
     max_branch_length: int(min=1, required=False)
+    # Ratio between along track and slant range spacing
     pixel_spacing_ratio: num(required=False)
+    # Threshold for the initial correlation value
     initial_correlation_threshold: num(min=0, max=1, required=False)
+    # Threshold for the maximum correlation value
     max_correlation_threshold: num(max=1, required=False)
-    correlation_threshold_increments: num(min=0, max=1, required=False)
+    # Minimum size of an area to unwrap
     min_tile_area: num(required=False)
+    # Number of lines used in the bootstrap phase
     bootstrap_lines: int(min=1, required=False)
+    # Minimum bootstrap overlapping area
     min_overlap_area: int(min=0, required=False)
+    # Bootstrap phase variance threshold (radian)
     phase_variance_threshold: num(min=0, required=False)
+
+phass_options:
+    # Normalized interferometric correlation value of the pixel to unwrap
+    # Pixels with a good_correlation lower than the assigned value are
+    # masking out during the phass unwrapping
+    good_correlation: num(min=0, max=1, required=False)
+    # Minimum size (in pixels) of a region to unwrap
+    min_unwrap_area: int(min=1, required=False)
+    # Filepath to power raster
+    power: str(required=False)
 
 dense_offsets_options:
     # Flag to enable/disable dense offsets estimation. Default: True

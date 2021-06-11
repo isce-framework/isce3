@@ -271,3 +271,15 @@ runconfig:
                 flatten: True
                 oversample: 2
                 rows_per_block: 8192
+
+            phase_unwrap:
+                # Path to HDF5 file or directory containing the input interferogram
+                # and coherence (normalized magnitude of complex correlation) rasters
+                # Not required as we allow the use of intermediate outputs from
+                # the previous InSAR module, which is not user-specified.
+                # Required for running stand-alone phase unwrapping
+                crossmul_path:
+                # Increments to correlation threshold
+                correlation_threshold_increments: 0.1
+                # Unwrapping algorithm to use
+                algorithm: icu

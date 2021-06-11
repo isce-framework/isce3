@@ -20,15 +20,16 @@ class UnwrapRunConfig(RunConfig):
         '''
         error_channel = journal.error('CrossmulRunConfig.yaml_check')
 
-        if self.cfg['processing']['phase_unwrap'] is None:
-            err_str = "'phase_unwrap' necessary for standalone execution with YAML"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        if 'crossmul_path' not in self.cfg['processing']['phase_unwrap']:
+        # Check if crossmul_path is provided (needed for stand-alone unwrapping)
+        if self.cfg['processing']['phase_unwrap']['crossmul_path'] is None:
             err_str = "'crossmul_path' file path under `phase_unwrap' required for standalone execution with YAML"
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        # Allocate, if not present, cfg related to user-unwrapper choice
+        algorithm = self.cfg['processing']['phase_unwrap']['algorithm']
+        if algorithm not in self.cfg['processing']['phase_unwrap']:
+            self.cfg['processing']['phase_unwrap'][algorithm] = {}
 
         # Check if crossmul path is a directory or a file
         crossmul_path = self.cfg['processing']['phase_unwrap']['crossmul_path']

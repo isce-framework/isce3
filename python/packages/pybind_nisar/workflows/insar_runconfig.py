@@ -55,14 +55,10 @@ class InsarRunConfig(Geo2rdrRunConfig):
         else:
             self.cfg['processing']['crossmul']['flatten'] = None
 
-        # set to empty dict and default unwrap values will be used
-        # if phase_unwrap fields not in yaml
-        if 'phase_unwrap' not in self.cfg['processing']:
-            self.cfg['processing']['phase_unwrap'] = {}
-
-        # if phase_unwrap fields not in yaml
-        if self.cfg['processing']['phase_unwrap'] is None:
-            self.cfg['processing']['phase_unwrap'] = {}
+        # Create default unwrap cfg dict depending on unwrapping algorithm
+        algorithm = self.cfg['processing']['phase_unwrap']['algorithm']
+        if algorithm not in self.cfg['processing']['phase_unwrap']:
+            self.cfg['processing']['phase_unwrap'][algorithm]={}
 
         if 'interp_method' not in self.cfg['processing']['geocode']:
             self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
