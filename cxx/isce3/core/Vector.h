@@ -14,6 +14,8 @@ template<int N, typename T>
 class Vector : public Eigen::Matrix<T, N, 1> {
     using super_t = Eigen::Matrix<T, N, 1>;
     using super_t::super_t;
+
+    static_assert(N > 0);
 };
 
 // Function to compute normal vector to a plane given three points

@@ -6,6 +6,7 @@
 #define EIGEN_MPL2_ONLY
 #include <Eigen/Dense>
 #include "Common.h"
+#include "Vector.h"
 
 namespace isce3 { namespace core {
 
@@ -13,16 +14,18 @@ template<int N, typename T>
 class DenseMatrix : public Eigen::Matrix<T, N, N> {
     using super_t = Eigen::Matrix<T, N, N>;
     using super_t::super_t;
+
+    static_assert(N > 0);
 public:
     DenseMatrix() = default;
     CUDA_HOSTDEV auto operator[](int i)       { return this->row(i); }
     CUDA_HOSTDEV auto operator[](int i) const { return this->row(i); }
 
-    CUDA_HOSTDEV auto dot(const super_t& other) const {
+    CUDA_HOSTDEV auto dot(const DenseMatrix& other) const {
         return *this * other;
     }
 
-    CUDA_HOSTDEV auto dot(const Eigen::Matrix<T, N, 1>& other) const {
+    CUDA_HOSTDEV auto dot(const Vector<N, T>& other) const {
         return *this * other;
     }
 
@@ -76,6 +79,35 @@ CUDA_HOSTDEV Mat3 DenseMatrix<N, T>::enuToXyz(double lat, double lon)
     return Mat3 {{{-sin(lon), -sin(lat) * cos(lon), cos(lat) * cos(lon)},
                   {cos(lon), -sin(lat) * sin(lon), cos(lat) * sin(lon)},
                   {0, cos(lat), sin(lat)}}};
+}
+
+// XXX
+// These overloads are a workaround to resolve an issue observed with certain
+// Eigen & CUDA version combinations where matrix-matrix and matrix-vector
+// multiplication produced incorrect results (or raised "illegal memory access"
+// errors in debug mode).
+template<int N, typename T>
+CUDA_HOSTDEV auto
+operator*(const DenseMatrix<N, T>& a, const DenseMatrix<N, T>& b)
+{
+    DenseMatrix<N, T> out;
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            out(i, j) = a.row(i).dot(b.col(j));
+        }
+    }
+    return out;
+}
+
+template<int N, typename T>
+CUDA_HOSTDEV auto
+operator*(const DenseMatrix<N, T>& m, const Vector<N, T>& v)
+{
+    Vector<N, T> out;
+    for (int i = 0; i < N; ++i) {
+        out[i] = m.row(i).dot(v);
+    }
+    return out;
 }
 
 }}
