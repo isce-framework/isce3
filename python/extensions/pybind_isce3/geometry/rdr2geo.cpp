@@ -150,17 +150,15 @@ void addbinding_rdr2geo(py::module& m)
 void addbinding(py::class_<Topo> & pyRdr2Geo)
 {
     pyRdr2Geo
-        .def(py::init([](const isce3::product::RadarGridParameters & radar_grid,
-             const isce3::core::Orbit & orbit,
-             const isce3::core::Ellipsoid & ellipsoid,
-             const isce3::core::LUT2d<double> & doppler,
-             const double threshold,
-             const int numiter,
-             const int extraiter,
-             const dataInterpMethod dem_interp_method,
-             const int epsg_out,
-             const bool compute_mask)
-            {
+            .def(py::init([](const isce3::product::RadarGridParameters&
+                                          radar_grid,
+                                  const isce3::core::Orbit& orbit,
+                                  const isce3::core::Ellipsoid& ellipsoid,
+                                  const isce3::core::LUT2d<double>& doppler,
+                                  const double threshold, const int numiter,
+                                  const int extraiter,
+                                  const dataInterpMethod dem_interp_method,
+                                  const int epsg_out, const bool compute_mask) {
                 auto rdr2geo_obj = Topo(radar_grid, orbit, ellipsoid, doppler);
                 rdr2geo_obj.threshold(threshold);
                 rdr2geo_obj.numiter(numiter);
@@ -170,41 +168,66 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                 rdr2geo_obj.computeMask(compute_mask);
                 return rdr2geo_obj;
             }),
-            py::arg("radar_grid"),
-            py::arg("orbit"),
-            py::arg("ellipsoid"),
-            py::arg("doppler") = isce3::core::LUT2d<double>(),
-            py::arg("threshold") = 0.05,
-            py::arg("numiter") = 25,
-            py::arg("extraiter") = 10,
-            py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
-            py::arg("epsg_out") = 4326,
-            py::arg("compute_mask") = true)
-        .def("topo", py::overload_cast<isce3::io::Raster &, const std::string &>
-                (&Topo::topo),
-                py::arg("dem_raster"),
-                py::arg("outdir"))
-        .def_property_readonly("orbit", &Topo::orbit)
-        .def_property_readonly("ellipsoid", &Topo::ellipsoid)
-        .def_property_readonly("doppler", &Topo::doppler)
-        .def_property_readonly("radar_grid", &Topo::radarGridParameters)
-        .def_property("threshold",
-                py::overload_cast<>(&Topo::threshold, py::const_),
-                py::overload_cast<double>(&Topo::threshold))
-        .def_property("numiter",
-                py::overload_cast<>(&Topo::numiter, py::const_),
-                py::overload_cast<int>(&Topo::numiter))
-        .def_property("extraiter",
-                py::overload_cast<>(&Topo::extraiter, py::const_),
-                py::overload_cast<int>(&Topo::extraiter))
-        .def_property("dem_interp_method",
-                py::overload_cast<>(&Topo::demMethod, py::const_),
-                py::overload_cast<dataInterpMethod>(&Topo::demMethod))
-        .def_property("epsg_out",
-                py::overload_cast<>(&Topo::epsgOut, py::const_),
-                py::overload_cast<int>(&Topo::epsgOut))
-        .def_property("compute_mask",
-                py::overload_cast<>(&Topo::computeMask, py::const_),
-                py::overload_cast<bool>(&Topo::computeMask))
-        ;
+                    py::arg("radar_grid"), py::arg("orbit"),
+                    py::arg("ellipsoid"),
+                    py::arg("doppler") = isce3::core::LUT2d<double>(),
+                    py::arg("threshold") = 0.05, py::arg("numiter") = 25,
+                    py::arg("extraiter") = 10,
+                    py::arg("dem_interp_method") =
+                            isce3::core::BIQUINTIC_METHOD,
+                    py::arg("epsg_out") = 4326, py::arg("compute_mask") = true)
+            .def("topo",
+                    py::overload_cast<isce3::io::Raster&, const std::string&>(
+                            &Topo::topo),
+                    py::arg("dem_raster"), py::arg("outdir"))
+            .def("topo",
+                    py::overload_cast<isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&>(
+                            &Topo::topo),
+                    py::arg("dem_raster"), py::arg("x_raster"),
+                    py::arg("y_raster"), py::arg("height_raster"),
+                    py::arg("incidence_angle_raster"),
+                    py::arg("heading_angle_raster"),
+                    py::arg("local_incidence_angle_raster"),
+                    py::arg("local_Psi_raster"),
+                    py::arg("simulated_amplitude_raster"),
+                    py::arg("shadow_layover_raster"))
+            .def("topo",
+                    py::overload_cast<isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&, isce3::io::Raster&,
+                            isce3::io::Raster&>(&Topo::topo),
+                    py::arg("dem_raster"), py::arg("x_raster"),
+                    py::arg("y_raster"), py::arg("height_raster"),
+                    py::arg("incidence_angle_raster"),
+                    py::arg("heading_angle_raster"),
+                    py::arg("local_incidence_angle_raster"),
+                    py::arg("local_Psi_raster"),
+                    py::arg("simulated_amplitude_raster"))
+            .def_property_readonly("orbit", &Topo::orbit)
+            .def_property_readonly("ellipsoid", &Topo::ellipsoid)
+            .def_property_readonly("doppler", &Topo::doppler)
+            .def_property_readonly("radar_grid", &Topo::radarGridParameters)
+            .def_property("threshold",
+                    py::overload_cast<>(&Topo::threshold, py::const_),
+                    py::overload_cast<double>(&Topo::threshold))
+            .def_property("numiter",
+                    py::overload_cast<>(&Topo::numiter, py::const_),
+                    py::overload_cast<int>(&Topo::numiter))
+            .def_property("extraiter",
+                    py::overload_cast<>(&Topo::extraiter, py::const_),
+                    py::overload_cast<int>(&Topo::extraiter))
+            .def_property("dem_interp_method",
+                    py::overload_cast<>(&Topo::demMethod, py::const_),
+                    py::overload_cast<dataInterpMethod>(&Topo::demMethod))
+            .def_property("epsg_out",
+                    py::overload_cast<>(&Topo::epsgOut, py::const_),
+                    py::overload_cast<int>(&Topo::epsgOut))
+            .def_property("compute_mask",
+                    py::overload_cast<>(&Topo::computeMask, py::const_),
+                    py::overload_cast<bool>(&Topo::computeMask));
 }

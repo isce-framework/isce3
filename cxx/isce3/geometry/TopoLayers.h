@@ -114,6 +114,64 @@ class isce3::geometry::TopoLayers {
             _localIncRaster = &localIncRaster;
             _localPsiRaster = &localPsiRaster;
             _simRaster = &simRaster;
+
+            // Update sizes
+            _width = xRaster.width();
+            _length = xRaster.length();
+
+            if ((yRaster.width() != _width) || (yRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input y raster is different from x "
+                        "raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((zRaster.width() != _width) || (zRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input z raster is different from x "
+                        "raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((incRaster.width() != _width) ||
+                    (incRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input incidence angle raster is "
+                        "different from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((hdgRaster.width() != _width) ||
+                    (hdgRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input heading raster is different "
+                        "from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((localIncRaster.width() != _width) ||
+                    (localIncRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input local incidence angle raster "
+                        "is different from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((localPsiRaster.width() != _width) ||
+                    (localPsiRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input local Psi raster is different "
+                        "from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((simRaster.width() != _width) ||
+                    (simRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the input simulated amplitude raster is "
+                        "different from x raster "
+                        "All input rasters must have the same shape.");
+            }
         }
 
         // Set rasters (plus mask raster) from externally created rasters
@@ -131,6 +189,70 @@ class isce3::geometry::TopoLayers {
             _localPsiRaster = &localPsiRaster;
             _simRaster = &simRaster;
             _maskRaster = &maskRaster;
+
+            // Update sizes
+            _width = xRaster.width();
+            _length = xRaster.length();
+
+            if ((yRaster.width() != _width) || (yRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the y raster is different from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((zRaster.width() != _width) || (zRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the z raster is different from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((incRaster.width() != _width) ||
+                    (incRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the incidence angle raster is different "
+                        "from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((hdgRaster.width() != _width) ||
+                    (hdgRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the heading raster is different from x "
+                        "raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((localIncRaster.width() != _width) ||
+                    (localIncRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the local incidence angle raster is "
+                        "different from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((localPsiRaster.width() != _width) ||
+                    (localPsiRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the local Psi raster is different from x "
+                        "raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((simRaster.width() != _width) ||
+                    (simRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the simulated amplitude raster is "
+                        "different from x raster "
+                        "All input rasters must have the same shape.");
+            }
+
+            if ((maskRaster.width() != _width) ||
+                    (maskRaster.length() != _length)) {
+                throw isce3::except::DomainError(ISCE_SRCINFO(),
+                        "The shape of the shadow/layover raster is different "
+                        "from x raster "
+                        "All input rasters must have the same shape.");
+            }
         }
 
         // Get array references
@@ -259,6 +381,11 @@ class isce3::geometry::TopoLayers {
 
         // Directory for placing rasters
         std::string _topodir;
+
+        // Flag indicates if the Class owns the Rasters
+        // Should be True when initRasters is called
+        // Should be false when the Rasters are passed
+        // from outside and setRaster method is called
         bool _haveRasters;
 
 };
