@@ -162,7 +162,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         if dst in ['RIFG', 'RUNW']:
             # RUNW and RIFG have no attitude group and have geolocation grid
             yds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/zeroDopplerTime',
-                    data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])                 
+                    data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])
             xds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/slantRange',
                     data = src_h5[f'{src_meta_path}/geolocationGrid/slantRange'])
             cp_h5_meta_data(src_h5, dst_h5,
@@ -179,12 +179,12 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         if dst == "GCOV":
             algorithms_ds = (dst_meta_path +
                              'processingInformation/algorithms/geocoding')
-            dst_h5.require_dataset(algorithms_ds, (), "S27", 
+            dst_h5.require_dataset(algorithms_ds, (), "S27",
                 data=np.string_(geocode_algorithm))
 
             algorithms_ds = (dst_meta_path +
                              'processingInformation/algorithms/demInterpolation')
-            dst_h5.require_dataset(algorithms_ds, (), "S27", 
+            dst_h5.require_dataset(algorithms_ds, (), "S27",
                 data=np.string_(dem_interp_method))
 
         # copy processingInformation/inputs group
@@ -438,15 +438,17 @@ def prep_ds_insar(cfg, dst, dst_h5):
                                    data=np.string_(list(freq_pols.keys())))
     dset.attrs["description"] = descr
 
+    # Open reference SLC
+    input_h5 = cfg['InputFileGroup']['InputFilePath']
+    ref_slc = SLC(hdf5file=input_h5)
+    src_h5 = h5py.File(input_h5, 'r', libver='latest', swmr=True)
+
     for freq in freq_pols.keys():
         pol_list = freq_pols[freq]
         # Get SLC dimension for that frequency
-        input_h5 = cfg['InputFileGroup']['InputFilePath']
-        src_h5 = h5py.File(input_h5, 'r', libver='latest', swmr=True)
 
         # Take size of first available polarization
-        dset = src_h5[os.path.join(common_parent_path,
-                                   f'SLC/swaths/frequency{freq}/{pol_list[0]}')]
+        dset = src_h5[os.path.join(f'{ref_slc.SwathPath}/frequency{freq}/{pol_list[0]}')]
         az_lines, rg_cols = dset.shape
 
         if dst in ['RUNW', 'RIFG']:
@@ -487,33 +489,6 @@ def prep_ds_insar(cfg, dst, dst_h5):
         dst_parent_path = os.path.join(common_parent_path,
                                        f'{dst}/{grid_swath}/frequency{freq}')
 
-        if dst in ['RIFG', 'RUNW']:
-            # Generate slantRange and Azimuth time (for RIFG and RUNW only)
-            slant_range = src_h5[f'science/LSAR/SLC/swaths/frequency{freq}/slantRange'][()]
-            doppler_time = src_h5['science/LSAR/SLC/swaths/zeroDopplerTime'][()]
-
-            # TO DO: This is valid for odd number of looks. For R1 extend this to even number of looks
-            idx_rg = np.arange(int(len(slant_range) / rg_looks) * rg_looks)[
-                     ::rg_looks] + int(rg_looks / 2)
-            idx_az = np.arange(int(len(doppler_time) / az_looks) * az_looks)[
-                     ::az_looks] + int(az_looks / 2)
-
-            descr = "CF compliant dimension associated with slant range"
-            id_group = dst_h5[os.path.join(common_parent_path,
-                                           f'{dst}/{grid_swath}/frequency{freq}')]
-            dset = id_group.create_dataset('slantRange',
-                                           data=slant_range[idx_rg])
-            dset.attrs["description"] = descr
-            dset.attrs["units"] = np.string_("meters")
-            dset.attrs["long_name"] = np.string_("slant range")
-
-            descr = descr.replace("slant range", "azimuth time")
-            dset = id_group.create_dataset('zeroDopplerTime',
-                                           data=doppler_time[idx_az])
-            dset.attrs["description"] = descr
-            dset.attrs["units"] = src_h5['science/LSAR/SLC/swaths/zeroDopplerTime'].attrs["units"]
-            src_h5.close()
-
         # Add list of polarizations
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
 
@@ -535,48 +510,62 @@ def prep_ds_insar(cfg, dst, dst_h5):
         dst_h5.create_group(dst_path_intf)
         dst_h5.create_group(dst_path_offs)
 
-        # TODO R2: Different projection for pixel offset
-        # TODO R2: different x/yCoordinates and spacing for pixel Offset
-
-        # Add scalar dataset to interferogram (common to HH and VV)
-        # Note we add range/azimuth bandwidth to frequencyA
-        descr = "Processed azimuth bandwidth in Hz"
-        _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                         'azimuthBandwidth',
-                         descr=descr, units="Hz", data=1,
-                         long_name="azimuth bandwidth")
-        _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                         'rangeBandwidth',
-                         descr=descr.replace("azimuth", "range"), units="Hz",
-                         data=1,
-                         long_name="range bandwidth")
-        descr = "Slant range spacing of grid. Same as difference between \
-                         consecutive samples in slantRange array"
-        _create_datasets(dst_h5[dst_path_intf], [0], np.float64,
-                         'slantRangeSpacing',
-                         descr=descr, units="meters", data=1,
-                         long_name="slant range spacing")
-        descr = "Time interval in the along track direction for raster layers. " \
-                "This is the same as the spacing between consecutive entries in " \
-                "zeroDopplerTime array"
-        _create_datasets(dst_h5[dst_path_intf], [0], np.float32,
-                         'zeroDopplerTimeSpacing',
-                         descr=descr, units="seconds", data=1,
-                         long_name="zero doppler time spacing")
-
         if dst in ['RIFG', 'RUNW']:
+
+            # Generate slantRange and Azimuth time (for RIFG and RUNW only)
+            slant_range = src_h5[f'{ref_slc.SwathPath}/frequency{freq}/slantRange'][()]
+            doppler_time = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTime'][()]
+            rg_spacing = src_h5[f'{ref_slc.SwathPath}/frequency{freq}/slantRangeSpacing'][()]
+            az_spacing = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTimeSpacing'][()]
+
+            # TO DO: This is valid for odd number of looks. For R1 extend this to even number of looks
+            idx_rg = np.arange(int(len(slant_range) / rg_looks) * rg_looks)[
+                     ::rg_looks] + int(rg_looks / 2)
+            idx_az = np.arange(int(len(doppler_time) / az_looks) * az_looks)[
+                     ::az_looks] + int(az_looks / 2)
+
+            descr = "CF compliant dimension associated with slant range"
+            id_group = dst_h5[os.path.join(common_parent_path,
+                                           f'{dst}/{grid_swath}/frequency{freq}/interferogram')]
+            dset = id_group.create_dataset('slantRange',
+                                           data=slant_range[idx_rg])
+            dset.attrs["description"] = descr
+            dset.attrs["units"] = np.string_("meters")
+            dset.attrs["long_name"] = np.string_("slant range")
+
+            descr = descr.replace("slant range", "azimuth time")
+            dset = id_group.create_dataset('zeroDopplerTime',
+                                           data=doppler_time[idx_az])
+            dset.attrs["description"] = descr
+            dset.attrs["units"] = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTime'].attrs["units"]
+            src_h5.close()
+
+            # Allocate slant range and azimuth spacing
+            descr = "Slant range spacing of grid. Same as difference between \
+                                     consecutive samples in slantRange array"
+            _create_datasets(dst_h5[dst_path_intf], [0], np.float64,
+                             'slantRangeSpacing',
+                             descr=descr, units="meters", data=rg_looks*rg_spacing,
+                             long_name="slant range spacing")
+            descr = "Time interval in the along track direction for raster layers. " \
+                    "This is the same as the spacing between consecutive entries in " \
+                    "zeroDopplerTime array"
+            _create_datasets(dst_h5[dst_path_intf], [0], np.float32,
+                             'zeroDopplerTimeSpacing',
+                             descr=descr, units="seconds", data=az_looks*az_spacing,
+                             long_name="zero doppler time spacing")
+
             descr = "Slant range spacing of offset grid"
             _create_datasets(dst_h5[dst_path_offs], [0], np.float64,
                              'slantRangeSpacing',
-                             descr=descr, units="meters", data=rg_skip,
+                             descr=descr, units="meters", data=rg_skip*rg_spacing,
                              long_name="slant range spacing")
             descr = "Along track spacing of the offset grid"
             _create_datasets(dst_h5[dst_path_offs], [0], np.float32,
                              'zeroDopplerTimeSpacing',
-                             descr=descr, units="seconds", data=az_skip,
+                             descr=descr, units="seconds", data=az_skip*az_spacing,
                              long_name="zero doppler time spacing")
 
-        if dst in ['RIFG', 'RUNW']:
             descr = "Nominal along track spacing in meters between consecutive lines" \
                     "near mid swath of the interferogram image"
             _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
@@ -612,6 +601,17 @@ def prep_ds_insar(cfg, dst, dst_h5):
                              descr=descr.replace('1st', '4th'), units=" ",
                              data=1,
                              long_name="valid samples sub swath 4")
+
+        descr = "Processed azimuth bandwidth in Hz"
+        _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
+                         'azimuthBandwidth',
+                         descr=descr, units="Hz", data=1,
+                         long_name="azimuth bandwidth")
+        _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
+                         'rangeBandwidth',
+                         descr=descr.replace("azimuth", "range"), units="Hz",
+                         data=1,
+                         long_name="range bandwidth")
 
         # Adding polarization-dependent datasets to interferogram and pixelOffsets
         for pol in pol_list:
@@ -919,7 +919,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
         epsg_dataset_name = os.path.join(root_ds, 'epsg')
         if epsg_dataset_name in hdf5_obj:
             del hdf5_obj[epsg_dataset_name]
-        epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name, 
+        epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name,
                                                data=np.array(epsg_code, "i4"))
         epsg_dataset.attrs["description"] = np.string_(descr)
         epsg_dataset.attrs["units"] = ""
@@ -1099,8 +1099,8 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
     return yds, xds
 
 
-def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid, 
-                                 heights, radar_grid, orbit, 
+def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
+                                 heights, radar_grid, orbit,
                                  native_doppler, grid_doppler,
                                  threshold_geo2rdr=1e-8,
                                  numiter_geo2rdr=100, delta_range=1e-8,
@@ -1239,10 +1239,10 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
 
 
 def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
-                                       heights, orbit, native_doppler, 
+                                       heights, orbit, native_doppler,
                                        grid_doppler, epsg,
                                        threshold_geo2rdr=1e-8,
-                                       numiter_geo2rdr=100, delta_range=1e-8, 
+                                       numiter_geo2rdr=100, delta_range=1e-8,
                                        epsg_los_and_along_track_vectors=0):
     if cube_group_name not in hdf5_obj:
         cube_group = hdf5_obj.create_group(cube_group_name)

@@ -82,7 +82,7 @@ def run(cfg):
             out_path = out_dir / 'coregistered_secondary.slc'
 
             # Extract and create raster of SLC to resample
-            h5_ds = f'//science/LSAR/SLC/swaths/frequency{freq}/{pol}'
+            h5_ds = f'/{slc.SwathPath}/frequency{freq}/{pol}'
             raster_path = f'HDF5:{input_hdf5}:{h5_ds}'
             raster = isce3.io.Raster(raster_path)
 
