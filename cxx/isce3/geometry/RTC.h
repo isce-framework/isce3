@@ -38,7 +38,7 @@ enum rtcMemoryMode {
 };
 
 constexpr static int AP_DEFAULT_MIN_BLOCK_SIZE = 1 << 22; // 4MB
-constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 30; // 1GB
+constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 28; // 256MB
 
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
 enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
