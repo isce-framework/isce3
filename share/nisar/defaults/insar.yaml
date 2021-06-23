@@ -171,7 +171,7 @@ runconfig:
                 # Number of lines to skip in reference image for next offset estimate
                 skip_azimuth: 32
                 # Margin around image edges to avoid for offset computation
-                margin:
+                margin: 0
                 # Number of columns of output offset (covariance, snr) file
                 offset_width:
                 # Number of lines of output offset (covariance, snr) file

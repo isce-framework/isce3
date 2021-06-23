@@ -117,8 +117,8 @@ runconfig:
                 enabled: True
                 window_range: 64
                 window_azimuth: 64
-                half_search_range: 20
-                half_search_azimuth: 20
+                half_search_range: 10
+                half_search_azimuth: 10
                 skip_range: 8
                 skip_azimuth: 8
                 correlation_surface_zoom: 8

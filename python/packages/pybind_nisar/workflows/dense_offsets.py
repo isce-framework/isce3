@@ -239,7 +239,7 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
             err_str = "The input gross offset does not match the offset width*offset length"
             error_channel.log(err_str)
             raise RuntimeError(err_str)
-        gross_offset = gross_offset.reshape(window_number, 2)
+        gross_offset = gross_offset.reshape(windows_number, 2)
         gross_azimuth = gross_offset[:, 0]
         gross_range = gross_offset[:, 1]
         ampcor_obj.setVaryingGrossOffset(gross_azimuth, gross_range)

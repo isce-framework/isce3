@@ -49,7 +49,7 @@ class GeocodeInsarRunConfig(RunConfig):
         gunw_datasets = ["connectedComponents", "coherenceMagnitude", "unwrappedPhase",
                          "alongTrackOffset", "slantRangeOffset", "layoverShadowMask"]
         for gunw_dataset in gunw_datasets:
-            if gunw_dataset not in self.cfg['processing']['geocode']:
+            if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
                 self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True
 
         if self.cfg['processing']['dem_margin'] is None:
@@ -74,3 +74,22 @@ class GeocodeInsarRunConfig(RunConfig):
             err_str = f"range looks = {rg_looks} not an odd integer."
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        # To geocode the offsets we need the offset field shape and
+        # the start pixel in range and azimuth. Note, margin and gross_offsets
+        # are allocated as defaults in share/nisar/defaults/insar.yaml
+        geocode_azimuth_offset = self.cfg['processing']['geocode']['datasets'][
+                'alongTrackOffset']
+        geocode_range_offset = self.cfg['processing']['geocode']['datasets'][
+                'slantRangeOffset']
+        if geocode_azimuth_offset or geocode_range_offset:
+            offset_cfg = self.cfg['processing']['dense_offsets']
+            margin = max(offset_cfg['margin'],
+                         offset_cfg['gross_offset_range'],
+                         offset_cfg['gross_offset_azimuth'])
+            if offset_cfg['start_pixel_range'] is None:
+               offset_cfg['start_pixel_range'] = margin + offset_cfg[
+                          'half_search_range']
+            if offset_cfg['start_pixel_azimuth'] is None:
+               offset_cfg['start_pixel_azimuth'] = margin + offset_cfg[
+                          'half_search_azimuth']

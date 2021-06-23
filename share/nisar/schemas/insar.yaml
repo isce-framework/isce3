@@ -405,7 +405,9 @@ gunw_datasets:
     connectedComponents: bool(required=False)
     coherenceMagnitude: bool(required=False)
     unwrappedPhase: bool(required=False)
-
+    layoverShadowMask: bool(required=False)
+    alongTrackOffset: bool(required=False)
+    slantRangeOffset: bool(required=False)
 
 qa_options:
     # Enabled file format validation
