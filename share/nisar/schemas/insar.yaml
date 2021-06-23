@@ -113,12 +113,20 @@ runconfig:
 
             dem_margin: num(required=False)
 
-            resample:
-                lines_per_tile: int(min=1, required=False)
+
+            coarse_resample: include('resample_options', required=False)
 
             dense_offsets: include('dense_offsets_options', required=False)
 
             rubbersheet: include('rubbersheet_options', required=False)
+
+            fine_resample:
+                # Flag to swicth on/off fine resampling
+                enabled: bool(required=False)
+                # Path to coarse/fine offset directory
+                offsets_dir: str(required=False)
+                # Number of lines per tile to resample in batch
+                lines_per_tile: int(min=1, required=False)
 
             crossmul: include('crossmul_options', required=False)
 
@@ -194,6 +202,13 @@ icu_options:
     min_overlap_area: int(min=0, required=False)
     # Bootstrap phase variance threshold (radian)
     phase_variance_threshold: num(min=0, required=False)
+
+
+resample_options:
+    # Path to coarse/fine offset directory
+    offsets_dir: str(required=False)
+    # Number of lines per tile to resample in batch
+    lines_per_tile: int(min=1, required=False)
 
 phass_options:
     # Normalized interferometric correlation value of the pixel to unwrap

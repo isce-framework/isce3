@@ -44,8 +44,7 @@ class DenseOffsetsRunConfig(RunConfig):
 
         if os.path.isdir(coregistered_slc_path):
             helpers.check_mode_directory_tree(coregistered_slc_path,
-                                              'resample_slc',
+                                              'coarse_resample_slc',
                                               frequencies, freq_pols)
         else:
             helpers.check_hdf5_freq_pols(coregistered_slc_path, freq_pols)
-

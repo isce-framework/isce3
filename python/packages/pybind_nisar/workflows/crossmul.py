@@ -15,7 +15,7 @@ from pybind_nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from pybind_nisar.workflows.yaml_argparse import YamlArgparse
 
 
-def run(cfg: dict, output_hdf5: str = None):
+def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     '''
     run crossmul
     '''
@@ -104,8 +104,8 @@ def run(cfg: dict, output_hdf5: str = None):
                 if coregistered_is_file:
                     raster_str = f'HDF5:{sec_hdf5}:/{sec_slc.slcPath(freq, pol)}'
                 else:
-                    raster_str = str(coregistered_slc_path / \
-                                     f'resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
+                    raster_str = str(coregistered_slc_path / f'{resample_type}_resample_slc/'
+                                                             f'freq{freq}/{pol}/coregistered_secondary.slc')
 
                 sec_slc_raster = isce3.io.Raster(raster_str)
 
@@ -155,11 +155,13 @@ if __name__ == "__main__":
     run crossmul from command line
     '''
     # load command line args
-    crossmul_parser = YamlArgparse()
+    crossmul_parser = YamlArgparse(resample_type=True)
     args = crossmul_parser.parse()
+    # extract resample type
+    resample_type = args.resample_type
     # get a runconfig dict from command line args
-    crossmul_runconfig = CrossmulRunConfig(args)
+    crossmul_runconfig = CrossmulRunConfig(args, resample_type)
     # prepare RIFG HDF5
     out_paths = h5_prep.run(crossmul_runconfig.cfg)
     # run crossmul
-    run(crossmul_runconfig.cfg, out_paths['RIFG'])
+    run(crossmul_runconfig.cfg, out_paths['RIFG'], resample_type)

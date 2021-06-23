@@ -39,7 +39,7 @@ class YamlArgparse():
     Class for parsing Yaml path from CLI
     '''
 
-    def __init__(self):
+    def __init__(self, resample_type = False):
         self.parser = argparse.ArgumentParser(description='',
                                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -49,6 +49,11 @@ class YamlArgparse():
                                  default=True, help='Disable logging to file. Log to file on by default.')
         self.parser.add_argument('--restart', action='store_true', default=False,
                                  help='Restart the InSAR workflow from the beginning and ignore the previous run. False by default.')
+        if resample_type:
+            self.parser.add_argument('--resample-type', dest='resample_type', default='coarse',
+                                     help='Type of offsets (coregistered slc) to use in resample_slc (crossmul).\n'
+                                          'Coarse: geometry offsets (secondary SLC resampled with geometry offsets)\n'
+                                          'Fine: rubbersheeted dense offsets (secondary slc resampled with rubbersheet dense offsets')
         self.args = argparse.Namespace()
 
     def parse(self):

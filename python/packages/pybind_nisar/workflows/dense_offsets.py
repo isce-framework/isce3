@@ -86,7 +86,7 @@ def run(cfg: dict):
                             format='ENVI')
             else:
                 sec_raster_path = str(coregistered_slc_path /
-                                      f'resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
+                                      f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
             sec_raster = isce3.io.Raster(sec_raster_path)
             ampcor.secondaryImageName = sec_raster_path
             ampcor.secondaryImageHeight = sec_raster.length

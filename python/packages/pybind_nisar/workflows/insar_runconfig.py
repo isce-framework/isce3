@@ -1,5 +1,6 @@
 import journal
 import numpy as np
+
 from pybind_nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 
 
@@ -15,7 +16,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
         Check submodule paths from YAML
         '''
         scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
-        error_channel = journal.error('InsarRunConfig.yaml_check')
+        error_channel = journal.error('InsarRunconfig.yaml_check')
 
         # If dense_offsets is disabled and rubbersheet is enabled
         # throw an exception and do not run the workflow
@@ -23,15 +24,23 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 self.cfg['processing']['rubbersheet']['enabled']:
             err_str = "Dense_offsets must be enabled to run rubbersheet"
             error_channel.log(err_str)
-            raise RuntimeError(err_str)
+            raise ValueError(err_str)
+
+        # If rubbersheet is disabled but fine_resampling is enabled,
+        # throw an exception and stop insar.py execution
+        if not self.cfg['processing']['rubbersheet']['enabled'] and \
+                self.cfg['processing']['fine_resample']['enabled']:
+            err_str = "Rubbersheet must be enabled to run fine SLC resampling"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
 
         # for each submodule check if user path for input data assigned
         # if not assigned, assume it'll be in scratch
         if 'topo_path' not in self.cfg['processing']['geo2rdr']:
             self.cfg['processing']['geo2rdr']['topo_path'] = scratch_path
 
-        if 'offset_dir' not in self.cfg['processing']['resample']:
-            self.cfg['processing']['resample']['offset_dir'] = scratch_path
+        if self.cfg['processing']['coarse_resample']['offsets_dir'] is None:
+            self.cfg['processing']['coarse_resample']['offsets_dir'] = scratch_path
 
         if self.cfg['processing']['dense_offsets']['coregistered_slc_path'] is None:
             self.cfg['processing']['dense_offsets'][
@@ -46,6 +55,9 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if self.cfg['processing']['rubbersheet']['geo2rdr_offsets_path'] is None:
             self.cfg['processing']['rubbersheet'][
                 'geo2rdr_offsets_path'] = scratch_path
+
+        if self.cfg['processing']['fine_resample']['offsets_dir'] is None:
+            self.cfg['processing']['fine_resample']['offsets_dir'] = scratch_path
 
         if 'coregistered_slc_path' not in self.cfg['processing']['crossmul']:
             self.cfg['processing']['crossmul'][

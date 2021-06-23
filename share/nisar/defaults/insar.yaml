@@ -148,8 +148,11 @@ runconfig:
 
             dem_margin:
 
-            resample:
-                lines_per_tile: 1
+            coarse_resample:
+                # Path to coarse offsets directory (geo2rdr offsets)
+                offsets_dir:
+                # Number of lines per tile to resample in batch
+                lines_per_tile: 100
 
             dense_offsets:
                 # Flag to enable/disable dense offsets estimation
@@ -158,7 +161,7 @@ runconfig:
                 # Not required as we allow the use of intermediate outputs from
                 # the previous InSAR module, which is not user-specified
                 coregistered_slc_path:
-                 # Number of columns for chip/template window in reference image
+                # Number of columns for chip/template window in reference image
                 window_range: 64
                 # Number of lines for chip/template window in reference image
                 window_azimuth: 64
@@ -264,6 +267,14 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
+
+            fine_resample:
+                # Flag to enable/disable fine resampling
+                enabled: True
+                # Path to fine offsets (rubbersheet dense offsets)
+                offsets_dir:
+                # Number of lines per tile to resample in batch
+                lines_per_tile: 100
 
             crossmul:
                 range_looks: 11

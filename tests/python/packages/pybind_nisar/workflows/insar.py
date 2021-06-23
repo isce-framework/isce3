@@ -36,13 +36,13 @@ def test_insar_run():
         insar_runcfg.yaml_check()
 
         out_paths = h5_prep.run(insar_runcfg.cfg)
-
         persist = Persistence(restart=True)
-        persist.run_steps['dense_offsets'] = False
 
-        # No CPU dense_offsets at the moment. Turn off
-        # rubbersheet otherwise insar.py will fail
+        # No CPU dense offsets. Turn off dense_offsets,
+        # rubbersheet, and fine_resample to avoid test failure
+        persist.run_steps['dense_offsets'] = False
         persist.run_steps['rubbersheet'] = False
+        persist.run_steps['fine_resample'] = False
 
         # run insar for prod_type
         insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)

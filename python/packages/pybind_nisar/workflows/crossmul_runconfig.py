@@ -6,16 +6,16 @@ from pybind_nisar.workflows.runconfig import RunConfig
 
 
 class CrossmulRunConfig(RunConfig):
-    def __init__(self, args):
+    def __init__(self, args, resample_type='coarse'):
         # all insar submodules share a commmon `insar` schema
         super().__init__(args, 'insar')
 
         if self.args.run_config_path is not None:
             self.load_geocode_yaml_to_dict()
             self.geocode_common_arg_load()
-            self.yaml_check()
+            self.yaml_check(resample_type)
 
-    def yaml_check(self):
+    def yaml_check(self, resample_type):
         '''
         Check crossmul specifics from YAML
         '''
@@ -34,11 +34,17 @@ class CrossmulRunConfig(RunConfig):
             raise ValueError(err_str)
 
         # check if required coregistered frequency/polarization rasters exist in directory or HDF5 file
+        # Distinguish between coarse and fine resample_slc directories
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
         frequencies = freq_pols.keys()
         if os.path.isdir(coregistered_slc_path):
-            helpers.check_mode_directory_tree(coregistered_slc_path, 'resample_slc',\
-                    frequencies, freq_pols)
+            if resample_type not in ['coarse', 'fine']:
+                err_str = f"{resample_type} not a valid resample slc type"
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+            helpers.check_mode_directory_tree(coregistered_slc_path,
+                                              f'{resample_type}_resample_slc',
+                                              frequencies, freq_pols)
         else:
             helpers.check_hdf5_freq_pols(coregistered_slc_path, freq_pols)
 

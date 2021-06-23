@@ -15,7 +15,6 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     Run INSAR workflow with parameters in cfg dictionary
     '''
     info_channel = journal.info("insar.run")
-    error_channel = journal.error('insar.run')
     info_channel.log("starting INSAR")
 
     t_all = time.time()
@@ -26,8 +25,8 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['geo2rdr']:
         geo2rdr.run(cfg)
 
-    if run_steps['resample']:
-        resample_slc.run(cfg)
+    if run_steps['coarse_resample']:
+        resample_slc.run(cfg, 'coarse')
 
     if (run_steps['dense_offsets']) and \
             (cfg['processing']['dense_offsets']['enabled']):
@@ -37,8 +36,18 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
             cfg['processing']['rubbersheet']['enabled']:
         rubbersheet.run(cfg, out_paths['RIFG'])
 
+    # If enabled, run fine_resampling
+    if run_steps['fine_resample'] and \
+            cfg['processing']['fine_resample']['enabled']:
+        resample_slc.run(cfg, 'fine')
+
+    # If fine_resampling is enabled, use fine-coregistered SLC
+    # to run crossmul
     if run_steps['crossmul']:
-        crossmul.run(cfg, out_paths['RIFG'])
+        if cfg['processing']['fine_resample']['enabled']:
+            crossmul.run(cfg, out_paths['RIFG'], 'fine')
+        else:
+            crossmul.run(cfg, out_paths['RIFG'], 'coarse')
 
     if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])

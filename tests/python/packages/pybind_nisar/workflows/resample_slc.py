@@ -27,10 +27,10 @@ def test_resample_slc_run():
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
 
     # Initialize runconfig object
-    runconfig = ResampleSlcRunConfig(args)
+    runconfig = ResampleSlcRunConfig(args, 'coarse')
     runconfig.geocode_common_arg_load()
 
-    resample_slc.run(runconfig.cfg)
+    resample_slc.run(runconfig.cfg, 'coarse')
 
 
 def test_resample_slc_validate():
@@ -41,7 +41,7 @@ def test_resample_slc_validate():
     scratch_path = '.'
     ref_slc = np.fromfile(os.path.join(iscetest.data, 'warped_winnipeg.slc'),
                           dtype=np.complex64).reshape(250, 250)[20:-20, 20:-20]
-    test_slc = np.fromfile(os.path.join(scratch_path, 'resample_slc', 'freqA',
+    test_slc = np.fromfile(os.path.join(scratch_path, 'coarse_resample_slc', 'freqA',
                                         'HH', 'coregistered_secondary.slc'), dtype=np.complex64).reshape(250, 250)[
                20:-20, 20:-20]
 
