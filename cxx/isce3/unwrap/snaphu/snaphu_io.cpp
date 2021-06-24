@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <isce3/except/Error.h>
+
 #include "snaphu.h"
 
 namespace isce3::unwrap {
@@ -248,8 +250,8 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   /* file will be opened in write mode later, clobbering existing file */
   if((fp=fopen(outfiles->outfile,"a"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"file %s is not writable\n",outfiles->outfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "File " + std::string(outfiles->outfile) + " is not writable");
   }else{
     if(ftell(fp)){
       fclose(fp);
@@ -267,56 +269,56 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   /* make sure options aren't contradictory */
   if(params->initonly && params->unwrapped){
     fflush(NULL);
-    fprintf(sp0,"cannot use initialize-only mode with unwrapped input\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Cannot use initialize-only mode with unwrapped input");
   }
   if(params->initonly && params->p>=0){
     fflush(NULL);
-    fprintf(sp0,"cannot use initialize-only mode with Lp costs\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Cannot use initialize-only mode with Lp costs");
   }
   if(params->costmode==NOSTATCOSTS && !(params->initonly || params->p>=0)){
     fflush(NULL);
-    fprintf(sp0,"no-statistical-costs option can only be used in\n");
-    fprintf(sp0,"  initialize-only or Lp-norm modes\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "no-statistical-costs option can only be used in initialize-only "
+            "or Lp-norm modes");
   }
   if(strlen(infiles->costinfile) && params->costmode==NOSTATCOSTS){
     fflush(NULL);
-    fprintf(sp0,"no-statistical-costs option cannot be given\n");
-    fprintf(sp0,"  if input cost file is specified\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "no-statistical-costs option cannot be given if input cost file "
+            "is specified");
   }
   if(strlen(outfiles->costoutfile) && params->costmode==NOSTATCOSTS){
     fflush(NULL);
-    fprintf(sp0,"no-statistical-costs option cannot be given\n");
-    fprintf(sp0,"  if output cost file is specified\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "no-statistical-costs option cannot be given if output cost file "
+            "is specified");
   }
 
   /* check geometry parameters */
   if(params->earthradius<=0){
     fflush(NULL);
-    fprintf(sp0,"earth radius must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Earth radius must be nonnegative");
   }
   if(params->altitude){
     if(params->altitude>0){
       params->orbitradius=params->earthradius+params->altitude;
     }else{
       fflush(NULL);
-      fprintf(sp0,"platform altitude must be positive\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Platform altitude must be positive");
     }
   }else if(params->orbitradius < params->earthradius){
     fflush(NULL);
-    fprintf(sp0,"platform orbit radius must be greater than earth radius\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Platform orbit radius must be greater than earth radius");
   }
   if(params->costmode==TOPO && params->baseline<0){
     fflush(NULL);
-    fprintf(sp0,"baseline length must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Baseline length must be nonnegative\n");
   }
   if(params->costmode==TOPO && params->baseline==0){
     fflush(NULL);
@@ -324,99 +326,99 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   }
   if(params->ncorrlooks<=0){
     fflush(NULL);
-    fprintf(sp0,"number of looks ncorrlooks must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Number of looks ncorrlooks must be positive\n");
   }
   if(params->nearrange<=0){
     fflush(NULL);
-    fprintf(sp0,"slant range parameter nearrange must be positive (meters)\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Slant range parameter nearrange must be positive (meters)");
   }
   if(params->dr<=0 || params->da<=0){
     fflush(NULL);
-    fprintf(sp0,"pixel spacings dr and da must be positive (meters)\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Pixel spacings dr and da must be positive (meters)");
   }
   /* dr and da after multilooking can be larger than rangeres, azres */
   /*
   if(params->rangeres<=(params->dr) 
      || params->azres<=(params->da)){
     fflush(NULL);
-    fprintf(sp0,"resolutions parameters must be larger than pixel spacings\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Resolutions parameters must be larger than pixel spacings");
   }
   */
   if(params->lambda<=0){
     fflush(NULL);
-    fprintf(sp0,"wavelength lambda  must be positive (meters)\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Wavelength lambda  must be positive (meters)");
   }
 
   /* check scattering model defaults */
   if(params->kds<=0){
     fflush(NULL);
-    fprintf(sp0,"scattering model parameter kds must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Scattering model parameter kds must be positive");
   }
   if(params->specularexp<=0){
     fflush(NULL);
-    fprintf(sp0,"scattering model parameter SPECULAREXP must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Scattering model parameter SPECULAREXP must be positive");
   }
   if(params->dzrcritfactor<0){
     fflush(NULL);
-    fprintf(sp0,"dzrcritfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "dzrcritfactor must be nonnegative");
   }
   if(params->laywidth<1){
     fflush(NULL);
-    fprintf(sp0,"layover window width laywidth must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Layover window width laywidth must be positive");
   }
   if(params->layminei<0){
     fflush(NULL);
-    fprintf(sp0,"layover minimum brightness must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Layover minimum brightness must be nonnegative");
   }
   if(params->sloperatiofactor<0){
     fflush(NULL);
-    fprintf(sp0,"slope ratio fudge factor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Slope ratio fudge factor must be nonnegative");
   }
   if(params->sigsqei<=0){
     fflush(NULL);
-    fprintf(sp0,"intensity estimate variance must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Intensity estimate variance must be positive");
   }
 
   /* check decorrelation model defaults */
   if(params->drho<=0){
     fflush(NULL);
-    fprintf(sp0,"correlation step size drho must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Correlation step size drho must be positive");
   }
   if(params->rhosconst1<=0 || params->rhosconst2<=0){
     fflush(NULL);
-    fprintf(sp0,"parameters rhosconst1 and rhosconst2 must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameters rhosconst1 and rhosconst2 must be positive");
   }
   if(!strlen(infiles->corrfile) 
      && (params->defaultcorr<0 || params->defaultcorr>1)){
     fflush(NULL);
-    fprintf(sp0,"default correlation must be between 0 and 1\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Default correlation must be between 0 and 1");
   }
   if(params->rhominfactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter rhominfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter rhominfactor must be nonnegative");
   }
   if(params->ncorrlooksaz<1 || params->ncorrlooksrange<1
      || params->nlooksaz<1 || params->nlooksrange<1
      || params->nlooksother<1){
     fflush(NULL);
-    fprintf(sp0,"numbers of looks must be positive integer\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Numbers of looks must be positive integer");
   }
   if(!strlen(infiles->corrfile)){
     if(params->ncorrlooksaz<params->nlooksaz){ 
@@ -436,70 +438,70 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   /* check pdf model parameters */
   if(params->azdzfactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter azdzfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter azdzfactor must be nonnegative");
   }
   if(params->dzeifactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter dzeifactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter dzeifactor must be nonnegative");
   }
   if(params->dzeiweight<0 || params->dzeiweight>1.0){
     fflush(NULL);
-    fprintf(sp0,"parameter dzeiweight must be between 0 and 1\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter dzeiweight must be between 0 and 1");
   }
   if(params->dzlayfactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter dzlayfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter dzlayfactor must be nonnegative");
   }
   if(params->layconst<=0){
     fflush(NULL);
-    fprintf(sp0,"parameter layconst must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter layconst must be positive");
   }
   if(params->layfalloffconst<0){
     fflush(NULL);
-    fprintf(sp0,"parameter layfalloffconst must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter layfalloffconst must be nonnegative");
   }
   if(params->sigsqshortmin<=0){
     fflush(NULL);
-    fprintf(sp0,"parameter sigsqshortmin must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter sigsqshortmin must be positive");
   }
   if(params->sigsqlayfactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter sigsqlayfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter sigsqlayfactor must be nonnegative");
   }
 
   /* check deformation mode parameters */
   if(params->defoazdzfactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter defoazdzfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter defoazdzfactor must be nonnegative");
   }
   if(params->defothreshfactor<0){
     fflush(NULL);
-    fprintf(sp0,"parameter defothreshfactor must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter defothreshfactor must be nonnegative");
   }
   if(params->defomax<0){
     fflush(NULL);
-    fprintf(sp0,"parameter defomax must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter defomax must be nonnegative");
   }
   if(params->sigsqcorr<0){
     fflush(NULL);
-    fprintf(sp0,"parameter sigsqcorr must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter sigsqcorr must be nonnegative");
   }
   if(params->defolayconst<=0){
     fflush(NULL);
-    fprintf(sp0,"parameter defolayconst must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Parameter defolayconst must be positive");
   }
   
   /* check algorithm parameters */
@@ -507,86 +509,85 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   /* or floating point exception */
   if((params->initmaxflow)<1 && (params->initmaxflow)!=AUTOCALCSTATMAX){
     fflush(NULL);
-    fprintf(sp0,"initialization maximum flow must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Initialization maximum flow must be positive");
   }
   if((params->arcmaxflowconst)<1){
     fflush(NULL);
-    fprintf(sp0,"arcmaxflowconst must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "arcmaxflowconst must be positive");
   }
   if((params->maxflow)<1){
     fflush(NULL);
-    fprintf(sp0,"maxflow must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "maxflow must be positive");
   }
   if(params->krowei<=0 || params->kcolei<=0){
     fflush(NULL);
-    fprintf(sp0,"averaging window sizes krowei and kcolei must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Averaging window sizes krowei and kcolei must be positive");
   }
   if(params->kperpdpsi<=0 || params->kpardpsi<=0){
     fflush(NULL);
-    fprintf(sp0,
-          "averaging window sizes kperpdpsi and kpardpsi must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+          "Averaging window sizes kperpdpsi and kpardpsi must be positive");
   }
   if(params->threshold<=0){
     fflush(NULL);
-    fprintf(sp0,"numerical solver threshold must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Numerical solver threshold must be positive");
   }
   if(params->initdzr<=0){
     fflush(NULL);
-    fprintf(sp0,"initdzr must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "initdzr must be positive");
   }
   if(params->initdzstep<=0){
     fflush(NULL);
-    fprintf(sp0,"initdzstep must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "initdzstep must be positive");
   }
   if(params->maxcost>POSSHORTRANGE || params->maxcost<=0){
     fflush(NULL);
-    fprintf(sp0,"maxcost must be positive and within range or short int\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "maxcost must be positive and within range or short int");
   }
   if(params->costscale<=0){
     fflush(NULL);
-    fprintf(sp0,"cost scale factor costscale must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "cost scale factor costscale must be positive");
   }
   if(params->p<0 && params->p!=PROBCOSTP){
     fflush(NULL);
-    fprintf(sp0,"Lp-norm parameter p should be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Lp-norm parameter p should be nonnegative");
   }
   if(params->costmode==TOPO && (params->maxflow*params->nshortcycle)
      >POSSHORTRANGE){
     fflush(NULL);
-    fprintf(sp0,"maxflow exceeds range of short int for given nshortcycle\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "maxflow exceeds range of short int for given nshortcycle");
   }
   if(params->costmode==DEFO && ceil(params->defomax*params->nshortcycle)
      >POSSHORTRANGE){
     fflush(NULL);
-    fprintf(sp0,"defomax exceeds range of short int for given nshortcycle\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "defomax exceeds range of short int for given nshortcycle");
   }
   if(params->nshortcycle < 1 || params->nshortcycle > MAXNSHORTCYCLE){
     fflush(NULL);
-    fprintf(sp0,"illegal value for nshortcycle\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Illegal value for nshortcycle");
   }
   if(params->maxnewnodeconst<=0 || params->maxnewnodeconst>1){
     fflush(NULL);
-    fprintf(sp0,"maxnewnodeconst must be between 0 and 1\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "maxnewnodeconst must be between 0 and 1");
   }
   if(params->nconnnodemin<0){
     fflush(NULL);
-    fprintf(sp0,"nconnnodemin must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "nconnnodemin must be nonnegative");
   }
   if(infiles->infileformat!=FLOAT_DATA || strlen(infiles->magfile)){
     params->havemagnitude=TRUE;
@@ -601,9 +602,9 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   if(params->initmaxflow==AUTOCALCSTATMAX 
      && !(params->ntilerow==1 && params->ntilecol==1)){
     fflush(NULL);
-    fprintf(sp0,"initial maximum flow cannot be calculated automatically in "
-            "tile mode\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Initial maximum flow cannot be calculated automatically in "
+            "tile mode");
   }
 
   /* masking parameters */
@@ -612,33 +613,33 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
      || params->edgemaskleft || params->edgemaskright){
     if(params->initonly){
       fflush(NULL);
-      fprintf(sp0,"masking not applicable for initialize-only mode\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Masking not applicable for initialize-only mode");
     }
   }
   if(params->edgemasktop<0 || params->edgemaskbot<0  
      || params->edgemaskleft<0 || params->edgemaskright<0){
     fflush(NULL);
-    fprintf(sp0,"edgemask parameters cannot be negative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "edgemask parameters cannot be negative");
   }
   if(params->edgemasktop+params->edgemaskbot>=nlines  
      || params->edgemaskleft+params->edgemaskright>=linelen){
     fflush(NULL);
-    fprintf(sp0,"edge masks cannot exceed input array size\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Edge masks cannot exceed input array size");
   }
 
   /* tile parameters */
   if(params->ntilerow<1 || params->ntilecol<1){
     fflush(NULL);
-    fprintf(sp0,"numbers of tile rows and columns must be positive\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Numbers of tile rows and columns must be positive");
   }
   if(params->rowovrlp<0 || params->colovrlp<0){
     fflush(NULL);
-    fprintf(sp0,"tile overlaps must be nonnegative\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Tile overlaps must be nonnegative");
   }
   if(params->ntilerow>1 || params->ntilecol>1){
     ni=ceil((nlines+(params->ntilerow-1)*params->rowovrlp)
@@ -650,36 +651,35 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
        || params->ntilerow*params->ntilerow > nlines
        || params->ntilecol*params->ntilecol > linelen){
       fflush(NULL);
-      fprintf(sp0,"tiles too small or overlap too large for given input\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Tiles too small or overlap too large for given input");
     }
     if(params->minregionsize 
        > ((nlines-(params->ntilerow-1)*(ni-params->rowovrlp))
           *(linelen-(params->ntilecol-1)*(nj-params->colovrlp)))){
       fflush(NULL);
-      fprintf(sp0,"minimum region size too large for given tile parameters\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Minimum region size too large for given tile parameters");
     }
     if(TMPTILEOUTFORMAT!=ALT_LINE_DATA && TMPTILEOUTFORMAT!=FLOAT_DATA){
       fflush(NULL);
-      fprintf(sp0,"unsupported TMPTILEOUTFORMAT value in complied binary\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Unsupported TMPTILEOUTFORMAT value in complied binary");
     }
     if(TMPTILEOUTFORMAT==FLOAT_DATA && outfiles->outfileformat!=FLOAT_DATA){
       fflush(NULL);
-      fprintf(sp0,"precompiled tile format precludes given output format\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Precompiled tile format precludes given output format");
     }
     if(params->scndryarcflowmax<1){
       fflush(NULL);
-      fprintf(sp0,"parameter scndryarcflowmax too small\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Parameter scndryarcflowmax too small");
     }
     if(params->initonly){
       fflush(NULL);
-      fprintf(sp0,
-              "initialize-only mode and tile mode are mutually exclusive\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Initialize-only mode and tile mode are mutually exclusive");
     }
     if(params->assembleonly){
       n=strlen(params->tiledir);
@@ -688,8 +688,8 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       }
       if(!strlen(params->tiledir)){
         fflush(NULL);
-        fprintf(sp0,"tile directory name must be specified\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Tile directory name must be specified");
       }
       if(!strcmp(params->tiledir,"/")){
         StrNCopy(params->tiledir,"",MAXSTRLEN);
@@ -701,13 +701,13 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
        || params->piecenrow!=DEF_PIECENROW
        || params->piecencol!=DEF_PIECENCOL){
       fflush(NULL);
-      fprintf(sp0,"piece-only mode cannot be used with multiple tiles\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Piece-only mode cannot be used with multiple tiles");
     }
     if(params->costmode==NOSTATCOSTS){
       fflush(NULL);
-      fprintf(sp0,"no-statistical-costs option cannot be used in tile mode\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "no-statistical-costs option cannot be used in tile mode");
     }
     if(params->rowovrlp<TILEOVRLPWARNTHRESH
        || params->colovrlp<TILEOVRLPWARNTHRESH){
@@ -717,8 +717,8 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   }else{
     if(params->assembleonly){
       fflush(NULL);
-      fprintf(sp0,"assemble-only mode can only be used with multiple tiles\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "assemble-only mode can only be used with multiple tiles");
     }
     if(params->nthreads>1){
       fflush(NULL);
@@ -729,20 +729,19 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       fprintf(sp0,"only one tile--disregarding tile overlap values\n");
     }
     if(params->onetilereopt){
-      fprintf(sp0,
-              "cannot do single-tile reoptimization without tiling params\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Cannot do single-tile reoptimization without tiling params");
     }
   }
   if(params->nthreads<1){
       fflush(NULL);
-    fprintf(sp0,"number of processors must be at least one\n");
-    exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Number of processors must be at least one");
   }else if(params->nthreads>MAXTHREADS){
     fflush(NULL);
-    fprintf(sp0,"number of processors exceeds precomplied limit of %d\n",
-            MAXTHREADS);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Number of processors exceeds precomplied limit of " +
+            std::to_string(MAXTHREADS));
   }
 
   /* piece params */
@@ -759,28 +758,28 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
      || params->piecefirstrow+params->piecenrow>nlines
      || params->piecefirstcol+params->piecencol>linelen){
     fflush(NULL);
-    fprintf(sp0,"illegal values for piece of interferogram to unwrap\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Illegal values for piece of interferogram to unwrap");
   }
 
   /* connected component parameters */
   if(params->regrowconncomps){
     if(!strlen(outfiles->conncompfile)){
       fflush(NULL);
-      fprintf(sp0,"no connected component output file specified\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "No connected component output file specified");
     }      
     params->unwrapped=TRUE;
   }
   if(params->minconncompfrac<0 || params->minconncompfrac>1){
     fflush(NULL);
-    fprintf(sp0,"illegal value for minimum connected component fraction\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Illegal value for minimum connected component fraction");
   }
   if(params->maxncomps<=0){
     fflush(NULL);
-    fprintf(sp0,"illegal value for maximum number of connected components\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Illegal value for maximum number of connected components");
   }
   if(params->maxncomps>UCHAR_MAX
      && params->conncompouttype==CONNCOMPOUTTYPEUCHAR){
@@ -835,8 +834,8 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
 
       /* abort if we were given a non-zero length name that is unreadable */
       fflush(NULL);
-      fprintf(sp0,"unable to read configuration file %s\n",conffile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to read configuration file " + std::string(conffile));
     }
   }else{
     
@@ -862,9 +861,9 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
     /* make sure we got the whole line */
     if(strlen(buf)>=MAXLINELEN-1){
       fflush(NULL);
-      fprintf(sp0,"line %ld in file %s exceeds maximum line length\n",
-              nlines,conffile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Line " + std::to_string(nlines) + " in file " +
+              std::string(conffile) + " exceeds maximum line length");
     }
 
     /* parse config line */
@@ -923,9 +922,9 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
   /* if only one field is read, and it is not a comment, we have an error */
   if(nfields==1 && isalnum(str1[0])){
     fflush(NULL);
-    fprintf(sp0,"unrecognized configuration parameter '%s' (%s:%ld)\n",
-            str1,conffile,nlines);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Unrecognized configuration parameter '" + std::string(str1) +
+            "' (" + std::string(conffile) + ":" + std::to_string(nlines) + ")");
   }
 
   /* if we have (at least) two non-comment fields */
@@ -942,31 +941,31 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
     }else if(!strcmp(str1,"AMPFILE") || !strcmp(str1,"AMPFILE1")){
       if(strlen(infiles->ampfile2) && !params->amplitude){
         fflush(NULL);
-        fprintf(sp0,"cannot specify both amplitude and power\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Cannot specify both amplitude and power");
       }
       StrNCopy(infiles->ampfile,str2,MAXSTRLEN);
     }else if(!strcmp(str1,"AMPFILE2")){
       if(strlen(infiles->ampfile) && !params->amplitude){
         fflush(NULL);
-        fprintf(sp0,"cannot specify both amplitude and power\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Cannot specify both amplitude and power");
       }
       StrNCopy(infiles->ampfile2,str2,MAXSTRLEN);
       infiles->ampfileformat=FLOAT_DATA;
     }else if(!strcmp(str1,"PWRFILE") || !strcmp(str1,"PWRFILE1")){
       if(strlen(infiles->ampfile2) && params->amplitude){
         fflush(NULL);
-        fprintf(sp0,"cannot specify both amplitude and power\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Cannot specify both amplitude and power");
       } 
       StrNCopy(infiles->ampfile,str2,MAXSTRLEN);
       params->amplitude=FALSE;
     }else if(!strcmp(str1,"PWRFILE2")){
       if(strlen(infiles->ampfile) && params->amplitude){
         fflush(NULL);
-        fprintf(sp0,"cannot specify both amplitude and power\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Cannot specify both amplitude and power");
       } 
       StrNCopy(infiles->ampfile2,str2,MAXSTRLEN);
       params->amplitude=FALSE;
@@ -1354,17 +1353,19 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
       badparam=SetBooleanSignedChar(&(params->regrowconncomps),str2);
     }else{
       fflush(NULL);
-      fprintf(sp0,"unrecognized configuration parameter '%s' (%s:%ld)\n",
-              str1,conffile,nlines);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unrecognized configuration parameter '" + std::string(str1) +
+              "' (" + std::string(conffile) + ":" + std::to_string(nlines) +
+              ")");
     }
     
     /* give an error if we had trouble interpreting the line */
     if(badparam){
       fflush(NULL);
-      fprintf(sp0,"illegal argument %s for parameter %s (%s:%ld)\n",
-              str2,str1,conffile,nlines);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal argument " + std::string(str2) + " for parameter " +
+              std::string(str1) + " (" + std::string(conffile) + ":" +
+              std::to_string(nlines) + ")");
     }
       
   }
@@ -1395,8 +1396,8 @@ int WriteConfigLogFile(infileT *infiles,
     /* open the log file */
     if((fp=fopen(outfiles->logfile,"w"))==NULL){
       fflush(NULL);
-      fprintf(sp0,"unable to write to log file %s\n",outfiles->logfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to write to log file " + std::string(outfiles->logfile));
     }
     fprintf(sp1,"Logging run-time parameters to file %s\n",outfiles->logfile);
     
@@ -1661,16 +1662,16 @@ int WriteConfigLogFile(infileT *infiles,
       fprintf(fp,"CONNCOMPOUTTYPE  UINT\n");
     }else{
       fflush(NULL);
-      fprintf(sp0,"ERROR: bad value of params->conncompouttype\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Bad value of params->conncompouttype");
     }
 
     /* close the log file */
     if(fclose(fp)){
       fflush(NULL);
-      fprintf(sp0,"ERROR in closing log file %s (disk full?)\nAbort\n",
-              outfiles->logfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error in closing log file " + std::string(outfiles->logfile) +
+              " (disk full?)");
     }
   }
 
@@ -1749,8 +1750,8 @@ long GetNLines(infileT *infiles, long linelen, paramT *params){
   /* get size of input file in rows and columns */
   if((fp=fopen(infiles->infile,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"can't open file %s\n",infiles->infile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(infiles->infile));
   }
   fseek(fp,0,SEEK_END);
   filesize=ftell(fp);
@@ -1763,9 +1764,9 @@ long GetNLines(infileT *infiles, long linelen, paramT *params){
   }
   if(filesize % (datasize*linelen)){
     fflush(NULL);
-    fprintf(sp0,"extra data in file %s (bad linelength?)\n",
-            infiles->infile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Extra data in file " + std::string(infiles->infile) +
+            " (bad linelength?)");
   }
   return(filesize/(datasize*linelen));               /* implicit floor */
 
@@ -1824,9 +1825,9 @@ FILE *OpenOutputFile(char *outfile, char *realoutfile){
       StrNCopy(realoutfile,dumpfile,MAXSTRLEN);
     }else{
       fflush(NULL);
-      fprintf(sp0,"Unable to write to file %s or dump to file %s\nAbort\n",
-             outfile,dumpfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to write to file " + std::string(outfile) + " or dump "
+              "to file " + std::string(dumpfile));
     }
   }else{
     StrNCopy(realoutfile,outfile,MAXSTRLEN);
@@ -1856,9 +1857,9 @@ int WriteAltLineFile(float **mag, float **phase, char *outfile,
     if(fwrite(mag[row],sizeof(float),ncol,fp)!=ncol
        || fwrite(phase[row],sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
   }
   if(fclose(fp)){
@@ -1893,9 +1894,9 @@ int WriteAltSampFile(float **arr1, float **arr2, char *outfile,
     }
     if(fwrite(outline,sizeof(float),2*ncol,fp)!=2*ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
   }
   if(fclose(fp)){
@@ -1923,9 +1924,9 @@ int Write2DArray(void **array, char *filename, long nrow, long ncol,
   for(row=0; row<nrow; row++){
     if(fwrite(array[row],size,ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
   }
   if(fclose(fp)){
@@ -1954,17 +1955,17 @@ int Write2DRowColArray(void **array, char *filename, long nrow,
   for(row=0; row<nrow-1; row++){
     if(fwrite(array[row],size,ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
   }
   for(row=nrow-1; row<2*nrow-1; row++){
     if(fwrite(array[row],size,ncol-1,fp)!=ncol-1){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
   }
   if(fclose(fp)){
@@ -1998,13 +1999,13 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
   /* check data size */
   if(tileparams->ncol>LARGESHORT || tileparams->nrow>LARGESHORT){
     fflush(NULL);
-    fprintf(sp0,"one or more interferogram dimensions too large\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "One or more interferogram dimensions too large");
   }
   if(tileparams->ncol<2 || tileparams->nrow<2){
     fflush(NULL);
-    fprintf(sp0,"input interferogram must be at least 2x2\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Input interferogram must be at least 2x2");
   }
 
   /* is the input file already unwrapped? */
@@ -2026,21 +2027,21 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
                   tileparams,sizeof(float *),sizeof(float));
     }else{
       fflush(NULL);
-      fprintf(sp0,"illegal input file format specification\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Illegal input file format specification");
     }
 
     /* check to make sure the input data doesn't contain NaNs or infs */
     if(!ValidDataArray(wrappedphase,nrow,ncol) 
        || (mag!=NULL && !ValidDataArray(mag,nrow,ncol))){
       fflush(NULL);
-      fprintf(sp0,"NaN or infinity found in input float data\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "NaN or infinity found in input float data");
     }
     if(mag!=NULL && !NonNegDataArray(mag,nrow,ncol)){
       fflush(NULL);
-      fprintf(sp0,"Negative magnitude found in input magnitude data\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Negative magnitude found in input magnitude data");
     }
 
     /* flip the sign of the wrapped phase if flip flag is set */
@@ -2064,21 +2065,21 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
                   tileparams,sizeof(float *),sizeof(float));
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal input file format specification\nAbort\n");
-      exit(ABNORMAL_EXIT);      
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Illegal input file format specification");
     }
 
     /* check to make sure the input data doesn't contain NaNs or infs */
     if(!ValidDataArray(unwrappedphase,nrow,ncol) 
        || (mag!=NULL && !ValidDataArray(mag,nrow,ncol))){
       fflush(NULL);
-      fprintf(sp0,"NaN or infinity found in input float data\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "NaN or infinity found in input float data");
     }
     if(mag!=NULL && !NonNegDataArray(mag,nrow,ncol)){
       fflush(NULL);
-      fprintf(sp0,"Negative magnitude found in input magnitude data\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Negative magnitude found in input magnitude data");
     }
 
     
@@ -2249,8 +2250,8 @@ int ReadUnwrappedEstimateFile(float ***unwrappedestptr, infileT *infiles,
   /* make sure data is valid */
   if(!ValidDataArray(*unwrappedestptr,nrow,ncol)){
     fflush(NULL);
-    fprintf(sp0,"Infinity or NaN found in file %s\nAbort\n",infiles->estfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Infinity or NaN found in file " + std::string(infiles->estfile));
   }
 
   /* flip the sign of the unwrapped estimate if the flip flag is set */
@@ -2354,9 +2355,10 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
                   sizeof(float *),sizeof(float));
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal file formats specified for files %s, %s\nAbort\n",
-              infiles->ampfile,infiles->ampfile2);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Illegal file formats specified for files " +
+              std::string(infiles->ampfile) + ", " +
+              std::string(infiles->ampfile2));
     }
 
   }else{
@@ -2376,9 +2378,9 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
       pwr2=NULL;
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal file format specified for file %s\nAbort\n",
-              infiles->ampfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Illegal file format specified for file " +
+              std::string(infiles->ampfile));
     }
   }
 
@@ -2387,15 +2389,15 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
      || (pwr2!=NULL && !ValidDataArray(pwr2,nrow,ncol))
      || (pwr!=NULL && !ValidDataArray(pwr,nrow,ncol))){
     fflush(NULL);
-    fprintf(sp0,"Infinity or NaN found in amplitude or power data\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Infinity or NaN found in amplitude or power data");
   }
   if((pwr1!=NULL && !NonNegDataArray(pwr1,nrow,ncol)) 
      || (pwr2!=NULL && !NonNegDataArray(pwr2,nrow,ncol))
      || (pwr!=NULL && !NonNegDataArray(pwr,nrow,ncol))){
     fflush(NULL);
-    fprintf(sp0,"Negative value found in amplitude or power data\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Negative value found in amplitude or power data");
   }
 
   /* if data is amplitude, square to get power */
@@ -2462,9 +2464,9 @@ int ReadCorrelation(float ***corrptr, infileT *infiles,
                 sizeof(float *),sizeof(float));
   }else{
     fflush(NULL);
-    fprintf(sp0,"Illegal file format specified for file %s\nAbort\n",
-            infiles->corrfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "Illegal file format specified for file " +
+            std::string(infiles->corrfile));
   }
 
   /* set output pointer and free memory */
@@ -2496,8 +2498,8 @@ int ReadAltLineFile(float ***mag, float ***phase, char *alfile,
   /* open the file */
   if((fp=fopen(alfile,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",alfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(alfile));
   }
 
   /* get number of lines based on file size and line length */ 
@@ -2505,9 +2507,10 @@ int ReadAltLineFile(float ***mag, float ***phase, char *alfile,
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ldx%ld array expected)\nAbort\n",
-            alfile,nlines,linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(alfile) + " wrong size (" +
+            std::to_string(nlines) + "x" + std::to_string(linelen) +
+            " array expected)");
   }
   fseek(fp,0,SEEK_SET);                 
 
@@ -2528,14 +2531,14 @@ int ReadAltLineFile(float ***mag, float ***phase, char *alfile,
   for(row=0; row<nrow; row++){
     if(fread((*mag)[row],sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",alfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(alfile));
     }
     fseek(fp,padlen,SEEK_CUR);
     if(fread((*phase)[row],sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",alfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(alfile));
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -2565,8 +2568,8 @@ int ReadAltLineFilePhase(float ***phase, char *alfile,
   /* open the file */
   if((fp=fopen(alfile,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",alfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(alfile));
   }
 
   /* get number of lines based on file size and line length */ 
@@ -2574,9 +2577,10 @@ int ReadAltLineFilePhase(float ***phase, char *alfile,
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ldx%ld array expected)\nAbort\n",
-            alfile,nlines,linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(alfile) + " wrong size (" +
+            std::to_string(nlines) + "x" + std::to_string(linelen) +
+            " array expected)");
   }
   fseek(fp,0,SEEK_SET);                 
 
@@ -2594,8 +2598,8 @@ int ReadAltLineFilePhase(float ***phase, char *alfile,
   for(row=0; row<nrow; row++){
     if(fread((*phase)[row],sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",alfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(alfile));
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -2623,8 +2627,8 @@ int ReadComplexFile(float ***mag, float ***phase, char *rifile,
   /* open the file */
   if((fp=fopen(rifile,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",rifile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(rifile));
   }
 
   /* get number of lines based on file size and line length */ 
@@ -2632,9 +2636,10 @@ int ReadComplexFile(float ***mag, float ***phase, char *rifile,
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ldx%ld array expected)\nAbort\n",
-            rifile,nlines,linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(rifile) + " wrong size (" +
+            std::to_string(nlines) + "x" + std::to_string(linelen) +
+            " array expected)");
   }
   fseek(fp,0,SEEK_SET);                 
 
@@ -2656,8 +2661,8 @@ int ReadComplexFile(float ***mag, float ***phase, char *rifile,
   for(row=0; row<nrow; row++){
     if(fread(inpline,sizeof(float),2*ncol,fp)!=2*ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",rifile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(rifile));
     }
     for(col=0; col<ncol; col++){
       (*mag)[row][col]=sqrt(inpline[2*col]*inpline[2*col]
@@ -2698,8 +2703,8 @@ int Read2DArray(void ***arr, char *infile, long linelen, long nlines,
   /* open the file */
   if((fp=fopen(infile,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",infile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(infile));
   }
 
   /* get number of lines based on file size and line length */ 
@@ -2707,9 +2712,10 @@ int Read2DArray(void ***arr, char *infile, long linelen, long nlines,
   filesize=ftell(fp);
   if(filesize!=(nlines*linelen*elsize)){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ldx%ld array expected)\nAbort\n",
-            infile,nlines,linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(infile) + " wrong size (" +
+            std::to_string(nlines) + "x" + std::to_string(linelen) +
+            " array expected)");
   }
   fseek(fp,0,SEEK_SET);                 
 
@@ -2727,8 +2733,8 @@ int Read2DArray(void ***arr, char *infile, long linelen, long nlines,
   for(row=0; row<nrow; row++){
     if(fread((*arr)[row],elsize,ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",infile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(infile));
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -2757,8 +2763,8 @@ int ReadAltSampFile(float ***arr1, float ***arr2, char *infile,
   /* open the file */
   if((fp=fopen(infile,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",infile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(infile));
   }
 
   /* get number of lines based on file size and line length */ 
@@ -2766,9 +2772,10 @@ int ReadAltSampFile(float ***arr1, float ***arr2, char *infile,
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ldx%ld array expected)\nAbort\n",
-            infile,nlines,linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(infile) + " wrong size (" +
+            std::to_string(nlines) + "x" + std::to_string(linelen) +
+            " array expected)");
   }
   fseek(fp,0,SEEK_SET);                 
 
@@ -2790,8 +2797,8 @@ int ReadAltSampFile(float ***arr1, float ***arr2, char *infile,
   for(row=0; row<nrow; row++){
     if(fread(inpline,sizeof(float),2*ncol,fp)!=2*ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",infile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(infile));
     }
     for(col=0; col<ncol; col++){
       (*arr1)[row][col]=inpline[2*col];
@@ -2824,8 +2831,8 @@ int Read2DRowColFile(void ***arr, char *filename, long linelen, long nlines,
   /* open the file */
   if((fp=fopen(filename,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",filename);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(filename));
   }
 
   /* get number of data elements in file */ 
@@ -2837,9 +2844,10 @@ int Read2DRowColFile(void ***arr, char *filename, long linelen, long nlines,
   /* check file size */
   if(2*linelen*nlines-nlines-linelen != nel || (filelen % size)){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ld elements expected)\nAbort\n",
-            filename,2*linelen*nlines-nlines-linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(filename) + " wrong size (" +
+            std::to_string(2*linelen*nlines-nlines-linelen) +
+            " elements expected)");
   }
 
   /* get memory if passed pointer is NULL */
@@ -2856,8 +2864,8 @@ int Read2DRowColFile(void ***arr, char *filename, long linelen, long nlines,
   for(row=0; row<nrow-1; row++){
     if(fread((*arr)[row],size,ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",filename);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(filename));
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -2866,8 +2874,8 @@ int Read2DRowColFile(void ***arr, char *filename, long linelen, long nlines,
   for(row=nrow-1; row<2*nrow-1; row++){
     if(fread((*arr)[row],size,ncol-1,fp)!=ncol-1){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",filename);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(filename));
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -2896,8 +2904,8 @@ int Read2DRowColFileRows(void ***arr, char *filename, long linelen,
   /* open the file */
   if((fp=fopen(filename,"r"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Can't open file %s\nAbort\n",filename);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(filename));
   }
 
   /* get number of data elements in file */ 
@@ -2909,9 +2917,10 @@ int Read2DRowColFileRows(void ***arr, char *filename, long linelen,
   /* check file size */
   if(2*linelen*nlines-nlines-linelen != nel || (filelen % size)){
     fflush(NULL);
-    fprintf(sp0,"File %s wrong size (%ld elements expected)\nAbort\n",
-            filename,2*linelen*nlines-nlines-linelen);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(filename) + " wrong size (" +
+            std::to_string(2*linelen*nlines-nlines-linelen) +
+            " elements expected)");
   }
 
   /* get memory if passed pointer is NULL */
@@ -2928,8 +2937,8 @@ int Read2DRowColFileRows(void ***arr, char *filename, long linelen,
   for(row=0; row<nrow; row++){
     if(fread((*arr)[row],size,ncol,fp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while reading from file %s\nAbort\n",filename);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(filename));
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -2994,29 +3003,29 @@ int SetStreamPointers(void){
   if((sp0=DEF_ERRORSTREAM)==NULL){
     if((sp0=fopen(NULLFILE,"w"))==NULL){
       fflush(NULL);
-      fprintf(sp0,"unable to open null file %s\n",NULLFILE);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to open null file " + std::string(NULLFILE));
     }
   }
   if((sp1=DEF_OUTPUTSTREAM)==NULL){
     if((sp1=fopen(NULLFILE,"w"))==NULL){
       fflush(NULL);
-      fprintf(sp0,"unable to open null file %s\n",NULLFILE);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to open null file " + std::string(NULLFILE));
     }
   }
   if((sp2=DEF_VERBOSESTREAM)==NULL){
     if((sp2=fopen(NULLFILE,"w"))==NULL){
       fflush(NULL);
-      fprintf(sp0,"unable to open null file %s\n",NULLFILE);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to open null file " + std::string(NULLFILE));
     }
   }
   if((sp3=DEF_COUNTERSTREAM)==NULL){
     if((sp3=fopen(NULLFILE,"w"))==NULL){
       fflush(NULL);
-      fprintf(sp0,"unable to open null file %s\n",NULLFILE);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Unable to open null file " + std::string(NULLFILE));
     }
   }
   return(0);
@@ -3060,8 +3069,8 @@ int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol,
   sprintf(logfile,"%s/%s%ld_%ld",params->tiledir,LOGFILEROOT,tilerow,tilecol);
   if((logfp=fopen(logfile,"w"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Unable to open log file %s\nAbort\n",logfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Unable to open log file " + std::string(logfile));
   }
   fprintf(logfp,"%s (pid %ld): unwrapping tile at row %ld, column %ld\n\n",
           PROGRAMNAME,(long )pid,tilerow,tilecol);
@@ -3082,8 +3091,8 @@ int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol,
   }
   if((sp3=fopen(NULLFILE,"w"))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Unable to open null file %s\n",NULLFILE);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Unable to open null file " + std::string(NULLFILE));
   }
   return(0);
 }
@@ -3179,8 +3188,8 @@ int MakeTileDir(paramT *params, outfileT *outfiles){
   fprintf(sp1,"Creating temporary directory %s\n",params->tiledir);
   if(mkdir(params->tiledir,TILEDIRMODE)){
     fflush(NULL);
-    fprintf(sp0,"Error creating directory %s\nAbort\n",params->tiledir);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Error creating directory " + std::string(params->tiledir));
   }
 
   /* done */
@@ -3212,9 +3221,9 @@ int SetTileInitOutfile(char *outfile, long pid){
 
   /* see if file already exists and exit if so */
   if(!stat(outfile,statbuf)){
-    fprintf(sp0,
-            "ERROR: refusing to write tile init to existing file %s\n",outfile);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Refusing to write tile init to existing file " +
+            std::string(outfile));
   }
 
   /* done */
@@ -3238,8 +3247,8 @@ int ParseFilename(char *filename, char *path, char *basename){
   /* make sure we have a nonzero filename */
   if(!strlen(filename)){
     fflush(NULL);
-    fprintf(sp0,"Zero-length filename passed to ParseFilename()\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Zero-length filename passed to ParseFilename()");
   }
 
   /* initialize path */
@@ -3264,8 +3273,8 @@ int ParseFilename(char *filename, char *path, char *basename){
   /* make sure we have a nonzero base filename */
   if(!strlen(basename)){
     fflush(NULL);
-    fprintf(sp0,"Zero-length base filename found in ParseFilename()\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Zero-length base filename found in ParseFilename()");
   }
 
   /* done */

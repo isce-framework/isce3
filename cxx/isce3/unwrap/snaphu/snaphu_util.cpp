@@ -27,6 +27,8 @@
 
 #include "snaphu.h"
 
+#include <isce3/except/Error.h>
+
 namespace isce3::unwrap {
 
 /* static (local) function prototypes */
@@ -157,9 +159,8 @@ int CalcWrappedRangeDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
   paddpsi=MirrorPad(dpsi,nrow,ncol-1,(kperpdpsi-1)/2,(kpardpsi-1)/2);
   if(paddpsi==dpsi){
     fflush(NULL);
-    fprintf(sp0,"Wrapped-gradient averaging box too large "
-            "for input array size\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Wrapped-gradient averaging box too large for input array size");
   }
   BoxCarAvg(avgdpsi,paddpsi,nrow,ncol-1,kperpdpsi,kpardpsi);
   Free2DArray((void **)paddpsi,nrow+kperpdpsi-1);
@@ -191,9 +192,8 @@ int CalcWrappedAzDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
   paddpsi=MirrorPad(dpsi,nrow-1,ncol,(kpardpsi-1)/2,(kperpdpsi-1)/2);
   if(paddpsi==dpsi){
     fflush(NULL);
-    fprintf(sp0,"Wrapped-gradient averaging box too large "
-            "for input array size\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Wrapped-gradient averaging box too large for input array size");
   }
   BoxCarAvg(avgdpsi,paddpsi,nrow-1,ncol,kpardpsi,kperpdpsi);
   Free2DArray((void **)paddpsi,nrow-1+kpardpsi-1);
@@ -524,8 +524,7 @@ void *MAlloc(size_t size){
 
   if((ptr=malloc(size))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Out of memory\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Out of memory");
   }
   return(ptr);
 }
@@ -541,8 +540,7 @@ void *CAlloc(size_t nitems, size_t size){
   
   if((ptr=calloc(nitems,size))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Out of memory\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Out of memory");
   }
   return(ptr);
 }
@@ -558,8 +556,7 @@ void *ReAlloc(void *ptr, size_t size){
   
   if((ptr2=realloc(ptr,size))==NULL){
     fflush(NULL);
-    fprintf(sp0,"Out of memory\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Out of memory");
   }
   return(ptr2);
 }
@@ -799,9 +796,8 @@ int Despeckle(float **mag, float ***ei, long nrow, long ncol){
   intensity=MirrorPad(mag,nrow,ncol,ARMLEN,ARMLEN);
   if(intensity==mag){
     fflush(NULL);
-    fprintf(sp0,"Despeckling box size too large for input array size\n"
-            "Abort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Despeckling box size too large for input array size");
   }
 
 
@@ -1190,9 +1186,9 @@ void SignalExit(int signum){
   
   signal(SIGTERM,SIG_IGN);
   fflush(NULL);
-  fprintf(sp0,"Exiting with status %d on signal %d\n",ABNORMAL_EXIT,signum);
   fflush(NULL);
-  exit(ABNORMAL_EXIT);
+  throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+          "Received interrupt or hangup signal " + std::to_string(signum));
 
   /* done */
   return;

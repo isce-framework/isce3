@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <isce3/except/Error.h>
+
 #include "snaphu.h"
 #include "snaphu_unwrap.h"
 
@@ -115,7 +117,6 @@ void snaphuUnwrap(const std::string& configfile){
   /* finish up */
   fprintf(sp1,"Program %s done\n",PROGRAMNAME);
   DisplayElapsedTime(tstart,cputimestart);
-  exit(NORMAL_EXIT);
 
 } /* end of snaphuUnwrap() */
 
@@ -196,8 +197,8 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
       fprintf(sp1,"Starting second-round single-tile unwrapping\n");
       
     }else{
-      fprintf(sp0,"ERROR: illegal optiter value in Unwrap()\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal optiter value in Unwrap()");
     }
     
     /* set up for unwrapping */
@@ -274,9 +275,9 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
 
                 /* parent kills children and exits if there was a fork error */
                 fflush(NULL);
-                fprintf(sp0,"Error while forking\nAbort\n");
                 kill(0,SIGKILL);
-                exit(ABNORMAL_EXIT);
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                        "Error while forking");
 
               }else if(pid==0){
 
@@ -334,11 +335,11 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
               /* make sure child exited cleanly */
               if(!(WIFEXITED(childstatus)) || (WEXITSTATUS(childstatus))!=0){
                 fflush(NULL);
-                fprintf(sp0,"Unexpected or abnormal exit of child process %ld\n"
-                        "Abort\n",(long )pid);
                 signal(SIGTERM,SIG_IGN);
                 kill(0,SIGTERM);
-                exit(ABNORMAL_EXIT);
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                        "Unexpected or abnormal exit of child process " +
+                        std::to_string(pid));
               }
 
               /* we're done if there are no more active children */
@@ -497,13 +498,13 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
     }else if(params->initmethod==MCFINIT){
 
       fflush(NULL);
-      fprintf(sp0,"MCF initialization not implemented\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "MCF initialization not implemented");
 
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal initialization method\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+              "Illegal initialization method");
     }
 
     /* integrate the phase and write out if necessary */

@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <isce3/except/Error.h>
+
 #include "snaphu.h"
 
 namespace isce3::unwrap {
@@ -196,8 +198,8 @@ int SetupTile(long nlines, long linelen, paramT *params,
   /* error checking on tile size */
   if(params->minregionsize > (tileparams->nrow)*(tileparams->ncol)){
     fflush(NULL);
-    fprintf(sp0,"Minimum region size cannot exceed tile size\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Minimum region size cannot exceed tile size");
   }
 
   /* set output files */
@@ -424,8 +426,8 @@ int GrowRegions(void **costs, short **flows, long nrow, long ncol,
       EvalCost=EvalCostSmooth;
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal cost mode in GrowRegions().  This is a bug.\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal cost mode in GrowRegions().  This is a bug.");
     }
     temptileparams->firstrow=0;
     temptileparams->firstcol=0;
@@ -626,9 +628,8 @@ int GrowRegions(void **costs, short **flows, long nrow, long ncol,
       for(col=0;col<ncol;col++){
         if(nodes[row][col].incost>LARGESHORT){
           fflush(NULL);
-          fprintf(sp0,
-                  "Number of regions in tile exceeds max allowed\nAbort\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                  "Number of regions in tile exceeds max allowed");
         }
         regions[row][col]=nodes[row][col].incost;
       }
@@ -697,8 +698,8 @@ int GrowConnCompsMask(void **costs, short **flows, long nrow, long ncol,
   costthresh=params->conncompthresh;
   if(minsize>nrow*ncol){
     fflush(NULL);
-    fprintf(sp0,"Minimum region size cannot exceed tile size\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Minimum region size cannot exceed tile size");
   }
 
   /* loop over all arcs */
@@ -897,8 +898,8 @@ int GrowConnCompsMask(void **costs, short **flows, long nrow, long ncol,
     outbufptr=(void *)uintbuf;
   }else{
     fflush(NULL);
-    fprintf(sp0,"Bad conncompouttype in GrowConnCompMask()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Bad conncompouttype in GrowConnCompMask()");
   }
   fprintf(sp1,"Writing connected components to file %s"
           " as %d-byte unsigned ints\n",
@@ -908,9 +909,8 @@ int GrowConnCompsMask(void **costs, short **flows, long nrow, long ncol,
     for(col=0;col<ncol;col++){
       if(nodes[row][col].incost>outtypemax){
         fflush(NULL);
-        fprintf(sp0,"Number of connected components too large for output type\n"
-                "Abort\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Number of connected components too large for output type");
       }
       uintbuf[col]=(unsigned int)(nodes[row][col].incost);
     }
@@ -921,9 +921,9 @@ int GrowConnCompsMask(void **costs, short **flows, long nrow, long ncol,
     }
     if(fwrite(outbufptr,outtypesize,ncol,conncompfp)!=ncol){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
   }
   if(fclose(conncompfp)){
@@ -1262,8 +1262,8 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
     EvalCost=EvalCostSmooth;
   }else{
     fflush(NULL);
-    fprintf(sp0,"Illegal cost mode in AssembleTiles().  Abort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Illegal cost mode in AssembleTiles()");
   }
   /*
   if(CalcCost==CalcCostTopo || CalcCost==CalcCostDefo){
@@ -1609,8 +1609,8 @@ int ReadNextRegion(long tilerow, long tilecol, long nlines, long linelen,
     costtypesize=sizeof(bidircostT);
   }else{
     fflush(NULL);
-    fprintf(sp0,"ERROR: Bad CalcCost func ptr in ReadNextRegion()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Bad CalcCost func ptr in ReadNextRegion()");
   }
 
   /* use SetupTile() to set filenames only; tile params overwritten below */
@@ -1643,8 +1643,8 @@ int ReadNextRegion(long tilerow, long tilecol, long nlines, long linelen,
                 sizeof(float *),sizeof(float));
   }else{
     fflush(NULL);
-    fprintf(sp0,"Cannot read format of unwrapped phase tile data\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Cannot read format of unwrapped phase tile data");
   }
 
   /* read cost data */
@@ -1759,8 +1759,8 @@ int ReadEdgesAboveAndBelow(long tilerow, long tilecol, long nlines,
     costtypesize=sizeof(bidircostT);
   }else{
     fflush(NULL);
-    fprintf(sp0,"ERROR: Bad CalcCost func ptr in ReadEdgesAboveAndBelow()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Bad CalcCost func ptr in ReadEdgesAboveAndBelow()");
   }
 
   /* set names of files with SetupTile() */
@@ -1965,8 +1965,8 @@ int TraceRegions(short **regions, short **nextregions, short **lastregions,
     costtypesize=sizeof(bidircostT);
   }else{
     fflush(NULL);
-    fprintf(sp0,"ERROR: Bad CalcCost func ptr in TraceRegions()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Bad CalcCost func ptr in TraceRegions()");
   }
 
   /* get memory */
@@ -2023,9 +2023,9 @@ int TraceRegions(short **regions, short **nextregions, short **lastregions,
         nnewnodes++;
         if(nnewnodes > SHRT_MAX){
           fflush(NULL);
-          fprintf(sp0,"Exceeded maximum number of secondary nodes\n"
-                  "Decrease TILECOSTTHRESH and/or increase MINREGIONSIZE\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                  "Exceeded maximum number of secondary nodes. Decrease "
+                  "TILECOSTTHRESH and/or increase MINREGIONSIZE");
         }
         scndrynodes[tilenum]=(nodeT *)ReAlloc(scndrynodes[tilenum],
                                               nnewnodes*sizeof(nodeT));
@@ -2444,8 +2444,8 @@ int SetUpperEdge(long ncol, long tilerow, long tilecol, void **voidcosts,
            +((bidircostT *)voidcostsabove)[col].negweight)/2;
       }else{
         fflush(NULL);
-        fprintf(sp0,"Illegal cost mode in SetUpperEdge().  This is a bug.\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Illegal cost mode in SetUpperEdge().  This is a bug.");
       }
     }
   }else{
@@ -2474,8 +2474,8 @@ int SetUpperEdge(long ncol, long tilerow, long tilecol, void **voidcosts,
       }
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal cost mode in SetUpperEdge().  This is a bug.\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal cost mode in SetUpperEdge().  This is a bug.");
     }
   }
 
@@ -2530,16 +2530,16 @@ int SetLowerEdge(long nrow, long ncol, long tilerow, long tilecol,
       if(tempflow<minflow){
         if(tempflow<flowlimlo){
           fflush(NULL);
-          fprintf(sp0,"Overflow in tile offset\nAbort\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::OverflowError(ISCE_SRCINFO(),
+                  "Overflow in tile offset");
         }
         minflow=tempflow;
       }
       if(tempflow>maxflow){
         if(tempflow>flowlimhi){
           fflush(NULL);
-          fprintf(sp0,"Overflow in tile offset\nAbort\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::OverflowError(ISCE_SRCINFO(),
+                  "Overflow in tile offset");
         }
         maxflow=tempflow;
       }
@@ -2581,8 +2581,8 @@ int SetLowerEdge(long nrow, long ncol, long tilerow, long tilecol,
            +((bidircostT *)voidcostsbelow)[col].negweight)/2;
       }else{
         fflush(NULL);
-        fprintf(sp0,"Illegal cost mode in SetLowerEdge().  This is a bug.\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Illegal cost mode in SetLowerEdge().  This is a bug.");
       }
     }
 
@@ -2631,8 +2631,8 @@ int SetLowerEdge(long nrow, long ncol, long tilerow, long tilecol,
       }
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal cost mode in SetLowerEdge().  This is a bug.\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal cost mode in SetLowerEdge().  This is a bug.");
     }
   }
 
@@ -2722,8 +2722,8 @@ int SetLeftEdge(long nrow, long prevncol, long tilerow, long tilecol,
           /2;
       }else{
         fflush(NULL);
-        fprintf(sp0,"Illegal cost mode in SetLeftEdge().  This is a bug.\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Illegal cost mode in SetLeftEdge().  This is a bug.");
       }
     }
   }else{
@@ -2752,8 +2752,8 @@ int SetLeftEdge(long nrow, long prevncol, long tilerow, long tilecol,
       }
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal cost mode in SetLeftEdge().  This is a bug.\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal cost mode in SetLeftEdge().  This is a bug.");
     }
   }
 
@@ -2809,16 +2809,16 @@ int SetRightEdge(long nrow, long ncol, long tilerow, long tilecol,
       if(tempflow<minflow){
         if(tempflow<flowlimlo){
           fflush(NULL);
-          fprintf(sp0,"Overflow in tile offset\nAbort\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::OverflowError(ISCE_SRCINFO(),
+                  "Overflow in tile offset");
         }
         minflow=tempflow;
       }
       if(tempflow>maxflow){
         if(tempflow>flowlimhi){
           fflush(NULL);
-          fprintf(sp0,"Overflow in tile offset\nAbort\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::OverflowError(ISCE_SRCINFO(),
+                  "Overflow in tile offset");
         }
         maxflow=tempflow;
       }
@@ -2864,8 +2864,8 @@ int SetRightEdge(long nrow, long ncol, long tilerow, long tilecol,
            +((bidircostT **)voidnextcosts)[row+nrow-1][ncol-2].negweight)/2;
       }else{
         fflush(NULL);
-        fprintf(sp0,"Illegal cost mode in SetRightEdge().  This is a bug.\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Illegal cost mode in SetRightEdge().  This is a bug.");
       }
     }
 
@@ -2919,8 +2919,8 @@ int SetRightEdge(long nrow, long ncol, long tilerow, long tilecol,
       }
     }else{
       fflush(NULL);
-      fprintf(sp0,"Illegal cost mode in SetRightEdge().  This is a bug.\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Illegal cost mode in SetRightEdge().  This is a bug.");
     }
   }
 
@@ -3447,9 +3447,9 @@ int TraceSecondaryArc(nodeT *primaryhead, nodeT **scndrynodes,
   nnewarcs=++(*nnewarcsptr);
   if(nnewarcs > SHRT_MAX){
     fflush(NULL);
-    fprintf(sp0,"Exceeded maximum number of secondary arcs\n"
-            "Decrease TILECOSTTHRESH and/or increase MINREGIONSIZE\n");
-    exit(ABNORMAL_EXIT);  
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Exceeded maximum number of secondary arcs. Decrease "
+            "TILECOSTTHRESH and/or increase MINREGIONSIZE");
   }
   scndryarcs[tilenum]=(scndryarcT *)ReAlloc(scndryarcs[tilenum],
                                             nnewarcs*sizeof(scndryarcT));
@@ -3772,9 +3772,9 @@ int IntegrateSecondaryFlows(long linelen, long nlines, nodeT **scndrynodes,
     }
     if(writeerror){
       fflush(NULL);
-      fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-              realoutfile);
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
     }
 
   } /* end loop over tile rows */
@@ -4187,9 +4187,9 @@ int AssembleTileConnComps(long linelen, long nlines,
         }
         if(writeerror){
           fflush(NULL);
-          fprintf(sp0,"Error while writing to file %s (device full?)\nAbort\n",
-                  realoutfile);
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                  "Error while writing to file " + std::string(realoutfile) +
+                  " (device full?)");
         }
       }
 

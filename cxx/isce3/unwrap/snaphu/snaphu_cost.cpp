@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <isce3/except/Error.h>
+
 #include "snaphu.h"
 
 namespace isce3::unwrap {
@@ -250,8 +252,7 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
     }else{
       costs=NULL;
       fflush(NULL);
-      fprintf(sp0,"unrecognized cost mode\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unrecognized cost mode");
     }
     (*costsptr)=costs;
     
@@ -276,8 +277,7 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
     colcost=NULL;
     CalcStatCost=NULL;
     fflush(NULL);
-    fprintf(sp0,"unrecognized cost mode\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unrecognized cost mode");
   }
   
 
@@ -1250,8 +1250,8 @@ int MaskPrespecifiedArcCosts(void **costsptr, short **weights,
   }else if(params->costmode==SMOOTH){
     smoothcosts=(smoothcostT **)costsptr;
   }else{
-    fprintf(sp0,"illegal cost mode in MaskPrespecifiedArcCosts()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Illegal cost mode in MaskPrespecifiedArcCosts()");
   }
 
   /* loop over all arcs */
@@ -1354,9 +1354,8 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
     padimag=MirrorPad(imagcomp,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
     if(padreal==realcomp || padimag==imagcomp){
       fflush(NULL);
-      fprintf(sp0,"Correlation averaging box too large for input array size\n"
-              "Abort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Correlation averaging box too large for input array size");
     }
     avgreal=realcomp;
     BoxCarAvg(avgreal,padreal,nrow,ncol,krowcorr,kcolcorr);
@@ -1431,8 +1430,8 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
     for(col=0;col<ncol;col++){
       if(!IsFinite(corr[row][col])){
         fflush(NULL);
-        fprintf(sp0,"NaN or infinity found in correlation data\nAbort\n");
-        exit(ABNORMAL_EXIT);
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "NaN or infinity found in correlation data");
       }else if(corr[row][col]>1.0){
         if(corr[row][col]>1.001){
           iclipped++;               /* don't warn for minor numerical errors */
@@ -1504,9 +1503,9 @@ int RemoveMean(float **ei, long nrow, long ncol,
   padei=MirrorPad(ei,nrow,ncol,(krowei-1)/2,(kcolei-1)/2);
   if(padei==ei){
     fflush(NULL);
-    fprintf(sp0,"Intensity-normalization averaging box too large "
-            "for input array size\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Intensity-normalization averaging box too large for input array "
+            "size");
   }
 
   /* calculate average ei by using sliding window */
@@ -1553,10 +1552,9 @@ float *BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr,
   nomincmax=acos((a*a-slantrange*slantrange-re*re)/(2*slantrange*re));
   if(!IsFinite(nominc0) || !IsFinite(nomincmax)){
     fflush(NULL);
-    fprintf(sp0,"Geometry error detected.  " 
-            "Check altitude, near range, and earth radius parameters\n"
-            "Abort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Geometry error detected. Check altitude, near range, and earth "
+            "radius parameters");
   }
 
   /* build lookup table */
@@ -1623,9 +1621,9 @@ double SolveDZRCrit(double sinnomincangle, double cosnomincangle,
     step/=2.0;
     if(++i>MAXITERATION){
       fflush(NULL);
-      fprintf(sp0,"Couldn't find critical incidence angle ");
-      fprintf(sp0,"(check scattering parameters)\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Couldn't find critical incidence angle (check scattering "
+              "parameters)");
     }
   }
 
@@ -1649,9 +1647,8 @@ double SolveDZRCrit(double sinnomincangle, double cosnomincangle,
     step/=2.0;
     if(++i>MAXITERATION){
       fflush(NULL);
-      fprintf(sp0,"Couldn't find critical slope ");
-      fprintf(sp0,"(check geometry parameters)\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Couldn't find critical slope (check geometry parameters)");
     }
   }
 }
@@ -1826,10 +1823,9 @@ double CalcDZRhoMax(double rho, double nominc, paramT *params,
     }
     if(++i>MAXITERATION){
       fflush(NULL);
-      fprintf(sp0,"Couldn't find slope for correlation of %f\n",rho);
-      fprintf(sp0,"(check geometry and spatial decorrelation parameters)\n");
-      fprintf(sp0,"Abort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Couldn't find slope for correlation of " + std::to_string(rho) +
+              "(check geometry and spatial decorrelation parameters)");
     }
   }
 

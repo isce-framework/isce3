@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+#include <isce3/except/Error.h>
+
 #include "snaphu.h"
 
 namespace isce3::unwrap {
@@ -336,8 +338,8 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                         nrow,ncol);  
         if(requestedstop_global){
           fflush(NULL);
-          fprintf(sp0,"Program exiting\n");
-          exit(ABNORMAL_EXIT);
+          throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                  "Received interrupt or hangup signal");
         }
         Free2DArray((void **)unwrappedphase,nrow);
         dumpresults_global=FALSE;
@@ -1375,8 +1377,8 @@ long CheckBoundary(nodeT **nodes, nodeT *ground, long ngroundarcs,
   /* if start node is not eligible, just return NULL */
   if(start->group==MASKED){
     fflush(NULL);
-    fprintf(sp0,"ERROR: ineligible starting node in CheckBoundary()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Ineligible starting node in CheckBoundary()");
   }
   
   /* initialize local variables */
@@ -1454,21 +1456,18 @@ long CheckBoundary(nodeT **nodes, nodeT *ground, long ngroundarcs,
   /* check for consistency */
   if(nontree!=nconnected){
     fflush(NULL);
-    fprintf(sp0,
-            "ERROR: inconsistent num connected nodes in CheckBoundary()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Inconsistent num connected nodes in CheckBoundary()");
   }
   if(nboundaryarc!=boundary->nneighbor){
     fflush(NULL);
-    fprintf(sp0,
-            "ERROR: inconsistent num neighbor nodes in CheckBoundary()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Inconsistent num neighbor nodes in CheckBoundary()");
   }
   if(nboundarynode!=1){
     fflush(NULL);
-    fprintf(sp0,
-            "ERROR: number of boundary nodes is not 1 in CheckBoundary()\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Number of boundary nodes is not 1 in CheckBoundary()");
   }
 
   /* return number of connected nodes */
@@ -1640,9 +1639,9 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
   row=nextnode->row;
   col=nextnode->col;
   if(!IsRegionEdgeNode(mag,row,col,nrow,ncol)){
-    fprintf(sp0,"ERROR: DischargeBoundary() start node %ld, %ld not on edge\n",
-            row,col);
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "DischargeBoundary() start node " + std::to_string(row) +
+            ", " + std::to_string(col) + " not on edge");
   }
 
   /* silence compiler warnings */
@@ -2420,8 +2419,8 @@ int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr,
     if(*mostflowptr*params->nshortcycle>LARGESHORT){
       fprintf(sp1,"Maximum flow on network: %ld\n",*mostflowptr);
       fflush(NULL);
-      fprintf(sp0,"((Maximum flow) * NSHORTCYCLE) too large\nAbort\n");
-      exit(ABNORMAL_EXIT);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "((Maximum flow) * NSHORTCYCLE) too large");
     }
     if(ncol>2){
       *ngroundarcsptr=2*(nrow+ncol-2)-4; /* don't include corner column arcs */
@@ -3028,15 +3027,15 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
     (*sourcelistptr)=sourcelist;
   }else{
     fflush(NULL);
-    fprintf(sp0,"ERROR: NULL sourcelistptr in SelectSources()\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "NULL sourcelistptr in SelectSources()");
   }
   if(nconnectedarrptr!=NULL){
     (*nconnectedarrptr)=nconnectedarr;
   }else{
     fflush(NULL);
-    fprintf(sp0,"ERROR: NULL nconnectedarrptr SelectSources()\nAbort\n");
-    exit(ABNORMAL_EXIT);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "NULL nconnectedarrptr SelectSources()");
   }
   return(nsource);
 
@@ -3688,8 +3687,8 @@ signed char ClipFlow(signed char **residue, short **flows,
             tempcharge=residue[row][col-1]+excess;
             if(tempcharge>MAXRES || tempcharge<MINRES){
               fflush(NULL);
-              fprintf(sp0,"Overflow of residue data type\nAbort\n");
-              exit(ABNORMAL_EXIT);
+              throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                      "Overflow of residue data type");
             }
             residue[row][col-1]=tempcharge;
           }
@@ -3697,8 +3696,8 @@ signed char ClipFlow(signed char **residue, short **flows,
             tempcharge=residue[row][col]-excess;
             if(tempcharge<MINRES || tempcharge>MAXRES){
               fflush(NULL);
-              fprintf(sp0,"Overflow of residue data type\nAbort\n");
-              exit(ABNORMAL_EXIT);
+              throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                      "Overflow of residue data type");
             }
             residue[row][col]=tempcharge;
           }
@@ -3707,8 +3706,8 @@ signed char ClipFlow(signed char **residue, short **flows,
             tempcharge=residue[row-nrow][col]+excess;
             if(tempcharge>MAXRES || tempcharge<MINRES){
               fflush(NULL);
-              fprintf(sp0,"Overflow of residue data type\nAbort\n");
-              exit(ABNORMAL_EXIT);
+              throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                      "Overflow of residue data type");
             }
             residue[row-nrow][col]=tempcharge;
           }
@@ -3716,8 +3715,8 @@ signed char ClipFlow(signed char **residue, short **flows,
             tempcharge=residue[row-nrow+1][col]-excess;
             if(tempcharge<MINRES || tempcharge>MAXRES){
               fflush(NULL);
-              fprintf(sp0,"Overflow of residue data type\nAbort\n");
-              exit(ABNORMAL_EXIT);
+              throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                      "Overflow of residue data type");
             }
             residue[row-nrow+1][col]=tempcharge;
           }
