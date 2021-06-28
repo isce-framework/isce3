@@ -329,11 +329,11 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
-inline isce3::core::Vec3 GetDemCoordsSameEpsg(double x, double y,
+inline isce3::core::Vec3 getDemCoordsSameEpsg(double x, double y,
         const DEMInterpolator& dem_interp,
         isce3::core::ProjectionBase* input_proj);
 
-inline isce3::core::Vec3 GetDemCoordsDiffEpsg(double x, double y,
+inline isce3::core::Vec3 getDemCoordsDiffEpsg(double x, double y,
         const DEMInterpolator& dem_interp,
         isce3::core::ProjectionBase* input_proj);
 
@@ -354,7 +354,7 @@ inline isce3::core::Vec3 GetDemCoordsDiffEpsg(double x, double y,
 isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         const double minX, const double maxX, const double minY,
         const double maxY, DEMInterpolator* dem_interp_block,
-        isce3::core::ProjectionBase* proj = nullptr, 
+        isce3::core::ProjectionBase* proj = nullptr,
         const int dem_margin_x_in_pixels = 50,
         const int dem_margin_y_in_pixels = 50);
 

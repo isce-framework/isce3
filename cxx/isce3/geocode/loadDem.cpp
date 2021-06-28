@@ -1,12 +1,11 @@
 #include "loadDem.h"
 #include <isce3/except/Error.h>
 
-isce3::geometry::DEMInterpolator
-isce3::geocode::loadDEM(isce3::io::Raster& demRaster,
-                       const isce3::product::GeoGridParameters& geoGrid,
-                       int lineStart, int blockLength, int blockWidth,
-                       double demMargin,
-                       isce3::core::dataInterpMethod demInterpMethod)
+isce3::geometry::DEMInterpolator isce3::geocode::loadDEM(
+        isce3::io::Raster& demRaster,
+        const isce3::product::GeoGridParameters& geoGrid, int lineStart,
+        int blockLength, int blockWidth, double demMargin,
+        isce3::core::dataInterpMethod demInterpMethod)
 {
     // DEM interpolator
     isce3::geometry::DEMInterpolator demInterp(0, demInterpMethod);

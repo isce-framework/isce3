@@ -70,7 +70,7 @@ void GeoGridParameters::print() const
     std::string delimiter = "\n";
 
     // remove last delimiter
-    ret_str.erase(ret_str.length() - 1 - delimiter.length(), std::string::npos);
+    ret_str.erase(ret_str.length() - delimiter.length(), std::string::npos);
 
     // substitute "\n" by pyre::journal::newline
     size_t pos = 0;

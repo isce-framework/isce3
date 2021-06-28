@@ -1,17 +1,18 @@
 #pragma once
 
 #include <isce3/core/forward.h>
+#include <isce3/geometry/forward.h>
+
+#include <thrust/device_vector.h>
+
 #include <isce3/container/RadarGeometry.h>
-#include <isce3/cuda/core/gpuProjections.h>
-#include <isce3/cuda/core/gpuInterpolator.h>
 #include <isce3/cuda/core/InterpolatorHandle.h>
 #include <isce3/cuda/core/ProjectionBaseHandle.h>
-#include <isce3/geometry/forward.h>
+#include <isce3/cuda/core/gpuInterpolator.h>
+#include <isce3/cuda/core/gpuProjections.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
-
-#include <thrust/device_vector.h>
 
 namespace isce3::cuda::geocode {
 
@@ -51,8 +52,7 @@ struct RadarGridParams {
  *         geocode_obj.geocodeRasterBlock(output_raster, input_raster)
  *
  */
-class Geocode
-{
+class Geocode {
 public:
     /** Class constructor. Sets values to be shared by all blocks. Also
      *  calculates number of blocks needed to completely geocode provided
@@ -62,30 +62,26 @@ public:
      * \param[in] rdr_geom              Radar geometry describing input rasters
      * \param[in] dem_raster            DEM used to calculate radar grid indices
      * \param[in] dem_margin            Extra margin applied to bounding box to
-     *                                  load DEM. Units are need to match geogrid
-     *                                  EPSG units.
-     * \param[in] lines_per_block       Number of lines to be processed per block
-     * \param[in] data_interp_method    Data interpolation method
-     * \param[in] dem_interp_method     DEMinterpolation method
-     * \param[in] threshold             Convergence threshold for geo2rdr
+     *                                  load DEM. Units are need to match
+     * geogrid EPSG units. \param[in] lines_per_block       Number of lines to
+     * be processed per block \param[in] data_interp_method    Data
+     * interpolation method \param[in] dem_interp_method     DEMinterpolation
+     * method \param[in] threshold             Convergence threshold for geo2rdr
      * \param[in] maxiter               Maximum iterations for geo2rdr
      * \param[in] dr                    Step size for numerical gradient for
      *                                  geo2rdr
      * \param[in] invalid_value         Value assigned to invalid geogrid pixels
      */
-    Geocode(const isce3::product::GeoGridParameters & geogrid,
-            const isce3::container::RadarGeometry & rdr_geom,
-            const isce3::io::Raster & dem_raster,
-            const double dem_margin,
+    Geocode(const isce3::product::GeoGridParameters& geogrid,
+            const isce3::container::RadarGeometry& rdr_geom,
+            const isce3::io::Raster& dem_raster, const double dem_margin,
             const size_t lines_per_block = 1000,
             const isce3::core::dataInterpMethod data_interp_method =
                     isce3::core::BILINEAR_METHOD,
             const isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::BIQUINTIC_METHOD,
-            const double threshold = 1e-8,
-            const int maxiter = 50,
-            const double dr = 10,
-            const float invalid_value = 0.0);
+            const double threshold = 1e-8, const int maxiter = 50,
+            const double dr = 10, const float invalid_value = 0.0);
 
     /** Calculate and set radar grid coordinates of geocode grid for a given
      *  block number in device memory. The radar grid coordinates can then be
@@ -104,9 +100,9 @@ public:
      * \param[in] output_raster     Geocoded individual raster
      * \param[in] input_raster      Individual raster to be geocoded
      */
-    template <typename T>
-    void geocodeRasterBlock(isce3::io::Raster & output_raster,
-                            isce3::io::Raster & input_raster);
+    template<typename T>
+    void geocodeRasterBlock(
+            isce3::io::Raster& output_raster, isce3::io::Raster& input_raster);
 
     size_t numBlocks() const { return _n_blocks; }
     size_t linesPerBlock() const { return _lines_per_block; }
@@ -162,9 +158,11 @@ private:
 
     // interpolator used to geocode - common to all blocks
     isce3::cuda::core::InterpolatorHandle<float> _interp_float_handle;
-    isce3::cuda::core::InterpolatorHandle<thrust::complex<float>> _interp_cfloat_handle;
+    isce3::cuda::core::InterpolatorHandle<thrust::complex<float>>
+            _interp_cfloat_handle;
     isce3::cuda::core::InterpolatorHandle<double> _interp_double_handle;
-    isce3::cuda::core::InterpolatorHandle<thrust::complex<double>> _interp_cdouble_handle;
+    isce3::cuda::core::InterpolatorHandle<thrust::complex<double>>
+            _interp_cdouble_handle;
 
     // value applied to invalid geogrid pixels
     float _invalid_float;

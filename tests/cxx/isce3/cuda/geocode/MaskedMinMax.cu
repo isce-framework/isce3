@@ -1,15 +1,16 @@
-#include <isce3/cuda/geocode/MaskedMinMax.h>
-
 #include <thrust/device_vector.h>
 #include <vector>
 
 #include <gtest/gtest.h>
 
+#include <isce3/cuda/geocode/MaskedMinMax.h>
+
 struct MaskedMinMaxTest : public ::testing::Test {
     std::vector<double> data = {5.0, 2.0, 4.0, 3.0, 1.0};
 };
 
-TEST_F(MaskedMinMaxTest, NoMaskedData) {
+TEST_F(MaskedMinMaxTest, NoMaskedData)
+{
     // copy common data to device
     thrust::device_vector<double> d_data(data);
 
@@ -25,7 +26,8 @@ TEST_F(MaskedMinMaxTest, NoMaskedData) {
     ASSERT_EQ(data_max, 5.0);
 }
 
-TEST_F(MaskedMinMaxTest, SomeMaskedData) {
+TEST_F(MaskedMinMaxTest, SomeMaskedData)
+{
     // copy common data to device
     thrust::device_vector<double> d_data(data);
 
@@ -39,7 +41,8 @@ TEST_F(MaskedMinMaxTest, SomeMaskedData) {
     ASSERT_EQ(data_max, 4.0);
 }
 
-TEST_F(MaskedMinMaxTest, AllMaskedData) {
+TEST_F(MaskedMinMaxTest, AllMaskedData)
+{
     // copy to common data device
     thrust::device_vector<double> d_data(data);
 
@@ -55,7 +58,8 @@ TEST_F(MaskedMinMaxTest, AllMaskedData) {
     ASSERT_TRUE(isnan(data_max));
 }
 
-int main(int argc, char * argv[]) {
+int main(int argc, char* argv[])
+{
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

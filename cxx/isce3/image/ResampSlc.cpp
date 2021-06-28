@@ -323,8 +323,8 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                             intAz - tile.firstImageRow() + ii - chipHalf;
                     // Carrier phase
                     const double chipPhase = dop * (ii - 4.0);
-                    const std::complex<float> cval(std::cos(chipPhase),
-                                                   -std::sin(chipPhase));
+                    const std::complex<float> cval(
+                            std::cos(chipPhase), -std::sin(chipPhase));
                     // Set the data values after removing doppler in azimuth
                     for (int jj = 0; jj < chipSize; ++jj) {
                         // Column to read from

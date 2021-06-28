@@ -59,17 +59,12 @@ inline std::complex<float> sumCoherent(const std::complex<float>* data,
     return std::complex<float>(sum);
 }
 
-void backproject(std::complex<float>* out,
-                 const RadarGeometry& out_geometry,
-                 const std::complex<float>* in,
-                 const RadarGeometry& in_geometry,
-                 const DEMInterpolator& dem,
-                 double fc,
-                 double ds,
-                 const Kernel<float>& kernel,
-                 DryTroposphereModel dry_tropo_model,
-                 const isce3::geometry::detail::Rdr2GeoParams& r2g_params,
-                 const isce3::geometry::detail::Geo2RdrParams& g2r_params)
+void backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
+        const std::complex<float>* in, const RadarGeometry& in_geometry,
+        const DEMInterpolator& dem, double fc, double ds,
+        const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoParams& r2g_params,
+        const isce3::geometry::detail::Geo2RdrParams& g2r_params)
 {
     static constexpr double c = isce3::core::speed_of_light;
     static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();

@@ -2,8 +2,8 @@
 
 #include "forward.h"
 
-#include <valarray>
 #include <string>
+#include <valarray>
 
 #include <isce3/io/Raster.h>
 
@@ -387,5 +387,4 @@ class isce3::geometry::TopoLayers {
         // Should be false when the Rasters are passed
         // from outside and setRaster method is called
         bool _haveRasters;
-
 };

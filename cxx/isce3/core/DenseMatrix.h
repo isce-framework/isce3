@@ -5,6 +5,7 @@
 #include <cmath>
 #define EIGEN_MPL2_ONLY
 #include <Eigen/Dense>
+
 #include "Common.h"
 #include "Vector.h"
 
@@ -16,16 +17,19 @@ class DenseMatrix : public Eigen::Matrix<T, N, N> {
     using super_t::super_t;
 
     static_assert(N > 0);
+
 public:
     DenseMatrix() = default;
     CUDA_HOSTDEV auto operator[](int i)       { return this->row(i); }
     CUDA_HOSTDEV auto operator[](int i) const { return this->row(i); }
 
-    CUDA_HOSTDEV auto dot(const DenseMatrix& other) const {
+    CUDA_HOSTDEV auto dot(const DenseMatrix& other) const
+    {
         return *this * other;
     }
 
-    CUDA_HOSTDEV auto dot(const Vector<N, T>& other) const {
+    CUDA_HOSTDEV auto dot(const Vector<N, T>& other) const
+    {
         return *this * other;
     }
 
@@ -87,8 +91,8 @@ CUDA_HOSTDEV Mat3 DenseMatrix<N, T>::enuToXyz(double lat, double lon)
 // multiplication produced incorrect results (or raised "illegal memory access"
 // errors in debug mode).
 template<int N, typename T>
-CUDA_HOSTDEV auto
-operator*(const DenseMatrix<N, T>& a, const DenseMatrix<N, T>& b)
+CUDA_HOSTDEV auto operator*(
+        const DenseMatrix<N, T>& a, const DenseMatrix<N, T>& b)
 {
     DenseMatrix<N, T> out;
     for (int i = 0; i < N; ++i) {
@@ -100,8 +104,7 @@ operator*(const DenseMatrix<N, T>& a, const DenseMatrix<N, T>& b)
 }
 
 template<int N, typename T>
-CUDA_HOSTDEV auto
-operator*(const DenseMatrix<N, T>& m, const Vector<N, T>& v)
+CUDA_HOSTDEV auto operator*(const DenseMatrix<N, T>& m, const Vector<N, T>& v)
 {
     Vector<N, T> out;
     for (int i = 0; i < N; ++i) {

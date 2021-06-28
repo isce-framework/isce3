@@ -71,13 +71,14 @@ TEST(TestRTC, RunRTC) {
             std::string filename;
             // test removed because it requires high geogrid upsampling (too
             // slow)
-            if (rtc_algorithm ==
-                        isce3::geometry::rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION &&
-                radar_grid_str == "cropped") {
+            if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                         RTC_BILINEAR_DISTRIBUTION &&
+                    radar_grid_str == "cropped") {
                 continue;
-            } else if (rtc_algorithm ==
-                       isce3::geometry::rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION) {
-                filename = "./rtc_bilinear_distribution_" + radar_grid_str + ".bin";
+            } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                                RTC_BILINEAR_DISTRIBUTION) {
+                filename = "./rtc_bilinear_distribution_" + radar_grid_str +
+                           ".bin";
             } else {
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
             }
@@ -108,14 +109,15 @@ TEST(TestRTC, CheckResults) {
 
             // test removed because it requires high geogrid upsampling (too
             // slow)
-            if (rtc_algorithm ==
-                        isce3::geometry::rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION &&
-                radar_grid_str == "cropped") {
+            if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                         RTC_BILINEAR_DISTRIBUTION &&
+                    radar_grid_str == "cropped") {
                 continue;
-            } else if (rtc_algorithm ==
-                       isce3::geometry::rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION) {
+            } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
+                                                RTC_BILINEAR_DISTRIBUTION) {
                 max_rmse = 0.7;
-                filename = "./rtc_bilinear_distribution_" + radar_grid_str + ".bin";
+                filename = "./rtc_bilinear_distribution_" + radar_grid_str +
+                           ".bin";
             } else {
                 max_rmse = 0.1;
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";

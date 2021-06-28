@@ -6,6 +6,8 @@ import numpy as np
 
 import journal
 
+from osgeo import osr
+
 import pybind_isce3 as isce
 from pybind_nisar.products.readers import SLC
 
@@ -93,27 +95,48 @@ def create(cfg, frequency_group = None, frequency = None,
     if spacing_x is None or spacing_y is None:
         dem_raster = isce.io.Raster(dem_file)
 
-        # copy X spacing from DEM
-        if spacing_x is None:
-            spacing_x = dem_raster.dx
+        # Set pixel spacing using the input DEM (same EPSG)
+        if epsg == dem_raster.get_epsg():
 
-            # DEM X spacing should be positive
-            if spacing_x <= 0:
-                err_str = f'Expected positive pixel spacing in the X/longitude direction'
-                err_str += f' for DEM {dem_file}. Actual value: {spacing_x}.'
-                error_channel.log(err_str)
-                raise ValueError(err_str)   
+            # copy X spacing from DEM
+            if spacing_x is None:
+                spacing_x = dem_raster.dx
 
-        # copy Y spacing from DEM
-        if spacing_y is None:
-            spacing_y = dem_raster.dy
+                # DEM X spacing should be positive
+                if spacing_x <= 0:
+                    err_str = f'Expected positive pixel spacing in the X/longitude direction'
+                    err_str += f' for DEM {dem_file}. Actual value: {spacing_x}.'
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)   
 
-            # DEM Y spacing should be negative
-            if spacing_y >= 0:
-                err_str = f'Expected negative pixel spacing in the Y/latitude direction'
-                err_str += f' for DEM {dem_file}. Actual value: {spacing_y}.'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
+            # copy Y spacing from DEM
+            if spacing_y is None:
+                spacing_y = dem_raster.dy
+
+                # DEM Y spacing should be negative
+                if spacing_y >= 0:
+                    err_str = f'Expected negative pixel spacing in the Y/latitude direction'
+                    err_str += f' for DEM {dem_file}. Actual value: {spacing_y}.'
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
+
+        else:
+            epsg_spatial_ref = osr.SpatialReference()
+            epsg_spatial_ref.ImportFromEPSG(epsg)
+
+            # Set pixel spacing in degrees (lat/lon)
+            if epsg_spatial_ref.IsGeographic():
+                if spacing_x is None:
+                    spacing_x = 0.00017966305682390427
+                if spacing_y is None:
+                    spacing_y = -0.00017966305682390427
+
+            # Set pixel spacing in meters
+            else:
+                if spacing_x is None:
+                    spacing_x = 20
+                if spacing_y is None:
+                    spacing_y = -20
 
     if spacing_x == 0.0 or spacing_y == 0.0:
         err_str = 'spacing_x or spacing_y cannot be 0.0'

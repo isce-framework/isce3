@@ -12,20 +12,21 @@ namespace py = pybind11;
 void addbinding_metadata_cubes(py::module & m)
 {
     m.def("make_radar_grid_cubes", &isce3::geometry::makeRadarGridCubes,
-          py::arg("radar_grid"), py::arg("geogrid"), py::arg("heights"),
-          py::arg("orbit"), py::arg("native_doppler"), py::arg("grid_doppler"),
-          py::arg("epsg_los_and_along_track_vectors") = 0,
-          py::arg("slant_range_raster") = nullptr,
-          py::arg("azimuth_time_raster") = nullptr,
-          py::arg("incidence_angle_raster") = nullptr,
-          py::arg("lo_unit_vector_x_raster") = nullptr,
-          py::arg("los_unit_vector_y_raster") = nullptr,
-          py::arg("along_track_unit_vector_x_raster") = nullptr,
-          py::arg("along_track_unit_vector_y_raster") = nullptr,
-          py::arg("elevation_angle_raster") = nullptr,
-          py::arg("threshold_geo2rdr") = 1.0e-8,
-          py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-8,
-          R"(Make metadata radar grid cubes
+            py::arg("radar_grid"), py::arg("geogrid"), py::arg("heights"),
+            py::arg("orbit"), py::arg("native_doppler"),
+            py::arg("grid_doppler"),
+            py::arg("epsg_los_and_along_track_vectors") = 0,
+            py::arg("slant_range_raster") = nullptr,
+            py::arg("azimuth_time_raster") = nullptr,
+            py::arg("incidence_angle_raster") = nullptr,
+            py::arg("lo_unit_vector_x_raster") = nullptr,
+            py::arg("los_unit_vector_y_raster") = nullptr,
+            py::arg("along_track_unit_vector_x_raster") = nullptr,
+            py::arg("along_track_unit_vector_y_raster") = nullptr,
+            py::arg("elevation_angle_raster") = nullptr,
+            py::arg("threshold_geo2rdr") = 1.0e-8,
+            py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-8,
+            R"(Make metadata radar grid cubes
 
              Metadata radar grid cubes describe the radar geometry
              over a three-dimensional grid, defined by
@@ -94,25 +95,20 @@ void addbinding_metadata_cubes(py::module & m)
 )");
 
     m.def("make_geolocation_cubes", &isce3::geometry::makeGeolocationGridCubes,
-        py::arg("radar_grid"),
-        py::arg("heights"),
-        py::arg("orbit"),
-        py::arg("native_doppler"),
-        py::arg("grid_doppler"),
-        py::arg("epsg"),
-        py::arg("epsg_los_and_along_track_vectors") = 0, 
-        py::arg("coordinate_x_raster") = nullptr,
-        py::arg("coordinate_y_raster") = nullptr,
-        py::arg("incidence_angle_raster") = nullptr,
-        py::arg("lo_unit_vector_x_raster") = nullptr,
-        py::arg("los_unit_vector_y_raster") = nullptr,
-        py::arg("along_track_unit_vector_x_raster") = nullptr,
-        py::arg("along_track_unit_vector_y_raster") = nullptr,
-        py::arg("elevation_angle_raster") = nullptr,
-        py::arg("threshold_geo2rdr") = 1.0e-8,
-        py::arg("numiter_geo2rdr") = 100,
-        py::arg("delta_range") = 1.0e-6,
-        R"(Make metadata geolocation grid cubes
+            py::arg("radar_grid"), py::arg("heights"), py::arg("orbit"),
+            py::arg("native_doppler"), py::arg("grid_doppler"), py::arg("epsg"),
+            py::arg("epsg_los_and_along_track_vectors") = 0,
+            py::arg("coordinate_x_raster") = nullptr,
+            py::arg("coordinate_y_raster") = nullptr,
+            py::arg("incidence_angle_raster") = nullptr,
+            py::arg("lo_unit_vector_x_raster") = nullptr,
+            py::arg("los_unit_vector_y_raster") = nullptr,
+            py::arg("along_track_unit_vector_x_raster") = nullptr,
+            py::arg("along_track_unit_vector_y_raster") = nullptr,
+            py::arg("elevation_angle_raster") = nullptr,
+            py::arg("threshold_geo2rdr") = 1.0e-8,
+            py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-6,
+            R"(Make metadata geolocation grid cubes
  
            Metadata geolocation grid cubes describe the radar geometry 
            over a three-dimensional grid, defined by 

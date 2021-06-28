@@ -3,27 +3,26 @@
 #include <cmath>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind_isce3/core/LookSide.h>
 #include <stdexcept>
 #include <string>
 
-#include <pybind_isce3/core/LookSide.h>
-
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
-#include <isce3/core/LookSide.h>
 #include <isce3/core/LUT2d.h>
+#include <isce3/core/LookSide.h>
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Vector.h>
 #include <isce3/focus/Backproject.h> // TODO better place for defaults
 #include <isce3/geometry/DEMInterpolator.h>
-#include <isce3/geometry/geometry.h>
 #include <isce3/geometry/detail/Rdr2Geo.h>
+#include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
-using isce3::geometry::detail::Rdr2GeoParams;
 using isce3::geometry::DEMInterpolator;
 using isce3::geometry::Topo;
+using isce3::geometry::detail::Rdr2GeoParams;
 
 namespace py = pybind11;
 

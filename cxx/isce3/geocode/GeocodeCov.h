@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 // pyre
 #include <pyre/journal.h>
 
@@ -45,12 +47,13 @@ public:
      * @param[out] output_raster       Output raster
      * @param[in]  dem_raster          Input DEM raster
      * @param[in]  output_mode         Geocode method
-     * @param[in]  flag_az_baseband_doppler Shift SLC azimuth spectrum to baseband
-     *  (using Doppler centroid) before interpolation
+     * @param[in]  flag_az_baseband_doppler Shift SLC azimuth spectrum to
+     * baseband (using Doppler centroid) before interpolation
      * @param[in]  flatten             Flatten the geocoded SLC
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  flag_apply_rtc      Apply radiometric terrain correction (RTC)
+     * @param[in]  flag_apply_rtc      Apply radiometric terrain correction
+     * (RTC)
      * @param[in]  input_terrain_radiometry  Input terrain radiometry
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  exponent            Exponent to be applied to the input data.
@@ -81,7 +84,8 @@ public:
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
-     * @param[in]  phase_screen_raster Phase screen to be removed before geocoding
+     * @param[in]  phase_screen_raster Phase screen to be removed before
+     * geocoding
      * @param[in]  offset_az_raster    Azimuth offset raster (reference
      * radar-grid geometry)
      * @param[in]  offset_rg_raster    Range offset raster (reference
@@ -93,16 +97,13 @@ public:
      * @param[in]  max_block_size       Maximum block size (per thread)
      * @param[in]  dem_interp_method   DEM interpolation method
      */
-    void
-    geocode(const isce3::product::RadarGridParameters& radar_grid,
+    void geocode(const isce3::product::RadarGridParameters& radar_grid,
             isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
             isce3::io::Raster& dem_raster,
             geocodeOutputMode output_mode = geocodeOutputMode::INTERP,
-            bool flag_az_baseband_doppler = false,
-            bool flatten = false,
+            bool flag_az_baseband_doppler = false, bool flatten = false,
             double geogrid_upsampling = 1,
-            bool flag_upsample_radar_grid = false,
-            bool flag_apply_rtc = false,
+            bool flag_upsample_radar_grid = false, bool flag_apply_rtc = false,
             isce3::geometry::rtcInputTerrainRadiometry
                     input_terrain_radiometry = isce3::geometry::
                             rtcInputTerrainRadiometry::BETA_NAUGHT,
@@ -144,16 +145,16 @@ public:
      * @param[in]  input_raster        Input raster
      * @param[out] output_raster       Output raster
      * @param[in]  dem_raster          Input DEM raster
-     * @param[in]  flag_az_baseband_doppler Shift SLC azimuth spectrum to baseband
-     *  (using Doppler centroid) before interpolation
+     * @param[in]  flag_az_baseband_doppler Shift SLC azimuth spectrum to
+     * baseband (using Doppler centroid) before interpolation
      * @param[in]  input_terrain_radiometry  Input terrain radiometry
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit will be set to NaN.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
      * direction) used to compute the radiometric terrain correction RTC.
-     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
-     * RTC_AREA_PROJECTION)
+     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
+     * or RTC_AREA_PROJECTION)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -165,7 +166,8 @@ public:
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
      * @param[in]  flatten             Flatten the geocoded SLC
-     * @param[in]  phase_screen_raster Phase screen to be removed before geocoding
+     * @param[in]  phase_screen_raster Phase screen to be removed before
+     * geocoding
      * @param[in]  offset_az_raster    Azimuth offset raster (reference
      * radar-grid geometry)
      * @param[in]  offset_rg_raster    Range offset raster (reference radar-grid
@@ -175,11 +177,9 @@ public:
      * @param[in]  dem_interp_method   DEM interpolation method
      */
     template<class T_out>
-    void geocodeInterp(
-            const isce3::product::RadarGridParameters& radar_grid,
+    void geocodeInterp(const isce3::product::RadarGridParameters& radar_grid,
             isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
-            isce3::io::Raster& dem_raster,
-            bool flag_apply_rtc = false,
+            isce3::io::Raster& dem_raster, bool flag_apply_rtc = false,
             bool flag_az_baseband_doppler = false, bool flatten = false,
             isce3::geometry::rtcInputTerrainRadiometry
                     input_terrain_radiometry = isce3::geometry::
@@ -206,21 +206,20 @@ public:
             isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
-
     /** Geocode using the area projection algorithm (adaptive multilooking)
      *
      * @param[in]  radar_grid          Radar grid
      * @param[in]  input_raster        Input raster
      * @param[out] output_raster       Output raster
      * @param[in]  dem_raster          Input DEM raster
-     * @param[in]  output_mode         Output mode
      * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
-     * @param[in]  flag_apply_rtc      Apply radiometric terrain correction (RTC)
+     * @param[in]  flag_apply_rtc      Apply radiometric terrain correction
+     * (RTC)
      * @param[in]  input_terrain_radiometry  Input terrain radiometry
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
-     * Radar data with RTC area factor below this limit are ignored.
+     * Radar data with RTC area factor below this limit will be set to NaN.
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
      * direction) used to compute the radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
@@ -255,7 +254,6 @@ public:
             const isce3::product::RadarGridParameters& radar_grid,
             isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
             isce3::io::Raster& dem_raster,
-            geocodeOutputMode output_mode = geocodeOutputMode::AREA_PROJECTION,
             double geogrid_upsampling = 1,
             bool flag_upsample_radar_grid = false,
             bool flag_apply_rtc = false,
@@ -324,15 +322,12 @@ public:
      * @param[out] nblock_y            Number of blocks in the Y direction
      * @param[in]  max_block_size      Maximum block size in Bytes (per thread)
      */
-    void getBlocksNumberAndLength(const int array_length, 
-                                  const int array_width,
-                                  const int nbands = 1,
-                                  const size_t type_size = 4, // Float32
-                                  pyre::journal::info_t* channel = nullptr, 
-                                  int* block_length = nullptr, 
-                                  int* nblock_y = nullptr,
-                                  const long long max_block_size = 
-                                  DEFAULT_MAX_BLOCK_SIZE);
+    void getBlocksNumberAndLength(const int array_length, const int array_width,
+            const int nbands = 1,
+            const size_t type_size = 4, // Float32
+            pyre::journal::info_t* channel = nullptr,
+            int* block_length = nullptr, int* nblock_y = nullptr,
+            const long long max_block_size = DEFAULT_MAX_BLOCK_SIZE);
 
     // Get/set data interpolator
     isce3::core::dataInterpMethod dataInterpolator() const 
@@ -347,7 +342,10 @@ public:
 
     void doppler(isce3::core::LUT2d<double> doppler) { _doppler = doppler; }
 
-    void nativeDoppler(isce3::core::LUT2d<double> nativeDoppler) { _nativeDoppler = nativeDoppler; }
+    void nativeDoppler(isce3::core::LUT2d<double> nativeDoppler)
+    {
+        _nativeDoppler = nativeDoppler;
+    }
 
     void orbit(isce3::core::Orbit& orbit) { _orbit = orbit; }
 
@@ -391,19 +389,17 @@ public:
     int geoGridLength() const { return _geoGridLength; }
 
 private:
-
     /*
-    Get radar grid boundaries (offsets and window size) based on 
+    Get radar grid boundaries (offsets and window size) based on
     the Geocode object geogrid attributes.
     */
     void _getRadarGridBoundaries(
-        const isce3::product::RadarGridParameters& radar_grid,
-        isce3::io::Raster& input_raster, 
-        isce3::io::Raster& dem_raster,
-        isce3::core::ProjectionBase* proj,
-        double geogrid_upsampling, bool flag_upsample_radar_grid,
-        isce3::core::dataInterpMethod dem_interp_method,
-        int* offset_y, int* offset_x, int* grid_size_y, int* grid_size_x);
+            const isce3::product::RadarGridParameters& radar_grid,
+            isce3::io::Raster& input_raster, isce3::io::Raster& dem_raster,
+            isce3::core::ProjectionBase* proj, double geogrid_upsampling,
+            bool flag_upsample_radar_grid,
+            isce3::core::dataInterpMethod dem_interp_method, int* offset_y,
+            int* offset_x, int* grid_size_y, int* grid_size_x);
 
     /*
     Compute radar positions (az, rg, DEM vect.) for a geogrid vector
@@ -411,42 +407,46 @@ private:
     If flag_compute_min_max is True, the function also return the min/max
     az. and rg. positions
     */
-    void _getRadarPositionVect(
-            double dem_y1, const int k_start, const int k_end,
-            double geogrid_upsampling, double* a11, double* r11, 
-            double* y_min, double* x_min, double* y_max, double* x_max, 
+    void _getRadarPositionVect(double dem_y1, const int k_start,
+            const int k_end, double geogrid_upsampling, double* a11,
+            double* r11, double* y_min, double* x_min, double* y_max,
+            double* x_max,
             const isce3::product::RadarGridParameters& radar_grid,
             isce3::core::ProjectionBase* proj,
             isce3::geometry::DEMInterpolator& dem_interp_block,
+            const std::function<Vec3(double, double,
+                    const isce3::geometry::DEMInterpolator&,
+                    isce3::core::ProjectionBase*)>& getDemCoords,
             bool flag_direction_line, bool flag_save_vectors,
-            bool flag_compute_min_max,
-            std::vector<double>* a_last = nullptr, 
+            bool flag_compute_min_max, std::vector<double>* a_last = nullptr,
             std::vector<double>* r_last = nullptr,
             std::vector<Vec3>* dem_last = nullptr);
 
     /*
-    Check if a geogrid bounding box (y0, x0, yf, xf) fully 
-    covers the RSLC (represented by the radar_grid). 
+    Check if a geogrid bounding box (y0, x0, yf, xf) fully
+    covers the RSLC (represented by the radar_grid).
     */
-    bool _checkLoadEntireRslcCorners(
-            const double y0, const double x0, 
-            const double yf, const double xf, 
+    bool _checkLoadEntireRslcCorners(const double y0, const double x0,
+            const double yf, const double xf,
             const isce3::product::RadarGridParameters& radar_grid,
             isce3::core::ProjectionBase* proj,
-            isce3::geometry::DEMInterpolator& dem_interp,
-            int margin_pixels);
+            const std::function<Vec3(double, double,
+                    const isce3::geometry::DEMInterpolator&,
+                    isce3::core::ProjectionBase*)>& getDemCoords,
+            isce3::geometry::DEMInterpolator& dem_interp, int margin_pixels);
 
     /*
     Get radar grid boundaries, i.e. min and max rg. and az. indexes, using
     the border of a geogrid bounding box.
     */
-    void _getRadarPositionBorder(
-            double geogrid_upsampling, const double dem_y1,
-            const double dem_x1, const double dem_yf,
-            const double dem_xf, double* a_min,
-            double* r_min, double* a_max, double* r_max, 
+    void _getRadarPositionBorder(double geogrid_upsampling, const double dem_y1,
+            const double dem_x1, const double dem_yf, const double dem_xf,
+            double* a_min, double* r_min, double* a_max, double* r_max,
             const isce3::product::RadarGridParameters& radar_grid,
             isce3::core::ProjectionBase* proj,
+            const std::function<Vec3(double, double,
+                    const isce3::geometry::DEMInterpolator&,
+                    isce3::core::ProjectionBase*)>& getDemCoords,
             isce3::geometry::DEMInterpolator& dem_interp);
 
     template<class T2, class T_out>
@@ -486,10 +486,9 @@ private:
     std::string _get_nbytes_str(long nbytes);
 
     int _geo2rdr(const isce3::product::RadarGridParameters& radar_grid,
-                 double x, double y, double& azimuthTime, double& slantRange,
-                 isce3::geometry::DEMInterpolator& demInterp,
-                 isce3::core::ProjectionBase* proj,
-                 float &dem_value);
+            double x, double y, double& azimuthTime, double& slantRange,
+            isce3::geometry::DEMInterpolator& demInterp,
+            isce3::core::ProjectionBase* proj, float& dem_value);
 
     /**
      * @param[in] rdrDataBlock a basebanded block of data in radar coordinate
@@ -518,21 +517,20 @@ private:
      */
     template<class T_out>
     inline void _interpolate(const isce3::core::Matrix<T_out>& rdrDataBlock,
-                      isce3::core::Matrix<T_out>& geoDataBlock,
-                      const std::valarray<double>& radarX,
-                      const std::valarray<double>& radarY,
-                      const int radarBlockWidth, const int radarBlockLength,
-                      const int azimuthFirstLine, const int rangeFirstPixel,
-                      const isce3::core::Interpolator<T_out>* interp,
-                      const isce3::product::RadarGridParameters& radarGrid,
-                      const bool flag_az_baseband_doppler, const bool flatten,
-                      isce3::io::Raster* phase_screen_raster,
-                      isce3::core::Matrix<float>& phase_screen_array,
-                      double abs_cal_factor, float clip_min, float clip_max,
-                      bool flag_run_rtc, const isce3::core::Matrix<float>& rtc_area,
-                      isce3::io::Raster* out_geo_rtc, 
-                      isce3::core::Matrix<float>& out_geo_rtc_arraya);
-
+            isce3::core::Matrix<T_out>& geoDataBlock,
+            const std::valarray<double>& radarX,
+            const std::valarray<double>& radarY, const int radarBlockWidth,
+            const int radarBlockLength, const int azimuthFirstLine,
+            const int rangeFirstPixel,
+            const isce3::core::Interpolator<T_out>* interp,
+            const isce3::product::RadarGridParameters& radarGrid,
+            const bool flag_az_baseband_doppler, const bool flatten,
+            isce3::io::Raster* phase_screen_raster,
+            isce3::core::Matrix<float>& phase_screen_array,
+            double abs_cal_factor, float clip_min, float clip_max,
+            bool flag_run_rtc, const isce3::core::Matrix<float>& rtc_area,
+            isce3::io::Raster* out_geo_rtc,
+            isce3::core::Matrix<float>& out_geo_rtc_arraya);
 
     /**
      * param[in,out] data a matrix of data that needs to be base-banded in
@@ -543,10 +541,10 @@ private:
      * param[in] doppler_lut 2D LUT of the image Doppler
      */
     template<class T2>
-    inline void _baseband(isce3::core::Matrix<T2>& data, const double starting_range,
-                   const double sensing_start, const double range_pixel_spacing,
-                   const double prf,
-                   const isce3::core::LUT2d<double>& doppler_lut);
+    inline void _baseband(isce3::core::Matrix<T2>& data,
+            const double starting_range, const double sensing_start,
+            const double range_pixel_spacing, const double prf,
+            const isce3::core::LUT2d<double>& doppler_lut);
 
     /**
      * param[in,out] data a matrix of data that needs to be base-banded in
@@ -558,12 +556,9 @@ private:
      */
     template<class T2>
     inline void _baseband(isce3::core::Matrix<std::complex<T2>>& data,
-                   const double starting_range, const double sensing_start,
-                   const double range_pixel_spacing, const double prf,
-                   const isce3::core::LUT2d<double>& doppler_lut);
-
-
-
+            const double starting_range, const double sensing_start,
+            const double range_pixel_spacing, const double prf,
+            const isce3::core::LUT2d<double>& doppler_lut);
 
     // isce3::core objects
     isce3::core::Orbit _orbit;

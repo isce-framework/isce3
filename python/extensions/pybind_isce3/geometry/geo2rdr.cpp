@@ -2,11 +2,10 @@
 
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind_isce3/core/LookSide.h>
 #include <stdexcept>
 #include <string>
 #include <utility>
-
-#include <pybind_isce3/core/LookSide.h>
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
@@ -14,8 +13,8 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Vector.h>
 #include <isce3/focus/Backproject.h>
-#include <isce3/geometry/geometry.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
+#include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 

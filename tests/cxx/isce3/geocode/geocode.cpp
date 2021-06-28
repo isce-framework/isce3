@@ -165,19 +165,16 @@ TEST(GeocodeTest, TestGeocodeCov) {
 
             // run geocode
             geoObj.geocode(radar_grid, radarRaster, geocodedRaster, demRaster,
-                           output_mode, flag_az_baseband_doppler, flatten,
-                           geogrid_upsampling, 
-                           flag_upsample_radar_grid, flag_apply_rtc,
-                           input_terrain_radiometry, 
-                           output_terrain_radiometry, exponent, 
-                           rtc_min_value_db, rtc_geogrid_upsampling,
-                           rtc_algorithm, abs_cal_factor, clip_min, clip_max,
-                           min_nlooks, radar_grid_nlooks, nullptr,
-                           out_geo_rdr, out_geo_dem, out_geo_nlooks,
-                           out_geo_rtc, input_rtc, output_rtc,
-                           phase_screen_raster, offset_az_raster,
-                           offset_rg_raster, geocode_memory_mode_1,
-                           min_block_size, max_block_size);
+                    output_mode, flag_az_baseband_doppler, flatten,
+                    geogrid_upsampling, flag_upsample_radar_grid,
+                    flag_apply_rtc, input_terrain_radiometry,
+                    output_terrain_radiometry, exponent, rtc_min_value_db,
+                    rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor,
+                    clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
+                    out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
+                    input_rtc, output_rtc, phase_screen_raster,
+                    offset_az_raster, offset_rg_raster, geocode_memory_mode_1,
+                    min_block_size, max_block_size);
         }
     } 
 
@@ -218,20 +215,16 @@ TEST(GeocodeTest, TestGeocodeCov) {
                                             geoGridWidth, geoGridLength, 1,
                                             GDT_CFloat32, "ENVI");
 
-    geoComplexObj.geocode(
-            radar_grid, slc_raster_xy, geocoded_diag_raster, demRaster,
-            output_mode, flag_az_baseband_doppler, flatten, 
-            geogrid_upsampling, flag_upsample_radar_grid, 
-            flag_apply_rtc, 
-            input_terrain_radiometry, output_terrain_radiometry, 
-            exponent, rtc_min_value_db, rtc_geogrid_upsampling, 
-            rtc_algorithm, abs_cal_factor, clip_min, 
-            clip_max, min_nlooks, radar_grid_nlooks, &geocoded_off_diag_raster, 
-            out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc, 
-            input_rtc, output_rtc,
-            phase_screen_raster, offset_az_raster, offset_rg_raster,
-            geocode_memory_mode_2, min_block_size,
-            max_block_size);
+    geoComplexObj.geocode(radar_grid, slc_raster_xy, geocoded_diag_raster,
+            demRaster, output_mode, flag_az_baseband_doppler, flatten,
+            geogrid_upsampling, flag_upsample_radar_grid, flag_apply_rtc,
+            input_terrain_radiometry, output_terrain_radiometry, exponent,
+            rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
+            abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
+            &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem, out_geo_nlooks,
+            out_geo_rtc, input_rtc, output_rtc, phase_screen_raster,
+            offset_az_raster, offset_rg_raster, geocode_memory_mode_2,
+            min_block_size, max_block_size);
 
     //  load complex raster containing X conj(Y)
     isce3::io::Raster slc_x_conj_y_raster("x_conj_y_slc_rdr.bin");

@@ -15,6 +15,6 @@
  *                              cannot be empty.
  *
  */
-thrust::pair<double, double>
-masked_minmax(const thrust::device_vector<double> & data,
-              const thrust::device_vector<bool> & mask);
+thrust::pair<double, double> masked_minmax(
+        const thrust::device_vector<double>& data,
+        const thrust::device_vector<bool>& mask);

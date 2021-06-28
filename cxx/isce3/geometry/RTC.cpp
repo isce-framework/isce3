@@ -11,6 +11,7 @@
 #include <cstring>
 #include <ctime>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -346,7 +347,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
     }
 }
 
-inline Vec3 GetDemCoordsSameEpsg(double x, double y,
+inline Vec3 getDemCoordsSameEpsg(double x, double y,
         const DEMInterpolator& dem_interp, isce3::core::ProjectionBase*)
 {
 
@@ -354,7 +355,7 @@ inline Vec3 GetDemCoordsSameEpsg(double x, double y,
     return dem_coords;
 }
 
-inline Vec3 GetDemCoordsDiffEpsg(double x, double y,
+inline Vec3 getDemCoordsDiffEpsg(double x, double y,
         const DEMInterpolator& dem_interp,
         isce3::core::ProjectionBase* input_proj)
 {
@@ -421,14 +422,12 @@ std::string getNbytesStr(long long nbytes)
 }
 
 void areaProjGetNBlocks(const int array_length, const int array_width,
-                        const int nbands, const size_t type_size,
-                        pyre::journal::info_t* channel, const double upsampling,
-                        int* block_length_with_upsampling, int* block_length,
-                        int* nblocks_y, int* block_width_with_upsampling,
-                        int* block_width, int* nblocks_x,
-                        const int min_block_size, 
-                        const long long max_block_size,
-                        const int nblocks_per_thread)
+        const int nbands, const size_t type_size,
+        pyre::journal::info_t* channel, const double upsampling,
+        int* block_length_with_upsampling, int* block_length, int* nblocks_y,
+        int* block_width_with_upsampling, int* block_width, int* nblocks_x,
+        const int min_block_size, const long long max_block_size,
+        const int nblocks_per_thread)
 {
 
     int _nblocks_x = 0, _nblocks_y;
@@ -897,12 +896,12 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
 
     std::function<Vec3(double, double, const DEMInterpolator&,
             isce3::core::ProjectionBase*)>
-            GetDemCoords;
+            getDemCoords;
 
     if (geogrid.epsg() == dem_raster.getEPSG()) {
-        GetDemCoords = GetDemCoordsSameEpsg;
+        getDemCoords = getDemCoordsSameEpsg;
     } else {
-        GetDemCoords = GetDemCoordsDiffEpsg;
+        getDemCoords = getDemCoordsDiffEpsg;
     }
 
     // Loop over DEM facets
@@ -931,7 +930,7 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
                                                                upsample_factor;
 
             const Vec3 inputDEM =
-                    GetDemCoords(dem_xmid, dem_ymid, dem_interp, proj.get());
+                    getDemCoords(dem_xmid, dem_ymid, dem_interp, proj.get());
 
             // Compute facet-central LLH vector
             const Vec3 inputLLH = dem_interp.proj()->inverse(inputDEM);
@@ -964,13 +963,13 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
 
             // Set DEM-coordinate corner vectors
             const Vec3 dem00 =
-                    GetDemCoords(dem_x0, dem_y0, dem_interp, proj.get());
+                    getDemCoords(dem_x0, dem_y0, dem_interp, proj.get());
             const Vec3 dem01 =
-                    GetDemCoords(dem_x0, dem_y1, dem_interp, proj.get());
+                    getDemCoords(dem_x0, dem_y1, dem_interp, proj.get());
             const Vec3 dem10 =
-                    GetDemCoords(dem_x1, dem_y0, dem_interp, proj.get());
+                    getDemCoords(dem_x1, dem_y0, dem_interp, proj.get());
             const Vec3 dem11 =
-                    GetDemCoords(dem_x1, dem_y1, dem_interp, proj.get());
+                    getDemCoords(dem_x1, dem_y1, dem_interp, proj.get());
 
             // Convert to XYZ
             const Vec3 xyz00 =
@@ -1125,7 +1124,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     auto elapsed_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start_time);
     float elapsed_time = ((float) elapsed_time_milliseconds.count()) / 1e3;
-    info << "elapsed time (RTC-BI) [s]: " << elapsed_time << pyre::journal::endl;
+    info << "elapsed time (RTC-BI) [s]: " << elapsed_time
+         << pyre::journal::endl;
 }
 
 isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
@@ -1155,7 +1155,7 @@ isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         auto p1_llh = proj->inverse({geogrid_min_xy[0], geogrid_min_xy[1], 0});
         auto p2_llh = proj->inverse({geogrid_min_xy[0], geogrid_max_xy[1], 0});
         auto p3_llh = proj->inverse({geogrid_max_xy[0], geogrid_min_xy[1], 0});
-        auto p4_llh = proj->inverse({geogrid_max_xy[0], geogrid_max_xy[1], 0});;
+        auto p4_llh = proj->inverse({geogrid_max_xy[0], geogrid_max_xy[1], 0});
 
         Vec3 p1_xy, p2_xy, p3_xy, p4_xy;
 
@@ -1225,7 +1225,7 @@ void _RunBlock(const int jmax, const int block_size,
 
     std::function<Vec3(double, double, const DEMInterpolator&,
             isce3::core::ProjectionBase*)>
-            GetDemCoords;
+            getDemCoords;
 
     isce3::core::Matrix<float> out_geo_rdr_a;
     isce3::core::Matrix<float> out_geo_rdr_r;
@@ -1259,16 +1259,16 @@ void _RunBlock(const int jmax, const int block_size,
                     geogrid_upsampling;
 
     if (geogrid.epsg() == dem_raster.getEPSG()) {
-        GetDemCoords = GetDemCoordsSameEpsg;
+        getDemCoords = getDemCoordsSameEpsg;
 
     } else {
-        GetDemCoords = GetDemCoordsDiffEpsg;
+        getDemCoords = getDemCoordsDiffEpsg;
     }
 
     const int dem_margin_in_pixels = 100;
 
     auto error_code = loadDemFromProj(dem_raster, minX, maxX, minY, maxY,
-            &dem_interp_block, proj, dem_margin_in_pixels, 
+            &dem_interp_block, proj, dem_margin_in_pixels,
             dem_margin_in_pixels);
 
     if (error_code != isce3::error::ErrorCode::Success) {
@@ -1305,7 +1305,7 @@ void _RunBlock(const int jmax, const int block_size,
         const double dem_x1 = geogrid.startX() +
                               (geogrid.spacingX() * jj) / geogrid_upsampling;
 
-        dem11 = GetDemCoords(dem_x1, dem_y1, dem_interp_block, proj);
+        dem11 = getDemCoords(dem_x1, dem_y1, dem_interp_block, proj);
         // course
         int converged = geo2rdr(dem_interp_block.proj()->inverse(dem11),
                 ellipsoid, orbit, dop, a11, r11, radar_grid.wavelength(), side,
@@ -1346,7 +1346,7 @@ void _RunBlock(const int jmax, const int block_size,
         const double dem_y1 = geogrid.startY() + geogrid.spacingY() *
                                                          (1.0 + ii) /
                                                          geogrid_upsampling;
-        dem11 = GetDemCoords(dem_x1_0, dem_y1, dem_interp_block, proj);
+        dem11 = getDemCoords(dem_x1_0, dem_y1, dem_interp_block, proj);
 
         int converged = geo2rdr(dem_interp_block.proj()->inverse(dem11),
                 ellipsoid, orbit, dop, a11, r11, radar_grid.wavelength(), side,
@@ -1400,7 +1400,7 @@ void _RunBlock(const int jmax, const int block_size,
                                                              (1.0 + jj) /
                                                              geogrid_upsampling;
 
-            dem11 = GetDemCoords(dem_x1, dem_y1, dem_interp_block, proj);
+            dem11 = getDemCoords(dem_x1, dem_y1, dem_interp_block, proj);
 
             int converged = geo2rdr(dem_interp_block.proj()->inverse(dem11),
                     ellipsoid, orbit, dop, a11, r11, radar_grid.wavelength(),
@@ -1489,7 +1489,7 @@ void _RunBlock(const int jmax, const int block_size,
                                                             (0.5 + jj) /
                                                             geogrid_upsampling;
             const Vec3 dem_c =
-                    GetDemCoords(dem_x, dem_y, dem_interp_block, proj);
+                    getDemCoords(dem_x, dem_y, dem_interp_block, proj);
 
             double a_c = (a00 + a01 + a10 + a11) / 4.0;
             double r_c = (r00 + r01 + r10 + r11) / 4.0;

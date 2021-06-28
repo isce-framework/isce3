@@ -1,5 +1,7 @@
 #include "Backproject.h"
 
+#include <pybind11/numpy.h>
+
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Kernels.h>
 #include <isce3/except/Error.h>
@@ -8,7 +10,6 @@
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/detail/Rdr2Geo.h>
-#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 

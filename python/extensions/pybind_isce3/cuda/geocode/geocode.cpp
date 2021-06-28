@@ -6,7 +6,7 @@ namespace py = pybind11;
 
 using isce3::cuda::geocode::Geocode;
 
-void addsubmodule_cuda_geocode(py::module & m)
+void addsubmodule_cuda_geocode(py::module& m)
 {
     py::module m_geocode = m.def_submodule("geocode");
 
