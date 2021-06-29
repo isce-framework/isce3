@@ -129,13 +129,27 @@ pipeline {
       echo 'I succeeded!'
     }
     unstable {
-      echo 'I am unstable :/'
+      echo 'I am unstable :/ Emailing PR author and one of the ISCE3 maintainers.'
+      emailStatus()      
     }
     failure {
-      echo 'I failed :('
+      echo 'I failed :( Emailing PR author and one of the ISCE3 maintainers.'
+      emailStatus()
     }
     changed {
       echo 'Things were different before...'
     }
   }
 }
+
+def emailStatus() {
+      mail to: 'geoffrey.m.gunter@jpl.nasa.gov',
+          subject: "ISCE3 build ${currentBuild.result}: ${currentBuild.fullDisplayName}",
+          body: "Minimum workflow test ${currentBuild.result}: ${env.BUILD_URL}" 
+      emailext(
+          subject: "ISCE3 build ${currentBuild.result}: ${currentBuild.fullDisplayName}",
+          body: "Minimum workflow test ${currentBuild.result}: ${env.BUILD_URL}",
+          recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+      )
+}
+
