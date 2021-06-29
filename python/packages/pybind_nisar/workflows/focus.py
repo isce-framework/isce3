@@ -3,7 +3,7 @@ import h5py
 import json
 import logging
 import os
-from pybind_nisar.products.readers.Raw import Raw
+from pybind_nisar.products.readers.Raw import Raw, open_rrsd
 from pybind_nisar.products.writers import SLC
 from pybind_nisar.types import to_complex32
 from pybind_nisar.workflows import gpu_check
@@ -88,10 +88,10 @@ def get_window(win: Struct, msg=''):
     raise NotImplementedError(f"window {kind} not in (Kaiser, Cosine).")
 
 
-def get_chirp(cfg: Struct, raw: Raw, frequency: str):
+def get_chirp(cfg: Struct, raw: Raw, frequency: str, tx: str):
     if cfg.DynamicAncillaryFileGroup.Waveform:
         log.warning("Ignoring input waveform file.  Using analytic chirp.")
-    chirp = raw.getChirp(frequency)
+    chirp = raw.getChirp(frequency, tx)
     log.info(f"Chirp length = {len(chirp)}")
     window = get_window(cfg.processing.range_window, msg="Range window: ")
     chirp *= window(len(chirp))
@@ -116,7 +116,7 @@ def get_orbit(cfg: Struct):
     rawfiles = cfg.InputFileGroup.InputFilePath
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate orbit data.")
-    raw = Raw(hdf5file=rawfiles[0])
+    raw = open_rrsd(rawfiles[0])
     return raw.getOrbit()
 
 
@@ -127,17 +127,17 @@ def get_attitude(cfg: Struct):
     rawfiles = cfg.InputFileGroup.InputFilePath
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate attitude data.")
-    raw = Raw(hdf5file=rawfiles[0])
+    raw = open_rrsd(rawfiles[0])
     return raw.getAttitude()
 
 
 def get_total_grid_bounds(rawfiles: List[str], frequency='A'):
     times, ranges = [], []
     for fn in rawfiles:
-        raw = Raw(hdf5file=fn)
+        raw = open_rrsd(fn)
         pol = raw.polarizations[frequency][0]
-        ranges.append(raw.getRanges(frequency))
-        times.append(raw.getPulseTimes(frequency, pol[0]))
+        ranges.append(raw.getRanges(frequency, tx=pol[0]))
+        times.append(raw.getPulseTimes(frequency, tx=pol[0]))
     rmin = min(r[0] for r in ranges)
     rmax = max(r[-1] for r in ranges)
     dtmin = min(epoch + isce.core.TimeDelta(t[0]) for (epoch, t) in times)
@@ -162,10 +162,21 @@ def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
     """
     p, v = orbit.interpolate(t)
     R = attitude.interpolate(t).to_rotation_matrix()
-    axis = R[:,0]
+    axis = R[:,1]
+    # In NISAR coordinate frames (see D-80882 and REE User Guide) left/right is
+    # implemented as a 180 yaw flip, so the left/right flag can just be
+    # inferred by the sign of axis.dot(v). Verify this convention.
+    inferred_side = "left" if axis.dot(v) > 0 else "right"
+    if side != inferred_side:
+        raise ValueError(f"Requested side={side} but "
+                         f"inferred side={inferred_side} based on orientation "
+                         f"(Y_RCS.dot(V) = {axis.dot(v)})")
     if dem is None:
         dem = isce.geometry.DEMInterpolator()
-    xyz = isce.geometry.rdr2geo_cone(p, axis, angle, r, dem, side, **kw)
+    # NOTE Here "left" means an acute, positive look angle by right-handed
+    # rotation about `axis`.  Since axis will flip sign, always use "left" to
+    # get the requested side in the sense of velocity vector.
+    xyz = isce.geometry.rdr2geo_cone(p, axis, angle, r, dem, "left", **kw)
     look = (xyz - p) / np.linalg.norm(xyz - p)
     vhat = v / np.linalg.norm(v)
     return np.arcsin(look.dot(vhat))
@@ -242,7 +253,7 @@ def make_doppler_lut(rawfiles: List[str],
     # Input wrangling.
     assert len(rawfiles) > 0, "Need at least one L0B file."
     assert (azimuth_spacing > 0.0) and (range_spacing > 0.0)
-    raw = Raw(hdf5file=rawfiles[0])
+    raw = open_rrsd(rawfiles[0])
     if orbit is None:
         orbit = raw.getOrbit()
     if attitude is None:
@@ -486,7 +497,7 @@ def focus(runconfig):
         raise NotImplementedError("mixed-mode processing not yet supported")
 
     input_raw_path = os.path.abspath(rawfiles[0])
-    raw = Raw(hdf5file=input_raw_path)
+    raw = open_rrsd(input_raw_path)
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
     attitude = get_attitude(cfg)
@@ -496,6 +507,14 @@ def focus(runconfig):
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
     kernel = get_kernel(cfg)
     scale = cfg.processing.encoding_scale_factor
+
+    # Check that center frequency doesn't depend on TX polarization since
+    # this is assumed in RSLC Doppler metadata.
+    for frequency, polarizations in raw.polarizations.items():
+        fc_list = [raw.getCenterFrequency(frequency, pol[0])
+            for pol in polarizations]
+        if len(set(fc_list)) > 1:
+            raise NotImplementedError("TX frequency agility not supported")
 
     use_gpu = gpu_check.use_gpu(cfg.worker.gpu_enabled, cfg.worker.gpu_id)
     if use_gpu:
@@ -522,8 +541,10 @@ def focus(runconfig):
     if "B" in raw.frequencies:
         # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B.
-        rskip = int(np.round(raw.getRanges("B").spacing
-            / raw.getRanges("A").spacing))
+        # Don't assume A and B have same polarization, e.g., Quasi-Quad-Pol
+        tx = raw.polarizations["B"][0][0]
+        rskip = int(np.round(raw.getRanges("B", tx).spacing
+            / raw.getRanges("A", txref).spacing))
         ogrid["B"] = ogrid["A"][:, ::rskip]
         log.info("Output grid B is %s", ogrid["B"])
 
@@ -580,7 +601,7 @@ def focus(runconfig):
         rawdata = raw.getRawDataset(frequency, pol)
         log.info(f"Raw data shape = {rawdata.shape}")
         raw_times, raw_grid = raw.getRadarGrid(frequency, tx=pol[0])
-        fc = raw.getCenterFrequency(frequency)
+        fc = raw.getCenterFrequency(frequency, pol[0])
         na = cfg.processing.rangecomp.block_size.azimuth
         nr = rawdata.shape[1]
         swaths = raw.getSubSwaths(frequency, tx=pol[0])
@@ -614,7 +635,7 @@ def focus(runconfig):
         del raw_mm, rawfd
 
         log.info("Generating chirp")
-        chirp = get_chirp(cfg, raw, frequency)
+        chirp = get_chirp(cfg, raw, frequency, pol[0])
 
         rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
         log.info(f"Preparing range compressor with {rcmode}")
