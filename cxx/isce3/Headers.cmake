@@ -135,6 +135,7 @@ math/Bessel.h
 math/ComplexMultiply.h
 math/Sinc.h
 math/Sinc.icc
+polsar/symmetrize.h
 product/forward.h
 product/GeoGridParameters.h
 product/Metadata.h

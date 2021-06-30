@@ -44,6 +44,11 @@ runconfig:
                 # Compute cross-elements (True) or diagonals only (False). Default: False
                 fullcovariance: bool(required=False)
         
+                # Perform polarimetric symmetrization. It's only applicable
+                # for quad-polarimetric datasets (i.e. datasets that include
+                # HV and VH), otherwise, the flag is ignored.
+                symmetrize_cross_pol_channels:  bool(required=False)
+
             # Only checked when internet access is available
             dem_download:
                 # s3 bucket / curl URL / local file

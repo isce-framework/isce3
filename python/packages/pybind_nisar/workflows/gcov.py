@@ -31,6 +31,8 @@ def run(cfg):
     output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     flag_fullcovariance = cfg['processing']['input_subset']['fullcovariance']
+    flag_symmetrize_cross_pol_channels = \
+        cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
     scratch_path = cfg['ProductPathGroup']['ScratchPath']
 
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
@@ -109,18 +111,71 @@ def run(cfg):
         if radar_grid_nlooks > 1:
             radar_grid = radar_grid.multilook(az_look, rg_look)
         geogrid = geogrids[frequency]
-        pol_list = freq_pols[frequency]
+        input_pol_list = freq_pols[frequency]
 
         # do no processing if no polarizations specified for current frequency
-        if not pol_list:
+        if not input_pol_list:
             continue
+
+        # set dict of input rasters
+        input_raster_dict = {}
+
+        # `input_pol_list` is the input list of polarizations that may include
+        # HV and VH. `pol_list` is the actual list of polarizations to be
+        # geocoded. It may include HV but it will not include VH if the
+        # polarimetric symmetrization is performed
+        pol_list = input_pol_list
+        for pol in pol_list:
+            temp_ref = \
+                f'HDF5:"{input_hdf5}":/{slc.slcPath(frequency, pol)}'
+            temp_raster = isce3.io.Raster(temp_ref)
+            input_raster_dict[pol] = temp_raster
+        # symmetrize cross-polarimetric channels (if applicable)
+        if (flag_symmetrize_cross_pol_channels and 
+                'HV' in input_pol_list and
+                'VH' in input_pol_list):
+
+            # create output raster
+            symmetrized_hv_temp = tempfile.NamedTemporaryFile(
+                dir=scratch_path, suffix='.tif')
+
+            # get cross-polarimetric channels from input_raster_dict
+            hv_raster_obj = input_raster_dict['HV']
+            vh_raster_obj = input_raster_dict['VH']
+
+            # create output symmetrized HV object
+            symmetrized_hv_obj = isce3.io.Raster(
+                symmetrized_hv_temp.name,
+                hv_raster_obj.width, 
+                hv_raster_obj.length, 
+                hv_raster_obj.num_bands,
+                hv_raster_obj.datatype(), 
+                'GTiff')
+
+            # call symmetrization function
+            isce3.polsar.symmetrize_cross_pol_channels(
+                hv_raster_obj, 
+                vh_raster_obj, 
+                symmetrized_hv_obj)
+            
+            # ensure changes are flushed to disk by closing & re-opening the
+            # raster.
+            del symmetrized_hv_obj
+            symmetrized_hv_obj = isce3.io.Raster(
+                symmetrized_hv_temp.name)
+
+            # Since HV and VH were symmetrized into HV, remove VH from
+            # `pol_list` and `from input_raster_dict`.
+            pol_list.remove('VH')
+            input_raster_dict.pop('VH')
+
+            # Update `input_raster_dict` with the new `symmetrized_hv_obj`
+            input_raster_dict['HV'] = symmetrized_hv_obj
 
         # construct input rasters
         input_raster_list = []
         for pol in pol_list:
-            raster_ref = f'HDF5:"{input_hdf5}":/{slc.slcPath(frequency, pol)}'
-            temp_raster = isce3.io.Raster(raster_ref)
-            input_raster_list.append(temp_raster)
+            input_raster_list.append(input_raster_dict[pol])
 
         # set paths temporary files
         input_temp = tempfile.NamedTemporaryFile(

@@ -2,6 +2,7 @@
 
 #include <isce3/config.h>
 
+#include "antenna/antenna.h"
 #include "container/container.h"
 #include "core/core.h"
 #include "focus/focus.h"
@@ -9,10 +10,10 @@
 #include "geometry/geometry.h"
 #include "image/image.h"
 #include "io/io.h"
-#include "signal/signal.h"
+#include "polsar/polsar.h"
 #include "product/product.h"
+#include "signal/signal.h"
 #include "unwrap/unwrap.h"
-#include "antenna/antenna.h"
 
 #ifdef ISCE3_CUDA
 #include "cuda/cuda.h"
@@ -27,6 +28,7 @@ PYBIND11_MODULE(pybind_isce3, m) {
     addsubmodule_geocode(m);
     addsubmodule_image(m);
     addsubmodule_io(m);
+    addsubmodule_polsar(m);
     addsubmodule_signal(m);
     addsubmodule_product(m);
     addsubmodule_container(m);

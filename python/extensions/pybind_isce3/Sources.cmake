@@ -53,6 +53,8 @@ io/gdal/Raster.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp
+polsar/symmetrize.cpp
+polsar/polsar.cpp
 signal/signal.cpp
 signal/convolve2D.cpp
 signal/Covariance.cpp

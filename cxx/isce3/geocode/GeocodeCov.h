@@ -37,6 +37,26 @@ enum geocodeMemoryMode {
     BLOCKS_GEOGRID_AND_RADARGRID = 3
 };
 
+constexpr static long long DEFAULT_MAX_BLOCK_SIZE = 1 << 29; // 512MB
+/** Compute the number of blocks and their length for block processing
+ * in the length direction
+ *
+ * @param[in]  array_length        Length of the data to be processed
+ * @param[in]  array_width         Width of the data to be processed
+ * @param[in]  nbands              Number of the bands to be processed
+ * @param[in]  type_size           Type size of the data to be processed
+ * @param[in]  channel             Pyre info channel
+ * @param[out] block_length        Block length
+ * @param[out] nblock_y            Number of blocks in the Y direction
+ * @param[in]  max_block_size      Maximum block size in Bytes (per thread)
+ */
+void getBlocksNumberAndLength(const int array_length, const int array_width,
+        const int nbands = 1,
+        const size_t type_size = 4, // Float32
+        pyre::journal::info_t* channel = nullptr, int* block_length = nullptr,
+        int* nblock_y = nullptr,
+        const long long max_block_size = DEFAULT_MAX_BLOCK_SIZE);
+
 template<class T>
 class Geocode {
 public:
@@ -309,26 +329,6 @@ public:
     void updateGeoGrid(const isce3::product::RadarGridParameters& radar_grid,
                        isce3::io::Raster& dem_raster);
 
-    constexpr static long long DEFAULT_MAX_BLOCK_SIZE = 1 << 29; // 512MB
-    /** Compute the number of blocks and their length for block processing
-     * in the length direction
-     *
-     * @param[in]  array_length        Length of the data to be processed
-     * @param[in]  array_width         Width of the data to be processed
-     * @param[in]  nbands              Number of the bands to be processed
-     * @param[in]  type_size           Type size of the data to be processed
-     * @param[in]  channel             Pyre info channel
-     * @param[out] block_length        Block length
-     * @param[out] nblock_y            Number of blocks in the Y direction
-     * @param[in]  max_block_size      Maximum block size in Bytes (per thread)
-     */
-    void getBlocksNumberAndLength(const int array_length, const int array_width,
-            const int nbands = 1,
-            const size_t type_size = 4, // Float32
-            pyre::journal::info_t* channel = nullptr,
-            int* block_length = nullptr, int* nblock_y = nullptr,
-            const long long max_block_size = DEFAULT_MAX_BLOCK_SIZE);
-
     // Get/set data interpolator
     isce3::core::dataInterpMethod dataInterpolator() const 
     { 
@@ -450,33 +450,27 @@ private:
             isce3::geometry::DEMInterpolator& dem_interp);
 
     template<class T2, class T_out>
-    void _runBlock(
-            const isce3::product::RadarGridParameters& radar_grid,
+    void _runBlock(const isce3::product::RadarGridParameters& radar_grid,
             bool is_radar_grid_single_block,
             std::vector<std::unique_ptr<isce3::core::Matrix<T2>>>& rdrData,
             int block_size_y, int block_size_with_upsampling_y, int block_y,
             int block_size_x, int block_size_with_upsampling_x, int block_x,
-            long long& numdone, const long long&  progress_block, 
-            double geogrid_upsampling,
-            int nbands, int nbands_off_diag_terms,
+            long long& numdone, const long long& progress_block,
+            double geogrid_upsampling, int nbands, int nbands_off_diag_terms,
             isce3::core::dataInterpMethod dem_interp_method,
             isce3::io::Raster& dem_raster,
             isce3::io::Raster* out_off_diag_terms,
-            isce3::io::Raster* out_geo_rdr,
-            isce3::io::Raster* out_geo_dem,
+            isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_dem,
             isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
-            isce3::core::ProjectionBase* proj, 
-            bool flag_apply_rtc, isce3::io::Raster* rtc_raster,
-            isce3::io::Raster& input_raster,
+            isce3::core::ProjectionBase* proj, bool flag_apply_rtc,
+            isce3::io::Raster* rtc_raster, isce3::io::Raster& input_raster,
             int raster_offset_y, int raster_offset_x,
             isce3::io::Raster& output_raster,
-            isce3::core::Matrix<float>& rtc_area,
-            float rtc_min_value,
+            isce3::core::Matrix<float>& rtc_area, float rtc_min_value,
             double abs_cal_factor, float clip_min, float clip_max,
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
-            geocodeMemoryMode geocode_memory_mode, 
-            pyre::journal::info_t& info);
+            geocodeMemoryMode geocode_memory_mode, pyre::journal::info_t& info);
 
     void _loadDEM(isce3::io::Raster& demRaster,
                   isce3::geometry::DEMInterpolator& demInterp,
