@@ -1924,7 +1924,8 @@ void Geocode<T>::_getRadarPositionVect(double dem_pos_1, const int k_start,
     az. and rg. positions
     */
 
-    double pixazm, start, dr, r0;
+    double pixazm = 0.0, start = 0.0, dr = 0.0, r0 = 0.0;
+
     if (flag_compute_min_max) {
         // start (az) and r0 at the outer edge of the first pixel
         pixazm = radar_grid.azimuthTimeInterval();
