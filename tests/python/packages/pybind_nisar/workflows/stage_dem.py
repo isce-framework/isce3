@@ -1,31 +1,68 @@
 import os
+import subprocess
+import argparse
 
 import numpy.testing as npt
 from pybind_nisar.workflows import stage_dem
 
+from shapely import wkt
+
 import iscetest
 
 
-def test_run():
-    """
-    Run DEM stager
-    """
-    # Get reference SLC
-    slc_file = os.path.join(iscetest.data, 'Greenland.h5')
+def test_dateline_crossing():
+    # Polygon on Ross Ice Shelf (Antarctica)
+    # crossing the dateline
+    polygon_wkt = 'POLYGON((-160.9795 -76.9215,163.3981 -77.0962,' \
+                  '          152.885 -81.8908,-149.3722 -81.6129,-160.9795 -76.9215))'
+    polygon = wkt.loads(polygon_wkt)
 
-    # Prepare output directory
-    out_file = os.path.join('dem.tif')
+    # Check if crossing dateline
+    polys = stage_dem.check_dateline(polygon)
 
-    # Return and check S3 VRT Filepath
-    vrtFilename = stage_dem.return_dem_filepath(None, ref_slc=slc_file)
-    npt.assert_equal(vrtFilename, '/vsis3/nisar-dem/EPSG3413/EPSG3413.vrt')
+    assert (len(polys) == 2)
 
-    # Return and check EPSG
-    poly = stage_dem.determine_polygon(slc_file)
-    epsg = stage_dem.determine_projection(poly, None)
 
-    npt.assert_equal(epsg, 3413)
+def test_point2epsg():
+    # Coordinate points taken from track-frame database
 
-    # Download dem
-    stage_dem.download_dem(poly, epsg, 5, out_file)
-    os.remove(out_file)
+    npt.assert_equal(stage_dem.point2epsg(-162.377, 0.881), 32603)
+    npt.assert_equal(stage_dem.point2epsg(-108.511, 8.901), 32612)
+    npt.assert_equal(stage_dem.point2epsg(151.555, -34.963), 32756)
+    npt.assert_equal(stage_dem.point2epsg(81.863, 0.817), 32644)
+    npt.assert_equal(stage_dem.point2epsg(-21.748, 80.49), 3413)
+    npt.assert_equal(stage_dem.point2epsg(77.191, -79.856), 3031)
+
+
+def test_run_stage_dem():
+    # Argparse
+    opts = argparse.Namespace(
+        product=os.path.join(iscetest.data, "Greenland.h5"),
+        outfile='dem.vrt', bbox=None, filepath='file',
+        margin=1)
+
+    try:
+        stage_dem.main(opts)
+    except subprocess.CalledProcessError:
+        print('S3 bucket not accessible')
+
+
+def test_check_overlap():
+    # Determine poliygon covered by RSLC
+    rslc_file = os.path.join(iscetest.data, 'Greenland.h5')
+
+    poly = stage_dem.determine_polygon(rslc_file, None)
+    polys = stage_dem.check_dateline(poly)
+
+    # Determine overlap
+    overlap = stage_dem.check_dem_overlap('dem.vrt', polys)
+
+    npt.assert_allclose(overlap, 100, rtol=1e-3)
+
+
+if __name__ == "__main__":
+    test_dateline_crossing()
+    test_point2epsg()
+    test_run_stage_dem()
+    test_check_overlap()
+
