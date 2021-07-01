@@ -78,10 +78,6 @@ void isce3::geocode::geocodeSlc(
         std::valarray<double> radarX(blockSize);
         std::valarray<double> radarY(blockSize);
 
-        // container for the sum of the carrier phase (Doppler) to be added back
-        // and the geometrical phase to be removed for flattening the SLC phase.
-        std::valarray<std::complex<double>> geometricalPhase(blockSize);
-
         int localAzimuthFirstLine = radarGrid.length() - 1;
         int localAzimuthLastLine = 0;
         int localRangeFirstPixel = radarGrid.width() - 1;
@@ -102,11 +98,14 @@ void isce3::geocode::geocodeSlc(
             // Global line index
             const size_t line = lineStart + blockLine;
 
-            // y coordinate in the out put grid
-            double y = geoGrid.startY() + geoGrid.spacingY() * line;
+            // y coordinate in the out put grid 
+	    // Assuming geoGrid.startY() and geoGrid.startX() represent the top-left 
+	    // corner of the first pixel, then 0.5 pixel shift is needed to get
+	    // to the center of each pixel
+            double y = geoGrid.startY() + geoGrid.spacingY() * (line + 0.5);
 
             // x in the output geocoded Grid
-            double x = geoGrid.startX() + geoGrid.spacingX() * pixel;
+            double x = geoGrid.startX() + geoGrid.spacingX() * (pixel + 0.5);
 
             // compute the azimuth time and slant range for the
             // x,y coordinates in the output grid
@@ -158,20 +157,6 @@ void isce3::geocode::geocodeSlc(
             radarX[blockLine * geoGrid.width() + pixel] = rdrX;
             radarY[blockLine * geoGrid.width() + pixel] = rdrY;
 
-            // doppler to be added back after interpolation
-            double phase =
-                    nativeDoppler.eval(aztime, srange) * 2 * M_PI * aztime;
-            //
-
-            if (flatten) {
-                phase += (4.0 * (M_PI / radarGrid.wavelength())) * srange;
-            }
-
-            const std::complex<double> cpxPhase(std::cos(phase),
-                                                std::sin(phase));
-
-            geometricalPhase[blockLine * geoGrid.width() + pixel] = cpxPhase;
-
         } // end loops over lines and pixel of output grid
 
         // Get min and max swath extents from among all threads
@@ -208,28 +193,10 @@ void isce3::geocode::geocodeSlc(
                                  azimuthFirstLine, rdrBlockWidth,
                                  rdrBlockLength, band + 1);
 
-            // baseband the SLC in the radar grid
-            const double blockStartingRange =
-                    radarGrid.startingRange() +
-                    rangeFirstPixel * radarGrid.rangePixelSpacing();
-            const double blockSensingStart = radarGrid.sensingStart() +
-                                             azimuthFirstLine / radarGrid.prf();
-
-            isce3::geocode::baseband(rdrDataBlock, blockStartingRange,
-                                    blockSensingStart,
-                                    radarGrid.rangePixelSpacing(),
-                                    radarGrid.prf(), nativeDoppler);
-
             // interpolate the data in radar grid to the geocoded grid.
-            // Also the geometrical phase, which is the phase of the carrier
-            // to be added back and the geometrical phase to be removed is
-            // applied.
-            std::cout << "resample " << std::endl;
             isce3::geocode::interpolate(rdrDataBlock, geoDataBlock, radarX,
-                                       radarY, geometricalPhase, rdrBlockWidth,
-                                       rdrBlockLength, azimuthFirstLine,
-                                       rangeFirstPixel, interp.get());
-
+                    radarY, azimuthFirstLine, rangeFirstPixel, interp.get(),
+                    radarGrid, nativeDoppler, flatten);
             // set output
             std::cout << "set output " << std::endl;
             outputRaster.setBlock(geoDataBlock.data(), 0, lineStart,
