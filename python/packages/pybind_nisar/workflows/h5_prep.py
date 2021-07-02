@@ -840,7 +840,11 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
         else:
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, data=data)
     else:
-        if chunks[0] < shape[0] and chunks[1] < shape[1]:
+        # temporary fix for CUDA geocode insar's inability to direct write to
+        # HDF5 with chunks (see https://github-fn.jpl.nasa.gov/isce-3/isce/issues/813 for details)
+        create_with_chunks = (chunks[0] < shape[0] and chunks[1] < shape[1]) and \
+            ('GUNW' not in dst_grp.name)
+        if create_with_chunks:
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape,
                                         chunks=chunks)
         else:

@@ -1,5 +1,4 @@
 import journal
-import numpy as np
 
 from pybind_nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 
@@ -16,7 +15,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
         Check submodule paths from YAML
         '''
         scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
-        error_channel = journal.error('InsarRunconfig.yaml_check')
+        error_channel = journal.error('InsarRunConfig.yaml_check')
 
         # If dense_offsets is disabled and rubbersheet is enabled
         # throw an exception and do not run the workflow

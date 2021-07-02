@@ -5,6 +5,7 @@ core/gpuBicubicInterpolator.cu
 core/gpuBilinearInterpolator.cu
 core/gpuLUT1d.cu
 core/gpuLUT2d.cu
+core/gpuNearestNeighborInterpolator.cu
 core/gpuPoly2d.cu
 core/gpuProjections.cu
 core/gpuSinc2dInterpolator.cu

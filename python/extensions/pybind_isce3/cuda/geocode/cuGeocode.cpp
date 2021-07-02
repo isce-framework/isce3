@@ -72,40 +72,40 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                 Index of block of raster where radar grid coordinates are calculated
                 and set.
             )")
-            .def(
-                    "geocode_raster_block",
-                    [](Geocode& self, isce3::io::Raster& output_raster,
-                            isce3::io::Raster& input_raster) {
-                        const int dtype = input_raster.dtype();
-                        switch (dtype) {
-                        case GDT_Float32: {
-                            self.geocodeRasterBlock<float>(
-                                    output_raster, input_raster);
-                            break;
-                        }
-                        case GDT_CFloat32: {
-                            self.geocodeRasterBlock<thrust::complex<float>>(
-                                    output_raster, input_raster);
-                            break;
-                        }
-                        case GDT_Float64: {
-                            self.geocodeRasterBlock<double>(
-                                    output_raster, input_raster);
-                            break;
-                        }
-                        case GDT_CFloat64: {
-                            self.geocodeRasterBlock<thrust::complex<double>>(
-                                    output_raster, input_raster);
-                            break;
-                        }
-                        default: {
-                            throw isce3::except::RuntimeError(
-                                    ISCE_SRCINFO(), "unsupported datatype");
-                        }
-                        }
-                    },
-                    py::arg("output_raster"), py::arg("input_raster"),
-                    R"(
+    .def("geocode_raster_block", [](Geocode & self,
+                                    isce3::io::Raster & output_raster,
+                                    isce3::io::Raster & input_raster) {
+                const int dtype =  input_raster.dtype();
+                switch (dtype) {
+                    case GDT_Float32:   {
+                        self.geocodeRasterBlock<float>(
+                                output_raster, input_raster);
+                        break; }
+                    case GDT_CFloat32:  {
+                        self.geocodeRasterBlock<thrust::complex<float>>(
+                                output_raster, input_raster);
+                        break;}
+                    case GDT_Float64:   {
+                        self.geocodeRasterBlock<double>(
+                                output_raster, input_raster);
+                        break; }
+                    case GDT_CFloat64:  {
+                        self.geocodeRasterBlock<thrust::complex<double>>(
+                                output_raster, input_raster);
+                        break;}
+                    case GDT_Byte:  {
+                        self.geocodeRasterBlock<unsigned char>(
+                                output_raster, input_raster);
+                        break;}
+                    default: {
+                        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                                "unsupported datatype");
+                             }
+                }
+            },
+            py::arg("output_raster"),
+            py::arg("input_raster"),
+            R"(
             Geocode raster according to block specified in make_radar_grid_coordinates.
 
             Parameters

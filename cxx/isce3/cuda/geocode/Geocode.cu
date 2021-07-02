@@ -172,26 +172,35 @@ __global__ void interpolate(T* geo_data_block, const double* __restrict__ rdr_x,
     geo_data_block[tid] = interp_val;
 }
 
-__host__ Geocode::Geocode(const isce3::product::GeoGridParameters& geogrid,
-        const isce3::container::RadarGeometry& rdr_geom,
-        const Raster& dem_raster, const double dem_margin,
-        const size_t lines_per_block,
-        const isce3::core::dataInterpMethod data_interp_method,
-        const isce3::core::dataInterpMethod dem_interp_method,
-        const double threshold, const int maxiter, const double dr,
-        const float invalid_value)
-    : _geogrid(geogrid), _rdr_geom(rdr_geom),
-      _ellipsoid(isce3::core::makeProjection(_geogrid.epsg())->ellipsoid()),
-      _lines_per_block(lines_per_block), _geo_block_length(_lines_per_block),
-      _n_blocks((geogrid.length() + _lines_per_block - 1) / _lines_per_block),
-      _az_first_line(_rdr_geom.radarGrid().length() - 1), _az_last_line(0),
-      _range_first_pixel(_rdr_geom.radarGrid().width() - 1),
-      _range_last_pixel(0), _dem_raster(dem_raster), _dem_margin(dem_margin),
-      _interp_float_handle(data_interp_method),
-      _interp_cfloat_handle(data_interp_method),
-      _interp_double_handle(data_interp_method),
-      _interp_cdouble_handle(data_interp_method), _proj_handle(geogrid.epsg()),
-      _dem_interp_method(dem_interp_method)
+__host__
+Geocode::Geocode(const isce3::product::GeoGridParameters & geogrid,
+                const isce3::container::RadarGeometry & rdr_geom,
+                const Raster & dem_raster,
+                const double dem_margin,
+                const size_t lines_per_block,
+                const isce3::core::dataInterpMethod data_interp_method,
+                const isce3::core::dataInterpMethod dem_interp_method,
+                const double threshold, const int maxiter,
+                const double dr, const float invalid_value) :
+    _geogrid(geogrid),
+    _rdr_geom(rdr_geom),
+    _ellipsoid(isce3::core::makeProjection(_geogrid.epsg())->ellipsoid()),
+    _lines_per_block(lines_per_block),
+    _geo_block_length(_lines_per_block),
+    _n_blocks((geogrid.length() + _lines_per_block -1) / _lines_per_block),
+    _az_first_line(_rdr_geom.radarGrid().length() - 1),
+    _az_last_line(0),
+    _range_first_pixel(_rdr_geom.radarGrid().width() - 1),
+    _range_last_pixel(0),
+    _dem_raster(dem_raster),
+    _dem_margin(dem_margin),
+    _interp_float_handle(data_interp_method),
+    _interp_cfloat_handle(data_interp_method),
+    _interp_double_handle(data_interp_method),
+    _interp_cdouble_handle(data_interp_method),
+    _interp_unsigned_char_handle(data_interp_method),
+    _proj_handle(geogrid.epsg()),
+    _dem_interp_method(dem_interp_method)
 {
     // init light weight radar grid
     _radar_grid.sensing_start = _rdr_geom.radarGrid().sensingStart();
@@ -219,9 +228,11 @@ __host__ Geocode::Geocode(const isce3::product::GeoGridParameters& geogrid,
     if (std::isnan(invalid_value)) {
         _invalid_float = std::numeric_limits<float>::quiet_NaN();
         _invalid_double = std::numeric_limits<double>::quiet_NaN();
+        _invalid_unsigned_char = 255;
     } else {
         _invalid_float = invalid_value;
-        _invalid_double = (double) invalid_value;
+        _invalid_double = static_cast<double>(invalid_value);
+        _invalid_unsigned_char = static_cast<unsigned char>(invalid_value);
     }
 }
 
@@ -334,8 +345,11 @@ void Geocode::geocodeRasterBlock(Raster& output_raster, Raster& input_raster)
         invalid_value = _invalid_double;
     } else if constexpr (std::is_same_v<T, thrust::complex<double>>) {
         interp = _interp_cdouble_handle.getInterp();
-        invalid_value =
-                thrust::complex<double>(_invalid_double, _invalid_double);
+        invalid_value = thrust::complex<double>(_invalid_double,
+                                                _invalid_double);
+    } else if constexpr (std::is_same_v<T, unsigned char>) {
+        interp = _interp_unsigned_char_handle.getInterp();
+        invalid_value = _invalid_unsigned_char;
     }
 
     // 0 width indicates current block is out of bounds
@@ -396,4 +410,5 @@ EXPLICIT_INSTATIATION(float);
 EXPLICIT_INSTATIATION(thrust::complex<float>);
 EXPLICIT_INSTATIATION(double);
 EXPLICIT_INSTATIATION(thrust::complex<double>);
+EXPLICIT_INSTATIATION(unsigned char);
 } // namespace isce3::cuda::geocode

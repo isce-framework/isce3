@@ -163,10 +163,13 @@ private:
     isce3::cuda::core::InterpolatorHandle<double> _interp_double_handle;
     isce3::cuda::core::InterpolatorHandle<thrust::complex<double>>
             _interp_cdouble_handle;
+    isce3::cuda::core::InterpolatorHandle<unsigned char>
+            _interp_unsigned_char_handle;
 
     // value applied to invalid geogrid pixels
     float _invalid_float;
     double _invalid_double;
+    unsigned char _invalid_unsigned_char;
 
     isce3::core::dataInterpMethod _dem_interp_method;
 };

@@ -20,20 +20,23 @@ __global__ void init_interp(DeviceInterp<T>** interp,
 {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // Choose interpolator
-        switch (interp_method) {
-        case isce3::core::BILINEAR_METHOD:
-            (*interp) = new isce3::cuda::core::gpuBilinearInterpolator<T>();
-            break;
-        case isce3::core::BICUBIC_METHOD:
-            (*interp) = new isce3::cuda::core::gpuBicubicInterpolator<T>();
-            break;
-        case isce3::core::BIQUINTIC_METHOD: {
-            size_t order = 6;
-            (*interp) =
-                    new isce3::cuda::core::gpuSpline2dInterpolator<T>(order);
-            break;
-        }
-        default: *unsupported_interp = true; break;
+        switch(interp_method) {
+            case isce3::core::BILINEAR_METHOD:
+                (*interp) = new isce3::cuda::core::gpuBilinearInterpolator<T>();
+                break;
+            case isce3::core::BICUBIC_METHOD:
+                (*interp) = new isce3::cuda::core::gpuBicubicInterpolator<T>();
+                break;
+            case isce3::core::BIQUINTIC_METHOD:
+                size_t order = 6;
+                (*interp) = new isce3::cuda::core::gpuSpline2dInterpolator<T>(order);
+                break;
+            case isce3::core::NEAREST_METHOD:
+                (*interp) = new isce3::cuda::core::gpuNearestNeighborInterpolator<T>();
+                break;
+            default:
+                *unsupported_interp = true;
+                break;
         }
     }
 }
@@ -82,4 +85,5 @@ template class InterpolatorHandle<float>;
 template class InterpolatorHandle<thrust::complex<float>>;
 template class InterpolatorHandle<double>;
 template class InterpolatorHandle<thrust::complex<double>>;
+template class InterpolatorHandle<unsigned char>;
 } // namespace isce3::cuda::core

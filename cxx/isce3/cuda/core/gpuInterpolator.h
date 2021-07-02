@@ -75,4 +75,13 @@ class gpuSinc2dInterpolator : public isce3::cuda::core::gpuInterpolator<U> {
         CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
 };
+
+/** gpuNearestNeighborInterpolator class derived from abstract gpuInterpolator class */
+template <class T>
+class gpuNearestNeighborInterpolator : public isce3::cuda::core::gpuInterpolator<T> {
+    public:
+        CUDA_HOSTDEV gpuNearestNeighborInterpolator(){};
+        CUDA_DEV T interpolate(double x, double y, const T* z, size_t nx, size_t ny = 0);
+};
+
 }}}
