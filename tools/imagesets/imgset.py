@@ -496,11 +496,11 @@ class ImageSet:
                 qadir = pjoin(testdir, f"qa_{product}")
                 os.makedirs(qadir, exist_ok=True)
                 log = pjoin(qadir,f"stdouterr.log")
-                cmd = [f"time cfchecks.py output_{wfname}/{product.upper()}_gunw.h5"]
+                cmd = [f"time cfchecks.py output_{wfname}/{product.upper()}_product.h5"]
                 if product == 'gunw':
                     cmd.append(f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
                                        --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
-                                       output_{wfname}/{product.upper()}_gunw.h5""")
+                                       output_{wfname}/{product.upper()}_product.h5""")
                 try:
                     self.distribrun(testdir, cmd, logfile=log, nisarimg=True, 
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
