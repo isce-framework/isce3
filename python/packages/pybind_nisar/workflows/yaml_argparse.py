@@ -46,9 +46,9 @@ class YamlArgparse():
         self.parser.add_argument('run_config_path', type=str, nargs='?',
                                  default=None, help='Path to run config file')
         self.parser.add_argument('--no-log-file', dest='log_file', action='store_false',
-                                 default=True, help='Disable logging to file. Log to file on by default.')
+                                 default=True, help='Disable logging to file. Log to file on/True by default. If off/False, log file in runconfig yaml will not be read nor altered, log messasges will be sent to stdout, and all submodules will run i.e. no persistence checking.')
         self.parser.add_argument('--restart', action='store_true', default=False,
-                                 help='Restart the InSAR workflow from the beginning and ignore the previous run. False by default.')
+                                 help='Restart the InSAR workflow from the beginning and, if applicable, ignore the persistence state of previous run. Off/False by default.')
         if resample_type:
             self.parser.add_argument('--resample-type', dest='resample_type', default='coarse',
                                      help='Type of offsets (coregistered slc) to use in resample_slc (crossmul).\n'
@@ -62,6 +62,10 @@ class YamlArgparse():
         '''
         self.args = self.parser.parse_args()
         self.check_run_config_path()
+        # Force restart if no log file provided
+        # Otherwise persistence will attempt reading nonexistent file
+        if not self.args.log_file:
+            self.args.restart = True
         return self.args
 
     def check_run_config_path(self):
@@ -75,13 +79,6 @@ class YamlArgparse():
             err_str = f"{self.args.run_config_path} not a valid path"
             error_channel.log(err_str)
             raise FileNotFoundError(err_str)
-
-        if self.args.log_file:
-            helpers.check_log_dir_writable(self.args.run_config_path)
-
-            # make a journal device that is attached to a file
-            journal.debug.journal.device = "journal.file"
-            journal.debug.journal.device.log = open(self.args.run_config_path + ".log", 'a')
 
 
 # only used for unit tests

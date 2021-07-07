@@ -68,7 +68,7 @@ if __name__ == "__main__":
     insar_runcfg = InsarRunConfig(args)
 
     # determine what steps if any need to be rerun
-    persist = Persistence(args.restart)
+    persist = Persistence(insar_runcfg.args.restart)
 
     # run InSAR workflow
     if persist.run:

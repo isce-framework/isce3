@@ -86,7 +86,9 @@ class RunConfig:
         self.cfg = self.cfg['runconfig']['groups']
         self.user = self.user['runconfig']['groups']
 
-        # update logging destination
+        # attempt updating logging destination only if:
+        # CLI arg for log is True AND valid path provided in yaml
+        # otherwise indicate restart
         if self.args.log_file and 'logging' in self.cfg:
             log_path = self.cfg['logging']['path']
             helpers.check_log_dir_writable(log_path)
@@ -95,7 +97,10 @@ class RunConfig:
                 write_mode = self.cfg['logging']['write_mode']
             else:
                 write_mode = 'a'
+            journal.debug.journal.device = "journal.file"
             journal.debug.journal.device.log = open(log_path, write_mode)
+        else:
+            self.args.restart = True
 
         # remove default frequency(s) if not chosen by user
         default_freqs = self.cfg['processing']['input_subset']['list_of_frequencies']
@@ -231,7 +236,7 @@ class RunConfig:
 
         # check for user provided EPSG and grab geocode group EPSG if not provided
 
-        if self.cfg['processing']['radar_grid_cubes']['outputEPSG'] is None: 
+        if self.cfg['processing']['radar_grid_cubes']['outputEPSG'] is None:
             cubes_epsg = geocode_dict['outputEPSG']
         else:
             cubes_epsg = self.cfg['processing']['radar_grid_cubes']['outputEPSG']
@@ -258,7 +263,7 @@ class RunConfig:
         frequency_ref = 'A'
         frequency_group = None
         cubes_geogrid = geogrid.create(
-            self.cfg, frequency_group = frequency_group, 
+            self.cfg, frequency_group = frequency_group,
             frequency = frequency_ref,
             geocode_dict = radar_grid_cubes_dict,
             default_spacing_x = default_cube_geogrid_spacing_x,
