@@ -78,14 +78,17 @@ class ImageSet:
             Modifier to nominal Docker tag name
             
         """
-        if tagmod != "":
-            tagmod = "-" + tagmod
-        try:
-            gitmod = '-' + subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode('ascii').strip()
-        except:
-            gitmod = ""
-        return f"nisar-adt/isce3{repomod}:{self.name}{tagmod}" \
-               + f"-{getpass.getuser()}{gitmod}" 
+        if self.imgtag:
+            return f"nisar-adt/isce3{repomod}:{self.imgtag}"
+        else:
+            if tagmod != "":
+                tagmod = "-" + tagmod
+            try:
+                gitmod = '-' + subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode('ascii').strip()
+            except:
+                gitmod = ""
+            return f"nisar-adt/isce3{repomod}:{self.name}{tagmod}" \
+                   + f"-{getpass.getuser()}{gitmod}" 
 
     def docker_run(self, img, cmd):
         runcmd = f"{docker} run {self.run_args} --rm -i {self.tty} " \
@@ -98,7 +101,7 @@ class ImageSet:
         """
         self.docker_run("dev", cmd)
 
-    def __init__(self, name, *, projblddir, printlog=False):
+    def __init__(self, name, *, projblddir, printlog=False, imgtag=None):
         """
         A set of docker images for building and testing isce3/nisar distributables.
         
@@ -113,6 +116,7 @@ class ImageSet:
         """
         self.name = name
         self.projblddir = projblddir
+        self.imgtag = imgtag   
         self.datadir = projblddir + "/workflow_testdata_tmp/data"
         self.testdir = projblddir + "/workflow_testdata_tmp/test"
         self.build_args = f'''
@@ -143,7 +147,7 @@ class ImageSet:
             self.run_args += " --runtime=nvidia"
 
         logging.basicConfig(format='', level=logging.INFO)
-        self.printlog = printlog    
+        self.printlog = printlog 
 
     def cmake_args(self):
         return [f"-D{key}={value}" for key, value in self.cmake_defs.items()] \

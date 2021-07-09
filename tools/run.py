@@ -64,5 +64,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--imgset", default="centos7conda")
     parser.add_argument("-B", "--projblddir", default=f"{projsrcdir}/build-docker")
     parser.add_argument("-p", "--printlog", action='store_true')
+    parser.add_argument("-t", "--imgtag", default=None)    
     parser.add_argument("steps", nargs="+")
     run(**vars(parser.parse_args()))
