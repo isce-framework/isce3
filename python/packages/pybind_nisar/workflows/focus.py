@@ -167,8 +167,8 @@ def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
     # implemented as a 180 yaw flip, so the left/right flag can just be
     # inferred by the sign of axis.dot(v). Verify this convention.
     inferred_side = "left" if axis.dot(v) > 0 else "right"
-    if side != inferred_side:
-        raise ValueError(f"Requested side={side} but "
+    if side.lower() != inferred_side:
+        raise ValueError(f"Requested side={side.lower()} but "
                          f"inferred side={inferred_side} based on orientation "
                          f"(Y_RCS.dot(V) = {axis.dot(v)})")
     if dem is None:
