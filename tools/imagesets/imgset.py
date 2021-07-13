@@ -324,7 +324,7 @@ class ImageSet:
             --rm -i {self.tty} {img} sh -ci"  
         run_with_logging(dockercall, cmd, logger, printlog=self.printlog)
 
-    def workflowtest(self, wfname, testname, dataname, pyname, arg=""): # hmmmmmmmmm
+    def workflowtest(self, wfname, testname, dataname, pyname, suf="", description="", arg=""): 
         """
         Run the specified workflow test using the distrib image.
         
@@ -334,22 +334,42 @@ class ImageSet:
             Workflow name (e.g. "rslc")
         testname : str
             Workflow test name (e.g. "RSLC_REE1")
-        dataname : str
-            Test input data (e.g. "L0B_RRSD_REE1")
+        dataname : str or iterable of str or None
+            Test input dataset(s) to be mounted (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2"]). 
+            If None, no input datasets are used.
         pyname : str
             Name of the isce3 module to execute (e.g. "pybind_nisar.workflows.focus")
+        suf: str
+            Suffix in runconfig and output directory name to differentiate between
+            reference and secondary data in end-to-end tests
+        description: str
+            Extra test description to print out to differentiate between
+            reference and secondary data in end-to-end tests                     
         arg : str, optional
             Additional command line argument(s) to pass to the workflow
         """
-        print(f"\nRunning workflow test {testname}\n")
+        print(f"\nRunning workflow test {testname}{description}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
-        os.makedirs(pjoin(testdir, f"output_{wfname}"), exist_ok=True)
-        os.makedirs(pjoin(testdir, f"scratch_{wfname}"), exist_ok=True)
-        # copy test runconfig to test directory
-        shutil.copyfile(pjoin(runconfigdir, f"{testname}.yaml"), 
-                        pjoin(testdir, f"runconfig_{wfname}.yaml"))
-        log = pjoin(testdir, f"output_{wfname}", "stdouterr.log")
-        cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}.yaml"]
+        # create input directories before docker volume mount to avoid root ownership 
+        # of these directories
+        if dataname is not None:
+            if type(dataname) is not list:
+                dataname = [dataname]
+            for data in dataname:
+                os.makedirs(pjoin(testdir, f"input_{data}"), exist_ok=True)
+        # create output directories
+        os.makedirs(pjoin(testdir, f"output_{wfname}{suf}"), exist_ok=True)
+        os.makedirs(pjoin(testdir, f"scratch_{wfname}{suf}"), exist_ok=True)
+        # copy test runconfig to test directory (for end-to-end testing, we need to 
+        # distinguish between the runconfig files for each individual workflow)
+        if testname.startswith("end2end"):
+            inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
+        else:
+            inputrunconfig = f"{testname}{suf}.yaml"
+        shutil.copyfile(pjoin(runconfigdir, inputrunconfig), 
+                        pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
+        log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
+        cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
         try:
             self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
                             loghdlrname=f'wftest.{os.path.basename(testdir)}')
@@ -379,6 +399,32 @@ class ImageSet:
             tests = workflowtests['insar'].items()
         for testname, dataname in tests:
             self.workflowtest("insar", testname, dataname, "pybind_nisar.workflows.insar", arg="--restart")
+
+    def end2endtest(self, tests=None):
+        """
+        Run all workflows for one pair of L0B input data, including RSLC, GSLC, GCOV, RIFG, RUNW, GUNW.
+        The GSLC, GCOV, and InSAR products are generated from outputs of the RSLC workflow.
+        """
+        if tests is None:
+            tests = workflowtests['end2end'].items()
+        for testname, dataname in tests:
+            # copy runconfigs and create output direcotories
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            for wfname in ['rslc', 'gslc', 'gcov', 'insar']:
+                if wfname == 'rslc':
+                    pyname = 'pybind_nisar.workflows.focus'
+                else:
+                    pyname = f'pybind_nisar.workflows.{wfname}'
+
+                if wfname == 'insar':
+                    self.workflowtest(wfname, testname, dataname, pyname, arg="--restart",
+                                      description=" InSAR product")
+                else:
+                    self.workflowtest(wfname, testname, dataname, pyname, suf="_ref",
+                                      description=f" {wfname.upper()} reference product")
+                    self.workflowtest(wfname, testname, dataname, pyname, suf="_sec",
+                                      description=f" {wfname.upper()} secondary product")
+
 
     def noisesttest(self, tests=None):
         if tests is None:
@@ -443,7 +489,7 @@ class ImageSet:
         self.ptatest(tests=list(workflowtests['pta'].items())[:1])
         self.beamformtest(tests=list(workflowtests['beamform'].items())[:1])
 
-    def workflowqa(self, wfname, testname):
+    def workflowqa(self, wfname, testname, suf="", description=""):
         """
         Run QA and CF compliance checking for the specified workflow using the NISAR distrib image.
         
@@ -453,15 +499,22 @@ class ImageSet:
             Workflow name (e.g. "rslc")
         testname: str
             Workflow test name (e.g. "RSLC_REE1")
+        suf: str
+            Suffix in runconfig and output directory name to differentiate between
+            reference and secondary data in end-to-end tests
+        description: str
+            Extra test description to print out to differentiate between
+            reference and secondary data in end-to-end tests                     
         """
-        print(f"\nRunning workflow QA on test {testname}\n")
+        print(f"\nRunning workflow QA on test {testname}{description}\n")
         testdir = os.path.abspath(pjoin(self.testdir, testname))
-        os.makedirs(pjoin(testdir, f"qa_{wfname}"), exist_ok=True)
-        log = pjoin(testdir, f"qa_{wfname}", "stdouterr.log")
-        cmd = [f"time cfchecks.py output_{wfname}/{wfname}.h5",
-               f"""time verify_{wfname}.py --fpdf qa_{wfname}/graphs.pdf \
-                    --fhdf qa_{wfname}/stats.h5 --flog qa_{wfname}/qa.log --validate \
-                    --quality output_{wfname}/{wfname}.h5"""]
+        os.makedirs(pjoin(testdir, f"qa_{wfname}{suf}"), exist_ok=True)
+        log = pjoin(testdir, f"qa_{wfname}{suf}", "stdouterr.log")
+        # run qa command
+        cmd = [f"time cfchecks.py output_{wfname}{suf}/{wfname}.h5",
+               f"""time verify_{wfname}.py --fpdf qa_{wfname}{suf}/graphs.pdf \
+                    --fhdf qa_{wfname}{suf}/stats.h5 --flog qa_{wfname}{suf}/qa.log --validate \
+                    --quality output_{wfname}{suf}/{wfname}.h5"""]
         try:
             self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                             loghdlrname=f'wfqa.{os.path.basename(testdir)}')
@@ -515,7 +568,7 @@ class ImageSet:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             # run QA for each of the InSAR products
             for product in ['rifg', 'runw', 'gunw']:
-                print(f"\nRunning workflow QA on InSAR test {testname} product {product.upper()}\n")
+                print(f"\nRunning workflow QA on test {testname} {product.upper()} product\n")
                 qadir = pjoin(testdir, f"qa_{product}")
                 os.makedirs(qadir, exist_ok=True)
                 log = pjoin(qadir,f"stdouterr.log")
@@ -529,11 +582,27 @@ class ImageSet:
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
                 except subprocess.CalledProcessError as e:
                     if product == 'gunw':
-                        raise RuntimeError(f"Workflow QA on InSAR test {testname} product {product.upper()} failed\n") from e
+                        raise RuntimeError(f"Workflow QA on test {testname} {product.upper()} product failed\n") from e
                     else:
                         # do not exit since CF checker errors are expected
-                        print(f"Found known errors running CF Checker on InSAR test {testname} product {product.upper()}\n")
-       
+                        print(f"Found known errors running CF Checker on test {testname} {product.upper()} product\n")
+      
+    def end2endqa(self, tests=None):
+        """
+        Run QA on all end2end workflow test results for one pair of L0B input data, including RSLC, GSLC, GCOV,
+        RIFG, RUNW, GUNW.
+
+        """
+        if tests is None:
+            tests = workflowtests['end2end'].items()
+        for testname, dataname in tests:
+            for wfname in ['rslc', 'gslc', 'gcov']:
+                for suf, descr in [('_ref', 'reference'), ('_sec', 'secondary')]:
+                    self.workflowqa(wfname, testname, suf=suf, description=f' {wfname.upper()} {descr} product')
+
+            self.insarqa([testname])
+
+
     def minqa(self):
         """
         Only run qa for first test in each workflow

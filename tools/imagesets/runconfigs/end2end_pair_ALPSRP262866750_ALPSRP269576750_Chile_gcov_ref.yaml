@@ -1,0 +1,153 @@
+runconfig:
+    name: NISAR_L2-L-GCOV_RUNCONFIG
+
+    groups:
+        PGENameGroup:
+            PGEName: GCOV_L_PGE
+
+        InputFileGroup:
+            # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
+            InputFilePath:
+            - output_rslc_ref/rslc.h5
+
+        DynamicAncillaryFileGroup:
+            # REQUIRED - Use the provided DEM as input
+            DEMFile: input_L0B_RRSD_ALPSRP262866750_Chile/dem.tif
+
+        ProductPathGroup:
+            # Directory where PGE will place results. Irrelevant to SAS.
+            ProductPath: output_gcov_ref
+
+            # Directory where SAS can write temporary data
+            ScratchPath: scratch_gcov_ref
+
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
+            SASOutputFile: output_gcov_ref/gcov.h5
+
+        PrimaryExecutable:
+            ProductType: GCOV
+
+        DebugLevelGroup:
+            DebugSwitch: false
+
+        #adt section - isce3 + pyre workflow
+        processing:
+            # OPTIONAL - Frequencies and polarisations to be processed
+            input_subset:
+                # OPTIONAL - List of frequencies to process. Default empty representing all
+                list_of_frequencies:
+                    # keys for frequency A and B are required.
+                    # valid options for polarizations
+                    # 'all' for all polarizations found in RSLC
+                    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+                    # empty for no polarizations
+                    A: 
+
+                # OPTIONAL - If we want full covariance instead of diagonals only. Default False
+                fullcovariance:   False
+
+            # TODO OPTIONAL - Only checked when internet access is available
+            dem_download:
+                # OPTIONAL - s3 bucket / curl URL / local file
+                source: 
+                top_left:
+                    x:
+                    y:
+                bottom_right:
+                    x:
+                    y:
+
+            # OPTIONAL - if amplitude data needs to be mulitlooked before GCOV generation
+            pre_process:   
+               azimuth_looks: 1
+               range_looks:   1
+
+            # OPTIONAL - to control behavior of RTC module
+            rtc:
+                output_type: gamma0
+
+                # OPTIONAL - Choices:
+                # "bilinear_distribution" (default)
+                # "area_projection"
+                algorithm_type: area_projection
+
+                # OPTIONAL - Choices:
+                # "beta0" (default)
+                # "sigma0"
+                input_terrain_radiometry: sigma0
+
+                # OPTIONAL - Minimum RTC area factor in dB
+                rtc_min_value_db: -30
+
+            # OPTIONAL - Mechanism to specify output posting and DEM
+            geocode:
+                # OPTIONAL -
+                algorithm_type: area_projection
+ 
+                # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_radargrid", and "auto" (default)
+                memory_mode:
+
+                # OPTIONAL - Processing upsampling factor applied to input geogrid
+                geogrid_upsampling: 1
+
+                # OPTIONAL - absolute radiometric correction
+                abs_rad_cal: 1
+
+                save_nlooks: True
+                save_rtc: True
+                 
+                # OPTIONAL - Same as input DEM if not provided.
+                outputEPSG: 
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # If no provided, values will match spacing in provided DEM
+                output_posting:
+                    A:
+                        x_posting:  
+                        y_posting:  
+                    B:
+                        x_posting:  
+                        y_posting:  
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                y_snap: 
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                x_snap: 
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                top_left:        
+                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    y_abs:
+                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    x_abs:
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                bottom_right:
+                    y_abs:
+                    x_abs:
+
+            # OPTIONAL - if noise correction desired (for ISRO)
+            noise_correction:
+                # OPTIONAL -
+                apply_correction: False
+
+                # OPTIONAL -
+                correction_type:
+
+        # OPTIONAL - To setup type of worker
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: False
+            # TODO
+            #gpu_id: 0            
+
+        # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
+        logging: 
+            path: output_gcov_ref/gcov.log
+            write_mode: 'w'
+

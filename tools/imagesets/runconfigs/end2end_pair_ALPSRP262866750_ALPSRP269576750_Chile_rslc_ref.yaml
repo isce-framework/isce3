@@ -1,0 +1,101 @@
+runconfig:
+    groups:
+        InputFileGroup:
+            InputFilePath:
+            -   input_L0B_RRSD_ALPSRP262866750_Chile/ALPSRP262866750.L0B.h5
+        DynamicAncillaryFileGroup:
+            DEMFile:
+            Orbit:
+            Pointing:
+            ExternalCalibration:
+            InternalCalibration:
+            PolarimetricCalibration:
+            BookendCalibration:
+            AntennaPattern:
+            Waveform:
+        ProductPathGroup:
+            ProductPath: output_rslc_ref
+            ScratchPath: scratch_rslc_ref
+            SASOutputFile: output_rslc_ref/rslc.h5
+            SASConfigFile: output_rslc_ref/runconfig_rslc_ref.yaml
+        PrimaryExecutable:
+            ProductType: RSLC
+        Geometry:
+            RelativeOrbitNumber: 1
+            FrameNumber: 1
+        archive: {}
+        qaqc: {}
+        worker:
+            gpu_enabled: true
+            gpu_id: 0
+        profiler: {}
+        processing:
+            output_grid:
+                start_time:
+                end_time:
+                start_range:
+                end_range:
+                output_prf:
+                time_snap_interval: 1.0
+            range_window:
+                kind: Kaiser
+                shape: 3.0
+            azimuth_window:
+                kind: Kaiser
+                shape: 0.0
+            range_common_band_filter:
+                attenuation: 40.0
+                width: 0.15
+            doppler:
+                azimuth_boresight_deg: 0.0
+                interp_method: bilinear
+                spacing:
+                    range: 2000.0
+                    azimuth: 1.0
+                rdr2geo:
+                    threshold: 1e-08
+                    maxiter: 25
+                    extraiter: 15
+            rangecomp:
+                mode: full
+                block_size:
+                    range: 0
+                    azimuth: 1024
+            azcomp:
+                block_size:
+                    range: 128
+                    azimuth: 128
+                azimuth_resolution: 6.0
+                kernel:
+                    type: Knab
+                    halfwidth: 4
+                    approx_oversample: 1.7
+                    fit: Table
+                    fit_order: 2048
+                rdr2geo:
+                    threshold: 1e-08
+                    maxiter: 25
+                    extraiter: 15
+                geo2rdr:
+                    threshold: 1e-08
+                    maxiter: 50
+                    delta_range: 10.0
+            dry_troposphere_model: nodelay
+            dem:
+                reference_height: 661.0
+                interp_method: biquintic
+            nominal_antenna_size:
+                range: 12.0
+                azimuth: 12.0
+            encoding_scale_factor: 0.01
+            delete_tempfiles: true
+            is_enabled:
+                rfi_removal: true
+                presum_blu: true
+                rangecomp: true
+                eap: true
+                range_cor: true
+                azcomp: true
+        PGENameGroup:
+            PGEName: RSLC_L_PGE
+    name: NISAR_L1-L-RSLC_RUNCONFIG

@@ -41,6 +41,30 @@ workflowdata = {
             "ALPSRP271200680.L0B.h5",  
             "README.txt",
         ],
+        "L0B_RRSD_ALPSRP262866750_Chile":
+        [
+            "ALPSRP262866750.L0B.h5",
+            "dem.tif",
+            "README.txt",
+        ],
+        "L0B_RRSD_ALPSRP269576750_Chile":
+        [
+            "ALPSRP269576750.L0B.h5",
+            "dem.tif",
+            "README.txt",
+        ],
+        "L0B_RRSD_ALPSRP110160680_Rosamond":
+        [
+            "ALPSRP110160680.L0B.h5",
+            "dem.tif",
+            "README.txt",
+        ],
+        "L0B_RRSD_ALPSRP116870680_Rosamond":
+        [
+            "ALPSRP116870680.L0B.h5",
+            "dem.tif",
+            "README.txt",
+        ],
     
         "L0B_RRSD_REE_NISAR_dithered":
         [
@@ -188,6 +212,19 @@ workflowtests = {
             [
                 "L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02",
                 "L1_RSLC_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02",
+            ],
+    },
+
+    'end2end': {
+        "end2end_pair_ALPSRP262866750_ALPSRP269576750_Chile":
+            [
+                "L0B_RRSD_ALPSRP262866750_Chile",
+                "L0B_RRSD_ALPSRP269576750_Chile",
+            ],
+        "end2end_pair_ALPSRP110160680_ALPSRP116870680_Rosamond":
+            [
+                "L0B_RRSD_ALPSRP110160680_Rosamond",
+                "L0B_RRSD_ALPSRP116870680_Rosamond",
             ],
     },
     
