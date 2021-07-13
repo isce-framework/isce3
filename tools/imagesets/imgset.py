@@ -404,14 +404,32 @@ class ImageSet:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             os.makedirs(pjoin(testdir, f"output_pta"), exist_ok=True)
             log = pjoin(testdir, f"output_pta", "stdouterr.log")
-            cmd = [f"""time python -m pybind_nisar.workflows.point_target_info \
-                                   input_{dataname}/{workflowdata[dataname][0]} 512 256 256 \
-                                   --fs-bw-ratio 2 --mlobe-nulls 2 --search-null > output_pta/pta.json"""]
+            cmd = [f"""time point_target_analysis.py -i input_{dataname}/rslc_ree17.h5\
+                            -f 'A' -p 'HH' -c 3.177 -54.58 0 --fs-bw-ratio 2 --mlobe-nulls 2 \
+                            --search-null --num-lobes 10 --num-search-pix 6 -o output_pta/pta.json"""]
             try:
                 self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
                                 loghdlrname=f'wftest.{os.path.basename(testdir)}')
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool point target analyzer tool test {testname} failed") from e
+
+    def beamformtest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['beamform'].items()
+        for testname, dataname in tests:
+            print(f"\nRunning CalTool beamformer test {testname}\n")
+            testdir = os.path.abspath(pjoin(self.testdir, testname))
+            os.makedirs(pjoin(testdir, f"output_beamform"), exist_ok=True)
+            log = pjoin(testdir, f"output_beamform", "stdouterr.log")
+            for btype, copt in [("tx", ""), ("rx", f"-c input_{dataname[0]}/{dataname[3]}")]:
+                cmd = [f"""time beamform_{btype}.py -i input_{dataname[0]}/{dataname[1]} \
+                                -a input_{dataname[0]}/{dataname[2]} {copt} \
+                                -o output_beamform/beamform_{btype}_output.txt"""] 
+                try:
+                    self.distribrun(testdir, cmd, logfile=log, dataname=dataname[0], nisarimg=True,
+                                    loghdlrname=f"wftest.{os.path.basename(testdir)}")
+                except subprocess.CalledProcessError as e:
+                    raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
 
     def mintests(self):
         """
@@ -423,6 +441,7 @@ class ImageSet:
         self.insartest(tests=list(workflowtests['insar'].items())[:1])
         self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
         self.ptatest(tests=list(workflowtests['pta'].items())[:1])
+        self.beamformtest(tests=list(workflowtests['beamform'].items())[:1])
 
     def workflowqa(self, wfname, testname):
         """

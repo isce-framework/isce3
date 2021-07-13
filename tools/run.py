@@ -23,6 +23,7 @@ def run(*, steps, imgset, **kwargs):
         "makedistrib_nisar",
         "noisesttest",
         "ptatest",
+        "beamformtest",
         "rslcqa",
         "gslcqa",
         "gcovqa",

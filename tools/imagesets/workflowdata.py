@@ -54,9 +54,18 @@ workflowdata = {
             "L0B_RRSD_REE_NOISEST1.h5", 
             "README.txt",
         ],
-        "L0B_RRSD_REE_PTA1":
+
+        "L0B_RRSD_REE17_PTA":
         [
-            "L0B_RRSD_REE_PTA1.c8",
+            "rslc_ree17.h5",
+        ],
+
+        "L0B_RRSD_REE_beamform":
+        [
+            "REE_L0B_ECHO_DATA.h5",
+            "REE_ANTPAT_CUTS_DATA.h5",
+            "instrumentTables_bf_19000101.h5",
+            "ree_gen_nisar_product.log",
             "README.txt",
         ],
     
@@ -187,6 +196,16 @@ workflowtests = {
     ]},
 
     'pta': {"pta_" + name: "L0B_RRSD_" + name for name in [
-        "REE_PTA1",
+        "REE17_PTA",
     ]},
+
+    'beamform': {                                                    
+        "beamform_L0B_RRSD_REE_beamform":
+            [
+                "L0B_RRSD_REE_beamform",            # input data directory
+                "REE_L0B_ECHO_DATA.h5",             # L0B data
+                "REE_ANTPAT_CUTS_DATA.h5",          # antenna pattern 
+                "instrumentTables_bf_19000101.h5",  # instrument tables
+            ],
+    },
 }    
