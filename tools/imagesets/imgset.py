@@ -260,7 +260,8 @@ class ImageSet:
 
         mindata = ["L0B_RRSD_REE1",
                    "L0B_RRSD_REE_NOISEST1",
-                   "L0B_RRSD_REE_PTA1",
+                   "L0B_RRSD_REE17_PTA",
+                   "L0B_RRSD_REE_beamform",
                    "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
                    "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
                    "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
