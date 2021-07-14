@@ -269,6 +269,7 @@ if __name__ == "__main__":
     unwrap_runconfig = UnwrapRunConfig(args)
 
     # Prepare RUNW HDF5
+    unwrap_runconfig.cfg['PrimaryExecutable']['ProductType'] = 'RUNW_STANDALONE'
     out_paths = h5_prep.run(unwrap_runconfig.cfg)
 
     # Use RIFG from crossmul_path

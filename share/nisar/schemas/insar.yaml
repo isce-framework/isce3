@@ -28,7 +28,7 @@ runconfig:
 
         PrimaryExecutable:
             # RIFG_RUNW_GUNW will produce all three InSAR products
-            ProductType: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW')
+            ProductType: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
 
         DebugLevelGroup:
             DebugSwitch: bool()
@@ -377,7 +377,7 @@ radar_grid_cubes_options:
 
     # Same as input DEM if not provided.
     outputEPSG: int(min=1024, max=32767, required=False)
-               
+
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
     output_posting:
@@ -386,21 +386,21 @@ radar_grid_cubes_options:
 
     # To control output grid in same units as output EPSG
     x_snap: num(min=0, required=False)
-               
+
     # To control output grid in same units as output EPSG
     y_snap: num(min=0, required=False)
-               
-    top_left:    
+
+    top_left:
         # Set top-left y in same units as output EPSG
         y_abs: num(required=False)
-       
+
         # Set top-left x in same units as output EPSG
         x_abs: num(required=False)
-               
-    bottom_right:  
+
+    bottom_right:
         # Set bottom-right y in same units as output EPSG
         y_abs: num(required=False)
-       
+
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 

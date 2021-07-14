@@ -31,7 +31,9 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
                     'RUNW': insar_products[:-1],
                     'RIFG': [insar_products[0]],
                     'GCOV': ['GCOV'],
-                    'GSLC': ['GSLC']}
+                    'GSLC': ['GSLC'],
+                    'RUNW_STANDALONE': ['RUNW'],
+                    'GUNW_STANDALONE': ['GUNW']}
 
     # dict keying product type to dict of product type key(s) to output(s)
     # following lambda creates subproduct specific output path
@@ -46,7 +48,9 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
                 'RUNW': {'RIFG': f'{scratch}/RIFG.h5', 'RUNW': output_path},
                 'RIFG': {'RIFG': output_path},
                 'GCOV': {'GCOV': output_path},
-                'GSLC': {'GSLC': output_path}}
+                'GSLC': {'GSLC': output_path},
+                'RUNW_STANDALONE': {'RUNW': output_path},
+                'GUNW_STANDALONE': {'GUNW': output_path}}
 
     return product_dict[product_type], h5_paths[product_type]
 

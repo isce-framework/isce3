@@ -292,16 +292,23 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
             src_freq_path = f"/science/LSAR/RUNW/swaths/frequency{freq}"
             dst_freq_path = f"/science/LSAR/GUNW/grids/frequency{freq}"
 
+            # flag to ensure layover shadown only geocoded once per freq
+            # layover shadow has no polarization
+            skip_layover_shadow = False
             for pol in pol_list:
                 # iterate over key: dataset name value: bool flag to perform geocode
                 for dataset_name, geocode_this_dataset in gunw_datasets.items():
                     if not geocode_this_dataset:
                         continue
 
+                    if dataset_name == "layoverShadowMask" and skip_layover_shadow:
+                        continue
+
                     # Create radar grid for the offsets (and dataset path)
                     if (dataset_name == "layoverShadowMask"):
                         input_raster, dataset_path = get_shadow_input_output(
                             scratch_path, freq, dst_freq_path)
+                        skip_layover_shadow = True
                     else:
                         input_raster, dataset_path = get_input_output(src_freq_path,
                                                                       dst_freq_path,
@@ -422,6 +429,19 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                                                      interp_method,
                                                      invalid_value=np.nan)
 
+            '''
+            connectedComponents raster has type unsigned char and an invalid
+            value of NaN becomes 0 which conflicts with 0 being used to indicate
+            an unmasked value/pixel. 255 is chosen as it is the most distant
+            value from components assigned in ascending order [0, 1, ...)
+            '''
+            geocode_conn_comp_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                                     dem_raster,
+                                                     dem_block_margin,
+                                                     lines_per_block,
+                                                     isce3.core.DataInterpMethod.NEAREST,
+                                                     invalid_value=0)
+
             # If needed create geocode object for offset datasets
             if gunw_datasets['alongTrackOffset'] or gunw_datasets['slantRangeOffset']:
                 # Create offset unique radar grid
@@ -449,9 +469,9 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                                                              grid_zero_doppler)
 
                 '''
-                layover shadow raster has type unsigned char and an invalid
+                layover shadow raster has type char and an invalid
                 value of NaN becomes 0 which conflicts with 0 being used
-                to indicate an unmasked value/pixel. 255 is chosen as it is
+                to indicate an unmasked value/pixel. 127 is chosen as it is
                 the most distant value from the allowed set of [0, 1, 2, 3].
                 '''
                 geocode_shadow_obj = isce3.cuda.geocode.Geocode(geogrid,
@@ -460,18 +480,22 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                                                                 dem_block_margin,
                                                                 lines_per_block,
                                                                 isce3.core.DataInterpMethod.NEAREST,
-                                                                invalid_value=255)
+                                                                invalid_value=127)
 
             pol_list = freq_pols[freq]
+            src_freq_path = f"/science/LSAR/RUNW/swaths/frequency{freq}"
+            dst_freq_path = f"/science/LSAR/GUNW/grids/frequency{freq}"
+            # flag to ensure layover shadown only geocoded once per freq
+            # layover shadow has no polarization
+            skip_layover_shadow = False
             # Loop over polarizations
             for pol in pol_list:
-                src_freq_path = f"/science/LSAR/RUNW/swaths/frequency{freq}"
-                dst_freq_path = f"/science/LSAR/GUNW/grids/frequency{freq}"
 
                 # Loop over number blocks
                 for i_block in range(geocode_obj.n_blocks):
                     # Set interpolation grid for current block
                     geocode_obj.set_block_radar_coord_grid(i_block)
+                    geocode_conn_comp_obj.set_block_radar_coord_grid(i_block)
 
                     if gunw_datasets['alongTrackOffset'] or gunw_datasets['slantRangeOffset']:
                         geocode_offset_obj.set_block_radar_coord_grid(i_block)
@@ -481,6 +505,8 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
 
                     # Iterate over/input output raster pairs and geocode
                     for dataset_name, geocode_this_dataset in gunw_datasets.items():
+                        if dataset_name == "layoverShadowMask" and skip_layover_shadow:
+                            continue
 
                         # Prepare input raster
                         if (dataset_name == "layoverShadowMask"):
@@ -507,6 +533,8 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                             block_geocode_obj = geocode_offset_obj
                         elif dataset_name == "layoverShadowMask":
                             block_geocode_obj = geocode_shadow_obj
+                        elif dataset_name == "connectedComponents":
+                            block_geocode_obj = geocode_conn_comp_obj
                         else:
                             block_geocode_obj = geocode_obj
 
@@ -519,6 +547,9 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                                                           geogrid.spacing_y])
                         del input_raster
                         del geocoded_raster
+
+                if gunw_datasets['layoverShadowMask']:
+                    skip_layover_shadow = True
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
@@ -543,6 +574,7 @@ if __name__ == "__main__":
     geocode_insar_runconfig = GeocodeInsarRunConfig(args)
 
     # prepare RIFG HDF5
+    geocode_insar_runconfig.cfg['PrimaryExecutable']['ProductType'] = 'GUNW_STANDALONE'
     out_paths = h5_prep.run(geocode_insar_runconfig.cfg)
     runw_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'runw_path']
