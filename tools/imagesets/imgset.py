@@ -468,15 +468,18 @@ class ImageSet:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             os.makedirs(pjoin(testdir, f"output_beamform"), exist_ok=True)
             log = pjoin(testdir, f"output_beamform", "stdouterr.log")
-            for btype, copt in [("tx", ""), ("rx", f"-c input_{dataname[0]}/{dataname[3]}")]:
-                cmd = [f"""time beamform_{btype}.py -i input_{dataname[0]}/{dataname[1]} \
-                                -a input_{dataname[0]}/{dataname[2]} {copt} \
-                                -o output_beamform/beamform_{btype}_output.txt"""] 
-                try:
-                    self.distribrun(testdir, cmd, logfile=log, dataname=dataname[0], nisarimg=True,
-                                    loghdlrname=f"wftest.{os.path.basename(testdir)}")
-                except subprocess.CalledProcessError as e:
-                    raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
+            cmd = [f"""time beamform_tx.py -i input_{dataname[0]}/{dataname[1]} \
+                            -a input_{dataname[0]}/{dataname[2]} \
+                            -o output_beamform/beamform_tx_output.txt""", 
+                   f"""time beamform_rx.py -i input_{dataname[0]}/{dataname[1]} \
+                            -a input_{dataname[0]}/{dataname[2]} \
+                            -c input_{dataname[0]}/{dataname[3]} \
+                            -o output_beamform/beamform_rx_output.txt"""] 
+            try:
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname[0], nisarimg=True,
+                                loghdlrname=f"wftest.{os.path.basename(testdir)}")
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
 
     def mintests(self):
         """
