@@ -49,105 +49,17 @@ runconfig:
                 # HV and VH), otherwise, the flag is ignored.
                 symmetrize_cross_pol_channels:  bool(required=False)
 
-            # Only checked when internet access is available
-            dem_download:
-                # s3 bucket / curl URL / local file
-                source: str(required=False)
-                top_left:
-                    x: num(required=False)
-                    y: num(required=False)
-               
-                bottom_right:
-                    x: num(required=False)
-                    y: num(required=False)
+            # DEM download options: checked only if internet access is available
+            dem_download: include('dem_download_options', required=False)
+
+            # Pre-processing (before geocoding) options
+            pre_process: include('pre_process_options', required=False)
+
+            # Radiometric Terrain Correction (RTC)
+            rtc: include('rtc_options', required=False)
         
-            # Pre-processing options (before geocoding)
-            pre_process:
-                # Number of looks in azimuth
-                azimuth_looks: int(min=1, required=False)
-               
-                # Number of looks in range
-                range_looks: int(min=1, required=False)
-        
-            rtc: # RTC options
-
-                # RTC output type: empty value to turn off the RTC
-                # The output_type defaults to "gamma0" if the key is absent
-                output_type: enum('gamma0', 'sigma0', required=False)
-               
-                algorithm_type: enum('area_projection', 'bilinear_distribution', required=False)
-               
-                input_terrain_radiometry: enum('beta0', 'sigma0', required=False)
-              
-                # Minimum RTC area factor in dB
-                rtc_min_value_db: num(required=False)
-        
-            # Mechanism to specify output posting and DEM
-            geocode:
-                algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
-
-                # Apply RTC
-                apply_rtc: bool(required=False)
-               
-                memory_mode: enum('auto', 'single_block', 'blocks_geogrid', 'blocks_geogrid_and_radargrid', required=False)
-               
-                # Processing upsampling factor on top of the input geogrid
-                geogrid_upsampling: int(required=False)
-               
-                # Save the number of looks used to compute GCOV
-                save_nlooks: bool(required=False)
-               
-                # Save the RTC area factor used to compute GCOV
-                save_rtc: bool(required=False)
-                
-                # Save interpolated DEM used to compute GCOV
-                save_dem: bool(required=False)
-             
-                # Absolute radiometric correction factor
-                abs_rad_cal: num(required=False)
-
-                # Clip values above threshold
-                clip_max: num(required=False)
-
-                # Clip values below threshold
-                clip_min: num(required=False)
-               
-                # Double sampling of the radar-grid
-                # input sampling in the range direction
-                upsample_radargrid: bool(required=False)
-               
-                # Same as input DEM if not provided.
-                outputEPSG: int(min=1024, max=32767, required=False)
-               
-                # Output posting in same units as output EPSG.
-                # If not provided, spacing values will be taken from provided DEM.
-                output_posting:
-                    A:
-                        x_posting: num(min=0, required=False)
-                        y_posting: num(min=0, required=False)
-                    B:
-                        x_posting: num(min=0, required=False)
-                        y_posting: num(min=0, required=False)
-
-                # To control output grid in same units as output EPSG
-                x_snap: num(min=0, required=False)
-               
-                # To control output grid in same units as output EPSG
-                y_snap: num(min=0, required=False)
-               
-                top_left:    
-                    # Set top-left y in same units as output EPSG
-                    y_abs: num(required=False)
-                   
-                    # Set top-left x in same units as output EPSG
-                    x_abs: num(required=False)
-               
-                bottom_right:  
-                    # Set bottom-right y in same units as output EPSG
-                    y_abs: num(required=False)
-                   
-                    # Set bottom-right x in same units as output EPSG
-                    x_abs: num(required=False)
+            # Geocode options: (e.g. output posting)
+            geocode: include('geocode_options', required=False)
 
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
@@ -157,23 +69,13 @@ runconfig:
 
             dem_interpolation_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
-            # If noise correction desired (for ISRO)
-            noise_correction:
-                apply_correction: bool(required=False)
-               
-                correction_type:  str(required=False)
-        
-        # To setup type of worker
-        worker:
-            # To prevent downloading DEM / other data automatically. Default True
-            internet_access: bool(required=False)
-           
-            # To explicitly use GPU capability if available. Default False
-            gpu_enabled: bool(required=False)
-            # Index of the GPU to use for processing, optional. Defaults to the
-            # first available CUDA device. Ignored if *gpu_enabled* is False.
-            gpu_id: int(min=0, required=False)
+            # Noise correction options (for ISRO)
+            noise_correction: include('noise_correction_options', required=False)
 
+        # Worker options (e.g., enable/disable GPU processing, set GPU device ID)
+        worker: include('worker_options', required=False)
+
+        # Quality Assurance software options
         QA: include('qa_options', required=False)
 
         # Place holder for user set path to log file.
@@ -216,15 +118,139 @@ radar_grid_cubes_options:
         x_abs: num(required=False)
 
 geo2rdr_options:
+    # Convergence threshold for geo2rdr algorithm
     threshold: num(min=1.0e-9, max=1.0e-3, required=False)
+
+    # Maximum number of iterations
     maxiter: int(min=10, max=50, required=False)
 
 qa_options:
-    validate: bool(required=False)  # enable file format validation
-    quality: bool(required=False)   # produce a data summary
+    # Enable/disable file format validation
+    validate: bool(required=False)
+
+    # Produce a data summary
+    quality: bool(required=False)
 
 log_nfo:
     # Path to log file
     path: str()
+
     # Log file write mode. 'a' for append to existing. 'w' for new or overwrite existing.
     write_mode: enum('a', 'w', required=False)
+
+dem_download_options:
+    # s3 bucket / curl URL / local file
+    source: str(required=False)
+    top_left:
+            # Top-left X coordinate
+            x: num(required=False)
+            # Top-left Y coordinate
+            y: num(required=False)
+
+    bottom_right:
+            # Bottom-right X coordinate
+            x: num(required=False)
+            # Bottom-right Y coordinate
+            y: num(required=False)
+
+pre_process_options:
+    # Number of looks in azimuth
+    azimuth_looks: int(min=1, required=False)
+
+    # Number of looks in slant range
+    range_looks: int(min=1, required=False)
+
+rtc_options:
+    # RTC output type: empty value to turn off the RTC
+    # The output_type defaults to "gamma0" if the key is absent
+    output_type: enum('gamma0', 'sigma0', required=False)
+
+    algorithm_type: enum('area_projection', 'bilinear_distribution', required=False)
+
+    input_terrain_radiometry: enum('beta0', 'sigma0', required=False)
+
+    # Minimum RTC area factor in dB
+    rtc_min_value_db: num(required=False)
+
+geocode_options:
+    algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
+
+    # Apply RTC
+    apply_rtc: bool(required=False)
+
+    memory_mode: enum('auto', 'single_block', 'blocks_geogrid', 'blocks_geogrid_and_radargrid', required=False)
+
+    # Processing upsampling factor on top of the input geogrid
+    geogrid_upsampling: int(required=False)
+
+    # Save the number of looks used to compute GCOV
+    save_nlooks: bool(required=False)
+
+    # Save the RTC area factor used to compute GCOV
+    save_rtc: bool(required=False)
+
+    # Save interpolated DEM used to compute GCOV
+    save_dem: bool(required=False)
+
+    # Absolute radiometric correction factor
+    abs_rad_cal: num(required=False)
+
+    # Clip values above threshold
+    clip_max: num(required=False)
+
+    # Clip values below threshold
+    clip_min: num(required=False)
+
+    # Double sampling of the radar-grid
+    # input sampling in the range direction
+    upsample_radargrid: bool(required=False)
+
+    # Same as input DEM if not provided.
+    outputEPSG: int(min=1024, max=32767, required=False)
+
+    # Output posting in same units as output EPSG.
+    # If not provided, spacing values will be taken from provided DEM.
+    output_posting:
+        A:
+            x_posting: num(min=0, required=False)
+            y_posting: num(min=0, required=False)
+        B:
+            x_posting: num(min=0, required=False)
+            y_posting: num(min=0, required=False)
+
+    # To control output grid in same units as output EPSG
+    x_snap: num(min=0, required=False)
+
+    # To control output grid in same units as output EPSG
+    y_snap: num(min=0, required=False)
+
+    top_left:
+        # Set top-left y in same units as output EPSG
+        y_abs: num(required=False)
+
+        # Set top-left x in same units as output EPSG
+        x_abs: num(required=False)
+
+    bottom_right:
+        # Set bottom-right y in same units as output EPSG
+        y_abs: num(required=False)
+
+        # Set bottom-right x in same units as output EPSG
+        x_abs: num(required=False)
+
+noise_correction_options:
+    # Enable/disable noise correction
+    apply_correction: bool(required=False)
+
+    correction_type: str(required=False)
+
+worker_options:
+    # Enable/disable internet connection (e.g. to download DEM)
+    internet_access: bool(required=False)
+
+    # To explicitly use GPU capability if available. Default False
+    gpu_enabled: bool(required=False)
+
+    # Index of the GPU to use for processing, optional. Defaults to the
+    # first available CUDA device. Ignored if *gpu_enabled* is False.
+    gpu_id: int(min=0, required=False)

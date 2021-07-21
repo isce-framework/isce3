@@ -34,7 +34,6 @@ runconfig:
 
         # ADT section - isce3 + pyre workflow
         processing:
-            keep_scratch: True
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:

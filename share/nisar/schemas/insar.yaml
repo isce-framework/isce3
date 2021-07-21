@@ -35,8 +35,6 @@ runconfig:
 
         #adt section - isce3 + pyre workflow
         processing:
-            # flag to keep or delete scratch contents
-            keep_scratch: bool()
 
             # Mechanism to select frequencies and polarizations
             input_subset:
@@ -48,61 +46,11 @@ runconfig:
                     A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
                     B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
 
-            # Only checked when internet access is available
-            dem_download:
-                # s3 bucket / curl URL / local file
-                source: str(required=False)
-                top_left:
-                    x: num(required=False)
-                    y: num(required=False)
+            # DEM download options: checked only if internet access is available
+            dem_download: include('dem_download_options', required=False)
 
-                bottom_right:
-                    x: num(required=False)
-                    y: num(required=False)
-
-
-            # Mechanism to specify output posting and DEM
-            geocode:
-                # Required for geocode standalone
-                runw_path: str(required=False)
-
-                # DEM interpolation method. BILINEAR is default.
-                interp_method: enum('BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
-
-                datasets: include('gunw_datasets', required=False)
-
-                # Same as input DEM if not provided.
-                outputEPSG: int(min=1024, max=32767, required=False)
-
-                # Output posting in same units as output EPSG.
-                # If not provided, spacing values will be taken from provided DEM.
-                output_posting:
-                    A:
-                        x_posting: num(min=0, required=False)
-                        y_posting: num(min=0, required=False)
-                    B:
-                        x_posting: num(min=0, required=False)
-                        y_posting: num(min=0, required=False)
-
-                # To control output grid in same units as output EPSG
-                x_snap: num(min=0, required=False)
-
-                # To control output grid in same units as output EPSG
-                y_snap: num(min=0, required=False)
-
-                top_left:
-                    # Set top-left y in same units as output EPSG
-                    y_abs: num(required=False)
-
-                    # Set top-left x in same units as output EPSG
-                    x_abs: num(required=False)
-
-                bottom_right:
-                    # Set bottom-right y in same units as output EPSG
-                    y_abs: num(required=False)
-
-                    # Set bottom-right x in same units as output EPSG
-                    x_abs: num(required=False)
+            # Geocode options (e.g. output posting)
+            geocode: include('geocode_options', required=False)
 
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
@@ -113,50 +61,26 @@ runconfig:
 
             dem_margin: num(required=False)
 
+            # Coarse resample (geometry offsets only) options
+            coarse_resample: include('coarse_resample_options', required=False)
 
-            coarse_resample: include('resample_options', required=False)
-
+            # Cross-correlation (Ampcor) options
             dense_offsets: include('dense_offsets_options', required=False)
 
+            # Offset culling options
             rubbersheet: include('rubbersheet_options', required=False)
 
-            fine_resample:
-                # Flag to swicth on/off fine resampling
-                enabled: bool(required=False)
-                # Path to coarse/fine offset directory
-                offsets_dir: str(required=False)
-                # Number of lines per tile to resample in batch
-                lines_per_tile: int(min=1, required=False)
+            # Fine resample (geometry + rubbersheeted dense offsets) options
+            fine_resample: include('fine_resample_options', required=False)
 
+            # Interferogram/coherence options (e.g. range looks)
             crossmul: include('crossmul_options', required=False)
 
-            # Required for RUNW and full InSAR
-            phase_unwrap:
-                # Path to HDF5 file or directory containing the input interferogram
-                # and coherence (normalized magnitude of complex correlation) rasters
-                # Not required as we allow the use of intermediate outputs from
-                # the previous InSAR module, which is not user-specified.
-                # Required for running stand-alone phase unwrapping
-                crossmul_path: str(required=False)
-                # Increments to correlation threshold
-                correlation_threshold_increments: num(min=0, max=1, required=False)
-                # Unwrapping algorithm to use
-                algorithm: enum('icu', 'phass', required=False)
-                # ICU unwrapping options
-                icu: include('icu_options', required=False)
-                # Phass unwrapping options
-                phass: include('phass_options', required=False)
+            # Phase unwrapping options (e.g. unwrapping algorithm)
+            phase_unwrap: include('phase_unwrap_options', required=False)
 
         # To setup type of worker
-        worker:
-            # To prevent downloading DEM / other data automatically. Default True
-            internet_access: bool(required=False)
-
-            # To explicitly use GPU capability if available. Default False
-            gpu_enabled: bool(required=False)
-            # Index of the GPU to use for processing, optional. Defaults to the
-            # first available CUDA device. Ignored if *gpu_enabled* is False.
-            gpu_id: int(min=0, required=False)
+        worker: include('worker_options', required=False)
 
         QA: include('qa_options', required=False)
 
@@ -165,119 +89,195 @@ runconfig:
         logging: include('log_nfo', required=False)
 
 ---
+phase_unwrap_options:
+    # Path to HDF5 file or directory containing the input interferogram
+    # and coherence (normalized magnitude of complex correlation) rasters
+    # Not required as we allow the use of intermediate outputs from
+    # the previous InSAR module, which is not user-specified.
+    # Required for running stand-alone phase unwrapping
+    crossmul_path: str(required=False)
+
+    # Increments to correlation threshold
+    correlation_threshold_increments: num(min=0, max=1, required=False)
+
+    # Unwrapping algorithm to use
+    algorithm: enum('icu', 'phass', required=False)
+
+    # ICU unwrapping options
+    icu: include('icu_options', required=False)
+
+    # Phass unwrapping options
+    phass: include('phass_options', required=False)
+
 icu_options:
     # Seed point to initialize ICU algorithm
     seed: int(min=0, required=False)
+
     # Number of lines in buffer to process simultaneously
     buffer_lines: int(min=1, required=False)
+
     # Number of overlapping lines for each data block
     overlap_lines: int(min=1, required=False)
+
     # Flag to activate neutrons based on phase gradient metric
     use_phase_gradient_neutron: bool(required=False)
+
     # Flag to activate neutron based on reference RSLC intensity
     use_intensity_neutron: bool(required=False)
+
     # Square window size for phase gradient computation
     phase_gradient_window_size: int(min=1, required=False)
+
     # Threshold value for phase gradient neutrons (radian)
     neutron_phase_gradient_threshold: num(min=0, required=False)
+
     # Threshold value for intensity neutron (sigma above mean)
     neutron_intensity_threshold: num(min=0, required=False)
+
     # Threshold on the maximum level of intensity for intensity neutron
     max_intensity_correlation_threshold: num(required=False)
+
     # Maximum number of tree realizations
     trees_number: int(min=1, required=False)
+
     # Maximum extent for each tree branch
     max_branch_length: int(min=1, required=False)
+
     # Ratio between along track and slant range spacing
     pixel_spacing_ratio: num(required=False)
+
     # Threshold for the initial correlation value
     initial_correlation_threshold: num(min=0, max=1, required=False)
+
     # Threshold for the maximum correlation value
     max_correlation_threshold: num(max=1, required=False)
+
     # Minimum size of an area to unwrap
     min_tile_area: num(required=False)
+
     # Number of lines used in the bootstrap phase
     bootstrap_lines: int(min=1, required=False)
+
     # Minimum bootstrap overlapping area
     min_overlap_area: int(min=0, required=False)
+
     # Bootstrap phase variance threshold (radian)
     phase_variance_threshold: num(min=0, required=False)
-
-
-resample_options:
-    # Path to coarse/fine offset directory
-    offsets_dir: str(required=False)
-    # Number of lines per tile to resample in batch
-    lines_per_tile: int(min=1, required=False)
 
 phass_options:
     # Normalized interferometric correlation value of the pixel to unwrap
     # Pixels with a good_correlation lower than the assigned value are
     # masking out during the phass unwrapping
     good_correlation: num(min=0, max=1, required=False)
+
     # Minimum size (in pixels) of a region to unwrap
     min_unwrap_area: int(min=1, required=False)
+
     # Filepath to power raster
     power: str(required=False)
+
+coarse_resample_options:
+    # Path to coarse/fine offset directory
+    offsets_dir: str(required=False)
+
+    # Number of lines per tile to resample in batch
+    lines_per_tile: int(min=1, required=False)
+
+fine_resample_options:
+    # Flag to swicth on/off fine resampling
+    enabled: bool(required=False)
+
+    # Path to coarse/fine offset directory
+    offsets_dir: str(required=False)
+
+    # Number of lines per tile to resample in batch
+    lines_per_tile: int(min=1, required=False)
 
 dense_offsets_options:
     # Flag to enable/disable dense offsets estimation. Default: True
     enabled: bool(required=False)
+
     # Path to HDF5 file or directory with geometry-coregistered SLCs.
     # Not required as we allow the use of intermediate outputs from
     # the previous InSAR module, which is not user-specified
     coregistered_slc_path: str(required=False)
+
     # Number of columns for chip/template window in reference image
     window_range: int(min=16, max=512, required=False)
+
     # Number of lines for chip/template window in reference image
     window_azimuth: int(min=16, max=512, required=False)
+
     # Number of columns for search chip/template in secondary image
     half_search_range: int(min=4, max=32, required=False)
+
     # Number of lines for search chip/template in secondary image
     half_search_azimuth: int(min=4, max=32, required=False)
+
     # Number of columns to skip in reference image for next offset estimate
     skip_range: int(min=1, required=False)
+
     # Number of lines to skip in reference image for next offset estimate
     skip_azimuth: int(min=1, required=False)
+
     # Margin around image edges to avoid for offset computation
     margin: int(min=0, required=False)
+
     # Number of columns of output offset (covariance, snr) file
     offset_width: int(required=False)
+
     # Number of lines of output offset (covariance, snr) file
     offset_length: int(required=False)
+
     # Start pixel of the reference image along slant range
     start_pixel_range: int(min=0, required=False)
+
     # Start pixel of the reference image along azimuth
     start_pixel_azimuth: int(min=0, required=False)
+
     # Domain (frequency or spatial) where to compute cross-correlation
     cross_correlation_domain: enum('frequency', 'spatial', required=False)
+
     # Anti-aliasing oversampling factor to apply to reference/secondary SLC
     # prior to cross-correlation computation
     slc_oversampling_factor: int(min=2, max=5, required=False)
+
     # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
     deramping_method: enum('magnitude', 'complex', required=False)
+
     # Flag to use constant range/azimuth offsets in dense offsets estimation
     use_gross_offsets: bool(required=False)
+
     # Constant offset along slant range to guide dense offset estimation
     gross_offset_range: int(required=False)
+
     # Constant gross offset along az to guide dense offset estimation
     gross_offset_azimuth: int(required=False)
+
     # File path to pixel by pixel gross offset (e.g. from reference velocity map)
     gross_offset_filepath: str(required=False)
+
     # Flag to add gross offset to the output of dense offset file
     merge_gross_offset: bool(required=False)
+
     # Square zoom window size for cross-correlation statistics (SNR, covariance)
     correlation_statistics_zoom: int(required=False)
+
     # Square zoom window size for sub-pixel offset refinement
     correlation_surface_zoom: int(min=4, required=False)
+
     # Oversampling factor of the correlation surface for sub-pixel offset refinement
     correlation_surface_oversampling_factor: int(min=2, max=128, required=False)
+
     # Correlation surface oversampling algorithm
     correlation_surface_oversampling_method: enum('sinc', 'fft', required=False)
+
     # Number of cuda streams
     cuda_streams: int(required=False)
+
     # Number of offset estimates to process in batch along slant range
     windows_batch_range: int(min=1, required=False)
+
     # Number of offset estimates to process in batch along azimuth
     windows_batch_azimuth: int(min=1, required=False)
 
@@ -286,40 +286,53 @@ rubbersheet_options:
     # Not required as InSAR workflow allows using intermediate outputs
     # from previous steps (not user-specified)
     dense_offsets_path: str(required=False)
+
     # Path to geo2rdr offset path
     geo2rdr_offsets_path: str(required=False)
+
     # Flag to enable/disable rubbersheet step
     enabled: bool(required=False)
+
     # Metric used to identify offsets outliers
     culling_metric: enum('snr', 'median_filter', 'covariance', required=False)
+
     # Size of median filter in range. Median filter is used
     # for offset outlier identification.
     median_filter_size_range: int(min=3, required=False)
+
     # Size of median filter in azimuth (see above)
     median_filter_size_azimuth: int(min=3, required=False)
+
     # Threshold for outlier identification. Depends on "culling_metric".
     # SNR: offsets with SNR below threshold are identified as outliers
     # Covariance: offsets with range/azimuth covariance above threshold are outliers
     # Median filter: offsets with median absolute deviation above thresholds are outliers
     threshold: num(min=0, required=False)
+
     # Flag to enable mask refinement The intent of this refinement is to remove
     # noisy spots on 1-2 pixels after the first outlier identification.
     # The refinement is performed by thresholding the median absolute deviation of
     # the offsets where outlier locations have been filled with zeros
     mask_refine_enabled: bool(required=False)
+
     # Threshold for outlier refinement mask computation
     mask_refine_threshold: num(min=0, required=False)
+
     # Size of median filter in range and azimuth for outlier mask refinement
     mask_refine_filter_size: int(min=3, max=7, required=False)
+
     # Method to fill data holes left by outliers culling:
     # fill_smoothed: iteratively fill holes with mean value in a neighborhood.
     # nearest_neighbor: Fill holes with nearest neighbor interpolation
     outlier_filling_method: enum('fill_smoothed', 'nearest_neighbor', required=False)
+
     # Fill smoothed option
     fill_smoothed: include('fill_smoothed_options', required=False)
+
     # Interpolation method. Interpolation is used to fill residual
     # outlier holes (if present)
     interpolation_method: enum('nearest', 'linear', 'cubic', required=False)
+
     # It is good practice to filter the offsets prior to interferogram
     # formation to reduce noise. We expose: no_filter: do not filter the offsets/
     # degrade offsets resolution. median_filter, boxcar_filter (moving average),
@@ -332,12 +345,14 @@ rubbersheet_options:
 fill_smoothed_options:
     # Number of fill smoothed iterations
     iterations: int(min=1, required=False)
+
     # Size of neighborhood where to look for smoothed values
     kernel_size: int(min=3, required=False)
 
 offset_filter_options:
     # Filter size (median/boxcar) in slant range
     filter_size_range: int(min=3, required=False)
+
     # Filter size (median/boxcar) in azimuth
     filter_size_azimuth: int(min=3, required=False)
 
@@ -354,8 +369,13 @@ crossmul_options:
     #          └── (HH, HV, VH, VV)
     #              └── coregistered_secondary.slc
     coregistered_slc_path: str(required=False)
+
+    # Number of looks in slant range direction
     range_looks: int(min=1,  required=False)
+
+    # Number of looks in azimuth direction
     azimuth_looks: int(min=1,  required=False)
+
     # Flatten is False disables flatten
     # Flatten is True runs flatten and sets data directory to scratch
     # Flatten is str assumes value is path to data directory
@@ -367,7 +387,11 @@ crossmul_options:
     #         └── range.off
     # Flatten defaults to True
     flatten: any(bool(), str(min=1))
+
+    # Oversampling factor (avoids aliasing during interferogram formation)
     oversample: int(min=1, required=False)
+
+    # Number of lines per block to process in batch
     rows_per_block: int(min=1, required=False)
 
 radar_grid_cubes_options:
@@ -405,16 +429,89 @@ radar_grid_cubes_options:
         x_abs: num(required=False)
 
 geo2rdr_options:
+    # Convergence threshold for geo2rdr algorithm
     threshold: num(min=1.0e-9, max=1.0e-3, required=False)
+
+    # Maximum number of iterations
     maxiter: int(min=10, max=50, required=False)
+
+    # Path to rdr2geo (topo) outputs. Required only for
+    # stand-alone usage of geo2rdr.py
     topo_path: str(required=False)
 
 
 log_nfo:
     # Path to log file
     path: str()
+
     # Log file write mode. 'a' for append to existing. 'w' for new or overwrite existing.
     write_mode: enum('a', 'w', required=False)
+
+qa_options:
+    # Enabled file format validation
+    validate: bool(required=False)
+
+    # Produce a data summary
+    quality: bool(required=False)
+
+dem_download_options:
+    # s3 bucket / curl URL / local file
+    source: str(required=False)
+
+    top_left:
+        # Top-left X coordinate
+        x: num(required=False)
+        # To-left Y coordinate
+        y: num(required=False)
+
+    bottom_right:
+        # Bottom-right X coordinate
+        x: num(required=False)
+        # Bottom-right Y coordinate
+        y: num(required=False)
+
+geocode_options:
+    # Required for geocode standalone
+    runw_path: str(required=False)
+
+    # DEM interpolation method. BILINEAR is default.
+    interp_method: enum('BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
+
+    # Rasters in RUNW to geocode
+    datasets: include('gunw_datasets', required=False)
+
+    # Same as input DEM if not provided.
+    outputEPSG: int(min=1024, max=32767, required=False)
+
+    # Output posting in same units as output EPSG.
+    # If not provided, spacing values will be taken from provided DEM.
+    output_posting:
+        A:
+            x_posting: num(min=0, required=False)
+            y_posting: num(min=0, required=False)
+        B:
+            x_posting: num(min=0, required=False)
+            y_posting: num(min=0, required=False)
+
+    # To control output grid in same units as output EPSG
+    x_snap: num(min=0, required=False)
+
+    # To control output grid in same units as output EPSG
+    y_snap: num(min=0, required=False)
+
+    top_left:
+        # Set top-left y in same units as output EPSG
+        y_abs: num(required=False)
+
+        # Set top-left x in same units as output EPSG
+        x_abs: num(required=False)
+
+    bottom_right:
+        # Set bottom-right y in same units as output EPSG
+        y_abs: num(required=False)
+
+        # Set bottom-right x in same units as output EPSG
+        x_abs: num(required=False)
 
 gunw_datasets:
     connectedComponents: bool(required=False)
@@ -424,8 +521,13 @@ gunw_datasets:
     alongTrackOffset: bool(required=False)
     slantRangeOffset: bool(required=False)
 
-qa_options:
-    # Enabled file format validation
-    validate: bool(required=False)
-    # Produce a data summary
-    quality: bool(required=False)
+worker_options:
+    # Enable/disable internet connection (e.g. for download DEM)
+    internet_access: bool(required=False)
+
+    # To explicitly use GPU capability if available. Default False
+    gpu_enabled: bool(required=False)
+
+    # Index of the GPU to use for processing, optional. Defaults to the
+    # first available CUDA device. Ignored if *gpu_enabled* is False.
+    gpu_id: int(min=0, required=False)
