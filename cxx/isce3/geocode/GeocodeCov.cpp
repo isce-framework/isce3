@@ -432,14 +432,6 @@ void Geocode<T>::geocodeInterp(
             out_geo_dem_array.fill(std::numeric_limits<float>::quiet_NaN());
         }
 
-        // First and last line of the data block in radar coordinates
-        int azimuthFirstLine = radar_grid.length() - 1;
-        int azimuthLastLine = 0;
-
-        // First and last pixel of the data block in radar coordinates
-        int rangeFirstPixel = radar_grid.width() - 1;
-        int rangeLastPixel = 0;
-
         // load a block of DEM for the current geocoded grid
         isce3::geometry::DEMInterpolator demInterp = isce3::geocode::loadDEM(
                 demRaster, geogrid, lineStart, geoBlockLength, geogrid.width(),
@@ -450,17 +442,17 @@ void Geocode<T>::geocodeInterp(
         std::valarray<double> radarX(blockSize);
         std::valarray<double> radarY(blockSize);
 
-        int localAzimuthFirstLine = radar_grid.length() - 1;
-        int localAzimuthLastLine = 0;
-        int localRangeFirstPixel = radar_grid.width() - 1;
-        int localRangeLastPixel = 0;
+        int azimuthFirstLine = radar_grid.length() - 1;
+        int azimuthLastLine = 0;
+        int rangeFirstPixel = radar_grid.width() - 1;
+        int rangeLastPixel = 0;
 
         // Loop over lines, samples of the output grid
 #pragma omp parallel for reduction(                                            \
         min                                                                    \
-        : localAzimuthFirstLine, localRangeFirstPixel)                         \
+        : azimuthFirstLine, rangeFirstPixel)                         \
         reduction(max                                                          \
-                  : localAzimuthLastLine, localRangeLastPixel)
+                  : azimuthLastLine, rangeLastPixel)
 
         for (size_t kk = 0; kk < geoBlockLength * geogrid.width(); ++kk) {
 
@@ -525,14 +517,14 @@ void Geocode<T>::geocodeInterp(
                     rdrX >= radar_grid.width())
                 continue;
 
-            localAzimuthFirstLine = std::min(
-                    localAzimuthFirstLine, static_cast<int>(std::floor(rdrY)));
-            localAzimuthLastLine = std::max(localAzimuthLastLine,
+            azimuthFirstLine = std::min(
+                    azimuthFirstLine, static_cast<int>(std::floor(rdrY)));
+            azimuthLastLine = std::max(azimuthLastLine,
                     static_cast<int>(std::ceil(rdrY) - 1));
-            localRangeFirstPixel = std::min(
-                    localRangeFirstPixel, static_cast<int>(std::floor(rdrX)));
-            localRangeLastPixel = std::max(
-                    localRangeLastPixel, static_cast<int>(std::ceil(rdrX) - 1));
+            rangeFirstPixel = std::min(
+                    rangeFirstPixel, static_cast<int>(std::floor(rdrX)));
+            rangeLastPixel = std::max(
+                    rangeLastPixel, static_cast<int>(std::ceil(rdrX) - 1));
 
             // store the adjusted X and Y indices
             radarX[blockLine * geogrid.width() + pixel] = rdrX;
@@ -558,11 +550,15 @@ void Geocode<T>::geocodeInterp(
                     geogrid.width(), geoBlockLength, 1);
         }
 
-        // Get min and max swath extents from among all threads
-        azimuthFirstLine = std::min(azimuthFirstLine, localAzimuthFirstLine);
-        azimuthLastLine = std::max(azimuthLastLine, localAzimuthLastLine);
-        rangeFirstPixel = std::min(rangeFirstPixel, localRangeFirstPixel);
-        rangeLastPixel = std::max(rangeLastPixel, localRangeLastPixel);
+        // Add extra margin for interpolation
+        int interp_margin = 5;
+        azimuthFirstLine = std::max(azimuthFirstLine - interp_margin, 0);
+        rangeFirstPixel = std::max(rangeFirstPixel - interp_margin, 0);
+
+        azimuthLastLine = std::min(azimuthLastLine + interp_margin, 
+                                   static_cast<int>(radar_grid.length() - 1));
+        rangeLastPixel = std::min(rangeLastPixel + interp_margin, 
+                                  static_cast<int>(radar_grid.width() - 1));
 
         if (azimuthFirstLine > azimuthLastLine ||
                 rangeFirstPixel > rangeLastPixel)
@@ -735,7 +731,8 @@ inline void Geocode<T>::_interpolate(
 
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
-    int extraMargin = isce3::core::SINC_HALF;
+    // Add extra margin for interpolation
+    int interp_margin = 5;
 
     double offsetY =
             azimuthFirstLine / radar_grid.prf() + radar_grid.sensingStart();
@@ -753,9 +750,9 @@ inline void Geocode<T>::_interpolate(
         double rdrY = radarY[i * width + j] - azimuthFirstLine;
         double rdrX = radarX[i * width + j] - rangeFirstPixel;
 
-        if (rdrX < extraMargin || rdrY < extraMargin ||
-                rdrX >= (radarBlockWidth - extraMargin) ||
-                rdrY >= (radarBlockLength - extraMargin)) {
+        if (rdrX < interp_margin || rdrY < interp_margin ||
+                rdrX >= (radarBlockWidth - interp_margin) ||
+                rdrY >= (radarBlockLength - interp_margin)) {
 
             // set NaN values according to T_out, i.e. real (NaN) or complex
             // (NaN, NaN)

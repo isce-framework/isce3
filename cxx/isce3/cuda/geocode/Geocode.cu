@@ -24,6 +24,7 @@
 #include "Geocode.h"
 #include "MaskedMinMax.h"
 
+#include <cstdio>
 using isce3::core::Vec3;
 using isce3::io::Raster;
 
@@ -306,6 +307,16 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number)
 
     _az_last_line = std::max(static_cast<size_t>(0),
             static_cast<size_t>(std::ceil(rdr_y_max) - 1));
+
+    // Extra margin for interpolation to avoid gaps between blocks in output
+    const size_t interp_margin {5};
+    _range_first_pixel = interp_margin > _range_first_pixel ? 0 : _range_first_pixel - interp_margin;
+    _range_last_pixel = std::min(_rdr_geom.radarGrid().width() - 1,
+                             _range_last_pixel + interp_margin);
+
+    _az_first_line = interp_margin > _az_first_line ? 0 : _az_first_line - interp_margin;
+    _az_last_line = std::min(_rdr_geom.radarGrid().length() - 1,
+                             _az_last_line+interp_margin);
 
     // check if block entirely masked
     bool all_masked = std::isnan(rdr_y_min);
