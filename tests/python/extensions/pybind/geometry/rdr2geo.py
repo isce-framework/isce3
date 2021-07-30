@@ -6,7 +6,7 @@ import numpy as np
 
 import iscetest
 import isce3
-from pybind_nisar.products.readers import SLC
+from nisar.products.readers import SLC
 
 
 def test_point():
@@ -88,7 +88,7 @@ def test_run_raster_layers():
     # load test DEM
     dem_raster = isce3.io.Raster(os.path.join(iscetest.data, "srtm_cropped.tif"))
     x_raster = isce3.io.Raster("x.rdr", radargrid.width,
-                                  radargrid.length, 1, gdal.GDT_Float64, 'ENVI') 
+                                  radargrid.length, 1, gdal.GDT_Float64, 'ENVI')
     y_raster = isce3.io.Raster("y.rdr", radargrid.width,
                                   radargrid.length, 1, gdal.GDT_Float64, 'ENVI')
     height_raster = isce3.io.Raster("z.rdr", radargrid.width,
@@ -109,7 +109,7 @@ def test_run_raster_layers():
     # run
     rdr2geo_obj.topo(dem_raster, x_raster,
                      y_raster, height_raster,
-                     incidence_angle_raster, 
+                     incidence_angle_raster,
                      heading_angle_raster,
                      local_incidence_angle_raster,
                      local_Psi_raster,
@@ -135,7 +135,7 @@ def test_validate():
     # load reference topo raster
     ref_ds = gdal.Open(os.path.join(iscetest.data, "topo/topo.vrt"),
             gdal.GA_ReadOnly)
-    
+
     # define tolerances
     tols = [1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02]
 

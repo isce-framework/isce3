@@ -60,7 +60,7 @@ docker run \
                 ls -al ${CONTAINER_DATADIR} && 
                 cd ${CONTAINER_DATADIR} && 
                 mkdir output_rslc scratch_rslc qa_rslc &&
-                time python3 /opt/isce/packages/pybind_nisar/workflows/focus.py run_config_rslc.yaml &&
+                time python3 /opt/isce/packages/nisar/workflows/focus.py run_config_rslc.yaml &&
                 time python3 /opt/QualityAssurance/verify_rslc.py  --fpdf qa_rslc/graphs.pdf --fhdf qa_rslc/stats.h5 --flog qa_rslc/qa.log --validate --quality output_rslc/rslc.h5
                "
 

@@ -7,7 +7,7 @@ import numpy as np
 
 import iscetest
 import pybind_isce3 as isce3
-from pybind_nisar.products.readers import SLC
+from nisar.products.readers import SLC
 
 
 def test_run():

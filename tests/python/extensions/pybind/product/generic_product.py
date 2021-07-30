@@ -4,8 +4,8 @@ import pytest
 
 import isce3
 import iscetest
-from pybind_nisar.products.readers import open_product, SLC
-from pybind_nisar.products.readers.Raw import Raw
+from nisar.products.readers import open_product, SLC
+from nisar.products.readers.Raw import Raw
 
 def test_radargridparameters():
     # Test creation of an L0B RRSD product

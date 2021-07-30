@@ -4,7 +4,7 @@ import numpy as np
 from osgeo import gdal
 import iscetest
 import pybind_isce3 as isce
-from pybind_nisar.products.readers import SLC
+from nisar.products.readers import SLC
 
 def test_run():
     '''

@@ -1,7 +1,7 @@
 # Python packages
 set(PYPKGS
     isce3
-    pybind_nisar
+    nisar
     )
 
 foreach(PYPKG ${PYPKGS})
@@ -19,23 +19,23 @@ set(WORKFLOWS
 )
 foreach(WORKFLOW ${WORKFLOWS})
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/share/nisar/${WORKFLOW}
-            DESTINATION ${ISCE_PACKAGESDIR}/pybind_nisar/workflows)
+            DESTINATION ${ISCE_PACKAGESDIR}/nisar/workflows)
 endforeach()
 
 
 # XXX Make workflow scripts executable.
 set (list_of_exe
-     pybind_nisar/workflows/crossmul.py
-     pybind_nisar/workflows/focus.py
-     pybind_nisar/workflows/geo2rdr.py
-     pybind_nisar/workflows/geocode_insar.py
-     pybind_nisar/workflows/gcov.py
-     pybind_nisar/workflows/gslc.py
-     pybind_nisar/workflows/insar.py
-     pybind_nisar/workflows/rdr2geo.py
-     pybind_nisar/workflows/resample_slc.py
-     pybind_nisar/workflows/stage_dem.py
-     pybind_nisar/workflows/unwrap.py)
+     nisar/workflows/crossmul.py
+     nisar/workflows/focus.py
+     nisar/workflows/geo2rdr.py
+     nisar/workflows/geocode_insar.py
+     nisar/workflows/gcov.py
+     nisar/workflows/gslc.py
+     nisar/workflows/insar.py
+     nisar/workflows/rdr2geo.py
+     nisar/workflows/resample_slc.py
+     nisar/workflows/stage_dem.py
+     nisar/workflows/unwrap.py)
 
 foreach(script ${list_of_exe})
     install(
