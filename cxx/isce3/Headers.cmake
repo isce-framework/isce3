@@ -1,5 +1,8 @@
 set(HEADERS
+antenna/detail/WinChirpRgCompPow.h
+antenna/detail/WinChirpRgCompPow.icc
 antenna/forward.h
+antenna/ElPatternEst.h
 antenna/geometryfunc.h
 antenna/Frame.h
 antenna/Frame.icc
@@ -133,6 +136,7 @@ matchtemplate/ampcor/dom/SLC.h
 matchtemplate/ampcor/dom/SLC.icc
 math/Bessel.h
 math/ComplexMultiply.h
+math/polyfunc.h
 math/Sinc.h
 math/Sinc.icc
 polsar/symmetrize.h

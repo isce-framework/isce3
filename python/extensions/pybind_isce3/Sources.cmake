@@ -1,5 +1,6 @@
 set(SRCS
 antenna/antenna.cpp
+antenna/ElPatternEst.cpp
 antenna/Frame.cpp
 antenna/geometryfunc.cpp
 antenna/SphGridType.cpp
@@ -24,6 +25,7 @@ core/Projections.cpp
 core/Quaternion.cpp
 core/StateVector.cpp
 core/TimeDelta.cpp
+core/Poly1d.cpp
 focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
@@ -43,6 +45,7 @@ geometry/RTC.cpp
 geometry/metadataCubes.cpp
 geometry/ltpcoordinates.cpp
 geometry/pntintersect.cpp
+geometry/lookIncFromSr.cpp
 image/image.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp

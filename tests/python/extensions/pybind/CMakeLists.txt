@@ -46,8 +46,10 @@ unwrap/icu.py
 unwrap/phass.py
 geometry/ltpcoordinates.py
 geometry/pntintersect.py
+geometry/look_inc_from_sr.py
 antenna/frame.py
 antenna/geometryfunc.py
+antenna/el_pattern_est.py
 )
 
 if(WITH_CUDA)

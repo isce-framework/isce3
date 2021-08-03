@@ -4,6 +4,7 @@ namespace isce3 { namespace antenna {
 
 // list of classes
 class Frame;
+class ElPatternEst;
 
 // list of enums
 enum class SphGridType;

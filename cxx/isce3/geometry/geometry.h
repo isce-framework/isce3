@@ -18,6 +18,11 @@
 #include <isce3/core/forward.h>
 #include <isce3/product/forward.h>
 
+#include <optional>
+#include <tuple>
+
+#include <Eigen/Dense>
+
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/geometry/DEMInterpolator.h>
@@ -310,6 +315,85 @@ std::pair<int, double> srPosFromLookVecDem(double& sr,
         const isce3::core::Vec3& sc_pos, const isce3::core::Vec3& lkvec,
         const DEMInterpolator& dem_interp = {}, double hgt_err = 0.5,
         int num_iter = 10, const isce3::core::Ellipsoid& ellips = {});
+
+/**
+ * Estimate look angle (off-nadir angle) and ellipsoidal incidence angle at a
+ * desired slant range from orbit (spacecraft/antenna statevector) and at
+ * a certain relative azimuth time.
+ * Note that this is an approximate closed-form solution where an approximate
+ * sphere (like SCH coordinate) to Ellipsoid is formed at a certain spacecraft
+ * location and along its heading.
+ * Finally,the look angle is calculated in a closed-form expression via
+ * "Law of Cosines".
+ * <a href="https://en.wikipedia.org/wiki/Law_of_cosines"
+ * target="_blank">See Law of Cosines</a>
+ * The respective ellipsoidal incidence angle is formed in that approximate
+ * sphere by using a fixed height w.r.t its ellipsoid for all look angles via
+ * "Law of Sines".
+ * <a href="https://en.wikipedia.org/wiki/Law_of_sines" target="_blank">See Law
+ * of Sines</a>.
+ * @param[in] slant_range: true slant range in meters from antenna phase center
+ * (or spacecraft position) to the ground.
+ * @param[in] orbit: isce3 orbit object.
+ * @param[in] az_time (optional): relative azimuth time in seconds w.r.t
+ * reference epoch time of orbit object. If not speficied or set to {} or
+ * std::nullopt, the mid time of orbit will be used as azimuth time.
+ * @param[in] dem_interp (optional) : DEMInterpolator object wrt to
+ * reference ellipsoid. Default is global 0.0 (m) height.
+ * @param[in] ellips (optional) : Ellipsoid object. Default is WGS84 reference
+ * ellipsoid.
+ * @return look angle in radians.
+ * @return incidence angles in radians.
+ * @exception RuntimeError
+ * @note that a fixed DEM height, a mean value over all DEM, is used as a
+ * relative height above the local sphere defined by along-track radius of
+ * curvature of the ellipsoid. No local slope is taken into acccount in
+ * estimating incidience angle!
+ */
+std::tuple<double, double> lookIncAngFromSlantRange(double slant_range,
+        const isce3::core::Orbit& orbit, std::optional<double> az_time = {},
+        const DEMInterpolator& dem_interp = {},
+        const isce3::core::Ellipsoid& ellips = {});
+
+/**
+ * Overloaded vectorized version of estimating look angle (off-nadir angle)
+ * and ellipsoidal incidence angle at a
+ * desired slant range from orbit (spacecraft/antenna statevector) and at
+ * a certain relative azimuth time.
+ * Note that this is an approximate closed-form solution where an approximate
+ * sphere (like SCH coordinate) to Ellipsoid is formed at a certain spacecraft
+ * location and along its heading.
+ * Finally,the look angle is calculated in a closed-form expression via
+ * "Law of Cosines".
+ * <a href="https://en.wikipedia.org/wiki/Law_of_cosines"
+ * target="_blank">See Law of Cosines</a>
+ * The respective ellipsoidal incidence angle is formed in that approximate
+ * sphere by using a fixed height w.r.t its ellipsoid for all look angles via
+ * "Law of Sines".
+ * <a href="https://en.wikipedia.org/wiki/Law_of_sines" target="_blank">See Law
+ * of Sines</a>.
+ * @param[in] slant_range: true slant range in meters from antenna phase center
+ * (or spacecraft position) to the ground.
+ * @param[in] orbit: isce3 orbit object.
+ * @param[in] az_time (optional): relative azimuth time in seconds w.r.t
+ * reference epoch time of orbit object. If not speficied or set to {} or
+ * std::nullopt, the mid time of orbit will be used as azimuth time.
+ * @param[in] dem_interp (optional) : DEMInterpolator object wrt to
+ * reference ellipsoid. Default is global 0.0 (m) height.
+ * @param[in] ellips (optional) : Ellipsoid object. Default is WGS84 reference
+ * ellipsoid.
+ * @return a vector of look angles in radians.
+ * @return a vector of incidence angles in radians.
+ * @note that a fixed DEM height, a mean value over all DEM, is used as a
+ * relative height above the local sphere defined by along-track radius of
+ * curvature of the ellipsoid. No local slope is taken into acccount in
+ * estimating incidience angle.
+ */
+std::tuple<Eigen::ArrayXd, Eigen::ArrayXd> lookIncAngFromSlantRange(
+        const Eigen::Ref<const Eigen::ArrayXd>& slant_range,
+        const isce3::core::Orbit& orbit, std::optional<double> az_time = {},
+        const DEMInterpolator& dem_interp = {},
+        const isce3::core::Ellipsoid& ellips = {});
 
 } // namespace geometry
 } // namespace isce3

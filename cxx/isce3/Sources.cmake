@@ -1,4 +1,5 @@
 set(SRCS
+antenna/ElPatternEst.cpp
 antenna/geometryfunc.cpp
 core/Attitude.cpp
 core/Baseline.cpp
@@ -71,6 +72,7 @@ matchtemplate/ampcor/correlators/tgtStats.cpp
 matchtemplate/ampcor/dom/Raster.cc
 matchtemplate/ampcor/dom/SLC.cc
 math/Bessel.cpp
+math/polyfunc.cpp
 polsar/symmetrize.cpp
 product/GeoGridParameters.cpp
 product/Product.cpp

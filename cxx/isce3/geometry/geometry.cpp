@@ -484,4 +484,123 @@ std::pair<int, double> isce3::geometry::srPosFromLookVecDem(double& sr,
     return std::make_pair(cnt, abs_hgt_dif);
 }
 
+/**
+ * @internal
+ * A helper function to get two geometry values "platform-height +
+ * alongtrack-range-curvature" and "dem-height + alongtrack-range-curvature"
+ * from orbit and mean DEM at a certain azimuth time for a certain ellipsoidal
+ * planet. This function will be used in "lookIncAngFromSlantRange" functions.
+ * @param[in] orbit: isce3 orbit object.
+ * @param[in] az_time (optional): relative azimuth time in seconds w.r.t
+ * reference epoch time of orbit object. If not speficied or set to {} or
+ * std::nullopt, the mid time of orbit will be used as azimuth time.
+ * @param[in] dem_interp: DEMInterpolator object wrt reference ellipsoid.
+ * @param[in] ellips: Ellipsoid object.
+ * @return a tuple of two scalars, "platform-height +
+ * alongtrack-range-curvature" and "dem-height + alongtrack-range-curvature"
+ * @exception RuntimeError
+ */
+static std::tuple<double, double> _get_rgcurv_plus_hgt(
+        const isce3::core::Orbit& orbit, std::optional<double> az_time,
+        const isce3::geometry::DEMInterpolator& dem_interp,
+        const isce3::core::Ellipsoid& ellips)
+{
+    // set azimuth time to midtime of orbit if not specified
+    if (!az_time)
+        *az_time = orbit.midTime();
+    // get the pos/vel of S/C at azimuth time
+    isce3::core::Vec3 sc_pos, sc_vel;
+    auto err_code = orbit.interpolate(&sc_pos, &sc_vel, *az_time);
+    if (err_code != isce3::error::ErrorCode::Success)
+        throw isce3::except::RuntimeError(
+                ISCE_SRCINFO(), isce3::error::getErrorString(err_code));
+    // get LLH of S/C
+    auto sc_llh = ellips.xyzToLonLat(sc_pos);
+    // get heading of S/C
+    auto sc_hdg = isce3::geometry::heading(sc_llh(0), sc_llh(1), sc_vel);
+    // get ellipsoid range curvature along flight track / heading
+    auto rg_curv = ellips.rDir(sc_hdg, sc_llh(1));
+    // get mean dem height
+    auto dem_hgt = dem_interp.meanHeight();
+    return {sc_llh(2) + rg_curv, dem_hgt + rg_curv};
+}
+
+std::tuple<double, double> isce3::geometry::lookIncAngFromSlantRange(
+        double slant_range, const isce3::core::Orbit& orbit,
+        std::optional<double> az_time, const DEMInterpolator& dem_interp,
+        const isce3::core::Ellipsoid& ellips)
+{
+    // get combinations of range curvature with platform height as well as mean
+    // DEM height
+    auto [schgt_plus_rgcurv, demhgt_plus_rgcurv] =
+            _get_rgcurv_plus_hgt(orbit, az_time, dem_interp, ellips);
+
+    // calculate look angle
+    double lk_ang = std::acos(
+            (slant_range * slant_range + schgt_plus_rgcurv * schgt_plus_rgcurv -
+                    demhgt_plus_rgcurv * demhgt_plus_rgcurv) /
+            (2.0 * slant_range * schgt_plus_rgcurv));
+    // check if look angle is a valid value
+    const auto half_pi = M_PI / 2.0;
+    if (std::isnan(lk_ang) || !(lk_ang > 0.0 && lk_ang < half_pi))
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad input values result in nan or unacceptable look angle!");
+
+    // calculate incidence angle
+    double inc_ang = lk_ang + std::asin(std::sin(lk_ang) * slant_range /
+                                        demhgt_plus_rgcurv);
+    return {lk_ang, inc_ang};
+}
+
+std::tuple<Eigen::ArrayXd, Eigen::ArrayXd>
+isce3::geometry::lookIncAngFromSlantRange(
+        const Eigen::Ref<const Eigen::ArrayXd>& slant_range,
+        const isce3::core::Orbit& orbit, std::optional<double> az_time,
+        const DEMInterpolator& dem_interp, const isce3::core::Ellipsoid& ellips)
+{
+    // get combinations of along-track range curvature with platform height as
+    // well as with mean DEM height
+    auto [schgt_plus_rgcurv, demhgt_plus_rgcurv] =
+            _get_rgcurv_plus_hgt(orbit, az_time, dem_interp, ellips);
+
+    // define a lambda function for look angle and slant range calculation
+    auto est_look = [=](double sr) {
+        return std::acos((sr * sr + schgt_plus_rgcurv * schgt_plus_rgcurv -
+                                 demhgt_plus_rgcurv * demhgt_plus_rgcurv) /
+                         (2.0 * sr * schgt_plus_rgcurv));
+    };
+
+    auto est_incidence = [=](double sr, double lka) {
+        return lka + std::asin(std::sin(lka) * sr / demhgt_plus_rgcurv);
+    };
+
+    // Simply calculate look angles for (min,max) slant range vector
+    // Note that no need to assume to  have uniform-spacing and/or monotonic
+    // slant range values! simply check (min, max) look angles to make sure they
+    // are within reasonable range
+    const auto half_pi = M_PI / 2.0;
+    auto lka_min = est_look(slant_range.minCoeff());
+    if (std::isnan(lka_min) || !(lka_min > 0.0 && lka_min < half_pi))
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad input values result in nan or "
+                "unacceptable min look angle!");
+    auto lka_max = est_look(slant_range.maxCoeff());
+    if (std::isnan(lka_max) || !(lka_max > lka_min && lka_max < half_pi))
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad input values result in nan or "
+                "unacceptable max look angle!");
+
+    // allocate output vectors with proper size
+    const auto len = slant_range.size();
+    Eigen::ArrayXd lka_all(len);
+    Eigen::ArrayXd inca_all(len);
+    // loop over all slant ranges and calculate both look angle and incidecne
+    // angle
+    for (Eigen::Index idx = 0; idx < len; ++idx) {
+        lka_all(idx) = est_look(slant_range(idx));
+        inca_all(idx) = est_incidence(slant_range(idx), lka_all(idx));
+    }
+    return {lka_all, inca_all};
+}
+
 // end of file
