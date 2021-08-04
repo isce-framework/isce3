@@ -108,8 +108,15 @@ std::vector<std::string> findByName(hid_t loc_id, std::string nameIn,
             findMetaInfo.basePath.append("/");
     }
 
+// If we are using the new H5Ovisit_by_name API introduced in HDF5 1.12:
+#if H5_VERSION_GE(1, 12, 0) && !defined(H5_USE_110_API)
+    // we do a more efficient visit, only retrieving the basic info
+    H5Ovisit_by_name3(loc_id, start.c_str(), H5_INDEX_NAME, H5_ITER_INC,
+                      matchName, &findMetaInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+#else
     H5Ovisit_by_name(loc_id, start.c_str(), H5_INDEX_NAME, H5_ITER_INC,
                      matchName, &findMetaInfo, H5P_DEFAULT);
+#endif
 
     return findMetaInfo.outList;
 }
