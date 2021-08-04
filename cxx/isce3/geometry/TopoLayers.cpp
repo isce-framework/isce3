@@ -1,6 +1,7 @@
 #include "TopoLayers.h"
 
 #include <iterator>
+#include <stdexcept>
 #include <variant>
 #include <vector>
 
@@ -19,11 +20,17 @@ void TopoLayers::writeData(size_t xidx, size_t yidx)
 #pragma omp parallel for
     for (auto i = 0; i < valarrays.size(); ++i) {
         if (rasters[i]) {
-            std::visit(
-                    [&](const auto& ptr) {
-                        rasters[i]->setBlock(ptr, xidx, yidx, _width, _length);
-                    },
-                    valarrays[i]);
+
+            // std::bad_variant_access requires macOS 10.14
+            if (auto* p = std::get_if<double*>(&valarrays[i])) {
+                rasters[i]->setBlock(*p, xidx, yidx, _width, _length);
+            } else if (auto* p = std::get_if<float*>(&valarrays[i])) {
+                rasters[i]->setBlock(*p, xidx, yidx, _width, _length);
+            } else if (auto* p = std::get_if<short*>(&valarrays[i])) {
+                rasters[i]->setBlock(*p, xidx, yidx, _width, _length);
+            } else {
+                throw std::logic_error("invalid variant type");
+            }
         }
     }
 }
