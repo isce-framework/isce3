@@ -532,7 +532,9 @@ std::tuple<double, double> isce3::geometry::lookIncAngFromSlantRange(
 {
     // get combinations of range curvature with platform height as well as mean
     // DEM height
-    auto [schgt_plus_rgcurv, demhgt_plus_rgcurv] =
+    double schgt_plus_rgcurv;
+    double demhgt_plus_rgcurv;
+    std::tie(schgt_plus_rgcurv, demhgt_plus_rgcurv) =
             _get_rgcurv_plus_hgt(orbit, az_time, dem_interp, ellips);
 
     // calculate look angle
@@ -560,7 +562,9 @@ isce3::geometry::lookIncAngFromSlantRange(
 {
     // get combinations of along-track range curvature with platform height as
     // well as with mean DEM height
-    auto [schgt_plus_rgcurv, demhgt_plus_rgcurv] =
+    double schgt_plus_rgcurv;
+    double demhgt_plus_rgcurv;
+    std::tie(schgt_plus_rgcurv, demhgt_plus_rgcurv) =
             _get_rgcurv_plus_hgt(orbit, az_time, dem_interp, ellips);
 
     // define a lambda function for look angle and slant range calculation
