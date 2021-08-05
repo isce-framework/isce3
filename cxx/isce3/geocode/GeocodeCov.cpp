@@ -2529,6 +2529,20 @@ void Geocode<T>::_runBlock(
                 dem_last[j + 1] = dem11;
             }
 
+            // save geo-edges
+            if (out_geo_dem != nullptr) {
+                if (i == 0) {
+                    out_geo_dem_array(i, j + 1) = dem01[2];
+                }
+                if (i == 0 && j == 0) {
+                    out_geo_dem_array(i, j) = dem00[2];
+                }
+                if (j == 0) {
+                    out_geo_dem_array(i + 1, j) = dem10[2];
+                }
+                out_geo_dem_array(i + 1, j + 1) = dem11[2];
+            }
+
             if (std::isnan(a00) || std::isnan(a10) || std::isnan(a10) ||
                     std::isnan(a11)) {
                 continue;
@@ -2715,20 +2729,6 @@ void Geocode<T>::_runBlock(
                 // save lower left pixel
                 out_geo_rdr_a(i + 1, j + 1) = y11;
                 out_geo_rdr_r(i + 1, j + 1) = x11;
-            }
-
-            // save geo-edges
-            if (out_geo_dem != nullptr) {
-                if (i == 0) {
-                    out_geo_dem_array(i, j + 1) = dem01[2];
-                }
-                if (i == 0 && j == 0) {
-                    out_geo_dem_array(i, j) = dem00[2];
-                }
-                if (j == 0) {
-                    out_geo_dem_array(i + 1, j) = dem10[2];
-                }
-                out_geo_dem_array(i + 1, j + 1) = dem11[2];
             }
 
             // x, y positions are binned by integer quotient (floor)
