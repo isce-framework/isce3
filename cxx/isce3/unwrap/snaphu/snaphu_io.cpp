@@ -8,22 +8,10 @@
 
 *************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <signal.h>
-#include <limits.h>
-#include <float.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstring>
+#include <cctype>
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 
 #include <isce3/except/Error.h>
 
@@ -43,11 +31,13 @@ int LogBoolParam(FILE *fp, const char *key, signed char boolvalue);
 static
 int LogFileFormat(FILE *fp, const char *key, signed char fileformat);
 static
-int WriteAltLineFile(float **mag, float **phase, char *outfile, 
-                     long nrow, long ncol);
+int WriteAltLineFile(Array2D<float>& mag,
+                     Array2D<float>& phase,
+                     char *outfile, long nrow, long ncol);
 static
-int WriteAltSampFile(float **arr1, float **arr2, char *outfile, 
-                     long nrow, long ncol);
+int WriteAltSampFile(Array2D<float>& arr1,
+                     Array2D<float>& arr2,
+                     char *outfile, long nrow, long ncol);
 
 
 
@@ -57,11 +47,10 @@ int WriteAltSampFile(float **arr1, float **arr2, char *outfile,
  */
 int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
 
-
-  /* initialize to all zero to start for extra robustness */
-  memset(infiles,0,sizeof(infileT));
-  memset(outfiles,0,sizeof(outfileT));
-  memset(params,0,sizeof(paramT));
+  /* initialize to start for extra robustness */
+  *infiles={};
+  *outfiles={};
+  *params={};
   
   /* input files */
   StrNCopy(infiles->weightfile,DEF_WEIGHTFILE,MAXSTRLEN);
@@ -204,6 +193,7 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   params->edgemaskleft=DEF_EDGEMASKLEFT;
   params->edgemaskright=DEF_EDGEMASKRIGHT;
   params->parentpid=(long )getpid();
+
 
   /* tile parameters */
   params->ntilerow=DEF_NTILEROW;
@@ -824,7 +814,7 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
   int parsestatus;
   long nlines, nparams;
   char *ptr;
-  char buf[MAXLINELEN];
+  char buf[MAXLINELEN]={};
   FILE *fp;
 
   
@@ -907,9 +897,8 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
 
   int nparams;
   long nfields;
-  char str1[MAXLINELEN], str2[MAXLINELEN];
+  char str1[MAXLINELEN]={}, str2[MAXLINELEN]={};
   signed char badparam;
-
 
   /* set up */
   nparams=0;
@@ -1386,9 +1375,9 @@ int WriteConfigLogFile(infileT *infiles,
                        outfileT *outfiles, long linelen, paramT *params){
 
   FILE *fp;
-  time_t t[1];
-  char buf[MAXSTRLEN], *ptr;
-  char hostnamestr[MAXSTRLEN];
+  time_t t[1]={};
+  char buf[MAXSTRLEN]={}, *ptr;
+  char hostnamestr[MAXSTRLEN]={};
 
   /* see if we need to write a log file */
   if(strlen(outfiles->logfile)){
@@ -1778,7 +1767,8 @@ long GetNLines(infileT *infiles, long linelen, paramT *params){
  * Writes the unwrapped phase to the output file specified, in the
  * format given in the parameter structure.
  */
-int WriteOutputFile(float **mag, float **unwrappedphase, char *outfile,
+int WriteOutputFile(Array2D<float>& mag,
+                    Array2D<float>& unwrappedphase, char *outfile,
                     outfileT *outfiles, long nrow, long ncol){
 
   if(outfiles->outfileformat==ALT_LINE_DATA){
@@ -1786,14 +1776,14 @@ int WriteOutputFile(float **mag, float **unwrappedphase, char *outfile,
   }else if(outfiles->outfileformat==ALT_SAMPLE_DATA){
     WriteAltSampFile(mag,unwrappedphase,outfile,nrow,ncol);
   }else if(outfiles->outfileformat==FLOAT_DATA){
-    Write2DArray((void **)unwrappedphase,outfile,
-                 nrow,ncol,sizeof(float));
+    Write2DArray<float>(unwrappedphase,outfile,
+                        nrow,ncol,sizeof(float));
   }else{
     fflush(NULL);
     fprintf(sp0,"WARNING: Illegal format specified for output file\n");
     fprintf(sp0,"         using default floating-point format\n");
-    Write2DArray((void **)unwrappedphase,outfile,
-                 nrow,ncol,sizeof(float));
+    Write2DArray<float>(unwrappedphase,outfile,
+                        nrow,ncol,sizeof(float));
   }
   return(0);
 }
@@ -1806,9 +1796,9 @@ int WriteOutputFile(float **mag, float **unwrappedphase, char *outfile,
  * is written into the string realoutfile, for which at least 
  * MAXSTRLEN bytes should already be allocated.
  */
-FILE *OpenOutputFile(char *outfile, char *realoutfile){
+FILE *OpenOutputFile(const char *outfile, char *realoutfile){
 
-  char path[MAXSTRLEN], basename[MAXSTRLEN], dumpfile[MAXSTRLEN];
+  char path[MAXSTRLEN]={}, basename[MAXSTRLEN]={}, dumpfile[MAXSTRLEN]={};
   FILE *fp;
 
   if((fp=fopen(outfile,"w"))==NULL){
@@ -1845,17 +1835,18 @@ FILE *OpenOutputFile(char *outfile, char *realoutfile){
  * default directory if the file name/path passed in cannot be used.
  */
 static
-int WriteAltLineFile(float **mag, float **phase, char *outfile, 
-                     long nrow, long ncol){
+int WriteAltLineFile(Array2D<float>& mag,
+                     Array2D<float>& phase,
+                     char *outfile, long nrow, long ncol){
 
   int row;
   FILE *fp;
-  char realoutfile[MAXSTRLEN];
+  char realoutfile[MAXSTRLEN]={};
 
   fp=OpenOutputFile(outfile,realoutfile);
   for(row=0; row<nrow; row++){
-    if(fwrite(mag[row],sizeof(float),ncol,fp)!=ncol
-       || fwrite(phase[row],sizeof(float),ncol,fp)!=ncol){
+    if(fwrite(mag.row(row).data(),sizeof(float),ncol,fp)!=ncol
+       || fwrite(phase.row(row).data(),sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while writing to file " + std::string(realoutfile) +
@@ -1877,22 +1868,22 @@ int WriteAltLineFile(float **mag, float **phase, char *outfile,
  * passed in cannot be used.
  */
 static
-int WriteAltSampFile(float **arr1, float **arr2, char *outfile, 
-                     long nrow, long ncol){
+int WriteAltSampFile(Array2D<float>& arr1,
+                     Array2D<float>& arr2,
+                     char *outfile, long nrow, long ncol){
 
   long row, col;
   FILE *fp;
-  float *outline;
-  char realoutfile[MAXSTRLEN];
+  char realoutfile[MAXSTRLEN]={};
 
-  outline=(float *)MAlloc(2*ncol*sizeof(float));
+  auto outline=Array1D<float>(2*ncol);
   fp=OpenOutputFile(outfile,realoutfile);
   for(row=0; row<nrow; row++){
     for(col=0;col<ncol;col++){
-      outline[2*col]=arr1[row][col];
-      outline[2*col+1]=arr2[row][col];
+      outline[2*col]=arr1(row,col);
+      outline[2*col+1]=arr2(row,col);
     }
-    if(fwrite(outline,sizeof(float),2*ncol,fp)!=2*ncol){
+    if(fwrite(outline.data(),sizeof(float),2*ncol,fp)!=2*ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while writing to file " + std::string(realoutfile) +
@@ -1918,7 +1909,7 @@ int Write2DArray(void **array, char *filename, long nrow, long ncol,
 
   int row;
   FILE *fp;
-  char realoutfile[MAXSTRLEN];
+  char realoutfile[MAXSTRLEN]={};
 
   fp=OpenOutputFile(filename,realoutfile);
   for(row=0; row<nrow; row++){
@@ -1949,7 +1940,7 @@ int Write2DRowColArray(void **array, char *filename, long nrow,
 
   int row;
   FILE *fp;
-  char realoutfile[MAXSTRLEN];
+  char realoutfile[MAXSTRLEN]={};
 
   fp=OpenOutputFile(filename,realoutfile);
   for(row=0; row<nrow-1; row++){
@@ -1980,19 +1971,15 @@ int Write2DRowColArray(void **array, char *filename, long nrow,
  * -------------------------
  * Reads the input file specified on the command line.
  */
-int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
-                  short ***flowsptr, long linelen, long nlines, 
+int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrappedphaseptr,
+                  Array2D<short>* flowsptr, long linelen, long nlines,
                   paramT *params, tileparamT *tileparams){
 
   long row, col, nrow, ncol;
-  float **mag, **wrappedphase, **unwrappedphase;
-  short **flows;
 
   /* initialize */
-  mag=NULL;
-  wrappedphase=NULL;
-  unwrappedphase=NULL;
-  flows=NULL;
+  Array2D<float> mag, wrappedphase, unwrappedphase;
+  Array2D<short> flows;
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
 
@@ -2023,7 +2010,7 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
       ReadAltSampFile(&mag,&wrappedphase,infiles->infile,
                       linelen,nlines,tileparams);
     }else if(infiles->infileformat==FLOAT_DATA){
-      Read2DArray((void ***)&wrappedphase,infiles->infile,linelen,nlines,
+      Read2DArray(&wrappedphase,infiles->infile,linelen,nlines,
                   tileparams,sizeof(float *),sizeof(float));
     }else{
       fflush(NULL);
@@ -2032,13 +2019,13 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
     }
 
     /* check to make sure the input data doesn't contain NaNs or infs */
-    if(!ValidDataArray(wrappedphase,nrow,ncol) 
-       || (mag!=NULL && !ValidDataArray(mag,nrow,ncol))){
+    if(!ValidDataArray(wrappedphase,nrow,ncol)
+       || (mag.size() && !ValidDataArray(mag,nrow,ncol))){
       fflush(NULL);
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
               "NaN or infinity found in input float data");
     }
-    if(mag!=NULL && !NonNegDataArray(mag,nrow,ncol)){
+    if(mag.size() && !NonNegDataArray(mag,nrow,ncol)){
       fflush(NULL);
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
               "Negative magnitude found in input magnitude data");
@@ -2061,7 +2048,7 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
       ReadAltSampFile(&mag,&unwrappedphase,infiles->infile,
                            linelen,nlines,tileparams);
     }else if(infiles->unwrappedinfileformat==FLOAT_DATA){
-      Read2DArray((void ***)&unwrappedphase,infiles->infile,linelen,nlines,
+      Read2DArray(&unwrappedphase,infiles->infile,linelen,nlines,
                   tileparams,sizeof(float *),sizeof(float));
     }else{
       fflush(NULL);
@@ -2070,13 +2057,13 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
     }
 
     /* check to make sure the input data doesn't contain NaNs or infs */
-    if(!ValidDataArray(unwrappedphase,nrow,ncol) 
-       || (mag!=NULL && !ValidDataArray(mag,nrow,ncol))){
+    if(!ValidDataArray(unwrappedphase,nrow,ncol)
+       || (mag.size() && !ValidDataArray(mag,nrow,ncol))){
       fflush(NULL);
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
               "NaN or infinity found in input float data");
     }
-    if(mag!=NULL && !NonNegDataArray(mag,nrow,ncol)){
+    if(mag.size() && !NonNegDataArray(mag,nrow,ncol)){
       fflush(NULL);
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
               "Negative magnitude found in input magnitude data");
@@ -2089,10 +2076,7 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
     /* parse flows of unwrapped phase */
     wrappedphase=ExtractFlow(unwrappedphase,&flows,nrow,ncol);
 
-    /* free unwrapped phase array to save memory */
-    Free2DArray((void **)unwrappedphase,nrow);
-
-  }    
+  }
 
   /* show which pixels read if tiling */
   if(tileparams->nrow!=nlines || tileparams->ncol!=linelen){
@@ -2101,13 +2085,13 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
             tileparams->nrow,tileparams->ncol,
             tileparams->firstrow,tileparams->firstcol);
   }
-  
+
   /* get memory for mag (power) image and set to unity if not passed */
-  if(mag==NULL){
-    mag=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!mag.size()) {
+    mag=Array2D<float>(nrow, ncol);
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        mag[row][col]=1.0;
+        mag(row,col)=1.0;
       }
     }
   }
@@ -2129,17 +2113,16 @@ int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
  * Memory for the magnitude array should already have been allocated by
  * ReadInputFile().
  */
-int ReadMagnitude(float **mag, infileT *infiles, long linelen, long nlines, 
+int ReadMagnitude(Array2D<float>& mag, infileT *infiles, long linelen, long nlines,
                   tileparamT *tileparams){
 
-  float **dummy;
+  Array2D<float> dummy;
 
-  dummy=NULL;
   if(strlen(infiles->magfile)){
     fprintf(sp1,"Reading interferogram magnitude from file %s\n",
             infiles->magfile);
     if(infiles->magfileformat==FLOAT_DATA){
-      Read2DArray((void ***)&mag,infiles->magfile,linelen,nlines,tileparams,
+      Read2DArray(&mag,infiles->magfile,linelen,nlines,tileparams,
                   sizeof(float *),sizeof(float));
     }else if(infiles->magfileformat==COMPLEX_DATA){
       ReadComplexFile(&mag,&dummy,infiles->magfile,linelen,nlines,
@@ -2152,9 +2135,6 @@ int ReadMagnitude(float **mag, infileT *infiles, long linelen, long nlines,
                       tileparams);
     }
   }
-  if(dummy!=NULL){
-    Free2DArray((void **)dummy,tileparams->nrow);
-  }
   return(0);
 }
 
@@ -2164,43 +2144,37 @@ int ReadMagnitude(float **mag, infileT *infiles, long linelen, long nlines,
  * is zero or where pixel is close enough to edge as defined by
  * edgemask parameters; leave magnitude unchanged otherwise.
  */
-int ReadByteMask(float **mag, infileT *infiles, long linelen, long nlines, 
+int ReadByteMask(Array2D<float>& mag, infileT *infiles, long linelen, long nlines,
                  tileparamT *tileparams, paramT *params){
 
   long row, col, nrow, ncol, fullrow, fullcol;
-  signed char **bytemask;
 
   /* set up */
+  Array2D<signed char> bytemask;
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
 
   /* read byte mask (memory allocated by read function) */
-  bytemask=NULL;
   if(strlen(infiles->bytemaskfile)){
     fprintf(sp1,"Reading byte mask from file %s\n",infiles->bytemaskfile);
-    Read2DArray((void ***)&bytemask,infiles->bytemaskfile,linelen,nlines,
+    Read2DArray(&bytemask,infiles->bytemaskfile,linelen,nlines,
                 tileparams,sizeof(signed char *),sizeof(signed char));
   }
-    
+
   /* loop over rows and columns and zero out magnitude where mask is zero */
   /* also mask edges according to edgemask parameters */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
       fullrow=tileparams->firstrow+row;
       fullcol=tileparams->firstcol+col;
-      if((bytemask!=NULL && bytemask[row][col]==0)
+      if((bytemask.size() && bytemask(row,col)==0)
          || fullrow<params->edgemasktop
          || fullcol<params->edgemaskleft
          || fullrow>=nlines-params->edgemaskbot
          || fullcol>=linelen-params->edgemaskright){
-        mag[row][col]=0;
+        mag(row,col)=0;
       }
     }
-  }
-
-  /* free bytemask memory */
-  if(bytemask!=NULL){
-    Free2DArray((void **)bytemask,nrow);
   }
 
   /* done */
@@ -2213,16 +2187,15 @@ int ReadByteMask(float **mag, infileT *infiles, long linelen, long nlines,
  * -------------------------------------
  * Reads the unwrapped-phase estimate from a file (assumes file name exists).
  */
-int ReadUnwrappedEstimateFile(float ***unwrappedestptr, infileT *infiles, 
-                              long linelen, long nlines, 
+int ReadUnwrappedEstimateFile(Array2D<float>* unwrappedestptr, infileT *infiles,
+                              long linelen, long nlines,
                               paramT *params, tileparamT *tileparams){
 
-  float **dummy;
   long nrow, ncol;
 
 
   /* initialize */
-  dummy=NULL;
+  Array2D<float> dummy;
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
 
@@ -2233,7 +2206,7 @@ int ReadUnwrappedEstimateFile(float ***unwrappedestptr, infileT *infiles,
     ReadAltLineFilePhase(unwrappedestptr,infiles->estfile,
                          linelen,nlines,tileparams);
   }else if(infiles->estfileformat==FLOAT_DATA){
-    Read2DArray((void ***)unwrappedestptr,infiles->estfile,linelen,nlines,
+    Read2DArray(unwrappedestptr,infiles->estfile,linelen,nlines,
                 tileparams,sizeof(float *),sizeof(float));
   }else if(infiles->estfileformat==ALT_SAMPLE_DATA){
     ReadAltSampFile(&dummy,unwrappedestptr,infiles->estfile,
@@ -2243,10 +2216,7 @@ int ReadUnwrappedEstimateFile(float ***unwrappedestptr, infileT *infiles,
     fprintf(sp0,"Illegal file format specification for file %s\nAbort\n",
             infiles->estfile);
   }
-  if(dummy!=NULL){
-    Free2DArray((void **)dummy,nrow);
-  }
-  
+
   /* make sure data is valid */
   if(!ValidDataArray(*unwrappedestptr,nrow,ncol)){
     fflush(NULL);
@@ -2267,11 +2237,10 @@ int ReadUnwrappedEstimateFile(float ***unwrappedestptr, infileT *infiles,
  * ---------------------------
  * Read in weights form rowcol format file of short ints.
  */
-int ReadWeightsFile(short ***weightsptr,char *weightfile, 
+int ReadWeightsFile(Array2D<short>* weightsptr,char *weightfile,
                     long linelen, long nlines, tileparamT *tileparams){
 
   long row, col, nrow, ncol;
-  short **rowweight, **colweight;
   signed char printwarning;
 
 
@@ -2280,23 +2249,23 @@ int ReadWeightsFile(short ***weightsptr,char *weightfile,
   ncol=tileparams->ncol;
   if(strlen(weightfile)){
     fprintf(sp1,"Reading weights from file %s\n",weightfile);
-    Read2DRowColFile((void ***)weightsptr,weightfile,linelen,nlines,
+    Read2DRowColFile(weightsptr,weightfile,linelen,nlines,
                      tileparams,sizeof(short));
-    rowweight=*weightsptr;
-    colweight=&(*weightsptr)[nrow-1];
+    auto rowweight=weightsptr->topRows(nrow-1);
     printwarning=FALSE;
     for(row=0;row<nrow-1;row++){
       for(col=0;col<ncol;col++){
-        if(rowweight[row][col]<0){
-          rowweight[row][col]=0;
+        if(rowweight(row,col)<0){
+          rowweight(row,col)=0;
           printwarning=TRUE;
         }
       }
     }
+    auto colweight=weightsptr->bottomRows(nrow);
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol-1;col++){
-        if(colweight[row][col]<0){
-          colweight[row][col]=0;
+        if(colweight(row,col)<0){
+          colweight(row,col)=0;
           printwarning=TRUE;
         }
       }
@@ -2307,10 +2276,9 @@ int ReadWeightsFile(short ***weightsptr,char *weightfile,
     }
   }else{
     fprintf(sp1,"No weight file specified.  Assuming uniform weights\n");
-    *weightsptr=(short **)Get2DRowColMem(nrow,ncol,
-                                         sizeof(short *),sizeof(short));
-    rowweight=*weightsptr;
-    colweight=&(*weightsptr)[nrow-1];
+    *weightsptr=MakeRowColArray2D<short>(nrow, ncol);
+    auto rowweight=weightsptr->topRows(nrow-1);
+    auto colweight=weightsptr->bottomRows(nrow);
     Set2DShortArray(rowweight,nrow-1,ncol,DEF_WEIGHT);
     Set2DShortArray(colweight,nrow,ncol-1,DEF_WEIGHT);
   }
@@ -2325,22 +2293,18 @@ int ReadWeightsFile(short ***weightsptr,char *weightfile,
  * -------------------------
  * Reads the intensity information from specified file(s).  If possilbe,
  * sets arrays for average power and individual powers of single-pass
- * SAR images.  
+ * SAR images.
  */
-int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr, 
-                  infileT *infiles, long linelen, long nlines, 
+int ReadIntensity(Array2D<float>* pwrptr, Array2D<float>* pwr1ptr, Array2D<float>* pwr2ptr,
+                  infileT *infiles, long linelen, long nlines,
                   paramT *params, tileparamT *tileparams){
-  
-  float **pwr, **pwr1, **pwr2;
-  long row, col, nrow, ncol;
 
+  long row, col, nrow, ncol;
 
   /* initialize */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
-  pwr=NULL;
-  pwr1=NULL;
-  pwr2=NULL;
+  Array2D<float> pwr, pwr1, pwr2;
 
   /* read the data */
   if(strlen(infiles->ampfile2)){
@@ -2349,9 +2313,9 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
     fprintf(sp1,"Reading brightness data from files %s and %s\n",
             infiles->ampfile,infiles->ampfile2);
     if(infiles->ampfileformat==FLOAT_DATA){
-      Read2DArray((void ***)&pwr1,infiles->ampfile,linelen,nlines,tileparams,
+      Read2DArray(&pwr1,infiles->ampfile,linelen,nlines,tileparams,
                   sizeof(float *),sizeof(float));
-      Read2DArray((void ***)&pwr2,infiles->ampfile2,linelen,nlines,tileparams,
+      Read2DArray(&pwr2,infiles->ampfile2,linelen,nlines,tileparams,
                   sizeof(float *),sizeof(float));
     }else{
       fflush(NULL);
@@ -2372,10 +2336,8 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
       ReadAltLineFile(&pwr1,&pwr2,infiles->ampfile,linelen,nlines,
                       tileparams);
     }else if(infiles->ampfileformat==FLOAT_DATA){
-      Read2DArray((void ***)&pwr,infiles->ampfile,linelen,nlines,tileparams,
+      Read2DArray(&pwr,infiles->ampfile,linelen,nlines,tileparams,
                   sizeof(float *),sizeof(float));
-      pwr1=NULL;
-      pwr2=NULL;
     }else{
       fflush(NULL);
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -2385,16 +2347,16 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
   }
 
   /* check data validity */
-  if((pwr1!=NULL && !ValidDataArray(pwr1,nrow,ncol)) 
-     || (pwr2!=NULL && !ValidDataArray(pwr2,nrow,ncol))
-     || (pwr!=NULL && !ValidDataArray(pwr,nrow,ncol))){
+  if((pwr1.size() && !ValidDataArray(pwr1,nrow,ncol))
+     || (pwr2.size() && !ValidDataArray(pwr2,nrow,ncol))
+     || (pwr.size() && !ValidDataArray(pwr,nrow,ncol))){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "Infinity or NaN found in amplitude or power data");
   }
-  if((pwr1!=NULL && !NonNegDataArray(pwr1,nrow,ncol)) 
-     || (pwr2!=NULL && !NonNegDataArray(pwr2,nrow,ncol))
-     || (pwr!=NULL && !NonNegDataArray(pwr,nrow,ncol))){
+  if((pwr1.size() && !NonNegDataArray(pwr1,nrow,ncol))
+     || (pwr2.size() && !NonNegDataArray(pwr2,nrow,ncol))
+     || (pwr.size() && !NonNegDataArray(pwr,nrow,ncol))){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "Negative value found in amplitude or power data");
@@ -2404,24 +2366,24 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
   if(params->amplitude){
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        if(pwr1!=NULL && pwr2!=NULL){
-          pwr1[row][col]*=pwr1[row][col];
-          pwr2[row][col]*=pwr2[row][col];
+        if(pwr1.size() && pwr2.size()){
+          pwr1(row,col)*=pwr1(row,col);
+          pwr2(row,col)*=pwr2(row,col);
         }else{
-          pwr[row][col]*=pwr[row][col];
+          pwr(row,col)*=pwr(row,col);
         }
       }
     }
   }
 
   /* get the average power */
-  if(pwr1!=NULL && pwr2!=NULL){
-    if(pwr==NULL){
-      pwr=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(pwr1.size() && pwr2.size()){
+    if(!pwr.size()){
+      pwr=Array2D<float>(nrow, ncol);
     }
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        pwr[row][col]=(pwr1[row][col]+pwr2[row][col])/2.0;
+        pwr(row,col)=(pwr1(row,col)+pwr2(row,col))/2.0;
       }
     }
   }
@@ -2441,17 +2403,11 @@ int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr,
  * ---------------------------
  * Reads the correlation information from specified file.
  */
-int ReadCorrelation(float ***corrptr, infileT *infiles, 
+int ReadCorrelation(Array2D<float>* corrptr, infileT *infiles,
                     long linelen, long nlines, tileparamT *tileparams){
-  
-  float **corr, **dummy;
-  long nrow;
-
 
   /* initialize */
-  nrow=tileparams->nrow;
-  dummy=NULL;
-  corr=NULL;
+  Array2D<float> corr, dummy;
 
   /* read the data */
   fprintf(sp1,"Reading correlation data from file %s\n",infiles->corrfile);
@@ -2460,7 +2416,7 @@ int ReadCorrelation(float ***corrptr, infileT *infiles,
   }else if(infiles->corrfileformat==ALT_LINE_DATA){
     ReadAltLineFilePhase(&corr,infiles->corrfile,linelen,nlines,tileparams);
   }else if(infiles->corrfileformat==FLOAT_DATA){
-    Read2DArray((void ***)&corr,infiles->corrfile,linelen,nlines,tileparams,
+    Read2DArray(&corr,infiles->corrfile,linelen,nlines,tileparams,
                 sizeof(float *),sizeof(float));
   }else{
     fflush(NULL);
@@ -2469,10 +2425,7 @@ int ReadCorrelation(float ***corrptr, infileT *infiles,
             std::string(infiles->corrfile));
   }
 
-  /* set output pointer and free memory */
-  if(dummy!=NULL){
-    Free2DArray((void **)dummy,nrow);
-  }
+  /* set output pointer */
   *corrptr=corr;
 
   /* done */
@@ -2486,10 +2439,10 @@ int ReadCorrelation(float ***corrptr, infileT *infiles,
  * Read in the data from a file containing magnitude and phase
  * data.  File should have one line of magnitude data, one line
  * of phase data, another line of magnitude data, etc.  
- * ncol refers to the number of complex elements in one line of 
- * data.  
+ * ncol refers to the number of complex elements in one line of
+ * data.
  */
-int ReadAltLineFile(float ***mag, float ***phase, char *alfile, 
+int ReadAltLineFile(Array2D<float>* mag, Array2D<float>* phase, char *alfile,
                     long linelen, long nlines, tileparamT *tileparams){
 
   FILE *fp;
@@ -2517,25 +2470,25 @@ int ReadAltLineFile(float ***mag, float ***phase, char *alfile,
   /* get memory */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
-  if(*mag==NULL){
-    (*mag)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!mag->size()){
+    *mag=Array2D<float>(nrow,ncol);
   }
-  if(*phase==NULL){
-    (*phase)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!phase->size()){
+    *phase=Array2D<float>(nrow,ncol);
   }
-  
+
   /* read the data */
   fseek(fp,(tileparams->firstrow*2*linelen+tileparams->firstcol)
         *sizeof(float),SEEK_CUR);
   padlen=(linelen-ncol)*sizeof(float);
   for(row=0; row<nrow; row++){
-    if(fread((*mag)[row],sizeof(float),ncol,fp)!=ncol){
+    if(fread(mag->row(row).data(),sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while reading from file " + std::string(alfile));
     }
     fseek(fp,padlen,SEEK_CUR);
-    if(fread((*phase)[row],sizeof(float),ncol,fp)!=ncol){
+    if(fread(phase->row(row).data(),sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while reading from file " + std::string(alfile));
@@ -2555,12 +2508,12 @@ int ReadAltLineFile(float ***mag, float ***phase, char *alfile,
  * --------------------------------
  * Read only the phase data from a file containing magnitude and phase
  * data.  File should have one line of magnitude data, one line
- * of phase data, another line of magnitude data, etc.  
- * ncol refers to the number of complex elements in one line of 
- * data. 
+ * of phase data, another line of magnitude data, etc.
+ * ncol refers to the number of complex elements in one line of
+ * data.
  */
-int ReadAltLineFilePhase(float ***phase, char *alfile, 
-                          long linelen, long nlines, tileparamT *tileparams){
+int ReadAltLineFilePhase(Array2D<float>* phase, char *alfile,
+                         long linelen, long nlines, tileparamT *tileparams){
 
   FILE *fp;
   long filesize,row,nrow,ncol,padlen;
@@ -2572,8 +2525,8 @@ int ReadAltLineFilePhase(float ***phase, char *alfile,
             "Can't open file " + std::string(alfile));
   }
 
-  /* get number of lines based on file size and line length */ 
-  fseek(fp,0,SEEK_END);            
+  /* get number of lines based on file size and line length */
+  fseek(fp,0,SEEK_END);
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
     fflush(NULL);
@@ -2582,21 +2535,21 @@ int ReadAltLineFilePhase(float ***phase, char *alfile,
             std::to_string(nlines) + "x" + std::to_string(linelen) +
             " array expected)");
   }
-  fseek(fp,0,SEEK_SET);                 
+  fseek(fp,0,SEEK_SET);
 
   /* get memory */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
-  if(*phase==NULL){
-    (*phase)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!phase->size()){
+    *phase=Array2D<float>(nrow,ncol);
   }
-  
+
   /* read the phase data */
   fseek(fp,(tileparams->firstrow*2*linelen+linelen
             +tileparams->firstcol)*sizeof(float),SEEK_CUR);
   padlen=(2*linelen-ncol)*sizeof(float);
   for(row=0; row<nrow; row++){
-    if(fread((*phase)[row],sizeof(float),ncol,fp)!=ncol){
+    if(fread(phase->row(row).data(),sizeof(float),ncol,fp)!=ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while reading from file " + std::string(alfile));
@@ -2614,15 +2567,14 @@ int ReadAltLineFilePhase(float ***phase, char *alfile,
  * ---------------------------
  * Reads file of complex floats of the form real,imag,real,imag...
  * ncol is the number of complex samples (half the number of real
- * floats per line).  Ensures that phase values are in the range 
+ * floats per line).  Ensures that phase values are in the range
  * [0,2pi).
  */
-int ReadComplexFile(float ***mag, float ***phase, char *rifile, 
+int ReadComplexFile(Array2D<float>* mag, Array2D<float>* phase, char *rifile,
                     long linelen, long nlines, tileparamT *tileparams){
-         
+
   FILE *fp;
   long filesize,ncol,nrow,row,col,padlen;
-  float *inpline;
 
   /* open the file */
   if((fp=fopen(rifile,"r"))==NULL){
@@ -2646,103 +2598,45 @@ int ReadComplexFile(float ***mag, float ***phase, char *rifile,
   /* get memory */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
-  if(*mag==NULL){
-    (*mag)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!mag->size()){
+    *mag=Array2D<float>(nrow,ncol);
   }
-  if(*phase==NULL){
-    (*phase)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!phase->size()){
+    *phase=Array2D<float>(nrow,ncol);
   }
-  inpline=(float *)MAlloc(2*ncol*sizeof(float));
+  auto inpline=Array1D<float>(2*ncol);
 
   /* read the data and convert to magnitude and phase */
   fseek(fp,(tileparams->firstrow*linelen+tileparams->firstcol)
         *2*sizeof(float),SEEK_CUR);
   padlen=(linelen-ncol)*2*sizeof(float);
   for(row=0; row<nrow; row++){
-    if(fread(inpline,sizeof(float),2*ncol,fp)!=2*ncol){
+    if(fread(inpline.data(),sizeof(float),2*ncol,fp)!=2*ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while reading from file " + std::string(rifile));
     }
     for(col=0; col<ncol; col++){
-      (*mag)[row][col]=sqrt(inpline[2*col]*inpline[2*col]
+      (*mag)(row,col)=sqrt(inpline[2*col]*inpline[2*col]
                             +inpline[2*col+1]*inpline[2*col+1]);
       if(inpline[2*col+1]==0 && inpline[2*col]==0){
-        (*phase)[row][col]=0;
-      }else if(!IsFinite((*phase)[row][col]=atan2(inpline[2*col+1],
+        (*phase)(row,col)=0;
+      }else if(!IsFinite((*phase)(row,col)=atan2(inpline[2*col+1],
                                                   inpline[2*col]))){
-        (*phase)[row][col]=0;
-      }else if((*phase)[row][col]<0){
-        (*phase)[row][col]+=TWOPI;
-      }else if((*phase)[row][col]>=TWOPI){
-        (*phase)[row][col]-=TWOPI;
+        (*phase)(row,col)=0;
+      }else if((*phase)(row,col)<0){
+        (*phase)(row,col)+=TWOPI;
+      }else if((*phase)(row,col)>=TWOPI){
+        (*phase)(row,col)-=TWOPI;
       }
     }
     fseek(fp,padlen,SEEK_CUR);
   }
-  free(inpline);
   fclose(fp);
 
   /* done */
   return(0);
   
-}
-
-
-/* function: Read2DArray()
- * -------------------------
- * Reads file of real data of size elsize.  Assumes the native byte order 
- * of the platform. 
- */
-int Read2DArray(void ***arr, char *infile, long linelen, long nlines, 
-                tileparamT *tileparams, size_t elptrsize, size_t elsize){
-         
-  FILE *fp;
-  long filesize,row,nrow,ncol,padlen;
-
-  /* open the file */
-  if((fp=fopen(infile,"r"))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Can't open file " + std::string(infile));
-  }
-
-  /* get number of lines based on file size and line length */ 
-  fseek(fp,0,SEEK_END);
-  filesize=ftell(fp);
-  if(filesize!=(nlines*linelen*elsize)){
-    fflush(NULL);
-    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "File " + std::string(infile) + " wrong size (" +
-            std::to_string(nlines) + "x" + std::to_string(linelen) +
-            " array expected)");
-  }
-  fseek(fp,0,SEEK_SET);                 
-
-  /* get memory */
-  nrow=tileparams->nrow;
-  ncol=tileparams->ncol;
-  if(*arr==NULL){
-    (*arr)=(void **)Get2DMem(nrow,ncol,elptrsize,elsize);
-  }
-
-  /* read the data */
-  fseek(fp,(linelen*tileparams->firstrow+tileparams->firstcol)
-        *elsize,SEEK_CUR);
-  padlen=(linelen-ncol)*elsize;
-  for(row=0; row<nrow; row++){
-    if(fread((*arr)[row],elsize,ncol,fp)!=ncol){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Error while reading from file " + std::string(infile));
-    }
-    fseek(fp,padlen,SEEK_CUR);
-  }
-  fclose(fp);
-
-  /* done */
-  return(0);
-
 }
 
 
@@ -2753,12 +2647,11 @@ int Read2DArray(void ***arr, char *infile, long linelen, long nlines,
  * ncol is the number of samples in each image (note the number of
  * floats per line in the specified file).
  */
-int ReadAltSampFile(float ***arr1, float ***arr2, char *infile, 
+int ReadAltSampFile(Array2D<float>* arr1, Array2D<float>* arr2, char *infile,
                     long linelen, long nlines, tileparamT *tileparams){
-         
+
   FILE *fp;
   long filesize,row,col,nrow,ncol,padlen;
-  float *inpline;
 
   /* open the file */
   if((fp=fopen(infile,"r"))==NULL){
@@ -2782,163 +2675,27 @@ int ReadAltSampFile(float ***arr1, float ***arr2, char *infile,
   /* get memory */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
-  if(*arr1==NULL){
-    (*arr1)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!arr1->size()){
+    *arr1=Array2D<float>(nrow,ncol);
   }
-  if(*arr2==NULL){
-    (*arr2)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  if(!arr2->size()){
+    *arr2=Array2D<float>(nrow,ncol);
   }
-  inpline=(float *)MAlloc(2*ncol*sizeof(float));
+  auto inpline=Array1D<float>(2*ncol);
 
   /* read the data */
   fseek(fp,(tileparams->firstrow*linelen+tileparams->firstcol)
         *2*sizeof(float),SEEK_CUR);
   padlen=(linelen-ncol)*2*sizeof(float);
   for(row=0; row<nrow; row++){
-    if(fread(inpline,sizeof(float),2*ncol,fp)!=2*ncol){
+    if(fread(inpline.data(),sizeof(float),2*ncol,fp)!=2*ncol){
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Error while reading from file " + std::string(infile));
     }
     for(col=0; col<ncol; col++){
-      (*arr1)[row][col]=inpline[2*col];
-      (*arr2)[row][col]=inpline[2*col+1];
-    }
-    fseek(fp,padlen,SEEK_CUR);
-  }
-  free(inpline);
-  fclose(fp);
-
-  /* done */
-  return(0);
-
-}
-
-
-/* function: Read2DRowColFile()
- * ----------------------------
- * Gets memory and reads single array from a file.  Array should be in the 
- * file line by line starting with the row array (size nrow-1 x ncol) and
- * followed by the column array (size nrow x ncol-1).  Both arrays 
- * are placed into the passed array as they were in the file.
- */
-int Read2DRowColFile(void ***arr, char *filename, long linelen, long nlines, 
-                     tileparamT *tileparams, size_t size){
-
-  FILE *fp;
-  long row, nel, nrow, ncol, padlen, filelen;
- 
-  /* open the file */
-  if((fp=fopen(filename,"r"))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Can't open file " + std::string(filename));
-  }
-
-  /* get number of data elements in file */ 
-  fseek(fp,0,SEEK_END);
-  filelen=ftell(fp);
-  fseek(fp,0,SEEK_SET);
-  nel=(long )(filelen/size);
-
-  /* check file size */
-  if(2*linelen*nlines-nlines-linelen != nel || (filelen % size)){
-    fflush(NULL);
-    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "File " + std::string(filename) + " wrong size (" +
-            std::to_string(2*linelen*nlines-nlines-linelen) +
-            " elements expected)");
-  }
-
-  /* get memory if passed pointer is NULL */
-  nrow=tileparams->nrow;
-  ncol=tileparams->ncol;
-  if(*arr==NULL){
-    (*arr)=Get2DRowColMem(nrow,ncol,sizeof(void *),size);
-  }
-
-  /* read arrays */
-  fseek(fp,(linelen*tileparams->firstrow+tileparams->firstcol)
-        *size,SEEK_SET);
-  padlen=(linelen-ncol)*size;
-  for(row=0; row<nrow-1; row++){
-    if(fread((*arr)[row],size,ncol,fp)!=ncol){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Error while reading from file " + std::string(filename));
-    }
-    fseek(fp,padlen,SEEK_CUR);
-  }
-  fseek(fp,(linelen*(nlines-1)+(linelen-1)*tileparams->firstrow
-            +tileparams->firstcol)*size,SEEK_SET);
-  for(row=nrow-1; row<2*nrow-1; row++){
-    if(fread((*arr)[row],size,ncol-1,fp)!=ncol-1){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Error while reading from file " + std::string(filename));
-    }
-    fseek(fp,padlen,SEEK_CUR);
-  }
-  fclose(fp);
-
-  /* done */
-  return(0);
-
-}
-
-
-/* function: Read2DRowColFileRows()
- * --------------------------------
- * Similar to Read2DRowColFile(), except reads only row (horizontal) data
- * at specified locations.  tileparams->nrow is treated as the number of
- * rows of data to be read from the RowCol file, not the number of 
- * equivalent rows in the orginal pixel file (whose arcs are represented
- * in the RowCol file).
- */
-int Read2DRowColFileRows(void ***arr, char *filename, long linelen, 
-                         long nlines, tileparamT *tileparams, size_t size){
-
-  FILE *fp;
-  long row, nel, nrow, ncol, padlen, filelen;
- 
-  /* open the file */
-  if((fp=fopen(filename,"r"))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Can't open file " + std::string(filename));
-  }
-
-  /* get number of data elements in file */ 
-  fseek(fp,0,SEEK_END);
-  filelen=ftell(fp);
-  fseek(fp,0,SEEK_SET);
-  nel=(long )(filelen/size);
-
-  /* check file size */
-  if(2*linelen*nlines-nlines-linelen != nel || (filelen % size)){
-    fflush(NULL);
-    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "File " + std::string(filename) + " wrong size (" +
-            std::to_string(2*linelen*nlines-nlines-linelen) +
-            " elements expected)");
-  }
-
-  /* get memory if passed pointer is NULL */
-  nrow=tileparams->nrow;
-  ncol=tileparams->ncol;
-  if(*arr==NULL){
-    (*arr)=Get2DMem(nrow,ncol,sizeof(void *),size);
-  }
-
-  /* read arrays */
-  fseek(fp,(linelen*tileparams->firstrow+tileparams->firstcol)
-        *size,SEEK_SET);
-  padlen=(linelen-ncol)*size;
-  for(row=0; row<nrow; row++){
-    if(fread((*arr)[row],size,ncol,fp)!=ncol){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Error while reading from file " + std::string(filename));
+      (*arr1)(row,col)=inpline[2*col];
+      (*arr2)(row,col)=inpline[2*col+1];
     }
     fseek(fp,padlen,SEEK_CUR);
   }
@@ -3063,14 +2820,15 @@ int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol,
                              paramT *params){
 
   FILE *logfp;
-  char logfile[MAXSTRLEN], cwd[MAXSTRLEN];
+  char cwd[MAXSTRLEN]={};
 
   fflush(NULL);
-  sprintf(logfile,"%s/%s%ld_%ld",params->tiledir,LOGFILEROOT,tilerow,tilecol);
-  if((logfp=fopen(logfile,"w"))==NULL){
+  const auto logfile=std::string(params->tiledir)+"/"+LOGFILEROOT
+    +std::to_string(tilerow)+"_"+std::to_string(tilecol);
+  if((logfp=fopen(logfile.c_str(),"w"))==NULL){
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Unable to open log file " + std::string(logfile));
+            "Unable to open log file " + logfile);
   }
   fprintf(logfp,"%s (pid %ld): unwrapping tile at row %ld, column %ld\n\n",
           PROGRAMNAME,(long )pid,tilerow,tilecol);
@@ -3102,16 +2860,15 @@ int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol,
  * -----------------------------
  * Dumps incremental cost arrays, creating file names for them.
  */
-int DumpIncrCostFiles(incrcostT **incrcosts, long iincrcostfile, 
+int DumpIncrCostFiles(Array2D<incrcostT>& incrcosts, long iincrcostfile,
                       long nflow, long nrow, long ncol){
 
   long row, col, maxcol;
-  char incrcostfile[MAXSTRLEN];
-  char tempstr[MAXSTRLEN];
-  short **tempcosts;
+  char incrcostfile[MAXSTRLEN]={};
+  char tempstr[MAXSTRLEN]={};
 
   /* get memory for tempcosts */
-  tempcosts=(short **)Get2DRowColMem(nrow,ncol,sizeof(short *),sizeof(short));
+  auto tempcosts=MakeRowColArray2D<short>(nrow, ncol);
 
   /* create the file names and dump the files */
   /* snprintf() is more elegant, but its unavailable on some machines */
@@ -3122,13 +2879,13 @@ int DumpIncrCostFiles(incrcostT **incrcosts, long iincrcostfile,
       maxcol=ncol-1;
     }
     for(col=0;col<maxcol;col++){
-      tempcosts[row][col]=incrcosts[row][col].poscost;
+      tempcosts(row,col)=incrcosts(row,col).poscost;
     }
   }
   strncpy(incrcostfile,INCRCOSTFILEPOS,MAXSTRLEN-1);
   sprintf(tempstr,".%ld_%ld",iincrcostfile,nflow);
   strncat(incrcostfile,tempstr,MAXSTRLEN-strlen(incrcostfile)-1);
-  Write2DRowColArray((void **)tempcosts,incrcostfile,
+  Write2DRowColArray(tempcosts,incrcostfile,
                      nrow,ncol,sizeof(short));
   for(row=0;row<2*nrow-1;row++){
     if(row<nrow-1){
@@ -3137,17 +2894,14 @@ int DumpIncrCostFiles(incrcostT **incrcosts, long iincrcostfile,
       maxcol=ncol-1;
     }
     for(col=0;col<maxcol;col++){
-      tempcosts[row][col]=incrcosts[row][col].negcost;
+      tempcosts(row,col)=incrcosts(row,col).negcost;
     }
   }
   strncpy(incrcostfile,INCRCOSTFILENEG,MAXSTRLEN-1);
   sprintf(tempstr,".%ld_%ld",iincrcostfile,nflow);
   strncat(incrcostfile,tempstr,MAXSTRLEN-strlen(incrcostfile)-1);
-  Write2DRowColArray((void **)tempcosts,incrcostfile,
+  Write2DRowColArray(tempcosts,incrcostfile,
                      nrow,ncol,sizeof(short));
-
-  /* free memory */
-  Free2DArray((void **)tempcosts,2*nrow-1);
 
   /* done */
   return(0);
@@ -3162,19 +2916,15 @@ int DumpIncrCostFiles(incrcostT **incrcosts, long iincrcostfile,
  */
 int MakeTileDir(paramT *params, outfileT *outfiles){
 
-  char path[MAXSTRLEN], basename[MAXSTRLEN];
-  struct stat statbuf[1];
-
-
-  /* initialize, including statubf for good measure even though not used */
-  memset(path,0,MAXSTRLEN);
-  memset(basename,0,MAXSTRLEN);
-  memset(statbuf,0,sizeof(struct stat));
+  char path[MAXSTRLEN]={}, basename[MAXSTRLEN]={};
+  struct stat statbuf[1]={};
   
   /* create name for tile directory if necessary (use pid to make unique) */
   if(!strlen(params->tiledir)){
     ParseFilename(outfiles->outfile,path,basename);
-    sprintf(params->tiledir,"%s%s%ld",path,TMPTILEDIRROOT,params->parentpid);
+    const auto tiledir=
+      std::string(path)+TMPTILEDIRROOT+std::to_string(params->parentpid);
+    std::strcpy(params->tiledir,tiledir.c_str());
   }
 
   /* return if directory exists */
@@ -3206,14 +2956,8 @@ int MakeTileDir(paramT *params, outfileT *outfiles){
  */
 int SetTileInitOutfile(char *outfile, long pid){
 
-  char path[MAXSTRLEN], basename[MAXSTRLEN];
-  struct stat statbuf[1];
-
-
-  /* initialize, including statubf for good measure even though not used */
-  memset(path,0,MAXSTRLEN);
-  memset(basename,0,MAXSTRLEN);
-  memset(statbuf,0,sizeof(struct stat));
+  char path[MAXSTRLEN]={}, basename[MAXSTRLEN]={};
+  struct stat statbuf[1]={};
   
   /* create name for output file (use pid to make unique) */
   ParseFilename(outfile,path,basename);
@@ -3239,9 +2983,9 @@ int SetTileInitOutfile(char *outfile, long pid){
  * should be no more than MAXSTRLEN characters.  The output path 
  * has a trailing "/" character.
  */
-int ParseFilename(char *filename, char *path, char *basename){
+int ParseFilename(const char *filename, char *path, char *basename){
 
-  char tempstring[MAXSTRLEN];
+  char tempstring[MAXSTRLEN]={};
   char *tempouttok;
 
   /* make sure we have a nonzero filename */

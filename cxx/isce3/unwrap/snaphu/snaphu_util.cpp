@@ -8,21 +8,10 @@
 
 *************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
-#include <signal.h>
-#include <limits.h>
-#include <float.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <sys/time.h>
+#include <csignal>
+#include <cstring>
 #include <sys/resource.h>
 
 #include "snaphu.h"
@@ -38,7 +27,6 @@ static
 int IsFalse(char *str);
 static
 double ModDiff(double f1, double f2);
-
 
 
 /* function: IsTrue()
@@ -122,13 +110,13 @@ double ModDiff(double f1, double f2){
  * Makes sure the passed float array is properly wrapped into the [0,2pi)
  * interval.
  */
-int WrapPhase(float **wrappedphase, long nrow, long ncol){
+int WrapPhase(Array2D<float>& wrappedphase, long nrow, long ncol){
 
   long row, col;
 
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      wrappedphase[row][col]-=TWOPI*floor(wrappedphase[row][col]/TWOPI);
+      wrappedphase(row,col)-=TWOPI*floor(wrappedphase(row,col)/TWOPI);
     }
   }
   return(0);
@@ -140,30 +128,32 @@ int WrapPhase(float **wrappedphase, long nrow, long ncol){
  * Computes an array of wrapped phase differences in range (across rows).
  * Input wrapped phase array should be in radians.  Output is in cycles.
  */
-int CalcWrappedRangeDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
+int CalcWrappedRangeDiffs(Array2D<float>& dpsi,
+                          Array2D<float>& avgdpsi,
+                          Array2D<float>& wrappedphase,
                           long kperpdpsi, long kpardpsi,
                           long nrow, long ncol){
   long row, col;
-  float **paddpsi;
 
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol-1;col++){
-      dpsi[row][col]=(wrappedphase[row][col+1]-wrappedphase[row][col])/TWOPI;
-      if(dpsi[row][col]>=0.5){
-        dpsi[row][col]-=1.0;
-      }else if(dpsi[row][col]<-0.5){
-        dpsi[row][col]+=1.0;
+      dpsi(row,col)=(wrappedphase(row,col+1)-wrappedphase(row,col))/TWOPI;
+      if(dpsi(row,col)>=0.5){
+        dpsi(row,col)-=1.0;
+      }else if(dpsi(row,col)<-0.5){
+        dpsi(row,col)+=1.0;
       }
     }
   }
-  paddpsi=MirrorPad(dpsi,nrow,ncol-1,(kperpdpsi-1)/2,(kpardpsi-1)/2);
-  if(paddpsi==dpsi){
+  Array2D<float> paddpsi;
+  try {
+    paddpsi=MirrorPad(dpsi,nrow,ncol-1,(kperpdpsi-1)/2,(kpardpsi-1)/2);
+  } catch (const isce3::except::RuntimeError&) {
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
             "Wrapped-gradient averaging box too large for input array size");
   }
   BoxCarAvg(avgdpsi,paddpsi,nrow,ncol-1,kperpdpsi,kpardpsi);
-  Free2DArray((void **)paddpsi,nrow+kperpdpsi-1);
   return(0);
 
 }
@@ -174,29 +164,32 @@ int CalcWrappedRangeDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
  * Computes an array of wrapped phase differences in range (across rows).
  * Input wrapped phase array should be in radians.  Output is in cycles.
  */
-int CalcWrappedAzDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
+int CalcWrappedAzDiffs(Array2D<float>& dpsi,
+                       Array2D<float>& avgdpsi,
+                       Array2D<float>& wrappedphase,
                        long kperpdpsi, long kpardpsi, long nrow, long ncol){
   long row, col;
-  float **paddpsi;
 
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol;col++){
-      dpsi[row][col]=(wrappedphase[row][col]-wrappedphase[row+1][col])/TWOPI;
-      if(dpsi[row][col]>=0.5){
-        dpsi[row][col]-=1.0;
-      }else if(dpsi[row][col]<-0.5){
-        dpsi[row][col]+=1.0;
+      dpsi(row,col)=(wrappedphase(row,col)-wrappedphase(row+1,col))/TWOPI;
+      if(dpsi(row,col)>=0.5){
+        dpsi(row,col)-=1.0;
+      }else if(dpsi(row,col)<-0.5){
+        dpsi(row,col)+=1.0;
       }
     }
   }
-  paddpsi=MirrorPad(dpsi,nrow-1,ncol,(kpardpsi-1)/2,(kperpdpsi-1)/2);
-  if(paddpsi==dpsi){
+  Array2D<float> paddpsi;
+  try {
+    paddpsi=MirrorPad(dpsi,nrow-1,ncol,(kpardpsi-1)/2,(kperpdpsi-1)/2);
+  } catch (const isce3::except::RuntimeError&) {
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
             "Wrapped-gradient averaging box too large for input array size");
   }
+  auto avgdpsi_ = Array2D<float>(nrow, ncol);
   BoxCarAvg(avgdpsi,paddpsi,nrow-1,ncol,kpardpsi,kperpdpsi);
-  Free2DArray((void **)paddpsi,nrow-1+kpardpsi-1);
   return(0);
 
 }
@@ -210,39 +203,36 @@ int CalcWrappedAzDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
  * Residue array will then have size nrow-1 x ncol-1.  Residues will
  * always be -1, 0, or 1 if wrapped phase is passed in.
  */
-int CycleResidue(float **phase, signed char **residue, 
+int CycleResidue(Array2D<float>& phase, Array2D<signed char>& residue,
                  int nrow, int ncol){
 
   int row, col;
-  float **rowdiff, **coldiff;
 
-  rowdiff=(float **)Get2DMem(nrow-1,ncol,sizeof(float *),sizeof(float));
-  coldiff=(float **)Get2DMem(nrow,ncol-1,sizeof(float *),sizeof(float));
+  auto rowdiff = Array2D<float>(nrow-1, ncol);
+  auto coldiff = Array2D<float>(nrow, ncol-1);
 
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol;col++){
-      rowdiff[row][col]=ModDiff(phase[row+1][col],phase[row][col]);
+      rowdiff(row,col)=ModDiff(phase(row+1,col),phase(row,col));
     }
   }
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol-1;col++){
-      coldiff[row][col]=ModDiff(phase[row][col+1],phase[row][col]);
+      coldiff(row,col)=ModDiff(phase(row,col+1),phase(row,col));
     }
   }
 
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      residue[row][col]=(signed char)LRound((coldiff[row][col]
-                                             +rowdiff[row][col+1]
-                                             -coldiff[row+1][col]
-                                             -rowdiff[row][col])/TWOPI);
+      residue(row,col)=(signed char)LRound((coldiff(row,col)
+                                            +rowdiff(row,col+1)
+                                            -coldiff(row+1,col)
+                                            -rowdiff(row,col))/TWOPI);
     }
   }
 
-  Free2DArray((void **)rowdiff,nrow-1);
-  Free2DArray((void **)coldiff,nrow);
   return(0);
-  
+
 }
 
 
@@ -252,16 +242,16 @@ int CycleResidue(float **phase, signed char **residue,
  * exists and that row and col are in bounds of the 2-D array of
  * wrapped phase values passed.
  */
-int NodeResidue(float **wphase, long row, long col){
+int NodeResidue(Array2D<float>& wphase, long row, long col){
 
   int residue;
 
 
   /* compute residue */
-  residue=(int )LRound((ModDiff(wphase[row][col+1],wphase[row][col])
-                        +ModDiff(wphase[row+1][col+1],wphase[row][col+1])
-                        +ModDiff(wphase[row+1][col],wphase[row+1][col+1])
-                        +ModDiff(wphase[row][col],wphase[row+1][col]))/TWOPI);
+  residue=(int )LRound((ModDiff(wphase(row,col+1),wphase(row,col))
+                        +ModDiff(wphase(row+1,col+1),wphase(row,col+1))
+                        +ModDiff(wphase(row+1,col),wphase(row+1,col+1))
+                        +ModDiff(wphase(row,col),wphase(row+1,col)))/TWOPI);
 
   /* return */
   return(residue);
@@ -271,23 +261,22 @@ int NodeResidue(float **wphase, long row, long col){
 
 /* function: CalcFlow()
  * --------------------
- * Calculates flow based on unwrapped phase data in a 2D array.  
+ * Calculates flow based on unwrapped phase data in a 2D array.
  * Allocates memory for row and column flow arrays.
  */
-int CalcFlow(float **phase, short ***flowsptr, long nrow, long ncol){
+int CalcFlow(Array2D<float>& phase, Array2D<short>* flowsptr, long nrow, long ncol){
 
   long row, col;
 
   /* get memory for flow arrays */
-  if((*flowsptr)==NULL){
-    (*flowsptr)=(short **)Get2DRowColMem(nrow,ncol,
-                                         sizeof(short *),sizeof(short));
+  if(!flowsptr->size()){
+    *flowsptr = MakeRowColArray2D<short>(nrow, ncol);
   }
 
   /* get row flows (vertical phase differences) */
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol;col++){
-      (*flowsptr)[row][col]=(short)LRound((phase[row][col]-phase[row+1][col])
+      (*flowsptr)(row,col)=(short)LRound((phase(row,col)-phase(row+1,col))
                                          /TWOPI);
     }
   }
@@ -295,9 +284,9 @@ int CalcFlow(float **phase, short ***flowsptr, long nrow, long ncol){
   /* get col flows (horizontal phase differences) */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol-1;col++){
-      (*flowsptr)[nrow-1+row][col]=(short)LRound((phase[row][col+1]
-                                                  -phase[row][col])
-                                                 /TWOPI);
+      (*flowsptr)(nrow-1+row,col)=(short)LRound((phase(row,col+1)
+                                                 -phase(row,col))
+                                                /TWOPI);
     }
   }
 
@@ -312,31 +301,31 @@ int CalcFlow(float **phase, short ***flowsptr, long nrow, long ncol){
  * This function takes row and column flow information and integrates
  * wrapped phase to create an unwrapped phase field.  The unwrapped
  * phase field will be the same size as the wrapped field.  The array
- * rowflow should have size N-1xM and colflow size NxM-1 where the 
+ * rowflow should have size N-1xM and colflow size NxM-1 where the
  * phase fields are NxM.  Output is saved to a file.
  */
-int IntegratePhase(float **psi, float **phi, short **flows,
+int IntegratePhase(Array2D<float>& psi, Array2D<float>& phi, Array2D<short>& flows,
                    long nrow, long ncol){
 
   long row, col;
-  short **rowflow, **colflow;
-  rowflow=flows;
-  colflow=&(flows[nrow-1]);
- 
+
+  auto rowflow = flows.block(0,0,nrow-1,ncol);
+  auto colflow = flows.block(nrow-1,0,nrow,ncol-1);
+
   /* set first element as seed */
-  phi[0][0]=psi[0][0];
+  phi(0,0)=psi(0,0);
 
   /* integrate over first row */
   for(col=1;col<ncol;col++){
-    phi[0][col]=phi[0][col-1]+(ModDiff(psi[0][col],psi[0][col-1])
-      +colflow[0][col-1]*TWOPI);
+    phi(0,col)=phi(0,col-1)+(ModDiff(psi(0,col),psi(0,col-1))
+      +colflow(0,col-1)*TWOPI);
   }
 
   /* integrate over columns */
   for(row=1;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      phi[row][col]=phi[row-1][col]+(ModDiff(psi[row][col],psi[row-1][col])
-        -rowflow[row-1][col]*TWOPI);
+      phi(row,col)=phi(row-1,col)+(ModDiff(psi(row,col),psi(row-1,col))
+        -rowflow(row-1,col)*TWOPI);
     }
   }
 
@@ -350,25 +339,24 @@ int IntegratePhase(float **psi, float **phi, short **flows,
  * -----------------------
  * Given an unwrapped phase array, parse the data and find the flows.
  * Assumes only integer numbers of cycles have been added to get the 
- * unwrapped phase from the wrapped pase.  Gets memory and writes 
+ * unwrapped phase from the wrapped pase.  Gets memory and writes
  * wrapped phase to passed pointer.  Assumes flows fit into short ints.
  */
-float **ExtractFlow(float **unwrappedphase, short ***flowsptr, 
-                    long nrow, long ncol){    
+Array2D<float>
+ExtractFlow(Array2D<float>& unwrappedphase, Array2D<short>* flowsptr, long nrow, long ncol){
 
   long row, col;
-  float **wrappedphase;
-  
+
   /* get memory for wrapped phase array */
-  wrappedphase=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  auto wrappedphase = Array2D<float>(nrow, ncol);
 
   /* calculate wrapped phase */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
       /* fmod() gives wrong results here (maybe because of float argument?) */
-      /* wrappedphase[row][col]=fmod(unwrappedphase[row][col],TWOPI); */
-      wrappedphase[row][col]=unwrappedphase[row][col]
-        -TWOPI*floor(unwrappedphase[row][col]/TWOPI);
+      /* wrappedphase(row,col)=fmod(unwrappedphase(row,col),TWOPI); */
+      wrappedphase(row,col)=unwrappedphase(row,col)
+        -TWOPI*floor(unwrappedphase(row,col)/TWOPI);
     }
   }
 
@@ -386,14 +374,14 @@ float **ExtractFlow(float **unwrappedphase, short ***flowsptr,
  * Flips the sign of all values in a passed array if the flip flag is set.
  * Otherwise, does nothing.
  */
-int FlipPhaseArraySign(float **arr, paramT *params, long nrow, long ncol){
+int FlipPhaseArraySign(Array2D<float>& arr, paramT *params, long nrow, long ncol){
 
   long row, col;
 
   if(params->flipphasesign){
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        arr[row][col]*=-1;
+        arr(row,col)*=-1;
       }
     }
   }
@@ -406,7 +394,7 @@ int FlipPhaseArraySign(float **arr, paramT *params, long nrow, long ncol){
  * Flips the sign of all values in a row-by-column array if the flip
  * flip flag is set.  Otherwise, does nothing.
  */
-int FlipFlowArraySign(short **arr, paramT *params, long nrow, long ncol){
+int FlipFlowArraySign(Array2D<short>& arr, paramT *params, long nrow, long ncol){
 
   long row, col, maxcol;
 
@@ -418,168 +406,11 @@ int FlipFlowArraySign(short **arr, paramT *params, long nrow, long ncol){
         maxcol=ncol-1;
       }
       for(col=0;col<maxcol;col++){
-        arr[row][col]=-arr[row][col];
+        arr(row,col)=-arr(row,col);
       }
     }
   }
   return(0);
-}
-
-
-/* function: Get2DMem()
- * --------------------
- * Allocates memory for 2D array.
- * Dynamically allocates memory and returns pointer of
- * type void ** for an array of size nrow x ncol.  
- * First index is row number: array[row][col]
- * size is size of array element, psize is size of pointer
- * to array element (eg sizeof(float *)).
- */
-void **Get2DMem(int nrow, int ncol, int psize, size_t size){
-
-  long row;
-  void *baseptr;
-  void **arr;
-
-  /* return NULL if sizes are 0 */
-  if(nrow < 1 || ncol < 1){
-    return(NULL);
-  }
-
-  /* allocate memory */
-  baseptr=CAlloc(nrow*ncol,size);
-
-  /* set array of pointers to rows */
-  arr=(void **)MAlloc(nrow*sizeof(void *));
-  for(row=0;row<nrow;row++){
-    arr[row]=&(((char *)baseptr)[row*ncol*size]);
-  }
-
-  /* return base pointer */
-  return(arr);
-
-}
-
-
-/* function: Get2DRowColMem()
- * --------------------------
- * Allocates memory for 2D array.  The array will have 2*nrow-1 rows.
- * The first nrow-1 rows will have ncol columns, and the rest will
- * have ncol-1 columns.
- */
-void **Get2DRowColMem(long nrow, long ncol, int psize, size_t size){
-
-  void **array;
-
-  /* always just function that initializes to zero */
-  /* this function exists only for historical interface reasons */
-  array = Get2DRowColZeroMem(nrow,ncol,psize,size);
-  return(array);
-
-}
-
-
-/* function: Get2DRowColZeroMem()
- * ------------------------------
- * Allocates memory for 2D array.  The array will have 2*nrow-1 rows.
- * The first nrow-1 rows will have ncol columns, and the rest will
- * have ncol-1 columns.  Memory is initialized to zero.
- */
-void **Get2DRowColZeroMem(long nrow, long ncol, int psize, size_t size){
-
-  long row;
-  void *baseptr;
-  void **arr;
-
-  /* return NULL if sizes are 0 */
-  if(nrow < 1 || ncol < 1){
-    return(NULL);
-  }
-
-  /* allocate memory */
-  baseptr=CAlloc((nrow-1)*ncol+nrow*(ncol-1),size);
-
-  /* set array of pointers to rows */
-  arr=(void **)MAlloc((2*nrow-1)*sizeof(void *));
-  for(row=0;row<nrow-1;row++){
-    arr[row]=&(((char *)baseptr)[row*ncol*size]);
-  }
-  for(row=nrow-1;row<2*nrow-1;row++){
-    arr[row]=&(((char *)baseptr)[((nrow-1)*ncol+(row-(nrow-1))*(ncol-1))*size]);
-  }
-
-  /* return base pointer */
-  return(arr);
-
-}
-
-
-/* function: MAlloc()
- * --------------------
- * Has same functionality as malloc(), but exits if out of memory.
- */
-void *MAlloc(size_t size){
-
-  void *ptr;
-
-  if((ptr=malloc(size))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Out of memory");
-  }
-  return(ptr);
-}
-
-
-/* function: CAlloc()
- * ------------------
- * Has same functionality as calloc(), but exits if out of memory.
- */
-void *CAlloc(size_t nitems, size_t size){
-  
-  void *ptr;
-  
-  if((ptr=calloc(nitems,size))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Out of memory");
-  }
-  return(ptr);
-}
-
-
-/* function: ReAlloc()
- * -------------------
- * Has same functionality as realloc(), but exits if out of memory.
- */
-void *ReAlloc(void *ptr, size_t size){
-  
-  void *ptr2;
-  
-  if((ptr2=realloc(ptr,size))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "Out of memory");
-  }
-  return(ptr2);
-}
-
-
-/* function: Free2DArray()
- * -----------------------
- * This function frees the dynamically allocated memory for a 2D
- * array.  Pass in a pointer to a pointer cast to a void **.
- * The function assumes the array is of the form arr[rows][cols]
- * so that nrow is the number of elements in the pointer array.
- */
-int Free2DArray(void **array, unsigned int nrow){
-
-  if(array != NULL){
-    if(array[0] != NULL){
-      free(array[0]);
-      array[0] = NULL;
-    }
-    free(array);
-  }
-  return(0);
-  
 }
 
 
@@ -588,13 +419,13 @@ int Free2DArray(void **array, unsigned int nrow){
  * Sets all entries of a 2D array of shorts to the given value.  Assumes
  * that memory is already allocated.
  */
-int Set2DShortArray(short **arr, long nrow, long ncol, long value){
+int Set2DShortArray(Eigen::Ref<Array2D<short>> arr, long nrow, long ncol, long value){
 
   long row, col;
 
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      arr[row][col]=value;
+      arr(row,col)=value;
     }
   }
   return(0);
@@ -606,13 +437,13 @@ int Set2DShortArray(short **arr, long nrow, long ncol, long value){
  * Given a 2D floating point array, returns FALSE if any elements are NaN
  * or infinite, and TRUE otherwise.
  */
-signed char ValidDataArray(float **arr, long nrow, long ncol){
+signed char ValidDataArray(Array2D<float>& arr, long nrow, long ncol){
 
   long row, col;
 
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      if(!IsFinite(arr[row][col])){
+      if(!IsFinite(arr(row,col))){
         return(FALSE);
       }
     }
@@ -626,13 +457,13 @@ signed char ValidDataArray(float **arr, long nrow, long ncol){
  * Given a 2D floating point array, returns FALSE if any elements are
  * NaN or infinite or negative, and TRUE otherwise.
  */
-signed char NonNegDataArray(float **arr, long nrow, long ncol){
+signed char NonNegDataArray(Array2D<float>& arr, long nrow, long ncol){
 
   long row, col;
 
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      if(arr[row][col] < 0){
+      if(arr(row,col) < 0){
         return(FALSE);
       }
     }
@@ -701,25 +532,25 @@ long LClip(long a, long minval, long maxval){
 /* function: Short2DRowColAbsMax()
  * -------------------------------
  * Returns the maximum of the absolute values of element in a 
- * two-dimensional short array.  The number of rows and columns 
- * should be passed in. 
+ * two-dimensional short array.  The number of rows and columns
+ * should be passed in.
  */
-long Short2DRowColAbsMax(short **arr, long nrow, long ncol){
+long Short2DRowColAbsMax(Array2D<short>& arr, long nrow, long ncol){
 
   long row, col, maxval;
 
   maxval=0;
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol;col++){
-      if(labs(arr[row][col])>maxval){
-        maxval=labs(arr[row][col]);
+      if(labs(arr(row,col))>maxval){
+        maxval=labs(arr(row,col));
       }
     }
   }
   for(row=nrow-1;row<2*nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      if(labs(arr[row][col])>maxval){
-        maxval=labs(arr[row][col]);
+      if(labs(arr(row,col))>maxval){
+        maxval=labs(arr(row,col));
       }
     }
   }
@@ -732,7 +563,7 @@ long Short2DRowColAbsMax(short **arr, long nrow, long ncol){
  * Given an array of floats, interpolates at the specified noninteger
  * index.  Returns first or last array value if index is out of bounds.
  */
-float LinInterp1D(float *arr, double index, long nelem){
+float LinInterp1D(Array1D<float>& arr, double index, long nelem){
 
   long intpart;
   double fracpart;
@@ -754,7 +585,7 @@ float LinInterp1D(float *arr, double index, long nelem){
  * Given a 2-D array of floats, interpolates at the specified noninteger
  * indices.  Returns first or last array values if index is out of bounds.
  */
-float LinInterp2D(float **arr, double rowind, double colind , 
+float LinInterp2D(Array2D<float>& arr, double rowind, double colind,
                   long nrow, long ncol){
 
   long rowintpart;
@@ -763,24 +594,27 @@ float LinInterp2D(float **arr, double rowind, double colind ,
   rowintpart=(long )floor(rowind);
   rowfracpart=rowind-rowintpart;
   if(rowintpart<0){
-    return(LinInterp1D(arr[0],colind,ncol));
+    auto row = Array1D<float>(arr.row(0));
+    return(LinInterp1D(row,colind,ncol));
   }else if(rowintpart>=nrow-1){
-    return(LinInterp1D(arr[nrow-1],colind,ncol));
+    auto row = Array1D<float>(arr.row(nrow-1));
+    return(LinInterp1D(row,colind,ncol));
   }else{
-    return(((1-rowfracpart)*LinInterp1D(arr[rowintpart],colind,ncol)
-            +rowfracpart*LinInterp1D(arr[rowintpart+1],colind,ncol))/2.0);
+    auto row1 = Array1D<float>(arr.row(rowintpart));
+    auto row2 = Array1D<float>(arr.row(rowintpart+1));
+    return(((1-rowfracpart)*LinInterp1D(row1,colind,ncol)
+            +rowfracpart*LinInterp1D(row2,colind,ncol))/2.0);
   }
 }
 
 
 /* function: Despeckle()
  * ---------------------
- * Filters magnitude/power data with adaptive geometric filter to get rid of 
+ * Filters magnitude/power data with adaptive geometric filter to get rid of
  * speckle.  Allocates 2D memory for ei.  Does not square before averaging.
  */
-int Despeckle(float **mag, float ***ei, long nrow, long ncol){
+int Despeckle(Array2D<float>& mag, Array2D<float>* ei, long nrow, long ncol){
 
-  float **intensity;
   double ratio, ratiomax, wfull, wstick, w[NARMS+1];
   long row, col, i, j, k, Irow, Icol;
   short jmin[5]={2,2,0,1,2};
@@ -788,13 +622,13 @@ int Despeckle(float **mag, float ***ei, long nrow, long ncol){
   enum{ C=0, T, B, R, L, TR, BL, TL, BR};
 
   /* get memory for output array */
-  if(*ei==NULL){
-    (*ei)=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
-  }
+  *ei = Array2D<float>(nrow, ncol);
 
   /* pad magnitude and place into new array (don't touch original data) */
-  intensity=MirrorPad(mag,nrow,ncol,ARMLEN,ARMLEN);
-  if(intensity==mag){
+  Array2D<float> intensity;
+  try {
+    intensity=MirrorPad(mag,nrow,ncol,ARMLEN,ARMLEN);
+  } catch (const isce3::except::RuntimeError&) {
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
             "Despeckling box size too large for input array size");
@@ -806,11 +640,11 @@ int Despeckle(float **mag, float ***ei, long nrow, long ncol){
     Irow=row+ARMLEN;
     for(col=0;col<ncol;col++){
       Icol=col+ARMLEN;
-      
-      /* filter only if input is nonzero so we preserve mask info in input */
-      if(intensity[Irow][Icol]==0){
 
-        (*ei)[row][col]=0;
+      /* filter only if input is nonzero so we preserve mask info in input */
+      if(intensity(Irow,Icol)==0){
+
+        (*ei)(row,col)=0;
 
       }else{
 
@@ -819,34 +653,34 @@ int Despeckle(float **mag, float ***ei, long nrow, long ncol){
         }
         for(i=-1;i<=1;i++){
           for(j=-1;j<=1;j++){
-            w[C]+=intensity[Irow+i][Icol+j];
+            w[C]+=intensity(Irow+i,Icol+j);
           }
         }
         for(i=-1;i<=1;i++){
           for(j=2;j<ARMLEN+1;j++){
-            w[T]+=intensity[Irow-j][Icol+i];
-            w[B]+=intensity[Irow+j][Icol+i];
-            w[L]+=intensity[Irow+i][Icol-j];
-            w[R]+=intensity[Irow+i][Icol+j];
+            w[T]+=intensity(Irow-j,Icol+i);
+            w[B]+=intensity(Irow+j,Icol+i);
+            w[L]+=intensity(Irow+i,Icol-j);
+            w[R]+=intensity(Irow+i,Icol+j);
           }
         }
         for(i=0;i<=4;i++){
           for(j=jmin[i];j<=jmax[i];j++){
-            w[TR]+=intensity[Irow-i][Icol+j];
-            w[BR]+=intensity[Irow+i][Icol+j];
-            w[BL]+=intensity[Irow+i][Icol-j];
-            w[TL]+=intensity[Irow-i][Icol-j];
+            w[TR]+=intensity(Irow-i,Icol+j);
+            w[BR]+=intensity(Irow+i,Icol+j);
+            w[BL]+=intensity(Irow+i,Icol-j);
+            w[TL]+=intensity(Irow-i,Icol-j);
           }
         }
         wfull=w[C]+w[T]+w[R]+w[B]+w[L];
         for(i=2;i<5;i++){
           for(j=2;j<7-i;j++){
-            wfull+=intensity[Irow+i][Icol+j];
-            wfull+=intensity[Irow-i][Icol+j];
-            wfull+=intensity[Irow+i][Icol-j];
-            wfull+=intensity[Irow-i][Icol-j];
+            wfull+=intensity(Irow+i,Icol+j);
+            wfull+=intensity(Irow-i,Icol+j);
+            wfull+=intensity(Irow+i,Icol-j);
+            wfull+=intensity(Irow-i,Icol-j);
           }
-        } 
+        }
         ratiomax=1;
         for(k=1;k<=NARMS;k+=2){
           wstick=w[0]+w[k]+w[k+1];
@@ -855,17 +689,15 @@ int Despeckle(float **mag, float ***ei, long nrow, long ncol){
           }
           if(ratio>ratiomax){
             ratiomax=ratio;
-            (*ei)[row][col]=wstick;
+            (*ei)(row,col)=wstick;
           }
         }
       }
     }
-  }   
+  }
 
-  /* free memory */
-  Free2DArray((void **)intensity,nrow+2*ARMLEN);
   return(0);
-  
+
 }
 
 
@@ -877,19 +709,18 @@ int Despeckle(float **mag, float ***ei, long nrow, long ncol){
  * too large for the array size, a pointer to the original array is
  * returned.
  */
-float **MirrorPad(float **array1, long nrow, long ncol, long krow, long kcol){
+Array2D<float>
+MirrorPad(Array2D<float>& array1, long nrow, long ncol, long krow, long kcol){
 
   long row, col;
-  float **array2;
 
   /* get memory */
-  array2=(float **)Get2DMem(nrow+2*krow,ncol+2*kcol,
-                            sizeof(float *),sizeof(float));
-  
+  auto array2 = Array2D<float>(nrow+2*krow,ncol+2*kcol);
+
   /* center array1 in new array */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      array2[row+krow][col+kcol]=array1[row][col];
+      array2(row+krow,col+kcol)=array1(row,col);
     }
   }
 
@@ -897,36 +728,37 @@ float **MirrorPad(float **array1, long nrow, long ncol, long krow, long kcol){
   /* if array is too small for pad dimensions, return original array */
   /* requires checking by calling function */
   if(krow>nrow || kcol>ncol){
-    return(array1);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Array too small for pad dimensions");
   }
 
   /* mirror reflect edges */
   for(row=0;row<krow;row++){
     for(col=0;col<kcol;col++){
-      array2[row][col]=array2[2*krow-row][2*kcol-col];
-      array2[row][ncol+kcol+col]
-        =array2[2*krow-row][ncol+kcol-2-col];
-      array2[nrow+krow+row][col]
-        =array2[nrow+krow-2-row][2*kcol-col];
-      array2[nrow+krow+row][ncol+kcol+col]
-        =array2[nrow+krow-2-row][ncol+kcol-2-col];
+      array2(row,col)=array2(2*krow-row,2*kcol-col);
+      array2(row,ncol+kcol+col)
+        =array2(2*krow-row,ncol+kcol-2-col);
+      array2(nrow+krow+row,col)
+        =array2(nrow+krow-2-row,2*kcol-col);
+      array2(nrow+krow+row,ncol+kcol+col)
+        =array2(nrow+krow-2-row,ncol+kcol-2-col);
     }
   }
   for(row=krow;row<nrow+krow;row++){
     for(col=0;col<kcol;col++){
-      array2[row][col]=array2[row][2*kcol-col];
-      array2[row][ncol+kcol+col]
-        =array2[row][ncol+kcol-2-col];
+      array2(row,col)=array2(row,2*kcol-col);
+      array2(row,ncol+kcol+col)
+        =array2(row,ncol+kcol-2-col);
     }
   }
   for(col=kcol;col<ncol+kcol;col++){
     for(row=0;row<krow;row++){
-      array2[row][col]=array2[2*krow-row][col];
-      array2[nrow+krow+row][col]
-        =array2[nrow+krow-2-row][col];
+      array2(row,col)=array2(2*krow-row,col);
+      array2(nrow+krow+row,col)
+        =array2(nrow+krow-2-row,col);
     }
   }
-  
+
   /* return a pointer to the padded array */
   return(array2);
 
@@ -937,11 +769,11 @@ float **MirrorPad(float **array1, long nrow, long ncol, long krow, long kcol){
  * ---------------------
  * Takes in 2-D array, convolves with boxcar filter of size specified.  
  * Uses a recursion technique (but the function does not actually call
- * itself recursively) to compute the result, so there may be roundoff 
+ * itself recursively) to compute the result, so there may be roundoff
  * errors.
  */
-int BoxCarAvg(float **avgarr, float **padarr, long nrow, long ncol, 
-              long krow, long kcol){
+int BoxCarAvg(Array2D<float>& avgarr, Array2D<float>& padarr,
+              long nrow, long ncol, long krow, long kcol){
 
   long i, row, col, n;
   double window;
@@ -953,18 +785,18 @@ int BoxCarAvg(float **avgarr, float **padarr, long nrow, long ncol,
     window=0;
     for(i=row;i<row+krow;i++){
       for(col=0;col<kcol;col++){
-        window+=padarr[i][col];
+        window+=padarr(i,col);
       }
     }
-    avgarr[row][0]=(float )window;
+    avgarr(row,0)=(float )window;
 
     /* convolve window with row, using result of last cell */
     for(col=1;col<ncol;col++){
       for(i=row;i<row+krow;i++){
-        window-=padarr[i][col-1];
-        window+=padarr[i][col+kcol-1];
+        window-=padarr(i,col-1);
+        window+=padarr(i,col+kcol-1);
       }
-      avgarr[row][col]=(float )window;
+      avgarr(row,col)=(float )window;
     }
   }
 
@@ -972,10 +804,10 @@ int BoxCarAvg(float **avgarr, float **padarr, long nrow, long ncol,
   n=krow*kcol;
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      avgarr[row][col]/=n;
+      avgarr(row,col)/=n;
     }
   }
-  
+
   /* done */
   return(0);
   
@@ -1003,18 +835,18 @@ char *StrNCopy(char *dest, const char *src, size_t n){
  * the unwrapped data elementwise from the wrapped data and stores
  * the result, rewrapped to [0,2pi), in the wrapped array.
  */
-int FlattenWrappedPhase(float **wrappedphase, float **unwrappedest, 
+int FlattenWrappedPhase(Array2D<float>& wrappedphase, Array2D<float>& unwrappedest,
                         long nrow, long ncol){
- 
+
   long row, col;
 
   /* loop to subtract, rewrap, store in wrapped array. */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      wrappedphase[row][col]-=unwrappedest[row][col];
-      wrappedphase[row][col]=fmod(wrappedphase[row][col],TWOPI);
-      if(wrappedphase[row][col]<0){
-        wrappedphase[row][col]+=TWOPI;
+      wrappedphase(row,col)-=unwrappedest(row,col);
+      wrappedphase(row,col)=fmod(wrappedphase(row,col),TWOPI);
+      if(wrappedphase(row,col)<0){
+        wrappedphase(row,col)+=TWOPI;
       }
     }
   }
@@ -1029,17 +861,19 @@ int FlattenWrappedPhase(float **wrappedphase, float **unwrappedest,
  * ----------------------------
  * Addes the values of two 2-D arrays elementwise.
  */
-int Add2DFloatArrays(float **arr1, float **arr2, long nrow, long ncol){
+int Add2DFloatArrays(Array2D<float>& arr1,
+                     Array2D<float>& arr2,
+                     long nrow, long ncol){
 
   long row, col;
- 
+
   /* loop over all rows and columns, add and store result in first array */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      arr1[row][col]+=arr2[row][col];
+      arr1(row,col)+=arr2(row,col);
     }
   }
-  
+
   /* done */
   return(0);
 

@@ -8,22 +8,8 @@
 
 *************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <signal.h>
-#include <limits.h>
-#include <float.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <isce3/except/Error.h>
 
@@ -34,119 +20,119 @@ namespace isce3::unwrap {
 /* static variables local this file */
 
 /* pointers to functions for tailoring network solver to specific topologies */
-static nodeT *(*NeighborNode)(nodeT *, long, long *, nodeT **, nodeT *, long *,
+static nodeT *(*NeighborNode)(nodeT *, long, long *, Array2D<nodeT>&, nodeT *, long *,
                               long *, long *, long, long, boundaryT *,
-                              nodesuppT **);
+                              Array2D<nodesuppT>&);
 static void (*GetArc)(nodeT *, nodeT *, long *, long *, long *, long, long,
-                      nodeT **, nodesuppT **);
+                      Array2D<nodeT>&, Array2D<nodesuppT>&);
 
 /* static (local) function prototypes */
 static
-void AddNewNode(nodeT *from, nodeT *to, long arcdir, bucketT *bkts, 
-                long nflow, incrcostT **incrcosts, long arcrow, long arccol, 
+void AddNewNode(nodeT *from, nodeT *to, long arcdir, bucketT *bkts,
+                long nflow, Array2D<incrcostT>& incrcosts, long arcrow, long arccol,
                 paramT *params);
 static
-void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex, 
-                         long arcrow, long arccol, long arcdir, 
-                         candidateT **candidatebagptr, 
-                         long *candidatebagnextptr, 
-                         long *candidatebagsizeptr, incrcostT **incrcosts, 
-                         signed char **iscandidate, paramT *params);
+void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
+                         long arcrow, long arccol, long arcdir,
+                         Array1D<candidateT>* candidatebagptr,
+                         long *candidatebagnextptr,
+                         long *candidatebagsizeptr, Array2D<incrcostT>& incrcosts,
+                         Array2D<signed char>& iscandidate, paramT *params);
 static
-nodeT *InitBoundary(nodeT *source, nodeT **nodes, 
-                    boundaryT *boundary, nodesuppT **nodesupp, float **mag,
+nodeT *InitBoundary(nodeT *source, Array2D<nodeT>& nodes,
+                    boundaryT *boundary, Array2D<nodesuppT>& nodesupp, Array2D<float>& mag,
                     nodeT *ground, long ngroundarcs, long nrow, long ncol,
                     paramT *params, long *nconnectedptr);
 static
-long CheckBoundary(nodeT **nodes, nodeT *ground, long ngroundarcs, 
+long CheckBoundary(Array2D<nodeT>& nodes, nodeT *ground, long ngroundarcs,
                    boundaryT *boundary, long nrow, long ncol,
                    paramT *params, nodeT *start);
 static
-int IsRegionEdgeArc(float **mag, long arcrow, long arccol,
+int IsRegionEdgeArc(Array2D<float>& mag, long arcrow, long arccol,
                     long nrow, long ncol);
 static
-int IsInteriorNode(float **mag, long row, long col, long nrow, long ncol);
+int IsInteriorNode(Array2D<float>& mag, long row, long col, long nrow, long ncol);
 static
-int IsRegionEdgeNode(float **mag, long row, long col, long nrow, long ncol);
+int IsRegionEdgeNode(Array2D<float>& mag, long row, long col, long nrow, long ncol);
 static
 int CleanUpBoundaryNodes(boundaryT *boundary);
 static
-int DischargeBoundary(nodeT **nodes, nodeT *ground,
-                      boundaryT *boundary, nodesuppT **nodesupp, short **flows,
-                      signed char **iscandidate, float **mag,
-                      float **wrappedphase, long ngroundarcs,
+int DischargeBoundary(Array2D<nodeT>& nodes, nodeT *ground,
+                      boundaryT *boundary, Array2D<nodesuppT>& nodesupp, Array2D<short>& flows,
+                      Array2D<signed char>& iscandidate, Array2D<float>& mag,
+                      Array2D<float>& wrappedphase, long ngroundarcs,
                       long nrow, long ncol);
 static
-int InitTree(nodeT *source, nodeT **nodes, 
-             boundaryT *boundary, nodesuppT **nodesupp, 
-             nodeT *ground, long ngroundarcs, bucketT *bkts, long nflow, 
-             incrcostT **incrcosts, long nrow, long ncol, paramT *params);
+int InitTree(nodeT *source, Array2D<nodeT>& nodes,
+             boundaryT *boundary, Array2D<nodesuppT>& nodesupp,
+             nodeT *ground, long ngroundarcs, bucketT *bkts, long nflow,
+             Array2D<incrcostT>& incrcosts, long nrow, long ncol, paramT *params);
 static
 nodeT *FindApex(nodeT *from, nodeT *to);
 static
 int CandidateCompare(const void *c1, const void *c2);
 static
 nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
-                        nodeT **nodes, nodeT *ground, long *arcrowptr, 
-                        long *arccolptr, long *arcdirptr, long nrow, 
-                        long ncol, boundaryT *boundary, nodesuppT **nodesupp);
+                        Array2D<nodeT>& nodes, nodeT *ground, long *arcrowptr,
+                        long *arccolptr, long *arcdirptr, long nrow,
+                        long ncol, boundaryT *boundary, Array2D<nodesuppT>& nodesupp);
 static inline
 long GetArcNumLims(long fromrow, long *upperarcnumptr,
                    long ngroundarcs, boundaryT *boundary);
 static
 nodeT *NeighborNodeNonGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
-                           nodeT **nodes, nodeT *ground, long *arcrowptr, 
-                           long *arccolptr, long *arcdirptr, long nrow, 
+                           Array2D<nodeT>& nodes, nodeT *ground, long *arcrowptr,
+                           long *arccolptr, long *arcdirptr, long nrow,
                            long ncol, boundaryT *boundary,
-                           nodesuppT **nodesupp);
+                           Array2D<nodesuppT>& nodesupp);
 static
-void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol, 
+void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
                 long *arcdir, long nrow, long ncol,
-                nodeT **nodes, nodesuppT **nodesupp);
+                Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp);
 static
-void GetArcNonGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol, 
+void GetArcNonGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
                    long *arcdir, long nrow, long ncol,
-                   nodeT **nodes, nodesuppT **nodesupp);
+                   Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp);
 static
-void NonDegenUpdateChildren(nodeT *startnode, nodeT *lastnode, 
-                            nodeT *nextonpath, long dgroup, 
-                            long ngroundarcs, long nflow, nodeT **nodes,
-                            nodesuppT **nodesupp, nodeT *ground, 
+void NonDegenUpdateChildren(nodeT *startnode, nodeT *lastnode,
+                            nodeT *nextonpath, long dgroup,
+                            long ngroundarcs, long nflow, Array2D<nodeT>& nodes,
+                            Array2D<nodesuppT>& nodesupp, nodeT *ground,
                             boundaryT *boundary,
-                            nodeT ***apexes, incrcostT **incrcosts, 
+                            Array2D<nodeT*>& apexes, Array2D<incrcostT>& incrcosts,
                             long nrow, long ncol, paramT *params);
 static
-long PruneTree(nodeT *source, nodeT **nodes, nodeT *ground, boundaryT *boundary,
-               nodesuppT **nodesupp, incrcostT **incrcosts, 
-               short **flows, long ngroundarcs, long prunecostthresh,
+long PruneTree(nodeT *source, Array2D<nodeT>& nodes, nodeT *ground, boundaryT *boundary,
+               Array2D<nodesuppT>& nodesupp, Array2D<incrcostT>& incrcosts,
+               Array2D<short>& flows, long ngroundarcs, long prunecostthresh,
                long nrow, long ncol);
 static
-int CheckLeaf(nodeT *node1, nodeT **nodes, nodeT *ground, boundaryT *boundary,
-              nodesuppT **nodesupp, incrcostT **incrcosts, 
-              short **flows, long ngroundarcs, long nrow, long ncol, 
+int CheckLeaf(nodeT *node1, Array2D<nodeT>& nodes, nodeT *ground, boundaryT *boundary,
+              Array2D<nodesuppT>& nodesupp, Array2D<incrcostT>& incrcosts,
+              Array2D<short>& flows, long ngroundarcs, long nrow, long ncol,
               long prunecostthresh);
 static
 int InitBuckets(bucketT *bkts, nodeT *source, long nbuckets);
 static
 nodeT *MinOutCostNode(bucketT *bkts);
 static
-nodeT *SelectConnNodeSource(nodeT **nodes, nodeT *ground, long ngroundarcs, 
+nodeT *SelectConnNodeSource(Array2D<nodeT>& nodes, nodeT *ground, long ngroundarcs,
                             boundaryT *boundary, long nrow, long ncol,
                             paramT *params, nodeT *start, long *nconnectedptr);
 static
-short GetCost(incrcostT **incrcosts, long arcrow, long arccol, 
+short GetCost(Array2D<incrcostT>& incrcosts, long arcrow, long arccol,
               long arcdir);
 static
-void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground, 
-              bucketT *bkts, short **mstcosts, signed char **residue, 
-              signed char **arcstatus, long nrow, long ncol);
+void SolveMST(Array2D<nodeT>& nodes, nodeT *source, nodeT *ground,
+              bucketT *bkts, Array2D<short>& mstcosts, Array2D<signed char>& residue,
+              Array2D<signed char>& arcstatus, long nrow, long ncol);
 static
-long DischargeTree(nodeT *source, short **mstcosts, short **flows,
-                   signed char **residue, signed char **arcstatus, 
-                   nodeT **nodes, nodeT *ground, long nrow, long ncol);
+long DischargeTree(nodeT *source, Array2D<short>& mstcosts, Array2D<short>& flows,
+                   Array2D<signed char>& residue, Array2D<signed char>& arcstatus,
+                   Array2D<nodeT>& nodes, nodeT *ground, long nrow, long ncol);
 static
-signed char ClipFlow(signed char **residue, short **flows, 
-                     short **mstcosts, long nrow, long ncol, 
+signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
+                     Array2D<short>& mstcosts, long nrow, long ncol,
                      long maxflow);
 
 
@@ -181,16 +167,18 @@ int SetNonGridNetworkFunctionPointers(void){
  * ---------------------
  * Solves the nonlinear network optimization problem.
  */
-long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
-               nodeT *source, candidateT **candidatelistptr, 
-               candidateT **candidatebagptr, long *candidatelistsizeptr,
-               long *candidatebagsizeptr, bucketT *bkts, short **flows, 
-               void **costs, incrcostT **incrcosts, nodeT ***apexes, 
-               signed char **iscandidate, long ngroundarcs, long nflow, 
-               float **mag, float **wrappedphase, char *outfile, 
-               long nnoderow, int *nnodesperrow, long narcrow, 
-               int *narcsperrow, long nrow, long ncol,
-               outfileT *outfiles, long nconnected, paramT *params){
+template<class CostTag>
+long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *ground,
+               nodeT *source, Array1D<candidateT>* candidatelistptr,
+               Array1D<candidateT>* candidatebagptr, long *candidatelistsizeptr,
+               long *candidatebagsizeptr, bucketT *bkts, Array2D<short>& flows,
+               Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT>& incrcosts, 
+               Array2D<nodeT*>& apexes, Array2D<signed char>& iscandidate, 
+               long ngroundarcs, long nflow, Array2D<float>& mag, 
+               Array2D<float>& wrappedphase, char *outfile, long nnoderow, 
+               Array1D<int>& nnodesperrow, long /*narcrow*/,
+               Array1D<int>& /*narcsperrow*/, long nrow, long ncol,
+               outfileT *outfiles, long nconnected, paramT *params, CostTag tag){
 
   long i, row, col, arcrow, arccol, arcdir, arcnum, upperarcnum;
   long arcrow1, arccol1, arcdir1, arcrow2, arccol2, arcdir2;
@@ -201,17 +189,10 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
   long inondegen, ipivots, nnewnodes, maxnewnodes, templong;
   long nmajor, nmajorprune, npruned, prunecostthresh;
   signed char fromside;
-  candidateT *candidatelist, *candidatebag, *tempcandidateptr;
   nodeT *from, *to, *cycleapex, *node1, *node2, *leavingparent, *leavingchild;
   nodeT *root, *mntpt, *oldmntpt, *skipthread, *tempnode1, *tempnode2;
   nodeT *firstfromnode, *firsttonode;
-  nodeT **apexlist;
-  boundaryT boundary[1];
-  float **unwrappedphase;
-  
-
-  /* initilize structures on stack to zero for good measure */
-  memset(boundary,0,sizeof(boundaryT));
+  boundaryT boundary[1]={};
 
   /* initialize some variables to zero to stop compiler warnings */
   from=NULL;
@@ -229,14 +210,18 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
   tempnode2=NULL;
   firstfromnode=NULL;
   firsttonode=NULL;
-  
+
   /* dereference some pointers and store as local variables */
-  candidatelist=(*candidatelistptr);
-  candidatebag=(*candidatebagptr);
-  candidatelistsize=(*candidatelistsizeptr);
-  candidatebagsize=(*candidatebagsizeptr);
+  auto candidatelist=*candidatelistptr;
+  auto candidatebag=*candidatebagptr;
+  candidatelistsize=*candidatelistsizeptr;
+  candidatebagsize=*candidatebagsizeptr;
   candidatelistlen=0;
   candidatebagnext=0;
+
+  Array1D<candidateT>* localcandidatelistptr=&candidatelist;
+  Array1D<candidateT>* localcandidatebagptr=&candidatebag;
+  Array1D<candidateT>* tempcandidateptr=nullptr;
 
   /* initialize boundary, which affects network structure */
   /* recompute number of connected nodes since setting boundary may make */
@@ -249,7 +234,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
   InitTree(source,nodes,boundary,nodesupp,ground,ngroundarcs,bkts,nflow,
            incrcosts,nrow,ncol,params);
   apexlistlen=INITARRSIZE;
-  apexlist=(nodeT **)MAlloc(apexlistlen*sizeof(nodeT *));
+  auto apexlist = Array1D<nodeT*>(apexlistlen);
   groupcounter=2;
   ipivots=0;
   inondegen=0;
@@ -282,34 +267,34 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
       to->prev=from;
       to->next->prev=to;
       from->next=to;
-    
+
       /* scan new node's neighbors */
       from=to;
       arcnum=GetArcNumLims(from->row,&upperarcnum,ngroundarcs,boundary);
       while(arcnum<upperarcnum){
-        
+
         /* get row, col indices and distance of next node */
         to=NeighborNode(from,++arcnum,&upperarcnum,nodes,ground,
                         &arcrow,&arccol,&arcdir,nrow,ncol,boundary,nodesupp);
-        
+
         /* if to node is on tree */
         if(to->group>0){
           if(to!=from->pred){
             cycleapex=FindApex(from,to);
-            apexes[arcrow][arccol]=cycleapex;
+            apexes(arcrow,arccol)=cycleapex;
             CheckArcReducedCost(from,to,cycleapex,arcrow,arccol,arcdir,
-                                &candidatebag,&candidatebagnext,
+                                localcandidatebagptr,&candidatebagnext,
                                 &candidatebagsize,incrcosts,iscandidate,
                                 params);
           }else{
-            apexes[arcrow][arccol]=NULL;
+            apexes(arcrow,arccol)=NULL;
           }
 
         }else if(to->group!=PRUNED && to->group!=MASKED){
 
           /* if to is not on tree, update outcost and add to bucket */
           AddNewNode(from,to,arcdir,bkts,nflow,incrcosts,arcrow,arccol,params);
-          
+
         }
       }
       nnewnodes++;
@@ -327,13 +312,9 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
         fflush(NULL);
         fprintf(sp0,"\n\nDumping current solution to file %s\n",
                 outfile);
-        if(requestedstop_global){
-          Free2DArray((void **)costs,2*nrow-1);
-        }
-        unwrappedphase=(float **)Get2DMem(nrow,ncol,sizeof(float *),
-                                          sizeof(float));
+        auto unwrappedphase = Array2D<float>(nrow,ncol);
         IntegratePhase(wrappedphase,unwrappedphase,flows,nrow,ncol);
-        FlipPhaseArraySign(unwrappedphase,params,nrow,ncol);    
+        FlipPhaseArraySign(unwrappedphase,params,nrow,ncol);
         WriteOutputFile(mag,unwrappedphase,outfiles->outfile,outfiles,
                         nrow,ncol);  
         if(requestedstop_global){
@@ -341,16 +322,15 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
           throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                   "Received interrupt or hangup signal");
         }
-        Free2DArray((void **)unwrappedphase,nrow);
         dumpresults_global=FALSE;
         fflush(NULL);
         fprintf(sp0,"\n\nProgram continuing\n");
       }
 
       /* swap candidate bag and candidate list pointers and sizes */
-      tempcandidateptr=candidatebag;
-      candidatebag=candidatelist;
-      candidatelist=tempcandidateptr;
+      tempcandidateptr=localcandidatebagptr;
+      localcandidatebagptr=localcandidatelistptr;
+      localcandidatelistptr=tempcandidateptr;
       templong=candidatebagsize;
       candidatebagsize=candidatelistsize;
       candidatelistsize=templong;
@@ -358,17 +338,17 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
       candidatebagnext=0;
 
       /* sort candidate list by violation, with augmenting arcs always first */
-      qsort((void *)candidatelist,candidatelistlen,sizeof(candidateT),
+      qsort((void *)localcandidatelistptr->data(),candidatelistlen,sizeof(candidateT),
             CandidateCompare);
 
       /* set all arc directions to be plus/minus 1 */
       for(i=0;i<candidatelistlen;i++){
-        if(candidatelist[i].arcdir>1){
-          candidatelist[i].arcdir=1;
-        }else if(candidatelist[i].arcdir<-1){
-          candidatelist[i].arcdir=-1;
+        if((*localcandidatelistptr)[i].arcdir>1){
+          (*localcandidatelistptr)[i].arcdir=1;
+        }else if((*localcandidatelistptr)[i].arcdir<-1){
+          (*localcandidatelistptr)[i].arcdir=-1;
         }
-      }      
+      }
 
       /* this doesn't seem to make it any faster, so just do all of them */
       /* set the number of candidates to process */
@@ -386,32 +366,32 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
       for(i=0;i<candidatelistlen;i++){
 
         /* get arc info */
-        from=candidatelist[i].from;
-        to=candidatelist[i].to;
-        arcdir=candidatelist[i].arcdir;
-        arcrow=candidatelist[i].arcrow;
-        arccol=candidatelist[i].arccol;
+        from=(*localcandidatelistptr)[i].from;
+        to=(*localcandidatelistptr)[i].to;
+        arcdir=(*localcandidatelistptr)[i].arcdir;
+        arcrow=(*localcandidatelistptr)[i].arcrow;
+        arccol=(*localcandidatelistptr)[i].arccol;
 
         /* unset iscandidate */
-        iscandidate[arcrow][arccol]=FALSE;
+        iscandidate(arcrow,arccol)=FALSE;
 
         /* make sure the next arc still has a negative violation */
         outcostto=from->outcost+
           GetCost(incrcosts,arcrow,arccol,arcdir);
-        cyclecost=outcostto + to->incost 
-          -apexes[arcrow][arccol]->outcost
-          -apexes[arcrow][arccol]->incost;
+        cyclecost=outcostto + to->incost
+          -apexes(arcrow,arccol)->outcost
+          -apexes(arcrow,arccol)->incost;
 
         /* if violation no longer negative, check reverse arc */
         if(!((outcostto < to->outcost) || (cyclecost < 0))){
           from=to;
-          to=candidatelist[i].from;
+          to=(*localcandidatelistptr)[i].from;
           arcdir=-arcdir;
           outcostto=from->outcost+
             GetCost(incrcosts,arcrow,arccol,arcdir);
-          cyclecost=outcostto + to->incost 
-            -apexes[arcrow][arccol]->outcost
-            -apexes[arcrow][arccol]->incost;
+          cyclecost=outcostto + to->incost
+            -apexes(arcrow,arccol)->outcost
+            -apexes(arcrow,arccol)->incost;
         }
 
         /* see if the cycle is negative (see if there is a violation) */
@@ -421,8 +401,8 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
           if(++groupcounter>MAXGROUPBASE){
             for(row=0;row<nnoderow;row++){
               for(col=0;col<nnodesperrow[row];col++){
-                if(nodes[row][col].group>0){
-                  nodes[row][col].group=1;
+                if(nodes(row,col).group>0){
+                  nodes(row,col).group=1;
                 }
               }
             }
@@ -446,19 +426,19 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
               node1=from;
               node2=to;
               leavingchild=NULL;
-              flows[arcrow][arccol]+=arcdir*nflow;
-              ReCalcCost(costs,incrcosts,flows[arcrow][arccol],arcrow,arccol,
-                         nflow,nrow,params);
+              flows(arcrow,arccol)+=arcdir*nflow;
+              ReCalcCost(costs,incrcosts,flows(arcrow,arccol),arcrow,arccol,
+                         nflow,nrow,params,tag);
               violation=GetCost(incrcosts,arcrow,arccol,arcdir);
               if(node1->level > node2->level){
                 while(node1->level != node2->level){
                   GetArc(node1->pred,node1,&arcrow1,&arccol1,&arcdir1,
                          nrow,ncol,nodes,nodesupp);
-                  flows[arcrow1][arccol1]+=(arcdir1*nflow);
-                  ReCalcCost(costs,incrcosts,flows[arcrow1][arccol1],
-                             arcrow1,arccol1,nflow,nrow,params);
-                  if(leavingchild==NULL 
-                     && !flows[arcrow1][arccol1]){
+                  flows(arcrow1,arccol1)+=(arcdir1*nflow);
+                  ReCalcCost(costs,incrcosts,flows(arcrow1,arccol1),
+                             arcrow1,arccol1,nflow,nrow,params,tag);
+                  if(leavingchild==NULL
+                     && !flows(arcrow1,arccol1)){
                     leavingchild=node1;
                   }
                   violation+=GetCost(incrcosts,arcrow1,arccol1,arcdir1);
@@ -469,10 +449,10 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                 while(node1->level != node2->level){
                   GetArc(node2->pred,node2,&arcrow2,&arccol2,&arcdir2,
                          nrow,ncol,nodes,nodesupp);
-                  flows[arcrow2][arccol2]-=(arcdir2*nflow);
-                  ReCalcCost(costs,incrcosts,flows[arcrow2][arccol2],
-                             arcrow2,arccol2,nflow,nrow,params);
-                  if(!flows[arcrow2][arccol2]){
+                  flows(arcrow2,arccol2)-=(arcdir2*nflow);
+                  ReCalcCost(costs,incrcosts,flows(arcrow2,arccol2),
+                             arcrow2,arccol2,nflow,nrow,params,tag);
+                  if(!flows(arcrow2,arccol2)){
                     leavingchild=node2;
                     fromside=FALSE;
                   }
@@ -486,19 +466,19 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                        nodes,nodesupp);
                 GetArc(node2->pred,node2,&arcrow2,&arccol2,&arcdir2,nrow,ncol,
                        nodes,nodesupp);
-                flows[arcrow1][arccol1]+=(arcdir1*nflow);
-                flows[arcrow2][arccol2]-=(arcdir2*nflow);
-                ReCalcCost(costs,incrcosts,flows[arcrow1][arccol1],
-                           arcrow1,arccol1,nflow,nrow,params);
-                ReCalcCost(costs,incrcosts,flows[arcrow2][arccol2],
-                           arcrow2,arccol2,nflow,nrow,params);
+                flows(arcrow1,arccol1)+=(arcdir1*nflow);
+                flows(arcrow2,arccol2)-=(arcdir2*nflow);
+                ReCalcCost(costs,incrcosts,flows(arcrow1,arccol1),
+                           arcrow1,arccol1,nflow,nrow,params,tag);
+                ReCalcCost(costs,incrcosts,flows(arcrow2,arccol2),
+                           arcrow2,arccol2,nflow,nrow,params,tag);
                 violation+=(GetCost(incrcosts,arcrow1,arccol1,arcdir1)
                             +GetCost(incrcosts,arcrow2,arccol2,-arcdir2));
-                if(!flows[arcrow2][arccol2]){
+                if(!flows(arcrow2,arccol2)){
                   leavingchild=node2;
                   fromside=FALSE;
-                }else if(leavingchild==NULL 
-                         && !flows[arcrow1][arccol1]){
+                }else if(leavingchild==NULL
+                         && !flows(arcrow1,arccol1)){
                   leavingchild=node1;
                 }
                 node1->group=groupcounter+1;
@@ -595,13 +575,13 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                                      ground,&arcrow,&arccol,&arcdir,nrow,ncol,
                                      boundary,nodesupp);
               if(tempnode1->group==groupcounter
-                 && apexes[arcrow][arccol]==NULL){
+                 && apexes(arcrow,arccol)==NULL){
                 firsttonode=tempnode1;
                 if(firstfromnode!=NULL){
                   break;
                 }
-              }else if(tempnode1->group==fromgroup 
-                       && apexes[arcrow][arccol]==NULL){
+              }else if(tempnode1->group==fromgroup
+                       && apexes(arcrow,arccol)==NULL){
                 firstfromnode=tempnode1;
                 if(firsttonode!=NULL){
                   break;
@@ -642,7 +622,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
 
           /* remount subtree at new mount point */
           if(leavingchild==NULL){
-            
+
             skipthread=to;
 
           }else{
@@ -660,7 +640,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
               root->pred=mntpt;
               GetArc(mntpt,root,&arcrow,&arccol,&arcdir,nrow,ncol,
                      nodes,nodesupp);
-              
+
               /* calculate differences for updating potentials and levels */
               dlevel=mntpt->level-root->level+1;
               doutcost=mntpt->outcost - root->outcost 
@@ -674,13 +654,13 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
               startlevel=root->level;
               groupcounter++;
               while(TRUE){
-                
+
                 /* update the level, potentials, and group of the node */
                 node1->level+=dlevel;
                 node1->outcost+=doutcost;
                 node1->incost+=dincost;
                 node1->group=groupcounter;
-                
+
                 /* break when node1 is no longer descendent of the root */
                 if(node1->next->level <= startlevel){
                   break;
@@ -701,17 +681,17 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
 
             /* reset apex pointers for entering and leaving arcs */
             GetArc(from,to,&arcrow,&arccol,&arcdir,nrow,ncol,nodes,nodesupp);
-            apexes[arcrow][arccol]=NULL;
+            apexes(arcrow,arccol)=NULL;
             GetArc(leavingparent,leavingchild,&arcrow,&arccol,
                    &arcdir,nrow,ncol,nodes,nodesupp);
-            apexes[arcrow][arccol]=cycleapex;
+            apexes(arcrow,arccol)=cycleapex;
 
             /* make sure we have enough memory for the apex list */
             if(groupcounter-apexlistbase+1>apexlistlen){
-              apexlistlen=1.5*(groupcounter-apexlistbase+1); 
-              apexlist=(nodeT **)ReAlloc(apexlist,apexlistlen*sizeof(nodeT *));
+              apexlistlen=1.5*(groupcounter-apexlistbase+1);
+              apexlist.conservativeResize(apexlistlen);
             }
-        
+
             /* set the apex list */
             /* the apex list is a look up table of apex node pointers indexed */
             /*   by the group number relative to a base group value */
@@ -720,13 +700,13 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
               apexlist[group1-apexlistbase]=node2;
               node2=node2->pred;
             }
-        
+
             /* reset apex pointers on remounted tree */
             /* only nodes which are in different groups need new apexes */
             node1=to;
             startlevel=to->level;
             while(TRUE){
-              
+
               /* loop over outgoing arcs */
               arcnum=GetArcNumLims(node1->row,&upperarcnum,
                                    ngroundarcs,boundary);
@@ -734,41 +714,40 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                 node2=NeighborNode(node1,++arcnum,&upperarcnum,nodes,ground,
                                    &arcrow,&arccol,&arcdir,nrow,ncol,
                                    boundary,nodesupp);
-                
+
                 /* if node2 on tree */
                 if(node2->group>0){
 
-                
                   /* if node2 is either not part of remounted tree or */
                   /*   it is higher on remounted tree than node1, */
                   /*   and arc isn't already on tree */
-                  if(node2->group < node1->group 
-                     && apexes[arcrow][arccol]!=NULL){
+                  if(node2->group < node1->group
+                     && apexes(arcrow,arccol)!=NULL){
 
                     /* if new apex in apexlist */
                     /* node2 on remounted tree, if nonaugmenting pivot */
                     if(node2->group >= apexlistbase){
-                      
-                      apexes[arcrow][arccol]=apexlist[node2->group
+
+                      apexes(arcrow,arccol)=apexlist[node2->group
                                                      -apexlistbase];
-                      
+
                     }else{
-                        
+
                       /* if old apex below level of cycleapex, */
                       /*   node2 is on "to" node's side of tree */
                       /* implicitly, if old apex above cycleapex, */
                       /*   we do nothing since apex won't change */
-                      if(apexes[arcrow][arccol]->level > cycleapex->level){
-                      
+                      if(apexes(arcrow,arccol)->level > cycleapex->level){
+
                         /* since new apex not in apexlist (tested above), */
                         /* node2 above leaving arc so new apex is cycleapex */
-                        apexes[arcrow][arccol]=cycleapex;
-                        
+                        apexes(arcrow,arccol)=cycleapex;
+
                       }else{
 
                         /* node2 not on "to" side of tree */
                         /* if old apex is cycleapex, node2 is on "from" side */
-                        if(apexes[arcrow][arccol]==cycleapex){
+                        if(apexes(arcrow,arccol)==cycleapex){
 
                           /* new apex will be on cycle, so trace node2->pred */
                           /*   until we hit a node with group==fromgroup */
@@ -776,15 +755,15 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                           while(tempnode2->group != fromgroup){
                             tempnode2=tempnode2->pred;
                           }
-                          apexes[arcrow][arccol]=tempnode2;
+                          apexes(arcrow,arccol)=tempnode2;
 
                         }
                       }
                     }
 
                     /* check outgoing arcs for negative reduced costs */
-                    CheckArcReducedCost(node1,node2,apexes[arcrow][arccol],
-                                        arcrow,arccol,arcdir,&candidatebag,
+                    CheckArcReducedCost(node1,node2,apexes(arcrow,arccol),
+                                        arcrow,arccol,arcdir,localcandidatebagptr,
                                         &candidatebagnext,&candidatebagsize,
                                         incrcosts,iscandidate,params);
 
@@ -799,7 +778,6 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                 } /* end if node2 on tree */
               } /* end loop over node1 outgoing arcs */
 
-
               /* move to next node in thread, break if we left the subtree */
               node1=node1->next;
               if(node1->level <= startlevel){
@@ -812,10 +790,10 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
           /* we need to check outarcs from descendents of any cycle node */
           /* (except apex, since apex potentials don't change) */
           if(cyclecost<0){
-            
+
             /* check descendents of cycle children of apex */
             while(TRUE){
-              
+
               /* firstfromnode, firsttonode may have changed */
               if(firstfromnode!=NULL && firstfromnode->pred==cycleapex){
                 node1=firstfromnode;
@@ -830,7 +808,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
 
               /* loop over all descendents */
               while(TRUE){
-              
+
                 /* loop over outgoing arcs */
                 arcnum=GetArcNumLims(node1->row,&upperarcnum,
                                      ngroundarcs,boundary);
@@ -841,11 +819,11 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
 
                   /* check for outcost updates or negative reduced costs */
                   if(node2->group>0){
-                    if(apexes[arcrow][arccol]!=NULL 
-                       && (node2->group!=node1->group 
+                    if(apexes(arcrow,arccol)!=NULL
+                       && (node2->group!=node1->group
                            || node1->group==apexlistbase)){
-                      CheckArcReducedCost(node1,node2,apexes[arcrow][arccol],
-                                          arcrow,arccol,arcdir,&candidatebag,
+                      CheckArcReducedCost(node1,node2,apexes(arcrow,arccol),
+                                          arcrow,arccol,arcdir,localcandidatebagptr,
                                           &candidatebagnext,&candidatebagsize,
                                           incrcosts,iscandidate,params);
                     }
@@ -854,7 +832,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
                                arcrow,arccol,params);
                   }                     
                 }
-                
+
                 /* move to next node in thread, break if left the subtree */
                 /*   but skip the remounted tree, since we checked it above */
                 node1=node1->next;
@@ -876,10 +854,10 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
       /*
       while(candidatebagnext+(candidatelistlen-ncandidates)>candidatebagsize){
         candidatebagsize+=CANDIDATEBAGSTEP;
-        candidatebag=ReAlloc(candidatebag,candidatebagsize*sizeof(candidateT));
+        localcandidatebagptr->conservativeResize(candidatebagsize);
       }
       for(i=ncandidates;i<candidatelistlen;i++){
-        candidatebag[candidatebagnext++]=candidatelist[i];
+        (*localcandidatebagptr)[candidatebagnext++]=(*localcandidatelistptr)[i];
       }
       */
 
@@ -898,7 +876,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
       npruned+=PruneTree(source,nodes,ground,boundary,nodesupp,incrcosts,flows,
                          ngroundarcs,prunecostthresh,nrow,ncol);
     }
-    
+
   } /* end while treesize<number of total nodes */
 
   /* sanity check tree structure */
@@ -922,7 +900,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
   /*   discharge sending flow along zero-cost edge arcs */
   DischargeBoundary(nodes,ground,boundary,nodesupp,flows,iscandidate,
                     mag,wrappedphase,ngroundarcs,nrow,ncol);
-  
+
   /* sanity check that buckets are actually all empty after optimizer is done */
   for(i=0;i<bkts->size;i++){
     if(bkts->bucketbase[i]!=NULL){
@@ -931,7 +909,7 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
       break;
     }
   }
-  
+
   /* clean up: set pointers for outputs */
   fprintf(sp3,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
           "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
@@ -939,19 +917,12 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
           "Treesize: %-10ld Pivots: %-11ld Improvements: %-11ld\n",
           treesize,ipivots,inondegen);
   fflush(sp3);
-  *candidatelistptr=candidatelist;
-  *candidatebagptr=candidatebag;
+  *candidatelistptr=*localcandidatelistptr;
+  *candidatebagptr=*localcandidatebagptr;
   *candidatelistsizeptr=candidatelistsize;
   *candidatebagsizeptr=candidatebagsize;
-  free(apexlist);
   CleanUpBoundaryNodes(boundary);
-  if(boundary->neighborlist!=NULL){
-    free(boundary->neighborlist);
-  }
-  if(boundary->boundarylist!=NULL){
-    free(boundary->boundarylist);
-  }
-  
+
   /* return the number of nondegenerate pivots (number of improvements) */
   return(inondegen);
 
@@ -965,12 +936,11 @@ long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground,
  * from (then we have to do the update).
  */
 static
-void AddNewNode(nodeT *from, nodeT *to, long arcdir, bucketT *bkts, 
-                long nflow, incrcostT **incrcosts, long arcrow, long arccol, 
-                paramT *params){
-  
-  long newoutcost;
+void AddNewNode(nodeT *from, nodeT *to, long arcdir, bucketT *bkts,
+                long /*nflow*/, Array2D<incrcostT>& incrcosts, long arcrow, long arccol,
+                paramT * /*params*/){
 
+  long newoutcost;
   
   newoutcost=from->outcost
     +GetCost(incrcosts,arcrow,arccol,arcdir);
@@ -1013,12 +983,12 @@ void AddNewNode(nodeT *from, nodeT *to, long arcdir, bucketT *bkts,
  * the arc to the entering arc candidate bag if one is found.
  */
 static
-void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex, 
-                         long arcrow, long arccol, long arcdir, 
-                         candidateT **candidatebagptr, 
-                         long *candidatebagnextptr, 
-                         long *candidatebagsizeptr, incrcostT **incrcosts, 
-                         signed char **iscandidate, paramT *params){
+void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
+                         long arcrow, long arccol, long arcdir,
+                         Array1D<candidateT>* candidatebagptr,
+                         long *candidatebagnextptr,
+                         long *candidatebagsizeptr, Array2D<incrcostT>& incrcosts,
+                         Array2D<signed char>& iscandidate, paramT * /*params*/){
 
   long apexcost, fwdarcdist, revarcdist, violation;
   nodeT *temp;
@@ -1026,7 +996,7 @@ void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
 
   /* do nothing if already candidate */
   /* illegal corner arcs have iscandidate=TRUE set ahead of time */
-  if(iscandidate[arcrow][arccol]){
+  if(iscandidate(arcrow,arccol)){
     return;
   }
 
@@ -1064,8 +1034,7 @@ void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
   if(violation<0){
     if((*candidatebagnextptr)>=(*candidatebagsizeptr)){
       (*candidatebagsizeptr)+=CANDIDATEBAGSTEP;
-      (*candidatebagptr)=(candidateT *)ReAlloc(*candidatebagptr,
-                                 (*candidatebagsizeptr)*sizeof(candidateT));
+      candidatebagptr->conservativeResize(*candidatebagsizeptr);
     }
     (*candidatebagptr)[*candidatebagnextptr].violation=violation;
     (*candidatebagptr)[*candidatebagnextptr].from=from;
@@ -1074,7 +1043,7 @@ void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
     (*candidatebagptr)[*candidatebagnextptr].arccol=arccol;
     (*candidatebagptr)[*candidatebagnextptr].arcdir=arcdir;
     (*candidatebagnextptr)++;
-    iscandidate[arcrow][arccol]=TRUE;
+    iscandidate(arcrow,arccol)=TRUE;
   }
 
   /* done */
@@ -1100,8 +1069,8 @@ void CheckArcReducedCost(nodeT *from, nodeT *to, nodeT *apex,
  * Return pointer to source since source may become pointer to boundary.
  */
 static
-nodeT *InitBoundary(nodeT *source, nodeT **nodes, 
-                    boundaryT *boundary, nodesuppT **nodesupp, float **mag,
+nodeT *InitBoundary(nodeT *source, Array2D<nodeT>& nodes,
+                    boundaryT *boundary, Array2D<nodesuppT>& nodesupp, Array2D<float>& mag,
                     nodeT *ground, long ngroundarcs, long nrow, long ncol,
                     paramT *params, long *nconnectedptr){
 
@@ -1112,9 +1081,8 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
   long neighborarcnum, neighborupperarcnum;
   long arcrow, arccol, arcdir;
   long nconnected;
-  nodeT **nodelist, **boundarylist, *from, *to, *end;
-  neighborT *neighborlist;
-  
+  nodeT *from, *to, *end;
+
   /* initialize to null first */
   boundary->node->row=BOUNDARYROW;
   boundary->node->col=BOUNDARYCOL;
@@ -1125,32 +1093,32 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
   boundary->node->group=0;
   boundary->node->incost=VERYFAR;
   boundary->node->outcost=VERYFAR;
-  boundary->neighborlist=NULL;
-  boundary->boundarylist=NULL;
+  boundary->neighborlist=Array1D<neighborT>{};
+  boundary->boundarylist=Array1D<nodeT*>{};
   boundary->nneighbor=0;
   boundary->nboundary=0;
 
   /* if this is non-grid network, do nothing */
-  if(nodesupp!=NULL){
+  if(nodesupp.size()){
     return(source);
   }
-  
+
   /* if source is ground, do nothing */
   if(source==ground){
     return(source);
   }
 
   /* make sure magnitude exists */
-  if(mag==NULL){
+  if(!mag.size()) {
     return(source);
   }
-  
+
   /* get memory for node list */
   nlistmem=NLISTMEMINCR;
-  nodelist=(nodeT **)MAlloc(nlistmem*sizeof(nodeT *));
+  auto nodelist = Array1D<nodeT*>(nlistmem);
   nodelist[0]=source;
   nlist=1;
-  
+
   /* first pass: build list of nodes on boundary */
   /* this should handle double-corner cases where all four arcs out of grid */
   /*   node will be region edge arcs (eg, mag[i][j] and mag[i+1][j+1] are */
@@ -1176,7 +1144,7 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
         /* keep node in list */
         if(nlist==nlistmem){
           nlistmem+=NLISTMEMINCR;
-          nodelist=(nodeT **)ReAlloc(nodelist,nlistmem*sizeof(nodeT *));
+          nodelist.conservativeResize(nlistmem);
         }
         nodelist[nlist++]=to;
         to->group=BOUNDARYCANDIDATE;
@@ -1199,7 +1167,7 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
 
   /* get memory for boundary list */
   nboundarymem=NLISTMEMINCR;
-  boundarylist=(nodeT **)MAlloc(nboundarymem*sizeof(nodeT *));
+  auto boundarylist = Array1D<nodeT*>(nboundarymem);
 
   /* second pass to avoid multiple arcs to same node */
   /* go through nodes in list and check criteria for including on boundary */
@@ -1258,8 +1226,7 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
         nodelist[k]->level=BOUNDARYLEVEL;
         if(++boundary->nboundary > nboundarymem){
           nboundarymem+=NLISTMEMINCR;
-          boundarylist=(nodeT **)ReAlloc(boundarylist,
-                                         nboundarymem*sizeof(nodeT *));
+          boundarylist.conservativeResize(nboundarymem);
         }
         boundarylist[boundary->nboundary-1]=nodelist[k];
       }
@@ -1271,15 +1238,13 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
     nodelist[k]->group=0;
     nodelist[k]->next=NULL;
   }
-  free(nodelist);
-  
+
   /* punt if there were too few boundary nodes */
   if(boundary->nboundary<MINBOUNDARYSIZE){
     for(k=0;k<boundary->nboundary;k++){
       boundarylist[k]->level=0;
       boundarylist[k]->group=0;
     }
-    free(boundarylist);
     boundary->node->row=BOUNDARYROW;
     boundary->node->col=BOUNDARYCOL;
     boundary->node->next=NULL;
@@ -1289,8 +1254,8 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
     boundary->node->group=0;
     boundary->node->incost=VERYFAR;
     boundary->node->outcost=VERYFAR;
-    boundary->neighborlist=NULL;
-    boundary->boundarylist=NULL;
+    boundary->neighborlist=Array1D<neighborT>{};
+    boundary->boundarylist=Array1D<nodeT*>{};
     boundary->nneighbor=0;
     boundary->nboundary=0;
     return(source);
@@ -1298,7 +1263,7 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
 
   /* set up for creating neighbor list */
   nneighbormem=NLISTMEMINCR;
-  neighborlist=(neighborT *)MAlloc(nneighbormem*sizeof(neighborT));
+  auto neighborlist = Array1D<neighborT>(nneighbormem);
 
   /* now go through boundary pointer nodes and build neighbor list */
   for(k=0;k<boundary->nboundary;k++){
@@ -1321,8 +1286,7 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
         boundary->nneighbor++;
         if(boundary->nneighbor>nneighbormem){
           nneighbormem+=NLISTMEMINCR;
-          neighborlist=(neighborT *)ReAlloc(neighborlist,
-                                            nneighbormem*sizeof(neighborT));
+          neighborlist.conservativeResize(nneighbormem);
         }
         neighborlist[boundary->nneighbor-1].neighbor=to;
         neighborlist[boundary->nneighbor-1].arcrow=arcrow;
@@ -1339,11 +1303,10 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
   }
 
   /* keep only needed memory and store pointers in boundary structure */
-  boundary->neighborlist=(neighborT *)ReAlloc(neighborlist,
-                                              (boundary->nneighbor
-                                               *sizeof(neighborT)));
-  boundary->boundarylist=(nodeT **)ReAlloc(boundarylist,(boundary->nboundary
-                                                         *sizeof(nodeT *)));
+  neighborlist.conservativeResize(boundary->nneighbor);
+  boundary->neighborlist = neighborlist;
+  boundarylist.conservativeResize(boundary->nboundary);
+  boundary->boundarylist = boundarylist;
 
   /* count number of connected nodes, which may have changed since setting */
   /*   the boundary may have made some nodes inaccessible */
@@ -1364,16 +1327,16 @@ nodeT *InitBoundary(nodeT *source, nodeT **nodes,
  * Similar to SelectConnNodeSource, but reset group to zero and check boundary.
  */
 static
-long CheckBoundary(nodeT **nodes, nodeT *ground, long ngroundarcs, 
+long CheckBoundary(Array2D<nodeT>& nodes, nodeT *ground, long ngroundarcs,
                    boundaryT *boundary, long nrow, long ncol,
-                   paramT *params, nodeT *start){
-  
+                   paramT * /*params*/, nodeT *start){
+
   long arcrow, arccol, arcdir, arcnum, upperarcnum;
   long nontree, nboundaryarc, nboundarynode, nconnected;
   nodeT *node1, *node2, *end;
-  nodesuppT **nodesupp;
 
-  
+  Array2D<nodesuppT> nodesupp;
+
   /* if start node is not eligible, just return NULL */
   if(start->group==MASKED){
     fflush(NULL);
@@ -1384,7 +1347,6 @@ long CheckBoundary(nodeT **nodes, nodeT *ground, long ngroundarcs,
   /* initialize local variables */
   nconnected=0;
   end=start;
-  nodesupp=NULL;
   node1=start;
   node1->group=INBUCKET;
 
@@ -1481,13 +1443,13 @@ long CheckBoundary(nodeT **nodes, nodeT *ground, long ngroundarcs,
  * Return TRUE if arc is on edge of region, FALSE otherwise.
  */
 static
-int IsRegionEdgeArc(float **mag, long arcrow, long arccol,
-                    long nrow, long ncol){
+int IsRegionEdgeArc(Array2D<float>& mag, long arcrow, long arccol,
+                    long nrow, long /*ncol*/){
 
   long row1, col1, row2, col2, nzeromag;
-  
+
   /* if no magnitude, then everything is in single region */
-  if(mag==NULL){
+  if(!mag.size()) {
     return(FALSE);
   }
 
@@ -1503,13 +1465,13 @@ int IsRegionEdgeArc(float **mag, long arcrow, long arccol,
     col1=arccol;
     col2=col1+1;
   }
-  
+
   /* see whether exactly one pixel has zero magnitude */
   nzeromag=0;
-  if(mag[row1][col1]==0){
+  if(mag(row1,col1)==0){
     nzeromag++;
   }
-  if(mag[row2][col2]==0){
+  if(mag(row2,col2)==0){
     nzeromag++;
   }
   if(nzeromag==1){
@@ -1526,10 +1488,10 @@ int IsRegionEdgeArc(float **mag, long arcrow, long arccol,
  * otherwise.
  */
 static
-int IsInteriorNode(float **mag, long row, long col, long nrow, long ncol){
+int IsInteriorNode(Array2D<float>& mag, long row, long col, long /*nrow*/, long /*ncol*/){
 
   /* if there is no magnitude info, then all nodes are interior nodes */
-  if(mag==NULL){
+  if(!mag.size()) {
     return(TRUE);
   }
 
@@ -1539,8 +1501,8 @@ int IsInteriorNode(float **mag, long row, long col, long nrow, long ncol){
   }
 
   /* check mag */
-  if(mag[row][col]==0 || mag[row+1][col]==0
-     || mag[row][col+1]==0 || mag[row+1][col+1]==0){
+  if(mag(row,col)==0 || mag(row+1,col)==0
+     || mag(row,col+1)==0 || mag(row+1,col+1)==0){
     return(FALSE);
   }
   return(TRUE);
@@ -1554,13 +1516,13 @@ int IsInteriorNode(float **mag, long row, long col, long nrow, long ncol){
  * at least one non-zero magnitude pixel, FALSE otherwise.
  */
 static
-int IsRegionEdgeNode(float **mag, long row, long col, long nrow, long ncol){
+int IsRegionEdgeNode(Array2D<float>& mag, long row, long col, long /*nrow*/, long /*ncol*/){
 
   int onezeromag, onenonzeromag;
 
-  
+
   /* if there is no magnitude info, then no nodes are on edge */
-  if(mag==NULL){
+  if(!mag.size()) {
     return(FALSE);
   }
 
@@ -1572,12 +1534,12 @@ int IsRegionEdgeNode(float **mag, long row, long col, long nrow, long ncol){
   /* check mag for one zero mag and one nonzero mag pixel around node */
   onezeromag=FALSE;
   onenonzeromag=FALSE;
-  if(mag[row][col]==0 || mag[row+1][col]==0
-     || mag[row][col+1]==0 || mag[row+1][col+1]==0){
+  if(mag(row,col)==0 || mag(row+1,col)==0
+     || mag(row,col+1)==0 || mag(row+1,col+1)==0){
     onezeromag=TRUE;
   }
-  if(mag[row][col]!=0 || mag[row+1][col]!=0
-     || mag[row][col+1]!=0 || mag[row+1][col+1]!=0){
+  if(mag(row,col)!=0 || mag(row+1,col)!=0
+     || mag(row,col+1)!=0 || mag(row+1,col+1)!=0){
     onenonzeromag=TRUE;
   }
   if(onezeromag && onenonzeromag){
@@ -1599,7 +1561,7 @@ int CleanUpBoundaryNodes(boundaryT *boundary){
 
 
   /* loop over boundary nodes and unset group value */
-  if(boundary!=NULL && boundary->boundarylist!=NULL){
+  if(boundary!=NULL && boundary->boundarylist.size()){
     for(k=0;k<boundary->nboundary;k++){
       boundary->boundarylist[k]->group=0;
     }
@@ -1615,10 +1577,10 @@ int CleanUpBoundaryNodes(boundaryT *boundary){
  * surplus/demand by sending flow along zero-cost arcs along region edge.
  */
 static
-int DischargeBoundary(nodeT **nodes, nodeT *ground,
-                      boundaryT *boundary, nodesuppT **nodesupp, short **flows,
-                      signed char **iscandidate, float **mag,
-                      float **wrappedphase, long ngroundarcs,
+int DischargeBoundary(Array2D<nodeT>& nodes, nodeT *ground,
+                      boundaryT *boundary, Array2D<nodesuppT>& nodesupp, Array2D<short>& flows,
+                      Array2D<signed char>& iscandidate, Array2D<float>& mag,
+                      Array2D<float>& wrappedphase, long ngroundarcs,
                       long nrow, long ncol){
 
   long nedgenode;
@@ -1626,10 +1588,10 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
   long arcnum, upperarcnum, arcrow, arccol, arcdir, narccol;
   long surplus, residue, excess;
   nodeT *from, *to, *nextnode;
-  
-  
+
+
   /* do nothing if we have no boundary */
-  if(nodesupp!=NULL || boundary==NULL
+  if(nodesupp.size() || boundary==NULL
      || boundary->nboundary==0 || boundary->nneighbor==0){
     return(0);
   }
@@ -1658,10 +1620,10 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
       narccol=ncol-1;
     }
     for(col=0;col<narccol;col++){
-      iscandidate[row][col]=0;
+      iscandidate(row,col)=0;
     }
   }
-  
+
   /* initialize counter of edge nodes to 1 */
   /* (tree root doesn't get push or counter increment) */
   nedgenode=1;
@@ -1692,20 +1654,20 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
 
       /* see if arc is on region edge and not done */
       if(IsRegionEdgeArc(mag,arcrow,arccol,nrow,ncol)
-         && (iscandidate[arcrow][arccol]==-1 ||
-             (iscandidate[arcrow][arccol]==0 && to->outcost!=-1))){
+         && (iscandidate(arcrow,arccol)==-1 ||
+             (iscandidate(arcrow,arccol)==0 && to->outcost!=-1))){
 
         /* save arc */
         nextnode=to;
         row=arcrow;
         col=arccol;
         todir=arcdir;
-        
+
         /* stop and follow arc if arc not yet followed */
-        if(!iscandidate[arcrow][arccol]){
+        if(!iscandidate(arcrow,arccol)){
           break;
         }
-        
+
       }
     }
 
@@ -1716,15 +1678,15 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
 
     /* if we found leaf and we're moving back up the tree, do a push */
     /* otherwise, just mark the path by decrementing iscandidate */
-    if((--iscandidate[row][col])==-2){
+    if((--iscandidate(row,col))==-2){
 
       /* integrate flow into current node */
       fromrow=from->row;
       fromcol=from->col;
-      surplus=(flows[fromrow][fromcol]
-               -flows[fromrow][fromcol+1]
-               +flows[fromrow+nrow-1][fromcol]
-               -flows[fromrow+1+nrow-1][fromcol]);
+      surplus=(flows(fromrow,fromcol)
+               -flows(fromrow,fromcol+1)
+               +flows(fromrow+nrow-1,fromcol)
+               -flows(fromrow+1+nrow-1,fromcol));
 
       /* compute residue from wrapped phase */
       residue=NodeResidue(wrappedphase,fromrow,fromcol);
@@ -1733,7 +1695,7 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
       excess=surplus+residue;
 
       /* augment flow */
-      flows[row][col]+=todir*excess;
+      flows(row,col)+=todir*excess;
 
       /* increment counter of edge nodes */
       nedgenode++;
@@ -1749,33 +1711,33 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
       if(row<nrow-1){
-        if(iscandidate[row][col]){
+        if(iscandidate(row,col)){
           if(col>0){
-            nodes[row][col-1].outcost=0;
+            nodes(row,col-1).outcost=0;
           }
           if(col<ncol-1){
-            nodes[row][col].outcost=0;
+            nodes(row,col).outcost=0;
           }
         }
-        iscandidate[row][col]=FALSE;
+        iscandidate(row,col)=FALSE;
       }
       if(col<ncol-1){
-        if(iscandidate[row+nrow-1][col]){
+        if(iscandidate(row+nrow-1,col)){
           if(row>0){
-            nodes[row-1][col].outcost=0;
+            nodes(row-1,col).outcost=0;
           }
           if(row<nrow-1){
-            nodes[row][col].outcost=0;
+            nodes(row,col).outcost=0;
           }
         }
-        iscandidate[row+nrow-1][col]=FALSE;
+        iscandidate(row+nrow-1,col)=FALSE;
       }
     }
   }
-  iscandidate[nrow-1][0]=TRUE;
-  iscandidate[2*nrow-2][0]=TRUE;
-  iscandidate[nrow-1][ncol-2]=TRUE;
-  iscandidate[2*nrow-2][ncol-2]=TRUE;
+  iscandidate(nrow-1,0)=TRUE;
+  iscandidate(2*nrow-2,0)=TRUE;
+  iscandidate(nrow-1,ncol-2)=TRUE;
+  iscandidate(2*nrow-2,ncol-2)=TRUE;
 
   /* done */
   return(nedgenode);
@@ -1788,10 +1750,10 @@ int DischargeBoundary(nodeT **nodes, nodeT *ground,
  * Initialize tree for tree solver.
  */
 static
-int InitTree(nodeT *source, nodeT **nodes,
-             boundaryT *boundary, nodesuppT **nodesupp, 
-             nodeT *ground, long ngroundarcs, bucketT *bkts, long nflow, 
-             incrcostT **incrcosts, long nrow, long ncol, paramT *params){
+int InitTree(nodeT *source, Array2D<nodeT>& nodes,
+             boundaryT *boundary, Array2D<nodesuppT>& nodesupp,
+             nodeT *ground, long ngroundarcs, bucketT *bkts, long nflow,
+             Array2D<incrcostT>& incrcosts, long nrow, long ncol, paramT *params){
 
   long arcnum, upperarcnum, arcrow, arccol, arcdir;
   nodeT *to;
@@ -1921,10 +1883,10 @@ long GetArcNumLims(long fromrow, long *upperarcnumptr,
  * given arc number for a grid network with a ground node.
  */
 static
-nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
-                        nodeT **nodes, nodeT *ground, long *arcrowptr, 
-                        long *arccolptr, long *arcdirptr, long nrow, 
-                        long ncol, boundaryT *boundary, nodesuppT **nodesupp){
+nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long * /*upperarcnumptr*/,
+                        Array2D<nodeT>& nodes, nodeT *ground, long *arcrowptr,
+                        long *arccolptr, long *arcdirptr, long nrow,
+                        long ncol, boundaryT *boundary, Array2D<nodesuppT>& /*nodesupp*/){
   long row, col;
   nodeT *neighbor;
 
@@ -1952,7 +1914,7 @@ nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
       if(col==ncol-2){
         neighbor=ground;
       }else{
-        neighbor=&nodes[row][col+1];
+        neighbor=&nodes(row,col+1);
       }
       break;
     case -3:
@@ -1962,7 +1924,7 @@ nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
       if(row==nrow-2){
         neighbor=ground;
       }else{
-        neighbor=&nodes[row+1][col];
+        neighbor=&nodes(row+1,col);
       }
       break;
     case -2:
@@ -1972,7 +1934,7 @@ nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
       if(col==0){
         neighbor=ground;
       }else{
-        neighbor=&nodes[row][col-1];
+        neighbor=&nodes(row,col-1);
       }
       break;
 
@@ -1983,7 +1945,7 @@ nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
       if(row==0){
         neighbor=ground;
       }else{
-        neighbor=&nodes[row-1][col];
+        neighbor=&nodes(row-1,col);
       }
       break;
     default:
@@ -1991,22 +1953,22 @@ nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
         *arcrowptr=arcnum;
         *arccolptr=0;
         *arcdirptr=1;
-        neighbor=&nodes[*arcrowptr][0];
-      }else if(arcnum<2*(nrow-1)){           
+        neighbor=&nodes(*arcrowptr,0);
+      }else if(arcnum<2*(nrow-1)){
         *arcrowptr=arcnum-(nrow-1);
         *arccolptr=ncol-1;
         *arcdirptr=-1;
-        neighbor=&nodes[*arcrowptr][ncol-2];
-      }else if(arcnum<2*(nrow-1)+ncol-3){   
+        neighbor=&nodes(*arcrowptr,ncol-2);
+      }else if(arcnum<2*(nrow-1)+ncol-3){
         *arcrowptr=nrow-1;
-        *arccolptr=arcnum-2*(nrow-1)+1;    
+        *arccolptr=arcnum-2*(nrow-1)+1;
         *arcdirptr=1;
-        neighbor=&nodes[0][*arccolptr];
+        neighbor=&nodes(0,*arccolptr);
       }else{
         *arcrowptr=2*nrow-2;
         *arccolptr=arcnum-(2*(nrow-1)+ncol-3)+1;
         *arcdirptr=-1;
-        neighbor=&nodes[nrow-2][*arccolptr];
+        neighbor=&nodes(nrow-2,*arccolptr);
       }
       break;
     }
@@ -2031,10 +1993,10 @@ nodeT *NeighborNodeGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
  */
 static
 nodeT *NeighborNodeNonGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
-                           nodeT **nodes, nodeT *ground, long *arcrowptr, 
-                           long *arccolptr, long *arcdirptr, long nrow, 
-                           long ncol, boundaryT *boundary,
-                           nodesuppT **nodesupp){
+                           Array2D<nodeT>& /*nodes*/, nodeT * /*ground*/, long *arcrowptr,
+                           long *arccolptr, long *arcdirptr, long /*nrow*/,
+                           long /*ncol*/, boundaryT * /*boundary*/,
+                           Array2D<nodesuppT>& nodesupp){
 
   long tilenum, nodenum;
   scndryarcT *outarc;
@@ -2042,10 +2004,10 @@ nodeT *NeighborNodeNonGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
   /* set up */
   tilenum=node1->row;
   nodenum=node1->col;
-  *upperarcnumptr=nodesupp[tilenum][nodenum].noutarcs-5;
-  
+  *upperarcnumptr=nodesupp(tilenum,nodenum).noutarcs-5;
+
   /* set the arc row (tilenumber) and column (arcnumber) */
-  outarc=nodesupp[tilenum][nodenum].outarcs[arcnum+4];
+  outarc=nodesupp(tilenum,nodenum).outarcs[arcnum+4];
   *arcrowptr=outarc->arcrow;
   *arccolptr=outarc->arccol;
   if(node1==outarc->from){
@@ -2055,7 +2017,7 @@ nodeT *NeighborNodeNonGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
   }
 
   /* return the neighbor node */
-  return(nodesupp[tilenum][nodenum].neighbornodes[arcnum+4]);
+  return(nodesupp(tilenum,nodenum).neighbornodes[arcnum+4]);
 
 }
 
@@ -2066,9 +2028,9 @@ nodeT *NeighborNodeNonGrid(nodeT *node1, long arcnum, long *upperarcnumptr,
  * arc arrays, assuming primary (grid) network.
  */
 static
-void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol, 
+void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
                 long *arcdir, long nrow, long ncol,
-                nodeT **nodes, nodesuppT **nodesupp){
+                Array2D<nodeT>& nodes, Array2D<nodesuppT>& /*nodesupp*/){
 
   long fromrow, fromcol, torow, tocol;
 
@@ -2094,16 +2056,16 @@ void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
     *arcrow=fromrow+nrow-1;
     *arccol=fromcol;
     *arcdir=-1;
-  }else if(fromrow==BOUNDARYROW){ /* arc from boundary pointer */  
-    if(tocol<ncol-2 && nodes[torow][tocol+1].group==BOUNDARYPTR){
+  }else if(fromrow==BOUNDARYROW){ /* arc from boundary pointer */
+    if(tocol<ncol-2 && nodes(torow,tocol+1).group==BOUNDARYPTR){
       *arcrow=torow;
       *arccol=tocol+1;
       *arcdir=-1;
-    }else if(tocol>0 && nodes[torow][tocol-1].group==BOUNDARYPTR){
+    }else if(tocol>0 && nodes(torow,tocol-1).group==BOUNDARYPTR){
       *arcrow=torow;
       *arccol=tocol;
       *arcdir=1;
-    }else if(torow<nrow-2 && nodes[torow+1][tocol].group==BOUNDARYPTR){
+    }else if(torow<nrow-2 && nodes(torow+1,tocol).group==BOUNDARYPTR){
       *arcrow=torow+1+nrow-1;
       *arccol=tocol;
       *arcdir=-1;
@@ -2113,15 +2075,15 @@ void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
       *arcdir=1;
     }
   }else if(torow==BOUNDARYROW){   /* arc to boundary pointer */
-    if(fromcol<ncol-2 && nodes[fromrow][fromcol+1].group==BOUNDARYPTR){
+    if(fromcol<ncol-2 && nodes(fromrow,fromcol+1).group==BOUNDARYPTR){
       *arcrow=fromrow;
       *arccol=fromcol+1;
       *arcdir=1;
-    }else if(fromcol>0 && nodes[fromrow][fromcol-1].group==BOUNDARYPTR){
+    }else if(fromcol>0 && nodes(fromrow,fromcol-1).group==BOUNDARYPTR){
       *arcrow=fromrow;
       *arccol=fromcol;
       *arcdir=-1;
-    }else if(fromrow<nrow-2 && nodes[fromrow+1][fromcol].group==BOUNDARYPTR){
+    }else if(fromrow<nrow-2 && nodes(fromrow+1,fromcol).group==BOUNDARYPTR){
       *arcrow=fromrow+1+nrow-1;
       *arccol=fromcol;
       *arcdir=1;
@@ -2173,9 +2135,9 @@ void GetArcGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
  * arc arrays, assuming secondary (arbitrary topology) network.
  */
 static
-void GetArcNonGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol, 
-                   long *arcdir, long nrow, long ncol,
-                   nodeT **nodes, nodesuppT **nodesupp){
+void GetArcNonGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
+                   long *arcdir, long /*nrow*/, long /*ncol*/,
+                   Array2D<nodeT>& /*nodes*/, Array2D<nodesuppT>& nodesupp){
 
   long tilenum, nodenum, arcnum;
   scndryarcT *outarc;
@@ -2187,7 +2149,7 @@ void GetArcNonGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
   /* loop over all outgoing arcs of from node */
   arcnum=0;
   while(TRUE){
-    outarc=nodesupp[tilenum][nodenum].outarcs[arcnum++];
+    outarc=nodesupp(tilenum,nodenum).outarcs[arcnum++];
     if(outarc->from==to){
       *arcrow=outarc->arcrow;
       *arccol=outarc->arccol;
@@ -2210,13 +2172,13 @@ void GetArcNonGrid(nodeT *from, nodeT *to, long *arcrow, long *arccol,
  * until a stop node is hit.
  */
 static
-void NonDegenUpdateChildren(nodeT *startnode, nodeT *lastnode, 
-                            nodeT *nextonpath, long dgroup, 
-                            long ngroundarcs, long nflow, nodeT **nodes,
-                            nodesuppT **nodesupp, nodeT *ground,
+void NonDegenUpdateChildren(nodeT *startnode, nodeT *lastnode,
+                            nodeT *nextonpath, long dgroup,
+                            long ngroundarcs, long /*nflow*/, Array2D<nodeT>& nodes,
+                            Array2D<nodesuppT>& nodesupp, nodeT *ground,
                             boundaryT *boundary,
-                            nodeT ***apexes, incrcostT **incrcosts, 
-                            long nrow, long ncol, paramT *params){
+                            Array2D<nodeT*>& /*apexes*/, Array2D<incrcostT>& incrcosts,
+                            long nrow, long ncol, paramT * /*params*/){
 
   nodeT *node1, *node2;
   long dincost, doutcost, arcnum, upperarcnum, startlevel;
@@ -2274,9 +2236,9 @@ void NonDegenUpdateChildren(nodeT *startnode, nodeT *lastnode,
  * removed.
  */
 static
-long PruneTree(nodeT *source, nodeT **nodes, nodeT *ground, boundaryT *boundary,
-               nodesuppT **nodesupp, incrcostT **incrcosts, 
-               short **flows, long ngroundarcs, long prunecostthresh,
+long PruneTree(nodeT *source, Array2D<nodeT>& nodes, nodeT *ground, boundaryT *boundary,
+               Array2D<nodesuppT>& nodesupp, Array2D<incrcostT>& incrcosts,
+               Array2D<short>& flows, long ngroundarcs, long prunecostthresh,
                long nrow, long ncol){
 
   long npruned;
@@ -2329,12 +2291,12 @@ long PruneTree(nodeT *source, nodeT **nodes, nodeT *ground, boundaryT *boundary,
  * Checks to see if the passed node should be pruned from the tree.  
  * The node should be pruned if it is a leaf and if all of its outgoing
  * arcs have very high costs and only lead to other nodes that are already
- *  on the tree or are already pruned. 
+ *  on the tree or are already pruned.
  */
 static
-int CheckLeaf(nodeT *node1, nodeT **nodes, nodeT *ground, boundaryT *boundary,
-              nodesuppT **nodesupp, incrcostT **incrcosts, 
-              short **flows, long ngroundarcs, long nrow, long ncol, 
+int CheckLeaf(nodeT *node1, Array2D<nodeT>& nodes, nodeT *ground, boundaryT *boundary,
+              Array2D<nodesuppT>& nodesupp, Array2D<incrcostT>& incrcosts,
+              Array2D<short>& flows, long ngroundarcs, long nrow, long ncol,
               long prunecostthresh){
 
   long arcnum, upperarcnum, arcrow, arccol, arcdir;
@@ -2357,9 +2319,9 @@ int CheckLeaf(nodeT *node1, nodeT **nodes, nodeT *ground, boundaryT *boundary,
     /*   or if incremental costs of arc are too small */
     /*   or there is nonzero flow on the arc */
     if(node2->group==0 || node2->group==INBUCKET
-       || incrcosts[arcrow][arccol].poscost<prunecostthresh
-       || incrcosts[arcrow][arccol].negcost<prunecostthresh
-       || flows[arcrow][arccol]!=0){
+       || incrcosts(arcrow,arccol).poscost<prunecostthresh
+       || incrcosts(arcrow,arccol).negcost<prunecostthresh
+       || flows(arcrow,arccol)!=0){
       return(FALSE);
     }
   }
@@ -2373,46 +2335,45 @@ int CheckLeaf(nodeT *node1, nodeT **nodes, nodeT *ground, boundaryT *boundary,
 /* function: InitNetowrk()
  * -----------------------
  */
-int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr, 
-                long *nflowdoneptr, long *mostflowptr, long *nflowptr, 
-                long *candidatebagsizeptr, candidateT **candidatebagptr, 
-                long *candidatelistsizeptr, candidateT **candidatelistptr, 
-                signed char ***iscandidateptr, nodeT ****apexesptr, 
-                bucketT **bktsptr, long *iincrcostfileptr, 
-                incrcostT ***incrcostsptr, nodeT ***nodesptr, nodeT *ground, 
-                long *nnoderowptr, int **nnodesperrowptr, long *narcrowptr,
-                int **narcsperrowptr, long nrow, long ncol, 
+int InitNetwork(Array2D<short>& flows, long *ngroundarcsptr, long *ncycleptr,
+                long *nflowdoneptr, long *mostflowptr, long *nflowptr,
+                long *candidatebagsizeptr, Array1D<candidateT>* candidatebagptr,
+                long *candidatelistsizeptr, Array1D<candidateT>* candidatelistptr,
+                Array2D<signed char>* iscandidateptr, Array2D<nodeT*>* apexesptr,
+                bucketT *bkts, long *iincrcostfileptr,
+                Array2D<incrcostT>* incrcostsptr, Array2D<nodeT>* nodesptr, nodeT *ground,
+                long *nnoderowptr, Array1D<int>* nnodesperrowptr, long *narcrowptr,
+                Array1D<int>* narcsperrowptr, long nrow, long ncol,
                 signed char *notfirstloopptr, totalcostT *totalcostptr,
                 paramT *params){
 
   long i;
 
-
   /* get and initialize memory for nodes */
-  if(ground!=NULL && *nodesptr==NULL){
-    *nodesptr=(nodeT **)Get2DMem(nrow-1,ncol-1,sizeof(nodeT *),sizeof(nodeT));
+  if(ground!=NULL && nodesptr->size()){
+    *nodesptr = Array2D<nodeT>(nrow-1, ncol-1);
     InitNodeNums(nrow-1,ncol-1,*nodesptr,ground);
   }
 
   /* take care of ambiguous flows to ground at corners */
   if(ground!=NULL){
-    flows[0][0]+=flows[nrow-1][0];
-    flows[nrow-1][0]=0;
-    flows[0][ncol-1]-=flows[nrow-1][ncol-2];
-    flows[nrow-1][ncol-2]=0;
-    flows[nrow-2][0]-=flows[2*nrow-2][0];
-    flows[2*nrow-2][0]=0;
-    flows[nrow-2][ncol-1]+=flows[2*nrow-2][ncol-2];
-    flows[2*nrow-2][ncol-2]=0;
+    flows(0,0)+=flows(nrow-1,0);
+    flows(nrow-1,0)=0;
+    flows(0,ncol-1)-=flows(nrow-1,ncol-2);
+    flows(nrow-1,ncol-2)=0;
+    flows(nrow-2,0)-=flows(2*nrow-2,0);
+    flows(2*nrow-2,0)=0;
+    flows(nrow-2,ncol-1)+=flows(2*nrow-2,ncol-2);
+    flows(2*nrow-2,ncol-2)=0;
   }
 
   /* initialize network solver variables */
   *ncycleptr=0;
   *nflowptr=1;
   *candidatebagsizeptr=INITARRSIZE;
-  *candidatebagptr=(candidateT *)MAlloc(*candidatebagsizeptr*sizeof(candidateT));
+  *candidatebagptr= Array1D<candidateT>(*candidatebagsizeptr);
   *candidatelistsizeptr=INITARRSIZE;
-  *candidatelistptr=(candidateT *)MAlloc(*candidatelistsizeptr*sizeof(candidateT));
+  *candidatelistptr = Array1D<candidateT>(*candidatelistsizeptr);
   if(ground!=NULL){
     *nflowdoneptr=0;
     *mostflowptr=Short2DRowColAbsMax(flows,nrow,ncol);
@@ -2427,49 +2388,44 @@ int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr,
     }else{
       *ngroundarcsptr=2*(nrow+ncol-2)-2;
     }
-    *iscandidateptr=(signed char **)Get2DRowColMem(nrow,ncol,
-                                                   sizeof(signed char *),
-                                                   sizeof(signed char));
-    *apexesptr=(nodeT ***)Get2DRowColMem(nrow,ncol,sizeof(nodeT **),
-                                         sizeof(nodeT *));
+    *iscandidateptr = MakeRowColArray2D<signed char>(nrow, ncol);
+    *apexesptr = MakeRowColArray2D<nodeT*>(nrow, ncol);
   }
 
   /* set up buckets for TreeSolve (MSTInitFlows() has local set of buckets) */
-  *bktsptr=(bucketT *)MAlloc(sizeof(bucketT));
   if(ground!=NULL){
-    (*bktsptr)->minind=-LRound((params->maxcost+1)*(nrow+ncol)
+    bkts->minind=-LRound((params->maxcost+1)*(nrow+ncol)
                                *NEGBUCKETFRACTION);
-    (*bktsptr)->maxind=LRound((params->maxcost+1)*(nrow+ncol)
+    bkts->maxind=LRound((params->maxcost+1)*(nrow+ncol)
                               *POSBUCKETFRACTION);
   }else{
-    (*bktsptr)->minind=-LRound((params->maxcost+1)*(nrow)
+    bkts->minind=-LRound((params->maxcost+1)*(nrow)
                                *NEGBUCKETFRACTION);
-    (*bktsptr)->maxind=LRound((params->maxcost+1)*(nrow)
+    bkts->maxind=LRound((params->maxcost+1)*(nrow)
                               *POSBUCKETFRACTION);
   }
-  (*bktsptr)->size=(*bktsptr)->maxind-(*bktsptr)->minind+1;
-  (*bktsptr)->bucketbase=(nodeT **)MAlloc((*bktsptr)->size*sizeof(nodeT *));
-  (*bktsptr)->bucket=&((*bktsptr)->bucketbase[-(*bktsptr)->minind]);
-  for(i=0;i<(*bktsptr)->size;i++){
-    (*bktsptr)->bucketbase[i]=NULL;
+  bkts->size=bkts->maxind-bkts->minind+1;
+  bkts->bucketbase = Array1D<nodeT*>(bkts->size);
+  bkts->bucket = &(bkts->bucketbase[-bkts->minind]);
+  for(i=0;i<bkts->size;i++){
+    bkts->bucketbase[i]=NULL;
   }
 
   /* get memory for incremental cost arrays */
   *iincrcostfileptr=0;
   if(ground!=NULL){
-    (*incrcostsptr)=(incrcostT **)Get2DRowColMem(nrow,ncol,sizeof(incrcostT *),
-                                                 sizeof(incrcostT));
+    *incrcostsptr = MakeRowColArray2D<incrcostT>(nrow, ncol);
   }
 
   /* set number of nodes and arcs per row */
   if(ground!=NULL){
     (*nnoderowptr)=nrow-1;
-    (*nnodesperrowptr)=(int *)MAlloc((nrow-1)*sizeof(int));
+    *nnodesperrowptr = Array1D<int>(nrow-1);
     for(i=0;i<nrow-1;i++){
       (*nnodesperrowptr)[i]=ncol-1;
     }
     (*narcrowptr)=2*nrow-1;
-    (*narcsperrowptr)=(int *)MAlloc((2*nrow-1)*sizeof(int));
+    *narcsperrowptr = Array1D<int>(2*nrow-1);
     for(i=0;i<nrow-1;i++){
       (*narcsperrowptr)[i]=ncol;
     }
@@ -2491,9 +2447,9 @@ int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr,
 /* function: SetupTreeSolveNetwork()
  * ---------------------------------
  */
-long SetupTreeSolveNetwork(nodeT **nodes, nodeT *ground, nodeT ***apexes, 
-                           signed char **iscandidate, long nnoderow,
-                           int *nnodesperrow, long narcrow, int *narcsperrow,
+long SetupTreeSolveNetwork(Array2D<nodeT>& nodes, nodeT *ground, Array2D<nodeT*>& apexes,
+                           Array2D<signed char>& iscandidate, long nnoderow,
+                           Array1D<int>& nnodesperrow, long narcrow, Array1D<int>& narcsperrow,
                            long nrow, long ncol){
 
   long row, col, nnodes;
@@ -2503,13 +2459,13 @@ long SetupTreeSolveNetwork(nodeT **nodes, nodeT *ground, nodeT ***apexes,
   nnodes=0;
   for(row=0;row<nnoderow;row++){
     for(col=0;col<nnodesperrow[row];col++){
-      if(nodes[row][col].group!=MASKED){
-        nodes[row][col].group=0;
+      if(nodes(row,col).group!=MASKED){
+        nodes(row,col).group=0;
         nnodes++;
       }
-      nodes[row][col].incost=VERYFAR;
-      nodes[row][col].outcost=VERYFAR;
-      nodes[row][col].pred=NULL;
+      nodes(row,col).incost=VERYFAR;
+      nodes(row,col).outcost=VERYFAR;
+      nodes(row,col).pred=NULL;
     }
   }
 
@@ -2527,19 +2483,19 @@ long SetupTreeSolveNetwork(nodeT **nodes, nodeT *ground, nodeT ***apexes,
   /* initialize arcs */
   for(row=0;row<narcrow;row++){
     for(col=0;col<narcsperrow[row];col++){
-      apexes[row][col]=NONTREEARC;
-      iscandidate[row][col]=FALSE;
+      apexes(row,col)=NONTREEARC;
+      iscandidate(row,col)=FALSE;
     }
   }
 
   /* if in grid mode, ground will exist */
   if(ground!=NULL){
-    
+
     /* set iscandidate=TRUE for illegal corner arcs so they're never used */
-    iscandidate[nrow-1][0]=TRUE;
-    iscandidate[2*nrow-2][0]=TRUE;
-    iscandidate[nrow-1][ncol-2]=TRUE;
-    iscandidate[2*nrow-2][ncol-2]=TRUE;
+    iscandidate(nrow-1,0)=TRUE;
+    iscandidate(2*nrow-2,0)=TRUE;
+    iscandidate(nrow-1,ncol-2)=TRUE;
+    iscandidate(2*nrow-2,ncol-2)=TRUE;
 
   }
 
@@ -2554,14 +2510,14 @@ long SetupTreeSolveNetwork(nodeT **nodes, nodeT *ground, nodeT ***apexes,
  * Check magnitude masking to make sure we have at least one pixel
  * that is not masked; return 0 on success, or 1 if all pixels masked.
  */
-signed char CheckMagMasking(float **mag, long nrow, long ncol){
+signed char CheckMagMasking(Array2D<float>& mag, long nrow, long ncol){
 
   long row, col;
 
   /* loop over pixels and see if any are unmasked */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      if(mag[row][col]>0){
+      if(mag(row,col)>0){
         return(0);
       }
     }
@@ -2576,19 +2532,19 @@ signed char CheckMagMasking(float **mag, long nrow, long ncol){
  * Set group numbers of nodes to MASKED if they are surrounded by
  * zero-magnitude pixels, 0 otherwise.
  */
-int MaskNodes(long nrow, long ncol, nodeT **nodes, nodeT *ground, 
-              float **mag){
+int MaskNodes(long nrow, long ncol, Array2D<nodeT>& nodes, nodeT *ground,
+              Array2D<float>& mag){
 
   long row, col;
 
   /* loop over grid nodes and see if masking is necessary */
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      if(mag[row][col] || mag[row][col+1]
-         || mag[row+1][col] || mag[row+1][col+1]){
-        nodes[row][col].group=0;
+      if(mag(row,col) || mag(row,col+1)
+         || mag(row+1,col) || mag(row+1,col+1)){
+        nodes(row,col).group=0;
       }else{
-        nodes[row][col].group=MASKED;
+        nodes(row,col).group=MASKED;
       }
     }
   }
@@ -2596,14 +2552,14 @@ int MaskNodes(long nrow, long ncol, nodeT **nodes, nodeT *ground,
   /* check whether ground node should be masked */
   ground->group=MASKED;
   for(row=0;row<nrow;row++){
-    if(mag[row][0] || mag[row][ncol-1]){
+    if(mag(row,0) || mag(row,ncol-1)){
       ground->group=0;
       break;
     }
   }
   if(ground->group==MASKED){
     for(col=0;col<ncol;col++){
-      if(mag[0][col] || mag[nrow-1][col]){
+      if(mag(0,col) || mag(nrow-1,col)){
         ground->group=0;
         break;
       }
@@ -2621,7 +2577,7 @@ int MaskNodes(long nrow, long ncol, nodeT **nodes, nodeT *ground,
  * Return maximum flow magnitude that does not traverse an arc adjacent
  * to a masked interferogram pixel.
  */
-long MaxNonMaskFlow(short **flows, float **mag, long nrow, long ncol){
+long MaxNonMaskFlow(Array2D<short>& flows, Array2D<float>& mag, long nrow, long ncol){
 
   long row, col;
   long mostflow, flowvalue;
@@ -2630,17 +2586,17 @@ long MaxNonMaskFlow(short **flows, float **mag, long nrow, long ncol){
   mostflow=0;
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol;col++){
-      flowvalue=labs((long )flows[row][col]);
-      if(flowvalue>mostflow && mag[row][col]>0 && mag[row+1][col]>0){
+      flowvalue=labs((long )flows(row,col));
+      if(flowvalue>mostflow && mag(row,col)>0 && mag(row+1,col)>0){
         mostflow=flowvalue;
       }
     }
   }
   for(row=nrow-1;row<2*nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      flowvalue=labs((long )flows[row][col]);
-      if(flowvalue>mostflow 
-         && mag[row-nrow+1][col]>0 && mag[row-nrow+1][col+1]>0){
+      flowvalue=labs((long )flows(row,col));
+      if(flowvalue>mostflow
+         && mag(row-nrow+1,col)>0 && mag(row-nrow+1,col+1)>0){
           mostflow=flowvalue;
       }
     }
@@ -2652,15 +2608,15 @@ long MaxNonMaskFlow(short **flows, float **mag, long nrow, long ncol){
 /* function: InitNodeNums()
  * ------------------------
  */
-int InitNodeNums(long nrow, long ncol, nodeT **nodes, nodeT *ground){
+int InitNodeNums(long nrow, long ncol, Array2D<nodeT>& nodes, nodeT *ground){
 
   long row, col;
 
   /* loop over each element and initialize values */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      nodes[row][col].row=row;
-      nodes[row][col].col=col;
+      nodes(row,col).row=row;
+      nodes(row,col).col=col;
     }
   }
 
@@ -2709,17 +2665,17 @@ int InitBuckets(bucketT *bkts, nodeT *source, long nbuckets){
 /* function: InitNodes()
  * ---------------------
  */
-int InitNodes(long nnrow, long nncol, nodeT **nodes, nodeT *ground){
+int InitNodes(long nnrow, long nncol, Array2D<nodeT>& nodes, nodeT *ground){
 
   long row, col;
 
   /* loop over each element and initialize values */
   for(row=0;row<nnrow;row++){
     for(col=0;col<nncol;col++){
-      nodes[row][col].group=NOTINBUCKET;
-      nodes[row][col].incost=VERYFAR;
-      nodes[row][col].outcost=VERYFAR;
-      nodes[row][col].pred=NULL;
+      nodes(row,col).group=NOTINBUCKET;
+      nodes(row,col).incost=VERYFAR;
+      nodes(row,col).outcost=VERYFAR;
+      nodes(row,col).pred=NULL;
     }
   }
 
@@ -2920,23 +2876,21 @@ nodeT *MinOutCostNode(bucketT *bkts){
  * connected pixels (not disconnected by masking).  Return the number
  * of sources (ie, the number of connected sets of pixels).
  */
-long SelectSources(nodeT **nodes, nodeT *ground, long nflow, 
-                   short **flows, long ngroundarcs, 
+long SelectSources(Array2D<nodeT>& nodes, nodeT *ground, long /*nflow*/,
+                   Array2D<short>& /*flows*/, long ngroundarcs,
                    long nrow, long ncol, paramT *params,
-                   nodeT ***sourcelistptr, long **nconnectedarrptr){
+                   Array1D<nodeT*>* sourcelistptr, Array1D<long>* nconnectedarrptr){
 
   long row, col, nsource, nsourcelistmem, nconnected;
-  long *nconnectedarr;
   nodeT *source;
-  nodeT **sourcelist;
-  
+
 
   /* initialize local variables */
   nsource=0;
   nsourcelistmem=0;
-  sourcelist=NULL;
-  nconnectedarr=NULL;
-  
+  Array1D<nodeT*> sourcelist;
+  Array1D<long> nconnectedarr;
+
   /* loop over nodes to initialize */
   if(ground->group!=MASKED && ground->group!=BOUNDARYPTR){
     ground->group=0;
@@ -2944,10 +2898,10 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
   ground->next=NULL;
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      if(nodes[row][col].group!=MASKED && nodes[row][col].group!=BOUNDARYPTR){
-        nodes[row][col].group=0;
+      if(nodes(row,col).group!=MASKED && nodes(row,col).group!=BOUNDARYPTR){
+        nodes(row,col).group=0;
       }
-      nodes[row][col].next=NULL;
+      nodes(row,col).next=NULL;
     }
   }
 
@@ -2959,10 +2913,10 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
     /* get more memory for source list if needed */
     if(++nsource>nsourcelistmem){
       nsourcelistmem+=NSOURCELISTMEMINCR;
-      sourcelist=(nodeT **)ReAlloc(sourcelist,nsourcelistmem*sizeof(nodeT *));
-      nconnectedarr=(long *)ReAlloc(nconnectedarr,nsourcelistmem*sizeof(long));
+      sourcelist.conservativeResize(nsourcelistmem);
+      nconnectedarr.conservativeResize(nsourcelistmem);
     }
-      
+
     /* store source in list */
     sourcelist[nsource-1]=source;
     nconnectedarr[nsource-1]=nconnected;
@@ -2975,16 +2929,16 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
 
       /* check pixel (NULL for boundary since not yet defined) */
       source=SelectConnNodeSource(nodes,ground,ngroundarcs,NULL,nrow,ncol,params,
-                                  &nodes[row][col],&nconnected);
+                                  &nodes(row,col),&nconnected);
       if(source!=NULL){
 
         /* get more memory for source list if needed */
         if(++nsource>nsourcelistmem){
           nsourcelistmem+=NSOURCELISTMEMINCR;
-          sourcelist=(nodeT **)ReAlloc(sourcelist,nsourcelistmem*sizeof(nodeT *));
-          nconnectedarr=(long *)ReAlloc(nconnectedarr,nsourcelistmem*sizeof(long));
+          sourcelist.conservativeResize(nsourcelistmem);
+          nconnectedarr.conservativeResize(nsourcelistmem);
         }
-          
+
         /* store source in list */
         sourcelist[nsource-1]=source;
         nconnectedarr[nsource-1]=nconnected;
@@ -3004,34 +2958,34 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol-1;col++){
 #if TRUE
-      if(nodes[row][col].group==INBUCKET
-         || nodes[row][col].group==NOTINBUCKET
-         || nodes[row][col].group==BOUNDARYCANDIDATE
-         || nodes[row][col].group==PRUNED){
+      if(nodes(row,col).group==INBUCKET
+         || nodes(row,col).group==NOTINBUCKET
+         || nodes(row,col).group==BOUNDARYCANDIDATE
+         || nodes(row,col).group==PRUNED){
         fflush(NULL);
         fprintf(stderr,
                 "WARNING: weird nodes[%ld][%ld].group=%d in SelectSources()\n",
-                row,col,nodes[row][col].group);
+                row,col,nodes(row,col).group);
       }
 #endif
-      if(nodes[row][col].group!=MASKED && nodes[row][col].group!=BOUNDARYPTR){
-        nodes[row][col].group=0;
+      if(nodes(row,col).group!=MASKED && nodes(row,col).group!=BOUNDARYPTR){
+        nodes(row,col).group=0;
       }
-      nodes[row][col].next=NULL;
+      nodes(row,col).next=NULL;
     }
   }
 
-  
+
   /* done */
   if(sourcelistptr!=NULL){
-    (*sourcelistptr)=sourcelist;
+    *sourcelistptr = sourcelist;
   }else{
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
             "NULL sourcelistptr in SelectSources()");
   }
   if(nconnectedarrptr!=NULL){
-    (*nconnectedarrptr)=nconnectedarr;
+    *nconnectedarrptr = nconnectedarr;
   }else{
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
@@ -3050,14 +3004,14 @@ long SelectSources(nodeT **nodes, nodeT *ground, long nflow,
  * small.
  */
 static
-nodeT *SelectConnNodeSource(nodeT **nodes, nodeT *ground, long ngroundarcs, 
+nodeT *SelectConnNodeSource(Array2D<nodeT>& nodes, nodeT *ground, long ngroundarcs,
                             boundaryT *boundary, long nrow, long ncol,
                             paramT *params, nodeT *start, long *nconnectedptr){
-  
+
   long arcrow, arccol, arcdir, arcnum, upperarcnum, nconnected;
   nodeT *node1, *node2, *end, *source;
-  nodesuppT **nodesupp;
 
+  Array2D<nodesuppT> nodesupp;
 
   /* if start node is not eligible, just return NULL */
   if(start->group==MASKED || start->group==ONTREE){
@@ -3067,7 +3021,6 @@ nodeT *SelectConnNodeSource(nodeT **nodes, nodeT *ground, long ngroundarcs,
   /* initialize local variables */
   nconnected=0;
   end=start;
-  nodesupp=NULL;
   node1=start;
   node1->group=INBUCKET;
 
@@ -3124,18 +3077,18 @@ nodeT *SelectConnNodeSource(nodeT **nodes, nodeT *ground, long ngroundarcs,
 /* function: GetCost()
  * -------------------
  * Returns incremental flow cost for current flow increment dflow from
- * lookup array.  
+ * lookup array.
  */
 static
-short GetCost(incrcostT **incrcosts, long arcrow, long arccol, 
+short GetCost(Array2D<incrcostT>& incrcosts, long arcrow, long arccol,
               long arcdir){
 
   /* look up cost and return it for the appropriate arc direction */
   /* we may want add a check here for clipped incremental costs */
   if(arcdir>0){
-    return(incrcosts[arcrow][arccol].poscost);
+    return(incrcosts(arcrow,arccol).poscost);
   }else{
-    return(incrcosts[arcrow][arccol].negcost);
+    return(incrcosts(arcrow,arccol).negcost);
   }
 }
 
@@ -3144,38 +3097,39 @@ short GetCost(incrcostT **incrcosts, long arcrow, long arccol,
  * ----------------------
  * Updates the incremental cost for an arc.
  */
-long ReCalcCost(void **costs, incrcostT **incrcosts, long flow, 
-                long arcrow, long arccol, long nflow, long nrow, 
-                paramT *params){
+template<class CostTag>
+long ReCalcCost(Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT>& incrcosts, long flow,
+                long arcrow, long arccol, long nflow, long nrow,
+                paramT *params, CostTag tag){
 
   long poscost, negcost, iclipped;
 
   /* calculate new positive and negative nflow costs, as long ints */
   CalcCost(costs,flow,arcrow,arccol,nflow,nrow,params,
-           &poscost,&negcost);
+           &poscost,&negcost,tag);
 
   /* clip costs to short int */
   iclipped=0;
   if(poscost>LARGESHORT){
-    incrcosts[arcrow][arccol].poscost=LARGESHORT;
+    incrcosts(arcrow,arccol).poscost=LARGESHORT;
     iclipped++;
   }else{
     if(poscost<-LARGESHORT){
-      incrcosts[arcrow][arccol].poscost=-LARGESHORT;
+      incrcosts(arcrow,arccol).poscost=-LARGESHORT;
       iclipped++;
     }else{
-      incrcosts[arcrow][arccol].poscost=poscost;
+      incrcosts(arcrow,arccol).poscost=poscost;
     }
   }
   if(negcost>LARGESHORT){
-    incrcosts[arcrow][arccol].negcost=LARGESHORT;
+    incrcosts(arcrow,arccol).negcost=LARGESHORT;
     iclipped++;
   }else{
     if(negcost<-LARGESHORT){
-      incrcosts[arcrow][arccol].negcost=-LARGESHORT;
+      incrcosts(arcrow,arccol).negcost=-LARGESHORT;
       iclipped++;
     }else{
-      incrcosts[arcrow][arccol].negcost=negcost;
+      incrcosts(arcrow,arccol).negcost=negcost;
     }
   }
 
@@ -3189,13 +3143,13 @@ long ReCalcCost(void **costs, incrcostT **incrcosts, long flow,
  * Calculates the costs for positive and negative dflow flow increment
  * if there is zero flow on the arc.
  */
-int SetupIncrFlowCosts(void **costs, incrcostT **incrcosts, short **flows,
-                       long nflow, long nrow, long narcrow, 
-                       int *narcsperrow, paramT *params){
+template<class CostTag>
+int SetupIncrFlowCosts(Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT>& incrcosts, 
+                       Array2D<short>& flows, long nflow, long nrow, long narcrow,
+                       Array1D<int>& narcsperrow, paramT *params, CostTag tag){
 
   long arcrow, arccol, iclipped, narcs;
   char pl[2];
-
 
   /* loop over all rows and columns */
   narcs=0;
@@ -3205,8 +3159,8 @@ int SetupIncrFlowCosts(void **costs, incrcostT **incrcosts, short **flows,
     for(arccol=0;arccol<narcsperrow[arcrow];arccol++){
 
       /* calculate new positive and negative nflow costs, as long ints */
-      iclipped+=ReCalcCost(costs,incrcosts,flows[arcrow][arccol],
-                           arcrow,arccol,nflow,nrow,params);
+      iclipped+=ReCalcCost(costs,incrcosts,flows(arcrow,arccol),
+                           arcrow,arccol,nflow,nrow,params,tag);
     }
   }
 
@@ -3231,11 +3185,13 @@ int SetupIncrFlowCosts(void **costs, incrcostT **incrcosts, short **flows,
 /* function: EvaluateTotalCost()
  * -----------------------------
  * Computes the total cost of the flow array and prints it out.  Pass nrow
- * and ncol if in grid mode (primary network), or pass nrow=ntiles and 
+ * and ncol if in grid mode (primary network), or pass nrow=ntiles and
  * ncol=0 for nongrid mode (secondary network).
  */
-totalcostT EvaluateTotalCost(void **costs, short **flows, long nrow, long ncol,
-                             int *narcsperrow,paramT *params){
+template<class CostTag>
+totalcostT EvaluateTotalCost(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, 
+                             long nrow, long ncol, Array1D<int>& narcsperrow, paramT *params, 
+                             CostTag tag){
 
   totalcostT rowcost, totalcost;
   long row, col, maxrow, maxcol;
@@ -3259,7 +3215,7 @@ totalcostT EvaluateTotalCost(void **costs, short **flows, long nrow, long ncol,
       maxcol=narcsperrow[row];
     }
     for(col=0;col<maxcol;col++){
-      rowcost+=EvalCost(costs,flows,row,col,nrow,params);
+      rowcost+=EvalCost(costs,flows,row,col,nrow,params,tag);
     }
     totalcost+=rowcost;
   }
@@ -3271,24 +3227,18 @@ totalcostT EvaluateTotalCost(void **costs, short **flows, long nrow, long ncol,
 /* function: MSTInitFlows()
  * ------------------------
  * Initializes the flow on a the network using minimum spanning tree
- * algorithm.  
+ * algorithm.
  */
-int MSTInitFlows(float **wrappedphase, short ***flowsptr, 
-                 short **mstcosts, long nrow, long ncol, 
-                 nodeT ***nodesptr, nodeT *ground, long maxflow){
-  
+int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
+                 Array2D<short>& mstcosts, long nrow, long ncol,
+                 Array2D<nodeT>* nodesptr, nodeT *ground, long maxflow){
+
   long row, col, i, maxcost;
-  signed char **residue, **arcstatus;
-  short **flows;
   nodeT *source;
-  bucketT bkts[1];
+  bucketT bkts[1]={};
 
-
-  /* initialize stack structures to zero for good measure */
-  memset(bkts,0,sizeof(bucketT));
-  
   /* get and initialize memory for ground, nodes, buckets, and child array */
-  *nodesptr=(nodeT **)Get2DMem(nrow-1,ncol-1,sizeof(nodeT *),sizeof(nodeT));
+  *nodesptr = Array2D<nodeT>(nrow-1, ncol-1);
   InitNodeNums(nrow-1,ncol-1,*nodesptr,ground);
 
   /* find maximum cost */
@@ -3300,32 +3250,29 @@ int MSTInitFlows(float **wrappedphase, short ***flowsptr,
       i=ncol-1;
     }
     for(col=0;col<i;col++){
-      if(mstcosts[row][col]>maxcost 
+      if(mstcosts(row,col)>maxcost
          && !((row==nrow-1 || 2*nrow-2) && (col==0 || col==ncol-2))){
-        maxcost=mstcosts[row][col];
+        maxcost=mstcosts(row,col);
       }
     }
   }
 
   /* get memory for buckets and arc status */
   bkts->size=LRound((maxcost+1)*(nrow+ncol+1));
-  bkts->bucketbase=(nodeT **)MAlloc(bkts->size*sizeof(nodeT *));
+  bkts->bucketbase = Array1D<nodeT*>(bkts->size);
   bkts->minind=0;
   bkts->maxind=bkts->size-1;
-  bkts->bucket=bkts->bucketbase;
-  arcstatus=(signed char **)Get2DRowColMem(nrow,ncol,sizeof(signed char *),
-                                           sizeof(signed char));
+  bkts->bucket = bkts->bucketbase.data();
+  auto arcstatus = MakeRowColArray2D<signed char>(nrow, ncol);
 
   /* calculate phase residues (integer numbers of cycles) */
   fprintf(sp1,"Initializing flows with MST algorithm\n");
-  residue=(signed char **)Get2DMem(nrow-1,ncol-1,sizeof(signed char *),
-                                   sizeof(signed char));
+  auto residue = Array2D<signed char>(nrow-1, ncol-1);
   CycleResidue(wrappedphase,residue,nrow,ncol);
 
   /* get memory for flow arrays */
-  (*flowsptr)=(short **)Get2DRowColZeroMem(nrow,ncol,
-                                           sizeof(short *),sizeof(short));
-  flows=*flowsptr;
+  *flowsptr = MakeRowColArray2D<short>(nrow, ncol);
+  auto& flows=*flowsptr;
 
   /* loop until no flows exceed the maximum flow */
   fprintf(sp2,"Running approximate minimum spanning tree solver\n");
@@ -3335,8 +3282,8 @@ int MSTInitFlows(float **wrappedphase, short ***flowsptr,
     source=NULL;
     for(row=0;row<nrow-1 && source==NULL;row++){
       for(col=0;col<ncol-1 && source==NULL;col++){
-        if(residue[row][col]){
-          source=&(*nodesptr)[row][col];
+        if(residue(row,col)){
+          source=&(*nodesptr)(row,col);
         }
       }
     }
@@ -3363,14 +3310,9 @@ int MSTInitFlows(float **wrappedphase, short ***flowsptr,
       break;
     }
   }
-   
-  /* free memory and return */
-  Free2DArray((void **)residue,nrow-1);
-  Free2DArray((void **)arcstatus,2*nrow-1);
-  Free2DArray((void **)mstcosts,2*nrow-1);
-  free(bkts->bucketbase);
+
   return(0);
-  
+
 }
 
 
@@ -3387,19 +3329,17 @@ int MSTInitFlows(float **wrappedphase, short ***flowsptr,
  * shortest path codes written by Cherkassky, Goldberg, and Radzik.
  */
 static
-void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground, 
-              bucketT *bkts, short **mstcosts, signed char **residue, 
-              signed char **arcstatus, long nrow, long ncol){
+void SolveMST(Array2D<nodeT>& nodes, nodeT *source, nodeT *ground,
+              bucketT *bkts, Array2D<short>& mstcosts, Array2D<signed char>& residue,
+              Array2D<signed char>& arcstatus, long nrow, long ncol){
 
   nodeT *from, *to, *pathfrom, *pathto;
-  nodesuppT **nodesupp;
   long fromdist, newdist, arcdist, ngroundarcs, groundcharge;
   long fromrow, fromcol, row, col, arcnum, upperarcnum, maxcol;
   long pathfromrow, pathfromcol;
   long arcrow, arccol, arcdir;
 
-  /* initialize some variables */
-  nodesupp=NULL;
+  Array2D<nodesuppT> nodesupp;
 
   /* calculate the number of ground arcs */
   ngroundarcs=2*(nrow+ncol-2)-4;
@@ -3408,7 +3348,7 @@ void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground,
   groundcharge=0;
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      groundcharge-=residue[row][col];
+      groundcharge-=residue(row,col);
     }
   }
 
@@ -3420,7 +3360,7 @@ void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground,
       maxcol=ncol-1;
     }
     for(arccol=0;arccol<maxcol;arccol++){
-      arcstatus[arcrow][arccol]=0;
+      arcstatus(arcrow,arccol)=0;
     }
   }
 
@@ -3430,11 +3370,11 @@ void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground,
     /* info for current node */
     fromrow=from->row;
     fromcol=from->col;
-    
+
     /* if we found a residue */
-    if(((fromrow!=GROUNDROW && residue[fromrow][fromcol]) || 
+    if(((fromrow!=GROUNDROW && residue(fromrow,fromcol)) ||
        (fromrow==GROUNDROW && groundcharge)) && from!=source){
-      
+
       /* set node and its predecessor */
       pathto=from;
       pathfrom=from->pred;
@@ -3448,14 +3388,14 @@ void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground,
         /* get arc indices for arc between pathfrom and pathto */
         GetArc(pathfrom,pathto,&arcrow,&arccol,&arcdir,nrow,ncol,
                nodes,nodesupp);
-        
+
         /* set arc status to -1 to mark arc on tree */
-        arcstatus[arcrow][arccol]=-1;
-        
+        arcstatus(arcrow,arccol)=-1;
+
         /* stop when we get to a residue */
         pathfromrow=pathfrom->row;
         pathfromcol=pathfrom->col;
-        if((pathfromrow!=GROUNDROW && residue[pathfromrow][pathfromcol])
+        if((pathfromrow!=GROUNDROW && residue(pathfromrow,pathfromcol))
            || (pathfromrow==GROUNDROW && groundcharge)){
           break;
         }
@@ -3482,9 +3422,9 @@ void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground,
       col=to->col;
 
       /* get cost of arc to new node (if arc on tree, cost is 0) */
-      if(arcstatus[arcrow][arccol]<0){
+      if(arcstatus(arcrow,arccol)<0){
         arcdist=0;
-      }else if((arcdist=mstcosts[arcrow][arccol])==LARGESHORT){
+      }else if((arcdist=mstcosts(arcrow,arccol))==LARGESHORT){
         arcdist=VERYFAR;
       }
 
@@ -3531,15 +3471,15 @@ void SolveMST(nodeT **nodes, nodeT *source, nodeT *ground,
  * walking the tree, so it should be nore more than a factor of 2 slower.
  */
 static
-long DischargeTree(nodeT *source, short **mstcosts, short **flows,
-                   signed char **residue, signed char **arcstatus, 
-                   nodeT **nodes, nodeT *ground, long nrow, long ncol){
+long DischargeTree(nodeT *source, Array2D<short>& /*mstcosts*/, Array2D<short>& flows,
+                   Array2D<signed char>& residue, Array2D<signed char>& arcstatus,
+                   Array2D<nodeT>& nodes, nodeT *ground, long nrow, long ncol){
 
   long row, col, todir, arcrow, arccol, arcdir;
   long arcnum, upperarcnum, ngroundarcs;
   nodeT *from, *to, *nextnode;
-  nodesuppT **nodesupp;
-
+  
+  Array2D<nodesuppT> nodesupp;
 
   /* set up */
   /* use outcost member of node structure to temporarily store charge */
@@ -3547,12 +3487,11 @@ long DischargeTree(nodeT *source, short **mstcosts, short **flows,
   ground->outcost=0;
   for(row=0;row<nrow-1;row++){
     for(col=0;col<ncol-1;col++){
-      nodes[row][col].outcost=residue[row][col];
-      ground->outcost-=residue[row][col];
+      nodes(row,col).outcost=residue(row,col);
+      ground->outcost-=residue(row,col);
     }
   }
   ngroundarcs=2*(nrow+ncol-2)-4;
-  nodesupp=NULL;
   todir=0;
 
   /* keep looping unitl we've walked the entire tree */
@@ -3568,9 +3507,9 @@ long DischargeTree(nodeT *source, short **mstcosts, short **flows,
       /* get row, col indices and distance of next node */
       to=NeighborNode(from,++arcnum,&upperarcnum,nodes,ground,
                       &arcrow,&arccol,&arcdir,nrow,ncol,NULL,nodesupp);
-      
+
       /* see if the arc is on the tree and if it has been followed yet */
-      if(arcstatus[arcrow][arccol]==-1){
+      if(arcstatus(arcrow,arccol)==-1){
 
         /* arc has not yet been followed: move down the tree */
         nextnode=to;
@@ -3578,7 +3517,7 @@ long DischargeTree(nodeT *source, short **mstcosts, short **flows,
         col=arccol;
         break;
 
-      }else if(arcstatus[arcrow][arccol]==-2){
+      }else if(arcstatus(arcrow,arccol)==-2){
 
         /* arc has already been followed and leads back up the tree: */
         /* save it, but keep looking for downwards arc */
@@ -3597,8 +3536,8 @@ long DischargeTree(nodeT *source, short **mstcosts, short **flows,
 
     /* if we found leaf and we're moving back up the tree, do a push */
     /* otherwise, just mark the path by decrementing arcstatus */
-    if((--arcstatus[row][col])==-3){
-      flows[row][col]+=todir*from->outcost;
+    if((--arcstatus(row,col))==-3){
+      flows(row,col)+=todir*from->outcost;
       nextnode->outcost+=from->outcost;
       from->outcost=0;
     }
@@ -3620,8 +3559,8 @@ long DischargeTree(nodeT *source, short **mstcosts, short **flows,
  * maxcost.  Residues should have been set to zero by DischargeTree().
  */
 static
-signed char ClipFlow(signed char **residue, short **flows, 
-                     short **mstcosts, long nrow, long ncol, 
+signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
+                     Array2D<short>& mstcosts, long nrow, long ncol,
                      long maxflow){
 
   long row, col, cliplimit, maxcol, excess, tempcharge, sign;
@@ -3652,8 +3591,8 @@ signed char ClipFlow(signed char **residue, short **flows,
       maxcol=ncol-1;
     }
     for(col=0;col<maxcol;col++){
-      if(mstcosts[row][col]>maxcost && mstcosts[row][col]<LARGESHORT){
-        maxcost=mstcosts[row][col];
+      if(mstcosts(row,col)>maxcost && mstcosts(row,col)<LARGESHORT){
+        maxcost=mstcosts(row,col);
       }
     }
   }
@@ -3674,55 +3613,55 @@ signed char ClipFlow(signed char **residue, short **flows,
       maxcol=ncol-1;
     }
     for(col=0;col<maxcol;col++){
-      if(labs(flows[row][col])>cliplimit){
-        if(flows[row][col]>0){
+      if(labs(flows(row,col))>cliplimit){
+        if(flows(row,col)>0){
           sign=1;
-          excess=flows[row][col]-cliplimit;
+          excess=flows(row,col)-cliplimit;
         }else{
           sign=-1;
-          excess=flows[row][col]+cliplimit;
+          excess=flows(row,col)+cliplimit;
         }
         if(row<nrow-1){
           if(col!=0){
-            tempcharge=residue[row][col-1]+excess;
+            tempcharge=residue(row,col-1)+excess;
             if(tempcharge>MAXRES || tempcharge<MINRES){
               fflush(NULL);
               throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                       "Overflow of residue data type");
             }
-            residue[row][col-1]=tempcharge;
+            residue(row,col-1)=tempcharge;
           }
           if(col!=ncol-1){
-            tempcharge=residue[row][col]-excess;
+            tempcharge=residue(row,col)-excess;
             if(tempcharge<MINRES || tempcharge>MAXRES){
               fflush(NULL);
               throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                       "Overflow of residue data type");
             }
-            residue[row][col]=tempcharge;
+            residue(row,col)=tempcharge;
           }
         }else{
           if(row!=nrow-1){
-            tempcharge=residue[row-nrow][col]+excess;
+            tempcharge=residue(row-nrow,col)+excess;
             if(tempcharge>MAXRES || tempcharge<MINRES){
               fflush(NULL);
               throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                       "Overflow of residue data type");
             }
-            residue[row-nrow][col]=tempcharge;
+            residue(row-nrow,col)=tempcharge;
           }
           if(row!=2*nrow-2){
-            tempcharge=residue[row-nrow+1][col]-excess;
+            tempcharge=residue(row-nrow+1,col)-excess;
             if(tempcharge<MINRES || tempcharge>MAXRES){
               fflush(NULL);
               throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                       "Overflow of residue data type");
             }
-            residue[row-nrow+1][col]=tempcharge;
+            residue(row-nrow+1,col)=tempcharge;
           }
         }
-        flows[row][col]=sign*cliplimit;
-        mstcosts[row][col]=maxcost;
+        flows(row,col)=sign*cliplimit;
+        mstcosts(row,col)=maxcost;
       }
     }
   }
@@ -3732,5 +3671,38 @@ signed char ClipFlow(signed char **residue, short **flows,
   return(FALSE);
 
 }
+
+
+#define INSTANTIATE_TEMPLATES(T) \
+  template long TreeSolve(Array2D<nodeT>&, Array2D<nodesuppT>&, nodeT*, \
+                          nodeT*, Array1D<candidateT>*, \
+                          Array1D<candidateT>*, long*, \
+                          long*, bucketT*, Array2D<short>&, \
+                          Array2D<typename T::Cost>&, Array2D<incrcostT>&, Array2D<nodeT*>&, \
+                          Array2D<signed char>&, long, long, \
+                          Array2D<float>&, Array2D<float>&, char*, \
+                          long, Array1D<int>&, long, \
+                          Array1D<int>&, long, long, \
+                          outfileT*, long, paramT*, T); \
+  template long ReCalcCost(Array2D<typename T::Cost>&, Array2D<incrcostT>&, long, \
+                           long, long, long, long, \
+                           paramT*, T); \
+  template int SetupIncrFlowCosts(Array2D<typename T::Cost>&, Array2D<incrcostT>&, Array2D<short>&, \
+                       long, long, long, \
+                       Array1D<int>&, paramT*, T); \
+  template totalcostT EvaluateTotalCost(Array2D<typename T::Cost>&, Array2D<short>&, long, long, \
+                             Array1D<int>&, paramT*, T);
+INSTANTIATE_TEMPLATES(TopoCostTag)
+INSTANTIATE_TEMPLATES(DefoCostTag)
+INSTANTIATE_TEMPLATES(SmoothCostTag)
+INSTANTIATE_TEMPLATES(L0CostTag)
+INSTANTIATE_TEMPLATES(L1CostTag)
+INSTANTIATE_TEMPLATES(L2CostTag)
+INSTANTIATE_TEMPLATES(LPCostTag)
+INSTANTIATE_TEMPLATES(L0BiDirCostTag)
+INSTANTIATE_TEMPLATES(L1BiDirCostTag)
+INSTANTIATE_TEMPLATES(L2BiDirCostTag)
+INSTANTIATE_TEMPLATES(LPBiDirCostTag)
+INSTANTIATE_TEMPLATES(NonGridCostTag)
 
 } // namespace isce3::unwrap

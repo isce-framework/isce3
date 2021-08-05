@@ -8,6 +8,17 @@
 
 *************************************************************************/
 
+#include <algorithm>
+#include <climits>
+#include <cstddef>
+#include <cstdio>
+#include <ctime>
+#include <string>
+
+#include <Eigen/Core>
+
+#include <isce3/except/Error.h>
+
 namespace isce3::unwrap {
 
 /**********************/
@@ -412,105 +423,113 @@ namespace isce3::unwrap {
 /* type definitions */
 /********************/
 
+/* 1-D dynamically-sized owning array */
+template<typename T>
+using Array1D = Eigen::Array<T, Eigen::Dynamic, 1>;
+
+/* 2-D row-major dynamically-sized owning array */
+template<typename T>
+using Array2D = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
 /* node data structure */
 typedef struct nodeST{
-  int row,col;                  /* row, col of this node */
-  struct nodeST *next;          /* ptr to next node in thread or bucket */
-  struct nodeST *prev;          /* ptr to previous node in thread or bucket */
-  struct nodeST *pred;          /* parent node in tree */
-  unsigned int level;           /* tree level */
-  int group;                    /* for marking label */
-  int incost,outcost;           /* costs to, from root of tree */
+  int row=0,col=0;              /* row, col of this node */
+  struct nodeST *next=nullptr;  /* ptr to next node in thread or bucket */
+  struct nodeST *prev=nullptr;  /* ptr to previous node in thread or bucket */
+  struct nodeST *pred=nullptr;  /* parent node in tree */
+  unsigned int level=0;         /* tree level */
+  int group=0;                  /* for marking label */
+  int incost=0,outcost=0;       /* costs to, from root of tree */
 }nodeT;
 
 
 /* boundary neighbor structure */
 typedef struct neighborST{
-  nodeT *neighbor;              /* neighbor node pointer */
-  int arcrow;                   /* row of arc to neighbor */
-  int arccol;                   /* col of arc to neighbor */
-  int arcdir;                   /* direction of arc to neighbor */
+  nodeT *neighbor=nullptr;      /* neighbor node pointer */
+  int arcrow=0;                 /* row of arc to neighbor */
+  int arccol=0;                 /* col of arc to neighbor */
+  int arcdir=0;                 /* direction of arc to neighbor */
 }neighborT;
 
 
 /* boundary data structure */
 typedef struct boundaryST{
-  nodeT node[1];                /* ground node pointed to by this boundary */
-  neighborT* neighborlist;      /* list of neighbors of common boundary */
-  nodeT **boundarylist;         /* list of nodes covered by common boundary */
-  long nneighbor;               /* number of neighbor nodes of boundary */
-  long nboundary;               /* number of nodes covered by boundary */
+  nodeT node[1]={};             /* ground node pointed to by this boundary */
+  Array1D<neighborT> neighborlist={}; /* list of neighbors of common boundary */
+  Array1D<nodeT*> boundarylist={};  /* list of nodes covered by common boundary */
+  long nneighbor=0;             /* number of neighbor nodes of boundary */
+  long nboundary=0;             /* number of nodes covered by boundary */
 }boundaryT;
 
   
 /* arc cost data structure */
 typedef struct costST{
-  short offset;                 /* offset of wrapped phase gradient from 0 */
-  short sigsq;                  /* variance due to decorrelation */
-  short dzmax;                  /* largest discontinuity on shelf */
-  short laycost;                /* cost of layover discontinuity shelf */
+  short offset=0;               /* offset of wrapped phase gradient from 0 */
+  short sigsq=0;                /* variance due to decorrelation */
+  short dzmax=0;                /* largest discontinuity on shelf */
+  short laycost=0;              /* cost of layover discontinuity shelf */
 }costT;
 
 
 /* arc cost data structure for smooth costs */
 typedef struct smoothcostST{
-  short offset;                 /* offset of wrapped phase gradient from 0 */
-  short sigsq;                  /* variance due to decorrelation */
+  short offset=0;               /* offset of wrapped phase gradient from 0 */
+  short sigsq=0;                /* variance due to decorrelation */
 }smoothcostT;
 
 
 /* arc cost data structure for bidirectional scalar costs */
 typedef struct bidircostST{
-  short posweight;              /* weight for positive flows */
-  short negweight;              /* weight for negative flows */
+  short posweight=0;            /* weight for positive flows */
+  short negweight=0;            /* weight for negative flows */
 }bidircostT;
 
 
 /* incremental cost data structure */
 typedef struct incrcostST{
-  short poscost;                /* cost for positive flow increment */
-  short negcost;                /* cost for negative flow increment */
+  short poscost=0;              /* cost for positive flow increment */
+  short negcost=0;              /* cost for negative flow increment */
 }incrcostT;
 
 
 /* arc candidate data structure */
 typedef struct candidateST{
-  nodeT *from, *to;             /* endpoints of candidate arc */
-  long violation;               /* magnitude of arc violation */
-  int arcrow,arccol;            /* indexes into arc arrays */
-  signed char arcdir;           /* direction of arc (1=fwd, -1=rev) */
+  nodeT *from=nullptr, *to=nullptr; /* endpoints of candidate arc */
+  long violation=0;             /* magnitude of arc violation */
+  int arcrow=0,arccol=0;        /* indexes into arc arrays */
+  signed char arcdir=0;         /* direction of arc (1=fwd, -1=rev) */
 }candidateT;
 
 
 /* bucket data structure */
 typedef struct bucketST{
-  long size;                    /* number of buckets in list */
-  long curr;                    /* current bucket index */
-  long maxind;                  /* maximum bucket index */
-  long minind;                  /* smallest (possibly negative) bucket index */
-  nodeT **bucket;               /* array of first nodes in each bucket */
-  nodeT **bucketbase;           /* real base of bucket array */
-  signed char wrapped;          /* flag denoting wrapped circular buckets */
+  long size=0;                  /* number of buckets in list */
+  long curr=0;                  /* current bucket index */
+  long maxind=0;                /* maximum bucket index */
+  long minind=0;                /* smallest (possibly negative) bucket index */
+  nodeT **bucket=nullptr;       /* array of first nodes in each bucket */
+  Array1D<nodeT*> bucketbase={};  /* real base of bucket array */
+  signed char wrapped=FALSE;    /* flag denoting wrapped circular buckets */
 }bucketT;
 
 
 /* secondary arc data structure */
 typedef struct scndryarcST{
-  int arcrow;                   /* row of arc in secondary network array */
-  int arccol;                   /* col of arc in secondary network array */
-  nodeT *from;                  /* secondary node at tail of arc */
-  nodeT *to;                    /* secondary node at head of arc */
-  signed char fromdir;          /* direction from which arc enters head */
+  int arcrow=0;                 /* row of arc in secondary network array */
+  int arccol=0;                 /* col of arc in secondary network array */
+  nodeT *from=nullptr;          /* secondary node at tail of arc */
+  nodeT *to=nullptr;            /* secondary node at head of arc */
+  signed char fromdir=0;        /* direction from which arc enters head */
 }scndryarcT;
 
 
 /* supplementary data structure for secondary nodes */
 typedef struct nodesuppST{
-  int row;                      /* row of node in primary network problem */
-  int col;                      /* col of node in primary network problem */
-  nodeT **neighbornodes;        /* pointers to neighboring secondary nodes */
-  scndryarcT **outarcs;         /* pointers to secondary arcs to neighbors */
-  int noutarcs;                 /* number of arcs from this node */
+  int row=0;                    /* row of node in primary network problem */
+  int col=0;                    /* col of node in primary network problem */
+  Array1D<nodeT*> neighbornodes={}; /* pointers to neighboring secondary nodes */
+  Array1D<scndryarcT*> outarcs={};  /* pointers to secondary arcs to neighbors */
+  int noutarcs=0;               /* number of arcs from this node */
 }nodesuppT;
 
 
@@ -518,196 +537,210 @@ typedef struct nodesuppST{
 typedef struct paramST{
 
   /* SAR and geometry parameters */
-  double orbitradius;     /* radius of platform orbit (meters) */
-  double altitude;        /* SAR altitude (meters) */
-  double earthradius;     /* radius of earth (meters) */
-  double bperp;           /* nominal perpendiuclar baseline (meters) */
-  signed char transmitmode; /* transmit mode (PINGPONG or SINGLEANTTRANSMIT) */
-  double baseline;        /* baseline length (meters, always postive) */
-  double baselineangle;   /* baseline angle above horizontal (rad) */
-  long nlooksrange;       /* number of looks in range for input data */ 
-  long nlooksaz;          /* number of looks in azimuth for input data */ 
-  long nlooksother;       /* number of nonspatial looks for input data */ 
-  double ncorrlooks;      /* number of independent looks in correlation est */
-  long ncorrlooksrange;   /* number of looks in range for correlation */ 
-  long ncorrlooksaz;      /* number of looks in azimuth for correlation */ 
-  double nearrange;       /* slant range to near part of swath (meters) */
-  double dr;              /* range bin spacing (meters) */
-  double da;              /* azimuth bin spacing (meters) */
-  double rangeres;        /* range resolution (meters) */
-  double azres;           /* azimuth resolution (meters) */
-  double lambda;          /* wavelength (meters) */
+  double orbitradius=0.0;       /* radius of platform orbit (meters) */
+  double altitude=0.0;          /* SAR altitude (meters) */
+  double earthradius=0.0;       /* radius of earth (meters) */
+  double bperp=0.0;             /* nominal perpendiuclar baseline (meters) */
+  signed char transmitmode=0;   /* transmit mode (PINGPONG or SINGLEANTTRANSMIT) */
+  double baseline=0.0;          /* baseline length (meters, always postive) */
+  double baselineangle=0.0;     /* baseline angle above horizontal (rad) */
+  long nlooksrange=0;           /* number of looks in range for input data */
+  long nlooksaz=0;              /* number of looks in azimuth for input data */
+  long nlooksother=0;           /* number of nonspatial looks for input data */
+  double ncorrlooks=0.0;        /* number of independent looks in correlation est */
+  long ncorrlooksrange=0;       /* number of looks in range for correlation */
+  long ncorrlooksaz=0;          /* number of looks in azimuth for correlation */
+  double nearrange=0.0;         /* slant range to near part of swath (meters) */
+  double dr=0.0;                /* range bin spacing (meters) */
+  double da=0.0;                /* azimuth bin spacing (meters) */
+  double rangeres=0.0;          /* range resolution (meters) */
+  double azres=0.0;             /* azimuth resolution (meters) */
+  double lambda=0.0;            /* wavelength (meters) */
 
   /* scattering model parameters */
-  double kds;             /* ratio of diffuse to specular scattering */
-  double specularexp;     /* power specular scattering component */
-  double dzrcritfactor;   /* fudge factor for linearizing scattering model */
-  signed char shadow;     /* allow discontinuities from shadowing */
-  double dzeimin;         /* lower limit for backslopes (if shadow = FALSE) */
-  long laywidth;          /* width of window for summing layover brightness */
-  double layminei;        /* threshold brightness for assuming layover */
-  double sloperatiofactor;/* fudge factor for linearized scattering slopes */
-  double sigsqei;         /* variance (dz, meters) due to uncertainty in EI */
+  double kds=0.0;               /* ratio of diffuse to specular scattering */
+  double specularexp=0.0;       /* power specular scattering component */
+  double dzrcritfactor=0.0;     /* fudge factor for linearizing scattering model */
+  signed char shadow=0;         /* allow discontinuities from shadowing */
+  double dzeimin=0.0;           /* lower limit for backslopes (if shadow = FALSE) */
+  long laywidth=0;              /* width of window for summing layover brightness */
+  double layminei=0.0;          /* threshold brightness for assuming layover */
+  double sloperatiofactor=0.0;  /* fudge factor for linearized scattering slopes */
+  double sigsqei=0.0;           /* variance (dz, meters) due to uncertainty in EI */
 
   /* decorrelation model parameters */
-  double drho;            /* step size of correlation-slope lookup table */
-  double rhosconst1,rhosconst2;/* for calculating rho0 in biased rho */
-  double cstd1,cstd2,cstd3;/* for calculating correlation power given nlooks */
-  double defaultcorr;     /* default correlation if no correlation file */
-  double rhominfactor;    /* threshold for setting unbiased correlation to 0 */
+  double drho=0.0;              /* step size of correlation-slope lookup table */
+  double rhosconst1=0.0,rhosconst2=0.0; /* for calculating rho0 in biased rho */
+  double cstd1=0.0,cstd2=0.0,cstd3=0.0; /* for calculating correlation power given nlooks */
+  double defaultcorr=0.0;       /* default correlation if no correlation file */
+  double rhominfactor=0.0;      /* threshold for setting unbiased correlation to 0 */
 
   /* pdf model parameters */
-  double dzlaypeak;       /* range pdf peak for no discontinuity when bright */
-  double azdzfactor;      /* fraction of dz in azimuth vs. rnage */
-  double dzeifactor;      /* nonlayover dz scale factor */
-  double dzeiweight;      /* weight to give dz expected from intensity */
-  double dzlayfactor;     /* layover regime dz scale factor */
-  double layconst;        /* normalized constant pdf of layover edge */
-  double layfalloffconst; /* factor of sigsq for layover cost increase */
-  long sigsqshortmin;     /* min short value for costT variance */
-  double sigsqlayfactor;  /* fration of ambiguityheight^2 for layover sigma */
+  double dzlaypeak=0.0;         /* range pdf peak for no discontinuity when bright */
+  double azdzfactor=0.0;        /* fraction of dz in azimuth vs. rnage */
+  double dzeifactor=0.0;        /* nonlayover dz scale factor */
+  double dzeiweight=0.0;        /* weight to give dz expected from intensity */
+  double dzlayfactor=0.0;       /* layover regime dz scale factor */
+  double layconst=0.0;          /* normalized constant pdf of layover edge */
+  double layfalloffconst=0.0;   /* factor of sigsq for layover cost increase */
+  long sigsqshortmin=0;         /* min short value for costT variance */
+  double sigsqlayfactor=0.0;    /* fration of ambiguityheight^2 for layover sigma */
 
   /* deformation mode parameters */
-  double defoazdzfactor;  /* scale for azimuth ledge in defo cost function */
-  double defothreshfactor;/* factor of rho0 for discontinuity threshold */
-  double defomax;         /* max discontinuity (cycles) from deformation */
-  double sigsqcorr;       /* variance in measured correlation */
-  double defolayconst;    /* layconst for deformation mode */
+  double defoazdzfactor=0.0;    /* scale for azimuth ledge in defo cost function */
+  double defothreshfactor=0.0;  /* factor of rho0 for discontinuity threshold */
+  double defomax=0.0;           /* max discontinuity (cycles) from deformation */
+  double sigsqcorr=0.0;         /* variance in measured correlation */
+  double defolayconst=0.0;      /* layconst for deformation mode */
 
   /* algorithm parameters */
-  signed char eval;       /* evaluate unwrapped input file if TRUE */
-  signed char unwrapped;  /* input file is unwrapped if TRUE */
-  signed char regrowconncomps;/* grow connected components and exit if TRUE */
-  signed char initonly;   /* exit after initialization if TRUE */
-  signed char initmethod; /* MST or MCF initialization */
-  signed char costmode;   /* statistical cost mode */
-  signed char dumpall;    /* dump intermediate files */
-  signed char verbose;    /* print verbose output */
-  signed char amplitude;  /* intensity data is amplitude, not power */
-  signed char havemagnitude; /* flag: create correlation from other inputs */
-  signed char flipphasesign; /* flag: flip phase and flow array signs */
-  signed char onetilereopt;  /* flag: reoptimize full input after tile init */
-  signed char rmtileinit; /* flag to remove temporary tile unw init soln */
-  long initmaxflow;       /* maximum flow for initialization */
-  long arcmaxflowconst;   /* units of flow past dzmax to use for initmaxflow */
-  long maxflow;           /* max flow for tree solve looping */
-  long krowei, kcolei;    /* size of boxcar averaging window for mean ei */
-  long kpardpsi;          /* length of boxcar for mean wrapped gradient */
-  long kperpdpsi;         /* width of boxcar for mean wrapped gradient */
-  double threshold;       /* thershold for numerical dzrcrit calculation */
-  double initdzr;         /* initial dzr for numerical dzrcrit calc. (m) */
-  double initdzstep;      /* initial stepsize for spatial decor slope calc. */
-  double maxcost;         /* min and max float values for cost arrays */
-  double costscale;       /* scale factor for discretizing to integer costs */
-  double costscaleambight;/* ambiguity height for auto costs caling */
-  double dnomincangle;    /* step size for range-varying param lookup table */
-  long srcrow,srccol;     /* source node location */
-  double p;               /* power for Lp-norm solution (less than 0 is MAP) */
-  signed char bidirlpn;   /* use bidirectional Lp costs if TRUE */
-  long nshortcycle;       /* number of points for one cycle in short int dz */
-  double maxnewnodeconst; /* number of nodes added to tree on each iteration */
-  long maxnflowcycles;    /* max number of cycles to consider nflow done */
-  double maxcyclefraction;/* ratio of max cycles to pixels */
-  long nconnnodemin;      /* min number of nodes to keep in connected set */
-  long nmajorprune;       /* number of major iterations between tree pruning */
-  long prunecostthresh;   /* cost threshold for pruning */
-  long edgemasktop;       /* number of pixels to mask at top edge of input */
-  long edgemaskbot;       /* number of pixels to mask at bottom edge */
-  long edgemaskleft;      /* number of pixels to mask at left edge */
-  long edgemaskright;     /* number of pixels to mask at right edge */
-  long parentpid;         /* process identification number of parent */
+  signed char eval=0;           /* evaluate unwrapped input file if TRUE */
+  signed char unwrapped=0;      /* input file is unwrapped if TRUE */
+  signed char regrowconncomps=0;  /* grow connected components and exit if TRUE */
+  signed char initonly=0;       /* exit after initialization if TRUE */
+  signed char initmethod=0;     /* MST or MCF initialization */
+  signed char costmode=0;       /* statistical cost mode */
+  signed char dumpall=0;        /* dump intermediate files */
+  signed char verbose=0;        /* print verbose output */
+  signed char amplitude=0;      /* intensity data is amplitude, not power */
+  signed char havemagnitude=0;  /* flag: create correlation from other inputs */
+  signed char flipphasesign=0;  /* flag: flip phase and flow array signs */
+  signed char onetilereopt=0;   /* flag: reoptimize full input after tile init */
+  signed char rmtileinit=0;     /* flag to remove temporary tile unw init soln */
+  long initmaxflow=0;           /* maximum flow for initialization */
+  long arcmaxflowconst=0;       /* units of flow past dzmax to use for initmaxflow */
+  long maxflow=0;               /* max flow for tree solve looping */
+  long krowei=0, kcolei=0;      /* size of boxcar averaging window for mean ei */
+  long kpardpsi=0;              /* length of boxcar for mean wrapped gradient */
+  long kperpdpsi=0;             /* width of boxcar for mean wrapped gradient */
+  double threshold=0.0;         /* thershold for numerical dzrcrit calculation */
+  double initdzr=0.0;           /* initial dzr for numerical dzrcrit calc. (m) */
+  double initdzstep=0.0;        /* initial stepsize for spatial decor slope calc. */
+  double maxcost=0.0;           /* min and max float values for cost arrays */
+  double costscale=0.0;         /* scale factor for discretizing to integer costs */
+  double costscaleambight=0.0;  /* ambiguity height for auto costs caling */
+  double dnomincangle=0.0;      /* step size for range-varying param lookup table */
+  long srcrow=0,srccol=0;       /* source node location */
+  double p=0.0;                 /* power for Lp-norm solution (less than 0 is MAP) */
+  signed char bidirlpn=0;       /* use bidirectional Lp costs if TRUE */
+  long nshortcycle=0;           /* number of points for one cycle in short int dz */
+  double maxnewnodeconst=0.0;   /* number of nodes added to tree on each iteration */
+  long maxnflowcycles=0;        /* max number of cycles to consider nflow done */
+  double maxcyclefraction=0.0;  /* ratio of max cycles to pixels */
+  long nconnnodemin=0;          /* min number of nodes to keep in connected set */
+  long nmajorprune=0;           /* number of major iterations between tree pruning */
+  long prunecostthresh=0;       /* cost threshold for pruning */
+  long edgemasktop=0;           /* number of pixels to mask at top edge of input */
+  long edgemaskbot=0;           /* number of pixels to mask at bottom edge */
+  long edgemaskleft=0;          /* number of pixels to mask at left edge */
+  long edgemaskright=0;         /* number of pixels to mask at right edge */
+  long parentpid=0;             /* process identification number of parent */
 
   /* tiling parameters */
-  long ntilerow;          /* number of tiles in azimuth */
-  long ntilecol;          /* number of tiles in range */
-  long rowovrlp;          /* pixels of overlap between row tiles */
-  long colovrlp;          /* pixels of overlap between column tiles */
-  long piecefirstrow;     /* first row (indexed from 1) for piece mode */
-  long piecefirstcol;     /* first column (indexed from 1) for piece mode */
-  long piecenrow;         /* number of rows for piece mode */
-  long piecencol;         /* number of cols for piece mode */
-  long tilecostthresh;    /* maximum cost within single reliable tile region */
-  long minregionsize;     /* minimum number of pixels in a region */
-  long nthreads;          /* number of parallel processes to run */
-  long scndryarcflowmax;  /* max flow increment for which to keep cost data */
-  double tileedgeweight;  /* weight applied to tile-edge secondary arc costs */
-  signed char assembleonly; /* flag for assemble-only (no unwrap) mode */
-  signed char rmtmptile;  /* flag for removing temporary tile files */
-  char tiledir[MAXSTRLEN];/* directory for temporary tile files */
+  long ntilerow=0;              /* number of tiles in azimuth */
+  long ntilecol=0;              /* number of tiles in range */
+  long rowovrlp=0;              /* pixels of overlap between row tiles */
+  long colovrlp=0;              /* pixels of overlap between column tiles */
+  long piecefirstrow=0;         /* first row (indexed from 1) for piece mode */
+  long piecefirstcol=0;         /* first column (indexed from 1) for piece mode */
+  long piecenrow=0;             /* number of rows for piece mode */
+  long piecencol=0;             /* number of cols for piece mode */
+  long tilecostthresh=0;        /* maximum cost within single reliable tile region */
+  long minregionsize=0;         /* minimum number of pixels in a region */
+  long nthreads=0;              /* number of parallel processes to run */
+  long scndryarcflowmax=0;      /* max flow increment for which to keep cost data */
+  double tileedgeweight=0.0;    /* weight applied to tile-edge secondary arc costs */
+  signed char assembleonly=0;   /* flag for assemble-only (no unwrap) mode */
+  signed char rmtmptile=0;      /* flag for removing temporary tile files */
+  char tiledir[MAXSTRLEN]={};   /* directory for temporary tile files */
 
   /* connected component parameters */
-  double minconncompfrac; /* min fraction of pixels in connected component */
-  long conncompthresh;    /* cost threshold for connected component */
-  long maxncomps;         /* max number of connected components */
-  int conncompouttype;    /* flag for type of connected component output file */
+  double minconncompfrac=0.0;   /* min fraction of pixels in connected component */
+  long conncompthresh=0;        /* cost threshold for connected component */
+  long maxncomps=0;             /* max number of connected components */
+  int conncompouttype=0;        /* flag for type of connected component output file */
   
 }paramT;
 
 
 /* input file name data structure */
 typedef struct infileST{
-  char infile[MAXSTRLEN];             /* input interferogram */
-  char magfile[MAXSTRLEN];            /* interferogram magnitude (optional) */
-  char ampfile[MAXSTRLEN];            /* image amplitude or power file */
-  char ampfile2[MAXSTRLEN];           /* second amplitude or power file */
-  char weightfile[MAXSTRLEN];         /* arc weights */
-  char corrfile[MAXSTRLEN];           /* correlation file */
-  char estfile[MAXSTRLEN];            /* unwrapped estimate */
-  char costinfile[MAXSTRLEN];         /* file from which cost data is read */
-  char bytemaskfile[MAXSTRLEN];       /* signed char valid pixel mask */
-  char dotilemaskfile[MAXSTRLEN];     /* signed char tile unwrap mask file */
-  signed char infileformat;           /* input file format */
-  signed char unwrappedinfileformat;  /* input file format if unwrapped */
-  signed char magfileformat;          /* interferogram magnitude file format */
-  signed char corrfileformat;         /* correlation file format */
-  signed char weightfileformat;       /* weight file format */
-  signed char ampfileformat;          /* amplitude file format */
-  signed char estfileformat;          /* unwrapped-estimate file format */
+  char infile[MAXSTRLEN]={};          /* input interferogram */
+  char magfile[MAXSTRLEN]={};         /* interferogram magnitude (optional) */
+  char ampfile[MAXSTRLEN]={};         /* image amplitude or power file */
+  char ampfile2[MAXSTRLEN]={};        /* second amplitude or power file */
+  char weightfile[MAXSTRLEN]={};      /* arc weights */
+  char corrfile[MAXSTRLEN]={};        /* correlation file */
+  char estfile[MAXSTRLEN]={};         /* unwrapped estimate */
+  char costinfile[MAXSTRLEN]={};      /* file from which cost data is read */
+  char bytemaskfile[MAXSTRLEN]={};    /* signed char valid pixel mask */
+  char dotilemaskfile[MAXSTRLEN]={};  /* signed char tile unwrap mask file */
+  signed char infileformat=0;         /* input file format */
+  signed char unwrappedinfileformat=0;  /* input file format if unwrapped */
+  signed char magfileformat=0;        /* interferogram magnitude file format */
+  signed char corrfileformat=0;       /* correlation file format */
+  signed char weightfileformat=0;     /* weight file format */
+  signed char ampfileformat=0;        /* amplitude file format */
+  signed char estfileformat=0;        /* unwrapped-estimate file format */
 }infileT;
 
 
 /* output file name data structure */
 typedef struct outfileST{
-  char outfile[MAXSTRLEN];            /* unwrapped output */
-  char initfile[MAXSTRLEN];           /* unwrapped initialization */
-  char flowfile[MAXSTRLEN];           /* flows of unwrapped solution */
-  char eifile[MAXSTRLEN];             /* despckled, normalized intensity */
-  char rowcostfile[MAXSTRLEN];        /* statistical azimuth cost array */
-  char colcostfile[MAXSTRLEN];        /* statistical range cost array */
-  char mstrowcostfile[MAXSTRLEN];     /* scalar initialization azimuth costs */
-  char mstcolcostfile[MAXSTRLEN];     /* scalar initialization range costs */
-  char mstcostsfile[MAXSTRLEN];       /* scalar initialization costs (all) */
-  char corrdumpfile[MAXSTRLEN];       /* correlation coefficient magnitude */
-  char rawcorrdumpfile[MAXSTRLEN];    /* correlation coefficient magnitude */
-  char conncompfile[MAXSTRLEN];       /* connected component map or mask */
-  char costoutfile[MAXSTRLEN];        /* file to which cost data is written */
-  char logfile[MAXSTRLEN];            /* file to which parmeters are logged */
-  signed char outfileformat;          /* output file format */
+  char outfile[MAXSTRLEN]={};         /* unwrapped output */
+  char initfile[MAXSTRLEN]={};        /* unwrapped initialization */
+  char flowfile[MAXSTRLEN]={};        /* flows of unwrapped solution */
+  char eifile[MAXSTRLEN]={};          /* despckled, normalized intensity */
+  char rowcostfile[MAXSTRLEN]={};     /* statistical azimuth cost array */
+  char colcostfile[MAXSTRLEN]={};     /* statistical range cost array */
+  char mstrowcostfile[MAXSTRLEN]={};  /* scalar initialization azimuth costs */
+  char mstcolcostfile[MAXSTRLEN]={};  /* scalar initialization range costs */
+  char mstcostsfile[MAXSTRLEN]={};    /* scalar initialization costs (all) */
+  char corrdumpfile[MAXSTRLEN]={};    /* correlation coefficient magnitude */
+  char rawcorrdumpfile[MAXSTRLEN]={}; /* correlation coefficient magnitude */
+  char conncompfile[MAXSTRLEN]={};    /* connected component map or mask */
+  char costoutfile[MAXSTRLEN]={};     /* file to which cost data is written */
+  char logfile[MAXSTRLEN]={};         /* file to which parmeters are logged */
+  signed char outfileformat=0;        /* output file format */
 }outfileT;
 
 
 /* tile parameter data structure */
 typedef struct tileparamST{
-  long firstcol;          /* first column of tile to process (index from 0) */
-  long ncol;              /* number of columns in tile to process */
-  long firstrow;          /* first row of tile to process (index from 0) */
-  long nrow;              /* number of rows in tile to process */
+  long firstcol=0;              /* first column of tile to process (index from 0) */
+  long ncol=0;                  /* number of columns in tile to process */
+  long firstrow=0;              /* first row of tile to process (index from 0) */
+  long nrow=0;                  /* number of rows in tile to process */
 }tileparamT;
 
 
 /* connectected component size structure */
 typedef struct conncompsizeST{
-  unsigned int tilenum;               /* tile index */
-  unsigned int icomptile;             /* conn comp index in tile */
-  unsigned int icompfull;             /* conn comp index in full array */
-  long npix;                          /* number of pixels in conn comp */
+  unsigned int tilenum=0;       /* tile index */
+  unsigned int icomptile=0;     /* conn comp index in tile */
+  unsigned int icompfull=0;     /* conn comp index in full array */
+  long npix=0;                  /* number of pixels in conn comp */
 }conncompsizeT;
+
+
+/* cost-mode-specific empty structs for tag dispatch */
+struct TopoCostTag { using Cost = costT; };
+struct DefoCostTag { using Cost = costT; };
+struct SmoothCostTag { using Cost = smoothcostT; };
+struct L0CostTag { using Cost = short; };
+struct L1CostTag { using Cost = short; };
+struct L2CostTag { using Cost = short; };
+struct LPCostTag { using Cost = short; };
+struct L0BiDirCostTag { using Cost = bidircostT; };
+struct L1BiDirCostTag { using Cost = bidircostT; };
+struct L2BiDirCostTag { using Cost = bidircostT; };
+struct LPBiDirCostTag { using Cost = bidircostT; };
+struct NonGridCostTag { using Cost = Array1D<long>; };
 
 
 /* type for total cost of solution (may overflow long) */
 typedef double totalcostT;
 #define INITTOTALCOST LARGEFLOAT
-
 
 
 /***********************/
@@ -716,189 +749,197 @@ typedef double totalcostT;
 
 /* functions in snaphu_tile.c */
 
-int SetupTile(long nlines, long linelen, paramT *params, 
-              tileparamT *tileparams, outfileT *outfiles, 
+int SetupTile(long nlines, long linelen, paramT *params,
+              tileparamT *tileparams, outfileT *outfiles,
               outfileT *tileoutfiles, long tilerow, long tilecol);
-signed char **SetUpDoTileMask(infileT *infiles, long ntilerow, long ntilecol);
-int GrowRegions(void **costs, short **flows, long nrow, long ncol, 
-                incrcostT **incrcosts, outfileT *outfiles, 
-                tileparamT *tileparams, paramT *params);
-int GrowConnCompsMask(void **costs, short **flows, long nrow, long ncol, 
-                      incrcostT **incrcosts, outfileT *outfiles, 
-                      paramT *params);
-int AssembleTiles(outfileT *outfiles, paramT *params, 
-                  long nlines, long linelen);
+Array2D<signed char> SetUpDoTileMask(infileT *infiles, long ntilerow, long ntilecol);
+template<class CostTag>
+int GrowRegions(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, long nrow, long ncol,
+                Array2D<incrcostT>& incrcosts, outfileT *outfiles,
+                tileparamT *tileparams, paramT *params, CostTag tag);
+template<class CostTag>
+int GrowConnCompsMask(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, long nrow, long ncol,
+                      Array2D<incrcostT>& incrcosts, outfileT *outfiles,
+                      paramT *params, CostTag tag);
+template<class CostTag>
+int AssembleTiles(outfileT *outfiles, paramT *params,
+                  long nlines, long linelen, CostTag tag);
 
 
 /* functions in snaphu_solver.c */
 
 int SetGridNetworkFunctionPointers(void);
 int SetNonGridNetworkFunctionPointers(void);
-long TreeSolve(nodeT **nodes, nodesuppT **nodesupp, nodeT *ground, 
-               nodeT *source, candidateT **candidatelistptr, 
-               candidateT **candidatebagptr, long *candidatelistsizeptr,
-               long *candidatebagsizeptr, bucketT *bkts, short **flows, 
-               void **costs, incrcostT **incrcosts, nodeT ***apexes, 
-               signed char **iscandidate, long ngroundarcs, long nflow, 
-               float **mag, float **wrappedphase, char *outfile, 
-               long nnoderow, int *nnodesperrow, long narcrow, 
-               int *narcsperrow, long nrow, long ncol,
-               outfileT *outfiles, long nconnected, paramT *params);
-int InitNetwork(short **flows, long *ngroundarcsptr, long *ncycleptr, 
-                long *nflowdoneptr, long *mostflowptr, long *nflowptr, 
-                long *candidatebagsizeptr, candidateT **candidatebagptr, 
-                long *candidatelistsizeptr, candidateT **candidatelistptr, 
-                signed char ***iscandidateptr, nodeT ****apexesptr, 
-                bucketT **bktsptr, long *iincrcostfileptr, 
-                incrcostT ***incrcostsptr, nodeT ***nodesptr, nodeT *ground, 
-                long *nnoderowptr, int **nnodesperrowptr, long *narcrowptr,
-                int **narcsperrowptr, long nrow, long ncol, 
+template<class CostTag>
+long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *ground,
+               nodeT *source, Array1D<candidateT>* candidatelistptr,
+               Array1D<candidateT>* candidatebagptr, long *candidatelistsizeptr,
+               long *candidatebagsizeptr, bucketT *bkts, Array2D<short>& flows,
+               Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT>& incrcosts, Array2D<nodeT*>& apexes,
+               Array2D<signed char>& iscandidate, long ngroundarcs, long nflow,
+               Array2D<float>& mag, Array2D<float>& wrappedphase, char *outfile,
+               long nnoderow, Array1D<int>& nnodesperrow, long narcrow,
+               Array1D<int>& narcsperrow, long nrow, long ncol,
+               outfileT *outfiles, long nconnected, paramT *params, CostTag tag);
+int InitNetwork(Array2D<short>& flows, long *ngroundarcsptr, long *ncycleptr,
+                long *nflowdoneptr, long *mostflowptr, long *nflowptr,
+                long *candidatebagsizeptr, Array1D<candidateT>* candidatebagptr,
+                long *candidatelistsizeptr, Array1D<candidateT>* candidatelistptr,
+                Array2D<signed char>* iscandidateptr, Array2D<nodeT*>* apexesptr,
+                bucketT *bkts, long *iincrcostfileptr,
+                Array2D<incrcostT>* incrcostsptr, Array2D<nodeT>* nodesptr, nodeT *ground,
+                long *nnoderowptr, Array1D<int>* nnodesperrowptr, long *narcrowptr,
+                Array1D<int>* narcsperrowptr, long nrow, long ncol,
                 signed char *notfirstloopptr, totalcostT *totalcostptr,
                 paramT *params);
-long SetupTreeSolveNetwork(nodeT **nodes, nodeT *ground, nodeT ***apexes, 
-                           signed char **iscandidate, long nnoderow,
-                           int *nnodesperrow, long narcrow, int *narcsperrow,
+long SetupTreeSolveNetwork(Array2D<nodeT>& nodes, nodeT *ground, Array2D<nodeT*>& apexes,
+                           Array2D<signed char>& iscandidate, long nnoderow,
+                           Array1D<int>& nnodesperrow, long narcrow, Array1D<int>& narcsperrow,
                            long nrow, long ncol);
-signed char CheckMagMasking(float **mag, long nrow, long ncol);
-int MaskNodes(long nrow, long ncol, nodeT **nodes, nodeT *ground, 
-              float **mag);
-long MaxNonMaskFlow(short **flows, float **mag, long nrow, long ncol);
-int InitNodeNums(long nrow, long ncol, nodeT **nodes, nodeT *ground);
-int InitNodes(long nrow, long ncol, nodeT **nodes, nodeT *ground);
+signed char CheckMagMasking(Array2D<float>& mag, long nrow, long ncol);
+int MaskNodes(long nrow, long ncol, Array2D<nodeT>& nodes, nodeT *ground,
+              Array2D<float>& mag);
+long MaxNonMaskFlow(Array2D<short>& flows, Array2D<float>& mag, long nrow, long ncol);
+int InitNodeNums(long nrow, long ncol, Array2D<nodeT>& nodes, nodeT *ground);
+int InitNodes(long nrow, long ncol, Array2D<nodeT>& nodes, nodeT *ground);
 void BucketInsert(nodeT *node, long ind, bucketT *bkts);
 void BucketRemove(nodeT *node, long ind, bucketT *bkts);
 nodeT *ClosestNode(bucketT *bkts);
-long SelectSources(nodeT **nodes, nodeT *ground, long nflow, 
-                   short **flows, long ngroundarcs, 
+long SelectSources(Array2D<nodeT>& nodes, nodeT *ground, long nflow,
+                   Array2D<short>& flows, long ngroundarcs,
                    long nrow, long ncol, paramT *params,
-                   nodeT ***sourcelistptr, long **nconnectedarrptr);
-long ReCalcCost(void **costs, incrcostT **incrcosts, long flow, 
-                long arcrow, long arccol, long nflow, long nrow, 
-                paramT *params);
-int SetupIncrFlowCosts(void **costs, incrcostT **incrcosts, short **flows,
-                       long nflow, long nrow, long narcrow, 
-                       int *narcsperrow, paramT *params);
-totalcostT EvaluateTotalCost(void **costs, short **flows, long nrow, long ncol,
-                             int *narcsperrow,paramT *params);
-int MSTInitFlows(float **wrappedphase, short ***flowsptr, 
-                 short **mstcosts, long nrow, long ncol, 
-                 nodeT ***nodes, nodeT *ground, long maxflow);
+                   Array1D<nodeT*>* sourcelistptr, Array1D<long>* nconnectedarrptr);
+template<class CostTag>
+long ReCalcCost(Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT>& incrcosts, long flow,
+                long arcrow, long arccol, long nflow, long nrow,
+                paramT *params, CostTag tag);
+template<class CostTag>
+int SetupIncrFlowCosts(Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT>& incrcosts, Array2D<short>& flows,
+                       long nflow, long nrow, long narcrow,
+                       Array1D<int>& narcsperrow, paramT *params, CostTag tag);
+template<class CostTag>
+totalcostT EvaluateTotalCost(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, long nrow, long ncol,
+                             Array1D<int>& narcsperrow, paramT *params, CostTag tag);
+int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
+                 Array2D<short>& mstcosts, long nrow, long ncol,
+                 Array2D<nodeT>* nodes, nodeT *ground, long maxflow);
 
 
 /* functions in snaphu_cost.c */
-int BuildCostArrays(void ***costsptr, short ***mstcostsptr, 
-                    float **mag, float **wrappedphase, 
-                    float **unwrappedest, long linelen, long nlines, 
-                    long nrow, long ncol, paramT *params, 
-                    tileparamT *tileparams, infileT *infiles, 
-                    outfileT *outfiles);
-void CalcCostTopo(void **costs, long flow, long arcrow, long arccol, 
-                  long nflow, long nrow, paramT *params, 
-                  long *poscostptr, long *negcostptr);
-void CalcCostDefo(void **costs, long flow, long arcrow, long arccol, 
-                  long nflow, long nrow, paramT *params, 
-                  long *poscostptr, long *negcostptr);
-void CalcCostSmooth(void **costs, long flow, long arcrow, long arccol, 
-                    long nflow, long nrow, paramT *params, 
-                    long *poscostptr, long *negcostptr);
-void CalcCostL0(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr);
-void CalcCostL1(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr);
-void CalcCostL2(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr);
-void CalcCostLP(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr);
-void CalcCostL0BiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr);
-void CalcCostL1BiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr);
-void CalcCostL2BiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr);
-void CalcCostLPBiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr);
-void CalcCostNonGrid(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr);
-long EvalCostTopo(void **costs, short **flows, long arcrow, long arccol,
-                  long nrow, paramT *params);
-long EvalCostDefo(void **costs, short **flows, long arcrow, long arccol,
-                  long nrow, paramT *params);
-long EvalCostSmooth(void **costs, short **flows, long arcrow, long arccol,
-                    long nrow, paramT *params);
-long EvalCostL0(void **costs, short **flows, long arcrow, long arccol,
-                long nrow, paramT *params);
-long EvalCostL1(void **costs, short **flows, long arcrow, long arccol,
-                long nrow, paramT *params);
-long EvalCostL2(void **costs, short **flows, long arcrow, long arccol,
-                long nrow, paramT *params);
-long EvalCostLP(void **costs, short **flows, long arcrow, long arccol,
-                long nrow, paramT *params);
-long EvalCostL0BiDir(void **costs, short **flows, long arcrow, long arccol,
-                     long nrow, paramT *params);
-long EvalCostL1BiDir(void **costs, short **flows, long arcrow, long arccol,
-                     long nrow, paramT *params);
-long EvalCostL2BiDir(void **costs, short **flows, long arcrow, long arccol,
-                     long nrow, paramT *params);
-long EvalCostLPBiDir(void **costs, short **flows, long arcrow, long arccol,
-                     long nrow, paramT *params);
-long EvalCostNonGrid(void **costs, short **flows, long arcrow, long arccol, 
-                     long nrow, paramT *params);
+template<class CostTag>
+int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* mstcostsptr,
+                    Array2D<float>& mag, Array2D<float>& wrappedphase,
+                    Array2D<float>& unwrappedest, long linelen, long nlines,
+                    long nrow, long ncol, paramT *params,
+                    tileparamT *tileparams, infileT *infiles,
+                    outfileT *outfiles, CostTag tag);
+void CalcCost(Array2D<costT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, TopoCostTag tag);
+void CalcCost(Array2D<costT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, DefoCostTag tag);
+void CalcCost(Array2D<smoothcostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, SmoothCostTag tag);
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, L0CostTag tag);
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, L1CostTag tag);
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, L2CostTag tag);
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, LPCostTag tag);
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, L0BiDirCostTag tag);
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, L1BiDirCostTag tag);
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, L2BiDirCostTag tag);
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, LPBiDirCostTag tag);
+void CalcCost(Array2D<Array1D<long>>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, NonGridCostTag tag);
+long EvalCost(Array2D<costT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, TopoCostTag tag);
+long EvalCost(Array2D<costT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, DefoCostTag tag);
+long EvalCost(Array2D<smoothcostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, SmoothCostTag tag);
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, L0CostTag tag);
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, L1CostTag tag);
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, L2CostTag tag);
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, LPCostTag tag);
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, L0BiDirCostTag tag);
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, L1BiDirCostTag tag);
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, L2BiDirCostTag tag);
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, LPBiDirCostTag tag);
+long EvalCost(Array2D<Array1D<long>>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, NonGridCostTag tag);
 
 
 /* functions in snaphu_util.c */
 
 signed char SetBooleanSignedChar(signed char *boolptr, char *str);
-int WrapPhase(float **wrappedphase, long nrow, long ncol);
-int CalcWrappedRangeDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
+int WrapPhase(Array2D<float>& wrappedphase, long nrow, long ncol);
+int CalcWrappedRangeDiffs(Array2D<float>& dpsi,
+                          Array2D<float>& avgdpsi,
+                          Array2D<float>& wrappedphase,
                           long kperpdpsi, long kpardpsi,
                           long nrow, long ncol);
-int CalcWrappedAzDiffs(float **dpsi, float **avgdpsi, float **wrappedphase,
+int CalcWrappedAzDiffs(Array2D<float>& dpsi,
+                       Array2D<float>& avgdpsi,
+                       Array2D<float>& wrappedphase,
                        long kperpdpsi, long kpardpsi, long nrow, long ncol);
-int CycleResidue(float **phase, signed char **residue, 
+int CycleResidue(Array2D<float>& phase, Array2D<signed char>& residue,
                  int nrow, int ncol);
-int NodeResidue(float **wphase, long row, long col);
-int CalcFlow(float **phase, short ***flowsptr, long nrow, long ncol);
-int IntegratePhase(float **psi, float **phi, short **flows,
+int NodeResidue(Array2D<float>& wphase, long row, long col);
+int CalcFlow(Array2D<float>& phase, Array2D<short>* flowsptr, long nrow, long ncol);
+int IntegratePhase(Array2D<float>& psi, Array2D<float>& phi, Array2D<short>& flows,
                    long nrow, long ncol);
-float **ExtractFlow(float **unwrappedphase, short ***flowsptr, 
-                    long nrow, long ncol);
-int FlipPhaseArraySign(float **arr, paramT *params, long nrow, long ncol);
-int FlipFlowArraySign(short **arr, paramT *params, long nrow, long ncol);
-void **Get2DMem(int nrow, int ncol, int psize, size_t size);
-void **Get2DRowColMem(long nrow, long ncol, int psize, size_t size);
-void **Get2DRowColZeroMem(long nrow, long ncol, int psize, size_t size);
-void *MAlloc(size_t size);
-void *CAlloc(size_t nitems, size_t size);
-void *ReAlloc(void *ptr, size_t size);
-int Free2DArray(void **array, unsigned int nrow);
-int Set2DShortArray(short **arr, long nrow, long ncol, long value);
-signed char ValidDataArray(float **arr, long nrow, long ncol);
-signed char NonNegDataArray(float **arr, long nrow, long ncol);
+Array2D<float> ExtractFlow(Array2D<float>& unwrappedphase, Array2D<short>* flowsptr,
+                           long nrow, long ncol);
+int FlipPhaseArraySign(Array2D<float>& arr, paramT *params, long nrow, long ncol);
+int FlipFlowArraySign(Array2D<short>& arr, paramT *params, long nrow, long ncol);
+int Set2DShortArray(Eigen::Ref<Array2D<short>> arr, long nrow, long ncol, long value);
+signed char ValidDataArray(Array2D<float>& arr, long nrow, long ncol);
+signed char NonNegDataArray(Array2D<float>& arr, long nrow, long ncol);
 signed char IsFinite(double d);
 long LRound(double a);
 long LMin(long a, long b);
 long LClip(long a, long minval, long maxval);
-long Short2DRowColAbsMax(short **arr, long nrow, long ncol);
-float LinInterp1D(float *arr, double index, long nelem);
-float LinInterp2D(float **arr, double rowind, double colind , 
+long Short2DRowColAbsMax(Array2D<short>& arr, long nrow, long ncol);
+float LinInterp1D(Array1D<float>& arr, double index, long nelem);
+float LinInterp2D(Array2D<float>& arr, double rowind, double colind,
                   long nrow, long ncol);
-int Despeckle(float **mag, float ***ei, long nrow, long ncol);
-float **MirrorPad(float **array1, long nrow, long ncol, long krow, long kcol);
-int BoxCarAvg(float **avgarr, float **padarr, long nrow, long ncol, 
-              long krow, long kcol);
+int Despeckle(Array2D<float>& mag, Array2D<float>* ei, long nrow, long ncol);
+Array2D<float> MirrorPad(Array2D<float>& array1,
+                          long nrow, long ncol, long krow, long kcol);
+int BoxCarAvg(Array2D<float>& avgarr, Array2D<float>& padarr,
+              long nrow, long ncol, long krow, long kcol);
 char *StrNCopy(char *dest, const char *src, size_t n);
-int FlattenWrappedPhase(float **wrappedphase, float **unwrappedest, 
+int FlattenWrappedPhase(Array2D<float>& wrappedphase, Array2D<float>& unwrappedest,
                         long nrow, long ncol);
-int Add2DFloatArrays(float **arr1, float **arr2, long nrow, long ncol);
+int Add2DFloatArrays(Array2D<float>& arr1,
+                     Array2D<float>& arr2,
+                     long nrow, long ncol);
 int StringToDouble(char *str, double *d);
 int StringToLong(char *str, long *l);
 int CatchSignals(void (*SigHandler)(int));
@@ -909,6 +950,7 @@ int StartTimers(time_t *tstart, double *cputimestart);
 int DisplayElapsedTime(time_t tstart, double cputimestart);
 int LongCompare(const void *c1, const void *c2);
 
+
 /* functions in snaphu_io.c */
 
 int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params);
@@ -916,60 +958,364 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
                 long linelen, long nlines, paramT *params);
 int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
                    long *ncolptr, paramT *params);
-int WriteConfigLogFile(infileT *infiles, 
+int WriteConfigLogFile(infileT *infiles,
                        outfileT *outfiles, long linelen, paramT *params);
 long GetNLines(infileT *infiles, long linelen, paramT *params);
-int WriteOutputFile(float **mag, float **unwrappedphase, char *outfile, 
+int WriteOutputFile(Array2D<float>& mag,
+                    Array2D<float>& unwrappedphase, char *outfile,
                     outfileT *outfiles, long nrow, long ncol);
-FILE *OpenOutputFile(char *outfile, char *realoutfile);
-int Write2DArray(void **array, char *filename, long nrow, long ncol, 
+FILE *OpenOutputFile(const char *outfile, char *realoutfile);
+int Write2DArray(void **array, char *filename, long nrow, long ncol,
                  size_t size);
-int Write2DRowColArray(void **array, char *filename, long nrow, 
+int Write2DRowColArray(void **array, char *filename, long nrow,
                        long ncol, size_t size);
-int ReadInputFile(infileT *infiles, float ***magptr, float ***wrappedphaseptr,
-                  short ***flowsptr, long linelen, long nlines, 
+int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrappedphaseptr,
+                  Array2D<short>* flowsptr, long linelen, long nlines,
                   paramT *params, tileparamT *tileparams);
-int ReadMagnitude(float **mag, infileT *infiles, long linelen, long nlines, 
+int ReadMagnitude(Array2D<float>& mag, infileT *infiles, long linelen, long nlines,
                   tileparamT *tileparams);
-int ReadByteMask(float **mag, infileT *infiles, long linelen, long nlines, 
+int ReadByteMask(Array2D<float>& mag, infileT *infiles, long linelen, long nlines,
                  tileparamT *tileparams, paramT *params);
-int ReadUnwrappedEstimateFile(float ***unwrappedestptr, infileT *infiles, 
-                              long linelen, long nlines, 
+int ReadUnwrappedEstimateFile(Array2D<float>* unwrappedestptr, infileT *infiles,
+                              long linelen, long nlines,
                               paramT *params, tileparamT *tileparams);
-int ReadWeightsFile(short ***weightsptr,char *weightfile, 
+int ReadWeightsFile(Array2D<short>* weightsptr,char *weightfile,
                     long linelen, long nlines, tileparamT *tileparams);
-int ReadIntensity(float ***pwrptr, float ***pwr1ptr, float ***pwr2ptr, 
-                  infileT *infiles, long linelen, long nlines, 
+int ReadIntensity(Array2D<float>* pwrptr, Array2D<float>* pwr1ptr, Array2D<float>* pwr2ptr,
+                  infileT *infiles, long linelen, long nlines,
                   paramT *params, tileparamT *tileparams);
-int ReadCorrelation(float ***corrptr, infileT *infiles,
+int ReadCorrelation(Array2D<float>* corrptr, infileT *infiles,
                     long linelen, long nlines, tileparamT *tileparams);
-int ReadAltLineFile(float ***mag, float ***phase, char *alfile, 
+int ReadAltLineFile(Array2D<float>* mag, Array2D<float>* phase, char *alfile,
                     long linelen, long nlines, tileparamT *tileparams);
-int ReadAltLineFilePhase(float ***phase, char *alfile, 
+int ReadAltLineFilePhase(Array2D<float>* phase, char *alfile,
                          long linelen, long nlines, tileparamT *tileparams);
-int ReadComplexFile(float ***mag, float ***phase, char *rifile, 
+int ReadComplexFile(Array2D<float>* mag, Array2D<float>* phase, char *rifile,
                     long linelen, long nlines, tileparamT *tileparams);
-int Read2DArray(void ***arr, char *infile, long linelen, long nlines, 
-                tileparamT *tileparams, size_t elptrsize, size_t elsize);
-int ReadAltSampFile(float ***arr1, float ***arr2, char *infile,
+int ReadAltSampFile(Array2D<float>* arr1, Array2D<float>* arr2, char *infile,
                      long linelen, long nlines, tileparamT *tileparams);
-int Read2DRowColFile(void ***arr, char *filename, long linelen, long nlines, 
-                     tileparamT *tileparams, size_t size);
-int Read2DRowColFileRows(void ***arr, char *filename, long linelen, 
-                         long nlines, tileparamT *tileparams, size_t size);
 int SetDumpAll(outfileT *outfiles, paramT *params);
 int SetStreamPointers(void);
 int SetVerboseOut(paramT *params);
 int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol,
                              paramT *params);
-int DumpIncrCostFiles(incrcostT **incrcosts, long iincrcostfile, 
+int DumpIncrCostFiles(Array2D<incrcostT>& incrcosts, long iincrcostfile,
                       long nflow, long nrow, long ncol);
 int MakeTileDir(paramT *params, outfileT *outfiles);
-int ParseFilename(char *filename, char *path, char *basename);
+int ParseFilename(const char *filename, char *path, char *basename);
 int SetTileInitOutfile(char *outfile, long pid);
 
 
+/* function: MakeRowColArray2D()
+ * -----------------------------
+ * Creates a 2D array for storing arc attributes for a grid-like network. This
+ * function is intended as a replacement for Get2DRowColMem() and
+ * Get2DRowColZeroMem(), so the resulting array is typically treated as though
+ * it were the same shape as the memory buffer created by those functions. The
+ * true output array shape is 2*nrow-1 rows by ncol columns.
+ */
+template<typename T>
+Array2D<T>
+MakeRowColArray2D(long nrow, long ncol)
+{
+  return Array2D<T>::Zero(2*nrow-1,ncol);
+}
 
+template<>
+inline Array2D<costT>
+MakeRowColArray2D<costT>(long nrow, long ncol)
+{
+  auto arr = Array2D<costT>(2*nrow-1,ncol);
+
+  /* fill with zeros */
+  const costT val={0,0,0,0};
+  std::fill_n(arr.data(),arr.size(),val);
+
+  return arr;
+}
+
+template<>
+inline Array2D<smoothcostT>
+MakeRowColArray2D<smoothcostT>(long nrow, long ncol)
+{
+  auto arr = Array2D<smoothcostT>(2*nrow-1,ncol);
+
+  /* fill with zeros */
+  const smoothcostT val={0,0};
+  std::fill_n(arr.data(),arr.size(),val);
+
+  return arr;
+}
+
+template<>
+inline Array2D<bidircostT>
+MakeRowColArray2D<bidircostT>(long nrow, long ncol)
+{
+  auto arr = Array2D<bidircostT>(2*nrow-1,ncol);
+
+  /* fill with zeros */
+  const bidircostT val={0,0};
+  std::fill_n(arr.data(),arr.size(),val);
+
+  return arr;
+}
+
+template<>
+inline Array2D<incrcostT>
+MakeRowColArray2D<incrcostT>(long nrow, long ncol)
+{
+  auto arr = Array2D<incrcostT>(2*nrow-1,ncol);
+
+  /* fill with zeros */
+  const incrcostT val={0,0};
+  std::fill_n(arr.data(),arr.size(),val);
+
+  return arr;
+}
+
+/* function: Write2DArray() */
+template<typename T>
+int Write2DArray(Array2D<T>& array, const char *filename,
+                 long nrow, long ncol, size_t size){
+
+  int row;
+  FILE *fp;
+  char realoutfile[MAXSTRLEN]={};
+
+  fp=OpenOutputFile(filename,realoutfile);
+  for(row=0;row<nrow;row++){
+    if(fwrite(array.row(row).data(),size,ncol,fp)!=ncol){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
+    }
+  }
+  if(fclose(fp)){
+    fflush(NULL);
+    //fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+  }
+  return(0);
+}
+
+
+/* function: Write2DRowColArray() */
+template<typename T>
+int Write2DRowColArray(Array2D<T>& array, char *filename, long nrow,
+                        long ncol, size_t size){
+
+  int row;
+  FILE *fp;
+  char realoutfile[MAXSTRLEN]={};
+
+  fp=OpenOutputFile(filename,realoutfile);
+  for(row=0;row<nrow-1;row++){
+    if(fwrite(array.row(row).data(),size,ncol,fp)!=ncol){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
+    }
+  }
+  for(row=nrow-1;row<2*nrow-1;row++){
+    if(fwrite(array.row(row).data(),size,ncol-1,fp)!=ncol-1){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while writing to file " + std::string(realoutfile) +
+              " (device full?)");
+    }
+  }
+  if(fclose(fp)){
+    fflush(NULL);
+    //fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+  }
+  return(0);
+}
+
+
+/* function: Read2DArray() */
+template<typename T>
+int Read2DArray(Array2D<T>* arr, char *infile, long linelen, long nlines,
+                tileparamT *tileparams, size_t /*elptrsize*/, size_t elsize){
+
+  FILE *fp;
+  long filesize,row,nrow,ncol,padlen;
+
+  /* open the file */
+  if((fp=fopen(infile,"r"))==NULL){
+    fflush(NULL);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(infile));
+  }
+
+  /* get number of lines based on file size and line length */ 
+  fseek(fp,0,SEEK_END);
+  filesize=ftell(fp);
+  if(filesize!=(nlines*linelen*elsize)){
+    fflush(NULL);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(infile) + " wrong size (" +
+            std::to_string(nlines) + "x" + std::to_string(linelen) +
+            " array expected)");
+  }
+  fseek(fp,0,SEEK_SET);
+
+  /* get memory */
+  nrow=tileparams->nrow;
+  ncol=tileparams->ncol;
+  if(!arr->size()){
+    *arr=Array2D<T>(nrow,ncol);
+  }
+
+  /* read the data */
+  fseek(fp,(linelen*tileparams->firstrow+tileparams->firstcol)
+        *elsize,SEEK_CUR);
+  padlen=(linelen-ncol)*elsize;
+  for(row=0;row<nrow;row++){
+    if(fread(arr->row(row).data(),elsize,ncol,fp)!=ncol){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(infile));
+    }
+    fseek(fp,padlen,SEEK_CUR);
+  }
+  fclose(fp);
+
+  /* done */
+  return(0);
+
+}
+
+
+/* function: Read2DRowColFile() */
+template<typename T>
+int Read2DRowColFile(Array2D<T>* arr, char *filename, long linelen, long nlines,
+                     tileparamT *tileparams, size_t size){
+
+  FILE *fp;
+  long row, nel, nrow, ncol, padlen, filelen;
+ 
+  /* open the file */
+  if((fp=fopen(filename,"r"))==NULL){
+    fflush(NULL);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(filename));
+  }
+
+  /* get number of data elements in file */ 
+  fseek(fp,0,SEEK_END);
+  filelen=ftell(fp);
+  fseek(fp,0,SEEK_SET);
+  nel=(long )(filelen/size);
+
+  /* check file size */
+  if(2*linelen*nlines-nlines-linelen != nel || (filelen % size)){
+    fflush(NULL);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(filename) + " wrong size (" +
+            std::to_string(2*linelen*nlines-nlines-linelen) +
+            " elements expected)");
+  }
+
+  /* get memory if passed pointer is NULL */
+  nrow=tileparams->nrow;
+  ncol=tileparams->ncol;
+  if(!arr->size()){
+    *arr=MakeRowColArray2D<T>(nrow,ncol);
+  }
+
+  /* read arrays */
+  fseek(fp,(linelen*tileparams->firstrow+tileparams->firstcol)
+        *size,SEEK_SET);
+  padlen=(linelen-ncol)*size;
+  for(row=0; row<nrow-1; row++){
+    if(fread(arr->row(row).data(),size,ncol,fp)!=ncol){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(filename));
+    }
+    fseek(fp,padlen,SEEK_CUR);
+  }
+  fseek(fp,(linelen*(nlines-1)+(linelen-1)*tileparams->firstrow
+            +tileparams->firstcol)*size,SEEK_SET);
+  for(row=nrow-1; row<2*nrow-1; row++){
+    if(fread(arr->row(row).data(),size,ncol-1,fp)!=ncol-1){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(filename));
+    }
+    fseek(fp,padlen,SEEK_CUR);
+  }
+  fclose(fp);
+
+  /* done */
+  return(0);
+
+}
+
+
+/* function: Read2DRowColFileRows()
+ * --------------------------------
+ * Similar to Read2DRowColFile(), except reads only row (horizontal) data
+ * at specified locations.  tileparams->nrow is treated as the number of
+ * rows of data to be read from the RowCol file, not the number of 
+ * equivalent rows in the orginal pixel file (whose arcs are represented
+ * in the RowCol file).
+ */
+template<typename T>
+int Read2DRowColFileRows(Array2D<T>* arr, char *filename, long linelen, 
+                         long nlines, tileparamT *tileparams, size_t size){
+
+  FILE *fp;
+  long row, nel, nrow, ncol, padlen, filelen;
+ 
+  /* open the file */
+  if((fp=fopen(filename,"r"))==NULL){
+    fflush(NULL);
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Can't open file " + std::string(filename));
+  }
+
+  /* get number of data elements in file */ 
+  fseek(fp,0,SEEK_END);
+  filelen=ftell(fp);
+  fseek(fp,0,SEEK_SET);
+  nel=(long )(filelen/size);
+
+  /* check file size */
+  if(2*linelen*nlines-nlines-linelen != nel || (filelen % size)){
+    fflush(NULL);
+    throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "File " + std::string(filename) + " wrong size (" +
+            std::to_string(2*linelen*nlines-nlines-linelen) +
+            " elements expected)");
+  }
+
+  /* get memory if passed pointer is NULL */
+  nrow=tileparams->nrow;
+  ncol=tileparams->ncol;
+  if(!arr->size()){
+    *arr=MakeRowColArray2D<T>(nrow,ncol);
+  }
+
+  /* read arrays */
+  fseek(fp,(linelen*tileparams->firstrow+tileparams->firstcol)
+        *size,SEEK_SET);
+  padlen=(linelen-ncol)*size;
+  for(row=0; row<nrow; row++){
+    if(fread(arr->row(row).data(),size,ncol,fp)!=ncol){
+      fflush(NULL);
+      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+              "Error while reading from file " + std::string(filename));
+    }
+    fseek(fp,padlen,SEEK_CUR);
+  }
+  fclose(fp);
+
+  /* done */
+  return(0);
+
+}
 
 
 /*******************************************/
@@ -987,10 +1333,5 @@ extern FILE *sp0, *sp1, *sp2, *sp3;
 /* node pointer for marking arc not on tree in apex array */
 /* this should be treat as a constant */
 extern nodeT NONTREEARC[1];
-
-/* pointers to functions which calculate arc costs */
-extern void (*CalcCost)(void **, long, long, long, long, long,
-                        paramT *, long *, long *);
-extern long (*EvalCost)(void **, short **, long, long, long, paramT *);
 
 } // namespace isce3::unwrap

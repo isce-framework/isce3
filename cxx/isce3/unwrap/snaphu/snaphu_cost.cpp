@@ -8,22 +8,10 @@
 
 *************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <signal.h>
-#include <limits.h>
-#include <float.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <type_traits>
 
 #include <isce3/except/Error.h>
 
@@ -33,45 +21,48 @@ namespace isce3::unwrap {
 
 /* static (local) function prototypes */
 static
-void **BuildStatCostsTopo(float **wrappedphase, float **mag, 
-                          float **unwrappedest, float **pwr, 
-                          float **corr, short **rowweight, short **colweight,
-                          long nrow, long ncol, tileparamT *tileparams, 
-                          outfileT *outfiles, paramT *params);
+Array2D<costT> BuildStatCostsTopo(Array2D<float>& wrappedphase, Array2D<float>& mag,
+                                  Array2D<float>& unwrappedest, Array2D<float>& pwr,
+                                  Array2D<float>& corr, Array2D<short>& rowweight, Array2D<short>& colweight,
+                                  long nrow, long ncol, tileparamT *tileparams,
+                                  outfileT *outfiles, paramT *params);
 static
-void **BuildStatCostsDefo(float **wrappedphase, float **mag, 
-                          float **unwrappedest, float **corr, 
-                          short **rowweight, short **colweight,
-                          long nrow, long ncol, tileparamT *tileparams, 
-                          outfileT *outfiles, paramT *params);
+Array2D<costT> BuildStatCostsDefo(Array2D<float>& wrappedphase, Array2D<float>& mag,
+                                  Array2D<float>& unwrappedest, Array2D<float>& corr,
+                                  Array2D<short>& rowweight, Array2D<short>& colweight,
+                                  long nrow, long ncol, tileparamT *tileparams,
+                                  outfileT *outfiles, paramT *params);
 static
-void **BuildStatCostsSmooth(float **wrappedphase, float **mag, 
-                            float **unwrappedest, float **corr, 
-                            short **rowweight, short **colweight,
-                            long nrow, long ncol, tileparamT *tileparams, 
-                            outfileT *outfiles, paramT *params);
+Array2D<smoothcostT> BuildStatCostsSmooth(Array2D<float>& wrappedphase, Array2D<float>& mag,
+                                          Array2D<float>& unwrappedest, Array2D<float>& corr,
+                                          Array2D<short>& rowweight, Array2D<short>& colweight,
+                                          long nrow, long ncol, tileparamT *tileparams,
+                                          outfileT *outfiles, paramT *params);
 static
 void MaskCost(costT *costptr);
 static
 void MaskSmoothCost(smoothcostT *smoothcostptr);
 static
-int MaskPrespecifiedArcCosts(void **costsptr, short **weights,
+int MaskPrespecifiedArcCosts(Array2D<costT>& costs, Array2D<short>& weights,
                              long nrow, long ncol, paramT *params);
 static
-int GetIntensityAndCorrelation(float **mag, float **wrappedphase, 
-                               float ***pwrptr, float ***corrptr, 
+int MaskPrespecifiedArcCosts(Array2D<smoothcostT>& costs, Array2D<short>& weights,
+                             long nrow, long ncol, paramT *params);
+static
+int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase,
+                               Array2D<float>* pwrptr, Array2D<float>* corrptr,
                                infileT *infiles, long linelen, long nlines,
-                               long nrow, long ncol, outfileT *outfiles, 
+                               long nrow, long ncol, outfileT *outfiles,
                                paramT *params, tileparamT *tileparams);
 static
-int RemoveMean(float **ei, long nrow, long ncol, 
+int RemoveMean(Array2D<float>& ei, long nrow, long ncol,
                long krowei, long kcolei);
+static Array1D<float>
+BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr,
+                        long *tablesizeptr, tileparamT *tileparams,
+                        paramT *params);
 static
-float *BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr, 
-                               long *tablesizeptr, tileparamT *tileparams,
-                               paramT *params);
-static
-double SolveDZRCrit(double sinnomincangle, double cosnomincangle, 
+double SolveDZRCrit(double sinnomincangle, double cosnomincangle,
                     paramT *params, double threshold);
 static
 int SolveEIModelParams(double *slope1ptr, double *slope2ptr, 
@@ -81,112 +72,65 @@ int SolveEIModelParams(double *slope1ptr, double *slope2ptr,
 static
 double EIofDZR(double dzr, double sinnomincangle, double cosnomincangle,
                paramT *params);
+static Array2D<float>
+BuildDZRhoMaxLookupTable(double nominc0, double dnominc,
+                         long nominctablesize, double rhomin,
+                         double drho, long nrho, paramT *params);
 static
-float **BuildDZRhoMaxLookupTable(double nominc0, double dnominc, 
-                                 long nominctablesize, double rhomin, 
-                                 double drho, long nrho, paramT *params);
-static
-double CalcDZRhoMax(double rho, double nominc, paramT *params, 
+double CalcDZRhoMax(double rho, double nominc, paramT *params,
                     double threshold);
 static
-int CalcInitMaxFlow(paramT *params, void **costs, long nrow, long ncol);
+int CalcInitMaxFlow(paramT *params, Array2D<costT>& costs, long nrow, long ncol);
 
 
 
 /* function: BuildCostArrays()
  * ---------------------------
- * Builds cost arrays for arcs based on interferogram intensity 
- * and correlation, depending on options and passed parameters.  
+ * Builds cost arrays for arcs based on interferogram intensity
+ * and correlation, depending on options and passed parameters.
  */
-int BuildCostArrays(void ***costsptr, short ***mstcostsptr, 
-                    float **mag, float **wrappedphase, 
-                    float **unwrappedest, long linelen, long nlines, 
-                    long nrow, long ncol, paramT *params, 
-                    tileparamT *tileparams, infileT *infiles, 
-                    outfileT *outfiles){
-  
+template<class CostTag>
+int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* mstcostsptr,
+                    Array2D<float>& mag, Array2D<float>& wrappedphase,
+                    Array2D<float>& unwrappedest, long linelen, long nlines,
+                    long nrow, long ncol, paramT *params,
+                    tileparamT *tileparams, infileT *infiles,
+                    outfileT *outfiles, CostTag tag){
+
   long row, col, maxcol, tempcost;
   long poscost, negcost, costtypesize;
-  float **pwr, **corr;
-  short **weights, **rowweight, **colweight, **scalarcosts;
-  bidircostT **bidircosts;
-  void **costs, **rowcost, **colcost;
-  void (*CalcStatCost)(void **, long, long, long, long, long,
-                       paramT *, long *, long *);
+  Array2D<float> pwr, corr;
 
-  
+  using Cost=typename CostTag::Cost;
+  Array2D<Cost> costs;
+  Array2D<short> scalarcosts;
+  Array2D<bidircostT> bidircosts;
 
   /* initializations to silence compiler warnings */
   costtypesize=0;
-  bidircosts=NULL;
-  scalarcosts=NULL;
-  
-  /* set global pointers to functions for calculating and evaluating costs */
-  if(params->p<0){
-    if(params->costmode==TOPO){
-      CalcCost=CalcCostTopo;
-      EvalCost=EvalCostTopo;
-    }else if(params->costmode==DEFO){
-      CalcCost=CalcCostDefo;
-      EvalCost=EvalCostDefo;
-    }else if(params->costmode==SMOOTH){
-      CalcCost=CalcCostSmooth;
-      EvalCost=EvalCostSmooth;
-    }
-  }else{
-    if(params->bidirlpn){
-      if(params->p==0){
-        CalcCost=CalcCostL0BiDir;
-        EvalCost=EvalCostL0BiDir;
-      }else if(params->p==1){
-        CalcCost=CalcCostL1BiDir;
-        EvalCost=EvalCostL1BiDir;
-      }else if(params->p==2){
-        CalcCost=CalcCostL2BiDir;
-        EvalCost=EvalCostL2BiDir;
-      }else{
-        CalcCost=CalcCostLPBiDir;
-        EvalCost=EvalCostLPBiDir;
-      }
-    }else{
-      if(params->p==0){
-        CalcCost=CalcCostL0;
-        EvalCost=EvalCostL0;
-      }else if(params->p==1){
-        CalcCost=CalcCostL1;
-        EvalCost=EvalCostL1;
-      }else if(params->p==2){
-        CalcCost=CalcCostL2;
-        EvalCost=EvalCostL2;
-      }else{
-        CalcCost=CalcCostLP;
-        EvalCost=EvalCostLP;
-      }
-    }
-  }
 
   /* read weights */
-  weights=NULL;
+  Array2D<short> weights;
   ReadWeightsFile(&weights,infiles->weightfile,linelen,nlines,tileparams);
-  rowweight=weights;
-  colweight=&weights[nrow-1];
+  Array2D<short> rowweight=weights.topRows(nrow-1);
+  Array2D<short> colweight=weights.bottomRows(nrow);
 
   /* set weights to zero for arcs adjacent to zero-magnitude pixels */
-  if(mag!=NULL){
+  if(mag.size()){
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        if(mag[row][col]==0){
+        if(mag(row,col)==0){
           if(row>0){
-            rowweight[row-1][col]=0;
+            rowweight(row-1,col)=0;
           }
           if(row<nrow-1){
-            rowweight[row][col]=0;
+            rowweight(row,col)=0;
           }
           if(col>0){
-            colweight[row][col-1]=0;
+            colweight(row,col-1)=0;
           }
           if(col<ncol-1){
-            colweight[row][col]=0;
+            colweight(row,col)=0;
           }
         }
       }
@@ -213,8 +157,7 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
 
     /* read cost info from file */
     fprintf(sp1,"Reading cost information from file %s\n",infiles->costinfile);
-    costs=NULL;
-    Read2DRowColFile((void ***)&costs,infiles->costinfile,
+    Read2DRowColFile(&costs,infiles->costinfile,
                      linelen,nlines,tileparams,costtypesize);
     (*costsptr)=costs;
 
@@ -222,7 +165,12 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
     /* make sure corresponding costs are nulled when costs are read from */
     /*   file rather than internally generated since read costs are not */
     /*   multiplied by weights */
-    MaskPrespecifiedArcCosts(costs,weights,nrow,ncol,params);
+    if constexpr(std::is_same<Cost,costT>{} || std::is_same<Cost,smoothcostT>{}){
+      MaskPrespecifiedArcCosts(costs,weights,nrow,ncol,params);
+    }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+    }
 
   }else if(params->costmode!=NOSTATCOSTS){
 
@@ -236,21 +184,35 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
     /* set global pointers to functions for calculating and evaluating costs */
     if(params->costmode==TOPO){
       fprintf(sp1,"Calculating topography-mode cost parameters\n");
-      costs=BuildStatCostsTopo(wrappedphase,mag,unwrappedest,pwr,corr,
-                               rowweight,colweight,nrow,ncol,tileparams,
-                               outfiles,params);
-    }else if(params->costmode==DEFO){
-      fprintf(sp1,"Calculating deformation-mode cost parameters\n");
-      costs=BuildStatCostsDefo(wrappedphase,mag,unwrappedest,corr,
-                               rowweight,colweight,nrow,ncol,tileparams,
-                               outfiles,params);
-    }else if(params->costmode==SMOOTH){
-      fprintf(sp1,"Calculating smooth-solution cost parameters\n");
-      costs=BuildStatCostsSmooth(wrappedphase,mag,unwrappedest,corr,
+      if constexpr(std::is_same<Cost,costT>{}){
+        costs=BuildStatCostsTopo(wrappedphase,mag,unwrappedest,pwr,corr,
                                  rowweight,colweight,nrow,ncol,tileparams,
                                  outfiles,params);
+      }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+      }
+    }else if(params->costmode==DEFO){
+      fprintf(sp1,"Calculating deformation-mode cost parameters\n");
+      if constexpr(std::is_same<Cost,costT>{}){
+        costs=BuildStatCostsDefo(wrappedphase,mag,unwrappedest,corr,
+                                 rowweight,colweight,nrow,ncol,tileparams,
+                                 outfiles,params);
+      }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+      }
+    }else if(params->costmode==SMOOTH){
+      fprintf(sp1,"Calculating smooth-solution cost parameters\n");
+      if constexpr(std::is_same<Cost,smoothcostT>{}){
+        costs=BuildStatCostsSmooth(wrappedphase,mag,unwrappedest,corr,
+                                   rowweight,colweight,nrow,ncol,tileparams,
+                                   outfiles,params);
+      }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+      }
     }else{
-      costs=NULL;
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unrecognized cost mode");
     }
@@ -259,40 +221,21 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
 
   }/* end if(params->costmode!=NOSTATCOSTS) */
   
-  /* set array subpointers and temporary cost-calculation function pointer */
-  if(params->costmode==TOPO){
-    rowcost=costs;
-    colcost=(void **)&(((costT **)costs)[nrow-1]);
-    CalcStatCost=CalcCostTopo;
-  }else if(params->costmode==DEFO){
-    rowcost=costs;
-    colcost=(void **)&(((costT **)costs)[nrow-1]);
-    CalcStatCost=CalcCostDefo;
-  }else if(params->costmode==SMOOTH){
-    rowcost=costs;
-    colcost=(void **)&(((smoothcostT **)costs)[nrow-1]);
-    CalcStatCost=CalcCostSmooth;
-  }else{
-    rowcost=NULL;
-    colcost=NULL;
-    CalcStatCost=NULL;
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unrecognized cost mode");
-  }
-  
+  Array2D<Cost> rowcost=costs.block(0,0,nrow-1,ncol);
+  Array2D<Cost> colcost=costs.block(nrow-1,0,nrow,ncol-1);
 
   /* dump statistical cost arrays */
   if(strlen(infiles->costinfile) || params->costmode!=NOSTATCOSTS){
     if(strlen(outfiles->costoutfile)){
-      Write2DRowColArray((void **)costs,outfiles->costoutfile,
+      Write2DRowColArray(costs,outfiles->costoutfile,
                         nrow,ncol,costtypesize);
     }else{
       if(strlen(outfiles->rowcostfile)){
-        Write2DArray((void **)rowcost,outfiles->rowcostfile,
+        Write2DArray(rowcost,outfiles->rowcostfile,
                      nrow-1,ncol,costtypesize);
       }
       if(strlen(outfiles->colcostfile)){
-        Write2DArray((void **)colcost,outfiles->colcostfile,
+        Write2DArray(colcost,outfiles->colcostfile,
                      nrow,ncol-1,costtypesize);
       }
     }
@@ -301,13 +244,21 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
   /* get memory for scalar costs if in Lp mode */
   if(params->p>=0){
     if(params->bidirlpn){
-      bidircosts=(bidircostT **)Get2DRowColMem(nrow,ncol,sizeof(bidircostT *),
-                                               sizeof(bidircostT));
-      (*costsptr)=(void **)bidircosts;
+      if constexpr(std::is_same<Cost,bidircostT>{}){
+        bidircosts=MakeRowColArray2D<bidircostT>(nrow,ncol);
+        (*costsptr)=bidircosts;
+      }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+      }
     }else{
-      scalarcosts=(short **)Get2DRowColMem(nrow,ncol,sizeof(short *),
-                                           sizeof(short));
-      (*costsptr)=(void **)scalarcosts;
+      if constexpr(std::is_same<Cost,short>{}){
+        scalarcosts=MakeRowColArray2D<short>(nrow,ncol);
+        (*costsptr)=scalarcosts;
+      }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+      }
     }
   }
 
@@ -324,10 +275,10 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
         }
         for(col=0;col<maxcol;col++){
           if(params->bidirlpn){
-            bidircosts[row][col].posweight=weights[row][col];
-            bidircosts[row][col].negweight=weights[row][col];
+            bidircosts(row,col).posweight=weights(row,col);
+            bidircosts(row,col).negweight=weights(row,col);
           }else{
-            scalarcosts[row][col]=weights[row][col];
+            scalarcosts(row,col)=weights(row,col);
           }
         }
       }
@@ -335,10 +286,9 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
 
     /* unless input is already unwrapped, use weights memory for mstcosts */
     if(!params->unwrapped){
-      (*mstcostsptr)=weights;
+      *mstcostsptr = weights;
     }else{
-      Free2DArray((void **)weights,2*nrow-1);
-      (*mstcostsptr)=NULL;
+      *mstcostsptr = Array2D<short>{};
     }
 
   }else if(!params->unwrapped || params->p>=0){
@@ -354,8 +304,8 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
       for(col=0;col<maxcol;col++){
 
         /* calculate incremental costs for flow=0, nflow=1 */
-        CalcStatCost((void **)costs,0,row,col,1,nrow,params,
-                     &poscost,&negcost);
+        CalcCost(costs,0,row,col,1,nrow,params,
+                 &poscost,&negcost,tag);
 
         /* take smaller of positive and negative incremental cost */
         if(poscost<negcost){
@@ -368,18 +318,18 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
         /* note: weights used for MST algorithm will not be zero along */
         /*   masked edges since they are clipped to 1, but MST is run */
         /*   once on entire network, not just non-masked regions */
-        weights[row][col]=LClip(tempcost,MINSCALARCOST,params->maxcost);
-        
+        weights(row,col)=LClip(tempcost,MINSCALARCOST,params->maxcost);
+
         /* assign Lp costs if in Lp mode */
         /* let scalar cost be zero if costs in both directions are zero */
         if(params->p>=0){
           if(params->bidirlpn){
-            bidircosts[row][col].posweight=LClip(poscost,0,params->maxcost);
-            bidircosts[row][col].negweight=LClip(negcost,0,params->maxcost);
+            bidircosts(row,col).posweight=LClip(poscost,0,params->maxcost);
+            bidircosts(row,col).negweight=LClip(negcost,0,params->maxcost);
           }else{
-            scalarcosts[row][col]=weights[row][col];
+            scalarcosts(row,col)=weights(row,col);
             if(poscost==0 && negcost==0){
-              scalarcosts[row][col]=0;
+              scalarcosts(row,col)=0;
             }
           }
         }
@@ -387,61 +337,56 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
     }
 
     /* set costs for corner arcs to prevent ambiguous flows */
-    weights[nrow-1][0]=LARGESHORT;
-    weights[nrow-1][ncol-2]=LARGESHORT;
-    weights[2*nrow-2][0]=LARGESHORT;
-    weights[2*nrow-2][ncol-2]=LARGESHORT;
+    weights(nrow-1,0)=LARGESHORT;
+    weights(nrow-1,ncol-2)=LARGESHORT;
+    weights(2*nrow-2,0)=LARGESHORT;
+    weights(2*nrow-2,ncol-2)=LARGESHORT;
     if(params->p>=0){
       if(params->bidirlpn){
-        bidircosts[nrow-1][0].posweight=LARGESHORT;
-        bidircosts[nrow-1][0].negweight=LARGESHORT;
-        bidircosts[nrow-1][ncol-2].posweight=LARGESHORT;
-        bidircosts[nrow-1][ncol-2].negweight=LARGESHORT;
-        bidircosts[2*nrow-2][0].posweight=LARGESHORT;
-        bidircosts[2*nrow-2][0].negweight=LARGESHORT;
-        bidircosts[2*nrow-2][ncol-2].posweight=LARGESHORT;
-        bidircosts[2*nrow-2][ncol-2].negweight=LARGESHORT;
+        bidircosts(nrow-1,0).posweight=LARGESHORT;
+        bidircosts(nrow-1,0).negweight=LARGESHORT;
+        bidircosts(nrow-1,ncol-2).posweight=LARGESHORT;
+        bidircosts(nrow-1,ncol-2).negweight=LARGESHORT;
+        bidircosts(2*nrow-2,0).posweight=LARGESHORT;
+        bidircosts(2*nrow-2,0).negweight=LARGESHORT;
+        bidircosts(2*nrow-2,ncol-2).posweight=LARGESHORT;
+        bidircosts(2*nrow-2,ncol-2).negweight=LARGESHORT;
       }else{
-        scalarcosts[nrow-1][0]=LARGESHORT;
-        scalarcosts[nrow-1][ncol-2]=LARGESHORT;
-        scalarcosts[2*nrow-2][0]=LARGESHORT;
-        scalarcosts[2*nrow-2][ncol-2]=LARGESHORT;
+        scalarcosts(nrow-1,0)=LARGESHORT;
+        scalarcosts(nrow-1,ncol-2)=LARGESHORT;
+        scalarcosts(2*nrow-2,0)=LARGESHORT;
+        scalarcosts(2*nrow-2,ncol-2)=LARGESHORT;
       }
     }
-    
+
     /* dump mst initialization costs */
     if(strlen(outfiles->mstrowcostfile)){
-      Write2DArray((void **)rowweight,outfiles->mstrowcostfile,
+      Write2DArray(rowweight,outfiles->mstrowcostfile,
                    nrow-1,ncol,sizeof(short));
     }
     if(strlen(outfiles->mstcolcostfile)){
-      Write2DArray((void **)colweight,outfiles->mstcolcostfile,
-                   nrow,ncol-1,sizeof(short)); 
+      Write2DArray(colweight,outfiles->mstcolcostfile,
+                   nrow,ncol-1,sizeof(short));
     }
     if(strlen(outfiles->mstcostsfile)){
-      Write2DRowColArray((void **)rowweight,outfiles->mstcostsfile,
+      Write2DRowColArray(rowweight,outfiles->mstcostsfile,
                          nrow,ncol,sizeof(short));
     }
 
     /* unless input is unwrapped, calculate initialization max flow */
     if(params->initmaxflow==AUTOCALCSTATMAX && !params->unwrapped){
-      CalcInitMaxFlow(params,(void **)costs,nrow,ncol);
-    }
-
-    /* free costs memory if in init-only or Lp mode */
-    if(params->initonly || params->p>=0){
-      Free2DArray((void **)costs,2*nrow-1);
+      if constexpr(std::is_same<Cost,costT>{}){
+        CalcInitMaxFlow(params,costs,nrow,ncol);
+      }else{
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                "Bad Cost type in BuildCostArrays()");
+      }
     }
 
     /* use memory allocated for weights arrays for mstcosts if needed */
     if(!params->unwrapped){
-      (*mstcostsptr)=weights;
-    }else{
-      Free2DArray((void **)weights,2*nrow-1);
+      *mstcostsptr = weights;
     }
- 
-  }else{
-    Free2DArray((void **)weights,2*nrow-1);
   }
 
   /* done */
@@ -455,11 +400,11 @@ int BuildCostArrays(void ***costsptr, short ***mstcostsptr,
  * Builds statistical cost arrays for topography mode.
  */
 static
-void **BuildStatCostsTopo(float **wrappedphase, float **mag, 
-                          float **unwrappedest, float **pwr, 
-                          float **corr, short **rowweight, short **colweight,
-                          long nrow, long ncol, tileparamT *tileparams, 
-                          outfileT *outfiles, paramT *params){
+Array2D<costT> BuildStatCostsTopo(Array2D<float>& wrappedphase, Array2D<float>& /*mag*/,
+                                  Array2D<float>& unwrappedest, Array2D<float>& pwr,
+                                  Array2D<float>& corr, Array2D<short>& rowweight, Array2D<short>& colweight,
+                                  long nrow, long ncol, tileparamT *tileparams,
+                                  outfileT *outfiles, paramT *params){
 
   long row, col, iei, nrho, nominctablesize;
   long kperpdpsi, kpardpsi, sigsqshortmin;
@@ -473,15 +418,14 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
   double sigsqrho, sigsqrhoconst, sigsqei, sigsqlay;
   double glay, costscale, ambiguityheight, ztoshort, ztoshortsq;
   double nshortcycle, midrangeambight;
-  float **ei, **dpsi, **avgdpsi, *dzrcrittable, **dzrhomaxtable;
-  costT **costs, **rowcost, **colcost;
   signed char noshadow, nolayover;
 
+  Array2D<float> ei;
 
   /* get memory and set cost array pointers */
-  costs=(costT **)Get2DRowColMem(nrow,ncol,sizeof(costT *),sizeof(costT));
-  rowcost=(costT **)costs;
-  colcost=(costT **)&costs[nrow-1];
+  auto costs=MakeRowColArray2D<costT>(nrow,ncol);
+  auto rowcost=costs.block(0,0,nrow-1,ncol);
+  auto colcost=costs.block(nrow-1,0,nrow,ncol-1);
 
   /* set up */
   rho0=(params->rhosconst1)/(params->ncorrlooks)+(params->rhosconst2);
@@ -511,9 +455,7 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
   /* despeckle the interferogram intensity */
   fprintf(sp2,"Despeckling intensity image\n");
-  ei=NULL;
   Despeckle(pwr,&ei,nrow,ncol);
-  Free2DArray((void **)pwr,nrow);
 
   /* remove large-area average intensity */
   fprintf(sp2,"Normalizing intensity\n");
@@ -521,7 +463,7 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
   /* dump normalized, despeckled intensity */
   if(strlen(outfiles->eifile)){
-    Write2DArray((void **)ei,outfiles->eifile,nrow,ncol,sizeof(float));
+    Write2DArray(ei,outfiles->eifile,nrow,ncol,sizeof(float));
   }
 
   /* compute some midswath parameters */
@@ -548,13 +490,13 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
   baselineangle=params->baselineangle;
 
   /* build lookup table for dzrcrit vs incidence angle */
-  dzrcrittable=BuildDZRCritLookupTable(&nominc0,&dnominc,&nominctablesize,
-                                       tileparams,params);
+  auto dzrcrittable=BuildDZRCritLookupTable(&nominc0,&dnominc,&nominctablesize,
+                                            tileparams,params);
 
   /* build lookup table for dzrhomax vs incidence angle */
-  dzrhomaxtable=BuildDZRhoMaxLookupTable(nominc0,dnominc,nominctablesize,
-                                         rhomin,drho,nrho,params);
-  
+  auto dzrhomaxtable=BuildDZRhoMaxLookupTable(nominc0,dnominc,nominctablesize,
+                                              rhomin,drho,nrho,params);
+
   /* set cost autoscale factor based on midswath parameters */
   bperp=baseline*cos(lookangle-baselineangle);
   midrangeambight=fabs(lambda*slantrange*sinnomincangle/(2*bperp));
@@ -562,8 +504,8 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
   glay=-costscale*log(params->layconst);
 
   /* get memory for wrapped difference arrays */
-  dpsi=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
-  avgdpsi=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  auto dpsi=Array2D<float>(nrow,ncol);
+  auto avgdpsi=Array2D<float>(nrow,ncol);
 
   /* build array of mean wrapped phase differences in range */
   /* simple average of phase differences is biased, but mean phase */
@@ -600,12 +542,12 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
     /* loop over azimuth */
     for(row=0;row<nrow;row++){
-        
+
       /* see if we have a masked pixel */
-      if(colweight[row][col]==0){
-          
+      if(colweight(row,col)==0){
+
         /* masked pixel */
-        MaskCost(&colcost[row][col]);
+        MaskCost(&colcost(row,col));
 
       }else{
 
@@ -613,17 +555,17 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
         /* calculate variance due to decorrelation */
         /* factor of 2 in sigsqrhoconst for pdf convolution */
-        rho=corr[row][col];
+        rho=corr(row,col);
         if(rho<rhomin){
           rho=0;
         }
         sigsqrho=sigsqrhoconst*pow(1-rho,rhopow);
 
         /* calculate dz expected from EI if no layover */
-        if(ei[row][col]>eicrit){
-          dzei=(slope2*ei[row][col]+const2)*dzeifactor;
+        if(ei(row,col)>eicrit){
+          dzei=(slope2*ei(row,col)+const2)*dzeifactor;
         }else{
-          dzei=(slope1*ei[row][col]+const1)*dzeifactor;
+          dzei=(slope1*ei(row,col)+const1)*dzeifactor;
         }
         if(noshadow && dzei<dzeimin){
           dzei=dzeimin;
@@ -631,12 +573,12 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
         /* calculate dz expected from EI if layover exists */
         dzlay=0;
-        if(ei[row][col]>layminei){
+        if(ei(row,col)>layminei){
           for(iei=0;iei<laywidth;iei++){
-            if(ei[row][col+iei]>eicrit){
-              dzlay+=slope2*ei[row][col+iei]+const2;
+            if(ei(row,col+iei)>eicrit){
+              dzlay+=slope2*ei(row,col+iei)+const2;
             }else{
-              dzlay+=slope1*ei[row][col+iei]+const1;
+              dzlay+=slope1*ei(row,col+iei)+const1;
             }
             if(col+iei>ncol-2){
               break;
@@ -660,48 +602,48 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
         nolayover=TRUE;
         if(dzlay){
           if(rho>0){
-            colcost[row][col].offset=nshortcycle*
-              (dpsi[row][col]-0.5*(avgdpsi[row][col]+dphilaypeak));
+            colcost(row,col).offset=nshortcycle*
+              (dpsi(row,col)-0.5*(avgdpsi(row,col)+dphilaypeak));
           }else{
-            colcost[row][col].offset=nshortcycle*
-              (dpsi[row][col]-0.25*avgdpsi[row][col]-0.75*dphilaypeak);
+            colcost(row,col).offset=nshortcycle*
+              (dpsi(row,col)-0.25*avgdpsi(row,col)-0.75*dphilaypeak);
           }
-          colcost[row][col].sigsq=(sigsqrho+sigsqei+sigsqlay)*ztoshortsq
-            /(costscale*colweight[row][col]);
-          if(colcost[row][col].sigsq<sigsqshortmin){
-            colcost[row][col].sigsq=sigsqshortmin;
+          colcost(row,col).sigsq=(sigsqrho+sigsqei+sigsqlay)*ztoshortsq
+            /(costscale*colweight(row,col));
+          if(colcost(row,col).sigsq<sigsqshortmin){
+            colcost(row,col).sigsq=sigsqshortmin;
           }
-          colcost[row][col].dzmax=dzlay*ztoshort;
-          colcost[row][col].laycost=colweight[row][col]*glay;
-          if(labs(colcost[row][col].dzmax)
-             >floor(sqrt(colcost[row][col].laycost*colcost[row][col].sigsq))){
+          colcost(row,col).dzmax=dzlay*ztoshort;
+          colcost(row,col).laycost=colweight(row,col)*glay;
+          if(labs(colcost(row,col).dzmax)
+             >floor(sqrt(colcost(row,col).laycost*colcost(row,col).sigsq))){
             nolayover=FALSE;
           }
         }
         if(nolayover){
-          colcost[row][col].sigsq=(sigsqrho+sigsqei)*ztoshortsq
-            /(costscale*colweight[row][col]);
-          if(colcost[row][col].sigsq<sigsqshortmin){
-            colcost[row][col].sigsq=sigsqshortmin;
+          colcost(row,col).sigsq=(sigsqrho+sigsqei)*ztoshortsq
+            /(costscale*colweight(row,col));
+          if(colcost(row,col).sigsq<sigsqshortmin){
+            colcost(row,col).sigsq=sigsqshortmin;
           }
           if(rho>0){
-            colcost[row][col].offset=ztoshort*
-              (ambiguityheight*(dpsi[row][col]-0.5*avgdpsi[row][col])
+            colcost(row,col).offset=ztoshort*
+              (ambiguityheight*(dpsi(row,col)-0.5*avgdpsi(row,col))
                -0.5*dzeiweight*dzei);
           }else{
-            colcost[row][col].offset=ztoshort*
-              (ambiguityheight*(dpsi[row][col]-0.25*avgdpsi[row][col])
+            colcost(row,col).offset=ztoshort*
+              (ambiguityheight*(dpsi(row,col)-0.25*avgdpsi(row,col))
                -0.75*dzeiweight*dzei);
           }
-          colcost[row][col].laycost=NOCOSTSHELF;
-          colcost[row][col].dzmax=LARGESHORT;
+          colcost(row,col).laycost=NOCOSTSHELF;
+          colcost(row,col).dzmax=LARGESHORT;
         }
 
         /* shift PDF to account for flattening by coarse unwrapped estimate */
-        if(unwrappedest!=NULL){
-          colcost[row][col].offset+=(nshortcycle/TWOPI*
-                                     (unwrappedest[row][col+1]
-                                      -unwrappedest[row][col]));
+        if(unwrappedest.size()){
+          colcost(row,col).offset+=(nshortcycle/TWOPI*
+                                     (unwrappedest(row,col+1)
+                                      -unwrappedest(row,col)));
         }
 
       }
@@ -747,12 +689,12 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
     /* loop over azimuth */
     for(row=0;row<nrow-1;row++){
-        
+
       /* see if we have a masked pixel */
-      if(rowweight[row][col]==0){
-          
+      if(rowweight(row,col)==0){
+
         /* masked pixel */
-        MaskCost(&rowcost[row][col]);
+        MaskCost(&rowcost(row,col));
 
       }else{
 
@@ -760,7 +702,7 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
         /* variance due to decorrelation */
         /* get correlation and clip small values because of estimator bias */
-        rho=(corr[row][col]+corr[row+1][col])/2.0;
+        rho=(corr(row,col)+corr(row+1,col))/2.0;
         if(rho<rhomin){
           rho=0;
         }
@@ -768,13 +710,13 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
         /* if no layover, the expected dz for azimuth will always be 0 */
         dzei=0;
-        
+
         /* calculate dz expected from EI if layover exists */
         dzlay=0;
-        avgei=(ei[row][col]+ei[row+1][col])/2.0;
+        avgei=(ei(row,col)+ei(row+1,col))/2.0;
         if(avgei>layminei){
           for(iei=0;iei<laywidth;iei++){
-            avgei=(ei[row][col+iei]+ei[row+1][col+iei])/2.0;
+            avgei=(ei(row,col+iei)+ei(row+1,col+iei))/2.0;
             if(avgei>eicrit){
               dzlay+=slope2*avgei+const2;
             }else{
@@ -800,57 +742,49 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
 
         /* set cost parameters in terms of flow, represented as shorts */
         if(rho>0){
-          rowcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-avgdpsi[row][col]);
+          rowcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-avgdpsi(row,col));
         }else{
-          rowcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-0.5*avgdpsi[row][col]);
+          rowcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-0.5*avgdpsi(row,col));
         }
         nolayover=TRUE;
         if(dzlay){
-          rowcost[row][col].sigsq=(sigsqrho+sigsqei+sigsqlay)*ztoshortsq
-            /(costscale*rowweight[row][col]);
-          if(rowcost[row][col].sigsq<sigsqshortmin){
-            rowcost[row][col].sigsq=sigsqshortmin;
+          rowcost(row,col).sigsq=(sigsqrho+sigsqei+sigsqlay)*ztoshortsq
+            /(costscale*rowweight(row,col));
+          if(rowcost(row,col).sigsq<sigsqshortmin){
+            rowcost(row,col).sigsq=sigsqshortmin;
           }
-          rowcost[row][col].dzmax=fabs(dzlay*ztoshort);
-          rowcost[row][col].laycost=rowweight[row][col]*glay;
-          if(labs(rowcost[row][col].dzmax)
-             >floor(sqrt(rowcost[row][col].laycost*rowcost[row][col].sigsq))){
+          rowcost(row,col).dzmax=fabs(dzlay*ztoshort);
+          rowcost(row,col).laycost=rowweight(row,col)*glay;
+          if(labs(rowcost(row,col).dzmax)
+             >floor(sqrt(rowcost(row,col).laycost*rowcost(row,col).sigsq))){
             nolayover=FALSE;
           }
         }
         if(nolayover){
-          rowcost[row][col].sigsq=(sigsqrho+sigsqei)*ztoshortsq
-            /(costscale*rowweight[row][col]);
-          if(rowcost[row][col].sigsq<sigsqshortmin){
-            rowcost[row][col].sigsq=sigsqshortmin;
+          rowcost(row,col).sigsq=(sigsqrho+sigsqei)*ztoshortsq
+            /(costscale*rowweight(row,col));
+          if(rowcost(row,col).sigsq<sigsqshortmin){
+            rowcost(row,col).sigsq=sigsqshortmin;
           }
-          rowcost[row][col].laycost=NOCOSTSHELF;
-          rowcost[row][col].dzmax=LARGESHORT;
+          rowcost(row,col).laycost=NOCOSTSHELF;
+          rowcost(row,col).dzmax=LARGESHORT;
         }
 
         /* shift PDF to account for flattening by coarse unwrapped estimate */
-        if(unwrappedest!=NULL){
-          rowcost[row][col].offset+=(nshortcycle/TWOPI*
-                                     (unwrappedest[row+1][col]
-                                      -unwrappedest[row][col]));
+        if(unwrappedest.size()){
+          rowcost(row,col).offset+=(nshortcycle/TWOPI*
+                                     (unwrappedest(row+1,col)
+                                      -unwrappedest(row,col)));
         }
 
       }
     }
   }  /* end of azimuth gradient cost calculation */
 
-  /* free temporary arrays */
-  Free2DArray((void **)corr,nrow);
-  Free2DArray((void **)dpsi,nrow);
-  Free2DArray((void **)avgdpsi,nrow);
-  Free2DArray((void **)ei,nrow);
-  free(dzrcrittable);
-  Free2DArray((void **)dzrhomaxtable,nominctablesize);
-
   /* return pointer to costs arrays */
-  return((void **)costs);
+  return(costs);
 
 }
 
@@ -860,11 +794,11 @@ void **BuildStatCostsTopo(float **wrappedphase, float **mag,
  * Builds statistical cost arrays for deformation mode.
  */
 static
-void **BuildStatCostsDefo(float **wrappedphase, float **mag, 
-                          float **unwrappedest, float **corr, 
-                          short **rowweight, short **colweight,
-                          long nrow, long ncol, tileparamT *tileparams, 
-                          outfileT *outfiles, paramT *params){
+Array2D<costT> BuildStatCostsDefo(Array2D<float>& wrappedphase, Array2D<float>& /*mag*/,
+                                  Array2D<float>& unwrappedest, Array2D<float>& corr,
+                                  Array2D<short>& rowweight, Array2D<short>& colweight,
+                                  long nrow, long ncol, tileparamT * /*tileparams*/,
+                                  outfileT * /*outfiles*/, paramT *params){
 
   long row, col;
   long kperpdpsi, kpardpsi, sigsqshortmin, defomax;
@@ -872,13 +806,11 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
   double defocorrthresh, sigsqcorr, sigsqrho, sigsqrhoconst;
   double glay, costscale;
   double nshortcycle, nshortcyclesq;
-  float **dpsi, **avgdpsi;
-  costT **costs, **rowcost, **colcost;
 
   /* get memory and set cost array pointers */
-  costs=(costT **)Get2DRowColMem(nrow,ncol,sizeof(costT *),sizeof(costT));
-  rowcost=(costT **)costs;
-  colcost=(costT **)&costs[nrow-1];
+  auto costs=MakeRowColArray2D<costT>(nrow,ncol);
+  auto rowcost=costs.block(0,0,nrow-1,ncol);
+  auto colcost=costs.block(nrow-1,0,nrow,ncol-1);
 
   /* set up */
   rho0=(params->rhosconst1)/(params->ncorrlooks)+(params->rhosconst2);
@@ -897,8 +829,8 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
   defomax=(long )ceil(params->defomax*nshortcycle);
 
   /* get memory for wrapped difference arrays */
-  dpsi=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
-  avgdpsi=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  auto dpsi=Array2D<float>(nrow,ncol);
+  auto avgdpsi=Array2D<float>(nrow,ncol);
 
   /* build array of mean wrapped phase differences in range */
   /* simple average of phase differences is biased, but mean phase */
@@ -912,18 +844,18 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
     for(row=0;row<nrow;row++){
 
       /* see if we have a masked pixel */
-      if(colweight[row][col]==0){
-          
+      if(colweight(row,col)==0){
+
         /* masked pixel */
-        MaskCost(&colcost[row][col]);
+        MaskCost(&colcost(row,col));
 
       }else{
 
         /* deformation-mode costs */
-        
+
         /* calculate variance due to decorrelation */
         /* need symmetry for range if deformation */
-        rho=(corr[row][col]+corr[row][col+1])/2.0;
+        rho=(corr(row,col)+corr(row,col+1))/2.0;
         if(rho<defocorrthresh){
           rho=0;
         }
@@ -931,35 +863,35 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
 
         /* set cost paramaters in terms of flow, represented as shorts */
         if(rho>0){
-          colcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-avgdpsi[row][col]);
+          colcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-avgdpsi(row,col));
         }else{
-          colcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-0.5*avgdpsi[row][col]);       
+          colcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-0.5*avgdpsi(row,col));
         }
-        colcost[row][col].sigsq=sigsqrho/(costscale*colweight[row][col]);
-        if(colcost[row][col].sigsq<sigsqshortmin){
-          colcost[row][col].sigsq=sigsqshortmin;
+        colcost(row,col).sigsq=sigsqrho/(costscale*colweight(row,col));
+        if(colcost(row,col).sigsq<sigsqshortmin){
+          colcost(row,col).sigsq=sigsqshortmin;
         }
         if(rho<defocorrthresh){
-          colcost[row][col].dzmax=defomax;
-          colcost[row][col].laycost=colweight[row][col]*glay;
-          if(colcost[row][col].dzmax<floor(sqrt(colcost[row][col].laycost
-                                                *colcost[row][col].sigsq))){
-            colcost[row][col].laycost=NOCOSTSHELF;
-            colcost[row][col].dzmax=LARGESHORT;
+          colcost(row,col).dzmax=defomax;
+          colcost(row,col).laycost=colweight(row,col)*glay;
+          if(colcost(row,col).dzmax<floor(sqrt(colcost(row,col).laycost
+                                                *colcost(row,col).sigsq))){
+            colcost(row,col).laycost=NOCOSTSHELF;
+            colcost(row,col).dzmax=LARGESHORT;
           }
         }else{
-          colcost[row][col].laycost=NOCOSTSHELF;
-          colcost[row][col].dzmax=LARGESHORT;
+          colcost(row,col).laycost=NOCOSTSHELF;
+          colcost(row,col).dzmax=LARGESHORT;
         }
       }
 
       /* shift PDF to account for flattening by coarse unwrapped estimate */
-      if(unwrappedest!=NULL){
-        colcost[row][col].offset+=(nshortcycle/TWOPI*
-                                   (unwrappedest[row][col+1]
-                                    -unwrappedest[row][col]));
+      if(unwrappedest.size()){
+        colcost(row,col).offset+=(nshortcycle/TWOPI*
+                                   (unwrappedest(row,col+1)
+                                    -unwrappedest(row,col)));
       }
     }
   }  /* end of range gradient cost calculation */
@@ -975,10 +907,10 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
     for(row=0;row<nrow-1;row++){
 
       /* see if we have a masked pixel */
-      if(rowweight[row][col]==0){
-          
+      if(rowweight(row,col)==0){
+
         /* masked pixel */
-        MaskCost(&rowcost[row][col]);
+        MaskCost(&rowcost(row,col));
 
       }else{
 
@@ -986,7 +918,7 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
 
         /* variance due to decorrelation */
         /* get correlation and clip small values because of estimator bias */
-        rho=(corr[row][col]+corr[row+1][col])/2.0;
+        rho=(corr(row,col)+corr(row+1,col))/2.0;
         if(rho<defocorrthresh){
           rho=0;
         }
@@ -994,46 +926,41 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
 
         /* set cost paramaters in terms of flow, represented as shorts */
         if(rho>0){
-          rowcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-avgdpsi[row][col]);
+          rowcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-avgdpsi(row,col));
         }else{
-          rowcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-0.5*avgdpsi[row][col]);
+          rowcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-0.5*avgdpsi(row,col));
         }
-        rowcost[row][col].sigsq=sigsqrho/(costscale*rowweight[row][col]);
-        if(rowcost[row][col].sigsq<sigsqshortmin){
-          rowcost[row][col].sigsq=sigsqshortmin;
+        rowcost(row,col).sigsq=sigsqrho/(costscale*rowweight(row,col));
+        if(rowcost(row,col).sigsq<sigsqshortmin){
+          rowcost(row,col).sigsq=sigsqshortmin;
         }
         if(rho<defocorrthresh){
-          rowcost[row][col].dzmax=defomax;
-          rowcost[row][col].laycost=rowweight[row][col]*glay;
-          if(rowcost[row][col].dzmax<floor(sqrt(rowcost[row][col].laycost
-                                                *rowcost[row][col].sigsq))){
-            rowcost[row][col].laycost=NOCOSTSHELF;
-            rowcost[row][col].dzmax=LARGESHORT;
+          rowcost(row,col).dzmax=defomax;
+          rowcost(row,col).laycost=rowweight(row,col)*glay;
+          if(rowcost(row,col).dzmax<floor(sqrt(rowcost(row,col).laycost
+                                                *rowcost(row,col).sigsq))){
+            rowcost(row,col).laycost=NOCOSTSHELF;
+            rowcost(row,col).dzmax=LARGESHORT;
           }
         }else{
-          rowcost[row][col].laycost=NOCOSTSHELF;
-          rowcost[row][col].dzmax=LARGESHORT;
+          rowcost(row,col).laycost=NOCOSTSHELF;
+          rowcost(row,col).dzmax=LARGESHORT;
         }
       }
 
       /* shift PDF to account for flattening by coarse unwrapped estimate */
-      if(unwrappedest!=NULL){
-        rowcost[row][col].offset+=(nshortcycle/TWOPI*
-                                   (unwrappedest[row+1][col]
-                                    -unwrappedest[row][col]));
+      if(unwrappedest.size()){
+        rowcost(row,col).offset+=(nshortcycle/TWOPI*
+                                   (unwrappedest(row+1,col)
+                                    -unwrappedest(row,col)));
       }
     }
   } /* end of azimuth cost calculation */
 
-  /* free temporary arrays */
-  Free2DArray((void **)corr,nrow);
-  Free2DArray((void **)dpsi,nrow);
-  Free2DArray((void **)avgdpsi,nrow);
-
   /* return pointer to costs arrays */
-  return((void **)costs);
+  return(costs);
 
 }
 
@@ -1043,11 +970,11 @@ void **BuildStatCostsDefo(float **wrappedphase, float **mag,
  * Builds statistical cost arrays for smooth-solution mode.
  */
 static
-void **BuildStatCostsSmooth(float **wrappedphase, float **mag, 
-                            float **unwrappedest, float **corr, 
-                            short **rowweight, short **colweight,
-                            long nrow, long ncol, tileparamT *tileparams, 
-                            outfileT *outfiles, paramT *params){
+Array2D<smoothcostT> BuildStatCostsSmooth(Array2D<float>& wrappedphase, Array2D<float>& /*mag*/,
+                                          Array2D<float>& unwrappedest, Array2D<float>& corr,
+                                          Array2D<short>& rowweight, Array2D<short>& colweight,
+                                          long nrow, long ncol, tileparamT * /*tileparams*/,
+                                          outfileT * /*outfiles*/, paramT *params){
 
   long row, col;
   long kperpdpsi, kpardpsi, sigsqshortmin;
@@ -1055,14 +982,11 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
   double defocorrthresh, sigsqcorr, sigsqrho, sigsqrhoconst;
   double costscale;
   double nshortcycle, nshortcyclesq;
-  float **dpsi, **avgdpsi;
-  smoothcostT **costs, **rowcost, **colcost;
 
   /* get memory and set cost array pointers */
-  costs=(smoothcostT **)Get2DRowColMem(nrow,ncol,sizeof(smoothcostT *),
-                                       sizeof(smoothcostT));
-  rowcost=(smoothcostT **)costs;
-  colcost=(smoothcostT **)&costs[nrow-1];
+  auto costs=MakeRowColArray2D<smoothcostT>(nrow,ncol);
+  auto rowcost=costs.block(0,0,nrow-1,ncol);
+  auto colcost=costs.block(nrow-1,0,nrow,ncol-1);
 
   /* set up */
   rho0=(params->rhosconst1)/(params->ncorrlooks)+(params->rhosconst2);
@@ -1079,8 +1003,8 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
   nshortcyclesq=nshortcycle*nshortcycle;
 
   /* get memory for wrapped difference arrays */
-  dpsi=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
-  avgdpsi=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  auto dpsi=Array2D<float>(nrow,ncol);
+  auto avgdpsi=Array2D<float>(nrow,ncol);
 
   /* build array of mean wrapped phase differences in range */
   /* simple average of phase differences is biased, but mean phase */
@@ -1094,18 +1018,18 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
     for(row=0;row<nrow;row++){
 
       /* see if we have a masked pixel */
-      if(colweight[row][col]==0){
-          
+      if(colweight(row,col)==0){
+
         /* masked pixel */
-        MaskSmoothCost(&colcost[row][col]);
+        MaskSmoothCost(&colcost(row,col));
 
       }else{
 
         /* smooth-mode costs */
-        
+
         /* calculate variance due to decorrelation */
         /* need symmetry for range if deformation */
-        rho=(corr[row][col]+corr[row][col+1])/2.0;
+        rho=(corr(row,col)+corr(row,col+1))/2.0;
         if(rho<defocorrthresh){
           rho=0;
         }
@@ -1113,23 +1037,23 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
 
         /* set cost paramaters in terms of flow, represented as shorts */
         if(rho>0){
-          colcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-avgdpsi[row][col]);
+          colcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-avgdpsi(row,col));
         }else{
-          colcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-0.5*avgdpsi[row][col]);       
+          colcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-0.5*avgdpsi(row,col));
         }
-        colcost[row][col].sigsq=sigsqrho/(costscale*colweight[row][col]);
-        if(colcost[row][col].sigsq<sigsqshortmin){
-          colcost[row][col].sigsq=sigsqshortmin;
+        colcost(row,col).sigsq=sigsqrho/(costscale*colweight(row,col));
+        if(colcost(row,col).sigsq<sigsqshortmin){
+          colcost(row,col).sigsq=sigsqshortmin;
         }
       }
 
       /* shift PDF to account for flattening by coarse unwrapped estimate */
-      if(unwrappedest!=NULL){
-        colcost[row][col].offset+=(nshortcycle/TWOPI*
-                                   (unwrappedest[row][col+1]
-                                    -unwrappedest[row][col]));
+      if(unwrappedest.size()){
+        colcost(row,col).offset+=(nshortcycle/TWOPI*
+                                   (unwrappedest(row,col+1)
+                                    -unwrappedest(row,col)));
       }
     }
   }  /* end of range gradient cost calculation */
@@ -1145,10 +1069,10 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
     for(row=0;row<nrow-1;row++){
 
       /* see if we have a masked pixel */
-      if(rowweight[row][col]==0){
-          
+      if(rowweight(row,col)==0){
+
         /* masked pixel */
-        MaskSmoothCost(&rowcost[row][col]);
+        MaskSmoothCost(&rowcost(row,col));
 
       }else{
 
@@ -1156,7 +1080,7 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
 
         /* variance due to decorrelation */
         /* get correlation and clip small values because of estimator bias */
-        rho=(corr[row][col]+corr[row+1][col])/2.0;
+        rho=(corr(row,col)+corr(row+1,col))/2.0;
         if(rho<defocorrthresh){
           rho=0;
         }
@@ -1164,34 +1088,29 @@ void **BuildStatCostsSmooth(float **wrappedphase, float **mag,
 
         /* set cost paramaters in terms of flow, represented as shorts */
         if(rho>0){
-          rowcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-avgdpsi[row][col]);
+          rowcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-avgdpsi(row,col));
         }else{
-          rowcost[row][col].offset=nshortcycle*
-            (dpsi[row][col]-0.5*avgdpsi[row][col]);
+          rowcost(row,col).offset=nshortcycle*
+            (dpsi(row,col)-0.5*avgdpsi(row,col));
         }
-        rowcost[row][col].sigsq=sigsqrho/(costscale*rowweight[row][col]);
-        if(rowcost[row][col].sigsq<sigsqshortmin){
-          rowcost[row][col].sigsq=sigsqshortmin;
+        rowcost(row,col).sigsq=sigsqrho/(costscale*rowweight(row,col));
+        if(rowcost(row,col).sigsq<sigsqshortmin){
+          rowcost(row,col).sigsq=sigsqshortmin;
         }
       }
 
       /* shift PDF to account for flattening by coarse unwrapped estimate */
-      if(unwrappedest!=NULL){
-        rowcost[row][col].offset+=(nshortcycle/TWOPI*
-                                   (unwrappedest[row+1][col]
-                                    -unwrappedest[row][col]));
+      if(unwrappedest.size()){
+        rowcost(row,col).offset+=(nshortcycle/TWOPI*
+                                   (unwrappedest(row+1,col)
+                                    -unwrappedest(row,col)));
       }
     }
   } /* end of azimuth cost calculation */
 
-  /* free temporary arrays */
-  Free2DArray((void **)corr,nrow);
-  Free2DArray((void **)dpsi,nrow);
-  Free2DArray((void **)avgdpsi,nrow);
-
   /* return pointer to costs arrays */
-  return((void **)costs);
+  return(costs);
 
 }
 
@@ -1234,25 +1153,10 @@ void MaskSmoothCost(smoothcostT *smoothcostptr){
  * are null.
  */
 static
-int MaskPrespecifiedArcCosts(void **costsptr, short **weights,
-                             long nrow, long ncol, paramT *params){
+int MaskPrespecifiedArcCosts(Array2D<costT>& costs, Array2D<short>& weights,
+                             long nrow, long ncol, paramT */*params*/){
 
   long row, col, maxcol;
-  costT **costs;
-  smoothcostT **smoothcosts;
-
-
-  /* set up pointers */
-  costs=NULL;
-  smoothcosts=NULL;
-  if(params->costmode==TOPO || params->costmode==DEFO){
-    costs=(costT **)costsptr;
-  }else if(params->costmode==SMOOTH){
-    smoothcosts=(smoothcostT **)costsptr;
-  }else{
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Illegal cost mode in MaskPrespecifiedArcCosts()");
-  }
 
   /* loop over all arcs */
   for(row=0;row<2*nrow-1;row++){
@@ -1262,20 +1166,46 @@ int MaskPrespecifiedArcCosts(void **costsptr, short **weights,
       maxcol=ncol-1;
     }
     for(col=0;col<maxcol;col++){
-      if(weights[row][col]==0){
-        if(costs!=NULL){
-          MaskCost(&costs[row][col]);
-        }
-        if(smoothcosts!=NULL){
-          MaskSmoothCost(&smoothcosts[row][col]);
-        }
+      if(weights(row,col)==0){
+          MaskCost(&costs(row,col));
       }
     }
   }
 
   /* done */
   return(0);
-  
+
+}
+
+
+/* function: MaskPrespecifiedArcCosts()
+ * ------------------------------------
+ * Loop over grid arcs and set costs to null if corresponding weights
+ * are null.
+ */
+static
+int MaskPrespecifiedArcCosts(Array2D<smoothcostT>& costs, Array2D<short>& weights,
+                             long nrow, long ncol, paramT */*params*/){
+
+  long row, col, maxcol;
+
+  /* loop over all arcs */
+  for(row=0;row<2*nrow-1;row++){
+    if(row<nrow-1){
+      maxcol=ncol;
+    }else{
+      maxcol=ncol-1;
+    }
+    for(col=0;col<maxcol;col++){
+      if(weights(row,col)==0){
+          MaskSmoothCost(&costs(row,col));
+      }
+    }
+  }
+
+  /* done */
+  return(0);
+
 }
 
 
@@ -1286,25 +1216,17 @@ int MaskPrespecifiedArcCosts(void **costsptr, short **weights,
  * generates correlatin info from interferogram and amplitude.
  */
 static
-int GetIntensityAndCorrelation(float **mag, float **wrappedphase, 
-                               float ***pwrptr, float ***corrptr, 
+int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase,
+                               Array2D<float>* pwrptr, Array2D<float>* corrptr,
                                infileT *infiles, long linelen, long nlines,
-                               long nrow, long ncol, outfileT *outfiles, 
+                               long nrow, long ncol, outfileT *outfiles,
                                paramT *params, tileparamT *tileparams){
-  
+
   long row, col, krowcorr, kcolcorr, iclipped;
-  float **pwr, **corr;
-  float **realcomp, **imagcomp;
-  float **padreal, **padimag, **avgreal, **avgimag;
-  float **pwr1, **pwr2, **padpwr1, **padpwr2, **avgpwr1, **avgpwr2; 
   double rho0, rhomin, biaseddefaultcorr;
 
-  /* initialize */
-  pwr=NULL;
-  corr=NULL;
-  pwr1=NULL;
-  pwr2=NULL;
-  
+  Array2D<float> pwr, pwr1, pwr2, corr;
+
   /* read intensity, if specified */
   if(strlen(infiles->ampfile)){
     ReadIntensity(&pwr,&pwr1,&pwr2,infiles,linelen,nlines,params,tileparams);
@@ -1313,18 +1235,18 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
       fprintf(sp1,"No brightness file specified.  ");
       fprintf(sp1,"Using interferogram magnitude as intensity\n");
     }
-    pwr=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+    pwr = Array2D<float>(nrow, ncol);
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        pwr[row][col]=mag[row][col];
+        pwr(row,col)=mag(row,col);
       }
     }
   }
 
   /* read corrfile, if specified */
   if(strlen(infiles->corrfile)){
-    ReadCorrelation(&corr,infiles,linelen,nlines,tileparams); 
-  }else if(pwr1!=NULL && pwr2!=NULL && params->havemagnitude){
+    ReadCorrelation(&corr,infiles,linelen,nlines,tileparams);
+  }else if(pwr1.size() && pwr2.size() && params->havemagnitude){
 
     /* generate the correlation info from the interferogram and amplitude */
     fprintf(sp1,"Generating correlation from interferogram and intensity\n");
@@ -1338,70 +1260,60 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
       *(krowcorr*(params->da/params->azres))*params->nlooksother;
     fprintf(sp1,"   (%.1f equivalent independent looks)\n",
             params->ncorrlooks);
-    
+
     /* get real and imaginary parts of interferogram */
-    realcomp=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
-    imagcomp=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+    auto realcomp = Array2D<float>(nrow, ncol);
+    auto imagcomp = Array2D<float>(nrow, ncol);
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        realcomp[row][col]=mag[row][col]*cos(wrappedphase[row][col]);
-        imagcomp[row][col]=mag[row][col]*sin(wrappedphase[row][col]);
+        realcomp(row,col)=mag(row,col)*cos(wrappedphase(row,col));
+        imagcomp(row,col)=mag(row,col)*sin(wrappedphase(row,col));
       }
     }
 
     /* do complex spatial averaging on the interferogram */
-    padreal=MirrorPad(realcomp,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
-    padimag=MirrorPad(imagcomp,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
-    if(padreal==realcomp || padimag==imagcomp){
+    Array2D<float> padreal, padimag;
+    try {
+      padreal=MirrorPad(realcomp,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
+      padimag=MirrorPad(imagcomp,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
+    } catch (const isce3::except::RuntimeError&) {
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Correlation averaging box too large for input array size");
     }
-    avgreal=realcomp;
+    auto avgreal = realcomp;
     BoxCarAvg(avgreal,padreal,nrow,ncol,krowcorr,kcolcorr);
-    avgimag=imagcomp;
+    auto avgimag = imagcomp;
     BoxCarAvg(avgimag,padimag,nrow,ncol,krowcorr,kcolcorr);
-    Free2DArray((void **)padreal,nrow);
-    Free2DArray((void **)padimag,nrow);
 
     /* spatially average individual SAR power images */
-    padpwr1=MirrorPad(pwr1,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
-    avgpwr1=pwr1;
+    auto padpwr1=MirrorPad(pwr1,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
+    auto avgpwr1 = pwr1;
     BoxCarAvg(avgpwr1,padpwr1,nrow,ncol,krowcorr,kcolcorr);
-    padpwr2=MirrorPad(pwr2,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
-    avgpwr2=pwr2;
+    auto padpwr2=MirrorPad(pwr2,nrow,ncol,(krowcorr-1)/2,(kcolcorr-1)/2);
+    auto avgpwr2 = pwr2;
     BoxCarAvg(avgpwr2,padpwr2,nrow,ncol,krowcorr,kcolcorr);
-    Free2DArray((void **)padpwr1,nrow);
-    Free2DArray((void **)padpwr2,nrow);
 
     /* build correlation data */
-    corr=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+    corr = Array2D<float>(nrow, ncol);
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        if(avgpwr1[row][col]<=0 || avgpwr2[row][col]<=0){
-          corr[row][col]=0.0;
+        if(avgpwr1(row,col)<=0 || avgpwr2(row,col)<=0){
+          corr(row,col)=0.0;
         }else{
-          corr[row][col]=sqrt((avgreal[row][col]*avgreal[row][col]
-                               +avgimag[row][col]*avgimag[row][col])
-                              /(avgpwr1[row][col]*avgpwr2[row][col]));
+          corr(row,col)=sqrt((avgreal(row,col)*avgreal(row,col)
+                               +avgimag(row,col)*avgimag(row,col))
+                              /(avgpwr1(row,col)*avgpwr2(row,col)));
         }
       }
     }
-
-    /* free temporary arrays */
-    Free2DArray((void **)avgreal,nrow);
-    Free2DArray((void **)avgimag,nrow);
-    Free2DArray((void **)avgpwr1,nrow);
-    Free2DArray((void **)avgpwr2,nrow);
-    pwr1=NULL;
-    pwr2=NULL;
 
   }else{
 
     /* no file specified: set corr to default value */
     /* find biased default correlation using */
     /* inverse of unbias method used by BuildCostArrays() */
-    corr=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+    corr = Array2D<float>(nrow, ncol);
     fprintf(sp1,"No correlation file specified.  Assuming correlation = %g\n",
            params->defaultcorr);
     rho0=(params->rhosconst1)/(params->ncorrlooks)+(params->rhosconst2);
@@ -1413,35 +1325,35 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
     }
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
-        corr[row][col]=biaseddefaultcorr;
+        corr(row,col)=biaseddefaultcorr;
       }
     }
   }
 
   /* dump correlation data if necessary */
   if(strlen(outfiles->rawcorrdumpfile)){
-    Write2DArray((void **)corr,outfiles->rawcorrdumpfile,
-                 nrow,ncol,sizeof(float)); 
+    Write2DArray(corr,outfiles->rawcorrdumpfile,
+                 nrow,ncol,sizeof(float));
   }
 
   /* check correlation data validity */
   iclipped=0;
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      if(!IsFinite(corr[row][col])){
+      if(!IsFinite(corr(row,col))){
         fflush(NULL);
         throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                 "NaN or infinity found in correlation data");
-      }else if(corr[row][col]>1.0){
-        if(corr[row][col]>1.001){
+      }else if(corr(row,col)>1.0){
+        if(corr(row,col)>1.001){
           iclipped++;               /* don't warn for minor numerical errors */
         }
-        corr[row][col]=1.0;
-      }else if(corr[row][col]<0.0){
-        if(corr[row][col]<-0.001){
+        corr(row,col)=1.0;
+      }else if(corr(row,col)<0.0){
+        if(corr(row,col)<-0.001){
           iclipped++;               /* don't warn for minor numerical errors */
         }
-        corr[row][col]=0.0;
+        corr(row,col)=0.0;
       }
     }
   }
@@ -1450,24 +1362,14 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
     fprintf(sp0,"WARNING: %ld illegal correlation values clipped to [0,1]\n",
             iclipped);
   }
-  
+
   /* dump correlation data if necessary */
   if(strlen(outfiles->corrdumpfile)){
-    Write2DArray((void **)corr,outfiles->corrdumpfile,
-                 nrow,ncol,sizeof(float)); 
+    Write2DArray(corr,outfiles->corrdumpfile,
+                 nrow,ncol,sizeof(float));
   }
 
-  /* free memory and set output pointers */
-  if(pwr1!=NULL){
-    Free2DArray((void **)pwr1,nrow);
-  }
-  if(pwr2!=NULL){
-    Free2DArray((void **)pwr2,nrow);
-  }
-  if(params->costmode==DEFO && pwr!=NULL){
-    Free2DArray((void **)pwr,nrow);
-    pwr=NULL;
-  }
+  /* set output pointers */
   *pwrptr=pwr;
   *corrptr=corr;
 
@@ -1482,10 +1384,9 @@ int GetIntensityAndCorrelation(float **mag, float **wrappedphase,
  * Divides intensity by average over sliding window.
  */
 static
-int RemoveMean(float **ei, long nrow, long ncol, 
+int RemoveMean(Array2D<float>& ei, long nrow, long ncol,
                long krowei, long kcolei){
 
-  float **avgei, **padei;
   long row, col;
 
   /* make sure krowei, kcolei are odd */
@@ -1497,11 +1398,13 @@ int RemoveMean(float **ei, long nrow, long ncol,
   }
 
   /* get memory */
-  avgei=(float **)Get2DMem(nrow,ncol,sizeof(float *),sizeof(float));
+  auto avgei = Array2D<float>(nrow, ncol);
 
   /* pad ei in new array */
-  padei=MirrorPad(ei,nrow,ncol,(krowei-1)/2,(kcolei-1)/2);
-  if(padei==ei){
+  Array2D<float> padei;
+  try {
+    padei=MirrorPad(ei,nrow,ncol,(krowei-1)/2,(kcolei-1)/2);
+  } catch (const isce3::except::RuntimeError&) {
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
             "Intensity-normalization averaging box too large for input array "
@@ -1514,35 +1417,29 @@ int RemoveMean(float **ei, long nrow, long ncol,
   /* divide ei by avgei */
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
-      if(avgei){
-        ei[row][col]/=(avgei[row][col]);
-      }
+      ei(row,col)/=(avgei(row,col));
     }
   }
 
-  /* free memory */
-  Free2DArray((void **)padei,nrow+krowei-1);
-  Free2DArray((void **)avgei,nrow);
   return(0);
-  
+
 }
 
 
 /* function: BuildDZRCritLookupTable()
  * -----------------------------------
- * Builds a 1-D lookup table of dzrcrit values indexed by incidence angle 
+ * Builds a 1-D lookup table of dzrcrit values indexed by incidence angle
  * (in rad).
  */
-static
-float *BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr, 
-                               long *tablesizeptr, tileparamT *tileparams, 
-                               paramT *params){
+static Array1D<float>
+BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr,
+                        long *tablesizeptr, tileparamT *tileparams,
+                        paramT *params){
 
   long tablesize, k;
   double nominc, nominc0, nomincmax, dnominc;
   double a, re, slantrange;
-  float *dzrcrittable;
-  
+
   /* compute nominal spherical earth incidence angle for near and far range */
   a=params->orbitradius;
   re=params->earthradius;
@@ -1560,7 +1457,7 @@ float *BuildDZRCritLookupTable(double *nominc0ptr, double *dnomincptr,
   /* build lookup table */
   dnominc=params->dnomincangle;
   tablesize=(long )floor((nomincmax-nominc0)/dnominc)+1;
-  dzrcrittable=(float *)MAlloc(tablesize*sizeof(float));
+  auto dzrcrittable = Array1D<float>(tablesize);
   nominc=nominc0;
   for(k=0;k<tablesize;k++){
     dzrcrittable[k]=(float )SolveDZRCrit(sin(nominc),cos(nominc),params,
@@ -1727,23 +1624,21 @@ double EIofDZR(double dzr, double sinnomincangle, double cosnomincangle,
  * Builds a 2-D lookup table of dzrhomax values vs nominal incidence angle
  * (rad) and correlation.
  */
-static
-float **BuildDZRhoMaxLookupTable(double nominc0, double dnominc, 
-                                 long nominctablesize, double rhomin, 
-                                 double drho, long nrho, paramT *params){
+static Array2D<float>
+BuildDZRhoMaxLookupTable(double nominc0, double dnominc,
+                         long nominctablesize, double rhomin,
+                         double drho, long nrho, paramT *params){
 
   long krho, knominc;
   double nominc, rho;
-  float **dzrhomaxtable;
 
-  dzrhomaxtable=(float **)Get2DMem(nominctablesize,nrho,
-                                   sizeof(float *),sizeof(float));
+  auto dzrhomaxtable = Array2D<float>(nominctablesize, nrho);
   nominc=nominc0;
   for(knominc=0;knominc<nominctablesize;knominc++){
     rho=rhomin;
     for(krho=0;krho<nrho;krho++){
-      dzrhomaxtable[knominc][krho]=(float )CalcDZRhoMax(rho,nominc,params,
-                                                        params->threshold);
+      dzrhomaxtable(knominc,krho)=(float )CalcDZRhoMax(rho,nominc,params,
+                                                       params->threshold);
       rho+=drho;
     }
     nominc+=dnominc;
@@ -1833,22 +1728,21 @@ double CalcDZRhoMax(double rho, double nominc, paramT *params,
 }
 
 
-/* function: CalcCostTopo()
+/* function: CalcCost()
  * ------------------------
  * Calculates topography arc distance given an array of cost data structures.
  */
-void CalcCostTopo(void **costs, long flow, long arcrow, long arccol, 
-                  long nflow, long nrow, paramT *params, 
-                  long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<costT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long nrow, paramT *params,
+              long *poscostptr, long *negcostptr, TopoCostTag /*tag*/){
 
   long idz1, idz2pos, idz2neg, cost1, nflowsq, poscost, negcost;
   long nshortcycle, layfalloffconst;
   long offset, sigsq, laycost, dzmax;
   costT *cost;
 
-
   /* get arc info */
-  cost=&((costT **)(costs))[arcrow][arccol];
+  cost=&costs(arcrow,arccol);
   offset=cost->offset;
   sigsq=cost->sigsq;
   dzmax=cost->dzmax;
@@ -1946,21 +1840,20 @@ void CalcCostTopo(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostDefo()
+/* function: CalcCost()
  * ------------------------
  * Calculates deformation arc distance given an array of cost data structures.
  */
-void CalcCostDefo(void **costs, long flow, long arcrow, long arccol, 
-                  long nflow, long nrow, paramT *params, 
-                  long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<costT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT *params,
+              long *poscostptr, long *negcostptr, DefoCostTag /*tag*/){
 
   long idz1, idz2pos, idz2neg, cost1, nflowsq, poscost, negcost;
   long nshortcycle, layfalloffconst;
   costT *cost;
 
-
   /* get arc info */
-  cost=&((costT **)(costs))[arcrow][arccol];
+  cost=&costs(arcrow,arccol);
 
   /* just return 0 if we have zero cost arc */
   if(cost->sigsq==LARGESHORT){
@@ -2034,14 +1927,14 @@ void CalcCostDefo(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostSmooth()
+/* function: CalcCost()
  * --------------------------
  * Calculates smooth-solution arc distance given an array of smoothcost
  *  data structures.
  */
-void CalcCostSmooth(void **costs, long flow, long arcrow, long arccol, 
-                    long nflow, long nrow, paramT *params, 
-                    long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<smoothcostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT *params,
+              long *poscostptr, long *negcostptr, SmoothCostTag /*tag*/){
 
   long idz1, idz2pos, idz2neg, cost1, nflowsq, poscost, negcost;
   long nshortcycle;
@@ -2049,7 +1942,7 @@ void CalcCostSmooth(void **costs, long flow, long arcrow, long arccol,
 
 
   /* get arc info */
-  cost=&((smoothcostT **)(costs))[arcrow][arccol];
+  cost=&costs(arcrow,arccol);
 
   /* just return 0 if we have zero cost arc */
   if(cost->sigsq==LARGESHORT){
@@ -2092,29 +1985,29 @@ void CalcCostSmooth(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostL0()
+/* function: CalcCost()
  * ----------------------
  * Calculates the L0 arc distance given an array of short integer weights.
  */
-void CalcCostL0(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT */*params*/,
+              long *poscostptr, long *negcostptr, L0CostTag /*tag*/){
 
   /* L0-norm */
   if(flow){
     if(flow+nflow){
       *poscostptr=0;
     }else{
-      *poscostptr=-((short **)costs)[arcrow][arccol];
+      *poscostptr=-costs(arcrow,arccol);
     }
     if(flow-nflow){
       *negcostptr=0;
     }else{
-      *negcostptr=-((short **)costs)[arcrow][arccol];
+      *negcostptr=-costs(arcrow,arccol);
     }
   }else{
-    *poscostptr=((short **)costs)[arcrow][arccol];
-    *negcostptr=((short **)costs)[arcrow][arccol];
+    *poscostptr=costs(arcrow,arccol);
+    *negcostptr=costs(arcrow,arccol);
   }
 
   /* done */
@@ -2123,17 +2016,17 @@ void CalcCostL0(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostL1()
+/* function: CalcCost()
  * ----------------------
  * Calculates the L1 arc distance given an array of short integer weights.
  */
-void CalcCostL1(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT */*params*/,
+              long *poscostptr, long *negcostptr, L1CostTag /*tag*/){
 
   /* L1-norm */
-  *poscostptr=((short **)costs)[arcrow][arccol]*(labs(flow+nflow)-labs(flow));
-  *negcostptr=((short **)costs)[arcrow][arccol]*(labs(flow-nflow)-labs(flow));
+  *poscostptr=costs(arcrow,arccol)*(labs(flow+nflow)-labs(flow));
+  *negcostptr=costs(arcrow,arccol)*(labs(flow-nflow)-labs(flow));
 
   /* done */
   return;
@@ -2141,35 +2034,35 @@ void CalcCostL1(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostL2()
+/* function: CalcCost()
  * ----------------------
  * Calculates the L2 arc distance given an array of short integer weights.
  */
-void CalcCostL2(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT */*params*/,
+              long *poscostptr, long *negcostptr, L2CostTag /*tag*/){
 
   long flow2, flowsq;
 
   /* L2-norm */
   flowsq=flow*flow;
   flow2=flow+nflow;
-  *poscostptr=((short **)costs)[arcrow][arccol]*(flow2*flow2-flowsq);
+  *poscostptr=costs(arcrow,arccol)*(flow2*flow2-flowsq);
   flow2=flow-nflow;
-  *negcostptr=((short **)costs)[arcrow][arccol]*(flow2*flow2-flowsq);
+  *negcostptr=costs(arcrow,arccol)*(flow2*flow2-flowsq);
 
   /* done */
   return;
 }
 
 
-/* function: CalcCostLP()
+/* function: CalcCost()
  * ----------------------
  * Calculates the Lp arc distance given an array of short integer weights.
  */
-void CalcCostLP(void **costs, long flow, long arcrow, long arccol, 
-                long nflow, long nrow, paramT *params, 
-                long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<short>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT *params,
+              long *poscostptr, long *negcostptr, LPCostTag /*tag*/){
 
   double p;
   short flow2;
@@ -2177,10 +2070,10 @@ void CalcCostLP(void **costs, long flow, long arcrow, long arccol,
   /* Lp-norm */
   flow2=flow+nflow;
   p=params->p;
-  *poscostptr=LRound(((short **)costs)[arcrow][arccol]*
+  *poscostptr=LRound(costs(arcrow,arccol)*
                      (pow(labs(flow2),p)-pow(labs(flow),p)));
   flow2=flow-nflow;
-  *negcostptr=LRound(((short **)costs)[arcrow][arccol]*
+  *negcostptr=LRound(costs(arcrow,arccol)*
                      (pow(labs(flow2),p)-pow(labs(flow),p)));
 
   /* done */
@@ -2188,37 +2081,37 @@ void CalcCostLP(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostL0BiDir()
+/* function: CalcCost()
  * ---------------------------
  * Calculates the L0 arc cost given an array of bidirectional cost weights.
  */
-void CalcCostL0BiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT */*params*/,
+              long *poscostptr, long *negcostptr, L0BiDirCostTag /*tag*/){
   
   long newflow, cost0;
 
   /* L0-norm */
   if(flow>0){
-    cost0=((bidircostT **)costs)[arcrow][arccol].posweight;
+    cost0=costs(arcrow,arccol).posweight;
   }else if(flow<0){
-    cost0=((bidircostT **)costs)[arcrow][arccol].negweight;
+    cost0=costs(arcrow,arccol).negweight;
   }else{
     cost0=0;
   }
   newflow=flow+nflow;
   if(newflow>0){
-    *poscostptr=((bidircostT **)costs)[arcrow][arccol].posweight-cost0;
+    *poscostptr=costs(arcrow,arccol).posweight-cost0;
   }else if(newflow<0){
-    *poscostptr=((bidircostT **)costs)[arcrow][arccol].negweight-cost0;
+    *poscostptr=costs(arcrow,arccol).negweight-cost0;
   }else{
     *poscostptr=-cost0;
   }
   newflow=flow-nflow;
   if(newflow>0){
-    *negcostptr=((bidircostT **)costs)[arcrow][arccol].posweight-cost0;
+    *negcostptr=costs(arcrow,arccol).posweight-cost0;
   }else if(newflow<0){
-    *negcostptr=((bidircostT **)costs)[arcrow][arccol].negweight-cost0;
+    *negcostptr=costs(arcrow,arccol).negweight-cost0;
   }else{
     *negcostptr=-cost0;
   }
@@ -2228,36 +2121,36 @@ void CalcCostL0BiDir(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostL1BiDir()
+/* function: CalcCost()
  * ---------------------------
  * Calculates the L1 arc cost given an array of bidirectional cost weights.
  */
-void CalcCostL1BiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT */*params*/,
+              long *poscostptr, long *negcostptr, L1BiDirCostTag /*tag*/){
 
   long newflow, cost0;
 
   /* L1-norm */
   if(flow>0){
-    cost0=((bidircostT **)costs)[arcrow][arccol].posweight*flow;
+    cost0=costs(arcrow,arccol).posweight*flow;
   }else{
-    cost0=-((bidircostT **)costs)[arcrow][arccol].negweight*flow;
+    cost0=-costs(arcrow,arccol).negweight*flow;
   }
   newflow=flow+nflow;
   if(newflow>0){
-    *poscostptr=(((bidircostT **)costs)[arcrow][arccol].posweight*newflow
+    *poscostptr=(costs(arcrow,arccol).posweight*newflow
                  -cost0);
   }else{
-    *poscostptr=(-((bidircostT **)costs)[arcrow][arccol].negweight*newflow
+    *poscostptr=(-costs(arcrow,arccol).negweight*newflow
                  -cost0);
   }
   newflow=flow-nflow;
   if(newflow>0){
-    *negcostptr=(((bidircostT **)costs)[arcrow][arccol].posweight*newflow
+    *negcostptr=(costs(arcrow,arccol).posweight*newflow
                  -cost0);
   }else{
-    *negcostptr=(-((bidircostT **)costs)[arcrow][arccol].negweight*newflow
+    *negcostptr=(-costs(arcrow,arccol).negweight*newflow
                  -cost0);
   }
 
@@ -2267,36 +2160,36 @@ void CalcCostL1BiDir(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostL2BiDir()
+/* function: CalcCost()
  * ---------------------------
  * Calculates the L2 arc cost given an array of bidirectional cost weights.
  */
-void CalcCostL2BiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT */*params*/,
+              long *poscostptr, long *negcostptr, L2BiDirCostTag /*tag*/){
 
   long newflow, cost0;
 
   /* L2-norm */
   if(flow>0){
-    cost0=((bidircostT **)costs)[arcrow][arccol].posweight*flow*flow;
+    cost0=costs(arcrow,arccol).posweight*flow*flow;
   }else{
-    cost0=((bidircostT **)costs)[arcrow][arccol].negweight*flow*flow;
+    cost0=costs(arcrow,arccol).negweight*flow*flow;
   }
   newflow=flow+nflow;
   if(newflow>0){
-    *poscostptr=(((bidircostT **)costs)[arcrow][arccol].posweight
+    *poscostptr=(costs(arcrow,arccol).posweight
                  *newflow*newflow-cost0);
   }else{
-    *poscostptr=(((bidircostT **)costs)[arcrow][arccol].negweight
+    *poscostptr=(costs(arcrow,arccol).negweight
                  *newflow*newflow-cost0);
   }
   newflow=flow-nflow;
   if(newflow>0){
-    *negcostptr=(((bidircostT **)costs)[arcrow][arccol].posweight
+    *negcostptr=(costs(arcrow,arccol).posweight
                  *newflow*newflow-cost0);
   }else{
-    *negcostptr=(((bidircostT **)costs)[arcrow][arccol].negweight
+    *negcostptr=(costs(arcrow,arccol).negweight
                  *newflow*newflow-cost0);
   }
 
@@ -2305,13 +2198,13 @@ void CalcCostL2BiDir(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostLPBiDir()
+/* function: CalcCost()
  * ---------------------------
  * Calculates the Lp arc cost given an array of bidirectional cost weights.
  */
-void CalcCostLPBiDir(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<bidircostT>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT *params,
+              long *poscostptr, long *negcostptr, LPBiDirCostTag /*tag*/){
 
   long newflow;
   double p, cost0;
@@ -2319,24 +2212,24 @@ void CalcCostLPBiDir(void **costs, long flow, long arcrow, long arccol,
   /* Lp-norm */
   p=params->p;
   if(flow>0){
-    cost0=((bidircostT **)costs)[arcrow][arccol].posweight*pow(flow,p);
+    cost0=costs(arcrow,arccol).posweight*pow(flow,p);
   }else{
-    cost0=((bidircostT **)costs)[arcrow][arccol].negweight*pow(-flow,p);
+    cost0=costs(arcrow,arccol).negweight*pow(-flow,p);
   }
   newflow=flow+nflow;
   if(newflow>0){
-    *poscostptr=LRound(((bidircostT **)costs)[arcrow][arccol].posweight
+    *poscostptr=LRound(costs(arcrow,arccol).posweight
                        *pow(newflow,p)-cost0);
   }else{
-    *poscostptr=LRound(((bidircostT **)costs)[arcrow][arccol].negweight
+    *poscostptr=LRound(costs(arcrow,arccol).negweight
                        *pow(newflow,p)-cost0);
   }
   newflow=flow-nflow;
   if(newflow>0){
-    *negcostptr=LRound(((bidircostT **)costs)[arcrow][arccol].posweight
+    *negcostptr=LRound(costs(arcrow,arccol).posweight
                        *pow(newflow,p)-cost0);
   }else{
-    *negcostptr=LRound(((bidircostT **)costs)[arcrow][arccol].negweight
+    *negcostptr=LRound(costs(arcrow,arccol).negweight
                        *pow(newflow,p)-cost0);
   }
 
@@ -2345,7 +2238,7 @@ void CalcCostLPBiDir(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: CalcCostNonGrid()
+/* function: CalcCost()
  * ---------------------------
  * Calculates the arc cost given an array of long integer cost lookup tables.
  *
@@ -2360,26 +2253,24 @@ void CalcCostLPBiDir(void **costs, long flow, long arcrow, long arccol,
  * beyond the ends of the cost table, assuming quadratically (with an offset)
  * increasing cost (subject to rounding and scaling).
  *
- * As of summer 2019, the rationale for how seconeary costs are
+ * As of summer 2019, the rationale for how secondary costs are
  * extrapolated beyond the end of the table has been lost to time, but
  * the logic at least does give a self-consistent cost function that
  * is continuous at +/-flowmax and quadratically increases beyond,
  * albeit not necessarily with a starting slope that has an easily
  * intuitive basis.
  */
-void CalcCostNonGrid(void **costs, long flow, long arcrow, long arccol, 
-                     long nflow, long nrow, paramT *params, 
-                     long *poscostptr, long *negcostptr){
+void CalcCost(Array2D<Array1D<long>>& costs, long flow, long arcrow, long arccol,
+              long nflow, long /*nrow*/, paramT *params,
+              long *poscostptr, long *negcostptr, NonGridCostTag /*tag*/){
 
   long xflow, flowmax, poscost, negcost, nflowsq, arroffset, sumsigsqinv;
   long abscost0;
-  long *costarr;
   double c1;
-
 
   /* set up */
   flowmax=params->scndryarcflowmax;
-  costarr=((long ***)costs)[arcrow][arccol];
+  auto& costarr=costs(arcrow,arccol);
   arroffset=costarr[0];
   sumsigsqinv=costarr[2*flowmax+1];
 
@@ -2461,18 +2352,18 @@ void CalcCostNonGrid(void **costs, long flow, long arcrow, long arccol,
 }
 
 
-/* function: EvalCostTopo()
+/* function: EvalCost()
  * ------------------------
  * Calculates topography arc cost given an array of cost data structures.
  */
-long EvalCostTopo(void **costs, short **flows, long arcrow, long arccol,
-                  long nrow, paramT *params){
+long EvalCost(Array2D<costT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long nrow, paramT *params, TopoCostTag /*tag*/){
 
   long idz1, cost1, dzmax;
   costT *cost;
 
   /* get arc info */
-  cost=&((costT **)(costs))[arcrow][arccol];
+  cost=&costs(arcrow,arccol);
 
   /* just return 0 if we have zero cost arc */
   if(cost->sigsq==LARGESHORT){
@@ -2483,13 +2374,13 @@ long EvalCostTopo(void **costs, short **flows, long arcrow, long arccol,
   if(arcrow<nrow-1){
 
     /* row cost: dz symmetric with respect to origin */
-    idz1=labs(flows[arcrow][arccol]*(params->nshortcycle)+cost->offset);
+    idz1=labs(flows(arcrow,arccol)*(params->nshortcycle)+cost->offset);
     dzmax=cost->dzmax;
 
   }else{
 
     /* column cost: non-symmetric dz */
-    idz1=flows[arcrow][arccol]*(params->nshortcycle)+cost->offset;
+    idz1=flows(arcrow,arccol)*(params->nshortcycle)+cost->offset;
     if((dzmax=cost->dzmax)<0){
       idz1*=-1;
       dzmax*=-1;
@@ -2511,26 +2402,26 @@ long EvalCostTopo(void **costs, short **flows, long arcrow, long arccol,
 }
 
 
-/* function: EvalCostDefo()
+/* function: EvalCost()
  * ------------------------
  * Calculates deformation arc cost given an array of cost data structures.
  */
-long EvalCostDefo(void **costs, short **flows, long arcrow, long arccol,
-                  long nrow, paramT *params){
+long EvalCost(Array2D<costT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT *params, DefoCostTag /*tag*/){
 
   long idz1, cost1;
   costT *cost;
 
   /* get arc info */
-  cost=&((costT **)(costs))[arcrow][arccol];
+  cost=&costs(arcrow,arccol);
 
   /* just return 0 if we have zero cost arc */
   if(cost->sigsq==LARGESHORT){
     return(0);
   }
-  
+
   /* compute argument to cost function */
-  idz1=labs(flows[arcrow][arccol]*(params->nshortcycle)+cost->offset);
+  idz1=labs(flows(arcrow,arccol)*(params->nshortcycle)+cost->offset);
 
   /* calculate and return cost */
   if(idz1>cost->dzmax){
@@ -2541,24 +2432,25 @@ long EvalCostDefo(void **costs, short **flows, long arcrow, long arccol,
     if(cost->laycost!=NOCOSTSHELF && cost1>cost->laycost){
       cost1=cost->laycost;
     }
+
   }
   return(cost1);
 }
 
 
-/* function: EvalCostSmooth()
+/* function: EvalCost()
  * --------------------------
- * Calculates smooth-solution arc cost given an array of 
+ * Calculates smooth-solution arc cost given an array of
  * smoothcost data structures.
  */
-long EvalCostSmooth(void **costs, short **flows, long arcrow, long arccol,
-                    long nrow, paramT *params){
+long EvalCost(Array2D<smoothcostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT *params, SmoothCostTag /*tag*/){
 
   long idz1;
   smoothcostT *cost;
 
   /* get arc info */
-  cost=&((smoothcostT **)(costs))[arcrow][arccol];
+  cost=&costs(arcrow,arccol);
 
   /* just return 0 if we have zero cost arc */
   if(cost->sigsq==LARGESHORT){
@@ -2566,7 +2458,7 @@ long EvalCostSmooth(void **costs, short **flows, long arcrow, long arccol,
   }
 
   /* compute argument to cost function */
-  idz1=labs(flows[arcrow][arccol]*(params->nshortcycle)+cost->offset);
+  idz1=labs(flows(arcrow,arccol)*(params->nshortcycle)+cost->offset);
 
   /* calculate and return cost */
   return((idz1*idz1)/cost->sigsq);
@@ -2574,148 +2466,147 @@ long EvalCostSmooth(void **costs, short **flows, long arcrow, long arccol,
 }
 
 
-/* function: EvalCostL0()
+/* function: EvalCost()
  * ----------------------
  * Calculates the L0 arc cost given an array of cost data structures.
  */
-long EvalCostL0(void **costs, short **flows, long arcrow, long arccol, 
-                long nrow, paramT *params){
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT * /*params*/, L0CostTag /*tag*/){
 
   /* L0-norm */
-  if(flows[arcrow][arccol]){
-    return((long)((short **)costs)[arcrow][arccol]);
+  if(flows(arcrow,arccol)){
+    return((long)costs(arcrow,arccol));
   }else{
     return(0);
   }
 }
 
 
-/* function: EvalCostL1()
+/* function: EvalCost()
  * ----------------------
  * Calculates the L1 arc cost given an array of cost data structures.
  */
-long EvalCostL1(void **costs, short **flows, long arcrow, long arccol, 
-                long nrow, paramT *params){
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT * /*params*/, L1CostTag /*tag*/){
 
   /* L1-norm */
-  return((long )((((short **)costs)[arcrow][arccol])
-                 *labs(flows[arcrow][arccol])));
+  return((long )((costs(arcrow,arccol))
+                 *labs(flows(arcrow,arccol))));
 }
 
 
-/* function: EvalCostL2()
+/* function: EvalCost()
  * ----------------------
  * Calculates the L2 arc cost given an array of cost data structures.
  */
-long EvalCostL2(void **costs, short **flows, long arcrow, long arccol, 
-                long nrow, paramT *params){
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT * /*params*/, L2CostTag /*tag*/){
 
   /* L2-norm */
-  return((long )((((short **)costs)[arcrow][arccol])
-                 *(flows[arcrow][arccol]*flows[arcrow][arccol])));
+  return((long )((costs(arcrow,arccol))
+                 *(flows(arcrow,arccol)*flows(arcrow,arccol))));
 }
 
 
-/* function: EvalCostLP()
+/* function: EvalCost()
  * ----------------------
  * Calculates the Lp arc cost given an array of cost data structures.
  */
-long EvalCostLP(void **costs, short **flows, long arcrow, long arccol, 
-                long nrow, paramT *params){
+long EvalCost(Array2D<short>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT *params, LPCostTag /*tag*/){
 
   /* Lp-norm */
-  return(LRound((((short **)costs)[arcrow][arccol]) * 
-                pow(labs(flows[arcrow][arccol]),params->p)));
+  return(LRound((costs(arcrow,arccol)) *
+                pow(labs(flows(arcrow,arccol)),params->p)));
 }
 
 
-/* function: EvalCostL0BiDir()
+/* function: EvalCost()
  * ---------------------------
  * Calculates the L0 arc cost given an array of bidirectional cost structures.
  */
-long EvalCostL0BiDir(void **costs, short **flows, long arcrow, long arccol, 
-                     long nrow, paramT *params){
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT * /*params*/, L0BiDirCostTag /*tag*/){
 
   /* L0-norm */
-  if(flows[arcrow][arccol]>0){
-    return((long )((bidircostT **)costs)[arcrow][arccol].posweight);
-  }else if(flows[arcrow][arccol]<0){
-    return((long )((bidircostT **)costs)[arcrow][arccol].negweight);
+  if(flows(arcrow,arccol)>0){
+    return((long )costs(arcrow,arccol).posweight);
+  }else if(flows(arcrow,arccol)<0){
+    return((long )costs(arcrow,arccol).negweight);
   }else{
     return(0);
   }
 }
 
 
-/* function: EvalCostL1BiDir()
+/* function: EvalCost()
  * ---------------------------
  * Calculates the L1 arc cost given an array of bidirectional cost structures.
  */
-long EvalCostL1BiDir(void **costs, short **flows, long arcrow, long arccol, 
-                     long nrow, paramT *params){
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT * /*params*/, L1BiDirCostTag /*tag*/){
 
   /* L1-norm */
-  if(flows[arcrow][arccol]>0){
-    return((long )((((bidircostT **)costs)[arcrow][arccol].posweight) 
-                   *(flows[arcrow][arccol])));
+  if(flows(arcrow,arccol)>0){
+    return((long )((costs(arcrow,arccol).posweight)
+                   *(flows(arcrow,arccol))));
   }else{
-    return((long )((((bidircostT **)costs)[arcrow][arccol].negweight) 
-                   *(-flows[arcrow][arccol])));
+    return((long )((costs(arcrow,arccol).negweight)
+                   *(-flows(arcrow,arccol))));
   }
 }
 
 
-/* function: EvalCostL2BiDir()
+/* function: EvalCost()
  * ---------------------------
  * Calculates the L2 arc cost given an array of bidirectional cost structures.
  */
-long EvalCostL2BiDir(void **costs, short **flows, long arcrow, long arccol, 
-                     long nrow, paramT *params){
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT * /*params*/, L2BiDirCostTag /*tag*/){
 
   /* L2-norm */
-  if(flows[arcrow][arccol]>0){
-    return((long )((((bidircostT **)costs)[arcrow][arccol].posweight)
-                   *(flows[arcrow][arccol]*flows[arcrow][arccol])));
+  if(flows(arcrow,arccol)>0){
+    return((long )((costs(arcrow,arccol).posweight)
+                   *(flows(arcrow,arccol)*flows(arcrow,arccol))));
   }else{
-    return((long )((((bidircostT **)costs)[arcrow][arccol].negweight)
-                   *(flows[arcrow][arccol]*flows[arcrow][arccol])));
+    return((long )((costs(arcrow,arccol).negweight)
+                   *(flows(arcrow,arccol)*flows(arcrow,arccol))));
   }
 }
 
 
-/* function: EvalCostLPBiDir()
+/* function: EvalCost()
  * ---------------------------
  * Calculates the Lp arc cost given an array of bidirectional cost structures.
  */
-long EvalCostLPBiDir(void **costs, short **flows, long arcrow, long arccol, 
-                     long nrow, paramT *params){
+long EvalCost(Array2D<bidircostT>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT *params, LPBiDirCostTag /*tag*/){
 
   /* Lp-norm */
-  if(flows[arcrow][arccol]>0){
-    return(LRound((((bidircostT **)costs)[arcrow][arccol].posweight)
-                  *pow(flows[arcrow][arccol],params->p)));
+  if(flows(arcrow,arccol)>0){
+    return(LRound((costs(arcrow,arccol).posweight)
+                  *pow(flows(arcrow,arccol),params->p)));
   }else{
-    return(LRound((((bidircostT **)costs)[arcrow][arccol].posweight)
-                  *pow(-flows[arcrow][arccol],params->p)));
+    return(LRound((costs(arcrow,arccol).posweight)
+                  *pow(-flows(arcrow,arccol),params->p)));
   }
 }
 
 
-/* function: EvalCostNonGrid()
+/* function: EvalCost()
  * ---------------------------
  * Calculates the arc cost given an array of long integer cost lookup tables.
  */
-long EvalCostNonGrid(void **costs, short **flows, long arcrow, long arccol, 
-                     long nrow, paramT *params){
+long EvalCost(Array2D<Array1D<long>>& costs, Array2D<short>& flows, long arcrow, long arccol,
+              long /*nrow*/, paramT *params, NonGridCostTag /*tag*/){
 
   long flow, xflow, flowmax, arroffset, sumsigsqinv;
-  long *costarr;
   double c1;
 
   /* set up */
-  flow=flows[arcrow][arccol];
+  flow=flows(arcrow,arccol);
   flowmax=params->scndryarcflowmax;
-  costarr=((long ***)costs)[arcrow][arccol];
+  auto& costarr=costs(arcrow,arccol);
   arroffset=costarr[0];
   sumsigsqinv=costarr[2*flowmax+1];
 
@@ -2750,7 +2641,7 @@ long EvalCostNonGrid(void **costs, short **flows, long arcrow, long arccol,
  * by examining the dzmax members of arc statistical cost data structures.
  */
 static
-int CalcInitMaxFlow(paramT *params, void **costs, long nrow, long ncol){
+int CalcInitMaxFlow(paramT *params, Array2D<costT>& costs, long nrow, long ncol){
 
   long row, col, maxcol, initmaxflow, arcmaxflow;
 
@@ -2767,8 +2658,8 @@ int CalcInitMaxFlow(paramT *params, void **costs, long nrow, long ncol){
             maxcol=ncol-1;
           }
           for(col=0;col<maxcol;col++){
-            if(((costT **)costs)[row][col].dzmax!=LARGESHORT){
-              arcmaxflow=ceil(labs((long )((costT **)costs)[row][col].dzmax)/
+            if(costs(row,col).dzmax!=LARGESHORT){
+              arcmaxflow=ceil(labs((long )costs(row,col).dzmax)/
                               (double )(params->nshortcycle)
                               +params->arcmaxflowconst);
               if(arcmaxflow>initmaxflow){
@@ -2785,5 +2676,26 @@ int CalcInitMaxFlow(paramT *params, void **costs, long nrow, long ncol){
   }
   return(0);
 }
+
+
+#define INSTANTIATE_TEMPLATES(T) \
+  template int BuildCostArrays(Array2D<typename T::Cost>*, Array2D<short>*, \
+                               Array2D<float>&, Array2D<float>&, \
+                               Array2D<float>&, long, long, \
+                               long, long, paramT*, \
+                               tileparamT*, infileT*, \
+                               outfileT*, T);
+INSTANTIATE_TEMPLATES(TopoCostTag)
+INSTANTIATE_TEMPLATES(DefoCostTag)
+INSTANTIATE_TEMPLATES(SmoothCostTag)
+INSTANTIATE_TEMPLATES(L0CostTag)
+INSTANTIATE_TEMPLATES(L1CostTag)
+INSTANTIATE_TEMPLATES(L2CostTag)
+INSTANTIATE_TEMPLATES(LPCostTag)
+INSTANTIATE_TEMPLATES(L0BiDirCostTag)
+INSTANTIATE_TEMPLATES(L1BiDirCostTag)
+INSTANTIATE_TEMPLATES(L2BiDirCostTag)
+INSTANTIATE_TEMPLATES(LPBiDirCostTag)
+INSTANTIATE_TEMPLATES(NonGridCostTag)
 
 } // namespace isce3::unwrap
