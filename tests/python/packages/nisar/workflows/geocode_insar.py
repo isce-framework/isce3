@@ -5,6 +5,7 @@ from osgeo import gdal
 import h5py
 import numpy as np
 
+import isce3
 from nisar.workflows import geocode_insar, h5_prep
 from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
 
@@ -16,6 +17,10 @@ def test_geocode_run():
     '''
     test_yaml_path = os.path.join(iscetest.data, 'insar_test.yaml')
     for pu in ['cpu', 'gpu']:
+        # Skip GPU geocode insar if cuda not included
+        if pu == 'gpu' and not hasattr(isce3, 'cuda'):
+            continue
+
         with open(test_yaml_path) as fh_test_yaml:
             test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
                 replace('@TEST_OUTPUT@', f'{pu}_gunw.h5'). \
@@ -73,6 +78,10 @@ def test_geocode_validate():
     # prepare the check gunw hdf5
     scratch_path = '.'
     for pu in ['cpu', 'gpu']:
+        # Skip GPU geocode insar if cuda not included
+        if pu == 'gpu' and not hasattr(isce3, 'cuda'):
+            continue
+
         path_gunw = os.path.join(scratch_path, f'{pu}_gunw.h5')
         product_path = 'science/LSAR/GUNW/grids/frequencyA/interferogram/HH'
         with h5py.File(path_gunw, 'r', libver='latest', swmr=True) as h:

@@ -7,15 +7,14 @@ nisar/workflows/focus.py
 nisar/workflows/stage_dem.py
 nisar/workflows/gcov.py
 nisar/workflows/geo2rdr.py
+nisar/workflows/geocode_insar.py
 nisar/workflows/gslc.py
 nisar/workflows/gpu_check.py
-nisar/workflows/geocode_insar.py
 nisar/workflows/insar.py
 nisar/workflows/process_args.py
 nisar/workflows/point_target_info.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
-nisar/workflows/rubbersheet.py
 nisar/workflows/unwrap.py
 nisar/workflows/antenna_parser.py
 )
@@ -45,17 +44,19 @@ set_tests_properties(test.python.pkg.nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.rdr2geo)
 set_tests_properties(test.python.pkg.nisar.workflows.resample_slc PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.geo2rdr)
-if(WITH_CUDA)
-    set_tests_properties(test.python.pkg.nisar.workflows.dense_offsets PROPERTIES
-                 DEPENDS test.python.pkg.nisar.workflows.cuda_insar)
-    set_tests_properties(test.python.pkg.nisar.workflows.rubbersheet PROPERTIES
-                 DEPENDS test.python.pkg.nisar.workflows.cuda_insar)
-endif()
 set_tests_properties(test.python.pkg.nisar.workflows.crossmul PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.resample_slc)
 # using rdr2geo outputs as RUNW rasters to confirm geocode run
 # using RUNW HDF5 needed as a verifiable dummy RUNW input
 set_tests_properties(test.python.pkg.nisar.workflows.geocode_insar PROPERTIES
              DEPENDS "test.python.pkg.nisar.workflows.rdr2geo;test.python.pkg.nisar.workflows.unwrap")
+
 set_tests_properties(test.python.pkg.nisar.workflows.insar PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.geocode_insar)
+
+if(WITH_CUDA)
+    set_tests_properties(test.python.pkg.nisar.workflows.dense_offsets PROPERTIES
+                 DEPENDS test.python.pkg.nisar.workflows.cuda_insar)
+    set_tests_properties(test.python.pkg.nisar.workflows.rubbersheet PROPERTIES
+                 DEPENDS test.python.pkg.nisar.workflows.cuda_insar)
+endif()
