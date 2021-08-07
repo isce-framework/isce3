@@ -9,7 +9,7 @@ runconfig:
         InputFileGroup:
             # REQUIRED List of NISAR raw data products in L0B format.
             InputFilePath:
-            - input_L0B_RRSD_REE2/REE_L0B_NISAR_array144sq_01.h5
+            - input_L0B_RRSD_REE2/REE_L0B_NISAR_array144sq_02.h5
 
         DynamicAncillaryFileGroup:
             # Digital elevation model, optional.
@@ -73,8 +73,8 @@ runconfig:
                 # Azimuth bounds of output SLC, optional.
                 # Defaults to extent of raw data minus sythetic aperture and shifted
                 # by squint.
-                start_time: "2023-07-01T00:01:45.0"
-                end_time: "2023-07-01T00:02:10.0"
+                start_time: 2023-07-01T00:01:50.000
+                end_time: 2023-07-01T00:02:27.000
 
                 # Range bounds of output SLC in meters, optional.
                 # Defaults to entire fully focused swath.
@@ -107,8 +107,7 @@ runconfig:
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
-                #azimuth_boresight_deg: 0.9
-                azimuth_boresight_deg: -0.9
+                azimuth_boresight_deg: 0.9
 
                 # How to interpolate between samples in the LUT.
                 interp_method: bilinear

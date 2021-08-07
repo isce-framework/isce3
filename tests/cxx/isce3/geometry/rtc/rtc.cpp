@@ -73,7 +73,7 @@ TEST(TestRTC, RunRTC) {
             // slow)
             if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
                                          RTC_BILINEAR_DISTRIBUTION &&
-                radar_grid_str == "cropped") {
+                    radar_grid_str == "cropped") {
                 continue;
             } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
                                                 RTC_BILINEAR_DISTRIBUTION) {
@@ -111,7 +111,7 @@ TEST(TestRTC, CheckResults) {
             // slow)
             if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
                                          RTC_BILINEAR_DISTRIBUTION &&
-                radar_grid_str == "cropped") {
+                    radar_grid_str == "cropped") {
                 continue;
             } else if (rtc_algorithm == isce3::geometry::rtcAlgorithm::
                                                 RTC_BILINEAR_DISTRIBUTION) {

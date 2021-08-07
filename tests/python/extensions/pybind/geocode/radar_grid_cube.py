@@ -7,8 +7,8 @@ from osgeo import gdal
 import numpy as np
 import iscetest
 import pybind_isce3 as isce3
-from pybind_nisar.products.readers import SLC
-from pybind_nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
+from nisar.products.readers import SLC
+from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 
 # run tests
 def test_run():

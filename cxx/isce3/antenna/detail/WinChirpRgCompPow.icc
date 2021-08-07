@@ -1,0 +1,134 @@
+// Implementation of WinChirpRgCompPow.h
+
+#include <cmath>
+#include <type_traits>
+
+#include <isce3/except/Error.h>
+#include <isce3/focus/Chirp.h>
+#include <isce3/focus/RangeComp.h>
+
+namespace isce3 { namespace antenna { namespace detail {
+
+template<typename T>
+std::vector<T> genRaisedCosineWin(int size, double ped)
+{
+    // check the arguments
+    static_assert(std::is_floating_point_v<T>,
+            "'genRaisedCosineWin' requires floating-point output/template "
+            "type!");
+    if (size < 1)
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Raisedcosine window size must be a positive value!");
+    if (ped < 0.0 || ped > 1.0)
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "The raisedcosine window pedestal shall be a "
+                "value within [0, 1]!");
+    // form the window function
+    std::vector<T> rc_win(size);
+    if (size == 1) {
+        rc_win[0] = 1;
+        return rc_win;
+    }
+    const double cos_fact {2.0 * M_PI / (size - 1)};
+    const double scalar {-0.5 * (1.0 - ped)};
+    const double offset {0.5 * (1.0 + ped)};
+    for (int idx = 0; idx < size; ++idx)
+        rc_win[idx] = scalar * std::cos(cos_fact * idx) + offset;
+    return rc_win;
+}
+
+std::vector<std::complex<float>> genRcosWinChirp(double sample_freq,
+        double chirp_slope, double chirp_dur, double win_ped, bool norm)
+{
+    // check the arguments
+    if (!(sample_freq > 0.0))
+        throw isce3::except::InvalidArgument(
+                ISCE_SRCINFO(), "Sampling frequency must be a positive value!");
+    if (!(chirp_dur > 0.0))
+        throw isce3::except::InvalidArgument(
+                ISCE_SRCINFO(), "Chirp duration must be a positive value!");
+
+    // form an analythical chirp with rectangular envelope
+    auto chp =
+            isce3::focus::formLinearChirp(chirp_slope, chirp_dur, sample_freq);
+    Eigen::Map<Eigen::VectorXcf> chp_map(chp.data(), chp.size());
+
+    // form the window function
+    auto rcw = genRaisedCosineWin(static_cast<int>(chp.size()), win_ped);
+    Eigen::Map<Eigen::VectorXf> rcw_map(rcw.data(), rcw.size());
+
+    // perform windowing in time-domain and force unit-energy!
+    // Note that Applying window func in time domian only works for LFM!
+    // In general, It shall be done in Freq domian to propely bandlimit any
+    // waveform!
+    chp_map = chp_map.cwiseProduct(rcw_map);
+    if (norm)
+        chp_map.normalize();
+    return chp;
+}
+
+Eigen::ArrayXd meanRgCompEchoPower(
+        const Eigen::Ref<const RowMatrixXcf>& echo_mat,
+        const std::vector<std::complex<float>>& chirp_ref)
+{
+    // check length of ref chirp versus range bins (columns) of echo
+    if (static_cast<Eigen::Index>(chirp_ref.size()) > echo_mat.cols())
+        throw isce3::except::LengthError(ISCE_SRCINFO(),
+                "Chirp ref is longer than range bins or number "
+                "columns of echo!");
+
+    // form rangecomp object with valid mode (truncated true range bins w/o
+    // two-way group delay!)
+    auto rgc_obj = isce3::focus::RangeComp(chirp_ref, echo_mat.cols(), 1,
+            isce3::focus::RangeComp::Mode::Valid);
+    // final number of range bins and range lines(or pulses)
+    const auto nrgbs = rgc_obj.outputSize();
+    const auto nrgls = echo_mat.rows();
+    // Allocate and Initialize the final mean power vector
+    Eigen::ArrayXd mean_pow = Eigen::ArrayXd::Zero(nrgbs);
+    // allocate range line vector for range compression output
+    Eigen::ArrayXcf rgc_line(nrgbs);
+
+    for (Eigen::Index pulse = 0; pulse < nrgls; ++pulse) {
+        // range compression per range line
+        rgc_obj.rangecompress(rgc_line.data(), echo_mat.row(pulse).data());
+        // get the power and add up its double precision version
+        mean_pow += rgc_line.abs2().cast<double>();
+    }
+    mean_pow /= nrgls;
+    return mean_pow;
+}
+
+std::tuple<Eigen::ArrayXd, Eigen::ArrayXd> rangeCalibAvgEchoPower(
+        const Eigen::Ref<const Eigen::ArrayXd>& echo_pow, double rg_start,
+        double rg_spacing, int size_avg)
+{
+    // check some inputs
+    if (!(rg_spacing > 0.0))
+        throw isce3::except::InvalidArgument(
+                ISCE_SRCINFO(), "Range spacing must be a positive value.");
+    const auto echo_size = static_cast<int>(echo_pow.size());
+    if (size_avg < 1 || size_avg > echo_size)
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Block size for averaging must be within [1, echo_size]");
+
+    const int nrgb {echo_size / size_avg};
+    // form the slant range vector
+    const double drg {size_avg * rg_spacing};
+    const double rg_first {rg_start + 0.5 * (size_avg - 1) * rg_spacing};
+    const double rg_last {rg_first + (nrgb - 1) * drg};
+    Eigen::ArrayXd sr = Eigen::ArrayXd::LinSpaced(nrgb, rg_first, rg_last);
+    // allocate calibrated power vector
+    Eigen::ArrayXd cal_pow(nrgb);
+    // loop over range blocks
+    for (int idx = 0; idx < nrgb; ++idx) {
+        // path loss calib factor correction
+        auto cal_fact = std::pow(sr(idx) / rg_first, 3);
+        // take a mean of the block and then apply calib factor due to range
+        cal_pow(idx) =
+                echo_pow.segment(idx * size_avg, size_avg).mean() * cal_fact;
+    }
+    return {cal_pow, sr};
+}
+
+}}} // namespace isce3::antenna::detail

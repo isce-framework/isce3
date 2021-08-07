@@ -8,7 +8,7 @@ import numpy.testing as npt
 
 import iscetest
 import pybind_isce3 as isce3
-from pybind_nisar.products.readers import SLC
+from nisar.products.readers import SLC
 
 def test_point():
     h5_path = os.path.join(iscetest.data, "envisat.h5")

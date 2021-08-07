@@ -1,6 +1,7 @@
 #include "GeocodeCov.h"
 
 #include <limits>
+#include <pybind11/stl.h>
 
 #include <isce3/core/Constants.h>
 #include <isce3/geometry/RTC.h>
@@ -24,48 +25,50 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
     pyGeocode.def(py::init<>())
             .def_property("orbit", nullptr, &Geocode<T>::orbit)
             .def_property("doppler", nullptr, &Geocode<T>::doppler)
+            .def_property("native_doppler", nullptr, &Geocode<T>::nativeDoppler)
             .def_property("ellipsoid", nullptr, &Geocode<T>::ellipsoid)
-            .def_property("threshold_geo2rdr", nullptr,
-                          &Geocode<T>::thresholdGeo2rdr)
-            .def_property("numiter_geo2rdr", nullptr,
-                          &Geocode<T>::numiterGeo2rdr)
-            .def_property("lines_per_block", nullptr,
-                          &Geocode<T>::linesPerBlock)
-            .def_property("dem_block_margin", nullptr,
-                          &Geocode<T>::demBlockMargin)
+            .def_property(
+                    "threshold_geo2rdr", nullptr, &Geocode<T>::thresholdGeo2rdr)
+            .def_property(
+                    "numiter_geo2rdr", nullptr, &Geocode<T>::numiterGeo2rdr)
+            .def_property(
+                    "lines_per_block", nullptr, &Geocode<T>::linesPerBlock)
+            .def_property(
+                    "dem_block_margin", nullptr, &Geocode<T>::demBlockMargin)
             .def_property("radar_block_margin", nullptr,
-                          &Geocode<T>::radarBlockMargin)
-            .def_property("data_interpolator", 
-                py::overload_cast<>(&Geocode<T>::dataInterpolator, 
-                                    py::const_),
-               [](Geocode<T>& self, std::string& method) {
-                              // get interp method
-                              auto data_interpolator =
-                                      parseDataInterpMethod(method);
+                    &Geocode<T>::radarBlockMargin)
+            .def_property("data_interpolator",
+                    py::overload_cast<>(
+                            &Geocode<T>::dataInterpolator, py::const_),
+                    [](Geocode<T>& self, std::string& method) {
+                        // get interp method
+                        auto data_interpolator = parseDataInterpMethod(method);
 
-                              // set interp method
-                              self.dataInterpolator(data_interpolator);
-                          })
-            .def_property_readonly("geogrid_start_x",
-                                   &Geocode<T>::geoGridStartX)
-            .def_property_readonly("geogrid_start_y",
-                                   &Geocode<T>::geoGridStartY)
-            .def_property_readonly("geogrid_spacing_x",
-                                   &Geocode<T>::geoGridSpacingX)
-            .def_property_readonly("geogrid_spacing_y",
-                                   &Geocode<T>::geoGridSpacingY)
+                        // set interp method
+                        self.dataInterpolator(data_interpolator);
+                    })
+            .def_property_readonly(
+                    "geogrid_start_x", &Geocode<T>::geoGridStartX)
+            .def_property_readonly(
+                    "geogrid_start_y", &Geocode<T>::geoGridStartY)
+            .def_property_readonly(
+                    "geogrid_spacing_x", &Geocode<T>::geoGridSpacingX)
+            .def_property_readonly(
+                    "geogrid_spacing_y", &Geocode<T>::geoGridSpacingY)
             .def_property_readonly("geogrid_width", &Geocode<T>::geoGridWidth)
             .def_property_readonly("geogrid_length", &Geocode<T>::geoGridLength)
             .def("update_geogrid", &Geocode<T>::updateGeoGrid,
-                 py::arg("radar_grid"), py::arg("dem_raster"))
+                    py::arg("radar_grid"), py::arg("dem_raster"))
             .def("geogrid", &Geocode<T>::geoGrid, py::arg("x_start"),
-                 py::arg("y_start"), py::arg("x_spacing"), py::arg("y_spacing"),
-                 py::arg("width"), py::arg("length"), py::arg("epsg"))
-            .def("geocode", &Geocode<T>::geocode,
-                    py::arg("radar_grid"), py::arg("input_raster"),
-                    py::arg("output_raster"), py::arg("dem_raster"),
-                    py::arg("output_mode") =
-                            geocodeOutputMode::AREA_PROJECTION,
+                    py::arg("y_start"), py::arg("x_spacing"),
+                    py::arg("y_spacing"), py::arg("width"), py::arg("length"),
+                    py::arg("epsg"))
+            .def("geocode", &Geocode<T>::geocode, py::arg("radar_grid"),
+                    py::arg("input_raster"), py::arg("output_raster"),
+                    py::arg("dem_raster"),
+                    py::arg("output_mode") = geocodeOutputMode::AREA_PROJECTION,
+                    py::arg("flag_az_baseband_doppler") = false,
+                    py::arg("flatten") = false,
                     py::arg("geogrid_upsampling") = 1,
                     py::arg("flag_upsample_radar_grid") = false,
                     py::arg("flag_apply_rtc") = false,
@@ -93,6 +96,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("out_geo_dem") = nullptr,
                     py::arg("out_geo_nlooks") = nullptr,
                     py::arg("out_geo_rtc") = nullptr,
+                    py::arg("phase_screen") = nullptr,
+                    py::arg("offset_az_raster") = nullptr,
+                    py::arg("offset_rg_raster") = nullptr,
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
                     py::arg("memory_mode") = geocodeMemoryMode::AUTO,
@@ -100,14 +106,13 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                             isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
                     py::arg("max_block_size") =
                             isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
-                    py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD);
+                    py::arg("dem_interp_method") =
+                            isce3::core::BIQUINTIC_METHOD);
 }
 
-
-
-void addbinding(pybind11::enum_<geocodeOutputMode> & pyGeocodeMode)
+void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeOutputMode)
 {
-    pyGeocodeMode.value("INTERP", geocodeOutputMode::INTERP)
+    pyGeocodeOutputMode.value("INTERP", geocodeOutputMode::INTERP)
             .value("AREA_PROJECTION", geocodeOutputMode::AREA_PROJECTION);
 };
 

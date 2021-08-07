@@ -4,20 +4,21 @@ void isce3::geocode::interpolate(
         const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
         isce3::core::Matrix<std::complex<float>>& geoDataBlock,
         const std::valarray<double>& radarX,
-        const std::valarray<double>& radarY,
-        const std::valarray<std::complex<double>>& geometricalPhase,
-        const int radarBlockWidth, const int radarBlockLength,
-        const int azimuthFirstLine, const int rangeFirstPixel,
-        const isce3::core::Interpolator<std::complex<float>>* interp)
+        const std::valarray<double>& radarY, const int azimuthFirstLine,
+        const int rangeFirstPixel,
+        const isce3::core::Interpolator<std::complex<float>>* interp,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::core::LUT2d<double>& dopplerLUT, const bool& flatten)
 {
-
-    size_t length = geoDataBlock.length();
-    size_t width = geoDataBlock.width();
-    int extraMargin = isce3::core::SINC_HALF;
+    const int chipSize = isce3::core::SINC_ONE;
+    const int width = geoDataBlock.width();
+    const int length = geoDataBlock.length();
+    const int inWidth = rdrDataBlock.width();
+    const int inLength = rdrDataBlock.length();
+    const int chipHalf = chipSize / 2;
 
 #pragma omp parallel for
     for (size_t kk = 0; kk < length * width; ++kk) {
-
         size_t i = kk / width;
         size_t j = kk % width;
 
@@ -26,22 +27,65 @@ void isce3::geocode::interpolate(
         double rdrY = radarY[i * width + j] - azimuthFirstLine;
         double rdrX = radarX[i * width + j] - rangeFirstPixel;
 
-        if (rdrX < extraMargin || rdrY < extraMargin ||
-            rdrX >= (radarBlockWidth - extraMargin) ||
-            rdrY >= (radarBlockLength - extraMargin)) {
+        const int intX = static_cast<int>(rdrX);
+        const int intY = static_cast<int>(rdrY);
+        const double fracX = rdrX - intX;
+        const double fracY = rdrY - intY;
 
-            geoDataBlock(i,j) = std::complex<float> (0.0, 0.0);
+        if ((intX < chipHalf) || (intX >= (inWidth - chipHalf)))
+            continue;
+        if ((intY < chipHalf) || (intY >= (inLength - chipHalf)))
+            continue;
 
-        } else {
+        // Slant Range at the current output pixel
+        const double rng =
+                radarGrid.startingRange() +
+                radarX[i * width + j] * radarGrid.rangePixelSpacing();
 
-            // Interpolate chip
-            const std::complex<double> cval =
-                interp->interpolate(rdrX, rdrY, rdrDataBlock);
+        // Azimuth time at the current output pixel
+        const double az = radarGrid.sensingStart() +
+                          radarY[i * width + j] / radarGrid.prf();
 
-            // geometricalPhase is the sum of carrier (Doppler) phase to be added
-            // back and the geometrical phase to be removed: exp(1J* (carrier
-            // - 4.0*PI*slantRange/wavelength))
-            geoDataBlock(i, j) = cval * geometricalPhase[i * width + j];
+        if (not dopplerLUT.contains(az, rng))
+            continue;
+
+        // Evaluate Doppler at current range and azimuth time
+        const double dop =
+                dopplerLUT.eval(az, rng) * 2 * M_PI / radarGrid.prf();
+
+        // Doppler to be added back. Simultaneously evaluate carrier
+        // that needs to be added back after interpolation
+        double carrier_phase = (dop * fracY); // +
+                                              //_rgCarrier.eval(rdrX, rdrY) +
+                                              //_azCarrier.eval(rdrX, rdrY);
+
+        if (flatten) {
+            carrier_phase += (4.0 * (M_PI / radarGrid.wavelength())) * rng;
         }
-    } // end for
+
+        isce3::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
+        // Read data chip without the carrier phases
+        for (int ii = 0; ii < chipSize; ++ii) {
+            // Row to read from
+            const int chipRow = intY + ii - chipHalf;
+
+            // Carrier phase
+            const double phase = dop * (ii - chipHalf);
+            const std::complex<float> cval(std::cos(phase), -std::sin(phase));
+
+            // Set the data values after removing doppler in azimuth
+            for (int jj = 0; jj < chipSize; ++jj) {
+                // Column to read from
+                const int chipCol = intX + jj - chipHalf;
+                chip(ii, jj) = rdrDataBlock(chipRow, chipCol) * cval;
+            }
+        }
+        // Interpolate chip
+        const std::complex<float> cval =
+                interp->interpolate(isce3::core::SINC_HALF + fracX,
+                        isce3::core::SINC_HALF + fracY, chip);
+
+        geoDataBlock(i, j) = cval * std::complex<float>(std::cos(carrier_phase),
+                                            std::sin(carrier_phase));
+    }
 }

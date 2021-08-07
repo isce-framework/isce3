@@ -60,6 +60,8 @@ io/raster/rasterview.cpp
 matchtemplate/ampcor/ampcor.cpp
 math/bessel/bessel53.cpp
 math/sinc.cpp
+math/polyfunc.cpp
+polsar/symmetrize.cpp
 product/serialization/serializeProduct.cpp
 product/serialization/serializeProductMetadata.cpp
 product/radargrid/radargrid.cpp

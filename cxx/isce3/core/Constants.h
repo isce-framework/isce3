@@ -34,6 +34,16 @@ const int SINC_LEN = 8;
 const int SINC_ONE = 9;
 const int SINC_SUB = 8192;
 
+/** Enumeration type to indicate memory management for processes
+ * that require block processing in the Y direction
+ */
+enum class MemoryModeBlockY {
+    AutoBlocksY,     /**< auto mode (default value is defined by the
+                         module that is being executed) */
+    SingleBlockY,    /**< use a single block (disable block mode) */
+    MultipleBlocksY, /**< use multiple blocks (enable block mode) */
+};
+
 /** Convert string to dataInterpMethod */
 dataInterpMethod parseDataInterpMethod(const std::string & method);
 

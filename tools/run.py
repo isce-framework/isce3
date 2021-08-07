@@ -17,16 +17,19 @@ def run(*, steps, imgset, **kwargs):
         "gslctest",
         "gcovtest",
         "insartest",
+        "end2endtest",
     ]
 
     nisarsteps = mainsteps + [
         "makedistrib_nisar",
         "noisesttest",
         "ptatest",
+        "beamformtest",
         "rslcqa",
         "gslcqa",
         "gcovqa",
         "insarqa",
+        "end2endqa",
     ]
 
     # you can say "all" or "main" for a sequence similar to our CI pipeline
@@ -64,5 +67,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--imgset", default="centos7conda")
     parser.add_argument("-B", "--projblddir", default=f"{projsrcdir}/build-docker")
     parser.add_argument("-p", "--printlog", action='store_true')
+    parser.add_argument("-t", "--imgtag", default=None)    
     parser.add_argument("steps", nargs="+")
     run(**vars(parser.parse_args()))

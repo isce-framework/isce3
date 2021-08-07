@@ -1,12 +1,15 @@
 #include "Backproject.h"
 
+#include <pybind11/numpy.h>
+
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Kernels.h>
 #include <isce3/except/Error.h>
 #include <isce3/focus/Backproject.h>
 #include <isce3/focus/DryTroposphereModel.h>
 #include <isce3/geometry/DEMInterpolator.h>
-#include <pybind11/numpy.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 
 namespace py = pybind11;
 
@@ -61,7 +64,7 @@ void addbinding_backproject(py::module& m)
 
             DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
 
-            Rdr2GeoParams r2gparams;
+            isce3::geometry::detail::Rdr2GeoParams r2gparams;
             if (rdr2geo_params.contains("threshold")) {
                 r2gparams.threshold = py::float_(rdr2geo_params["threshold"]);
             }
@@ -72,7 +75,7 @@ void addbinding_backproject(py::module& m)
                 r2gparams.extraiter = py::int_(rdr2geo_params["extraiter"]);
             }
 
-            Geo2RdrParams g2rparams;
+            isce3::geometry::detail::Geo2RdrParams g2rparams;
             if (geo2rdr_params.contains("threshold")) {
                 g2rparams.threshold = py::float_(geo2rdr_params["threshold"]);
             }

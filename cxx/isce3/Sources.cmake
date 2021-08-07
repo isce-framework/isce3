@@ -1,4 +1,5 @@
 set(SRCS
+antenna/ElPatternEst.cpp
 antenna/geometryfunc.cpp
 core/Attitude.cpp
 core/Baseline.cpp
@@ -47,6 +48,7 @@ geocode/GeocodePolygon.cpp
 geometry/geometry.cpp
 geometry/RTC.cpp
 geometry/Topo.cpp
+geometry/TopoLayers.cpp
 geometry/metadataCubes.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
@@ -70,6 +72,8 @@ matchtemplate/ampcor/correlators/tgtStats.cpp
 matchtemplate/ampcor/dom/Raster.cc
 matchtemplate/ampcor/dom/SLC.cc
 math/Bessel.cpp
+math/polyfunc.cpp
+polsar/symmetrize.cpp
 product/GeoGridParameters.cpp
 product/Product.cpp
 product/RadarGridParameters.cpp

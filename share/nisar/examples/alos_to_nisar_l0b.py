@@ -7,8 +7,8 @@ import numpy
 import os
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
 import pybind_isce3 as isce3
-from pybind_nisar.products.readers.Raw import Raw
-from pybind_nisar.workflows.focus import make_doppler_lut
+from nisar.products.readers.Raw import Raw
+from nisar.workflows.focus import make_doppler_lut
 
 def cmdLineParse():
     '''

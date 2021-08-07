@@ -6,6 +6,8 @@
 
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/Matrix.h>
+#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridParameters.h>
 
 namespace isce3 { namespace geocode {
 
@@ -14,20 +16,21 @@ namespace isce3 { namespace geocode {
  * @param[out] geoDataBlock a block of data in geo coordinates
  * @param[in] radarX the radar-coordinates x-index of the pixels in geo-grid
  * @param[in] radarY the radar-coordinates y-index of the pixels in geo-grid
- * @param[in] geometricalPhase the geometrical phase of each pixel in geo-grid
- * @param[in] radarBlockWidth width of the data block in radar coordinates
- * @param[in] radarBlockLength length of the data block in radar coordinates
- * @param[in] azimuthFirstLine azimuth time of the first sample
- * @param[in] rangeFirstPixel  range of the first sample
+ * @param[in] azimuthFirstLine line index of the first sample of the block
+ * @param[in] rangeFirstPixel  pixel index of the first sample of the block
  * @param[in] interp interpolator object
+ * @param[in] radarGrid RadarGridParameters
+ * @param[in] dopplerLUT Doppler LUT
+ * @param[in] flatten flag to determine if the geocoded SLC will be flattened or
+ * not
  */
 void interpolate(const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
-                 isce3::core::Matrix<std::complex<float>>& geoDataBlock,
-                 const std::valarray<double>& radarX,
-                 const std::valarray<double>& radarY,
-                 const std::valarray<std::complex<double>>& geometricalPhase,
-                 const int radarBlockWidth, const int radarBlockLength,
-                 const int azimuthFirstLine, const int rangeFirstPixel,
-                 const isce3::core::Interpolator<std::complex<float>>* interp);
+        isce3::core::Matrix<std::complex<float>>& geoDataBlock,
+        const std::valarray<double>& radarX,
+        const std::valarray<double>& radarY, const int azimuthFirstLine,
+        const int rangeFirstPixel,
+        const isce3::core::Interpolator<std::complex<float>>* interp,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::core::LUT2d<double>& dopplerLUT, const bool& flatten);
 
 }} // namespace isce3::geocode

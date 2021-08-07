@@ -454,9 +454,13 @@ TEST(radarGridCubeTest, testRadarGridCube)
         isce3::product::GeoGridParameters geogrid(x0, y0, dx, dy, width, length,
                                                   epsg);
 
+        const int epsg_los_and_along_track_vectors = epsg;
+
         // Make cubes
-        isce3::geometry::makeRadarGridCubes(
-                radar_grid, geogrid, heights, orbit, zero_doppler, zero_doppler,
+        std::cout << "calling makeRadarGridCubes() with geogrid EPSG:" << epsg
+                  << std::endl;
+        isce3::geometry::makeRadarGridCubes(radar_grid, geogrid, heights, orbit,
+                zero_doppler, zero_doppler, epsg_los_and_along_track_vectors,
                 &slant_range_raster, &azimuth_time_raster,
                 &incidence_angle_raster, &los_unit_vector_x_raster,
                 &los_unit_vector_y_raster, &along_track_unit_vector_x_raster,
@@ -698,6 +702,7 @@ TEST(metadataCubesTest, testMetadataCubes) {
     int numiter_geo2rdr = 25;
     double delta_range = 1e-6;
     int epsg = 4326;
+    int epsg_los_and_along_track_vectors = epsg;
 
     std::vector<double> heights = {0.0, 1000.0};
 
@@ -728,13 +733,13 @@ TEST(metadataCubesTest, testMetadataCubes) {
                                              GDT_Float64, "ENVI");
 
     // Make cubes
-    isce3::geometry::makeGeolocationGridCubes(
-            radar_grid, heights, orbit, zero_doppler, zero_doppler, epsg,
+    isce3::geometry::makeGeolocationGridCubes(radar_grid, heights, orbit,
+            zero_doppler, zero_doppler, epsg, epsg_los_and_along_track_vectors,
             &coordinate_x_raster, &coordinate_y_raster, &incidence_angle_raster,
             &los_unit_vector_x_raster, &los_unit_vector_y_raster,
-            &along_track_unit_vector_x_raster, &along_track_unit_vector_y_raster,
-            &elevation_angle_raster, threshold_geo2rdr, numiter_geo2rdr,
-            delta_range);
+            &along_track_unit_vector_x_raster,
+            &along_track_unit_vector_y_raster, &elevation_angle_raster,
+            threshold_geo2rdr, numiter_geo2rdr, delta_range);
 
     auto proj = isce3::core::makeProjection(epsg);
 

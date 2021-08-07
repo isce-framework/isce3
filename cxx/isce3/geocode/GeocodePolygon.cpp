@@ -27,8 +27,9 @@ GeocodePolygon<T>::GeocodePolygon(
     pyre::journal::info_t _info("isce.geometry.GeocodePolygon");
 
     if (x_vect.size() != y_vect.size()) {
-        std::string error_msg = "ERROR number of X- and Y-coordiantes"
-                                " do not match: " + std::to_string(x_vect.size()) +
+        std::string error_msg = "ERROR number of X- and Y-coordinates"
+                                " do not match: " +
+                                std::to_string(x_vect.size()) +
                                 " != " + std::to_string(y_vect.size());
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
     }

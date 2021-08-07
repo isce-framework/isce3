@@ -38,7 +38,7 @@ enum rtcMemoryMode {
 };
 
 constexpr static int AP_DEFAULT_MIN_BLOCK_SIZE = 1 << 22; // 4MB
-constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 30; // 1GB
+constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 28; // 256MB
 
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
 enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
@@ -145,7 +145,6 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
  * @param[in]  input_dop           Doppler LUT
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
- * @param[in]  frequency           Product frequency
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
  * @param[in]  output_terrain_radiometry Output terrain radiometry
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
@@ -330,19 +329,34 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
-inline isce3::core::Vec3 GetDemCoordsSameEpsg(double x, double y,
+inline isce3::core::Vec3 getDemCoordsSameEpsg(double x, double y,
         const DEMInterpolator& dem_interp,
         isce3::core::ProjectionBase* input_proj);
 
-inline isce3::core::Vec3 GetDemCoordsDiffEpsg(double x, double y,
+inline isce3::core::Vec3 getDemCoordsDiffEpsg(double x, double y,
         const DEMInterpolator& dem_interp,
         isce3::core::ProjectionBase* input_proj);
 
+/** Load DEM raster into a DEMInterpolator object around a given bounding box
+ * in the same or different coordinate system as the DEM raster
+ *
+ * @param[in]  dem_raster              DEM raster
+ * @param[in]  minX                    Minimum X/easting position
+ * @param[in]  maxX                    Maximum X/easting position
+ * @param[in]  minY                    Minimum Y/northing position
+ * @param[in]  maxY                    Maximum Y/northing position
+ * @param[out] dem_interp_block        DEM interpolation object
+ * @param[in]  proj                    Projection object (nullptr to use same
+ * DEM projection)
+ * @param[in]  dem_margin_x_in_pixels  DEM X/easting margin in pixels
+ * @param[in]  dem_margin_y_in_pixels  DEM Y/northing margin in pixels
+ */
 isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         const double minX, const double maxX, const double minY,
         const double maxY, DEMInterpolator* dem_interp_block,
-        isce3::core::ProjectionBase* proj, const double margin_x,
-        const double margin_y);
+        isce3::core::ProjectionBase* proj = nullptr,
+        const int dem_margin_x_in_pixels = 50,
+        const int dem_margin_y_in_pixels = 50);
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,

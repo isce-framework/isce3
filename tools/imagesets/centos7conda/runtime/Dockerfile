@@ -1,4 +1,5 @@
-FROM nvidia/cuda:11.0-base-centos7
+# Use specific version of nvidia/cuda:11.0-base-centos7 image
+FROM nvidia/cuda@sha256:260c6346ca819adcfb71993ad44c0d0623ab93ce6df67567eec9d2278da07802
 
 # Trying to install a package that doesn't exist should be an error.
 RUN yum update -y \

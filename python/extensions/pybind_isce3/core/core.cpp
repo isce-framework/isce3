@@ -18,6 +18,7 @@
 #include "Quaternion.h"
 #include "StateVector.h"
 #include "TimeDelta.h"
+#include "Poly1d.h"
 
 namespace py = pybind11;
 
@@ -38,6 +39,7 @@ void addsubmodule_core(py::module & m)
     py::class_<isce3::core::Quaternion> pyQuaternion(m_core, "Quaternion");
     py::class_<isce3::core::StateVector> pyStateVector(m_core, "StateVector");
     py::class_<isce3::core::TimeDelta> pyTimeDelta(m_core, "TimeDelta");
+    py::class_<isce3::core::Poly1d> pyPoly1d(m_core, "Poly1d");
 
     // Default to double for kernels
     using namespace isce3::core;
@@ -91,6 +93,7 @@ void addsubmodule_core(py::module & m)
     addbinding(pyQuaternion);
     addbinding(pyStateVector);
     addbinding(pyTimeDelta);
+    addbinding(pyPoly1d);
 
     addbinding(pyKernel);
     addbinding(pyBartlettKernel);

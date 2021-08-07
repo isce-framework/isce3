@@ -58,6 +58,13 @@ runconfig:
 
                 # OPTIONAL - If we want full covariance instead of diagonals only. Default False
                 fullcovariance:   False
+        
+                # Perform polarimetric symmetrization. It's only applicable
+                # for quad-polarimetric datasets (i.e. datasets that include
+                # HV and VH), otherwise, the flag is ignored.
+                # If enabled, the output product's "HV" dataset will contain symmetrized 
+                # HV/VH data and the "VH" dataset will be omitted from the output.
+                symmetrize_cross_pol_channels:  True
 
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
@@ -102,6 +109,7 @@ runconfig:
                 # OPTIONAL -
                 algorithm_type: area_projection
 
+                # OPTIONAL - Apply RTC
                 apply_rtc: True
  
                 # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_radargrid", and "auto" (default)
@@ -167,7 +175,7 @@ runconfig:
 
             radar_grid_cubes: 
     
-                # # List heights in meters
+                # List of heights in meters
                 heights: 
 
                 # OPTIONAL - Same as the geocode group outputEPSG if not provided

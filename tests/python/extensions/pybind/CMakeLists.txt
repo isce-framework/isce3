@@ -33,19 +33,23 @@ image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
+polsar/symmetrize.py
 signal/convolve2D.py
 signal/covariance.py
 signal/crossmul.py
 signal/crossmultiply.py
 signal/filter2D.py
+product/generic_product.py
 product/radargridparameters.py
 product/swath.py
 unwrap/icu.py
 unwrap/phass.py
 geometry/ltpcoordinates.py
 geometry/pntintersect.py
+geometry/look_inc_from_sr.py
 antenna/frame.py
 antenna/geometryfunc.py
+antenna/el_pattern_est.py
 )
 
 if(WITH_CUDA)
@@ -53,6 +57,7 @@ if(WITH_CUDA)
         cuda/core/compute_capability.py
         cuda/core/device.py
         cuda/focus/backproject.py
+        cuda/geocode/geocode.py
         cuda/geometry/geo2rdr.py
         cuda/geometry/rdr2geo.py
         cuda/image/resamp.py

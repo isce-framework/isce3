@@ -5,7 +5,7 @@ import numpy as np
 from osgeo import gdal
 import pybind_isce3 as isce3
 import iscetest
-from pybind_nisar.products.readers import SLC
+from nisar.products.readers import SLC
 
 # Create list of RadarGridParameters to process
 radar_grid_str_list = ['cropped', 'multilooked']

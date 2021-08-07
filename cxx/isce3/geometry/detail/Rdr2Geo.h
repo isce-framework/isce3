@@ -11,7 +11,7 @@ namespace isce3 { namespace geometry { namespace detail {
 /** \internal Root-finding configuration parameters for rdr2geo */
 struct Rdr2GeoParams {
     /** \internal Absolute slant range convergence tolerance (m) */
-    double tol = 1e-8;
+    double threshold = 1e-8;
 
     /** \internal Maximum number of primary Newton-Raphson iterations */
     int maxiter = 25;

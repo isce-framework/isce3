@@ -10,12 +10,14 @@
 #include <isce3/core/Kernels.h>
 #include <isce3/focus/Backproject.h>
 #include <isce3/focus/DryTroposphereModel.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 
 namespace isce3 { namespace cuda { namespace focus {
 
 using isce3::focus::DryTroposphereModel;
-using isce3::focus::Geo2RdrParams;
-using isce3::focus::Rdr2GeoParams;
+using isce3::geometry::detail::Geo2RdrParams;
+using isce3::geometry::detail::Rdr2GeoParams;
 
 /**
  * Focus in azimuth via time-domain backprojection

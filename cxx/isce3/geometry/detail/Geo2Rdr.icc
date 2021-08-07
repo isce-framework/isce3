@@ -157,14 +157,14 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
         }
 
         // check for convergence
-        if (std::abs(*r - r_old) < params.tol) {
+        if (std::abs(*r - r_old) < params.threshold) {
             return ErrorCode::Success;
         }
 
         // update guess for azimuth time
         double dt;
         const auto status = computeDopplerAztimeDiff(&dt, *t, *r, rvec, vel,
-                                                     doppler, wvl, params.dr);
+                                                     doppler, wvl, params.delta_range);
         if (status != ErrorCode::Success) {
             return status;
         }

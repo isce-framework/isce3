@@ -8,6 +8,7 @@
 #include "rdr2geo.h"
 #include "ltpcoordinates.h"
 #include "pntintersect.h"
+#include "lookIncFromSr.h"
 
 namespace py = pybind11;
 
@@ -54,4 +55,5 @@ void addsubmodule_geometry(py::module & m)
     addbinding_metadata_cubes(geometry);
     addbinding_ltp_coordinates(geometry);
     addbinding_pnt_intersect(geometry);
+    addbinding_look_inc_from_sr(geometry);
 }

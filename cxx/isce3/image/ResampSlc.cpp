@@ -285,9 +285,9 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                 if ((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)))
                     continue;
 
-                // Slant range at j index 
+                // Slant range at j index
                 const double rng = R0 + j * dR;
-                
+
                 // Check if the Doppler LUT covers the current position
                 if (not _dopplerLUT.contains(az, rng))
                     continue;
@@ -322,9 +322,9 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                     const int chipRow =
                             intAz - tile.firstImageRow() + ii - chipHalf;
                     // Carrier phase
-                    const double phase = dop * (ii - 4.0);
-                    const std::complex<float> cval(std::cos(phase),
-                                                   -std::sin(phase));
+                    const double chipPhase = dop * (ii - 4.0);
+                    const std::complex<float> cval(
+                            std::cos(chipPhase), -std::sin(chipPhase));
                     // Set the data values after removing doppler in azimuth
                     for (int jj = 0; jj < chipSize; ++jj) {
                         // Column to read from

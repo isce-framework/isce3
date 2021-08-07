@@ -24,17 +24,16 @@ runconfig:
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: output_insar/gunw.h5
+            SASOutputFile: output_insar/product.h5
 
         PrimaryExecutable:
-            ProductType: POLAR
+            ProductType: RIFG_RUNW_GUNW
 
         DebugLevelGroup:
             DebugSwitch: false
 
         # ADT section - isce3 + pyre workflow
         processing:
-            keep_scratch: True
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:
@@ -42,7 +41,7 @@ runconfig:
                     # valid options for polarizations
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    A: [HH, VV]
+                    A: [HH]
 
 
 
@@ -80,7 +79,7 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
-                    y_abs: 
+                    y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
                     x_abs:
 
@@ -89,21 +88,27 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            geo2rdr: 
+            geo2rdr:
                 threshold: 1e-8
                 maxiter: 25
-               
+
             blocksize:
                 y: 1000
 
             dem_margin: 0.1
 
-            resample:
+            coarse_resample:
                 lines_per_tile: 100
 
             dense_offsets:
                 # OPTIONAL - Flag to enable/disable dense offsets estimation. Default True
-                enabled: False
+                enabled: True
+
+            rubbersheet:
+                enabled: True
+
+            fine_resample:
+                enabled: True
 
             crossmul:
                 flatten: True
@@ -111,8 +116,8 @@ runconfig:
                 azimuth_looks: 11
 
             phase_unwrap:
-                crossmul_path: 
-                buffer_lines: 1000
+                crossmul_path:
+                algorithm: icu
 
         # TODO OPTIONAL - To setup type of worker
         worker:
@@ -123,7 +128,6 @@ runconfig:
             gpu_enabled: True
 
         # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
-        logging: 
+        logging:
             path: output_insar/insar.log
             write_mode: 'w'
-
