@@ -3,8 +3,9 @@ import time
 
 import journal
 from nisar.workflows import (crossmul, dense_offsets, geo2rdr,
-                                    geocode_insar, h5_prep, rdr2geo,
-                                    resample_slc, rubbersheet, unwrap)
+                             geocode_insar, h5_prep, rdr2geo,
+                             resample_slc, rubbersheet, unwrap,
+                             bandpass_insar)
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -19,6 +20,9 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     t_all = time.time()
 
+    if run_steps['bandpass']:
+        bandpass_insar.run(cfg)
+    
     if run_steps['rdr2geo']:
         rdr2geo.run(cfg)
 
