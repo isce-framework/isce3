@@ -153,60 +153,6 @@ def demodulate_slc(SLC, diff_frequency, rg_sample_freq):
 def freqSpectrum(cfrequency, dt, fft_size):
     freq = cfrequency + fftfreq(fft_size, dt)
     return freq
-  
-def constructRangeBandpassKaiser(subBandCenterFrequencies,
-                                 subBandBandwidths,
-                                 samplingFrequency,
-                                 fft_size):
-    frequency = freqSpectrum(
-                cfrequency = subBandCenterFrequencies,
-                dt = 1.0 / samplingFrequency,
-                fft_size = fft_size) 
-
-    freq_size=np.shape(frequency)[0]
-    norm = 1.0;    
-    fmid = subBandCenterFrequencies
-    bandwidth = subBandBandwidths
-
-    # The Nyquist rate of the signal.
-    nyq_rate = samplingFrequency * 0.5
-    bandwidth_half = bandwidth *  0.5
-    # The desired width of the transition from pass to stop,
-    # relative to the Nyquist rate.  
-    width = (nyq_rate - bandwidth_half) / nyq_rate    
-
-    # The desired attenuation in the stop band, in dB.
-    ripple_db = 35.0
-
-    # Compute the order and Kaiser parameter for the FIR filter.
-    N, beta = kaiserord(ripple_db, width)
-
-    # The cutoff frequency of the filter.
-    fL = nyq_rate - bandwidth_half 
-    fH = bandwidth_half
-    if not N % 2: N += 1  # Make sure that N is odd.
-
-    # Use firwin with a Kaiser window to create a bandpass FIR filter.
-    taps = firwin(N,  [fL, fH], nyq=nyq_rate, window=('kaiser', beta), pass_zero='bandpass')
-    taps2=np.zeros([fft_size])
-    taps2[0:len(taps)]=taps
-    
-    w, h = freqz(taps, worN=fft_size)
-
-    filthh = ifft(fftshift(h))
-    print("ncshift0:",filthh.argmax())
-
-    ncshift = filthh.argmax()
-    filthh2 = np.roll(filthh, -ncshift)
-
-    print("ncshift:",filthh2.argmax())
-
-    print("size of filthh",np.shape(filthh))
-    # filter1D = fft(filthh2)
-    filter1D = fft(filthh2)
-    # filter1D2=circ_shift(filter1D, fft_size, (N-1)*0.5)
-
-    return filter1D
 
 def constructRangeBandpassCosine(subBandCenterFrequencies,
                                  samplingFrequency,
