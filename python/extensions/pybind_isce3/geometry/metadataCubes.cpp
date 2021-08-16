@@ -24,6 +24,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("along_track_unit_vector_x_raster") = nullptr,
             py::arg("along_track_unit_vector_y_raster") = nullptr,
             py::arg("elevation_angle_raster") = nullptr,
+            py::arg("ground_track_velocity_raster") = nullptr,
             py::arg("threshold_geo2rdr") = 1.0e-8,
             py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-8,
             R"(Make metadata radar grid cubes
@@ -85,6 +86,8 @@ void addbinding_metadata_cubes(py::module & m)
                   Along-track unit vector Y raster
               elevation_angle_raster : isce3.io.Raster, optional
                   Elevation angle (in degrees wrt geodedic nadir) cube raster
+              ground_track_velocity_raster : isce3.io.Raster, optional
+                  Ground-track velocity cube raster
               threshold_geo2rdr : double, optional
                   Range threshold for geo2rdr
               numiter_geo2rdr : int, optional
@@ -106,6 +109,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("along_track_unit_vector_x_raster") = nullptr,
             py::arg("along_track_unit_vector_y_raster") = nullptr,
             py::arg("elevation_angle_raster") = nullptr,
+            py::arg("ground_track_velocity_raster") = nullptr,
             py::arg("threshold_geo2rdr") = 1.0e-8,
             py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-6,
             R"(Make metadata geolocation grid cubes
@@ -167,6 +171,8 @@ void addbinding_metadata_cubes(py::module & m)
                   Along-track unit vector Y raster
               elevation_angle_raster : isce3.io.Raster, optional
                   Elevation angle (in degrees wrt geodedic nadir) cube raster
+              ground_track_velocity_raster : isce3.io.Raster, optional
+                  Ground-track velocity cube raster
               threshold_geo2rdr : double, optional
                   Range threshold for geo2rdr
               numiter_geo2rdr : int, optional

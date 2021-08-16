@@ -37,8 +37,10 @@ namespace isce3 { namespace geometry {
  * @param[out] along_track_unit_vector_y_array  Along-track unit vector Y array
  * @param[out] elevation_angle_raster           Elevation cube raster
  * @param[out] elevation_angle_array            Elevation cube array
+ * @param[out] ground_track_velocity_raster     Ground-track velocity raster
+ * @param[out] ground_track_velocity_array      Ground-track velocity array
  */
-static inline void writeVectorDerivedCubes(const int array_pos_i,
+inline void writeVectorDerivedCubes(const int array_pos_i,
         const int array_pos_j, const double native_azimuth_time,
         const isce3::core::Vec3& target_llh,
         const isce3::core::Vec3& target_proj, const isce3::core::Orbit& orbit,
@@ -55,7 +57,9 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
         isce3::io::Raster* along_track_unit_vector_y_raster,
         isce3::core::Matrix<float>& along_track_unit_vector_y_array,
         isce3::io::Raster* elevation_angle_raster,
-        isce3::core::Matrix<float>& elevation_angle_array);
+        isce3::core::Matrix<float>& elevation_angle_array,
+        isce3::io::Raster* ground_track_velocity_raster,
+        isce3::core::Matrix<double>& ground_track_velocity_array);
 
 /** Make metadata radar grid cubes
  *
@@ -107,6 +111,7 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
  * cube raster
  * @param[out] elevation_angle_raster      Elevation angle (in degrees wrt
  * geodedic nadir) cube raster
+ * @param[out] ground_track_velocity_raster Ground-track velocity raster
  * @param[in]  threshold_geo2rdr           Range threshold for geo2rdr
  * @param[in]  numiter_geo2rdr             Geo2rdr maximum number of iterations
  * @param[in]  delta_range                 Step size used for computing
@@ -126,6 +131,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* along_track_unit_vector_x_raster = nullptr,
         isce3::io::Raster* along_track_unit_vector_y_raster = nullptr,
         isce3::io::Raster* elevation_angle_raster = nullptr,
+        isce3::io::Raster* ground_track_velocity_raster = nullptr,
         const double threshold_geo2rdr = 1e-8, const int numiter_geo2rdr = 100,
         const double delta_range = 1e-8);
 
@@ -176,6 +182,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * cube raster
  * @param[out] elevation_angle_raster    Elevation angle (in degrees wrt
  * geodedic nadir) cube raster
+ * @param[out] ground_track_velocity_raster Ground-track velocity raster
  * @param[in]  threshold_geo2rdr         Range threshold for geo2rdr
  * @param[in]  numiter_geo2rdr           Geo2rdr maximum number of iterations
  * @param[in]  delta_range               Step size used for computing
@@ -190,11 +197,12 @@ void makeGeolocationGridCubes(
         isce3::io::Raster* coordinate_x_raster = nullptr,
         isce3::io::Raster* coordinate_y_raster = nullptr,
         isce3::io::Raster* incidence_angle_raster = nullptr,
-        isce3::io::Raster* losUnitVectorX_raster = nullptr,
-        isce3::io::Raster* losUnitVectorY_raster = nullptr,
-        isce3::io::Raster* alongTrackUnitVectorX_raster = nullptr,
-        isce3::io::Raster* alongTrackUnitVectorY_raster = nullptr,
-        isce3::io::Raster* elevationAngle_raster = nullptr,
+        isce3::io::Raster* los_unit_vector_x_raster = nullptr,
+        isce3::io::Raster* los_unit_vector_y_raster = nullptr,
+        isce3::io::Raster* along_track_unit_vector_x_raster = nullptr,
+        isce3::io::Raster* along_track_unit_vector_y_raster = nullptr,
+        isce3::io::Raster* elevation_angle_raster = nullptr,
+        isce3::io::Raster* ground_track_velocity_raster = nullptr, 
         const double threshold_geo2rdr = 1e-8, const int numiter_geo2rdr = 100,
         const double delta_range = 1e-8);
 
