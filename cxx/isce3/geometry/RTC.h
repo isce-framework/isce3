@@ -355,8 +355,8 @@ isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
         const double minX, const double maxX, const double minY,
         const double maxY, DEMInterpolator* dem_interp_block,
         isce3::core::ProjectionBase* proj = nullptr,
-        const int dem_margin_x_in_pixels = 50,
-        const int dem_margin_y_in_pixels = 50);
+        const int dem_margin_x_in_pixels = 100,
+        const int dem_margin_y_in_pixels = 100);
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
