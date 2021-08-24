@@ -20,6 +20,7 @@
 #include <isce3/product/Product.h>
 
 // isce3::geometry
+#include <isce3/geometry/RTC.h>
 #include "DEMInterpolator.h"
 #include "TopoLayers.h"
 
@@ -142,6 +143,9 @@ topo(Raster & demRaster, TopoLayers & layers)
     const double startingRange = _radarGrid.startingRange();
     const double endingRange = _radarGrid.endingRange();
     const double midRange = _radarGrid.midRange();
+
+    info << "DEM EPSG: " << demRaster.getEPSG() << pyre::journal::newline;
+    info << "Output EPSG: " << _epsgOut << pyre::journal::endl;
 
     // Loop over blocks
     size_t totalconv = 0;
@@ -619,16 +623,39 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     }
     layers.hdg(line, bin, heading);
 
+    // Project output coordinates to DEM coordinates
+    auto input_coords_llh = _proj->inverse({x, y, targetLLH[2]});
+    Vec3 dem_vect = demInterp.proj()->forward(input_coords_llh);
+
     // East-west slope using central difference
-    double aa = demInterp.interpolateXY(x - demInterp.deltaX(), y);
-    double bb = demInterp.interpolateXY(x + demInterp.deltaX(), y);
-    double gamma = targetLLH[1];
-    double alpha = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaX());
+    double aa = demInterp.interpolateXY(dem_vect[0] - demInterp.deltaX(), dem_vect[1]);
+    double bb = demInterp.interpolateXY(dem_vect[0] + demInterp.deltaX(), dem_vect[1]);
+
+    Vec3 dem_vect_p_dx = {dem_vect[0] + demInterp.deltaX(), dem_vect[1], dem_vect[2]};
+    Vec3 dem_vect_m_dx = {dem_vect[0] - demInterp.deltaX(), dem_vect[1], dem_vect[2]};
+    Vec3 input_coords_llh_p_dx, input_coords_llh_m_dx;
+    demInterp.proj()->inverse(dem_vect_p_dx, input_coords_llh_p_dx);
+    demInterp.proj()->inverse(dem_vect_m_dx, input_coords_llh_m_dx);
+    const Vec3 input_coords_xyz_p_dx = _ellipsoid.lonLatToXyz(input_coords_llh_p_dx);
+    const Vec3 input_coords_xyz_m_dx = _ellipsoid.lonLatToXyz(input_coords_llh_m_dx);
+    double dx = (input_coords_xyz_p_dx - input_coords_xyz_m_dx).norm();
+
+    double alpha = (bb - aa) / dx;
 
     // North-south slope using central difference
-    aa = demInterp.interpolateXY(x, y - demInterp.deltaY());
-    bb = demInterp.interpolateXY(x, y + demInterp.deltaY());
-    double beta = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
+    aa = demInterp.interpolateXY(dem_vect[0], dem_vect[1] - demInterp.deltaY());
+    bb = demInterp.interpolateXY(dem_vect[0], dem_vect[1] + demInterp.deltaY());
+
+    Vec3 dem_vect_p_dy = {dem_vect[0], dem_vect[1] + demInterp.deltaY(), dem_vect[2]};
+    Vec3 dem_vect_m_dy = {dem_vect[0], dem_vect[1] - demInterp.deltaY(), dem_vect[2]};
+    Vec3 input_coords_llh_p_dy, input_coords_llh_m_dy;
+    demInterp.proj()->inverse(dem_vect_p_dy, input_coords_llh_p_dy);
+    demInterp.proj()->inverse(dem_vect_m_dy, input_coords_llh_m_dy);
+    const Vec3 input_coords_xyz_p_dy = _ellipsoid.lonLatToXyz(input_coords_llh_p_dy);
+    const Vec3 input_coords_xyz_m_dy = _ellipsoid.lonLatToXyz(input_coords_llh_m_dy);
+    double dy = (input_coords_xyz_p_dy - input_coords_xyz_m_dy).norm();
+
+    double beta = (bb - aa) / dy;
 
     // Compute local incidence angle
     const Vec3 enunorm = enu.normalized();
@@ -675,6 +702,17 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
     // Initialize mask to zero for this block
     layers.mask() = 0;
 
+    // Prepare function getDemCoords() to interpolate DEM
+    std::function<Vec3(double, double,
+                       const isce3::geometry::DEMInterpolator&,
+                       isce3::core::ProjectionBase*)> getDemCoords;
+
+    if (_epsgOut == demInterp.epsgCode()) {                   
+        getDemCoords = isce3::geometry::getDemCoordsSameEpsg;
+    } else {
+        getDemCoords = isce3::geometry::getDemCoordsDiffEpsg;
+    }
+
     // Loop over lines in block
     #pragma omp parallel for firstprivate(x, y, ctrack, ctrackGrid, \
                                           slantRangeGrid, maskGrid)
@@ -720,12 +758,11 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double y_grid = y[k] * frac1 + y[k+1] * frac2;
 
             // Interpolate DEM at x/y
-            const float z_grid = demInterp.interpolateXY(x_grid, y_grid);
+            Vec3 demXYZ = getDemCoords(x_grid, y_grid, demInterp, _proj);
 
             // Convert DEM XYZ to ECEF XYZ
             Vec3 llh, xyz, satToGround;
-            Vec3 demXYZ{x_grid, y_grid, z_grid};
-            _proj->inverse(demXYZ, llh);
+            demInterp.proj()->inverse(demXYZ, llh);
             _ellipsoid.lonLatToXyz(llh, xyz);
 
             // Compute and save slant range
