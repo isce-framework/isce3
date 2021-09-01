@@ -1,4 +1,5 @@
 set(TESTFILES
+antenna/edge_method_cost_func.cpp
 antenna/frame.cpp
 container/rsd.cpp
 core/attitude/quaternion_euler.cpp
@@ -61,6 +62,7 @@ matchtemplate/ampcor/ampcor.cpp
 math/bessel/bessel53.cpp
 math/sinc.cpp
 math/polyfunc.cpp
+math/root_find1d.cpp
 polsar/symmetrize.cpp
 product/serialization/serializeProduct.cpp
 product/serialization/serializeProductMetadata.cpp

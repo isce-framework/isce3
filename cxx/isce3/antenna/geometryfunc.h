@@ -48,7 +48,6 @@ namespace isce3 { namespace antenna {
  * @exception InvalidArgument, RuntimeError
  * @cite ReeTechDesDoc
  */
-
 std::tuple<double, double, bool> ant2rgdop(double el_theta, double az_phi,
         const isce3::core::Vec3& pos_ecef, const isce3::core::Vec3& vel_ecef,
         const isce3::core::Quaternion& quat, double wavelength,
