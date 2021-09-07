@@ -352,11 +352,12 @@ def run(cfg):
                                valid_max=clip_max)
 
             # save nlooks
-            _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
-                               yds, xds, 'numberOfLooks',
-                               long_name = 'number of looks', 
-                               units = '',
-                               valid_min = 0)
+            if flag_save_nlooks:
+                _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
+                                   yds, xds, 'numberOfLooks',
+                                   long_name = 'number of looks', 
+                                   units = '',
+                                   valid_min = 0)
 
             # save rtc
             if flag_save_rtc:
