@@ -172,6 +172,9 @@ rtc_options:
     # Minimum RTC area factor in dB
     rtc_min_value_db: num(required=False)
 
+    # RTC DEM upsampling
+    dem_upsampling: int(min=1, required=False)
+
 geocode_options:
     algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 

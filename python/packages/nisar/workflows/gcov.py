@@ -65,6 +65,7 @@ def run(cfg):
     rtc_algorithm = rtc_dict['algorithm_type']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
+    rtc_upsampling = rtc_dict['dem_upsampling']
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
@@ -291,6 +292,7 @@ def run(cfg):
                     output_terrain_radiometry=output_terrain_radiometry,
                     exponent=exponent,
                     rtc_min_value_db=rtc_min_value_db,
+                    rtc_upsampling=rtc_upsampling,
                     rtc_algorithm=rtc_algorithm,
                     abs_cal_factor=abs_cal_factor,
                     flag_upsample_radar_grid=flag_upsample_radar_grid,
