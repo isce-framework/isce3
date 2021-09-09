@@ -24,6 +24,10 @@ def run(cfg):
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
     scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
+    threshold = cfg['processing']['rdr2geo']['threshold']
+    numiter = cfg['processing']['rdr2geo']['numiter']
+    extraiter = cfg['processing']['rdr2geo']['extraiter']
+    lines_per_block = cfg['processing']['rdr2geo']['lines_per_block']
 
     # get params from SLC
     slc = SLC(hdf5file=input_hdf5)
@@ -64,7 +68,10 @@ def run(cfg):
         else:
             Rdr2Geo = isce3.geometry.Rdr2Geo
 
-        rdr2geo_obj = Rdr2Geo(radargrid, orbit, ellipsoid, grid_doppler)
+        rdr2geo_obj = Rdr2Geo(radargrid, orbit, ellipsoid, grid_doppler,
+                              threshold=threshold, numiter=numiter,
+                              extraiter=extraiter,
+                              lines_per_block=lines_per_block)
 
         # run
         rdr2geo_obj.topo(dem_raster, str(rdr2geo_scratch_path))

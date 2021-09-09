@@ -31,11 +31,13 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
              const isce3::core::Ellipsoid & ellipsoid,
              const isce3::core::LUT2d<double> & doppler,
              const double threshold,
-             const int numiter)
+             const int numiter,
+             const int lines_per_block)
             {
                 auto geo2rdr_obj = Geo2rdr(radar_grid, orbit, ellipsoid, doppler);
                 geo2rdr_obj.threshold(threshold);
                 geo2rdr_obj.numiter(numiter);
+                geo2rdr_obj.linesPerBlock(lines_per_block);
                 return geo2rdr_obj;
             }),
             py::arg("radar_grid"),
@@ -43,7 +45,8 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
             py::arg("ellipsoid"),
             py::arg("doppler") = isce3::core::LUT2d<double>(),
             py::arg("threshold") = 0.05,
-            py::arg("numiter") = 25)
+            py::arg("numiter") = 25,
+            py::arg("lines_per_block") = 1000)
         .def("geo2rdr", py::overload_cast<isce3::io::Raster &, const std::string &,
                 double, double>
                 (&Geo2rdr::geo2rdr),
@@ -61,6 +64,9 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
         .def_property("numiter",
                 py::overload_cast<>(&Geo2rdr::numiter, py::const_),
                 py::overload_cast<int>(&Geo2rdr::numiter))
+        .def_property("lines_per_block",
+                py::overload_cast<>(&Geo2rdr::linesPerBlock, py::const_),
+                py::overload_cast<size_t>(&Geo2rdr::linesPerBlock))
         ;
 }
 

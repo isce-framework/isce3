@@ -95,6 +95,13 @@ public:
     void numiter(int n) { _numiter = n; }
 
     /**
+     * Set lines to be processed per block
+     *
+     * @param[in] linesPerBlock Lines to be processed per block
+     */
+    void linesPerBlock(size_t linesPerBlock) { _linesPerBlock = linesPerBlock; }
+
+    /**
      * Run geo2rdr with offsets and externally created offset rasters
      *
      * @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
@@ -150,6 +157,9 @@ public:
 
     /** Return number of Newton-Raphson iterations used for processing */
     int numiter() const { return _numiter; }
+
+    /** Get linesPerBlock */
+    size_t linesPerBlock() const { return _linesPerBlock; }
 
 private:
 
