@@ -28,16 +28,15 @@ class RasterTest : public ::testing::Test {
         std::remove( filename.c_str());
         isce3::io::Raster inc = isce3::io::Raster( filename, nc,
                                     nl, 1, GDT_Float32, "GTiff");
-        std::valarray<int> block( nbx*nby );                           // 1d valarray for
         uint nXBlocks = floor( (float) inc.width()  / (float) nbx );  // number of blocks
         uint nYBlocks = floor( (float) inc.length() / (float) nby );  // number of blocks
 
         //Wrap Matrix around valarray
-        isce3::core::Matrix<int> mat( &(block[0]), nby, nbx);
+        isce3::core::Matrix<int> mat(nby, nbx);
 
         for ( uint y=0; y<nYBlocks; ++y ) {
             for ( uint x=0; x<nXBlocks; ++x ) {
-                block = x*y;                                 // pick a value
+                mat.fill(x*y); // pick a value
                 inc.setBlock( mat, x*nbx, y*nby, 1);            // block must be within band
             }
         }
@@ -92,8 +91,8 @@ TEST_F(RasterTest, setGetBlockMatrix) {
     inc.setBlock( fullmat, 0, 0, 1 );     // write full image
     inc.getBlock( blockmat, 0, 0, 1);        // read upper-left sub-block
     inc.getBlock( chunkmat, nbx, nbx, 1 );   // read chunk from band 1
-    ASSERT_EQ( block.sum(), nbx*nby );              // block sum must be equal to nbx*nby
-    ASSERT_EQ( chunk.sum(),  (nbx+1)*(nby+1));                  // chunk sum 
+    ASSERT_EQ( blockmat.sum(), nbx*nby );              // block sum must be equal to nbx*nby
+    ASSERT_EQ( chunkmat.sum(),  (nbx+1)*(nby+1));                  // chunk sum 
 }
 
 
@@ -102,13 +101,13 @@ TEST_F(RasterTest, getMatrixRaster) {
   //Wrap block into Matrix
   isce3::core::Matrix<int> blockmat(nby, nbx);
 
-  //Create raster object from matrix
-  isce3::io::Raster raster(blockmat);
-
   //Fill the matrix
   for(uint ii=0; ii < nby; ii++)
       for(uint jj=0; jj < nbx; jj++)
           blockmat(ii,jj) = ii * nbx + jj;
+
+  //Create raster object from matrix
+  isce3::io::Raster raster(blockmat);
 
   //Scalar for querying raster
   float a;
@@ -134,16 +133,18 @@ TEST_F(RasterTest, setMatrixRaster) {
   //Set 0,0 and check
   a = 10.0;
   raster.setValue(a, 0, 0, 1);
+  raster.getBlock(blockmat, 0, 0, 1);
   ASSERT_EQ(blockmat(0,0), 10);
 
   //Set last pixel
   a = -4.0;
   raster.setValue(a, nbx-1, nby-1, 1);
+  raster.getBlock(blockmat, 0, 0, 1);
   ASSERT_EQ( blockmat(nby-1,nbx-1), -4);
 }
 
 
-// 
+//
 TEST_F(RasterTest, setGetBlockEMatrix2D) {
   //Setup geotiff
   std::string filename = "matrix_getset.tif";

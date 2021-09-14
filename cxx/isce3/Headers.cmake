@@ -19,8 +19,6 @@ core/Baseline.h
 core/Basis.h
 core/Common.h
 core/Constants.h
-core/Cube.h
-core/Cube.icc
 core/DateTime.h
 core/DenseMatrix.h
 core/detail/BuildOrbit.h
@@ -42,7 +40,6 @@ core/LUT1d.h
 core/LUT1d.icc
 core/LUT2d.h
 core/Matrix.h
-core/Matrix.icc
 core/Metadata.h
 core/Orbit.h
 core/Peg.h

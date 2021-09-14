@@ -7,6 +7,7 @@
 #include "LUT2d.h"
 
 #include <complex>
+#include <pyre/journal.h>
 
 #include "Interpolator.h"
 
