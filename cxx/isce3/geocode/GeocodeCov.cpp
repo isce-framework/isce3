@@ -2109,11 +2109,9 @@ void Geocode<T>::_runBlock(
         getDemCoords = isce3::geometry::getDemCoordsDiffEpsg;
     }
 
-    // Load DEM using the block geogrid with a margin of 100 pixels
-    const double margin_x = std::abs(_geoGridSpacingX) * 100;
-    const double margin_y = std::abs(_geoGridSpacingY) * 100;
+    // Load DEM using the block geogrid extents
     auto error_code = loadDemFromProj(dem_raster, minX, maxX, minY, maxY,
-            &dem_interp_block, proj, margin_x, margin_y);
+            &dem_interp_block, proj);
 
     if (error_code != isce3::error::ErrorCode::Success) {
         _saveOptionalFiles(block_x, block_size_x, block_y, block_size_y,

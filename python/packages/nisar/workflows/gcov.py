@@ -65,6 +65,7 @@ def run(cfg):
     rtc_algorithm = rtc_dict['algorithm_type']
     input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
+    rtc_upsampling = rtc_dict['dem_upsampling']
 
     # unpack geo2rdr parameters
     geo2rdr_dict = cfg['processing']['geo2rdr']
@@ -291,6 +292,7 @@ def run(cfg):
                     output_terrain_radiometry=output_terrain_radiometry,
                     exponent=exponent,
                     rtc_min_value_db=rtc_min_value_db,
+                    rtc_upsampling=rtc_upsampling,
                     rtc_algorithm=rtc_algorithm,
                     abs_cal_factor=abs_cal_factor,
                     flag_upsample_radar_grid=flag_upsample_radar_grid,
@@ -344,6 +346,7 @@ def run(cfg):
             yds = hdf5_obj[os.path.join(root_ds, 'yCoordinates')]
             cov_elements_list = [p.upper()+p.upper() for p in pol_list]
 
+            # save GCOV imagery
             _save_hdf5_dataset(temp_output.name, hdf5_obj, root_ds,
                                yds, xds, cov_elements_list,
                                long_name=output_radiometry_str,
@@ -351,12 +354,18 @@ def run(cfg):
                                valid_min=clip_min,
                                valid_max=clip_max)
 
+            # save listOfCovarianceTerms
+            freq_group = hdf5_obj[root_ds]
+            if not flag_fullcovariance:
+                _save_list_cov_terms(cov_elements_list, freq_group)
+
             # save nlooks
-            _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
-                               yds, xds, 'numberOfLooks',
-                               long_name = 'number of looks', 
-                               units = '',
-                               valid_min = 0)
+            if flag_save_nlooks:
+                _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
+                                   yds, xds, 'numberOfLooks',
+                                   long_name = 'number of looks', 
+                                   units = '',
+                                   valid_min = 0)
 
             # save rtc
             if flag_save_rtc:
@@ -403,7 +412,8 @@ def run(cfg):
                         if (b2 <= b1):
                             continue
                         off_diag_terms_list.append(p1.upper()+p2.upper())
-    
+                _save_list_cov_terms(cov_elements_list + off_diag_terms_list, 
+                                     freq_group)
                 _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                                    yds, xds, off_diag_terms_list,
                                    long_name = output_radiometry_str, 
@@ -440,6 +450,17 @@ def run(cfg):
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f} seconds")
+
+
+def _save_list_cov_terms(cov_elements_list, dataset_group):
+
+    name = "listOfCovarianceTerms"
+    cov_elements_list.sort()
+    cov_elements_array = np.array(cov_elements_list, dtype="S4")
+    dset = dataset_group.create_dataset(name, data=cov_elements_array)
+    desc = f"List of processed covariance terms"
+    dset.attrs["description"] = np.string_(desc)
+
 
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
                        yds, xds, ds_name, standard_name=None,

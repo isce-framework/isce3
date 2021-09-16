@@ -1,6 +1,9 @@
 import h5py
 import logging
 import numpy as np
+from numpy.testing import assert_allclose
+import os
+import isce3
 from pybind_isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
 from pybind_isce3.product import RadarGridParameters
 from pybind_isce3.geometry import DEMInterpolator
@@ -19,6 +22,61 @@ def time_units(epoch: DateTime) -> str:
     date = "{:04d}-{:02d}-{:02d}".format(epoch.year, epoch.month, epoch.day)
     time = "{:02d}:{:02d}:{:02d}".format(epoch.hour, epoch.minute, epoch.second)
     return "seconds since " + date + " " + time
+
+
+def assert_same_lut2d_grid(x: np.ndarray, y: np.ndarray, lut: LUT2d):
+    assert_allclose(x[0], lut.x_start)
+    assert_allclose(y[0], lut.y_start)
+    assert (len(x) > 1) and (len(y) > 1)
+    assert_allclose(x[1] - x[0], lut.x_spacing)
+    assert_allclose(y[1] - y[0], lut.y_spacing)
+    assert lut.width == len(x)
+    assert lut.length == len(y)
+
+
+def h5_require_dirname(group: h5py.Group, name: str):
+    """Make sure any intermediate paths in `name` exist in `group`.
+    """
+    assert os.sep == '/', "Need to fix HDF5 path manipulation on Windows"
+    d = os.path.dirname(name)
+    group.require_group(d)
+
+
+def add_cal_layer(group: h5py.Group, lut: LUT2d, name: str,
+                  epoch: DateTime, units: str):
+    """Add calibration LUT to HDF5 group, making sure that its domain matches
+    any existing cal LUTs.
+
+    Parameters
+    ----------
+    group : h5py.Group
+        Group where LUT and its axes will be stored.
+    lut : isce3.core.LUT2d
+        Look up table.  Axes are assumed to be y=zeroDopplerTime, x=slantRange.
+    name : str
+        Name of dataset to store LUT data (can be path relative to `group`).
+    epoch: isce3.core.DateTime
+        Reference time associated with y-axis.
+    units : str
+        Units of lut.data.  Will be stored in `units` attribute of dataset.
+    """
+    # If we've already saved one cal layer then we've already saved its
+    # x and y axes.  Make sure they're the same and just save the new z data.
+    xname, yname = "slantRange", "zeroDopplerTime"
+    if (xname in group) and (yname in group):
+        x, y = group[xname], group[yname]
+        assert_same_lut2d_grid(x, y, lut)
+        extant_epoch = isce3.io.get_ref_epoch(y.parent, y.name)
+        assert extant_epoch == epoch
+        data = lut.data
+        z = group.require_dataset(name, data.shape, data.dtype)
+        z[...] = data
+    elif (xname not in group) and (yname not in group):
+        h5_require_dirname(group, name)
+        lut.save_to_h5(group, name, epoch, units)
+    else:
+        raise IOError(f"Found only one of {xname} or {yname}."
+                      "  Need both or none.")
 
 
 class SLC(h5py.File):
@@ -49,7 +107,7 @@ class SLC(h5py.File):
         # Actual LUT goes into a subdirectory, not created by serialization.
         name = f"frequency{frequency}"
         fg = g.require_group(name)
-        dop.save_to_h5(g, f"{name}/dopplerCentroid", epoch, "Hz")
+        add_cal_layer(g, dop, f"{name}/dopplerCentroid", epoch, "Hz")
         # TODO veff, fmrate not used anywhere afaict except product io.
         v = np.zeros_like(dop.data)
         g.require_dataset("effectiveVelocity", v.shape, v.dtype, data=v)
@@ -108,15 +166,14 @@ class SLC(h5py.File):
 
     def add_polarization(self, frequency="A", pol="HH"):
         assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
+        pols = np.string_([pol])  # careful not to promote to unicode below
         g = self.swath(frequency)
         name = "listOfPolarizations"
         if name in g:
-            pols = np.array(g[name])
-            assert(pol not in pols)
-            pols = np.append(pols, [pol])
+            old_pols = np.array(g[name])
+            assert pols[0] not in old_pols
+            pols = np.append(old_pols, pols)
             del g[name]
-        else:
-            pols = np.array([pol], dtype="S2")
         dset = g.create_dataset(name, data=pols)
         desc = f"List of polarization layers with frequency{frequency}"
         dset.attrs["description"] = np.string_(desc)

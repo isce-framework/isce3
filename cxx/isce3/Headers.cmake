@@ -1,6 +1,7 @@
 set(HEADERS
 antenna/detail/WinChirpRgCompPow.h
 antenna/detail/WinChirpRgCompPow.icc
+antenna/edge_method_cost_func.h
 antenna/forward.h
 antenna/ElPatternEst.h
 antenna/geometryfunc.h
@@ -18,8 +19,6 @@ core/Baseline.h
 core/Basis.h
 core/Common.h
 core/Constants.h
-core/Cube.h
-core/Cube.icc
 core/DateTime.h
 core/DenseMatrix.h
 core/detail/BuildOrbit.h
@@ -41,7 +40,6 @@ core/LUT1d.h
 core/LUT1d.icc
 core/LUT2d.h
 core/Matrix.h
-core/Matrix.icc
 core/Metadata.h
 core/Orbit.h
 core/Peg.h
@@ -136,7 +134,10 @@ matchtemplate/ampcor/dom/SLC.h
 matchtemplate/ampcor/dom/SLC.icc
 math/Bessel.h
 math/ComplexMultiply.h
+math/detail/RootFind1dBase.h
 math/polyfunc.h
+math/RootFind1dNewton.h
+math/RootFind1dSecant.h
 math/Sinc.h
 math/Sinc.icc
 polsar/symmetrize.h

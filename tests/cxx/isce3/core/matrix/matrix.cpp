@@ -75,36 +75,6 @@ TEST(MatrixTest, VectorConstructor) {
 TEST(MatrixTest, CopyConstructor) {
     // Make a vector of values 
     std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
-    // Make a matrix from the vector
-    isce3::core::Matrix<double> M(values, 3);
-    // Make a shallow copy
-    isce3::core::Matrix<double> N(M);
-
-    // Check shapes are equal
-    ASSERT_EQ(M.width(), N.width());
-    ASSERT_EQ(M.length(), N.length());
-
-    // Check the values
-    for (size_t i = 0; i < M.length(); ++i) {
-        for (size_t j = 0; j < M.width(); ++j) {
-            ASSERT_NEAR(M(i,j), N(i,j), 1.0e-12);
-        }
-    }
-
-    // Change value of middle element of original matrix
-    M(1, 1) = 20.0;
-    // Check corresponding value in copied matrix has been udpated
-    ASSERT_NEAR(N(1, 1), 20.0, 1.0e-12);
-
-    // Change value of last element in copied matrix
-    N(2, 2) = 50.0;
-    // Check corresponding value in original matrix has been udpated
-    ASSERT_NEAR(M(2, 2), 50.0, 1.0e-12);
-}
-
-TEST(MatrixTest, DeepCopyConstructor) {
-    // Make a vector of values 
-    std::vector<double> values = isce3::core::arange(0.0, 9.0, 1.0);
     // Make a const matrix from the vector
     const isce3::core::Matrix<double> M(values, 3);
     // Make a deep copy (by passing in const matrix)
@@ -122,17 +92,19 @@ TEST(MatrixTest, MatrixView) {
     // Make a matrix from the vector
     isce3::core::Matrix<double> M(values, 3);
     // Get a view of a subset of the matrix
-    const isce3::core::Matrix<double>::view_t view = M.submat(1, 1, 2, 2);
+    auto view = M.submat(1, 1, 2, 2);
 
     // Vector of expected values
     std::vector<double> expected{4.0, 5.0, 7.0, 8.0};
 
     // Compare values
     size_t count = 0;
-    for (auto it = view.begin(); it != view.end(); ++it) {
-        double view_val = *it;
-        ASSERT_NEAR(view_val, expected[count], 1.0e-12);
-        ++count;
+    for (int row = 0; row < view.rows(); row++) {
+        for (int col = 0; col < view.cols(); col++) {
+            double view_val = view(row, col);
+            ASSERT_NEAR(view_val, expected[count], 1.0e-12);
+            ++count;
+        }
     }
 }
 
@@ -168,7 +140,7 @@ TEST(MatrixTest, MatrixViewSet) {
     N.zeros();
 
     // Set column of matrix with row from original matrix
-    N.submat(0, 1, 3, 1) = M.submat(1, 0, 1, 3);
+    N.submat(0, 1, 3, 1) = M.submat(1, 0, 1, 3).transpose();
 
     // Vector of expected values
     std::vector<double> expected{0.0, 3.0, 0.0,
@@ -176,8 +148,10 @@ TEST(MatrixTest, MatrixViewSet) {
                                  0.0, 5.0, 0.0};
 
     // Compare values
-    for (size_t count = 0; count < (N.width() * N.length()); ++count) {
-        ASSERT_NEAR(N(count), expected[count], 1.0e-12);
+    for (int row = 0; row < N.rows(); row++) {
+        for (int col = 0; col < N.cols(); col++) {
+            ASSERT_NEAR(N(row, col), expected[row * N.cols() + col], 1.0e-12);
+        }
     }
 }
 

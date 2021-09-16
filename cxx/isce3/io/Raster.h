@@ -24,8 +24,6 @@
 
 #include <isce3/io/gdal/Raster.h>
 
-//#include <pyre/journal.h>
-
 /** Data structure meant to handle Raster I/O operations.
 *
 * This is currently a thin wrapper over GDAL's Dataset class with some simpler
@@ -48,11 +46,43 @@ class isce3::io::Raster {
       /** Constructor to create a 1 band dataset with default Driver */
       Raster(const std::string& fname, size_t width, size_t length, GDALDataType dtype = isce3::io::defaultGDALDataType);
 
-      /** Constructor for a 1 band dataset from isce3::core::Matrix<T> */
-      template<typename T> Raster(isce3::core::Matrix<T> &matrix);
-
       // Constructor for a 1 band dataset from isce3::core::Matrix<T>::view_type
-      template<typename T> Raster(pyre::grid::View<T> &view);
+      template<typename T> Raster(Eigen::PlainObjectBase<T> &view);
+
+      // Constructor for a 1 band dataset from isce3::core::Matrix<T> view type
+      template <typename Derived>
+      Raster(Eigen::Block<Derived>& view)
+      {
+          using Scalar = typename Eigen::PlainObjectBase<Derived>::value_type;
+
+          //Get the packing. Update with pyre error logging.
+          if (!view.IsRowMajor)
+          {
+              throw std::runtime_error("Input view is not packed in row major order");
+          }
+
+          //Size of each element
+          size_t bytesperunit = sizeof(Scalar);
+
+          //Pointer and offset math
+          size_t pixeloffset = (const char*) &view(0, 1) - (const char*) &view(0, 0);
+          size_t  lineoffset = (const char*) &view(1, 0) - (const char*) &view(0, 0);
+
+          //Update with pyre error logging
+          if ((pixeloffset < bytesperunit) || (lineoffset < bytesperunit))
+          {
+              throw std::runtime_error("Invalid pixel/line offset");
+          }
+
+          initFromPointer(view.data(),
+                          asGDT<Scalar>,
+                          view.cols(),
+                          view.rows(),
+                          pixeloffset,
+                          lineoffset);
+      }
+
+
 
       /** Create new raster object like another */
       Raster(const std::string& fname, const Raster& rast);
@@ -160,10 +190,6 @@ class isce3::io::Raster {
       template<typename T> void getBlock(isce3::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
       template<typename T> void setBlock(isce3::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
       //2D block read/write for Matrix<T>, optional band index
-      /** Read/Write block of data from given band to/from Matrix<T>::view_type */
-      template<typename T> void getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir);
-      template<typename T> void    getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band = 1);
-      template<typename T> void    setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band = 1);
 
       /** Read/write block of data from given band to/from EArray2D<T> */
       template<typename T> void getBlock(isce3::core::EArray2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
@@ -172,6 +198,50 @@ class isce3::io::Raster {
       /** Read/write block of data from given band to/from EArray2D<T> */
       template<typename T> void getBlock(isce3::core::EMatrix2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
       template<typename T> void setBlock(isce3::core::EMatrix2D<T>& mat, size_t xidx, size_t yidx, size_t band = 1);
+
+      template<typename Derived>
+      void setBlock(const Eigen::Block<Derived>& block, int xoff, int yoff, int band = 1) {
+
+          using T = typename Eigen::Block<Derived>::value_type;
+
+          const int nxsize = block.cols();
+          const int nysize = block.rows();
+
+          const size_t line_spacing = (char*) &block(1, 0) - (char*) &block(0, 0);
+
+          auto iodir = GF_Write;
+          auto iostat = _dataset->GetRasterBand(band)->RasterIO(
+                  iodir, xoff, yoff, nxsize, nysize,
+                  (void*) &block(0, 0), nxsize, nysize, asGDT<T>,
+                  sizeof(T), line_spacing);
+
+          if (iostat != CPLE_None) { // RasterIO returned errors
+              throw std::runtime_error(
+                      "Raster::getBlock(Eigen::Block): error in RasterIO");
+          }
+      }
+
+      template<typename Derived>
+      void getBlock(Eigen::Block<Derived>& block, int xoff, int yoff, int band = 1) const {
+
+          using T = typename Eigen::Block<Derived>::value_type;
+
+          const int nxsize = block.cols();
+          const int nysize = block.rows();
+
+          const size_t line_spacing = (char*) &block(1, 0) - (char*) &block(0, 0);
+
+          auto iodir = GF_Read;
+          auto iostat = _dataset->GetRasterBand(band)->RasterIO(
+                  iodir, xoff, yoff, nxsize, nysize,
+                  (void*) &block(0, 0), nxsize, nysize, asGDT<T>,
+                  sizeof(T), line_spacing);
+
+          if (iostat != CPLE_None) { // RasterIO returned errors
+              throw std::runtime_error(
+                      "Raster::getBlock(Eigen::Block): error in RasterIO");
+          }
+      }
 
       //Functions to deal with projections and geotransform information
       /** Return EPSG code corresponding to raster*/

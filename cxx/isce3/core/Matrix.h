@@ -8,151 +8,80 @@
 
 #include "forward.h"
 
+#include <cassert>
 #include <cmath>
+#include <limits>
 #include <valarray>
 #include <vector>
-
-#include <pyre/grid.h>
 
 #include "EMatrix.h"
 
 /** Data structure for a 2D row-major matrix*/
-template <typename cell_t>
-class isce3::core::Matrix {
+template <typename T>
+class isce3::core::Matrix :
+    public Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+{
+
+        using super_t = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
     public:
-        // Types for interfacing with pyre::grid
-        using rep_t = std::array<size_t, 2>;
-        using index_t = pyre::grid::index_t<rep_t>;
-        using layout_t = pyre::grid::layout_t<index_t>;
-
-        // Use a grid with view memory storage
-        using grid_t = pyre::grid::grid_t<cell_t, layout_t, pyre::memory::view_t<cell_t>>;
-
-        // Dependent types
-        using view_t = typename grid_t::view_type;
-        using shape_t = index_t;
-        using packing_t = pyre::grid::packing_t<2>;
-        using slice_t = pyre::grid::slice_t<index_t, packing_t>;
+        using index_t = typename super_t::Index;
 
     public:
         /** Default constructor */
-        inline Matrix();
+        Matrix() : super_t(0, 0) {}
 
-        /** Constructor with number of rows and number of columns */
-        inline Matrix(size_t nrows, size_t ncols);
+        Matrix(index_t rows, index_t cols) : super_t(rows, cols) {}
 
-        /** Deep copy constructor from another matrix - allocates memory and copies values */
-        inline Matrix(const Matrix<cell_t> & m);
+        template<typename Derived>
+        Matrix(const Eigen::Block<Derived>& b) : super_t(b) {}
 
-        /** Shallow copy constructor from another matrix - does not allocate own memory */
-        inline Matrix(Matrix<cell_t> & m);
-
-        /** Copy constructor from a grid view (copy values) */
-        inline Matrix(const view_t & view);
-
-        /** Shallow copy constructor from raw pointer to data - does not allocate own memory */
-        inline Matrix(cell_t * data, size_t nrows, size_t ncols);
-
-        /** Shallow copy constructor from an std::valarray - does not allocate own memory */
-        inline Matrix(std::valarray<cell_t> & data, size_t ncols);
-
-        /** Shallow copy constructor from an std::vector - does not allocate own memory */
-        inline Matrix(std::vector<cell_t> & data, size_t ncols);
-
-        /** Destructor */
-        inline ~Matrix();
-
-        /** Deep assignment operator - allocates memory and copies values */
-        inline Matrix<cell_t> & operator=(const Matrix<cell_t> & m);
-
-        /** Shallow assignment operator - does not allocate own memory */
-        inline Matrix<cell_t> & operator=(Matrix<cell_t> & m);
-        
-        /** Assignment operator from a grid view (copy values) */
-        inline Matrix<cell_t> & operator=(const view_t & view);
-
-        /** Resize memory for a given number of rows and columns */
-        inline void resize(size_t nrows, size_t ncols);
-
-        /** Extract copy of sub-matrix given starting indices and span */
-        inline const view_t submat(size_t row, size_t col, size_t rowspan, size_t colspan);
-            
-        /** Access to data buffer */
-        inline cell_t * data();
-
-        /** Read-only access to data buffer */
-        inline const cell_t * data() const;
-
-        /** Access to data buffer at a specific row */
-        inline cell_t * rowptr(size_t row);
-
-        /** Read-only access to data buffer at a specific row */
-        inline const cell_t * rowptr(size_t row) const;
-
-        /** Access matrix value for a given row and column */
-        inline cell_t & operator()(size_t row, size_t col);
-
-        /** Read-only access to matrix value for a given row and column */
-        inline const cell_t & operator()(size_t row, size_t col) const;
-
-        /** Access matrix value for a flattened index */
-        inline cell_t & operator()(size_t index);
-
-        /** Read-only access to matrix value for a flattened index */
-        inline const cell_t & operator()(size_t index) const;
-
-        /** Access matrix value for a given grid::index_type */
-        inline cell_t & operator[](const index_t & index);
-
-        /** Read-only access to matrix value for a given grid::idnex_type */
-        inline const cell_t & operator[](const index_t & index) const;
-
-        /** Fill with zeros */
-        inline void zeros();
-
-        /** Fill with a constant value */
-        inline void fill(cell_t value);
-
-        /** Get shape information as grid::shape_type */
-        inline shape_t shape() const;
-
-        /** Get matrix width */
-        inline size_t width() const;
-
-        /** Get matrix length */
-        inline size_t length() const;
-
-        /** Get byteoffset for row and column for reading flat binary buffer */
-        inline shape_t byteoffset() const;
-
-        auto map() const
+        /** Copy constructor from raw pointer to data */
+        Matrix(T * data, size_t nrows, size_t ncols) :
+            super_t(Eigen::Map<super_t>(data, nrows, ncols))
         {
-            return Eigen::Map<const EArray2D<cell_t>> {
-                    _buffer, static_cast<Eigen::Index>(_nrows),
-                    static_cast<Eigen::Index>(_ncols)};
+            assert(ncols <= std::numeric_limits<Eigen::Index>::max());
+            assert(nrows <= std::numeric_limits<Eigen::Index>::max());
         }
 
-    // Data members
-    private:
-        // Shape information
-        size_t _nrows;
-        size_t _ncols;
+        /** Copy constructor from an std::valarray */
+        Matrix(std::valarray<T> & data, size_t ncols) :
+            super_t(Eigen::Map<super_t>(data.data(), data.size() / ncols, ncols))
+        {
+            assert(ncols <= std::numeric_limits<Eigen::Index>::max());
+        }
 
-        // Dynamic memory data
-        cell_t* _buffer = nullptr;
-        bool _owner;
+        /** Copy constructor from an std::vector */
+        Matrix(std::vector<T> & data, size_t ncols) :
+            super_t(Eigen::Map<super_t>(data.data(), data.size() / ncols, ncols))
+        {
+            assert(ncols <= std::numeric_limits<Eigen::Index>::max());
+        }
 
-        // grid pointer for slicing support
-        grid_t * _grid;
+        /** Extract copy of sub-matrix given starting indices and span */
+        auto submat(size_t row, size_t col, size_t rowspan, size_t colspan) {
+            assert(col <= std::numeric_limits<Eigen::Index>::max());
+            assert(row <= std::numeric_limits<Eigen::Index>::max());
+            assert(colspan <= std::numeric_limits<Eigen::Index>::max());
+            assert(rowspan <= std::numeric_limits<Eigen::Index>::max());
+            return this->block(row, col, rowspan, colspan);
+        }
 
-    // Utility functions
-    private:
-        // Reset grid pointer
-        inline void _resetGrid();
+        /** Fill with zeros */
+        void zeros() { this->fill(0); }
+
+        /** Get matrix width */
+        size_t width() const { return this->cols(); }
+
+        /** Get matrix length */
+        size_t length() const { return this->rows(); }
+
+        auto map() const {
+            return Eigen::Map<const super_t> {
+                    this->data(),
+                    this->rows(),
+                    this->cols(),
+            };
+        }
+
 };
-
-// Get inline implementations for Matrix
-#define ISCE_CORE_MATRIX_ICC
-#include "Matrix.icc"
-#undef ISCE_CORE_MATRIX_ICC

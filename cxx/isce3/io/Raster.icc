@@ -54,76 +54,35 @@ inline void isce3::io::Raster::initFromPointer(void* ptr,  //Raw pointer
 }
 
 
-// Constructor for a 1 band dataset from isce3::core::Matrix<T>
-template <typename T>
-isce3::io::Raster::Raster(isce3::core::Matrix<T> &matrix)
+// Constructor for a 1 band dataset from isce3::core::Matrix<T> view type
+template <typename Derived>
+isce3::io::Raster::Raster(Eigen::PlainObjectBase<Derived>& view)
 {
-    auto byteoffset = matrix.byteoffset();
-    initFromPointer(matrix.data(),
-                    asGDT<T>,
-                    matrix.width(),
-                    matrix.length(),
-                    byteoffset[1],
-                    byteoffset[0]);
-}
-
-
-// Constructor for a 1 band dataset from isce3::core::Matrix<T>::grid_type::view_type
-template <typename T>
-isce3::io::Raster::Raster(pyre::grid::View<T>& view)
-{
-    //If we add a similar byteoffset method to pyre::grid::View, we could use that
-    //For now, we need to do the math ourselves
-    //Get the layout. Update with pyre error logging.
-    auto layout = view.layout();
-    if (layout.dim() != 2)
-    {
-        std::cout << "Input is not a 2D view \n";
-        return;
-    }
+    using Scalar = typename Eigen::PlainObjectBase<Derived>::value_type;
 
     //Get the packing. Update with pyre error logging.
-    auto packing = view.slice().packing();
-    if ((packing[0] !=  1u) || (packing[1] != 0u))
+    if (!view.IsRowMajor)
     {
-        std::cout << "Input view is not packed in row major order\n";
-        return;
+        throw std::runtime_error("Input view is not packed in row major order");
     }
 
     //Size of each element
-    size_t bytesperunit = sizeof(typename T::cell_type);
-    //std::cout << "Element size in bytes: " << bytesperunit << "\n";
-
-    //Get shape
-    auto shape = view.slice().shape();
-    //std::cout << "Shape of view: " << shape[0] << " x " << shape[1] << "\n";
-
-    //Address to the first element of the view
-    auto iterator = view.begin();
-    auto startoffset = &(*iterator);
-
-    //Address to the next element in fast direction (assuming Row Major)
-    auto incrementoffset = &(*(++iterator));
-
-    //Address to the last element of the view
-    auto endoffset = &(*view.end());
+    size_t bytesperunit = sizeof(Scalar);
 
     //Pointer and offset math
-    size_t pixeloffset = (incrementoffset - startoffset) * bytesperunit;
-    size_t totalbyteoffset = (endoffset - startoffset) * bytesperunit;
-    size_t lineoffset = (totalbyteoffset - shape[1] * pixeloffset) / shape[0];
+    size_t pixeloffset = (char*) &view(0, 1) - (char*) &view(0, 0);
+    size_t lineoffset = (char*) &view(1, 0) - (char*) &view(0, 0);
 
     //Update with pyre error logging
     if ((pixeloffset < bytesperunit) || (lineoffset < bytesperunit))
     {
-        std::cout << "Something looks fishy in the offset estimation \n";
-        return;
+        throw std::runtime_error("Something looks fishy in the offset estimation");
     }
 
-    initFromPointer(startoffset,
-                    asGDT<typename T::cell_type>,
-                    shape[1],
-                    shape[0],
+    initFromPointer(view.data(),
+                    asGDT<Scalar>,
+                    view.cols(),
+                    view.rows(),
                     pixeloffset,
                     lineoffset);
 }
@@ -489,89 +448,6 @@ template<typename T>
 void isce3::io::Raster::setBlock(isce3::core::EMatrix2D<T>& mat, size_t xidx, size_t yidx,
                                     size_t band) {
       setBlock(mat.data(), xidx, yidx, mat.cols(), mat.rows(), band);
-}
-
-
-// Get/Set a block of data for given x/y position and band from Matrix<T>::view_type
-template<typename T>
-void isce3::io::Raster::getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir)
-{
-    //Ensure that the view is 2D and Row major
-    //Unclear if view currently supports numpy-like squeeze
-    //functionality for higher dimension grids
-    //Might need updates if view supports such features
-    //and we wish to support 2D subset views
-
-    //Get the layout. Update with pyre error logging.
-    auto layout = view.layout();
-    if (layout.dim() != 2)
-    {
-        std::cout << "Input is not a 2D view \n";
-        return;
-    }
-
-    //Get the packing. Update with pyre error logging.
-    auto packing = view.slice().packing();
-    if ((packing[0] !=  1u) || (packing[1] != 0u))
-    {
-        std::cout << "Input view is not packed in row major order\n";
-        return;
-    }
-
-    //Size of each element
-    size_t bytesperunit = sizeof(typename T::cell_type);
-    //std::cout << "Element size in bytes: " << bytesperunit << "\n";
-
-    //Get shape
-    auto shape = view.slice().shape();
-    //std::cout << "Shape of view: " << shape[0] << " x " << shape[1] << "\n";
-
-    //Address to the first element of the view
-    auto iterator = view.begin();
-    auto startoffset = &(*iterator);
-
-    //Address to the next element in fast direction (assuming Row Major)
-    auto incrementoffset = &(*(++iterator));
-
-    //Address to the last element of the view
-    auto endoffset = &(*view.end());
-
-    //Pointer and offset math
-    size_t pixeloffset = (incrementoffset - startoffset) * bytesperunit;
-    size_t totalbyteoffset = (endoffset - startoffset) * bytesperunit;
-    size_t lineoffset = (totalbyteoffset - shape[1] * pixeloffset) / shape[0];
-
-    //Update with pyre error logging
-    if ((pixeloffset < bytesperunit) || (lineoffset < bytesperunit))
-    {
-        std::cout << "Something looks fishy in the offset estimation \n";
-        return;
-    }
-
-    //std::cout << "Start: " << startoffset << "\n"
-    //          << "Pixel offset: " << pixeloffset << "\n"
-    //          << "Line offset: " << lineoffset << "\n";
-
-    auto iostat =  _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx,
-            shape[1], shape[0], startoffset, shape[1], shape[0],
-            asGDT<typename T::cell_type>, pixeloffset, lineoffset);
-
-    if (iostat != CPLE_None) // RasterIO returned errors
-        std::cout << "In isce3::io::Raster::get/setValue() - error in RasterIO." << std::endl;
-}
-
-//Get block of data from given band
-template<typename T>
-void isce3::io::Raster::getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band)
-{
-    this->getSetBlock(view, xidx, yidx, band, GF_Read);
-}
-
-//Set block of data from given band
-template<typename T>
-void isce3::io::Raster::setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band)
-{
-    this->getSetBlock(view, xidx, yidx, band, GF_Write);
 }
 
 /**

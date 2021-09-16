@@ -54,10 +54,9 @@ runconfig:
 
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
-            geo2rdr: include('geo2rdr_options', required=False)
+            rdr2geo: include('rdr2geo_options', required=False)
 
-            blocksize:
-                y: int(min=100, max=10000)
+            geo2rdr: include('geo2rdr_options', required=False)
 
             dem_margin: num(required=False)
 
@@ -430,14 +429,30 @@ radar_grid_cubes_options:
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
-    threshold: num(min=1.0e-9, max=1.0e-3, required=False)
+    threshold: num(min=0, required=False)
 
     # Maximum number of iterations
-    maxiter: int(min=10, max=50, required=False)
+    maxiter: int(min=1, required=False)
 
     # Path to rdr2geo (topo) outputs. Required only for
     # stand-alone usage of geo2rdr.py
     topo_path: str(required=False)
+
+    # Line per block to
+    lines_per_block: int(min=1, required=False)
+
+rdr2geo_options:
+    # Convergence threshold for rdr2geo algorithm
+    threshold: num(min=0, required=False)
+
+    # Maximum number of iterations
+    numiter: int(min=1, required=False)
+
+    # Extra/secondary number of iterations
+    extraiter: int(min=1, required=False)
+
+    # Line per block to
+    lines_per_block: int(min=1, required=False)
 
 
 log_nfo:
@@ -512,6 +527,9 @@ geocode_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+    # Set lines to be processed per block
+    lines_per_block: int(min=100, max=10000, required=False)
 
 gunw_datasets:
     connectedComponents: bool(required=False)

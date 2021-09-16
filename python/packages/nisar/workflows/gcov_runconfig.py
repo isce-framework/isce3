@@ -26,10 +26,10 @@ class GCOVRunConfig(RunConfig):
             geocode_dict['abs_rad_cal'] = 1.0
 
         if geocode_dict['clip_max'] is None:
-            geocode_dict['clip_max'] = 5.0
+            geocode_dict['clip_max'] = np.nan
 
         if geocode_dict['clip_min'] is None:
-            geocode_dict['clip_min'] = 0.0
+            geocode_dict['clip_min'] = np.nan
 
         if geocode_dict['geogrid_upsampling'] is None:
             geocode_dict['geogrid_upsampling'] = 1.0

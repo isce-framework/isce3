@@ -58,10 +58,13 @@ TEST(TopoTest, RunTopo) {
 TEST(TopoTest, CheckResults) {
     
     // Open generated topo raster
+    std::cout << "test file: ./topo.vrt" << std::endl;
     isce3::io::Raster testRaster("topo.vrt");
     
     // Open reference topo raster
-    isce3::io::Raster refRaster(TESTDATA_DIR "topo/topo.vrt");
+    std::string ref_filename = TESTDATA_DIR "topo/topo.vrt";
+    std::cout << "reference file:" << ref_filename << std::endl; 
+    isce3::io::Raster refRaster(ref_filename);
 
     // The associated tolerances
     std::vector<double> tols{1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02};
@@ -75,6 +78,9 @@ TEST(TopoTest, CheckResults) {
 
     // Loop over topo bands
     for (size_t k = 0; k < refRaster.numBands(); ++k) {
+
+        std::cout << "comparing band: " << k + 1 << std::endl;
+
         // Compute sum of absolute error
         double error = 0.0;
         size_t count = 0;

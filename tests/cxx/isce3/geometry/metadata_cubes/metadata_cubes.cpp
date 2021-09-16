@@ -35,7 +35,8 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
                     isce3::io::Raster& los_unit_vector_y_raster,
                     isce3::io::Raster& along_track_unit_vector_x_raster,
                     isce3::io::Raster& along_track_unit_vector_y_raster,
-                    isce3::io::Raster& elevation_angle_raster)
+                    isce3::io::Raster& elevation_angle_raster,
+                    isce3::io::Raster& ground_track_velocity_raster)
 {
     auto proj = isce3::core::makeProjection(geogrid.epsg());
 
@@ -59,26 +60,15 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
                                  geogrid.length(), geogrid.width(), band);
     auto elevation_angle_array = _getCubeArray<float>(
             elevation_angle_raster, geogrid.length(), geogrid.width(), band);
+    auto ground_track_velocity_array = _getCubeArray<double>(
+            ground_track_velocity_raster, geogrid.length(), geogrid.width(), 
+            band);
 
-    double slant_range_error_threshold;
-    double vel_unit_error_threshold;
-    double sat_position_error_threshold;
-    double incidence_angle_error_threshold;
-    /*
-    Error thresholds in UTM are larger because of the higher number of
-    operations whose errors add up.
-    */
-    if (geogrid.epsg() == 4326) {
-        slant_range_error_threshold = 1e-16;
-        incidence_angle_error_threshold = 1e-5;
-        sat_position_error_threshold = 1e-3;
-        vel_unit_error_threshold = 1e-3;
-    } else {
-        slant_range_error_threshold = 1e-16;
-        incidence_angle_error_threshold = 1e-5;
-        sat_position_error_threshold = 1e-3;
-        vel_unit_error_threshold = 1e-3;
-    }
+    const double slant_range_error_threshold = 1e-16;
+    const double vel_unit_error_threshold = 1e-3;
+    const double sat_position_error_threshold = 1e-3;
+    const double incidence_angle_error_threshold = 1e-5;
+    const double ground_track_velocity_error_threshold = 1e-15;
 
     for (int i = 0; i < geogrid.length(); ++i) {
         double pos_y = geogrid.startY() + (0.5 + i) * geogrid.spacingY();
@@ -210,13 +200,21 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
                 along_track_unit_vector_xyz_test = (sat_next_xyz - sat_xyz).normalized();
             }
 
-            // 4. Check velocity unit vector
+            // 4. Check along-track unit vector
             ASSERT_NEAR(along_track_unit_vector_xyz_test[0], vel_unit_xyz[0],
                         vel_unit_error_threshold);
             ASSERT_NEAR(along_track_unit_vector_xyz_test[1], vel_unit_xyz[1],
                         vel_unit_error_threshold);
             ASSERT_NEAR(along_track_unit_vector_xyz_test[2], vel_unit_xyz[2],
                         vel_unit_error_threshold);
+
+            // 5. Check ground-track velocity vector
+            double ground_track_velocity_test = ground_track_velocity_array(i, j);
+            const double ground_track_velocity_ref =
+                target_xyz.norm() * vel_xyz.norm() / sat_xyz.norm();
+            ASSERT_NEAR(ground_track_velocity_test, ground_track_velocity_ref,
+                        ground_track_velocity_error_threshold);
+
         }
     }
 }
@@ -449,7 +447,10 @@ TEST(radarGridCubeTest, testRadarGridCube)
                 GDT_Float32, "ENVI");
         isce3::io::Raster elevation_angle_raster("elevationAngle.rdr", width,
                                                  length, heights.size(),
-                                                 GDT_Float64, "ENVI");
+                                                 GDT_Float32, "ENVI");
+        isce3::io::Raster ground_track_velocity_raster(
+            "groundTrackVelocity.rdr", width, length, heights.size(),
+            GDT_Float64, "ENVI");
 
         isce3::product::GeoGridParameters geogrid(x0, y0, dx, dy, width, length,
                                                   epsg);
@@ -465,6 +466,7 @@ TEST(radarGridCubeTest, testRadarGridCube)
                 &incidence_angle_raster, &los_unit_vector_x_raster,
                 &los_unit_vector_y_raster, &along_track_unit_vector_x_raster,
                 &along_track_unit_vector_y_raster, &elevation_angle_raster,
+                &ground_track_velocity_raster,
                 threshold_geo2rdr, numiter_geo2rdr, delta_range);
 
         // 1. Check geotransform and EPSG
@@ -476,7 +478,8 @@ TEST(radarGridCubeTest, testRadarGridCube)
                 los_unit_vector_y_raster,
                 along_track_unit_vector_x_raster,
                 along_track_unit_vector_y_raster,
-                elevation_angle_raster};
+                elevation_angle_raster,
+                ground_track_velocity_raster};
 
         for (auto cube_raster : raster_vector) {
             ASSERT_TRUE(cube_raster.getEPSG() == epsg);
@@ -503,7 +506,8 @@ TEST(radarGridCubeTest, testRadarGridCube)
                     slant_range_raster, azimuth_time_raster,
                     incidence_angle_raster, los_unit_vector_x_raster,
                     los_unit_vector_y_raster, along_track_unit_vector_x_raster,
-                    along_track_unit_vector_y_raster, elevation_angle_raster);
+                    along_track_unit_vector_y_raster, elevation_angle_raster,
+                    ground_track_velocity_raster);
         }
 
         // 3. Compare results with topo
@@ -730,7 +734,10 @@ TEST(metadataCubesTest, testMetadataCubes) {
             GDT_Float32, "ENVI");
     isce3::io::Raster elevation_angle_raster("elevationAngle.bin", width,
                                              length, heights.size(),
-                                             GDT_Float64, "ENVI");
+                                             GDT_Float32, "ENVI");
+    isce3::io::Raster ground_track_velocity_raster(
+        "groundTrackVelocity.bin", width, length, heights.size(),
+        GDT_Float32, "ENVI");
 
     // Make cubes
     isce3::geometry::makeGeolocationGridCubes(radar_grid, heights, orbit,
@@ -739,7 +746,8 @@ TEST(metadataCubesTest, testMetadataCubes) {
             &los_unit_vector_x_raster, &los_unit_vector_y_raster,
             &along_track_unit_vector_x_raster,
             &along_track_unit_vector_y_raster, &elevation_angle_raster,
-            threshold_geo2rdr, numiter_geo2rdr, delta_range);
+            &ground_track_velocity_raster, threshold_geo2rdr, numiter_geo2rdr,
+            delta_range);
 
     auto proj = isce3::core::makeProjection(epsg);
 

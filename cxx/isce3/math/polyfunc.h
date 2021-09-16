@@ -10,7 +10,7 @@
 
 #include <isce3/core/Poly1d.h>
 #include <isce3/except/Error.h>
-
+/** @namespace isce3::math */
 namespace isce3 { namespace math {
 
 /**

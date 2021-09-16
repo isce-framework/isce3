@@ -25,7 +25,8 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                                   const double threshold, const int numiter,
                                   const int extraiter,
                                   const dataInterpMethod dem_interp_method,
-                                  const int epsg_out, const bool compute_mask) {
+                                  const int epsg_out, const bool compute_mask,
+                                  const int lines_per_block) {
                 auto rdr2geo_obj = Topo(radar_grid, orbit, ellipsoid, doppler);
                 rdr2geo_obj.threshold(threshold);
                 rdr2geo_obj.numiter(numiter);
@@ -33,6 +34,7 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                 rdr2geo_obj.demMethod(dem_interp_method);
                 rdr2geo_obj.epsgOut(epsg_out);
                 rdr2geo_obj.computeMask(compute_mask);
+                rdr2geo_obj.linesPerBlock(lines_per_block);
                 return rdr2geo_obj;
             }),
                     py::arg("radar_grid"), py::arg("orbit"),
@@ -42,7 +44,8 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                     py::arg("extraiter") = 10,
                     py::arg("dem_interp_method") =
                             isce3::core::BIQUINTIC_METHOD,
-                    py::arg("epsg_out") = 4326, py::arg("compute_mask") = true)
+                    py::arg("epsg_out") = 4326, py::arg("compute_mask") = true,
+                    py::arg("lines_per_block") = 1000)
             .def("topo",
                     py::overload_cast<isce3::io::Raster&, const std::string&>(
                             &Topo::topo),
@@ -96,5 +99,9 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                     py::overload_cast<int>(&Topo::epsgOut))
             .def_property("compute_mask",
                     py::overload_cast<>(&Topo::computeMask, py::const_),
-                    py::overload_cast<bool>(&Topo::computeMask));
+                    py::overload_cast<bool>(&Topo::computeMask))
+            .def_property("lines_per_block",
+                    py::overload_cast<>(&Topo::linesPerBlock, py::const_),
+                    py::overload_cast<size_t>(&Topo::linesPerBlock))
+            ;
 }

@@ -114,16 +114,41 @@ void setOutputTopoLayers(const Vec3& targetLLH,
     }
     layers.hdg(index, heading);
 
+    // Project output coordinates to DEM coordinates
+    Vec3 input_coords_llh;
+    (*projOutput)->inverse({x, y, targetLLH[2]}, input_coords_llh);
+    Vec3 dem_vect;
+    (*(demInterp.proj()))->forward(input_coords_llh, dem_vect);
+
     // East-west slope using central difference
-    double aa = demInterp.interpolateXY(x - demInterp.deltaX(), y);
-    double bb = demInterp.interpolateXY(x + demInterp.deltaX(), y);
-    double gamma = targetLLH[1];
-    double alpha = ((bb - aa) * degrees) / (2.0 * ellipsoid.rEast(gamma) * demInterp.deltaX());
+    double aa = demInterp.interpolateXY(dem_vect[0] - demInterp.deltaX(), dem_vect[1]);
+    double bb = demInterp.interpolateXY(dem_vect[0] + demInterp.deltaX(), dem_vect[1]);
+
+    Vec3 dem_vect_p_dx = {dem_vect[0] + demInterp.deltaX(), dem_vect[1], dem_vect[2]};
+    Vec3 dem_vect_m_dx = {dem_vect[0] - demInterp.deltaX(), dem_vect[1], dem_vect[2]};
+    Vec3 input_coords_llh_p_dx, input_coords_llh_m_dx;
+    (*(demInterp.proj()))->inverse(dem_vect_p_dx, input_coords_llh_p_dx);
+    (*(demInterp.proj()))->inverse(dem_vect_m_dx, input_coords_llh_m_dx);
+    const Vec3 input_coords_xyz_p_dx = ellipsoid.lonLatToXyz(input_coords_llh_p_dx);
+    const Vec3 input_coords_xyz_m_dx = ellipsoid.lonLatToXyz(input_coords_llh_m_dx);
+    double dx = (input_coords_xyz_p_dx - input_coords_xyz_m_dx).norm();
+
+    double alpha = (bb - aa) / dx;
 
     // North-south slope using central difference
-    aa = demInterp.interpolateXY(x, y - demInterp.deltaY());
-    bb = demInterp.interpolateXY(x, y + demInterp.deltaY());
-    double beta = ((bb - aa) * degrees) / (2.0 * ellipsoid.rNorth(gamma) * demInterp.deltaY());
+    aa = demInterp.interpolateXY(dem_vect[0], dem_vect[1] - demInterp.deltaY());
+    bb = demInterp.interpolateXY(dem_vect[0], dem_vect[1] + demInterp.deltaY());
+
+    Vec3 dem_vect_p_dy = {dem_vect[0], dem_vect[1] + demInterp.deltaY(), dem_vect[2]};
+    Vec3 dem_vect_m_dy = {dem_vect[0], dem_vect[1] - demInterp.deltaY(), dem_vect[2]};
+    Vec3 input_coords_llh_p_dy, input_coords_llh_m_dy;
+    (*(demInterp.proj()))->inverse(dem_vect_p_dy, input_coords_llh_p_dy);
+    (*(demInterp.proj()))->inverse(dem_vect_m_dy, input_coords_llh_m_dy);
+    const Vec3 input_coords_xyz_p_dy = ellipsoid.lonLatToXyz(input_coords_llh_p_dy);
+    const Vec3 input_coords_xyz_m_dy = ellipsoid.lonLatToXyz(input_coords_llh_m_dy);
+    double dy = (input_coords_xyz_p_dy - input_coords_xyz_m_dy).norm();
+
+    double beta = (bb - aa) / dy;
 
     // Compute local incidence angle
     enu /= enu.norm();

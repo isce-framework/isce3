@@ -1,4 +1,5 @@
 set(SRCS
+antenna/edge_method_cost_func.cpp
 antenna/ElPatternEst.cpp
 antenna/geometryfunc.cpp
 core/Attitude.cpp
@@ -73,6 +74,8 @@ matchtemplate/ampcor/dom/Raster.cc
 matchtemplate/ampcor/dom/SLC.cc
 math/Bessel.cpp
 math/polyfunc.cpp
+math/RootFind1dNewton.cpp
+math/RootFind1dSecant.cpp
 polsar/symmetrize.cpp
 product/GeoGridParameters.cpp
 product/Product.cpp
