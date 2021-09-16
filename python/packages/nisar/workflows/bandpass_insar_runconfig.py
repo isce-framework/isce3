@@ -6,6 +6,7 @@ import journal
 from nisar.workflows.runconfig import RunConfig
 import nisar.workflows.helpers as helpers
 
+
 class BandpassRunConfig(RunConfig):
     def __init__(self, args):
         # all insar submodules share a commmon `insar` schema
@@ -97,6 +98,6 @@ class BandpassRunConfig(RunConfig):
         frequencies = freq_pols.keys()
         if os.path.isdir(bandpass_slc_path):
             helpers.check_mode_directory_tree(bandpass_slc_path, 'bandpass_slc',\
-                    frequencies, freq_pols)
+                                              frequencies, freq_pols)
         else:
             helpers.check_hdf5_freq_pols(bandpass_slc_path, freq_pols)
