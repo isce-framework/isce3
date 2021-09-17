@@ -138,6 +138,10 @@ runconfig:
                     y_abs:
                     x_abs:
 
+            bandpass:
+                # Number of lines per blocks
+                lines_per_block: 1000
+
             geo2rdr:
                 # No topo_path provided. Default to ScratchPath.
                 threshold: 1.0e-8
