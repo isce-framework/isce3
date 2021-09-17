@@ -58,6 +58,8 @@ runconfig:
 
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
+            bandpass: include('bandpass_options', required=False)
+
             rdr2geo: include('rdr2geo_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
@@ -478,6 +480,10 @@ radar_grid_cubes_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+bandpass_options:
+    # Number of lines per block
+    lines_per_block: int(min=1, required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

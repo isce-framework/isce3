@@ -24,7 +24,7 @@ def run(cfg: dict):
     ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
     sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    blocksize = cfg['processing']['blocksize']['y']
+    blocksize = cfg['processing']['bandpass']['lines_per_block']
     scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
 
     # init parameters shared by frequency A and B
@@ -46,8 +46,8 @@ def run(cfg: dict):
     bandpass_slc_path = pathlib.Path(f"{scratch_path}/bandpass/")
 
     if bandpass_modes:
-        ref_slc_output = f"{scratch_path}/bandpass/ref_bp.h5"
-        sec_slc_output = f"{scratch_path}/bandpass/sec_bp.h5"   
+        ref_slc_output = f"{bandpass_slc_path}/ref_bp.h5"
+        sec_slc_output = f"{bandpass_slc_path}/sec_bp.h5"   
         bandpass_slc_path.mkdir(parents=True, exist_ok=True)
 
     common_parent_path = 'science/LSAR'
