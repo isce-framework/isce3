@@ -769,7 +769,7 @@ inline void Geocode<T>::_interpolate(
 
         if (flag_apply_rtc) {
             float rtc_value =
-                    rtc_area(rdrY + azimuthFirstLine, rdrX + rangeFirstPixel);
+                    rtc_area(int(rdrY + azimuthFirstLine), int(rdrX + rangeFirstPixel));
             val /= std::sqrt(rtc_value);
             if (out_geo_rtc != nullptr) {
 #pragma omp atomic write
@@ -818,7 +818,7 @@ inline void Geocode<T>::_interpolate(
 
         if (phase_screen_raster != nullptr) {
             phase -= phase_screen_array(
-                    rdrY + azimuthFirstLine, rdrX + rangeFirstPixel);
+                    int(rdrY + azimuthFirstLine), int(rdrX + rangeFirstPixel));
         }
 
         T_out cpxPhase;

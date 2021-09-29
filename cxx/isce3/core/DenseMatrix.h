@@ -33,7 +33,9 @@ public:
         return *this * other;
     }
 
-    CUDA_HOSTDEV constexpr DenseMatrix(
+// Backport Eigen 3.4.0's initializer_list constructor
+#if !EIGEN_VERSION_AT_LEAST(3, 4, 0)
+    CUDA_HOSTDEV explicit constexpr DenseMatrix(
             std::initializer_list<std::initializer_list<T>> lst) {
         int i = 0, j = 0;
         for (const auto& l : lst) {
@@ -43,6 +45,7 @@ public:
             i++, j = 0;
         }
     }
+#endif
 
     /** Matrix transposition */
     CUDA_HOSTDEV constexpr DenseMatrix<N, T> transpose() const {
