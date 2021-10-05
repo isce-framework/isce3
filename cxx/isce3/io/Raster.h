@@ -132,6 +132,9 @@ class isce3::io::Raster {
        * @param[in] ds GDALDataset pointer*/
       inline void         dataset(GDALDataset* ds) { _dataset=ds; }
 
+      /** GDALDataset owner getter*/
+      inline bool dataset_owner()  const { return _owner; }
+
       /** Return GDALDatatype of specified band
        *
        * @param[in] band Band number in 1-index*/

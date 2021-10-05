@@ -93,6 +93,24 @@ void addbinding(py::class_<Raster> & pyRaster)
             "Create a VRT raster dataset from list of rasters",
             py::arg("path"),
             py::arg("raster_list"))
+        .def("close_dataset", [](Raster & self)
+            {
+                if (self.dataset_owner()) {
+                    auto gdal_ds = self.dataset();
+                    delete gdal_ds;
+                }
+                self.dataset(nullptr);
+            },
+            R"(
+            Close the dataset.
+
+            Decrements the reference count of the underlying `GDALDataset`, which,
+            if this was the last open instance, causes the dataset to be closed
+            and any cached changes to be flushed to disk.
+
+            This invalidates the `Raster` instance -- it cannot be used after closing
+            the underlying dataset.
+            )")
         .def(py::init([](std::uintptr_t py_ds_ptr)
             {
                 auto gdal_ds = reinterpret_cast<GDALDataset*>(py_ds_ptr);
