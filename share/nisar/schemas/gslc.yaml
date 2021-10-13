@@ -16,6 +16,8 @@ runconfig:
         ProductPathGroup:
             # Directory where PGE will place results
             ProductPath: str()
+            # Product Counter
+            ProductCounter: int(min=1, max=999, required=False)
        
             # Directory where SAS can write temporary data
             ScratchPath: str()
@@ -27,6 +29,9 @@ runconfig:
 
         PrimaryExecutable:
             ProductType: enum('GSLC')
+            CompositeReleaseID: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
+            ProcessingType: enum('PR', 'UR', required=False)
+            ProductAccuracy: enum('P', 'M', 'N', 'F', 'T', required=False)
 
         DebugLevelGroup:
             DebugSwitch: bool()
