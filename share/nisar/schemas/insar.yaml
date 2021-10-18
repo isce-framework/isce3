@@ -432,6 +432,12 @@ radar_grid_cubes_options:
 bandpass_options:
     # Number of lines per block
     lines_per_block: int(min=1, required=False)
+    # Set window function for range spectrum bandpass filtering
+    window_function: enum('tukey', 'cosine', 'kaiser', required=False)
+    # Shape parameter. For Kaiser, 0 <= shape < Inf.
+    # For Cosine and Tukey, 0 <= shape <= 1
+    window_shape: num(min=0, required=False)
+    range_fft_size: int(min=1, required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

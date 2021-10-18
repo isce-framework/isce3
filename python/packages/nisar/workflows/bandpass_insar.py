@@ -25,6 +25,9 @@ def run(cfg: dict):
     sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     blocksize = cfg['processing']['bandpass']['lines_per_block']
+    window_function = cfg['processing']['bandpass']['window_function']
+    window_shape = cfg['processing']['bandpass']['window_shape']
+    fft_size = cfg['processing']['bandpass']['range_fft_size']
     scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
 
     # init parameters shared by frequency A and B
@@ -38,7 +41,7 @@ def run(cfg: dict):
     t_all = time.time()
 
     # check if bandpass is necessary
-    bandpass_modes = splitspectrum.check_insar_mixmode(ref_slc, 
+    bandpass_modes = splitspectrum.check_range_bandwidth_overlap(ref_slc, 
                      sec_slc, 
                      freq_pols)
 
@@ -56,8 +59,8 @@ def run(cfg: dict):
     for freq, target in bandpass_modes.items():
         pol_list = freq_pols[freq]
 
-        # if reference has wide bandwidth, then reference will be bandpassed
-        # base   : SLC to be referenced  
+        # if reference has a wider bandwidth, then reference will be bandpassed
+        # base : SLC to be referenced  
         # target : SLC to be bandpassed
         if target == 'ref':
             base_hdf5 = sec_hdf5
@@ -82,38 +85,38 @@ def run(cfg: dict):
         if os.path.exists(target_output):
             os.remove(target_output)
 
-        # Copy HDF 5 file to be bandpassed    
-        with h5py.File(target_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
-                h5py.File(target_output, 'w', libver='latest', swmr=True) as dst_h5:
-            cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}')
-
         # meta data extraction 
         base_meta_data = splitspectrum.get_meta_data_bandpass(base_slc, freq)
+        target_meta_data = splitspectrum.get_meta_data_bandpass(target_slc, freq)
+
         bandwidth_half = 0.5 * base_meta_data['rg_bandwidth'] 
         low_frequency_base = base_meta_data['center_frequency'] - \
                              bandwidth_half
         high_frequency_base = base_meta_data['center_frequency'] + \
                               bandwidth_half
 
-        # initialize bandpass instance
-        bandpass = splitspectrum.SplitSpectrum(target_slc, freq)
-
+        # Initialize bandpass instance
+        # Specify meta parameters of SLC to be bandpassed 
+        bandpass = splitspectrum.SplitSpectrum(rg_sample_freq=target_meta_data['rg_sample_freq'],
+                                               rg_bandwidth=target_meta_data['rg_bandwidth'],
+                                               center_frequency=target_meta_data['center_frequency'],
+                                               slant_range=target_meta_data['slant_range'],  
+                                               freq=freq)
+                                                
         dest_freq_path = f"/science/LSAR/SLC/swaths/frequency{freq}"
         with h5py.File(target_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
-                h5py.File(target_output, 'r+') as dst_h5:
+                h5py.File(target_output, 'w') as dst_h5:
+            # Copy HDF 5 file to be bandpassed    
+            cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}')
+
             for pol in pol_list:
                 
                 target_raster_str = f'HDF5:{target_hdf5}:/{target_slc.slcPath(freq, pol)}'
                 target_slc_raster = isce3.io.Raster(target_raster_str)   
                 rows = target_slc_raster.length   
                 cols = target_slc_raster.width         
-                nblocks = int(rows / blocksize)
+                nblocks = int(np.ceil(rows / blocksize))
 
-                if (nblocks == 0):
-                    nblocks = 1
-                elif (np.mod(rows, (nblocks * blocksize)) != 0):
-                    nblocks = nblocks + 1
-  
                 for block in range(0, nblocks):
                     print("-- bandpass block: ", block)
                     row_start = block * blocksize
@@ -123,42 +126,40 @@ def run(cfg: dict):
                         block_rows_data = blocksize
                     
                     dest_pol_path = f"{dest_freq_path}/{pol}"
-                    target_slc_image = np.zeros([block_rows_data, cols], 
+                    target_slc_image = np.empty([block_rows_data, cols], 
                                                 dtype=complex)
-
+                    # Read SLC from HDF5
                     src_h5[dest_pol_path].read_direct(
                         target_slc_image, 
                         np.s_[row_start : row_start + block_rows_data, :])
 
-                    bandpass.slc_raster = target_slc_image
+                    # Specify low and high frequency to be passed (bandpass)
+                    # and the center frequency to be basebanded (demodulation)
                     bandpass_slc, bandpass_meta = bandpass.bandpass_spectrum(
                         slc_raster=target_slc_image,
                         low_frequency=low_frequency_base,
                         high_frequency=high_frequency_base,
-                        new_center_frequency=base_meta_data['center_frequency']
+                        new_center_frequency=base_meta_data['center_frequency'],
+                        fft_size=fft_size, 
+                        window_shape=window_shape, 
+                        window=window_function
                         )   
-                      
+                    
                     if block == 0:
                         del dst_h5[dest_pol_path]
+                        # Initialize the raster with updated shape in HDF5
                         dst_h5.create_dataset(dest_pol_path, 
-                                              np.shape(bandpass_slc), 
+                                              [rows, np.shape(bandpass_slc)[1]], 
                                               np.complex64,
-                                              chunks=(128, 128),
-                                              data=np.complex64(bandpass_slc),
-                                              maxshape=(rows, bandpass_slc.shape[1]))
-                    else:
-                        dst_h5[dest_pol_path].resize((dst_h5[dest_pol_path].shape[0] 
-                                                     + bandpass_slc.shape[0]), 
-                                                     axis=0)
-                        dst_h5[dest_pol_path][-bandpass_slc.shape[0] :] = \
-                                                     np.complex64(bandpass_slc)
-
+                                              chunks=(128, 128))
+                    # Write bandpassed SLC to HDF5
+                    dst_h5[dest_pol_path].write_direct(bandpass_slc,
+                        dest_sel=np.s_[row_start : row_start + block_rows_data, :])
+                    
                 dst_h5[dest_pol_path].attrs['description'] = f"Bandpass SLC image ({pol})"
-                dst_h5[dest_pol_path].attrs['units'] = f"DN"
+                dst_h5[dest_pol_path].attrs['units'] = f""
  
-        # update meta information for bandpass SLC
-        with h5py.File(target_output, 'r+', libver='latest', swmr=True) as dst_h5:
-
+            # update meta information for bandpass SLC
             data = dst_h5[f"{dest_freq_path}/processedCenterFrequency"]
             data[...] = bandpass_meta['center_frequency']
             data = dst_h5[f"{dest_freq_path}/slantRangeSpacing"]
@@ -187,6 +188,7 @@ if __name__ == "__main__":
     bandpass_parser = YamlArgparse()
     args = bandpass_parser.parse()
     # get a runconfig dict from command line args
-    badnpass_runconfig = BandpassRunConfig(args)
+    bandpass_runconfig = BandpassRunConfig(args)
+    print(bandpass_runconfig.cfg)
     # run bandpass
     run(bandpass_runconfig.cfg)
