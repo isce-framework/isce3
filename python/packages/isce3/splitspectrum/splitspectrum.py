@@ -355,8 +355,8 @@ class SplitSpectrum:
        
         # sampling frequency is 1.2 times wider than bandwith
         sampling_bandwidth_ratio = 1.2
-        sampling_low_frequency = fL - (sampling_bandwidth_ratio - 1) * subbandwidth *.5
-        sampling_high_frequency = fH + (sampling_bandwidth_ratio - 1) * subbandwidth *.5
+        sampling_low_frequency = fL - (sampling_bandwidth_ratio - 1) * subbandwidth * 0.5
+        sampling_high_frequency = fH + (sampling_bandwidth_ratio - 1) * subbandwidth * 0.5
 
         # index for low and high sampling frequency in frequency_range
         idx_fL = np.abs(frequency_range - sampling_low_frequency).argmin()
