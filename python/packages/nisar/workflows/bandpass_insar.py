@@ -13,7 +13,7 @@ from nisar.workflows import h5_prep
 from nisar.workflows.bandpass_insar_runconfig import BandpassRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.h5 import cp_h5_meta_data
-import nisar.workflows.splitspectrum as splitspectrum
+from isce3.splitspectrum import splitspectrum
 
 
 def run(cfg: dict):
