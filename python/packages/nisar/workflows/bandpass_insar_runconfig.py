@@ -14,4 +14,4 @@ class BandpassRunConfig(RunConfig):
 
         self.load_geocode_yaml_to_dict()
         self.geocode_common_arg_load()
-        self.yaml_check()
+

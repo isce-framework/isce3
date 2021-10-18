@@ -141,6 +141,13 @@ runconfig:
             bandpass:
                 # Number of lines per blocks
                 lines_per_block: 1000
+                # Set window function for range spectrum bandpass filtering
+                window_function: tukey
+                # Shape parameter. For Kaiser, 0 <= shape < Inf.
+                # For Cosine and Tukey, 0 <= shape <= 1.
+                window_shape: 0.25
+                # FFT size in range. 
+                range_fft_size: 
 
             geo2rdr:
                 # No topo_path provided. Default to ScratchPath.
