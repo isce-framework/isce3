@@ -177,7 +177,6 @@ class SplitSpectrum:
             window_function=window,
             window_shape=window_shape
         )
-        print(window, window_shape)
         # construct window to bandpass spectrum 
         # for given low and high frequencies
         window_bandpass = self.get_range_bandpass_window(

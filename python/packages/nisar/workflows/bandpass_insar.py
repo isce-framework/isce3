@@ -189,6 +189,5 @@ if __name__ == "__main__":
     args = bandpass_parser.parse()
     # get a runconfig dict from command line args
     bandpass_runconfig = BandpassRunConfig(args)
-    print(bandpass_runconfig.cfg)
     # run bandpass
     run(bandpass_runconfig.cfg)
