@@ -9,7 +9,7 @@ class Persistence():
     # init InSAR steps in reverse chronological run order
     insar_steps = ['geocode', 'unwrap', 'crossmul', 'fine_resample', 'rubbersheet',
                    'dense_offsets', 'coarse_resample', 'geo2rdr', 'rdr2geo', 'h5_prep',
-                   'bandpass']
+                   'bandpass_insar']
 
     def __init__(self, restart=False):
         # bool flag that determines if insar.run is called

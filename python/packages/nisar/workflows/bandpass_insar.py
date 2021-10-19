@@ -135,14 +135,15 @@ def run(cfg: dict):
 
                     # Specify low and high frequency to be passed (bandpass)
                     # and the center frequency to be basebanded (demodulation)
-                    bandpass_slc, bandpass_meta = bandpass.bandpass_spectrum(
+                    bandpass_slc, bandpass_meta = bandpass.bandpass_shift_spectrum(
                         slc_raster=target_slc_image,
                         low_frequency=low_frequency_base,
                         high_frequency=high_frequency_base,
                         new_center_frequency=base_meta_data['center_frequency'],
                         fft_size=fft_size, 
                         window_shape=window_shape, 
-                        window=window_function
+                        window=window_function,
+                        resampling=True
                         )   
                     
                     if block == 0:
@@ -170,14 +171,14 @@ def run(cfg: dict):
             dst_h5.create_dataset(f"{dest_freq_path}/slantRange",
                                   data=bandpass_meta['slant_range'])
 
-    # update HDF5 
-    if bandpass_modes:
-        h5_prep.run(cfg)
+    # # update HDF5 
+    # if bandpass_modes:
+    #     h5_prep.run(cfg)
 
     t_all_elapsed = time.time() - t_all
     print('total processing time: ', t_all_elapsed, ' sec')
     info_channel.log(
-        f"successfully ran bandpass in {t_all_elapsed:.3f} seconds")
+        f"successfully ran bandpass_insar in {t_all_elapsed:.3f} seconds")
 
 
 if __name__ == "__main__":
