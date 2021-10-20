@@ -123,15 +123,6 @@ io/IH5.icc
 io/Raster.h
 io/Raster.icc
 io/Serialization.h
-matchtemplate/ampcor/correlators/correlators.h
-matchtemplate/ampcor/correlators/kernels.h
-matchtemplate/ampcor/correlators/Sequential.h
-matchtemplate/ampcor/correlators/Sequential.icc
-matchtemplate/ampcor/dom/dom.h
-matchtemplate/ampcor/dom/Raster.h
-matchtemplate/ampcor/dom/Raster.icc
-matchtemplate/ampcor/dom/SLC.h
-matchtemplate/ampcor/dom/SLC.icc
 math/Bessel.h
 math/ComplexMultiply.h
 math/detail/RootFind1dBase.h

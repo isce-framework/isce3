@@ -44,11 +44,6 @@ image/gpuResampSlc.h
 image/ResampSlc.h
 io/DataStream.h
 io/DataStream.icc
-matchtemplate/ampcor/correlators.h
-matchtemplate/ampcor/kernels.h
-matchtemplate/ampcor/public.h
-matchtemplate/ampcor/Sequential.h
-matchtemplate/ampcor/Sequential.icc
 math/ComplexMultiply.h
 signal/forward.h
 signal/gpuCrossMul.h

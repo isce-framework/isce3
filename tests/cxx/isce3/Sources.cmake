@@ -57,7 +57,6 @@ io/raster/raster.cpp
 io/raster/rasterepsg.cpp
 io/raster/rastermatrix.cpp
 io/raster/rasterview.cpp
-matchtemplate/ampcor/ampcor.cpp
 math/bessel/bessel53.cpp
 math/sinc.cpp
 math/polyfunc.cpp
