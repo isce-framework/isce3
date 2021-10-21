@@ -428,8 +428,8 @@ class SplitSpectrum:
         subbandwidth = np.abs(fH - fL)
         fft_size = len(frequency_range)
         
-        assert fH < np.max(frequency_range), 'High freqeuncy is expected '
-        assert fL > np.min(frequency_range), 'Low freqeuncy is lower than observation'
+        assert fH < np.max(frequency_range), 'High freqeuncy is out of freqeuncy bins'
+        assert fL > np.min(frequency_range), 'Low freqeuncy is out of freqeuncy bins'
        
         # sampling frequency is 1.2 times wider than bandwith
         sampling_bandwidth_ratio = 1.2
