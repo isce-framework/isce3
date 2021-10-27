@@ -9,7 +9,6 @@ import numpy as np
 
 import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
 from nisar.workflows.bandpass_insar_runconfig import BandpassRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.h5 import cp_h5_meta_data
@@ -34,7 +33,6 @@ def run(cfg: dict):
     ref_slc = SLC(hdf5file=ref_hdf5)
     sec_slc = SLC(hdf5file=sec_hdf5)
 
-    error_channel = journal.error('bandpass_insar.run')
     info_channel = journal.info("bandpass_insar.run")
     info_channel.log("starting bandpass_insar")
 
@@ -49,8 +47,8 @@ def run(cfg: dict):
     bandpass_slc_path = pathlib.Path(f"{scratch_path}/bandpass/")
 
     if bandpass_modes:
-        ref_slc_output = f"{bandpass_slc_path}/ref_bp.h5"
-        sec_slc_output = f"{bandpass_slc_path}/sec_bp.h5"   
+        ref_slc_output = f"{bandpass_slc_path}/ref_slc_bandpassed.h5"
+        sec_slc_output = f"{bandpass_slc_path}/sec_slc_bandpassed.h5"   
         bandpass_slc_path.mkdir(parents=True, exist_ok=True)
 
     common_parent_path = 'science/LSAR'
@@ -63,7 +61,6 @@ def run(cfg: dict):
         # base : SLC to be referenced  
         # target : SLC to be bandpassed
         if target == 'ref':
-            base_hdf5 = sec_hdf5
             target_hdf5 = ref_hdf5
             target_slc = ref_slc
             base_slc = sec_slc
@@ -73,7 +70,6 @@ def run(cfg: dict):
             target_output = ref_slc_output
 
         elif target == 'sec':
-            base_hdf5 = ref_hdf5
             target_hdf5 = sec_hdf5
             target_slc = sec_slc
             base_slc = ref_slc
@@ -120,7 +116,7 @@ def run(cfg: dict):
                 for block in range(0, nblocks):
                     print("-- bandpass block: ", block)
                     row_start = block * blocksize
-                    if ((row_start + blocksize) > rows):
+                    if (row_start + blocksize > rows):
                         block_rows_data = rows - row_start
                     else:
                         block_rows_data = blocksize
@@ -142,7 +138,7 @@ def run(cfg: dict):
                         new_center_frequency=base_meta_data['center_frequency'],
                         fft_size=fft_size, 
                         window_shape=window_shape, 
-                        window=window_function,
+                        window_function=window_function,
                         resampling=True
                         )   
                     
@@ -170,10 +166,6 @@ def run(cfg: dict):
             del dst_h5[f"{dest_freq_path}/slantRange"]
             dst_h5.create_dataset(f"{dest_freq_path}/slantRange",
                                   data=bandpass_meta['slant_range'])
-
-    # # update HDF5 
-    # if bandpass_modes:
-    #     h5_prep.run(cfg)
 
     t_all_elapsed = time.time() - t_all
     print('total processing time: ', t_all_elapsed, ' sec')
