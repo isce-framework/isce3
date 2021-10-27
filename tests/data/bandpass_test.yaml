@@ -6,7 +6,7 @@ runconfig:
             PGEName: INSAR_L_PGE
 
         InputFileGroup:
-            # REQUIRED - Two NISAR L1B RSLC formatted HDF5 files
+            # REQUIRED - Two NISAR L1 RSLC formatted HDF5 files
             InputFilePath:
             - @ISCETEST@/Sdelta_129_02.h5
             - @ISCETEST@/Sdelta_138_02.h5
@@ -98,6 +98,12 @@ runconfig:
                     y_abs:
                     x_abs:
 
+            bandpass:
+                lines_per_block: 1000
+                window_function: tukey
+                window_shape: 0.25
+                range_fft_size: 
+                
             geo2rdr:
                 topo_path: '.'
                 threshold: 1.0e-9
