@@ -2,38 +2,47 @@ import numpy as np
 import journal
 from scipy.fft import fft, ifft, fftfreq
 from scipy.signal import resample
+from dataclasses import dataclass
 
 import isce3
 from nisar.workflows.focus import cosine_window
 
 
-def get_meta_data_bandpass(slc_product, freq):
-    """Get meta data from SLC object.
-
-    Parameters
-    ----------
-    slc_product : nisar.products.readers.SLC
-        slc object
-    freq : {'A', 'B'}
-        frequency band
-
-    Returns
-    -------
-    meta_data : dict
-        dict containing meta_data
-    """
-    meta_data = dict()
-    rdr_grid = slc_product.getRadarGrid(freq)
-    meta_data['rg_pxl_spacing'] = rdr_grid.range_pixel_spacing
-    meta_data['wavelength'] = rdr_grid.wavelength
-    meta_data['rg_sample_freq'] = isce3.core.speed_of_light * \
-        0.5 / meta_data['rg_pxl_spacing']
-    meta_data['rg_bandwidth'] = slc_product.getSwathMetadata(
-        freq).processed_range_bandwidth
-    meta_data['center_frequency'] = isce3.core.speed_of_light / \
-        meta_data['wavelength']
-    meta_data['slant_range'] = rdr_grid.slant_range
-    return meta_data
+@dataclass(frozen=True)
+class bandpass_meta_data:
+    # slant range spacing
+    rg_pxl_spacing: float
+    # wavelength
+    wavelength: float
+    # sampling frequency
+    rg_sample_freq: float
+    #bandiwdth
+    rg_bandwidth: float
+    #center frequency
+    center_freq: float
+    #slant range
+    slant_range: 'method'
+    
+    @classmethod
+    def load_from_slc(cls, slc_product, freq):
+        """Get meta data from SLC object.
+        Parameters
+        ----------
+        slc_product : nisar.products.readers.SLC
+            slc object
+        freq : {'A', 'B'}
+            frequency band
+        Returns
+        -------
+        meta_data : bandpass_meta_data
+            bandpass meta data object
+        """
+        rdr_grid = slc_product.getRadarGrid(freq)
+        rg_sample_freq = isce3.core.speed_of_light * 0.5 / rdr_grid.range_pixel_spacing
+        rg_bandwidth = slc_product.getSwathMetadata(freq).processed_range_bandwidth            
+        center_frequency = isce3.core.speed_of_light / rdr_grid.wavelength
+        return cls(rdr_grid.range_pixel_spacing, rdr_grid.wavelength, rg_sample_freq,
+                   rg_bandwidth, center_frequency, rdr_grid.slant_range)
 
 
 def check_range_bandwidth_overlap(ref_slc, sec_slc, pols):
@@ -61,14 +70,14 @@ def check_range_bandwidth_overlap(ref_slc, sec_slc, pols):
     mode = dict()
 
     for freq, pol_list in pols.items():
-        ref_meta_data = get_meta_data_bandpass(ref_slc, freq)
-        sec_meta_data = get_meta_data_bandpass(sec_slc, freq)
-        
-        ref_wvl = ref_meta_data['wavelength']
-        sec_wvl = sec_meta_data['wavelength']
-        ref_bw = ref_meta_data['rg_bandwidth']
-        sec_bw = sec_meta_data['rg_bandwidth']
-
+        ref_meta_data = bandpass_meta_data.load_from_slc(ref_slc, freq)
+        sec_meta_data = bandpass_meta_data.load_from_slc(sec_slc, freq)
+ 
+        ref_wvl = ref_meta_data.wavelength
+        sec_wvl = sec_meta_data.wavelength
+        ref_bw = ref_meta_data.rg_bandwidth
+        sec_bw = sec_meta_data.rg_bandwidth
+ 
         # check if two SLCs have same bandwidth and center frequency
         if (ref_wvl != sec_wvl) or (ref_bw != sec_bw):
             if ref_bw > sec_bw:
@@ -133,7 +142,7 @@ class SplitSpectrum:
         high_frequency : float
             high frequency band to be passed [Hz]
         new_center_frequency : float
-            new center frequency for bandpass [Hz]
+            new center frequency for new bandpassed slc [Hz]
         window_function : str
             window type {tukey, kaiser, cosine}
         window_shape : float 
@@ -148,8 +157,8 @@ class SplitSpectrum:
         -------
         resampled_slc or slc_demodulate: numpy.ndarray 
             numpy array of bandpassed slc
-            if resampling is True, return resampled_slc 
-            if resampling is False, return slc_demodulate
+            if resampling is True, return resampled slc with bandpass and demodulation 
+            if resampling is False, return slc with bandpass and demodulation without resampling
         meta : dict 
             dict containing meta data of bandpassed slc
             center_frequency, rg_bandwidth, range_spacing, slant_range
@@ -237,11 +246,8 @@ class SplitSpectrum:
 
         Returns
         -------
-        filtered_slc : numpy.ndarray 
+        slc_bandpassed : numpy.ndarray 
             numpy array of bandpassed slc
-        meta : dict 
-            dict containing meta data of bandpassed slc
-            center_frequency, rg_bandwidth, range_spacing, slant_range
         """       
         error_channel = journal.error('splitspectrum.bandpass_spectrum')
 
@@ -292,11 +298,11 @@ class SplitSpectrum:
         spectrum_target = fft(slc_raster, n=fft_size) / \
                               window_target
         # apply new bandpass window to spectrum 
-        slc_bp = ifft(spectrum_target 
+        slc_bandpassed = ifft(spectrum_target 
                       * window_bandpass
                       * np.sqrt(resampling_scale_factor), n=fft_size)
 
-        return slc_bp
+        return slc_bandpassed
 
     def demodulate_slc(self, slc_array, diff_frequency, rg_sample_freq):
         """ Demodulate SLC 
@@ -404,24 +410,31 @@ class SplitSpectrum:
                 window_shape=window_shape
             )
         
-        elif window_kind == 'kaiser' or window_kind == 'cosine':
-            if (window_kind == 'kaiser') and not (window_shape > 0):
+        elif window_kind == 'kaiser':
+            if not (window_shape > 0):
                 err_str = f"Expected pedestal bigger than 0, got {window_shape}."
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-            if (window_kind == 'cosine') and not (0 <= window_shape <= 1):
-                err_str = f"Expected window_shape between 0 and 1, got  {window_shape}."
-                error_channel.log(err_str)
-                raise ValueError(err_str)
-                    
-            filter_1d = self.construct_range_bandpass_kaiser_cosine(
+        
+            filter_1d = self.construct_range_bandpass_kaiser(
                 frequency_range=frequency,
                 freq_low=freq_low,
                 freq_high=freq_high,
-                window_function=window_kind,
                 window_shape=window_shape
             )
         
+        elif window_kind == 'cosine':
+            if not (0 <= window_shape <= 1):
+                err_str = f"Expected window_shape between 0 and 1, got  {window_shape}."
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+            filter_1d = self.construct_range_bandpass_cosine(
+                frequency_range=frequency,
+                freq_low=freq_low,
+                freq_high=freq_high,
+                window_shape=window_shape
+            )                   
+            
         else:
             err_str = f"window {window_kind} not in (Kaiser, Cosine, Tukey)."
             error_channel.log(err_str)
@@ -429,7 +442,67 @@ class SplitSpectrum:
             
         return filter_1d
 
-    def construct_range_bandpass_kaiser_cosine(self, 
+    def construct_range_bandpass_cosine(self, 
+                                        frequency_range,
+                                        freq_low,
+                                        freq_high,
+                                        window_shape):
+        '''Generate a Cosine bandpass window
+
+        Parameters
+        ----------
+        frequency_range : np.ndarray
+            Discrete Fourier Transform sample frequency range bins[Hz]
+        freq_low : float
+            low frequency to be passed [Hz]
+        freq_high: float
+            high frequency to be passed [Hz]
+        window_shape : float 
+            parameter for the cosine window
+
+        Returns
+        -------
+        filter_1d : np.ndarray
+            one dimensional Cosine bandpass filter in frequency domain
+        '''        
+        filter_1d = self._construct_range_bandpass_kaiser_cosine(frequency_range,
+                                                     freq_low,
+                                                     freq_high,
+                                                     cosine_window,
+                                                     window_shape)
+        return filter_1d
+
+    def construct_range_bandpass_kaiser(self, 
+                                        frequency_range,
+                                        freq_low,
+                                        freq_high,
+                                        window_shape):
+        '''Generate a Kaiser bandpass window
+
+        Parameters
+        ----------
+        frequency_range : np.ndarray
+            Discrete Fourier Transform sample frequency range bins[Hz]
+        freq_low : float
+            low frequency to be passed [Hz]
+        freq_high: float
+            high frequency to be passed [Hz]
+        window_shape : float 
+            parameter for the kaiser window
+
+        Returns
+        -------
+        filter_1d : np.ndarray
+            one dimensional kaiser bandpass filter in frequency domain
+        '''
+        filter_1d = self._construct_range_bandpass_kaiser_cosine(frequency_range,
+                                                     freq_low,
+                                                     freq_high,
+                                                     np.kaiser,
+                                                     window_shape)
+        return filter_1d
+
+    def _construct_range_bandpass_kaiser_cosine(self, 
                                                frequency_range,
                                                freq_low,
                                                freq_high,
@@ -445,8 +518,8 @@ class SplitSpectrum:
             low frequency to be passed [Hz]
         freq_high: float
             high frequency to be passed [Hz]
-        window_function : str
-            window type {kaiser, cosine}
+        window_function : class function 
+            window type {np.kaiser, cosine_window}
         window_shape : float 
             parameter for the kaiser window
 
@@ -484,11 +557,10 @@ class SplitSpectrum:
             subband_length = idx_freq_high - idx_freq_low + 1
             
         filter_1d = np.zeros([fft_size], dtype='complex')
-        if window_function == 'kaiser':
-            subwindow = np.kaiser(subband_length, window_shape)
-        elif window_function == 'cosine':
-            subwindow = cosine_window(subband_length, window_shape)
-        
+
+        # window_function is function class {np.kaiser or consine} 
+        subwindow = window_function(subband_length, window_shape)
+
         if idx_freq_low >= idx_freq_high: 
             filter_1d[idx_freq_low :] = subwindow[0 : fft_size - idx_freq_low]
             filter_1d[: idx_freq_high + 1] = subwindow[fft_size - idx_freq_low:]
@@ -531,7 +603,7 @@ class SplitSpectrum:
             # Get the absolute value of shifted frequency
             freq = frequency_range[i]
             freqabs = np.abs(freq - freq_mid)
-            # Passband. Pass original signals within a selected range of frequencies
+            # Passband. i.e. range of frequencies that can pass through a filter
             if (freq <= (freq_high - df)) and (freq >= (freq_low + df)):
                 filter_1d[i] = 1
             # Transition region
