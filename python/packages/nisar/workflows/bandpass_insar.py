@@ -39,9 +39,10 @@ def run(cfg: dict):
     t_all = time.time()
 
     # check if bandpass is necessary
-    bandpass_modes = splitspectrum.check_range_bandwidth_overlap(ref_slc, 
-                     sec_slc, 
-                     freq_pols)
+    bandpass_modes = splitspectrum.check_range_bandwidth_overlap(
+        ref_slc=ref_slc, 
+        sec_slc=sec_slc, 
+        pols=freq_pols)
 
     # check if user provided path to raster(s) is a file or directory
     bandpass_slc_path = pathlib.Path(f"{scratch_path}/bandpass/")
@@ -82,21 +83,25 @@ def run(cfg: dict):
             os.remove(target_output)
 
         # meta data extraction 
-        base_meta_data = splitspectrum.get_meta_data_bandpass(base_slc, freq)
-        target_meta_data = splitspectrum.get_meta_data_bandpass(target_slc, freq)
+        base_meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
+            slc_product=base_slc, 
+            freq=freq)
+        target_meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
+            slc_product=target_slc, 
+            freq=freq)
 
-        bandwidth_half = 0.5 * base_meta_data['rg_bandwidth'] 
-        low_frequency_base = base_meta_data['center_frequency'] - \
+        bandwidth_half = 0.5 * base_meta_data.rg_bandwidth
+        low_frequency_base = base_meta_data.center_freq - \
                              bandwidth_half
-        high_frequency_base = base_meta_data['center_frequency'] + \
+        high_frequency_base = base_meta_data.center_freq + \
                               bandwidth_half
 
         # Initialize bandpass instance
         # Specify meta parameters of SLC to be bandpassed 
-        bandpass = splitspectrum.SplitSpectrum(rg_sample_freq=target_meta_data['rg_sample_freq'],
-                                               rg_bandwidth=target_meta_data['rg_bandwidth'],
-                                               center_frequency=target_meta_data['center_frequency'],
-                                               slant_range=target_meta_data['slant_range'],  
+        bandpass = splitspectrum.SplitSpectrum(rg_sample_freq=target_meta_data.rg_sample_freq,
+                                               rg_bandwidth=target_meta_data.rg_bandwidth,
+                                               center_frequency=target_meta_data.center_freq,
+                                               slant_range=target_meta_data.slant_range,  
                                                freq=freq)
                                                 
         dest_freq_path = f"/science/LSAR/SLC/swaths/frequency{freq}"
@@ -135,7 +140,7 @@ def run(cfg: dict):
                         slc_raster=target_slc_image,
                         low_frequency=low_frequency_base,
                         high_frequency=high_frequency_base,
-                        new_center_frequency=base_meta_data['center_frequency'],
+                        new_center_frequency=base_meta_data.center_freq,
                         fft_size=fft_size, 
                         window_shape=window_shape, 
                         window_function=window_function,
@@ -162,7 +167,7 @@ def run(cfg: dict):
             data = dst_h5[f"{dest_freq_path}/slantRangeSpacing"]
             data[...] = bandpass_meta['range_spacing']
             data = dst_h5[f"{dest_freq_path}/processedRangeBandwidth"]
-            data[...] = base_meta_data['rg_bandwidth'] 
+            data[...] = base_meta_data.rg_bandwidth 
             del dst_h5[f"{dest_freq_path}/slantRange"]
             dst_h5.create_dataset(f"{dest_freq_path}/slantRange",
                                   data=bandpass_meta['slant_range'])
