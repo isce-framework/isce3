@@ -79,8 +79,11 @@ runconfig:
             # Interferogram/coherence options (e.g. range looks)
             crossmul: include('crossmul_options', required=False)
 
+            filter_interferogram: include('filter_interferogram_options', required=False)
+
             # Phase unwrapping options (e.g. unwrapping algorithm)
             phase_unwrap: include('phase_unwrap_options', required=False)
+
 
         # To setup type of worker
         worker: include('worker_options', required=False)
@@ -360,8 +363,14 @@ offset_filter_options:
     filter_size_azimuth: int(min=3, required=False)
 
 gaussian_filter_options:
-    # Gaussian filter standard deviation
-    sigma: int(min=0, required=False)
+    # Gaussian filter standard deviation along slant range
+    sigma_range: num(min=0, required=False)
+    # Gaussian filter standard deviation along azimuth
+    sigma_azimuth: num(min=0, required=False)
+    # Number of rows for 1D gaussian kernel
+    filter_size_azimuth: int(min=1, required=False)
+    # Number of columns for 1D gaussian kernel
+    filter_size_range: int(min=1, required=False)
 
 crossmul_options:
     # Path to HDF5 file or directory with coregistered SLCs
@@ -396,6 +405,45 @@ crossmul_options:
 
     # Number of lines per block to process in batch
     rows_per_block: int(min=1, required=False)
+
+filter_interferogram_options:
+    # Path to HDF5 or directory containing complex interferogram
+    # Not required as InSAR workflow allows using intermediate outputs
+    # from previous steps (not user-specified)
+    interferogram_path: str(required=False)
+
+    # Options to set frequency/polarization dependent masks during filtering
+    mask: include('filter_mask_options', required=False)
+
+    # Blocksize, for block-processing usage on insar_filtering.py
+    lines_per_block: int(min=1, required=False)
+
+    # Filter type to be used in interferogram filtering. Available options:
+    # no filter, boxcar, gaussian
+    filter_type: enum('no_filter', 'boxcar', 'gaussian', required=False)
+
+    # Boxcar filter options: kernel sizes in slant range and azimuth
+    boxcar: include('offset_filter_options', required=False)
+
+    # Gaussian filter options: standard deviation in slant range and azimuth
+    gaussian: include('gaussian_filter_options', required=False)
+
+filter_mask_options:
+    # Filepath to one mask to be applied for each frequency and polarization
+    general: str(required=False)
+
+    # Filepath to the masks applied to filter frequency A rasters
+    A: include('freq_pol_masks', required=False)
+
+    # Filepath to the masks applied to filter frequency B rasters
+    B: include('freq_pol_masks', required=False)
+
+freq_pol_masks:
+    # Filepath to masks for filtering HH, HV, VH, and VV raster layers
+    HH: str(required=False)
+    HV: str(required=False)
+    VH: str(required=False)
+    VV: str(required=False)
 
 radar_grid_cubes_options:
 

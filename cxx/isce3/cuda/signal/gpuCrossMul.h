@@ -165,7 +165,7 @@ class isce3::cuda::signal::gpuCrossmul {
         bool _doCommonRangeBandFilter = false;
 
         // number of lines per block
-        size_t _rowsPerBlock = 8192;
+        size_t _rowsPerBlock = 2048;
 
         // upsampling factor
         size_t _oversample = 1;

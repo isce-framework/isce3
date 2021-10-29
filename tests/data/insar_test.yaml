@@ -133,5 +133,10 @@ runconfig:
                 flatten: False
                 oversample: 2
 
+            filter_interferogram:
+                interferogram_path:
+                lines_per_block: 22
+                filter_type: boxcar
+
             phase_unwrap:
                 crossmul_path: @ISCETEST@/winnipeg.h5

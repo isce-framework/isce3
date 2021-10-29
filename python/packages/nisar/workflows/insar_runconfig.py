@@ -1,7 +1,6 @@
-import journal
-
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
-
+import journal
+import os
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -14,8 +13,13 @@ class InsarRunConfig(Geo2rdrRunConfig):
         '''
         Check submodule paths from YAML
         '''
+
         scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
         error_channel = journal.error('InsarRunConfig.yaml_check')
+
+        # Extract frequencies and polarizations to process
+        freq_pols = self.cfg['processing']['input_subset'][
+            'list_of_frequencies']
 
         # If dense_offsets is disabled and rubbersheet is enabled
         # throw an exception and do not run the workflow
@@ -69,10 +73,66 @@ class InsarRunConfig(Geo2rdrRunConfig):
         else:
             self.cfg['processing']['crossmul']['flatten'] = None
 
+        # Check dictionary for interferogram filtering
+        mask_options = self.cfg['processing']['filter_interferogram']['mask']
+
+        # If general mask is provided, check its existence
+        if 'general' in mask_options and mask_options['general'] is not None:
+            if not os.path.isfile(mask_options['general']):
+                err_str = f"The mask file {mask_options['general']} is not a file"
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+        else:
+            # Otherwise check that mask for individual freq/pols are correctly assigned
+            for freq, pol_list in freq_pols.items():
+                if freq in mask_options:
+                   for pol in pol_list:
+                       if pol in mask_options[freq]:
+                          mask_file = mask_options[freq][pol]
+                          if mask_file is not None and not os.path.isfile(mask_file):
+                             err_str = f"{mask_file} is invalid; needs to be a file"
+                             error_channel.log(err_str)
+                             raise ValueError(err_str)
+
+        # Check filter_type and if not allocated, create a default cfg dictionary
+        # filter_type will be present at runtime because is allocated in share/nisar/defaults
+        filter_type = self.cfg['processing']['filter_interferogram']['filter_type']
+        if filter_type != 'no_filter' and filter_type not in \
+                self.cfg['processing']['filter_interferogram']:
+            self.cfg['processing']['filter_interferogram'][filter_type] = {}
+
+        # Based on filter_type, check if related dictionary and/or parameters
+        # are assigned. Note, if filter_type='boxcar', the filter dictionary
+        # is filled by share/nisar/defaults
+        if filter_type == 'gaussian':
+            if 'gaussian' not in self.cfg['processing']['filter_interferogram']:
+                self.cfg['processing']['filter_interferogram'][
+                    'gaussian'] = {}
+            gaussian_options = self.cfg['processing']['filter_interferogram'][
+                'gaussian']
+            if 'sigma_range' not in gaussian_options:
+                gaussian_options['sigma_range'] = 1
+            if 'sigma_azimuth' not in gaussian_options:
+                gaussian_options['sigma_azimuth'] = 1
+            if 'filter_size_range' not in gaussian_options:
+                gaussian_options['filter_size_range'] = 9
+            if 'filter_size_azimuth' not in gaussian_options:
+                gaussian_options['filter_size_azimuth'] = 9
+
+        # set to empty dict and default unwrap values will be used
+        # if phase_unwrap fields not in yaml
+        if 'phase_unwrap' not in self.cfg['processing']:
+            self.cfg['processing']['phase_unwrap'] = {}
+
+        # if phase_unwrap fields not in yaml
+        if self.cfg['processing']['phase_unwrap'] is None:
+            self.cfg['processing']['phase_unwrap'] = {}
+
         # Create default unwrap cfg dict depending on unwrapping algorithm
         algorithm = self.cfg['processing']['phase_unwrap']['algorithm']
         if algorithm not in self.cfg['processing']['phase_unwrap']:
             self.cfg['processing']['phase_unwrap'][algorithm]={}
+
 
         if 'interp_method' not in self.cfg['processing']['geocode']:
             self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
