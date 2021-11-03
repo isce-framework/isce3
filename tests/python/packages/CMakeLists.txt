@@ -12,6 +12,7 @@ nisar/workflows/gslc.py
 nisar/workflows/gpu_check.py
 nisar/workflows/insar.py
 nisar/workflows/filter_interferogram.py
+nisar/workflows/bandpass_insar.py
 nisar/workflows/process_args.py
 nisar/workflows/point_target_info.py
 nisar/workflows/rdr2geo.py
