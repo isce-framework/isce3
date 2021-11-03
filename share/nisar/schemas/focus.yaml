@@ -56,7 +56,6 @@ runconfig:
       ProcessingType: enum('PR', 'UR') # production, urgent response
       MissionId: enum('NISAR')
       ProductAccuracy: enum('P', 'M', 'N', 'F', 'T')
-      CoverageIndicator: enum('F', 'P')
     DebugLevelGroup:
       DebugSwitch: bool()
     Geometry:
@@ -64,6 +63,8 @@ runconfig:
       RelativeOrbitNumber: int(min=1, max=173)
       FrameNumber: int(min=1, max=176)
       OrbitDirection: enum('Descending', 'Ascending')
+      TrackFramePolygon: str(required=False)
+      FullCoverageThresholdPercent: num(min=0.0, required=False)
     worker:
       # Whether or not to use GPU, optional. Defaults to True if available.
       gpu_enabled: bool(required=False)

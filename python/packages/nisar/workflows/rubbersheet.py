@@ -281,8 +281,10 @@ def fill_outliers_holes(offset, output_path, rubbersheet_params):
         offset_smoothed = ndimage.median_filter(offset_filled,
                                                 [window_az, window_rg])
     elif filter_type == 'gaussian':
-        sigma = rubbersheet_params['gaussian']['sigma']
-        offset_smoothed = ndimage.gaussian_filter(offset_filled, sigma)
+        sigma_range = rubbersheet_params['gaussian']['sigma_range']
+        sigma_azimuth = rubbersheet_params['gaussian']['sigma_azimuth']
+        offset_smoothed = ndimage.gaussian_filter(offset_filled, [sigma_azimuth,
+                                                  sigma_range])
     else:
         err_str = "Not a valid filter option to filter rubbersheeted offsets"
         error_channel.log(err_str)

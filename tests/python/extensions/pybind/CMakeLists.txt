@@ -50,6 +50,7 @@ geometry/look_inc_from_sr.py
 antenna/frame.py
 antenna/geometryfunc.py
 antenna/el_pattern_est.py
+antenna/edge_method_cost_func.py
 )
 
 if(WITH_CUDA)

@@ -7,7 +7,7 @@ class Persistence():
     basic class that determines InSAR persistence
     '''
     # init InSAR steps in reverse chronological run order
-    insar_steps = ['geocode', 'unwrap', 'crossmul', 'fine_resample', 'rubbersheet',
+    insar_steps = ['geocode', 'unwrap', 'filter_interferogram','crossmul', 'fine_resample', 'rubbersheet',
                    'dense_offsets', 'coarse_resample', 'geo2rdr', 'rdr2geo', 'h5_prep']
 
     def __init__(self, restart=False):

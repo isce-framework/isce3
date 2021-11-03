@@ -769,7 +769,7 @@ inline void Geocode<T>::_interpolate(
 
         if (flag_apply_rtc) {
             float rtc_value =
-                    rtc_area(rdrY + azimuthFirstLine, rdrX + rangeFirstPixel);
+                    rtc_area(int(rdrY + azimuthFirstLine), int(rdrX + rangeFirstPixel));
             val /= std::sqrt(rtc_value);
             if (out_geo_rtc != nullptr) {
 #pragma omp atomic write
@@ -818,7 +818,7 @@ inline void Geocode<T>::_interpolate(
 
         if (phase_screen_raster != nullptr) {
             phase -= phase_screen_array(
-                    rdrY + azimuthFirstLine, rdrX + rangeFirstPixel);
+                    int(rdrY + azimuthFirstLine), int(rdrX + rangeFirstPixel));
         }
 
         T_out cpxPhase;
@@ -2109,11 +2109,9 @@ void Geocode<T>::_runBlock(
         getDemCoords = isce3::geometry::getDemCoordsDiffEpsg;
     }
 
-    // Load DEM using the block geogrid with a margin of 100 pixels
-    const double margin_x = std::abs(_geoGridSpacingX) * 100;
-    const double margin_y = std::abs(_geoGridSpacingY) * 100;
+    // Load DEM using the block geogrid extents
     auto error_code = loadDemFromProj(dem_raster, minX, maxX, minY, maxY,
-            &dem_interp_block, proj, margin_x, margin_y);
+            &dem_interp_block, proj);
 
     if (error_code != isce3::error::ErrorCode::Success) {
         _saveOptionalFiles(block_x, block_size_x, block_y, block_size_y,

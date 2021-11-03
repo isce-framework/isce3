@@ -12,7 +12,6 @@
 namespace isce3 { namespace antenna { namespace detail {
 
 // Aliases, typedef:
-// fuzzy naming convention by isce3::core::EMtarix module!!!
 using RowMatrixXcf = isce3::core::EMatrix2D<std::complex<float>>;
 
 // Functions:

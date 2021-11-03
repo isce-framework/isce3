@@ -4,6 +4,7 @@
 #include "SphGridType.h"
 #include "geometryfunc.h"
 #include "ElPatternEst.h"
+#include "edge_method_cost_func.h"
 
 namespace py = pybind11;
 
@@ -28,4 +29,5 @@ void addsubmodule_antenna(py::module & m)
 
     // for modules with pure functions
     addbinding_geometryfunc(m_antenna);
+    addbinding_edge_method_cost_func(m_antenna);
 }

@@ -24,7 +24,6 @@ namespace isce3 {
         template<int, typename = double> class DenseMatrix;
         template<int, typename = double> class Vector;
 
-        template<class> class Cube;
         template<typename> class Linspace;
         template<class> class LUT1d;
         template<class> class LUT2d;

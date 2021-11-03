@@ -1265,11 +1265,8 @@ void _RunBlock(const int jmax, const int block_size,
         getDemCoords = getDemCoordsDiffEpsg;
     }
 
-    const int dem_margin_in_pixels = 100;
-
     auto error_code = loadDemFromProj(dem_raster, minX, maxX, minY, maxY,
-            &dem_interp_block, proj, dem_margin_in_pixels,
-            dem_margin_in_pixels);
+            &dem_interp_block, proj);
 
     if (error_code != isce3::error::ErrorCode::Success) {
         return;

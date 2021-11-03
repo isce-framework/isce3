@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <valarray>
 
+#include <pyre/journal.h>
+
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/Poly2d.h>
 #include <isce3/product/Product.h>

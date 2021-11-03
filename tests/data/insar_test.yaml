@@ -103,9 +103,6 @@ runconfig:
                 threshold: 1.0e-9
                 maxiter: 25
 
-            blocksize:
-                y: 1000
-
             dem_margin: 0.1
 
             coarse_resample:
@@ -135,6 +132,11 @@ runconfig:
                 azimuth_looks: 11
                 flatten: False
                 oversample: 2
+
+            filter_interferogram:
+                interferogram_path:
+                lines_per_block: 22
+                filter_type: boxcar
 
             phase_unwrap:
                 crossmul_path: @ISCETEST@/winnipeg.h5

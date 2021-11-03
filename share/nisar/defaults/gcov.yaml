@@ -101,7 +101,10 @@ runconfig:
                 input_terrain_radiometry: beta0
 
                 # OPTIONAL - Minimum RTC area factor in dB
-                rtc_min_value_db: -30
+                rtc_min_value_db:
+
+                # RTC DEM upsampling
+                dem_upsampling: 1
 
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
@@ -131,10 +134,10 @@ runconfig:
                 abs_rad_cal: 1
 
                 # OPTIONAL - Clip values above threshold
-                clip_max: 5.0
+                clip_max:
 
                 # OPTIONAL - Clip values below threshold
-                clip_min: 0.0
+                clip_min:
 
                 # OPTIONAL - Double sampling of the radar-grid
                 # input sampling in the range direction

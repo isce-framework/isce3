@@ -100,10 +100,13 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            radar_grid_cubes: 
-    
+                # OPTIONAL - Set lines to be processed per block
+                lines_per_block: 1000
+
+            radar_grid_cubes:
+
                 # List of heights in meters
-                heights: 
+                heights:
 
                 # OPTIONAL - Same as the geocode group outputEPSG if not provided
                 outputEPSG:
@@ -114,8 +117,8 @@ runconfig:
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
                 y_snap:
@@ -124,7 +127,7 @@ runconfig:
                 x_snap:
 
                 # OPTIONAL - Can control with absolute values or with snap values
-                top_left:        
+                top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
                     y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
@@ -133,15 +136,20 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
                     y_abs:
-                    x_abs:  
+                    x_abs:
 
             geo2rdr:
                 # No topo_path provided. Default to ScratchPath.
                 threshold: 1.0e-8
                 maxiter: 25
+                lines_per_block: 1000
 
-            blocksize:
-                y: 1000
+            rdr2geo:
+                # No topo_path provided. Default to ScratchPath.
+                threshold: 1.0e-7
+                numiter: 25
+                extraiter: 10
+                lines_per_block: 1000
 
             dem_margin:
 
@@ -280,6 +288,17 @@ runconfig:
                 oversample: 2
                 rows_per_block: 8192
 
+
+            filter_interferogram:
+                interferogram_path:
+                mask:
+                    general:
+                lines_per_block: 100
+                filter_type: boxcar
+                boxcar:
+                    filter_size_range: 9
+                    filter_size_azimuth: 9
+                    
             phase_unwrap:
                 # Path to HDF5 file or directory containing the input interferogram
                 # and coherence (normalized magnitude of complex correlation) rasters
@@ -291,3 +310,4 @@ runconfig:
                 correlation_threshold_increments: 0.1
                 # Unwrapping algorithm to use
                 algorithm: icu
+

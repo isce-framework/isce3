@@ -25,9 +25,9 @@ def run(cfg):
     dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
     scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-
-    # Get geo2rdr params
-    geo2rdr_in = cfg['processing']['geo2rdr']
+    threshold = cfg['processing']['geo2rdr']['threshold']
+    numiter = cfg['processing']['geo2rdr']['maxiter']
+    lines_per_block = cfg['processing']['geo2rdr']['lines_per_block']
 
     # Get parameters from SLC
     slc = SLC(hdf5file=sec_hdf5)
@@ -72,8 +72,8 @@ def run(cfg):
             Geo2Rdr = isce3.geometry.Geo2Rdr
 
         geo2rdr_obj = Geo2Rdr(radar_grid, orbit, ellipsoid, doppler_grid,
-                              threshold=geo2rdr_in['threshold'],
-                              numiter=geo2rdr_in['maxiter'])
+                              threshold, numiter, lines_per_block)
+
         # Opem Topo Raster
         topo_path = pathlib.Path(cfg['processing']['geo2rdr']['topo_path'])
         rdr2geo_topo_path = topo_path / 'rdr2geo' / f'freq{freq}' / 'topo.vrt'

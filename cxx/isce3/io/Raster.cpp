@@ -233,7 +233,7 @@ int isce3::io::Raster::setEPSG(int epsgcode)
 // Destructor. When GDALOpenShared() is used the dataset is dereferenced
 // and closed only if the referenced count is less than 1.
 isce3::io::Raster::~Raster() {
-    if (_owner) {
+    if (_owner and _dataset != nullptr) {
         GDALClose( _dataset );
     }
 }

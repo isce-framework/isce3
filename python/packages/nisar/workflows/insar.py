@@ -3,11 +3,12 @@ import time
 
 import journal
 from nisar.workflows import (crossmul, dense_offsets, geo2rdr,
-                                    geocode_insar, h5_prep, rdr2geo,
-                                    resample_slc, rubbersheet, unwrap)
+                                    geocode_insar, h5_prep, filter_interferogram,
+                                    rdr2geo, resample_slc, rubbersheet, unwrap)
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 from nisar.workflows.yaml_argparse import YamlArgparse
+
 
 
 def run(cfg: dict, out_paths: dict, run_steps: dict):
@@ -48,6 +49,11 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
             crossmul.run(cfg, out_paths['RIFG'], 'fine')
         else:
             crossmul.run(cfg, out_paths['RIFG'], 'coarse')
+
+    # Run insar_filter only
+    if run_steps['filter_interferogram'] and \
+        cfg['processing']['filter_interferogram']['filter_type'] != 'no_filter':
+        filter_interferogram.run(cfg, out_paths['RIFG'])
 
     if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])

@@ -1176,6 +1176,12 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         long_name='Elevation angle',
         descr='Elevation angle is defined as angle between LOS vector and norm at the sensor',
         units='degrees')
+    ground_track_velocity_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'groundTrackVelocity', np.float64, cube_shape,
+        zds=zds, yds=yds, xds=xds,
+        long_name='Ground-track velocity',
+        descr='Ground track velocity needed to convert azimuth offsets in pixels to meters',
+        units='m/s')
 
     isce3.geometry.make_radar_grid_cubes(radar_grid,
                                          geogrid,
@@ -1192,6 +1198,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
                                          along_track_unit_vector_x_raster,
                                          along_track_unit_vector_y_raster,
                                          elevation_angle_raster,
+                                         ground_track_velocity_raster,
                                          threshold_geo2rdr,
                                          numiter_geo2rdr,
                                          delta_range)
@@ -1317,6 +1324,12 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         long_name='Elevation angle',
         descr='Elevation angle is defined as angle between LOS vector and norm at the sensor',
         units='degrees')
+    ground_track_velocity_raster = _get_raster_from_hdf5_ds(
+        cube_group, 'groundTrackVelocity', np.float64, cube_shape,
+        zds=zds, yds=yds, xds=xds,
+        long_name='Ground-track velocity',
+        descr='Ground track velocity needed to convert azimuth offsets in pixels to meters',
+        units='m/s')
 
     isce3.geometry.make_geolocation_cubes(radar_grid,
                                           heights,
@@ -1333,6 +1346,7 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
                                           along_track_unit_vector_x_raster,
                                           along_track_unit_vector_y_raster,
                                           elevation_angle_raster,
+                                          ground_track_velocity_raster,
                                           threshold_geo2rdr,
                                           numiter_geo2rdr,
                                           delta_range)

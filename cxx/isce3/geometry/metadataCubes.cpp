@@ -59,7 +59,7 @@ static void writeArray(isce3::io::Raster* raster,
     }
 }
 
-static inline void writeVectorDerivedCubes(const int array_pos_i,
+inline void writeVectorDerivedCubes(const int array_pos_i,
         const int array_pos_j, const double native_azimuth_time,
         const isce3::core::Vec3& target_llh,
         const isce3::core::Vec3& target_proj, const isce3::core::Orbit& orbit,
@@ -76,7 +76,9 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
         isce3::io::Raster* along_track_unit_vector_y_raster,
         isce3::core::Matrix<float>& along_track_unit_vector_y_array,
         isce3::io::Raster* elevation_angle_raster,
-        isce3::core::Matrix<float>& elevation_angle_array)
+        isce3::core::Matrix<float>& elevation_angle_array,
+        isce3::io::Raster* ground_track_velocity_raster,
+        isce3::core::Matrix<double>& ground_track_velocity_array)
 {
 
     const int i = array_pos_i;
@@ -98,6 +100,13 @@ static inline void writeVectorDerivedCubes(const int array_pos_i,
 
     // Get target position in ECEF (target_xyz)
     const isce3::core::Vec3 target_xyz = ellipsoid.lonLatToXyz(target_llh);
+
+    // Ground-track velocity
+    if (ground_track_velocity_raster != nullptr) {
+        const double ground_velocity =
+            target_xyz.norm() * vel_xyz.norm() / sat_xyz.norm();
+        ground_track_velocity_array(i, j) = ground_velocity;
+    }
 
     // Create target-to-sat vector in ECEF
     const isce3::core::Vec3 look_vector_xyz =
@@ -270,6 +279,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* along_track_unit_vector_x_raster,
         isce3::io::Raster* along_track_unit_vector_y_raster,
         isce3::io::Raster* elevation_angle_raster,
+        isce3::io::Raster* ground_track_velocity_raster,
         const double threshold_geo2rdr, const int numiter_geo2rdr,
         const double delta_range)
 {
@@ -311,6 +321,8 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                 getNanArray<float>(along_track_unit_vector_y_raster, geogrid);
         auto elevation_angle_array =
                 getNanArray<float>(elevation_angle_raster, geogrid);
+        auto ground_track_velocity_array =
+                getNanArray<double>(ground_track_velocity_raster, geogrid);
 
         double azimuth_time = radar_grid.sensingMid();
         double native_azimuth_time = radar_grid.sensingMid();
@@ -360,7 +372,8 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                     los_unit_vector_y_raster == nullptr &&
                     along_track_unit_vector_x_raster == nullptr &&
                     along_track_unit_vector_y_raster == nullptr &&
-                    elevation_angle_raster == nullptr) {
+                    elevation_angle_raster == nullptr &&
+                    ground_track_velocity_raster == nullptr) {
                     continue;
                 }
 
@@ -390,8 +403,11 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
                         along_track_unit_vector_x_raster,
                         along_track_unit_vector_x_array,
                         along_track_unit_vector_y_raster,
-                        along_track_unit_vector_y_array, elevation_angle_raster,
-                        elevation_angle_array);
+                        along_track_unit_vector_y_array, 
+                        elevation_angle_raster,
+                        elevation_angle_array,
+                        ground_track_velocity_raster,
+                        ground_track_velocity_array);
             }
         }
 
@@ -407,6 +423,8 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         writeArray(along_track_unit_vector_y_raster,
                    along_track_unit_vector_y_array, height_count);
         writeArray(elevation_angle_raster, elevation_angle_array, height_count);
+        writeArray(ground_track_velocity_raster, ground_track_velocity_array,
+                   height_count);
     }
 
     double geotransform[] = {
@@ -445,6 +463,10 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         elevation_angle_raster->setGeoTransform(geotransform);
         elevation_angle_raster->setEPSG(geogrid.epsg());
     }
+    if (ground_track_velocity_raster != nullptr) {
+        ground_track_velocity_raster->setGeoTransform(geotransform);
+        ground_track_velocity_raster->setEPSG(geogrid.epsg());
+    }
 }
 
 void makeGeolocationGridCubes(
@@ -461,6 +483,7 @@ void makeGeolocationGridCubes(
         isce3::io::Raster* along_track_unit_vector_x_raster,
         isce3::io::Raster* along_track_unit_vector_y_raster,
         isce3::io::Raster* elevation_angle_raster,
+        isce3::io::Raster* ground_track_velocity_raster,
         const double threshold_geo2rdr, const int numiter_geo2rdr,
         const double delta_range)
 {
@@ -501,6 +524,8 @@ void makeGeolocationGridCubes(
                 getNanArrayRadarGrid<float>(along_track_unit_vector_y_raster, radar_grid);
         auto elevation_angle_array =
                 getNanArrayRadarGrid<float>(elevation_angle_raster, radar_grid);
+        auto ground_track_velocity_array =
+                getNanArrayRadarGrid<double>(ground_track_velocity_raster, radar_grid);
 
         auto height = heights[height_count];
         double native_azimuth_time = radar_grid.sensingMid();
@@ -550,7 +575,8 @@ void makeGeolocationGridCubes(
                     los_unit_vector_y_raster == nullptr &&
                     along_track_unit_vector_x_raster == nullptr &&
                     along_track_unit_vector_y_raster == nullptr &&
-                    elevation_angle_raster == nullptr) {
+                    elevation_angle_raster == nullptr &&
+                    ground_track_velocity_raster == nullptr) {
                     continue;
                 }
 
@@ -579,8 +605,11 @@ void makeGeolocationGridCubes(
                         along_track_unit_vector_x_raster,
                         along_track_unit_vector_x_array,
                         along_track_unit_vector_y_raster,
-                        along_track_unit_vector_y_array, elevation_angle_raster,
-                        elevation_angle_array);
+                        along_track_unit_vector_y_array, 
+                        elevation_angle_raster,
+                        elevation_angle_array,
+                        ground_track_velocity_raster,
+                        ground_track_velocity_array);
             }
         }
         writeArray(coordinate_x_raster, coordinate_x_array, height_count);
@@ -595,6 +624,8 @@ void makeGeolocationGridCubes(
         writeArray(along_track_unit_vector_y_raster,
                    along_track_unit_vector_y_array, height_count);
         writeArray(elevation_angle_raster, elevation_angle_array, height_count);
+        writeArray(ground_track_velocity_raster, ground_track_velocity_array, 
+                   height_count);
     }
 }
 }

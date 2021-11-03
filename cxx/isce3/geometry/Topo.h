@@ -142,6 +142,13 @@ public:
      */
     void decimaldegMargin(double deg) { _margin = deg; }
 
+    /**
+     * Set lines to be processed per block
+     *
+     * @param[in] linesPerBlock Lines to be processed per block
+     */
+    void linesPerBlock(size_t linesPerBlock) { _linesPerBlock = linesPerBlock; }
+
     // Get topo processing options
 
     /** Get distance convergence threshold used for processing */
@@ -170,6 +177,9 @@ public:
 
     /** Get margin in decimal degrees */
     double decimaldegMargin() const { return _margin; }
+
+    /** Get linesPerBlock */
+    size_t linesPerBlock() const { return _linesPerBlock; }
 
     /** Get read-only reference to RadarGridParameters */
     const isce3::product::RadarGridParameters & radarGridParameters() const { return _radarGrid; }

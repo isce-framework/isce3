@@ -50,7 +50,7 @@ __host__ gpuSinc2dInterpolator<T>::gpuSinc2dInterpolator(
     // Copy Orbit data to device-side memory and keep device pointer in gpuOrbit
     // object. Device-side copy constructor simply shallow-copies the device
     // pointers when called
-    checkCudaErrors(cudaMemcpy(kernel, &(h_kernel[0]),
+    checkCudaErrors(cudaMemcpy(kernel, h_kernel.data(),
             filter.size() * sizeof(double), cudaMemcpyHostToDevice));
 }
 

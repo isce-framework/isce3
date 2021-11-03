@@ -30,17 +30,6 @@ geometry/Topo.cpp
 geometry/utilities.cu
 image/gpuResampSlc.cu
 image/ResampSlc.cpp
-matchtemplate/ampcor/c2r.cu
-matchtemplate/ampcor/correlate.cu
-matchtemplate/ampcor/detect.cu
-matchtemplate/ampcor/maxcor.cu
-matchtemplate/ampcor/migrate.cu
-matchtemplate/ampcor/nudge.cu
-matchtemplate/ampcor/offsets.cu
-matchtemplate/ampcor/r2c.cu
-matchtemplate/ampcor/refStats.cu
-matchtemplate/ampcor/sat.cu
-matchtemplate/ampcor/tgtStats.cu
 matchtemplate/pycuampcor/cuAmpcorChunk.cu
 matchtemplate/pycuampcor/cuAmpcorController.cu
 matchtemplate/pycuampcor/cuAmpcorParameter.cu

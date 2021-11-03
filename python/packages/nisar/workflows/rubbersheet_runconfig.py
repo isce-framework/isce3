@@ -45,8 +45,10 @@ class RubbersheetRunConfig(RunConfig):
                 self.cfg['processing']['rubbersheet']['median'][
                     'filter_size_azimuth'] = 5
         elif filter_type == 'gaussian':
-            if 'sigma' not in self.cfg['processing']['rubbersheet']['gaussian']:
-                self.cfg['processing']['rubbersheet']['gaussian']['sigma'] = 1
+            if 'sigma_range' not in self.cfg['processing']['rubbersheet']['gaussian']:
+                self.cfg['processing']['rubbersheet']['gaussian']['sigma_range'] = 1
+            if 'sigma_azimuth' not in self.cfg['processing']['rubbersheet']['gaussian']:
+                self.cfg['processing']['rubbersheet']['gaussian']['sigma_azimuth'] = 1
 
         # If dense_offsets_path is None, assume that we run rubbersheet
         # as part of insar.py. In this case, dense_offsets_path comes from

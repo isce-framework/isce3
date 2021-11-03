@@ -11,6 +11,7 @@ nisar/workflows/geocode_insar.py
 nisar/workflows/gslc.py
 nisar/workflows/gpu_check.py
 nisar/workflows/insar.py
+nisar/workflows/filter_interferogram.py
 nisar/workflows/process_args.py
 nisar/workflows/point_target_info.py
 nisar/workflows/rdr2geo.py
@@ -40,12 +41,16 @@ foreach(TESTFILE ${TESTFILES})
     set_property(TEST ${TESTNAME} PROPERTY WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${DIR})
 endforeach()
 
+
 set_tests_properties(test.python.pkg.nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.rdr2geo)
 set_tests_properties(test.python.pkg.nisar.workflows.resample_slc PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.geo2rdr)
 set_tests_properties(test.python.pkg.nisar.workflows.crossmul PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.resample_slc)
+set_tests_properties(test.python.pkg.nisar.workflows.filter_interferogram PROPERTIES
+             DEPENDS test.python.pkg.nisar.workflows.crossmul)
+
 # using rdr2geo outputs as RUNW rasters to confirm geocode run
 # using RUNW HDF5 needed as a verifiable dummy RUNW input
 set_tests_properties(test.python.pkg.nisar.workflows.geocode_insar PROPERTIES

@@ -99,7 +99,7 @@ void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t &,
     /*
      * Computes the transformation matrix from xyz to a local sch frame
      */
-    cartmat_t matschxyzp = {{{-sin(sch[0]/radcur),
+    cartmat_t matschxyzp   {{{-sin(sch[0]/radcur),
                              -(sin(sch[1]/radcur) * cos(sch[0]/radcur)),
                              cos(sch[0]/radcur) * cos(sch[1]/radcur)},
                             {cos(sch[0]/radcur),
