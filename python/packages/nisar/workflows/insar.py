@@ -56,6 +56,11 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         else:
             crossmul.run(cfg, out_paths['RIFG'], 'coarse')
 
+    # Run insar_filter only
+    if run_steps['filter_interferogram'] and \
+        cfg['processing']['filter_interferogram']['filter_type'] != 'no_filter':
+        filter_interferogram.run(cfg, out_paths['RIFG'])
+
     if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 

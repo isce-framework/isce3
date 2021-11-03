@@ -48,6 +48,8 @@ set_tests_properties(test.python.pkg.nisar.workflows.resample_slc PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.geo2rdr)
 set_tests_properties(test.python.pkg.nisar.workflows.crossmul PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.resample_slc)
+set_tests_properties(test.python.pkg.nisar.workflows.filter_interferogram PROPERTIES
+             DEPENDS test.python.pkg.nisar.workflows.crossmul)
 # using rdr2geo outputs as RUNW rasters to confirm geocode run
 # using RUNW HDF5 needed as a verifiable dummy RUNW input
 set_tests_properties(test.python.pkg.nisar.workflows.geocode_insar PROPERTIES
