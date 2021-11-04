@@ -60,6 +60,8 @@ runconfig:
 
             bandpass: include('bandpass_options', required=False)
 
+            ionosphere_correction: include('ionosphere_correction_options', required=False)
+
             rdr2geo: include('rdr2geo_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
@@ -491,6 +493,17 @@ bandpass_options:
     window_shape: num(min=0, required=False)
     range_fft_size: int(min=1, required=False)
 
+ionosphere_correction_options:
+    lines_per_block: int(min=1, required=False)
+    method: enum('split_main_band', required=False)
+    low_bandwidth: num(min=0, required=False)
+    high_bandwidth : num(min=0, required=False)
+    range_fft_size: int(min=1, required=False)
+    window_function: enum('tukey', 'cosine', 'kaiser', required=False)
+    # Shape parameter. For Kaiser, 0 <= shape < Inf.
+    # For Cosine and Tukey, 0 <= shape <= 1
+    window_shape: num(min=0, required=False)
+    
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
     threshold: num(min=0, required=False)
