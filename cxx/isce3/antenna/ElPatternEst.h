@@ -2,6 +2,7 @@
 
 #include <tuple>
 #include <vector>
+#include <optional>
 
 #include <Eigen/Dense>
 
@@ -114,7 +115,7 @@ public:
     tuple5_t powerPattern2way(const Eigen::Ref<const RowMatrixXcf>& echo_mat,
             double sr_spacing, double chirp_rate, double chirp_dur,
             std::optional<double> az_time = {}, int size_avg = 8,
-            bool inc_corr = true);
+            bool inc_corr = true) const;
 
     /**
      * Estimated averaged one-way time-series power pattern in Elevation from
@@ -150,7 +151,7 @@ public:
     tuple5_t powerPattern1way(const Eigen::Ref<const RowMatrixXcf>& echo_mat,
             double sr_spacing, double chirp_rate, double chirp_dur,
             std::optional<double> az_time = {}, int size_avg = 8,
-            bool inc_corr = true);
+            bool inc_corr = true) const;
 
     /**
      * Get raised-cosine window pedestal set at the constructor.
@@ -185,7 +186,7 @@ private:
      */
     tuple4_t _getCalibPowLinear(const Eigen::Ref<const RowMatrixXcf>& echo_mat,
             double sr_spacing, double chirp_rate, double chirp_dur,
-            std::optional<double> az_time, int size_avg, bool inc_corr);
+            std::optional<double> az_time, int size_avg, bool inc_corr) const;
 
     // members
 protected:

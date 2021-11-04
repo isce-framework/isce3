@@ -37,7 +37,7 @@ std::vector<T> genRaisedCosineWin(int size, double ped)
     return rc_win;
 }
 
-std::vector<std::complex<float>> genRcosWinChirp(double sample_freq,
+inline std::vector<std::complex<float>> genRcosWinChirp(double sample_freq,
         double chirp_slope, double chirp_dur, double win_ped, bool norm)
 {
     // check the arguments
@@ -67,7 +67,7 @@ std::vector<std::complex<float>> genRcosWinChirp(double sample_freq,
     return chp;
 }
 
-Eigen::ArrayXd meanRgCompEchoPower(
+inline Eigen::ArrayXd meanRgCompEchoPower(
         const Eigen::Ref<const RowMatrixXcf>& echo_mat,
         const std::vector<std::complex<float>>& chirp_ref)
 {
@@ -99,7 +99,7 @@ Eigen::ArrayXd meanRgCompEchoPower(
     return mean_pow;
 }
 
-std::tuple<Eigen::ArrayXd, Eigen::ArrayXd> rangeCalibAvgEchoPower(
+inline std::tuple<Eigen::ArrayXd, Eigen::ArrayXd> rangeCalibAvgEchoPower(
         const Eigen::Ref<const Eigen::ArrayXd>& echo_pow, double rg_start,
         double rg_spacing, int size_avg)
 {

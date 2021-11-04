@@ -51,6 +51,7 @@ antenna/frame.py
 antenna/geometryfunc.py
 antenna/el_pattern_est.py
 antenna/edge_method_cost_func.py
+#antenna/el_null_range_est.py
 )
 
 if(WITH_CUDA)

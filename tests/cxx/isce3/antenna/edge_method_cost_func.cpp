@@ -5,7 +5,7 @@
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 
-#include <isce3/antenna/edge_method_cost_func.h>
+#include <isce3/antenna/EdgeMethodCostFunc.h>
 #include <isce3/core/Poly1d.h>
 #include <isce3/math/polyfunc.h>
 

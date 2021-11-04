@@ -1,11 +1,10 @@
-#include "edge_method_cost_func.h"
+#include "EdgeMethodCostFunc.h"
 
 #include <optional>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <isce3/antenna/edge_method_cost_func.h>
 #include <isce3/core/Linspace.h>
 #include <isce3/core/Poly1d.h>
 

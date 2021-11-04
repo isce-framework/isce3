@@ -4,7 +4,7 @@
 
 #include <Eigen/Dense>
 
-#include <isce3/antenna/edge_method_cost_func.h>
+#include <isce3/antenna/EdgeMethodCostFunc.h>
 #include <isce3/except/Error.h>
 #include <isce3/math/RootFind1dNewton.h>
 #include <isce3/math/polyfunc.h>

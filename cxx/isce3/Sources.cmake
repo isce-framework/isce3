@@ -1,6 +1,9 @@
 set(SRCS
-antenna/edge_method_cost_func.cpp
+antenna/detail/BinarySearchFunc.cpp
 antenna/ElPatternEst.cpp
+antenna/ElNullAnalyses.cpp
+antenna/ElNullRangeEst.cpp
+antenna/EdgeMethodCostFunc.cpp
 antenna/geometryfunc.cpp
 core/Attitude.cpp
 core/Baseline.cpp

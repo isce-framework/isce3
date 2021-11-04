@@ -1,4 +1,4 @@
-/** @file edge_method_cost_func.h
+/** @file EdgeMethodCostFunc.h
  * Cost functions used in EL antenna pointing estimation via edge method
  */
 #pragma once

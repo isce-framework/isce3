@@ -1,6 +1,7 @@
 set(SRCS
 antenna/antenna.cpp
-antenna/edge_method_cost_func.cpp
+antenna/EdgeMethodCostFunc.cpp
+antenna/ElNullRangeEst.cpp
 antenna/ElPatternEst.cpp
 antenna/Frame.cpp
 antenna/geometryfunc.cpp
