@@ -149,16 +149,16 @@ runconfig:
                 # FFT size in range. 
                 range_fft_size: 
 
-            ionosphere_correction:
-                lines_per_block: 1000
-                method: split_main_band
-                low_bandwidth: 5000000
-                high_bandwidth : 5000000
-                range_fft_size:
-                window_function: tukey
-                # Shape parameter. For Kaiser, 0 <= shape < Inf.
-                # For Cosine and Tukey, 0 <= shape <= 1.
-                window_shape: 0.25               
+            ionosphere_phase_correction:
+                enabled: True
+                range_split_spectum:
+                   lines_per_block: 1000
+                   spectral_diversity: split_main_band
+                   range_fft_size:
+                   window_function: tukey
+                   # Shape parameter. For Kaiser, 0 <= shape < Inf.
+                   # For Cosine and Tukey, 0 <= shape <= 1.
+                   window_shape: 0.25
 
             geo2rdr:
                 # No topo_path provided. Default to ScratchPath.

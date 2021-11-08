@@ -60,7 +60,7 @@ runconfig:
 
             bandpass: include('bandpass_options', required=False)
 
-            ionosphere_correction: include('ionosphere_correction_options', required=False)
+            ionosphere_phase_correction: include('ionosphere_phase_correction_options', required=False)
 
             rdr2geo: include('rdr2geo_options', required=False)
 
@@ -493,17 +493,26 @@ bandpass_options:
     window_shape: num(min=0, required=False)
     range_fft_size: int(min=1, required=False)
 
-ionosphere_correction_options:
+range_split_spectrum_options:
+    # Number of lines per block for block processing)
     lines_per_block: int(min=1, required=False)
-    method: enum('split_main_band', required=False)
-    low_bandwidth: num(min=0, required=False)
-    high_bandwidth : num(min=0, required=False)
+    # 'split_main_band' splits the main range bandwidth into a low and high subband
+    # being 1/3 (fixed for now) of the total main range spectrum.
+    # 'main_side_band' uses the additional NISAR 5 MHz side-band to estimate the
+    # ionosphere phase screen. Main and side-bands are intended to be at the same polarization
+    spectral_diversity: enum('split_main_band', 'main_side_band', required=False)
     range_fft_size: int(min=1, required=False)
+    # Type of window used to taper range spectrum
     window_function: enum('tukey', 'cosine', 'kaiser', required=False)
     # Shape parameter. For Kaiser, 0 <= shape < Inf.
     # For Cosine and Tukey, 0 <= shape <= 1
     window_shape: num(min=0, required=False)
-    
+
+ionosphere_phase_correction_options:
+    # Boolean flag to enable/disable ionosphere phase correction
+    enabled: bool(required=False)
+    range_split_spectrum: include('range_split_spectrum_options', required=False)
+
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
     threshold: num(min=0, required=False)
