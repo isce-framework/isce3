@@ -96,7 +96,7 @@ def get_chirp(cfg: Struct, raw: Raw, frequency: str, tx: str):
     window = get_window(cfg.processing.range_window, msg="Range window: ")
     chirp *= window(len(chirp))
     log.info("Normalizing chirp to unit white noise gain.")
-    return chirp / np.linalg.norm(chirp)**2
+    return chirp / np.linalg.norm(chirp)
 
 
 def parse_rangecomp_mode(mode: str):
