@@ -36,7 +36,7 @@ TEST_F(Poly2dTest, Constant) {
         double value = poly.eval(0.0, i*1.0);
         EXPECT_DOUBLE_EQ(value, refval);
     }
-    
+
     fails += ::testing::Test::HasFailure();
 }
 
@@ -52,7 +52,7 @@ TEST_F(Poly2dTest, MeanShift)
     for(size_t i=0; i<5; i++)
     {
         isce3::core::Poly2d newpoly(refpoly);
-        newpoly.rangeMean = 0.5 * i * i;
+        newpoly.xMean = 0.5 * i * i;
 
         double refval = refpoly.eval(0.0, 2.0 * i);
         double newval = newpoly.eval(0.0, 2.0 * i + 0.5 * i * i);
@@ -74,7 +74,7 @@ TEST_F(Poly2dTest, NormShift)
     for(size_t i=1; i<6; i++)
     {
         isce3::core::Poly2d newpoly(refpoly);
-        newpoly.rangeNorm = i * i * 1.0;
+        newpoly.xNorm = i * i * 1.0;
 
         double refval = refpoly.eval(0.0, 2.5);
         double newval = newpoly.eval(0.0, 2.5 * i * i);

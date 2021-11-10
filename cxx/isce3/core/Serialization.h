@@ -253,12 +253,12 @@ inline void loadFromH5(isce3::io::IGroup & group, Poly2d & poly, std::string nam
     isce3::io::loadFromH5(group, name, poly.coeffs);
 
     // Set other polynomial properties
-    poly.rangeOrder = poly.coeffs.size() - 1;
-    poly.azimuthOrder = 0;
-    poly.rangeMean = 0.0;
-    poly.azimuthMean = 0.0;
-    poly.rangeNorm = 1.0;
-    poly.azimuthNorm = 1.0;
+    poly.xOrder = poly.coeffs.size() - 1;
+    poly.yOrder = 0;
+    poly.xMean = 0.0;
+    poly.yMean = 0.0;
+    poly.xNorm = 1.0;
+    poly.yNorm = 1.0;
 }
 
 // ------------------------------------------------------------------------

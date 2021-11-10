@@ -12,6 +12,7 @@ core/linspace.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
+core/poly2d.py
 core/projections.py
 core/quaternion.py
 core/statevector.py

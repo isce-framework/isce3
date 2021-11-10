@@ -1,8 +1,3 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
-
 #pragma once
 
 #include "forward.h"
@@ -12,60 +7,60 @@
 #include <vector>
 #include "Constants.h"
 
-/** Data structure for representing 1D polynomials
+/** Data structure for representing 2D polynomials
  *
- * Poly2D is function of the form 
+ * Poly2D is function of the form
  * \f[
- *     f\left( y, x \right) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} a_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i 
- \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j 
+ *     f\left( y, x \right) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} a_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i
+ \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j
  * \f]
  *
- * where \f$a_ij\f$ represents the coefficients, \f$\mu_x\f$ and \f$\mu_y\f$ represent the means and 
+ * where \f$a_ij\f$ represents the coefficients, \f$\mu_x\f$ and \f$\mu_y\f$ represent the means and
  * \f$\sigma_x\f$ and \f$\sigma_y\f$ represent the norms*/
 class isce3::core::Poly2d {
 public:
 
     /** Order of polynomial in range or x*/
-    int rangeOrder;
+    int xOrder;
     /** Order of polynomial in azimuth or y*/
-    int azimuthOrder;
+    int yOrder;
     /** Mean in range or x direction*/
-    double rangeMean;
+    double xMean;
     /** Mean in azimuth or y direction*/
-    double azimuthMean;
+    double yMean;
     /** Norm in range or x direction*/
-    double rangeNorm;
+    double xNorm;
     /** Norm in azimuth or y direction*/
-    double azimuthNorm;
+    double yNorm;
     /**Linearized vector of coefficients in row-major format*/
     std::vector<double> coeffs;
 
     /** Simple constructor
      *
-     * @param[in] ro Range Order
-     * @param[in] ao Azimuth Order
-     * @param[in] rm Range Mean
-     * @param[in] am Azimuth Mean
-     * @param[in] rn Range Norm
-     * @param[in] an Azimuth Norm*/
-    Poly2d(int ro, int ao, double rm, double am, double rn, double an) : rangeOrder(ro), 
-                                                                         azimuthOrder(ao), 
-                                                                         rangeMean(rm), 
-                                                                         azimuthMean(am),
-                                                                         rangeNorm(rn), 
-                                                                         azimuthNorm(an), 
-                                                                         coeffs((ro+1)*(ao+1)) 
+     * @param[in] xo x/Range Order
+     * @param[in] yo y/Azimuth Order
+     * @param[in] xm x/Range Mean
+     * @param[in] ym y/Azimuth Mean
+     * @param[in] xn x/Range Norm
+     * @param[in] yn y/Azimuth Norm*/
+    Poly2d(int xo, int yo, double xm, double ym, double xn, double yn) : xOrder(xo),
+                                                                         yOrder(yo),
+                                                                         xMean(xm),
+                                                                         yMean(ym),
+                                                                         xNorm(xn),
+                                                                         yNorm(yn),
+                                                                         coeffs((xo+1)*(yo+1))
                                                                          {}
 
     /** Empty constructor*/
     Poly2d() : Poly2d(-1,-1,0.,0.,1.,1.) {}
 
-    /** Copy constructor 
+    /** Copy constructor
      *
      * @param[in] p Poly2D object*/
-    Poly2d(const Poly2d &p) : rangeOrder(p.rangeOrder), azimuthOrder(p.azimuthOrder), 
-                              rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
-                              rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), 
+    Poly2d(const Poly2d &p) : xOrder(p.xOrder), yOrder(p.yOrder),
+                              xMean(p.xMean), yMean(p.yMean),
+                              xNorm(p.xNorm), yNorm(p.yNorm),
                               coeffs(p.coeffs) {}
 
     /** Assignment operator*/
@@ -77,8 +72,8 @@ public:
     /**Get coefficient by indices*/
     inline double getCoeff(int row, int col) const;
 
-    /**Evaluate polynomial at given y,x*/
-    double eval(double azi, double rng) const;
+    /**Evaluate polynomial at given y/azimuth/row ,x/range/col*/
+    double eval(double y, double x) const;
 
     /**Printing for debugging*/
     void printPoly() const;
@@ -86,34 +81,34 @@ public:
 
 isce3::core::Poly2d & isce3::core::Poly2d::
 operator=(const Poly2d &rhs) {
-    rangeOrder = rhs.rangeOrder;
-    azimuthOrder = rhs.azimuthOrder;
-    rangeMean = rhs.rangeMean;
-    azimuthMean = rhs.azimuthMean;
-    rangeNorm = rhs.rangeNorm;
-    azimuthNorm = rhs.azimuthNorm;
+    xOrder = rhs.xOrder;
+    yOrder = rhs.yOrder;
+    xMean = rhs.xMean;
+    yMean = rhs.yMean;
+    xNorm = rhs.xNorm;
+    yNorm = rhs.yNorm;
     coeffs = rhs.coeffs;
     return *this;
 }
 
 /**
- * @param[in] row azimuth/y index 
+ * @param[in] row azimuth/y index
  * @param[in] col range/x index
  * @param[in] val Coefficient value*/
 void isce3::core::Poly2d::
 setCoeff(int row, int col, double val) {
-    if ((row < 0) || (row > azimuthOrder)) {
-        std::string errstr = "Poly2d::setCoeff - Trying to set coefficient for row " + 
-                             std::to_string(row+1) + " out of " + 
-                             std::to_string(azimuthOrder+1);
+    if ((row < 0) || (row > yOrder)) {
+        std::string errstr = "Poly2d::setCoeff - Trying to set coefficient for row " +
+                             std::to_string(row+1) + " out of " +
+                             std::to_string(yOrder+1);
         throw std::out_of_range(errstr);
     }
-    if ((col < 0) || (col > rangeOrder)) {
+    if ((col < 0) || (col > xOrder)) {
         std::string errstr = "Poly2d::setCoeff - Trying to set coefficient for col " +
-                             std::to_string(col+1) + " out of " + std::to_string(rangeOrder+1);
+                             std::to_string(col+1) + " out of " + std::to_string(xOrder+1);
         throw std::out_of_range(errstr);
     }
-    coeffs[IDX1D(row,col,rangeOrder+1)] = val;
+    coeffs[IDX1D(row,col,xOrder+1)] = val;
 }
 
 /**
@@ -121,16 +116,16 @@ setCoeff(int row, int col, double val) {
  * @param[in] col range/x index*/
 double isce3::core::Poly2d::
 getCoeff(int row, int col) const {
-    if ((row < 0) || (row > azimuthOrder)) {
+    if ((row < 0) || (row > yOrder)) {
         std::string errstr = "Poly2d::getCoeff - Trying to get coefficient for row " +
-                             std::to_string(row+1) + " out of " + 
-                             std::to_string(azimuthOrder+1);
+                             std::to_string(row+1) + " out of " +
+                             std::to_string(yOrder+1);
         throw std::out_of_range(errstr);
     }
-    if ((col < 0) || (col > rangeOrder)) {
-        std::string errstr = "Poly2d::getCoeff - Trying to get coefficient for col " + 
-                             std::to_string(col+1) + " out of " + std::to_string(rangeOrder+1);
+    if ((col < 0) || (col > xOrder)) {
+        std::string errstr = "Poly2d::getCoeff - Trying to get coefficient for col " +
+                             std::to_string(col+1) + " out of " + std::to_string(xOrder+1);
         throw std::out_of_range(errstr);
     }
-    return coeffs[IDX1D(row,col,rangeOrder+1)];
+    return coeffs[IDX1D(row,col,xOrder+1)];
 }
