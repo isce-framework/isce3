@@ -11,7 +11,7 @@ import numpy as np
 
 from osgeo import osr
 
-import pybind_isce3 as isce3
+import isce3
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
 

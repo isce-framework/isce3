@@ -13,7 +13,7 @@ import h5py
 import journal
 import numpy as np
 
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5

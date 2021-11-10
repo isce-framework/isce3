@@ -6,7 +6,7 @@ from nisar.products.readers import Base
 import numpy as np
 import pyre
 import journal
-import pybind_isce3 as isce
+import isce3
 import re
 
 # TODO some CSV logger
@@ -126,7 +126,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
             T = group["chirpDuration"][()]
             K = group["chirpSlope"][()]
             dr = group["slantRangeSpacing"][()]
-        fs = isce.core.speed_of_light / (2 * dr)
+        fs = isce3.core.speed_of_light / (2 * dr)
         fc = self.getCenterFrequency(frequency, tx)
         return fc, fs, K, T
 
@@ -139,13 +139,13 @@ class RawBase(Base, family='nisar.productreader.raw'):
     def getOrbit(self):
         path = f"{self.TelemetryPath}/orbit"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
-            orbit = isce.core.Orbit.load_from_h5(f[path])
+            orbit = isce3.core.Orbit.load_from_h5(f[path])
         return orbit
 
     def getAttitude(self):
         path = f"{self.TelemetryPath}/attitude"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
-            q = isce.core.Attitude.load_from_h5(f[path])
+            q = isce3.core.Attitude.load_from_h5(f[path])
         return q
 
     def getRanges(self, frequency='A', tx='H'):
@@ -155,7 +155,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
             r = np.asarray(group["slantRange"])
             dr = group["slantRangeSpacing"][()]
         nr = len(r)
-        out = isce.core.Linspace(r[0], dr, nr)
+        out = isce3.core.Linspace(r[0], dr, nr)
         assert np.isclose(out[-1], r[-1])
         return out
 
@@ -186,7 +186,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
             # FIXME product spec changed UTCTime -> UTCtime
             name = find_case_insensitive(f[txpath], "UTCtime")
             t = np.asarray(f[txpath][name])
-            epoch = isce.io.get_ref_epoch(f[txpath], name)
+            epoch = isce3.io.get_ref_epoch(f[txpath], name)
         return epoch, t
 
 
@@ -202,7 +202,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
     # since PRF isn't necessarily constant.  Return pulse times with grid?
     def getRadarGrid(self, frequency='A', tx='H', prf=None):
         fc = self.getCenterFrequency(frequency, tx)
-        wvl = isce.core.speed_of_light / fc
+        wvl = isce3.core.speed_of_light / fc
         r = self.getRanges(frequency, tx)
         epoch, t = self.getPulseTimes(frequency, tx)
         nt = len(t)
@@ -212,7 +212,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         else:
             prf = (nt - 1) / (t[-1] - t[0])
         side = self.identification.lookDirection
-        grid = isce.product.RadarGridParameters(
+        grid = isce3.product.RadarGridParameters(
             t[0], wvl, prf, r[0], r.spacing, side, nt, len(r), epoch)
         return t, grid
 

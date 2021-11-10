@@ -1,6 +1,6 @@
 import journal
 
-import pybind_isce3 as isce
+import isce3
 from nisar.workflows.runconfig import RunConfig
 
 class GSLCRunConfig(RunConfig):
@@ -21,6 +21,6 @@ class GSLCRunConfig(RunConfig):
             (max of X and Y pixel spacing).
             '''
             dem_file = self.cfg['DynamicAncillaryFileGroup']['DEMFile']
-            dem_raster = isce.io.Raster(dem_file)
+            dem_raster = isce3.io.Raster(dem_file)
             dem_margin = 50 * max([dem_raster.dx, dem_raster.dy])
             self.cfg['processing']['dem_margin'] = dem_margin
