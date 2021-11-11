@@ -154,6 +154,8 @@ runconfig:
                 range_split_spectum:
                    lines_per_block: 1000
                    spectral_diversity: split_main_band
+                   low_bandwidth:
+                   high_bandwidth:
                    range_fft_size:
                    window_function: tukey
                    # Shape parameter. For Kaiser, 0 <= shape < Inf.
