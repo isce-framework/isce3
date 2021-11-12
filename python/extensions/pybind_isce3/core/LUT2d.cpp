@@ -123,6 +123,10 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
             py::arg("epoch"),
             py::arg("units") = "")
 
+        .def("contains", &LUT2d<T>::contains,
+            "Check if point (y, x) resides in domain of LUT",
+            py::arg("y"),
+            py::arg("x"))
         .def_property_readonly("have_data", &LUT2d<T>::haveData)
         .def_property_readonly("ref_value", &LUT2d<T>::refValue)
         .def_property_readonly("x_start",   &LUT2d<T>::xStart)

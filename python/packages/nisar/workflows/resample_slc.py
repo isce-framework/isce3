@@ -81,7 +81,7 @@ def run(cfg, resample_type):
         else:
             Resamp = isce3.image.ResampSlc
 
-        resamp_obj = Resamp(radar_grid, native_doppler, radar_grid.wavelength)
+        resamp_obj = Resamp(radar_grid, native_doppler)
 
         # If lines per tile is > 0, assign it to resamp_obj
         if resamp_args['lines_per_tile']:

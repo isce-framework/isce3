@@ -45,7 +45,7 @@ public:
      * Constructor from an isce3::product::RadarGridParameters (no flattening)
      */
     ResampSlc(const isce3::product::RadarGridParameters& rdr_grid,
-              const isce3::core::LUT2d<double>& doppler, double wvl);
+              const isce3::core::LUT2d<double>& doppler);
 
     /**
      * Constructor from an isce3::product::RadarGridParameters and reference

@@ -20,7 +20,7 @@ def test_run():
     slc = SLC(hdf5file=h5_path)
 
     # init resamp obj
-    resamp = isce3.image.ResampSlc(grid, slc.getDopplerCentroid(), grid.wavelength)
+    resamp = isce3.image.ResampSlc(grid, slc.getDopplerCentroid())
     resamp.lines_per_tile = 249
 
     # prepare rasters
@@ -47,7 +47,7 @@ def test_validate():
 
     # load reference data and avoid edges
     ref_slc = np.fromfile(iscetest.data+'warped_envisat.slc', dtype=np.complex64).reshape(500,500)[20:-20,20:-20]
-    
+
     # get normalized error
     abs_error = np.abs(np.sum(test_slc - ref_slc) / test_slc.size)
 
