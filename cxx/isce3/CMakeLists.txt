@@ -29,7 +29,7 @@ target_link_libraries(${LISCE} PRIVATE
     )
 
 target_compile_features(${LISCE} INTERFACE
-    cxx_std_14
+    cxx_std_17
     )
 
 target_include_directories(${LISCE} PUBLIC
