@@ -1,4 +1,6 @@
+import h5py
 import journal
+import os
 from nisar.workflows.runconfig import RunConfig
 from nisar.products.readers import SLC
 
@@ -57,5 +59,12 @@ class SplitSpectrumRunConfig(RunConfig):
                 iono_cfg['high_bandwidth'] = rg_side_bandwidth
 
             # Check that main and side-band are at the same polarization. If not, throw an error.
-            # Note, ref_slc.getSwathMetadata(freq) does not return list of polarizations.
-            # TO DO: Modify the Swath class to return listOfPolarizations for freqA and freqB
+            src_h5 = h5py.File(self.cfg['InputFileGroup']['InputFilePath'], 'r')
+            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
+            pols_freqA = src_h5[pol_path][()]
+            pols_freqB = src_h5[pol_path.replace('A', 'B')][()]
+            src_h5.close()
+            if len(set.intersection(set(pols_freqA), set(pols_freqB))) == 0:
+                err_str = "No common polarization between frequency A and B rasters"
+                error_channel.log(err_str)
+                raise FileNotFoundError(err_str)
