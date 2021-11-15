@@ -374,8 +374,8 @@ void Geocode<T>::geocodeInterp(
             if (std::isnan(rtc_geogrid_upsampling))
                 rtc_geogrid_upsampling = 1;
 
-            isce3::geometry::rtcMemoryMode rtc_memory_mode =
-                    isce3::geometry::RTC_AUTO;
+            isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY;
             int radar_grid_nlooks = 1;
             computeRtc(demRaster, *rtc_raster, radar_grid, _orbit, _doppler,
                     _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
@@ -728,6 +728,8 @@ inline void Geocode<T>::_interpolate(
         isce3::io::Raster* out_geo_rtc,
         isce3::core::Matrix<float>& out_geo_rtc_array)
 {
+
+    using isce3::math::complex_operations::operator*;
 
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
@@ -1677,13 +1679,13 @@ void Geocode<T>::geocodeAreaProj(
             else if (std::isnan(rtc_geogrid_upsampling))
                 rtc_geogrid_upsampling = 2 * geogrid_upsampling;
 
-            isce3::geometry::rtcMemoryMode rtc_memory_mode;
+            isce3::core::MemoryModeBlockY rtc_memory_mode;
             if (geocode_memory_mode == geocodeMemoryMode::AUTO)
-                rtc_memory_mode = isce3::geometry::RTC_AUTO;
+                rtc_memory_mode = isce3::core::MemoryModeBlockY::AutoBlocksY;
             else if (geocode_memory_mode == geocodeMemoryMode::SINGLE_BLOCK)
-                rtc_memory_mode = isce3::geometry::RTC_SINGLE_BLOCK;
+                rtc_memory_mode = isce3::core::MemoryModeBlockY::SingleBlockY;
             else
-                rtc_memory_mode = isce3::geometry::RTC_BLOCKS_GEOGRID;
+                rtc_memory_mode = isce3::core::MemoryModeBlockY::MultipleBlocksY;
 
             computeRtc(dem_raster, *rtc_raster, radar_grid_cropped, _orbit,
                     _doppler, _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
@@ -2014,6 +2016,8 @@ void Geocode<T>::_runBlock(
         bool flag_upsample_radar_grid, geocodeMemoryMode geocode_memory_mode,
         pyre::journal::info_t& info)
 {
+
+    using isce3::math::complex_operations::operator*;
 
     // start (az) and r0 at the outer edge of the first pixel
     const double pixazm = radar_grid.azimuthTimeInterval();

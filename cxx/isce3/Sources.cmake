@@ -63,6 +63,7 @@ io/IH5.cpp
 io/IH5Dataset.cpp
 io/Raster.cpp
 math/Bessel.cpp
+math/Stats.cpp
 math/polyfunc.cpp
 math/RootFind1dNewton.cpp
 math/RootFind1dSecant.cpp

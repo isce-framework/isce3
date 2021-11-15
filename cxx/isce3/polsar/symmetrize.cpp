@@ -3,7 +3,7 @@
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/geocode/GeocodeCov.h>
 #include <isce3/geometry/RTC.h>
-#include <isce3/math/ComplexMultiply.h>
+#include <isce3/math/complexOperations.h>
 
 namespace isce3 { namespace polsar {
 
@@ -54,7 +54,7 @@ void _symmetrizeCrossPolChannels(isce3::io::Raster& hv_raster,
         const int vh_raster_band, const int output_raster_band)
 {
 
-    using namespace isce3::math::complex_multiply;
+    using namespace isce3::math::complex_operations;
 
     // Read HV array
     isce3::core::Matrix<T> hv_array(block_length, block_width);

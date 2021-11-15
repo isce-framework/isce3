@@ -127,7 +127,8 @@ io/Raster.h
 io/Raster.icc
 io/Serialization.h
 math/Bessel.h
-math/ComplexMultiply.h
+math/complexOperations.h
+math/Stats.h
 math/detail/RootFind1dBase.h
 math/polyfunc.h
 math/RootFind1dNewton.h
