@@ -10,7 +10,7 @@ import numpy as np
 import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
-from nisar.workflows.bandpass_insar_runconfig import BandpassRunConfig
+from nisar.workflows.bandpass_insar_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.h5 import cp_h5_meta_data
 from isce3.splitspectrum import splitspectrum
@@ -193,12 +193,14 @@ def run(cfg: dict):
 
 if __name__ == "__main__":
     '''
-    run bandpass from command line
+    Run split-spectrum from command line
     '''
     # load command line args
-    bandpass_parser = YamlArgparse()
-    args = bandpass_parser.parse()
+    split_spectrum_parser = YamlArgparse()
+    args = split_spectrum_parser.parse()
+
     # get a runconfig dict from command line args
-    bandpass_runconfig = BandpassRunConfig(args)
+    split_spectrum_runconfig = SplitSpectrumRunConfig(args)
+
     # run bandpass
-    run(bandpass_runconfig.cfg)
+    run(split_spectrum_runconfig.cfg)
