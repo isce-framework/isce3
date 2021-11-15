@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-import os
 import pathlib
 import time
 import h5py
@@ -9,7 +7,6 @@ import numpy as np
 
 import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
 from nisar.workflows.bandpass_insar_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.h5 import cp_h5_meta_data
@@ -24,13 +21,16 @@ def run(cfg: dict):
     ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
     sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    blocksize = cfg['processing']['ionosphere_correction']['lines_per_block']
-    method = cfg['processing']['ionosphere_correction']['method']
-    fft_size = cfg['processing']['ionosphere_correction']['range_fft_size']
-    window_function = cfg['processing']['ionosphere_correction']['window_function']
-    window_shape = cfg['processing']['ionosphere_correction']['window_shape']
-    low_bandwidth = cfg['processing']['ionosphere_correction']['low_bandwidth']
-    high_bandwidth = cfg['processing']['ionosphere_correction']['high_bandwidth']
+
+    # Extract range split spectrum dictionary and corresponding parameters
+    split_cfg = cfg['processing']['ionosphere_phase_correction']['range_split_spectrum']
+    blocksize = split_cfg['lines_per_block']
+    method = split_cfg['spectral_diversity']
+    fft_size = split_cfg['range_fft_size']
+    window_function = split_cfg['window_function']
+    window_shape = split_cfg['window_shape']
+    low_bandwidth = split_cfg['low_bandwidth']
+    high_bandwidth = split_cfg['high_bandwidth']
 
     scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
 
