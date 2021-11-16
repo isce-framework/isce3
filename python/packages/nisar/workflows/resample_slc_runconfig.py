@@ -56,9 +56,9 @@ class ResampleSlcRunConfig(RunConfig):
             # use the HH or VV rubbersheeted offsets to fine
             # resample the secondary SLC. Check for the offsets existence
             for freq in frequencies:
-                for pol in ['HH', 'VV']:
+                for pol in set.intersection(set(['HH', 'VV']), set(freq_pols[freq])):
                     rg_off = os.path.join(offsets_dir,
-                                          'rubbersheeted_offsets',
+                                          'rubbersheet_offsets',
                                           f'freq{freq}', pol, 'range.off.vrt')
                     az_off = rg_off.replace('range', 'azimuth')
                     if not os.path.exists(rg_off) or not os.path.exists(az_off):
