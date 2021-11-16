@@ -35,7 +35,7 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
             py::arg("orbit"),
             py::arg("ellipsoid"),
             py::arg("doppler") = isce3::core::LUT2d<double>(),
-            py::arg("threshold") = 0.05,
+            py::arg("threshold") = 1e-8,
             py::arg("numiter") = 25,
             py::arg("lines_per_block") = 1000)
         .def("geo2rdr", py::overload_cast<isce3::io::Raster &, const std::string &,
