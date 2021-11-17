@@ -8,7 +8,7 @@ import journal
 
 from osgeo import osr
 
-import pybind_isce3 as isce
+import isce3
 from nisar.products.readers import SLC
 
 
@@ -93,7 +93,7 @@ def create(cfg, frequency_group = None, frequency = None,
         spacing_y = default_spacing_y
 
     if spacing_x is None or spacing_y is None:
-        dem_raster = isce.io.Raster(dem_file)
+        dem_raster = isce3.io.Raster(dem_file)
 
         # Set pixel spacing using the input DEM (same EPSG)
         if epsg == dem_raster.get_epsg():
@@ -147,10 +147,10 @@ def create(cfg, frequency_group = None, frequency = None,
     if None in [start_x, start_y, epsg, end_x, end_y]:
 
         # extract other geogrid params from radar grid and orbit constructed bounding box
-        geogrid = isce.product.bbox_to_geogrid(slc.getRadarGrid(frequency),
-                                               slc.getOrbit(),
-                                               isce.core.LUT2d(),
-                                               spacing_x, spacing_y, epsg)
+        geogrid = isce3.product.bbox_to_geogrid(slc.getRadarGrid(frequency),
+                                                slc.getOrbit(),
+                                                isce3.core.LUT2d(),
+                                                spacing_x, spacing_y, epsg)
 
         # restore runconfig start_x (if provided)
         if start_x is not None:
@@ -181,9 +181,9 @@ def create(cfg, frequency_group = None, frequency = None,
         length = _grid_size(end_y, start_y, -1.0*spacing_y)
 
         # build from probably good user values
-        geogrid = isce.product.GeoGridParameters(start_x, start_y,
-                                                 spacing_x, spacing_y,
-                                                 width, length, epsg)
+        geogrid = isce3.product.GeoGridParameters(start_x, start_y,
+                                                  spacing_x, spacing_y,
+                                                  width, length, epsg)
 
     # recheck x+y end points before snap and length+width calculation
     end_pt = lambda start, sz, spacing: start + spacing * sz

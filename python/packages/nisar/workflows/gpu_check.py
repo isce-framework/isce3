@@ -14,7 +14,7 @@ def cuda_device_valid(gpu_id: int) -> bool:
     logical
         Whether given device is supported
     """
-    from pybind_isce3.cuda.core import Device, min_compute_capability
+    from isce3.cuda.core import Device, min_compute_capability
     device = Device(gpu_id)
     return device.compute_capability >= min_compute_capability()
 
@@ -40,10 +40,10 @@ def use_gpu(gpu_requested: bool, gpu_id: int) -> bool:
         If GPU processing was requested but not available or if an invalid CUDA
         device was requested
     """
-    import pybind_isce3
+    import isce3
 
     # Check if CUDA support is enabled.
-    cuda_available = lambda : hasattr(pybind_isce3, "cuda")
+    cuda_available = lambda : hasattr(isce3, "cuda")
 
     # If unspecified, use GPU processing if supported. Otherwise, fall back to
     # CPU processing.

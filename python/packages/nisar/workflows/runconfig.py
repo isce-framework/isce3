@@ -9,7 +9,7 @@ from ruamel.yaml import YAML
 import yamale
 import numpy as np
 
-import pybind_isce3 as isce
+import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import geogrid
 import nisar.workflows.helpers as helpers
@@ -210,7 +210,7 @@ class RunConfig:
 
         # check for user provided EPSG and grab from DEM if none provided
         if geocode_dict['outputEPSG'] is None:
-            geocode_dict['outputEPSG'] = isce.io.Raster(self.cfg['DynamicAncillaryFileGroup']['DEMFile']).get_epsg()
+            geocode_dict['outputEPSG'] = isce3.io.Raster(self.cfg['DynamicAncillaryFileGroup']['DEMFile']).get_epsg()
 
         # make geogrids for each frequency
         geogrids = {}

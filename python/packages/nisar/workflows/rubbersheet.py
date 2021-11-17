@@ -8,7 +8,7 @@ import time
 import h5py
 import os
 import numpy as np
-import pybind_isce3 as isce3
+import isce3
 from osgeo import gdal
 from scipy import ndimage
 from scipy import interpolate

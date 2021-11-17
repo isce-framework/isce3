@@ -4,3 +4,4 @@ from . import geocode
 from . import geometry
 from . import image
 from . import signal
+from . import matchtemplate

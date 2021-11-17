@@ -8,7 +8,7 @@ import time
 
 import h5py
 import journal
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import gpu_check, h5_prep
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig

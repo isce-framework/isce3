@@ -28,6 +28,7 @@ core/Quaternion.cpp
 core/StateVector.cpp
 core/TimeDelta.cpp
 core/Poly1d.cpp
+core/Poly2d.cpp
 focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp

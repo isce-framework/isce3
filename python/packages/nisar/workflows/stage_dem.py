@@ -154,7 +154,7 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter on the ground
     """
-    from pybind_isce3.core import LUT2d
+    from isce3.core import LUT2d
     from isce3.geometry import DEMInterpolator, get_geo_perimeter_wkt
     from nisar.products.readers import SLC
 
@@ -338,7 +338,7 @@ def check_dem_overlap(DEMFilepath, polys):
         Area (in percentage) covered by the intersection between the
         user-provided dem and the one downloadable by stage_dem.py
     """
-    from pybind_isce3.io import Raster
+    from isce3.io import Raster
 
     # Get local DEM edge coordinates
     DEM = Raster(DEMFilepath)

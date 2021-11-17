@@ -8,7 +8,7 @@ import pathlib
 import time
 
 import journal
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import gpu_check, runconfig
 from nisar.workflows.rdr2geo_runconfig import Rdr2geoRunConfig

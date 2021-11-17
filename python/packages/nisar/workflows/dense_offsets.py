@@ -7,7 +7,7 @@ import time
 
 import journal
 import numpy as np
-import pybind_isce3 as isce3
+import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
 from nisar.workflows import gpu_check, h5_prep

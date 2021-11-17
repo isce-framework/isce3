@@ -4,9 +4,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import os
 import isce3
-from pybind_isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
-from pybind_isce3.product import RadarGridParameters
-from pybind_isce3.geometry import DEMInterpolator
+from isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
+from isce3.product import RadarGridParameters
+from isce3.geometry import DEMInterpolator
 from nisar.h5 import set_string
 from nisar.types import complex32
 from nisar.products.readers.Raw import Raw

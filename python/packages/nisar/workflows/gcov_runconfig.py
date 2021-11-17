@@ -2,7 +2,7 @@ import numpy as np
 
 import journal
 
-import pybind_isce3 as isce
+import isce3
 from nisar.workflows.runconfig import RunConfig
 
 class GCOVRunConfig(RunConfig):
@@ -35,38 +35,38 @@ class GCOVRunConfig(RunConfig):
             geocode_dict['geogrid_upsampling'] = 1.0
 
         if geocode_dict['memory_mode'] == 'single_block':
-            geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.SINGLE_BLOCK
+            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.SINGLE_BLOCK
         elif geocode_dict['memory_mode'] == 'geogrid':
-            geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID
+            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID
         elif geocode_dict['memory_mode'] == 'geogrid_radargrid':
-            geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID
+            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID
         else:
-            geocode_dict['memory_mode'] = isce.geocode.GeocodeMemoryMode.AUTO
+            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.AUTO
 
         rtc_output_type = rtc_dict['output_type']
         if rtc_output_type == 'sigma0':
-            rtc_dict['output_type'] = isce.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT
+            rtc_dict['output_type'] = isce3.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT
         else:
-            rtc_dict['output_type'] = isce.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
+            rtc_dict['output_type'] = isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
 
         geocode_algorithm = self.cfg['processing']['geocode']['algorithm_type']
         if geocode_algorithm == "area_projection":
-            output_mode = isce.geocode.GeocodeOutputMode.AREA_PROJECTION
+            output_mode = isce3.geocode.GeocodeOutputMode.AREA_PROJECTION
         else:
-            output_mode = isce.geocode.GeocodeOutputMode.INTERP
+            output_mode = isce3.geocode.GeocodeOutputMode.INTERP
         geocode_dict['output_mode'] = output_mode
 
         # only 2 RTC algorithms supported: area_projection (default) & bilinear_distribution
         if rtc_dict['algorithm_type'] == "bilinear_distribution":
-            rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION
+            rtc_dict['algorithm_type'] = isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION
         else:
-            rtc_dict['algorithm_type'] = isce.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
+            rtc_dict['algorithm_type'] = isce3.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
 
         if rtc_dict['input_terrain_radiometry'] == "sigma0":
-            rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
+            rtc_dict['input_terrain_radiometry'] = isce3.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
         else:
-            rtc_dict['input_terrain_radiometry'] = isce.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
+            rtc_dict['input_terrain_radiometry'] = isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
 
         if rtc_dict['rtc_min_value_db'] is None:
             rtc_dict['rtc_min_value_db'] = np.nan
@@ -77,7 +77,7 @@ class GCOVRunConfig(RunConfig):
             (max of X and Y pixel spacing).
             '''
             dem_file = self.cfg['DynamicAncillaryFileGroup']['DEMFile']
-            dem_raster = isce.io.Raster(dem_file)
+            dem_raster = isce3.io.Raster(dem_file)
             dem_margin = 50 * max([dem_raster.dx, dem_raster.dy])
             self.cfg['processing']['dem_margin'] = dem_margin
 
@@ -86,15 +86,15 @@ class GCOVRunConfig(RunConfig):
             self.cfg['processing']['dem_interpolation_method']
 
         if dem_interp_method == 'biquintic':
-            dem_interp_method_enum = isce.core.DataInterpMethod.BIQUINTIC
+            dem_interp_method_enum = isce3.core.DataInterpMethod.BIQUINTIC
         elif (dem_interp_method == 'sinc'):
-            dem_interp_method_enum = isce.core.DataInterpMethod.SINC
+            dem_interp_method_enum = isce3.core.DataInterpMethod.SINC
         elif (dem_interp_method == 'bilinear'):
-            dem_interp_method_enum = isce.core.DataInterpMethod.BILINEAR
+            dem_interp_method_enum = isce3.core.DataInterpMethod.BILINEAR
         elif (dem_interp_method == 'bicubic'):
-            dem_interp_method_enum = isce.core.DataInterpMethod.BICUBIC
+            dem_interp_method_enum = isce3.core.DataInterpMethod.BICUBIC
         elif (dem_interp_method == 'nearest'):
-            dem_interp_method_enum = isce.core.DataInterpMethod.NEAREST
+            dem_interp_method_enum = isce3.core.DataInterpMethod.NEAREST
         else:
             err_msg = ('ERROR invalid DEM interpolation method:'
                        f' {dem_interp_method}')
