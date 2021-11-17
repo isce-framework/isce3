@@ -2617,6 +2617,62 @@ void Geocode<T>::_runBlock(
             isce3::geometry::areaProjIntegrateSegment(y10_cut, y00_cut, x10_cut,
                     x00_cut, size_y, size_x, w_arr, w_total, plane_orientation);
 
+            bool flag_self_intersecting_area_element = false;
+
+            // test for self-intersection
+            for (int yy = 0; yy < size_y; ++yy) {
+                for (int xx = 0; xx < size_x; ++xx) {
+                    double w = w_arr(yy, xx);
+                    if (w * w_total < 0 && abs(w) >  0.00001) {
+                        flag_self_intersecting_area_element = true;
+                        break;
+                    }
+                }
+                if (flag_self_intersecting_area_element) {
+                    break;
+                }
+            }
+
+            if (flag_self_intersecting_area_element) {
+                /* 
+                If self-intersecting, divide area element (geogrid pixel) into
+                two triangles and integrate them separately.
+                */
+                isce3::core::Matrix<double> w_arr_1(size_y, size_x);
+                w_arr_1.fill(0);
+                double w_total_1 = 0;
+                isce3::geometry::areaProjIntegrateSegment(y00_cut, y01_cut, x00_cut,
+                        x01_cut, size_y, size_x, w_arr_1, w_total_1, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y01_cut, y11_cut, x01_cut,
+                        x11_cut, size_y, size_x, w_arr_1, w_total_1, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y11_cut, y00_cut, x11_cut,
+                        x00_cut, size_y, size_x, w_arr_1, w_total_1, plane_orientation);
+
+                isce3::core::Matrix<double> w_arr_2(size_y, size_x);
+                w_arr_2.fill(0);
+                double w_total_2 = 0;
+                isce3::geometry::areaProjIntegrateSegment(y00_cut, y11_cut, x00_cut,
+                        x11_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y11_cut, y10_cut, x11_cut,
+                        x10_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y10_cut, y00_cut, x10_cut,
+                        x00_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
+                
+                w_total = 0;
+                /*
+                The new weight array `w_arr` is the sum of the absolute values of both
+                triangles weighted arrays `w_arr_1` and `w_arr_2`. The integrated
+                total `w_total` is updated accordingly.
+                */
+                for (int yy = 0; yy < size_y; ++yy) {
+                    for (int xx = 0; xx < size_x; ++xx) {
+                        w_arr(yy, xx) = std::min(
+                            abs(w_arr_1(yy, xx)) + abs(w_arr_2(yy, xx)), 1.0);
+                        w_total += w_arr(yy, xx);
+                    }
+                }
+            }
+
             double nlooks = 0;
             float area_total = 0;
             std::vector<T_out> cumulative_sum(nbands, 0);
@@ -2630,7 +2686,7 @@ void Geocode<T>::_runBlock(
                     double w = w_arr(yy, xx);
                     int y = yy + y_min;
                     int x = xx + x_min;
-                    if (w == 0 || w * w_total < 0)
+                    if (w == 0)
                         continue;
                     else if (y - offset_y < 0 || x - offset_x < 0 ||
                              y >= ybound || x >= xbound) {
