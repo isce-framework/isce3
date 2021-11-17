@@ -151,11 +151,11 @@ runconfig:
 
             ionosphere_phase_correction:
                 enabled: True
-                range_split_spectum:
+                range_split_spectrum:
                    lines_per_block: 1000
                    spectral_diversity: split_main_band
-                   low_bandwidth:
-                   high_bandwidth:
+                   low_band_bandwidth:
+                   high_band_bandwidth:
                    range_fft_size:
                    window_function: tukey
                    # Shape parameter. For Kaiser, 0 <= shape < Inf.

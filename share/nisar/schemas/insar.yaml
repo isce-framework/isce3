@@ -503,9 +503,9 @@ range_split_spectrum_options:
     spectral_diversity: enum('split_main_band', 'main_side_band', required=False)
     # Low bandwidth. If unspecified is automatically set by the workflow according to
     # the selected spectral diversity
-    low_bandwidth: num(min=0, required=False)
+    low_band_bandwidth: num(min=0, required=False)
     # High bandwidth. If unspecified, it is automatically set by the workflow
-    high_bandwidth: num(min=0, required=False)
+    high_band_bandwidth: num(min=0, required=False)
     range_fft_size: int(min=1, required=False)
     # Type of window used to taper range spectrum
     window_function: enum('tukey', 'cosine', 'kaiser', required=False)
