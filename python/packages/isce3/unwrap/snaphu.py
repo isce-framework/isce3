@@ -75,7 +75,9 @@ class TopoCostParams:
         crossover point between diffuse and specular scatter in terms of range
         slope. (default: 2.0)
     shadow : bool, optional
-        Allow discontinuities from shadowing? (default: False)
+        Allow discontinuities from shadowing? If this is disabled, the minimum
+        topographic slope estimated from mean backscatter intensity is clipped
+        to the value of `dz_ei_min`. (default: False)
     dz_ei_min : float, optional
         Minimum slope expected in the absence of layover, in meters per
         slant-range pixel. (default: -4.0)
@@ -135,10 +137,11 @@ class TopoCostParams:
         Initial range slope step size in dzrhomax numerical solution, in
         meters/pixel. (default: 100.0)
     cost_scale_ambig_ht : float, optional
-        Ambiguity height, in meters, for auto-scaling the
-        `SolverParams.cost_scale` parameter to equal 100. The cost scale is
-        automatically adjusted to be inversely proportional to the midswath
-        ambiguity height. (default: 80.0)
+        Ambiguity height for auto-scaling the `SolverParams.cost_scale`
+        parameter to equal 100. This is the amount of height change, in meters,
+        that results in a :math:`2 \pi` change in the interferometric phase. The
+        cost scale is automatically adjusted to be inversely proportional to the
+        midswath ambiguity height. (default: 80.0)
     dnom_inc_angle : float, optional
         Step size, in radians, for dzrhomax lookup table. The index is on the
         flat-earth incidence angle; this is the sample spacing in the table.
@@ -357,11 +360,12 @@ class TilingParams:
         Maximum number of child processes to spawn for parallel tile unwrapping.
         If nproc is less than 1, use all available processors. (default: 1)
     tile_nrows, tile_ncols : int, optional
-        Number of rows and columns of tiles. If `tile_nrows` and `tile_ncols`
-        are both 1, the interferogram is unwrapped as a single tile.
-        (default: 1, 1)
+        Number of tiles along the row/column directions. If `tile_nrows` and
+        `tile_ncols` are both 1, the interferogram is unwrapped as a single
+        tile. (default: 1, 1)
     row_overlap, col_overlap : int, optional
-        Overlap, in pixels, between neighboring tiles. (default: 0)
+        Overlap, in number of rows/columns, between neighboring tiles.
+        (default: 0)
     tile_cost_thresh : int, optional
         Cost threshold to use for determining boundaries of reliable regions.
         Larger cost threshold implies smaller regions (safer, but more expensive
@@ -542,15 +546,30 @@ class ConnCompParams:
 
 @dataclass(frozen=True)
 class CorrBiasModelParams:
-    """Model parameters for estimating bias in sample correlation magnitude
+    r"""Model parameters for estimating bias in sample correlation magnitude
     expected for zero true correlation
 
-    The expected biased correlation measure, given that true interferometric
-    correlation is zero, is modelled as
+    The multilooked correlation magnitude of the interferometric pair
+    :math:`z_1` and :math:`z_2` is commonly estimated as
 
-    .. math:: \rho_0 = \frac{c_1}{nlooks} + c_2
+    .. math::
 
-    where :math:`nlooks` is the number of effective looks used to form the
+        \rho = \left| \frac{ \sum_{i=1}^{N}{z_{1i} z_{2i} ^*} }
+            { \sqrt{ \sum_{i=1}^{N}{ \left| z_{1i} \right| ^2 } }
+            \sqrt{ \sum_{i=1}^{N}{ \left| z_{2i} \right| ^2 } } }  \right|
+
+    where :math:`N` is the number of statistically independent looks. SNAPHU
+    uses the estimated correlation coefficient to infer statistics of the
+    interferometric phase.
+
+    This estimator is biased with respect to the expected true correlation,
+    particularly at lower correlation values. In order to compensate for this,
+    SNAPHU models the expected biased correlation measure, given that true
+    interferometric correlation is zero, as
+
+    .. math:: \rho_0 = \frac{c_1}{N} + c_2
+
+    where :math:`N` is the number of effective looks used to estimate the
     correlation and :math:`c_1` & :math:`c_2` are the model coefficients. This
     approximately matches the curves of Touzi et al [1]_.
 
@@ -559,11 +578,11 @@ class CorrBiasModelParams:
     c1, c2 : float, optional
         Correlation bias model parameters.
     min_corr_factor : float, optional
-        Factor applied to expected minimum measured (biased) correlation. Values
-        smaller than the threshold min_corr_factor * rho0 are assumed to come
-        from zero statistical correlation because of estimator bias. rho0 is the
-        expected biased correlation measure if the true correlation is zero.
-        (default: 1.25)
+        Factor applied to expected minimum measured (biased) correlation
+        coefficient. Values smaller than the threshold min_corr_factor * rho0
+        are assumed to come from zero statistical correlation because of
+        estimator bias. rho0 is the expected biased correlation measure if the
+        true correlation is zero. (default: 1.25)
 
     References
     ----------
@@ -837,6 +856,10 @@ def unwrap(
     reassembly. The default behavior is to unwrap the full interferogram as a
     single tile.
 
+    .. warning:: Currently, if tile mode is used and any connected component
+    crosses spans multiple tiles, the assigned connected component label may be
+    inconsistent across tiles.
+
     Parameters
     ----------
     unw : isce3.io.gdal.Raster
@@ -848,8 +871,8 @@ def unwrap(
     igram : isce3.io.gdal.Raster
         Input interferogram. Must have GDT_CFloat32 datatype.
     corr : isce3.io.gdal.Raster
-        Correlation magnitude. Must have the same dimensions as the input
-        interferogram and GDT_Float32 datatype.
+        Correlation magnitude, normalized to the interval [0, 1]. Must have the
+        same dimensions as the input interferogram and GDT_Float32 datatype.
     nlooks : float
         Effective number of looks used to form the input correlation data.
     cost : {"topo", "defo", "smooth", "p-norm"}, optional
@@ -861,13 +884,16 @@ def unwrap(
     pwr : isce3.io.gdal.Raster or None, optional
         Average intensity of the two SLCs, in linear units (not dB). Only used
         in "topo" cost mode. If None, interferogram magnitude is used as
-        intensity. (default: None)
+        intensity. Must have the same dimensions as the input interferogram and
+        GDT_Float32 datatype. (default: None)
     mask : isce3.io.gdal.Raster or None, optional
         Binary mask of valid pixels. Zeros in this raster indicate interferogram
-        pixels that should be masked out. (default: None)
+        pixels that should be masked out. Must have the same dimensions as the
+        input interferogram and GDT_Byte datatype. (default: None)
     unwest : isce3.io.gdal.Raster or None, optional
         Initial estimate of unwrapped phase, in radians. This can be used to
-        provide a coarse unwrapped estimate to guide the algorithm.
+        provide a coarse unwrapped estimate to guide the algorithm. Must have
+        the same dimensions as the input interferogram and GDT_Float32 datatype.
         (default: None)
     tiling_params : TilingParams or None, optional
         Configuration parameters affecting scene tiling and parallel processing.
@@ -892,7 +918,8 @@ def unwrap(
         Scratch directory where intermediate processing artifacts are written.
         If the specified directory does not exist, it will be created. If None,
         a temporary directory will be created and automatically removed from the
-        filesystem at the end of processing. (default: None)
+        filesystem at the end of processing. Otherwise, the directory and its
+        contents will not be cleaned up. (default: None)
     verbose : bool, optional
         Print verbose output? (default: False)
     debug : bool, optional

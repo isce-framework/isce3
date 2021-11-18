@@ -370,7 +370,7 @@ class TestSnaphu:
         assert frac_nonzero(~good_pixels) < 1e-3
 
     def test_tile_mode(self):
-        """Test SNAPHU unwrapping using "smooth" cost mode."""
+        """Test SNAPHU tiled unwrapping mode."""
         # Interferogram dimensions
         l, w = 1100, 256
 
