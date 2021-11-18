@@ -284,7 +284,7 @@ class TestSnaphu:
         range_res = 7.5
         az_res = 6.6
         wvl = 0.24
-        transmit_mode = snaphu.TransmitMode.REPEATPASS
+        transmit_mode = "repeat_pass"
         inc_angle = np.deg2rad(37.0)
 
         # Multilooking params.
@@ -414,11 +414,7 @@ class TestSnaphu:
 
         # Unwrap phase using SNAPHU "defo" cost mode.
         tiling_params = snaphu.TilingParams(
-            nproc=4,
-            tile_nrows=2,
-            tile_ncols=2,
-            row_overlap=16,
-            col_overlap=16,
+            nproc=4, tile_nrows=2, tile_ncols=2, row_overlap=16, col_overlap=16,
         )
         snaphu.unwrap(
             unw_raster,

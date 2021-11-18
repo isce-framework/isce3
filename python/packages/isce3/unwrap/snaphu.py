@@ -1,5 +1,4 @@
 import contextlib
-import enum
 import os
 import pathlib
 import tempfile
@@ -11,20 +10,16 @@ import numpy as np
 from pybind_isce3.unwrap import _snaphu_unwrap
 
 
-class TransmitMode(enum.Enum):
-    """Radar transmit mode
+TransmitMode = Literal["pingpong", "repeat_pass", "single_antenna_transmit"]
+TransmitMode.__doc__ = """Radar transmit mode
 
-    PINGPONG and REPEATPASS modes indicate that both antennas both transmitted
-    and received. Both modes have the same effect in the algorithm.
+    'pingpong' and 'repeat_pass' modes indicate that both antennas both
+    transmitted and received. Both modes have the same effect in the algorithm.
 
-    SINGLEANTENNATRANSMIT indicates that a single antenna was used to transmit
-    while both antennas received. In this mode, the baseline is effectively
-    halved.
+    'single_antenna_transmit' indicates that a single antenna was used to
+    transmit while both antennas received. In this mode, the baseline is
+    effectively halved.
     """
-
-    PINGPONG = enum.auto()
-    REPEATPASS = enum.auto()
-    SINGLEANTENNATRANSMIT = enum.auto()
 
 
 @dataclass(frozen=True)
@@ -59,8 +54,12 @@ class TopoCostParams:
         Single-look range & azimuth resolution, in meters.
     wavelength : float
         Wavelength, in meters.
-    transmit_mode : TransmitMode
-        Transmit mode.
+    transmit_mode : {"pingpong", "repeat_pass", "single_antenna_transmit"}
+        Radar transmit mode. 'pingpong' and 'repeat_pass' modes indicate that
+        both antennas both transmitted and received. Both modes have the same
+        effect in the algorithm. 'single_antenna_transmit' indicates that a
+        single antenna was used to transmit while both antennas received. In
+        this mode, the baseline is effectively halved.
     altitude : float
         Platform altitude relative to the Earth's surface, in meters.
     earth_radius : float, optional
@@ -189,6 +188,16 @@ class TopoCostParams:
 
     def tostring(self):
         """Convert to string in SNAPHU config file format."""
+
+        def parse_transmit_mode(s):
+            if s == "pingpong":
+                return "PINGPONG"
+            if s == "repeat_pass":
+                return "REPEATPASS"
+            if s == "single_antenna_transmit":
+                return "SINGLEANTENNATRANSMIT"
+            raise ValueError(f"invalid transmit mode '{s}'")
+
         s = ""
         s += f"BPERP {self.bperp}\n"
         s += f"NEARRANGE {self.near_range}\n"
@@ -197,7 +206,7 @@ class TopoCostParams:
         s += f"RANGERES {self.range_res}\n"
         s += f"AZRES {self.az_res}\n"
         s += f"LAMBDA {self.wavelength}\n"
-        s += f"TRANSMITMODE {self.transmit_mode.name}\n"
+        s += f"TRANSMITMODE {parse_transmit_mode(self.transmit_mode)}\n"
         s += f"ALTITUDE {self.altitude}\n"
         s += f"EARTHRADIUS {self.earth_radius}\n"
         s += f"KDS {self.kds}\n"
@@ -641,7 +650,7 @@ def scratch_directory(d: Optional[os.PathLike] = None, /) -> pathlib.Path:
 
     Parameters
     ----------
-    d : os.PathLike or None, optional
+    d : path-like or None, optional
         Scratch directory path. If None, a temporary directory is created.
         (default: None)
 
@@ -675,7 +684,7 @@ def to_flat_file(
 
     Parameters
     ----------
-    path : os.PathLike
+    path : path-like
         Output filepath.
     raster : isce3.io.gdal.Raster
         Input raster.
@@ -716,7 +725,7 @@ def from_flat_file(
 
     Parameters
     ----------
-    path : os.PathLike
+    path : path-like
         Input filepath.
     raster : isce3.io.gdal.Raster
         Output raster.
@@ -748,10 +757,7 @@ CostMode = Literal["topo", "defo", "smooth", "p-norm"]
 CostMode.__doc__ = """SNAPHU cost mode options"""
 
 CostParams = Union[
-    TopoCostParams,
-    DefoCostParams,
-    SmoothCostParams,
-    PNormCostParams,
+    TopoCostParams, DefoCostParams, SmoothCostParams, PNormCostParams,
 ]
 CostParams.__doc__ = """SNAPHU cost mode configuration parameters"""
 
@@ -882,7 +888,7 @@ def unwrap(
         Model parameters for approximating phase standard deviation from
         correlation magnitude. If None, the default model parameters are used.
         (default: None)
-    scratchdir : os.PathLike or None, optional
+    scratchdir : path-like or None, optional
         Scratch directory where intermediate processing artifacts are written.
         If the specified directory does not exist, it will be created. If None,
         a temporary directory will be created and automatically removed from the
