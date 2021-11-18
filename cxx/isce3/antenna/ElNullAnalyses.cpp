@@ -90,8 +90,8 @@ tuple_ant genAntennaPairCoefs(
     auto el_space = std::min(*el_res_max, el_ang_step);
     auto el_start = idx_peak_left * el_ang_step + el_ang_start;
     auto el_stop = idx_peak_right * el_ang_step + el_ang_start;
-    auto num_idx =
-            static_cast<Eigen::Index>((el_stop - el_start) / el_space + 1);
+    auto num_idx = static_cast<Eigen::Index>(
+            std::round((el_stop - el_start) / el_space) + 1);
 
     Eigen::ArrayXd el_vec =
             Eigen::ArrayXd::LinSpaced(num_idx, el_start, el_stop);
