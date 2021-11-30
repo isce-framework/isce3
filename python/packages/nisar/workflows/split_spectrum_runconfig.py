@@ -6,6 +6,7 @@ from nisar.products.readers import SLC
 from nisar.workflows.runconfig import RunConfig
 
 
+
 class SplitSpectrumRunConfig(RunConfig):
     def __init__(self, args):
         # All InSAR submodules share a common InSAR schema
@@ -31,6 +32,7 @@ class SplitSpectrumRunConfig(RunConfig):
         rg_main_bandwidth = ref_slc.getSwathMetadata(
             'A').processed_range_bandwidth
 
+
         # Check if ionosphere_phase_correction is enabled. Otherwise,
         # throw an error and do not execute split-spectrum
         if not iono_cfg['enabled']:
@@ -53,6 +55,7 @@ class SplitSpectrumRunConfig(RunConfig):
             rg_side_bandwidth = ref_slc.getSwathMetadata(
                 'B').processed_range_bandwidth
 
+
             # If "low_bandwidth" and "high_bandwidth" are not assigned, assign main range bandwidth
             # and side-band bandwidths, respectively. If assigned, check that
             # "low_bandwidth" and "high_bandwidth" correspond to main and side range bandwidths
@@ -71,6 +74,7 @@ class SplitSpectrumRunConfig(RunConfig):
             pols_freqA = src_h5[pol_path][()]
             pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
                                     'listOfPolarizations')
+
             pols_freqB = src_h5[pol_path][()]
             src_h5.close()
             if len(set.intersection(set(pols_freqA), set(pols_freqB))) == 0:

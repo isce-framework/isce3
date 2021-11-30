@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os
 import pathlib
 import time
@@ -12,6 +13,7 @@ from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
 from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
+
 
 
 def run(cfg: dict):
@@ -184,6 +186,7 @@ def run(cfg: dict):
     else:
         info_channel.log('Use side band for ionosphere phase correction')
     t_all_elapsed = time.time() - t_all
+
     info_channel.log(
         f"successfully ran split_spectrum in {t_all_elapsed:.3f} seconds")
 
