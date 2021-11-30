@@ -698,6 +698,8 @@ def focus(runconfig):
         if cfg.processing.delete_tempfiles:
             delete_safely(hdr)
 
+        slc.compute_stats(frequency, pol)
+
 
 def configure_logging():
     log_level = logging.DEBUG

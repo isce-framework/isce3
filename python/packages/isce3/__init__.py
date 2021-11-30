@@ -11,6 +11,7 @@ from . import geocode
 from . import geometry
 from . import image
 from . import io
+from . import math
 from . import polsar
 from . import product
 from . import signal

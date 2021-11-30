@@ -44,7 +44,7 @@ image/gpuResampSlc.h
 image/ResampSlc.h
 io/DataStream.h
 io/DataStream.icc
-math/ComplexMultiply.h
+math/complexOperations.h
 signal/forward.h
 signal/gpuCrossMul.h
 signal/gpuFilter.h

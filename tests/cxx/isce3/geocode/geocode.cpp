@@ -16,11 +16,14 @@
 #include <isce3/geometry/Topo.h>
 #include <isce3/io/IH5.h>
 #include <isce3/io/Raster.h>
+#include <isce3/math/Stats.h>
 #include <isce3/product/GeoGridParameters.h>
 #include <isce3/product/Product.h>
 #include <isce3/product/Serialization.h>
 
 std::set<std::string> geocode_mode_set = {"interp", "area_proj"};
+
+using isce3::math::computeRasterStats;
 
 // Declaration for utility function to read metadata stream from V  RT
 std::stringstream streamFromVRT(const char* filename, int bandNum = 1);
@@ -31,6 +34,12 @@ void createZeroDem();
 // To create test data
 void createTestData();
 
+
+template<class T>
+void checkStatsReal(isce3::math::Stats<T>, isce3::io::Raster &raster);
+
+template<class T>
+void checkStatsComplex(isce3::math::Stats<T>, isce3::io::Raster &raster);
 
 TEST(GeocodeTest, TestGeocodeCov) {
 
@@ -238,9 +247,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
 }
 
 
-
 TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
-    // The geocoded latitude and longitude data should be
+    //  The geocoded latitude and longitude data should be
     // consistent with the geocoded pixel location.
 
     std::cout << "opening: area_proj_geo_diag.bin" << std::endl;
@@ -253,17 +261,17 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
     size_t length = geocoded_diag_raster.length();
     size_t width = geocoded_diag_raster.width();
 
-    float err_x = 0.0;
-    float err_y = 0.0;
-    float err_x_conj_y = 0.0;
-    float max_err_x = 0.0;
-    float max_err_y = 0.0; 
-    float max_err_x_conj_y = 0.0;
+    double err_x = 0.0;
+    double err_y = 0.0;
+    double err_x_conj_y = 0.0;
+    double max_err_x = 0.0;
+    double max_err_y = 0.0; 
+    double max_err_x_conj_y = 0.0;
 
-    std::valarray<float> geocoded_diag_array_x(length * width);
-    std::valarray<float> geocoded_diag_array_y(length * width);
-    std::valarray<std::complex<float>> geocoded_off_diag_array(length * width);
-    std::valarray<std::complex<float>> slc_x_conj_y_array(length * width);
+    std::valarray<double> geocoded_diag_array_x(length * width);
+    std::valarray<double> geocoded_diag_array_y(length * width);
+    std::valarray<std::complex<double>> geocoded_off_diag_array(length * width);
+    std::valarray<std::complex<double>> slc_x_conj_y_array(length * width);
 
     geocoded_diag_raster.getBlock(geocoded_diag_array_x, 0, 0, width, length, 1);
     geocoded_diag_raster.getBlock(geocoded_diag_array_y, 0, 0, width, length, 2);
@@ -277,6 +285,11 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
     int nvalid_y = 0;
     double square_sum_x_conj_y = 0; // sum of square differences
     int nvalid_x_conj_y = 0;
+
+    isce3::math::Stats<std::complex<double>> stats;
+    std::complex<double> total = 0;
+    double total_real_valued = 0;
+    double total_square = 0;
 
     for (size_t line = 0; line < length; ++line) {
         for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -307,21 +320,54 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
             }
 
             // geocoded off-diag ~= geocoded x conj (y)
-            float norm_off_diag = std::norm(geocoded_off_diag_array[index]);
-            float norm_x_conj_y = std::norm(slc_x_conj_y_array[index]);
-            if (!isnan(norm_off_diag) && !isnan(norm_x_conj_y)) {
-                err_x_conj_y = std::norm(geocoded_off_diag_array[index] -
-                                         slc_x_conj_y_array[index]);
-                square_sum_x_conj_y += pow(err_x_conj_y, 2);
-                if (norm_off_diag > 0 && norm_x_conj_y > 0) {
-                    nvalid_x_conj_y++;
-                }
-                if (err_x_conj_y > max_err_x_conj_y) {
-                    max_err_x_conj_y = std::abs(err_x_conj_y);
-                }
+            double norm_off_diag = std::norm(geocoded_off_diag_array[index]);
+            double norm_x_conj_y = std::norm(slc_x_conj_y_array[index]);
+
+
+            if (isnan(norm_x_conj_y)) {
+                continue;
             }
+
+            stats.n_valid++;
+            if (isnan(std::abs(stats.min)) or
+                    std::abs(slc_x_conj_y_array[index]) < std::abs(stats.min)) {
+                stats.min = slc_x_conj_y_array[index];
+            }
+            if (isnan(std::abs(stats.max)) or
+                    std::abs(slc_x_conj_y_array[index]) > std::abs(stats.max)) {
+                stats.max = slc_x_conj_y_array[index];
+            }
+            total += slc_x_conj_y_array[index];
+            total_real_valued += std::abs(slc_x_conj_y_array[index]);
+            total_square += std::pow(std::abs(slc_x_conj_y_array[index]), 2);
+
+            if (isnan(norm_off_diag)) {
+                continue;
+            }
+
+            err_x_conj_y = std::norm(geocoded_off_diag_array[index] -
+                                        slc_x_conj_y_array[index]);
+            square_sum_x_conj_y += pow(err_x_conj_y, 2);
+            // if (norm_off_diag > 0 && norm_x_conj_y > 0) {
+            nvalid_x_conj_y++;
+            // }
+
+            max_err_x_conj_y = std::max(max_err_x_conj_y, 
+                                        std::abs(err_x_conj_y));
+    
         }
     }
+
+    stats.mean = total / static_cast<double>(stats.n_valid);
+    double mean_real_valued = total_real_valued / stats.n_valid;
+
+    double sample_stddev_factor = (
+        static_cast<double>(stats.n_valid)) / 
+        (static_cast<double>(stats.n_valid - 1));
+
+    stats.sample_stddev = std::sqrt(sample_stddev_factor *
+                                    (total_square / stats.n_valid -
+                                     std::pow(mean_real_valued, 2)));
 
     double rmse_x = std::sqrt(square_sum_x / nvalid_x);
     double rmse_y = std::sqrt(square_sum_y / nvalid_y);
@@ -346,6 +392,8 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
     ASSERT_LT(max_err_y, 1.0e-6);
     ASSERT_LT(max_err_x_conj_y, 1.0e-6);
 
+    checkStatsComplex(stats, geocoded_slc_x_conj_y_raster);
+
 }
 
 
@@ -355,14 +403,14 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        std::string x_raster_str = "x_" + geocode_mode_str + "_geo.bin";
-        std::string y_raster_str = "y_" + geocode_mode_str + "_geo.bin";
-        std::cout << "evaluating files:" << std::endl
-                  << "     " << x_raster_str << std::endl
-                  << "     " << y_raster_str << std::endl;
+        std::string x_file_str = "x_" + geocode_mode_str + "_geo.bin";
+        std::string y_file_str = "y_" + geocode_mode_str + "_geo.bin";
+        std::cout << "evaluating files:" << std::endl;
+        std::cout << "    " << x_file_str << std::endl;
+        std::cout << "    " << y_file_str << std::endl;
+        isce3::io::Raster xRaster(x_file_str);
+        isce3::io::Raster yRaster(y_file_str);
 
-        isce3::io::Raster xRaster(x_raster_str);
-        isce3::io::Raster yRaster(y_raster_str);
         size_t length = xRaster.length();
         size_t width = xRaster.width();
 
@@ -385,14 +433,17 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
         std::valarray<double> geoX(length * width);
         std::valarray<double> geoY(length * width);
 
+        isce3::math::Stats<double> stats_x;
+        isce3::math::Stats<double> stats_y;
+
         xRaster.getBlock(geoX, 0, 0, width, length);
         yRaster.getBlock(geoY, 0, 0, width, length);
 
         double square_sum_x = 0; // sum of square differences
-        int nvalid_x = 0;
         double square_sum_y = 0; // sum of square differences
-        int nvalid_y = 0;
 
+        double total_x = 0, total_y = 0;
+        double total_square_x = 0, total_square_y = 0;
         for (size_t line = 0; line < length; ++line) {
             for (size_t pixel = 0; pixel < width; ++pixel) {
                 size_t index = line * width + pixel;
@@ -400,7 +451,15 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
                     gridLon = x0 + pixel * dx;
                     errX = geoX[index] - gridLon;
                     square_sum_x += pow(errX, 2);
-                    nvalid_x++;
+                    stats_x.n_valid++;
+                    total_x += geoX[index];
+                    total_square_x += std::pow(geoX[index], 2);
+                    if (isnan(stats_x.min) or geoX[index] < stats_x.min) {
+                        stats_x.min = geoX[index];
+                    }
+                    if (isnan(stats_x.max) or geoX[index] > stats_x.max) {
+                        stats_x.max = geoX[index];
+                    }
                     if (std::abs(errX) > maxErrX) {
                         maxErrX = std::abs(errX);
                     }
@@ -409,7 +468,15 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
                     gridLat = y0 + line * dy;
                     errY = geoY[index] - gridLat;
                     square_sum_y += pow(errY, 2);
-                    nvalid_y++;
+                    stats_y.n_valid++;
+                    total_y += geoY[index];
+                    total_square_y += std::pow(geoY[index], 2);
+                    if (isnan(stats_y.min) or geoX[index] < stats_y.min) {
+                        stats_y.min = geoY[index];
+                    }
+                    if (isnan(stats_y.max) or geoX[index] > stats_y.max) {
+                        stats_y.max = geoY[index];
+                    }
                     if (std::abs(errY) > maxErrY) {
                         maxErrY = std::abs(errY);
                     }
@@ -417,12 +484,26 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
             }
         }
 
-        double rmse_x = std::sqrt(square_sum_x / nvalid_x);
-        double rmse_y = std::sqrt(square_sum_y / nvalid_y);
+        stats_x.mean = total_x / stats_x.n_valid;
+        stats_y.mean = total_y / stats_y.n_valid;
+
+        double sample_stddev_factor = (
+            static_cast<double>(stats_x.n_valid)) / 
+            (static_cast<double>(stats_x.n_valid - 1));
+
+        stats_x.sample_stddev = std::sqrt(sample_stddev_factor *
+                                          (total_square_x / stats_x.n_valid -
+                                           std::pow(stats_x.mean, 2)));
+        stats_y.sample_stddev = std::sqrt(sample_stddev_factor *
+                                          (total_square_y / stats_y.n_valid -
+                                           std::pow(stats_y.mean, 2)));
+
+        double rmse_x = std::sqrt(square_sum_x / stats_x.n_valid);
+        double rmse_y = std::sqrt(square_sum_y / stats_y.n_valid);
 
         std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
-        std::cout << "  nvalid X: " << nvalid_x << std::endl;
-        std::cout << "  nvalid Y: " << nvalid_y << std::endl;
+        std::cout << "  nvalid X: " << stats_x.n_valid << std::endl;
+        std::cout << "  nvalid Y: " << stats_y.n_valid << std::endl;
         std::cout << "  RMSE X: " << rmse_x << std::endl;
         std::cout << "  RMSE Y: " << rmse_y << std::endl;
         std::cout << "  maxErrX: " << maxErrX << std::endl;
@@ -430,8 +511,8 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
         std::cout << "  dx: " << dx << std::endl;
         std::cout << "  dy: " << dy << std::endl;
     
-        ASSERT_GE(nvalid_x, 800);
-        ASSERT_GE(nvalid_y, 800);
+        ASSERT_GE(stats_x.n_valid, 800);
+        ASSERT_GE(stats_y.n_valid, 800);
 
         if (geocode_mode_str == "interp") {
             // errors with interp algorithm are smaller because topo
@@ -442,6 +523,11 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
 
         ASSERT_LT(rmse_x, 0.5 * dx);
         ASSERT_LT(rmse_y, 0.5 * std::abs(dy));
+
+        // Check stats
+        checkStatsReal(stats_x, xRaster);
+        checkStatsReal(stats_y, yRaster);
+
     }
 }
 
@@ -637,6 +723,89 @@ void createZeroDem()
     dem = 0.0;
     zeroDemRaster.setBlock(dem, 0, 0, width, length);
 }
+
+
+template<class T>
+void checkStatsReal(isce3::math::Stats<T> computed_stats, 
+                    isce3::io::Raster &raster) {
+
+        int band = 0, approx_ok = 0;
+        double raster_min, raster_max, raster_mean, raster_stddev, raster_sample_stddev;
+
+        auto isce3_stats = computeRasterStats<T>(raster)[band];
+
+        // Get GDAL metadata stats
+        GDALDataset* output_raster_dataset = raster.dataset();
+        GDALRasterBand* output_raster_band =
+                output_raster_dataset->GetRasterBand(band + 1);
+        // output_raster_band->
+        output_raster_band->ComputeStatistics(approx_ok, &raster_min, &raster_max,
+                &raster_mean, &raster_stddev, NULL, nullptr);
+
+        // convert stddev to sample stddev
+        raster_sample_stddev = raster_stddev * std::sqrt(isce3_stats.n_valid) / std::sqrt(isce3_stats.n_valid - 1);
+
+        std::cout << "=== real gdal =====================" << std::endl;
+        std::cout << "min: " << isce3_stats.min << ", " << raster_min << std::endl;
+        std::cout << "mean: " << isce3_stats.mean << ", " << raster_mean << std::endl;
+        std::cout << "max: " << isce3_stats.max << ", " << raster_max << std::endl;
+        std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << raster_stddev << std::endl;
+        std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << raster_sample_stddev << std::endl;
+
+        std::cout << "=== real =====================" << std::endl;
+        std::cout << "min: " << isce3_stats.min << ", " << computed_stats.min << std::endl;
+        std::cout << "mean: " << isce3_stats.mean << ", " << computed_stats.mean << std::endl;
+        std::cout << "max: " << isce3_stats.max << ", " << computed_stats.max << std::endl;
+        std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << computed_stats.sample_stddev << std::endl;
+        std::cout << "n_valid: " << isce3_stats.n_valid << ", " << computed_stats.n_valid << std::endl;
+
+        // Compare Stats struct values with GDAL metadata saved by GeocodeCov
+        ASSERT_NEAR(isce3_stats.min, raster_min, 1.0e-15);
+        ASSERT_NEAR(isce3_stats.mean, raster_mean, 1.0e-15);
+        ASSERT_NEAR(isce3_stats.max, raster_max, 1.0e-15);
+        ASSERT_NEAR(isce3_stats.sample_stddev, raster_sample_stddev , 1.0e-15);
+
+        // Compare Stats struct values with unitest values
+        ASSERT_NEAR(isce3_stats.min, computed_stats.min, 1.0e-7);
+        ASSERT_NEAR(isce3_stats.mean, computed_stats.mean, 1.0e-7);
+        ASSERT_NEAR(isce3_stats.max, computed_stats.max, 1.0e-7);
+
+        ASSERT_NEAR(isce3_stats.sample_stddev, computed_stats.sample_stddev, 1.0e-7);
+
+        ASSERT_EQ(isce3_stats.n_valid, computed_stats.n_valid);
+
+}
+
+template<class T>
+void checkStatsComplex(isce3::math::Stats<T> computed_stats,
+        isce3::io::Raster& raster)
+{
+
+    int band = 0;
+
+    auto isce3_stats = computeRasterStats<T>(raster)[band];
+
+    std::cout << "=== complex =====================" << std::endl;
+    std::cout << "min: " << isce3_stats.min << ", " << computed_stats.min << std::endl;
+    std::cout << "mean: " << isce3_stats.mean << ", " << computed_stats.mean << std::endl;
+    std::cout << "max: " << isce3_stats.max << ", " << computed_stats.max << std::endl;
+    std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << computed_stats.sample_stddev << std::endl;
+    std::cout << "n_valid: " << isce3_stats.n_valid << ", " << computed_stats.n_valid << std::endl;
+
+    // Compare Stats struct values with unitest values
+    ASSERT_LT(std::abs(isce3_stats.min - computed_stats.min), 1.0e-15);
+    ASSERT_LT(std::abs(isce3_stats.mean - computed_stats.mean), 1.0e-15);
+    ASSERT_LT(std::abs(isce3_stats.max - computed_stats.max), 1.0e-15);
+
+    if (!isnan(computed_stats.sample_stddev)) {
+        ASSERT_LT(std::abs(isce3_stats.sample_stddev - 
+                           computed_stats.sample_stddev), 1.0e-8);
+    }
+
+    ASSERT_EQ(isce3_stats.n_valid, computed_stats.n_valid);
+
+}
+
 
 void createTestData()
 {

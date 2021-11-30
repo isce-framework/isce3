@@ -259,7 +259,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         double abs_cal_factor, float clip_min, float clip_max,
         float radar_grid_nlooks, isce3::io::Raster* out_nlooks,
         isce3::io::Raster* input_rtc, isce3::io::Raster* output_rtc,
-        rtcMemoryMode rtc_memory_mode)
+        isce3::core::MemoryModeBlockY rtc_memory_mode)
 {
 
     if (exponent < 0 || exponent > 2) {
@@ -570,7 +570,7 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
         double geogrid_upsampling, float rtc_min_value_db, size_t nlooks_az,
         size_t nlooks_rg, isce3::io::Raster* out_nlooks,
-        rtcMemoryMode rtc_memory_mode)
+        isce3::core::MemoryModeBlockY rtc_memory_mode)
 {
 
     isce3::core::Orbit orbit = product.metadata().orbit();
@@ -600,7 +600,7 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
         double geogrid_upsampling, float rtc_min_value_db,
         float radar_grid_nlooks, isce3::io::Raster* out_nlooks,
-        rtcMemoryMode rtc_memory_mode,
+        isce3::core::MemoryModeBlockY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range)
 {
@@ -648,7 +648,7 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         double geogrid_upsampling, float rtc_min_value_db,
         float radar_grid_nlooks, isce3::io::Raster* out_geo_rdr,
         isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_nlooks,
-        rtcMemoryMode rtc_memory_mode,
+        isce3::core::MemoryModeBlockY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range)
 {
@@ -1667,7 +1667,7 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
         rtcAreaMode rtc_area_mode, double geogrid_upsampling,
         float rtc_min_value_db, float radar_grid_nlooks,
         isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_grid,
-        isce3::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
+        isce3::io::Raster* out_nlooks, isce3::core::MemoryModeBlockY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range)
 {
@@ -1736,7 +1736,7 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
     int block_length, block_length_with_upsampling;
 
     int nblocks;
-    if (rtc_memory_mode == rtcMemoryMode::RTC_SINGLE_BLOCK) {
+    if (rtc_memory_mode == isce3::core::MemoryModeBlockY::SingleBlockY) {
         nblocks = 1;
         block_length_with_upsampling = imax;
         block_length = geogrid.length();

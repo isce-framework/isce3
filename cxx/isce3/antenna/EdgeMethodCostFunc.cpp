@@ -137,9 +137,8 @@ std::tuple<double, double, bool, int> rollAngleOffsetFromEdge(
                 "Near-range look angle shall be smaller than "
                 "far one by at least one prec!");
 
-    const auto ang_size =
-            static_cast<int>((look_ang_far - look_ang_near) / look_ang_prec) +
-            1;
+    const auto ang_size = static_cast<int>(
+            std::round((look_ang_far - look_ang_near) / look_ang_prec) + 1);
     auto look_ang = isce3::core::Linspace<double>::from_interval(
             look_ang_near, look_ang_far, ang_size);
 

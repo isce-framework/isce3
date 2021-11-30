@@ -374,8 +374,8 @@ void Geocode<T>::geocodeInterp(
             if (std::isnan(rtc_geogrid_upsampling))
                 rtc_geogrid_upsampling = 1;
 
-            isce3::geometry::rtcMemoryMode rtc_memory_mode =
-                    isce3::geometry::RTC_AUTO;
+            isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY;
             int radar_grid_nlooks = 1;
             computeRtc(demRaster, *rtc_raster, radar_grid, _orbit, _doppler,
                     _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
@@ -728,6 +728,8 @@ inline void Geocode<T>::_interpolate(
         isce3::io::Raster* out_geo_rtc,
         isce3::core::Matrix<float>& out_geo_rtc_array)
 {
+
+    using isce3::math::complex_operations::operator*;
 
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
@@ -1677,13 +1679,13 @@ void Geocode<T>::geocodeAreaProj(
             else if (std::isnan(rtc_geogrid_upsampling))
                 rtc_geogrid_upsampling = 2 * geogrid_upsampling;
 
-            isce3::geometry::rtcMemoryMode rtc_memory_mode;
+            isce3::core::MemoryModeBlockY rtc_memory_mode;
             if (geocode_memory_mode == geocodeMemoryMode::AUTO)
-                rtc_memory_mode = isce3::geometry::RTC_AUTO;
+                rtc_memory_mode = isce3::core::MemoryModeBlockY::AutoBlocksY;
             else if (geocode_memory_mode == geocodeMemoryMode::SINGLE_BLOCK)
-                rtc_memory_mode = isce3::geometry::RTC_SINGLE_BLOCK;
+                rtc_memory_mode = isce3::core::MemoryModeBlockY::SingleBlockY;
             else
-                rtc_memory_mode = isce3::geometry::RTC_BLOCKS_GEOGRID;
+                rtc_memory_mode = isce3::core::MemoryModeBlockY::MultipleBlocksY;
 
             computeRtc(dem_raster, *rtc_raster, radar_grid_cropped, _orbit,
                     _doppler, _geoGridStartY, _geoGridSpacingY, _geoGridStartX,
@@ -2014,6 +2016,8 @@ void Geocode<T>::_runBlock(
         bool flag_upsample_radar_grid, geocodeMemoryMode geocode_memory_mode,
         pyre::journal::info_t& info)
 {
+
+    using isce3::math::complex_operations::operator*;
 
     // start (az) and r0 at the outer edge of the first pixel
     const double pixazm = radar_grid.azimuthTimeInterval();
@@ -2613,6 +2617,62 @@ void Geocode<T>::_runBlock(
             isce3::geometry::areaProjIntegrateSegment(y10_cut, y00_cut, x10_cut,
                     x00_cut, size_y, size_x, w_arr, w_total, plane_orientation);
 
+            bool flag_self_intersecting_area_element = false;
+
+            // test for self-intersection
+            for (int yy = 0; yy < size_y; ++yy) {
+                for (int xx = 0; xx < size_x; ++xx) {
+                    double w = w_arr(yy, xx);
+                    if (w * w_total < 0 && abs(w) >  0.00001) {
+                        flag_self_intersecting_area_element = true;
+                        break;
+                    }
+                }
+                if (flag_self_intersecting_area_element) {
+                    break;
+                }
+            }
+
+            if (flag_self_intersecting_area_element) {
+                /* 
+                If self-intersecting, divide area element (geogrid pixel) into
+                two triangles and integrate them separately.
+                */
+                isce3::core::Matrix<double> w_arr_1(size_y, size_x);
+                w_arr_1.fill(0);
+                double w_total_1 = 0;
+                isce3::geometry::areaProjIntegrateSegment(y00_cut, y01_cut, x00_cut,
+                        x01_cut, size_y, size_x, w_arr_1, w_total_1, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y01_cut, y11_cut, x01_cut,
+                        x11_cut, size_y, size_x, w_arr_1, w_total_1, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y11_cut, y00_cut, x11_cut,
+                        x00_cut, size_y, size_x, w_arr_1, w_total_1, plane_orientation);
+
+                isce3::core::Matrix<double> w_arr_2(size_y, size_x);
+                w_arr_2.fill(0);
+                double w_total_2 = 0;
+                isce3::geometry::areaProjIntegrateSegment(y00_cut, y11_cut, x00_cut,
+                        x11_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y11_cut, y10_cut, x11_cut,
+                        x10_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
+                isce3::geometry::areaProjIntegrateSegment(y10_cut, y00_cut, x10_cut,
+                        x00_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
+                
+                w_total = 0;
+                /*
+                The new weight array `w_arr` is the sum of the absolute values of both
+                triangles weighted arrays `w_arr_1` and `w_arr_2`. The integrated
+                total `w_total` is updated accordingly.
+                */
+                for (int yy = 0; yy < size_y; ++yy) {
+                    for (int xx = 0; xx < size_x; ++xx) {
+                        w_arr(yy, xx) = std::min(
+                            abs(w_arr_1(yy, xx)) + abs(w_arr_2(yy, xx)), 1.0);
+                        w_total += w_arr(yy, xx);
+                    }
+                }
+            }
+
             double nlooks = 0;
             float area_total = 0;
             std::vector<T_out> cumulative_sum(nbands, 0);
@@ -2626,7 +2686,7 @@ void Geocode<T>::_runBlock(
                     double w = w_arr(yy, xx);
                     int y = yy + y_min;
                     int x = xx + x_min;
-                    if (w == 0 || w * w_total < 0)
+                    if (w == 0)
                         continue;
                     else if (y - offset_y < 0 || x - offset_x < 0 ||
                              y >= ybound || x >= xbound) {

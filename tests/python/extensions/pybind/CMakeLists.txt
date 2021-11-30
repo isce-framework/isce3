@@ -34,6 +34,7 @@ image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
+math/stats.py
 polsar/symmetrize.py
 signal/convolve2D.py
 signal/covariance.py

@@ -212,8 +212,8 @@ void GeocodePolygon<T>::getPolygonMean(
         isce3::geometry::rtcAlgorithm rtc_algorithm =
                 isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
 
-        isce3::geometry::rtcMemoryMode rtc_memory_mode =
-                isce3::geometry::rtcMemoryMode::RTC_SINGLE_BLOCK;
+        isce3::core::MemoryModeBlockY rtc_memory_mode =
+                isce3::core::MemoryModeBlockY::SingleBlockY;
 
         computeRtc(radar_grid_cropped, _orbit, input_dop, dem_raster,
                    *rtc_raster, input_terrain_radiometry,
@@ -287,6 +287,8 @@ void GeocodePolygon<T>::_getPolygonMean(
         isce3::io::Raster* output_weights) {
 
     pyre::journal::info_t _info("isce.geometry._getPolygonMean");
+
+    using isce3::math::complex_operations::operator*;
 
     // number of bands in the input raster
     const int nbands = input_raster.numBands();

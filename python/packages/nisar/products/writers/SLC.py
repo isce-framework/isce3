@@ -371,6 +371,26 @@ class SLC(h5py.File):
             orbit, doppler, rslc_doppler, epsg, **tol)
 
 
+    def compute_stats(self, frequency, pol):
+        '''
+        Compute RSLC complex-valued statistics and save them as attributes
+        of the corresponding HDF5 dataset
+        '''
+        h5_ds = self.swath(frequency)[pol]
+        raster = isce3.io.Raster(f"IH5:::ID={h5_ds.id.id}".encode("utf-8"))
+        stats_obj = isce3.math.compute_raster_stats_real_imag(raster)[0]
+        h5_ds.attrs.create('min_real_value', data=stats_obj.min_real)
+        h5_ds.attrs.create('mean_real_value', data=stats_obj.mean_real)
+        h5_ds.attrs.create('max_real_value', data=stats_obj.max_real)
+        h5_ds.attrs.create('sample_stddev_real', 
+                           data=stats_obj.sample_stddev_real)
+        h5_ds.attrs.create('min_imag_value', data=stats_obj.min_imag)
+        h5_ds.attrs.create('mean_imag_value', data=stats_obj.mean_imag)
+        h5_ds.attrs.create('max_imag_value', data=stats_obj.max_imag)
+        h5_ds.attrs.create('sample_stddev_imag',
+                           data=stats_obj.sample_stddev_imag)
+      
+
     def add_calibration_section(self, frequency, pol, 
                                 az_time_orig_vect: np.array, 
                                 epoch: DateTime, 

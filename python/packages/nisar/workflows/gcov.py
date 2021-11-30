@@ -465,7 +465,7 @@ def _save_list_cov_terms(cov_elements_list, dataset_group):
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
                        yds, xds, ds_name, standard_name=None,
                        long_name=None, units=None, fill_value=None,
-                       valid_min=None, valid_max=None):
+                       valid_min=None, valid_max=None, compute_stats=True):
     '''
     write temporary raster file contents to HDF5
 
@@ -492,6 +492,20 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     '''
     if not os.path.isfile(ds_filename):
         return
+
+    stats_real_imag_vector = None
+    stats_vector = None
+    if compute_stats:
+        raster = isce3.io.Raster(ds_filename)
+
+        if (raster.datatype() == gdal.GDT_CFloat32 or 
+                raster.datatype() == gdal.GDT_CFloat64):
+            stats_real_imag_vector = \
+                isce3.math.compute_raster_stats_real_imag(raster)
+        elif raster.datatype() == gdal.GDT_Float64:
+            stats_vector = isce3.math.compute_raster_stats_float64(raster)
+        else:
+            stats_vector = isce3.math.compute_raster_stats_float32(raster)
 
     gdal_ds = gdal.Open(ds_filename)
     nbands = gdal_ds.RasterCount
@@ -522,6 +536,28 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
         if fill_value is not None:
             dset.attrs.create('_FillValue', data=fill_value)
+
+        if stats_vector is not None:
+            stats_obj = stats_vector[band]
+            dset.attrs.create('min_value', data=stats_obj.min)
+            dset.attrs.create('mean_value', data=stats_obj.mean)
+            dset.attrs.create('max_value', data=stats_obj.max)
+            dset.attrs.create('sample_standard_deviation', data=stats_obj.sample_stddev)
+
+        elif stats_real_imag_vector is not None:
+
+            stats_obj = stats_real_imag_vector[band]
+            dset.attrs.create('min_real_value', data=stats_obj.min_real)
+            dset.attrs.create('mean_real_value', data=stats_obj.mean_real)
+            dset.attrs.create('max_real_value', data=stats_obj.max_real)
+            dset.attrs.create('sample_standard_deviation_real', 
+                              data=stats_obj.sample_stddev_real)
+
+            dset.attrs.create('min_imag_value', data=stats_obj.min_imag)
+            dset.attrs.create('mean_imag_value', data=stats_obj.mean_imag)
+            dset.attrs.create('max_imag_value', data=stats_obj.max_imag)
+            dset.attrs.create('sample_standard_deviation_imag',
+                              data=stats_obj.sample_stddev_imag)
 
         if valid_min is not None:
             dset.attrs.create('valid_min', data=valid_min)

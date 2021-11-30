@@ -1,8 +1,10 @@
+import os
+
 import h5py
 import journal
-import os
-from nisar.workflows.runconfig import RunConfig
 from nisar.products.readers import SLC
+from nisar.workflows.runconfig import RunConfig
+
 
 
 class SplitSpectrumRunConfig(RunConfig):
@@ -27,7 +29,9 @@ class SplitSpectrumRunConfig(RunConfig):
         split_cfg = iono_cfg['range_split_spectrum']
         # Extract main range bandwidth from reference RSLC
         ref_slc = SLC(hdf5file=self.cfg['InputFileGroup']['InputFilePath'])
-        rg_main_bandwidth = ref_slc.getSwathMetadata('A').processed_range_bandwidth
+        rg_main_bandwidth = ref_slc.getSwathMetadata(
+            'A').processed_range_bandwidth
+
 
         # Check if ionosphere_phase_correction is enabled. Otherwise,
         # throw an error and do not execute split-spectrum
@@ -48,21 +52,29 @@ class SplitSpectrumRunConfig(RunConfig):
 
         if split_cfg['spectral_diversity'] == 'main_side_band':
             # Extract side-band range bandwidth
-            rg_side_bandwidth = ref_slc.getSwathMetadata('B').processed_range_bandwidth
+            rg_side_bandwidth = ref_slc.getSwathMetadata(
+                'B').processed_range_bandwidth
+
 
             # If "low_bandwidth" and "high_bandwidth" are not assigned, assign main range bandwidth
             # and side-band bandwidths, respectively. If assigned, check that
             # "low_bandwidth" and "high_bandwidth" correspond to main and side range bandwidths
-            if split_cfg['low_band_bandwidth'] is None or split_cfg['low_band_bandwidth'] != rg_main_bandwidth:
+            if split_cfg['low_band_bandwidth'] is None or split_cfg[
+                'low_band_bandwidth'] != rg_main_bandwidth:
                 split_cfg['low_band_bandwidth'] = rg_main_bandwidth
-            if split_cfg['high_band_bandwidth'] is None or split_cfg['high_band_bandwidth'] != rg_side_bandwidth:
+            if split_cfg['high_band_bandwidth'] is None or split_cfg[
+                'high_band_bandwidth'] != rg_side_bandwidth:
                 split_cfg['high_band_bandwidth'] = rg_side_bandwidth
 
             # Check that main and side-band are at the same polarization. If not, throw an error.
-            src_h5 = h5py.File(self.cfg['InputFileGroup']['InputFilePath'], 'r', libver='latest', swmr=True)
-            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
+            src_h5 = h5py.File(self.cfg['InputFileGroup']['InputFilePath'], 'r',
+                               libver='latest', swmr=True)
+            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA',
+                                    'listOfPolarizations')
             pols_freqA = src_h5[pol_path][()]
-            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB', 'listOfPolarizations')
+            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
+                                    'listOfPolarizations')
+
             pols_freqB = src_h5[pol_path][()]
             src_h5.close()
             if len(set.intersection(set(pols_freqA), set(pols_freqB))) == 0:

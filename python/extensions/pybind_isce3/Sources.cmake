@@ -59,6 +59,8 @@ io/gdal/Raster.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp
+math/math.cpp
+math/Stats.cpp
 polsar/symmetrize.cpp
 polsar/polsar.cpp
 signal/signal.cpp
