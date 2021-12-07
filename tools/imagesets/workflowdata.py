@@ -11,8 +11,8 @@ workflowdata = {
         # and so forth
         "L0B_RRSD_REE2":
         [
-            "REE_L0B_NISAR_array144sq_02.h5",
-            "REE_ANTPAT_DATA.h5",
+            "REE_L0B_ECHO_array144sq_03.h5",
+            "REE_ANTPAT_CUTS_DATA.h5",
             "README.txt",
         ],
     
