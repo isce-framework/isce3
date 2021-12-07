@@ -56,13 +56,13 @@ workflowdata = {
         "L0B_RRSD_ALPSRP110160680_Rosamond":
         [
             "ALPSRP110160680.L0B.h5",
-            "dem.tif",
+            "dem.tiff",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
             "ALPSRP116870680.L0B.h5",
-            "dem.tif",
+            "dem.tiff",
             "README.txt",
         ],
     
