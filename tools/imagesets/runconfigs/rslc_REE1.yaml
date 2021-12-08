@@ -47,9 +47,19 @@ runconfig:
         PrimaryExecutable:
             # Handy to set to "SLC" until other ISCE tools updated.
             ProductType: RSLC
+            CompositeReleaseID: D00200
+            MissionId: NISAR
+            ProcessingType: PR
+            ProductAccuracy: P
+        DebugLevelGroup:
+            DebugSwitch: false
         Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
+            CycleNumber: 1
+            RelativeOrbitNumber: 2
+            FrameNumber: 4
+            OrbitDirection: Ascending
+            TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
+            FullCoverageThresholdPercent: 75.0
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True
@@ -57,15 +67,15 @@ runconfig:
             output_grid:
                 # Azimuth bounds of output SLC, optional.
                 # Defaults to extent of raw data minus sythetic aperture and
-                start_time: 2021-07-01T03:20:03.461103958
-                end_time: 2021-07-01T03:20:03.539283375
+                start_time: 2021-07-01T03:20:03.457785404
+                end_time: 2021-07-01T03:20:03.542653825
                 # Range bounds of output SLC in meters, optional.
                 # Defaults to entire fully focused swath.
                 start_range: 967124.5530972595
                 end_range: 967930.2453281345
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: null
+                output_prf: 1520
                 # Interval for azimuth grid alignment in seconds. See docs.
                 # Typically want 1 second and integer PRF (in Hz). Will not
                 # override user-provided start_time.
@@ -76,7 +86,7 @@ runconfig:
                 kind: Kaiser
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.
                 # For Cosine, 0 <= shape <= 1
-                shape: 3.0
+                shape: 1.6
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
                 kind: Kaiser

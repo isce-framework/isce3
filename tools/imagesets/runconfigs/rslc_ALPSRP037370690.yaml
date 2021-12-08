@@ -47,9 +47,19 @@ runconfig:
         PrimaryExecutable:
             # Handy to set to "SLC" until other ISCE tools updated.
             ProductType: RSLC
+            CompositeReleaseID: D00200
+            MissionId: NISAR
+            ProcessingType: PR
+            ProductAccuracy: P
+        DebugLevelGroup:
+            DebugSwitch: false
         Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
+            CycleNumber: 1
+            RelativeOrbitNumber: 2
+            FrameNumber: 4
+            OrbitDirection: Ascending
+            TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
+            FullCoverageThresholdPercent: 75.0
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True
@@ -89,7 +99,7 @@ runconfig:
                 kind: Kaiser
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.
                 # For Cosine, 0 <= shape <= 1
-                shape: 3.0
+                shape: 1.6
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
                 kind: Kaiser
@@ -195,3 +205,6 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+        QA:
+            validate: True
+            quality: True

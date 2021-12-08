@@ -47,9 +47,19 @@ runconfig:
         PrimaryExecutable:
             # Handy to set to "SLC" until other ISCE tools updated.
             ProductType: RSLC
+            CompositeReleaseID: D00200
+            MissionId: NISAR
+            ProcessingType: PR
+            ProductAccuracy: P
+        DebugLevelGroup:
+            DebugSwitch: false
         Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
+            CycleNumber: 1
+            RelativeOrbitNumber: 2
+            FrameNumber: 4
+            OrbitDirection: Ascending
+            TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
+            FullCoverageThresholdPercent: 75.0
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True
@@ -57,25 +67,17 @@ runconfig:
             output_grid:
                 # Azimuth bounds of output SLC, optional.
                 # Defaults to extent of raw data minus sythetic aperture and
-                # 128
-                # start_time: 2006-10-07T06:10:05.473295634
-                # end_time: 2006-10-07T06:10:05.542038921
-                # # Range bounds of output SLC in meters, optional.
-                # # Defaults to entire fully focused swath.
-                # start_range: 751863.3552474803
-                # end_range: 752462.3952474804
-                # 256
-                # start_time: 2006-10-07T06:10:05.442352522
-                # end_time: 2006-10-07T06:10:05.579839095
-                # start_range: 751563.8348427379
-                # end_range: 752761.914842738
-                # 512
                 start_time: 2011-02-26T06:18:07.0
                 end_time: 2011-02-26T06:18:19.0
                 # Range bounds of output SLC in meters, optional.
                 # Defaults to entire fully focused swath.
                 start_range: 846567.0
                 end_range: 890973.75784125
+                # smaller 512x512 pixel grid for testing.
+                # start_time: 2011-02-26T06:18:14.651973674
+                # end_time: 2011-02-26T06:18:14.988815778
+                # start_range: 874925.4928237293
+                # end_range: 877323.8324877117
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
                 output_prf: 1520.0
@@ -89,7 +91,7 @@ runconfig:
                 kind: Kaiser
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.
                 # For Cosine, 0 <= shape <= 1
-                shape: 1.8
+                shape: 1.6
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
                 kind: Kaiser
@@ -133,8 +135,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 128
-                    azimuth: 128
+                    range: 1024
+                    azimuth: 1024
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
                 kernel:
@@ -195,3 +197,6 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+        QA:
+            validate: True
+            quality: True

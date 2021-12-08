@@ -1,6 +1,10 @@
 # Structure inherited from L0 PGEs covers inputs, outputs, and identification.
 runconfig:
+    name: NISAR_L1-L-RSLC_RUNCONFIG    
     groups:
+        PGENameGroup:
+            PGEName: RSLC_L_PGE
+
         InputFileGroup:
             # REQUIRED List of NISAR raw data products in L0B format.
             InputFilePath:
@@ -12,6 +16,8 @@ runconfig:
             AntennaPattern: L0B_RRSD_REE_NISAR_dithered/REE_ANTPAT_DATA.h5
 
         ProductPathGroup:
+            # Directory where PGE will place results. Irrelevant to SAS.
+            ProductPath: output_rslc
             # Directory where SAS can write temporary data
             ScratchPath: scratch_rslc
             # SAS writes output product to the following file. PGE may rename.
@@ -22,10 +28,21 @@ runconfig:
 
         PrimaryExecutable:
             ProductType: RSLC
+            CompositeReleaseID: D00200
+            MissionId: NISAR
+            ProcessingType: PR
+            ProductAccuracy: P
+
+        DebugLevelGroup:
+            DebugSwitch: false
 
         Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 150
+            CycleNumber: 1
+            RelativeOrbitNumber: 2
+            FrameNumber: 4
+            OrbitDirection: Ascending
+            TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
+            FullCoverageThresholdPercent: 75.0
 
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
@@ -46,14 +63,14 @@ runconfig:
 
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: null # 1300.0
+                output_prf: 1520.0
 
             # Range spectral window, optional.  Defaults to no weighting.
             range_window:
                 # Kaiser or Cosine
                 kind: Kaiser
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.  For Cosine, 0 <= shape <= 1
-                shape: 3.0
+                shape: 1.6
 
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
@@ -181,3 +198,6 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+        QA:
+            validate: True
+            quality: True
