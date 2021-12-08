@@ -144,7 +144,7 @@ runconfig:
 
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf:
+                output_prf: 1520.0
 
                 # Interval for azimuth grid alignment in seconds. See docs.
                 # Typically want 1 second and integer PRF (in Hz). Will not
@@ -156,7 +156,7 @@ runconfig:
                 # Kaiser or Cosine
                 kind: Kaiser
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.  For Cosine, 0 <= shape <= 1
-                shape: 3.0
+                shape: 1.6
 
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
