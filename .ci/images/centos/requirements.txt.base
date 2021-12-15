@@ -13,3 +13,4 @@ scipy
 testfixtures
 scikit-image
 shapely
+backoff
