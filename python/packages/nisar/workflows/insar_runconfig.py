@@ -140,7 +140,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
         # If ionosphere phase correction is enabled, check defaults
         if iono_cfg['enabled']:
             # Extract split-spectrum dictionary
-            split_cfg = iono_cfg['range_split_spectrum']
+            split_cfg = iono_cfg['split_range_spectrum']
             # Extract main range bandwidth from reference SLC
             ref_slc = SLC(hdf5file=self.cfg['InputFileGroup']['InputFilePath'])
             rg_main_bandwidth = ref_slc.getSwathMetadata(
@@ -151,10 +151,12 @@ class InsarRunConfig(Geo2rdrRunConfig):
             if split_cfg['spectral_diversity'] == 'split_main_band':
                 # If "low_bandwidth" or 'high_bandwidth" is not allocated, split the main range bandwidth
                 # into two 1/3 sub-bands.
-                if split_cfg['low_band_bandwidth'] is None:
+                if split_cfg['low_band_bandwidth'] is None or split_cfg[
+                    'high_band_bandwidth'] is None:
                     split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
-                if split_cfg['high_band_bandwidth'] is None:
                     split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
+                    err_str = "band_widths for sub-bands are not given; They will be 1/3 of range bandwidth"
+                    error_channel.log(err_str)
 
             if split_cfg['spectral_diversity'] == 'main_side_band':
                 # Extract side-band range bandwidth

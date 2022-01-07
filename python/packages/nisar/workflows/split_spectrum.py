@@ -15,7 +15,6 @@ from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
-
 def run(cfg: dict):
     '''
     run bandpass
@@ -27,10 +26,9 @@ def run(cfg: dict):
 
     # Extract range split spectrum dictionary and corresponding parameters
     ionosphere_option = cfg['processing']['ionosphere_phase_correction']
-    split_cfg = ionosphere_option['range_split_spectrum']
+    split_cfg = ionosphere_option['split_range_spectrum']
     blocksize = split_cfg['lines_per_block']
     method = split_cfg['spectral_diversity']
-    fft_size = split_cfg['range_fft_size']
     window_function = split_cfg['window_function']
     window_shape = split_cfg['window_shape']
     low_band_bandwidth = split_cfg['low_band_bandwidth']
@@ -42,7 +40,7 @@ def run(cfg: dict):
     info_channel.log("starting split_spectrum")
 
     t_all = time.time()
-
+    print(method)
     # Check split spectrum method
     if method == 'split_main_band':
         info_channel.log('Split the main band of the signal')
@@ -76,14 +74,13 @@ def run(cfg: dict):
             high_frequency_slc = meta_data.center_freq + bandwidth_half
 
             # first and second elements are the frequency ranges for low and high sub-bands, respectively.
-            low_frequencies_spectrum = np.array(
-                [low_frequency_slc, high_frequency_slc - high_band_bandwidth])
-            high_frequencies_spectrum = np.array(
-                [low_frequency_slc + low_band_bandwidth, high_frequency_slc])
+            low_subband_frequencies = np.array(
+                [low_frequency_slc, low_frequency_slc + low_band_bandwidth])
+            high_subband_frequencies = np.array(
+                [high_frequency_slc - high_band_bandwidth, high_frequency_slc])
 
-            sub_band_center_freq = (low_frequencies_spectrum +
-                                    high_frequencies_spectrum) / 2
-
+            low_band_center_freq = low_frequency_slc + low_band_bandwidth/2
+            high_band_center_freq = high_frequency_slc - high_band_bandwidth/2
             # Specify split-spectrum parameters
             split_spectrum = splitspectrum.SplitSpectrum(
                 rg_sample_freq=meta_data.rg_sample_freq,
@@ -106,6 +103,7 @@ def run(cfg: dict):
                     rows = slc_raster.length
                     cols = slc_raster.width
                     nblocks = int(np.ceil(rows / blocksize))
+                    fft_size = cols
 
                     for block in range(0, nblocks):
                         print(" -- split_spectrum block: ", block)
@@ -125,9 +123,9 @@ def run(cfg: dict):
 
                         subband_slc_low, subband_meta_low = split_spectrum.bandpass_shift_spectrum(
                             slc_raster=target_slc_image,
-                            low_frequency=low_frequencies_spectrum[0],
-                            high_frequency=high_frequencies_spectrum[0],
-                            new_center_frequency=sub_band_center_freq[0],
+                            low_frequency=low_subband_frequencies[0],
+                            high_frequency=low_subband_frequencies[1],
+                            new_center_frequency=low_band_center_freq,
                             fft_size=fft_size,
                             window_shape=window_shape,
                             window_function=window_function,
@@ -136,9 +134,9 @@ def run(cfg: dict):
 
                         subband_slc_high, subband_meta_high = split_spectrum.bandpass_shift_spectrum(
                             slc_raster=target_slc_image,
-                            low_frequency=low_frequencies_spectrum[1],
-                            high_frequency=high_frequencies_spectrum[1],
-                            new_center_frequency=sub_band_center_freq[1],
+                            low_frequency=high_subband_frequencies[0],
+                            high_frequency=high_subband_frequencies[1],
+                            new_center_frequency=high_band_center_freq,
                             fft_size=fft_size,
                             window_shape=window_shape,
                             window_function=window_function,

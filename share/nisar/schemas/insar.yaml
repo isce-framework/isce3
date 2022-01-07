@@ -493,7 +493,7 @@ bandpass_options:
     window_shape: num(min=0, required=False)
     range_fft_size: int(min=1, required=False)
 
-range_split_spectrum_options:
+split_range_spectrum_options:
     # Number of lines per block for block processing)
     lines_per_block: int(min=1, required=False)
     # 'split_main_band' splits the main range bandwidth into a low and high subband
@@ -506,7 +506,6 @@ range_split_spectrum_options:
     low_band_bandwidth: num(min=0, required=False)
     # High bandwidth. If unspecified, it is automatically set by the workflow
     high_band_bandwidth: num(min=0, required=False)
-    range_fft_size: int(min=1, required=False)
     # Type of window used to taper range spectrum
     window_function: enum('tukey', 'cosine', 'kaiser', required=False)
     # Shape parameter. For Kaiser, 0 <= shape < Inf.
@@ -516,7 +515,7 @@ range_split_spectrum_options:
 ionosphere_phase_correction_options:
     # Boolean flag to enable/disable ionosphere phase correction
     enabled: bool(required=False)
-    range_split_spectrum: include('range_split_spectrum_options', required=False)
+    split_range_spectrum: include('split_range_spectrum_options', required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

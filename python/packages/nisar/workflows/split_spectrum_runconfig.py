@@ -23,15 +23,15 @@ class SplitSpectrumRunConfig(RunConfig):
         '''
         Check split-spectrum specifics from YAML file
         '''
-
+        
+        info_channel = journal.info('SplitSpectrumRunConfig.yaml_check')
         error_channel = journal.error('SplitSpectrumRunConfig.yaml_check')
         iono_cfg = self.cfg['processing']['ionosphere_phase_correction']
-        split_cfg = iono_cfg['range_split_spectrum']
+        split_cfg = iono_cfg['split_range_spectrum']
         # Extract main range bandwidth from reference RSLC
         ref_slc = SLC(hdf5file=self.cfg['InputFileGroup']['InputFilePath'])
         rg_main_bandwidth = ref_slc.getSwathMetadata(
             'A').processed_range_bandwidth
-
 
         # Check if ionosphere_phase_correction is enabled. Otherwise,
         # throw an error and do not execute split-spectrum
@@ -45,16 +45,17 @@ class SplitSpectrumRunConfig(RunConfig):
         if split_cfg['spectral_diversity'] == 'split_main_band':
             # If "low_bandwidth" or 'high_bandwidth" is not allocated, split the main range bandwidth
             # into two 1/3 sub-bands.
-            if split_cfg['low_band_bandwidth'] is None:
+            if split_cfg['low_band_bandwidth'] is None or split_cfg[
+                'high_band_bandwidth'] is None:
                 split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
-            if split_cfg['high_band_bandwidth'] is None:
                 split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
+                info_str = "band_widths for sub-bands are not given; They will be 1/3 of range bandwidth"
+                info_channel.log(info_str)
 
         if split_cfg['spectral_diversity'] == 'main_side_band':
             # Extract side-band range bandwidth
             rg_side_bandwidth = ref_slc.getSwathMetadata(
                 'B').processed_range_bandwidth
-
 
             # If "low_bandwidth" and "high_bandwidth" are not assigned, assign main range bandwidth
             # and side-band bandwidths, respectively. If assigned, check that
