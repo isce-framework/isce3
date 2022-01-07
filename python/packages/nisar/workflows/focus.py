@@ -546,6 +546,8 @@ def focus(runconfig):
         rskip = int(np.round(raw.getRanges("B", tx).spacing
             / raw.getRanges("A", txref).spacing))
         ogrid["B"] = ogrid["A"][:, ::rskip]
+        fc = raw.getCenterFrequency("B")
+        ogrid["B"].wavelength = isce3.core.speed_of_light / fc
         log.info("Output grid B is %s", ogrid["B"])
 
     polygon = isce3.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
