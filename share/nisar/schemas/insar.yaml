@@ -498,7 +498,8 @@ geo2rdr_options:
     # Maximum number of iterations
     maxiter: int(min=1, required=False)
 
-    # Path to rdr2geo (topo) outputs. Required only for
+    # Path to a directory in which to store rdr2geo (topo) outputs. If the
+    # directory does not exist, it will be created. Required only for
     # stand-alone usage of geo2rdr.py
     topo_path: str(required=False)
 
@@ -518,6 +519,20 @@ rdr2geo_options:
     # Line per block to
     lines_per_block: int(min=1, required=False)
 
+    # Flags for enabling/disabling layers written in rdr2geo/topo
+    # default to save only layers needed for geo2rdr + InSAR
+    # x, y, and height required for geo2rdr and InSAR
+    # layover_shadow required for InSAR
+    write_x: bool(required=False)
+    write_y: bool(required=False)
+    write_z: bool(required=False)
+    write_height: bool(required=False)
+    write_incidence: bool(required=False)
+    write_heading: bool(required=False)
+    write_local_incidence: bool(required=False)
+    write_local_psi: bool(required=False)
+    write_simulated_amplitude: bool(required=False)
+    write_layover_shadow: bool(required=False)
 
 log_nfo:
     # Path to log file

@@ -39,7 +39,7 @@ using isce3::geometry::TopoLayers;
  * <li> localInc.rdr - Local incidence angle (degrees) at target
  * <li> locaPsi.rdr - Local projection angle (degrees) at target
  * <li> simamp.rdr - Simulated amplitude image.
- * <li> mask.rdr - Layover and shadow image.
+ * <li> layoverShadowMask.rdr - Layover and shadow image.
  * </ul>*/
 void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster,
@@ -47,13 +47,12 @@ topo(Raster & demRaster,
 
     { // Topo scope for creating output rasters
 
-    // Initialize a TopoLayers object to handle block data and raster data
-    TopoLayers layers;
-
     // Create rasters for individual layers (provide output raster sizes)
     const RadarGridParameters & radarGrid = this->radarGridParameters();
-    layers.initRasters(outdir, radarGrid.width(), radarGrid.length(),
-                       this->computeMask());
+
+    // Initialize a TopoLayers object to handle block data and raster data
+    TopoLayers layers(outdir, radarGrid.width(), radarGrid.length(),
+            _linesPerBlock, this->computeMask());
 
     // Call topo with layers
     topo(demRaster, layers);
@@ -74,7 +73,7 @@ topo(Raster & demRaster,
 
     // Add optional mask raster
     if (this->computeMask()) {
-        rasterTopoVec.push_back(Raster(outdir + "/mask.rdr" ));
+        rasterTopoVec.push_back(Raster(outdir + "/layoverShadowMask.rdr" ));
     };
 
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
@@ -97,50 +96,18 @@ topo(Raster & demRaster,
   * @param[in] simRaster output raster for simulated amplitude image.
   * @param[in] maskRaster output raster for layover/shadow mask. */
 void isce3::cuda::geometry::Topo::
-topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
-     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster, Raster & maskRaster) {
+topo(Raster & demRaster, Raster * xRaster, Raster * yRaster, Raster * heightRaster,
+     Raster * incRaster, Raster * hdgRaster, Raster * localIncRaster, Raster * localPsiRaster,
+     Raster * simRaster, Raster * maskRaster) {
 
     // Initialize a TopoLayers object to handle block data and raster data
-    TopoLayers layers;
-
     // Create rasters for individual layers (provide output raster sizes)
-    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-                      localPsiRaster, simRaster, maskRaster);
-    // Indicate a mask raster has been provided for writing
-    this->computeMask(true);
+    TopoLayers layers(_linesPerBlock, xRaster, yRaster, heightRaster, incRaster,
+            hdgRaster, localIncRaster, localPsiRaster, simRaster,
+            maskRaster);
 
-    // Call topo with layers
-    topo(demRaster, layers);
-}
-
-/** @param[in] demRaster input DEM raster
-  * @param[in] xRaster output raster for X coordinate in requested projection system
-                   (meters or degrees)
-  * @param[in] yRaster output raster for Y cooordinate in requested projection system
-                   (meters or degrees)
-  * @param[in] zRaster output raster for height above ellipsoid (meters)
-  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical
-               at target
-  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise
-               from EAST (Right hand rule)
-  * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
-  * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
-  * @param[in] simRaster output raster for simulated amplitude image.
-  * @param[in] maskRaster output raster for layover/shadow mask. */
-void isce3::cuda::geometry::Topo::
-topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
-     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster) {
-
-    // Initialize a TopoLayers object to handle block data and raster data
-    TopoLayers layers;
-
-    // Create rasters for individual layers (provide output raster sizes)
-    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-                      localPsiRaster, simRaster);
-    // Indicate no mask raster has been provided for writing
-    this->computeMask(false);
+    // Set computeMask flag by pointer value
+    this->computeMask(maskRaster != nullptr);
 
     // Call topo with layers
     topo(demRaster, layers);
@@ -213,7 +180,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
         // Reset reference height using mean
         demInterp.refHeight(dem_avg);
 
-        // Set output block sizes in layers
+        // Reset output block sizes in layers
         layers.setBlockSize(blockLength, radarGrid.width());
 
         // Run Topo on the GPU for this block

@@ -23,6 +23,7 @@ def test_filter_interferogram_run():
         test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
             replace('@TEST_OUTPUT@', 'RIFG.h5'). \
             replace('@TEST_PRODUCT_TYPES@', 'RIFG'). \
+            replace('@TEST_RDR2GEO_FLAGS@', 'True'). \
             replace('interferogram_path:', 'interferogram_path: RIFG.h5')
 
     # Create CLI input namespace with yaml text instead of filepath

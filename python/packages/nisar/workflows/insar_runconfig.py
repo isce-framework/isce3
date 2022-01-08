@@ -1,6 +1,7 @@
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 import journal
 import os
+import warnings
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -16,6 +17,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
         scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
         error_channel = journal.error('InsarRunConfig.yaml_check')
+        warning_channel = journal.warning('InsarRunConfig.yaml_check')
 
         # Extract frequencies and polarizations to process
         freq_pols = self.cfg['processing']['input_subset'][
@@ -36,6 +38,21 @@ class InsarRunConfig(Geo2rdrRunConfig):
             err_str = "Rubbersheet must be enabled to run fine SLC resampling"
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        # Check if rdr2geo flags enabled for topo X, Y, and Z rasters
+        for xyz in 'xyz':
+            # Get write flag for x, y, or z
+            write_flag = f'write_{xyz}'
+
+            # Check if it's not enabled (required for InSAR processing)
+            if not self.cfg['processing']['rdr2geo'][write_flag]:
+                # Raise and log warning
+                warning_str = f'{write_flag} incorrectly disabled for rdr2geo; it will be enabled'
+                warning_channel.log(warning_str)
+                warning.warn(warning_str)
+
+                # Set write flag True
+                self.cfg['processing']['rdr2geo'][write_flag] = True
 
         # for each submodule check if user path for input data assigned
         # if not assigned, assume it'll be in scratch
@@ -150,6 +167,16 @@ class InsarRunConfig(Geo2rdrRunConfig):
             if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
                 self.cfg['processing']['geocode']['datasets'][
                     gunw_dataset] = True
+
+        # Check if layover shadow output enabled
+        if not self.cfg['processing']['rdr2geo']['write_layover_shadow']:
+            # Raise and log warning
+            warning_str = 'layover_shadow incorrectly disabled for rdr2geo; it will be enabled'
+            warning_channel.log(warning_str)
+            warning.warn(warning_str)
+
+            # Set write flag True
+            self.cfg['processing']['rdr2geo']['write_layover_shadow'] = True
 
         # To geocode the offsets we need the offset field shape and
         # the start pixel in range and azimuth. Note, margin and gross_offsets

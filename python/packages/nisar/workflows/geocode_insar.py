@@ -63,7 +63,7 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     dataset_path : str
         HDF5 path to geocoded shadow layover dataset
     """
-    raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'mask.rdr'
+    raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'layoverShadowMask.rdr'
     input_raster = isce3.io.Raster(str(raster_ref))
 
     # access the HDF5 dataset for layover shadow mask

@@ -103,6 +103,14 @@ runconfig:
                 threshold: 1.0e-9
                 maxiter: 25
 
+            rdr2geo:
+                write_incidence: @TEST_RDR2GEO_FLAGS@
+                write_heading: @TEST_RDR2GEO_FLAGS@
+                write_local_incidence: @TEST_RDR2GEO_FLAGS@
+                write_local_psi: @TEST_RDR2GEO_FLAGS@
+                write_simulated_amplitude: @TEST_RDR2GEO_FLAGS@
+                write_layover_shadow: True
+
             dem_margin: 0.1
 
             coarse_resample:

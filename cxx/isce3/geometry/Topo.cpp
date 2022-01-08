@@ -57,11 +57,9 @@ template<typename T>
 void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
     { // Topo scope for creating output rasters
         // Initialize a TopoLayers object to handle block data and raster data
-        TopoLayers layers;
-
         // Create rasters for individual layers (provide output raster sizes)
-        layers.initRasters(outdir, _radarGrid.width(), _radarGrid.length(),
-                           _computeMask);
+        TopoLayers layers(outdir, _radarGrid.width(), _radarGrid.length(),
+                          _linesPerBlock, _computeMask);
 
         // Call topo with layers
         topo(dem, layers);
@@ -76,7 +74,7 @@ void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
 
     // Add optional mask raster
     if (_computeMask) {
-        rasterTopoVec.push_back(Raster(outdir + "/mask.rdr"));
+        rasterTopoVec.push_back(Raster(outdir + "/layoverShadowMask.rdr"));
     };
 
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec);
@@ -84,38 +82,21 @@ void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
     vrt.setEPSG(_epsgOut);
 }
 
+// Run topo with externally created topo rasters
 template<typename T>
-void isce3::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
-                                 Raster& heightRaster, Raster& incRaster,
-                                 Raster& hdgRaster, Raster& localIncRaster,
-                                 Raster& localPsiRaster, Raster& simRaster,
-                                 Raster& maskRaster) {
+void isce3::geometry::Topo::_topo(T& dem, Raster* xRaster, Raster* yRaster,
+                                 Raster* heightRaster, Raster* incRaster,
+                                 Raster* hdgRaster, Raster* localIncRaster,
+                                 Raster* localPsiRaster, Raster* simRaster,
+                                 Raster* maskRaster) {
     // Initialize a TopoLayers object to handle block data and raster data
-    TopoLayers layers;
-
     // Create rasters for individual layers (provide output raster sizes)
-    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-                      localIncRaster, localPsiRaster, simRaster, maskRaster);
-    // Indicate a mask raster has been provided for writing
-    computeMask(true);
+    TopoLayers layers(_linesPerBlock, xRaster, yRaster, heightRaster, incRaster,
+                      hdgRaster, localIncRaster, localPsiRaster, simRaster,
+                      maskRaster);
 
-    // Call topo with layers
-    topo(dem, layers);
-}
-
-template<typename T>
-void isce3::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
-                                 Raster& heightRaster, Raster& incRaster,
-                                 Raster& hdgRaster, Raster& localIncRaster,
-                                 Raster& localPsiRaster, Raster& simRaster) {
-    // Initialize a TopoLayers object to handle block data and raster data
-    TopoLayers layers;
-
-    // Create rasters for individual layers (provide output raster sizes)
-    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-                      localIncRaster, localPsiRaster, simRaster);
-    // Indicate no mask raster has been provided for writing
-    computeMask(false);
+    // Set computeMask flag by pointer value
+    computeMask(maskRaster != nullptr);
 
     // Call topo with layers
     topo(dem, layers);
@@ -180,7 +161,7 @@ topo(Raster & demRaster, TopoLayers & layers)
         // Reset reference height for DEMInterpolator
         demInterp.refHeight(dem_avg);
 
-        // Set output block sizes in layers
+        // Reset output block sizes in layers
         layers.setBlockSize(blockLength, _radarGrid.width());
 
         // Allocate vector for storing satellite position for each line
@@ -300,7 +281,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
         float demmax, dem_avg;
         demInterp.computeHeightStats(demmax, dem_avg, info);
 
-        // Set output block sizes in layers
+        // Reset output block sizes in layers
         layers.setBlockSize(blockLength, _radarGrid.width());
 
         // Allocate vector for storing satellite position for each line
@@ -342,7 +323,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid,
-                                      demInterp, llh, _radarGrid.lookSide(), 
+                                      demInterp, llh, _radarGrid.lookSide(),
                                       _threshold, _numiter, _extraiter);
                 totalconv += geostat;
 
@@ -385,52 +366,28 @@ void isce3::geometry::Topo::topo(isce3::io::Raster& demRaster,
 
 
 void isce3::geometry::Topo::topo(
-        isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
-        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
-        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
-        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
-        isce3::io::Raster& simRaster, isce3::io::Raster& maskRaster) {
+        isce3::io::Raster& demRaster, isce3::io::Raster* xRaster,
+        isce3::io::Raster* yRaster, isce3::io::Raster* heightRaster,
+        isce3::io::Raster* incRaster, isce3::io::Raster* hdgRaster,
+        isce3::io::Raster* localIncRaster, isce3::io::Raster* localPsiRaster,
+        isce3::io::Raster* simRaster, isce3::io::Raster* maskRaster) {
     _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
           localIncRaster, localPsiRaster, simRaster, maskRaster);
 }
-
-
-void isce3::geometry::Topo::topo(
-        isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
-        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
-        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
-        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
-        isce3::io::Raster& simRaster) {
-    _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-          localIncRaster, localPsiRaster, simRaster);
-}
-
 
 void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
                                 const std::string& outdir) {
     _topo(demInterp, outdir);
 }
 
-
 void isce3::geometry::Topo::topo(
-        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster& xRaster,
-        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
-        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
-        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
-        isce3::io::Raster& simRaster, isce3::io::Raster& maskRaster) {
+        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster* xRaster,
+        isce3::io::Raster* yRaster, isce3::io::Raster* heightRaster,
+        isce3::io::Raster* incRaster, isce3::io::Raster* hdgRaster,
+        isce3::io::Raster* localIncRaster, isce3::io::Raster* localPsiRaster,
+        isce3::io::Raster* simRaster, isce3::io::Raster* maskRaster) {
     _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
           localIncRaster, localPsiRaster, simRaster, maskRaster);
-}
-
-
-void isce3::geometry::Topo::topo(
-        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster& xRaster,
-        isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
-        isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
-        isce3::io::Raster& localIncRaster, isce3::io::Raster& localPsiRaster,
-        isce3::io::Raster& simRaster) {
-    _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-          localIncRaster, localPsiRaster, simRaster);
 }
 
 void isce3::geometry::Topo::
@@ -588,6 +545,10 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.y(line, bin, y);
     layers.z(line, bin, targetLLH[2]);
 
+    // Skip other computations if their rasters aren't set
+    if (layers.onlyXYZRastersSet())
+        return;
+
     // Convert llh->xyz for ground point
     const Vec3 targetXYZ = _ellipsoid.lonLatToXyz(targetLLH);
 
@@ -707,7 +668,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                        const isce3::geometry::DEMInterpolator&,
                        isce3::core::ProjectionBase*)> getDemCoords;
 
-    if (_epsgOut == demInterp.epsgCode()) {                   
+    if (_epsgOut == demInterp.epsgCode()) {
         getDemCoords = isce3::geometry::getDemCoordsSameEpsg;
     } else {
         getDemCoords = isce3::geometry::getDemCoordsDiffEpsg;
@@ -837,5 +798,3 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         }
     } // end loop lines
 }
-
-// end of file
