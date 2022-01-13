@@ -86,21 +86,25 @@ def run(cfg):
                               extraiter=extraiter,
                               lines_per_block=lines_per_block)
 
-        # dict of layer names keys to their GDAL types
-        layers = {'x':gdal.GDT_Float64, 'y':gdal.GDT_Float64,
-                  'z':gdal.GDT_Float64, 'incidence':gdal.GDT_Float32,
-                  'heading':gdal.GDT_Float32, 'local_incidence':gdal.GDT_Float32,
-                  'local_psi':gdal.GDT_Float32, 'simulated_amplitude':gdal.GDT_Float32,
-                  'layover_shadow':gdal.GDT_Byte}
+        # dict of layer names keys to tuples of their output name and GDAL types
+        layers = {'x':('x', gdal.GDT_Float64), 'y':('y', gdal.GDT_Float64),
+                  'z':('z', gdal.GDT_Float64),
+                  'incidence':('incidence', gdal.GDT_Float32),
+                  'heading':('heading', gdal.GDT_Float32),
+                  'local_incidence':('localIncidence', gdal.GDT_Float32),
+                  'local_psi':('localPsi', gdal.GDT_Float32),
+                  'simulated_amplitude':('simamp', gdal.GDT_Float32),
+                  'layover_shadow':('layoverShadowMask', gdal.GDT_Byte)}
 
         # get rdr2geo config dict from processing dict for brevity
         rdr2geo_cfg = cfg['processing']['rdr2geo']
 
         # list comprehend rasters to be written from layers dict
         raster_list = [
-            get_raster_obj(f'{str(rdr2geo_scratch_path)}/{name}.rdr',
-                           radargrid, rdr2geo_cfg[f'write_{name}'],
-                           dtype) for name, dtype in layers.items()]
+            get_raster_obj(f'{str(rdr2geo_scratch_path)}/{fname}.rdr',
+                           radargrid, rdr2geo_cfg[f'write_{key_name}'],
+                           dtype)
+            for key_name, (fname, dtype) in layers.items()]
 
         # extract individual elements from dict as args for topo
         x_raster, y_raster, height_raster, incidence_raster,\

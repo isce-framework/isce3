@@ -589,7 +589,7 @@ def _compute_stats(raster, h5_ds):
     h5_ds.attrs.create('min_value', data=stats_obj.min)
     h5_ds.attrs.create('mean_value', data=stats_obj.mean)
     h5_ds.attrs.create('max_value', data=stats_obj.max)
-    h5_ds.attrs.create('sample_stddev', 
+    h5_ds.attrs.create('sample_stddev',
                        data=stats_obj.sample_stddev)
 
 

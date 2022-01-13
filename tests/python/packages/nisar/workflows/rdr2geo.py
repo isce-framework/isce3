@@ -62,7 +62,7 @@ def test_rdr2geo_validate():
     ref_fnames = ['x.rdr', 'y.rdr', 'z.rdr', 'inc.rdr', 'hdg.rdr',
                   'localInc.rdr', 'localPsi.rdr']
     test_fnames = ['x.rdr', 'y.rdr', 'z.rdr', 'incidence.rdr', 'heading.rdr',
-              'local_incidence.rdr', 'local_psi.rdr']
+              'localIncidence.rdr', 'localPsi.rdr']
     # dtypes of vrt constituent files
     dtypes = [np.float64, np.float64, np.float64, np.float32, np.float32, np.float32, np.float32]
     # tolerances per vrt constituent file taken from C++ tests
