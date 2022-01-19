@@ -14,7 +14,7 @@ from scipy import ndimage
 from scipy import interpolate
 from scipy import signal
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep, gpu_check
+from nisar.workflows import h5_prep
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
 

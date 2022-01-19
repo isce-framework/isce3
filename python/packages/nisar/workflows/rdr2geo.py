@@ -12,7 +12,7 @@ from osgeo import gdal
 import journal
 import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, runconfig
+from nisar.workflows import runconfig
 from nisar.workflows.rdr2geo_runconfig import Rdr2geoRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -59,8 +59,8 @@ def run(cfg):
     info_channel.log("starting geocode SLC")
 
     # check if gpu ok to use
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])

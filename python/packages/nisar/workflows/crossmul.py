@@ -10,7 +10,7 @@ import h5py
 import journal
 import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, h5_prep
+from nisar.workflows import h5_prep
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -40,8 +40,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     info_channel.log("starting crossmultipy")
 
     # check if gpu ok to use
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])

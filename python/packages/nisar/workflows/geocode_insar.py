@@ -14,7 +14,7 @@ import journal
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep, gpu_check
+from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_insar_runconfig import \
     GeocodeInsarRunConfig
@@ -33,8 +33,8 @@ def run(cfg, runw_hdf5, output_hdf5):
     output_hdf5 : str
         Path to output GUNW HDF5
     """
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
