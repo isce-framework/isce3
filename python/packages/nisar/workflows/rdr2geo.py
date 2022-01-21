@@ -56,7 +56,7 @@ def run(cfg):
     grid_doppler = isce3.core.LUT2d()
 
     info_channel = journal.info("rdr2geo.run")
-    info_channel.log("starting geocode SLC")
+    info_channel.log("starting rdr2geo")
 
     # check if gpu ok to use
     use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
@@ -122,7 +122,7 @@ def run(cfg):
 
         # save non-None rasters to vrt
         output_vrt = isce3.io.Raster(f'{str(rdr2geo_scratch_path)}/topo.vrt', raster_list)
-        output_vrt.set_epsg(epsg)
+        output_vrt.set_epsg(rdr2geo_obj.epsg_out)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran rdr2geo in {t_all_elapsed:.3f} seconds")
