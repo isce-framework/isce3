@@ -447,10 +447,9 @@ def prep_ds_insar(cfg, dst, dst_h5):
     ref_slc = SLC(hdf5file=input_h5)
 
     with h5py.File(input_h5, 'r', libver='latest', swmr=True) as src_h5:
-        for freq in freq_pols.keys():
-            pol_list = freq_pols[freq]
-            # Get SLC dimension for that frequency
+        for freq, pol_list in freq_pols.items():
 
+            # Get SLC dimension for that frequency
             # Take size of first available polarization
             dset = src_h5[os.path.join(f'{ref_slc.SwathPath}/frequency{freq}/{pol_list[0]}')]
             az_lines, rg_cols = dset.shape
