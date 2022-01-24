@@ -322,7 +322,7 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                     const int chipRow =
                             intAz - tile.firstImageRow() + ii - chipHalf;
                     // Carrier phase
-                    const double chipPhase = dop * (ii - 4.0);
+                    const double chipPhase = dop * (ii - chipHalf);
                     const std::complex<float> cval(
                             std::cos(chipPhase), -std::sin(chipPhase));
                     // Set the data values after removing doppler in azimuth
@@ -335,8 +335,7 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
 
                 // Interpolate chip
                 const std::complex<float> cval = _interp->interpolate(
-                        isce3::core::SINC_HALF + fracRg,
-                        isce3::core::SINC_HALF + fracAz, chip);
+                        chipHalf + fracRg, chipHalf + fracAz, chip);
 
                 // Add doppler to interpolated value and save
                 imgOut[tileLine * outWidth + j] =
