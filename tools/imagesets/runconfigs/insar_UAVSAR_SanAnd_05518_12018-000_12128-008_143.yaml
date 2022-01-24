@@ -89,7 +89,7 @@ runconfig:
                     x_abs:
 
             geo2rdr:
-                threshold: 1e-8
+                threshold: 1.0e-8
                 maxiter: 25
 
             dem_margin: 0.1
