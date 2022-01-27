@@ -44,6 +44,7 @@ runconfig:
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: output_rslc/rslc.h5
             SASConfigFile: output_rslc/rslc_config.yaml
+            ProductCounter: 1
         PrimaryExecutable:
             ProductType: RSLC
             CompositeReleaseID: D00200

@@ -25,6 +25,7 @@ runconfig:
             SASOutputFile: output_rslc/rslc.h5
             # Echo processor config (including defaults) to file.
             SASConfigFile: output_rslc/rslc_config.yaml
+            ProductCounter: 1
 
         PrimaryExecutable:
             ProductType: RSLC
