@@ -670,9 +670,12 @@ class ImageSet:
 
     def tartests(self):
         """
-        Tar up test directories for delivery
+        Tar up test directories for delivery.  PGE has requested that
+        the scratch directory contents be excluded from the deliveries.
+        Include the scratch directories only as empty directories to
+        maintain consistency with the runconfigs.
         """
         for workflow in workflowtests:
             for test in workflowtests[workflow]:
                 print(f"\ntarring workflow test {test}\n")
-                subprocess.check_call(f"tar cvzf {test}.tar.gz {test}".split(), cwd=self.testdir)
+                subprocess.check_call(f"tar cvz --exclude scratch*/* -f {test}.tar.gz {test}".split(), cwd=self.testdir)
