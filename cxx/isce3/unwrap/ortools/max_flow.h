@@ -124,18 +124,14 @@
 #define OR_TOOLS_GRAPH_MAX_FLOW_H_
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
-#include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
-#include "ortools/graph/ebert_graph.h"
-#include "ortools/graph/flow_problem.pb.h"
-#include "ortools/graph/graph.h"
-#include "ortools/util/stats.h"
-#include "ortools/util/zvector.h"
+#include "ebert_graph.h"
+#include "graph.h"
+#include "zvector.h"
 
 namespace operations_research {
 
@@ -225,9 +221,6 @@ class SimpleMaxFlow {
   // TODO(user): Support incrementality in the max flow implementation.
   void SetArcCapacity(ArcIndex arc, FlowQuantity capacity);
 
-  // Creates the protocol buffer representation of the current problem.
-  FlowModelProto CreateFlowModelProto(NodeIndex source, NodeIndex sink) const;
-
  private:
   NodeIndex num_nodes_;
   std::vector<NodeIndex> arc_tail_;
@@ -243,7 +236,8 @@ class SimpleMaxFlow {
   std::unique_ptr<Graph> underlying_graph_;
   std::unique_ptr<GenericMaxFlow<Graph> > underlying_max_flow_;
 
-  DISALLOW_COPY_AND_ASSIGN(SimpleMaxFlow);
+  SimpleMaxFlow(const SimpleMaxFlow&);
+  SimpleMaxFlow& operator=(const SimpleMaxFlow&);
 };
 
 // Specific but efficient priority queue implementation. The priority type must
@@ -290,7 +284,8 @@ class PriorityQueueWithRestrictedPush {
   std::vector<std::pair<Element, IntegerPriority> > even_queue_;
   std::vector<std::pair<Element, IntegerPriority> > odd_queue_;
 
-  DISALLOW_COPY_AND_ASSIGN(PriorityQueueWithRestrictedPush);
+  PriorityQueueWithRestrictedPush(const PriorityQueueWithRestrictedPush&);
+  PriorityQueueWithRestrictedPush& operator=(const PriorityQueueWithRestrictedPush&);
 };
 
 // We want an enum for the Status of a max flow run, and we want this
@@ -421,9 +416,6 @@ class GenericMaxFlow : public MaxFlowStatusClass {
   void ProcessNodeByHeight(bool value) {
     process_node_by_height_ = value && use_global_update_;
   }
-
-  // Returns the protocol buffer representation of the current problem.
-  FlowModelProto CreateFlowModel();
 
  protected:
   // Returns true if arc is admissible.
@@ -637,14 +629,10 @@ class GenericMaxFlow : public MaxFlowStatusClass {
   // TODO(user): Make the check more exhaustive by checking the optimality?
   bool check_result_;
 
-  // Statistics about this class.
-  mutable StatsGroup stats_;
-
  private:
-  DISALLOW_COPY_AND_ASSIGN(GenericMaxFlow);
+  GenericMaxFlow(const GenericMaxFlow&);
+  GenericMaxFlow& operator=(const GenericMaxFlow&);
 };
-
-#if !SWIG
 
 // Default instance MaxFlow that uses StarGraph. Note that we cannot just use a
 // typedef because of dependent code expecting MaxFlow to be a real class.
@@ -654,8 +642,6 @@ class MaxFlow : public GenericMaxFlow<StarGraph> {
   MaxFlow(const StarGraph* graph, NodeIndex source, NodeIndex target)
       : GenericMaxFlow(graph, source, target) {}
 };
-
-#endif  // SWIG
 
 template <typename Element, typename IntegerPriority>
 bool PriorityQueueWithRestrictedPush<Element, IntegerPriority>::IsEmpty()
@@ -673,24 +659,24 @@ template <typename Element, typename IntegerPriority>
 void PriorityQueueWithRestrictedPush<Element, IntegerPriority>::Push(
     Element element, IntegerPriority priority) {
   // Since users may rely on it, we DCHECK the exact condition.
-  DCHECK(even_queue_.empty() || priority >= even_queue_.back().second - 1);
-  DCHECK(odd_queue_.empty() || priority >= odd_queue_.back().second - 1);
+  assert(even_queue_.empty() || priority >= even_queue_.back().second - 1);
+  assert(odd_queue_.empty() || priority >= odd_queue_.back().second - 1);
 
   // Note that the DCHECK() below are less restrictive than the ones above but
   // check a necessary and sufficient condition for the priority queue to behave
   // as expected.
   if (priority & 1) {
-    DCHECK(odd_queue_.empty() || priority >= odd_queue_.back().second);
+    assert(odd_queue_.empty() || priority >= odd_queue_.back().second);
     odd_queue_.push_back(std::make_pair(element, priority));
   } else {
-    DCHECK(even_queue_.empty() || priority >= even_queue_.back().second);
+    assert(even_queue_.empty() || priority >= even_queue_.back().second);
     even_queue_.push_back(std::make_pair(element, priority));
   }
 }
 
 template <typename Element, typename IntegerPriority>
 Element PriorityQueueWithRestrictedPush<Element, IntegerPriority>::Pop() {
-  DCHECK(!IsEmpty());
+  assert(!IsEmpty());
   if (even_queue_.empty()) return PopBack(&odd_queue_);
   if (odd_queue_.empty()) return PopBack(&even_queue_);
   if (odd_queue_.back().second > even_queue_.back().second) {
@@ -703,7 +689,7 @@ Element PriorityQueueWithRestrictedPush<Element, IntegerPriority>::Pop() {
 template <typename Element, typename IntegerPriority>
 Element PriorityQueueWithRestrictedPush<Element, IntegerPriority>::PopBack(
     std::vector<std::pair<Element, IntegerPriority> >* queue) {
-  DCHECK(!queue->empty());
+  assert(!queue->empty());
   Element element = queue->back().first;
   queue->pop_back();
   return element;

@@ -19,15 +19,15 @@
 #elif !defined(_MSC_VER)
 #include <endian.h>
 #endif
+#include <cassert>
 #include <climits>
 #include <cstdio>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <string>
 
-#include "ortools/base/integral_types.h"
-#include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
+#include <pyre/journal.h>
 
 // An array class for storing arrays of integers.
 //
@@ -50,8 +50,11 @@ class ZVector {
   ZVector(int64_t min_index, int64_t max_index)
       : base_(nullptr), min_index_(0), max_index_(-1), size_(0), storage_() {
     if (!Reserve(min_index, max_index)) {
-      LOG(DFATAL) << "Could not reserve memory for indices ranging from "
-                  << min_index << " to " << max_index;
+      pyre::journal::firewall_t channel("isce3.unwrap.ortools.zvector");
+      channel << pyre::journal::at(__HERE__)
+              << "Could not reserve memory for indices ranging from "
+              << min_index << " to " << max_index
+              << pyre::journal::endl;
     }
   }
 
@@ -61,34 +64,32 @@ class ZVector {
 
   // Returns the value stored at index.
   T Value(int64_t index) const {
-    DCHECK_LE(min_index_, index);
-    DCHECK_GE(max_index_, index);
-    DCHECK(base_ != nullptr);
+    assert(min_index_ <= index);
+    assert(max_index_ >= index);
+    assert(base_ != nullptr);
     return base_[index];
   }
 
-#if !defined(SWIG)
   // Shortcut for returning the value stored at index.
   T& operator[](int64_t index) {
-    DCHECK_LE(min_index_, index);
-    DCHECK_GE(max_index_, index);
-    DCHECK(base_ != nullptr);
+    assert(min_index_ <= index);
+    assert(max_index_ >= index);
+    assert(base_ != nullptr);
     return base_[index];
   }
 
   const T operator[](int64_t index) const {
-    DCHECK_LE(min_index_, index);
-    DCHECK_GE(max_index_, index);
-    DCHECK(base_ != nullptr);
+    assert(min_index_ <= index);
+    assert(max_index_ >= index);
+    assert(base_ != nullptr);
     return base_[index];
   }
-#endif
 
   // Sets to value the content of the array at index.
   void Set(int64_t index, T value) {
-    DCHECK_LE(min_index_, index);
-    DCHECK_GE(max_index_, index);
-    DCHECK(base_ != nullptr);
+    assert(min_index_ <= index);
+    assert(max_index_ >= index);
+    assert(base_ != nullptr);
     base_[index] = value;
   }
 
@@ -118,7 +119,7 @@ class ZVector {
     T* const new_base = new_storage - new_min_index;
     if (base_ != nullptr) {
       T* const destination = new_base + min_index_;
-      memcpy(destination, storage_.get(), size_ * sizeof(*base_));
+      std::memcpy(destination, storage_.get(), size_ * sizeof(*base_));
     }
 
     base_ = new_base;
@@ -131,8 +132,6 @@ class ZVector {
 
   // Sets all the elements in the array to value.
   void SetAll(T value) {
-    DLOG_IF(WARNING, base_ == nullptr || size_ <= 0)
-        << "Trying to set values to uninitialized vector.";
     for (int64_t i = 0; i < size_; ++i) {
       base_[min_index_ + i] = value;
     }

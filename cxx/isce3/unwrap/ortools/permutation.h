@@ -83,8 +83,9 @@
 #ifndef OR_TOOLS_UTIL_PERMUTATION_H_
 #define OR_TOOLS_UTIL_PERMUTATION_H_
 
-#include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
+#include <cassert>
+
+#include <pyre/journal.h>
 
 namespace operations_research {
 
@@ -114,7 +115,10 @@ class PermutationCycleHandler {
   // called. If an implementation doesn't call it, no need to
   // override.
   virtual void SetSeen(IndexType* unused_permutation_element) const {
-    LOG(FATAL) << "Base implementation of SetSeen() must not be called.";
+    pyre::journal::error_t channel("isce3.unwrap.ortools.permutation");
+    channel << pyre::journal::at(__HERE__)
+            << "Base implementation of SetSeen() must not be called."
+            << pyre::journal::endl;
   }
 
   // Returns true iff the given element of the permutation is unseen,
@@ -125,7 +129,10 @@ class PermutationCycleHandler {
   // called. If an implementation doesn't call it, no need to
   // override.
   virtual bool Unseen(IndexType unused_permutation_element) const {
-    LOG(FATAL) << "Base implementation of Unseen() must not be called.";
+    pyre::journal::error_t channel("isce3.unwrap.ortools.permutation");
+    channel << pyre::journal::at(__HERE__)
+            << "Base implementation of Unseen() must not be called."
+            << pyre::journal::endl;
     return false;
   }
 
@@ -135,7 +142,8 @@ class PermutationCycleHandler {
   PermutationCycleHandler() {}
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(PermutationCycleHandler);
+  PermutationCycleHandler(const PermutationCycleHandler&);
+  PermutationCycleHandler& operator=(const PermutationCycleHandler&);
 };
 
 // A generic cycle handler class for the common case in which the
@@ -170,7 +178,8 @@ class ArrayIndexCycleHandler : public PermutationCycleHandler<IndexType> {
   // Temporary storage for the one extra element we need.
   DataType temp_;
 
-  DISALLOW_COPY_AND_ASSIGN(ArrayIndexCycleHandler);
+  ArrayIndexCycleHandler(const ArrayIndexCycleHandler&);
+  ArrayIndexCycleHandler& operator=(const ArrayIndexCycleHandler&);
 };
 
 // Note that this template is not implemented in an especially
@@ -191,27 +200,28 @@ class PermutationApplier {
       const IndexType cycle_start = current;
       if (cycle_handler_->Unseen(next)) {
         cycle_handler_->SetSeen(&permutation[current]);
-        DCHECK(!cycle_handler_->Unseen(permutation[current]));
+        assert(!cycle_handler_->Unseen(permutation[current]));
         cycle_handler_->SetTempFromIndex(current);
         while (cycle_handler_->Unseen(permutation[next])) {
           cycle_handler_->SetIndexFromIndex(next, current);
           current = next;
           next = permutation[next];
           cycle_handler_->SetSeen(&permutation[current]);
-          DCHECK(!cycle_handler_->Unseen(permutation[current]));
+          assert(!cycle_handler_->Unseen(permutation[current]));
         }
         cycle_handler_->SetIndexFromTemp(current);
         // Set current back to the start of this cycle.
         current = next;
       }
-      DCHECK_EQ(cycle_start, current);
+      assert(cycle_start == current);
     }
   }
 
  private:
   PermutationCycleHandler<IndexType>* cycle_handler_;
 
-  DISALLOW_COPY_AND_ASSIGN(PermutationApplier);
+  PermutationApplier(const PermutationApplier&);
+  PermutationApplier& operator=(const PermutationApplier&);
 };
 }  // namespace operations_research
 #endif  // OR_TOOLS_UTIL_PERMUTATION_H_

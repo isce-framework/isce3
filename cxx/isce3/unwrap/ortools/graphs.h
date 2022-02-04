@@ -17,7 +17,7 @@
 #ifndef OR_TOOLS_GRAPH_GRAPHS_H_
 #define OR_TOOLS_GRAPH_GRAPHS_H_
 
-#include "ortools/graph/ebert_graph.h"
+#include "ebert_graph.h"
 
 namespace operations_research {
 
@@ -67,8 +67,8 @@ struct Graphs<operations_research::StarGraph> {
   static ArcIndex ArcReservation(const Graph& graph) {
     return graph.max_num_arcs();
   }
-  static void Build(Graph* graph) {}
-  static void Build(Graph* graph, std::vector<ArcIndex>* permutation) {
+  static void Build(Graph* /*graph*/) {}
+  static void Build(Graph* /*graph*/, std::vector<ArcIndex>* permutation) {
     permutation->clear();
   }
 };

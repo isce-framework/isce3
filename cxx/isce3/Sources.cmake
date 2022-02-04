@@ -91,6 +91,8 @@ unwrap/icu/PhaseGrad.cpp
 unwrap/icu/Residue.cpp
 unwrap/icu/Tree.cpp
 unwrap/icu/Unwrap.cpp
+unwrap/ortools/max_flow.cc
+unwrap/ortools/min_cost_flow.cc
 unwrap/phass/ASSP.cc
 unwrap/phass/BMFS.cc
 unwrap/phass/CannyEdgeDetector.cc

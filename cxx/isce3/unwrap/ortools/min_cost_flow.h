@@ -174,13 +174,9 @@
 #include <string>
 #include <vector>
 
-#include "ortools/base/integral_types.h"
-#include "ortools/base/logging.h"
-#include "ortools/base/macros.h"
-#include "ortools/graph/ebert_graph.h"
-#include "ortools/graph/graph.h"
-#include "ortools/util/stats.h"
-#include "ortools/util/zvector.h"
+#include "ebert_graph.h"
+#include "graph.h"
+#include "zvector.h"
 
 namespace operations_research {
 
@@ -301,7 +297,8 @@ class SimpleMinCostFlow : public MinCostFlowBase {
   CostValue optimal_cost_;
   FlowQuantity maximum_flow_;
 
-  DISALLOW_COPY_AND_ASSIGN(SimpleMinCostFlow);
+  SimpleMinCostFlow(const SimpleMinCostFlow&);
+  SimpleMinCostFlow& operator=(const SimpleMinCostFlow&);
 };
 
 // Generic MinCostFlow that works with StarGraph and all the graphs handling
@@ -589,9 +586,6 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // other nodes, the excess is simply 0.
   QuantityArray feasible_node_excess_;
 
-  // Statistics about this class.
-  StatsGroup stats_;
-
   // Number of Relabel() since last UpdatePrices().
   int num_relabels_since_last_price_update_;
 
@@ -604,10 +598,9 @@ class GenericMinCostFlow : public MinCostFlowBase {
   // Whether to check the problem feasibility with a max-flow.
   bool check_feasibility_;
 
-  DISALLOW_COPY_AND_ASSIGN(GenericMinCostFlow);
+  GenericMinCostFlow(const GenericMinCostFlow&);
+  GenericMinCostFlow& operator=(const GenericMinCostFlow&);
 };
-
-#if !SWIG
 
 // Default MinCostFlow instance that uses StarGraph.
 // New clients should use SimpleMinCostFlow if they can.
@@ -615,8 +608,6 @@ class MinCostFlow : public GenericMinCostFlow<StarGraph> {
  public:
   explicit MinCostFlow(const StarGraph* graph) : GenericMinCostFlow(graph) {}
 };
-
-#endif  // SWIG
 
 }  // namespace operations_research
 #endif  // OR_TOOLS_GRAPH_MIN_COST_FLOW_H_

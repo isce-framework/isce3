@@ -11,36 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ortools/graph/min_cost_flow.h"
+#include "min_cost_flow.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <string>
 
-#include "absl/strings/str_format.h"
-#include "ortools/base/commandlineflags.h"
-#include "ortools/base/mathutil.h"
-#include "ortools/graph/graph.h"
-#include "ortools/graph/graphs.h"
-#include "ortools/graph/max_flow.h"
+#include <isce3/except/Error.h>
+#include <pyre/journal.h>
 
-// TODO(user): Remove these flags and expose the parameters in the API.
-// New clients, please do not use these flags!
-ABSL_FLAG(int64_t, min_cost_flow_alpha, 5,
-          "Divide factor for epsilon at each refine step.");
-ABSL_FLAG(bool, min_cost_flow_check_feasibility, true,
-          "Check that the graph has enough capacity to send all supplies "
-          "and serve all demands. Also check that the sum of supplies "
-          "is equal to the sum of demands.");
-ABSL_FLAG(bool, min_cost_flow_check_balance, true,
-          "Check that the sum of supplies is equal to the sum of demands.");
-ABSL_FLAG(bool, min_cost_flow_check_costs, true,
-          "Check that the magnitude of the costs will not exceed the "
-          "precision of the machine when scaled (multiplied) by the number "
-          "of nodes");
-ABSL_FLAG(bool, min_cost_flow_check_result, true,
-          "Check that the result is valid.");
+#include "graphs.h"
+#include "max_flow.h"
 
 namespace operations_research {
 
@@ -54,17 +38,16 @@ GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::GenericMinCostFlow(
       first_admissible_arc_(),
       active_nodes_(),
       epsilon_(0),
-      alpha_(absl::GetFlag(FLAGS_min_cost_flow_alpha)),
+      alpha_(5),
       cost_scaling_factor_(1),
       scaled_arc_unit_cost_(),
       total_flow_cost_(0),
       status_(NOT_SOLVED),
       initial_node_excess_(),
       feasible_node_excess_(),
-      stats_("MinCostFlow"),
       feasibility_checked_(false),
       use_price_update_(false),
-      check_feasibility_(absl::GetFlag(FLAGS_min_cost_flow_check_feasibility)) {
+      check_feasibility_(true) {
   const NodeIndex max_num_nodes = Graphs<Graph>::NodeReservation(*graph_);
   if (max_num_nodes > 0) {
     node_excess_.Reserve(0, max_num_nodes - 1);
@@ -90,7 +73,7 @@ GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::GenericMinCostFlow(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetNodeSupply(
     NodeIndex node, FlowQuantity supply) {
-  DCHECK(graph_->IsNodeValid(node));
+  assert(graph_->IsNodeValid(node));
   node_excess_.Set(node, supply);
   initial_node_excess_.Set(node, supply);
   status_ = NOT_SOLVED;
@@ -100,7 +83,7 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetNodeSupply(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetArcUnitCost(
     ArcIndex arc, ArcScaledCostType unit_cost) {
-  DCHECK(IsArcDirect(arc));
+  assert(IsArcDirect(arc));
   scaled_arc_unit_cost_.Set(arc, unit_cost);
   scaled_arc_unit_cost_.Set(Opposite(arc), -scaled_arc_unit_cost_[arc]);
   status_ = NOT_SOLVED;
@@ -110,8 +93,8 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetArcUnitCost(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetArcCapacity(
     ArcIndex arc, ArcFlowType new_capacity) {
-  DCHECK_LE(0, new_capacity);
-  DCHECK(IsArcDirect(arc));
+  assert(0 <= new_capacity);
+  assert(IsArcDirect(arc));
   const FlowQuantity free_capacity = residual_arc_capacity_[arc];
   const FlowQuantity capacity_delta = new_capacity - Capacity(arc);
   if (capacity_delta == 0) {
@@ -126,10 +109,10 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetArcCapacity(
     // 2/ (capacity_delta < 0 && free_capacity + capacity_delta >= 0)
     //    meaning we are reducing the capacity, but that the capacity
     //    reduction is not larger than the free capacity.
-    DCHECK((capacity_delta > 0) ||
+    assert((capacity_delta > 0) ||
            (capacity_delta < 0 && new_availability >= 0));
     residual_arc_capacity_.Set(arc, new_availability);
-    DCHECK_LE(0, residual_arc_capacity_[arc]);
+    assert(0 <= residual_arc_capacity_[arc]);
   } else {
     // We have to reduce the flow on the arc, and update the excesses
     // accordingly.
@@ -141,17 +124,17 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetArcCapacity(
     node_excess_.Set(tail, node_excess_[tail] + flow_excess);
     const NodeIndex head = Head(arc);
     node_excess_.Set(head, node_excess_[head] - flow_excess);
-    DCHECK_LE(0, residual_arc_capacity_[arc]);
-    DCHECK_LE(0, residual_arc_capacity_[Opposite(arc)]);
+    assert(0 <= residual_arc_capacity_[arc]);
+    assert(0 <= residual_arc_capacity_[Opposite(arc)]);
   }
 }
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::SetArcFlow(
     ArcIndex arc, ArcFlowType new_flow) {
-  DCHECK(IsArcValid(arc));
+  assert(IsArcValid(arc));
   const FlowQuantity capacity = Capacity(arc);
-  DCHECK_GE(capacity, new_flow);
+  assert(capacity >= new_flow);
   residual_arc_capacity_.Set(Opposite(arc), new_flow);
   residual_arc_capacity_.Set(arc, capacity - new_flow);
   status_ = NOT_SOLVED;
@@ -177,14 +160,20 @@ bool GenericMinCostFlow<Graph, ArcFlowType,
       total_flow += excess;
       if (std::numeric_limits<FlowQuantity>::max() <
           max_capacity + total_flow) {
-        LOG(DFATAL) << "Input consistency error: max capacity + flow exceed "
-                    << "precision";
+        pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+        channel << pyre::journal::at(__HERE__)
+                << "Input consistency error: max capacity + flow exceed "
+                   "precision"
+                << pyre::journal::endl;
         return false;
       }
     }
   }
   if (total_supply != 0) {
-    LOG(DFATAL) << "Input consistency error: unbalanced problem";
+    pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+    channel << pyre::journal::at(__HERE__)
+            << "Input consistency error: unbalanced problem"
+            << pyre::journal::endl;
     return false;
   }
   return true;
@@ -195,7 +184,10 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::CheckResult()
     const {
   for (NodeIndex node = 0; node < graph_->num_nodes(); ++node) {
     if (node_excess_[node] != 0) {
-      LOG(DFATAL) << "node_excess_[" << node << "] != 0";
+      pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+      channel << pyre::journal::at(__HERE__)
+              << "node_excess_[" << node << "] != 0"
+              << pyre::journal::endl;
       return false;
     }
     for (OutgoingOrOppositeIncomingArcIterator it(*graph_, node); it.Ok();
@@ -203,17 +195,26 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::CheckResult()
       const ArcIndex arc = it.Index();
       bool ok = true;
       if (residual_arc_capacity_[arc] < 0) {
-        LOG(DFATAL) << "residual_arc_capacity_[" << arc << "] < 0";
+        pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+        channel << pyre::journal::at(__HERE__)
+                << "residual_arc_capacity_[" << arc << "] < 0"
+                << pyre::journal::endl;
         ok = false;
       }
       if (residual_arc_capacity_[arc] > 0 && ReducedCost(arc) < -epsilon_) {
-        LOG(DFATAL) << "residual_arc_capacity_[" << arc
-                    << "] > 0 && ReducedCost(" << arc << ") < " << -epsilon_
-                    << ". (epsilon_ = " << epsilon_ << ").";
+        pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+        channel << pyre::journal::at(__HERE__)
+                << "residual_arc_capacity_[" << arc
+                << "] > 0 && ReducedCost(" << arc << ") < " << -epsilon_
+                << ". (epsilon_ = " << epsilon_ << ")."
+                << pyre::journal::endl;
         ok = false;
       }
       if (!ok) {
-        LOG(DFATAL) << DebugString("CheckResult ", arc);
+        pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+        channel << pyre::journal::at(__HERE__)
+                << DebugString("CheckResult ", arc)
+                << pyre::journal::endl;
         return false;
       }
     }
@@ -228,19 +229,25 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::CheckCostRange()
   CostValue max_cost_magnitude = 0;
   // Traverse the initial arcs of the graph:
   for (ArcIndex arc = 0; arc < graph_->num_arcs(); ++arc) {
-    const CostValue cost_magnitude = MathUtil::Abs(scaled_arc_unit_cost_[arc]);
+    const CostValue cost_magnitude = std::abs(scaled_arc_unit_cost_[arc]);
     max_cost_magnitude = std::max(max_cost_magnitude, cost_magnitude);
     if (cost_magnitude != 0.0) {
       min_cost_magnitude = std::min(min_cost_magnitude, cost_magnitude);
     }
   }
-  VLOG(3) << "Min cost magnitude = " << min_cost_magnitude
-          << ", Max cost magnitude = " << max_cost_magnitude;
+  pyre::journal::debug_t debug("isce3.unwrap.ortools.min_cost_flow");
+  debug << pyre::journal::at(__HERE__)
+        << "Min cost magnitude = " << min_cost_magnitude
+        << ", Max cost magnitude = " << max_cost_magnitude
+        << pyre::journal::endl;
 #if !defined(_MSC_VER)
   if (log(std::numeric_limits<CostValue>::max()) <
       log(max_cost_magnitude + 1) + log(graph_->num_nodes() + 1)) {
-    LOG(DFATAL) << "Maximum cost magnitude " << max_cost_magnitude << " is too "
-                << "high for the number of nodes. Try changing the data.";
+    pyre::journal::firewall_t firewall("isce3.unwrap.ortools.min_cost_flow");
+    firewall << pyre::journal::at(__HERE__)
+             << "Maximum cost magnitude " << max_cost_magnitude
+             << " is too high for the number of nodes. Try changing the data."
+             << pyre::journal::endl;
     return false;
   }
 #endif
@@ -256,11 +263,13 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
   // the article "An Efficient Implementation of a Scaling Minimum-Cost Flow
   // Algorithm", A.V. Goldberg, Journal of Algorithms 22(1), January 1997, pp.
   // 1-29.
-  DCHECK_GE(node_excess_[node], 0);
+  assert(node_excess_[node] >= 0);
   for (OutgoingOrOppositeIncomingArcIterator it(*graph_, node); it.Ok();
        it.Next()) {
+#ifndef NDEBUG
     const ArcIndex arc = it.Index();
-    DCHECK(!IsAdmissible(arc)) << DebugString("CheckRelabelPrecondition:", arc);
+    assert(!IsAdmissible(arc) && DebugString("CheckRelabelPrecondition:", arc));
+#endif
   }
   return true;
 }
@@ -276,25 +285,23 @@ GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::DebugString(
   // ReducedCost fails.
   const CostValue reduced_cost = scaled_arc_unit_cost_[arc] +
                                  node_potential_[tail] - node_potential_[head];
-  return absl::StrFormat(
-      "%s Arc %d, from %d to %d, "
-      "Capacity = %d, Residual capacity = %d, "
-      "Flow = residual capacity for reverse arc = %d, "
-      "Height(tail) = %d, Height(head) = %d, "
-      "Excess(tail) = %d, Excess(head) = %d, "
-      "Cost = %d, Reduced cost = %d, ",
-      context, arc, tail, head, Capacity(arc),
-      static_cast<FlowQuantity>(residual_arc_capacity_[arc]), Flow(arc),
-      node_potential_[tail], node_potential_[head], node_excess_[tail],
-      node_excess_[head], static_cast<CostValue>(scaled_arc_unit_cost_[arc]),
-      reduced_cost);
+  return std::string(context) + " Arc " + std::to_string(arc)
+    + ", from " + std::to_string(tail) + " to " + std::to_string(head)
+    + ", Capacity = " + std::to_string(Capacity(arc)) + ", Residual capacity = "
+    + std::to_string(static_cast<FlowQuantity>(residual_arc_capacity_[arc]))
+    + ", Flow = residual capacity for reverse arc = " + std::to_string(Flow(arc))
+    + ", Height(tail) = " + std::to_string(node_potential_[tail])
+    + ", Height(head) = " + std::to_string(node_potential_[head])
+    + ", Excess(tail) = " + std::to_string(node_excess_[tail])
+    + ", Excess(head) = " + std::to_string(node_excess_[head]) + ", Cost = "
+    + std::to_string(static_cast<CostValue>(scaled_arc_unit_cost_[arc]))
+    + ", Reduced cost = " + std::to_string(reduced_cost) + ", ";
 }
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
     CheckFeasibility(std::vector<NodeIndex>* const infeasible_supply_node,
                      std::vector<NodeIndex>* const infeasible_demand_node) {
-  SCOPED_TIME_STAT(&stats_);
   // Create a new graph, which is a copy of graph_, with the following
   // modifications:
   // Two nodes are added: a source and a sink.
@@ -325,7 +332,7 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
   for (ArcIndex arc = 0; arc < graph_->num_arcs(); ++arc) {
     const ArcIndex new_arc =
         checker_graph.AddArc(graph_->Tail(arc), graph_->Head(arc));
-    DCHECK_EQ(arc, new_arc);
+    assert(arc == new_arc);
     checker.SetArcCapacity(new_arc, Capacity(arc));
   }
   FlowQuantity total_demand = 0;
@@ -344,12 +351,18 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
     }
   }
   if (total_supply != total_demand) {
-    LOG(DFATAL) << "total_supply(" << total_supply << ") != total_demand("
-                << total_demand << ").";
+    pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+    channel << pyre::journal::at(__HERE__)
+            << "total_supply(" << total_supply << ") != total_demand("
+            << total_demand << ")."
+            << pyre::journal::endl;
     return false;
   }
   if (!checker.Solve()) {
-    LOG(DFATAL) << "Max flow could not be computed.";
+    pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+    channel << pyre::journal::at(__HERE__)
+            << "Max flow could not be computed."
+            << pyre::journal::endl;
     return false;
   }
   const FlowQuantity optimal_max_flow = checker.GetOptimalFlow();
@@ -416,15 +429,15 @@ GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Capacity(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 CostValue GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UnitCost(
     ArcIndex arc) const {
-  DCHECK(IsArcValid(arc));
-  DCHECK_EQ(uint64_t{1}, cost_scaling_factor_);
+  assert(IsArcValid(arc));
+  assert(uint64_t{1} == cost_scaling_factor_);
   return scaled_arc_unit_cost_[arc];
 }
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 FlowQuantity GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Supply(
     NodeIndex node) const {
-  DCHECK(graph_->IsNodeValid(node));
+  assert(graph_->IsNodeValid(node));
   return node_excess_[node];
 }
 
@@ -451,7 +464,7 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::IsAdmissible(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
     FastIsAdmissible(ArcIndex arc, CostValue tail_potential) const {
-  DCHECK_EQ(node_potential_[Tail(arc)], tail_potential);
+  assert(node_potential_[Tail(arc)] == tail_potential);
   return residual_arc_capacity_[arc] > 0 &&
          FastReducedCost(arc, tail_potential) < 0;
 }
@@ -473,11 +486,11 @@ template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 CostValue
 GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::FastReducedCost(
     ArcIndex arc, CostValue tail_potential) const {
-  DCHECK_EQ(node_potential_[Tail(arc)], tail_potential);
-  DCHECK(graph_->IsNodeValid(Tail(arc)));
-  DCHECK(graph_->IsNodeValid(Head(arc)));
-  DCHECK_LE(node_potential_[Tail(arc)], 0) << DebugString("ReducedCost:", arc);
-  DCHECK_LE(node_potential_[Head(arc)], 0) << DebugString("ReducedCost:", arc);
+  assert(node_potential_[Tail(arc)] == tail_potential);
+  assert(graph_->IsNodeValid(Tail(arc)));
+  assert(graph_->IsNodeValid(Head(arc)));
+  assert(node_potential_[Tail(arc)] <= 0 && DebugString("ReducedCost:", arc));
+  assert(node_potential_[Head(arc)] <= 0 && DebugString("ReducedCost:", arc));
   return scaled_arc_unit_cost_[arc] + tail_potential -
          node_potential_[Head(arc)];
 }
@@ -493,12 +506,11 @@ GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Solve() {
   status_ = NOT_SOLVED;
-  if (absl::GetFlag(FLAGS_min_cost_flow_check_balance) &&
-      !CheckInputConsistency()) {
+  if (!CheckInputConsistency()) {
     status_ = UNBALANCED;
     return false;
   }
-  if (absl::GetFlag(FLAGS_min_cost_flow_check_costs) && !CheckCostRange()) {
+  if (!CheckCostRange()) {
     status_ = BAD_COST_RANGE;
     return false;
   }
@@ -510,14 +522,17 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Solve() {
   ResetFirstAdmissibleArcs();
   ScaleCosts();
   Optimize();
-  if (absl::GetFlag(FLAGS_min_cost_flow_check_result) && !CheckResult()) {
+  if (!CheckResult()) {
     status_ = BAD_RESULT;
     UnscaleCosts();
     return false;
   }
   UnscaleCosts();
   if (status_ != OPTIMAL) {
-    LOG(DFATAL) << "Status != OPTIMAL";
+    pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+    channel << pyre::journal::at(__HERE__)
+            << "Status != OPTIMAL"
+            << pyre::journal::endl;
     total_flow_cost_ = 0;
     return false;
   }
@@ -527,7 +542,6 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Solve() {
     total_flow_cost_ += scaled_arc_unit_cost_[arc] * flow_on_arc;
   }
   status_ = OPTIMAL;
-  IF_STATS_ENABLED(VLOG(1) << stats_.StatString());
   return true;
 }
 
@@ -542,24 +556,29 @@ void GenericMinCostFlow<Graph, ArcFlowType,
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::ScaleCosts() {
-  SCOPED_TIME_STAT(&stats_);
   cost_scaling_factor_ = graph_->num_nodes() + 1;
   epsilon_ = 1LL;
-  VLOG(3) << "Number of nodes in the graph = " << graph_->num_nodes();
-  VLOG(3) << "Number of arcs in the graph = " << graph_->num_arcs();
+  pyre::journal::debug_t channel("isce3.unwrap.ortools.min_cost_flow");
+  channel << pyre::journal::at(__HERE__)
+          << "Number of nodes in the graph = " << graph_->num_nodes()
+          << pyre::journal::endl
+          << "Number of arcs in the graph = " << graph_->num_arcs()
+          << pyre::journal::endl;
   for (ArcIndex arc = 0; arc < graph_->num_arcs(); ++arc) {
     const CostValue cost = scaled_arc_unit_cost_[arc] * cost_scaling_factor_;
     scaled_arc_unit_cost_.Set(arc, cost);
     scaled_arc_unit_cost_.Set(Opposite(arc), -cost);
-    epsilon_ = std::max(epsilon_, MathUtil::Abs(cost));
+    epsilon_ = std::max(epsilon_, std::abs(cost));
   }
-  VLOG(3) << "Initial epsilon = " << epsilon_;
-  VLOG(3) << "Cost scaling factor = " << cost_scaling_factor_;
+  channel << pyre::journal::at(__HERE__)
+          << "Cost scaling factor = " << cost_scaling_factor_
+          << pyre::journal::endl
+          << "Initial epsilon = " << epsilon_
+          << pyre::journal::endl;
 }
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UnscaleCosts() {
-  SCOPED_TIME_STAT(&stats_);
   for (ArcIndex arc = 0; arc < graph_->num_arcs(); ++arc) {
     const CostValue cost = scaled_arc_unit_cost_[arc] / cost_scaling_factor_;
     scaled_arc_unit_cost_.Set(arc, cost);
@@ -575,7 +594,10 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Optimize() {
   do {
     // Avoid epsilon_ == 0.
     epsilon_ = std::max(epsilon_ / alpha_, kEpsilonMin);
-    VLOG(3) << "Epsilon changed to: " << epsilon_;
+    pyre::journal::debug_t channel("isce3.unwrap.ortools.min_cost_flow");
+    channel << pyre::journal::at(__HERE__)
+            << "Epsilon changed to: " << epsilon_
+            << pyre::journal::endl;
     Refine();
   } while (epsilon_ != 1LL && status_ != INFEASIBLE);
   if (status_ == NOT_SOLVED) {
@@ -586,7 +608,6 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Optimize() {
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType,
                         ArcScaledCostType>::SaturateAdmissibleArcs() {
-  SCOPED_TIME_STAT(&stats_);
   for (NodeIndex node = 0; node < graph_->num_nodes(); ++node) {
     const CostValue tail_potential = node_potential_[node];
     for (OutgoingOrOppositeIncomingArcIterator it(*graph_, node,
@@ -611,17 +632,15 @@ void GenericMinCostFlow<Graph, ArcFlowType,
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::PushFlow(
     FlowQuantity flow, ArcIndex arc) {
-  SCOPED_TIME_STAT(&stats_);
   FastPushFlow(flow, arc, Tail(arc));
 }
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::FastPushFlow(
     FlowQuantity flow, ArcIndex arc, NodeIndex tail) {
-  SCOPED_TIME_STAT(&stats_);
-  DCHECK_EQ(Tail(arc), tail);
-  DCHECK_GT(residual_arc_capacity_[arc], 0);
-  DCHECK_LE(flow, residual_arc_capacity_[arc]);
+  assert(Tail(arc) == tail);
+  assert(residual_arc_capacity_[arc] > 0);
+  assert(flow <= residual_arc_capacity_[arc]);
   // Reduce the residual capacity on the arc by flow.
   residual_arc_capacity_.Set(arc, residual_arc_capacity_[arc] - flow);
   // Increase the residual capacity on the opposite arc by flow.
@@ -636,8 +655,7 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::FastPushFlow(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType,
                         ArcScaledCostType>::InitializeActiveNodeStack() {
-  SCOPED_TIME_STAT(&stats_);
-  DCHECK(active_nodes_.empty());
+  assert(active_nodes_.empty());
   for (NodeIndex node = 0; node < graph_->num_nodes(); ++node) {
     if (IsActive(node)) {
       active_nodes_.push(node);
@@ -647,7 +665,6 @@ void GenericMinCostFlow<Graph, ArcFlowType,
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UpdatePrices() {
-  SCOPED_TIME_STAT(&stats_);
 
   // The algorithm works as follows. Start with a set of nodes S containing all
   // the nodes with negative excess. Expand the set along reverse admissible
@@ -701,7 +718,7 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UpdatePrices() {
     // nodes not in S but that can reach it in one arc and try to expand S
     // again.
     for (; queue_index < bfs_queue.size(); ++queue_index) {
-      DCHECK_GE(num_nodes, bfs_queue.size());
+      assert(num_nodes >= bfs_queue.size());
       const NodeIndex node = bfs_queue[queue_index];
       for (OutgoingOrOppositeIncomingArcIterator it(*graph_, node); it.Ok();
            it.Next()) {
@@ -711,7 +728,7 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UpdatePrices() {
         if (residual_arc_capacity_[opposite_arc] > 0) {
           node_potential_[head] += potential_delta;
           if (ReducedCost(opposite_arc) < 0) {
-            DCHECK(IsAdmissible(opposite_arc));
+            assert(IsAdmissible(opposite_arc));
 
             // TODO(user): Try to steal flow if node_excess_[head] > 0.
             // An initial experiment didn't show a big speedup though.
@@ -755,7 +772,7 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UpdatePrices() {
                    min_non_admissible_potential[node] - node_potential_[node]);
       if (max_potential_diff == potential_delta) break;
     }
-    DCHECK_LE(max_potential_diff, potential_delta);
+    assert(max_potential_diff <= potential_delta);
     potential_delta = max_potential_diff - epsilon_;
 
     // Loop over nodes_to_process_ and for each node, apply the first of the
@@ -798,7 +815,6 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::UpdatePrices() {
 
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Refine() {
-  SCOPED_TIME_STAT(&stats_);
   SaturateAdmissibleArcs();
   InitializeActiveNodeStack();
 
@@ -813,7 +829,7 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Refine() {
     }
     const NodeIndex node = active_nodes_.top();
     active_nodes_.pop();
-    DCHECK(IsActive(node));
+    assert(IsActive(node));
     Discharge(node);
   }
 }
@@ -821,11 +837,10 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Refine() {
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Discharge(
     NodeIndex node) {
-  SCOPED_TIME_STAT(&stats_);
   do {
     // The node is initially active, and we exit as soon as it becomes
     // inactive.
-    DCHECK(IsActive(node));
+    assert(IsActive(node));
     const CostValue tail_potential = node_potential_[node];
     for (OutgoingOrOppositeIncomingArcIterator it(*graph_, node,
                                                   first_admissible_arc_[node]);
@@ -856,9 +871,8 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Discharge(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::LookAhead(
     ArcIndex in_arc, CostValue in_tail_potential, NodeIndex node) {
-  SCOPED_TIME_STAT(&stats_);
-  DCHECK_EQ(Head(in_arc), node);
-  DCHECK_EQ(node_potential_[Tail(in_arc)], in_tail_potential);
+  assert(Head(in_arc) == node);
+  assert(node_potential_[Tail(in_arc)] == in_tail_potential);
   if (node_excess_[node] < 0) return true;
   const CostValue tail_potential = node_potential_[node];
   for (OutgoingOrOppositeIncomingArcIterator it(*graph_, node,
@@ -880,8 +894,7 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::LookAhead(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Relabel(
     NodeIndex node) {
-  SCOPED_TIME_STAT(&stats_);
-  DCHECK(CheckRelabelPrecondition(node));
+  assert(CheckRelabelPrecondition(node));
   ++num_relabels_since_last_price_update_;
 
   // By setting node_potential_[node] to the guaranteed_new_potential we are
@@ -933,7 +946,9 @@ void GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::Relabel(
       // Note that this infeasibility detection is incomplete.
       // Only max flow can detect that a min-cost flow problem is infeasible.
       status_ = INFEASIBLE;
-      LOG(ERROR) << "Infeasible problem.";
+      pyre::journal::info_t channel("isce3.unwrap.ortools.min_cost_flow");
+      channel << pyre::journal::at(__HERE__) << "Infeasible problem."
+              << pyre::journal::endl;
     } else {
       // This source saturates all its arcs, we can actually decrease the
       // potential by as much as we want.
@@ -975,7 +990,7 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::IsArcValid(
 template <typename Graph, typename ArcFlowType, typename ArcScaledCostType>
 bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::IsArcDirect(
     ArcIndex arc) const {
-  DCHECK(IsArcValid(arc));
+  assert(IsArcValid(arc));
   return arc >= 0;
 }
 
@@ -1101,16 +1116,23 @@ SimpleMinCostFlow::Status SimpleMinCostFlow::SolveWithPossibleAdjustment(
         ++arc;
       }
     }
-    CHECK_EQ(arc, augmented_num_arcs);
+    if (arc != augmented_num_arcs) {
+      throw isce3::except::RuntimeError(
+        ISCE_SRCINFO(), "arc != augmented_num_arcs");
+    }
     if (!max_flow.Solve()) {
-      LOG(ERROR) << "Max flow could not be computed.";
+      pyre::journal::info_t channel("isce3.unwrap.ortools.min_cost_flow");
+      channel << pyre::journal::at(__HERE__)
+              << "Max flow could not be computed."
+              << pyre::journal::endl;
       switch (max_flow.status()) {
         case MaxFlowStatusClass::NOT_SOLVED:
           return NOT_SOLVED;
         case MaxFlowStatusClass::OPTIMAL:
-          LOG(ERROR)
-              << "Max flow failed but claimed to have an optimal solution";
-          ABSL_FALLTHROUGH_INTENDED;
+          channel << pyre::journal::at(__HERE__)
+                  << "Max flow failed but claimed to have an optimal solution"
+                  << pyre::journal::endl;
+          [[fallthrough]];
         default:
           return BAD_RESULT;
       }
