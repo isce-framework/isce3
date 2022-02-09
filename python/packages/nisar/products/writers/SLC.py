@@ -11,6 +11,8 @@ from nisar.h5 import set_string
 from nisar.types import complex32
 from nisar.products.readers.Raw import Raw
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
+from nisar.workflows.compute_stats import compute_stats_complex_data
+
 
 log = logging.getLogger("SLCWriter")
 
@@ -378,17 +380,7 @@ class SLC(h5py.File):
         '''
         h5_ds = self.swath(frequency)[pol]
         raster = isce3.io.Raster(f"IH5:::ID={h5_ds.id.id}".encode("utf-8"))
-        stats_obj = isce3.math.compute_raster_stats_real_imag(raster)[0]
-        h5_ds.attrs.create('min_real_value', data=stats_obj.min_real)
-        h5_ds.attrs.create('mean_real_value', data=stats_obj.mean_real)
-        h5_ds.attrs.create('max_real_value', data=stats_obj.max_real)
-        h5_ds.attrs.create('sample_stddev_real', 
-                           data=stats_obj.sample_stddev_real)
-        h5_ds.attrs.create('min_imag_value', data=stats_obj.min_imag)
-        h5_ds.attrs.create('mean_imag_value', data=stats_obj.mean_imag)
-        h5_ds.attrs.create('max_imag_value', data=stats_obj.max_imag)
-        h5_ds.attrs.create('sample_stddev_imag',
-                           data=stats_obj.sample_stddev_imag)
+        compute_stats_complex_data(raster, h5_ds)
       
 
     def add_calibration_section(self, frequency, pol, 
