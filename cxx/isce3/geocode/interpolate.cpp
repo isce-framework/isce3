@@ -32,10 +32,14 @@ void isce3::geocode::interpolate(
         const double fracX = rdrX - intX;
         const double fracY = rdrY - intY;
 
-        if ((intX < chipHalf) || (intX >= (inWidth - chipHalf)))
+        if ((intX < chipHalf) || (intX >= (inWidth - chipHalf))) {
+            geoDataBlock(i, j) *= std::numeric_limits<float>::quiet_NaN();
             continue;
-        if ((intY < chipHalf) || (intY >= (inLength - chipHalf)))
+        }
+        if ((intY < chipHalf) || (intY >= (inLength - chipHalf))) {
+            geoDataBlock(i, j) *= std::numeric_limits<float>::quiet_NaN();
             continue;
+        }
 
         // Slant Range at the current output pixel
         const double rng =
@@ -46,8 +50,10 @@ void isce3::geocode::interpolate(
         const double az = radarGrid.sensingStart() +
                           radarY[i * width + j] / radarGrid.prf();
 
-        if (not dopplerLUT.contains(az, rng))
+        if (not dopplerLUT.contains(az, rng)) {
+            geoDataBlock(i, j) *= std::numeric_limits<float>::quiet_NaN();
             continue;
+        }
 
         // Evaluate Doppler at current range and azimuth time
         const double dop =

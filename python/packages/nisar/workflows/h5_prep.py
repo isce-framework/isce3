@@ -1214,7 +1214,7 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
         del group[ds_name]
 
     # create dataset
-    dset = group.create_dataset(ds_name, dtype=np.float64, shape=shape)
+    dset = group.create_dataset(ds_name, dtype=dtype, shape=shape)
 
     if zds is not None:
         dset.dims[0].attach_scale(zds)
@@ -1239,6 +1239,10 @@ def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,
 
     if fill_value is not None:
         dset.attrs.create('_FillValue', data=fill_value)
+    elif np.issubdtype(dtype, np.floating):
+        dset.attrs.create('_FillValue', data=np.nan)
+    elif np.issubdtype(dtype, np.complexfloating):
+        dset.attrs.create('_FillValue', data=np.nan + 1j * np.nan)
 
     if valid_min is not None:
         dset.attrs.create('valid_min', data=valid_min)
