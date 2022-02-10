@@ -38,7 +38,8 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce3::cuda::geometry::Geo2rdr geo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    geo.threshold(1e-9);
+    auto threshold = 1e-6 / geo.radarGridParameters().prf();
+    geo.threshold(threshold);
     geo.numiter(50);
 
     // Open topo raster from topo unit test
@@ -66,13 +67,15 @@ TEST(Geo2rdrTest, CheckResults) {
             if (std::abs(rgoff) > 999.0 || std::abs(azoff) > 999.0)
                 continue;
             // Accumulate error
-            rg_error += rgoff*rgoff;
-            az_error += azoff*azoff;
+            rg_error = std::max(rg_error, std::abs(rgoff));
+            az_error = std::max(az_error, std::abs(azoff));
         }
     }
     // Check errors; azimuth errors tend to be a little larger
-    ASSERT_TRUE(rg_error < 1.0e-10);
-    ASSERT_TRUE(az_error < 1.0e-10);
+    // Allow a little wiggle room since Newton step size isn't a perfect
+    // estimate of the error in the solution.
+    EXPECT_LT(rg_error, 2.0e-6);
+    EXPECT_LT(az_error, 2.0e-6);
 }
 
 int main(int argc, char * argv[]) {

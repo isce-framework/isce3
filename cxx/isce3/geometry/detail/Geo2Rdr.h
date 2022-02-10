@@ -10,7 +10,7 @@ namespace isce3 { namespace geometry { namespace detail {
 
 /** \internal Root-finding configuration parameters for geo2rdr */
 struct Geo2RdrParams {
-    /** \internal Absolute slant range convergence tolerance (m) */
+    /** \internal Absolute azimuth time convergence tolerance (s) */
     double threshold = 1e-8;
 
     /** \internal Maximum number of Newton-Raphson iterations */

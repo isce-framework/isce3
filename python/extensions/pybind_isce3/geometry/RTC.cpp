@@ -3,6 +3,7 @@
 #include <isce3/io/Raster.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/product/RadarGridParameters.h>
 
 #include <limits>
@@ -127,6 +128,7 @@ void addbinding_apply_rtc(pybind11::module& m)
 
 void addbinding_compute_rtc(pybind11::module& m)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("compute_rtc",
             py::overload_cast<const isce3::product::RadarGridParameters&,
                     const isce3::core::Orbit&,
@@ -155,8 +157,9 @@ void addbinding_compute_rtc(pybind11::module& m)
                     isce3::core::MemoryModeBlockY::AutoBlocksY,
             py::arg("interp_method") =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-            py::arg("threshold") = 1e-4, py::arg("num_iter") = 100,
-            py::arg("delta_range") = 1e-4,
+            py::arg("threshold") = defaults.threshold,
+            py::arg("num_iter") = defaults.maxiter,
+            py::arg("delta_range") = defaults.delta_range,
             R"(This function computes and applies the radiometric terrain correction
              (RTC) to a multi-band raster.
 
@@ -196,7 +199,7 @@ void addbinding_compute_rtc(pybind11::module& m)
              interp_method : isce3.core.DataInterpMethod, optional
                  Interpolation Method
              threshold : double, optional
-                 Distance threshold for convergence
+                 Azimuth time threshold for convergence (s)
              num_iter : int, optional
                  Maximum number of Newton-Raphson iterations
              delta_range : double, optional
@@ -206,6 +209,7 @@ void addbinding_compute_rtc(pybind11::module& m)
 
 void addbinding_compute_rtc_bbox(pybind11::module& m)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("compute_rtc_bbox",
             py::overload_cast<isce3::io::Raster&, isce3::io::Raster&,
                     const isce3::product::RadarGridParameters&,
@@ -241,8 +245,9 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     isce3::core::MemoryModeBlockY::AutoBlocksY,
             py::arg("interp_method") =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-            py::arg("threshold") = 1e-4, py::arg("num_iter") = 100,
-            py::arg("delta_range") = 1e-4,
+            py::arg("threshold") = defaults.threshold,
+            py::arg("num_iter") = defaults.maxiter,
+            py::arg("delta_range") = defaults.delta_range,
             R"(This function computes and applies the radiometric terrain correction
              (RTC) to a multi-band raster using a predefined geogrid.
 
@@ -302,7 +307,7 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
              interp_method : isce3.core.DataInterpMethod, optional
                  Interpolation Method
              threshold : double, optional
-                 Distance threshold for convergence
+                 Azimuth time threshold for convergence (s)
              num_iter : int, optional
                  Maximum number of Newton-Raphson iterations
              delta_range : double, optional
