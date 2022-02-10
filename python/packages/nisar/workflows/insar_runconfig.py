@@ -1,5 +1,6 @@
 from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
+import nisar.workflows.helpers as helpers
 import journal
 import os
 import h5py
@@ -18,6 +19,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
         scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
         error_channel = journal.error('InsarRunConfig.yaml_check')
+        info_channel = journal.info("InsarRunConfig.yaml_check")
 
         # Extract frequencies and polarizations to process
         freq_pols = self.cfg['processing']['input_subset'][
@@ -151,27 +153,29 @@ class InsarRunConfig(Geo2rdrRunConfig):
             if split_cfg['spectral_diversity'] == 'split_main_band':
                 # If "low_bandwidth" or 'high_bandwidth" is not allocated, split the main range bandwidth
                 # into two 1/3 sub-bands.
-                if split_cfg['low_band_bandwidth'] is None or split_cfg[
-                    'high_band_bandwidth'] is None:
+                if split_cfg['low_band_bandwidth'] is None:
                     split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
+                    info_str = "low band width for low sub-bands are not given;"\
+                        "It is automatically set by 1/3 of range bandwidth of freqeuncyA""
+                    info_channel.log(info_str)
+
+                if split_cfg['high_band_bandwidth'] is None:
                     split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
-                    err_str = "band_widths for sub-bands are not given; They will be 1/3 of range bandwidth"
-                    error_channel.log(err_str)
+                    info_str = "high band width for high sub-band are not given;"\
+                        "It is automatically set by 1/3 of range bandwidth of freqeuncyA""
+                    info_channel.log(info_str)
 
             if split_cfg['spectral_diversity'] == 'main_side_band':
+                print(freq_pols.keys())
+                if 'B' not in freq_pols.keys():
+                    err_str = "polarizations for frequency B are not given;"\
+                        "frequency B is required for main-side-band method."
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
+
                 # Extract side-band range bandwidth
                 rg_side_bandwidth = ref_slc.getSwathMetadata(
                     'B').processed_range_bandwidth
-
-                # If "low_bandwidth" and "high_bandwidth" are not assigned, assign main range bandwidth
-                # and side-band bandwidths, respectively. If assigned, check that
-                # "low_bandwidth" and "high_bandwidth" correspond to main and side range bandwidths
-                if split_cfg['low_band_bandwidth'] is None or split_cfg[
-                    'low_band_bandwidth'] != rg_main_bandwidth:
-                    split_cfg['low_band_bandwidth'] = rg_main_bandwidth
-                if split_cfg['high_band_bandwidth'] is None or split_cfg[
-                    'high_band_bandwidth'] != rg_side_bandwidth:
-                    split_cfg['high_band_bandwidth'] = rg_side_bandwidth
 
                 # Check that main and side-band are at the same polarization. If not, throw an error.
                 src_h5 = h5py.File(self.cfg['InputFileGroup']['InputFilePath'],
@@ -184,6 +188,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                                         'listOfPolarizations')
                 pols_freqB = src_h5[pol_path][()]
                 src_h5.close()
+
                 if len(set.intersection(set(pols_freqA), set(pols_freqB))) == 0:
                     err_str = "No common polarization between frequency A and B rasters"
                     error_channel.log(err_str)

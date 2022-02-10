@@ -82,7 +82,7 @@ def run(cfg: dict):
             low_band_center_freq = low_frequency_slc + low_band_bandwidth/2
             high_band_center_freq = high_frequency_slc - high_band_bandwidth/2
             # Specify split-spectrum parameters
-            split_spectrum = splitspectrum.SplitSpectrum(
+            split_spectrum_parameters = splitspectrum.SplitSpectrum(
                 rg_sample_freq=meta_data.rg_sample_freq,
                 rg_bandwidth=meta_data.rg_bandwidth,
                 center_frequency=meta_data.center_freq,
@@ -121,7 +121,7 @@ def run(cfg: dict):
                             target_slc_image,
                             np.s_[row_start: row_start + block_rows_data, :])
 
-                        subband_slc_low, subband_meta_low = split_spectrum.bandpass_shift_spectrum(
+                        subband_slc_low, subband_meta_low = split_spectrum_parameters.bandpass_shift_spectrum(
                             slc_raster=target_slc_image,
                             low_frequency=low_subband_frequencies[0],
                             high_frequency=low_subband_frequencies[1],
@@ -132,7 +132,7 @@ def run(cfg: dict):
                             resampling=False
                         )
 
-                        subband_slc_high, subband_meta_high = split_spectrum.bandpass_shift_spectrum(
+                        subband_slc_high, subband_meta_high = split_spectrum_parameters.bandpass_shift_spectrum(
                             slc_raster=target_slc_image,
                             low_frequency=high_subband_frequencies[0],
                             high_frequency=high_subband_frequencies[1],
