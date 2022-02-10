@@ -4,6 +4,7 @@ import nisar.workflows.helpers as helpers
 import journal
 import os
 import h5py
+import warning
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -19,8 +20,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
         scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
         error_channel = journal.error('InsarRunConfig.yaml_check')
-        info_channel = journal.info("InsarRunConfig.yaml_check")
-
+        warning_channel = journal.warning('InsarRunConfig.yaml_check')
         # Extract frequencies and polarizations to process
         freq_pols = self.cfg['processing']['input_subset'][
             'list_of_frequencies']
@@ -157,16 +157,15 @@ class InsarRunConfig(Geo2rdrRunConfig):
                     split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
                     info_str = "low band width for low sub-bands are not given;"\
                         "It is automatically set by 1/3 of range bandwidth of freqeuncyA""
-                    info_channel.log(info_str)
+                    warning_channel.log(info_str)
 
                 if split_cfg['high_band_bandwidth'] is None:
                     split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
                     info_str = "high band width for high sub-band are not given;"\
                         "It is automatically set by 1/3 of range bandwidth of freqeuncyA""
-                    info_channel.log(info_str)
+                    warning_channel.log(info_str)
 
             if split_cfg['spectral_diversity'] == 'main_side_band':
-                print(freq_pols.keys())
                 if 'B' not in freq_pols.keys():
                     err_str = "polarizations for frequency B are not given;"\
                         "frequency B is required for main-side-band method."
