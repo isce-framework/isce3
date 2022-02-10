@@ -24,7 +24,8 @@ def test_geocode_run():
         with open(test_yaml_path) as fh_test_yaml:
             test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
                 replace('@TEST_OUTPUT@', f'{pu}_gunw.h5'). \
-                replace('@TEST_PRODUCT_TYPES@', 'GUNW')
+                replace('@TEST_PRODUCT_TYPES@', 'GUNW'). \
+                replace('@TEST_RDR2GEO_FLAGS@', 'True')
             if pu == 'gpu':
                 test_yaml = test_yaml.replace('gpu_enabled: False', 'gpu_enabled: True')
 

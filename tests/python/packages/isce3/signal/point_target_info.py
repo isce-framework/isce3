@@ -1,7 +1,7 @@
 import iscetest
 import numpy as np
 import numpy.testing as npt
-from nisar.workflows import point_target_info as pt
+from isce3.signal import point_target_info as pt
 
 def test_islr_pslr():
     num_pts = 2000

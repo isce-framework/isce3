@@ -12,6 +12,7 @@ from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
+from nisar.workflows.compute_stats import compute_stats_complex_data
 
 
 def run(cfg):
@@ -89,7 +90,7 @@ def run(cfg):
 
                 # output_raster_ref = f'HDF5:{output_hdf5}:/{dataset_path}'
                 gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"))
-                _compute_stats(gslc_raster, gslc_dataset)
+                compute_stats_complex_data(gslc_raster, gslc_dataset)
 
                 t_pol_elapsed = time.time() - t_pol
                 info_channel.log(f'polarization {polarization} ran in {t_pol_elapsed:.3f} seconds')
@@ -121,20 +122,6 @@ def run(cfg):
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")
-
-
-def _compute_stats(raster, h5_ds):
-    stats_obj = isce3.math.compute_raster_stats_real_imag(raster)[0]
-    h5_ds.attrs.create('min_real_value', data=stats_obj.min_real)
-    h5_ds.attrs.create('mean_real_value', data=stats_obj.mean_real)
-    h5_ds.attrs.create('max_real_value', data=stats_obj.max_real)
-    h5_ds.attrs.create('sample_stddev_real', 
-                       data=stats_obj.sample_stddev_real)
-    h5_ds.attrs.create('min_imag_value', data=stats_obj.min_imag)
-    h5_ds.attrs.create('mean_imag_value', data=stats_obj.mean_imag)
-    h5_ds.attrs.create('max_imag_value', data=stats_obj.max_imag)
-    h5_ds.attrs.create('sample_stddev_imag',
-                       data=stats_obj.sample_stddev_imag)
 
 
 if __name__ == "__main__":

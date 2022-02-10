@@ -1,4 +1,7 @@
 set(TESTFILES
+isce3/core/gpu_check.py
+isce3/signal/point_target_info.py
+isce3/unwrap/snaphu.py
 nisar/products/readers/attitude.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
@@ -9,12 +12,10 @@ nisar/workflows/gcov.py
 nisar/workflows/geo2rdr.py
 nisar/workflows/geocode_insar.py
 nisar/workflows/gslc.py
-nisar/workflows/gpu_check.py
 nisar/workflows/insar.py
 nisar/workflows/filter_interferogram.py
 nisar/workflows/bandpass_insar.py
 nisar/workflows/process_args.py
-nisar/workflows/point_target_info.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py

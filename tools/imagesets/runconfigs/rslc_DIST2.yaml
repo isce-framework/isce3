@@ -44,12 +44,22 @@ runconfig:
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: output_rslc/rslc.h5
             SASConfigFile: output_rslc/rslc_config.yaml
+            ProductCounter: 1
         PrimaryExecutable:
-            # Handy to set to "SLC" until other ISCE tools updated.
             ProductType: RSLC
+            CompositeReleaseID: D00200
+            MissionId: NISAR
+            ProcessingType: PR
+            ProductAccuracy: P
+        DebugLevelGroup:
+            DebugSwitch: false
         Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
+            CycleNumber: 1
+            RelativeOrbitNumber: 2
+            FrameNumber: 4
+            OrbitDirection: Descending
+            TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
+            FullCoverageThresholdPercent: 75.0
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True
@@ -65,7 +75,7 @@ runconfig:
                 end_range: 927914.7277333334
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: null
+                output_prf: 1520
                 # Interval for azimuth grid alignment in seconds. See docs.
                 # Typically want 1 second and integer PRF (in Hz). Will not
                 # override user-provided start_time.
@@ -76,7 +86,7 @@ runconfig:
                 kind: Kaiser
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.
                 # For Cosine, 0 <= shape <= 1
-                shape: 3.0
+                shape: 1.6
             # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
                 kind: Kaiser
@@ -100,8 +110,8 @@ runconfig:
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
                 rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1e-8)
-                    threshold: 1e-8
+                    # Slant range convergence threshold (m): float (default: 1.0e-8)
+                    threshold: 1.0e-8
                     # Max number of primary iterations: int (default: 25)
                     maxiter: 25
                     # Max number of secondary iterations: int (default: 15)
@@ -120,8 +130,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 64
-                    azimuth: 64
+                    range: 512
+                    azimuth: 512
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
                 kernel:
@@ -134,14 +144,14 @@ runconfig:
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
                 rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1e-8)
+                    # Slant range convergence threshold (m): float (default: 1.0e-8)
                     threshold: 1.0e-8
                     # Max number of primary iterations: int (default: 25)
                     maxiter: 100
                     # Max number of secondary iterations: int (default: 15)
                     extraiter: 15
                 geo2rdr:
-                    # Slant range convergence threshold (m): float (default: 1e-8)
+                    # Slant range convergence threshold (m): float (default: 1.0e-8)
                     threshold: 1.0e-6
                     # Max number of iterations: int (default: 50)
                     maxiter: 100
@@ -149,26 +159,24 @@ runconfig:
                     # (default: 10.)
                     delta_range: 10.
             dry_troposphere_model: nodelay
-            # FIXME: dem fields (null or blank) in the runconfig file cause rslc workflow to crash
-            #dem:
-            #    # Height (in meters) to use if DEM unavailable.
-            #    reference_height: 
-            #    # How to interpolate the digital elevation model.  One of
-            #    # nearest, bilinear, bicubic, biquintic, or sinc
-            #    interp_method: 
+            dem:
+                # Height (in meters) to use if DEM unavailable.
+                reference_height: 0.0
+                # How to interpolate the digital elevation model.  One of
+                # nearest, bilinear, bicubic, biquintic, or sinc
+                interp_method: bilinear
             # Nominal antenna dimensions to use for BLU, EAP, etc. when no
             # antenna pattern input file is provided or its contents are
             # unsuitable. Each dimension has units of meters and is assumed
             # 12.0 m if unspecified.
             nominal_antenna_size:
-                range: 
-                azimuth: 
+                range: 12.0
+                azimuth: 12.0
             # Scale factor to apply to data before float16 encoding, optional.
             # Default is 1.0.
             # The largest representable float16 value is 65504.
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.
-            # FIXME: This field must be commented out for rslc workflow to run properly
-            #encoding_scale_factor: null
+            encoding_scale_factor: 0.01
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
@@ -184,3 +192,6 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+        QA:
+            validate: True
+            quality: True

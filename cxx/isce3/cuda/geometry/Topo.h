@@ -39,19 +39,17 @@ class isce3::cuda::geometry::Topo : public isce3::geometry::Topo {
         /** Run topo - main entrypoint; internal creation of topo rasters */
         void topo(isce3::io::Raster &, const std::string &);
 
-        /** Run topo with externally created topo rasters */
-        void topo(isce3::io::Raster & demRaster, isce3::io::Raster & xRaster,
-                  isce3::io::Raster & yRaster, isce3::io::Raster & heightRaster,
-                  isce3::io::Raster & incRaster, isce3::io::Raster & hdgRaster,
-                  isce3::io::Raster & localIncRaster, isce3::io::Raster & localPsiRaster,
-                  isce3::io::Raster & simRaster);
-
         /** Run topo with externally created topo rasters (plus mask raster) */
-        void topo(isce3::io::Raster & demRaster, isce3::io::Raster & xRaster,
-                  isce3::io::Raster & yRaster, isce3::io::Raster & heightRaster,
-                  isce3::io::Raster & incRaster, isce3::io::Raster & hdgRaster,
-                  isce3::io::Raster & localIncRaster, isce3::io::Raster & localPsiRaster,
-                  isce3::io::Raster & simRaster, isce3::io::Raster & maskRaster);
+        void topo(isce3::io::Raster & demRaster,
+                  isce3::io::Raster * xRaster = nullptr,
+                  isce3::io::Raster * yRaster = nullptr,
+				  isce3::io::Raster * heightRaster = nullptr,
+                  isce3::io::Raster * incRaster = nullptr,
+				  isce3::io::Raster * hdgRaster = nullptr,
+                  isce3::io::Raster * localIncRaster = nullptr,
+				  isce3::io::Raster * localPsiRaster = nullptr,
+                  isce3::io::Raster * simRaster = nullptr,
+				  isce3::io::Raster * maskRaster = nullptr);
 
         /** Run topo - main entrypoint; internal creation of topo rasters */
         void topo(isce3::io::Raster &, isce3::geometry::TopoLayers &);

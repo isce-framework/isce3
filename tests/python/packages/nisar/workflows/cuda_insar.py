@@ -26,6 +26,7 @@ def test_insar_run():
                                                     iscetest.data). \
                 replace('@TEST_OUTPUT@', test_output). \
                 replace('@TEST_PRODUCT_TYPES@', prod_type). \
+                replace('@TEST_RDR2GEO_FLAGS@', 'False'). \
                 replace('gpu_enabled: False', 'gpu_enabled: True')
 
         # create CLI input namespace

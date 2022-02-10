@@ -536,6 +536,10 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 
         if fill_value is not None:
             dset.attrs.create('_FillValue', data=fill_value)
+        elif 'cfloat' in gdal.GetDataTypeName(raster.datatype()).lower():
+            dset.attrs.create('_FillValue', data=np.nan + 1j * np.nan)
+        elif 'float' in gdal.GetDataTypeName(raster.datatype()).lower():
+            dset.attrs.create('_FillValue', data=np.nan)
 
         if stats_vector is not None:
             stats_obj = stats_vector[band]

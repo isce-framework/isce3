@@ -6,7 +6,6 @@ import os
 from nisar.products.readers.Raw import Raw, open_rrsd
 from nisar.products.writers import SLC
 from nisar.types import to_complex32
-from nisar.workflows import gpu_check
 import numpy as np
 import isce3
 from isce3.core import DateTime, LUT2d
@@ -516,7 +515,7 @@ def focus(runconfig):
         if len(set(fc_list)) > 1:
             raise NotImplementedError("TX frequency agility not supported")
 
-    use_gpu = gpu_check.use_gpu(cfg.worker.gpu_enabled, cfg.worker.gpu_id)
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg.worker.gpu_enabled, cfg.worker.gpu_id)
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg.worker.gpu_id)
@@ -546,6 +545,8 @@ def focus(runconfig):
         rskip = int(np.round(raw.getRanges("B", tx).spacing
             / raw.getRanges("A", txref).spacing))
         ogrid["B"] = ogrid["A"][:, ::rskip]
+        fc = raw.getCenterFrequency("B")
+        ogrid["B"].wavelength = isce3.core.speed_of_light / fc
         log.info("Output grid B is %s", ogrid["B"])
 
     polygon = isce3.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,

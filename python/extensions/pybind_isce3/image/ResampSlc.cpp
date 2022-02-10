@@ -32,10 +32,6 @@ void addbinding(py::class_<ResampSlc> & pyResampSlc)
                 py::arg("ref_start_range"),
                 py::arg("ref_range_pixel_spacing"),
                 py::arg("ref_wavelength"))
-        .def(py::init<const isce3::product::RadarGridParameters &,
-                const isce3::core::LUT2d<double> &>(),
-                py::arg("rdr_grid"),
-                py::arg("doppler"))
         .def(py::init([](const isce3::product::RadarGridParameters & grid,
                 const isce3::core::LUT2d<double> & doppler,
                 const Poly2d & az_carrier,

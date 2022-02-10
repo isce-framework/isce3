@@ -10,7 +10,7 @@ import numpy as np
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, h5_prep
+from nisar.workflows import h5_prep
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.dense_offsets_runconfig import \
     DenseOffsetsRunConfig
@@ -40,8 +40,8 @@ def run(cfg: dict):
     info_channel.log('Start dense offsets estimation')
 
     # Check GPU use
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
 
     if use_gpu:
         # Set current CUDA device

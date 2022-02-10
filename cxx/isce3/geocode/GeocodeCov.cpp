@@ -760,6 +760,9 @@ inline void Geocode<T>::_interpolate(
             // (NaN, NaN)
             using T_out_real = typename isce3::real<T_out>::type;
             geoDataBlock(i, j) *= std::numeric_limits<T_out_real>::quiet_NaN();
+            if (flag_apply_rtc && out_geo_rtc != nullptr) {
+                out_geo_rtc_array(i, j) = std::numeric_limits<float>::quiet_NaN();
+            }
             continue;
         }
 
@@ -774,7 +777,6 @@ inline void Geocode<T>::_interpolate(
                     rtc_area(int(rdrY + azimuthFirstLine), int(rdrX + rangeFirstPixel));
             val /= std::sqrt(rtc_value);
             if (out_geo_rtc != nullptr) {
-#pragma omp atomic write
                 out_geo_rtc_array(i, j) = rtc_value;
             }
         }

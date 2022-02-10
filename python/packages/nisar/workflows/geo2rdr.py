@@ -10,7 +10,7 @@ import time
 import journal
 import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, runconfig
+from nisar.workflows import runconfig
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -46,8 +46,8 @@ def run(cfg):
     info_channel.log("starting geo2rdr")
 
     # check if gpu use if required
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
 
     if use_gpu:
         # set CUDA device

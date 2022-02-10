@@ -146,8 +146,8 @@ runconfig:
                 # Shape parameter. For Kaiser, 0 <= shape < Inf.
                 # For Cosine and Tukey, 0 <= shape <= 1.
                 window_shape: 0.25
-                # FFT size in range. 
-                range_fft_size: 
+                # FFT size in range.
+                range_fft_size:
 
             ionosphere_phase_correction:
                 enabled: True
@@ -173,6 +173,19 @@ runconfig:
                 numiter: 25
                 extraiter: 10
                 lines_per_block: 1000
+
+                # default to save only layers needed for geo2rdr + InSAR
+                # x, y, and height required for geo2rdr and InSAR
+                # layover_shadow required for InSAR
+                write_x: True
+                write_y: True
+                write_z: True
+                write_incidence: False
+                write_heading: False
+                write_local_incidence: False
+                write_local_psi: False
+                write_simulated_amplitude: False
+                write_layover_shadow: True
 
             dem_margin:
 
@@ -321,7 +334,7 @@ runconfig:
                 boxcar:
                     filter_size_range: 9
                     filter_size_azimuth: 9
-                    
+
             phase_unwrap:
                 # Path to HDF5 file or directory containing the input interferogram
                 # and coherence (normalized magnitude of complex correlation) rasters

@@ -14,11 +14,12 @@ import journal
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep, gpu_check
+from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_insar_runconfig import \
     GeocodeInsarRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
+from nisar.workflows.compute_stats import compute_stats_real_data
 
 
 def run(cfg, runw_hdf5, output_hdf5):
@@ -33,8 +34,8 @@ def run(cfg, runw_hdf5, output_hdf5):
     output_hdf5 : str
         Path to output GUNW HDF5
     """
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
@@ -63,7 +64,7 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     dataset_path : str
         HDF5 path to geocoded shadow layover dataset
     """
-    raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'mask.rdr'
+    raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'layoverShadowMask.rdr'
     input_raster = isce3.io.Raster(str(raster_ref))
 
     # access the HDF5 dataset for layover shadow mask
@@ -357,7 +358,7 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
                     if (dataset_name != "layoverShadowMask"):
                         # Layover/shadow masks dont't have min/max/mean/stddev
                         # stats attributes
-                        _compute_stats(geocoded_raster, geocoded_dataset)
+                        compute_stats_real_data(geocoded_raster, geocoded_dataset)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
@@ -565,8 +566,7 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                         if (dataset_name != "layoverShadowMask"):
                             # Layover/shadow masks dont't have min/max/mean/stddev
                             # stats attributes
-                            _compute_stats(geocoded_raster, geocoded_dataset)
-
+                            compute_stats_real_data(geocoded_raster, geocoded_dataset)
 
                 if gunw_datasets['layoverShadowMask']:
                     skip_layover_shadow = True
@@ -579,18 +579,6 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
-
-
-def _compute_stats(raster, h5_ds):
-    if raster.datatype() == gdal.GDT_Float64:
-        stats_obj = isce3.math.compute_raster_stats_float64(raster)[0]
-    else:
-        stats_obj = isce3.math.compute_raster_stats_float32(raster)[0]
-    h5_ds.attrs.create('min_value', data=stats_obj.min)
-    h5_ds.attrs.create('mean_value', data=stats_obj.mean)
-    h5_ds.attrs.create('max_value', data=stats_obj.max)
-    h5_ds.attrs.create('sample_stddev', 
-                       data=stats_obj.sample_stddev)
 
 
 if __name__ == "__main__":

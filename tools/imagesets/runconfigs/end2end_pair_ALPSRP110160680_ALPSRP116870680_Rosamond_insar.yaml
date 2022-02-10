@@ -13,7 +13,7 @@ runconfig:
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tif
+            DEMFile: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tiff
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -34,7 +34,6 @@ runconfig:
 
         # ADT section - isce3 + pyre workflow
         processing:
-            keep_scratch: True
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:
@@ -88,11 +87,8 @@ runconfig:
                     x_abs:
 
             geo2rdr:
-                threshold: 1e-8
+                threshold: 1.0e-8
                 maxiter: 25
-               
-            blocksize:
-                y: 1000
 
             dem_margin: 0.1
 
@@ -113,6 +109,13 @@ runconfig:
                 range_looks: 11
                 azimuth_looks: 11
                 rows_per_block: 4096
+
+            filter_interferogram:
+                lines_per_block: 150
+                filter_type: boxcar
+                boxcar:
+                    filter_size_range: 7
+                    filter_size_azimuth: 7
 
             phase_unwrap:
                 crossmul_path:

@@ -25,7 +25,8 @@ def test_insar_run():
             test_yaml = fh_test_yaml.read().replace('@ISCETEST@',
                                                     iscetest.data). \
                 replace('@TEST_OUTPUT@', test_output). \
-                replace('@TEST_PRODUCT_TYPES@', prod_type)
+                replace('@TEST_PRODUCT_TYPES@', prod_type). \
+                replace('@TEST_RDR2GEO_FLAGS@', 'False')
 
         # create CLI input namespace
         args = argparse.Namespace(run_config_path=test_yaml, log_file=False)

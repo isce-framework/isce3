@@ -20,7 +20,8 @@ def test_unwrap_run():
     with open(test_yaml) as fh_test_yaml:
         test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
             replace('@TEST_OUTPUT@', 'runw.h5'). \
-            replace('@TEST_PRODUCT_TYPES@', 'RUNW')
+            replace('@TEST_PRODUCT_TYPES@', 'RUNW').\
+            replace('@TEST_RDR2GEO_FLAGS@', 'True')
 
     # Create CLI input name space with yaml instead of filepath
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)

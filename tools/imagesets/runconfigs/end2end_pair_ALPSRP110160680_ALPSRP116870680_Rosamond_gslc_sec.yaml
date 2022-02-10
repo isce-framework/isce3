@@ -12,7 +12,7 @@ runconfig:
 
         DynamicAncillaryFileGroup:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tif
+            DEMFile: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tiff
 
         ProductPathGroup:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.

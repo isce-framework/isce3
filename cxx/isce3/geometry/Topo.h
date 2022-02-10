@@ -229,31 +229,16 @@ public:
      * @param[in] simRaster output raster for simulated amplitude image.
      * @param[in] maskRaster output raster for layover/shadow mask.
      */
-    void topo(isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
-              isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
-              isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
-              isce3::io::Raster& localIncRaster,
-              isce3::io::Raster& localPsiRaster, isce3::io::Raster& simRaster,
-              isce3::io::Raster& maskRaster);
-
-    /**
-     * Run topo with externally created topo rasters; generate mask
-     *
-     * @param[in] demRaster input DEM raster
-     * @param[in] xRaster output raster for X coordinate in requested projection system (meters or degrees)
-     * @param[in] yRaster output raster for Y cooordinate in requested projection system (meters or degrees)
-     * @param[in] zRaster output raster for height above ellipsoid (meters)
-     * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical at target
-     * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
-     * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
-     * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
-     * @param[in] simRaster output raster for simulated amplitude image.
-     */
-    void topo(isce3::io::Raster& demRaster, isce3::io::Raster& xRaster,
-              isce3::io::Raster& yRaster, isce3::io::Raster& heightRaster,
-              isce3::io::Raster& incRaster, isce3::io::Raster& hdgRaster,
-              isce3::io::Raster& localIncRaster,
-              isce3::io::Raster& localPsiRaster, isce3::io::Raster& simRaster);
+    void topo(isce3::io::Raster& demRaster,
+              isce3::io::Raster* xRaster = nullptr,
+              isce3::io::Raster* yRaster = nullptr,
+              isce3::io::Raster* heightRaster = nullptr,
+              isce3::io::Raster* incRaster = nullptr,
+              isce3::io::Raster* hdgRaster = nullptr,
+              isce3::io::Raster* localIncRaster = nullptr,
+              isce3::io::Raster* localPsiRaster = nullptr,
+              isce3::io::Raster* simRaster = nullptr,
+              isce3::io::Raster* maskRaster = nullptr);
 
     /**
      * Main entry point for the module; internal creation of topo rasters
@@ -304,36 +289,15 @@ public:
      * @param[in] maskRaster output raster for layover/shadow mask.
      */
     void topo(isce3::geometry::DEMInterpolator& demInterp,
-              isce3::io::Raster& xRaster, isce3::io::Raster& yRaster,
-              isce3::io::Raster& heightRaster, isce3::io::Raster& incRaster,
-              isce3::io::Raster& hdgRaster, isce3::io::Raster& localIncRaster,
-              isce3::io::Raster& localPsiRaster, isce3::io::Raster& simRaster,
-              isce3::io::Raster& maskRaster);
-
-    /**
-     * Run topo with externally created topo rasters; generate mask
-     *
-     * @param[in] demInterp input DEM interpolator
-     * @param[in] xRaster output raster for X coordinate in requested projection
-     * system (meters or degrees)
-     * @param[in] yRaster output raster for Y cooordinate in requested
-     * projection system (meters or degrees)
-     * @param[in] zRaster output raster for height above ellipsoid (meters)
-     * @param[in] incRaster output raster for incidence angle (degrees) computed
-     * from vertical at target
-     * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
-     * anti-clockwise from EAST (Right hand rule)
-     * @param[in] localIncRaster output raster for local incidence angle
-     * (degrees) at target
-     * @param[in] localPsiRaster output raster for local projection angle
-     * (degrees) at target
-     * @param[in] simRaster output raster for simulated amplitude image.
-     */
-    void topo(isce3::geometry::DEMInterpolator& demInterp,
-              isce3::io::Raster& xRaster, isce3::io::Raster& yRaster,
-              isce3::io::Raster& heightRaster, isce3::io::Raster& incRaster,
-              isce3::io::Raster& hdgRaster, isce3::io::Raster& localIncRaster,
-              isce3::io::Raster& localPsiRaster, isce3::io::Raster& simRaster);
+              isce3::io::Raster* xRaster,
+              isce3::io::Raster* yRaster,
+              isce3::io::Raster* heightRaster,
+              isce3::io::Raster* incRaster,
+              isce3::io::Raster* hdgRaster,
+              isce3::io::Raster* localIncRaster,
+              isce3::io::Raster* localPsiRaster,
+              isce3::io::Raster* simRaster,
+              isce3::io::Raster* maskRaster);
 
     /**
      * Compute layover/shadow masks
@@ -400,18 +364,16 @@ private:
 
     /** Run topo with externally created topo rasters; generate mask */
     template<typename T>
-    void _topo(T& dem, isce3::io::Raster& xRaster, isce3::io::Raster& yRaster,
-               isce3::io::Raster& heightRaster, isce3::io::Raster& incRaster,
-               isce3::io::Raster& hdgRaster, isce3::io::Raster& localIncRaster,
-               isce3::io::Raster& localPsiRaster, isce3::io::Raster& simRaster,
-               isce3::io::Raster& maskRaster);
-
-    /** Run topo with externally created topo rasters; generate mask */
-    template<typename T>
-    void _topo(T& dem, isce3::io::Raster& xRaster, isce3::io::Raster& yRaster,
-               isce3::io::Raster& heightRaster, isce3::io::Raster& incRaster,
-               isce3::io::Raster& hdgRaster, isce3::io::Raster& localIncRaster,
-               isce3::io::Raster& localPsiRaster, isce3::io::Raster& simRaster);
+    void _topo(T& dem,
+               isce3::io::Raster* xRaster = nullptr,
+               isce3::io::Raster* yRaster = nullptr,
+               isce3::io::Raster* heightRaster = nullptr,
+               isce3::io::Raster* incRaster = nullptr,
+               isce3::io::Raster* hdgRaster = nullptr,
+               isce3::io::Raster* localIncRaster = nullptr,
+               isce3::io::Raster* localPsiRaster = nullptr,
+               isce3::io::Raster* simRaster = nullptr,
+               isce3::io::Raster* maskRaster = nullptr);
 
     // isce3::core objects
     isce3::core::Orbit _orbit;

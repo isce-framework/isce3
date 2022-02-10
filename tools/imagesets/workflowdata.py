@@ -11,8 +11,8 @@ workflowdata = {
         # and so forth
         "L0B_RRSD_REE2":
         [
-            "REE_L0B_NISAR_array144sq_02.h5",
-            "REE_ANTPAT_DATA.h5",
+            "REE_L0B_ECHO_array144sq_03.h5",
+            "REE_ANTPAT_CUTS_DATA.h5",
             "README.txt",
         ],
     
@@ -56,13 +56,13 @@ workflowdata = {
         "L0B_RRSD_ALPSRP110160680_Rosamond":
         [
             "ALPSRP110160680.L0B.h5",
-            "dem.tif",
+            "dem.tiff",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
             "ALPSRP116870680.L0B.h5",
-            "dem.tif",
+            "dem.tiff",
             "README.txt",
         ],
     

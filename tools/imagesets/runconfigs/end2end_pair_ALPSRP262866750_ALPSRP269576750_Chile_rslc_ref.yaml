@@ -1,5 +1,8 @@
 runconfig:
+    name: NISAR_L1-L-RSLC_RUNCONFIG
     groups:
+        PGENameGroup:
+            PGEName: RSLC_L_PGE
         InputFileGroup:
             InputFilePath:
             -   input_L0B_RRSD_ALPSRP262866750_Chile/ALPSRP262866750.L0B.h5
@@ -18,21 +21,71 @@ runconfig:
             ScratchPath: scratch_rslc_ref
             SASOutputFile: output_rslc_ref/rslc.h5
             SASConfigFile: output_rslc_ref/runconfig_rslc_ref.yaml
+            ProductCounter: 1
         PrimaryExecutable:
             ProductType: RSLC
+            CompositeReleaseID: D00200
+            MissionId: NISAR
+            ProcessingType: PR
+            ProductAccuracy: P
+        DebugLevelGroup:
+            DebugSwitch: false
         Geometry:
+            CycleNumber: 1
             RelativeOrbitNumber: 1
             FrameNumber: 1
-        archive: {}
-        qaqc: {}
+            OrbitDirection: Ascending
+            TrackFramePolygon: '{"type": "Polygon", "coordinates" : [[
+                [-68.1893955973867, -21.943952177674],
+                [-68.113591144119, -21.9262772692904],
+                [-68.0386718155604, -21.9087702941051],
+                [-67.9645940471975, -21.8914224001131],
+                [-67.8913175381613, -21.8742253988158],
+                [-67.8188049237631, -21.8571716986535],
+                [-67.7470214889042, -21.8402542467468],
+                [-67.6759349166827, -21.823466476305],
+                [-67.6055150655684, -21.8068022646716],
+                [-67.5357337732792, -21.7902558924586],
+                [-67.4665652920792, -21.7738197465161],
+                [-67.4929372520296, -21.6756034157928],
+                [-67.51931410472, -21.5772101928025],
+                [-67.5456033254637, -21.4789849504135],
+                [-67.5718703530933, -21.3806849355991],
+                [-67.5980779631748, -21.2824497910132],
+                [-67.6242876479096, -21.1840502553814],
+                [-67.650419067568, -21.0857877506893],
+                [-67.6765306811373, -20.9874440246807],
+                [-67.7025797225064, -20.8891804235305],
+                [-67.728611934551, -20.7908256573711],
+                [-67.7973095543586, -20.8071036091417],
+                [-67.866613436335, -20.8234911195298],
+                [-67.9365489230806, -20.8399961423857],
+                [-68.0071438393769, -20.8566243496768],
+                [-68.0784279617703, -20.873381812739],
+                [-68.150433211531, -20.8902750428928],
+                [-68.223193874095, -20.9073110320991],
+                [-68.2967468462724, -20.9244973052322],
+                [-68.3711319180886, -20.9418419775897],
+                [-68.4463920947315, -20.9593538205855],
+                [-68.420854640387, -21.0578595662587],
+                [-68.3952993885933, -21.1562870431828],
+                [-68.3696860438798, -21.2547901295057],
+                [-68.3440556330639, -21.3532108953946],
+                [-68.3183511930318, -21.4517663925639],
+                [-68.2926480367703, -21.5501682063314],
+                [-68.2668913028169, -21.648625058105],
+                [-68.2411122035176, -21.7470173336448],
+                [-68.215251992181, -21.8455674476941],
+                [-68.1893955973867, -21.943952177674]]]
+            }'
+            FullCoverageThresholdPercent: 75.0
         worker:
             gpu_enabled: true
             gpu_id: 0
-        profiler: {}
         processing:
             output_grid:
-                start_time:
-                end_time:
+                start_time: 2010-12-31T03:31:26.173960000
+                end_time: 2010-12-31T03:31:42.573617050
                 start_range:
                 end_range:
                 output_prf:
@@ -53,7 +106,7 @@ runconfig:
                     range: 2000.0
                     azimuth: 1.0
                 rdr2geo:
-                    threshold: 1e-08
+                    threshold: 1.0e-08
                     maxiter: 25
                     extraiter: 15
             rangecomp:
@@ -73,11 +126,11 @@ runconfig:
                     fit: Table
                     fit_order: 2048
                 rdr2geo:
-                    threshold: 1e-08
+                    threshold: 1.0e-08
                     maxiter: 25
                     extraiter: 15
                 geo2rdr:
-                    threshold: 1e-08
+                    threshold: 1.0e-08
                     maxiter: 50
                     delta_range: 10.0
             dry_troposphere_model: nodelay
@@ -96,6 +149,6 @@ runconfig:
                 eap: true
                 range_cor: true
                 azcomp: true
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
-    name: NISAR_L1-L-RSLC_RUNCONFIG
+        QA:
+            validate: true
+            quality: true
