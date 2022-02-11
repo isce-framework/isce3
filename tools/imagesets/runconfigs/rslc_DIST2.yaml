@@ -2,61 +2,61 @@ runconfig:
     name: NISAR_L1-L-RSLC_RUNCONFIG
     
     groups:
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
+        pge_name_group:
+            pge_name: RSLC_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED List of NISAR raw data products in L0B format.
-            InputFilePath:
+            input_file_path:
             - input_L0B_RRSD_DIST2/REE_L0B_NISAR_DATA_PASS2.h5
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # Digital elevation model, optional.
-            DEMFile: null
+            dem_file: null
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            Orbit: null
+            orbit: null
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.
-            Pointing: null
+            pointing: null
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            ExternalCalibration: null
+            external_calibration: null
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            InternalCalibration: null
+            internal_calibration: null
             # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
             # If not provided, no polarimetric calibration performed.
-            PolarimetricCalibration: null
+            polarimetric_calibration: null
             # Pre- and post-data take calibration data products, optional.
-            BookendCalibration: null
+            bookend_calibration: null
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
-            AntennaPattern: null
+            antenna_pattern: null
             # Chirp replica file, optional.
             # If absent will generate LFM chirp using parameters in L0B product.
-            Waveform: null
-        ProductPathGroup:
+            waveform: null
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_rslc
+            product_path: output_rslc
             # Directory where SAS can write temporary data
-            ScratchPath: scratch_rslc
+            scratch_path: scratch_rslc
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-            SASOutputFile: output_rslc/rslc.h5
-            SASConfigFile: output_rslc/rslc_config.yaml
-            ProductCounter: 1
-        PrimaryExecutable:
-            ProductType: RSLC
-            CompositeReleaseID: D00200
+            sas_output_file: output_rslc/rslc.h5
+            sas_config_file: output_rslc/rslc_config.yaml
+            product_counter: 1
+        primary_executable:
+            product_type: RSLC
+            composite_release_id: D00200
             MissionId: NISAR
-            ProcessingType: PR
-            ProductAccuracy: P
-        DebugLevelGroup:
-            DebugSwitch: false
+            processing_type: PR
+            product_accuracy: P
+        debug_level_group:
+            debug_switch: false
         Geometry:
             CycleNumber: 1
-            RelativeOrbitNumber: 2
-            FrameNumber: 4
+            relative_orbit_number: 2
+            frame_number: 4
             OrbitDirection: Descending
             TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
             FullCoverageThresholdPercent: 75.0
@@ -192,6 +192,6 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
-        QA:
+        qa:
             validate: True
             quality: True

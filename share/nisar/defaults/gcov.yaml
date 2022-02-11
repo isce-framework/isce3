@@ -2,33 +2,33 @@ runconfig:
     name: gcov_workflow_default
 
     groups:
-        PGENameGroup:
-            PGEName: GCOV_L_PGE
+        pge_name_group:
+            pge_name: GCOV_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath:
+            input_file_path:
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: 
+            dem_file: 
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: 
+            product_path: 
 
             # Directory where SAS can write temporary data
-            ScratchPath:
+            scratch_path:
 
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: 
+            sas_output_file: 
 
-        PrimaryExecutable:
-            ProductType: GCOV
+        primary_executable:
+            product_type: GCOV
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         # TODO OPTIONAL - To setup type of worker
         worker:
@@ -144,7 +144,7 @@ runconfig:
                 upsample_radargrid: False
 
                 # OPTIONAL - Same as input DEM if not provided.
-                outputEPSG:
+                output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If not provided, spacing values will be taken from provided DEM.
@@ -181,8 +181,8 @@ runconfig:
                 # List of heights in meters
                 heights: 
 
-                # OPTIONAL - Same as the geocode group outputEPSG if not provided
-                outputEPSG:
+                # OPTIONAL - Same as the geocode group output_epsg if not provided
+                output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If not provided, spacing values will be taken from geocode group

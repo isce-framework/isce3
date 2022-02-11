@@ -20,9 +20,9 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
     '''
     Get sub-product type dict and sub-product HDF5 paths
     '''
-    output_path = cfg['ProductPathGroup']['SASOutputFile']
-    scratch = cfg['ProductPathGroup']['ScratchPath']
-    product_type = cfg['PrimaryExecutable']['ProductType']
+    output_path = cfg['product_path_group']['sas_output_file']
+    scratch = cfg['product_path_group']['scratch_path']
+    product_type = cfg['primary_executable']['product_type']
 
     # dict keying product type with list with possible product type(s)
     insar_products = ['RIFG', 'RUNW', 'GUNW']
@@ -91,11 +91,11 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     is_insar = dst in ['GUNW', 'RUNW', 'RIFG']
 
     # unpack info
-    input_hdf5 = cfg['InputFileGroup']['InputFilePath']
+    input_hdf5 = cfg['input_file_group']['input_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     if is_insar:
-        secondary_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
+        secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
 
     if dst == "GCOV":
         dem_interp_method = cfg['processing']['dem_interpolation_method']
@@ -295,7 +295,7 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     common_parent_path = 'science/LSAR'
     dst_meta_path = os.path.join(common_parent_path, f'{dst}/metadata')
 
-    secondary_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
+    secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Open secondary SLC
@@ -443,7 +443,7 @@ def prep_ds_insar(cfg, dst, dst_h5):
     dset.attrs["description"] = descr
 
     # Open reference SLC
-    input_h5 = cfg['InputFileGroup']['InputFilePath']
+    input_h5 = cfg['input_file_group']['input_file_path']
     ref_slc = SLC(hdf5file=input_h5)
 
     with h5py.File(input_h5, 'r', libver='latest', swmr=True) as src_h5:

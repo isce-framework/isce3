@@ -4,64 +4,64 @@
 runconfig:
   name: str()
   groups:
-    PGENameGroup:
-      PGEName: enum('RSLC_L_PGE')
-    InputFileGroup:
+    pge_name_group:
+      pge_name: enum('RSLC_L_PGE')
+    input_file_group:
       # REQUIRED List of NISAR raw data products in L0B format
-      InputFilePath: list(str(), min=1)
+      input_file_path: list(str(), min=1)
     ## The SAS will function without the following ancillary files but will produce
     ## products that do not meet all requirements.  These files are expected to
     ## be provided in routine processing.  The R1 SAS has not implemented any
     ## functionality using these files.  Implementation planned for R2.
-    DynamicAncillaryFileGroup:
+    dynamic_ancillary_file_group:
       # Digital elevation model, optional.
-      DEMFile: str(required=False)
+      dem_file: str(required=False)
       # Refined orbit, optional.
       # Defaults to orbit within L0B product.
-      Orbit: str(required=False)
+      orbit: str(required=False)
       # Refined pointing, optional.
       # Defaults to attitude within L0B product.
-      Pointing: str(required=False)
+      pointing: str(required=False)
       # External calibration data, optional.
       # Defaults to no extra calibration gain, phase, delay, etc.
-      ExternalCalibration: str(required=False)
+      external_calibration: str(required=False)
       # Internal calibration tables, optional.
       # If not provided, no secondary elevation antenna pattern correction.
-      InternalCalibration: str(required=False)
+      internal_calibration: str(required=False)
       # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
       # If not provided, no polarimetric calibration performed.
-      PolarimetricCalibration: str(required=False)
+      polarimetric_calibration: str(required=False)
       # Pre- and post-data take calibration data products, optional.
-      BookendCalibration: str(required=False)
+      bookend_calibration: str(required=False)
       # Antenna pattern data, optional.
       # Defaults to sinc^4 pattern using nominal antenna dimensions.
-      AntennaPattern: str(required=False)
+      antenna_pattern: str(required=False)
       # Chirp replica file, optional.
       # If absent will generate LFM chirp using parameters in L0B product.
-      Waveform: str(required=False)
-    ProductPathGroup:
+      waveform: str(required=False)
+    product_path_group:
       # Directory where PGE will place results
-      ProductPath: str()
+      product_path: str()
       # Directory where SAS can write temporary data
-      ScratchPath: str()
+      scratch_path: str()
       # Intermediate file name.  SAS writes output product to the following file
       # before it gets renamed by the PGE wrapper.
       # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-      SASOutputFile: str()
-      SASConfigFile: str()
-      ProductCounter: int(min=1, max=999)
-    PrimaryExecutable:
-      ProductType: str()
-      CompositeReleaseID: regex(r'\w\d\d\d\d\d', name='CRID')
-      ProcessingType: enum('PR', 'UR') # production, urgent response
+      sas_output_file: str()
+      sas_config_file: str()
+      product_counter: int(min=1, max=999)
+    primary_executable:
+      product_type: str()
+      composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID')
+      processing_type: enum('PR', 'UR') # production, urgent response
       MissionId: enum('NISAR')
-      ProductAccuracy: enum('P', 'M', 'N', 'F', 'T')
-    DebugLevelGroup:
-      DebugSwitch: bool()
+      product_accuracy: enum('P', 'M', 'N', 'F', 'T')
+    debug_level_group:
+      debug_switch: bool()
     Geometry:
       CycleNumber: int(min=1, max=999)
-      RelativeOrbitNumber: int(min=1, max=173)
-      FrameNumber: int(min=1, max=176)
+      relative_orbit_number: int(min=1, max=173)
+      frame_number: int(min=1, max=176)
       OrbitDirection: enum('Descending', 'Ascending')
       TrackFramePolygon: str(required=False)
       FullCoverageThresholdPercent: num(min=0.0, required=False)
@@ -222,9 +222,9 @@ runconfig:
         # azimuth compression
         azcomp: bool(required=False)
 
-    # The PGE wrapper uses the QA group to control whether or not to run the QA SAS
-    # program and which QA option(s) to enable. By default the QA SAS is not run.
-    QA: include('qa_options', required=False)
+    # The PGE wrapper uses the qa group to control whether or not to run the qa SAS
+    # program and which qa option(s) to enable. By default the qa SAS is not run.
+    qa: include('qa_options', required=False)
 ---
 spectral_window:
   kind: enum('Kaiser', 'Cosine', required=False)

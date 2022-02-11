@@ -187,7 +187,7 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
 
-    ref_hdf5 = cfg["InputFileGroup"]["InputFilePath"]
+    ref_hdf5 = cfg["input_file_group"]["input_file_path"]
     slc = SLC(hdf5file=ref_hdf5)
 
     # get doppler centroid
@@ -229,10 +229,10 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
         Path to output GUNW HDF5
     """
     # pull parameters from cfg
-    ref_hdf5 = cfg["InputFileGroup"]["InputFilePath"]
+    ref_hdf5 = cfg["input_file_group"]["input_file_path"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
-    dem_file = cfg["DynamicAncillaryFileGroup"]["DEMFile"]
+    dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
@@ -241,7 +241,7 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     gunw_datasets = cfg["processing"]["geocode"]["datasets"]
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     offset_cfg = cfg["processing"]["dense_offsets"]
 
     slc = SLC(hdf5file=ref_hdf5)
@@ -386,8 +386,8 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
 
     # Extract parameters from cfg dictionary
     dem_block_margin = cfg["processing"]["dem_margin"]
-    ref_hdf5 = cfg["InputFileGroup"]["InputFilePath"]
-    dem_file = cfg["DynamicAncillaryFileGroup"]["DEMFile"]
+    ref_hdf5 = cfg["input_file_group"]["input_file_path"]
+    dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
@@ -396,7 +396,7 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     offset_cfg = cfg["processing"]["dense_offsets"]
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
 
     if interp_method == 'BILINEAR':
         interp_method = isce3.core.DataInterpMethod.BILINEAR
@@ -594,7 +594,7 @@ if __name__ == "__main__":
     geocode_insar_runconfig = GeocodeInsarRunConfig(args)
 
     # prepare RIFG HDF5
-    geocode_insar_runconfig.cfg['PrimaryExecutable']['ProductType'] = 'GUNW_STANDALONE'
+    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'GUNW_STANDALONE'
     out_paths = h5_prep.run(geocode_insar_runconfig.cfg)
     runw_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'runw_path']

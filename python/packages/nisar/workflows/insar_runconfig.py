@@ -15,7 +15,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
         Check submodule paths from YAML
         '''
 
-        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
+        scratch_path = self.cfg['product_path_group']['scratch_path']
         error_channel = journal.error('InsarRunConfig.yaml_check')
         warning_channel = journal.warning('InsarRunConfig.yaml_check')
 

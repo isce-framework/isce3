@@ -20,13 +20,13 @@ def run(cfg):
     run geocodeSlc according to parameters in cfg dict
     '''
     # pull parameters from cfg
-    input_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
+    input_hdf5 = cfg['input_file_group']['input_file_path']
+    output_hdf5 = cfg['product_path_group']['sas_output_file']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     geogrids = cfg['processing']['geocode']['geogrids']
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     threshold_geo2rdr = cfg['processing']['geo2rdr']['threshold']
     iteration_geo2rdr = cfg['processing']['geo2rdr']['maxiter']
     lines_per_block = cfg['processing']['blocksize']['y']

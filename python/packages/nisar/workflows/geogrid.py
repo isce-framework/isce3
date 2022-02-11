@@ -53,12 +53,12 @@ def create(cfg, frequency_group = None, frequency = None,
     if geocode_dict is None:
         geocode_dict = cfg['processing']['geocode']
 
-    input_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
+    input_hdf5 = cfg['input_file_group']['input_file_path']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     slc = SLC(hdf5file=input_hdf5)
 
     # unpack and check cfg dict values. default values set to trigger inside fix(...)
-    epsg = geocode_dict['outputEPSG']
+    epsg = geocode_dict['output_epsg']
     start_x = geocode_dict['top_left']['x_abs']
     start_y = geocode_dict['top_left']['y_abs']
 

@@ -25,16 +25,16 @@ def run(cfg: dict, output_hdf5: str = None):
     '''
 
     # Pull parameters from cfg dictionary
-    ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
+    ref_hdf5 = cfg['input_file_group']['input_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     rubbersheet_params = cfg['processing']['rubbersheet']
     dense_offsets_path = pathlib.Path(rubbersheet_params['dense_offsets_path'])
     geo2rdr_offsets_path = pathlib.Path(rubbersheet_params['geo2rdr_offsets_path'])
 
     # If not set, set output HDF5 file
     if output_hdf5 is None:
-        output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
+        output_hdf5 = cfg['product_path_group']['sas_output_file']
 
     # Set info and error channels
     info_channel = journal.info('rubbersheet.run')

@@ -18,7 +18,7 @@ class Geo2rdrRunConfig(RunConfig):
         '''
         # Use scratch as topo_path if none given in YAML
         if 'topo_path' not in self.cfg['processing']['geo2rdr']:
-            self.cfg['processing']['geo2rdr']['topo_path'] = self.cfg['ProductPathGroup']['ScratchPath']
+            self.cfg['processing']['geo2rdr']['topo_path'] = self.cfg['product_path_group']['scratch_path']
 
         # Check topo directory structure
         topo_path = self.cfg['processing']['geo2rdr']['topo_path']

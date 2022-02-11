@@ -2,45 +2,45 @@
 runconfig:
     name: NISAR_L1-L-RSLC_RUNCONFIG    
     groups:
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
+        pge_name_group:
+            pge_name: RSLC_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED List of NISAR raw data products in L0B format.
-            InputFilePath:
+            input_file_path:
             - input_L0B_RRSD_REE_NISAR_dithered/L0B_RRSD_REE_NISAR_dithered.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
-            AntennaPattern: L0B_RRSD_REE_NISAR_dithered/REE_ANTPAT_DATA.h5
+            antenna_pattern: L0B_RRSD_REE_NISAR_dithered/REE_ANTPAT_DATA.h5
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_rslc
+            product_path: output_rslc
             # Directory where SAS can write temporary data
-            ScratchPath: scratch_rslc
+            scratch_path: scratch_rslc
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-            SASOutputFile: output_rslc/rslc.h5
+            sas_output_file: output_rslc/rslc.h5
             # Echo processor config (including defaults) to file.
-            SASConfigFile: output_rslc/rslc_config.yaml
-            ProductCounter: 1
+            sas_config_file: output_rslc/rslc_config.yaml
+            product_counter: 1
 
-        PrimaryExecutable:
-            ProductType: RSLC
-            CompositeReleaseID: D00200
+        primary_executable:
+            product_type: RSLC
+            composite_release_id: D00200
             MissionId: NISAR
-            ProcessingType: PR
-            ProductAccuracy: P
+            processing_type: PR
+            product_accuracy: P
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         Geometry:
             CycleNumber: 1
-            RelativeOrbitNumber: 2
-            FrameNumber: 4
+            relative_orbit_number: 2
+            frame_number: 4
             OrbitDirection: Ascending
             TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
             FullCoverageThresholdPercent: 75.0
@@ -199,6 +199,6 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
-        QA:
+        qa:
             validate: True
             quality: True
