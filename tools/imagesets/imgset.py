@@ -36,6 +36,7 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
     printlog : boolean, optional
         Print log to console
     """
+    import datetime;
     logger.propagate = printlog
     # remove extra whitespace
     normalize = lambda s: subprocess.list2cmdline(shlex.split(s))
@@ -43,7 +44,13 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
     cmdstr = normalize(dockercall) + ' "\n' + ''.join(f'{"":<6}{normalize(c)}\n' for c in cmd) + '"'
     # save command to log
     logger.info("++ " + cmdstr + "\n")
-    pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+
+    # Maximum number of seconds to wait for "docker run" to finish after
+    # its child process exits.  The observed times have been < 1 ms.
+    # Use a relatively large number to flag a possible problem with Docker.
+    timeout = 10
+
     with pipe.stdout:
         for line in iter(pipe.stdout.readline, b''): # b'\n'-separated lines
             decoded = line.decode("utf-8")
@@ -52,7 +59,12 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
                 decoded = decoded[:-1]
             logger.info(decoded)
     ret = pipe.poll()
-    if ret != 0:
+    if ret == None:
+        ret = pipe.wait(timeout=timeout)
+        # ret will be None if exception TimeoutExpired was raised and caught.
+        if ret != 0:
+            raise subprocess.CalledProcessError(ret, cmdstr)
+    elif ret != 0:
         raise subprocess.CalledProcessError(ret, cmdstr)
 
 # A set of docker images suitable for building and running isce3
@@ -670,12 +682,9 @@ class ImageSet:
 
     def tartests(self):
         """
-        Tar up test directories for delivery.  PGE has requested that
-        the scratch directory contents be excluded from the deliveries.
-        Include the scratch directories only as empty directories to
-        maintain consistency with the runconfigs.
+        Tar up test directories for delivery
         """
         for workflow in workflowtests:
             for test in workflowtests[workflow]:
                 print(f"\ntarring workflow test {test}\n")
-                subprocess.check_call(f"tar cvz --exclude scratch*/* -f {test}.tar.gz {test}".split(), cwd=self.testdir)
+                subprocess.check_call(f"tar cvzf {test}.tar.gz {test}".split(), cwd=self.testdir)
