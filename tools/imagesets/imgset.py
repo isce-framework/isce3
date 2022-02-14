@@ -43,7 +43,7 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
     cmdstr = normalize(dockercall) + ' "\n' + ''.join(f'{"":<6}{normalize(c)}\n' for c in cmd) + '"'
     # save command to log
     logger.info("++ " + cmdstr + "\n")
-    pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+    pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     # Maximum number of seconds to wait for "docker run" to finish after
     # its child process exits.  The observed times have been < 1 ms.
