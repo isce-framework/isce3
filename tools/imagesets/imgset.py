@@ -44,6 +44,12 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
     # save command to log
     logger.info("++ " + cmdstr + "\n")
     pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    # Maximum number of seconds to wait for "docker run" to finish after
+    # its child process exits.  The observed times have been < 1 ms.
+    # Use a relatively large number to flag a possible problem with Docker.
+    timeout = 10
+
     with pipe.stdout:
         for line in iter(pipe.stdout.readline, b''): # b'\n'-separated lines
             decoded = line.decode("utf-8")
@@ -52,6 +58,9 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
                 decoded = decoded[:-1]
             logger.info(decoded)
     ret = pipe.poll()
+    if ret is None:
+        ret = pipe.wait(timeout=timeout)
+        # ret will be None if exception TimeoutExpired was raised and caught.
     if ret != 0:
         raise subprocess.CalledProcessError(ret, cmdstr)
 
@@ -670,10 +679,7 @@ class ImageSet:
 
     def tartests(self):
         """
-        Tar up test directories for delivery.  PGE has requested that
-        the scratch directory contents be excluded from the deliveries.
-        Include the scratch directories only as empty directories to
-        maintain consistency with the runconfigs.
+        Tar up test directories for delivery
         """
         for workflow in workflowtests:
             for test in workflowtests[workflow]:
