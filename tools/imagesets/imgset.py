@@ -36,7 +36,6 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
     printlog : boolean, optional
         Print log to console
     """
-    import datetime;
     logger.propagate = printlog
     # remove extra whitespace
     normalize = lambda s: subprocess.list2cmdline(shlex.split(s))
@@ -59,12 +58,10 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
                 decoded = decoded[:-1]
             logger.info(decoded)
     ret = pipe.poll()
-    if ret == None:
+    if ret is None:
         ret = pipe.wait(timeout=timeout)
         # ret will be None if exception TimeoutExpired was raised and caught.
-        if ret != 0:
-            raise subprocess.CalledProcessError(ret, cmdstr)
-    elif ret != 0:
+    if ret != 0:
         raise subprocess.CalledProcessError(ret, cmdstr)
 
 # A set of docker images suitable for building and running isce3
@@ -687,4 +684,4 @@ class ImageSet:
         for workflow in workflowtests:
             for test in workflowtests[workflow]:
                 print(f"\ntarring workflow test {test}\n")
-                subprocess.check_call(f"tar cvzf {test}.tar.gz {test}".split(), cwd=self.testdir)
+                subprocess.check_call(f"tar cvz --exclude scratch*/* -f {test}.tar.gz {test}".split(), cwd=self.testdir)
