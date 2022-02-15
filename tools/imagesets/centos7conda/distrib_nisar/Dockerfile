@@ -23,8 +23,7 @@ RUN conda install testfixtures scikit-image
 RUN conda install cfunits --channel conda-forge
 
 # Soil Moisture
-RUN conda install make --channel conda-forge
-RUN conda create -n SoilMoisture gcc gfortran netcdf-cxx4 netcdf-fortran --channel conda-forge
+RUN conda create -n SoilMoisture gcc gfortran netcdf-cxx4 netcdf-fortran make --channel conda-forge
 
 # copy the repo from the intermediate image
 COPY --from=0 /opt/QualityAssurance /opt/QualityAssurance
