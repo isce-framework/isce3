@@ -41,9 +41,7 @@ runconfig:
                     # valid options for polarizations
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    A: [HH]
-
-
+                    A: [HH, VV]
 
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
