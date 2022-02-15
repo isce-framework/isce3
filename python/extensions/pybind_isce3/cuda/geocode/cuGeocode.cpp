@@ -1,7 +1,7 @@
 #include "cuGeocode.h"
-#include <isce3/core/forward.h>
 
 #include <gdal_priv.h>
+#include <pybind11/stl.h>
 
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Constants.h>
@@ -119,7 +119,20 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
             input_raster: io::Raster
                 Raster to be geocoded
         )")
-            .def_property_readonly("n_blocks", &Geocode::numBlocks)
-            .def_property_readonly("lines_per_block", &Geocode::linesPerBlock);
+    .def("geocode_rasters", &Geocode::geocodeRasters,
+            py::arg("output_rasters"),
+            py::arg("input_rasters"),
+            R"(
+            Geocode rasters with a shared geogrid with block processing handled internally.
+
+            Parameters
+            ----------
+            output_rasters: list(io::Raster)
+                List of geocoded rasters.
+            input_rasters: list(io::Raster)
+                List of rasters to be geocoded.
+        )")
+    .def_property_readonly("n_blocks", &Geocode::numBlocks)
+    .def_property_readonly("lines_per_block", &Geocode::linesPerBlock);
     ;
 }
