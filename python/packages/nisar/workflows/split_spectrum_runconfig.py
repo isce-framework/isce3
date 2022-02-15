@@ -6,7 +6,6 @@ from nisar.products.readers import SLC
 from nisar.workflows.runconfig import RunConfig
 
 
-
 class SplitSpectrumRunConfig(RunConfig):
     def __init__(self, args):
         # All InSAR submodules share a common InSAR schema
@@ -29,7 +28,7 @@ class SplitSpectrumRunConfig(RunConfig):
         iono_cfg = self.cfg['processing']['ionosphere_phase_correction']
         split_cfg = iono_cfg['split_range_spectrum']
         # Extract main range bandwidth from reference RSLC
-        ref_slc = SLC(hdf5file=self.cfg['InputFileGroup']['InputFilePath'])
+        ref_slc = SLC(hdf5file=self.cfg['input_file_group']['input_file_path'])
         rg_main_bandwidth = ref_slc.getSwathMetadata(
             'A').processed_range_bandwidth
 
@@ -68,16 +67,15 @@ class SplitSpectrumRunConfig(RunConfig):
                 split_cfg['high_band_bandwidth'] = rg_side_bandwidth
 
             # Check that main and side-band are at the same polarization. If not, throw an error.
-            src_h5 = h5py.File(self.cfg['InputFileGroup']['InputFilePath'], 'r',
-                               libver='latest', swmr=True)
-            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA',
-                                    'listOfPolarizations')
-            pols_freqA = src_h5[pol_path][()]
-            pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
-                                    'listOfPolarizations')
+            with h5py.File(self.cfg['input_file_group']['input_file_path'],
+                                   'r', libver='latest', swmr=True) as src_h5:                                   
+                    pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA',
+                                            'listOfPolarizations')
+                    pols_freqA = src_h5[pol_path][()]
+                    pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
+                                            'listOfPolarizations')
+                    pols_freqB = src_h5[pol_path][()]
 
-            pols_freqB = src_h5[pol_path][()]
-            src_h5.close()
             if len(set.intersection(set(pols_freqA), set(pols_freqB))) == 0:
                 err_str = "No common polarization between frequency A and B rasters"
                 error_channel.log(err_str)

@@ -11,6 +11,7 @@ import numpy as np
 from isce3.splitspectrum import splitspectrum
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
+
 from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -20,8 +21,8 @@ def run(cfg: dict):
     run bandpass
     '''
     # pull parameters from cfg
-    ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
+    ref_hdf5 = cfg['input_file_group']['input_file_path']
+    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Extract range split spectrum dictionary and corresponding parameters
@@ -34,13 +35,13 @@ def run(cfg: dict):
     low_band_bandwidth = split_cfg['low_band_bandwidth']
     high_band_bandwidth = split_cfg['high_band_bandwidth']
 
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
 
     info_channel = journal.info("split_spectrum.run")
     info_channel.log("starting split_spectrum")
 
     t_all = time.time()
-    print(method)
+
     # Check split spectrum method
     if method == 'split_main_band':
         info_channel.log('Split the main band of the signal')
@@ -106,7 +107,7 @@ def run(cfg: dict):
                     fft_size = cols
 
                     for block in range(0, nblocks):
-                        print(" -- split_spectrum block: ", block)
+                        info_channel.log(f" split_spectrum block: {block}")
                         row_start = block * blocksize
                         if ((row_start + blocksize) > rows):
                             block_rows_data = rows - row_start
@@ -154,15 +155,17 @@ def run(cfg: dict):
                                                        [rows, cols],
                                                        np.complex64,
                                                        chunks=(128, 128))
-                            # Write bandpassed SLC to HDF5
-                        dst_h5_low[dest_pol_path].write_direct(subband_slc_low,
-                                                               dest_sel=np.s_[
-                                                                        row_start: row_start + block_rows_data,
-                                                                        :])
+                        
+                        # Write bandpassed SLC to HDF5
+                        dst_h5_low[dest_pol_path].write_direct(
+                            subband_slc_low,
+                            dest_sel=np.s_[
+                                row_start: row_start + block_rows_data, :])
+
                         dst_h5_high[dest_pol_path].write_direct(
                             subband_slc_high,
                             dest_sel=np.s_[
-                                     row_start: row_start + block_rows_data, :])
+                                row_start: row_start + block_rows_data, :])
 
                     dst_h5_low[dest_pol_path].attrs[
                         'description'] = f"Split-spectrum SLC image ({pol})"

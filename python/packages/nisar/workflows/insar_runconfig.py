@@ -18,7 +18,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
         Check submodule paths from YAML
         '''
 
-        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
+        scratch_path = self.cfg['product_path_group']['scratch_path']
         error_channel = journal.error('InsarRunConfig.yaml_check')
         warning_channel = journal.warning('InsarRunConfig.yaml_check')
 
@@ -160,7 +160,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
             # Extract split-spectrum dictionary
             split_cfg = iono_cfg['split_range_spectrum']
             # Extract main range bandwidth from reference SLC
-            ref_slc = SLC(hdf5file=self.cfg['InputFileGroup']['InputFilePath'])
+            ref_slc = SLC(hdf5file=self.cfg['input_file_group']['input_file_path'])
             rg_main_bandwidth = ref_slc.getSwathMetadata(
                 'A').processed_range_bandwidth
 
@@ -193,18 +193,19 @@ class InsarRunConfig(Geo2rdrRunConfig):
                     'B').processed_range_bandwidth
 
                 # Check that main and side-band are at the same polarization. If not, throw an error.
-                src_h5 = h5py.File(self.cfg['InputFileGroup']['InputFilePath'],
+                src_h5 = h5py.File(self.cfg['input_file_group']['input_file_path'],
                                    'r',
                                    libver='latest', swmr=True)
-                pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA',
-                                        'listOfPolarizations')
-                pols_freqA = src_h5[pol_path][()]
-                pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
-                                        'listOfPolarizations')
-                pols_freqB = src_h5[pol_path][()]
-                src_h5.close()
+                with h5py.File(self.cfg['input_file_group']['input_file_path'],
+                                   'r', libver='latest', swmr=True) as src_h5:
+                    pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA',
+                                            'listOfPolarizations')
+                    pols_freqA = src_h5[pol_path][()]
+                    pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
+                                            'listOfPolarizations')
+                    pols_freqB = src_h5[pol_path][()]
 
-                if len(set.intersection(set(pols_freqA), set(pols_freqB))) == 0:
+                if not set.intersection(set(pols_freqA), set(pols_freqB)):
                     err_str = "No common polarization between frequency A and B rasters"
                     error_channel.log(err_str)
                     raise FileNotFoundError(err_str)
