@@ -64,9 +64,9 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
-    # if run_steps['ionosphere'] and \
-    #         cfg['processing']['ionosphere_phase_correction']['enabled']:
-    #     split_spectrum.run(cfg)
+    if run_steps['ionosphere'] and \
+            cfg['processing']['ionosphere_phase_correction']['enabled']:
+        split_spectrum.run(cfg)
 
     if run_steps['geocode'] and 'GUNW' in out_paths:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
