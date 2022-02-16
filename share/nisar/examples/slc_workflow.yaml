@@ -55,7 +55,7 @@ runconfig:
         primary_executable:
             product_type: RSLC
 
-        Geometry:
+        geometry:
             relative_orbit_number: 1
             frame_number: 150
 

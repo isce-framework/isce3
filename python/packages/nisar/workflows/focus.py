@@ -564,8 +564,8 @@ def focus(runconfig):
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, polygon=polygon,
-        track=cfg.Geometry.relative_orbit_number,
-        frame=cfg.Geometry.frame_number,
+        track=cfg.geometry.relative_orbit_number,
+        frame=cfg.geometry.frame_number,
         start_time=ogrid["A"].sensing_datetime(0),
         end_time=ogrid["A"].sensing_datetime(ogrid["A"].length - 1))
 

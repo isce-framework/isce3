@@ -49,18 +49,18 @@ runconfig:
             # Handy to set to "SLC" until other ISCE tools updated.
             product_type: RSLC
             composite_release_id: D00200
-            MissionId: NISAR
+            mission_id: NISAR
             processing_type: PR
             product_accuracy: P
         debug_level_group:
             debug_switch: false
-        Geometry:
-            CycleNumber: 1
+        geometry:
+            cycle_number: 1
             relative_orbit_number: 2
             frame_number: 4
-            OrbitDirection: Ascending
-            TrackFramePolygon: '{"type": "Polygon", "coordinates": []}'
-            FullCoverageThresholdPercent: 75.0
+            orbit_direction: Ascending
+            track_frame_polygon: '{"type": "Polygon", "coordinates": []}'
+            full_coverage_threshold_percent: 75.0
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
             gpu_enabled: True

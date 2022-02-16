@@ -56,7 +56,7 @@ runconfig:
             # Handy to set to "SLC" until other ISCE tools updated.
             product_type: RSLC
 
-        Geometry:
+        geometry:
             relative_orbit_number: 1
             frame_number: 1
 

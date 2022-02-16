@@ -25,17 +25,17 @@ runconfig:
         primary_executable:
             product_type: RSLC
             composite_release_id: D00200
-            MissionId: NISAR
+            mission_id: NISAR
             processing_type: PR
             product_accuracy: P
         debug_level_group:
             debug_switch: false
-        Geometry:
-            CycleNumber: 1
+        geometry:
+            cycle_number: 1
             relative_orbit_number: 1
             frame_number: 1
-            OrbitDirection: Ascending
-            TrackFramePolygon: '{"type": "Polygon", "coordinates" : [[
+            orbit_direction: Ascending
+            track_frame_polygon: '{"type": "Polygon", "coordinates" : [[
                 [-68.1914812891183, -21.9450716883908],
                 [-68.1156573726063, -21.9274132197719],
                 [-68.0407192606459, -21.9099225763898],
@@ -78,7 +78,7 @@ runconfig:
                 [-68.2173368757781, -21.8466248657298],
                 [-68.1914812891183, -21.9450716883908]]]
             }'
-            FullCoverageThresholdPercent: 75.0
+            full_coverage_threshold_percent: 75.0
         worker:
             gpu_enabled: true
             gpu_id: 0
