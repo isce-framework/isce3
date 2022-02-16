@@ -20,6 +20,7 @@ nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py
 nisar/workflows/antenna_parser.py
+nisar/antenna/beamformer.py
 )
 
 if(WITH_CUDA)
