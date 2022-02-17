@@ -376,17 +376,23 @@ class ImageSet:
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
+        elif testname.startswith("soilm"):
+            # Executable-dependent.  Currently works only for Disaggregation.
+            inputrunconfig = f"{testname}{suf}.txt"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
         else:
             inputrunconfig = f"{testname}{suf}.yaml"
-        shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
-                        pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
 
         if not testname.startswith("soilm"):
             cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
         else:
             executable = pyname
-            cmd = [f"time {executable} runconfig_{wfname}{suf}.yaml"]
+            # Executable-dependent.  Currently works only for Disaggregation.
+            cmd = [f"time {executable} runconfig_{wfname}{suf}.txt"]
 
         try:
             if not testname.startswith("soilm"):
