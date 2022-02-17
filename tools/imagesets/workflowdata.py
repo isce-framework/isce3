@@ -266,7 +266,7 @@ workflowtests = {
             ],
     },
 
-    'sm': {"sm_" + name: "L2_GCOV_" + name for name in [
-	"001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004",
+    'soilm': {"soilm_" + name: "L2_GCOV_" + name for name in [
+        "001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004",
     ]},
 }    

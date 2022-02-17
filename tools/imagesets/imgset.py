@@ -348,7 +348,9 @@ class ImageSet:
             Test input dataset(s) to be mounted (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2"]).
             If None, no input datasets are used.
         pyname : str
-            Name of the isce3 module to execute (e.g. "nisar.workflows.focus")
+            Name of the isce3 module to execute (e.g. "nisar.workflows.focus") or,
+            for Soil Moisture (SM) testing, the name of the SAS executable to run
+            (e.g. "NISAR_SM_DISAGG_SAS")
         suf: str
             Suffix in runconfig and output directory name to differentiate between
             reference and secondary data in end-to-end tests
@@ -380,14 +382,14 @@ class ImageSet:
                         pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
 
-        if not testname.startswith("sm"):
+        if not testname.startswith("soilm"):
             cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
         else:
             executable = pyname
             cmd = [f"time {executable} runconfig_{wfname}{suf}.yaml"]
 
         try:
-            if not testname.startswith("sm"):
+            if not testname.startswith("soilm"):
                 self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
                                 loghdlrname=f'wftest.{os.path.basename(testdir)}')
             else:
@@ -501,9 +503,9 @@ class ImageSet:
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
 
-    def smtest(self, tests=None):
+    def soilmtest(self, tests=None):
         if tests is None:
-            tests = workflowtests['sm'].items()
+            tests = workflowtests['soilm'].items()
         for testname, dataname in tests:
             # Note:  we will eventually have multiple SM executables, each
             # of which implements a different algorithm.  These executables
@@ -514,11 +516,10 @@ class ImageSet:
             #
             # Also, the current plan is for two of the SM executables to be
             # Fortran 90 binaries and the other two to be Python modules.
-            sm_bindir = '/opt/conda/envs/SoilMoisture/bin'
+            soilm_bindir = '/opt/conda/envs/SoilMoisture/bin'
             executables = [ 'NISAR_SM_DISAGG_SAS' ]
-            cmd = [ ]
             for executable in executables:
-                self.workflowtest("sm", testname, dataname, f"{sm_bindir}/{executable}")
+                self.workflowtest("soilm", testname, dataname, f"{soilm_bindir}/{executable}")
 
     def mintests(self):
         """

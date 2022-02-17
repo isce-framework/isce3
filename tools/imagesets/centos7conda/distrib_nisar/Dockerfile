@@ -23,7 +23,8 @@ RUN conda install testfixtures scikit-image
 RUN conda install cfunits --channel conda-forge
 
 # Soil Moisture
-RUN conda create -n SoilMoisture gcc gfortran netcdf-cxx4 netcdf-fortran make --channel conda-forge
+COPY spec-file.txt /tmp/spec-file.txt
+RUN conda create -n SoilMoisture --file /tmp/spec-file.txt && conda clean -ay
 
 # copy the repo from the intermediate image
 COPY --from=0 /opt/QualityAssurance /opt/QualityAssurance
@@ -32,11 +33,7 @@ COPY --from=0 /opt/calTools /opt/calTools
 COPY --from=0 /opt/SoilMoisture /opt/SoilMoisture
 
 # install 
-RUN cd /opt/QualityAssurance \
- && python setup.py install \
- && cd /opt/CFChecker \
- && python setup.py install \
- && cd /opt/calTools \
- && python setup.py install \
- && cd /opt/SoilMoisture \
- && env CONDA_PREFIX=/opt/conda/envs/SoilMoisture PATH=/opt/conda/bin:/opt/conda/envs/SoilMoisture/bin:/usr/bin make install
+RUN cd /opt/QualityAssurance && python setup.py install
+RUN cd /opt/CFChecker && python setup.py install
+RUN cd /opt/calTools && python setup.py install
+RUN cd /opt/SoilMoisture && conda run -n SoilMoisture make install
