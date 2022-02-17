@@ -21,7 +21,6 @@ from nisar.workflows.geocode_insar_runconfig import \
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
 
-
 def run(cfg, runw_hdf5, output_hdf5):
     """ Run geocode insar on user specified hardware
 
@@ -73,7 +72,8 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     return input_raster, dataset_path
 
 
-def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5, dataset_name):
+def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5,
+                        dataset_name):
     """ Create input raster object and output dataset path for datasets outside
 
     Parameters
@@ -96,6 +96,7 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5, dataset_na
     dataset_path : str
         HDF5 path to geocoded shadow layover dataset
     """
+
     if dataset_name in ['alongTrackOffset', 'slantRangeOffset']:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}'
@@ -215,6 +216,11 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
                                  grid_zero_doppler, threshold_geo2rdr,
                                  iteration_geo2rdr)
 
+def _snake_to_camel_case(snake_case_str):
+    splitted_snake_case_str = snake_case_str.split('_')
+    return (splitted_snake_case_str[0] +
+            ''.join(w.title() for w in splitted_snake_case_str[1:]))
+
 def get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
                      scratch_path=''):
     '''
@@ -257,13 +263,14 @@ def get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
             if  skip_layover_shadow:
                 continue
 
-            if ds_name  == "layoverShadowMask":
+            if ds_name  == "layover_shadow_mask":
                 input_raster, out_ds_path = get_shadow_input_output(
                     scratch_path, freq, dst_freq_path)
                 skip_layover_shadow = True
             else:
+                ds_name_camel_case = _snake_to_camel_case(ds_name)
                 input_raster, out_ds_path = get_ds_input_output(
-                    src_freq_path, dst_freq_path, pol, runw_hdf5, ds_name)
+                    src_freq_path, dst_freq_path, pol, runw_hdf5, ds_name_camel_case)
 
             input_rasters.append(input_raster)
 
@@ -383,17 +390,17 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
             else:
                 radar_grid = radar_grid_slc
 
-            desired = ['coherenceMagnitude', 'unwrappedPhase']
+            desired = ['coherence_magnitude', 'unwrapped_phase']
             geo.data_interpolator = interp_method
             cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
                                 runw_hdf5, dst_h5, radar_grid, dem_raster)
 
-            desired = ["connectedComponents"]
+            desired = ["connected_components"]
             geo.data_interpolator = 'NEAREST'
             cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
                                 runw_hdf5, dst_h5, radar_grid, dem_raster)
 
-            desired = ['alongTrackOffset', 'slantRangeOffset']
+            desired = ['along_track_offset', 'slant_range_offset']
             geo.data_interpolator = interp_method
             radar_grid_offset = get_offset_radar_grid(offset_cfg,
                                                       radar_grid_slc)
@@ -401,7 +408,7 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
                                 runw_hdf5, dst_h5, radar_grid_offset,
                                 dem_raster)
 
-            desired = ["layoverShadowMask"]
+            desired = ["layover_shadow_mask"]
             geo.data_interpolator = 'NEAREST'
             cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
                                 runw_hdf5, dst_h5, radar_grid_slc, dem_raster,
@@ -491,7 +498,7 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
                 # Multilook radar grid if needed
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
 
-            desired = ['coherenceMagnitude', 'unwrappedPhase']
+            desired = ['coherence_magnitude', 'unwrapped_phase']
             # Create radar grid geometry used by most datasets
             rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                          slc.getOrbit(),
@@ -508,9 +515,9 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
                                 runw_hdf5, dst_h5, geocode_obj)
 
-            desired = ["connectedComponents"]
+            desired = ["connected_components"]
             '''
-            connectedComponents raster has type unsigned char and an invalid
+            connected_components raster has type unsigned char and an invalid
             value of NaN becomes 0 which conflicts with 0 being used to indicate
             an unmasked value/pixel. 255 is chosen as it is the most distant
             value from components assigned in ascending order [0, 1, ...)
@@ -525,7 +532,7 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
                                 runw_hdf5, dst_h5, geocode_conn_comp_obj)
 
-            desired = ['alongTrackOffset', 'slantRangeOffset']
+            desired = ['along_track_offset', 'slant_range_offset']
             # If needed create geocode object for offset datasets
             # Create offset unique radar grid
             radar_grid = get_offset_radar_grid(offset_cfg,
@@ -547,7 +554,7 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
                                 runw_hdf5, dst_h5, geocode_offset_obj)
 
-            desired = ["layoverShadowMask"]
+            desired = ["layover_shadow_mask"]
             # If needed create geocode object for shadow layover dataset
             # Create radar grid geometry required by layover shadow
             rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),

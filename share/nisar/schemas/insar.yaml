@@ -611,12 +611,12 @@ geocode_options:
     lines_per_block: int(min=100, max=10000, required=False)
 
 gunw_datasets:
-    connectedComponents: bool(required=False)
-    coherenceMagnitude: bool(required=False)
-    unwrappedPhase: bool(required=False)
-    layoverShadowMask: bool(required=False)
-    alongTrackOffset: bool(required=False)
-    slantRangeOffset: bool(required=False)
+    connected_components: bool(required=False)
+    coherence_magnitude: bool(required=False)
+    unwrapped_phase: bool(required=False)
+    layover_shadow_mask: bool(required=False)
+    along_track_offset: bool(required=False)
+    slant_range_offset: bool(required=False)
 
 worker_options:
     # Enable/disable internet connection (e.g. for download DEM)

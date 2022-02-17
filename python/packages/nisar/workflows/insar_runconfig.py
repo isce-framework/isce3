@@ -159,9 +159,9 @@ class InsarRunConfig(Geo2rdrRunConfig):
             self.cfg['processing']['geocode']['datasets'] = {}
 
         # default to True for datasets not found
-        gunw_datasets = ["connectedComponents", "coherenceMagnitude",
-                         "unwrappedPhase", "alongTrackOffset", "slantRangeOffset",
-                         'layoverShadowMask']
+        gunw_datasets = ["connected_components", "coherence_magnitude",
+                         "unwrapped_phase", "along_track_offset",
+                         "slant_range_offset", 'layover_shadow_mask']
 
         for gunw_dataset in gunw_datasets:
             if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
@@ -182,9 +182,9 @@ class InsarRunConfig(Geo2rdrRunConfig):
         # the start pixel in range and azimuth. Note, margin and gross_offsets
         # are allocated as defaults in share/nisar/defaults/insar.yaml
         geocode_azimuth_offset = self.cfg['processing'][
-            'geocode']['datasets']['alongTrackOffset']
+            'geocode']['datasets']['along_track_offset']
         geocode_range_offset = self.cfg['processing'][
-            'geocode']['datasets']['slantRangeOffset']
+            'geocode']['datasets']['slant_range_offset']
         if geocode_azimuth_offset or geocode_range_offset:
             offset_cfg = self.cfg['processing']['dense_offsets']
             margin = max(offset_cfg['margin'], offset_cfg['gross_offset_range'],
