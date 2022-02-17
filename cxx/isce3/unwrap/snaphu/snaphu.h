@@ -19,8 +19,6 @@
 
 #include <isce3/except/Error.h>
 
-namespace isce3::unwrap {
-
 /**********************/
 /* defined constants  */
 /**********************/
@@ -129,6 +127,7 @@ namespace isce3::unwrap {
 #define NARMS                8         /* number of arms for Despeckle() */
 #define ARMLEN               5         /* length of arms for Despeckle() */
 #define KEDGE                5         /* length of edge detection window */
+#define ARCUBOUND            200       /* capacities for MCF solver */
 #define MSTINIT              1         /* initialization method */
 #define MCFINIT              2         /* initialization method */
 #define BIGGESTDZRHOMAX      10000.0
@@ -418,6 +417,8 @@ namespace isce3::unwrap {
  "Please send snaphu bug reports to " BUGREPORTEMAIL "\n"\
  "\n"
 
+
+namespace isce3::unwrap {
 
 /********************/
 /* type definitions */
@@ -823,6 +824,8 @@ totalcostT EvaluateTotalCost(Array2D<typename CostTag::Cost>& costs, Array2D<sho
 int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
                  Array2D<short>& mstcosts, long nrow, long ncol,
                  Array2D<nodeT>* nodes, nodeT *ground, long maxflow);
+int MCFInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr, Array2D<short>& mstcosts,
+                 long nrow, long ncol);
 
 
 /* functions in snaphu_cost.c */

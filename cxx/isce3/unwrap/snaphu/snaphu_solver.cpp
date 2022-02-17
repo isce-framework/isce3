@@ -10,8 +10,10 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include <isce3/except/Error.h>
+#include <isce3/unwrap/ortools/min_cost_flow.h>
 
 #include "snaphu.h"
 
@@ -2350,7 +2352,7 @@ int InitNetwork(Array2D<short>& flows, long *ngroundarcsptr, long *ncycleptr,
   long i;
 
   /* get and initialize memory for nodes */
-  if(ground!=NULL && nodesptr->size()){
+  if(ground!=NULL && !nodesptr->size()){
     *nodesptr = Array2D<nodeT>(nrow-1, ncol-1);
     InitNodeNums(nrow-1,ncol-1,*nodesptr,ground);
   }
@@ -3670,6 +3672,173 @@ signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
   fprintf(sp2,"Flows clipped to %ld.  Rerunning MST solver.\n",cliplimit);
   return(FALSE);
 
+}
+
+
+/* function: MCFInitFlows()
+ * ------------------------
+ * Initializes the flow on the network using a minimum cost flow
+ * algorithm.
+ */
+int MCFInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
+                 Array2D<short>& mstcosts, long nrow, long ncol){
+
+  /* number of rows & cols of nodes in the residue network */
+  const auto m=nrow-1;
+  const auto n=ncol-1;
+
+  /* calculate phase residues (integer numbers of cycles) */
+  auto residue=Array2D<signed char>(m,n);
+  CycleResidue(wrappedphase,residue,nrow,ncol);
+
+  /* total number of nodes and directed arcs in the network */
+  const auto nnodes=m*n+1;
+  const auto narcs=2*((m+1)*n+(n+1)*m);
+
+  /* the solver uses 32-bit integers for node & arc indices */
+  /* check for possible overflow */
+  using operations_research::NodeIndex;
+  using operations_research::ArcIndex;
+  if(nnodes>std::numeric_limits<NodeIndex>::max()){
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Number of MCF network nodes exceeds maximum representable value");
+  }
+  if(narcs>std::numeric_limits<ArcIndex>::max()){
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "Number of MCF network arcs exceeds maximum representable value");
+  }
+
+  /* begin building the network topology and setting up the MCF problem */
+  using Network=operations_research::SimpleMinCostFlow;
+  auto network=Network(nnodes,narcs);
+
+  /* assigns a positive integer label to each grid node */
+  /* grid node indices begin at 1 (index 0 is used for the ground node) */
+  auto GetNodeIndex=[=](long i, long j)->NodeIndex{
+    return 1+i*n+j;
+  };
+  constexpr NodeIndex ground=0;
+
+  /* adds a pair of forward & reverse arcs to the network connecting two nodes */
+  /* sister arcs have equal cost and capacity */
+  using operations_research::CostValue;
+  using operations_research::FlowQuantity;
+  auto AddSisterArcs=[&](NodeIndex node1, NodeIndex node2, CostValue cost){
+    constexpr static auto capacity=static_cast<FlowQuantity>(ARCUBOUND);
+    network.AddArcWithCapacityAndUnitCost(node2,node1,capacity,cost);
+    network.AddArcWithCapacityAndUnitCost(node1,node2,capacity,cost);
+  };
+
+  /* break down arc costs into row (horizontal) & col (vertical) cost arrays */
+  const auto rowcosts=mstcosts.topLeftCorner(m,n+1);
+  const auto colcosts=mstcosts.bottomLeftCorner(m+1,n);
+
+  /* arcs are assigned sequential indices (starting from 0) in the order that
+     they're added to the network */
+  /* we rely on this fact later on when extracting flows from the network */
+
+  /* begin adding horizontal arcs to the network */
+  for(long i=0;i<m;++i){
+    /* add a pair of arcs between the left border node and the ground node */
+    {
+      const auto node=GetNodeIndex(i,0);
+      const auto cost=static_cast<CostValue>(rowcosts(i,0));
+      AddSisterArcs(ground,node,cost);
+    }
+
+    /* add a pair of horizontal arcs between each adjacent grid node */
+    for(long j=0;j<n-1;++j){
+      const auto node1=GetNodeIndex(i,j);
+      const auto node2=GetNodeIndex(i,j+1);
+      const auto cost=static_cast<CostValue>(rowcosts(i,j+1));
+      AddSisterArcs(node1,node2,cost);
+    }
+
+    /* add a pair of arcs between the right border node and the ground node */
+    {
+      const auto node=GetNodeIndex(i,n-1);
+      const auto cost=static_cast<CostValue>(rowcosts(i,n));
+      AddSisterArcs(node,ground,cost);
+    }
+  }
+
+  /* begin adding vertical arcs to the network */
+  /* add a pair of arcs between each top border node and the ground node */
+  for(long j=0;j<n;++j){
+    const auto node=GetNodeIndex(0,j);
+    const auto cost=static_cast<CostValue>(colcosts(0,j));
+    AddSisterArcs(ground,node,cost);
+  }
+  /* add a pair of vertical arcs between each adjacent grid node */
+  for(long i=0;i<m-1;++i){
+    for(long j=0;j<n;++j){
+      const auto node1=GetNodeIndex(i,j);
+      const auto node2=GetNodeIndex(i+1,j);
+      const auto cost=static_cast<CostValue>(colcosts(i+1,j));
+      AddSisterArcs(node1,node2,cost);
+    }
+  }
+  /* add a pair of arcs between each bottom border node and the ground node */
+  for(long j=0;j<n;++j){
+    const auto node=GetNodeIndex(m-1,j);
+    const auto cost=static_cast<CostValue>(colcosts(m,j));
+    AddSisterArcs(node,ground,cost);
+  }
+
+  /* add node supplies to the network */
+  FlowQuantity totalsupply=0;
+  for(long i=0;i<m;++i){
+    for(long j=0;j<n;++j){
+      auto node=GetNodeIndex(i,j);
+      auto supply=static_cast<FlowQuantity>(residue(i,j));
+      network.SetNodeSupply(node,supply);
+      totalsupply+=supply;
+    }
+  }
+
+  /* add enough demand to the ground node to balance the network */
+  network.SetNodeSupply(ground,-totalsupply);
+
+  /* run the solver to produce L1-optimal flows */
+  if(network.Solve() != Network::OPTIMAL){
+    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+            "MCF initialization failed");
+  }
+
+  *flowsptr=MakeRowColArray2D<short>(nrow,ncol);
+
+  /* break down arc flows into row (horizontal) & col (vertical) flow arrays */
+  auto rowflows=flowsptr->topLeftCorner(m,n+1);
+  auto colflows=flowsptr->bottomLeftCorner(m+1,n);
+
+  /* extract arc flows from the network */
+  /* the easiest way to do this is in the exact order in which the arcs were
+     added to the network (relying implicitly on the sequential ordering of arc
+     indices) */
+
+  /* extract horizontal flows from the network */
+  ArcIndex arcidx=0;
+  for(long i=0;i<m;++i){
+    for(long j=0;j<n+1;++j){
+      /* Compute eastward-minus-westward net flow */
+      const auto x1=network.Flow(arcidx++);
+      const auto x2=network.Flow(arcidx++);
+      rowflows(i,j)=x2-x1;
+    }
+  }
+
+  /* extract vertical flows from the network */
+  for(long i=0;i<m+1;++i){
+    for(long j=0;j<n;++j){
+      /* Compute southward-minus-northward net flow */
+      const auto x1=network.Flow(arcidx++);
+      const auto x2=network.Flow(arcidx++);
+      colflows(i,j)=x2-x1;
+    }
+  }
+
+  /* done */
+  return(0);
 }
 
 
