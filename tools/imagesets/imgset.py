@@ -376,6 +376,8 @@ class ImageSet:
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         elif testname.startswith("soilm"):
             # Executable-dependent.  Currently works only for Disaggregation.
             inputrunconfig = f"{testname}{suf}.txt"
