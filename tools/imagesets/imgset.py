@@ -232,8 +232,8 @@ class ImageSet:
 
     def makedistrib_nisar(self):
         """
-        Install package to redistributable isce3 docker image with nisar qa and
-        noise estimator caltool
+        Install package to redistributable isce3 docker image with nisar qa,
+        noise estimator caltool, and Soil Moisture applications
         """
 
         build_args = f"--build-arg distrib_img={self.imgname()} \
@@ -336,7 +336,7 @@ class ImageSet:
 
     def workflowtest(self, wfname, testname, dataname, pyname, suf="", description="", arg=""):
         """
-        Run the specified workflow test using the distrib image.
+        Run the specified workflow test using either the distrib or the nisar image.
 
         Parameters
         -------------
@@ -348,7 +348,9 @@ class ImageSet:
             Test input dataset(s) to be mounted (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2"]).
             If None, no input datasets are used.
         pyname : str
-            Name of the isce3 module to execute (e.g. "nisar.workflows.focus")
+            Name of the isce3 module to execute (e.g. "nisar.workflows.focus") or,
+            for Soil Moisture (SM) testing, the name of the SAS executable to run
+            (e.g. "NISAR_SM_DISAGG_SAS")
         suf: str
             Suffix in runconfig and output directory name to differentiate between
             reference and secondary data in end-to-end tests
@@ -374,15 +376,34 @@ class ImageSet:
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
+        elif testname.startswith("soilm"):
+            # Executable-dependent.  Currently works only for Disaggregation.
+            inputrunconfig = f"{testname}{suf}.txt"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
         else:
             inputrunconfig = f"{testname}{suf}.yaml"
-        shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
-                        pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
-        cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
+
+        if not testname.startswith("soilm"):
+            cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
+        else:
+            executable = pyname
+            # Executable-dependent.  Currently works only for Disaggregation.
+            cmd = [f"time {executable} runconfig_{wfname}{suf}.txt"]
+
         try:
-            self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
-                            loghdlrname=f'wftest.{os.path.basename(testdir)}')
+            if not testname.startswith("soilm"):
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
+                                loghdlrname=f'wftest.{os.path.basename(testdir)}')
+            else:
+                # Currently, the SM executables are in the nisar image.
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
+                                loghdlrname=f"wftest.{os.path.basename(testdir)}")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow test {testname} failed") from e
 
@@ -489,6 +510,24 @@ class ImageSet:
                                 loghdlrname=f"wftest.{os.path.basename(testdir)}")
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
+
+    def soilmtest(self, tests=None):
+        if tests is None:
+            tests = workflowtests['soilm'].items()
+        for testname, dataname in tests:
+            # Note:  we will eventually have multiple SM executables, each
+            # of which implements a different algorithm.  These executables
+            # will run the same input test data.  It's TBD whether they'll
+            # be able to share the same runconfig.  The output files should
+            # be either written to different directories by executable or
+            # should be named to indicate which executable was used, or both.
+            #
+            # Also, the current plan is for two of the SM executables to be
+            # Fortran 90 binaries and the other two to be Python modules.
+            soilm_bindir = '/opt/conda/envs/SoilMoisture/bin'
+            executables = [ 'NISAR_SM_DISAGG_SAS' ]
+            for executable in executables:
+                self.workflowtest("soilm", testname, dataname, f"{soilm_bindir}/{executable}")
 
     def mintests(self):
         """

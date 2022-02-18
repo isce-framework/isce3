@@ -25,6 +25,7 @@ def run(*, steps, imgset, **kwargs):
         "noisesttest",
         "ptatest",
         "beamformtest",
+        "soilmtest",
         "rslcqa",
         "gslcqa",
         "gcovqa",

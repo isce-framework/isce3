@@ -161,9 +161,29 @@ workflowdata = {
             "dem.tif",
             "README.txt",
         ],
+
+        "L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004":
+        [
+            "NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004.h5",
+            "ERA5_SD_TP_ST_SM.nc",
+            "ancillary/DEMSLPSTD_M01_002.float32",
+            "ancillary/dominantIGBP_M01_B20120101_003.uint8",
+            "ancillary/EASE2_lat01km.float32",
+            "ancillary/EASE2_lat03km.float32",
+            "ancillary/EASE2_lat09km.float32",
+            "ancillary/EASE2_lat200m.float32",
+            "ancillary/EASE2_lon01km.float32",
+            "ancillary/EASE2_lon03km.float32",
+            "ancillary/EASE2_lon09km.float32",
+            "ancillary/EASE2_lon200m.float32",
+            "ancillary/UrbanFraction_M01_001.float32",
+            "ancillary/waterfrac_M01_002.float32",
+            "ancillary/waterfrac_M03_002.float32",
+            "README.txt",
+        ],
     }
 
-# dictionaries definining mappig of workflow tests to data
+# dictionaries definining mapping of workflow tests to data
 # each key is the test name, value is the corresponding data
 workflowtests = {
     'rslc': {"rslc_" + name: "L0B_RRSD_" + name for name in [
@@ -245,4 +265,8 @@ workflowtests = {
                 "instrumentTables_bf_19000101.h5",  # instrument tables
             ],
     },
+
+    'soilm': {"soilm_" + name: "L2_GCOV_" + name for name in [
+        "001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004",
+    ]},
 }    
