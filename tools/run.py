@@ -24,7 +24,6 @@ def run(*, steps, imgset, **kwargs):
         "makedistrib_nisar",
         "noisesttest",
         "ptatest",
-        "beamformtest",
         "soilmtest",
         "rslcqa",
         "gslcqa",

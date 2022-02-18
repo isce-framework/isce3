@@ -270,7 +270,6 @@ class ImageSet:
         mindata = ["L0B_RRSD_REE1",
                    "L0B_RRSD_REE_NOISEST1",
                    "L0B_RRSD_REE17_PTA",
-                   "L0B_RRSD_REE_beamform",
                    "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
                    "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
                    "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
@@ -490,27 +489,6 @@ class ImageSet:
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool point target analyzer tool test {testname} failed") from e
 
-    def beamformtest(self, tests=None):
-        if tests is None:
-            tests = workflowtests['beamform'].items()
-        for testname, dataname in tests:
-            print(f"\nRunning CalTool beamformer test {testname}\n")
-            testdir = os.path.abspath(pjoin(self.testdir, testname))
-            os.makedirs(pjoin(testdir, f"output_beamform"), exist_ok=True)
-            log = pjoin(testdir, f"output_beamform", "stdouterr.log")
-            cmd = [f"""time beamform_tx.py -i input_{dataname[0]}/{dataname[1]} \
-                            -a input_{dataname[0]}/{dataname[2]} \
-                            -o output_beamform/beamform_tx_output.txt""",
-                   f"""time beamform_rx.py -i input_{dataname[0]}/{dataname[1]} \
-                            -a input_{dataname[0]}/{dataname[2]} \
-                            -c input_{dataname[0]}/{dataname[3]} \
-                            -o output_beamform/beamform_rx_output.txt"""]
-            try:
-                self.distribrun(testdir, cmd, logfile=log, dataname=dataname[0], nisarimg=True,
-                                loghdlrname=f"wftest.{os.path.basename(testdir)}")
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
-
     def soilmtest(self, tests=None):
         if tests is None:
             tests = workflowtests['soilm'].items()
@@ -539,7 +517,6 @@ class ImageSet:
         self.insartest(tests=list(workflowtests['insar'].items())[:1])
         self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
         self.ptatest(tests=list(workflowtests['pta'].items())[:1])
-        self.beamformtest(tests=list(workflowtests['beamform'].items())[:1])
 
     def workflowqa(self, wfname, testname, suf="", description=""):
         """
