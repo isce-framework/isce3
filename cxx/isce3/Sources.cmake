@@ -43,7 +43,6 @@ focus/Presum.cpp
 focus/RangeComp.cpp
 geocode/baseband.cpp
 geocode/geocodeSlc.cpp
-geocode/interpolate.cpp
 geocode/loadDem.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp

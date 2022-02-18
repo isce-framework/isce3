@@ -83,7 +83,6 @@ focus/Presum.icc
 focus/RangeComp.h
 geocode/baseband.h
 geocode/geocodeSlc.h
-geocode/interpolate.h
 geocode/loadDem.h
 geometry/DEMInterpolator.h
 geometry/forward.h
