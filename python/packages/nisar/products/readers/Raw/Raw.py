@@ -197,6 +197,134 @@ class RawBase(Base, family='nisar.productreader.raw'):
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             return f[path]["centerFrequency"][()]
 
+    def getListOfTxTRMs(self, frequency: str = 'A', tx: str = None):
+        """
+        Get list of TR modules used for Transmit.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+           Sub-band.  Typically main science band is 'A'.
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular. 
+
+        Returns
+        -------
+        listOfTxTRMs : array_like int
+            List of Tx channel indices.
+        """
+
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
+        path = self._pulseMetaPath(frequency=frequency, tx=tx)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            return f[path]["listOfTxTRMs"][()]
+
+    def getListOfRxTRMs(self, frequency: str, polarization: str):
+        """
+        Get list of TR modules used for Receive.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+           Sub-band.  Typically main science band is 'A'.
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular. 
+
+        Returns
+        -------
+        listOfRxTRMs: array_like int
+            List of Rx channel indices.
+        """
+
+        path = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            return f[path]["listOfRxTRMs"][()]
+
+    def getRangeLineIndex(self, frequency: str = 'A', tx: str = None):
+        """
+        Get range line indices.
+
+        Returns range line indices derived from the hardware rangeline counter,
+        which starts at 1 at the beginning of a datatake and increases sequentially.
+        Except for the first observation within a datatake, the first index will be
+        some value other than 1.
+        
+        If a rangeline was missed due to corrupted data, for example, that would be
+        reflected as a skipped value in the index sequence.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+           Sub-band.  Typically main science band is 'A'.
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular. 
+
+        Returns
+        -------
+        rangeLineIndex: array_like int
+            List of range line indices.
+        """
+
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
+        path = self._pulseMetaPath(frequency=frequency, tx=tx)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            return f[path]["rangeLineIndex"][()]
+
+
+    def getCalType(self, frequency: str = 'A', tx: str = None):
+        """
+        Extract Tx Calibration mask for each range line.
+        HPA = 0, LNA = 1, BYPASS = 2
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+           Sub-band.  Typically main science band is 'A'.
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular. 
+
+        Returns
+        -------
+        LCAL_INTERVAL: int
+            Tx LNA path range line interval, e.g. 1024.
+        """
+
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
+        path = self._pulseMetaPath(frequency=frequency, tx=tx)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            return f[path]["calType"][()]
+
+    def getChirpCorrelator(self, frequency: str = 'A', tx: str = None):
+        """
+        Extract all 3 taps of 3-tap calibration correlator values for Transmit.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+           Sub-band.  Typically main science band is 'A'.
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular. 
+
+        Returns
+        -------
+        chirpCorrelator: 3D array of complex
+            3-tap correlator values for Transmit.
+            size = [num range lines x num chan x 3].
+        """
+
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
+        path = self._pulseMetaPath(frequency=frequency, tx=tx)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            return f[path]["chirpCorrelator"][()]
 
     # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
     # since PRF isn't necessarily constant.  Return pulse times with grid?

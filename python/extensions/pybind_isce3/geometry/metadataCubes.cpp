@@ -3,6 +3,7 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
 #include <isce3/product/RadarGridParameters.h>
@@ -11,6 +12,7 @@ namespace py = pybind11;
 
 void addbinding_metadata_cubes(py::module & m)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("make_radar_grid_cubes", &isce3::geometry::makeRadarGridCubes,
             py::arg("radar_grid"), py::arg("geogrid"), py::arg("heights"),
             py::arg("orbit"), py::arg("native_doppler"),
@@ -25,8 +27,9 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("along_track_unit_vector_y_raster") = nullptr,
             py::arg("elevation_angle_raster") = nullptr,
             py::arg("ground_track_velocity_raster") = nullptr,
-            py::arg("threshold_geo2rdr") = 1.0e-8,
-            py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-8,
+            py::arg("threshold_geo2rdr") = defaults.threshold,
+            py::arg("numiter_geo2rdr") = defaults.maxiter,
+            py::arg("delta_range") = defaults.delta_range,
             R"(Make metadata radar grid cubes
 
              Metadata radar grid cubes describe the radar geometry
@@ -110,8 +113,9 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("along_track_unit_vector_y_raster") = nullptr,
             py::arg("elevation_angle_raster") = nullptr,
             py::arg("ground_track_velocity_raster") = nullptr,
-            py::arg("threshold_geo2rdr") = 1.0e-8,
-            py::arg("numiter_geo2rdr") = 100, py::arg("delta_range") = 1.0e-6,
+            py::arg("threshold_geo2rdr") = defaults.threshold,
+            py::arg("numiter_geo2rdr") = defaults.maxiter,
+            py::arg("delta_range") = defaults.delta_range,
             R"(Make metadata geolocation grid cubes
  
            Metadata geolocation grid cubes describe the radar geometry 

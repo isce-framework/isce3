@@ -198,9 +198,14 @@ int isce3::geometry::geo2rdr(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
     if (error)
         return !converged;
 
-    double slantRange_old = slantRange;
+    // Newton step, initialized to zero.
+    double aztime_diff = 0.0;
+
     // Begin iterations
     for (int i = 0; i < maxIter; ++i) {
+        // Apply Newton step computed in previous iteration here so that
+        // (aztime, slantRange) are always consistent on return.
+        aztime -= aztime_diff;
 
         // Interpolate the orbit to current estimate of azimuth time
         orbit.interpolate(
@@ -219,17 +224,15 @@ int isce3::geometry::geo2rdr(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
         }
 
         slantRange = dr.norm();
-        // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold)
-            return converged;
-        else
-            slantRange_old = slantRange;
 
         // Update guess for azimuth time
-        double aztime_diff = _compute_doppler_aztime_diff(dr, satvel, doppler,
+        aztime_diff = _compute_doppler_aztime_diff(dr, satvel, doppler,
                 wavelength, aztime, slantRange, deltaRange);
 
-        aztime -= aztime_diff;
+        // Check convergence
+        if (std::abs(aztime_diff) < threshold) {
+            return converged;
+        }
     }
     // If we reach this point, no convergence for specified threshold
     return !converged;

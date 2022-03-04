@@ -2,34 +2,34 @@ runconfig:
     name: NISAR_L2-L-GCOV_RUNCONFIG
 
     groups:
-        PGENameGroup:
-            PGEName: GCOV_L_PGE
+        pge_name_group:
+            pge_name: GCOV_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath:
+            input_file_path:
             - output_rslc_sec/rslc.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tiff
+            dem_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tiff
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_gcov_sec
+            product_path: output_gcov_sec
 
             # Directory where SAS can write temporary data
-            ScratchPath: scratch_gcov_sec
+            scratch_path: scratch_gcov_sec
 
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: output_gcov_sec/gcov.h5
+            sas_output_file: output_gcov_sec/gcov.h5
 
-        PrimaryExecutable:
-            ProductType: GCOV
+        primary_executable:
+            product_type: GCOV
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         #adt section - isce3 + pyre workflow
         processing:
@@ -98,7 +98,7 @@ runconfig:
                 save_rtc: True
                  
                 # OPTIONAL - Same as input DEM if not provided.
-                outputEPSG: 
+                output_epsg: 
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If no provided, values will match spacing in provided DEM

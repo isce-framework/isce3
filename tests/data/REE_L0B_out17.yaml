@@ -1,19 +1,19 @@
 runconfig:
     groups:
-        InputFileGroup:
-            InputFilePath:
+        input_file_group:
+            input_file_path:
             - REE_L0B_out17.h5
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where SAS can write temporary data
-            ScratchPath: .
+            scratch_path: .
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-            SASOutputFile: ./rslc.h5
-            SASConfigFile: ./rslc_config.yaml
+            sas_output_file: ./rslc.h5
+            sas_config_file: ./rslc_config.yaml
 
-        PrimaryExecutable:
-            ProductType: SLC
+        primary_executable:
+            product_type: SLC
 
         worker:
             gpu_enabled: False

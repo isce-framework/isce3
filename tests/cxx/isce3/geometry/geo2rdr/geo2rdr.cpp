@@ -38,7 +38,8 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce3::geometry::Geo2rdr geo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    geo.threshold(1e-9);
+    auto threshold = 1e-6 / geo.radarGridParameters().prf();
+    geo.threshold(threshold);
     geo.numiter(50);
 
     // Open topo raster from topo unit test
@@ -66,13 +67,18 @@ TEST(Geo2rdrTest, CheckResults) {
             if (std::abs(rgoff) > 999.0 || std::abs(azoff) > 999.0)
                 continue;
             // Accumulate error
-            rg_error += rgoff*rgoff;
-            az_error += azoff*azoff;
+            rg_error = std::max(rg_error, std::abs(rgoff));
+            az_error = std::max(az_error, std::abs(azoff));
         }
     }
-    // Check errors; azimuth errors tend to be a little larger
-    EXPECT_LT(rg_error, 1e-9);
-    EXPECT_LT(az_error, 1e-9);
+    // Check errors.  The Newton step size isn't a perfect estimate of the error
+    // of the solution, so allow geo2rdr a little wiggle room in excess of the
+    // requested 1e-6 pixel error.
+    EXPECT_LT(az_error, 2e-6);
+    // In general there's no reason to expect the same convergence tolerance
+    // in range.  But rg_error approaches zero as the Doppler centroid
+    // approaches zero, so this check is okay given our particular test.
+    EXPECT_LT(rg_error, 2e-6);
 }
 
 int main(int argc, char * argv[]) {

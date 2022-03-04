@@ -36,7 +36,7 @@ class ResampleSlcRunConfig(RunConfig):
         resample_key = f'{resample_type}_resample'
         if self.cfg['processing'][resample_key]['offsets_dir'] is None:
             self.cfg['processing'][resample_key]['offsets_dir'] = \
-                self.cfg['ProductPathGroup']['ScratchPath']
+                self.cfg['product_path_group']['scratch_path']
         offsets_dir = self.cfg['processing'][resample_key]['offsets_dir']
 
         # Check directory structure and existence of offset files depending on

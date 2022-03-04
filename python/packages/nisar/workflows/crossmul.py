@@ -23,8 +23,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     run crossmul
     '''
     # pull parameters from cfg
-    ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
+    ref_hdf5 = cfg['input_file_group']['input_file_path']
+    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     flatten = cfg['processing']['crossmul']['flatten']
 
@@ -32,7 +32,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
         flatten_path = cfg['processing']['crossmul']['flatten']
 
     if output_hdf5 is None:
-        output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
+        output_hdf5 = cfg['product_path_group']['sas_output_file']
 
     # init parameters shared by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)

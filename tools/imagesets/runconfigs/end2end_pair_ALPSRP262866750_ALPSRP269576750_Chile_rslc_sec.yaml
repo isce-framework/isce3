@@ -1,41 +1,41 @@
 runconfig:
     name: NISAR_L1-L-RSLC_RUNCONFIG
     groups:
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
-        InputFileGroup:
-            InputFilePath:
+        pge_name_group:
+            pge_name: RSLC_L_PGE
+        input_file_group:
+            input_file_path:
             -   input_L0B_RRSD_ALPSRP269576750_Chile/ALPSRP269576750.L0B.h5
-        DynamicAncillaryFileGroup:
-            DEMFile:
-            Orbit:
-            Pointing:
-            ExternalCalibration:
-            InternalCalibration:
-            PolarimetricCalibration:
-            BookendCalibration:
-            AntennaPattern:
-            Waveform:
-        ProductPathGroup:
-            ProductPath: output_rslc_sec
-            ScratchPath: scratch_rslc_sec
-            SASOutputFile: output_rslc_sec/rslc.h5
-            SASConfigFile: output_rslc_sec/runconfig_rslc_sec.yaml
-            ProductCounter: 1
-        PrimaryExecutable:
-            ProductType: RSLC
-            CompositeReleaseID: D00200
-            MissionId: NISAR
-            ProcessingType: PR
-            ProductAccuracy: P
-        DebugLevelGroup:
-            DebugSwitch: false
-        Geometry:
-            CycleNumber: 1
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-            OrbitDirection: Ascending
-            TrackFramePolygon: '{"type": "Polygon", "coordinates" : [[
+        dynamic_ancillary_file_group:
+            dem_file:
+            orbit:
+            pointing:
+            external_calibration:
+            internal_calibration:
+            polarimetric_calibration:
+            bookend_calibration:
+            antenna_pattern:
+            waveform:
+        product_path_group:
+            product_path: output_rslc_sec
+            scratch_path: scratch_rslc_sec
+            sas_output_file: output_rslc_sec/rslc.h5
+            sas_config_file: output_rslc_sec/runconfig_rslc_sec.yaml
+            product_counter: 1
+        primary_executable:
+            product_type: RSLC
+            composite_release_id: D00200
+            mission_id: NISAR
+            processing_type: PR
+            product_accuracy: P
+        debug_level_group:
+            debug_switch: false
+        geometry:
+            cycle_number: 1
+            relative_orbit_number: 1
+            frame_number: 1
+            orbit_direction: Ascending
+            track_frame_polygon: '{"type": "Polygon", "coordinates" : [[
                 [-68.1914812891183, -21.9450716883908],
                 [-68.1156573726063, -21.9274132197719],
                 [-68.0407192606459, -21.9099225763898],
@@ -78,7 +78,7 @@ runconfig:
                 [-68.2173368757781, -21.8466248657298],
                 [-68.1914812891183, -21.9450716883908]]]
             }'
-            FullCoverageThresholdPercent: 75.0
+            full_coverage_threshold_percent: 75.0
         worker:
             gpu_enabled: true
             gpu_id: 0
@@ -149,6 +149,6 @@ runconfig:
                 eap: true
                 range_cor: true
                 azcomp: true
-        QA:
+        qa:
             validate: true
             quality: true

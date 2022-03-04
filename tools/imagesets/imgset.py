@@ -44,6 +44,12 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
     # save command to log
     logger.info("++ " + cmdstr + "\n")
     pipe = subprocess.Popen(shlex.split(cmdstr), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    # Maximum number of seconds to wait for "docker run" to finish after
+    # its child process exits.  The observed times have been < 1 ms.
+    # Use a relatively large number to flag a possible problem with Docker.
+    timeout = 10
+
     with pipe.stdout:
         for line in iter(pipe.stdout.readline, b''): # b'\n'-separated lines
             decoded = line.decode("utf-8")
@@ -52,6 +58,9 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
                 decoded = decoded[:-1]
             logger.info(decoded)
     ret = pipe.poll()
+    if ret is None:
+        ret = pipe.wait(timeout=timeout)
+        # ret will be None if exception TimeoutExpired was raised and caught.
     if ret != 0:
         raise subprocess.CalledProcessError(ret, cmdstr)
 
@@ -223,8 +232,8 @@ class ImageSet:
 
     def makedistrib_nisar(self):
         """
-        Install package to redistributable isce3 docker image with nisar qa and
-        noise estimator caltool
+        Install package to redistributable isce3 docker image with nisar qa,
+        noise estimator caltool, and Soil Moisture applications
         """
 
         build_args = f"--build-arg distrib_img={self.imgname()} \
@@ -261,7 +270,6 @@ class ImageSet:
         mindata = ["L0B_RRSD_REE1",
                    "L0B_RRSD_REE_NOISEST1",
                    "L0B_RRSD_REE17_PTA",
-                   "L0B_RRSD_REE_beamform",
                    "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
                    "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
                    "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
@@ -327,7 +335,7 @@ class ImageSet:
 
     def workflowtest(self, wfname, testname, dataname, pyname, suf="", description="", arg=""):
         """
-        Run the specified workflow test using the distrib image.
+        Run the specified workflow test using either the distrib or the nisar image.
 
         Parameters
         -------------
@@ -339,7 +347,9 @@ class ImageSet:
             Test input dataset(s) to be mounted (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2"]).
             If None, no input datasets are used.
         pyname : str
-            Name of the isce3 module to execute (e.g. "nisar.workflows.focus")
+            Name of the isce3 module to execute (e.g. "nisar.workflows.focus") or,
+            for Soil Moisture (SM) testing, the name of the SAS executable to run
+            (e.g. "NISAR_SM_DISAGG_SAS")
         suf: str
             Suffix in runconfig and output directory name to differentiate between
             reference and secondary data in end-to-end tests
@@ -365,15 +375,34 @@ class ImageSet:
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
+        elif testname.startswith("soilm"):
+            # Executable-dependent.  Currently works only for Disaggregation.
+            inputrunconfig = f"{testname}{suf}.txt"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
         else:
             inputrunconfig = f"{testname}{suf}.yaml"
-        shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
-                        pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
-        cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
+
+        if not testname.startswith("soilm"):
+            cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
+        else:
+            executable = pyname
+            # Executable-dependent.  Currently works only for Disaggregation.
+            cmd = [f"time {executable} runconfig_{wfname}{suf}.txt"]
+
         try:
-            self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
-                            loghdlrname=f'wftest.{os.path.basename(testdir)}')
+            if not testname.startswith("soilm"):
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname,
+                                loghdlrname=f'wftest.{os.path.basename(testdir)}')
+            else:
+                # Currently, the SM executables are in the nisar image.
+                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
+                                loghdlrname=f"wftest.{os.path.basename(testdir)}")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow test {testname} failed") from e
 
@@ -460,26 +489,23 @@ class ImageSet:
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"CalTool point target analyzer tool test {testname} failed") from e
 
-    def beamformtest(self, tests=None):
+    def soilmtest(self, tests=None):
         if tests is None:
-            tests = workflowtests['beamform'].items()
+            tests = workflowtests['soilm'].items()
         for testname, dataname in tests:
-            print(f"\nRunning CalTool beamformer test {testname}\n")
-            testdir = os.path.abspath(pjoin(self.testdir, testname))
-            os.makedirs(pjoin(testdir, f"output_beamform"), exist_ok=True)
-            log = pjoin(testdir, f"output_beamform", "stdouterr.log")
-            cmd = [f"""time beamform_tx.py -i input_{dataname[0]}/{dataname[1]} \
-                            -a input_{dataname[0]}/{dataname[2]} \
-                            -o output_beamform/beamform_tx_output.txt""",
-                   f"""time beamform_rx.py -i input_{dataname[0]}/{dataname[1]} \
-                            -a input_{dataname[0]}/{dataname[2]} \
-                            -c input_{dataname[0]}/{dataname[3]} \
-                            -o output_beamform/beamform_rx_output.txt"""]
-            try:
-                self.distribrun(testdir, cmd, logfile=log, dataname=dataname[0], nisarimg=True,
-                                loghdlrname=f"wftest.{os.path.basename(testdir)}")
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"CalTool beamformer tool test {testname} failed") from e
+            # Note:  we will eventually have multiple SM executables, each
+            # of which implements a different algorithm.  These executables
+            # will run the same input test data.  It's TBD whether they'll
+            # be able to share the same runconfig.  The output files should
+            # be either written to different directories by executable or
+            # should be named to indicate which executable was used, or both.
+            #
+            # Also, the current plan is for two of the SM executables to be
+            # Fortran 90 binaries and the other two to be Python modules.
+            soilm_bindir = '/opt/conda/envs/SoilMoisture/bin'
+            executables = [ 'NISAR_SM_DISAGG_SAS' ]
+            for executable in executables:
+                self.workflowtest("soilm", testname, dataname, f"{soilm_bindir}/{executable}")
 
     def mintests(self):
         """
@@ -491,7 +517,6 @@ class ImageSet:
         self.insartest(tests=list(workflowtests['insar'].items())[:1])
         self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
         self.ptatest(tests=list(workflowtests['pta'].items())[:1])
-        self.beamformtest(tests=list(workflowtests['beamform'].items())[:1])
 
     def workflowqa(self, wfname, testname, suf="", description=""):
         """
@@ -670,10 +695,7 @@ class ImageSet:
 
     def tartests(self):
         """
-        Tar up test directories for delivery.  PGE has requested that
-        the scratch directory contents be excluded from the deliveries.
-        Include the scratch directories only as empty directories to
-        maintain consistency with the runconfigs.
+        Tar up test directories for delivery
         """
         for workflow in workflowtests:
             for test in workflowtests[workflow]:

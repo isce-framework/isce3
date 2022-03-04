@@ -5,6 +5,7 @@
 #include <thrust/functional.h>
 #include <thrust/host_vector.h>
 
+#include <gdal_priv.h>
 #include <pyre/journal.h>
 
 #include <isce3/core/Ellipsoid.h>
@@ -412,6 +413,57 @@ void Geocode::geocodeRasterBlock(Raster& output_raster, Raster& input_raster)
 
     output_raster.setBlock(&h_geo_data_block[0], 0, _line_start,
             _geogrid.width(), _geo_block_length, 1);
+}
+
+void Geocode::geocodeRasters(
+        std::vector<std::reference_wrapper<isce3::io::Raster>> output_rasters,
+        std::vector<std::reference_wrapper<isce3::io::Raster>> input_rasters)
+{
+    // check if vectors are of same length
+    if (output_rasters.size() != input_rasters.size()) {
+        throw isce3::except::LengthError(
+                ISCE_SRCINFO(), "number of input and output rasters not equal");
+    }
+
+    const auto n_raster_pairs = output_rasters.size();
+
+    // iterate over blocks
+    for (size_t i_block = 0; i_block < _n_blocks; ++i_block) {
+
+        // set radar coords for each geocode obj for curret block
+        setBlockRdrCoordGrid(i_block);
+
+        for (size_t i_raster = 0; i_raster < n_raster_pairs; ++i_raster)
+        {
+            const int dtype = input_rasters[i_raster].get().dtype();
+            switch (dtype) {
+                case GDT_Float32:   {
+                    geocodeRasterBlock<float>(
+                            output_rasters[i_raster], input_rasters[i_raster]);
+                    break; }
+                case GDT_CFloat32:  {
+                    geocodeRasterBlock<thrust::complex<float>>(
+                            output_rasters[i_raster], input_rasters[i_raster]);
+                    break;}
+                case GDT_Float64:   {
+                    geocodeRasterBlock<double>(
+                            output_rasters[i_raster], input_rasters[i_raster]);
+                    break; }
+                case GDT_CFloat64:  {
+                    geocodeRasterBlock<thrust::complex<double>>(
+                            output_rasters[i_raster], input_rasters[i_raster]);
+                    break;}
+                case GDT_Byte:  {
+                    geocodeRasterBlock<unsigned char>(
+                            output_rasters[i_raster], input_rasters[i_raster]);
+                    break;}
+                default: {
+                    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                            "unsupported datatype");
+                         }
+            }
+        }
+    }
 }
 
 #define EXPLICIT_INSTATIATION(T)                                               \

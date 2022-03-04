@@ -112,7 +112,7 @@ inline void writeVectorDerivedCubes(const int array_pos_i,
  * @param[out] elevation_angle_raster      Elevation angle (in degrees wrt
  * geodedic nadir) cube raster
  * @param[out] ground_track_velocity_raster Ground-track velocity raster
- * @param[in]  threshold_geo2rdr           Range threshold for geo2rdr
+ * @param[in]  threshold_geo2rdr           Azimuth time threshold for geo2rdr
  * @param[in]  numiter_geo2rdr             Geo2rdr maximum number of iterations
  * @param[in]  delta_range                 Step size used for computing
  * derivative of doppler
@@ -183,7 +183,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * @param[out] elevation_angle_raster    Elevation angle (in degrees wrt
  * geodedic nadir) cube raster
  * @param[out] ground_track_velocity_raster Ground-track velocity raster
- * @param[in]  threshold_geo2rdr         Range threshold for geo2rdr
+ * @param[in]  threshold_geo2rdr         Azimuth time threshold for geo2rdr
  * @param[in]  numiter_geo2rdr           Geo2rdr maximum number of iterations
  * @param[in]  delta_range               Step size used for computing
  * derivative of doppler

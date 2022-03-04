@@ -21,9 +21,9 @@ def run(cfg):
     '''
 
     # Pull parameters from cfg dict
-    sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     threshold = cfg['processing']['geo2rdr']['threshold']
     numiter = cfg['processing']['geo2rdr']['maxiter']

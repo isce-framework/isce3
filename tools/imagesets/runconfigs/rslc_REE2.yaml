@@ -1,81 +1,81 @@
 runconfig:
     name: NISAR_L1-L-RSLC_RUNCONFIG
     groups:
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
+        pge_name_group:
+            pge_name: RSLC_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED List of NISAR raw data products in L0B format.
-            InputFilePath:
+            input_file_path:
             - input_L0B_RRSD_REE2/REE_L0B_ECHO_array144sq_03.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # Digital elevation model, optional.
-            DEMFile:
+            dem_file:
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            Orbit: orbit.xml
+            orbit: orbit.xml
 
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.
-            Pointing: attitude.xml
+            pointing: attitude.xml
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            ExternalCalibration: cal.xml
+            external_calibration: cal.xml
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            InternalCalibration: type7table.xml
+            internal_calibration: type7table.xml
 
             # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
             # If not provided, no polarimetric calibration performed.
-            PolarimetricCalibration: polcal.h5
+            polarimetric_calibration: polcal.h5
 
             # Pre- and post-data take calibration data products, optional.
-            BookendCalibration: pre_post_cal.L0B.h5
+            bookend_calibration: pre_post_cal.L0B.h5
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
-            AntennaPattern: input_L0B_RRSD_REE2/REE_ANTPAT_CUTS_DATA.h5
+            antenna_pattern: input_L0B_RRSD_REE2/REE_ANTPAT_CUTS_DATA.h5
 
             # Chirp replica file, optional.
             # If absent will generate LFM chirp using parameters in L0B product.
-            Waveform: chirp.xml
+            waveform: chirp.xml
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_rslc
+            product_path: output_rslc
 
             # Directory where SAS can write temporary data
-            ScratchPath: scratch_rslc
+            scratch_path: scratch_rslc
 
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-            SASOutputFile: output_rslc/rslc.h5
+            sas_output_file: output_rslc/rslc.h5
 
             # Echo processor config (including defaults) to file.
-            SASConfigFile: output_rslc/rslc_config.yaml
+            sas_config_file: output_rslc/rslc_config.yaml
 
-            ProductCounter: 1
+            product_counter: 1
 
-        PrimaryExecutable:
-            ProductType: RSLC
-            CompositeReleaseID: D00200
-            MissionId: NISAR
-            ProcessingType: PR
-            ProductAccuracy: P
+        primary_executable:
+            product_type: RSLC
+            composite_release_id: D00200
+            mission_id: NISAR
+            processing_type: PR
+            product_accuracy: P
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
-        Geometry:
-            CycleNumber: 1
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-            OrbitDirection: Ascending
-            TrackFramePolygon: '{"type": "Polygon", "coordinates" : [[
+        geometry:
+            cycle_number: 1
+            relative_orbit_number: 1
+            frame_number: 1
+            orbit_direction: Ascending
+            track_frame_polygon: '{"type": "Polygon", "coordinates" : [[
                 [94.0690770882858, -3.36761532641399],
                 [94.3177364485731, -3.31191099700549],
                 [94.5563909639158, -3.25838482092521],
@@ -118,7 +118,7 @@ runconfig:
                 [94.0168020056554, -3.12893471360212],
                 [94.0690770882858, -3.36761532641399]]]
             }'
-            FullCoverageThresholdPercent: 75.0
+            full_coverage_threshold_percent: 75.0
 
         worker:
             # Whether or not to use GPU, optional. Defaults to True if available.
@@ -287,8 +287,8 @@ runconfig:
                 # azimuth compression
                 azcomp: True
 
-        # The PGE wrapper uses the QA group to control whether or not to run the QA SAS
-        # program and which QA option(s) to enable. By default the QA SAS is not run.
-        QA:
+        # The PGE wrapper uses the qa group to control whether or not to run the qa SAS
+        # program and which qa option(s) to enable. By default the qa SAS is not run.
+        qa:
             validate: true
             quality: true

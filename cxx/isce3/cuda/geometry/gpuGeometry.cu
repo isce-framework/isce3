@@ -74,10 +74,14 @@ int geo2rdr(const Vec3& inputLLH, const isce3::core::Ellipsoid& ellipsoid,
     // Use mid-orbit epoch as initial guess
     aztime = orbit.midTime();
 
+    // Newton step, init to zero.
+    double dt = 0.0;
+
     // Begin iterations
     int converged = 0;
-    double slantRange_old = 0.0;
     for (int i = 0; i < maxIter; ++i) {
+        // Apply Newton step from previous iteration.
+        aztime -= dt;
 
         // Interpolate the orbit to current estimate of azimuth time
         Vec3 pos, vel;
@@ -95,16 +99,6 @@ int geo2rdr(const Vec3& inputLLH, const isce3::core::Ellipsoid& ellipsoid,
             return converged;
         }
 
-        // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold) {
-            converged = 1;
-            *slantRange_result = slantRange;
-            *aztime_result = aztime;
-            return converged;
-        } else {
-            slantRange_old = slantRange;
-        }
-
         // Compute doppler
         const double dopfact = dr.dot(vel);
         const double fdop = doppler.eval(slantRange) * dopscale;
@@ -119,8 +113,17 @@ int geo2rdr(const Vec3& inputLLH, const isce3::core::Ellipsoid& ellipsoid,
         const double c2 = (fdop / slantRange) + fdopder;
         const double fnprime = c1 + c2 * dopfact;
 
-        // Update guess for azimuth time
-        aztime -= fn / fnprime;
+        // Compute Newton step.  Don't apply until start of next iteration so
+        // that returned (slantRange, aztime) are always consistent.
+        dt = fn / fnprime;
+
+        // Check convergence
+        if (std::abs(dt) < threshold) {
+            converged = 1;
+            *slantRange_result = slantRange;
+            *aztime_result = aztime;
+            return converged;
+        }
     }
 
     // If we reach this point, no convergence for specified threshold

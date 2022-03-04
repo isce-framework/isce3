@@ -1,5 +1,8 @@
 #pragma once
 
+#include <functional>
+#include <vector>
+
 #include <isce3/core/forward.h>
 #include <isce3/geometry/forward.h>
 
@@ -103,6 +106,16 @@ public:
     template<typename T>
     void geocodeRasterBlock(
             isce3::io::Raster& output_raster, isce3::io::Raster& input_raster);
+
+    /** Geocode rasters with a shared geogrid. Block processing handled
+     * internally in function.
+     *
+     * \param[in] output_rasters    Geocoded rasters
+     * \param[in] input_rasters     Rasters to be geocoded
+     */
+    void geocodeRasters(
+            std::vector<std::reference_wrapper<isce3::io::Raster>> output_rasters,
+            std::vector<std::reference_wrapper<isce3::io::Raster>> input_rasters);
 
     size_t numBlocks() const { return _n_blocks; }
     size_t linesPerBlock() const { return _lines_per_block; }

@@ -63,7 +63,7 @@ def test_geocode_run():
                 h_runw[f'{runw_product_path}/{ds_name}'][:, :] = arr_mlook
 
         # disable unused runw dataset
-        runconfig.cfg['processing']['geocode']['datasets']['connectedComponents'] = False
+        runconfig.cfg['processing']['geocode']['datasets']['connected_components'] = False
 
         # run geocodeing of runw
         geocode_insar.run(runconfig.cfg, out_paths['RUNW'], out_paths['GUNW'])
@@ -117,11 +117,11 @@ def test_geocode_validate():
                 # check max error
                 max_err = np.nanmax(err)
                 # 1e-4 is ~11m
-                assert(max_err < 1e-4), f'{axis}-axis max error fail'
+                assert(max_err < 1e-4), f'{axis}-axis max error fail on {pu}'
 
                 # check RMSE
                 rmse = np.sqrt(np.sum(err**2) / np.count_nonzero(~geo_arr.mask))
-                assert(rmse < rmse_err_threshold), f'{axis}-axis RMSE fail'
+                assert(rmse < rmse_err_threshold), f'{axis}-axis RMSE fail on {pu}'
 
 
 if __name__ == "__main__":

@@ -155,7 +155,7 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
  * looks associated with the geogrid will be saved
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
- * @param[in]  threshold           Distance threshold for convergence
+ * @param[in]  threshold           Azimuth time threshold for convergence (s)
  * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
  * @param[in]  delta_range         Step size used for computing derivative of
  * doppler
@@ -214,7 +214,7 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * looks associated with the geogrid will be saved
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
- * @param[in]  threshold           Distance threshold for convergence
+ * @param[in]  threshold           Azimuth time threshold for convergence (s)
  * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
  * @param[in]  delta_range         Step size used for computing derivative of
  * doppler
@@ -301,7 +301,7 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * looks associated with the geogrid will be saved
  * @param[in] rtc_memory_mode      Select memory mode
  * @param[in] interp_method        Interpolation Method
- * @param[in] threshold            Distance threshold for convergence
+ * @param[in] threshold            Azimuth time threshold for convergence (s)
  * @param[in] num_iter             Maximum number of Newton-Raphson iterations
  * @param[in] delta_range          Step size used for computing derivative of
  * doppler

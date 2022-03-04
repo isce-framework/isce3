@@ -34,7 +34,7 @@ def test_run():
     for axis in input_axis:
         #  iterate thru geocode modes
         for key, value in geocode_modes.items():
-            runconfig.cfg['ProductPathGroup']['SASOutputFile'] = f'{axis}_{key}.h5'
+            runconfig.cfg['product_path_group']['sas_output_file'] = f'{axis}_{key}.h5'
 
             # prepare output hdf5
             h5_prep.run(runconfig.cfg)

@@ -11,7 +11,7 @@ def get_test_cfg():
     rawname = os.path.join(iscetest.data, "REE_L0B_out17.h5")
     cfgname = rawname.replace(".h5", ".yaml")
     cfg = focus.load_config(cfgname)
-    cfg.runconfig.groups.InputFileGroup.InputFilePath = [rawname]
+    cfg.runconfig.groups.input_file_group.input_file_path = [rawname]
     return cfg
 
 
@@ -27,4 +27,4 @@ def slc_is_baseband(filename: str, tol=2*np.pi/100, frequency="A", polarization=
 def test_focus():
     cfg = get_test_cfg()
     focus.focus(cfg)
-    assert slc_is_baseband(cfg.runconfig.groups.ProductPathGroup.SASOutputFile)
+    assert slc_is_baseband(cfg.runconfig.groups.product_path_group.sas_output_file)

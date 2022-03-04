@@ -27,7 +27,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     # pull parameters from dictionary
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     unwrap_args = cfg['processing']['phase_unwrap']
 
     # Create error and info channels
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     unwrap_runconfig = UnwrapRunConfig(args)
 
     # Prepare RUNW HDF5
-    unwrap_runconfig.cfg['PrimaryExecutable']['ProductType'] = 'RUNW_STANDALONE'
+    unwrap_runconfig.cfg['primary_executable']['product_type'] = 'RUNW_STANDALONE'
     out_paths = h5_prep.run(unwrap_runconfig.cfg)
 
     # Use RIFG from crossmul_path

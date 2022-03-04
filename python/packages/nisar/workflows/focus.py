@@ -88,7 +88,7 @@ def get_window(win: Struct, msg=''):
 
 
 def get_chirp(cfg: Struct, raw: Raw, frequency: str, tx: str):
-    if cfg.DynamicAncillaryFileGroup.Waveform:
+    if cfg.dynamic_ancillary_file_group.waveform:
         log.warning("Ignoring input waveform file.  Using analytic chirp.")
     chirp = raw.getChirp(frequency, tx)
     log.info(f"Chirp length = {len(chirp)}")
@@ -110,9 +110,9 @@ def parse_rangecomp_mode(mode: str):
 
 def get_orbit(cfg: Struct):
     log.info("Loading orbit")
-    if cfg.DynamicAncillaryFileGroup.Orbit:
+    if cfg.dynamic_ancillary_file_group.orbit:
         log.warning("Ignoring input orbit file.  Using L0B orbits.")
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate orbit data.")
     raw = open_rrsd(rawfiles[0])
@@ -121,9 +121,9 @@ def get_orbit(cfg: Struct):
 
 def get_attitude(cfg: Struct):
     log.info("Loading attitude")
-    if cfg.DynamicAncillaryFileGroup.Pointing:
+    if cfg.dynamic_ancillary_file_group.pointing:
         log.warning("Ignoring input pointing file.  Using L0B attitude.")
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate attitude data.")
     raw = open_rrsd(rawfiles[0])
@@ -194,7 +194,7 @@ def get_dem(cfg: Struct):
     dem = isce3.geometry.DEMInterpolator(
         height=cfg.processing.dem.reference_height,
         method=cfg.processing.dem.interp_method)
-    fn = cfg.DynamicAncillaryFileGroup.DEMFile
+    fn = cfg.dynamic_ancillary_file_group.dem_file
     if fn:
         log.info(f"Loading DEM {fn}")
         dem.load_dem(fn)
@@ -286,7 +286,7 @@ def make_doppler(cfg: Struct, frequency='A'):
     dem = get_dem(cfg)
     opt = cfg.processing.doppler
     az = np.radians(opt.azimuth_boresight_deg)
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
 
     fc, lut = make_doppler_lut(rawfiles,
                                az=az, orbit=orbit, attitude=attitude,
@@ -489,7 +489,7 @@ def get_range_deramp(grid: isce3.product.RadarGridParameters) -> np.ndarray:
 def focus(runconfig):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) <= 0:
         raise IOError("need at least one raw data file")
     if len(rawfiles) > 1:
@@ -552,20 +552,20 @@ def focus(runconfig):
     polygon = isce3.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
                                                    zerodop, dem)
 
-    output_slc_path = os.path.abspath(cfg.ProductPathGroup.SASOutputFile)
+    output_slc_path = os.path.abspath(cfg.product_path_group.sas_output_file)
 
     output_dir = os.path.dirname(output_slc_path)
     os.makedirs(output_dir, exist_ok=True)
 
-    product = cfg.PrimaryExecutable.ProductType
+    product = cfg.primary_executable.product_type
     log.info(f"Creating output {product} product {output_slc_path}")
     slc = SLC(output_slc_path, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, polygon=polygon,
-        track=cfg.Geometry.RelativeOrbitNumber,
-        frame=cfg.Geometry.FrameNumber,
+        track=cfg.geometry.relative_orbit_number,
+        frame=cfg.geometry.frame_number,
         start_time=ogrid["A"].sensing_datetime(0),
         end_time=ogrid["A"].sensing_datetime(ogrid["A"].length - 1))
 
@@ -592,7 +592,7 @@ def focus(runconfig):
                              **vars(cfg.processing.azcomp.geo2rdr))
 
     # Scratch directory for intermediate outputs
-    scratch_dir = os.path.abspath(cfg.ProductPathGroup.ScratchPath)
+    scratch_dir = os.path.abspath(cfg.product_path_group.scratch_path)
     os.makedirs(scratch_dir, exist_ok=True)
 
     # main processing loop
@@ -724,7 +724,7 @@ def main(argv):
     args = yaml_parser.parse()
     configure_logging()
     cfg = validate_config(load_config(args.run_config_path))
-    echofile = cfg.runconfig.groups.ProductPathGroup.SASConfigFile
+    echofile = cfg.runconfig.groups.product_path_group.sas_config_file
     if echofile:
         log.info(f"Logging configuration to file {echofile}.")
         dump_config(cfg, echofile)

@@ -27,19 +27,19 @@ def run(cfg):
     '''
 
     # pull parameters from cfg
-    input_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
+    input_hdf5 = cfg['input_file_group']['input_file_path']
+    output_hdf5 = cfg['product_path_group']['sas_output_file']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     flag_fullcovariance = cfg['processing']['input_subset']['fullcovariance']
     flag_symmetrize_cross_pol_channels = \
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
-    scratch_path = cfg['ProductPathGroup']['ScratchPath']
+    scratch_path = cfg['product_path_group']['scratch_path']
 
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
     
     # DEM parameters
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     dem_margin = cfg['processing']['dem_margin']
     dem_interp_method_enum = cfg['processing']['dem_interpolation_method_enum']
 

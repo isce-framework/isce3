@@ -22,7 +22,7 @@ class RubbersheetRunConfig(RunConfig):
         '''
 
         error_channel = journal.error('RubbersheetRunConfig.yaml_check')
-        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
+        scratch_path = self.cfg['product_path_group']['scratch_path']
 
         # Check if dense_offset is enabled, if not, and rubbersheet is enabled
         # throw an error and do not run rubbersheet

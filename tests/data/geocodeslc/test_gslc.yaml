@@ -2,28 +2,28 @@ runconfig:
     name: gslc_workflow_default
 
     groups:
-        PGENameGroup:
-            PGEName: GSLC_L_PGE
+        pge_name_group:
+            pge_name: GSLC_L_PGE
 
-        InputFileGroup:
-            InputFilePath:
+        input_file_group:
+            input_file_path:
             - @ISCETEST@/envisat.h5
-        DynamicAncillaryFileGroup:
-            DEMFile: @ISCETEST@/geocode/zeroHeightDEM.geo
-        ProductPathGroup:
+        dynamic_ancillary_file_group:
+            dem_file: @ISCETEST@/geocode/zeroHeightDEM.geo
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: '.'
+            product_path: '.'
             # Directory where SAS can write temporary data
-            ScratchPath: '.'
+            scratch_path: '.'
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: to_be_populated_by_test_code
+            sas_output_file: to_be_populated_by_test_code
        
-        PrimaryExecutable:
-            ProductType: GSLC
+        primary_executable:
+            product_type: GSLC
        
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         worker:
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
@@ -55,7 +55,7 @@ runconfig:
                         parameters:
 
             geocode:        #{optional} Mechanism to specify output posting and DEM
-                outputEPSG: 4326 #{optional} Same as input DEM if not provided.
+                output_epsg: 4326 #{optional} Same as input DEM if not provided.
                 x_snap: #{optional} To control output grid in same units as output EPSG
                 y_snap: #{optional} To control output grid in same units as output EPSG
                 output_posting:

@@ -11,6 +11,7 @@
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Metadata.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/core/Poly2d.h>
 #include <isce3/geocode/geocodeSlc.h>
 #include <isce3/geocode/GeocodeCov.h>
 #include <isce3/geometry/Topo.h>
@@ -185,7 +186,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
                     offset_az_raster, offset_rg_raster, geocode_memory_mode_1,
                     min_block_size, max_block_size);
         }
-    } 
+    }
 
     // Test generation of full-covariance elements and block processing
 
@@ -265,7 +266,7 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
     double err_y = 0.0;
     double err_x_conj_y = 0.0;
     double max_err_x = 0.0;
-    double max_err_y = 0.0; 
+    double max_err_y = 0.0;
     double max_err_x_conj_y = 0.0;
 
     std::valarray<double> geocoded_diag_array_x(length * width);
@@ -352,9 +353,9 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
             nvalid_x_conj_y++;
             // }
 
-            max_err_x_conj_y = std::max(max_err_x_conj_y, 
+            max_err_x_conj_y = std::max(max_err_x_conj_y,
                                         std::abs(err_x_conj_y));
-    
+
         }
     }
 
@@ -362,7 +363,7 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
     double mean_real_valued = total_real_valued / stats.n_valid;
 
     double sample_stddev_factor = (
-        static_cast<double>(stats.n_valid)) / 
+        static_cast<double>(stats.n_valid)) /
         (static_cast<double>(stats.n_valid - 1));
 
     stats.sample_stddev = std::sqrt(sample_stddev_factor *
@@ -488,7 +489,7 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
         stats_y.mean = total_y / stats_y.n_valid;
 
         double sample_stddev_factor = (
-            static_cast<double>(stats_x.n_valid)) / 
+            static_cast<double>(stats_x.n_valid)) /
             (static_cast<double>(stats_x.n_valid - 1));
 
         stats_x.sample_stddev = std::sqrt(sample_stddev_factor *
@@ -510,7 +511,7 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
         std::cout << "  maxErrY: " << maxErrY << std::endl;
         std::cout << "  dx: " << dx << std::endl;
         std::cout << "  dy: " << dy << std::endl;
-    
+
         ASSERT_GE(stats_x.n_valid, 800);
         ASSERT_GE(stats_y.n_valid, 800);
 
@@ -603,20 +604,20 @@ TEST(GeocodeTest, TestGeocodeSlc)
 
     bool flatten = false;
 
-    isce3::geocode::geocodeSlc(geocodedSlc, inputSlc, demRaster, radarGrid,
-                              geoGrid, orbit, nativeDoppler, imageGridDoppler,
-                              ellipsoid, thresholdGeo2rdr, numiterGeo2rdr,
-                              linesPerBlock, demBlockMargin, flatten);
+    isce3::geocode::geocodeSlc<isce3::core::Poly2d> (
+            geocodedSlc, inputSlc, demRaster, radarGrid, geoGrid, orbit,
+            nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
+            numiterGeo2rdr, linesPerBlock, demBlockMargin, flatten);
 
     isce3::io::Raster inputSlcY("yslc_rdr.bin", GA_ReadOnly);
 
     isce3::io::Raster geocodedSlcY("yslc_geo.bin", geoGridWidth, geoGridLength, 1,
                                   GDT_CFloat32, "ENVI");
 
-    isce3::geocode::geocodeSlc(geocodedSlcY, inputSlcY, demRaster, radarGrid,
-                              geoGrid, orbit, nativeDoppler, imageGridDoppler,
-                              ellipsoid, thresholdGeo2rdr, numiterGeo2rdr,
-                              linesPerBlock, demBlockMargin, flatten);
+    isce3::geocode::geocodeSlc<isce3::core::LUT2d<double>> (
+            geocodedSlcY, inputSlcY, demRaster, radarGrid, geoGrid, orbit,
+            nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
+            numiterGeo2rdr, linesPerBlock, demBlockMargin, flatten);
 
     double* _geoTrans = new double[6];
     _geoTrans[0] = geoGridStartX;
@@ -726,7 +727,7 @@ void createZeroDem()
 
 
 template<class T>
-void checkStatsReal(isce3::math::Stats<T> computed_stats, 
+void checkStatsReal(isce3::math::Stats<T> computed_stats,
                     isce3::io::Raster &raster) {
 
         int band = 0, approx_ok = 0;
@@ -798,7 +799,7 @@ void checkStatsComplex(isce3::math::Stats<T> computed_stats,
     ASSERT_LT(std::abs(isce3_stats.max - computed_stats.max), 1.0e-15);
 
     if (!isnan(computed_stats.sample_stddev)) {
-        ASSERT_LT(std::abs(isce3_stats.sample_stddev - 
+        ASSERT_LT(std::abs(isce3_stats.sample_stddev -
                            computed_stats.sample_stddev), 1.0e-8);
     }
 

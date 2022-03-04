@@ -1,63 +1,63 @@
 # Structure inherited from L0 PGEs covers inputs, outputs, and identification.
 runconfig:
     groups:
-        InputFileGroup:
+        input_file_group:
             # REQUIRED List of NISAR raw data products in L0B format.
-            InputFilePath:
+            input_file_path:
             - /mnt/ssd/NISAR_ADT/REE_SRC/out17/REE_L0B_out17_masked.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # Digital elevation model, optional.
-            DEMFile: dem.tif
+            dem_file: dem.tif
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            Orbit: orbit.xml
+            orbit: orbit.xml
 
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.
-            Pointing: attitude.xml
+            pointing: attitude.xml
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            ExternalCalibration: cal.xml
+            external_calibration: cal.xml
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            InternalCalibration: type7table.xml
+            internal_calibration: type7table.xml
 
             # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
             # If not provided, no polarimetric calibration performed.
-            PolarimetricCalibration: polcal.h5
+            polarimetric_calibration: polcal.h5
 
             # Pre- and post-data take calibration data products, optional.
-            BookendCalibration: pre_post_cal.L0B.h5
+            bookend_calibration: pre_post_cal.L0B.h5
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
-            AntennaPattern: antenna.h5
+            antenna_pattern: antenna.h5
 
             # Chirp replica file, optional.
             # If absent will generate LFM chirp using parameters in L0B product.
-            Waveform: chirp.xml
+            waveform: chirp.xml
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: /out
+            product_path: /out
             # Directory where SAS can write temporary data
-            ScratchPath: .
+            scratch_path: .
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-            SASOutputFile: ./slc.h5
+            sas_output_file: ./slc.h5
             # Echo processor config (including defaults) to file.
-            SASConfigFile: ./rslc_config.yaml
+            sas_config_file: ./rslc_config.yaml
 
-        PrimaryExecutable:
-            ProductType: RSLC
+        primary_executable:
+            product_type: RSLC
 
-        Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 150
+        geometry:
+            relative_orbit_number: 1
+            frame_number: 150
 
         archive:
             quicklook: True

@@ -47,7 +47,7 @@ void addbinding(py::class_<GeocodePolygon<T>> &pyGeocodePolygon)
         orbit               Orbit
         input_dop           Doppler LUT associated with the radar grid
         dem_raster          Input DEM raster
-        threshold           Distance threshold for convergence
+        threshold           Azimuth time threshold for convergence (s)
         num_iter            Maximum number of Newton-Raphson iterations
         delta_range         Step size used for computing Doppler derivative
         )")

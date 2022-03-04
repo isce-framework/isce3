@@ -24,9 +24,13 @@ def test_run():
 
     ellipsoid = isce.core.Ellipsoid()
 
+    # require geolocation accurate to one millionth of a pixel.
+    tol_pixels = 1e-6
+    tol_seconds = tol_pixels / radargrid.prf
+
     # init Geo2Rdr class
     geo2rdr_obj = isce.cuda.geometry.Geo2Rdr(radargrid, orbit,
-            ellipsoid, doppler, threshold=1e-9, numiter=50)
+            ellipsoid, doppler, threshold=tol_seconds, numiter=50)
 
     # load rdr2geo unit test output
     rdr2geo_raster = isce.io.Raster("topo.vrt")
@@ -34,11 +38,6 @@ def test_run():
     # run
     geo2rdr_obj.geo2rdr(rdr2geo_raster, ".")
 
-
-def test_validate():
-    '''
-    validate generated results
-    '''
     # list of test outputs
     test_outputs = ["range.off", "azimuth.off"]
 
@@ -51,12 +50,13 @@ def test_validate():
         # mask bad values
         test_arr = np.ma.masked_array(test_arr, mask=np.abs(test_arr) > 999.0)
 
-        # accumulate error
-        test_err = np.sum(test_arr*test_arr)
+        # compute max error (in pixels)
+        test_err = np.max(np.abs(test_arr))
 
-        assert( test_err < 1e-9 ), f"{test_output} accumulated error fail"
+        # Error may slightly exceed tolerance since Newton step size isn't a
+        # perfect estimate of the error in the solution.
+        assert(test_err < 2 * tol_pixels), f"{test_output} accumulated error fail"
 
 
 if  __name__ == "__main__":
     test_run()
-    test_validate()
