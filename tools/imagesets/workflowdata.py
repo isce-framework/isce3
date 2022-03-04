@@ -11,8 +11,8 @@ workflowdata = {
         # and so forth
         "L0B_RRSD_REE2":
         [
-            "REE_L0B_NISAR_array144sq_02.h5",
-            "REE_ANTPAT_DATA.h5",
+            "REE_L0B_ECHO_array144sq_03.h5",
+            "REE_ANTPAT_CUTS_DATA.h5",
             "README.txt",
         ],
     
@@ -56,13 +56,13 @@ workflowdata = {
         "L0B_RRSD_ALPSRP110160680_Rosamond":
         [
             "ALPSRP110160680.L0B.h5",
-            "dem.tif",
+            "dem.tiff",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
             "ALPSRP116870680.L0B.h5",
-            "dem.tif",
+            "dem.tiff",
             "README.txt",
         ],
     
@@ -84,15 +84,6 @@ workflowdata = {
             "rslc_ree17.h5",
         ],
 
-        "L0B_RRSD_REE_beamform":
-        [
-            "REE_L0B_ECHO_DATA.h5",
-            "REE_ANTPAT_CUTS_DATA.h5",
-            "instrumentTables_bf_19000101.h5",
-            "ree_gen_nisar_product.log",
-            "README.txt",
-        ],
-    
         "L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F":
         [
             "S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F.h5",
@@ -161,9 +152,29 @@ workflowdata = {
             "dem.tif",
             "README.txt",
         ],
+
+        "L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004":
+        [
+            "NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004.h5",
+            "ERA5_SD_TP_ST_SM.nc",
+            "ancillary/DEMSLPSTD_M01_002.float32",
+            "ancillary/dominantIGBP_M01_B20120101_003.uint8",
+            "ancillary/EASE2_lat01km.float32",
+            "ancillary/EASE2_lat03km.float32",
+            "ancillary/EASE2_lat09km.float32",
+            "ancillary/EASE2_lat200m.float32",
+            "ancillary/EASE2_lon01km.float32",
+            "ancillary/EASE2_lon03km.float32",
+            "ancillary/EASE2_lon09km.float32",
+            "ancillary/EASE2_lon200m.float32",
+            "ancillary/UrbanFraction_M01_001.float32",
+            "ancillary/waterfrac_M01_002.float32",
+            "ancillary/waterfrac_M03_002.float32",
+            "README.txt",
+        ],
     }
 
-# dictionaries definining mappig of workflow tests to data
+# dictionaries definining mapping of workflow tests to data
 # each key is the test name, value is the corresponding data
 workflowtests = {
     'rslc': {"rslc_" + name: "L0B_RRSD_" + name for name in [
@@ -236,13 +247,7 @@ workflowtests = {
         "REE17_PTA",
     ]},
 
-    'beamform': {                                                    
-        "beamform_L0B_RRSD_REE_beamform":
-            [
-                "L0B_RRSD_REE_beamform",            # input data directory
-                "REE_L0B_ECHO_DATA.h5",             # L0B data
-                "REE_ANTPAT_CUTS_DATA.h5",          # antenna pattern 
-                "instrumentTables_bf_19000101.h5",  # instrument tables
-            ],
-    },
+    'soilm': {"soilm_" + name: "L2_GCOV_" + name for name in [
+        "001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001-004",
+    ]},
 }    

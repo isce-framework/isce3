@@ -9,7 +9,7 @@ from ruamel.yaml import YAML
 import yamale
 import numpy as np
 
-import pybind_isce3 as isce
+import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import geogrid
 import nisar.workflows.helpers as helpers
@@ -116,7 +116,7 @@ class RunConfig:
         error_channel = journal.error('RunConfig.load')
 
         # check input file value
-        input_path = self.cfg['InputFileGroup']['InputFilePath']
+        input_path = self.cfg['input_file_group']['input_file_path']
 
         # check input HDF5(s) in cfg
         if isinstance(input_path, list):
@@ -133,7 +133,7 @@ class RunConfig:
                         err_str = f'{secondary_path} secondary RSLC not found.'
                         error_channel.log(err_str)
                         raise ValueError(err_str)
-                    self.cfg['InputFileGroup']['SecondaryFilePath'] = secondary_path
+                    self.cfg['input_file_group']['secondary_file_path'] = secondary_path
                 else:
                     err_str = f"{n_inputs} provided. 2 input files are required for INSAR workflow."
                     error_channel.log(err_str)
@@ -159,24 +159,24 @@ class RunConfig:
             error_channel.log(err_str)
             raise FileNotFoundError(err_str)
 
-        self.cfg['InputFileGroup']['InputFilePath'] = input_path
+        self.cfg['input_file_group']['input_file_path'] = input_path
 
         # ensure validity of DEM inputs
-        helpers.check_dem(self.cfg['DynamicAncillaryFileGroup']['DEMFile'])
+        helpers.check_dem(self.cfg['dynamic_ancillary_file_group']['dem_file'])
 
         # check if each product type has an output
-        output_hdf5 = self.cfg['ProductPathGroup']['SASOutputFile']
+        output_hdf5 = self.cfg['product_path_group']['sas_output_file']
         output_dir = os.path.dirname(output_hdf5)
 
         helpers.check_write_dir(output_dir)
-        helpers.check_write_dir(self.cfg['ProductPathGroup']['ScratchPath'])
+        helpers.check_write_dir(self.cfg['product_path_group']['scratch_path'])
 
     def prep_frequency_and_polarizations(self):
         '''
         check frequency and polarizations and fix as needed
         '''
         error_channel = journal.error('RunConfig.prep_frequency_and_polarizations')
-        input_path = self.cfg['InputFileGroup']['InputFilePath']
+        input_path = self.cfg['input_file_group']['input_file_path']
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
 
         slc = SLC(hdf5file=input_path)
@@ -209,8 +209,8 @@ class RunConfig:
         geocode_dict = self.cfg['processing']['geocode']
 
         # check for user provided EPSG and grab from DEM if none provided
-        if geocode_dict['outputEPSG'] is None:
-            geocode_dict['outputEPSG'] = isce.io.Raster(self.cfg['DynamicAncillaryFileGroup']['DEMFile']).get_epsg()
+        if geocode_dict['output_epsg'] is None:
+            geocode_dict['output_epsg'] = isce3.io.Raster(self.cfg['dynamic_ancillary_file_group']['dem_file']).get_epsg()
 
         # make geogrids for each frequency
         geogrids = {}
@@ -236,12 +236,12 @@ class RunConfig:
 
         # check for user provided EPSG and grab geocode group EPSG if not provided
 
-        if self.cfg['processing']['radar_grid_cubes']['outputEPSG'] is None:
-            cubes_epsg = geocode_dict['outputEPSG']
+        if self.cfg['processing']['radar_grid_cubes']['output_epsg'] is None:
+            cubes_epsg = geocode_dict['output_epsg']
         else:
-            cubes_epsg = self.cfg['processing']['radar_grid_cubes']['outputEPSG']
+            cubes_epsg = self.cfg['processing']['radar_grid_cubes']['output_epsg']
 
-        self.cfg['processing']['radar_grid_cubes']['outputEPSG'] = cubes_epsg
+        self.cfg['processing']['radar_grid_cubes']['output_epsg'] = cubes_epsg
 
         if not self.cfg['processing']['radar_grid_cubes']['heights']:
             self.cfg['processing']['radar_grid_cubes']['heights'] = \
@@ -257,7 +257,7 @@ class RunConfig:
             default_cube_geogrid_spacing_y = -500
 
         radar_grid_cubes_dict = self.cfg['processing']['radar_grid_cubes']
-        self.cfg['processing']['radar_grid_cubes']['outputEPSG'] = cubes_epsg
+        self.cfg['processing']['radar_grid_cubes']['output_epsg'] = cubes_epsg
 
         # build geogrid
         frequency_ref = 'A'

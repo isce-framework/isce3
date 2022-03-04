@@ -7,22 +7,35 @@ wrapper for rdr2geo
 import pathlib
 import time
 
+from osgeo import gdal
+
 import journal
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, runconfig
+from nisar.workflows import runconfig
 from nisar.workflows.rdr2geo_runconfig import Rdr2geoRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
+def get_raster_obj(out_path: str, radargrid: isce3.product.RadarGridParameters,
+                   write2disk: bool, dtype: int) -> None:
+    '''Function that returns io.Raster or None based on write2disk bool
+
+    dtype has to be a GDAL datatype
+    '''
+    if not write2disk:
+        return None
+
+    return  isce3.io.Raster(out_path, radargrid.width, radargrid.length, 1,
+                            dtype, 'ENVI')
 
 def run(cfg):
     '''
     run rdr2geo
     '''
     # pull parameters from cfg
-    input_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    input_hdf5 = cfg['input_file_group']['input_file_path']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     threshold = cfg['processing']['rdr2geo']['threshold']
     numiter = cfg['processing']['rdr2geo']['numiter']
@@ -43,11 +56,11 @@ def run(cfg):
     grid_doppler = isce3.core.LUT2d()
 
     info_channel = journal.info("rdr2geo.run")
-    info_channel.log("starting geocode SLC")
+    info_channel.log("starting rdr2geo")
 
     # check if gpu ok to use
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
@@ -73,8 +86,43 @@ def run(cfg):
                               extraiter=extraiter,
                               lines_per_block=lines_per_block)
 
-        # run
-        rdr2geo_obj.topo(dem_raster, str(rdr2geo_scratch_path))
+        # dict of layer names keys to tuples of their output name and GDAL types
+        layers = {'x':('x', gdal.GDT_Float64), 'y':('y', gdal.GDT_Float64),
+                  'z':('z', gdal.GDT_Float64),
+                  'incidence':('incidence', gdal.GDT_Float32),
+                  'heading':('heading', gdal.GDT_Float32),
+                  'local_incidence':('localIncidence', gdal.GDT_Float32),
+                  'local_psi':('localPsi', gdal.GDT_Float32),
+                  'simulated_amplitude':('simamp', gdal.GDT_Float32),
+                  'layover_shadow':('layoverShadowMask', gdal.GDT_Byte)}
+
+        # get rdr2geo config dict from processing dict for brevity
+        rdr2geo_cfg = cfg['processing']['rdr2geo']
+
+        # list comprehend rasters to be written from layers dict
+        raster_list = [
+            get_raster_obj(f'{str(rdr2geo_scratch_path)}/{fname}.rdr',
+                           radargrid, rdr2geo_cfg[f'write_{key_name}'],
+                           dtype)
+            for key_name, (fname, dtype) in layers.items()]
+
+        # extract individual elements from dict as args for topo
+        x_raster, y_raster, height_raster, incidence_raster,\
+            heading_raster, local_incidence_raster, local_psi_raster,\
+            simulated_amplitude_raster, shadow_raster = raster_list
+
+        # run topo
+        rdr2geo_obj.topo(dem_raster, x_raster, y_raster, height_raster,
+                         incidence_raster, heading_raster, local_incidence_raster,
+                         local_psi_raster, simulated_amplitude_raster,
+                         shadow_raster)
+
+        # remove undesired/None rasters from raster list
+        raster_list = [raster for raster in raster_list if raster is not None]
+
+        # save non-None rasters to vrt
+        output_vrt = isce3.io.Raster(f'{str(rdr2geo_scratch_path)}/topo.vrt', raster_list)
+        output_vrt.set_epsg(rdr2geo_obj.epsg_out)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran rdr2geo in {t_all_elapsed:.3f} seconds")

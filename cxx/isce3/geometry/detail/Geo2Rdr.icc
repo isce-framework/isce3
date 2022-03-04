@@ -136,9 +136,13 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
         }
     }
 
+    // Newton step, initialized to zero.
+    double dt = 0.0;
+
     // begin iterations
-    double r_old = 0.;
     for (int i = 0; i < params.maxiter; ++i) {
+        // apply Newton step here so that (r,t) are always consistent on return.
+        *t -= dt;
 
         // interpolate orbit
         Vec3 pos, vel;
@@ -156,21 +160,17 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
             }
         }
 
-        // check for convergence
-        if (std::abs(*r - r_old) < params.threshold) {
-            return ErrorCode::Success;
-        }
-
         // update guess for azimuth time
-        double dt;
         const auto status = computeDopplerAztimeDiff(&dt, *t, *r, rvec, vel,
                                                      doppler, wvl, params.delta_range);
         if (status != ErrorCode::Success) {
             return status;
         }
 
-        *t -= dt;
-        r_old = *r;
+        // check for convergence
+        if (std::abs(dt) < params.threshold) {
+            return ErrorCode::Success;
+        }
     }
 
     // if we reach this point, no convergence for specified threshold

@@ -12,6 +12,7 @@ core/linspace.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
+core/poly2d.py
 core/projections.py
 core/quaternion.py
 core/statevector.py
@@ -33,6 +34,7 @@ image/resamp.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py
+math/stats.py
 polsar/symmetrize.py
 signal/convolve2D.py
 signal/covariance.py
@@ -51,6 +53,7 @@ antenna/frame.py
 antenna/geometryfunc.py
 antenna/el_pattern_est.py
 antenna/edge_method_cost_func.py
+#antenna/el_null_range_est.py
 )
 
 if(WITH_CUDA)

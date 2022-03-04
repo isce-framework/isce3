@@ -4,7 +4,7 @@ import h5py
 import os
 import journal
 import pyre
-import pybind_isce3 as isce3
+import isce3
 from ..protocols import ProductReader
 
 

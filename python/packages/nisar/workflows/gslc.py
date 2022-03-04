@@ -6,12 +6,13 @@ import time
 import h5py
 import journal
 
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
+from nisar.workflows.compute_stats import compute_stats_complex_data
 
 
 def run(cfg):
@@ -19,13 +20,13 @@ def run(cfg):
     run geocodeSlc according to parameters in cfg dict
     '''
     # pull parameters from cfg
-    input_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
+    input_hdf5 = cfg['input_file_group']['input_file_path']
+    output_hdf5 = cfg['product_path_group']['sas_output_file']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     geogrids = cfg['processing']['geocode']['geogrids']
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     threshold_geo2rdr = cfg['processing']['geo2rdr']['threshold']
     iteration_geo2rdr = cfg['processing']['geo2rdr']['maxiter']
     lines_per_block = cfg['processing']['blocksize']['y']
@@ -86,6 +87,11 @@ def run(cfg):
                 # the rasters need to be deleted
                 del gslc_raster
                 del slc_raster
+
+                # output_raster_ref = f'HDF5:{output_hdf5}:/{dataset_path}'
+                gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"))
+                compute_stats_complex_data(gslc_raster, gslc_dataset)
+
                 t_pol_elapsed = time.time() - t_pol
                 info_channel.log(f'polarization {polarization} ran in {t_pol_elapsed:.3f} seconds')
 

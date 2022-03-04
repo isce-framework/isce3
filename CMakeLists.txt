@@ -48,8 +48,8 @@ if (WITH_CUDA)
 
     # check CUDA version
     set(CUDA_VERSION ${CMAKE_CUDA_COMPILER_VERSION})
-    if (CUDA_VERSION VERSION_LESS 9)
-        message(FATAL_ERROR "CUDA version must be at least 9. Detected ${CUDA_VERSION}")
+    if (CUDA_VERSION VERSION_LESS 11)
+        message(FATAL_ERROR "CUDA version must be at least 11. Detected ${CUDA_VERSION}")
     endif()
 
     # specify target CUDA device architecture(s)

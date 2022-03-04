@@ -1,7 +1,7 @@
 import os
 
 import journal
-import pybind_isce3 as isce
+import isce3
 import nisar.workflows.helpers as helpers
 from nisar.workflows.runconfig import RunConfig
 
@@ -46,8 +46,9 @@ class GeocodeInsarRunConfig(RunConfig):
             self.cfg['processing']['geocode']['datasets'] = {}
 
         # default to True for datasets not found
-        gunw_datasets = ["connectedComponents", "coherenceMagnitude", "unwrappedPhase",
-                         "alongTrackOffset", "slantRangeOffset", "layoverShadowMask"]
+        gunw_datasets = ["connected_components", "coherence_magnitude",
+                         "unwrapped_phase", "along_track_offset",
+                         "slant_range_offset", "layover_shadow_mask"]
         for gunw_dataset in gunw_datasets:
             if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
                 self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True
@@ -57,8 +58,8 @@ class GeocodeInsarRunConfig(RunConfig):
             Default margin as the length of 50 pixels
             (max of X and Y pixel spacing).
             '''
-            dem_file = self.cfg['DynamicAncillaryFileGroup']['DEMFile']
-            dem_raster = isce.io.Raster(dem_file)
+            dem_file = self.cfg['dynamic_ancillary_file_group']['dem_file']
+            dem_raster = isce3.io.Raster(dem_file)
             dem_margin = 50 * max([dem_raster.dx, dem_raster.dy])
             self.cfg['processing']['dem_margin'] = dem_margin
 
@@ -79,9 +80,9 @@ class GeocodeInsarRunConfig(RunConfig):
         # the start pixel in range and azimuth. Note, margin and gross_offsets
         # are allocated as defaults in share/nisar/defaults/insar.yaml
         geocode_azimuth_offset = self.cfg['processing']['geocode']['datasets'][
-                'alongTrackOffset']
+                'along_track_offset']
         geocode_range_offset = self.cfg['processing']['geocode']['datasets'][
-                'slantRangeOffset']
+                'slant_range_offset']
         if geocode_azimuth_offset or geocode_range_offset:
             offset_cfg = self.cfg['processing']['dense_offsets']
             margin = max(offset_cfg['margin'],

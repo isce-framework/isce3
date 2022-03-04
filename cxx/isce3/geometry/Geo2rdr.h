@@ -185,7 +185,7 @@ private:
 
     // Processing parameters
     int _numiter;
-    double _threshold;
+    double _threshold = 1e-8;
     size_t _linesPerBlock = 1000;
 };
 

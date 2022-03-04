@@ -21,8 +21,8 @@ class CrossmulRunConfig(RunConfig):
         '''
         error_channel = journal.error('CrossmulRunConfig.yaml_check')
 
-        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
-        # if coregistered_slc_path not provided, use ScratchPath as source for coregistered SLCs
+        scratch_path = self.cfg['product_path_group']['scratch_path']
+        # if coregistered_slc_path not provided, use scratch_path as source for coregistered SLCs
         if 'coregistered_slc_path' not in self.cfg['processing']['crossmul']:
             self.cfg['processing']['crossmul']['coregistered_slc_path'] = scratch_path
 

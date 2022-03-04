@@ -3,6 +3,7 @@
 #include <isce3/io/Raster.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/product/RadarGridParameters.h>
 
 #include <limits>
@@ -37,15 +38,6 @@ void addbinding(py::enum_<rtcAlgorithm> & pyAlgorithm)
             .value("RTC_AREA_PROJECTION", rtcAlgorithm::RTC_AREA_PROJECTION);
 }
 
-void addbinding(py::enum_<rtcMemoryMode> & pyMemoryMode)
-{
-    pyMemoryMode
-        .value("RTC_AUTO", rtcMemoryMode::RTC_AUTO)
-        .value("RTC_SINGLE_BLOCK", rtcMemoryMode::RTC_SINGLE_BLOCK)
-        .value("RTC_BLOCKS_GEOGRID", rtcMemoryMode::RTC_BLOCKS_GEOGRID)
-        ;
-}
-
 void addbinding(py::enum_<rtcAreaMode> & pyAreaMode)
 {
     pyAreaMode
@@ -77,7 +69,7 @@ void addbinding_apply_rtc(pybind11::module& m)
             py::arg("radar_grid_nlooks") = 1, py::arg("out_nlooks") = nullptr,
             py::arg("input_rtc") = nullptr, py::arg("output_rtc") = nullptr,
             py::arg("rtc_memory_mode") =
-                    isce3::geometry::rtcMemoryMode::RTC_AUTO,
+                    isce3::core::MemoryModeBlockY::AutoBlocksY,
             R"(This function computes and applies the radiometric terrain correction (RTC) to a multi-band
               raster.
 
@@ -129,13 +121,14 @@ void addbinding_apply_rtc(pybind11::module& m)
                   Raster containing pre-computed RTC area factor
               output_rtc : isce3.io.Raster, optional
                   Output RTC area factor (output)
-              rtc_memory_mode : isce3.geometry.RtcMemoryMode, optional
+              rtc_memory_mode : isce3.core.memory_mode_block_y, optional
                   Select memory mode
               )");
 }
 
 void addbinding_compute_rtc(pybind11::module& m)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("compute_rtc",
             py::overload_cast<const isce3::product::RadarGridParameters&,
                     const isce3::core::Orbit&,
@@ -143,7 +136,7 @@ void addbinding_compute_rtc(pybind11::module& m)
                     isce3::io::Raster&, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, isce3::geometry::rtcAreaMode,
                     rtcAlgorithm, double, float, float, isce3::io::Raster*,
-                    isce3::geometry::rtcMemoryMode,
+                    isce3::core::MemoryModeBlockY,
                     isce3::core::dataInterpMethod, double, int, double>(
                     &isce3::geometry::computeRtc),
             py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
@@ -161,11 +154,12 @@ void addbinding_compute_rtc(pybind11::module& m)
                     std::numeric_limits<float>::quiet_NaN(),
             py::arg("radar_grid_nlooks") = 1, py::arg("out_nlooks") = nullptr,
             py::arg("rtc_memory_mode") =
-                    isce3::geometry::rtcMemoryMode::RTC_AUTO,
+                    isce3::core::MemoryModeBlockY::AutoBlocksY,
             py::arg("interp_method") =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-            py::arg("threshold") = 1e-4, py::arg("num_iter") = 100,
-            py::arg("delta_range") = 1e-4,
+            py::arg("threshold") = defaults.threshold,
+            py::arg("num_iter") = defaults.maxiter,
+            py::arg("delta_range") = defaults.delta_range,
             R"(This function computes and applies the radiometric terrain correction
              (RTC) to a multi-band raster.
 
@@ -200,12 +194,12 @@ void addbinding_compute_rtc(pybind11::module& m)
              out_nlooks : isce3.io.Raster, optional
                  Raster to which the number of radar-grid
               looks associated with the geogrid will be saved (output)
-             rtc_memory_mode : isce3.geometry.RtcMemoryMode, optional
+             rtc_memory_mode : isce3.core.memory_mode_block_y, optional
                  Select memory mode
              interp_method : isce3.core.DataInterpMethod, optional
                  Interpolation Method
              threshold : double, optional
-                 Distance threshold for convergence
+                 Azimuth time threshold for convergence (s)
              num_iter : int, optional
                  Maximum number of Newton-Raphson iterations
              delta_range : double, optional
@@ -215,6 +209,7 @@ void addbinding_compute_rtc(pybind11::module& m)
 
 void addbinding_compute_rtc_bbox(pybind11::module& m)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     m.def("compute_rtc_bbox",
             py::overload_cast<isce3::io::Raster&, isce3::io::Raster&,
                     const isce3::product::RadarGridParameters&,
@@ -225,7 +220,7 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     rtcOutputTerrainRadiometry, isce3::geometry::rtcAreaMode,
                     rtcAlgorithm, double, float, float, isce3::io::Raster*,
                     isce3::io::Raster*, isce3::io::Raster*,
-                    isce3::geometry::rtcMemoryMode,
+                    isce3::core::MemoryModeBlockY,
                     isce3::core::dataInterpMethod, double, int, double>(
                     &isce3::geometry::computeRtc),
             py::arg("dem_raster"), py::arg("output_raster"),
@@ -247,11 +242,12 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
             py::arg("radar_grid_nlooks") = 1, py::arg("out_geo_rdr") = nullptr,
             py::arg("out_geo_grid") = nullptr, py::arg("out_nlooks") = nullptr,
             py::arg("rtc_memory_mode") =
-                    isce3::geometry::rtcMemoryMode::RTC_AUTO,
+                    isce3::core::MemoryModeBlockY::AutoBlocksY,
             py::arg("interp_method") =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-            py::arg("threshold") = 1e-4, py::arg("num_iter") = 100,
-            py::arg("delta_range") = 1e-4,
+            py::arg("threshold") = defaults.threshold,
+            py::arg("num_iter") = defaults.maxiter,
+            py::arg("delta_range") = defaults.delta_range,
             R"(This function computes and applies the radiometric terrain correction
              (RTC) to a multi-band raster using a predefined geogrid.
 
@@ -306,12 +302,12 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
              out_nlooks : isce3.io.Raster, optional
                  Raster to which the number of radar-grid
               looks associated with the geogrid will be saved (output)
-             rtc_memory_mode : isce3.geometry.RtcMemoryMode, optional
+             rtc_memory_mode : isce3.core.memory_mode_block_y, optional
                  Select memory mode
              interp_method : isce3.core.DataInterpMethod, optional
                  Interpolation Method
              threshold : double, optional
-                 Distance threshold for convergence
+                 Azimuth time threshold for convergence (s)
              num_iter : int, optional
                  Maximum number of Newton-Raphson iterations
              delta_range : double, optional

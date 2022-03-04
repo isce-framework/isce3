@@ -33,7 +33,7 @@ ElPatternEst::ElPatternEst(double sr_start, const isce3::core::Orbit& orbit,
 typename ElPatternEst::tuple5_t ElPatternEst::powerPattern2way(
         const Eigen::Ref<const RowMatrixXcf>& echo_mat, double sr_spacing,
         double chirp_rate, double chirp_dur, std::optional<double> az_time,
-        int size_avg, bool inc_corr)
+        int size_avg, bool inc_corr) const
 {
     // get calibrated avreaged two-way power pattern
     auto [cal_pow, slant_range, look_ang, inc_ang] =
@@ -52,7 +52,7 @@ typename ElPatternEst::tuple5_t ElPatternEst::powerPattern2way(
 typename ElPatternEst::tuple5_t ElPatternEst::powerPattern1way(
         const Eigen::Ref<const RowMatrixXcf>& echo_mat, double sr_spacing,
         double chirp_rate, double chirp_dur, std::optional<double> az_time,
-        int size_avg, bool inc_corr)
+        int size_avg, bool inc_corr) const
 {
     // get calibrated avreaged one-way power pattern
     auto [cal_pow, slant_range, look_ang, inc_ang] =
@@ -71,7 +71,7 @@ typename ElPatternEst::tuple5_t ElPatternEst::powerPattern1way(
 typename ElPatternEst::tuple4_t ElPatternEst::_getCalibPowLinear(
         const Eigen::Ref<const RowMatrixXcf>& echo_mat, double sr_spacing,
         double chirp_rate, double chirp_dur, std::optional<double> az_time,
-        int size_avg, bool inc_corr)
+        int size_avg, bool inc_corr) const
 
 {
     // get range sampling frequency

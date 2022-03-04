@@ -52,7 +52,7 @@ class Identification(object):
         Populate self with hdf5 group.
         '''
         from nisar.h5 import extractScalar, bytestring, extractWithIterator
-        import pybind_isce3 as isce3
+        import isce3
 
         self.missionId = extractScalar(h5grp, 'missionId', 
                                       bytestring, self.context['info'],

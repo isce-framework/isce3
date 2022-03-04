@@ -2,28 +2,28 @@ runconfig:
     name: gcov_workflow_default
 
     groups:
-        PGENameGroup:
-            PGEName: GCOV_L_PGE
+        pge_name_group:
+            pge_name: GCOV_L_PGE
 
-        InputFileGroup:
-            InputFilePath:
+        input_file_group:
+            input_file_path:
             - @ISCETEST@/envisat.h5
-        DynamicAncillaryFileGroup:
-            DEMFile: @ISCETEST@/geocode/zeroHeightDEM.geo
-        ProductPathGroup:
+        dynamic_ancillary_file_group:
+            dem_file: @ISCETEST@/geocode/zeroHeightDEM.geo
+        product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: '.'
+            product_path: '.'
             # Directory where SAS can write temporary data
-            ScratchPath: '.'
+            scratch_path: '.'
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RCOV workflow.
-            SASOutputFile: to_be_set_within_test_code
+            sas_output_file: to_be_set_within_test_code
        
-        PrimaryExecutable:
-            ProductType: GCOV
+        primary_executable:
+            product_type: GCOV
        
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         worker:
             # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
@@ -63,7 +63,7 @@ runconfig:
                 save_nlooks: True          # {optional} Save the number of looks used to compute GCOV
                 save_rtc: False             # {optional} Save the RTC area factor used to compute GCOV
                 abs_rad_cal: 1             # {optional} Absolute radiometric correction factor
-                outputEPSG: 4326 #{optional} Same as input DEM if not provided.
+                output_epsg: 4326 #{optional} Same as input DEM if not provided.
                 x_snap: #{optional} To control output grid in same units as output EPSG
                 y_snap: #{optional} To control output grid in same units as output EPSG
                 output_posting:

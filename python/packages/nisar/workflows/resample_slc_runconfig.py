@@ -36,7 +36,7 @@ class ResampleSlcRunConfig(RunConfig):
         resample_key = f'{resample_type}_resample'
         if self.cfg['processing'][resample_key]['offsets_dir'] is None:
             self.cfg['processing'][resample_key]['offsets_dir'] = \
-                self.cfg['ProductPathGroup']['ScratchPath']
+                self.cfg['product_path_group']['scratch_path']
         offsets_dir = self.cfg['processing'][resample_key]['offsets_dir']
 
         # Check directory structure and existence of offset files depending on
@@ -56,9 +56,9 @@ class ResampleSlcRunConfig(RunConfig):
             # use the HH or VV rubbersheeted offsets to fine
             # resample the secondary SLC. Check for the offsets existence
             for freq in frequencies:
-                for pol in ['HH', 'VV']:
+                for pol in set.intersection(set(['HH', 'VV']), set(freq_pols[freq])):
                     rg_off = os.path.join(offsets_dir,
-                                          'rubbersheeted_offsets',
+                                          'rubbersheet_offsets',
                                           f'freq{freq}', pol, 'range.off.vrt')
                     az_off = rg_off.replace('range', 'azimuth')
                     if not os.path.exists(rg_off) or not os.path.exists(az_off):

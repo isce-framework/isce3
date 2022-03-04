@@ -49,13 +49,12 @@ inline ResampSlc::ResampSlc(const isce3::product::Swath& swath,
 
 // Constructor from an isce3::product::RadarGridParameters (no flattening)
 inline ResampSlc::ResampSlc(const isce3::product::RadarGridParameters& rdr_grid,
-                            const isce3::core::LUT2d<double>& doppler,
-                            double wvl)
+                            const isce3::core::LUT2d<double>& doppler)
     : _haveRefData(false), _dopplerLUT(doppler),
       _startingRange(rdr_grid.startingRange()),
       _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
       _sensingStart(rdr_grid.sensingStart()), _prf(rdr_grid.prf()),
-      _wavelength(wvl)
+      _wavelength(rdr_grid.wavelength())
 {}
 
 // Constructor from an isce3::product::RadarGridParameters and reference radar

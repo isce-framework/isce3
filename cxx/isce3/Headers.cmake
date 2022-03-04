@@ -1,12 +1,15 @@
 set(HEADERS
+antenna/detail/BinarySearchFunc.h
 antenna/detail/WinChirpRgCompPow.h
 antenna/detail/WinChirpRgCompPow.icc
-antenna/edge_method_cost_func.h
-antenna/forward.h
 antenna/ElPatternEst.h
-antenna/geometryfunc.h
+antenna/ElNullAnalyses.h
+antenna/ElNullRangeEst.h
+antenna/EdgeMethodCostFunc.h
 antenna/Frame.h
 antenna/Frame.icc
+antenna/forward.h
+antenna/geometryfunc.h
 antenna/SphGridType.h
 antenna/SphGridType.icc
 container/forward.h
@@ -80,7 +83,6 @@ focus/Presum.icc
 focus/RangeComp.h
 geocode/baseband.h
 geocode/geocodeSlc.h
-geocode/interpolate.h
 geocode/loadDem.h
 geometry/DEMInterpolator.h
 geometry/forward.h
@@ -124,7 +126,8 @@ io/Raster.h
 io/Raster.icc
 io/Serialization.h
 math/Bessel.h
-math/ComplexMultiply.h
+math/complexOperations.h
+math/Stats.h
 math/detail/RootFind1dBase.h
 math/polyfunc.h
 math/RootFind1dNewton.h
@@ -183,4 +186,6 @@ unwrap/phass/Point.h
 unwrap/phass/RegionMap.h
 unwrap/phass/Seed.h
 unwrap/phass/sort.h
+unwrap/snaphu/snaphu.h
+unwrap/snaphu/snaphu_unwrap.h
 )

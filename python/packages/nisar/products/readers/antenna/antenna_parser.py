@@ -5,7 +5,7 @@ import h5py
 import collections as cl
 import numpy as np
 
-from pybind_isce3 import antenna as ant
+from isce3 import antenna as ant
 
 
 class AntennaParser:

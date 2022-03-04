@@ -18,7 +18,8 @@ def test_geo2rdr_run():
     with open(test_yaml) as fh_test_yaml:
         test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data).\
                 replace('@TEST_OUTPUT@', 'rifg.h5').\
-                replace('@TEST_PRODUCT_TYPES@', 'RIFG')
+                replace('@TEST_PRODUCT_TYPES@', 'RIFG').\
+                replace('@TEST_RDR2GEO_FLAGS@', 'True')
 
     # Create CLI input namespace with yaml text instead of filepath
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)

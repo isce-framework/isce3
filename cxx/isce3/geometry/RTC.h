@@ -30,13 +30,6 @@ enum rtcOutputTerrainRadiometry {
     GAMMA_NAUGHT = 1,
 };
 
-/** Enumeration type to indicate memory management */
-enum rtcMemoryMode {
-    RTC_AUTO = 0,
-    RTC_SINGLE_BLOCK = 1,
-    RTC_BLOCKS_GEOGRID = 2,
-};
-
 constexpr static int AP_DEFAULT_MIN_BLOCK_SIZE = 1 << 22; // 4MB
 constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 28; // 256MB
 
@@ -97,7 +90,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
         float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
         isce3::io::Raster* input_rtc = nullptr,
         isce3::io::Raster* output_rtc = nullptr,
-        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO);
+        isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor
@@ -135,7 +129,8 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         size_t nlooks_az = 1, size_t nlooks_rg = 1,
         isce3::io::Raster* out_nlooks = nullptr,
-        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO);
+        isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor
@@ -160,7 +155,7 @@ void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
  * looks associated with the geogrid will be saved
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
- * @param[in]  threshold           Distance threshold for convergence
+ * @param[in]  threshold           Azimuth time threshold for convergence (s)
  * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
  * @param[in]  delta_range         Step size used for computing derivative of
  * doppler
@@ -177,7 +172,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
-        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
+        isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
@@ -218,7 +214,7 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * looks associated with the geogrid will be saved
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
- * @param[in]  threshold           Distance threshold for convergence
+ * @param[in]  threshold           Azimuth time threshold for convergence (s)
  * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
  * @param[in]  delta_range         Step size used for computing derivative of
  * doppler
@@ -239,7 +235,8 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_nlooks = nullptr,
-        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
+        isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
@@ -304,7 +301,7 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * looks associated with the geogrid will be saved
  * @param[in] rtc_memory_mode      Select memory mode
  * @param[in] interp_method        Interpolation Method
- * @param[in] threshold            Distance threshold for convergence
+ * @param[in] threshold            Azimuth time threshold for convergence (s)
  * @param[in] num_iter             Maximum number of Newton-Raphson iterations
  * @param[in] delta_range          Step size used for computing derivative of
  * doppler
@@ -324,7 +321,8 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_nlooks = nullptr,
-        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
+        isce3::core::MemoryModeBlockY rtc_memory_mode = 
+                isce3::core::MemoryModeBlockY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);

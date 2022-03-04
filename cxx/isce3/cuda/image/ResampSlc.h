@@ -14,7 +14,7 @@ class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
         inline ResampSlc(const isce3::product::Product &product, char frequency = 'A') :
             isce3::image::ResampSlc(product, frequency) {}
 
-        // Constructor from an isce3::product::Product and reference product (flattening) 
+        // Constructor from an isce3::product::Product and reference product (flattening)
         inline ResampSlc(const isce3::product::Product & product,
                          const isce3::product::Product & refProduct,
                          char frequency = 'A') :
@@ -22,9 +22,8 @@ class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
 
         /** Constructor from an isce3::product::RadarGridParameters (no flattening) */
         inline ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
-                         const isce3::core::LUT2d<double> & doppler,
-                         double wvl) :
-            isce3::image::ResampSlc(rdr_grid, doppler, wvl) {}
+                         const isce3::core::LUT2d<double> & doppler) :
+            isce3::image::ResampSlc(rdr_grid, doppler) {}
 
         /** Constructor from an isce3::product::RadarGridParameters and reference radar grid (flattening) */
         inline ResampSlc(const isce3::product::RadarGridParameters & rdr_grid,
@@ -53,7 +52,7 @@ class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
         // Generic resamp entry point from externally created rasters
         void resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
                     isce3::io::Raster & rgOffsetRaster, isce3::io::Raster & azOffsetRaster,
-                    int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40, 
+                    int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40,
                     int chipSize=isce3::core::SINC_ONE);
 
         // Generic resamp entry point: use filenames to create rasters
@@ -61,5 +60,5 @@ class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
                     int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40,
                     int chipSize=isce3::core::SINC_ONE);
-        
+
 };

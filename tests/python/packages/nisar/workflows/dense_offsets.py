@@ -21,6 +21,7 @@ def test_dense_offsets_run():
         test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
             replace('@TEST_OUTPUT@', 'rifg.h5'). \
             replace('@TEST_PRODUCT_TYPES@', 'RIFG'). \
+            replace('@TEST_RDR2GEO_FLAGS@', 'True'). \
             replace('gpu_enabled: False', 'gpu_enabled: True')
 
     # Create CLI input namespace with yaml test instead of filepath

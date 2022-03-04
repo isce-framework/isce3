@@ -8,11 +8,14 @@ import time
 
 import h5py
 import journal
-import pybind_isce3 as isce3
+import isce3
+
+from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, h5_prep
+from nisar.workflows import h5_prep
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
+from nisar.workflows.compute_stats import compute_stats_real_data
 
 
 def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
@@ -20,8 +23,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     run crossmul
     '''
     # pull parameters from cfg
-    ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
+    ref_hdf5 = cfg['input_file_group']['input_file_path']
+    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     flatten = cfg['processing']['crossmul']['flatten']
 
@@ -29,7 +32,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
         flatten_path = cfg['processing']['crossmul']['flatten']
 
     if output_hdf5 is None:
-        output_hdf5 = cfg['ProductPathGroup']['SASOutputFile']
+        output_hdf5 = cfg['product_path_group']['sas_output_file']
 
     # init parameters shared by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
@@ -40,8 +43,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     info_channel.log("starting crossmultipy")
 
     # check if gpu ok to use
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
@@ -137,17 +140,43 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
                         crossmul.crossmul(ref_slc_raster, sec_slc_raster,
                                           igram_raster, coherence_raster)
 
+                    # Allocate raster statistics for coherence
+                    compute_stats_real_data(coherence_raster, coherence_dataset)
+
                     del coherence_raster
                 else:
                     # no coherence without multilook
                     crossmul.crossmul(ref_slc_raster, sec_slc_raster,
                                       igram_raster)
-
                 del igram_raster
+
+                # Allocate stats for rubbersheet offsets
+                stats_offsets(dst_h5, freq, pol)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
         f"successfully ran crossmul in {t_all_elapsed:.3f} seconds")
+
+
+def stats_offsets(h5_ds, freq, pol):
+    """
+    Allocate statistics for dense offsets
+    h5_ds: h5py.File
+       h5py File
+    freq: str
+       Frequency to process (A or B)
+    pol: str
+       Polarization to process (HH, HV, VH, VV)
+    """
+    path = f'science/LSAR/RIFG/swaths/frequency{freq}/pixelOffsets/{pol}/'
+    offset_layer = ['slantRangeOffset', 'alongTrackOffset']
+
+    for layer in offset_layer:
+        offset_path = f'{path}/{layer}'
+        offset_dataset = h5_ds[offset_path]
+        offset_raster = isce3.io.Raster(
+            f"IH5:::ID={offset_dataset.id.id}".encode("utf-8"))
+        compute_stats_real_data(offset_raster, offset_dataset)
 
 
 if __name__ == "__main__":

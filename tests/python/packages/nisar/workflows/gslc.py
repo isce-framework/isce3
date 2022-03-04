@@ -28,7 +28,7 @@ def test_run():
     # geocode same 2 rasters as C++/pybind geocodeSlc
     for xy in ['x', 'y']:
         # adjust runconfig to match just created raster
-        runconfig.cfg['ProductPathGroup']['SASOutputFile'] = f'{xy}_out.h5'
+        runconfig.cfg['product_path_group']['sas_output_file'] = f'{xy}_out.h5'
 
         # prepare output hdf5
         h5_prep.run(runconfig.cfg)

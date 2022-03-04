@@ -1,4 +1,4 @@
-#include <isce3/math/ComplexMultiply.h>
+#include <isce3/math/complexOperations.h>
 
 namespace isce3 { namespace core {
 
@@ -6,7 +6,7 @@ template<typename TK, typename TD>
 TD interp1d(const Kernel<TK>& kernel, const TD* x, size_t length, size_t stride,
             double t, bool periodic)
 {
-    using namespace isce3::math::complex_multiply;
+    using namespace isce3::math::complex_operations;
     int _width = int(ceil(kernel.width()));
     long i0 = 0;
     if (_width % 2 == 0) {

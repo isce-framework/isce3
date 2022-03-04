@@ -7,10 +7,10 @@ import time
 
 import journal
 import numpy as np
-import pybind_isce3 as isce3
+import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, h5_prep
+from nisar.workflows import h5_prep
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.dense_offsets_runconfig import \
     DenseOffsetsRunConfig
@@ -22,9 +22,9 @@ def run(cfg: dict):
     '''
 
     # Pull parameters from cfg
-    ref_hdf5 = cfg['InputFileGroup']['InputFilePath']
-    sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    ref_hdf5 = cfg['input_file_group']['input_file_path']
+    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offset_params = cfg['processing']['dense_offsets']
 
@@ -40,8 +40,8 @@ def run(cfg: dict):
     info_channel.log('Start dense offsets estimation')
 
     # Check GPU use
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
 
     if use_gpu:
         # Set current CUDA device

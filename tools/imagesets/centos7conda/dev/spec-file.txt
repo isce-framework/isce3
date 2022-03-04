@@ -167,3 +167,4 @@ https://conda.anaconda.org/conda-forge/linux-64/pyqtchart-5.12-py39h0fcd23e_7.ta
 https://conda.anaconda.org/conda-forge/linux-64/pyqtwebengine-5.12.1-py39h0fcd23e_7.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/pyqt-5.12.3-py39hf3d152e_7.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.3.4-py39hf3d152e_0.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/backoff-1.11.1-pyhd8ed1ab_0.tar.bz2

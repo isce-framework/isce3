@@ -6,11 +6,10 @@ import os
 from nisar.products.readers.Raw import Raw, open_rrsd
 from nisar.products.writers import SLC
 from nisar.types import to_complex32
-from nisar.workflows import gpu_check
 import numpy as np
-import pybind_isce3 as isce
-from pybind_isce3.core import DateTime, LUT2d
-from pybind_isce3.io.gdal import Raster, GDT_CFloat32
+import isce3
+from isce3.core import DateTime, LUT2d
+from isce3.io.gdal import Raster, GDT_CFloat32
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
@@ -89,20 +88,20 @@ def get_window(win: Struct, msg=''):
 
 
 def get_chirp(cfg: Struct, raw: Raw, frequency: str, tx: str):
-    if cfg.DynamicAncillaryFileGroup.Waveform:
+    if cfg.dynamic_ancillary_file_group.waveform:
         log.warning("Ignoring input waveform file.  Using analytic chirp.")
     chirp = raw.getChirp(frequency, tx)
     log.info(f"Chirp length = {len(chirp)}")
     window = get_window(cfg.processing.range_window, msg="Range window: ")
     chirp *= window(len(chirp))
     log.info("Normalizing chirp to unit white noise gain.")
-    return chirp / np.linalg.norm(chirp)**2
+    return chirp / np.linalg.norm(chirp)
 
 
 def parse_rangecomp_mode(mode: str):
-    lut = {"full": isce.focus.RangeComp.Mode.Full,
-           "same": isce.focus.RangeComp.Mode.Same,
-           "valid": isce.focus.RangeComp.Mode.Valid}
+    lut = {"full": isce3.focus.RangeComp.Mode.Full,
+           "same": isce3.focus.RangeComp.Mode.Same,
+           "valid": isce3.focus.RangeComp.Mode.Valid}
     mode = mode.lower()
     if mode not in lut:
         raise ValueError(f"Invalid RangeComp mode {mode}")
@@ -111,9 +110,9 @@ def parse_rangecomp_mode(mode: str):
 
 def get_orbit(cfg: Struct):
     log.info("Loading orbit")
-    if cfg.DynamicAncillaryFileGroup.Orbit:
+    if cfg.dynamic_ancillary_file_group.orbit:
         log.warning("Ignoring input orbit file.  Using L0B orbits.")
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate orbit data.")
     raw = open_rrsd(rawfiles[0])
@@ -122,9 +121,9 @@ def get_orbit(cfg: Struct):
 
 def get_attitude(cfg: Struct):
     log.info("Loading attitude")
-    if cfg.DynamicAncillaryFileGroup.Pointing:
+    if cfg.dynamic_ancillary_file_group.pointing:
         log.warning("Ignoring input pointing file.  Using L0B attitude.")
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate attitude data.")
     raw = open_rrsd(rawfiles[0])
@@ -140,8 +139,8 @@ def get_total_grid_bounds(rawfiles: List[str], frequency='A'):
         times.append(raw.getPulseTimes(frequency, tx=pol[0]))
     rmin = min(r[0] for r in ranges)
     rmax = max(r[-1] for r in ranges)
-    dtmin = min(epoch + isce.core.TimeDelta(t[0]) for (epoch, t) in times)
-    dtmax = max(epoch + isce.core.TimeDelta(t[-1]) for (epoch, t) in times)
+    dtmin = min(epoch + isce3.core.TimeDelta(t[0]) for (epoch, t) in times)
+    dtmax = max(epoch + isce3.core.TimeDelta(t[-1]) for (epoch, t) in times)
     epoch = min(epoch for (epoch, t) in times)
     tmin = (dtmin - epoch).total_seconds()
     tmax = (dtmax - epoch).total_seconds()
@@ -152,8 +151,8 @@ def get_total_grid(rawfiles: List[str], dt, dr, frequency='A'):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles, frequency)
     nt = int(np.ceil((tmax - tmin) / dt))
     nr = int(np.ceil((rmax - rmin) / dr))
-    t = isce.core.Linspace(tmin, dt, nt)
-    r = isce.core.Linspace(rmin, dr, nr)
+    t = isce3.core.Linspace(tmin, dt, nt)
+    r = isce3.core.Linspace(rmin, dr, nr)
     return epoch, t, r
 
 
@@ -172,11 +171,11 @@ def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
                          f"inferred side={inferred_side} based on orientation "
                          f"(Y_RCS.dot(V) = {axis.dot(v)})")
     if dem is None:
-        dem = isce.geometry.DEMInterpolator()
+        dem = isce3.geometry.DEMInterpolator()
     # NOTE Here "left" means an acute, positive look angle by right-handed
     # rotation about `axis`.  Since axis will flip sign, always use "left" to
     # get the requested side in the sense of velocity vector.
-    xyz = isce.geometry.rdr2geo_cone(p, axis, angle, r, dem, "left", **kw)
+    xyz = isce3.geometry.rdr2geo_cone(p, axis, angle, r, dem, "left", **kw)
     look = (xyz - p) / np.linalg.norm(xyz - p)
     vhat = v / np.linalg.norm(v)
     return np.arcsin(look.dot(vhat))
@@ -187,15 +186,15 @@ def squint_to_doppler(squint, wvl, vmag):
 
 
 def convert_epoch(t: List[float], epoch_in, epoch_out):
-    TD = isce.core.TimeDelta
+    TD = isce3.core.TimeDelta
     return [(epoch_in - epoch_out + TD(ti)).total_seconds() for ti in t]
 
 
 def get_dem(cfg: Struct):
-    dem = isce.geometry.DEMInterpolator(
+    dem = isce3.geometry.DEMInterpolator(
         height=cfg.processing.dem.reference_height,
         method=cfg.processing.dem.interp_method)
-    fn = cfg.DynamicAncillaryFileGroup.DEMFile
+    fn = cfg.dynamic_ancillary_file_group.dem_file
     if fn:
         log.info(f"Loading DEM {fn}")
         dem.load_dem(fn)
@@ -206,9 +205,9 @@ def get_dem(cfg: Struct):
 
 def make_doppler_lut(rawfiles: List[str],
         az: float = 0.0,
-        orbit: isce.core.Orbit = None,
-        attitude: isce.core.Attitude = None,
-        dem: isce.geometry.DEMInterpolator = None,
+        orbit: isce3.core.Orbit = None,
+        attitude: isce3.core.Attitude = None,
+        dem: isce3.geometry.DEMInterpolator = None,
         azimuth_spacing: float = 1.0,
         range_spacing: float = 1e3,
         frequency: str = "A",
@@ -259,13 +258,13 @@ def make_doppler_lut(rawfiles: List[str],
     if attitude is None:
         attitude = raw.getAttitude()
     if dem is None:
-        dem = isce.geometry.DEMInterpolator()
+        dem = isce3.geometry.DEMInterpolator()
     # Assume look side and center frequency constant across files.
     side = raw.identification.lookDirection
     fc = raw.getCenterFrequency(frequency)
 
     # Now do the actual calculations.
-    wvl = isce.core.speed_of_light / fc
+    wvl = isce3.core.speed_of_light / fc
     epoch, t, r = get_total_grid(rawfiles, azimuth_spacing, range_spacing)
     t = convert_epoch(t, epoch, orbit.reference_epoch)
     dop = np.zeros((len(t), len(r)))
@@ -287,7 +286,7 @@ def make_doppler(cfg: Struct, frequency='A'):
     dem = get_dem(cfg)
     opt = cfg.processing.doppler
     az = np.radians(opt.azimuth_boresight_deg)
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
 
     fc, lut = make_doppler_lut(rawfiles,
                                az=az, orbit=orbit, attitude=attitude,
@@ -349,9 +348,9 @@ def make_output_grid(cfg: Struct, igrid):
     nr = int(np.round((r1 - r0) / dr))
     nt = int(np.round((t1 - t0) * prf))
     assert (nr > 0) and (nt > 0)
-    ogrid = isce.product.RadarGridParameters(t0, igrid.wavelength, prf, r0,
-                                             dr, igrid.lookside, nt, nr,
-                                             igrid.ref_epoch)
+    ogrid = isce3.product.RadarGridParameters(t0, igrid.wavelength, prf, r0,
+                                              dr, igrid.lookside, nt, nr,
+                                              igrid.ref_epoch)
     return ogrid
 
 
@@ -362,9 +361,9 @@ def get_kernel(cfg: Struct):
     if opt.type.lower() != 'knab':
         raise NotImplementedError("Only Knab kernel implemented.")
     n = 1 + 2 * opt.halfwidth
-    kernel = isce.core.KnabKernel(n, 1 / 1.2)
+    kernel = isce3.core.KnabKernel(n, 1 / 1.2)
     assert opt.fit.lower() == "table"
-    table = isce.core.TabulatedKernelF32(kernel, opt.fit_order)
+    table = isce3.core.TabulatedKernelF32(kernel, opt.fit_order)
     return table
 
 
@@ -380,8 +379,8 @@ def verify_uniform_pri(t: np.ndarray, atol=0.0, rtol=0.001):
 
 
 def resample(raw: np.ndarray, t: np.ndarray,
-             grid: isce.product.RadarGridParameters, swaths: np.ndarray,
-             orbit: isce.core.Orbit, doppler: isce.core.LUT2d, L=12.0,
+             grid: isce3.product.RadarGridParameters, swaths: np.ndarray,
+             orbit: isce3.core.Orbit, doppler: isce3.core.LUT2d, L=12.0,
              fn="regridded.c8"):
     """
     Fill gaps and resample raw data to uniform grid using BLU method.
@@ -425,10 +424,10 @@ def resample(raw: np.ndarray, t: np.ndarray,
         # Get velocity for scaling autocorrelation function.  Won't change much
         # but update every pulse to avoid artifacts across images.
         v = np.linalg.norm(orbit.interpolate(tout)[1])
-        acor = isce.core.AzimuthKernel(L / v)
+        acor = isce3.core.AzimuthKernel(L / v)
         # Figure out what pulses are in play by computing weights without mask.
         # TODO All we really need is offset and len(weights)... maybe refactor.
-        offset, weights = isce.focus.get_presum_weights(acor, t, tout)
+        offset, weights = isce3.focus.get_presum_weights(acor, t, tout)
         nw = len(weights)
         # Compute valid data mask (transposed).
         # NOTE Could store the whole mask instead of recomputing blocks.
@@ -451,14 +450,14 @@ def resample(raw: np.ndarray, t: np.ndarray,
             valid = (uid & twiddle).astype(bool)
             # Pull out valid times for this mask config and compute weights.
             tj = t[offset:offset+nw][valid]
-            joff, jwgt = isce.focus.get_presum_weights(acor, tj, tout)
+            joff, jwgt = isce3.focus.get_presum_weights(acor, tj, tout)
             assert joff == 0
             # Now insert zeros where data is invalid to get full-length weights.
             jwgt_full = np.zeros_like(weights)
             jwgt_full[valid] = jwgt
             lut[uid] = jwgt_full
         # Fill weights for entire block using look up table.
-        w = isce.focus.fill_weights(ids, lut)
+        w = isce3.focus.fill_weights(ids, lut)
         # Read raw data.
         block = np.s_[offset:offset+nw, :]
         x = raw[block]
@@ -479,7 +478,7 @@ def delete_safely(filename):
         pass
 
 
-def get_range_deramp(grid: isce.product.RadarGridParameters) -> np.ndarray:
+def get_range_deramp(grid: isce3.product.RadarGridParameters) -> np.ndarray:
     """Compute the phase ramp required to shift a backprojected grid to
     baseband in range.
     """
@@ -490,7 +489,7 @@ def get_range_deramp(grid: isce.product.RadarGridParameters) -> np.ndarray:
 def focus(runconfig):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
-    rawfiles = cfg.InputFileGroup.InputFilePath
+    rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) <= 0:
         raise IOError("need at least one raw data file")
     if len(rawfiles) > 1:
@@ -502,7 +501,7 @@ def focus(runconfig):
     orbit = get_orbit(cfg)
     attitude = get_attitude(cfg)
     fc_ref, dop_ref = make_doppler(cfg)
-    zerodop = isce.core.LUT2d()
+    zerodop = isce3.core.LUT2d()
     azres = cfg.processing.azcomp.azimuth_resolution
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
     kernel = get_kernel(cfg)
@@ -516,17 +515,17 @@ def focus(runconfig):
         if len(set(fc_list)) > 1:
             raise NotImplementedError("TX frequency agility not supported")
 
-    use_gpu = gpu_check.use_gpu(cfg.worker.gpu_enabled, cfg.worker.gpu_id)
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg.worker.gpu_enabled, cfg.worker.gpu_id)
     if use_gpu:
         # Set the current CUDA device.
-        device = isce.cuda.core.Device(cfg.worker.gpu_id)
-        isce.cuda.core.set_device(device)
+        device = isce3.cuda.core.Device(cfg.worker.gpu_id)
+        isce3.cuda.core.set_device(device)
 
         log.info(f"Processing using CUDA device {device.id} ({device.name})")
 
-        backproject = isce.cuda.focus.backproject
+        backproject = isce3.cuda.focus.backproject
     else:
-        backproject = isce.focus.backproject
+        backproject = isce3.focus.backproject
 
     # Generate reference output grid based on highest bandwidth, always A.
     log.info(f"Available polarizations: {raw.polarizations}")
@@ -546,25 +545,27 @@ def focus(runconfig):
         rskip = int(np.round(raw.getRanges("B", tx).spacing
             / raw.getRanges("A", txref).spacing))
         ogrid["B"] = ogrid["A"][:, ::rskip]
+        fc = raw.getCenterFrequency("B")
+        ogrid["B"].wavelength = isce3.core.speed_of_light / fc
         log.info("Output grid B is %s", ogrid["B"])
 
-    polygon = isce.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
-                                                  zerodop, dem)
+    polygon = isce3.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
+                                                   zerodop, dem)
 
-    output_slc_path = os.path.abspath(cfg.ProductPathGroup.SASOutputFile)
+    output_slc_path = os.path.abspath(cfg.product_path_group.sas_output_file)
 
     output_dir = os.path.dirname(output_slc_path)
     os.makedirs(output_dir, exist_ok=True)
 
-    product = cfg.PrimaryExecutable.ProductType
+    product = cfg.primary_executable.product_type
     log.info(f"Creating output {product} product {output_slc_path}")
     slc = SLC(output_slc_path, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, polygon=polygon,
-        track=cfg.Geometry.RelativeOrbitNumber,
-        frame=cfg.Geometry.FrameNumber,
+        track=cfg.geometry.relative_orbit_number,
+        frame=cfg.geometry.frame_number,
         start_time=ogrid["A"].sensing_datetime(0),
         end_time=ogrid["A"].sensing_datetime(ogrid["A"].length - 1))
 
@@ -591,7 +592,7 @@ def focus(runconfig):
                              **vars(cfg.processing.azcomp.geo2rdr))
 
     # Scratch directory for intermediate outputs
-    scratch_dir = os.path.abspath(cfg.ProductPathGroup.ScratchPath)
+    scratch_dir = os.path.abspath(cfg.product_path_group.scratch_path)
     os.makedirs(scratch_dir, exist_ok=True)
 
     # main processing loop
@@ -639,15 +640,15 @@ def focus(runconfig):
 
         rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
         log.info(f"Preparing range compressor with {rcmode}")
-        rc = isce.focus.RangeComp(chirp, nr, maxbatch=na, mode=rcmode)
+        rc = isce3.focus.RangeComp(chirp, nr, maxbatch=na, mode=rcmode)
 
         # Rangecomp modifies range grid.  Also update wavelength.
         rc_grid = raw_grid.copy()
         rc_grid.starting_range -= (
             rc_grid.range_pixel_spacing * rc.first_valid_sample)
         rc_grid.width = rc.output_size
-        rc_grid.wavelength = isce.core.speed_of_light / fc
-        igeom = isce.container.RadarGeometry(rc_grid, orbit, dop[frequency])
+        rc_grid.wavelength = isce3.core.speed_of_light / fc
+        igeom = isce3.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
         fd = temp("_rc.c8")
         log.info(f"Writing range compressed data to {fd.name}")
@@ -683,7 +684,7 @@ def focus(runconfig):
                 block = np.s_[i:imax, j:jmax]
                 log.info(f"Azcomp block at (i, j) = ({i}, {j})")
                 bgrid = ogrid[frequency][block]
-                ogeom = isce.container.RadarGeometry(bgrid, orbit, zerodop)
+                ogeom = isce3.container.RadarGeometry(bgrid, orbit, zerodop)
                 z = np.zeros(bgrid.shape, 'c8')
                 backproject(z, ogeom, rcfile.data, igeom, dem, fc, azres,
                             kernel, atmos, vars(cfg.processing.azcomp.rdr2geo),
@@ -697,6 +698,8 @@ def focus(runconfig):
         hdr = fd.name.replace(".c8", ".hdr")
         if cfg.processing.delete_tempfiles:
             delete_safely(hdr)
+
+        slc.compute_stats(frequency, pol)
 
 
 def configure_logging():
@@ -721,7 +724,7 @@ def main(argv):
     args = yaml_parser.parse()
     configure_logging()
     cfg = validate_config(load_config(args.run_config_path))
-    echofile = cfg.runconfig.groups.ProductPathGroup.SASConfigFile
+    echofile = cfg.runconfig.groups.product_path_group.sas_config_file
     if echofile:
         log.info(f"Logging configuration to file {echofile}.")
         dump_config(cfg, echofile)

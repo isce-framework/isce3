@@ -1,10 +1,11 @@
 #include "cuGeocode.h"
-#include <isce3/core/forward.h>
 
 #include <gdal_priv.h>
+#include <pybind11/stl.h>
 
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Constants.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
 
@@ -14,6 +15,7 @@ using isce3::cuda::geocode::Geocode;
 
 void addbinding(pybind11::class_<Geocode>& pyGeocode)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     pyGeocode
             .def(py::init<const isce3::product::GeoGridParameters&,
                          const isce3::container::RadarGeometry&,
@@ -28,8 +30,10 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                             isce3::core::BILINEAR_METHOD,
                     py::arg("dem_interp_method") =
                             isce3::core::BIQUINTIC_METHOD,
-                    py::arg("threshold") = 1e-8, py::arg("maxiter") = 50,
-                    py::arg("delta_range") = 10, py::arg("invalid_value") = 0.0,
+                    py::arg("threshold") = defaults.threshold,
+                    py::arg("maxiter") = defaults.maxiter,
+                    py::arg("delta_range") = defaults.delta_range,
+                    py::arg("invalid_value") = 0.0,
                     R"(
             Create CUDA geocode object.
 
@@ -115,7 +119,20 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
             input_raster: io::Raster
                 Raster to be geocoded
         )")
-            .def_property_readonly("n_blocks", &Geocode::numBlocks)
-            .def_property_readonly("lines_per_block", &Geocode::linesPerBlock);
+    .def("geocode_rasters", &Geocode::geocodeRasters,
+            py::arg("output_rasters"),
+            py::arg("input_rasters"),
+            R"(
+            Geocode rasters with a shared geogrid with block processing handled internally.
+
+            Parameters
+            ----------
+            output_rasters: list(io::Raster)
+                List of geocoded rasters.
+            input_rasters: list(io::Raster)
+                List of rasters to be geocoded.
+        )")
+    .def_property_readonly("n_blocks", &Geocode::numBlocks)
+    .def_property_readonly("lines_per_block", &Geocode::linesPerBlock);
     ;
 }

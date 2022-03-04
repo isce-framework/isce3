@@ -3,10 +3,10 @@
 #include <gtest/gtest.h>
 
 #include <isce3/core/Constants.h>
-#include <isce3/math/ComplexMultiply.h>
+#include <isce3/math/complexOperations.h>
 #include <isce3/polsar/symmetrize.h>
 
-using namespace isce3::math::complex_multiply;
+using namespace isce3::math::complex_operations;
 
 TEST(PolsarSymmetrizeTest, symmetrize)
 {

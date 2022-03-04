@@ -2,34 +2,34 @@ runconfig:
     name: NISAR_L2-L-GSLC_RUNCONFIG
 
     groups:
-        PGENameGroup:
-            PGEName: GSLC_L_PGE
+        pge_name_group:
+            pge_name: GSLC_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath:
+            input_file_path:
             - input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/Snjoaq_14511_18034_014_180720_L090_CX_143_02.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/dem.tif
+            dem_file: input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/dem.tif
 
-        ProductPathGroup:
+        product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_gslc
+            product_path: output_gslc
 
             # REQUIRED - Directory where SAS can write temporary data
-            ScratchPath: scratch_gslc
+            scratch_path: scratch_gslc
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: output_gslc/gslc.h5
+            sas_output_file: output_gslc/gslc.h5
 
-        PrimaryExecutable:
-            ProductType: GSLC
+        primary_executable:
+            product_type: GSLC
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -75,7 +75,7 @@ runconfig:
                 y_snap: 100
 
                 # OPTIONAL - Same as input DEM if not provided.
-                outputEPSG:
+                output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If no provided, values will match spacing in provided DEM

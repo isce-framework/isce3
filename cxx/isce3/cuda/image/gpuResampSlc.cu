@@ -53,11 +53,11 @@ void transformTile(const thrust::complex<float> *tile,
                    double refRangePixelSpacing,
                    double refWavelength,
                    int chipSize,
-                   int rowOffset, 
+                   int rowOffset,
                    int rowStart) {
 
     int iTileOut = blockDim.x * blockIdx.x + threadIdx.x;
-    int iChip = iTileOut * chipSize * chipSize;                                          
+    int iChip = iTileOut * chipSize * chipSize;
     int chipHalf = chipSize/2;
 
     if (iTileOut < outWidth*outLength) {
@@ -74,7 +74,7 @@ void transformTile(const thrust::complex<float> *tile,
         const int intRg = __float2int_rd(j + rgOff);
         const double fracAz = i + azOff - intAz + rowStart;
         const double fracRg = j + rgOff - intRg;
-       
+
         // Check bounds again. Use rowOffset to account tiles where tile.rowStart != tile.firstRowImage
         bool intAzInBounds = !((intAz+rowOffset < chipHalf) || (intAz >= (inLength - chipHalf)));
         bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)));
@@ -86,29 +86,29 @@ void transformTile(const thrust::complex<float> *tile,
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation
-            double phase = (dop * fracAz) 
-                + rgCarrier.eval(i + azOff, j + rgOff) 
+            double phase = (dop * fracAz)
+                + rgCarrier.eval(i + azOff, j + rgOff)
                 + azCarrier.eval(i + azOff, j + rgOff);
 
             // Flatten the carrier phase if requested
             if (flatten) {
-                phase += ((4. * (M_PI / wavelength)) * 
-                    ((startingRange - refStartingRange) 
-                    + (j * (rangePixelSpacing - refRangePixelSpacing)) 
-                    + (rgOff * rangePixelSpacing))) + ((4.0 * M_PI 
-                    * (refStartingRange + (j * refRangePixelSpacing))) 
+                phase += ((4. * (M_PI / wavelength)) *
+                    ((startingRange - refStartingRange)
+                    + (j * (rangePixelSpacing - refRangePixelSpacing))
+                    + (rgOff * rangePixelSpacing))) + ((4.0 * M_PI
+                    * (refStartingRange + (j * refRangePixelSpacing)))
                     * ((1.0 / refWavelength) - (1.0 / wavelength)));
             }
-            
+
             // Modulate by 2*PI
             phase = fmod(phase, 2.0*M_PI);
-            
+
             // Read data chip without the carrier phases
             for (int ii = 0; ii < chipSize; ++ii) {
                 // Row to read from
                 const int chipRow = intAz + ii - chipHalf + rowOffset - rowStart;
                 // Carrier phase
-                const double phase = dop * (ii - 4.0);
+                const double phase = dop * (ii - chipHalf);
                 const thrust::complex<float> cval(cos(phase), -sin(phase));
                 // Set the data values after removing doppler in azimuth
                 for (int jj = 0; jj < chipSize; ++jj) {
@@ -142,7 +142,7 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
                isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
                double prf, double wavelength, double refStartingRange,
-               double refRangePixelSpacing, double refWavelength, 
+               double refRangePixelSpacing, double refWavelength,
                bool flatten, int chipSize) {
 
     // Cache geometry values
@@ -186,14 +186,14 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
     dim3 grid((nOutPixels+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // global call to transform
-    transformTile<<<grid, block>>>(d_tile, 
+    transformTile<<<grid, block>>>(d_tile,
                                    d_chip,
-                                   d_imgOut, 
-                                   d_rgOffTile, 
-                                   d_azOffTile, 
-                                   d_rgCarrier, 
-                                   d_azCarrier, 
-                                   d_dopplerLUT, 
+                                   d_imgOut,
+                                   d_rgOffTile,
+                                   d_azOffTile,
+                                   d_rgCarrier,
+                                   d_azCarrier,
+                                   d_dopplerLUT,
                                    interp,
                                    flatten,
                                    outWidth,
@@ -206,7 +206,7 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
                                    wavelength,
                                    refStartingRange,
                                    refRangePixelSpacing,
-                                   refWavelength,             
+                                   refWavelength,
                                    chipSize,
                                    tile.rowStart()-tile.firstImageRow(),// needed to keep az in bounds in subtiles
                                    tile.rowStart());                    // needed to match az components on CPU
@@ -224,7 +224,7 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
     checkCudaErrors(cudaFree(d_imgOut));
     checkCudaErrors(cudaFree(d_azOffTile));
     checkCudaErrors(cudaFree(d_rgOffTile));
-    
+
     // Write block of data
     outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);
 }

@@ -8,9 +8,9 @@ import pathlib
 import time
 
 import journal
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers import SLC
-from nisar.workflows import gpu_check, runconfig
+from nisar.workflows import runconfig
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -21,9 +21,9 @@ def run(cfg):
     '''
 
     # Pull parameters from cfg dict
-    sec_hdf5 = cfg['InputFileGroup']['SecondaryFilePath']
-    dem_file = cfg['DynamicAncillaryFileGroup']['DEMFile']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     threshold = cfg['processing']['geo2rdr']['threshold']
     numiter = cfg['processing']['geo2rdr']['maxiter']
@@ -46,8 +46,8 @@ def run(cfg):
     info_channel.log("starting geo2rdr")
 
     # check if gpu use if required
-    use_gpu = gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
-                                cfg['worker']['gpu_id'])
+    use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
+                                           cfg['worker']['gpu_id'])
 
     if use_gpu:
         # set CUDA device

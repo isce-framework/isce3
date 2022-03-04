@@ -1,6 +1,9 @@
 set(SRCS
-antenna/edge_method_cost_func.cpp
+antenna/detail/BinarySearchFunc.cpp
 antenna/ElPatternEst.cpp
+antenna/ElNullAnalyses.cpp
+antenna/ElNullRangeEst.cpp
+antenna/EdgeMethodCostFunc.cpp
 antenna/geometryfunc.cpp
 core/Attitude.cpp
 core/Baseline.cpp
@@ -40,7 +43,6 @@ focus/Presum.cpp
 focus/RangeComp.cpp
 geocode/baseband.cpp
 geocode/geocodeSlc.cpp
-geocode/interpolate.cpp
 geocode/loadDem.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp
@@ -60,6 +62,7 @@ io/IH5.cpp
 io/IH5Dataset.cpp
 io/Raster.cpp
 math/Bessel.cpp
+math/Stats.cpp
 math/polyfunc.cpp
 math/RootFind1dNewton.cpp
 math/RootFind1dSecant.cpp
@@ -99,4 +102,10 @@ unwrap/phass/Point.cc
 unwrap/phass/RegionMap.cc
 unwrap/phass/Seed.cc
 unwrap/phass/sort.cc
+unwrap/snaphu/snaphu_cost.cpp
+unwrap/snaphu/snaphu.cpp
+unwrap/snaphu/snaphu_io.cpp
+unwrap/snaphu/snaphu_solver.cpp
+unwrap/snaphu/snaphu_tile.cpp
+unwrap/snaphu/snaphu_util.cpp
 )

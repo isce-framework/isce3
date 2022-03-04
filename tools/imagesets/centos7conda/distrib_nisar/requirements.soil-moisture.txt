@@ -1,0 +1,5 @@
+gcc
+gfortran
+make
+netcdf-cxx4
+netcdf-fortran

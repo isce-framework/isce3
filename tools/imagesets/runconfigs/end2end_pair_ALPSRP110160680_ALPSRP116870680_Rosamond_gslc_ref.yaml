@@ -2,34 +2,34 @@ runconfig:
     name: NISAR_L2-L-GSLC_RUNCONFIG
 
     groups:
-        PGENameGroup:
-            PGEName: GSLC_L_PGE
+        pge_name_group:
+            pge_name: GSLC_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath:
+            input_file_path:
             - output_rslc_ref/rslc.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tif
+            dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tiff
 
-        ProductPathGroup:
+        product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_gslc_ref
+            product_path: output_gslc_ref
 
             # REQUIRED - Directory where SAS can write temporary data
-            ScratchPath: scratch_gslc_ref
+            scratch_path: scratch_gslc_ref
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: output_gslc_ref/gslc.h5
+            sas_output_file: output_gslc_ref/gslc.h5
 
-        PrimaryExecutable:
-            ProductType: GSLC
+        primary_executable:
+            product_type: GSLC
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -74,7 +74,7 @@ runconfig:
                 y_snap:
 
                 # OPTIONAL - Same as input DEM if not provided.
-                outputEPSG:
+                output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If no provided, values will match spacing in provided DEM

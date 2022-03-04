@@ -2,8 +2,10 @@
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/LUT2d.h>
+#include <isce3/core/Poly2d.h>
 #include <isce3/io/Raster.h>
 
+using isce3::core::Poly2d;
 using isce3::image::ResampSlc;
 
 namespace py = pybind11;
@@ -30,11 +32,19 @@ void addbinding(py::class_<ResampSlc> & pyResampSlc)
                 py::arg("ref_start_range"),
                 py::arg("ref_range_pixel_spacing"),
                 py::arg("ref_wavelength"))
-        .def(py::init<const isce3::product::RadarGridParameters &,
-                const isce3::core::LUT2d<double> &, double>(),
+        .def(py::init([](const isce3::product::RadarGridParameters & grid,
+                const isce3::core::LUT2d<double> & doppler,
+                const Poly2d & az_carrier,
+                const Poly2d & rg_carrier) {
+                    auto resamp = ResampSlc(grid, doppler);
+                    resamp.azCarrier(az_carrier);
+                    resamp.rgCarrier(rg_carrier);
+                    return resamp;
+                }),
                 py::arg("rdr_grid"),
                 py::arg("doppler"),
-                py::arg("wavelength"))
+                py::arg("azimuth_carrier")=Poly2d(),
+                py::arg("range_carrier")=Poly2d())
         .def(py::init<const isce3::product::RadarGridParameters &,
                 const isce3::product::RadarGridParameters &,
                 const isce3::core::LUT2d<double> &, double, double>(),

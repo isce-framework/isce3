@@ -2,38 +2,38 @@ runconfig:
     name: str()
 
     groups:
-        PGENameGroup:
-            PGEName: enum('GCOV_L_PGE')
+        pge_name_group:
+            pge_name: enum('GCOV_L_PGE')
        
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath: list(str(), min=1, max=1)
+            input_file_path: list(str(), min=1, max=1)
        
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # Digital elevation model
-            DEMFile: str()
+            dem_file: str()
        
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results
-            ProductPath: str()
-            ProductCounter: int(min=1, max=999, required=False)
+            product_path: str()
+            product_counter: int(min=1, max=999, required=False)
        
             # Directory where SAS can write temporary data
-            ScratchPath: str()
+            scratch_path: str()
        
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            SASOutputFile: str()
+            sas_output_file: str()
        
-        PrimaryExecutable:
-            ProductType: enum('GCOV')
-            CompositeReleaseID: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
-            ProcessingType: enum('PR', 'UR', required=False)
-            ProductAccuracy: enum('P', 'M', 'N', 'F', 'T', required=False)
+        primary_executable:
+            product_type: enum('GCOV')
+            composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
+            processing_type: enum('PR', 'UR', required=False)
+            product_accuracy: enum('P', 'M', 'N', 'F', 'T', required=False)
        
-        DebugLevelGroup:
-            DebugSwitch: bool()
+        debug_level_group:
+            debug_switch: bool()
        
         #adt section - isce3 + pyre workflow
         processing:
@@ -80,7 +80,7 @@ runconfig:
         worker: include('worker_options', required=False)
 
         # Quality Assurance software options
-        QA: include('qa_options', required=False)
+        qa: include('qa_options', required=False)
 
         # Place holder for user set path to log file.
         # If not set, log sent to screen or input yaml path derived file
@@ -93,7 +93,7 @@ radar_grid_cubes_options:
     heights: list(num(), required=False)
 
     # Same as input DEM if not provided.
-    outputEPSG: int(min=1024, max=32767, required=False)
+    output_epsg: int(min=1024, max=32767, required=False)
                
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
@@ -185,7 +185,7 @@ geocode_options:
     # Apply RTC
     apply_rtc: bool(required=False)
 
-    memory_mode: enum('auto', 'single_block', 'blocks_geogrid', 'blocks_geogrid_and_radargrid', required=False)
+    memory_mode: enum('auto', 'single_block', 'geogrid', 'geogrid_and_radargrid', required=False)
 
     # Processing upsampling factor on top of the input geogrid
     geogrid_upsampling: int(required=False)
@@ -213,7 +213,7 @@ geocode_options:
     upsample_radargrid: bool(required=False)
 
     # Same as input DEM if not provided.
-    outputEPSG: int(min=1024, max=32767, required=False)
+    output_epsg: int(min=1024, max=32767, required=False)
 
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.

@@ -10,7 +10,8 @@ void addsubmodule_geocode(py::module & m)
 {
     py::module geocode = m.def_submodule("geocode");
 
-    addbinding_geocodeslc(geocode);
+    addbinding_geocodeslc<isce3::core::LUT2d<double>>(geocode);
+    addbinding_geocodeslc<isce3::core::Poly2d>(geocode);
 
     // forward declare bound classes
     py::class_<isce3::geocode::Geocode<float>>

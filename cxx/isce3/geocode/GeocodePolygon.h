@@ -33,7 +33,7 @@ public:
      * @param[in]  orbit               Orbit
      * @param[in]  input_dop           Doppler LUT associated with the radar grid
      * @param[in]  dem_raster          Input DEM raster
-     * @param[in]  threshold           Distance threshold for convergence
+     * @param[in]  threshold           Azimuth time threshold for convergence (s)
      * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
      * @param[in]  delta_range         Step size used for computing Doppler derivative
      */

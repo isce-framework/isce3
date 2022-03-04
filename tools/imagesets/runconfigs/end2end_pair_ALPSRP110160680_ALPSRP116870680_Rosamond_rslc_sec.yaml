@@ -1,38 +1,91 @@
 runconfig:
+    name: NISAR_L1-L-RSLC_RUNCONFIG
     groups:
-        InputFileGroup:
-            InputFilePath:
+        pge_name_group:
+            pge_name: RSLC_L_PGE
+        input_file_group:
+            input_file_path:
             -   input_L0B_RRSD_ALPSRP116870680_Rosamond/ALPSRP116870680.L0B.h5
-        DynamicAncillaryFileGroup:
-            DEMFile:
-            Orbit:
-            Pointing:
-            ExternalCalibration:
-            InternalCalibration:
-            PolarimetricCalibration:
-            BookendCalibration:
-            AntennaPattern:
-            Waveform:
-        ProductPathGroup:
-            ProductPath: output_rslc_sec
-            ScratchPath: scratch_rslc_sec
-            SASOutputFile: output_rslc_sec/rslc.h5
-            SASConfigFile: output_rslc_sec/runconfig_rslc_sec.yaml
-        PrimaryExecutable:
-            ProductType: RSLC
-        Geometry:
-            RelativeOrbitNumber: 1
-            FrameNumber: 1
-        archive: {}
-        qaqc: {}
+        dynamic_ancillary_file_group:
+            dem_file:
+            orbit:
+            pointing:
+            external_calibration:
+            internal_calibration:
+            polarimetric_calibration:
+            bookend_calibration:
+            antenna_pattern:
+            waveform:
+        product_path_group:
+            product_path: output_rslc_sec
+            scratch_path: scratch_rslc_sec
+            sas_output_file: output_rslc_sec/rslc.h5
+            sas_config_file: output_rslc_sec/runconfig_rslc_sec.yaml
+            product_counter: 1
+        primary_executable:
+            product_type: RSLC
+            composite_release_id: D00200
+            mission_id: NISAR
+            processing_type: PR
+            product_accuracy: P
+        debug_level_group:
+            debug_switch: false
+        geometry:
+            cycle_number: 1
+            relative_orbit_number: 1
+            frame_number: 1
+            orbit_direction: Ascending
+            track_frame_polygon: '{"type": "Polygon", "coordinates" : [[
+                [-118.494045678471, 34.1198833322943],
+                [-118.407721743711, 34.1328597142333],
+                [-118.322373469636, 34.1456261493881],
+                [-118.23795156597, 34.158192139789],
+                [-118.154410480965, 34.170566466539],
+                [-118.071708021861, 34.1827572629944],
+                [-117.989805023275, 34.1947720787078],
+                [-117.908665057009, 34.2066179387212],
+                [-117.828254174411, 34.218301385736],
+                [-117.748540680627, 34.2298285258869],
+                [-117.669496014716, 34.2412101509449],
+                [-117.690299285265, 34.3399438580356],
+                [-117.711109612314, 34.4386329902234],
+                [-117.731943485303, 34.5373543868771],
+                [-117.752788368901, 34.6360485329515],
+                [-117.773652525542, 34.7347535489967],
+                [-117.79453338203, 34.8334566994781],
+                [-117.815436707865, 34.9321843116784],
+                [-117.83634576611, 35.0308574296312],
+                [-117.85728136449, 35.1295726884528],
+                [-117.878224615647, 35.2282411777494],
+                [-117.958253636157, 35.2169033135598],
+                [-118.038959947877, 35.2054182307427],
+                [-118.120372504489, 35.1937750808365],
+                [-118.202523434719, 35.1819677085269],
+                [-118.285447154132, 35.1699895180144],
+                [-118.3691805944, 35.1578334267904],
+                [-118.453763465005, 35.1454918230193],
+                [-118.539238548023, 35.1329565056532],
+                [-118.625652035051, 35.120218619829],
+                [-118.713053912866, 35.1072685829224],
+                [-118.691059800502, 35.0085625054253],
+                [-118.669079367829, 34.9098159293753],
+                [-118.647129504079, 34.8111046807711],
+                [-118.625191496693, 34.7123462157385],
+                [-118.60328032885, 34.6136079824951],
+                [-118.58139078558, 34.5148674942397],
+                [-118.559525137802, 34.4161356338635],
+                [-118.537675938489, 34.3173798369588],
+                [-118.515854392186, 34.2186509505216],
+                [-118.494045678471, 34.1198833322943]]]
+            }'
+            full_coverage_threshold_percent: 75.0
         worker:
             gpu_enabled: true
             gpu_id: 0
-        profiler: {}
         processing:
             output_grid:
-                start_time:
-                end_time:
+                start_time: 2008-04-04T06:19:17.452060000
+                end_time: 2008-04-04T06:19:33.851984624
                 start_range:
                 end_range:
                 output_prf:
@@ -53,7 +106,7 @@ runconfig:
                     range: 2000.0
                     azimuth: 1.0
                 rdr2geo:
-                    threshold: 1e-08
+                    threshold: 1.0e-08
                     maxiter: 25
                     extraiter: 15
             rangecomp:
@@ -73,11 +126,11 @@ runconfig:
                     fit: Table
                     fit_order: 2048
                 rdr2geo:
-                    threshold: 1e-08
+                    threshold: 1.0e-08
                     maxiter: 25
                     extraiter: 15
                 geo2rdr:
-                    threshold: 1e-08
+                    threshold: 1.0e-08
                     maxiter: 50
                     delta_range: 10.0
             dry_troposphere_model: nodelay
@@ -96,6 +149,6 @@ runconfig:
                 eap: true
                 range_cor: true
                 azcomp: true
-        PGENameGroup:
-            PGEName: RSLC_L_PGE
-    name: NISAR_L1-L-RSLC_RUNCONFIG
+        qa:
+            validate: true
+            quality: true

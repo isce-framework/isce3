@@ -6,6 +6,7 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
@@ -16,6 +17,7 @@ namespace py = pybind11;
 
 void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     pyGeo2Rdr
         .def(py::init([](const isce3::product::RadarGridParameters & radar_grid,
              const isce3::core::Orbit & orbit,
@@ -35,8 +37,8 @@ void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
             py::arg("orbit"),
             py::arg("ellipsoid"),
             py::arg("doppler") = isce3::core::LUT2d<double>(),
-            py::arg("threshold") = 0.05,
-            py::arg("numiter") = 25,
+            py::arg("threshold") = defaults.threshold,
+            py::arg("numiter") = defaults.maxiter,
             py::arg("lines_per_block") = 1000)
         .def("geo2rdr", py::overload_cast<isce3::io::Raster &, const std::string &,
                 double, double>

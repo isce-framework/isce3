@@ -4,12 +4,17 @@
 
 import argparse
 import os
+import backoff
 
 import numpy as np
 import shapely.ops
 import shapely.wkt
 from osgeo import gdal, osr
 from shapely.geometry import LinearRing, Point, Polygon, box
+
+
+# Enable exceptions
+gdal.UseExceptions()
 
 
 def cmdLineParse():
@@ -154,7 +159,7 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter on the ground
     """
-    from pybind_isce3.core import LUT2d
+    from isce3.core import LUT2d
     from isce3.geometry import DEMInterpolator, get_geo_perimeter_wkt
     from nisar.products.readers import SLC
 
@@ -228,6 +233,38 @@ def determine_projection(polys):
     return epsg
 
 
+@backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
+def translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax):
+    """Translate DEM from nisar-dem bucket. This
+       function is decorated to perform retries
+       using exponential backoff to make the remote
+       call resilient to transient issues stemming
+       from network access, authorization and AWS
+       throttling (see "Query throttling" section at
+       https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html).
+
+    Parameters:
+    ----------
+    vrt_filename: str
+        Path to the input VRT file
+    outpath: str
+        Path to the translated output GTiff file
+    xmin: float
+        Minimum longitude bound of the subwindow
+    xmax: float
+        Maximum longitude bound of the subwindow
+    ymin: float
+        Minimum latitude bound of the subwindow
+    ymax: float
+        Maximum latitude bound of the subwindow
+    """
+
+    ds = gdal.Open(vrt_filename, gdal.GA_ReadOnly)
+    gdal.Translate(outpath, ds, format='GTiff',
+                   projWin=[xmin, ymax, xmax, ymin])
+    ds = None
+
+
 def download_dem(polys, epsgs, margin, outfile):
     """Download DEM from nisar-dem bucket
 
@@ -266,13 +303,11 @@ def download_dem(polys, epsgs, margin, outfile):
     dem_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
         vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}/EPSG{epsg}.vrt'
-        poly.buffer(margin)
+        poly = poly.buffer(margin)
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
-        ds = gdal.Open(vrt_filename, gdal.GA_ReadOnly)
-        gdal.Translate(outpath, ds, format='GTiff',
-                       projWin=[xmin, ymax, xmax, ymin])
+        translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax)
 
     # Build vrt with downloaded DEMs
     gdal.BuildVRT(outfile, dem_list)
@@ -338,7 +373,7 @@ def check_dem_overlap(DEMFilepath, polys):
         Area (in percentage) covered by the intersection between the
         user-provided dem and the one downloadable by stage_dem.py
     """
-    from pybind_isce3.io import Raster
+    from isce3.io import Raster
 
     # Get local DEM edge coordinates
     DEM = Raster(DEMFilepath)
@@ -367,8 +402,8 @@ def check_aws_connection():
     s3 = boto3.resource('s3')
     obj = s3.Object('nisar-dem', 'EPSG3031/EPSG3031.vrt')
     try:
-        body = obj.get()['Body'].read()
-    except:
+        obj.get()['Body'].read()
+    except Exception:
         errmsg = 'No access to nisar-dem s3 bucket. Check your AWS credentials' \
                  'and re-run the code'
         raise ValueError(errmsg)

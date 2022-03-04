@@ -21,7 +21,7 @@ class DenseOffsetsRunConfig(RunConfig):
         '''
 
         error_channel = journal.error('DenseOffsetsRunConfig.yaml_check')
-        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
+        scratch_path = self.cfg['product_path_group']['scratch_path']
 
         # If coregistered_slc_path is None, assume that we run dense_offsets
         # as part of insar.py. In this case, coregistered_slc_path comes

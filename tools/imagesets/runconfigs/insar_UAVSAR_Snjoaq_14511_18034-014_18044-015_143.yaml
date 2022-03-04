@@ -2,35 +2,35 @@ runconfig:
     name: gunw_workflow_default
 
     groups:
-        PGENameGroup:
-            PGEName: INSAR_L_PGE
+        pge_name_group:
+            pge_name: INSAR_L_PGE
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath:
+            input_file_path:
             - input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/Snjoaq_14511_18034_014_180720_L090_CX_143_02.h5
             - input_L1_RSLC_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02/Snjoaq_14511_18044_015_180814_L090_CX_143_02.h5
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            DEMFile: input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/dem.tif
+            dem_file: input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/dem.tif
 
-        ProductPathGroup:
+        product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
-            ProductPath: output_insar
+            product_path: output_insar
 
             # REQUIRED - Directory where SAS can write temporary data
-            ScratchPath: scratch_insar
+            scratch_path: scratch_insar
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            SASOutputFile: output_insar/product.h5
+            sas_output_file: output_insar/product.h5
 
-        PrimaryExecutable:
-            ProductType: RIFG_RUNW_GUNW
+        primary_executable:
+            product_type: RIFG_RUNW_GUNW
 
-        DebugLevelGroup:
-            DebugSwitch: false
+        debug_level_group:
+            debug_switch: false
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -41,7 +41,7 @@ runconfig:
                     # valid options for polarizations
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    A: [HH]
+                    A: [HH, VV]
 
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
@@ -63,7 +63,7 @@ runconfig:
                 y_snap:
 
                 # OPTIONAL - Same as input DEM if not provided.
-                outputEPSG:
+                output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If no provided, values will match spacing in provided DEM
@@ -87,11 +87,8 @@ runconfig:
                     x_abs:
 
             geo2rdr:
-                threshold: 1e-8
+                threshold: 1.0e-8
                 maxiter: 25
-
-            blocksize:
-                y: 1000
 
             dem_margin: 0.1
 

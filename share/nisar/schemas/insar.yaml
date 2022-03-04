@@ -2,40 +2,40 @@ runconfig:
     name: str()
 
     groups:
-        PGENameGroup:
-            PGEName: enum('INSAR_L_PGE')
+        pge_name_group:
+            pge_name: enum('INSAR_L_PGE')
 
-        InputFileGroup:
+        input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            InputFilePath: list(str(), min=2, max=2)
+            input_file_path: list(str(), min=2, max=2)
 
-        DynamicAncillaryFileGroup:
+        dynamic_ancillary_file_group:
             # Digital elevation model
-            DEMFile: str()
+            dem_file: str()
 
-        ProductPathGroup:
+        product_path_group:
             # Directory where PGE will place results
-            ProductPath: str()
-            ProductCounter: int(min=1, max=999, required=False)
+            product_path: str()
+            product_counter: int(min=1, max=999, required=False)
 
             # Directory where SAS can write temporary data
-            ScratchPath: str()
+            scratch_path: str()
 
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            # In INSAR mode, GUNW, RIFG, and RUNW will be prepended to SASOutputFile
-            SASOutputFile: str()
+            # In INSAR mode, GUNW, RIFG, and RUNW will be prepended to sas_output_file
+            sas_output_file: str()
 
-        PrimaryExecutable:
+        primary_executable:
             # RIFG_RUNW_GUNW will produce all three InSAR products
-            ProductType: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
-            CompositeReleaseID: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
-            ProcessingType: enum('PR', 'UR', required=False)
-            ProductAccuracy: enum('P','M','N','F','T', required=False)
+            product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
+            composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
+            processing_type: enum('PR', 'UR', required=False)
+            product_accuracy: enum('P','M','N','F','T', required=False)
 
-        DebugLevelGroup:
-            DebugSwitch: bool()
+        debug_level_group:
+            debug_switch: bool()
 
         #adt section - isce3 + pyre workflow
         processing:
@@ -57,6 +57,8 @@ runconfig:
             geocode: include('geocode_options', required=False)
 
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
+
+            bandpass: include('bandpass_options', required=False)
 
             rdr2geo: include('rdr2geo_options', required=False)
 
@@ -88,7 +90,7 @@ runconfig:
         # To setup type of worker
         worker: include('worker_options', required=False)
 
-        QA: include('qa_options', required=False)
+        qa: include('qa_options', required=False)
 
         # Place holder for user set path to log file.
         # If not set, log sent to screen or input yaml path derived file
@@ -451,7 +453,7 @@ radar_grid_cubes_options:
     heights: list(num(), required=False)
 
     # Same as input DEM if not provided.
-    outputEPSG: int(min=1024, max=32767, required=False)
+    output_epsg: int(min=1024, max=32767, required=False)
 
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
@@ -479,6 +481,16 @@ radar_grid_cubes_options:
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 
+bandpass_options:
+    # Number of lines per block
+    lines_per_block: int(min=1, required=False)
+    # Set window function for range spectrum bandpass filtering
+    window_function: enum('tukey', 'cosine', 'kaiser', required=False)
+    # Shape parameter. For Kaiser, 0 <= shape < Inf.
+    # For Cosine and Tukey, 0 <= shape <= 1
+    window_shape: num(min=0, required=False)
+    range_fft_size: int(min=1, required=False)
+
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
     threshold: num(min=0, required=False)
@@ -486,7 +498,8 @@ geo2rdr_options:
     # Maximum number of iterations
     maxiter: int(min=1, required=False)
 
-    # Path to rdr2geo (topo) outputs. Required only for
+    # Path to a directory in which to store rdr2geo (topo) outputs. If the
+    # directory does not exist, it will be created. Required only for
     # stand-alone usage of geo2rdr.py
     topo_path: str(required=False)
 
@@ -506,6 +519,20 @@ rdr2geo_options:
     # Line per block to
     lines_per_block: int(min=1, required=False)
 
+    # Flags for enabling/disabling layers written in rdr2geo/topo
+    # default to save only layers needed for geo2rdr + InSAR
+    # x, y, and height required for geo2rdr and InSAR
+    # layover_shadow required for InSAR
+    write_x: bool(required=False)
+    write_y: bool(required=False)
+    write_z: bool(required=False)
+    write_height: bool(required=False)
+    write_incidence: bool(required=False)
+    write_heading: bool(required=False)
+    write_local_incidence: bool(required=False)
+    write_local_psi: bool(required=False)
+    write_simulated_amplitude: bool(required=False)
+    write_layover_shadow: bool(required=False)
 
 log_nfo:
     # Path to log file
@@ -548,7 +575,7 @@ geocode_options:
     datasets: include('gunw_datasets', required=False)
 
     # Same as input DEM if not provided.
-    outputEPSG: int(min=1024, max=32767, required=False)
+    output_epsg: int(min=1024, max=32767, required=False)
 
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
@@ -584,12 +611,12 @@ geocode_options:
     lines_per_block: int(min=100, max=10000, required=False)
 
 gunw_datasets:
-    connectedComponents: bool(required=False)
-    coherenceMagnitude: bool(required=False)
-    unwrappedPhase: bool(required=False)
-    layoverShadowMask: bool(required=False)
-    alongTrackOffset: bool(required=False)
-    slantRangeOffset: bool(required=False)
+    connected_components: bool(required=False)
+    coherence_magnitude: bool(required=False)
+    unwrapped_phase: bool(required=False)
+    layover_shadow_mask: bool(required=False)
+    along_track_offset: bool(required=False)
+    slant_range_offset: bool(required=False)
 
 worker_options:
     # Enable/disable internet connection (e.g. for download DEM)

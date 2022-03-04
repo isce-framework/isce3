@@ -17,6 +17,8 @@ import isce3
 from nisar.workflows import h5_prep
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
+from nisar.workflows.compute_stats import compute_stats_real_data
+
 
 def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     '''
@@ -25,7 +27,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     # pull parameters from dictionary
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    scratch_path = pathlib.Path(cfg['ProductPathGroup']['ScratchPath'])
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     unwrap_args = cfg['processing']['phase_unwrap']
 
     # Create error and info channels
@@ -143,7 +145,10 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
                                       corr_raster)
 
-                # Copy coherence magnitude and culled offsets to RIFG
+                # Compute stats for unwrapped phase
+                compute_stats_real_data(uigram_raster, uigram_dataset)
+
+                # Copy coherence magnitude and culled offsets from RIFG
                 dataset_names = ['coherenceMagnitude', 'alongTrackOffset',
                                  'slantRangeOffset']
                 group_names = ['interferogram', 'pixelOffsets', 'pixelOffsets']
@@ -151,6 +156,13 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     dst_path = f'{dst_freq_group_path}/{group_name}/{pol}/{dataset_name}'
                     src_path = f'{src_freq_group_path}/{group_name}/{pol}/{dataset_name}'
                     dst_h5[dst_path][:, :] = src_h5[src_path][()]
+
+                    dst_dataset = dst_h5[dst_path]
+                    dst_raster = isce3.io.Raster(
+                        f"IH5:::ID={dst_dataset.id.id}".encode("utf-8"),
+                        update=True)
+
+                    compute_stats_real_data(dst_raster, dst_dataset)
 
                 del uigram_raster
                 del conn_comp_raster
@@ -269,7 +281,7 @@ if __name__ == "__main__":
     unwrap_runconfig = UnwrapRunConfig(args)
 
     # Prepare RUNW HDF5
-    unwrap_runconfig.cfg['PrimaryExecutable']['ProductType'] = 'RUNW_STANDALONE'
+    unwrap_runconfig.cfg['primary_executable']['product_type'] = 'RUNW_STANDALONE'
     out_paths = h5_prep.run(unwrap_runconfig.cfg)
 
     # Use RIFG from crossmul_path

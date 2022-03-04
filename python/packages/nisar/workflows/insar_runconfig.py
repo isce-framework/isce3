@@ -1,6 +1,7 @@
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 import journal
 import os
+import warnings
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -14,8 +15,9 @@ class InsarRunConfig(Geo2rdrRunConfig):
         Check submodule paths from YAML
         '''
 
-        scratch_path = self.cfg['ProductPathGroup']['ScratchPath']
+        scratch_path = self.cfg['product_path_group']['scratch_path']
         error_channel = journal.error('InsarRunConfig.yaml_check')
+        warning_channel = journal.warning('InsarRunConfig.yaml_check')
 
         # Extract frequencies and polarizations to process
         freq_pols = self.cfg['processing']['input_subset'][
@@ -36,6 +38,21 @@ class InsarRunConfig(Geo2rdrRunConfig):
             err_str = "Rubbersheet must be enabled to run fine SLC resampling"
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        # Check if rdr2geo flags enabled for topo X, Y, and Z rasters
+        for xyz in 'xyz':
+            # Get write flag for x, y, or z
+            write_flag = f'write_{xyz}'
+
+            # Check if it's not enabled (required for InSAR processing)
+            if not self.cfg['processing']['rdr2geo'][write_flag]:
+                # Raise and log warning
+                warning_str = f'{write_flag} incorrectly disabled for rdr2geo; it will be enabled'
+                warning_channel.log(warning_str)
+                warning.warn(warning_str)
+
+                # Set write flag True
+                self.cfg['processing']['rdr2geo'][write_flag] = True
 
         # for each submodule check if user path for input data assigned
         # if not assigned, assume it'll be in scratch
@@ -142,22 +159,32 @@ class InsarRunConfig(Geo2rdrRunConfig):
             self.cfg['processing']['geocode']['datasets'] = {}
 
         # default to True for datasets not found
-        gunw_datasets = ["connectedComponents", "coherenceMagnitude",
-                         "unwrappedPhase", "alongTrackOffset", "slantRangeOffset",
-                         'layoverShadowMask']
+        gunw_datasets = ["connected_components", "coherence_magnitude",
+                         "unwrapped_phase", "along_track_offset",
+                         "slant_range_offset", 'layover_shadow_mask']
 
         for gunw_dataset in gunw_datasets:
             if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
                 self.cfg['processing']['geocode']['datasets'][
                     gunw_dataset] = True
 
+        # Check if layover shadow output enabled
+        if not self.cfg['processing']['rdr2geo']['write_layover_shadow']:
+            # Raise and log warning
+            warning_str = 'layover_shadow incorrectly disabled for rdr2geo; it will be enabled'
+            warning_channel.log(warning_str)
+            warning.warn(warning_str)
+
+            # Set write flag True
+            self.cfg['processing']['rdr2geo']['write_layover_shadow'] = True
+
         # To geocode the offsets we need the offset field shape and
         # the start pixel in range and azimuth. Note, margin and gross_offsets
         # are allocated as defaults in share/nisar/defaults/insar.yaml
         geocode_azimuth_offset = self.cfg['processing'][
-            'geocode']['datasets']['alongTrackOffset']
+            'geocode']['datasets']['along_track_offset']
         geocode_range_offset = self.cfg['processing'][
-            'geocode']['datasets']['slantRangeOffset']
+            'geocode']['datasets']['slant_range_offset']
         if geocode_azimuth_offset or geocode_range_offset:
             offset_cfg = self.cfg['processing']['dense_offsets']
             margin = max(offset_cfg['margin'], offset_cfg['gross_offset_range'],

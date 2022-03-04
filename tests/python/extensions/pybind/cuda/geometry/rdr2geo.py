@@ -71,7 +71,7 @@ def test_run_raster_layers():
                                   radargrid.length, 1, gdal.GDT_Float32, 'ENVI')
     simulated_amplitude_raster = isce3.io.Raster("simamp.rdr", radargrid.width,
                                   radargrid.length, 1, gdal.GDT_Float32, 'ENVI')
-    shadow_layover_raster = isce3.io.Raster("mask.rdr", radargrid.width,
+    layover_shadow_raster = isce3.io.Raster("layoverShadowMask.rdr", radargrid.width,
                                   radargrid.length, 1, gdal.GDT_Float32, 'ENVI')
 
     # run
@@ -81,7 +81,7 @@ def test_run_raster_layers():
                      heading_angle_raster,
                      local_incidence_angle_raster,
                      local_Psi_raster,
-                     simulated_amplitude_raster, shadow_layover_raster)
+                     simulated_amplitude_raster, layover_shadow_raster)
 
     topo_raster = isce3.io.Raster(
             "topo_layers.vrt", raster_list=[x_raster,

@@ -10,6 +10,7 @@
 #include "geometry/geometry.h"
 #include "image/image.h"
 #include "io/io.h"
+#include "math/math.h"
 #include "polsar/polsar.h"
 #include "product/product.h"
 #include "signal/signal.h"
@@ -28,6 +29,7 @@ PYBIND11_MODULE(pybind_isce3, m) {
     addsubmodule_geocode(m);
     addsubmodule_image(m);
     addsubmodule_io(m);
+    addsubmodule_math(m);
     addsubmodule_polsar(m);
     addsubmodule_signal(m);
     addsubmodule_product(m);

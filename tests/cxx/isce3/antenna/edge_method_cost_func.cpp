@@ -5,7 +5,7 @@
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 
-#include <isce3/antenna/edge_method_cost_func.h>
+#include <isce3/antenna/EdgeMethodCostFunc.h>
 #include <isce3/core/Poly1d.h>
 #include <isce3/math/polyfunc.h>
 
@@ -44,7 +44,7 @@ struct EdgeMethodCostFuncTest : public ::testing::Test {
             // add roll offset (perturbed)
             auto lka_ant_rad = lka_edge_rad + roll * md2r;
             // add a gain offset
-            auto gain_ant = polyvals(pf_ref, lka_ant_rad) + gain_ofs;
+            Eigen::ArrayXd gain_ant = polyvals(pf_ref, lka_ant_rad) + gain_ofs;
             pf_ant_vec.push_back(
                     isce3::math::polyfitObj(lka_edge_rad, gain_ant, 3, false));
         }
@@ -105,9 +105,9 @@ struct EdgeMethodCostFuncTest : public ::testing::Test {
     const double max_lka_edge_deg {34.0};
     const double prec_lka_edge_deg {1e-3};
     const int num_lka_edge {
-            static_cast<int>(
-                    (max_lka_edge_deg - min_lka_edge_deg) / prec_lka_edge_deg) +
-            1};
+            static_cast<int>(std::round((max_lka_edge_deg - min_lka_edge_deg) /
+                                        prec_lka_edge_deg) +
+                             1)};
 
     // gain offset in (dB) between relative EL power patterns extracted from
     // antenna and echo. the roll offset estimation is insensitive to this gain
@@ -125,8 +125,8 @@ struct EdgeMethodCostFuncTest : public ::testing::Test {
     // Build a 6-order polyminals of a relative antenna gain from gain (dB)
     // versus look angles (rad) to be used as a reference for building both
     // antenna and echo data
-    // These points are extracted from a realitic EL power pattern of ALOS1 beam
-    // #7.
+    // These points are extracted from a realistic EL power pattern of ALOS1
+    // beam #7.
     std::vector<double> gain {
             -2.2, -1.2, -0.55, -0.2, 0.0, -0.2, -0.5, -1.0, -2.0};
     std::vector<double> lka_deg {

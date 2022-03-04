@@ -20,6 +20,7 @@ RUN conda install -q -y \
         shapely \
         sphinx \
         wget \
+        backoff \
  && conda install -q -y -c conda-forge \
         ruamel.yaml \
         yamale \

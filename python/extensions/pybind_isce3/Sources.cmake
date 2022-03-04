@@ -1,6 +1,7 @@
 set(SRCS
 antenna/antenna.cpp
-antenna/edge_method_cost_func.cpp
+antenna/EdgeMethodCostFunc.cpp
+antenna/ElNullRangeEst.cpp
 antenna/ElPatternEst.cpp
 antenna/Frame.cpp
 antenna/geometryfunc.cpp
@@ -27,6 +28,7 @@ core/Quaternion.cpp
 core/StateVector.cpp
 core/TimeDelta.cpp
 core/Poly1d.cpp
+core/Poly2d.cpp
 focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
@@ -57,6 +59,8 @@ io/gdal/Raster.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp
+math/math.cpp
+math/Stats.cpp
 polsar/symmetrize.cpp
 polsar/polsar.cpp
 signal/signal.cpp
