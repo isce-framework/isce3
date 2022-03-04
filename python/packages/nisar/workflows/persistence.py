@@ -50,18 +50,25 @@ class Persistence():
                 if 'successfully ran INSAR' in log_line:
                     break
 
+                # success message found
+                success_msg_found = False
                 # check for message indicating successful run of step
-                if 'Successfully ran' in log_line or 'successfully ran' in log_line:
+                if 'uccessfully ran' in log_line:
                     # iterate thru reverse chronological steps
                     for insar_step in self.insar_steps:
                         # any step not found in line will be step to run
                         if insar_step not in log_line:
                             # set step name found to True
                             self.run_steps[insar_step] = True
+                            success_msg_found = True
                         else:
                             # check if any steps need to be run
                             if any(self.run_steps.values()):
                                 self.run = True
 
-                            # assume all previous steps successfully run and stop
+                            # all previous steps successfully run and stop
                             break
+
+            # check if any steps need to be run or success msg not found
+            if not success_msg_found:
+                self.__init__(True)
