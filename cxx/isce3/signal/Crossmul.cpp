@@ -22,9 +22,9 @@ size_t omp_thread_count() {
 
 /*
 isce3::signal::Crossmul::
-Crossmul(const isce3::product::Product& referenceSlcProduct,
-         const isce3::product::Product& secondarySlcProduct,
-         isce3::product::Product& outputInterferogramProduct)
+Crossmul(const isce3::product::RadarGridProduct& referenceSlcProduct,
+         const isce3::product::RadarGridProduct& secondarySlcProduct,
+         isce3::product::RadarGridProduct& outputInterferogramProduct)
 */
 
 /**

@@ -12,7 +12,7 @@
 
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/Poly2d.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/RadarGridParameters.h>
 
 namespace isce3 { namespace image {
@@ -21,15 +21,15 @@ class ResampSlc {
 public:
     typedef Tile<std::complex<float>> Tile_t;
 
-    /** Constructor from an isce3::product::Product (no flattening) */
-    ResampSlc(const isce3::product::Product& product, char frequency = 'A');
+    /** Constructor from an isce3::product::RadarGridProduct (no flattening) */
+    ResampSlc(const isce3::product::RadarGridProduct& product, char frequency = 'A');
 
     /**
-     * Constructor from an isce3::product::Product and reference product
+     * Constructor from an isce3::product::RadarGridProduct and reference product
      * (flattening)
      */
-    ResampSlc(const isce3::product::Product& product,
-              const isce3::product::Product& refProduct, char frequency = 'A');
+    ResampSlc(const isce3::product::RadarGridProduct& product,
+              const isce3::product::RadarGridProduct& refProduct, char frequency = 'A');
 
     /** Constructor from an isce3::product::Swath (no flattening) */
     ResampSlc(const isce3::product::Swath& swath);
@@ -97,7 +97,7 @@ public:
     void doppler(const isce3::core::LUT2d<double>&);
 
     // Set reference product for flattening
-    void referenceProduct(const isce3::product::Product& product,
+    void referenceProduct(const isce3::product::RadarGridProduct& product,
                           char frequency = 'A');
 
     // Get/set number of lines per processing tile

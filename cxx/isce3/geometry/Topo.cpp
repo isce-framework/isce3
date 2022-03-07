@@ -17,7 +17,7 @@
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Utilities.h>
 
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 
 // isce3::geometry
 #include <isce3/geometry/RTC.h>
@@ -32,7 +32,7 @@ using isce3::core::Vec3;
 using isce3::io::Raster;
 
 isce3::geometry::Topo::
-Topo(const isce3::product::Product & product,
+Topo(const isce3::product::RadarGridProduct & product,
      char frequency,
      bool nativeDoppler)
 :

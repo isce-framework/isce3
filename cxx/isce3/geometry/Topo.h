@@ -30,11 +30,11 @@ public:
     /**
      * Constructor using a product
      *
-     * @param[in] product Input Product
+     * @param[in] product Input RadarGridProduct
      * @param[in] frequency Frequency designation
      * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
      */
-    Topo(const isce3::product::Product &,
+    Topo(const isce3::product::RadarGridProduct &,
          char frequency = 'A',
          bool nativeDoppler = false);
 

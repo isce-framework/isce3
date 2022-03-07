@@ -27,7 +27,7 @@
 #include "isce3/core/Serialization.h"
 
 // isce3::product
-#include "isce3/product/Product.h"
+#include "isce3/product/RadarGridProduct.h"
 #include "isce3/product/RadarGridParameters.h"
 
 // isce3::geometry
@@ -61,8 +61,8 @@ struct GpuGeometryTest : public ::testing::Test {
             std::string h5file(TESTDATA_DIR "envisat.h5");
             isce3::io::IH5File file(h5file);
 
-            // Instantiate a Product
-            isce3::product::Product product(file);
+            // Instantiate a RadarGridProduct
+            isce3::product::RadarGridProduct product(file);
 
             // Extract core and product objects
             orbit = product.metadata().orbit();

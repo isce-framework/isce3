@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
                                  ellipse,   //Ellipsoid
                                  orbit,     //Orbit
                                  dop,       //Doppler
-                                 mode,      //Product metadata
+                                 mode,      //RadarGridProduct metadata
                                  aztime,    //Estimated azimuth time
                                  rng,       //Estimated slant range
                                  side,      //Look side 

@@ -21,7 +21,7 @@
 #include "isce3/io/Raster.h"
 
 // isce3::product
-#include "isce3/product/Product.h"
+#include "isce3/product/RadarGridProduct.h"
 
 // isce3::image
 #include "isce3/image/ResampSlc.h"
@@ -36,7 +36,7 @@ TEST(ResampSlcTest, Resamp) {
     isce3::io::IH5File file(h5file);
 
     // Create product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Instantiate a ResampSLC object
     isce3::image::ResampSlc resamp(product);

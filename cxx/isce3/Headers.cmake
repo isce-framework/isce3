@@ -139,7 +139,8 @@ product/forward.h
 product/GeoGridParameters.h
 product/Metadata.h
 product/ProcessingInformation.h
-product/Product.h
+product/RadarGridProduct.h
+product/GeoGridProduct.h
 product/RadarGridParameters.h
 product/Serialization.h
 product/Swath.h

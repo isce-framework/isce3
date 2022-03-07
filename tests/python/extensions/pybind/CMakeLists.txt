@@ -44,6 +44,7 @@ signal/filter2D.py
 product/generic_product.py
 product/radargridparameters.py
 product/swath.py
+product/grid.py
 unwrap/icu.py
 unwrap/phass.py
 geometry/ltpcoordinates.py

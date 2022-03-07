@@ -10,7 +10,7 @@
 #include "isce3/io/Raster.h"
 #include <isce3/io/IH5.h>
 #include <isce3/product/Serialization.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 
 #include "isce3/cuda/signal/gpuSignal.h"
 #include "isce3/cuda/signal/gpuFilter.h"
@@ -33,7 +33,7 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
@@ -79,7 +79,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the range bandwidth

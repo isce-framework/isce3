@@ -25,9 +25,9 @@ class isce3::signal::Crossmul {
         ~Crossmul() {};
 
         /*
-        void Crossmul(const isce3::product::Product& referenceSLC,
-                    const isce3::product::Product& secondarySLC,
-                    const isce3::product::Product& outputInterferogram);
+        void Crossmul(const isce3::product::RadarGridProduct& referenceSLC,
+                    const isce3::product::RadarGridProduct& secondarySLC,
+                    const isce3::product::RadarGridProduct& outputInterferogram);
         */
 
 

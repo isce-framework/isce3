@@ -10,13 +10,13 @@ class isce3::cuda::image::ResampSlc : public isce3::image::ResampSlc {
 
     public:
         // Meta-methods
-        // Constructor from an isce3::product::Product
-        inline ResampSlc(const isce3::product::Product &product, char frequency = 'A') :
+        // Constructor from an isce3::product::RadarGridProduct
+        inline ResampSlc(const isce3::product::RadarGridProduct &product, char frequency = 'A') :
             isce3::image::ResampSlc(product, frequency) {}
 
-        // Constructor from an isce3::product::Product and reference product (flattening)
-        inline ResampSlc(const isce3::product::Product & product,
-                         const isce3::product::Product & refProduct,
+        // Constructor from an isce3::product::RadarGridProduct and reference product (flattening)
+        inline ResampSlc(const isce3::product::RadarGridProduct & product,
+                         const isce3::product::RadarGridProduct & refProduct,
                          char frequency = 'A') :
             isce3::image::ResampSlc(product, refProduct, frequency) {}
 

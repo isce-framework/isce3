@@ -19,7 +19,7 @@
 #include <isce3/io/Raster.h>
 #include <isce3/math/Stats.h>
 #include <isce3/product/GeoGridParameters.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/Serialization.h>
 
 std::set<std::string> geocode_mode_set = {"interp", "area_proj"};
@@ -59,7 +59,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     const isce3::product::Swath & swath = product.swath('A');
     isce3::core::Orbit orbit = product.metadata().orbit();
@@ -545,7 +545,7 @@ TEST(GeocodeTest, TestGeocodeSlc)
 
     // Load the product
     std::cout << "create the product" << std::endl;
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // std::cout << "get the swath" << std::endl;
     // const isce3::product::Swath & swath = product.swath('A');
@@ -816,7 +816,7 @@ void createTestData()
     isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Create topo instance with native Doppler
     isce3::geometry::Topo topo(product, 'A', true);

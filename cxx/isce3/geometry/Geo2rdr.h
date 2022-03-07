@@ -22,7 +22,7 @@
 #include <isce3/io/Raster.h>
 
 // isce3::product
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/RadarGridParameters.h>
 
 #include <limits>
@@ -50,7 +50,7 @@ public:
      * @param[in] frequency Frequency designation
      * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
      */
-    Geo2rdr(const isce3::product::Product &,
+    Geo2rdr(const isce3::product::RadarGridProduct &,
             char frequency = 'A',
             bool nativeDoppler = false);
 

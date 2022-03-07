@@ -10,7 +10,7 @@
 
 inline
 isce3::geometry::Geo2rdr::
-Geo2rdr(const isce3::product::Product & product,
+Geo2rdr(const isce3::product::RadarGridProduct & product,
         char frequency,
         bool nativeDoppler)
 :

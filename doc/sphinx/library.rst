@@ -30,7 +30,7 @@ I/O Datastructures
 Product Datastructures
 ----------------------
 * :doc:`RadarGridParameters <./product/RadarGridParameters>`
-* :doc:`Product <./product/Product>`
+* :doc:`RadarGridProduct <./product/RadarGridProduct>`
 * :doc:`Metadata <./product/Metadata>`
 
 Image Datastructures

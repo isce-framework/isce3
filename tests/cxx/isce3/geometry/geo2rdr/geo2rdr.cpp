@@ -20,7 +20,7 @@
 #include "isce3/io/Raster.h"
 
 // isce3::product
-#include "isce3/product/Product.h"
+#include "isce3/product/RadarGridProduct.h"
 
 // isce3::geometry
 #include "isce3/geometry/Geo2rdr.h"
@@ -32,7 +32,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Create geo2rdr instance
     isce3::geometry::Geo2rdr geo(product, 'A', true);

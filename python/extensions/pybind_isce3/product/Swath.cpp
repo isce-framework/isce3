@@ -7,7 +7,7 @@
 #include <pybind11/stl.h>
 
 #include <isce3/io/IH5.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 
 namespace py = pybind11;
 
@@ -23,7 +23,7 @@ void addbinding(pybind11::class_<Swath> & pySwath)
                     isce3::io::IH5File file(h5file);
 
                     // instantiate and load a product
-                    isce3::product::Product product(file);
+                    isce3::product::RadarGridProduct product(file);
 
                     // return swath from product
                     return product.swath(freq);
