@@ -131,7 +131,7 @@ def simulate_terrain(
     return z[:length, :width]
 
 
-def jaccard_similarity(a, b, /):
+def jaccard_similarity(a, b):
     """Compute the Jaccard similarity coefficient (intersect-over-union) of two
     boolean arrays.
 
