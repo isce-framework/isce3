@@ -765,9 +765,6 @@ CostParams = Union[
 ]
 CostParams.__doc__ = """SNAPHU cost mode configuration parameters"""
 
-InitMethod = Literal["mst", "mcf"]
-InitMethod.__doc__ = """SNAPHU initialization method"""
-
 
 def unwrap(
     unw: isce3.io.gdal.Raster,
@@ -777,7 +774,7 @@ def unwrap(
     nlooks: float,
     cost: str = "smooth",
     cost_params: Optional[CostParams] = None,
-    init_method: InitMethod = "mcf",
+    init_method: str = "mcf",
     pwr: Optional[isce3.io.gdal.Raster] = None,
     mask: Optional[isce3.io.gdal.Raster] = None,
     unwest: Optional[isce3.io.gdal.Raster] = None,
