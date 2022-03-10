@@ -4,6 +4,7 @@ import nisar.workflows.helpers as helpers
 import journal
 import os
 import h5py
+import numpy as np
 import warnings
 
 class InsarRunConfig(Geo2rdrRunConfig):
@@ -159,10 +160,44 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if iono_cfg['enabled']:
             # Extract split-spectrum dictionary
             split_cfg = iono_cfg['split_range_spectrum']
+            iono_freq_pol = iono_cfg['list_of_frequencies']
+
             # Extract main range bandwidth from reference SLC
-            ref_slc = SLC(hdf5file=self.cfg['input_file_group']['input_file_path'])
+            ref_slc_path = self.cfg['input_file_group']['input_file_path']
+            sec_slc_path = self.cfg['input_file_group']['secondary_file_path']
+        
+            ref_slc = SLC(hdf5file=ref_slc_path)
+            sec_slc = SLC(hdf5file=sec_slc_path)
+
+            # extract the polarizations from reference and secondary hdf5
+            with h5py.File(ref_slc_path, 'r', libver='latest', 
+                swmr=True) as ref_h5, \
+                h5py.File(sec_slc_path, 'r', libver='latest', 
+                swmr=True) as sec_h5:
+                
+                ref_pol_path = os.path.join(
+                    ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
+                ref_pols_freqA = list(
+                    np.array(ref_h5[ref_pol_path][()], dtype=str))
+                
+                sec_pol_path = os.path.join(
+                    sec_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
+                sec_pols_freqA = list(
+                    np.array(sec_h5[sec_pol_path][()], dtype=str))
+
             rg_main_bandwidth = ref_slc.getSwathMetadata(
                 'A').processed_range_bandwidth
+
+            # Obtains common polarzations of freqA between reference and secondary
+            common_pol_refsec_freqA = set.intersection(
+                set(ref_pols_freqA), set(sec_pols_freqA))
+
+            # If no common polarizations found between reference and secondary, 
+            # then raise errors. 
+            if not common_pol_refsec_freqA:
+                err_str = "No common polarization between frequency A rasters"
+                error_channel.log(err_str)
+                raise FileNotFoundError(err_str)
 
             # Depending on how the user has selected "spectral_diversity" check if
             # "low_bandwidth" and "high_bandwidth" are assigned. Otherwise, use default
@@ -181,6 +216,18 @@ class InsarRunConfig(Geo2rdrRunConfig):
                         "It is automatically set by 1/3 of range bandwidth of freqeuncyA"
                     warning_channel.log(info_str)
 
+                # search for the common polarizations in runconfig and HDF5
+                ref_intersect_pol = [pol for pol in iono_freq_pol['A'] 
+                    if pol in ref_pols_freqA]
+                sec_intersect_pol = [pol for pol in iono_freq_pol['A'] 
+                    if pol in ref_pols_freqA]
+
+                # if given polarzations are not found in HDF5, then raise error. 
+                if (not ref_intersect_pol) or (not sec_intersect_pol):
+                    err_str = f"polarzations {iono_freq_pol['A']} for split-main-band are given, but not found"
+                    error_channel.log(err_str)
+                    raise FileNotFoundError(err_str)
+                    
             if split_cfg['spectral_diversity'] == 'main_side_band':
                 if 'B' not in freq_pols.keys():
                     err_str = "polarizations for frequency B are not given;"\
@@ -191,21 +238,32 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 # Extract side-band range bandwidth
                 rg_side_bandwidth = ref_slc.getSwathMetadata(
                     'B').processed_range_bandwidth
+                
+                # extract the polarizations from reference and secondary hdf5
+                with h5py.File(ref_slc_path, 'r', libver='latest', 
+                    swmr=True) as ref_h5, \
+                    h5py.File(sec_slc_path, 'r', libver='latest', 
+                    swmr=True) as sec_h5:
+                    
+                    ref_pol_path = os.path.join(
+                        ref_slc.SwathPath, 'frequencyB', 'listOfPolarizations')
+                    ref_pols_freqB = list(
+                        np.array(ref_h5[ref_pol_path][()], dtype=str))
+                    
+                    sec_pol_path = os.path.join(
+                        sec_slc.SwathPath, 'frequencyB', 'listOfPolarizations')
+                    sec_pols_freqB = list(
+                        np.array(sec_h5[sec_pol_path][()], dtype=str))
 
-                # Check that main and side-band are at the same polarization. If not, throw an error.
-                src_h5 = h5py.File(self.cfg['input_file_group']['input_file_path'],
-                                   'r',
-                                   libver='latest', swmr=True)
-                with h5py.File(self.cfg['input_file_group']['input_file_path'],
-                                   'r', libver='latest', swmr=True) as src_h5:
-                    pol_path = os.path.join(ref_slc.SwathPath, 'frequencyA',
-                                            'listOfPolarizations')
-                    pols_freqA = src_h5[pol_path][()]
-                    pol_path = os.path.join(ref_slc.SwathPath, 'frequencyB',
-                                            'listOfPolarizations')
-                    pols_freqB = src_h5[pol_path][()]
+                common_pol_refsec_freqB = set.intersection(
+                    set(ref_pols_freqB), set(sec_pols_freqB))
 
-                if not set.intersection(set(pols_freqA), set(pols_freqB)):
+                if not common_pol_refsec_freqB:
+                    err_str = "No common polarization between frequencyB rasters"
+                    error_channel.log(err_str)
+                    raise FileNotFoundError(err_str)
+                    
+                if not set.intersection(set(ref_pols_freqA), set(ref_pols_freqB)):
                     err_str = "No common polarization between frequency A and B rasters"
                     error_channel.log(err_str)
                     raise FileNotFoundError(err_str)

@@ -151,6 +151,9 @@ runconfig:
 
             ionosphere_phase_correction:
                 enabled: True
+                list_of_frequencies:
+                   A: 
+                   B: 
                 split_range_spectrum:
                    lines_per_block: 1000
                    spectral_diversity: split_main_band

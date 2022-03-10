@@ -28,6 +28,7 @@ def run(cfg: dict):
     # Extract range split spectrum dictionary and corresponding parameters
     ionosphere_option = cfg['processing']['ionosphere_phase_correction']
     split_cfg = ionosphere_option['split_range_spectrum']
+    iono_freq_pol = ionosphere_option['list_of_frequencies']
     blocksize = split_cfg['lines_per_block']
     method = split_cfg['spectral_diversity']
     window_function = split_cfg['window_function']
@@ -44,7 +45,6 @@ def run(cfg: dict):
 
     # Check split spectrum method
     if method == 'split_main_band':
-        info_channel.log('Split the main band of the signal')
         split_band_path = pathlib.Path(
             f"{scratch_path}/ionosphere/split_spectrum/")
         split_band_path.mkdir(parents=True, exist_ok=True)
@@ -52,7 +52,8 @@ def run(cfg: dict):
         common_parent_path = 'science/LSAR'
         freq = 'A'
         # Note, apply split-spectrum only to HH or VV?
-        pol_list = freq_pols[freq]
+        pol_list = iono_freq_pol[freq]
+        info_channel.log(f'Split the main band {pol_list} of the signal')
 
         for hdf5_ind, hdf5_str in enumerate([ref_hdf5, sec_hdf5]):
             # reference SLC
@@ -122,7 +123,8 @@ def run(cfg: dict):
                             target_slc_image,
                             np.s_[row_start: row_start + block_rows_data, :])
 
-                        subband_slc_low, subband_meta_low = split_spectrum_parameters.bandpass_shift_spectrum(
+                        subband_slc_low, subband_meta_low = \
+                            split_spectrum_parameters.bandpass_shift_spectrum(
                             slc_raster=target_slc_image,
                             low_frequency=low_subband_frequencies[0],
                             high_frequency=low_subband_frequencies[1],
@@ -133,7 +135,8 @@ def run(cfg: dict):
                             resampling=False
                         )
 
-                        subband_slc_high, subband_meta_high = split_spectrum_parameters.bandpass_shift_spectrum(
+                        subband_slc_high, subband_meta_high = \
+                            split_spectrum_parameters.bandpass_shift_spectrum(
                             slc_raster=target_slc_image,
                             low_frequency=high_subband_frequencies[0],
                             high_frequency=high_subband_frequencies[1],
@@ -187,10 +190,8 @@ def run(cfg: dict):
     else:
         info_channel.log('Use side band for ionosphere phase correction')
     t_all_elapsed = time.time() - t_all
-
     info_channel.log(
         f"successfully ran split_spectrum in {t_all_elapsed:.3f} seconds")
-
 
 if __name__ == "__main__":
     '''
