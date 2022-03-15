@@ -2,6 +2,7 @@ from typing import Optional
 
 import isce3
 import numpy as np
+import pytest
 from isce3.unwrap import snaphu
 
 
@@ -195,7 +196,8 @@ def simulate_phase_noise(corr, nlooks: float, *, seed: Optional[int] = None):
 
 
 class TestSnaphu:
-    def test_smooth_cost(self):
+    @pytest.mark.parametrize("init_method", ["mcf", "mst"])
+    def test_smooth_cost(self, init_method):
         """Test SNAPHU unwrapping using "smooth" cost mode."""
         # Interferogram dimensions
         l, w = 1100, 256
@@ -249,6 +251,7 @@ class TestSnaphu:
             corr_raster,
             nlooks=20.0,
             cost="smooth",
+            init_method=init_method,
             conncomp_params=conncomp_params,
         )
 
@@ -272,7 +275,8 @@ class TestSnaphu:
             cc = ccl_raster.data == label
             assert jaccard_similarity(cc, mask) > 0.9
 
-    def test_topo_cost(self):
+    @pytest.mark.parametrize("init_method", ["mcf", "mst"])
+    def test_topo_cost(self, init_method):
         """Test SNAPHU unwrapping using "topo" cost mode."""
         # Simulate a topographic interferometric phase signal using notionally
         # NISAR-like 20 MHz L-band parameters.
@@ -344,6 +348,7 @@ class TestSnaphu:
             nlooks=nlooks,
             cost="topo",
             cost_params=cost_params,
+            init_method=init_method,
         )
 
         # Check the connected component labels. There should be a single

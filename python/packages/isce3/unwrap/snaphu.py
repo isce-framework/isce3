@@ -774,6 +774,7 @@ def unwrap(
     nlooks: float,
     cost: str = "smooth",
     cost_params: Optional[CostParams] = None,
+    init_method: str = "mcf",
     pwr: Optional[isce3.io.gdal.Raster] = None,
     mask: Optional[isce3.io.gdal.Raster] = None,
     unwest: Optional[isce3.io.gdal.Raster] = None,
@@ -866,6 +867,10 @@ def unwrap(
         Configuration parameters for the specified cost mode. This argument is
         required for "topo" mode and optional for all other modes. If None, the
         default configuration parameters are used. (default: None)
+    init_method: {"mst", "mcf"}, optional
+        Algorithm used for initialization of unwrapped phase gradients.
+        Supported algorithms include Minimum Spanning Tree ("mst") and Minimum
+        Cost Flow ("mcf"). (default: "mcf")
     pwr : isce3.io.gdal.Raster or None, optional
         Average intensity of the two SLCs, in linear units (not dB). Only used
         in "topo" cost mode. If None, interferogram magnitude is used as
@@ -971,8 +976,14 @@ def unwrap(
 
     configstr += f"STATCOSTMODE {cost_string()}\n"
 
-    # XXX Currently, only "MST" initialization method is supported.
-    configstr += "INITMETHOD MST\n"
+    def init_string():
+        if init_method == "mst":
+            return "MST"
+        if init_method == "mcf":
+            return "MCF"
+        raise ValueError(f"invalid init method '{init_method}'")
+
+    configstr += f"INITMETHOD {init_string()}\n"
 
     # Check cost mode-specific configuration params.
     if cost == "topo":
