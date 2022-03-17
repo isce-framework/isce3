@@ -9,7 +9,7 @@
 
 #include "isce3/io/Raster.h"
 #include <isce3/io/IH5.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/Serialization.h>
 
 #include "isce3/cuda/signal/gpuCrossMul.h"
@@ -40,7 +40,7 @@ TEST(gpuCrossmul, Crossmul)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
@@ -125,7 +125,7 @@ TEST(gpuCrossmul, MultilookCrossmul)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
@@ -211,7 +211,7 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC

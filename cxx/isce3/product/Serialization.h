@@ -22,6 +22,7 @@
 // isce3::product
 #include <isce3/product/Metadata.h>
 #include <isce3/product/Swath.h>
+#include <isce3/product/Grid.h>
 
 //! The isce namespace
 namespace isce3 {
@@ -128,9 +129,126 @@ namespace isce3 {
           * @param[in] group            HDF5 group object.
           * @param[in] swaths           Map of Swaths to be configured. */
         inline void loadFromH5(isce3::io::IGroup & group, std::map<char, Swath> & swaths) {
-            loadFromH5(group, swaths['A'], 'A');
+            if (isce3::io::exists(group, "frequencyA")) {
+                loadFromH5(group, swaths['A'], 'A');
+            }
             if (isce3::io::exists(group, "frequencyB")) {
                 loadFromH5(group, swaths['B'], 'B');
+            }
+        }
+
+        /** Load Grid from HDF5
+          *
+          * @param[in] group        HDF5 group object.
+          * @param[in] grid         Grid object to be configured. 
+          * @param[in] freq         Frequency designation (e.g., A or B) */
+        inline void loadFromH5(isce3::io::IGroup & group, Grid & grid, char freq) {
+
+            // Open appropriate frequency group
+            std::string freqString("frequency");
+            freqString.push_back(freq);
+            isce3::io::IGroup fgroup = group.openGroup(freqString);
+
+            // Load X-coordinates
+            std::valarray<double> x_array;
+            isce3::io::loadFromH5(fgroup, "xCoordinates", x_array);
+            grid.startX(x_array[0]);
+            grid.width(x_array.size());
+
+            // Load Y-coordinates
+            std::valarray<double> y_array;
+            isce3::io::loadFromH5(fgroup, "yCoordinates", y_array);
+            grid.startY(y_array[0]);
+            grid.length(y_array.size());
+
+            // Get X-coordinate spacing
+            double value;
+            isce3::io::loadFromH5(fgroup, "xCoordinateSpacing", value);
+            grid.spacingX(value);
+
+            isce3::io::loadFromH5(fgroup, "yCoordinateSpacing", value);
+            grid.spacingY(value);
+
+            isce3::io::loadFromH5(fgroup, "rangeBandwidth", value);
+            grid.rangeBandwidth(value);
+
+            isce3::io::loadFromH5(fgroup, "azimuthBandwidth", value);
+            grid.azimuthBandwidth(value);
+
+            isce3::io::loadFromH5(fgroup, "centerFrequency", value);
+            grid.centerFrequency(value);
+
+            isce3::io::loadFromH5(fgroup, "slantRangeSpacing", value);
+            grid.slantRangeSpacing(value);
+
+            auto zero_dop_freq_vect = fgroup.find("zeroDopplerTimeSpacing", 
+                                            ".", "DATASET");
+
+            /* 
+            Look for zeroDopplerTimeSpacing in frequency group
+            (GCOV and GSLC products)
+            */
+            if (zero_dop_freq_vect.size() > 0) {
+                isce3::io::loadFromH5(fgroup, "zeroDopplerTimeSpacing", value);
+                grid.zeroDopplerTimeSpacing(value);
+            } else {
+
+                /* 
+                Look for zeroDopplerTimeSpacing within grid group
+                (GUNW products)
+                */
+                auto zero_dop_vect = group.find("zeroDopplerTimeSpacing", 
+                                                ".", "DATASET");
+                if (zero_dop_vect.size() > 0) {
+                    isce3::io::loadFromH5(group, "zeroDopplerTimeSpacing", value);
+                    grid.zeroDopplerTimeSpacing(value);
+                } else {
+                    grid.zeroDopplerTimeSpacing(
+                        std::numeric_limits<double>::quiet_NaN());
+                }
+            }
+
+            auto epsg_freq_vect = fgroup.find("epsg", ".", "DATASET");
+
+            int epsg = -1;
+            // Look for epsg in frequency group
+            if (epsg_freq_vect.size() > 0) {
+                isce3::io::loadFromH5(fgroup, "epsg", epsg);
+                grid.epsg(epsg);
+            } else {
+
+                // Look for epsg in dataset projection
+                auto projection_vect = fgroup.find("projection", 
+                                                   ".", "DATASET");
+                if (projection_vect.size() > 0) {
+                    for (auto projection_str: projection_vect) {
+                        auto projection_obj = fgroup.openDataSet(projection_str);
+                        if (projection_obj.attrExists("epsg_code")) {
+                            auto attr = projection_obj.openAttribute("epsg_code");
+                            attr.read(getH5Type<int>(), &epsg);
+                            grid.epsg(epsg);
+                        }
+                    }
+                } 
+            }
+                
+            if (epsg == -1) {
+                throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                        "ERROR could not infer EPSG code from input HDF5 file");
+            }
+
+        }
+
+        /** Load multiple grids from HDF5
+          *
+          * @param[in] group            HDF5 group object.
+          * @param[in] grids           Map of Grids to be configured. */
+        inline void loadFromH5(isce3::io::IGroup & group, std::map<char, Grid> & grids) {
+            if (isce3::io::exists(group, "frequencyA")) {
+                loadFromH5(group, grids['A'], 'A');
+            }
+            if (isce3::io::exists(group, "frequencyB")) {
+                loadFromH5(group, grids['B'], 'B');
             }
         }
 

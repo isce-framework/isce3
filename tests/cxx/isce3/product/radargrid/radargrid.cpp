@@ -12,7 +12,7 @@
 // isce3::product
 #include <isce3/core/LookSide.h>
 #include <isce3/product/RadarGridParameters.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 
 using isce3::core::LookSide;
 
@@ -23,7 +23,7 @@ TEST(RadarGridTest, fromProduct) {
     isce3::io::IH5File file(h5file);
 
     // Instantiate and load a product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     //Create radar grid from product
     isce3::product::RadarGridParameters grid(product);
@@ -44,7 +44,7 @@ TEST(RadarGridTest, fromSwath) {
     isce3::io::IH5File file(h5file);
 
     // Instantiate and load a product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Get the swath
     const isce3::product::Swath &swath = product.swath('A');

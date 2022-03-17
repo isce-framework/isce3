@@ -517,9 +517,8 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
     
     }else if(params->initmethod==MCFINIT){
 
-      fflush(NULL);
-      throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-              "MCF initialization not implemented");
+      /* use minimum cost flow (MCF) algorithm */
+      MCFInitFlows(wrappedphase,&flows,mstcosts,nrow,ncol);
 
     }else{
       fflush(NULL);
@@ -724,7 +723,6 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 
   /* flip the sign of the unwrapped phase array if it was flipped initially, */
   FlipPhaseArraySign(unwrappedphase,params,nrow,ncol);
-
 
   /* write the unwrapped output */
   fprintf(sp1,"Writing output to file %s\n",outfiles->outfile);

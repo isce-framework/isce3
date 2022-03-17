@@ -27,6 +27,7 @@ endforeach()
 set (list_of_exe
      nisar/workflows/crossmul.py
      nisar/workflows/focus.py
+     nisar/workflows/gen_doppler_range_product.py
      nisar/workflows/geo2rdr.py
      nisar/workflows/geocode_insar.py
      nisar/workflows/gcov.py

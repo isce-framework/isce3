@@ -4,6 +4,6 @@
 #include <isce3/product/forward.h>
 
 namespace isce3 { namespace cuda { namespace geometry {
-void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem,
+void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& dem,
                 isce3::io::Raster& out_raster, char frequency = 'A');
 }}}

@@ -3,23 +3,11 @@ import os
 import pathlib
 import tempfile
 from dataclasses import dataclass
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 import isce3
 import numpy as np
 from pybind_isce3.unwrap import _snaphu_unwrap
-
-
-TransmitMode = Literal["pingpong", "repeat_pass", "single_antenna_transmit"]
-TransmitMode.__doc__ = """Radar transmit mode
-
-    'pingpong' and 'repeat_pass' modes indicate that both antennas both
-    transmitted and received. Both modes have the same effect in the algorithm.
-
-    'single_antenna_transmit' indicates that a single antenna was used to
-    transmit while both antennas received. In this mode, the baseline is
-    effectively halved.
-    """
 
 
 @dataclass(frozen=True)
@@ -159,7 +147,7 @@ class TopoCostParams:
     range_res: float
     az_res: float
     wavelength: float
-    transmit_mode: TransmitMode
+    transmit_mode: str
     altitude: float
     earth_radius: float = 6_378_000.0
     kds: float = 0.02
@@ -656,7 +644,7 @@ class PhaseStddevModelParams:
 
 
 @contextlib.contextmanager
-def scratch_directory(d: Optional[os.PathLike] = None, /) -> pathlib.Path:
+def scratch_directory(d: Optional[os.PathLike] = None) -> pathlib.Path:
     """Context manager that creates a (possibly temporary) filesystem directory
 
     If the input is a path-like object, a directory will be created at the
@@ -772,9 +760,6 @@ def from_flat_file(
         raster.data[i0:i1] = mmap[i0:i1]
 
 
-CostMode = Literal["topo", "defo", "smooth", "p-norm"]
-CostMode.__doc__ = """SNAPHU cost mode options"""
-
 CostParams = Union[
     TopoCostParams, DefoCostParams, SmoothCostParams, PNormCostParams,
 ]
@@ -787,8 +772,9 @@ def unwrap(
     igram: isce3.io.gdal.Raster,
     corr: isce3.io.gdal.Raster,
     nlooks: float,
-    cost: CostMode = "smooth",
+    cost: str = "smooth",
     cost_params: Optional[CostParams] = None,
+    init_method: str = "mcf",
     pwr: Optional[isce3.io.gdal.Raster] = None,
     mask: Optional[isce3.io.gdal.Raster] = None,
     unwest: Optional[isce3.io.gdal.Raster] = None,
@@ -881,6 +867,10 @@ def unwrap(
         Configuration parameters for the specified cost mode. This argument is
         required for "topo" mode and optional for all other modes. If None, the
         default configuration parameters are used. (default: None)
+    init_method: {"mst", "mcf"}, optional
+        Algorithm used for initialization of unwrapped phase gradients.
+        Supported algorithms include Minimum Spanning Tree ("mst") and Minimum
+        Cost Flow ("mcf"). (default: "mcf")
     pwr : isce3.io.gdal.Raster or None, optional
         Average intensity of the two SLCs, in linear units (not dB). Only used
         in "topo" cost mode. If None, interferogram magnitude is used as
@@ -986,8 +976,14 @@ def unwrap(
 
     configstr += f"STATCOSTMODE {cost_string()}\n"
 
-    # XXX Currently, only "MST" initialization method is supported.
-    configstr += "INITMETHOD MST\n"
+    def init_string():
+        if init_method == "mst":
+            return "MST"
+        if init_method == "mcf":
+            return "MCF"
+        raise ValueError(f"invalid init method '{init_method}'")
+
+    configstr += f"INITMETHOD {init_string()}\n"
 
     # Check cost mode-specific configuration params.
     if cost == "topo":

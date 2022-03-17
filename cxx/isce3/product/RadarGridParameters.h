@@ -20,10 +20,10 @@ class isce3::product::RadarGridParameters {
 
         /**
          * Constructor with a product
-         * @param[in] product Input Product
+         * @param[in] product Input RadarGridProduct
          * @param[in] frequency Frequency designation
          */
-        RadarGridParameters(const isce3::product::Product & product,
+        RadarGridParameters(const isce3::product::RadarGridProduct & product,
                             char frequency = 'A');
 
         /**

@@ -11,7 +11,7 @@
 #include "isce3/io/Raster.h"
 #include "isce3/signal/Crossmul.h"
 #include <isce3/io/IH5.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/Serialization.h>
 
 using isce3::core::avgLUT2dToLUT1d;
@@ -40,7 +40,7 @@ TEST(Crossmul, RunCrossmul)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
@@ -125,7 +125,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     isce3::io::IH5File file(h5file);
 
     // Create a product and swath
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC

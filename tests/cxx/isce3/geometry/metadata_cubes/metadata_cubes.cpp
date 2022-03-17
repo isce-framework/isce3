@@ -13,7 +13,7 @@
 #include <isce3/geometry/Topo.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/RadarGridParameters.h>
 
 template<class T>
@@ -384,7 +384,7 @@ TEST(radarGridCubeTest, testRadarGridCube)
     isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Create radar grid parameter
     char frequency = 'A';
@@ -691,7 +691,7 @@ TEST(metadataCubesTest, testMetadataCubes) {
     isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Create radar grid parameter
     char frequency = 'A';

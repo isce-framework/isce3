@@ -1,9 +1,9 @@
 #include "RadarGridParameters.h"
 
-#include "Product.h"
+#include "RadarGridProduct.h"
 
 isce3::product::RadarGridParameters::
-RadarGridParameters(const Product & product, char frequency) :
+RadarGridParameters(const RadarGridProduct & product, char frequency) :
     RadarGridParameters(product.swath(frequency), product.lookSide())
 {
     validate();

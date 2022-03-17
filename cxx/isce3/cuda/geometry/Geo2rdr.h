@@ -17,8 +17,8 @@
 class isce3::cuda::geometry::Geo2rdr : public isce3::geometry::Geo2rdr {
 
     public:
-        /** Constructor from Product */
-        inline Geo2rdr(const isce3::product::Product & product,
+        /** Constructor from RadarGridProduct */
+        inline Geo2rdr(const isce3::product::RadarGridProduct & product,
                        char frequency = 'A',
                        bool nativeDoppler = false) :
             isce3::geometry::Geo2rdr(product, frequency, nativeDoppler) {}

@@ -79,6 +79,7 @@ signal/signal.cpp
 signal/signal_utils.cpp
 unwrap/icu/icu.cpp
 unwrap/phass/phass.cpp
+unwrap/snaphu/mcf.cpp
 )
 
 #This is a temporary fix - since GDAL does not support

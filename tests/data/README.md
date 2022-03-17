@@ -41,6 +41,19 @@ f415fc38e1feff0bb1453782be3d2b5f *smoothFinal.xml.gz
 This file was uncompressed and trimmed to the first ten state vectors in
 order to reduce the size of the `orbit.xml` file stored here.
 
+# nisar_129_gcov_crop.h5
+
+Minimal GCOV sample product obtained from processing a small subset of the
+UAVSAR dataset NISARA_13905_19070_007_190930_L090_CX_129_02 from the AM/PM
+campaing. The sample product was generated with parameters:
+```
+top_left:
+   y_abs: 35.18
+   x_abs: -83.46
+bottom_right:
+   y_abs: 35.13
+   x_abs: -83.41
+```
 ## REE
 
 Multi-channel L0B Raw data and HDF5 antenna pattern cuts (NISAR antenna format *v2*) 

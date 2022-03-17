@@ -139,7 +139,8 @@ product/forward.h
 product/GeoGridParameters.h
 product/Metadata.h
 product/ProcessingInformation.h
-product/Product.h
+product/RadarGridProduct.h
+product/GeoGridProduct.h
 product/RadarGridParameters.h
 product/Serialization.h
 product/Swath.h
@@ -171,6 +172,14 @@ unwrap/icu/LabelMap.icc
 unwrap/icu/PhaseGrad.h
 unwrap/icu/SearchTable.h
 unwrap/icu/SearchTable.icc
+unwrap/ortools/ebert_graph.h
+unwrap/ortools/graph.h
+unwrap/ortools/graphs.h
+unwrap/ortools/iterators.h
+unwrap/ortools/max_flow.h
+unwrap/ortools/min_cost_flow.h
+unwrap/ortools/permutation.h
+unwrap/ortools/zvector.h
 unwrap/phass/ASSP.h
 unwrap/phass/BMFS.h
 unwrap/phass/CannyEdgeDetector.h

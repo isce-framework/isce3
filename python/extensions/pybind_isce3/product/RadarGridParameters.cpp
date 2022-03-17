@@ -5,7 +5,7 @@
 
 #include <isce3/core/DateTime.h>
 #include <isce3/core/LookSide.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 
 namespace py = pybind11;
 
@@ -22,7 +22,7 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                     isce3::io::IH5File file(h5file);
 
                     // instantiate and load a product
-                    isce3::product::Product product(file);
+                    isce3::product::RadarGridProduct product(file);
 
                     // return swath from product
                     return RadarGridParameters(product, freq);

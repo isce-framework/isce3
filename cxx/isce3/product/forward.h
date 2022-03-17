@@ -2,9 +2,11 @@
 
 namespace isce3 { namespace product {
 
-    class Product;
+    class RadarGridProduct;
+    class GeoGridProduct;
     class RadarGridParameters;
     class GeoGridParameters;
     class Swath;
+    class Grid;
 
 }}
