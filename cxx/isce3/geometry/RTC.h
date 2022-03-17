@@ -96,7 +96,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor
  *
- * @param[in]  product             Product
+ * @param[in]  product             RadarGridProduct
  * @param[in]  dem_raster          Input DEM raster
  * @param[out] output_raster       Output raster
  * @param[in]  frequency           Product frequency
@@ -116,7 +116,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * looks associated with the geogrid will be saved
  * @param[in]  rtc_memory_mode     Select memory mode
  * */
-void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
+void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster, char frequency = 'A',
         bool native_doppler = false,
         rtcInputTerrainRadiometry inputTerrainRadiometry =

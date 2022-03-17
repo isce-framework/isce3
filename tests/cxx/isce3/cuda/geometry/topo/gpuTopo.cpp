@@ -21,7 +21,7 @@
 #include "isce3/io/Raster.h"
 
 // isce3::product
-#include "isce3/product/Product.h"
+#include "isce3/product/RadarGridProduct.h"
 
 // isce3::cuda::geometry
 #include "isce3/cuda/geometry/Topo.h"
@@ -36,7 +36,7 @@ TEST(GPUTopoTest, RunTopo) {
     isce3::io::IH5File file(h5file);
 
     // Load the product
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Create topo instance
     isce3::cuda::geometry::Topo topo(product, 'A', true);

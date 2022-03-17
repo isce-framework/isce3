@@ -4,8 +4,8 @@
 
 namespace isce3 { namespace image {
 
-// Constructor from an isce3::product::Product
-inline ResampSlc::ResampSlc(const isce3::product::Product& product,
+// Constructor from an isce3::product::RadarGridProduct
+inline ResampSlc::ResampSlc(const isce3::product::RadarGridProduct& product,
                             char frequency)
     : ResampSlc(product.swath(frequency))
 {
@@ -15,10 +15,10 @@ inline ResampSlc::ResampSlc(const isce3::product::Product& product,
     _filename = product.filename();
 }
 
-// Constructor from an isce3::product::Product and reference product
+// Constructor from an isce3::product::RadarGridProduct and reference product
 // (flattening)
-inline ResampSlc::ResampSlc(const isce3::product::Product& product,
-                            const isce3::product::Product& refProduct,
+inline ResampSlc::ResampSlc(const isce3::product::RadarGridProduct& product,
+                            const isce3::product::RadarGridProduct& refProduct,
                             char frequency)
     : ResampSlc(product.swath(frequency), refProduct.swath(frequency))
 {
@@ -146,7 +146,7 @@ inline void ResampSlc::doppler(const isce3::core::LUT2d<double>& lut)
 
 // Set reference product
 inline void
-ResampSlc::referenceProduct(const isce3::product::Product& refProduct,
+ResampSlc::referenceProduct(const isce3::product::RadarGridProduct& refProduct,
                             char frequency)
 {
     _setRefDataFromSwath(refProduct.swath(frequency));

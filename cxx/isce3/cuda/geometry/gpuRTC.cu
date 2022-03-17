@@ -20,7 +20,7 @@
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/RTC.h>
 #include <isce3/geometry/Topo.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 
 #include <isce3/cuda/core/gpuLUT1d.h>
 #include <isce3/cuda/core/Orbit.h>
@@ -271,7 +271,7 @@ namespace isce3 { namespace cuda {
 
     namespace geometry {
 
-void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem,
+void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& dem,
                 isce3::io::Raster& out_raster, char frequency)
 {
 

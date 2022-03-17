@@ -4,7 +4,7 @@
 #include <isce3/geometry/RTC.h>
 #include <isce3/io/IH5.h>
 #include <isce3/io/Raster.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/RadarGridParameters.h>
 #include <string>
 
@@ -19,7 +19,7 @@ std::set<isce3::geometry::rtcAlgorithm> rtc_algorithm_set = {
 TEST(TestRTC, RunRTC) {
     // Open HDF5 file and load products
     isce3::io::IH5File file(TESTDATA_DIR "envisat.h5");
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
     char frequency = 'A';
 
     // Open DEM raster

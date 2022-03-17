@@ -3,13 +3,13 @@
 #include "isce3/core/Serialization.h"
 #include "isce3/io/IH5.h"
 #include "isce3/io/Raster.h"
-#include "isce3/product/Product.h"
+#include "isce3/product/RadarGridProduct.h"
 #include "isce3/cuda/geometry/gpuRTC.h"
 
 TEST(TestRTC, RunRTC) {
     // Open HDF5 file and load products
     isce3::io::IH5File file(TESTDATA_DIR "envisat.h5");
-    isce3::product::Product product(file);
+    isce3::product::RadarGridProduct product(file);
 
     // Open DEM raster
     isce3::io::Raster dem(TESTDATA_DIR "srtm_cropped.tif");

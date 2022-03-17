@@ -28,11 +28,18 @@ def test_raw():
     t, grid = raw.getRadarGrid(frequency=freq, tx=tx)
     ds = raw.getRawDataset(freq, pol)
     swaths = raw.getSubSwaths(frequency=freq, tx=tx)
+    prf = raw.getNominalPRF(freq, tx)
+    bandwidth = raw.getRangeBandwidth(freq, tx)
 
     # Verify assumptions.
     npt.assert_equal(orbit.reference_epoch, attitude.reference_epoch)
     npt.assert_equal(side, "right")
-
+    npt.assert_equal(raw.isDithered(freq, tx), False)
+    npt.assert_equal(raw.sarBand, 'L')
+    npt.assert_equal(ds.ndim, 2)
+    npt.assert_equal(ds.dtype, np.complex64)
+    print(f'Datatype of raw dataset before decoding -> {ds.dtype_storage}')
+    
     # Check quaternion convention.
     # RCS frame has Y-axis nearly parallel to velocity (for small rotations).
     # In this case they should be exactly aligned since roll == pitch == 0.

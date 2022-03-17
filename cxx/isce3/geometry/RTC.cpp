@@ -563,7 +563,7 @@ void areaProjGetNBlocks(const int array_length, const int array_width,
     }
 }
 
-void computeRtc(isce3::product::Product& product, isce3::io::Raster& dem_raster,
+void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster, char frequency, bool native_doppler,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,

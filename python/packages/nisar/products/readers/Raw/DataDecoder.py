@@ -28,6 +28,9 @@ class DataDecoder(object):
         self.decoder = lambda key: self.dataset[key]
         self.dataset = h5dataset
         self.shape = self.dataset.shape
+        self.ndim = self.dataset.ndim        
+        self.dtype = np.dtype('c8')
+        self.dtype_storage = self.dataset.dtype
         group = h5dataset.parent
         if "BFPQLUT" in group:
             assert group["BFPQLUT"].dtype == np.float32

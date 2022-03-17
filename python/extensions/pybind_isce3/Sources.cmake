@@ -74,6 +74,7 @@ product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
 product/Swath.cpp
+product/Grid.cpp
 unwrap/unwrap.cpp
 unwrap/ICU.cpp
 unwrap/Phass.cpp

@@ -14,7 +14,7 @@
 #include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
-#include <isce3/product/Product.h>
+#include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/RadarGridParameters.h>
 
 

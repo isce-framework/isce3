@@ -67,9 +67,10 @@ math/polyfunc.cpp
 math/RootFind1dNewton.cpp
 math/RootFind1dSecant.cpp
 polsar/symmetrize.cpp
-product/GeoGridParameters.cpp
-product/Product.cpp
 product/RadarGridParameters.cpp
+product/GeoGridParameters.cpp
+product/RadarGridProduct.cpp
+product/GeoGridProduct.cpp
 signal/Covariance.cpp
 signal/Crossmul.cpp
 signal/CrossMultiply.cpp
@@ -90,6 +91,8 @@ unwrap/icu/PhaseGrad.cpp
 unwrap/icu/Residue.cpp
 unwrap/icu/Tree.cpp
 unwrap/icu/Unwrap.cpp
+unwrap/ortools/max_flow.cc
+unwrap/ortools/min_cost_flow.cc
 unwrap/phass/ASSP.cc
 unwrap/phass/BMFS.cc
 unwrap/phass/CannyEdgeDetector.cc

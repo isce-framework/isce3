@@ -17,8 +17,8 @@
 class isce3::cuda::geometry::Topo : public isce3::geometry::Topo {
 
     public:
-        /** Constructor from Product */
-        inline Topo(const isce3::product::Product & product,
+        /** Constructor from RadarGridProduct */
+        inline Topo(const isce3::product::RadarGridProduct & product,
                     char frequency = 'A',
                     bool nativeDoppler = false) :
             isce3::geometry::Topo(product, frequency, nativeDoppler){}

@@ -250,9 +250,32 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
             copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path)
         else:
             copy_gslc_gcov_meta(ref_slc.SwathPath, dst, src_h5, dst_h5)
+            if ref_slc.productType in ref_slc.SwathPath:
+                # Regular case
+                dst_path = ref_slc.SwathPath.replace(ref_slc.productType, dst)
+            else:
+                # ProductType is RSLC and SwathPath contains /SLC/
+                dst_path = ref_slc.SwathPath.replace('SLC', dst)
+            # Copy zeroDopplerTimeSpacing scalar (GCOV and GSLC)
+            for freq in freq_pols.keys():
+                frequency = f'frequency{freq}'
+                dst_freq_path = dst_path.replace('swaths', 'grids')+f'/{frequency}'
+                copy_zero_doppler_time_spacing(src_h5, ref_slc.SwathPath, 
+                                               dst_h5, dst_freq_path)
 
         src_h5.close()
         dst_h5.close()
+
+
+def copy_zero_doppler_time_spacing(src_h5, swath_path, dst_h5, dst_path):
+    az_spacing = src_h5[f'{swath_path}/zeroDopplerTimeSpacing'][()]
+    descr = "Time interval in the along track direction for raster layers. " \
+            "This is the same as the spacing between consecutive entries in " \
+            "zeroDopplerTime array"
+    _create_datasets(dst_h5[dst_path], [0], np.float32,
+                     'zeroDopplerTimeSpacing',
+                     descr=descr, units="seconds", data=az_spacing,
+                     long_name="zero doppler time spacing")
 
 
 def copy_gslc_gcov_meta(src_swath_path, dst, src_h5, dst_h5):
@@ -364,7 +387,6 @@ def prep_ds(cfg, output_hdf5, dst):
             prep_ds_gslc_gcov(cfg, dst, dst_h5)
         else:
             prep_ds_insar(cfg, dst, dst_h5)
-
 
 def prep_ds_gslc_gcov(cfg, dst, dst_h5):
     '''

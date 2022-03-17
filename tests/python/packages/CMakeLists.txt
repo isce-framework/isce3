@@ -1,12 +1,16 @@
 set(TESTFILES
 isce3/core/gpu_check.py
+isce3/signal/doppler_est_func.py
+isce3/signal/fir_filter_func.py
 isce3/signal/point_target_info.py
 isce3/unwrap/snaphu.py
 nisar/products/readers/attitude.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
 nisar/workflows/crossmul.py
+nisar/workflows/doppler_lut_from_raw.py
 nisar/workflows/focus.py
+nisar/workflows/gen_doppler_range_product.py
 nisar/workflows/stage_dem.py
 nisar/workflows/gcov.py
 nisar/workflows/geo2rdr.py

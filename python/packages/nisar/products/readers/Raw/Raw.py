@@ -130,6 +130,26 @@ class RawBase(Base, family='nisar.productreader.raw'):
         fc = self.getCenterFrequency(frequency, tx)
         return fc, fs, K, T
 
+    def getRangeBandwidth(self, frequency: str = 'A', tx: str = 'H'):
+        """Get RF bandwidth of a desired TX frequency band and pol.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}, optional
+            Sub-band
+        tx : {'H', 'V', 'L', 'R'}, optional
+            Transmit polarization
+
+        Returns
+        -------
+        float
+            Bandwidth in Hz.
+        
+        """
+        tx_path = self._pulseMetaPath(frequency=frequency, tx=tx)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            return f[tx_path]["rangeBandwidth"][()]
+        
     @property
     def TelemetryPath(self):
         return f"{self.ProductPath}/lowRateTelemetry"
@@ -189,6 +209,51 @@ class RawBase(Base, family='nisar.productreader.raw'):
             epoch = isce3.io.get_ref_epoch(f[txpath], name)
         return epoch, t
 
+    def getNominalPRF(self, frequency='A', tx='H'):
+        """Nominal PRF defined as mean PRF for dithered case.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}, optional
+            Sub-band.  Typically main science band is 'A'.
+
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular
+
+        Returns
+        -------
+        float
+            PRF in Hz.        
+
+        """
+        _, az_time = self.getPulseTimes(frequency, tx)
+        return (az_time.size - 1) / (az_time[-1] - az_time[0])
+
+    def isDithered(self, frequency='A', tx='H'):
+        """Whether or not PRF is dithering.
+
+        That is more than one PRF value within entire azimuth duration.
+
+       Parameters
+        ----------
+        frequency : {'A', 'B'}, optional
+            Sub-band.  Typically main science band is 'A'.
+
+        tx : {'H', 'V', 'L', 'R'}
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear), left circular, right circular
+
+        Returns
+        -------
+        bool
+            True if multiple PRF values and False if PRF is fixed.    
+
+        """
+        _, az_time = self.getPulseTimes(frequency, tx)
+        tm_diff = np.diff(az_time)
+        return not np.isclose(tm_diff.min(), tm_diff.max())
+        
 
     def getCenterFrequency(self, frequency: str = 'A', tx: str = None):
         if tx is None:
