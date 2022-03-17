@@ -233,6 +233,11 @@ class Base(pyre.component,
         return self._RootPath
 
     @property
+    def sarBand(self):
+        """SAR band string such as 'L' or 'S' for NISAR."""
+        return self.RootPath[-4]        
+
+    @property
     def IdentificationPath(self):
         return os.path.join(self.RootPath, self._IdentificationPath)
 
