@@ -516,12 +516,14 @@ ionosphere_phase_correction_options:
     # Boolean flag to enable/disable ionosphere phase correction
     enabled: bool(required=False)
     split_range_spectrum: include('split_range_spectrum_options', required=False)
-    list_of_frequencies:
-        # valid values for polarizations
-        # empty for all polarizations found in RSLC
-        # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-        A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
-        B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+    list_of_frequencies: include('ionosphere_freq_pol_options', required=False)
+
+ionosphere_freq_pol_options:
+    # valid values for polarizations
+    # empty for all polarizations found in RSLC
+    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+    A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+    B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
