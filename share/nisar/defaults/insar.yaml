@@ -150,7 +150,7 @@ runconfig:
                 range_fft_size:
 
             ionosphere_phase_correction:
-                enabled: True
+                enabled: False
                 list_of_frequencies:
                    A: 
                    B: 

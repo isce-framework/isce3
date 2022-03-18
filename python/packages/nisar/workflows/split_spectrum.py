@@ -51,7 +51,7 @@ def run(cfg: dict):
 
         common_parent_path = 'science/LSAR'
         freq = 'A'
-        # Note, apply split-spectrum only to HH or VV?
+
         pol_list = iono_freq_pol[freq]
         info_channel.log(f'Split the main band {pol_list} of the signal')
 
@@ -188,7 +188,8 @@ def run(cfg: dict):
                 data = dst_h5_high[f"{dest_freq_path}/processedRangeBandwidth"]
                 data[...] = subband_meta_high['rg_bandwidth']
     else:
-        info_channel.log('Use side band for ionosphere phase correction')
+        info_channel.log('Split spectrum is not needed')
+
     t_all_elapsed = time.time() - t_all
     info_channel.log(
         f"successfully ran split_spectrum in {t_all_elapsed:.3f} seconds")
