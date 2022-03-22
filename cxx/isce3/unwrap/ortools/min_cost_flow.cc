@@ -268,7 +268,13 @@ bool GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::
        it.Next()) {
 #ifndef NDEBUG
     const ArcIndex arc = it.Index();
-    assert(!IsAdmissible(arc) && DebugString("CheckRelabelPrecondition:", arc));
+    if (IsAdmissible(arc)) {
+      pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+      channel << pyre::journal::at(__HERE__)
+              << DebugString("CheckRelabelPrecondition:", arc)
+              << pyre::journal::endl;
+    }
+    assert(!IsAdmissible(arc));
 #endif
   }
   return true;
@@ -489,8 +495,16 @@ GenericMinCostFlow<Graph, ArcFlowType, ArcScaledCostType>::FastReducedCost(
   assert(node_potential_[Tail(arc)] == tail_potential);
   assert(graph_->IsNodeValid(Tail(arc)));
   assert(graph_->IsNodeValid(Head(arc)));
-  assert(node_potential_[Tail(arc)] <= 0 && DebugString("ReducedCost:", arc));
-  assert(node_potential_[Head(arc)] <= 0 && DebugString("ReducedCost:", arc));
+#ifndef NDEBUG
+  if (node_potential_[Tail(arc)] > 0 || node_potential_[Head(arc)] > 0) {
+    pyre::journal::firewall_t channel("isce3.unwrap.ortools.min_cost_flow");
+    channel << pyre::journal::at(__HERE__)
+            << DebugString("ReducedCost:", arc)
+            << pyre::journal::endl;
+  }
+#endif
+  assert(node_potential_[Tail(arc)] <= 0);
+  assert(node_potential_[Head(arc)] <= 0);
   return scaled_arc_unit_cost_[arc] + tail_potential -
          node_potential_[Head(arc)];
 }

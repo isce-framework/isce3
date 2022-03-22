@@ -312,7 +312,13 @@ bool GenericMaxFlow<Graph>::CheckRelabelPrecondition(NodeIndex node) const {
        it.Next()) {
 #ifndef NDEBUG
     const ArcIndex arc = it.Index();
-    assert(!IsAdmissible(arc) && DebugString("CheckRelabelPrecondition:", arc));
+    if (IsAdmissible(arc)) {
+      pyre::journal::firewall_t channel("isce3.unwrap.ortools.max_flow");
+      channel << pyre::journal::at(__HERE__)
+              << DebugString("CheckRelabelPrecondition:", arc)
+              << pyre::journal::endl;
+    }
+    assert(!IsAdmissible(arc));
 #endif
   }
   return true;
