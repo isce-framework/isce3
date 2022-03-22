@@ -1,0 +1,3 @@
+cmake>=3.18
+doxygen
+gxx_linux-64

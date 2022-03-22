@@ -1,0 +1,5 @@
+eigen
+git
+ninja
+pytest
+shapely
