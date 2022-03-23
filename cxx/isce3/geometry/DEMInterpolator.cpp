@@ -10,20 +10,10 @@
 #include <isce3/core/Projections.h>
 #include <isce3/io/Raster.h>
 
-isce3::geometry::DEMInterpolator::
-~DEMInterpolator() {
-    if (_interp) {
-        delete _interp;
-    }
-    if (_proj) {
-        delete _proj;
-    }
-}
-
 /** Set EPSG code for input DEM */
 void isce3::geometry::DEMInterpolator::epsgCode(int epsgcode) {
     _epsgcode = epsgcode;
-    _proj = isce3::core::createProj(epsgcode);
+    _proj = isce3::core::makeProjection(epsgcode);
 }
 
 // Load DEM subset into memory
@@ -58,7 +48,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     //Initialize projection
     int epsgcode = demRaster.getEPSG();
     _epsgcode = epsgcode;
-    _proj = isce3::core::createProj(epsgcode);
+    _proj = isce3::core::makeProjection(epsgcode);
 
     // Validate requested geographic bounds with input DEM raster
     if (minX < firstX) {
@@ -112,7 +102,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
 
     // Initialize internal interpolator
-    _interp = isce3::core::createInterpolator<float>(_interpMethod);
+    _interp = std::unique_ptr<isce3::core::Interpolator<float>>(isce3::core::createInterpolator<float>(_interpMethod));
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;
@@ -144,7 +134,7 @@ loadDEM(isce3::io::Raster & demRaster) {
     //Initialize projection
     int epsgcode = demRaster.getEPSG();
     _epsgcode = epsgcode;
-    _proj = isce3::core::createProj(epsgcode);
+    _proj = isce3::core::makeProjection(epsgcode);
 
     // Store actual starting lat/lon for raster subset
     _xstart = firstX;
@@ -159,7 +149,7 @@ loadDEM(isce3::io::Raster & demRaster) {
     demRaster.getBlock(_dem.data(), 0, 0, width, length);
 
     // Initialize internal interpolator
-    _interp = isce3::core::createInterpolator<float>(_interpMethod);
+    _interp = std::unique_ptr<isce3::core::Interpolator<float>>(isce3::core::createInterpolator<float>(_interpMethod));
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;

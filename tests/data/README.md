@@ -117,4 +117,13 @@ and then post-processed and converted into L0B product via its python utility to
   The Tx range lines types are of HPA, LNA, and BYPASS. BYPASS range line interval is 20.
 
 [1]: M. Shimada et al., "PALSAR Radiometric and Geometric Calibration",
-*IEEE Trans. Geosci. Remote Sens.*, pp. 3915-3932, December 2009.     
+*IEEE Trans. Geosci. Remote Sens.*, pp. 3915-3932, December 2009.
+
+## DEM
+- **dem_himalayas_E81p5_N28p3_short.tiff**
+
+  DEM raster file over a very small area of Himalayas downloaded from NISAR-DEM AWS S3
+  bucket as follows:
+  ```
+  $ stage_dem.py -b 81.45 28.29 81.5 28.3 -o dem_himalayas_E81p5_N28p3_short.vrt
+  ```
