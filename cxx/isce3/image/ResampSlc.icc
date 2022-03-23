@@ -6,8 +6,8 @@ namespace isce3 { namespace image {
 
 // Constructor from an isce3::product::RadarGridProduct
 inline ResampSlc::ResampSlc(const isce3::product::RadarGridProduct& product,
-                            char frequency)
-    : ResampSlc(product.swath(frequency))
+                            char frequency, const std::complex<float> invalid_value)
+    : ResampSlc(product.swath(frequency), invalid_value)
 {
     // Set the doppler
     _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
@@ -19,8 +19,9 @@ inline ResampSlc::ResampSlc(const isce3::product::RadarGridProduct& product,
 // (flattening)
 inline ResampSlc::ResampSlc(const isce3::product::RadarGridProduct& product,
                             const isce3::product::RadarGridProduct& refProduct,
-                            char frequency)
-    : ResampSlc(product.swath(frequency), refProduct.swath(frequency))
+                            char frequency, const std::complex<float> invalid_value)
+    : ResampSlc(product.swath(frequency), refProduct.swath(frequency),
+                invalid_value)
 {
     // Set the doppler
     _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
@@ -29,8 +30,9 @@ inline ResampSlc::ResampSlc(const isce3::product::RadarGridProduct& product,
 }
 
 // Constructor from an isce3::product::Swath (no flattening)
-inline ResampSlc::ResampSlc(const isce3::product::Swath& swath)
-    : _haveRefData(false)
+inline ResampSlc::ResampSlc(const isce3::product::Swath& swath,
+                            const std::complex<float> invalid_value)
+    : _haveRefData(false), _invalid_value(invalid_value)
 {
     // Set radar parameters
     _setDataFromSwath(swath);
@@ -38,8 +40,9 @@ inline ResampSlc::ResampSlc(const isce3::product::Swath& swath)
 
 // Constructor from an isce3::product::Swath and reference swath (flattening)
 inline ResampSlc::ResampSlc(const isce3::product::Swath& swath,
-                            const isce3::product::Swath& refSwath)
-    : _haveRefData(true)
+                            const isce3::product::Swath& refSwath,
+                            const std::complex<float> invalid_value)
+    : _haveRefData(true), _invalid_value(invalid_value)
 {
     // Set radar parameters
     _setDataFromSwath(swath);
@@ -49,12 +52,13 @@ inline ResampSlc::ResampSlc(const isce3::product::Swath& swath,
 
 // Constructor from an isce3::product::RadarGridParameters (no flattening)
 inline ResampSlc::ResampSlc(const isce3::product::RadarGridParameters& rdr_grid,
-                            const isce3::core::LUT2d<double>& doppler)
+                            const isce3::core::LUT2d<double>& doppler,
+                            const std::complex<float> invalid_value)
     : _haveRefData(false), _dopplerLUT(doppler),
       _startingRange(rdr_grid.startingRange()),
       _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
       _sensingStart(rdr_grid.sensingStart()), _prf(rdr_grid.prf()),
-      _wavelength(rdr_grid.wavelength())
+      _wavelength(rdr_grid.wavelength()), _invalid_value(invalid_value)
 {}
 
 // Constructor from an isce3::product::RadarGridParameters and reference radar
@@ -62,23 +66,26 @@ inline ResampSlc::ResampSlc(const isce3::product::RadarGridParameters& rdr_grid,
 inline ResampSlc::ResampSlc(
         const isce3::product::RadarGridParameters& rdr_grid,
         const isce3::product::RadarGridParameters& ref_rdr_grid,
-        const isce3::core::LUT2d<double>& doppler, double wvl, double ref_wvl)
+        const isce3::core::LUT2d<double>& doppler,
+        const std::complex<float> invalid_value)
     : _haveRefData(true), _dopplerLUT(doppler),
       _startingRange(rdr_grid.startingRange()),
       _rangePixelSpacing(rdr_grid.rangePixelSpacing()),
       _sensingStart(rdr_grid.sensingStart()), _prf(rdr_grid.prf()),
-      _wavelength(wvl), _refStartingRange(ref_rdr_grid.startingRange()),
+      _wavelength(rdr_grid.wavelength()),
+      _refStartingRange(ref_rdr_grid.startingRange()),
       _refRangePixelSpacing(ref_rdr_grid.rangePixelSpacing()),
-      _refWavelength(ref_wvl)
+      _refWavelength(ref_rdr_grid.wavelength()), _invalid_value(invalid_value)
 {}
 
 // Constructor from individual components (no flattening)
 inline ResampSlc::ResampSlc(const isce3::core::LUT2d<double>& doppler,
                             double startingRange, double rangePixelSpacing,
-                            double sensingStart, double prf, double wvl)
+                            double sensingStart, double prf, double wvl,
+                            const std::complex<float> invalid_value)
     : _haveRefData(false), _dopplerLUT(doppler), _startingRange(startingRange),
       _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
-      _prf(prf), _wavelength(wvl)
+      _prf(prf), _wavelength(wvl), _invalid_value(invalid_value)
 {}
 
 // Constructor from individual components (flattening)
@@ -86,11 +93,13 @@ inline ResampSlc::ResampSlc(const isce3::core::LUT2d<double>& doppler,
                             double startingRange, double rangePixelSpacing,
                             double sensingStart, double prf, double wvl,
                             double refStartingRange,
-                            double refRangePixelSpacing, double refWvl)
+                            double refRangePixelSpacing, double refWvl,
+                            const std::complex<float> invalid_value)
     : _haveRefData(true), _dopplerLUT(doppler), _startingRange(startingRange),
       _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
       _prf(prf), _wavelength(wvl), _refStartingRange(refStartingRange),
-      _refRangePixelSpacing(refRangePixelSpacing), _refWavelength(refWvl)
+      _refRangePixelSpacing(refRangePixelSpacing), _refWavelength(refWvl),
+      _invalid_value(invalid_value)
 {}
 
 // Set radar parameters from an isce3::product::Swath

@@ -1,10 +1,3 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Joshua Cohen, Bryan V. Riel, Liang Yu
-// Copyright 2017-2018
-//
-
 #include "ResampSlc.h"
 
 #include <algorithm>
@@ -14,7 +7,7 @@
 
 // isce3::core
 #include <isce3/core/Constants.h>
-#include <isce3/core/LUT1d.h>
+#include <isce3/core/LUT2d.h>
 
 #include <isce3/image/Tile.h>
 
@@ -30,9 +23,9 @@ resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
        const std::string & azOffsetFilename,       // filename of azimuth offsets
-       int inputBand, bool flatten, bool isComplex, int rowBuffer,
-       int chipSize) {
-
+       int inputBand, bool flatten, int rowBuffer,
+       int chipSize)
+{
     // Make input rasters
     Raster inputSlc(inputFilename, GA_ReadOnly);
     Raster rgOffsetRaster(rgOffsetFilename, GA_ReadOnly);
@@ -45,21 +38,16 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 
     // Call generic resamp
     resamp(inputSlc, outputSlc, rgOffsetRaster, azOffsetRaster, inputBand, flatten,
-           isComplex, rowBuffer, chipSize);
+           rowBuffer, chipSize);
 }
 
 // Generic resamp entry point from externally created rasters
 void isce3::cuda::image::ResampSlc::
 resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
        isce3::io::Raster & rgOffsetRaster, isce3::io::Raster & azOffsetRaster,
-       int inputBand, bool flatten, bool isComplex, int rowBuffer,
-       int chipSize) {
-
-    // Check if data are not complex
-    if (!isComplex) {
-        std::cout << "Real data interpolation not implemented yet.\n";
-        return;
-    }
+       int inputBand, bool flatten, int rowBuffer,
+       int chipSize)
+{
     // Set the band number for input SLC
     _inputBand = inputBand;
     // Cache width of SLC image
@@ -70,8 +58,9 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
     const int outWidth = rgOffsetRaster.width();
 
     // Check if reference data is available
-    if (!this->haveRefData()) {
-        flatten = false;
+    if (flatten && !this->haveRefData()) {
+        std::string error_msg{"Unable to flatten; reference data not provided."};
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
     }
 
     // initialize interpolator
@@ -79,8 +68,8 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
 
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
-    std::cout << 
-        "GPU resampling using " << nTiles << " tiles of " << _linesPerTile 
+    std::cout <<
+        "GPU resampling using " << nTiles << " tiles of " << _linesPerTile
         << " lines per tile\n";
     // Start timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -106,15 +95,16 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
 
         // Get corresponding image indices
         std::cout << "Reading in image data for tile " << tileCount << std::endl;
-        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2); 
+        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2);
 
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << std::endl;
-        gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier, 
-                isce3::core::avgLUT2dToLUT1d<double>(_dopplerLUT), interp, inWidth, inLength, this->startingRange(),
-                this->rangePixelSpacing(), this->prf(), this->wavelength(),
-                this->refStartingRange(), this->refRangePixelSpacing(),
-                this->refWavelength(), flatten, chipSize);
+        gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier,
+                _dopplerLUT, interp, inWidth, inLength, this->startingRange(),
+                this->rangePixelSpacing(), this->sensingStart(), this->prf(),
+                this->wavelength(), this->refStartingRange(),
+                this->refRangePixelSpacing(), this->refWavelength(), flatten,
+                chipSize, _invalid_value);
 
     }
 
@@ -124,5 +114,3 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
         timerEnd - timerStart).count();
     std::cout << "Elapsed processing time: " << elapsed << " sec" << "\n";
 }
-
-// end of file

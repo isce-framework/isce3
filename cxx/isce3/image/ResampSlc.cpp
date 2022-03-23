@@ -22,7 +22,7 @@ void ResampSlc::resamp(
         const std::string& outputFilename,   // filename of output resampled SLC
         const std::string& rgOffsetFilename, // filename of range offsets
         const std::string& azOffsetFilename, // filename of azimuth offsets
-        int inputBand, bool flatten, bool isComplex, int rowBuffer,
+        int inputBand, bool flatten, int rowBuffer,
         int chipSize)
 {
     // Make input rasters
@@ -38,7 +38,7 @@ void ResampSlc::resamp(
 
     // Call generic resamp
     resamp(inputSlc, outputSlc, rgOffsetRaster, azOffsetRaster, inputBand,
-           flatten, isComplex, rowBuffer, chipSize);
+           flatten, rowBuffer, chipSize);
 }
 
 // Generic resamp entry point from externally created rasters
@@ -46,15 +46,9 @@ void ResampSlc::resamp(isce3::io::Raster& inputSlc,
                        isce3::io::Raster& outputSlc,
                        isce3::io::Raster& rgOffsetRaster,
                        isce3::io::Raster& azOffsetRaster, int inputBand,
-                       bool flatten, bool isComplex, int rowBuffer,
+                       bool flatten, int rowBuffer,
                        int chipSize)
 {
-    // Check if data are not complex
-    if (!isComplex) {
-        std::cout << "Real data interpolation not implemented yet.\n";
-        return;
-    }
-
     // Set the band number for input SLC
     _inputBand = inputBand;
     // Cache width of SLC image
@@ -217,12 +211,12 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
 
     // Remove carrier from input data
     for (int i = 0; i < tile.length(); i++) {
+        const double az =  _sensingStart + (i + tile.firstImageRow()) / _prf;
         for (int j = 0; j < inWidth; j++) {
+            const double rng = _startingRange + j * _rangePixelSpacing;
             // Evaluate the pixel's carrier phase
-            const double phase = modulo_f(
-                    _rgCarrier.eval(tile.firstImageRow() + i, j) +
-                            _azCarrier.eval(tile.firstImageRow() + i, j),
-                    2.0 * M_PI);
+            const double phase = _rgCarrier.eval(az, rng)
+                + _azCarrier.eval(az, rng);
             // Remove the carrier
             std::complex<float> cpxPhase(std::cos(phase), -std::sin(phase));
             tile(i, j) *= cpxPhase;
@@ -236,19 +230,21 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                                const Tile<float>& azOffTile, int inLength,
                                bool flatten, int chipSize)
 {
+    if (flatten && !_haveRefData) {
+        std::string error_msg{"Unable to flatten; reference data not provided."};
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
     // Cache geometry values
     const int inWidth = tile.width();
     const int outWidth = azOffTile.width();
     const int outLength = azOffTile.length();
     int chipHalf = chipSize / 2;
-    const double R0 = _startingRange;
-    const double dR = _rangePixelSpacing;
-    const double az0 = _sensingStart;
 
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
-    // Initialize to zeros
-    imgOut = std::complex<float>(0.0, 0.0);
+    // Initialize/fill with invalid values
+    imgOut = _invalid_value;
 
     // From this point on, transformation is multithreaded
     int tileLine = 0;
@@ -262,8 +258,8 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
         // Loop over lines to perform interpolation
         for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
-            // Compute current azimuth time
-            const double az = az0 + i / _prf;
+            // Compute azimuth time at i index
+            const double az = _sensingStart + i / _prf;
 
             // Loop over width
             _Pragma("omp for") for (int j = 0; j < outWidth; ++j)
@@ -286,7 +282,7 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                     continue;
 
                 // Slant range at j index
-                const double rng = R0 + j * dR;
+                const double rng = _startingRange + j * _rangePixelSpacing;
 
                 // Check if the Doppler LUT covers the current position
                 if (not _dopplerLUT.contains(az, rng))
@@ -297,9 +293,14 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
 
                 // Doppler to be added back. Simultaneously evaluate carrier
                 // that needs to be added back after interpolation
-                double phase = (dop * fracAz) +
-                               _rgCarrier.eval(i + azOff, j + rgOff) +
-                               _azCarrier.eval(i + azOff, j + rgOff);
+                // Account for resample offsets in carrier evaluations.
+                const double azPlusOffset = az
+                    + static_cast<double>(azOff) / _prf;
+                const double rngPlusOffset = rng
+                    + static_cast<double>(rgOff) * _rangePixelSpacing;
+                double phase = (dop * fracAz)
+                    + _rgCarrier.eval(azPlusOffset, rngPlusOffset)
+                    + _azCarrier.eval(azPlusOffset, rngPlusOffset);
 
                 // Flatten the carrier phase if requested
                 if (flatten && _haveRefData) {
@@ -313,8 +314,6 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                                 (j * _refRangePixelSpacing))) *
                               ((1.0 / _refWavelength) - (1.0 / _wavelength)));
                 }
-                // Modulate by 2*PI
-                phase = modulo_f(phase, 2.0 * M_PI);
 
                 // Read data chip without the carrier phases
                 for (int ii = 0; ii < chipSize; ++ii) {
