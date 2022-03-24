@@ -32,7 +32,7 @@ class SplitSpectrumRunConfig(RunConfig):
         iono_freq_pol = iono_cfg['list_of_frequencies']
         ref_slc_path = self.cfg['input_file_group']['input_file_path']
         sec_slc_path = self.cfg['input_file_group']['secondary_file_path']
-        iono_method = split_cfg['spectral_diversity']
+        iono_method = iono_cfg['spectral_diversity']
 
         # Extract main range bandwidth from reference RSLC
         ref_slc = SLC(hdf5file=ref_slc_path)
@@ -66,7 +66,7 @@ class SplitSpectrumRunConfig(RunConfig):
         
         # Depending on how the user has selected "spectral_diversity" check if
         # "low_bandwidth" and "high_bandwidth" are assigned. Otherwise, use default
-        if split_cfg['spectral_diversity'] == 'split_main_band':
+        if iono_method == 'split_main_band':
             # If "low_bandwidth" or 'high_bandwidth" is not allocated, 
             # split the main range bandwidth into two 1/3 sub-bands.
             if split_cfg['low_band_bandwidth'] is None or split_cfg[
@@ -103,11 +103,11 @@ class SplitSpectrumRunConfig(RunConfig):
                 # Co-polarizations are found, split_main_band will be used for co-pols
                 common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA 
                     if pol in ['VV', 'HH']]
-                iono_freq_pol = {'A': common_copol_ref_sec}
+                iono_freq_pol['A'] = common_copol_ref_sec
                 
                 # If common co-pols not found, cross-pol will be alternatively used.
                 if not common_copol_ref_sec:
-                    iono_freq_pol = {'A': common_pol_refsec_freqA}
+                    iono_freq_pol['A'] = common_pol_refsec_freqA
                 info_str = f"{iono_freq_pol} will be used for split_main_band"
                 info_channel.log(info_str)
                 self.cfg['processing'][

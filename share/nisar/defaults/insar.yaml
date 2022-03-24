@@ -151,12 +151,12 @@ runconfig:
 
             ionosphere_phase_correction:
                 enabled: False
+                spectral_diversity: split_main_band
                 list_of_frequencies:
                    A: 
                    B: 
                 split_range_spectrum:
                    lines_per_block: 1000
-                   spectral_diversity: split_main_band
                    low_band_bandwidth:
                    high_band_bandwidth:
                    window_function: tukey

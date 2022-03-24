@@ -16,6 +16,60 @@ from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
+def prep_subband_h5(full_hdf5: str, 
+                    sub_band_hdf5: str, 
+                    freq_pols):
+
+    common_parent_path = 'science/LSAR'
+    swath_path = f'{common_parent_path}/SLC/swaths/'
+    freq_a_path = f'{swath_path}/frequencyA/'
+    freq_b_path = f'{swath_path}/frequencyB/'
+    metadata_path = f'{common_parent_path}/SLC/metadata/'
+    ident_path = f'{common_parent_path}/identification/'
+    pol_a_path = f'{freq_a_path}/listOfPolarizations'
+    pol_b_path = f'{freq_b_path}/listOfPolarizations'
+        
+    with h5py.File(full_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
+        h5py.File(sub_band_hdf5, 'w') as dst_h5:
+            
+        pols_freqA = list(
+                np.array(src_h5[pol_a_path][()], dtype=str))
+        pols_freqB = list(
+                np.array(src_h5[pol_b_path][()], dtype=str))
+        
+        if freq_pols['A']:
+            pols_a_excludes = [pol for pol in pols_freqA 
+                if pol not in freq_pols['A']]
+        else:
+            pols_a_excludes = pols_freqA
+
+        if freq_pols['B']:
+            pols_b_excludes = [pol for pol in pols_freqB 
+                if pol not in freq_pols['B']]
+        else:
+            pols_b_excludes = pols_freqB
+
+        if pols_a_excludes:
+            cp_h5_meta_data(src_h5, dst_h5, freq_a_path,
+                    excludes=pols_a_excludes)
+        else:
+            cp_h5_meta_data(src_h5, dst_h5, freq_a_path,
+                    excludes=[''])
+            
+        if pols_b_excludes:
+            cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
+                    excludes=pols_b_excludes)
+        else:
+            cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
+                    excludes=[''])
+
+        cp_h5_meta_data(src_h5, dst_h5, metadata_path,
+                    excludes=[''])
+        cp_h5_meta_data(src_h5, dst_h5, ident_path,
+                    excludes=[''])
+        cp_h5_meta_data(src_h5, dst_h5, swath_path,
+                    excludes=['frequencyA', 'frequencyB'])   
+
 def run(cfg: dict):
     '''
     run bandpass
@@ -23,14 +77,13 @@ def run(cfg: dict):
     # pull parameters from cfg
     ref_hdf5 = cfg['input_file_group']['input_file_path']
     sec_hdf5 = cfg['input_file_group']['secondary_file_path']
-    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Extract range split spectrum dictionary and corresponding parameters
     ionosphere_option = cfg['processing']['ionosphere_phase_correction']
+    method = ionosphere_option['spectral_diversity']
     split_cfg = ionosphere_option['split_range_spectrum']
     iono_freq_pol = ionosphere_option['list_of_frequencies']
     blocksize = split_cfg['lines_per_block']
-    method = split_cfg['spectral_diversity']
     window_function = split_cfg['window_function']
     window_shape = split_cfg['window_shape']
     low_band_bandwidth = split_cfg['low_band_bandwidth']
@@ -51,7 +104,7 @@ def run(cfg: dict):
 
         common_parent_path = 'science/LSAR'
         freq = 'A'
-
+        print('test', iono_freq_pol)
         pol_list = iono_freq_pol[freq]
         info_channel.log(f'Split the main band {pol_list} of the signal')
 
@@ -93,12 +146,17 @@ def run(cfg: dict):
 
             dest_freq_path = os.path.join(slc_product.SwathPath,
                                           f'frequency{freq}')
+
+            # prepare HDF5 for subband SLC HDF5
+            prep_subband_h5(hdf5_str, low_band_output, iono_freq_pol)
+            prep_subband_h5(hdf5_str, high_band_output, iono_freq_pol)
+
             with h5py.File(hdf5_str, 'r', libver='latest', swmr=True) as src_h5, \
-                    h5py.File(low_band_output, 'w') as dst_h5_low, \
-                    h5py.File(high_band_output, 'w') as dst_h5_high:
+                    h5py.File(low_band_output, 'r+') as dst_h5_low, \
+                    h5py.File(high_band_output, 'r+') as dst_h5_high:
                 # Copy HDF5 metadata for low high band
-                cp_h5_meta_data(src_h5, dst_h5_low, f'{common_parent_path}')
-                cp_h5_meta_data(src_h5, dst_h5_high, f'{common_parent_path}')
+                # cp_h5_meta_data(src_h5, dst_h5_low, f'{common_parent_path}')
+                # cp_h5_meta_data(src_h5, dst_h5_high, f'{common_parent_path}')
                 for pol in pol_list:
                     raster_str = f'HDF5:{hdf5_str}:/{slc_product.slcPath(freq, pol)}'
                     slc_raster = isce3.io.Raster(raster_str)
