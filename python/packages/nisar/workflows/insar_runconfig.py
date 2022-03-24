@@ -161,7 +161,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
             # Extract split-spectrum dictionary
             split_cfg = iono_cfg['split_range_spectrum']
             iono_freq_pol = iono_cfg['list_of_frequencies']
-            iono_method = split_cfg['spectral_diversity']
+            iono_method = iono_cfg['spectral_diversity']
 
             # Extract main range bandwidth from reference SLC
             ref_slc_path = self.cfg['input_file_group']['input_file_path']
@@ -206,7 +206,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 for iono_pol in iono_freq_pol['A']:
                     if (iono_pol not in ref_pols_freqA) or \
                        (iono_pol not in sec_pols_freqA):
-                        err_str = f"polarzations {iono_pol} for ionosphere estimation are given, but not found"
+                        err_str = f"polarzations {iono_pol} for ionosphere estimation are requested, but not found"
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
                     
@@ -236,13 +236,13 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 if split_cfg['low_band_bandwidth'] is None:
                     split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
                     info_str = "low band width for low sub-bands are not given;"\
-                        "It is automatically set by 1/3 of range bandwidth of freqeuncyA"
+                        "It is automatically set by 1/3 of range bandwidth of frequencyA"
                     warning_channel.log(info_str)
 
                 if split_cfg['high_band_bandwidth'] is None:
                     split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
                     info_str = "high band width for high sub-band are not given;"\
-                        "It is automatically set by 1/3 of range bandwidth of freqeuncyA"
+                        "It is automatically set by 1/3 of range bandwidth of frequencyA"
                     warning_channel.log(info_str)
 
             # methods that use side band
@@ -287,7 +287,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                         if (iono_pol not in ref_pols_freqB) or \
                             (iono_pol not in sec_pols_freqB):
                             err_str = f"polarzations {iono_pol} for ionosphere"\
-                                "estimation are given, but not found"
+                                "estimation are requested, but not found"
                             error_channel.log(err_str)
                             raise FileNotFoundError(err_str)
                             
