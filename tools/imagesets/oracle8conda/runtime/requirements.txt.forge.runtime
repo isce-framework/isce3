@@ -1,4 +1,5 @@
-libgcc-ng
-libstdcxx-ng
-yamale
 backoff
+libgcc-ng>=9,<10
+libstdcxx-ng>=9,<10
+pyre
+yamale

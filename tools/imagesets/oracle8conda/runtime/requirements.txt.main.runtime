@@ -2,8 +2,8 @@ fftw>=3
 gdal>=2.3
 h5py
 hdf5>=1.10.2
+matplotlib
 numpy
 python>=3.6
 ruamel.yaml
-matplotlib
 scipy

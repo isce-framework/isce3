@@ -1,3 +1,6 @@
 cmake>=3.18
 doxygen
-gxx_linux-64
+gmock
+gtest
+gxx_linux-64>=9,<10
+pybind11
