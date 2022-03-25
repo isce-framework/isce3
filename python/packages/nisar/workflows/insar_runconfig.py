@@ -209,18 +209,18 @@ class InsarRunConfig(Geo2rdrRunConfig):
                         err_str = f"polarzations {iono_pol} for ionosphere estimation are requested, but not found"
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
-                    
+
             # If common polarization found, but input polarizations are not given, 
             # then assign the common polarization for split_main_band
             if (common_pol_refsec_freqA) and (not iono_freq_pol['A']):
                 # Co-polarizations are found, split_main_band will be used for co-pols
                 common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA 
                     if pol in ['VV', 'HH']]
-                iono_freq_pol = {'A': common_copol_ref_sec}
+                iono_freq_pol['A'] = common_copol_ref_sec
                     
                 # If common co-pols not found, cross-pol will be alternatively used.
                 if not common_copol_ref_sec:
-                    iono_freq_pol = {'A': common_pol_refsec_freqA}
+                    iono_freq_pol['A'] = common_pol_refsec_freqA
 
                 warning_str = f"{iono_freq_pol} will be used for {iono_method}"
                 warning_channel.log(warning_str)
@@ -244,6 +244,14 @@ class InsarRunConfig(Geo2rdrRunConfig):
                     info_str = "high band width for high sub-band are not given;"\
                         "It is automatically set by 1/3 of range bandwidth of frequencyA"
                     warning_channel.log(info_str)
+
+                # If polarzations for frequency B are requested 
+                # for split_main_band method, then throw error
+                if iono_freq_pol['B']:
+                    err_str = f"Incorrect polarzations {iono_freq_pol['B']} for frequency B are requested. "\
+                        f"{iono_method} should not have polarizations in frequency B."
+                    error_channel.log(err_str)
+                    raise FileNotFoundError(err_str)
 
             # methods that use side band
             if iono_method in ['main_side_band', 'main_diff_main_side_band']:

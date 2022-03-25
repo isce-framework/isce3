@@ -93,10 +93,18 @@ class SplitSpectrumRunConfig(RunConfig):
                 for iono_pol in iono_freq_pol['A']:
                     if (iono_pol not in ref_pols_freqA) or \
                        (iono_pol not in sec_pols_freqA):
-                        err_str = f"polarzations {iono_pol} for ionosphere estimation are given, but not found"
+                        err_str = f"polarizations {iono_pol} for ionosphere estimation are given, but not found"
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
 
+            # If polarizations for frequency B are requested 
+            # for split_main_band method, then throw error
+            if iono_freq_pol['B']:
+                err_str = f"Incorrect polarzations {iono_freq_pol['B']} for frequency B are requested. "\
+                    f"{iono_method} should not have polarizations in frequency B."
+                error_channel.log(err_str)
+                raise FileNotFoundError(err_str)
+                
             # If common polarization found, but input polarizations are not given, 
             # then assign the common polarization for split_main_band
             if (common_pol_refsec_freqA) and (not iono_freq_pol['A']):
@@ -104,11 +112,14 @@ class SplitSpectrumRunConfig(RunConfig):
                 common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA 
                     if pol in ['VV', 'HH']]
                 iono_freq_pol['A'] = common_copol_ref_sec
+                iono_freq_pol['B'] = None
                 
                 # If common co-pols not found, cross-pol will be alternatively used.
                 if not common_copol_ref_sec:
                     iono_freq_pol['A'] = common_pol_refsec_freqA
-                info_str = f"{iono_freq_pol} will be used for split_main_band"
+                    iono_freq_pol['B'] = None
+
+                info_str = f"{iono_freq_pol['A']} will be used for split_main_band"
                 info_channel.log(info_str)
                 self.cfg['processing'][
                     'ionosphere_phase_correction'][

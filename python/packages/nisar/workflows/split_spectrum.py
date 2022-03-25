@@ -104,7 +104,6 @@ def run(cfg: dict):
 
         common_parent_path = 'science/LSAR'
         freq = 'A'
-        print('test', iono_freq_pol)
         pol_list = iono_freq_pol[freq]
         info_channel.log(f'Split the main band {pol_list} of the signal')
 
