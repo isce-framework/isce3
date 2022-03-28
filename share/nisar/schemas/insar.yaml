@@ -60,6 +60,8 @@ runconfig:
 
             bandpass: include('bandpass_options', required=False)
 
+            ionosphere_phase_correction: include('ionosphere_phase_correction_options', required=False)
+
             rdr2geo: include('rdr2geo_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
@@ -490,6 +492,38 @@ bandpass_options:
     # For Cosine and Tukey, 0 <= shape <= 1
     window_shape: num(min=0, required=False)
     range_fft_size: int(min=1, required=False)
+
+split_range_spectrum_options:
+    # Number of lines per block for block processing)
+    lines_per_block: int(min=1, required=False)
+    # Low bandwidth. If unspecified is automatically set by the workflow according to
+    # the selected spectral diversity
+    low_band_bandwidth: num(min=0, required=False)
+    # High bandwidth. If unspecified, it is automatically set by the workflow
+    high_band_bandwidth: num(min=0, required=False)
+    # Type of window used to taper range spectrum
+    window_function: enum('tukey', 'cosine', 'kaiser', required=False)
+    # Shape parameter. For Kaiser, 0 <= shape < Inf.
+    # For Cosine and Tukey, 0 <= shape <= 1
+    window_shape: num(min=0, required=False)
+
+ionosphere_phase_correction_options:
+    # Boolean flag to enable/disable ionosphere phase correction
+    enabled: bool(required=False)
+    # 'split_main_band' splits the main range bandwidth into a low and high subband
+    # being 1/3 (fixed for now) of the total main range spectrum.
+    # 'main_side_band' uses the additional NISAR 5 MHz side-band to estimate the
+    # ionosphere phase screen. Main and side-bands are intended to be at the same polarization
+    spectral_diversity: enum('split_main_band', 'main_side_band', 'main_diff_main_side_band', required=False)
+    split_range_spectrum: include('split_range_spectrum_options', required=False)
+    list_of_frequencies: include('ionosphere_freq_pol_options', required=False)
+
+ionosphere_freq_pol_options:
+    # valid values for polarizations
+    # empty for all polarizations found in RSLC
+    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+    A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+    B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
