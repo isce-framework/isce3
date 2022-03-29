@@ -38,3 +38,7 @@ RUN yum install -y \
         libcufft-$CUDA_PKG_VERSION \
  && yum clean all \
  && rm -rf /var/cache/yum
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
