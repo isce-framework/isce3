@@ -7,7 +7,7 @@
 
 // isce3::core
 #include <isce3/core/Constants.h>
-#include <isce3/core/LUT2d.h>
+#include <isce3/core/LUT1d.h>
 
 #include <isce3/image/Tile.h>
 
@@ -75,6 +75,7 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
     auto timerStart = std::chrono::steady_clock::now();
 
     // For each full tile of _linesPerTile lines...
+    const isce3::core::LUT1d<double> dopplerLUT1d = isce3::core::avgLUT2dToLUT1d<double>(_dopplerLUT);
     for (int tileCount = 0; tileCount < nTiles; tileCount++) {
 
         // Make a tile for representing input SLC data
@@ -100,7 +101,8 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << std::endl;
         gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier,
-                _dopplerLUT, interp, inWidth, inLength, this->startingRange(),
+                dopplerLUT1d, interp,
+                inWidth, inLength, this->startingRange(),
                 this->rangePixelSpacing(), this->sensingStart(), this->prf(),
                 this->wavelength(), this->refStartingRange(),
                 this->refRangePixelSpacing(), this->refWavelength(), flatten,

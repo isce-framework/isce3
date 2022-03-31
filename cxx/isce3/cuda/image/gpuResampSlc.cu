@@ -11,7 +11,7 @@
 
 // isce3::cuda::core
 #include <isce3/cuda/core/gpuPoly2d.h>
-#include <isce3/cuda/core/gpuLUT2d.h>
+#include <isce3/cuda/core/gpuLUT1d.h>
 #include <isce3/cuda/core/gpuInterpolator.h>
 
 #include <isce3/cuda/except/Error.h>
@@ -20,7 +20,7 @@
 
 using isce3::cuda::core::gpuPoly2d;
 using isce3::cuda::core::gpuInterpolator;
-using isce3::cuda::core::gpuLUT2d;
+using isce3::cuda::core::gpuLUT1d;
 using isce3::cuda::core::gpuSinc2dInterpolator;
 
 #define THRD_PER_BLOCK 512// Number of threads per block (should always %32==0)
@@ -33,7 +33,7 @@ void transformTile(const thrust::complex<float> *tile,
                    const float *azOffTile,
                    const gpuPoly2d rgCarrier,
                    const gpuPoly2d azCarrier,
-                   const gpuLUT2d<double> dopplerLUT,
+                   const gpuLUT1d<double> dopplerLUT,
                    gpuSinc2dInterpolator<thrust::complex<float>> interp,
                    bool flatten,
                    int outWidth,
@@ -85,12 +85,11 @@ void transformTile(const thrust::complex<float> *tile,
 
         // Skip computations if indices out of bound or az/rng not in doppler
         // Output previously filled with designated invalid values
-        if (intAzOutOfBounds || intRgOutOfBounds
-                || !dopplerLUT.contains(az, rng))
+        if (intAzOutOfBounds || intRgOutOfBounds)
             return;
 
         // evaluate Doppler polynomial
-        const double dop = dopplerLUT.eval(az, rng) * 2 * M_PI / prf;
+        const double dop = dopplerLUT.eval(rng) * 2 * M_PI / prf;
 
         // Doppler to be added back. Simultaneously evaluate carrier that needs to
         // be added back after interpolation
@@ -147,7 +146,7 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
                isce3::image::Tile<float> & azOffTile,
                const isce3::core::Poly2d & rgCarrier,
                const isce3::core::Poly2d & azCarrier,
-               const isce3::core::LUT2d<double> & dopplerLUT,
+               const isce3::core::LUT1d<double> & dopplerLUT,
                isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
                double sensingStart, double prf, double wavelength, double refStartingRange,
@@ -171,7 +170,7 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
     float *d_rgOffTile, *d_azOffTile;
     gpuPoly2d d_rgCarrier(rgCarrier);
     gpuPoly2d d_azCarrier(azCarrier);
-    gpuLUT2d<double> d_dopplerLUT(dopplerLUT);
+    gpuLUT1d<double> d_dopplerLUT(dopplerLUT);
 
     // determine sizes
     size_t nInPixels = size_t(tile.length()) * tile.width();
