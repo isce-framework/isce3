@@ -293,8 +293,18 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     _deltay = delta_y;
 
     // Get DEMInterpolator width and length
-    const long width = max_x_idx - min_x_idx;
-    const long length = max_y_idx - min_y_idx;
+    long width = max_x_idx - min_x_idx;
+    long length = max_y_idx - min_y_idx;
+
+    // Make sure raster subset is does not extrapolate raster dimensions
+    if (!flag_dem_file_discontinuity && min_x_idx + width > demRaster.width()) {
+        width = demRaster.width() - min_x_idx;
+        max_x_idx = min_x_idx + width;
+    }
+    if (!flag_dem_file_discontinuity && min_y_idx + length > demRaster.length()) {
+        length = demRaster.length() - min_y_idx;
+        max_y_idx = min_y_idx + length;
+    }
 
     // If DEM has no valid points, escape
     if (width <= 0 || length <= 0) {
@@ -303,15 +313,17 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         return isce3::error::ErrorCode::OutOfBoundsDem;
     }
 
-    // Resize DEM array and fill it with NaN values
+    // Resize DEM array
     _dem.resize(length, width);
-    _dem.fill(std::numeric_limits<float>::quiet_NaN());
 
     if (!flag_dem_file_discontinuity) {
         // Read single block from DEM
         demRaster.getBlock(_dem.data(), min_x_idx, min_y_idx, width, length);
 
     } else {
+
+        // Fill DEM array with NaN values
+        _dem.fill(std::numeric_limits<float>::quiet_NaN());
 
         // Read DEM in two blocks "unrolling" the western side of the DEM around 
         // the DEM file discontinuity
