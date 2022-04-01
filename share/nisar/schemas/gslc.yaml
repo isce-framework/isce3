@@ -115,10 +115,10 @@ radar_grid_cubes_options:
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
-    threshold: num(min=1.0e-9, max=1.0e-3, required=False)
+    threshold: num(min=0, required=False)
 
-    # Maximum number of iteration for geo2rdr algorithm
-    maxiter: int(min=10, max=50, required=False)
+    # Maximum number of iterations
+    maxiter: int(min=1, required=False)
 
 logging_options:
     # Path to where to store log file

@@ -123,10 +123,10 @@ radar_grid_cubes_options:
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
-    threshold: num(min=1.0e-9, max=1.0e-3, required=False)
+    threshold: num(min=0, required=False)
 
     # Maximum number of iterations
-    maxiter: int(min=10, max=50, required=False)
+    maxiter: int(min=1, required=False)
 
 qa_options:
     # Enable/disable file format validation
