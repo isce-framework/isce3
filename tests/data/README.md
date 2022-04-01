@@ -116,6 +116,20 @@ and then post-processed and converted into L0B product via its python utility to
   The total number of range lines is *70*. The total number of range bins is 28927. 
   The Tx range lines types are of HPA, LNA, and BYPASS. BYPASS range line interval is 20.
 
+## Geoid EGM96
+
+- **egm96_15.gtx**
+  The geoid raster "egm96_15.gtx" contains the global geoid EGM96 array
+  sampled at 0.25 degrees in latitude and longitude. The raster
+  is geolocated over geographic coordinates with longitude range 
+  varying from -180 to 180 degrees.
+    
+- **egm96_15_lon_0_360.gtx**
+  The geoid raster "egm96_15_lon_0_360.gtx" is the "shifted" version of
+  "egm96_15.gtx" geolocated over geographic coordinates with longitude
+  from 0 to 360 deg.
+
+
 [1]: M. Shimada et al., "PALSAR Radiometric and Geometric Calibration",
 *IEEE Trans. Geosci. Remote Sens.*, pp. 3915-3932, December 2009.
 

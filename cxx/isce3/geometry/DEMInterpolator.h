@@ -57,7 +57,7 @@ class isce3::geometry::DEMInterpolator {
 
         /** Read in subset of data from a DEM with a supported projection */
         isce3::error::ErrorCode loadDEM(isce3::io::Raster& demRaster,
-                double minX, double maxX, double minY, double maxY);
+                double min_x, double max_x, double min_y, double max_y);
 
         /** Read in entire DEM with a supported projection */
         void loadDEM(isce3::io::Raster &demRaster);
