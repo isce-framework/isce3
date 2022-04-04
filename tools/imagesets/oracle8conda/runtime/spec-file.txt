@@ -157,6 +157,7 @@ https://conda.anaconda.org/conda-forge/linux-64/poppler-21.09.0-ha39eefc_3.tar.b
 https://conda.anaconda.org/conda-forge/linux-64/qt-5.12.9-hda022c4_4.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.17.21-py39h3811e60_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/scipy-1.8.0-py39hee8e79c_1.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/shapely-1.8.0-py39hc7dd4e9_2.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/yamale-4.0.3-pyh6c4a22f_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/libgdal-3.3.3-h18e3bf0_2.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.5.1-py39h2fa2bec_0.tar.bz2

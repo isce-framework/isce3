@@ -11,4 +11,5 @@ pyre
 python>=3.6
 ruamel.yaml
 scipy
+shapely
 yamale

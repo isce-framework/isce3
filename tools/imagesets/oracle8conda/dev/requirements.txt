@@ -8,4 +8,3 @@ gxx_linux-64>=9,<10
 ninja
 pybind11
 pytest
-shapely
