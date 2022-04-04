@@ -39,6 +39,6 @@ RUN yum install -y \
  && yum clean all \
  && rm -rf /var/cache/yum
 
-# nvidia-container-runtime
+# https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
