@@ -1,5 +1,5 @@
 # Use pinned oraclelinux:8 image
-FROM oraclelinux@sha256:2fc70a274b1da43b06cb07047dcf8592f287c22f32472ef3eae1518d22294fcc
+FROM oraclelinux:8.4@sha256:ef0327c1a51e3471e9c2966b26b6245bd1f4c3f7c86d7edfb47a39adb446ceb5
 
 RUN yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
 
