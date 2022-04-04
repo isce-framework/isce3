@@ -23,7 +23,7 @@ RUN conda install testfixtures scikit-image
 RUN conda install cfunits --channel conda-forge
 
 # Soil Moisture
-COPY spec-file.txt /tmp/spec-file.txt
+COPY soilmoisture-spec-file.txt /tmp/spec-file.txt
 RUN conda create -n SoilMoisture --file /tmp/spec-file.txt && conda clean -ay
 
 # copy the repo from the intermediate image
