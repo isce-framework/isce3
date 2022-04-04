@@ -20,4 +20,4 @@ RUN conda install --yes --file /tmp/spec-file.txt \
  && rm /tmp/spec-file.txt
 
 ENV CUDAHOSTCXX=x86_64-conda_cos6-linux-gnu-g++
-ENV CUDACXX=/usr/local/cuda-11.0/bin/nvcc
+ENV CUDACXX=/usr/local/cuda-${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}/bin/nvcc
