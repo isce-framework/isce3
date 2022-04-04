@@ -19,7 +19,7 @@ RUN cd /opt \
 
 FROM $distrib_img
 
-RUN conda install testfixtures scikit-image
+RUN conda install testfixtures scikit-image --channel conda-forge
 RUN conda install cfunits --channel conda-forge
 
 # Soil Moisture
