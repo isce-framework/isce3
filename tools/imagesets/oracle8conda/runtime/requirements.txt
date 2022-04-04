@@ -1,9 +1,14 @@
+backoff
 fftw>=3
 gdal>=2.3
 h5py
 hdf5>=1.10.2
+libgcc-ng>=9,<10
+libstdcxx-ng>=9,<10
 matplotlib
 numpy
+pyre
 python>=3.6
 ruamel.yaml
 scipy
+yamale

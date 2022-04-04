@@ -1,6 +1,11 @@
 cmake>=3.18
 doxygen
+eigen
+git
 gmock
 gtest
 gxx_linux-64>=9,<10
+ninja
 pybind11
+pytest
+shapely
