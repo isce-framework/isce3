@@ -261,7 +261,7 @@ class TestSnaphu:
             mphase = phase[mask]
             munw = unw_raster.data[mask]
             offset = mphase[0] - munw[0]
-            assert np.allclose(munw + offset, mphase, rtol=0.0, atol=1e-5)
+            assert np.allclose(mphase - offset, munw, rtol=1e-6, atol=1e-6)
 
         # Check the set of unique labels (masked-out pixels are labeled 0).
         unique_cc_labels = set(np.unique(ccl_raster.data))
@@ -371,7 +371,7 @@ class TestSnaphu:
         mphase = phase[mask]
         munw = unw_raster.data[mask]
         offset = mphase[0] - munw[0]
-        good_pixels = np.isclose(munw + offset, mphase, rtol=0.0, atol=1e-4)
+        good_pixels = np.isclose(mphase - offset, munw, rtol=1e-6, atol=1e-6)
         assert frac_nonzero(~good_pixels) < 1e-3
 
     def test_tile_mode(self):
@@ -437,4 +437,4 @@ class TestSnaphu:
             mphase = phase[mask]
             munw = unw_raster.data[mask]
             offset = mphase[0] - munw[0]
-            assert np.allclose(munw + offset, mphase, rtol=0.0, atol=1e-5)
+            assert np.allclose(mphase - offset, munw, rtol=1e-6, atol=1e-6)

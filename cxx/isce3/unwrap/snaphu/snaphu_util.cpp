@@ -27,6 +27,8 @@ static
 int IsFalse(char *str);
 static
 double ModDiff(double f1, double f2);
+static
+int DiffNCycle(double f1, double f2);
 
 
 /* function: IsTrue()
@@ -102,6 +104,30 @@ double ModDiff(double f1, double f2){
     f3+=TWOPI;
   }
   return(f3);
+}
+
+
+/* function: DiffNCycle()
+ * -------------------
+ * Computes the number of cycles of 2pi that must be added to the
+ * difference between f1 and f2 in order to "wrap" it to the interval
+ * (-pi,pi].  f1 and f2 should be between [0,2pi).  Assumes that PI has
+ * been defined.
+ *
+ * See also: ModDiff()
+ */
+static
+int DiffNCycle(double f1, double f2){
+
+  const auto f3=f1-f2;
+  if(f3>PI){
+    return -1;
+  }
+  if(f3<=-PI){
+    return 1;
+  }
+
+  return(0);
 }
 
 
@@ -302,30 +328,27 @@ int CalcFlow(Array2D<float>& phase, Array2D<short>* flowsptr, long nrow, long nc
  * wrapped phase to create an unwrapped phase field.  The unwrapped
  * phase field will be the same size as the wrapped field.  The array
  * rowflow should have size N-1xM and colflow size NxM-1 where the
- * phase fields are NxM.  Output is saved to a file.
+ * phase fields are NxM.
  */
 int IntegratePhase(Array2D<float>& psi, Array2D<float>& phi, Array2D<short>& flows,
                    long nrow, long ncol){
 
-  long row, col;
+  auto rowflow=flows.block(0,0,nrow-1,ncol);
+  auto colflow=flows.block(nrow-1,0,nrow,ncol-1);
 
-  auto rowflow = flows.block(0,0,nrow-1,ncol);
-  auto colflow = flows.block(nrow-1,0,nrow,ncol-1);
-
-  /* set first element as seed */
-  phi(0,0)=psi(0,0);
-
-  /* integrate over first row */
-  for(col=1;col<ncol;col++){
-    phi(0,col)=phi(0,col-1)+(ModDiff(psi(0,col),psi(0,col-1))
-      +colflow(0,col-1)*TWOPI);
-  }
-
-  /* integrate over columns */
-  for(row=1;row<nrow;row++){
-    for(col=0;col<ncol;col++){
-      phi(row,col)=phi(row-1,col)+(ModDiff(psi(row,col),psi(row-1,col))
-        -rowflow(row-1,col)*TWOPI);
+  /* compute unwrapped phase by accumulating the total number of cycles to be
+     added along an integration path that spans each row */
+  long initcycles=0;
+  for(long row=0;row<nrow;row++){
+    if(row>0){
+      initcycles+=DiffNCycle(psi(row,0),psi(row-1,0))-rowflow(row-1,0);
+    }
+    long cycles=initcycles;
+    for(long col=0;col<ncol;col++){
+      if(col>0){
+        cycles+=DiffNCycle(psi(row,col),psi(row,col-1))+colflow(row,col-1);
+      }
+      phi(row,col)=psi(row,col)+TWOPI*cycles;
     }
   }
 
