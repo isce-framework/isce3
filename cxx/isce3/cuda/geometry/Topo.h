@@ -55,13 +55,6 @@ class isce3::cuda::geometry::Topo : public isce3::geometry::Topo {
         void topo(isce3::io::Raster &, isce3::geometry::TopoLayers &);
 
     private:
-        // Default number of lines per block
-        size_t _linesPerBlock = 1000;
-
-        // Compute number of lines per block dynamically from GPU memmory
-        void computeLinesPerBlock(isce3::io::Raster &,
-                                  isce3::geometry::TopoLayers &);
-
         // Generate layover/shadow masks using an orbit
         void _setLayoverShadowWithOrbit(const isce3::core::Orbit & orbit,
                                         isce3::geometry::TopoLayers & layers,

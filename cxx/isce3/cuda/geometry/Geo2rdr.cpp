@@ -102,12 +102,9 @@ geo2rdr(isce3::io::Raster & topoRaster,
     // Interpolate orbit to middle of the scene as a test
     _checkOrbitInterpolation(tmid);
 
-    // Compute number of lines per block
-    computeLinesPerBlock();
-
     // Compute number of DEM blocks needed to process image
-    size_t nBlocks = demLength / _linesPerBlock;
-    if ((demLength % _linesPerBlock) != 0)
+    size_t nBlocks = demLength / linesPerBlock();
+    if ((demLength % linesPerBlock()) != 0)
         nBlocks += 1;
 
     // Cache near, mid, far ranges for diagnostics on Doppler
@@ -121,11 +118,11 @@ geo2rdr(isce3::io::Raster & topoRaster,
 
         // Get block extents
         size_t lineStart, blockLength;
-        lineStart = block * _linesPerBlock;
+        lineStart = block * linesPerBlock();
         if (block == (nBlocks - 1)) {
             blockLength = demLength - lineStart;
         } else {
-            blockLength = _linesPerBlock;
+            blockLength = linesPerBlock();
         }
         size_t blockSize = blockLength * demWidth;
 
@@ -194,33 +191,3 @@ _checkOrbitInterpolation(double aztime) {
     isce3::core::cartesian_t satxyz, satvel;
     this->orbit().interpolate(&satxyz, &satvel, aztime);
 }
-
-// Compute number of lines per block dynamically from GPU memory
-void isce3::cuda::geometry::Geo2rdr::
-computeLinesPerBlock() {
-
-    // Compute GPU memory
-    const size_t nGPUBytes = getDeviceMem();
-
-    // 2 GB buffer for safeguard for large enough devices (> 6 GB)
-    size_t gpuBuffer;
-    if (nGPUBytes > 6e9) {
-        gpuBuffer = 2e9;
-    } else {
-        // Else use 500 MB buffer
-        gpuBuffer = 500e6;
-    }
-
-    // Compute pixels per Block (3 double input layers and 2 float output layers)
-    size_t pixelsPerBlock = (nGPUBytes - gpuBuffer) /
-                            (3 * sizeof(double) + 2 * sizeof(float));
-    // Round down to nearest 10 million pixels
-    pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
-
-    // Compute number of lines per block
-    _linesPerBlock = pixelsPerBlock / this->radarGridParameters().width();
-    // Round down to nearest 500 lines
-    _linesPerBlock = (_linesPerBlock / 500) * 500;
-}
-
-// end of file

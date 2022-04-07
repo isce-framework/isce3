@@ -52,7 +52,7 @@ topo(Raster & demRaster,
 
     // Initialize a TopoLayers object to handle block data and raster data
     TopoLayers layers(outdir, radarGrid.width(), radarGrid.length(),
-            _linesPerBlock, this->computeMask());
+            linesPerBlock(), this->computeMask());
 
     // Call topo with layers
     topo(demRaster, layers);
@@ -102,7 +102,7 @@ topo(Raster & demRaster, Raster * xRaster, Raster * yRaster, Raster * heightRast
 
     // Initialize a TopoLayers object to handle block data and raster data
     // Create rasters for individual layers (provide output raster sizes)
-    TopoLayers layers(_linesPerBlock, xRaster, yRaster, heightRaster, incRaster,
+    TopoLayers layers(linesPerBlock(), xRaster, yRaster, heightRaster, incRaster,
             hdgRaster, localIncRaster, localPsiRaster, simRaster,
             maskRaster);
 
@@ -135,12 +135,9 @@ topo(Raster & demRaster, TopoLayers & layers) {
     // Create a DEM interpolator
     DEMInterpolator demInterp(-500.0, this->demMethod());
 
-    // Compute number of lines per block
-    computeLinesPerBlock(demRaster, layers);
-
     // Compute number of blocks needed to process image
-    size_t nBlocks = radarGrid.length() / _linesPerBlock;
-    if ((radarGrid.length() % _linesPerBlock) != 0)
+    size_t nBlocks = radarGrid.length() / linesPerBlock();
+    if ((radarGrid.length() % linesPerBlock()) != 0)
         nBlocks += 1;
 
     // Cache near, mid, far ranges for diagnostics on Doppler
@@ -154,11 +151,11 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
         // Get block extents
         size_t lineStart, blockLength;
-        lineStart = block * _linesPerBlock;
+        lineStart = block * linesPerBlock();
         if (block == (nBlocks - 1)) {
             blockLength = radarGrid.length() - lineStart;
         } else {
-            blockLength = _linesPerBlock;
+            blockLength = linesPerBlock();
         }
 
         // Diagnostics
@@ -212,39 +209,6 @@ topo(Raster & demRaster, TopoLayers & layers) {
         timerEnd - timerStart).count();
     info << "Elapsed processing time: " << elapsed << " sec"
          << pyre::journal::newline;
-}
-
-// Compute number of lines per block dynamically from GPU memory
-void isce3::cuda::geometry::Topo::
-computeLinesPerBlock(isce3::io::Raster & demRaster, TopoLayers & layers) {
-
-    // Compute GPU memory
-    const size_t nGPUBytes = getDeviceMem();
-
-    // Assume entire DEM passed to GPU
-    const size_t nDEMBytes = demRaster.width() * demRaster.length() * sizeof(float);
-
-    // 2 GB buffer for safeguard for large enough devices (> 6 GB)
-    size_t gpuBuffer;
-    if (nGPUBytes > 6e9) {
-        gpuBuffer = 2e9;
-    } else {
-        // Else use 500 MB buffer
-        gpuBuffer = 500e6;
-    }
-
-    // Compute pixels per Block (4 double and 5 float output topo layers)
-    size_t pixelsPerBlock = (nGPUBytes - nDEMBytes - gpuBuffer) /
-                            (4 * sizeof(double) + 5 * sizeof(float));
-    // Round down to nearest 10 million pixels
-    pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
-
-    // Compute number of lines per block
-    _linesPerBlock = pixelsPerBlock / this->radarGridParameters().width();
-    // Round down to nearest 500 lines
-    _linesPerBlock = (_linesPerBlock / 500) * 500;
-    // Make sure we don't exceed number of lines in topo rasters
-    _linesPerBlock = std::min(_linesPerBlock, layers.length());
 }
 
 // Compute layover and shadow masks
