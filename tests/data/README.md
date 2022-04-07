@@ -62,6 +62,14 @@ and then post-processed and converted into L0B product via its python utility to
 [*ReeUtilPy*](https://github.jpl.nasa.gov/SALSA-REE/ReeUtilPy).
 Note that these files may be stored in a separate location outside *isce3* repo.
 
+- **REE_L0B_out17.h5**
+
+  Simplest possible point target simulation: single target, uniform PRF, no
+  noise, zero Doppler geometry.  Designed to test backproject and focus.py.
+  REE input file preserved here (REE_L0B_out17.rdf).  Orbit and attitude data
+  were dumped to NISAR XML format files in the `focus` subdirectory, which
+  also contains a runconfig file for focus.py.
+
 - **REE_ANTPAT_CUTS_BEAM4.h5**
 
   Four-beam *NISAR* antenna pattern file. The original full *2-D* version of patterns

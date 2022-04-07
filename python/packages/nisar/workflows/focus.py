@@ -6,16 +6,17 @@ import os
 from nisar.products.readers.Raw import Raw, open_rrsd
 from nisar.products.writers import SLC
 from nisar.types import to_complex32
+import nisar
 import numpy as np
 import isce3
-from isce3.core import DateTime, LUT2d
+from isce3.core import DateTime, LUT2d, Attitude, Orbit
 from isce3.io.gdal import Raster, GDT_CFloat32
 from nisar.workflows.yaml_argparse import YamlArgparse
 import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
 import sys
 import tempfile
-from typing import List
+from typing import List, Union, Optional
 
 # TODO some CSV logger
 log = logging.getLogger("focus")
@@ -98,6 +99,20 @@ def get_chirp(cfg: Struct, raw: Raw, frequency: str, tx: str):
     return chirp / np.linalg.norm(chirp)
 
 
+def get_max_chirp_duration(cfg: Struct):
+    """Return maximum chirp duration (in seconds) among all sidebands,
+    polarizations, and files referenced in the runconfig.
+    """
+    maxlen = 0.0
+    for filename in cfg.input_file_group.input_file_path:
+        raw = open_rrsd(filename)
+        for freq, polarizations in raw.polarizations.items():
+            for pol in polarizations:
+                _, _, _, T = raw.getChirpParameters(freq, pol[0])
+                maxlen = max(maxlen, T)
+    return maxlen
+
+
 def parse_rangecomp_mode(mode: str):
     lut = {"full": isce3.focus.RangeComp.Mode.Full,
            "same": isce3.focus.RangeComp.Mode.Same,
@@ -109,9 +124,11 @@ def parse_rangecomp_mode(mode: str):
 
 
 def get_orbit(cfg: Struct):
-    log.info("Loading orbit")
-    if cfg.dynamic_ancillary_file_group.orbit:
-        log.warning("Ignoring input orbit file.  Using L0B orbits.")
+    xml = cfg.dynamic_ancillary_file_group.orbit
+    if xml is not None:
+        log.info("Loading orbit from external XML file.")
+        return nisar.products.readers.orbit.load_orbit_from_xml(xml)
+    log.info("Loading orbit from L0B file.")
     rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate orbit data.")
@@ -120,9 +137,11 @@ def get_orbit(cfg: Struct):
 
 
 def get_attitude(cfg: Struct):
-    log.info("Loading attitude")
-    if cfg.dynamic_ancillary_file_group.pointing:
-        log.warning("Ignoring input pointing file.  Using L0B attitude.")
+    xml = cfg.dynamic_ancillary_file_group.pointing
+    if xml is not None:
+        log.info("Loading attitude from external XML file")
+        return nisar.products.readers.attitude.load_attitude_from_xml(xml)
+    log.info("Loading attitude from L0B file.")
     rawfiles = cfg.input_file_group.input_file_path
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate attitude data.")
@@ -159,6 +178,7 @@ def get_total_grid(rawfiles: List[str], dt, dr, frequency='A'):
 def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
     """Find squint angle given imaging time and range to target.
     """
+    assert orbit.reference_epoch == attitude.reference_epoch
     p, v = orbit.interpolate(t)
     R = attitude.interpolate(t).to_rotation_matrix()
     axis = R[:,1]
@@ -205,13 +225,14 @@ def get_dem(cfg: Struct):
 
 def make_doppler_lut(rawfiles: List[str],
         az: float = 0.0,
-        orbit: isce3.core.Orbit = None,
-        attitude: isce3.core.Attitude = None,
-        dem: isce3.geometry.DEMInterpolator = None,
+        orbit: Optional[isce3.core.Orbit] = None,
+        attitude: Optional[isce3.core.Attitude] = None,
+        dem: Optional[isce3.geometry.DEMInterpolator] = None,
         azimuth_spacing: float = 1.0,
         range_spacing: float = 1e3,
         frequency: str = "A",
         interp_method: str = "bilinear",
+        epoch: Optional[DateTime] = None,
         **rdr2geo):
     """Generate Doppler look up table (LUT).
 
@@ -237,6 +258,8 @@ def make_doppler_lut(rawfiles: List[str],
         Band to use.  Default="A"
     interp_method : optional
         LUT interpolation method. Default="bilinear".
+    epoch : isce3.core.DateTime, optional
+        Time reference for output table.  Defaults to orbit.reference_epoch
     threshold : optional
     maxiter : optional
     extraiter : optional
@@ -259,14 +282,23 @@ def make_doppler_lut(rawfiles: List[str],
         attitude = raw.getAttitude()
     if dem is None:
         dem = isce3.geometry.DEMInterpolator()
+    if epoch is None:
+        epoch = orbit.reference_epoch
+    # Ensure consistent time reference (while avoiding side effects).
+    if orbit.reference_epoch != epoch:
+        orbit = orbit.copy()
+        orbit.update_reference_epoch(epoch)
+    if attitude.reference_epoch != epoch:
+        attitude = attitude.copy()
+        attitude.update_reference_epoch(epoch)
     # Assume look side and center frequency constant across files.
     side = raw.identification.lookDirection
     fc = raw.getCenterFrequency(frequency)
 
     # Now do the actual calculations.
     wvl = isce3.core.speed_of_light / fc
-    epoch, t, r = get_total_grid(rawfiles, azimuth_spacing, range_spacing)
-    t = convert_epoch(t, epoch, orbit.reference_epoch)
+    epoch_in, t, r = get_total_grid(rawfiles, azimuth_spacing, range_spacing)
+    t = convert_epoch(t, epoch_in, epoch)
     dop = np.zeros((len(t), len(r)))
     for i, ti in enumerate(t):
         _, v = orbit.interpolate(ti)
@@ -279,7 +311,7 @@ def make_doppler_lut(rawfiles: List[str],
     return fc, lut
 
 
-def make_doppler(cfg: Struct, frequency='A'):
+def make_doppler(cfg: Struct, frequency='A', epoch: Optional[DateTime] = None):
     log.info("Generating Doppler LUT from pointing")
     orbit = get_orbit(cfg)
     attitude = get_attitude(cfg)
@@ -293,7 +325,7 @@ def make_doppler(cfg: Struct, frequency='A'):
                                dem=dem, azimuth_spacing=opt.spacing.azimuth,
                                range_spacing=opt.spacing.range,
                                frequency=frequency,
-                               interp_method=opt.interp_method,
+                               interp_method=opt.interp_method,  epoch=epoch,
                                **vars(opt.rdr2geo))
 
     log.info(f"Made Doppler LUT for fc={fc} Hz with mean={lut.data.mean()} Hz")
@@ -318,37 +350,125 @@ def scale_doppler(dop: LUT2d, c: float):
     raise NotImplementedError("No way to scale Doppler with nonzero ref_value")
 
 
-def make_output_grid(cfg: Struct, igrid):
-    t0 = t0in = igrid.sensing_start
-    t1 = t1in = t0 + igrid.length / igrid.prf
-    r0 = r0in = igrid.starting_range
-    r1 = r1in = r0 + igrid.width * igrid.range_pixel_spacing
-    # TODO crop chirp length, synthetic aperture, and reskew.
-    # TODO snap start time to standard interval
+def make_output_grid(cfg: Struct, igrid: isce3.product.RadarGridParameters,
+                     orbit: Orbit, doppler: LUT2d, chirplen_meters: float,
+                     dem: isce3.geometry.DEMInterpolator):
+    # Default to processing all data.
+    t0 = igrid.sensing_start
+    t1 = t0 + (igrid.length - 1) / igrid.prf
+    r0 = igrid.starting_range
+    r1 = r0 + (igrid.width - 1) * igrid.range_pixel_spacing
     dr = igrid.range_pixel_spacing
+
+    ac = cfg.processing.azcomp
+
+    # Calc approx synthetic aperture duration (coherent processing interval).
+    tmid = 0.5 * (t0 + t1)
+    cpi = isce3.focus.get_sar_duration(tmid, r1, orbit, isce3.core.Ellipsoid(),
+                                       ac.azimuth_resolution, igrid.wavelength)
+    log.debug(f"Approximate synthetic aperture duration is {cpi} s.")
+
+    # Crop to fully focused region, ignoring range-dependence of CPI.
+    # Ignore sampling of convolution kernels, accepting possibility of a few
+    # pixels that are only 99.9% focused.
+    # CPI is symmetric about Doppler centroid.
+    t0 += cpi / 2
+    t1 -= cpi / 2
+    # Range delay is defined relative to _start_ of TX pulse.
+    r1 -= chirplen_meters
+
+    # Output grid is zero Doppler, so reskew the four corners and assume they
+    # enclose the image.  Take extrema as default processing box.
+    # Define a capture to save some typing
+    zerodop = isce3.core.LUT2d()
+    def reskew_to_zerodop(t, r):
+        return isce3.geometry.rdr2rdr(t, r, orbit, igrid.lookside, doppler,
+            igrid.wavelength, dem, doppler_out=zerodop,
+            rdr2geo_params=vars(ac.rdr2geo), geo2rdr_params=vars(ac.geo2rdr))
+
+    # One annoying case is where the orbit data covers the raw pulse times
+    # and nothing else.  The code can crash when trying to compute positions on
+    # the output zero-Doppler grid because the reskew time offset causes it to
+    # run off the end of the available orbit data.  Also the Newton solvers need
+    # some wiggle room. As a workaround, let's nudge the default bounds until
+    # we're sure the code doesn't crash.
+    def reskew_near_far_with_nudge(t, r0, r1, step, tstop):
+        assert (tstop - t) * step > 0, "Sign of step must bring t towards tstop"
+        offset = 0.0
+        # Give up when we've nudged t past tstop (nudging forwards or
+        # backwards).
+        while (tstop - (t + offset)) * step > 0:
+            try:
+                ta, ra = reskew_to_zerodop(t + offset, r0)
+                tb, rb = reskew_to_zerodop(t + offset, r1)
+                return offset, ta, ra, tb, rb
+            except RuntimeError:
+                offset += step
+        raise RuntimeError("No valid geometry.  Invalid orbit data?")
+
+    # Solve for points at near range (a) and far range (b) at start time.
+    offset0, ta, ra, tb, rb = reskew_near_far_with_nudge(t0, r0, r1, 0.1, t1)
+    log.debug(f"offset0 = {offset0}")
+    if abs(offset0) > 0.0:
+        log.warning(f"Losing up to {offset0} seconds of image data at start due"
+            " to insufficient orbit data.")
+    # Solve for points at near range (c) and far range (d) at end time.
+    offset1, tc, rc, td, rd = reskew_near_far_with_nudge(t1, r0, r1, -0.1, t0)
+    log.debug(f"offset1 = {offset1}")
+    if abs(offset1) > 0.0:
+        log.warning(f"Losing up to {offset1} seconds of image data at end due"
+            " to insufficient orbit data.")
+
+    # "z" for zero Doppler.  Reskew varies with range, so take most conservative
+    # bounding box to ensure fully focused data everywhere.
+    t0z = max(ta, tb)
+    r0z = max(ra, rc)
+    t1z = min(tc, td)
+    r1z = min(rb, rd)
+    log.debug(f"Reskew time offset at start {t0z - t0 - offset0} s")
+    log.debug(f"Reskew time offset at end {t1z - t1 - offset1} s")
+    log.debug(f"Reskew range offset at start {r0z - r0} m")
+    log.debug(f"Reskew range offset at end {r1z - r1} m")
+
+    dt0 = igrid.ref_epoch + isce3.core.TimeDelta(t0z)
+    dt1 = igrid.ref_epoch + isce3.core.TimeDelta(t1z)
+    log.info(f"Approximate fully focusable time interval is [{dt0}, {dt1}]")
+    log.info(f"Approximate fully focusable range interval is [{r0z}, {r1z}]")
+
+    # TODO snap start time to standard interval
 
     p = cfg.processing.output_grid
     if p.start_time:
-        t0 = (DateTime(p.start_time) - igrid.ref_epoch).total_seconds()
+        t0z = (DateTime(p.start_time) - igrid.ref_epoch).total_seconds()
     if p.end_time:
-        t1 = (DateTime(p.end_time) - igrid.ref_epoch).total_seconds()
-    r0 = p.start_range or r0
-    r1 = p.end_range or r1
+        t1z = (DateTime(p.end_time) - igrid.ref_epoch).total_seconds()
+    r0z = p.start_range or r0z
+    r1z = p.end_range or r1z
     prf = p.output_prf or igrid.prf
 
-    if t1 < t0in:
-        raise ValueError(f"Output grid t1={t1} < input grid t0={t0in}")
-    if t0 > t1in:
-        raise ValueError(f"Output grid t0={t0} > input grid t1={t1in}")
-    if r1 < r0in:
-        raise ValueError(f"Output grid r1={r1} < input grid r0={r0in}")
-    if r0 > r1in:
-        raise ValueError(f"Output grid r0={r0} > input grid r1={r1in}")
+    # User may have updated our precious start/end bounds, so check again that
+    # we're actually able to compute the geometry everywhere.  Also
+    # backprojection actually runs rdr2rdr in the other direction
+    # (zero-to-native) and the solver isn't necessarily symmetric with respect
+    # to how it converges to the solution.  So it's good to check here and
+    # error out early rather than wait for azcomp to crash and waste the user's
+    # time.  Don't bother nudging since we don't want to modify user input.
+    log.info("Verifying requested processing domain.")
+    for (t, r) in [(t0z, r0z), (t0z, r1z), (t1z, r0z), (t1z, r1z)]:
+        try:
+            isce3.geometry.rdr2rdr(t, r, orbit, igrid.lookside, zerodop,
+                igrid.wavelength, dem, doppler_out=doppler,
+                rdr2geo_params=vars(ac.rdr2geo),
+                geo2rdr_params=vars(ac.geo2rdr))
+        except RuntimeError:
+            dt = igrid.ref_epoch + isce3.core.TimeDelta(t)
+            log.error(f"Reskew zero-to-native failed at t={dt} r={r}")
+            raise RuntimeError("Could not compute imaging geometry")
 
-    nr = int(np.round((r1 - r0) / dr))
-    nt = int(np.round((t1 - t0) * prf))
+    nr = round((r1z - r0z) / dr)
+    nt = round((t1z - t0z) * prf)
     assert (nr > 0) and (nt > 0)
-    ogrid = isce3.product.RadarGridParameters(t0, igrid.wavelength, prf, r0,
+    ogrid = isce3.product.RadarGridParameters(t0z, igrid.wavelength, prf, r0z,
                                               dr, igrid.lookside, nt, nr,
                                               igrid.ref_epoch)
     return ogrid
@@ -486,6 +606,21 @@ def get_range_deramp(grid: isce3.product.RadarGridParameters) -> np.ndarray:
     return np.exp(-1j * 4 * np.pi / grid.wavelength * r)
 
 
+def require_ephemeris_overlap(ephemeris: Union[Attitude, Orbit],
+                              t0: float, t1: float, name: str = "Ephemeris"):
+    """Raise exception if ephemeris doesn't fully overlap time interval [t0, t1]
+    """
+    if ephemeris.contains(t0) and ephemeris.contains(t1):
+        return
+    dt0 = ephemeris.reference_epoch + isce3.core.TimeDelta(t0)
+    dt1 = ephemeris.reference_epoch + isce3.core.TimeDelta(t1)
+    msg = (f"{name} time span "
+        f"[{ephemeris.start_datetime}, {ephemeris.end_datetime}] does not fully"
+        f"overlap required time span [{dt0}, {dt1}]")
+    log.error(msg)
+    raise ValueError(msg)
+
+
 def focus(runconfig):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -498,9 +633,6 @@ def focus(runconfig):
     input_raw_path = os.path.abspath(rawfiles[0])
     raw = open_rrsd(input_raw_path)
     dem = get_dem(cfg)
-    orbit = get_orbit(cfg)
-    attitude = get_attitude(cfg)
-    fc_ref, dop_ref = make_doppler(cfg)
     zerodop = isce3.core.LUT2d()
     azres = cfg.processing.azcomp.azimuth_resolution
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
@@ -532,11 +664,29 @@ def focus(runconfig):
     txref = raw.polarizations["A"][0][0]
     pulse_times, raw_grid = raw.getRadarGrid(frequency="A", tx=txref)
 
+    orbit = get_orbit(cfg)
+    attitude = get_attitude(cfg)
+    # Use same epoch for all objects for consistency and correctness.
+    # Especially important since Doppler LUT does not carry its own epoch.
+    grid_epoch = raw_grid.ref_epoch
+    orbit.update_reference_epoch(grid_epoch)
+    attitude.update_reference_epoch(grid_epoch)
+    # Need orbit and attitude over whole raw domain in order to generate
+    # Doppler LUT.  Check explicitly in order to provide a sensible error.
+    log.info("Verifying ephemeris covers time span of raw data.")
+    require_ephemeris_overlap(orbit, pulse_times[0], pulse_times[-1], "Orbit")
+    require_ephemeris_overlap(attitude, pulse_times[0], pulse_times[-1],
+        "Attitude")
+    fc_ref, dop_ref = make_doppler(cfg, epoch=grid_epoch)
+
     log.info(f"len(pulses) = {len(pulse_times)}")
     log.info("Raw grid is %s", raw_grid)
     # Different grids for frequency A and B.
-    ogrid = dict(A = make_output_grid(cfg, raw_grid))
+    ogrid = dict()
+    max_chirplen = get_max_chirp_duration(cfg) * isce3.core.speed_of_light / 2
+    ogrid["A"] = make_output_grid(cfg, raw_grid, orbit, dop_ref, max_chirplen, dem)
     log.info("Output grid A is %s", ogrid["A"])
+    assert ogrid["A"].ref_epoch == grid_epoch
     if "B" in raw.frequencies:
         # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B.
@@ -561,8 +711,7 @@ def focus(runconfig):
     log.info(f"Creating output {product} product {output_slc_path}")
     slc = SLC(output_slc_path, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
-    if attitude:
-        slc.set_attitude(attitude, orbit.reference_epoch)
+    slc.set_attitude(attitude)
     slc.copy_identification(raw, polygon=polygon,
         track=cfg.geometry.relative_orbit_number,
         frame=cfg.geometry.frame_number,

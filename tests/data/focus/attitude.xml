@@ -1,0 +1,297 @@
+<?xml version="1.0"?>
+<radarPointing>
+  <productInformation>
+    <productName>placeholder</productName>
+    <mission>NISAR</mission>
+    <validityStartDateTime>2021-07-01T03:19:50.000000000</validityStartDateTime>
+    <validityEndDateTime>2021-07-01T03:20:17.000000000</validityEndDateTime>
+    <fileClass>Custom</fileClass>
+    <fileType>FOE</fileType>
+    <creator>NASA JPL</creator>
+    <creationDateTime>2022-02-02T14:53:37.286662000</creationDateTime>
+  </productInformation>
+  <LSAR>
+    <radarPointingStateVectorList count="28">
+      <radarPointingStateVector index="1">
+        <utc>2021-07-01T03:19:50.000000000</utc>
+        <yaw>86.10911480320367</yaw>
+        <pitch>37.00177768072491</pitch>
+        <roll>0.010577085407856035</roll>
+        <q0>-0.7363063200324784</q0>
+        <q1>0.6680041156116152</q1>
+        <q2>0.02600097848030533</q2>
+        <q3>0.10463008039870801</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="2">
+        <utc>2021-07-01T03:19:51.000000000</utc>
+        <yaw>86.10964659206374</yaw>
+        <pitch>37.00186078506034</pitch>
+        <roll>0.011068607806306054</roll>
+        <q0>-0.7359885626226098</q0>
+        <q1>0.6683092388530163</q1>
+        <q2>0.026168725293331273</q2>
+        <q3>0.10487513894593566</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="3">
+        <utc>2021-07-01T03:19:52.000000000</utc>
+        <yaw>86.11018271465062</yaw>
+        <pitch>37.00194379441298</pitch>
+        <roll>0.011560073353583007</roll>
+        <q0>-0.7356705974706594</q0>
+        <q1>0.6686141734556816</q1>
+        <q2>0.026336464719903457</q2>
+        <q3>0.1051201678908285</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="4">
+        <utc>2021-07-01T03:19:53.000000000</utc>
+        <yaw>86.11072316912608</yaw>
+        <pitch>37.00202671785281</pitch>
+        <roll>0.012051479433419533</roll>
+        <q0>-0.7353524246663784</q0>
+        <q1>0.6689189193335385</q1>
+        <q2>0.02650419671267534</q2>
+        <q3>0.1053651671642245</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="5">
+        <utc>2021-07-01T03:19:54.000000000</utc>
+        <yaw>86.11126795364858</yaw>
+        <pitch>37.00210956444963</pitch>
+        <roll>0.012542823429734853</roll>
+        <q0>-0.7350340442995733</q0>
+        <q1>0.6692234764005704</q1>
+        <q2>0.026671921224302474</q2>
+        <q3>0.10561013669696916</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="6">
+        <utc>2021-07-01T03:19:55.000000000</utc>
+        <yaw>86.11181706637329</yaw>
+        <pitch>37.002192343273244</pitch>
+        <roll>0.013034102727574623</roll>
+        <q0>-0.7347154564601126</q0>
+        <q1>0.6695278445708107</q1>
+        <q2>0.02683963820744246</q2>
+        <q3>0.10585507641991693</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="7">
+        <utc>2021-07-01T03:19:56.000000000</utc>
+        <yaw>86.11237050545202</yaw>
+        <pitch>37.0022750633932</pitch>
+        <roll>0.013525314712255631</roll>
+        <q0>-0.7343966612379206</q0>
+        <q1>0.6698320237583483</q1>
+        <q2>0.02700734761475511</q2>
+        <q3>0.10609998626393052</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="8">
+        <utc>2021-07-01T03:19:57.000000000</utc>
+        <yaw>86.11292826903329</yaw>
+        <pitch>37.002357733878966</pitch>
+        <roll>0.014016456769852565</roll>
+        <q0>-0.7340776587229818</q0>
+        <q1>0.6701360138773245</q1>
+        <q2>0.02717504939890226</q2>
+        <q3>0.10634486615988098</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="9">
+        <utc>2021-07-01T03:19:58.000000000</utc>
+        <yaw>86.1134903552623</yaw>
+        <pitch>37.00244036379981</pitch>
+        <roll>0.014507526287020766</roll>
+        <q0>-0.7337584490053386</q0>
+        <q1>0.6704398148419345</q1>
+        <q2>0.02734274351254799</q2>
+        <q3>0.10658971603864777</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="10">
+        <utc>2021-07-01T03:19:59.000000000</utc>
+        <yaw>86.114056762281</yaw>
+        <pitch>37.00252296222483</pitch>
+        <roll>0.01499852065115044</roll>
+        <q0>-0.7334390321750921</q0>
+        <q1>0.6707434265664262</q1>
+        <q2>0.0275104299083585</q2>
+        <q3>0.1068345358311189</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="11">
+        <utc>2021-07-01T03:20:00.000000000</utc>
+        <yaw>86.11462748822794</yaw>
+        <pitch>37.00260553822284</pitch>
+        <roll>0.01548943725013162</roll>
+        <q0>-0.7331194083224016</q0>
+        <q1>0.6710468489651019</q1>
+        <q2>0.02767810853900221</q2>
+        <q3>0.10707932546819107</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="12">
+        <utc>2021-07-01T03:20:01.000000000</utc>
+        <yaw>86.1150599770307</yaw>
+        <pitch>37.00268810086224</pitch>
+        <roll>0.015980273472915595</roll>
+        <q0>-0.7327995775367382</q0>
+        <q1>0.6713500819534041</q1>
+        <q2>0.027845779355736344</q2>
+        <q3>0.1073240848794313</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="13">
+        <utc>2021-07-01T03:20:02.000000000</utc>
+        <yaw>86.1154967034988</yaw>
+        <pitch>37.00277065264969</pitch>
+        <roll>0.016471036950345484</roll>
+        <q0>-0.7324795159998654</q0>
+        <q1>0.671653160260524</q1>
+        <q2>0.02801339709082898</q2>
+        <q3>0.1075687711935282</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="14">
+        <utc>2021-07-01T03:20:03.000000000</utc>
+        <yaw>86.11591005029544</yaw>
+        <pitch>37.00285319983525</pitch>
+        <roll>0.01691553820394592</roll>
+        <q0>-0.7321590296796948</q0>
+        <q1>0.6719562672792254</q1>
+        <q2>0.028181063174851414</q2>
+        <q3>0.10781353255038538</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="15">
+        <utc>2021-07-01T03:20:04.000000000</utc>
+        <yaw>86.11638287393401</yaw>
+        <pitch>37.002935722586585</pitch>
+        <roll>0.017452354281159682</roll>
+        <q0>-0.7318387011198851</q0>
+        <q1>0.6722588523906988</q1>
+        <q2>0.028348472974706787</q2>
+        <q3>0.1080579243068392</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="16">
+        <utc>2021-07-01T03:20:05.000000000</utc>
+        <yaw>86.11683231150903</yaw>
+        <pitch>37.003018240197136</pitch>
+        <roll>0.017942898003759818</roll>
+        <q0>-0.7315179479400544</q0>
+        <q1>0.6725614660508599</q1>
+        <q2>0.028515930984731715</q2>
+        <q3>0.10830239104084423</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="17">
+        <utc>2021-07-01T03:20:06.000000000</utc>
+        <yaw>86.11728598259761</yaw>
+        <pitch>37.003100745876054</pitch>
+        <roll>0.01843336315684171</roll>
+        <q0>-0.731196964396212</q0>
+        <q1>0.6728639246466578</q1>
+        <q2>0.028683335603861115</q2>
+        <q3>0.10854678450096011</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="18">
+        <utc>2021-07-01T03:20:07.000000000</utc>
+        <yaw>86.11774388383175</yaw>
+        <pitch>37.00318323935422</pitch>
+        <roll>0.01892374756002177</roll>
+        <q0>-0.7308757505875708</q0>
+        <q1>0.673166228077536</q1>
+        <q2>0.028850686766496828</q2>
+        <q3>0.10879110465483535</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="19">
+        <utc>2021-07-01T03:20:08.000000000</utc>
+        <yaw>86.11837062650024</yaw>
+        <pitch>37.003265727278375</pitch>
+        <roll>0.019414033495111213</roll>
+        <q0>-0.7305543304787067</q0>
+        <q1>0.6734683414975362</q1>
+        <q2>0.02901802978561004</q2>
+        <q3>0.10903539410085203</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="20">
+        <utc>2021-07-01T03:20:09.000000000</utc>
+        <yaw>86.11900167226598</yaw>
+        <pitch>37.003348218715125</pitch>
+        <roll>0.019904218354843215</roll>
+        <q0>-0.730232704160345</q0>
+        <q1>0.6737702648213827</q1>
+        <q2>0.02918536461396578</q2>
+        <q3>0.10927965277005594</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="21">
+        <utc>2021-07-01T03:20:10.000000000</utc>
+        <yaw>86.11963701920531</yaw>
+        <pitch>37.00343072273048</pitch>
+        <roll>0.020394299532666145</roll>
+        <q0>-0.729910871723269</q0>
+        <q1>0.6740719979638533</q1>
+        <q2>0.029352691204331375</q2>
+        <q3>0.10952388059350154</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="22">
+        <utc>2021-07-01T03:20:11.000000000</utc>
+        <yaw>86.12027666539139</yaw>
+        <pitch>37.00351324839011</pitch>
+        <roll>0.020884274422870854</roll>
+        <q0>-0.7295888332583212</q0>
+        <q1>0.6743735408397793</q1>
+        <q2>0.029520009509476485</q2>
+        <q3>0.10976807750225219</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="23">
+        <utc>2021-07-01T03:20:12.000000000</utc>
+        <yaw>86.12092060889415</yaw>
+        <pitch>37.00359580475918</pitch>
+        <roll>0.02137414042047606</roll>
+        <q0>-0.7292665888564015</q0>
+        <q1>0.6746748933640458</q1>
+        <q2>0.029687319482173083</q2>
+        <q3>0.1100122434273795</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="24">
+        <utc>2021-07-01T03:20:13.000000000</utc>
+        <yaw>86.12156884778028</yaw>
+        <pitch>37.003678400902494</pitch>
+        <roll>0.02186389492126208</roll>
+        <q0>-0.7289441386084676</q0>
+        <q1>0.6749760554515921</q1>
+        <q2>0.02985462107519558</q2>
+        <q3>0.11025637829996428</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="25">
+        <utc>2021-07-01T03:20:14.000000000</utc>
+        <yaw>86.12222138011326</yaw>
+        <pitch>37.0037610458844</pitch>
+        <roll>0.02235353532192693</roll>
+        <q0>-0.7286214826055366</q0>
+        <q1>0.67527702701741</q1>
+        <q2>0.030021914241320596</q2>
+        <q3>0.11050048205109586</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="26">
+        <utc>2021-07-01T03:20:15.000000000</utc>
+        <yaw>86.12287820395333</yaw>
+        <pitch>37.00384374876873</pitch>
+        <roll>0.022843059019594335</roll>
+        <q0>-0.7282986209386815</q0>
+        <q1>0.6755778079765473</q1>
+        <q2>0.030189198933327277</q2>
+        <q3>0.11074455461187245</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="27">
+        <utc>2021-07-01T03:20:16.000000000</utc>
+        <yaw>86.12353931735753</yaw>
+        <pitch>37.003926518618854</pitch>
+        <roll>0.023332463412561292</roll>
+        <q0>-0.7279755536990353</q0>
+        <q1>0.6758783982441036</q1>
+        <q2>0.030356475103997138</q2>
+        <q3>0.1109885959134011</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="28">
+        <utc>2021-07-01T03:20:17.000000000</utc>
+        <yaw>86.12420471837969</yaw>
+        <pitch>37.00400936449763</pitch>
+        <roll>0.02382174589980905</roll>
+        <q0>-0.7276522809777887</q0>
+        <q1>0.6761787977352326</q1>
+        <q2>0.030523742706113993</q2>
+        <q3>0.11123260588679766</q3>
+      </radarPointingStateVector>
+    </radarPointingStateVectorList>
+  </LSAR>
+</radarPointing>
