@@ -1,6 +1,6 @@
 """
-Suite of functions to prepare
-HDF5 for GSLC, GCOV, GUNW, RIFG, and RUNW
+Suite of functions to prepare HDF5 for
+GSLC, GCOV, GUNW, GOFF, RIFG, ROFF, and RUNW
 """
 
 import os
@@ -25,11 +25,14 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
     product_type = cfg['primary_executable']['product_type']
 
     # dict keying product type with list with possible product type(s)
-    insar_products = ['RIFG', 'RUNW', 'GUNW']
-    product_dict = {'RIFG_RUNW_GUNW': insar_products,
-                    'GUNW': insar_products,
-                    'RUNW': insar_products[:-1],
-                    'RIFG': [insar_products[0]],
+    insar_products = ['ROFF', 'GOFF', 'RIFG', 'RUNW', 'GUNW']
+    product_dict = {'ROFF_RIFG_RUNW_GOFF_GUNW': insar_products,
+                    'RIFG_RUNW_GUNW': insar_products[2:],
+                    'GUNW': insar_products[2:],
+                    'GOFF': insar_products[0:2],
+                    'RUNW': ['RIFG', 'RUNW'],
+                    'RIFG': ['RIFG'],
+                    'ROFF': ["ROFF"],
                     'GCOV': ['GCOV'],
                     'GSLC': ['GSLC'],
                     'RUNW_STANDALONE': ['RUNW'],
@@ -40,13 +43,20 @@ def get_products_and_paths(cfg: dict) -> (dict, dict):
     insar_path = lambda out_path, product: \
         os.path.join(os.path.dirname(out_path),
                      product + '_' + os.path.basename(out_path))
-    h5_paths = {'RIFG_RUNW_GUNW': dict(zip(insar_products,
-                                  [insar_path(output_path, product) for product
-                                   in insar_products])),
+    h5_paths = {'ROFF_RIFG_RUNW_GOFF_GUNW': dict(zip(insar_products,
+                                                     [insar_path(output_path, product) for product
+                                                     in insar_products])),
+                'RIFG_RUNW_GUNW': dict(zip(insar_products[2:],
+                                           [insar_path(output_path, product) for product
+                                           in insar_products[2:]])),
                 'GUNW': {'RIFG': f'{scratch}/RIFG.h5',
-                         'RUNW': f'{scratch}/RUNW.h5', 'GUNW': output_path},
+                         'RUNW': f'{scratch}/RUNW.h5',
+                         'GUNW': output_path},
+                'GOFF': {'ROFF': f'{scratch}/ROFF.h5',
+                         'GOFF': output_path},
                 'RUNW': {'RIFG': f'{scratch}/RIFG.h5', 'RUNW': output_path},
                 'RIFG': {'RIFG': output_path},
+                'ROFF': {'ROFF': output_path},
                 'GCOV': {'GCOV': output_path},
                 'GSLC': {'GSLC': output_path},
                 'RUNW_STANDALONE': {'RUNW': output_path},
@@ -64,7 +74,6 @@ def run(cfg: dict) -> dict:
     info_channel.log('preparing HDF5')
 
     product_dict, h5_paths = get_products_and_paths(cfg)
-
     for sub_prod_type in product_dict:
         out_path = h5_paths[sub_prod_type]
         cp_geocode_meta(cfg, out_path, sub_prod_type)
@@ -88,12 +97,11 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     '''
 
     # Check if InSAR
-    is_insar = dst in ['GUNW', 'RUNW', 'RIFG']
+    is_insar = dst in ['GUNW', 'GOFF', 'RUNW', 'ROFF', 'RIFG']
 
     # unpack info
-    input_hdf5 = cfg['input_file_group']['input_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-
+    input_hdf5 = cfg['input_file_group']['input_file_path']
     if is_insar:
         secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
 
@@ -114,22 +122,23 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     ref_slc = SLC(hdf5file=input_hdf5)
 
     # prelim setup
-    common_parent_path = 'science/LSAR'
+    common_path = 'science/LSAR'
     src_meta_path = ref_slc.MetadataPath
-    dst_meta_path = f'{common_parent_path}/{dst}/metadata'
+    dst_meta_path = f'{common_path}/{dst}/metadata'
 
     with h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
             h5py.File(output_hdf5, 'w', libver='latest', swmr=True) as dst_h5:
-
         dst_h5.attrs['Conventions'] = np.string_("CF-1.8")
 
-        # Copy of identification
-        identification_excludes = 'productType'
+        # Copy of identification group
+        ident_path = f'{common_path}/identification'
+        ident_excludes = 'productType'
         if is_insar:
-            identification_excludes = ['productType', 'listOfFrequencies',
-                                       'zeroDopplerStartTime', 'zeroDopplerEndTime']
-        cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification',
-                        excludes=identification_excludes)
+            ident_excludes = ['productType', 'listOfFrequencies',
+                              'zeroDopplerStartTime', 'zeroDopplerEndTime']
+        cp_h5_meta_data(src_h5, dst_h5, ident_path,
+                        excludes=ident_excludes)
+
         # If insar, create reference/secondary zeroDopplerStartEndTime
         if is_insar:
             # Open secondary hdf5 to copy information
@@ -137,24 +146,22 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                 src_dataset = ['zeroDopplerStartTime', 'zeroDopplerEndTime']
                 dst_dataset = ['referenceZeroDopplerStartTime', 'referenceZeroDopplerEndTime']
                 for src_data, dst_data in zip(src_dataset, dst_dataset):
-                    cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}/identification/{src_data}',
-                                    f'{common_parent_path}/identification/{dst_data}')
+                    cp_h5_meta_data(src_h5, dst_h5, f'{ident_path}/{src_data}',
+                                    f'{ident_path}/{dst_data}')
                     dst_data = dst_data.replace('reference', 'secondary')
-                    cp_h5_meta_data(sec_src_h5, dst_h5, f'{common_parent_path}/identification/{src_data}',
-                                    f'{common_parent_path}/identification/{dst_data}')
+                    cp_h5_meta_data(sec_src_h5, dst_h5, f'{ident_path}/{src_data}',
+                                    f'{ident_path}/{dst_data}')
 
-        # Flag isGeocoded
-        ident = dst_h5[f'{common_parent_path}/identification']
-        is_geocoded = dst in ['GCOV', 'GSLC', 'GUNW']
-        if 'isGeocoded' in ident:
-            del ident['isGeocoded']
-        dset = ident.create_dataset('isGeocoded',
-                                    data=np.string_(str(is_geocoded)))
+        # Delete flag isGeocoded if exist, and assign it again
+        is_geocoded = dst in ['GCOV', 'GSLC', 'GUNW', 'GOFF']
+
+        dst_h5[ident_path].create_dataset('isGeocoded',
+                                          data=np.string_(str(is_geocoded)))
         desc = "Flag to indicate radar geometry or geocoded product"
-        dset.attrs["description"] = np.string_(desc)
+        dst_h5[ident_path].attrs["description"] = np.string_(desc)
 
         # Assign productType
-        ident['productType'] = np.string_(dst)
+        dst_h5[f'{ident_path}/productType'] = np.string_(dst)
 
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
@@ -163,46 +170,57 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # copy attitude information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/attitude',
                         f'{dst_meta_path}/attitude')
-        if dst in ['RIFG', 'RUNW']:
-            # RUNW and RIFG have no attitude group and have geolocation grid
+
+        # copy processingInformation/algorithms group (common across products)
+        if dst in ['ROFF', 'GOFF']:
+            dst_proc_path = f'{dst_meta_path}/processingInformation/algorithms'
+            excludes =['SWSTCorrection', 'azimuthCompression', 'azimuthPresumming',
+                       'driftCompensator', 'elevationAntennaPatternCorrection',
+                       'internalCalibration', 'rangeCellMigration',
+                       'rangeCompression', 'rangeDependentGainCorrection',
+                       'rangeReferenceFunctionGenerator', 'rangeSpreadingLossCorrection',
+                       'secondaryRangeCompression']
+            cp_h5_meta_data(src_h5, dst_h5,
+                            f'{src_meta_path}/processingInformation/algorithms',
+                            dst_proc_path, excludes=excludes)
+            dst_h5[dst_proc_path].create_dataset('crossCorrelation',
+                                                 data=np.string_('Ampcor'))
+            descr = "Cross-correlation algorithm"
+            dst_h5[dst_proc_path].attrs["description"] = np.string_(descr)
+        else:
+           cp_h5_meta_data(src_h5, dst_h5,
+                           f'{src_meta_path}/processingInformation/algorithms',
+                           f'{dst_meta_path}/processingInformation/algorithms')
+        if dst in ['RIFG', 'RUNW', 'ROFF']:
             yds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/zeroDopplerTime',
-                    data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])
+                   data = src_h5[f'{src_meta_path}/geolocationGrid/zeroDopplerTime'])
             xds = dst_h5.create_dataset(f'{dst_meta_path}/geolocationGrid/slantRange',
-                    data = src_h5[f'{src_meta_path}/geolocationGrid/slantRange'])
+                   data = src_h5[f'{src_meta_path}/geolocationGrid/slantRange'])
             cp_h5_meta_data(src_h5, dst_h5,
                             f'{src_meta_path}/geolocationGrid',
                             f'{dst_meta_path}/geolocationGrid',
                             excludes=['zeroDopplerTime', 'slantRange'],
-                            attach_scales_list = [yds, xds])
-
-        # copy processingInformation/algorithms group (common across products)
-        cp_h5_meta_data(src_h5, dst_h5,
-                        f'{src_meta_path}/processingInformation/algorithms',
-                        f'{dst_meta_path}/processingInformation/algorithms')
-
-        if dst == "GCOV":
+                            attach_scales_list=[yds, xds])
+        if dst in ["GCOV", "GUNW"]:
             algorithms_ds = (dst_meta_path +
                              'processingInformation/algorithms/geocoding')
             dst_h5.require_dataset(algorithms_ds, (), "S27",
-                data=np.string_(geocode_algorithm))
-
+                                   data=np.string_(geocode_algorithm))
             algorithms_ds = (dst_meta_path +
-                             'processingInformation/algorithms/demInterpolation')
+                            'processingInformation/algorithms/demInterpolation')
             dst_h5.require_dataset(algorithms_ds, (), "S27",
-                data=np.string_(dem_interp_method))
+                                   data=np.string_(dem_interp_method))
 
         # copy processingInformation/inputs group
         cp_h5_meta_data(src_h5, dst_h5,
                         f'{src_meta_path}/processingInformation/inputs',
                         f'{dst_meta_path}/processingInformation/inputs',
                         excludes=['l0bGranules'])
-
         # Create l1SlcGranules
         inputs = [input_hdf5]
         if is_insar:
             inputs.append(secondary_hdf5)
-        input_grp = dst_h5[
-            os.path.join(dst_meta_path, 'processingInformation/inputs')]
+        input_grp = dst_h5[f'{dst_meta_path}/processingInformation/inputs']
         dset = input_grp.create_dataset("l1SlcGranules",
                                         data=np.string_(inputs))
         desc = "List of input L1 RSLC products used"
@@ -210,11 +228,11 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         dset.attrs["long_name"] = np.string_("list of L1 RSLC products")
 
         # Copy processingInformation/parameters
-        if dst == 'GUNW':
+        if dst in ['GUNW', 'GOFF']:
             exclude_args = ['frequencyA', 'frequencyB', 'azimuthChirpWeighting',
                             'effectiveVelocity', 'rangeChirpWeighting',
                             'slantRange', 'zeroDopplerTime']
-        elif dst in ['RUNW', 'RIFG']:
+        elif dst in ['RUNW', 'RIFG', 'ROFF']:
             exclude_args = ['frequencyA', 'frequencyB',
                             'azimuthChirpWeighting',
                             'effectiveVelocity', 'rangeChirpWeighting']
@@ -222,28 +240,27 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
             exclude_args = ['nes0', 'elevationAntennaPattern']
 
         cp_h5_meta_data(src_h5, dst_h5,
-                        os.path.join(src_meta_path,
-                                     'processingInformation/parameters'),
-                        os.path.join(dst_meta_path,
-                                     'processingInformation/parameters'),
+                        f'{src_meta_path}/processingInformation/parameters',
+                        f'{dst_meta_path}/processingInformation/parameters',
                         excludes=exclude_args)
-
         # Copy calibrationInformation group
         exclude_args = []
         if is_insar:
             exclude_args = ['nes0', 'elevationAntennaPattern']
         for freq in freq_pols.keys():
-            frequency = f'frequency{freq}'
-            pol_list = freq_pols[freq]
-            if pol_list is None:
-                continue
-            for polarization in pol_list:
-                cp_h5_meta_data(src_h5, dst_h5,
-                                os.path.join(src_meta_path,
-                                             f'calibrationInformation/{frequency}/{polarization}'),
-                                os.path.join(dst_meta_path,
-                                             f'calibrationInformation/{frequency}/{polarization}'),
-                                excludes=exclude_args)
+            if dst in ['ROFF', 'GOFF']:
+                cal_path = f'{dst_meta_path}/calibrationInformation'
+                dst_h5[f'{dst_meta_path}'].create_group('calibrationInformation')
+                dst_h5[cal_path].create_group(f'frequency{freq}')
+            else:
+               pol_list = freq_pols[freq]
+               if pol_list is None:
+                  continue
+               for pol in pol_list:
+                   cp_h5_meta_data(src_h5, dst_h5,
+                                   f'{src_meta_path}/calibrationInformation/frequency{freq}/{pol}',
+                                   f'{dst_meta_path}/calibrationInformation/frequency{freq}/{pol}',
+                                   excludes=exclude_args)
 
         # Copy product specifics
         if is_insar:
@@ -260,9 +277,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
             for freq in freq_pols.keys():
                 frequency = f'frequency{freq}'
                 dst_freq_path = dst_path.replace('swaths', 'grids')+f'/{frequency}'
-                copy_zero_doppler_time_spacing(src_h5, ref_slc.SwathPath, 
+                copy_zero_doppler_time_spacing(src_h5, ref_slc.SwathPath,
                                                dst_h5, dst_freq_path)
-
         src_h5.close()
         dst_h5.close()
 
@@ -315,8 +331,8 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     '''
     Copy metadata specific to INSAR workflow
     '''
-    common_parent_path = 'science/LSAR'
-    dst_meta_path = os.path.join(common_parent_path, f'{dst}/metadata')
+    common_path = 'science/LSAR'
+    dst_meta_path = f'{common_path}/{dst}/metadata'
 
     secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
@@ -324,53 +340,48 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     # Open secondary SLC
     with h5py.File(secondary_hdf5, 'r', libver='latest',
                    swmr=True) as secondary_h5:
-
-        dst_proc = os.path.join(dst_meta_path,
-                                'processingInformation/parameters')
-        src_proc = os.path.join(src_meta_path,
-                                'processingInformation/parameters')
+        dst_proc = f'{dst_meta_path}/processingInformation/parameters'
+        src_proc = f'{src_meta_path}/processingInformation/parameters'
 
         # Create groups in processing Information
-        dst_h5.create_group(os.path.join(dst_proc, 'common'))
-        dst_h5.create_group(os.path.join(dst_proc, 'reference'))
-        dst_h5.create_group(os.path.join(dst_proc, 'secondary'))
+        dst_h5.create_group(f'{dst_proc}/common')
+        dst_h5.create_group(f'{dst_proc}/reference')
+        dst_h5.create_group(f'{dst_proc}/secondary')
 
         # Copy data for reference and secondary
         cp_h5_meta_data(src_h5, dst_h5,
-                        os.path.join(src_proc, 'effectiveVelocity'),
-                        os.path.join(dst_proc, 'reference/effectiveVelocity'))
+                        f'{src_proc}/effectiveVelocity',
+                        f'{dst_proc}/reference/effectiveVelocity')
         cp_h5_meta_data(secondary_h5, dst_h5,
-                        os.path.join(src_proc, 'effectiveVelocity'),
-                        os.path.join(dst_proc, 'secondary/effectiveVelocity'))
+                        f'{src_proc}/effectiveVelocity',
+                        f'{dst_proc}/secondary/effectiveVelocity')
         for freq in freq_pols.keys():
             frequency = f'frequency{freq}'
             cp_h5_meta_data(src_h5, dst_h5,
-                            os.path.join(src_proc, f'{frequency}'),
-                            os.path.join(dst_proc, f'reference/{frequency}'))
+                            f'{src_proc}/{frequency}',
+                            f'{dst_proc}/reference/{frequency}')
             cp_h5_meta_data(secondary_h5, dst_h5,
-                            os.path.join(src_proc, f'{frequency}'),
-                            os.path.join(dst_proc, f'secondary/{frequency}'))
+                            f'{src_proc}/{frequency}',
+                            f'{dst_proc}/secondary/{frequency}')
 
         # Copy secondary image slantRange and azimuth time (modify attributes)
-        dst_grid_path = os.path.join(dst_meta_path, 'radarGrid')
-        if dst in ['RUNW', 'RIFG']:
-            dst_grid_path = os.path.join(dst_meta_path, 'geolocationGrid')
+        dst_grid_path =f'{dst_meta_path}/radarGrid'
+        if dst in ['RUNW', 'RIFG', 'ROFF']:
+            dst_grid_path =f'{dst_meta_path}/geolocationGrid'
 
-        cp_h5_meta_data(secondary_h5, dst_h5, os.path.join(src_meta_path,
-                                                           'geolocationGrid/slantRange'),
-                        os.path.join(dst_grid_path, 'secondarySlantRange'))
-        cp_h5_meta_data(secondary_h5, dst_h5, os.path.join(src_meta_path,
-                                                           'geolocationGrid/zeroDopplerTime'),
-                        os.path.join(dst_grid_path,
-                                     'secondaryZeroDopplerAzimuthTime'))
+        cp_h5_meta_data(secondary_h5, dst_h5,
+                        f'{src_meta_path}/geolocationGrid/slantRange',
+                        f'{dst_grid_path}/secondarySlantRange')
+        cp_h5_meta_data(secondary_h5, dst_h5,
+                       f'{src_meta_path}/geolocationGrid/zeroDopplerTime',
+                       f'{dst_grid_path}/secondaryZeroDopplerAzimuthTime')
 
         # Update these attribute with a description
         descr = "Slant range of corresponding pixels in secondary image"
-        dst_h5[os.path.join(dst_grid_path, 'secondarySlantRange')].attrs[
+        dst_h5[f'{dst_grid_path}/secondarySlantRange'].attrs[
             "description"] = descr
         descr = "Zero Doppler azimuth time of corresponding pixel in secondary image"
-        dst_h5[os.path.join(dst_grid_path,
-                            'secondaryZeroDopplerAzimuthTime')].attrs[
+        dst_h5[f'{dst_grid_path}/secondaryZeroDopplerAzimuthTime'].attrs[
             "description"] = descr
 
 
@@ -387,6 +398,7 @@ def prep_ds(cfg, output_hdf5, dst):
             prep_ds_gslc_gcov(cfg, dst, dst_h5)
         else:
             prep_ds_insar(cfg, dst, dst_h5)
+
 
 def prep_ds_gslc_gcov(cfg, dst, dst_h5):
     '''
@@ -427,432 +439,533 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
 
 
-def prep_ds_insar(cfg, dst, dst_h5):
-    '''
-    prepare INSAR (GUNW, RIFG, RUNW) specific datasets
-    '''
-
+def prep_ds_insar(pcfg, dst, dst_h5):
     # unpack info
-    common_parent_path = 'science/LSAR'
-    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-
-    # Extract range and azimuth looks
-    rg_looks = cfg['processing']['crossmul']['range_looks']
-    az_looks = cfg['processing']['crossmul']['azimuth_looks']
-
-    # Extract dense offsets parameters
-    rg_chip = cfg['processing']['dense_offsets']['window_range']
-    az_chip = cfg['processing']['dense_offsets']['window_azimuth']
-    rg_search = 2 * cfg['processing']['dense_offsets']['half_search_range']
-    az_search = 2 * cfg['processing']['dense_offsets']['half_search_azimuth']
-    rg_skip = cfg['processing']['dense_offsets']['skip_range']
-    az_skip = cfg['processing']['dense_offsets']['skip_azimuth']
-    corr_ovs = cfg['processing']['dense_offsets'][
-        'correlation_surface_oversampling_factor']
-    offset_width = cfg['processing']['dense_offsets']['offset_width']
-    offset_length = cfg['processing']['dense_offsets']['offset_length']
-    gross_offset_range = cfg['processing']['dense_offsets']['gross_offset_range']
-    gross_offset_azimuth = cfg['processing']['dense_offsets']['gross_offset_azimuth']
-
-    # Create datasets in the ouput hdf5
-    geogrids = cfg['processing']['geocode']['geogrids']
+    cfg = pcfg['processing']
+    common_path = 'science/LSAR'
+    freq_pols = cfg['input_subset']['list_of_frequencies']
+    geogrids =cfg['geocode']['geogrids']
 
     # Create list of frequencies
-    id_group = dst_h5['science/LSAR/identification']
+    id_group = dst_h5[f'{common_path}/identification']
     descr = "List of frequency layers available in the product"
     dset = id_group.create_dataset('listOfFrequencies',
                                    data=np.string_(list(freq_pols.keys())))
     dset.attrs["description"] = descr
 
     # Open reference SLC
-    input_h5 = cfg['input_file_group']['input_file_path']
-    ref_slc = SLC(hdf5file=input_h5)
-
-    with h5py.File(input_h5, 'r', libver='latest', swmr=True) as src_h5:
+    ref_path = pcfg['input_file_group']['input_file_path']
+    ref_slc = SLC(hdf5file=ref_path)
+    with h5py.File(ref_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
+            # Extract some info from reference RSLC
+            slc_path = f'{ref_slc.SwathPath}/frequency{freq}'
+            slc_dset = src_h5[f'{slc_path}/{pol_list[0]}']
+            slc_lines, slc_cols = slc_dset.shape
+            subswaths = src_h5[f'{slc_path}/numberOfSubSwaths'][()]
+            center_freq = src_h5[f'{slc_path}/processedCenterFrequency'][()]
+            rg_bw = src_h5[f'{slc_path}/processedRangeBandwidth'][()]
+            az_bw = src_h5[f'{slc_path}/processedAzimuthBandwidth'][()]
+            rg_vect = src_h5[f'{slc_path}/slantRange'][()]
+            az_vect = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTime'][()]
+            rg_spac = src_h5[f'{slc_path}/slantRangeSpacing'][()]
+            az_spac = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTimeSpacing'][()]
 
-            # Get SLC dimension for that frequency
-            # Take size of first available polarization
-            dset = src_h5[os.path.join(f'{ref_slc.SwathPath}/frequency{freq}/{pol_list[0]}')]
-            az_lines, rg_cols = dset.shape
-
-            if dst in ['RUNW', 'RIFG']:
-                grid_swath = 'swaths'
-                shape = (az_lines // az_looks, rg_cols // rg_looks)
-
-                # Compute dimensions for pixel offsets in radar coordinates
-                if cfg['processing']['dense_offsets']['margin'] is not None:
-                    margin = cfg['processing']['dense_offsets']['margin']
-                else:
-                    margin = 0
-
-                if (gross_offset_range is not None) and (gross_offset_azimuth is not None):
-                    margin = max(margin, np.abs(gross_offset_range), np.abs(gross_offset_azimuth))
-
-                margin_rg = 2 * margin + rg_search + rg_chip
-                margin_az = 2 * margin + az_search + az_chip
-
-                # If not assigned by user, compute offset length/width
-                # using dense offsets parameters
-                if offset_length is None:
-                    offset_length = (az_lines - margin_az) // az_skip
-                if offset_width is None:
-                    offset_width = (rg_cols - margin_rg) // rg_skip
-
-                shape_offset = (offset_length, offset_width)
-            else:
-                grid_swath = 'grids'
-                shape = (geogrids[freq].length, geogrids[freq].width)
-                shape_offset = shape
-
-            # Create grid or swath group depending on product
-            dst_h5[os.path.join(common_parent_path, f'{dst}')].require_group(
-                grid_swath)
-            dst_h5[os.path.join(common_parent_path,
-                                f'{dst}/{grid_swath}')].create_group(
+            # Create grids or swath group depending on product
+            grid_swath = 'swaths' if dst in ['RIFG', 'ROFF',
+                                             'RUNW'] else 'grids'
+            product_path = f'{common_path}/{dst}'
+            freq_path = f'{product_path}/{grid_swath}/frequency{freq}'
+            dst_h5[product_path].create_group(grid_swath)
+            dst_h5[f'{product_path}/{grid_swath}'].create_group(
                 f'frequency{freq}')
-            dst_parent_path = os.path.join(common_parent_path,
-                                        f'{dst}/{grid_swath}/frequency{freq}')
 
-            # Add list of polarizations
-            _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
+            # Create common parameters for this group
+            _add_polarization_list(dst_h5, dst, common_path, freq, pol_list)
 
-            # Add centerFrequency and number of subswaths
             descr = "Center frequency of the processed image"
-            _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                            "centerFrequency",
-                            descr=descr, units="Hz", data=1,
-                            long_name="center frequency")
-            descr = "Number of swaths of continuous imagery, due to gaps"
-            _create_datasets(dst_h5[dst_parent_path], [0], np.uint8,
-                            "numberOfSubSwaths",
-                            descr=descr, units=" ", data=1,
-                            long_name="number of subswaths")
-
-            # Create path to interferogram and pixelOffsets
-            dst_path_intf = os.path.join(dst_parent_path, 'interferogram')
-            dst_path_offs = os.path.join(dst_parent_path, 'pixelOffsets')
-            dst_h5.create_group(dst_path_intf)
-            dst_h5.create_group(dst_path_offs)
-
-            if dst in ['RIFG', 'RUNW']:
-
-                # Generate slantRange and Azimuth time (for RIFG and RUNW only)
-                slant_range = src_h5[f'{ref_slc.SwathPath}/frequency{freq}/slantRange'][()]
-                doppler_time = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTime'][()]
-                rg_spacing = src_h5[f'{ref_slc.SwathPath}/frequency{freq}/slantRangeSpacing'][()]
-                az_spacing = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTimeSpacing'][()]
-
-                # TO DO: This is valid for odd number of looks. For R1 extend this to even number of looks
-                idx_rg = np.arange(int(len(slant_range) / rg_looks) * rg_looks)[
-                        ::rg_looks] + int(rg_looks / 2)
-                idx_az = np.arange(int(len(doppler_time) / az_looks) * az_looks)[
-                        ::az_looks] + int(az_looks / 2)
-
-                descr = "CF compliant dimension associated with slant range"
-                id_group = dst_h5[os.path.join(common_parent_path,
-                                            f'{dst}/{grid_swath}/frequency{freq}/interferogram')]
-                dset = id_group.create_dataset('slantRange',
-                                            data=slant_range[idx_rg])
-                dset.attrs["description"] = descr
-                dset.attrs["units"] = np.string_("meters")
-                dset.attrs["long_name"] = np.string_("slant range")
-
-                descr = descr.replace("slant range", "azimuth time")
-                dset = id_group.create_dataset('zeroDopplerTime',
-                                            data=doppler_time[idx_az])
-                dset.attrs["description"] = descr
-                dset.attrs["units"] = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTime'].attrs["units"]
-                # src_h5.close()
-
-                # Allocate slant range and azimuth spacing
-                descr = "Slant range spacing of grid. Same as difference between \
-                                        consecutive samples in slantRange array"
-                _create_datasets(dst_h5[dst_path_intf], [0], np.float64,
-                                'slantRangeSpacing',
-                                descr=descr, units="meters", data=rg_looks*rg_spacing,
-                                long_name="slant range spacing")
-                descr = "Time interval in the along track direction for raster layers. " \
-                        "This is the same as the spacing between consecutive entries in " \
-                        "zeroDopplerTime array"
-                _create_datasets(dst_h5[dst_path_intf], [0], np.float32,
-                                'zeroDopplerTimeSpacing',
-                                descr=descr, units="seconds", data=az_looks*az_spacing,
-                                long_name="zero doppler time spacing")
-
-                descr = "Slant range spacing of offset grid"
-                _create_datasets(dst_h5[dst_path_offs], [0], np.float64,
-                                'slantRangeSpacing',
-                                descr=descr, units="meters", data=rg_skip*rg_spacing,
-                                long_name="slant range spacing")
-                descr = "Along track spacing of the offset grid"
-                _create_datasets(dst_h5[dst_path_offs], [0], np.float32,
-                                'zeroDopplerTimeSpacing',
-                                descr=descr, units="seconds", data=az_skip*az_spacing,
-                                long_name="zero doppler time spacing")
-
-                descr = "Nominal along track spacing in meters between consecutive lines" \
-                        "near mid swath of the interferogram image"
-                _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                                "sceneCenterAlongTrackSpacing",
-                                descr=descr, units="meters", data=1,
-                                long_name="scene center along track spacing")
-                descr = descr.replace("Nominal along track",
-                                    "Nominal ground range").replace('lines',
-                                                                    'pixels')
-                _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                                "sceneCenterGroundRangeSpacing",
-                                descr=descr, units="meters", data=1,
-                                long_name="scene center ground range spacing")
-
-                # Valid subsamples: to be copied from RSLC or need to be created from scratch?
-                descr = " First and last valid sample in each line of 1st subswath"
-                _create_datasets(dst_h5[dst_parent_path], [0], np.uint8,
-                                "validSubSamplesSubSwath1",
-                                descr=descr, units=" ", data=1,
-                                long_name="valid samples sub swath 1")
-                _create_datasets(dst_h5[dst_parent_path], [0], np.uint8,
-                                "validSubSamplesSubSwath2",
-                                descr=descr.replace('1st', '2nd'), units=" ",
-                                data=1,
-                                long_name="valid samples sub swath 2")
-                _create_datasets(dst_h5[dst_parent_path], [0], np.uint8,
-                                "validSubSamplesSubSwath3",
-                                descr=descr.replace('1st', '3rd'), units=" ",
-                                data=1,
-                                long_name="valid samples sub swath 3")
-                _create_datasets(dst_h5[dst_parent_path], [0], np.uint8,
-                                "validSubSamplesSubSwath4",
-                                descr=descr.replace('1st', '4th'), units=" ",
-                                data=1,
-                                long_name="valid samples sub swath 4")
-
+            _create_datasets(dst_h5[freq_path], [0], np.float32,
+                             "centerFrequency", descr=descr, units="Hz",
+                             data=center_freq, long_name="center frequency")
             descr = "Processed azimuth bandwidth in Hz"
-            _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                            'azimuthBandwidth',
-                            descr=descr, units="Hz", data=1,
-                            long_name="azimuth bandwidth")
-            _create_datasets(dst_h5[dst_parent_path], [0], np.float32,
-                            'rangeBandwidth',
-                            descr=descr.replace("azimuth", "range"), units="Hz",
-                            data=1,
-                            long_name="range bandwidth")
+            _create_datasets(dst_h5[freq_path], [0], np.float32,
+                             'azimuthBandwidth', descr=descr, units="Hz",
+                             data=az_bw, long_name="azimuth bandwidth")
+            _create_datasets(dst_h5[freq_path], [0], np.float32,
+                             'rangeBandwidth',
+                             descr=descr.replace("azimuth", "range"),
+                             units="Hz", data=rg_bw,
+                             long_name="range bandwidth")
 
-            # Adding polarization-dependent datasets to interferogram and pixelOffsets
+            if dst in ['RIFG', 'RUNW', 'GUNW']:
+                descr = "Number of swaths of continuous imagery, due to gaps"
+                _create_datasets(dst_h5[freq_path], [0], np.uint8,
+                                 "numberOfSubSwaths",
+                                 descr=descr, units=" ", data=subswaths,
+                                 long_name="number of subswaths")
+
+            # Add number of sub-swaths and spacing
+            if dst in ['RIFG', 'RUNW']:
+                descr = "Nominal along track spacing in meters between consecutive lines" \
+                        "near mid-swath of the interferogram image"
+                _create_datasets(dst_h5[freq_path], [0], np.float32,
+                                 "sceneCenterAlongTrackSpacing",
+                                  descr=descr, units="meters", data=1,
+                                  long_name="scene center along track spacing")
+                descr = "Nominal ground range spacing in meters between consecutive pixels" \
+                        "near mid-swath of the interferogram image"
+                _create_datasets(dst_h5[freq_path], [0], np.float32,
+                                 "sceneCenterGroundRangeSpacing",
+                                  descr=descr, units="meters", data=1,
+                                  long_name="scene center ground range spacing")
+                for sub in range(subswaths):
+                   subswath = sub + 1
+                   if f'validSamplesSubSwath{subswath}' in src_h5[slc_path].keys():
+                       samples = src_h5[f'{slc_path}/validSamplesSubSwath{subswath}'][()]
+                   else:
+                       samples = src_h5[f'{slc_path}/validSamples'][()]
+                   valid_samples = samples // cfg['crossmul']['range_looks']
+                   descr = f"First and last valid sample in each line of subswath {subswath}"
+                   _create_datasets(dst_h5[freq_path], valid_samples.shape,
+                                    np.uint8, f"validSubSamplesSubSwath{subswath}",
+                                    descr=descr, units=" ", data=valid_samples,
+                                    long_name=f"valid samples sub swath {subswath}")
+            elif dst == 'GUNW':
+               descr = "Nominal spacing in meters between consecutive pixels along X direction"
+               _create_datasets(dst_h5[freq_path], [0], np.float32,
+                                "xCoordinateSpacing", descr=descr,
+                                units="meters", data=geogrids[freq].spacing_x,
+                                long_name="X coordinate spacing")
+               _create_datasets(dst_h5[freq_path], [0], np.float32,
+                                "yCoordinateSpacing", descr=descr,
+                                 units="meters", data=geogrids[freq].spacing_y,
+                                 long_name="Y coordinate spacing")
+
+            # All the products have a pixelOffsets group
+            offs_path = f'{freq_path}/pixelOffsets'
+            dst_h5[freq_path].create_group('pixelOffsets')
+            # Get some offsets parameters
+            is_roff = cfg['offsets_product']['enabled']
+            margin = get_off_params(cfg, 'margin', is_roff)
+            rg_gross = get_off_params(cfg, 'gross_offset_range', is_roff)
+            az_gross = get_off_params(cfg, 'gross_offset_azimuth', is_roff)
+            rg_start = get_off_params(cfg, 'start_pixel_range', is_roff)
+            az_start = get_off_params(cfg, 'start_pixel_azimuth', is_roff)
+            rg_skip = get_off_params(cfg, 'skip_range', is_roff)
+            az_skip = get_off_params(cfg, 'skip_azimuth', is_roff)
+            rg_search = get_off_params(cfg, 'half_search_range', is_roff,
+                                       pattern='layer', get_min=True)
+            az_search = get_off_params(cfg, 'half_search_azimuth', is_roff,
+                                       pattern='layer', get_min=True)
+            rg_chip = get_off_params(cfg, 'window_range', is_roff,
+                                     pattern='layer', get_min=True)
+            az_chip = get_off_params(cfg, 'window_azimuth', is_roff,
+                                     pattern='layer', get_min=True)
+            # Adjust margin
+            margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
+            # Compute spacing of offset grid
+            if dst in ['RIFG', 'RUNW', 'ROFF']:
+               descr = 'Slant range spacing of the pixel offset grid'
+               _create_datasets(dst_h5[offs_path], [0], np.float32,
+                                "slantRangeSpacing", descr=descr, units="meters",
+                                 data=rg_spac * rg_skip,
+                                 long_name="slant range spacing")
+               _create_datasets(dst_h5[offs_path], [0], np.float32,
+                                "zeroDopplerTimeSpacing",
+                                descr=descr.replace('Slant range', 'Along-track'),
+                                units="seconds", data=az_spac * az_skip,
+                                long_name="along-track spacing")
+               # Compute slant range/azimuth vectors of offset grids
+               if rg_start is None:
+                  rg_start = margin + rg_search
+               if az_start is None:
+                  az_start = margin + az_search
+
+               descr = 'CF compliant dimension associated with slant range'
+               _create_datasets(dst_h5[offs_path], [0], np.float32,
+                                'slantRange', descr=descr, units='meters',
+                                 data=rg_vect[rg_start::rg_skip],
+                                 long_name="slant range")
+               _create_datasets(dst_h5[offs_path], [0], np.float32,
+                                'zeroDopplerTime',
+                                descr=descr.replace('slant range', 'azimuth time'),
+                                units='seconds', data=az_vect[az_start::az_skip],
+                                long_name="zero doppler time")
+            else:
+                set_get_geo_info(dst_h5, offs_path, geogrids[freq])
+
             for pol in pol_list:
-                intf_path = os.path.join(dst_path_intf, f'{pol}')
-                offs_path = os.path.join(dst_path_offs, f'{pol}')
-
-                dst_h5.create_group(intf_path)
-                dst_h5.create_group(offs_path)
-
-                grids_val = None
-                if dst == "GUNW":
-                    dst_geo_path = f'{dst_parent_path}/interferogram/{pol}'
-                    set_get_geo_info(dst_h5, dst_geo_path, geogrids[freq])
-                    grids_val = 'projection'
-
-                if dst in ['GUNW', 'RUNW']:
-                    descr = f"Connected components for {pol} layer"
-                    _create_datasets(dst_h5[intf_path], shape, np.uint8,
-                                    'connectedComponents',
-                                    descr=descr, units=" ", grids=grids_val,
-                                    long_name='connected components')
-                    descr = f"Unwrapped interferogram between {pol} layers"
-                    _create_datasets(dst_h5[intf_path], shape, np.float32,
-                                    'unwrappedPhase',
-                                    descr=descr, units="radians", grids=grids_val,
-                                    long_name='unwrapped phase')
-                    descr = f"Phase sigma coherence between {pol} layers"
-                    _create_datasets(dst_h5[intf_path], shape, np.float32,
-                                    'coherenceMagnitude',
-                                    descr=descr, units=" ", grids=grids_val,
-                                    long_name='coherence magnitude')
-                    descr = "Ionosphere phase screen"
-                    _create_datasets(dst_h5[intf_path], shape, np.float32,
-                                    'ionospherePhaseScreen',
-                                    chunks=(128, 128),
-                                    descr=descr, units="radians", grids=grids_val,
-                                    long_name='ionosphere phase screen')
-                    descr = "Uncertainty of split spectrum ionosphere phase screen"
-                    _create_datasets(dst_h5[intf_path], shape, np.float32,
-                                    'ionospherePhaseScreenUncertainty',
-                                    chunks=(128, 128),
-                                    descr=descr, units="radians", grids=grids_val,
-                                    long_name='ionosphere phase screen uncertainty')
-                    if dst == "GUNW":
-                        descr = f"Coherence mask for {pol} layer"
-                        _create_datasets(dst_h5[intf_path], shape, np.float32,
-                                        'coherenceMask',
-                                        descr=descr, units=" ", grids=grids_val,
-                                        long_name='coherence mask')
+                pol_path = f'{offs_path}/{pol}'
+                dst_h5[offs_path].create_group(f'{pol}')
+                off_length = get_off_params(cfg, 'offset_length', is_roff)
+                off_width = get_off_params(cfg, 'offset_width', is_roff)
+                if off_length is None:
+                    margin_az = 2*margin + 2*az_search + az_chip
+                    off_length = (slc_lines - margin_az) // az_skip
+                if off_width is None:
+                    margin_rg = 2*margin + 2*rg_search + rg_chip
+                    off_width = (slc_cols - margin_rg) // rg_skip
+                off_shape = (off_length, off_width)
+                if dst in ['GUNW', 'GOFF']:
+                    off_shape = (geogrids[freq].length, geogrids[freq].width)
+                if dst in ['GUNW', 'RUNW', 'RIFG']:
+                    descr = f"Along track offset for {pol} layer"
+                    descr_rg = descr.replace("Along track", "Slant range"),
+                    _create_datasets(dst_h5[pol_path], off_shape,
+                                     np.float32, 'alongTrackOffset',
+                                     descr=descr, units="meters",
+                                     long_name='along track offset')
+                    _create_datasets(dst_h5[pol_path], off_shape,
+                                     np.float32,'slantRangeOffset',
+                                     descr=descr_rg, units="meters",
+                                     long_name='slant range offset')
+                    descr = " Quality metric"
+                    _create_datasets(dst_h5[pol_path], off_shape,
+                                     np.float32, 'quality',
+                                     descr=descr, units=" ",
+                                     long_name='quality')
                 else:
-                    descr = f"Interferogram between {pol} layers"
-                    _create_datasets(dst_h5[intf_path], shape, np.complex64,
-                                    "wrappedInterferogram",
-                                    chunks=(128, 128),
-                                    descr=descr, units="radians",
-                                    long_name='wrapped phase')
-                    if (az_looks, rg_looks) != (1, 1):
-                        descr = f"Coherence between {pol} layers"
-                        _create_datasets(dst_h5[intf_path], shape, np.float32,
-                                        "coherenceMagnitude",
-                                        chunks=(128, 128),
-                                        descr=descr, units=None,
-                                        long_name='coherence magnitude')
+                    for key in cfg['offsets_product'].keys():
+                        if key.startswith('layer'):
+                            lay_path = f'{pol_path}/{key}'
+                            dst_h5[pol_path].create_group(f'{key}')
+                            descr = f"Along track offset for {pol} layer"
+                            descr_rg = descr.replace("Along track", "Slant range"),
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32, 'alongTrackOffset',
+                                             descr=descr, units="meters",
+                                             long_name='along track offset')
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32, 'slantRangeOffset',
+                                             descr=descr_rg, units="meters",
+                                             long_name='slant range offset')
+                            descr='Along-track pixel offset variance'
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32, 'alongTrackOffsetVariance',
+                                             descr=descr, units=" ",
+                                             long_name='along-track offset variance')
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32, 'slantRangeOffsetVariance',
+                                             descr=descr.replace('Along-track', 'Slant range'),
+                                             units=" ", long_name='slant range offset variance')
+                            descr = "Normalized surface correlation peak"
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32,'correlationSurfacePeak',
+                                             descr=descr, units=" ",
+                                             long_name='correlation surface peak')
+                            descr = "Off-diagonal term of the pixel offsets covariance matrix"
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32, 'crossOffsetVariance',
+                                             descr=descr, units=" ",
+                                             long_name='cross offset variance')
+                            descr = "Pixel offsets signal-to-noise ration"
+                            _create_datasets(dst_h5[lay_path], off_shape,
+                                             np.float32, 'snr',
+                                             descr=descr, units=" ",
+                                             long_name='signal-to-noise ratio')
 
-                descr = f"Along track offset for {pol} layer"
-                _create_datasets(dst_h5[offs_path], shape_offset, np.float32,
-                                'alongTrackOffset',
-                                descr=descr, units="meters",
-                                long_name='along track offset')
-                _create_datasets(dst_h5[offs_path], shape_offset, np.float32,
-                                'slantRangeOffset',
-                                descr=descr.replace("Along track", "Slant range"),
-                                units="meters",
-                                long_name='slant range offset')
-                descr = " Quality metric"
-                _create_datasets(dst_h5[offs_path], shape_offset, np.float32,
-                                'quality',
-                                descr=descr, units=" ", long_name='quality')
-
-            # Adding layover-shadow mask
+            # Form products inside interferogram
+            rg_looks = cfg['crossmul']['range_looks']
+            az_looks = cfg['crossmul']['azimuth_looks']
+            igram_shape = (slc_lines // az_looks, slc_cols // rg_looks)
+            grids_val = 'None'
             if dst in ['GUNW']:
-                descr = f"Layover Shadow mask for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
-                _create_datasets(dst_h5[dst_path_intf], shape, np.byte,
-                                'layoverShadowMask',
-                                descr=descr, units=" ", grids=grids_val,
-                                long_name='layover shadow mask')
+                igram_shape = (geogrids[freq].length, geogrids[freq].width)
+                grids_val = 'projection'
 
-            # Add datasets in metadata
-            dst_cal = os.path.join(common_parent_path,
-                                f'{dst}/metadata/calibrationInformation')
-            dst_proc = os.path.join(common_parent_path,
-                                    f'{dst}/metadata/processingInformation/parameters')
-            dst_grid = os.path.join(common_parent_path, f'{dst}/metadata/radarGrid')
+            if dst in ['RIFG', 'RUNW', 'GUNW']:
+                igram_path = f'{freq_path}/interferogram'
+                dst_h5[freq_path].create_group('interferogram')
 
-            if dst in ['RUNW', 'RIFG']:
-                dst_grid = os.path.join(common_parent_path,
-                                        f'{dst}/metadata/geolocationGrid')
+                # Create slant range/azimuth X/Y vectors
+                if dst in ['RUNW', 'RIFG']:
+                    rg_idx = np.arange((len(rg_vect) // rg_looks) * rg_looks)[
+                             ::rg_looks] + int(rg_looks / 2)
+                    az_idx = np.arange((len(az_vect) // az_looks) * az_looks)[
+                             ::az_looks] + int(az_looks / 2)
+                    descr = "CF compliant dimension associated with slant range"
+                    _create_datasets(dst_h5[igram_path], [0], np.float32,
+                                     'slantRange', descr=descr, units='meters',
+                                     data=rg_vect[rg_idx],
+                                     long_name="slant range")
+                    _create_datasets(dst_h5[igram_path], [0], np.float32,
+                                     'zeroDopplerTime',
+                                     descr=descr.replace('slant range',
+                                                         'azimuth time'),
+                                     units='seconds', data=az_vect[az_idx],
+                                     long_name="zero doppler time")
+                    descr = "Slant range spacing of grid. Same as difference between \
+                                          consecutive samples in slantRange array"
+                    _create_datasets(dst_h5[igram_path], [0], np.float64,
+                                     'slantRangeSpacing',
+                                     descr=descr, units="meters",
+                                     data=rg_looks * rg_spac,
+                                     long_name="slant range spacing")
+                    descr = "Time interval in the along track direction for raster layers. " \
+                            "This is the same as the spacing between consecutive entries in " \
+                            "zeroDopplerTime array"
+                    _create_datasets(dst_h5[igram_path], [0], np.float32,
+                                     'zeroDopplerTimeSpacing',
+                                     descr=descr, units="seconds",
+                                     data=az_looks * az_spac,
+                                     long_name="zero doppler time spacing")
+                elif dst in ['GUNW']:
+                    set_get_geo_info(dst_h5, igram_path, geogrids[freq])
+                    # Generate the layover/shadow and water masks
+                    descr = f"Layover Shadow mask for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
+                    _create_datasets(dst_h5[igram_path], igram_shape, np.byte,
+                                     'layoverShadowMask',
+                                     descr=descr, units=" ", grids=grids_val,
+                                     long_name='layover shadow mask')
+                    descr = 'Water mask for frequency {freq} layers'
+                    _create_datasets(dst_h5[igram_path], igram_shape, np.uint8,
+                                     'waterMask', descr=descr, units=" ",
+                                     grids=grids_val,
+                                     long_name='water mask')
 
-            # Add parallel and perpendicular component of baseline.
-            # TO DO (R2): Define dimension of baseline LUTs
-            if dst_grid not in dst_h5:
-                descr = "Perpendicular component of the InSAR baseline"
-                _create_datasets(dst_h5[dst_grid], shape, np.float64,
-                                "perpendicularBaseline",
-                                descr=descr, units="meters",
-                                long_name='perpendicular baseline')
-                _create_datasets(dst_h5[dst_grid], shape, np.float64,
-                                "parallelBaseline",
-                                descr=descr.replace('Perpendicular', 'Parallel'),
-                                units="meters",
-                                long_name='parallel baseline')
+                # Create datasets inside the interferogram group
+                for pol in pol_list:
+                   pol_path = f'{igram_path}/{pol}'
+                   dst_h5[igram_path].create_group(f'{pol}')
+                   _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                    'coherenceMagnitude', descr=descr, units=" ",
+                                    grids=grids_val,
+                                    long_name='coherence magnitude')
+                   if dst in ['RIFG']:
+                      descr = f"Interferogram between {pol} layers"
+                      _create_datasets(dst_h5[pol_path], igram_shape,
+                                       np.complex64,
+                                       "wrappedInterferogram",
+                                       chunks=(128, 128),
+                                       descr=descr, units="radians",
+                                       long_name='wrapped phase')
+                   elif dst in ['RUNW', 'GUNW']:
+                      descr = f"Unwrapped interferogram between {pol} layers"
+                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                       'unwrappedPhase', descr=descr,
+                                        units="radians", grids=grids_val,
+                                        long_name='unwrapped phase')
+                      descr = f"Connected components for {pol} layer"
+                      _create_datasets(dst_h5[pol_path], igram_shape, np.uint8,
+                                      'connectedComponents', descr=descr, units=" ",
+                                      grids=grids_val,
+                                      long_name='connected components')
+                      descr = "Ionosphere phase screen"
+                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                      'ionospherePhaseScreen', chunks=(128, 128),
+                                      descr=descr, units="radians",
+                                      grids=grids_val,
+                                      long_name='ionosphere phase screen')
+                      descr = "Uncertainty of split spectrum ionosphere phase screen"
+                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                      'ionospherePhaseScreenUncertainty',
+                                      chunks=(128, 128),
+                                      descr=descr, units="radians",
+                                      grids=grids_val,
+                                      long_name='ionosphere phase screen uncertainty')
+            # Allocate datasets in metadata
+            cal_path = f'{product_path}/metadata/calibrationInformation'
+            proc_path = f'{product_path}/metadata/processingInformation/parameters'
+            grid_path = f'{product_path}/metadata/geolocationGrid'
+            if dst in ['GOFF', 'GUNW']:
+                grid_path = grid_path.replace('geolocation', 'radar')
 
-            dst_cal_group = f'{dst_cal}/frequency{freq}'
-
+            freq_path = f'{cal_path}/frequency{freq}'
             descr = "Bulk along track time offset used to align reference and secondary image"
-            
-            _create_datasets(dst_h5[dst_cal_group], [0], np.float32,
-                            "bulkAlongTrackTimeOffset",
-                            descr=np.string_(descr), units="seconds", data=1,
-                            long_name='bulk along track time offset')
-            _create_datasets(dst_h5[dst_cal_group], [0], np.float32,
-                            "bulkSlantRangeOffset",
-                            descr=np.string_(
-                                descr.replace('along track time', 'slant range')),
-                            units="meters",
-                            data=1, long_name='bulk slant range offset')
+            _create_datasets(dst_h5[freq_path], [0], np.float32,
+                             "bulkAlongTrackTimeOffset",
+                             descr=descr, units="seconds", data=1,
+                             long_name='bulk along track time offset')
+            _create_datasets(dst_h5[freq_path], [0], np.float32,
+                             "bulkSlantRangeOffset",
+                             descr=descr.replace('along track time',
+                                                 'slant range'),
+                             units="meters",
+                             data=1, long_name='bulk slant range offset')
 
-            # Add datasets in processingInformation/parameters/common
-            dst_common_group = f'{dst_proc}/common/frequency{freq}'
-            dst_h5.create_group(dst_common_group)
-
-            # Create interferogram and pixel offset groups in
-            # processingInformation/parameters/common
-            dst_common_intf = os.path.join(dst_common_group, 'interferogram')
-            dst_common_offs = os.path.join(dst_common_group, 'pixelOffsets')
-
-            dst_h5.create_group(dst_common_intf)
-            dst_h5.create_group(dst_common_offs)
-
+            if dst in ['RIFG', 'RUNW', 'GUNW']:
+                for pol in pol_list:
+                    pol_path = f'{freq_path}/{pol}'
+                    descr = "Constant wrapped reference phase used to balance the interferogram"
+                    _create_datasets(dst_h5[pol_path], [0], np.float32,
+                                     "referencePhase",
+                                     descr=descr, units="radians", data=1,
+                                     long_name='reference phase')
+            # Allocate metadata in processingInformation/parameters
+            freq_path = f'{proc_path}/common/frequency{freq}'
+            dst_h5[f'{proc_path}/common'].create_group(f'frequency{freq}')
             descr = " Common Doppler bandwidth used for processing the interferogram"
-            _create_datasets(dst_h5[dst_common_group], [0], np.float64,
-                            "dopplerBandwidth",
-                            descr=descr, units="Hz", data=1,
-                            long_name='doppler bandwidth')
+            _create_datasets(dst_h5[freq_path], [0], np.float64,
+                             "dopplerBandwidth",
+                             descr=descr, units="Hz", data=1,
+                             long_name='doppler bandwidth')
             descr = f" 2D LUT of Doppler Centroid for frequency {freq}"
-            _create_datasets(dst_h5[dst_common_group], shape, np.float64,
-                            "dopplerCentroid",
-                            descr=descr, units="Hz", data=1,
-                            long_name='doppler centroid')
-            descr = "Number of looks applied in along track direction"
-            _create_datasets(dst_h5[dst_common_intf], [0], np.uint8,
-                            "numberOfAzimuthLooks",
-                            descr=descr, units=" ", data=int(az_looks),
-                            long_name='number of azimuth looks')
-            _create_datasets(dst_h5[dst_common_intf], [0], np.uint8,
-                            "numberOfRangeLooks",
-                            descr=descr.replace("along track", "slant range"),
-                            units=" ",
-                            data=int(rg_looks), long_name='number of range looks')
-
-            # Adding scalar datasets to pixelOffsets group
-            descr = "Along track window size for cross-correlation"
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'alongTrackWindowSize',
-                            descr=descr, units=" ", data=az_chip,
-                            long_name='along track window size')
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'slantRangeWindowSize',
-                            descr=descr.replace("Along track", "Slant range"),
-                            units=" ", data=rg_chip,
-                            long_name="slant range window size")
-            descr = "Along track skip window size for cross-correlation"
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'alongTrackSkipWindowSize',
-                            descr=descr, units=" ", data=az_skip,
-                            long_name='along track skip window size')
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'slantRangeSkipWindowSize',
-                            descr=descr.replace("Along track ", "Slant range"),
-                            units=" ", data=rg_skip,
-                            long_name="slant range skip window size")
-            descr = "Along track search window size for cross-correlation"
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'alongTrackSearchWindowSize',
-                            descr=descr, units=" ", data=az_search,
-                            long_name="along track skip window size")
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'slantRangeSearchWindowSize',
-                            descr=descr.replace("Along track ", "Slant range"),
-                            units=" ", data=rg_search,
-                            long_name="slant range search window size")
-            descr = "Oversampling factor of the cross-correlation surface"
-            _create_datasets(dst_h5[dst_common_offs], [0], np.uint8,
-                            'correlationSurfaceOversampling',
-                            descr=descr, units=" ", data=corr_ovs,
-                            long_name='correlation surface oversampling')
-            descr = "Method used for generating pixel offsets"
-            _create_datasets(dst_h5[dst_common_offs], [9], np.string_,
-                            'crossCorrelationMethod',
-                            descr=descr, units=None, data=1,
-                            long_name='cross correlation method')
-
-            if dst == "RIFG":
+            _create_datasets(dst_h5[freq_path], igram_shape, np.float64,
+                             "dopplerCentroid",
+                             descr=descr, units="Hz", data=1,
+                             long_name='doppler centroid')
+            if dst in ['ROFF', 'RIFG', 'RUNW', 'GUNW']:
                 descr = "Reference elevation above WGS84 Ellipsoid used for flattening"
-                _create_datasets(dst_h5[dst_common_group], [0], np.float32,
-                                "referenceFlatteningElevation",
-                                descr=descr, units="meters", data=1,
-                                long_name='reference flattening elevation')
+                _create_datasets(dst_h5[f'{freq_path}'], [0], np.float32,
+                                 "referenceFlatteningElevation",
+                                 descr=descr, units="meters", data=1,
+                                 long_name='reference flattening elevation')
 
-            for pol in pol_list:
-                cal_path = os.path.join(dst_cal_group, f"{pol}")
-                descr = "Constant wrapped reference phase used to balance the interferogram"
-                _create_datasets(dst_h5[cal_path], [0], np.float32,
-                                "referencePhase",
-                                descr=descr, units="radians", data=1,
-                                long_name='reference phase')
+            if dst in ['RIFG', 'RUNW', 'GUNW']:
+                igram_path = f'{freq_path}/interferogram'
+                offs_path = f'{freq_path}/pixelOffsets'
+                dst_h5[freq_path].create_group('interferogram')
+                dst_h5[freq_path].create_group('pixelOffsets')
+                descr = "Number of looks applied in along track direction"
+                _create_datasets(dst_h5[igram_path], [0], np.uint8,
+                                 "numberOfAzimuthLooks",
+                                 descr=descr, units=" ", data=int(az_looks),
+                                 long_name='number of azimuth looks')
+                _create_datasets(dst_h5[igram_path], [0], np.uint8,
+                                 "numberOfRangeLooks",
+                                 descr=descr.replace("along track",
+                                                     "slant range"),
+                                 units=" ", data=int(rg_looks),
+                                 long_name='number of range looks')
+                descr = "Along track window size for cross-correlation"
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'alongTrackWindowSize',
+                                 descr=descr, units=" ", data=az_chip,
+                                 long_name='along track window size')
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'slantRangeWindowSize',
+                                 descr=descr.replace("Along track",
+                                                     "Slant range"),
+                                 units=" ", data=rg_chip,
+                                 long_name="slant range window size")
+                descr = "Along track skip window size for cross-correlation"
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'alongTrackSkipWindowSize',
+                                 descr=descr, units=" ", data=az_skip,
+                                 long_name='along track skip window size')
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'slantRangeSkipWindowSize',
+                                 descr=descr.replace("Along track ",
+                                                     "Slant range"),
+                                 units=" ", data=rg_skip,
+                                 long_name="slant range skip window size")
+                descr = "Along track search window size for cross-correlation"
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'alongTrackSearchWindowSize',
+                                 descr=descr, units=" ", data=az_search,
+                                 long_name="along track skip window size")
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'slantRangeSearchWindowSize',
+                                 descr=descr.replace("Along track ",
+                                                     "Slant range"),
+                                 units=" ", data=rg_search,
+                                 long_name="slant range search window size")
+                descr = "Oversampling factor of the cross-correlation surface"
+                corr_ovs = get_off_params(cfg, 'correlation_surface_oversampling_factor',
+                                          is_roff)
+                _create_datasets(dst_h5[offs_path], [0], np.uint8,
+                                 'correlationSurfaceOversampling',
+                                 descr=descr, units=" ", data=corr_ovs,
+                                 long_name='correlation surface oversampling')
+                descr = "Method used for generating pixel offsets"
+                method = get_off_params(cfg, 'cross_correlation_method', is_roff)
+                _create_datasets(dst_h5[offs_path], [9], np.string_,
+                                 'crossCorrelationMethod',
+                                 descr=descr, units=None, data=method,
+                                 long_name='cross correlation method')
+            else:
+                offs_path = f'{proc_path}/pixelOffsets'
+                dst_h5[proc_path].create_group(f'pixelOffsets')
+                freq_path = f'{offs_path}/frequency{freq}'
+                dst_h5[offs_path].create_group(f'frequency{freq}')
+                descr='Reference RSLC starting pixel long along-track direction'
+                _create_datasets(dst_h5[freq_path], [0], np.uint8,
+                                 'alongTrackStartPixel',
+                                 descr=descr, units=None, data=az_start,
+                                 long_name='along-track start pixel')
+                _create_datasets(dst_h5[freq_path], [0], np.uint8,
+                                 'slantRangeStartPixel',
+                                 descr=descr.replace('along-track', 'slant range'),
+                                 units=None, data=az_start,
+                                 long_name='slant range start pixel')
+                corr_ovs = cfg['offsets_product'].get(
+                    'correlation_surface_oversampling_factor',
+                                       64)
+                descr="Method used to generate pixel offsets"
+                _create_datasets(dst_h5[freq_path], [0], np.uint8,
+                                 'correlationSurfaceOversampling',
+                                 descr=descr, units=" ", data=corr_ovs,
+                                 long_name='correlation surface oversampling')
+                off_cfg = cfg['offsets_product']
+                for key in off_cfg.keys():
+                    if key.startswith('layer'):
+                        lay_path = f'{freq_path}/{key}'
+                        lay_cfg = off_cfg[key]
+                        dst_h5[freq_path].create_group(f'{key}')
+                        _create_datasets(dst_h5[lay_path], [0], np.uint8,
+                                         'alongTrackWindowSize',
+                                         descr=descr, units=" ", data=lay_cfg.get('window_azimuth'),
+                                         long_name='along track window size')
+                        _create_datasets(dst_h5[lay_path], [0], np.uint8,
+                                         'slantRangeWindowSize',
+                                         descr=descr.replace("Along track",
+                                                             "Slant range"),
+                                         units=" ", data=lay_cfg.get('window_range'),
+                                         long_name="slant range window size")
+                        descr = "Along track skip window size for cross-correlation"
+                        _create_datasets(dst_h5[lay_path], [0], np.uint8,
+                                         'alongTrackSkipWindowSize',
+                                         descr=descr, units=" ", data=az_skip,
+                                         long_name='along track skip window size')
+                        _create_datasets(dst_h5[lay_path], [0], np.uint8,
+                                         'slantRangeSkipWindowSize',
+                                         descr=descr.replace("Along track ",
+                                                             "Slant range"),
+                                         units=" ", data=rg_skip,
+                                         long_name="slant range skip window size")
+                        descr = "Along track search window size for cross-correlation"
+                        _create_datasets(dst_h5[lay_path], [0], np.uint8,
+                                         'alongTrackSearchWindowSize',
+                                         descr=descr, units=" ", data=2*lay_cfg.get('half_search_azimuth'),
+                                         long_name="along track skip window size")
+                        _create_datasets(dst_h5[lay_path], [0], np.uint8,
+                                         'slantRangeSearchWindowSize',
+                                         descr=descr.replace("Along track ",
+                                                             "Slant range"),
+                                         units=" ", data=2*lay_cfg.get('half_search_range'),
+                                         long_name="slant range search window size")
+                        descr = "Method used to generate pixel offsets"
+                        _create_datasets(dst_h5[lay_path], [9], np.string_,
+                                         'crossCorrelationMethod',
+                                         descr=descr, units=None, data=lay_cfg.get('cross_correlation_method'),
+                                         long_name='cross correlation method')
+            # Add perpendicular and parallel baseline
+            descr = "Perpendicular component of the InSAR baseline"
+            _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+                             "perpendicularBaseline",
+                             descr=descr, units="meters",
+                             long_name='perpendicular baseline')
+            _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+                             "parallelBaseline",
+                             descr=descr.replace('Perpendicular', 'Parallel'),
+                             units="meters",
+                             long_name='parallel baseline')
+
+
+def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
+                   get_min=False):
+
+    cfg = pcfg['offsets_product'] if is_roff else pcfg['dense_offsets']
+    if pattern is not None and is_roff:
+        param = [cfg[key].get(param_name, None) for key
+                 in cfg if key.startswith(pattern)]
+    else:
+        param = cfg.get(param_name, None)
+
+    if get_min and isinstance(param, list):
+       param = min(list(filter(None, param)), default=0)
+
+    return param
 
 
 def _create_datasets(dst_grp, shape, ctype, dataset_name,
@@ -860,11 +973,12 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
                      data=None, standard_name=None, long_name=None,
                      yds=None, xds=None):
     if len(shape) == 1:
-        if ctype == np.string_:
-            ds = dst_grp.create_dataset(dataset_name,
-                                        data=np.string_("         "))
-        else:
-            ds = dst_grp.create_dataset(dataset_name, dtype=ctype, data=data)
+        if len(shape) == 1:
+            if ctype == np.string_:
+                ds = dst_grp.create_dataset(dataset_name,
+                                            data=np.string_("         "))
+            else:
+                ds = dst_grp.create_dataset(dataset_name, dtype=ctype, data=data)
     else:
         # temporary fix for CUDA geocode insar's inability to direct write to
         # HDF5 with chunks (see https://github-fn.jpl.nasa.gov/isce-3/isce/issues/813 for details)
@@ -904,7 +1018,7 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     dataset_path = os.path.join(common_parent_path,
                                 f'{dst}/grids/frequency{frequency}')
 
-    if dst in ['RUNW', 'RIFG']:
+    if dst in ['RUNW', 'RIFG', 'ROFF']:
         dataset_path = os.path.join(common_parent_path,
                                     f'{dst}/swaths/frequency{frequency}')
 

@@ -259,6 +259,16 @@ runconfig:
                 # Number of offset estimates to process in batch along azimuth
                 windows_batch_azimuth: 1
 
+            offsets_product:
+                # Flag to activate offsets product generation
+                enabled: False
+                # Margina round ref RSLC edges to exclude during cross-correlation
+                margin: 0
+                # Constant offset between ref and secondary RSLCs in slant range
+                gross_offset_range: 0
+                # Constant offset between ref and secondary RSLCs in azimuth
+                gross_offset_azimuth: 0
+
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).
                 # Not required as InSAR workflow allows using intermediate outputs
@@ -326,7 +336,6 @@ runconfig:
                 flatten: True
                 oversample: 2
                 rows_per_block: 8192
-
 
             filter_interferogram:
                 interferogram_path:
