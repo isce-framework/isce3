@@ -34,9 +34,12 @@ def prep_subband_h5(full_hdf5: str,
             
         pols_freqA = list(
                 np.array(src_h5[pol_a_path][()], dtype=str))
-        pols_freqB = list(
-                np.array(src_h5[pol_b_path][()], dtype=str))
-        
+        try:
+            pols_freqB = list(
+                    np.array(src_h5[pol_b_path][()], dtype=str))
+        except:
+            pols_freqB = ['']
+            
         if freq_pols['A']:
             pols_a_excludes = [pol for pol in pols_freqA 
                 if pol not in freq_pols['A']]
@@ -57,11 +60,17 @@ def prep_subband_h5(full_hdf5: str,
                     excludes=[''])
             
         if pols_b_excludes:
-            cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
-                    excludes=pols_b_excludes)
+            try:
+                cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
+                        excludes=pols_b_excludes)
+            except:
+                pass
         else:
-            cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
-                    excludes=[''])
+            try:
+                cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
+                        excludes=[''])
+            except:
+                pass
 
         cp_h5_meta_data(src_h5, dst_h5, metadata_path,
                     excludes=[''])
@@ -72,7 +81,7 @@ def prep_subband_h5(full_hdf5: str,
 
 def run(cfg: dict):
     '''
-    run bandpass
+    run split spectrum
     '''
     # pull parameters from cfg
     ref_hdf5 = cfg['input_file_group']['input_file_path']
@@ -153,9 +162,8 @@ def run(cfg: dict):
             with h5py.File(hdf5_str, 'r', libver='latest', swmr=True) as src_h5, \
                     h5py.File(low_band_output, 'r+') as dst_h5_low, \
                     h5py.File(high_band_output, 'r+') as dst_h5_high:
+
                 # Copy HDF5 metadata for low high band
-                # cp_h5_meta_data(src_h5, dst_h5_low, f'{common_parent_path}')
-                # cp_h5_meta_data(src_h5, dst_h5_high, f'{common_parent_path}')
                 for pol in pol_list:
                     raster_str = f'HDF5:{hdf5_str}:/{slc_product.slcPath(freq, pol)}'
                     slc_raster = isce3.io.Raster(raster_str)

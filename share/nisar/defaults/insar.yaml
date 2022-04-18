@@ -51,8 +51,8 @@ runconfig:
                     # valid options for polarizations
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    A:
-                    B:
+                    A: VV
+                    B: VV
 
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
@@ -151,6 +151,7 @@ runconfig:
 
             ionosphere_phase_correction:
                 enabled: False
+                lines_per_block: 1000
                 spectral_diversity: split_main_band
                 list_of_frequencies:
                    A: 
@@ -163,7 +164,18 @@ runconfig:
                    # Shape parameter. For Kaiser, 0 <= shape < Inf.
                    # For Cosine and Tukey, 0 <= shape <= 1.
                    window_shape: 0.25
-
+                dispersive_filter:
+                    enabled: True
+                    filter_mask_type: coherence
+                    filter_coherence_threshold: 0.5
+                    filling_method: nearest
+                    unwrap_correction: False
+                    kernel_x: 800
+                    kernel_y: 800
+                    sigma_x: 100
+                    sigma_y: 100
+                    filter_iterations: 1
+    
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
                 threshold: 1.0e-8

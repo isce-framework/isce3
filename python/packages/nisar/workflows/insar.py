@@ -5,7 +5,7 @@ import journal
 from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
                              geocode_insar, h5_prep, filter_interferogram,
                              rdr2geo, resample_slc, rubbersheet,
-                             split_spectrum, unwrap)
+                             split_spectrum, unwrap, ionosphere)
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -67,6 +67,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['ionosphere'] and \
             cfg['processing']['ionosphere_phase_correction']['enabled']:
         split_spectrum.run(cfg)
+        ionosphere.run(cfg)
 
     if run_steps['geocode'] and 'GUNW' in out_paths:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
