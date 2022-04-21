@@ -746,7 +746,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                         units="radians", grids=grids_val,
                                         long_name='unwrapped phase')
                       descr = f"Connected components for {pol} layer"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.uint8,
+                      _create_datasets(dst_h5[pol_path], igram_shape, np.uint32,
                                       'connectedComponents', descr=descr, units=" ",
                                       grids=grids_val,
                                       long_name='connected components')

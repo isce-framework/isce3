@@ -13,8 +13,10 @@ import journal
 import numpy as np
 from osgeo import gdal
 import isce3
+import isce3.unwrap.snaphu as snaphu
 
 from nisar.workflows import h5_prep
+from nisar.products.readers import SLC
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
@@ -22,12 +24,23 @@ from nisar.workflows.compute_stats import compute_stats_real_data
 
 def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     '''
-    run phase unwrapping (ICU only)
+    run phase unwrapping
+
+    Parameters
+    ---------
+    cfg: dict
+        Dictionary with user-defined options
+    input_hdf5: str
+        File path to input HDF5 product (i.e., RIFG)
+    output_hdf5: str
+        File path to output HDF5 product (i.e., RUNW)
     '''
 
     # pull parameters from dictionary
+    ref_slc_hdf5 = cfg['input_file_group']['input_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    lines_per_block = cfg['processing']['crossmul']['rows_per_block']
     unwrap_args = cfg['processing']['phase_unwrap']
 
     # Create error and info channels
@@ -42,22 +55,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
         error_channel.log(err_str)
         raise ValueError(err_str)
 
-    # Instantiate correct unwrap object
-    if unwrap_args['algorithm'] == 'icu':
-        unwrap_obj = isce3.unwrap.ICU()
-    elif unwrap_args['algorithm'] == 'phass':
-        unwrap_obj = isce3.unwrap.Phass()
-    else:
-        err_str = "Invalid unwrapping algorithm"
-        error_channel.log(err_str)
-        raise ValueError(err_str)
-
-    # Depending on unwrapper, set unwrap attributes
-    unwrap_obj = set_unwrap_attributes(unwrap_obj, unwrap_args)
-    info_channel.log("Running phase unwrapping with: ")
-    log_unwrap_attributes(unwrap_obj, info_channel,
-                          unwrap_args['algorithm'])
-
+    # Start to track time
     t_all = time.time()
 
     with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5,\
@@ -70,83 +68,149 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 src_pol_group_path = f'{src_freq_group_path}/interferogram/{pol}'
                 dst_pol_group_path = f'{dst_freq_group_path}/interferogram/{pol}'
 
-                # Interferogram filepath
+                # Fetch paths to input/output datasets
                 igram_path = f'HDF5:{crossmul_path}:/' \
                              f'{src_pol_group_path}/wrappedInterferogram'
-
-                # Prepare correlation input raster
                 corr_path = f'HDF5:{crossmul_path}:/' \
                             f'{src_pol_group_path}/coherenceMagnitude'
-                corr_raster = isce3.io.Raster(corr_path)
 
                 # Create unwrapped interferogram output raster
-                uigram_path = f'{dst_pol_group_path}/unwrappedPhase'
-                uigram_dataset = dst_h5[uigram_path]
-                uigram_raster = isce3.io.Raster(f"IH5:::ID={uigram_dataset.id.id}".encode("utf-8"),
-                                                update=True)
+                unw_path = f'{dst_pol_group_path}/unwrappedPhase'
+                unw_dataset = dst_h5[unw_path]
+                unw_raster_path = f"IH5:::ID={unw_dataset.id.id}".encode("utf-8")
 
                 # Create connected components output raster
                 conn_comp_path = f'{dst_pol_group_path}/connectedComponents'
                 conn_comp_dataset = dst_h5[conn_comp_path]
-                conn_comp_raster = isce3.io.Raster(f"IH5:::ID={conn_comp_dataset.id.id}".encode("utf-8"),
-                                                   update=True)
+                conn_comp_raster_path = f"IH5:::ID=" \
+                                        f"{conn_comp_dataset.id.id}".encode("utf-8")
 
-                # If unwrapping algorithm is ICU, run it with or without seed
-                if unwrap_args['algorithm'] == 'icu':
-                    # Allocate interferogram as ISCE3 raster
+                # Create unwrapping scratch directory to store temporary rasters
+                unwrap_scratch = scratch_path / f'unwrap/freq{freq}/{pol}'
+                unwrap_scratch.mkdir(parents=True, exist_ok=True)
+
+                # Run unwrapping based on user-defined algorithm
+                algorithm = unwrap_args['algorithm']
+
+                if algorithm == 'icu':
+                    info_channel.log('Unwrapping with ICU')
+                    icu_cfg = unwrap_args['icu']
+                    icu_obj = set_icu_attributes(icu_cfg)
+
+                    # Allocate input/output rasters
                     igram_raster = isce3.io.Raster(igram_path)
-                    if 'seed' in unwrap_args['icu']:
-                        unwrap_obj.unwrap(uigram_raster, conn_comp_raster,
-                                          igram_raster,
-                                          corr_raster, seed=unwrap_args['seed'])
+                    corr_raster = isce3.io.Raster(corr_path)
+                    unw_raster = isce3.io.Raster(unw_raster_path,
+                                                   update=True)
+                    conn_comp_raster = isce3.io.Raster(conn_comp_raster_path,
+                                                       update=True)
+                    # Run unwrapping
+                    icu_obj.unwrap(unw_raster, conn_comp_raster,
+                                   igram_raster, corr_raster, seed=icu_cfg['seed'])
+                    # Compute statistics
+                    compute_stats_real_data(unw_raster, unw_dataset)
+                    # Log attributes for ICU
+                    log_unwrap_attributes(icu_obj, info_channel, algorithm)
+
+                elif algorithm == 'phass':
+                    info_channel.log('Unwrapping using PHASS')
+                    phass_cfg = unwrap_args['phass']
+                    phass_obj = set_phass_attributes(phass_cfg)
+
+                    # Phass requires the phase of igram (not complex igram)
+                    # Generate InSAR phase using GDAL pixel functions
+                    igram_phase_path = unwrap_scratch/'wrapped_phase.vrt'
+                    igram_phase_to_vrt(igram_path, igram_phase_path)
+
+                    # Allocate input/output raster
+                    igram_phase_raster = isce3.io.Raster(phase_path)
+                    corr_raster = isce3.io.Raster(corr_path)
+
+                    # Check if it is required to unwrap with power raster
+                    if phass_cfg.get('power') is not None:
+                        power_raster = isce3.io.Raster(phass_cfg['power'])
+                        phass_obj.unwrap(igram_phase_raster, power_raster,
+                                         corr_raster, unw_raster,
+                                         conn_comp_raster)
                     else:
-                        unwrap_obj.unwrap(uigram_raster, conn_comp_raster,
-                                          igram_raster,
-                                          corr_raster)
-                else:
-                    # Unwrapping algorithm is PHASS which requires
-                    # the interferometric phase as input raster
-                    unwrap_scratch = scratch_path / f'unwrap/freq{freq}/{pol}'
-                    unwrap_scratch.mkdir(parents=True, exist_ok=True)
+                        phass_obj.unwrap(igram_phase_raster, corr_raster,
+                                         unw_raster, conn_comp_raster)
+                    # Compute statistics
+                    compute_stats_real_data(unw_raster, unw_dataset)
+                    # Log attributes for phass
+                    log_unwrap_attributes(phass_obj, info_channel, algorithm)
+                elif algorithm == 'snaphu':
+                    info_channel.log('Unwrapping with SNAPHU')
 
-                    # Using GDAL pixel function to compute a wrapped phase VRT
-                    ds = gdal.Open(igram_path, gdal.GA_ReadOnly)
-                    vrttmpl = f'''
-                            <VRTDataset rasterXSize="{ds.RasterXSize}" rasterYSize="{ds.RasterYSize}">
-                            <VRTRasterBand dataType="Float32" band="1" subClass="VRTDerivedRasterBand">
-                            <Description>Phase</Description>
-                            <PixelFunctionType>phase</PixelFunctionType>
-                            <SimpleSource>
-                            <SourceFilename>{igram_path}</SourceFilename>
-                            </SimpleSource>
-                            </VRTRasterBand>
-                            </VRTDataset>'''
-                    ds = None
-                    with open(os.path.join(unwrap_scratch, 'wrapped_phase.vrt'),
-                              'w') as fid:
-                        fid.write(vrttmpl)
+                    # Get SNAPHU dictionary with user params
+                    snaphu_cfg = unwrap_args['snaphu']
+                    # Allocate input/output rasters (for Snaphu isce3.io.gdal.Raster)
+                    igram_raster = isce3.io.gdal.Raster(igram_path)
+                    out_file_corr = str(unwrap_scratch/'nan_clip_coherence.tiff')
+                    # SNAPHU isn't currently handling NaN values in the input rasters
+                    # (even if masked out).  As a temporary fix, we create an intermediate raster
+                    # for the coherence data with NaN values replaced with zeros.
+                    filter_nan(corr_path, out_file_corr, lines_per_block,
+                             data_type=gdal.GDT_Float32)
+                    corr_raster = isce3.io.gdal.Raster(out_file_corr)
+                    unw_raster = isce3.io.gdal.Raster(unw_raster_path,
+                                                        access=isce3.io.gdal.GA_Update)
+                    conn_comp_raster = isce3.io.gdal.Raster(conn_comp_raster_path,
+                                                            access=isce3.io.gdal.GA_Update)
+                    # Allocate ancillary rasters necessary for unwrapping
+                    mask_raster = get_optional_snaphu_raster_dataset(snaphu_cfg, 'mask')
+                    unw_est_raster = get_optional_snaphu_raster_dataset(snaphu_cfg,
+                                                                        'unwrapped_phase_estimate')
+                    # Get snaphu cost mode (default: smooth) and cost mode obj
+                    cost_mode = snaphu_cfg['cost_mode']
+                    cost_obj = select_cost_options(snaphu_cfg, cost_mode)
+                    # Initialize solver, connected components objects
+                    solver_obj = set_solver_params(snaphu_cfg)
+                    conn_comp_obj = set_connected_components_params(snaphu_cfg)
 
-                    # Open phase_raster as ISCE3 raster
-                    phase_raster = isce3.io.Raster(os.path.join(unwrap_scratch, 'wrapped_phase.vrt'))
-
-                    # Check if power raster has been allocated
-                    if 'power' in unwrap_args['phass']:
-                        power_raster = isce3.io.Raster(unwrap_args['phass']['power'])
-                        unwrap_obj.unwrap(phase_raster, power_raster,
-                                          corr_raster, uigram_raster, conn_comp_raster)
+                    # Compute effective number of looks
+                    if snaphu_cfg.get('nlooks') is not None:
+                        nlooks = snaphu_cfg['nlooks']
                     else:
-                        unwrap_obj.unwrap(phase_raster, corr_raster,
-                                          uigram_raster, conn_comp_raster)
+                        # Compute nlooks based on info in RIFG
+                        rg_spac = src_h5[f'{src_freq_group_path}/interferogram' \
+                                         f'/slantRangeSpacing'][()]
+                        az_spac = src_h5[f'{src_freq_group_path}/' \
+                                         f'sceneCenterAlongTrackSpacing'][()]
+                        rg_bw = src_h5[f'{src_freq_group_path}/rangeBandwidth'][()]
+                        rg_res = isce3.core.speed_of_light / (2 * rg_bw)
+                        # To compute azimuth resolution, get sensor speed at mid-scene
+                        # And use azimuth processed bandwidth (copied from RSLC)
+                        ref_slc = SLC(hdf5file=ref_slc_hdf5)
+                        radar_grid = ref_slc.getRadarGrid(freq)
+                        orbit = ref_slc.getOrbit()
+                        _, v_mid = orbit.interpolate(radar_grid.sensing_mid)
+                        vs = np.linalg.norm(v_mid)
+                        az_bw = src_h5[f'{src_freq_group_path}/azimuthBandwidth'][()]
+                        az_res = vs/az_bw
+                        nlooks = rg_spac * az_spac / (rg_res * az_res)
 
-                if 'seed' in unwrap_args:
-                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
-                                      corr_raster, seed=unwrap_args['seed'])
+                    # Unwrap with snaphu (none for power mode and tiling_params)
+                    snaphu.unwrap(unw_raster, conn_comp_raster,
+                                  igram_raster, corr_raster, nlooks,
+                                  cost=cost_mode, cost_params=cost_obj,
+                                  pwr=None, mask=mask_raster,
+                                  unwest=unw_est_raster,
+                                  init_method=snaphu_cfg['initialization_method'],
+                                  tiling_params=None, solver_params=solver_obj,
+                                  conncomp_params=conn_comp_obj,
+                                  corr_bias_model_params=None,
+                                  phase_stddev_model_params=None,
+                                  scratchdir=unwrap_scratch,
+                                  verbose=snaphu_cfg['verbose'], debug=snaphu_cfg['debug'])
+                    # Compute statistics (stats module supports isce3.io.Raster)
+                    del unw_raster
+                    unw_raster = isce3.io.Raster(unw_raster_path)
+                    compute_stats_real_data(unw_raster, unw_dataset)
+
                 else:
-                    unwrap_obj.unwrap(uigram_raster, conn_comp_raster, igram_raster,
-                                      corr_raster)
-
-                # Compute stats for unwrapped phase
-                compute_stats_real_data(uigram_raster, uigram_dataset)
+                    err_str = f"{algorithm} is an invalid unwrapping algorithm"
+                    error_channel.log(err_str)
 
                 # Copy coherence magnitude and culled offsets from RIFG
                 dataset_names = ['coherenceMagnitude', 'alongTrackOffset',
@@ -156,15 +220,13 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     dst_path = f'{dst_freq_group_path}/{group_name}/{pol}/{dataset_name}'
                     src_path = f'{src_freq_group_path}/{group_name}/{pol}/{dataset_name}'
                     dst_h5[dst_path][:, :] = src_h5[src_path][()]
-
                     dst_dataset = dst_h5[dst_path]
                     dst_raster = isce3.io.Raster(
                         f"IH5:::ID={dst_dataset.id.id}".encode("utf-8"),
                         update=True)
-
                     compute_stats_real_data(dst_raster, dst_dataset)
-
-                del uigram_raster
+                # Clean up
+                del unw_raster
                 del conn_comp_raster
 
     t_all_elapsed = time.time() - t_all
@@ -173,11 +235,20 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
 def log_unwrap_attributes(unwrap, info, algorithm):
     '''
-    Write unwrap attributes to info
-    channel depending on unwrapping algorithm
+    Write unwrap attributes to info channel
+
+    Parameters
+    ---------
+    unwrap: object
+        Unwrapping object
+    info: journal.info
+        Info channel where to log attributes values
+    algorithm: str
+        String identifying unwrapping algorithm being used
     '''
     info.log(f"Unwrapping algorithm:{algorithm}")
     if algorithm == 'icu':
+        info.log(f"Correlation threshold increments: {unwrap.corr_incr_thr}")
         info.log(f"Number of buffer lines: {unwrap.buffer_lines}")
         info.log(f"Number of overlap lines: {unwrap.overlap_lines}")
         info.log(f"Use phase gradient neutron: {unwrap.use_phase_grad_neut}")
@@ -194,10 +265,11 @@ def log_unwrap_attributes(unwrap, info, algorithm):
         info.log(f"Maximum correlation threshold: {unwrap.max_corr_thr}")
         info.log(f"Correlation threshold increments: {unwrap.corr_incr_thr}")
         info.log(f"Minimum tile area fraction: {unwrap.min_cc_area}")
-        info.log(f"Number of bootstraping lines: {unwrap.num_bs_lines}")
+        info.log(f"Number of bootstrapping lines: {unwrap.num_bs_lines}")
         info.log(f"Minimum overlapping area: {unwrap.min_overlap_area}")
         info.log(f"Phase variance threshold: {unwrap.phase_var_thr}")
-    else:
+    elif algorithm == 'phass':
+        info.log(f"Correlation threshold increments: {unwrap.correlation_threshold}")
         info.log(f"Good correlation: {unwrap.good_correlation}")
         info.log(
             f"Minimum size of an unwrapped region: {unwrap.min_pixels_region}")
@@ -205,67 +277,325 @@ def log_unwrap_attributes(unwrap, info, algorithm):
     return info
 
 
-def set_unwrap_attributes(unwrap, cfg: dict):
+def set_icu_attributes(cfg: dict):
     '''
-    Assign user-defined values in cfg to
-    the unwrap object
+    Return ICU object with user-defined attribute values
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary containing user-defined ICU patameters
+
+    Returns
+    -------
+    unwrap: isce3.unwrap.ICU
+        ICU object with user-defined attribute values
     '''
-    error_channel = journal.error('unwrap.set_unwrap_attributes')
-
-    algorithm = cfg['algorithm']
-    if 'correlation_threshold_increments' in cfg:
-        unwrap.corr_incr_thr = cfg['correlation_threshold_increments']
-
-    if algorithm == 'icu':
-        icu_cfg = cfg['icu']
-        if 'buffer_lines' in icu_cfg:
-            unwrap.buffer_lines = icu_cfg['buffer_lines']
-        if 'overlap_lines' in icu_cfg:
-            unwrap.overlap_lines = icu_cfg['overlap_lines']
-        if 'use_phase_gradient_neutron' in icu_cfg:
-            unwrap.use_phase_grad_neut = icu_cfg['use_phase_gradient_neutron']
-        if 'use_intensity_neutron' in icu_cfg:
-            unwrap.use_intensity_neut = icu_cfg['use_intensity_neutron']
-        if 'phase_gradient_window_size' in icu_cfg:
-            unwrap.phase_grad_win_size = icu_cfg['phase_gradient_window_size']
-        if 'neutron_phase_gradient_threshold' in icu_cfg:
-            unwrap.neut_phase_grad_thr = icu_cfg[
-                'neutron_phase_gradient_threshold']
-        if 'neutron_intensity_threshold' in icu_cfg:
-            unwrap.neut_intensity_thr = icu_cfg['neutron_intensity_threshold']
-        if 'max_intensity_correlation_threshold' in icu_cfg:
-            unwrap.neut_correlation_thr = icu_cfg[
-                'max_intensity_correlation_threshold']
-        if 'trees_number' in icu_cfg:
-            unwrap.trees_number = icu_cfg['trees_number']
-        if 'max_branch_length' in icu_cfg:
-            unwrap.max_branch_length = icu_cfg['max_branch_length']
-        if 'pixel_spacing_ratio' in icu_cfg:
-            unwrap.ratio_dxdy = icu_cfg['pixel_spacing_ratio']
-        if 'initial_correlation_threshold' in icu_cfg:
-            unwrap.init_corr_thr = icu_cfg['initial_correlation_threshold']
-        if 'max_correlation_threshold' in icu_cfg:
-            unwrap.max_corr_thr = icu_cfg['max_correlation_threshold']
-        if 'min_tile_area' in icu_cfg:
-            unwrap.min_cc_area = icu_cfg['min_tile_area']
-        if 'bootstrap_lines' in icu_cfg:
-            unwrap.num_bs_lines = icu_cfg['bootstrap_lines']
-        if 'min_overlap_area' in icu_cfg:
-            unwrap.min_overlap_area = icu_cfg['min_overlap_area']
-        if 'phase_variance_threshold' in icu_cfg:
-            unwrap.phase_var_thr = icu_cfg['phase_variance_threshold']
-    elif algorithm == 'phass':
-        phass_cfg = cfg['phass']
-        if 'good_correlation' in phass_cfg:
-            unwrap.good_correlation = phass_cfg['good_correlation']
-        if 'min_unwrap_area' in phass_cfg:
-            unwrap.min_pixels_region = phass_cfg['min_unwrap_area']
-    else:
-        err_str = "Not a valid unwrapping algorithm"
-        error_channel.log(err_str)
-        raise ValueError(err_str)
+    unwrap = isce3.unwrap.ICU()
+    unwrap.corr_incr_thr = cfg['correlation_threshold_increments']
+    unwrap.buffer_lines = cfg['buffer_lines']
+    unwrap.overlap_lines = cfg['overlap_lines']
+    unwrap.use_phase_grad_neut = cfg['use_phase_gradient_neutron']
+    unwrap.use_intensity_neut = cfg['use_intensity_neutron']
+    unwrap.phase_grad_win_size = cfg['phase_gradient_window_size']
+    unwrap.neut_phase_grad_thr = cfg['neutron_phase_gradient_threshold']
+    unwrap.neut_intensity_thr = cfg['neutron_intensity_threshold']
+    unwrap.neut_correlation_thr = cfg['max_intensity_correlation_threshold']
+    unwrap.trees_number = cfg['trees_number']
+    unwrap.max_branch_length = cfg['max_branch_length']
+    unwrap.ratio_dxdy = cfg['pixel_spacing_ratio']
+    unwrap.init_corr_thr = cfg['initial_correlation_threshold']
+    unwrap.max_corr_thr = cfg['max_correlation_threshold']
+    unwrap.min_cc_area = cfg['min_tile_area']
+    unwrap.num_bs_lines = cfg['bootstrap_lines']
+    unwrap.min_overlap_area = cfg['min_overlap_area']
+    unwrap.phase_var_thr = cfg['phase_variance_threshold']
 
     return unwrap
+
+
+def set_phass_attributes(cfg: dict):
+    '''
+    Return Phass object with user-defined attribute values
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary containing Phass parameters
+
+    Returns
+    -------
+    unwrap: isce3.unwrap.Phass
+        Phass object with user-defined attribute values
+    '''
+    unwrap = isce3.unwrap.Phass()
+
+    unwrap.corr_incr_thr = cfg['correlation_threshold_increments']
+    unwrap.good_correlation = cfg['good_correlation']
+    unwrap.min_pixels_region = cfg['min_unwrap_area']
+
+    return unwrap
+
+
+def igram_phase_to_vrt(raster_path, output_path):
+    '''
+    Save the phase of complex raster in 'raster_path'
+    in a GDAL VRT format
+
+    Parameters
+    ----------
+    raster_path: str
+        File path of complex raster to save in VRT format
+    output_path: str
+        File path of output phase VRT raster
+    '''
+
+    ds = gdal.Open(raster_path, gdal.GA_ReadOnly)
+    vrttmpl = f'''
+            <VRTDataset rasterXSize="{ds.RasterXSize}" rasterYSize="{ds.RasterYSize}">
+            <VRTRasterBand dataType="Float32" band="1" subClass="VRTDerivedRasterBand">
+            <Description>Phase</Description>
+            <PixelFunctionType>phase</PixelFunctionType>
+            <SimpleSource>
+            <SourceFilename>{igram_path}</SourceFilename>
+            </SimpleSource>
+            </VRTRasterBand>
+            </VRTDataset>'''
+    ds = None
+    with open(output_path, 'w') as fid:
+        fid.write(vrttmpl)
+
+
+def get_optional_snaphu_raster_dataset(cfg, dataset_name):
+    '''
+    Create ISCE3 raster from cfg snaphu runconfig.
+    Returns None if `dataset_name` is not contained in `cfg`.
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary with user-defined options
+    dataset_name: str
+        Name of dataset to extract from 'cfg'
+
+    Returns
+    -------
+    raster: isce3.io.Raster
+        Raster containing the dataset at 'cfg[dataset_name]'
+    '''
+    if cfg.get(dataset_name) is not None:
+        raster = isce3.io.gdal.Raster(cfg[dataset_name])
+    else:
+        raster = None
+    return raster
+
+
+def select_cost_options(cfg, cost_mode='smooth'):
+    """
+    Select and set cost parameter object based
+    on user-defined cost mode options
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary containing SNAPHU parameter options
+    cost_mode: str
+        Snaphu cost mode. Default: defo
+
+    Returns
+    -------
+    cost_params_obj: object
+        Object corresponding to selected cost mode.
+        E.g. if cost_mode is "defo", cost_params_obj
+        is an instance of isce3.unwrap.snaphu.DefoCostParams()
+    """
+    error_channel = journal.error('unwrap.run.select_cost_options')
+
+    # If 'cost_mode_parameters' does not exist, create empty dictionary
+    if 'cost_mode_parameters' not in cfg:
+        cfg['cost_mode_parameters'] = {}
+
+    if cost_mode == 'defo':
+        cost_params_obj = set_defo_params(cfg['cost_mode_parameters'])
+    elif cost_mode == 'smooth':
+        cost_params_obj = set_smooth_params(cfg['cost_mode_parameters'])
+    elif cost_mode == 'p-norm':
+        cost_params_obj = set_pnorm_params(cfg['cost_mode_parameters'])
+    else:
+        err_str = f"{cost_mode} is not a valid cost mode option"
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+    return cost_params_obj
+
+
+def set_defo_params(cost_cfg):
+    """
+    Set parameters for SNAPHU deformation cost mode
+    If a parameter is not found assign default value.
+
+    Parameters
+    ----------
+    cost_cfg: dict
+        Dictionary containing SNAPHU cost parameters
+
+    Returns
+    -------
+    defo: isce3.unwrap.snaphu.DefoCostParams
+        Deformation cost parameter object with user-defined parameters
+    """
+    # If deformation parameter is not empty, extract it
+    if 'deformation_parameters' in cost_cfg:
+        cfg = cost_cfg['deformation_parameters']
+        defo = snaphu.DefoCostParams(**cfg)
+    else:
+        defo = snaphu.DefoCostParams()
+    return defo
+
+
+def set_smooth_params(cost_cfg):
+    """
+    Set parameters for SNAPHU smooth cost mode
+
+    Parameters
+    ----------
+    cost_cfg: dict
+        Dictionary containing SNAPHU cost parametersoptions
+
+    Returns
+    -------
+    smooth: isce3.unwrap.snaphu.SmoothCostParams
+        Smooth cost parameter object with user-defined parameters
+    """
+    # If smooth parameters are present, extract smooth dict
+    if 'smooth_parameters' in cost_cfg:
+        cfg = cost_cfg['smooth_parameters']
+        smooth = snaphu.SmoothCostParams(**cfg)
+    else:
+        # use all defaults values
+        smooth = snaphu.SmoothCostParams()
+    return smooth
+
+
+def set_pnorm_params(cost_cfg):
+    """
+    Set parameters for SNAPHU P-Norm cost mode
+
+    Parameters
+    ----------
+    cost_cfg: dict
+        Dictionary containing SNAPHU cost parameter options
+
+    Returns
+    -------
+    pnorm: isce3.unwrap.snaphu.PNormCostParams
+        P-Norm cost parameter object with user-defined parameters
+    """
+
+    # If pnorm section of runconfig is not empty,
+    # proceed to set user-defined pnorm parameters
+    if 'pnorm_parameters' in cost_cfg:
+        cfg = cost_cfg['pnorm_parameters']
+        pnorm = snaphu.PNormCostParams(**cfg)
+    else:
+        pnorm = snaphu.PNormCostParams()
+    return pnorm
+
+
+def set_solver_params(snaphu_cfg):
+    """
+    Set user-defined solver parameter options
+
+    Parameters
+    ----------
+    snaphu_cfg: dict
+        Dictionary containing SNAPHU options
+
+    Returns
+    -------
+    solver: isce3.unwrap.snaphu.SolverParams() or None
+        Object containing solver parameters options or None
+    """
+    # If 'solver_parameters' is in snaphu_cfg, inspect setted
+    # options. If None found, assign default
+    if 'solver_parameters' in snaphu_cfg:
+        cfg = snaphu_cfg['solver_parameters']
+        solver = snaphu.SolverParams(**cfg)
+    else:
+        solver = None
+    return solver
+
+
+def set_connected_components_params(snaphu_cfg):
+    """
+    Set user-defined connected components parameter options
+
+    Parameters
+    ----------
+    snaphu_cfg: dict
+        Dictionary containing SNAPHU options
+
+    Returns
+    -------
+    conn: isce3.unwrap.snaphu.ConnCompParams() or None
+        Object containing connected components parameters options or None
+    """
+    # If 'connected_components_parameters' is in snaphu_cfg,
+    # inspect setted options. If None found, assign default
+
+    if 'connected_components_parameters' in snaphu_cfg:
+        cfg = snaphu_cfg['connected_components_parameters']
+        conn = snaphu.ConnCompParams(**cfg)
+    else:
+        conn = None
+    return conn
+
+
+def filter_nan(file_path, out_file, lines_per_block,
+               data_type, value=0.0):
+    '''
+    Converts NaNs to 'value' in raster at 'out_file'
+
+    Parameters
+    ----------
+    file_path: str
+        File path to raster to filter NaN (GDAL-compatible)
+    out_file: str
+        File path to output raster
+    lines_per_block: int
+        Number of lines to read in batch
+    data_type: gdal type
+        Data type of output raster
+    value: float
+        Value to use to replace NaN
+    '''
+
+    ds_in = gdal.Open(file_path, gdal.GA_ReadOnly)
+    width = ds_in.RasterXSize
+    length = ds_in.RasterYSize
+    bands = ds_in.RasterCount
+
+    # Create output raster
+    driver = gdal.GetDriverByName('GTiff')
+    out_ds = driver.Create(out_file, width, length, bands, data_type)
+
+    lines_per_block = min(length, lines_per_block)
+    num_blocks = int(np.ceil(length / lines_per_block))
+
+    for band in range(bands):
+        for block in range(num_blocks):
+            line_start = block * lines_per_block
+            if block == num_blocks - 1:
+                block_length = length - line_start
+            else:
+                block_length = lines_per_block
+            # Extract a block from correlation data
+            data_block = ds_in.GetRasterBand(band + 1).ReadAsArray(0,
+                                                            line_start,
+                                                            width, block_length)
+            data_block[np.isnan(data_block)] = value
+            out_ds.GetRasterBand(band + 1).WriteArray(data_block,
+                                                      xoff=0, yoff=line_start)
+            out_ds.FlushCache()
 
 
 if __name__ == "__main__":
