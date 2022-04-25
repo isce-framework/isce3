@@ -374,6 +374,72 @@ class TestSnaphu:
         good_pixels = np.isclose(mphase - offset, munw, rtol=1e-6, atol=1e-6)
         assert frac_nonzero(~good_pixels) < 1e-3
 
+    def test_single_row_col_mask(self):
+        """Test SNAPHU with connected components separated by a single row or
+        column of masked pixels.
+        """
+        # Interferogram dimensions
+        l, w = 513, 513
+
+        # Simulate 2-D unwrapped phase field, in radians.
+        x = np.linspace(0.0, 50.0, w, dtype=np.float32)
+        y = np.linspace(0.0, 50.0, l, dtype=np.float32)
+        phase = x + y[:, None]
+
+        # Mask out the middle row & column, as well as each border row & column.
+        mask = np.ones((l, w), dtype=np.uint8)
+        mask[[0, l // 2, l - 1]] = 0
+        mask[:, [0, w // 2, w - 1]] = 0
+
+        # Simulate correlation coefficient.
+        corr = np.full((l, w), fill_value=0.7, dtype=np.float32)
+
+        # Add phase noise.
+        nlooks = 9.0
+        phase += simulate_phase_noise(corr, nlooks, seed=12345)
+
+        # Interferogram with a linear diagonal phase gradient.
+        igram = np.exp(1j * phase)
+
+        # Set masked interferogram pixels' magnitude to zero.
+        igram[mask == 0] = 0.0
+
+        # Convert the input arrays into rasters.
+        igram_raster = isce3.io.gdal.Raster(igram)
+        corr_raster = isce3.io.gdal.Raster(corr)
+        mask_raster = isce3.io.gdal.Raster(mask)
+
+        # Create output rasters for unwrapped phase & connected component
+        # labels.
+        unw_raster = isce3.io.gdal.Raster("unw.tif", w, l, np.float32, "GTiff")
+        ccl_raster = isce3.io.gdal.Raster("ccl.tif", w, l, np.uint32, "GTiff")
+
+        # Unwrap phase using SNAPHU "smooth" cost mode.
+        snaphu.unwrap(
+            unw_raster,
+            ccl_raster,
+            igram_raster,
+            corr_raster,
+            nlooks=nlooks,
+            cost="smooth",
+            mask=mask_raster,
+        )
+
+        # Check the connected component labels. There should be four distinct regions
+        # with unique nonzero labels. Masked pixels should be labeled 0.
+        unique_cc_labels = set(np.unique(ccl_raster.data))
+        assert unique_cc_labels == {0, 1, 2, 3, 4}
+        assert np.all(ccl_raster.data[mask == 0] == 0)
+
+        # Check the unwrapped phase for each connected component. The unwrapped and true
+        # phase should agree up to some fixed offset within each region.
+        for label in range(1, 5):
+            lmask = (ccl_raster.data == label)
+            mphase = phase[lmask]
+            munw = unw_raster.data[lmask]
+            offset = mphase[0] - munw[0]
+            assert np.allclose(mphase - offset, munw, rtol=1e-6, atol=1e-6)
+
     def test_tile_mode(self):
         """Test SNAPHU tiled unwrapping mode."""
         # Interferogram dimensions
