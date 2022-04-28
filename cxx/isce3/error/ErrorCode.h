@@ -11,6 +11,7 @@ enum class ErrorCode {
     OrbitInterpDomainError,
     OrbitInterpUnknownMethod,
     OutOfBoundsDem,
+    InvalidDem,
     FailedToConverge,
     WrongLookSide,
     OutOfBoundsLookup,

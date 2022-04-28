@@ -268,7 +268,7 @@ class SLC(h5py.File):
             " WGS84 G1762 reference frame")
         d.attrs["units"] = np.string_("meters per second squared")
 
-    def set_attitude(self, attitude: Attitude, epoch: DateTime, type="Custom"):
+    def set_attitude(self, attitude: Attitude, type="Custom"):
         log.info("Writing attitude to SLC")
         g = self.root.require_group("metadata/attitude")
         d = g.require_dataset("attitudeType", (), "S10", data=np.string_(type))
@@ -279,7 +279,7 @@ class SLC(h5py.File):
         d.attrs["description"] = np.string_("Time vector record. This record"
             " contains the time corresponding to attitude and quaternion"
             " records")
-        d.attrs["units"] = np.string_(time_units(epoch))
+        d.attrs["units"] = np.string_(time_units(attitude.reference_epoch))
         # TODO attitude rates
         n = len(attitude.time)
         qdot = np.zeros((n, 3))

@@ -59,6 +59,11 @@ public:
     /** Time of last measurement relative to reference epoch (s) */
     double endTime() const { return _time[size() - 1]; }
 
+    /** Check if time falls in the valid interpolation domain. */
+    bool contains(double time) const {
+        return (startTime() <= time) && (time <= endTime());
+    }
+
     /** UTC time of first measurement */
     DateTime startDateTime() const
     {

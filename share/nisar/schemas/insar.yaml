@@ -24,12 +24,12 @@ runconfig:
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
-            # In INSAR mode, GUNW, RIFG, and RUNW will be prepended to sas_output_file
+            # In INSAR mode, GUNW, GOFF, RIFG, ROFF, and RUNW will be prepended to sas_output_file
             sas_output_file: str()
 
         primary_executable:
             # RIFG_RUNW_GUNW will produce all three InSAR products
-            product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
+            product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P','M','N','F','T', required=False)
@@ -74,6 +74,9 @@ runconfig:
             # Cross-correlation (Ampcor) options
             dense_offsets: include('dense_offsets_options', required=False)
 
+            # Offset product options
+            offsets_product: include('offsets_product_options', required=False)
+
             # Offset culling options
             rubbersheet: include('rubbersheet_options', required=False)
 
@@ -100,91 +103,96 @@ runconfig:
 
 ---
 phase_unwrap_options:
-    # Path to HDF5 file or directory containing the input interferogram
-    # and coherence (normalized magnitude of complex correlation) rasters
-    # Not required as we allow the use of intermediate outputs from
-    # the previous InSAR module, which is not user-specified.
-    # Required for running stand-alone phase unwrapping
     crossmul_path: str(required=False)
 
-    # Increments to correlation threshold
-    correlation_threshold_increments: num(min=0, max=1, required=False)
+    algorithm: enum('icu', 'phass', 'snaphu', required=False)
 
-    # Unwrapping algorithm to use
-    algorithm: enum('icu', 'phass', required=False)
-
-    # ICU unwrapping options
     icu: include('icu_options', required=False)
 
-    # Phass unwrapping options
     phass: include('phass_options', required=False)
 
+    snaphu: include('snaphu_options', required=False)
+
 icu_options:
-    # Seed point to initialize ICU algorithm
+    correlation_threshold_increments: num(min=0, max=1, required=False)
     seed: int(min=0, required=False)
-
-    # Number of lines in buffer to process simultaneously
     buffer_lines: int(min=1, required=False)
-
-    # Number of overlapping lines for each data block
     overlap_lines: int(min=1, required=False)
-
-    # Flag to activate neutrons based on phase gradient metric
     use_phase_gradient_neutron: bool(required=False)
-
-    # Flag to activate neutron based on reference RSLC intensity
     use_intensity_neutron: bool(required=False)
-
-    # Square window size for phase gradient computation
     phase_gradient_window_size: int(min=1, required=False)
-
-    # Threshold value for phase gradient neutrons (radian)
     neutron_phase_gradient_threshold: num(min=0, required=False)
-
-    # Threshold value for intensity neutron (sigma above mean)
     neutron_intensity_threshold: num(min=0, required=False)
-
-    # Threshold on the maximum level of intensity for intensity neutron
     max_intensity_correlation_threshold: num(required=False)
-
-    # Maximum number of tree realizations
     trees_number: int(min=1, required=False)
-
-    # Maximum extent for each tree branch
     max_branch_length: int(min=1, required=False)
-
-    # Ratio between along track and slant range spacing
     pixel_spacing_ratio: num(required=False)
-
-    # Threshold for the initial correlation value
     initial_correlation_threshold: num(min=0, max=1, required=False)
-
-    # Threshold for the maximum correlation value
     max_correlation_threshold: num(max=1, required=False)
-
-    # Minimum size of an area to unwrap
     min_tile_area: num(required=False)
-
-    # Number of lines used in the bootstrap phase
     bootstrap_lines: int(min=1, required=False)
-
-    # Minimum bootstrap overlapping area
     min_overlap_area: int(min=0, required=False)
-
-    # Bootstrap phase variance threshold (radian)
     phase_variance_threshold: num(min=0, required=False)
 
 phass_options:
-    # Normalized interferometric correlation value of the pixel to unwrap
-    # Pixels with a good_correlation lower than the assigned value are
-    # masking out during the phass unwrapping
+    correlation_threshold_increments: num(min=0, max=1, required=False)
     good_correlation: num(min=0, max=1, required=False)
-
-    # Minimum size (in pixels) of a region to unwrap
     min_unwrap_area: int(min=1, required=False)
-
-    # Filepath to power raster
     power: str(required=False)
+
+snaphu_options:
+    nlooks: num(min=1, required=False)
+    cost_mode: enum('defo', 'smooth', 'p-norm', required=False)
+    cost_mode_parameters: include('cost_mode_options', required=False)
+    mask: str(required=False)
+    unwrapped_phase_estimate: str(required=False)
+    initialization_method: enum('mst', 'mcf', required=False)
+    solver_parameters: include('solver_options', required=False)
+    connected_components_parameters: include('connected_components_options', required=False)
+    verbose: bool(required=False)
+    debug: bool(required=False)
+
+cost_mode_options:
+    deformation_parameters: include('deformation_cost_options', required=False)
+    smooth_parameters: include('smooth_cost_options', required=False)
+    pnorm_parameters: include('pnorm_cost_options', required=False)
+
+deformation_cost_options:
+    azdz_factor: num(required=False)
+    defo_max: num(min=0, required=False)
+    sigsq_corr: num(min=0, required=False)
+    defo_const: num(min=0, max=1, required=False)
+    lay_falloff_const: num(required=False)
+    kpar_dpsi: int(min=1, required=False)
+    kperp_dpsi: int(min=1, required=False)
+
+smooth_cost_options:
+    kpar_dpsi: int(min=1, required=False)
+    kperp_dpsi: int(min=1, required=False)
+
+pnorm_cost_options:
+    p: num(min=0, required=False)
+    bidir: bool(required=False)
+
+solver_options:
+    max_flow_inc: int(min=0, required=False)
+    init_max_flow: int(min=0, max=9999, required=False)
+    arc_max_flow_const: int(required=False)
+    threshold: num(required=False)
+    max_cost: num(required=False)
+    cost_scale: num(required=False)
+    n_cycle: int(required=False)
+    max_new_node_const: num(required=False)
+    max_n_flow_cycles: num(required=False)
+    max_cycle_frac: num(required=False)
+    n_conn_node_min: int(min=0, required=False)
+    n_major_prune: int(required=False)
+    prune_cost_thresh: int(required=False)
+
+connected_components_options:
+    min_frac_area: num(required=False)
+    cost_thresh: int(required=False)
+    max_ncomps: int(required=False)
 
 coarse_resample_options:
     # Path to coarse/fine offset directory
@@ -194,7 +202,7 @@ coarse_resample_options:
     lines_per_tile: int(min=1, required=False)
 
 fine_resample_options:
-    # Flag to swicth on/off fine resampling
+    # Flag to switch on/off fine resampling
     enabled: bool(required=False)
 
     # Path to coarse/fine offset directory
@@ -290,6 +298,104 @@ dense_offsets_options:
 
     # Number of offset estimates to process in batch along azimuth
     windows_batch_azimuth: int(min=1, required=False)
+
+offsets_product_options:
+    # Flag to enable/disable offsets product computation (default: False)
+    enabled: bool(required=False)
+
+    # Path to HDF5 file or directory with geometry-coregistered SLCs.
+    # Not required as we allow the use of intermediate outputs from
+    # the previous InSAR module, which is not user-specified
+    coregistered_slc_path: str(required=False)
+
+    # Number of columns to skip in reference image for next offset estimate
+    skip_range: int(min=1, required=False)
+
+    # Number of lines to skip in reference image for next offset estimate
+    skip_azimuth: int(min=1, required=False)
+
+    # Margin around image edges to avoid for offset computation
+    margin: int(min=0, required=False)
+
+    # Number of columns of output offset (covariance, snr) file
+    offset_width: int(required=False)
+
+    # Number of lines of output offset (covariance, snr) file
+    offset_length: int(required=False)
+
+    # Start pixel of the reference image along slant range
+    start_pixel_range: int(min=0, required=False)
+
+    # Start pixel of the reference image along azimuth
+    start_pixel_azimuth: int(min=0, required=False)
+
+    # Domain (frequency or spatial) where to compute cross-correlation
+    cross_correlation_domain: enum('frequency', 'spatial', required=False)
+
+    # Anti-aliasing oversampling factor to apply to reference/secondary SLC
+    # prior to cross-correlation computation
+    slc_oversampling_factor: int(min=2, max=5, required=False)
+
+    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+    deramping_method: enum('magnitude', 'complex', required=False)
+
+    # Flag to use constant range/azimuth offsets in dense offsets estimation
+    use_gross_offsets: bool(required=False)
+
+    # Constant offset along slant range to guide dense offset estimation
+    gross_offset_range: int(required=False)
+
+    # Constant gross offset along az to guide dense offset estimation
+    gross_offset_azimuth: int(required=False)
+
+    # File path to pixel by pixel gross offset (e.g. from reference velocity map)
+    gross_offset_filepath: str(required=False)
+
+    # Flag to add gross offset to the output of dense offset file
+    merge_gross_offset: bool(required=False)
+
+    # Square zoom window size for cross-correlation statistics (SNR, covariance)
+    correlation_statistics_zoom: int(required=False)
+
+    # Square zoom window size for sub-pixel offset refinement
+    correlation_surface_zoom: int(min=4, required=False)
+
+    # Oversampling factor of the correlation surface for sub-pixel offset refinement
+    correlation_surface_oversampling_factor: int(min=2, max=128, required=False)
+
+    # Correlation surface oversampling algorithm
+    correlation_surface_oversampling_method: enum('sinc', 'fft', required=False)
+
+    # Number of cuda streams
+    cuda_streams: int(required=False)
+
+    # Number of offset estimates to process in batch along slant range
+    windows_batch_range: int(min=1, required=False)
+
+    # Number of offset estimates to process in batch along azimuth
+    windows_batch_azimuth: int(min=1, required=False)
+
+    # Pixel offsets layers
+    layer1: include('offset_layer_options', required=False)
+    layer2: include('offset_layer_options', required=False)
+    layer3: include('offset_layer_options', required=False)
+    layer4: include('offset_layer_options', required=False)
+
+offset_layer_options:
+    # Cross-correlation method (incoherent; coherent not implemented)
+    cross_correlation_method: enum('coherent', 'incoherent', required=False)
+
+    # Number of columns for chip/template window in reference image
+    window_range: int(min=16, max=512, required=False)
+
+    # Number of lines for chip/template window in reference image
+    window_azimuth: int(min=16, max=512, required=False)
+
+    # Number of columns for search chip/template in secondary image
+    half_search_range: int(min=4, max=32, required=False)
+
+    # Number of lines for search chip/template in secondary image
+    half_search_azimuth: int(min=4, max=32, required=False)
 
 rubbersheet_options:
     # Path to dense offsets outputs (offsets, snr, covariance).

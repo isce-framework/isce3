@@ -38,10 +38,13 @@ class GCOVRunConfig(RunConfig):
             geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.SINGLE_BLOCK
         elif geocode_dict['memory_mode'] == 'geogrid':
             geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID
-        elif geocode_dict['memory_mode'] == 'geogrid_radargrid':
+        elif geocode_dict['memory_mode'] == 'geogrid_and_radargrid':
             geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID
-        else:
+        elif geocode_dict['memory_mode'] == 'auto' or (geocode_dict['memory_mode'] is None):
             geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.AUTO
+        else:
+            err_msg = f"ERROR memory_mode: {geocode_dict['memory_mode']}"
+            raise ValueError(err_msg)
 
         rtc_output_type = rtc_dict['output_type']
         if rtc_output_type == 'sigma0':

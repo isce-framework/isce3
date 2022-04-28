@@ -115,7 +115,7 @@ runconfig:
                 # OPTIONAL - Apply RTC
                 apply_rtc: True
  
-                # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_radargrid", and "auto" (default)
+                # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
                 memory_mode:
 
                 # OPTIONAL - Processing upsampling factor applied to input geogrid

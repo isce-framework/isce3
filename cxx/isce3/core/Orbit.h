@@ -76,7 +76,12 @@ public:
     /** Reference epoch (UTC) */
     const DateTime & referenceEpoch() const { return _reference_epoch; }
 
-    /** Set reference epoch (UTC) */
+    /** Set reference epoch (UTC)
+     *
+     * Also updates relative time tags so that
+     *      referenceEpoch() + TimeDelta(time()[i])
+     * results in the same absolute time tags before and after this call.
+     */
     void referenceEpoch(const DateTime &);
 
     /** Interpolation method */
@@ -102,6 +107,11 @@ public:
 
     /** UTC time of last state vector */
     DateTime endDateTime() const { return _reference_epoch + TimeDelta(endTime()); }
+
+    /** Check if time falls in the valid interpolation domain. */
+    bool contains(double time) const {
+        return (startTime() <= time) && (time <= endTime());
+    }
 
     /** Time interval between state vectors (s) */
     double spacing() const { return _time.spacing(); }

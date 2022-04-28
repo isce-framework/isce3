@@ -201,8 +201,10 @@ Geocode::Geocode(const isce3::product::GeoGridParameters & geogrid,
     _interp_double_handle(data_interp_method),
     _interp_cdouble_handle(data_interp_method),
     _interp_unsigned_char_handle(data_interp_method),
+    _interp_unsigned_int_handle(data_interp_method),
     _proj_handle(geogrid.epsg()),
-    _dem_interp_method(dem_interp_method)
+    _dem_interp_method(dem_interp_method),
+    _data_interp_method(data_interp_method)
 {
     // init light weight radar grid
     _radar_grid.sensing_start = _rdr_geom.radarGrid().sensingStart();
@@ -231,10 +233,12 @@ Geocode::Geocode(const isce3::product::GeoGridParameters & geogrid,
         _invalid_float = std::numeric_limits<float>::quiet_NaN();
         _invalid_double = std::numeric_limits<double>::quiet_NaN();
         _invalid_unsigned_char = 255;
+        _invalid_unsigned_int = 4294967295;
     } else {
         _invalid_float = invalid_value;
         _invalid_double = static_cast<double>(invalid_value);
         _invalid_unsigned_char = static_cast<unsigned char>(invalid_value);
+        _invalid_unsigned_int = static_cast<unsigned int>(invalid_value);
     }
 }
 
@@ -337,9 +341,21 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number)
     }
 }
 
+void Geocode::rasterDtypeInterpCheck(const int dtype) const
+{
+    if ((dtype == GDT_Byte || dtype == GDT_UInt32) &&
+        _data_interp_method != isce3::core::NEAREST_METHOD)
+    {
+        std::string err_str {"int type of raster can only use nearest neighbor interp"};
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), err_str);
+    }
+}
+
 template<class T>
 void Geocode::geocodeRasterBlock(Raster& output_raster, Raster& input_raster)
 {
+    rasterDtypeInterpCheck(input_raster.dtype());
+
     // determine number of elements in output vector
     const auto n_elem_out = _geo_block_length * _geogrid.width();
 
@@ -362,6 +378,9 @@ void Geocode::geocodeRasterBlock(Raster& output_raster, Raster& input_raster)
     } else if constexpr (std::is_same_v<T, unsigned char>) {
         interp = _interp_unsigned_char_handle.getInterp();
         invalid_value = _invalid_unsigned_char;
+    } else if constexpr (std::is_same_v<T, unsigned int>) {
+        interp = _interp_unsigned_int_handle.getInterp();
+        invalid_value = _invalid_unsigned_int;
     }
 
     // 0 width indicates current block is out of bounds
@@ -427,6 +446,10 @@ void Geocode::geocodeRasters(
 
     const auto n_raster_pairs = output_rasters.size();
 
+    // check if raster types consistent with data interp method
+    for (size_t i_raster = 0; i_raster < n_raster_pairs; ++i_raster)
+        rasterDtypeInterpCheck(input_rasters[i_raster].get().dtype());
+
     // iterate over blocks
     for (size_t i_block = 0; i_block < _n_blocks; ++i_block) {
 
@@ -457,6 +480,10 @@ void Geocode::geocodeRasters(
                     geocodeRasterBlock<unsigned char>(
                             output_rasters[i_raster], input_rasters[i_raster]);
                     break;}
+                case GDT_UInt32:  {
+                    geocodeRasterBlock<unsigned int>(
+                            output_rasters[i_raster], input_rasters[i_raster]);
+                    break;}
                 default: {
                     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                             "unsupported datatype");
@@ -474,4 +501,5 @@ EXPLICIT_INSTATIATION(thrust::complex<float>);
 EXPLICIT_INSTATIATION(double);
 EXPLICIT_INSTATIATION(thrust::complex<double>);
 EXPLICIT_INSTATIATION(unsigned char);
+EXPLICIT_INSTATIATION(unsigned int);
 } // namespace isce3::cuda::geocode

@@ -22,12 +22,13 @@ namespace isce3::geocode {
 
 /**
  * Remove range and azimuth phase carrier from a block of input radar SLC data
+ *
  * @param[out] rdrDataBlock     block of input SLC data in radar grid to be deramped
  * @tparam[in] azCarrierPhase   azimuth carrier phase of the SLC data, in radian, as a function of azimuth and range
  * @tparam[in] rgCarrierPhase   range carrier phase of the SLC data, in radian, as a function of azimuth and range
  * @param[in] azimuthFirstLine  line index of the first sample of the block of input data with respect to the origin of the full SLC scene
  * @param[in] rangeFirstPixel   pixel index of the first sample of the block of input data with respect to the origin of the full SLC scene
- * @param[in] radarGrid     radar grid parameters
+ * @param[in] radarGrid         radar grid parameters of radar data
  */
 template <typename AzRgFunc>
 void carrierPhaseDeramp(
@@ -68,14 +69,15 @@ void carrierPhaseDeramp(
 
 /**
  * Add back range and azimuth phase carrier and simultaneously flatten the block of geocoded SLC
- * @param[out] geoDataBlock geocoded SLC data whose phase will be added by carrier phase and flatten by geometrical phase
- * @param[in] rdrDataBlock  radar grid SLC data
+ *
+ * @param[out] geoDataBlock     geocoded SLC data whose phase will be added by carrier phase and flatten by geometrical phase
+ * @param[in] rdrDataBlock      radar grid SLC data
  * @tparam[in] azCarrierPhase   azimuth carrier phase of the SLC data, in radian, as a function of azimuth and range
  * @tparam[in] rgCarrierPhase   range carrier phase of the SLC data, in radian, as a function of azimuth and range
- * @param[in] radarX        radar-coordinates x-index of the pixels in geo-grid
- * @param[in] radarY        radar-coordinates y-index of the pixels in geo-grid
- * @param[in] radarGrid     radar grid parameters
- * @param[in] flatten       flag to flatten the geocoded SLC
+ * @param[in] rangeIndices      range (radar-coordinates x) index of the pixels in geo-grid
+ * @param[in] azimuthIndices    azimuth (radar-coordinates y) index of the pixels in geo-grid
+ * @param[in] radarGrid         radar grid parameters
+ * @param[in] flatten           flag to flatten the geocoded SLC
  * @param[in] azimuthFirstLine  line index of the first sample of the block
  * @param[in] rangeFirstPixel   pixel index of the first sample of the block
  */
@@ -85,7 +87,8 @@ void carrierPhaseRerampAndFlatten(
         const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
         const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase,
         const isce3::core::LUT2d<double>& dopplerLUT,
-        isce3::core::Matrix<double> radarX, isce3::core::Matrix<double> radarY,
+        isce3::core::Matrix<double>& rangeIndices,
+        isce3::core::Matrix<double>& azimuthIndices,
         const isce3::product::RadarGridParameters& radarGrid,
         const bool flatten, const size_t azimuthFirstLine,
         const size_t rangeFirstPixel)
@@ -101,27 +104,29 @@ void carrierPhaseRerampAndFlatten(
         auto i = ii / outWidth;
         auto j = ii % outWidth;
 
-        const double rdrX = radarX(i,j) - rangeFirstPixel;
-        const double rdrY = radarY(i,j) - azimuthFirstLine;
+        // Get double and int rg/az coordinates (accounting for block offsets)
+        const double RgIndex = rangeIndices(i,j) - rangeFirstPixel;
+        const double AzIndex = azimuthIndices(i,j) - azimuthFirstLine;
 
-        // Check if chip indices could be outside radar grid
-        const int intX = static_cast<int>(rdrX);
-        const int intY = static_cast<int>(rdrY);
+        // Truncate rg/az indices to int
+        const int intRgIndex = static_cast<int>(RgIndex);
+        const int intAzIndex = static_cast<int>(AzIndex);
 
-        // Check if current pixel was interpolated
+        // Check if chip indices could be outside radar grid (plus interp chip)
+        // i.e. Check if current pixel was interpolated
         // Skip if chip indices outside int value of radar grid
-        if ((intX < chipHalf) || (intX >= (inWidth - chipHalf)))
+        if ((intRgIndex < chipHalf) || (intRgIndex >= (inWidth - chipHalf)))
             continue;
-        if ((intY < chipHalf) || (intY >= (inLength - chipHalf)))
+        if ((intAzIndex < chipHalf) || (intAzIndex >= (inLength - chipHalf)))
             continue;
 
         // Slant Range at the current output pixel
         const double rng = radarGrid.startingRange() +
-                radarX(i,j) * radarGrid.rangePixelSpacing();
+                rangeIndices(i,j) * radarGrid.rangePixelSpacing();
 
         // Azimuth time at the current output pixel
         const double az = radarGrid.sensingStart() +
-                          radarY(i,j) / radarGrid.prf();
+                          azimuthIndices(i,j) / radarGrid.prf();
 
         // Skip pixel if doppler could not be evaluated
         if (not dopplerLUT.contains(az, rng))
@@ -147,20 +152,22 @@ void carrierPhaseRerampAndFlatten(
 }
 
 
-/**
- * @param[in] rdrDataBlock a block of SLC data in radar coordinates basebanded in range direction
- * @param[out] geoDataBlock a block of data in geo coordinates
- * @param[in] radarX the radar-coordinates x-index of the pixels in geo-grid
- * @param[in] radarY the radar-coordinates y-index of the pixels in geo-grid
- * @param[in] azimuthFirstLine line index of the first sample of the block
- * @param[in] rangeFirstPixel  pixel index of the first sample of the block
- * @param[in] sincInterp sinc interpolator object
- * @param[in] radarGrid RadarGridParameters
- * @param[in] dopplerLUT native doppler of SLC image
+/** Interpolate radar data block to geo data block
+ *
+ * @param[in] rdrDataBlock      block of SLC data in radar coordinates basebanded in range direction
+ * @param[out] geoDataBlock     block of data in geo coordinates
+ * @param[in] rangeIndices      range (radar-coordinates x) index of the pixels in geo-grid
+ * @param[in] azimuthIndices    azimuth (radar-coordinates y) index of the pixels in geo-grid
+ * @param[in] azimuthFirstLine  line index of the first sample of the block
+ * @param[in] rangeFirstPixel   pixel index of the first sample of the block
+ * @param[in] sincInterp        sinc interpolator object
+ * @param[in] radarGrid         RadarGridParameters of radar data
+ * @param[in] dopplerLUT        native doppler of SLC image
  */
 void interpolate(const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
         isce3::core::Matrix<std::complex<float>>& geoDataBlock,
-        isce3::core::Matrix<double> radarX, isce3::core::Matrix<double> radarY,
+        isce3::core::Matrix<double>& rangeIndices,
+        isce3::core::Matrix<double>& azimuthIndices,
         const int azimuthFirstLine, const int rangeFirstPixel,
         const isce3::core::Interpolator<std::complex<float>>* sincInterp,
         const isce3::product::RadarGridParameters& radarGrid,
@@ -180,29 +187,32 @@ void interpolate(const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
 
         // adjust the row and column indicies for the current block,
         // i.e., moving the origin to the top-left of this radar block.
-        double rdrX = radarX(i,j) - rangeFirstPixel;
-        double rdrY = radarY(i,j) - azimuthFirstLine;
+        double RgIndex = rangeIndices(i,j) - rangeFirstPixel;
+        double AzIndex = azimuthIndices(i,j) - azimuthFirstLine;
 
-        const int intX = static_cast<int>(rdrX);
-        const int intY = static_cast<int>(rdrY);
-        const double fracX = rdrX - intX;
-        const double fracY = rdrY - intY;
+        // Truncate rg/az coordinates to int
+        const int intRgIndex = static_cast<int>(RgIndex);
+        const int intAzIndex = static_cast<int>(AzIndex);
+
+        // Save the fractional parts of rg/az coordinates
+        const double fracRgIndex = RgIndex - intRgIndex;
+        const double fracAzIndex = AzIndex - intAzIndex;
 
         // Check if chip indices could be outside radar grid
         // Skip if chip indices out of bounds
-        if ((intX < chipHalf) || (intX >= (inWidth - chipHalf)))
+        if ((intRgIndex < chipHalf) || (intRgIndex >= (inWidth - chipHalf)))
             continue;
-        if ((intY < chipHalf) || (intY >= (inLength - chipHalf)))
+        if ((intAzIndex < chipHalf) || (intAzIndex >= (inLength - chipHalf)))
             continue;
 
         // Slant Range at the current output pixel
         const double rng =
                 radarGrid.startingRange() +
-                radarX(i,j) * radarGrid.rangePixelSpacing();
+                rangeIndices(i,j) * radarGrid.rangePixelSpacing();
 
         // Azimuth time at the current output pixel
         const double az = radarGrid.sensingStart() +
-                          radarY(i,j) / radarGrid.prf();
+                          azimuthIndices(i,j) / radarGrid.prf();
 
         if (not dopplerLUT.contains(az, rng))
             continue;
@@ -215,16 +225,16 @@ void interpolate(const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
         // Read data chip
         for (int ii = 0; ii < chipSize; ++ii) {
             // Row to read from
-            const int chipRow = intY + ii - chipHalf;
+            const int chipRow = intAzIndex + ii - chipHalf;
 
             // Compute doppler frequency at current row
-            const double doppPhase = doppFreq * (ii - chipHalf + fracY);
+            const double doppPhase = doppFreq * (ii - chipHalf + fracAzIndex);
             const std::complex<float> doppVal(std::cos(doppPhase),
                                               -std::sin(doppPhase));
 
             for (int jj = 0; jj < chipSize; ++jj) {
                 // Column to read from
-                const int chipCol = intX + jj - chipHalf;
+                const int chipCol = intRgIndex + jj - chipHalf;
 
                 // Set the data values after doppler demodulation
                 chip(ii, jj) = rdrDataBlock(chipRow, chipCol) * doppVal;
@@ -233,8 +243,8 @@ void interpolate(const isce3::core::Matrix<std::complex<float>>& rdrDataBlock,
 
         // Interpolate chip
         const std::complex<float> cval =
-                sincInterp->interpolate(isce3::core::SINC_HALF + fracX,
-                        isce3::core::SINC_HALF + fracY, chip);
+                sincInterp->interpolate(isce3::core::SINC_HALF + fracRgIndex,
+                        isce3::core::SINC_HALF + fracAzIndex, chip);
 
         // Set geoDataBlock column and row from index
         geoDataBlock(i, j) = cval;
@@ -254,8 +264,73 @@ void geocodeSlc(
         const isce3::core::Ellipsoid& ellipsoid, const double& thresholdGeo2rdr,
         const int& numiterGeo2rdr, const size_t& linesPerBlock,
         const double& demBlockMargin, const bool flatten,
-        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase)
+        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase,
+        const std::complex<float> invalidValue)
 {
+    geocodeSlc(outputRaster, inputRaster, demRaster, radarGrid, radarGrid,
+            geoGrid, orbit,nativeDoppler, imageGridDoppler, ellipsoid,
+            thresholdGeo2rdr, numiterGeo2rdr, linesPerBlock, demBlockMargin,
+            flatten, azCarrierPhase, rgCarrierPhase, invalidValue);
+}
+
+
+/**
+ * Ensure sliced radar grid fits within full radar grid
+ * @param[in] fullGrid      radar grid to be validated against
+ * @param[in] slicedGrid    sliced radar grid to be validated
+ */
+inline void
+validate_slice(const isce3::product::RadarGridParameters& fullGrid,
+        const isce3::product::RadarGridParameters& slicedGrid) {
+    if (slicedGrid.sensingStart() < fullGrid.sensingStart()) {
+        std::string error_msg("sliced grid sensing start < full grid sensing start");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    if (slicedGrid.sensingStop() > fullGrid.sensingStop()) {
+        std::string error_msg("sliced grid sensing stop < full grid sensing stop");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    if (slicedGrid.startingRange() < fullGrid.startingRange()) {
+        std::string error_msg("sliced grid staring range < full grid staring range");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    if (slicedGrid.endingRange() > fullGrid.endingRange()) {
+        std::string error_msg("sliced grid ending range < full grid ending range");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    if (slicedGrid.lookSide() != fullGrid.lookSide()) {
+        std::string error_msg("sliced grid look side != full grid look side");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    if (slicedGrid.wavelength() != fullGrid.wavelength()) {
+        std::string error_msg("sliced grid wavelength != full grid wavelength");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+}
+
+
+template<typename AzRgFunc>
+void geocodeSlc(
+        isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
+        isce3::io::Raster& demRaster,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::product::RadarGridParameters& slicedRadarGrid,
+        const isce3::product::GeoGridParameters& geoGrid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& nativeDoppler,
+        const isce3::core::LUT2d<double>& imageGridDoppler,
+        const isce3::core::Ellipsoid& ellipsoid, const double& thresholdGeo2rdr,
+        const int& numiterGeo2rdr, const size_t& linesPerBlock,
+        const double& demBlockMargin, const bool flatten,
+        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase,
+        const std::complex<float> invalidValue)
+{
+    validate_slice(radarGrid, slicedRadarGrid);
 
     // number of bands in the input raster
     size_t nbands = inputRaster.numBands();
@@ -292,16 +367,19 @@ void geocodeSlc(
 
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
-        isce3::core::Matrix<double> radarX(geoBlockLength, geoGrid.width());
-        isce3::core::Matrix<double> radarY(geoBlockLength, geoGrid.width());
+        isce3::core::Matrix<double> rangeIndices(geoBlockLength, geoGrid.width());
+        isce3::core::Matrix<double> azimuthIndices(geoBlockLength, geoGrid.width());
 
         // First and last line of the data block in radar coordinates
         int azimuthFirstLine = radarGrid.length() - 1;
         int azimuthLastLine = 0;
+
+        // First and last pixel of the data block in radar coordinates
         int rangeFirstPixel = radarGrid.width() - 1;
         int rangeLastPixel = 0;
-        // First and last pixel of the data block in radar coordinates
 
+        // Compute radar coordinates of each geocoded pixel
+        // Determine boundary of corresponding radar raster
         size_t geoGridWidth = geoGrid.width();
 // Loop over lines, samples of the output grid
 #pragma omp parallel for reduction(min                                    \
@@ -349,28 +427,30 @@ void geocodeSlc(
                 }
 
                 // get the row and column index in the radar grid
-                double rdrY = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
-                double rdrX = (srange - radarGrid.startingRange()) /
+                double azimuthCoord = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
+                double rangeCoord = (srange - radarGrid.startingRange()) /
                               radarGrid.rangePixelSpacing();
 
-                if (rdrY < 0 || rdrX < 0 || rdrY >= radarGrid.length() ||
-                    rdrX >= radarGrid.width() ||
-                    not nativeDoppler.contains(aztime, srange))
+                if (aztime < slicedRadarGrid.sensingStart()
+                        || srange < slicedRadarGrid.startingRange()
+                        || aztime > slicedRadarGrid.sensingStop()
+                        || srange > slicedRadarGrid.endingRange()
+                        || !nativeDoppler.contains(aztime, srange))
                     continue;
 
                 azimuthFirstLine = std::min(
-                        azimuthFirstLine, static_cast<int>(std::floor(rdrY)));
+                        azimuthFirstLine, static_cast<int>(std::floor(azimuthCoord)));
                 azimuthLastLine =
                         std::max(azimuthLastLine,
-                                 static_cast<int>(std::ceil(rdrY) - 1));
+                                 static_cast<int>(std::ceil(azimuthCoord) - 1));
                 rangeFirstPixel = std::min(rangeFirstPixel,
-                                           static_cast<int>(std::floor(rdrX)));
+                                           static_cast<int>(std::floor(rangeCoord)));
                 rangeLastPixel = std::max(
-                        rangeLastPixel, static_cast<int>(std::ceil(rdrX) - 1));
+                        rangeLastPixel, static_cast<int>(std::ceil(rangeCoord) - 1));
 
                 // store the adjusted X and Y indices
-                radarX(blockLine, pixel) = rdrX;
-                radarY(blockLine, pixel) = rdrY;
+                rangeIndices(blockLine, pixel) = rangeCoord;
+                azimuthIndices(blockLine, pixel) = azimuthCoord;
             }
         } // end loops over lines and pixel of output grid
 
@@ -403,12 +483,9 @@ void geocodeSlc(
         // fill both radar data block with zero
         rdrDataBlock.zeros();
 
-        // fill both radar data block with NaN
         // assume all values invalid by default
         // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
-        geoDataBlock.fill(std::complex<float>(
-                    std::numeric_limits<float>::quiet_NaN(),
-                    std::numeric_limits<float>::quiet_NaN()));
+        geoDataBlock.fill(invalidValue);
 
         // for each band in the input:
         for (size_t band = 0; band < nbands; ++band) {
@@ -425,13 +502,14 @@ void geocodeSlc(
                     azimuthFirstLine, rangeFirstPixel, radarGrid);
 
             // interpolate the data in radar grid to the geocoded grid.
-            interpolate(rdrDataBlock, geoDataBlock, radarX, radarY,
+            interpolate(rdrDataBlock, geoDataBlock, rangeIndices, azimuthIndices,
                     azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
                     radarGrid, nativeDoppler);
 
             // Add back doppler and carriers as needd
             carrierPhaseRerampAndFlatten(geoDataBlock, rdrDataBlock, azCarrierPhase,
-                    rgCarrierPhase, nativeDoppler, radarX, radarY, radarGrid, flatten,
+                    rgCarrierPhase, nativeDoppler, rangeIndices,
+                    azimuthIndices, radarGrid, flatten,
                     azimuthFirstLine, rangeFirstPixel);
 
             // set output
@@ -456,7 +534,23 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const double& thresholdGeo2rdr,                                 \
         const int& numiterGeo2rdr, const size_t& linesPerBlock,         \
         const double& demBlockMargin, const bool flatten,               \
-        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase)
+        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
+        const std::complex<float> invalidValue);                        \
+template void geocodeSlc<AzRgFunc>(                                     \
+        isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,\
+        isce3::io::Raster& demRaster,                                   \
+        const isce3::product::RadarGridParameters& radarGrid,           \
+        const isce3::product::RadarGridParameters& slicedRadarGrid,     \
+        const isce3::product::GeoGridParameters& geoGrid,               \
+        const isce3::core::Orbit& orbit,                                \
+        const isce3::core::LUT2d<double>& nativeDoppler,                \
+        const isce3::core::LUT2d<double>& imageGridDoppler,             \
+        const isce3::core::Ellipsoid& ellipsoid,                        \
+        const double& thresholdGeo2rdr,                                 \
+        const int& numiterGeo2rdr, const size_t& linesPerBlock,         \
+        const double& demBlockMargin, const bool flatten,               \
+        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
+        const std::complex<float> invalidValue)
 
 EXPLICIT_INSTANTIATION(isce3::core::LUT2d<double>);
 EXPLICIT_INSTANTIATION(isce3::core::Poly2d);

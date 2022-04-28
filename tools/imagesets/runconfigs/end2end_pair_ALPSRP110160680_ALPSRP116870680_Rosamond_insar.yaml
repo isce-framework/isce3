@@ -119,7 +119,10 @@ runconfig:
 
             phase_unwrap:
                 crossmul_path:
-                algorithm: icu
+                algorithm: snaphu
+                snaphu:
+                    cost_mode: smooth
+                    initialization_method: mcf
 
         # TODO OPTIONAL - To setup type of worker
         worker:

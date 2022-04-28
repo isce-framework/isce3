@@ -29,7 +29,7 @@ namespace isce3 {
                isce3::image::Tile<float> & azOffTile,
                const isce3::core::Poly2d & rgCarrier,
                const isce3::core::Poly2d & azCarrier,
-               const isce3::core::LUT2d<double> & dopplerLUT,
+               const isce3::core::LUT1d<double> & dopplerLUT,
                isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
                double sensingStart, double prf, double wavelength, double refStartingRange,

@@ -64,7 +64,7 @@ def run(*, steps, imgset, **kwargs):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--imgset", default="centos7conda")
+    parser.add_argument("-i", "--imgset", default="oracle8conda")
     parser.add_argument("-B", "--projblddir", default=f"{projsrcdir}/build-docker")
     parser.add_argument("-p", "--printlog", action='store_true')
     parser.add_argument("-t", "--imgtag", default=None)    
