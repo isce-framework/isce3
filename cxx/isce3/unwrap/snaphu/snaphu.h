@@ -24,7 +24,7 @@
 /**********************/
 
 #define PROGRAMNAME          "snaphu"
-#define VERSION              "2.0.4"
+#define VERSION              "2.0.5"
 #define BUGREPORTEMAIL       "snaphu@gmail.com"
 #ifdef PI
 #undef PI
@@ -55,7 +55,7 @@
 #define BOUNDARYCANDIDATE    -7
 #define BOUNDARYLEVEL        LARGEINT
 #define INTERIORLEVEL        (BOUNDARYLEVEL-1)
-#define MINBOUNDARYSIZE      3
+#define MINBOUNDARYSIZE      100
 #define POSINCR              0
 #define NEGINCR              1
 #define NOCOSTSHELF          -LARGESHORT
@@ -806,7 +806,7 @@ int InitNodes(long nrow, long ncol, Array2D<nodeT>& nodes, nodeT *ground);
 void BucketInsert(nodeT *node, long ind, bucketT *bkts);
 void BucketRemove(nodeT *node, long ind, bucketT *bkts);
 nodeT *ClosestNode(bucketT *bkts);
-long SelectSources(Array2D<nodeT>& nodes, nodeT *ground, long nflow,
+long SelectSources(Array2D<nodeT>& nodes, Array2D<float>& mag, nodeT *ground, long nflow,
                    Array2D<short>& flows, long ngroundarcs,
                    long nrow, long ncol, paramT *params,
                    Array1D<nodeT*>* sourcelistptr, Array1D<long>* nconnectedarrptr);

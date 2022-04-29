@@ -178,12 +178,18 @@ private:
             _interp_cdouble_handle;
     isce3::cuda::core::InterpolatorHandle<unsigned char>
             _interp_unsigned_char_handle;
+    isce3::cuda::core::InterpolatorHandle<unsigned int>
+            _interp_unsigned_int_handle;
 
     // value applied to invalid geogrid pixels
     float _invalid_float;
     double _invalid_double;
     unsigned char _invalid_unsigned_char;
+    unsigned int _invalid_unsigned_int;
 
     isce3::core::dataInterpMethod _dem_interp_method;
+    isce3::core::dataInterpMethod _data_interp_method;
+
+    void rasterDtypeInterpCheck(const int dtype) const;
 };
 } // namespace isce3::cuda::geocode

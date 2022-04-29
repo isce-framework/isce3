@@ -101,6 +101,10 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                         self.geocodeRasterBlock<unsigned char>(
                                 output_raster, input_raster);
                         break;}
+                    case GDT_UInt32:  {
+                        self.geocodeRasterBlock<unsigned int>(
+                                output_raster, input_raster);
+                        break;}
                     default: {
                         throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                                 "unsupported datatype");

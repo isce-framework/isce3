@@ -30,7 +30,8 @@ def test_raw():
     swaths = raw.getSubSwaths(frequency=freq, tx=tx)
     prf = raw.getNominalPRF(freq, tx)
     bandwidth = raw.getRangeBandwidth(freq, tx)
-
+    caltone = raw.getCaltone(freq, pol)
+    
     # Verify assumptions.
     npt.assert_equal(orbit.reference_epoch, attitude.reference_epoch)
     npt.assert_equal(side, "right")

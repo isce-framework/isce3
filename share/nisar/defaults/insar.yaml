@@ -149,6 +149,21 @@ runconfig:
                 # FFT size in range.
                 range_fft_size:
 
+            ionosphere_phase_correction:
+                enabled: False
+                spectral_diversity: split_main_band
+                list_of_frequencies:
+                   A: 
+                   B: 
+                split_range_spectrum:
+                   lines_per_block: 1000
+                   low_band_bandwidth:
+                   high_band_bandwidth:
+                   window_function: tukey
+                   # Shape parameter. For Kaiser, 0 <= shape < Inf.
+                   # For Cosine and Tukey, 0 <= shape <= 1.
+                   window_shape: 0.25
+
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
                 threshold: 1.0e-8
@@ -244,6 +259,16 @@ runconfig:
                 # Number of offset estimates to process in batch along azimuth
                 windows_batch_azimuth: 1
 
+            offsets_product:
+                # Flag to activate offsets product generation
+                enabled: False
+                # Margina round ref RSLC edges to exclude during cross-correlation
+                margin: 0
+                # Constant offset between ref and secondary RSLCs in slant range
+                gross_offset_range: 0
+                # Constant offset between ref and secondary RSLCs in azimuth
+                gross_offset_azimuth: 0
+
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).
                 # Not required as InSAR workflow allows using intermediate outputs
@@ -312,7 +337,6 @@ runconfig:
                 oversample: 2
                 rows_per_block: 8192
 
-
             filter_interferogram:
                 interferogram_path:
                 mask:
@@ -330,8 +354,167 @@ runconfig:
                 # the previous InSAR module, which is not user-specified.
                 # Required for running stand-alone phase unwrapping
                 crossmul_path:
-                # Increments to correlation threshold
-                correlation_threshold_increments: 0.1
                 # Unwrapping algorithm to use
                 algorithm: icu
-
+                # Default parameters for ICU
+                icu:
+                    # Seed point to initialize ICU algorithm
+                    seed: 0
+                    # Number of lines in buffer to process simultaneously
+                    buffer_lines: 3700
+                    # Number of overlapping lines for each data block
+                    overlap_lines: 200
+                    # Flag to activate neutrons based on phase gradient metric
+                    use_phase_gradient_neutron: False
+                    # Flag to activate neutron based on reference RSLC intensity
+                    use_intensity_neutron: False
+                    # Square window size for phase gradient computation
+                    phase_gradient_window_size: 5
+                    # Threshold value for phase gradient neutrons (radian)
+                    neutron_phase_gradient_threshold: 3.0
+                    # Threshold value for intensity neutron (sigma above mean)
+                    neutron_intensity_threshold: 8.0
+                    # Threshold on the maximum level of intensity for intensity neutron
+                    max_intensity_correlation_threshold: 0.8
+                    # Maximum number of tree realizations
+                    trees_number: 7
+                    # Maximum extent for each tree branch
+                    max_branch_length: 64
+                    # Ratio of pixel spacing along slant range and azimuth
+                    pixel_spacing_ratio: 1.0
+                    # Threshold for the initial correlation value
+                    initial_correlation_threshold: 0.1
+                    # Threshold for the maximum correlation value
+                    max_correlation_threshold: 0.9
+                    # Increments to correlation threshold
+                    correlation_threshold_increments: 0.1
+                    # Minimum size of an area to unwrap
+                    min_tile_area: 0.003125
+                    # Number of lines used in the bootstrap phase
+                    bootstrap_lines: 16
+                    # Minimum bootstrap overlapping area
+                    min_overlap_area: 16
+                    # Bootstrap phase variance threshold (radian)
+                    phase_variance_threshold: 8
+                phass:
+                    # Increments to correlation threshold
+                    correlation_threshold_increments: 0.2
+                    # Normalized interferometric correlation value of the pixel to unwrap
+                    # Pixels with a good_correlation lower than the assigned value are
+                    # masking out during the phass unwrapping
+                    good_correlation: 0.7
+                    # Minimum size (in pixels) of a region to unwrap
+                    min_unwrap_area: 200
+                    # Filepath to power raster (reference RSLC)
+                    power:
+                snaphu:
+                    # Effective number of looks used in input correlation data
+                    nlooks:
+                    # Statistical cost mode
+                    cost_mode: smooth
+                    # File path to binary mask of valid pixels (GDT_Byte). Pixels labelled
+                    # with 0 will be masked out in the wrapped interferogram.
+                    mask:
+                    # Coarse unwrapped phase estimates to guide SNAPHU. Must be same shape
+                    # as input wrapped interferogram.
+                    unwrapped_phase_estimate:
+                    # Algorithm used for initialize unwrapped phase gradients.
+                    # Supported algorithms: MST (Minimum Spanning Tree); MCF
+                    # (Minimum Cost Flow)
+                    initialization_method: mcf
+                    # If True, prints verbose outputs
+                    verbose: False
+                    # If True, dumps intermediate data to 'scratchdir' for debugging
+                    debug: False
+                    # Configuration parameters for the specified cost mode.
+                    cost_mode_parameters:
+                        # Deformation cost parameter options
+                        deformation_parameters:
+                            # Factor applied to range discontinuity probability density to get
+                            # corresponding value for azimuth
+                            azdz_factor: 1.0
+                            # Max phase discontinuity in units of cycle of 2*pi. Set to 0 if not abrupt
+                            # phase discontinuity are expected
+                            defo_max: 1.2
+                            # Phase variance in cycle^2 reflecting uncertainty in measurement of
+                            # actual statistical correlation
+                            sigsq_corr: 0.05
+                            # Ratio of phase discontinuity probability density to peak probability
+                            # density expected for discontinuity-possible pixel differences. 1: zero
+                            # cost for discontinuity, o: infinite cost
+                            defo_const: 0.9
+                            # Factor for slope variance for non-layover to get falloff of probability
+                            # density after the upper layover slope limit has been exceeded
+                            lay_falloff_const: 2.0
+                            # Number sliding window pixel to average the wrapped phase gradient to get mean
+                            # non-layover slope in the direction parallel to the examined phase difference
+                            kpar_dpsi: 7
+                            # Same as above but in the perpendicular direction
+                            kperp_dpsi: 7
+                        # Smooth cost parameter options
+                        smooth_parameters:
+                            # Number sliding window pixel to average the wrapped phase gradient to get mean
+                            # non-layover slope in the direction parallel to the examined phase difference
+                            kpar_dpsi: 7
+                            # Same as above but in the perpendicular direction
+                            kperp_dpsi: 7
+                        # PNorm cost parameter options
+                        pnorm_parameters:
+                            # Lp norm non-negative exponent
+                            p: 0.0
+                            # Flag to activate bidirectional Lp costs. If True, scalar weight of a Lp arc
+                            # may be different depending on the direction of net flow arc. If False, scalar
+                            # weight is the same regardless arc direction
+                            bidir: True
+                    # Configuration parameters used by the network initialization and nonlinear
+                    # network flow solver algorithms
+                    solver_parameters:
+                        # Maximum flow increment
+                        max_flow_inc: 4
+                        # Maximum flow in initialization. If 0, max flow is computed automatically.
+                        # To disable, set to large value not overflowing long integer data
+                        init_max_flow: 9999
+                        # Constant to add to max flow expected from statistical cost functions for automatically
+                        # determining initial maximum flow
+                        arc_max_flow_const: 3
+                        # Threshold precision for iterative numerical calculation
+                        threshold: 0.001
+                        # Max cost for scalar MST cost and to estimate number of buckets
+                        # for solver routine
+                        max_cost: 1000.0
+                        # Cost scaling factor applied to floating-point costs before integer
+                        # cost quantization
+                        cost_scale: 100.0
+                        # Integer spacing representing one unit of flow (one phase cycle)
+                        # when storing costs as short integers
+                        n_cycle: 200
+                        # Fraction of total number of nodes to add in each tree expansion phase of
+                        # the solver algorithm.
+                        max_new_node_const: 0.0008
+                        # Number of cycles to call to the solver with a specific flow increment delta
+                        # and still consider that increment done. Ideally zero, but scaling for different
+                        # deltas may leave some negative cycles not critically affecting the solution.
+                        # If None, automatically determined from interferogram shape
+                        max_n_flow_cycles:
+                        # Fraction of the number of pixels to use as the maximum number of cycles
+                        # allowed for a specific flow increment if max_n_flow_cycles was None
+                        max_cycle_frac: 0.00001
+                        # Minimum number of connected nodes for unwrappping. If disconnected sets of pixels are
+                        # present, a source is selected for each connected set, if number of nodes in the set
+                        # is greater than n_conn_node_min. Must be nonnegative.
+                        n_conn_node_min: 0
+                        # Number of major iteration between tree pruning operations. Smaller numbers cause
+                        # pruning to occur more frequently
+                        n_major_prune: 2000000000
+                        # Cost threshold for tree pruning. Lower thresholds prune more aggressively
+                        prune_cost_thresh: 2000000000
+                    # Connected components parameters
+                    connected_components_parameters:
+                        # Minimum size of a single connected component, as a fraction of the total
+                        # number of pixels in the tile
+                        min_frac_area: 0.01
+                        # Cost threshold for connected components. Higher threshold gives smaller
+                        # connected components
+                        cost_thresh: 300
+                        # Max number of connected components per tile
+                        max_ncomps: 32

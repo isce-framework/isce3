@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <memory>
 #include "forward.h"
 
 // pyre
@@ -52,13 +53,11 @@ class isce3::geometry::DEMInterpolator {
             _maxValue{height},
             _epsgcode{epsg},
             _interpMethod{method} {}
-
-        /** Destructor */
-        ~DEMInterpolator();
+       
 
         /** Read in subset of data from a DEM with a supported projection */
         isce3::error::ErrorCode loadDEM(isce3::io::Raster& demRaster,
-                double minX, double maxX, double minY, double maxY);
+                double min_x, double max_x, double min_y, double max_y);
 
         /** Read in entire DEM with a supported projection */
         void loadDEM(isce3::io::Raster &demRaster);
@@ -138,7 +137,7 @@ class isce3::geometry::DEMInterpolator {
         void epsgCode(int epsgcode);
 
         /** Get Pointer to a ProjectionBase */
-        inline isce3::core::ProjectionBase* proj() const { return _proj; }
+        inline isce3::core::ProjectionBase* proj() const {return _proj.get(); }
 
         /** Get interpolator method enum */
         inline isce3::core::dataInterpMethod interpMethod() const {
@@ -159,10 +158,10 @@ class isce3::geometry::DEMInterpolator {
         float _maxValue;
         // Pointer to a ProjectionBase
         int _epsgcode;
-        isce3::core::ProjectionBase * _proj = nullptr;
+        std::shared_ptr<isce3::core::ProjectionBase> _proj;
         // Pointer to an Interpolator
         isce3::core::dataInterpMethod _interpMethod;
-        isce3::core::Interpolator<float> * _interp = nullptr;
+        std::shared_ptr<isce3::core::Interpolator<float>> _interp;
         // 2D array for storing DEM subset
         isce3::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing

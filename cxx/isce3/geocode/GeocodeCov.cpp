@@ -105,7 +105,7 @@ void getBlocksNumberAndLength(const int array_length, const int array_width,
         const long long max_block_size)
 {
 
-    const int max_block_length = max_block_size / 
+    const int max_block_length = max_block_size /
         (nbands * array_width * type_size);
 
     int _block_length = std::min(array_length, max_block_length);
@@ -290,6 +290,23 @@ void Geocode<T>::geocodeInterp(
     std::unique_ptr<isce3::core::ProjectionBase> proj(
             isce3::core::createProj(_epsgOut));
 
+    // make sure int type rasters only used with nearest neighbor
+    for (int band = 0; band < nbands; ++band)
+    {
+        const auto dtype = inputRaster.dtype(band + 1);
+        if ((dtype == GDT_Byte || dtype == GDT_UInt32)
+                && _data_interp_method != isce3::core::NEAREST_METHOD)
+        {
+            pyre::journal::error_t error(
+                    "isce3.geocode.GeocodeCov.geocodeInterp");
+            error << "int type of raster can only use nearest neighbor interp"
+                << pyre::journal::endl;
+            std::string err_str {
+                "int type of raster can only use nearest neighbor interp"};
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), err_str);
+        }
+    }
+
     // create data interpolator
     std::unique_ptr<isce3::core::Interpolator<T_out>> interp {
             isce3::core::createInterpolator<T_out>(_data_interp_method)};
@@ -374,7 +391,7 @@ void Geocode<T>::geocodeInterp(
             if (std::isnan(rtc_geogrid_upsampling))
                 rtc_geogrid_upsampling = 1;
 
-            isce3::core::MemoryModeBlockY rtc_memory_mode = 
+            isce3::core::MemoryModeBlockY rtc_memory_mode =
                 isce3::core::MemoryModeBlockY::AutoBlocksY;
             int radar_grid_nlooks = 1;
             computeRtc(demRaster, *rtc_raster, radar_grid, _orbit, _doppler,
@@ -555,9 +572,9 @@ void Geocode<T>::geocodeInterp(
         azimuthFirstLine = std::max(azimuthFirstLine - interp_margin, 0);
         rangeFirstPixel = std::max(rangeFirstPixel - interp_margin, 0);
 
-        azimuthLastLine = std::min(azimuthLastLine + interp_margin, 
+        azimuthLastLine = std::min(azimuthLastLine + interp_margin,
                                    static_cast<int>(radar_grid.length() - 1));
-        rangeLastPixel = std::min(rangeLastPixel + interp_margin, 
+        rangeLastPixel = std::min(rangeLastPixel + interp_margin,
                                   static_cast<int>(radar_grid.width() - 1));
 
         if (azimuthFirstLine > azimuthLastLine ||
@@ -706,7 +723,7 @@ void Geocode<T>::geocodeInterp(
     auto elapsed_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start_time);
     float elapsed_time = ((float) elapsed_time_milliseconds.count()) / 1e3;
-    info << "elapsed time (GEO-IN) [s]: " << elapsed_time << pyre::journal::endl;    
+    info << "elapsed time (GEO-IN) [s]: " << elapsed_time << pyre::journal::endl;
 }
 
 template<class T>
@@ -1048,7 +1065,7 @@ void _processUpsampledBlock(isce3::core::Matrix<T_out>* mat, size_t block,
     In this case, the input type T is expected to be complex and the output
     type T_out can be real or complex.
     The conversion from complex (e.g. SLC) to real (SAR backscatter)
-    in the context of geocoding is considered as the geocoding of 
+    in the context of geocoding is considered as the geocoding of
     the covariance matrix (diagonal elements) is done by
     squaring the modulus of the complex input. The conversion between
     variables of same type is considered as regular geocoding and
@@ -1115,17 +1132,17 @@ void _getUpsampledBlock(
                     std::cout.flush();
                 }
                 auto ptr = rdrData[band]->data();
-                input_raster.getBlock(ptr + 
-                                      block * radar_block_length * size_x, 
+                input_raster.getBlock(ptr +
+                                      block * radar_block_length * size_x,
                                       xidx, block * radar_block_length + yidx, size_x,
                                       this_radar_block_length, band + 1);
             }
 
             if (radargrid_nblocks > 1) {
-                std::cout << "reading band " << band + 1 
+                std::cout << "reading band " << band + 1
                           << " progress: 100%" << std::endl;
             }
-        } 
+        }
         else if (!flag_upsample_radar_grid && std::is_same<T, T_out>::value) {
             /*
             Enter here if:
@@ -1139,8 +1156,8 @@ void _getUpsampledBlock(
             {
             input_raster.getBlock(rdrData[band]->data(), xidx, yidx, size_x,
                                   size_y, band + 1);
-            }    
-        } 
+            }
+        }
         else if (!flag_upsample_radar_grid) {
             /*
             Enter here if:
@@ -1901,7 +1918,7 @@ void Geocode<T>::geocodeAreaProj(
     auto elapsed_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start_time);
     float elapsed_time = ((float) elapsed_time_milliseconds.count()) / 1e3;
-    info << "elapsed time (GEO-AP) [s]: " << elapsed_time << pyre::journal::endl;     
+    info << "elapsed time (GEO-AP) [s]: " << elapsed_time << pyre::journal::endl;
 }
 
 template<class T>
@@ -2636,7 +2653,7 @@ void Geocode<T>::_runBlock(
             }
 
             if (flag_self_intersecting_area_element) {
-                /* 
+                /*
                 If self-intersecting, divide area element (geogrid pixel) into
                 two triangles and integrate them separately.
                 */
@@ -2659,7 +2676,7 @@ void Geocode<T>::_runBlock(
                         x10_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
                 isce3::geometry::areaProjIntegrateSegment(y10_cut, y00_cut, x10_cut,
                         x00_cut, size_y, size_x, w_arr_2, w_total_2, plane_orientation);
-                
+
                 w_total = 0;
                 /*
                 The new weight array `w_arr` is the sum of the absolute values of both
@@ -2882,7 +2899,7 @@ void Geocode<T>::_runBlock(
         for (int band = 0; band < nbands_off_diag_terms; ++band) {
             for (int i = 0; i < this_block_size_y; ++i) {
                 for (int j = 0; j < this_block_size_x; ++j) {
-                    /* 
+                    /*
                     Since std::numeric_limits<T_out>::quiet_NaN() with
                     complex T_out is (or may be) undefined, we take the "real type"
                     if T_out (i.e. float or double) to create the NaN value and

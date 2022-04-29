@@ -32,9 +32,9 @@ namespace isce3 {
                const isce3::core::LUT1d<double> & dopplerLUT,
                isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
-               double prf, double wavelength, double refStartingRange,
+               double sensingStart, double prf, double wavelength, double refStartingRange,
                double refRangePixelSpacing, double refWavelength,
-               bool flatten, int chipSize
+               bool flatten, int chipSize, const std::complex<float> invalid_value
             );
         }
     }

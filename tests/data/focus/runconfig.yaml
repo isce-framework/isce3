@@ -4,6 +4,11 @@ runconfig:
             input_file_path:
             - REE_L0B_out17.h5
 
+        dynamic_ancillary_file_group:
+            # Orbit and Pointing are optional.  If omitted, read from L0B.
+            orbit: orbit.xml
+            pointing: attitude.xml
+
         product_path_group:
             # Directory where SAS can write temporary data
             scratch_path: .
@@ -27,7 +32,7 @@ runconfig:
 
             range_window:
                 kind: Kaiser
-                shape: 3.0
+                shape: 1.6
 
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.

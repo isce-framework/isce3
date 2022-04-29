@@ -230,7 +230,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         _, az_time = self.getPulseTimes(frequency, tx)
         return (az_time.size - 1) / (az_time[-1] - az_time[0])
 
-    def isDithered(self, frequency='A', tx='H'):
+    def isDithered(self, frequency='A', tx=None):
         """Whether or not PRF is dithering.
 
         That is more than one PRF value within entire azimuth duration.
@@ -240,9 +240,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
         frequency : {'A', 'B'}, optional
             Sub-band.  Typically main science band is 'A'.
 
-        tx : {'H', 'V', 'L', 'R'}
+        tx : {'H', 'V', 'L', 'R'}, optional
             Transmit polarization.  Abbreviations correspond to horizontal
             (linear), vertical (linear), left circular, right circular
+            Default is the first pol under `frequency`.
 
         Returns
         -------
@@ -250,6 +251,8 @@ class RawBase(Base, family='nisar.productreader.raw'):
             True if multiple PRF values and False if PRF is fixed.    
 
         """
+        if tx is None:
+            tx = self.polarizations[frequency][0][0]
         _, az_time = self.getPulseTimes(frequency, tx)
         tm_diff = np.diff(az_time)
         return not np.isclose(tm_diff.min(), tm_diff.max())
@@ -390,6 +393,33 @@ class RawBase(Base, family='nisar.productreader.raw'):
         path = self._pulseMetaPath(frequency=frequency, tx=tx)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             return f[path]["chirpCorrelator"][()]
+
+    def getCaltone(self, frequency='A', polarization=None):
+        """Get complex caltone coefficients for all channels and range lines.
+
+        Caltone coefficients are complex values obtained from pulsed CW
+        (continuous wave) signal of each RX channel.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        np.ndarray(np.ndarray(complex))
+            2-D complex float of caltone (CW) coefficients,
+            size = [rangelines x channels].
+            
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            return fid[path_txrx]["caltone"][()]        
 
     # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
     # since PRF isn't necessarily constant.  Return pulse times with grid?

@@ -35,6 +35,22 @@ void addbinding(pybind11::class_<Attitude>& pyAttitude)
             "Serialize Attitude to h5py.Group object.",
             py::arg("h5py_group"))
 
+        // add a function rather than just a settable property since
+        // self.time is also modified
+        .def("update_reference_epoch",
+            py::overload_cast<const DateTime&>(&Attitude::referenceEpoch),
+            R"(
+            Set reference epoch and modify time tags so that
+                self.reference_epoch + TimeDelta(self.time[i])
+            remains invariant for all i in range(len(self.time)).)",
+            py::arg("reference_epoch"))
+
+        .def("copy", [](const Attitude& self) { return Attitude(self);})
+        .def("__copy__", [](const Attitude& self) { return Attitude(self);})
+        .def("__deepcopy__", [](const Attitude& self, py::dict) {
+                return Attitude(self);
+            }, py::arg("memo"))
+
         .def_property_readonly("size", &Attitude::size)
         .def_property_readonly("time", &Attitude::time)
         .def_property_readonly("quaternions", &Attitude::quaternions)
@@ -44,5 +60,8 @@ void addbinding(pybind11::class_<Attitude>& pyAttitude)
         .def_property_readonly("end_datetime", &Attitude::endDateTime)
         .def_property_readonly("reference_epoch",
                 py::overload_cast<>(&Attitude::referenceEpoch, py::const_))
+        .def("contains", &Attitude::contains,
+            "Check if time falls in the valid interpolation domain.",
+            py::arg("time"))
         ;
 }

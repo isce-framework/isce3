@@ -9,7 +9,7 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path:
             - input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/SanAnd_05518_12018_000_120419_L090_CX_143_03.h5
-            - input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/SanAnd_05518_12128_008_121105_L090_CX_143_02.h5
+            - input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02/SanAnd_05518_12128_008_121105_L090_CX_138_02.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
@@ -85,6 +85,9 @@ runconfig:
                 bottom_right:
                     y_abs:
                     x_abs:
+
+            bandpass:
+                lines_per_block: 2000
 
             geo2rdr:
                 threshold: 1.0e-8

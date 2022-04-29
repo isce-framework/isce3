@@ -142,5 +142,4 @@ runconfig:
 
             phase_unwrap:
                 crossmul_path:
-                correlation_threshold_increments: 0.1
                 algorithm: icu

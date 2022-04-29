@@ -48,10 +48,6 @@ class isce3::cuda::geometry::Geo2rdr : public isce3::geometry::Geo2rdr {
                      double azshift=0.0, double rgshift=0.0);
 
     private:
-        // Default number of lines per block
-        size_t _linesPerBlock = 1000;
-
-    private:
         /** Print extents and image info */
         void _printExtents(pyre::journal::info_t &,
                            double, double, double,
@@ -60,7 +56,4 @@ class isce3::cuda::geometry::Geo2rdr : public isce3::geometry::Geo2rdr {
 
         /** Check we can interpolate orbit to middle of DEM */
         void _checkOrbitInterpolation(double);
-
-        /** Compute number of lines per block dynamically from GPU memmory */
-        void computeLinesPerBlock();
 };

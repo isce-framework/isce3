@@ -34,6 +34,20 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         .def(py::init<std::vector<StateVector>, isce3::core::DateTime>())
         .def_property_readonly("reference_epoch",
                 py::overload_cast<>(&Orbit::referenceEpoch, py::const_))
+        // add a function rather than just a settable property since
+        // self.time is also modified
+        .def("update_reference_epoch",
+            py::overload_cast<const DateTime&>(&Orbit::referenceEpoch),
+            R"(
+            Set reference epoch and modify time tags so that
+                self.reference_epoch + TimeDelta(self.time[i])
+            remains invariant for all i in range(len(self.time)).)",
+            py::arg("reference_epoch"))
+        .def("copy", [](const Orbit& self) { return Orbit(self); })
+        .def("__copy__", [](const Orbit& self) { return Orbit(self); })
+        .def("__deepcopy__", [](const Orbit& self,  py::dict) {
+                return Orbit(self);
+            }, py::arg("memo"))
         .def_property_readonly("time", py::overload_cast<>(&Orbit::time, py::const_))
         .def_property_readonly("position", [](const Orbit & self) {
             return py::roarray(toBuffer(self.position()), py::cast(self));
@@ -79,5 +93,9 @@ void addbinding(py::class_<Orbit> & pyOrbit)
             },
             "Interpolate platform position and velocity",
             py::arg("t"))
+
+        .def("contains", &Orbit::contains,
+            "Check if time falls in the valid interpolation domain.",
+            py::arg("time"))
         ;
 }

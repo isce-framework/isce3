@@ -19,3 +19,4 @@ template class gpuNearestNeighborInterpolator<thrust::complex<double>>;
 template class gpuNearestNeighborInterpolator<float>;
 template class gpuNearestNeighborInterpolator<thrust::complex<float>>;
 template class gpuNearestNeighborInterpolator<unsigned char>;
+template class gpuNearestNeighborInterpolator<unsigned int>;

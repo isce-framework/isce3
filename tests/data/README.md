@@ -62,6 +62,14 @@ and then post-processed and converted into L0B product via its python utility to
 [*ReeUtilPy*](https://github.jpl.nasa.gov/SALSA-REE/ReeUtilPy).
 Note that these files may be stored in a separate location outside *isce3* repo.
 
+- **REE_L0B_out17.h5**
+
+  Simplest possible point target simulation: single target, uniform PRF, no
+  noise, zero Doppler geometry.  Designed to test backproject and focus.py.
+  REE input file preserved here (REE_L0B_out17.rdf).  Orbit and attitude data
+  were dumped to NISAR XML format files in the `focus` subdirectory, which
+  also contains a runconfig file for focus.py.
+
 - **REE_ANTPAT_CUTS_BEAM4.h5**
 
   Four-beam *NISAR* antenna pattern file. The original full *2-D* version of patterns
@@ -69,6 +77,9 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   on *JPL NISE* machine.
   This file contains the first four NISAR-like beams (nearest range ones).
   It containes both elevation and azimuth cuts of both polarizations *H* and *V*.
+  The file is generated along with the L0B files "REE_L0B_CHANNEL4_EXTSCENE_PASS1...".
+  That is the same antenna patterns used to generate the respective 4-channel L0B 
+  products.
 
 - **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000.h5**
 
@@ -76,9 +87,39 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   simulated *REE* L0B product over heterogenous urban-like simulated extended scene.
   The total number of truncated range lines is *3000*.
   The range bins has also been truncated from original datasets to get rid of far-range 
-  bins where there exist simply noise plus TX gap. 
+  bins where there exist simply noise plus TX gap. The number of range bins is 1850.
   This dataset is suitable for demonstrating formation of three null patterns in elevation 
   direction used in elevation pointing over heterogenous scene.
+  The caltone has been already applied to individual RX channels via RxCal prior to its
+  L0B file generation. Thus, RX channels are balanced out.
+  The shape of echo is rangeline-by-rangebin-by-channel!
+  As of 4/18/2022, this is considered an older spec for DM2 (diagnostic mode 2) and simply 
+  kept for the sake of an old unit test.
+
+- **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5**
+
+  Similar to "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000.h5" with exception of no
+  RxCal (caltone) has been applied. Thus, the RX channels are imbalance!
+  Besides, echo has different shape of channel-by-rangeline-by-rangebin! 
+  The shape of the echo is based on a newly proposed spec for DM2 as of 4/18/2022.
+  This dataset is useful to test generation of EL null-range product with caltone flag.  
+
+- **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5**
+
+  Calibrated version of "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5" with the
+  same shape. Thus, the RX channels are balanced via applying caltones.  
+
+- **REE_ORBIT_CHANNEL4_EXTSCENE_PASS1.xml**
+
+  External Orbit XML file covering original full version of dataset 
+  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5".
+  The format is based on doc JPL D-102253.
+
+- **REE_ATTITUDE_CHANNEL4_EXTSCENE_PASS1.xml**
+
+  External Attitude XML file covering original full version of dataset 
+  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5".
+  The format is based on doc JPL D-102253.
 
 ## ALOS1
 
@@ -116,5 +157,28 @@ and then post-processed and converted into L0B product via its python utility to
   The total number of range lines is *70*. The total number of range bins is 28927. 
   The Tx range lines types are of HPA, LNA, and BYPASS. BYPASS range line interval is 20.
 
+## Geoid EGM96
+
+- **egm96_15.gtx**
+  The geoid raster "egm96_15.gtx" contains the global geoid EGM96 array
+  sampled at 0.25 degrees in latitude and longitude. The raster
+  is geolocated over geographic coordinates with longitude range 
+  varying from -180 to 180 degrees.
+    
+- **egm96_15_lon_0_360.gtx**
+  The geoid raster "egm96_15_lon_0_360.gtx" is the "shifted" version of
+  "egm96_15.gtx" geolocated over geographic coordinates with longitude
+  from 0 to 360 deg.
+
+
 [1]: M. Shimada et al., "PALSAR Radiometric and Geometric Calibration",
-*IEEE Trans. Geosci. Remote Sens.*, pp. 3915-3932, December 2009.     
+*IEEE Trans. Geosci. Remote Sens.*, pp. 3915-3932, December 2009.
+
+## DEM
+- **dem_himalayas_E81p5_N28p3_short.tiff**
+
+  DEM raster file over a very small area of Himalayas downloaded from NISAR-DEM AWS S3
+  bucket as follows:
+  ```
+  $ stage_dem.py -b 81.45 28.29 81.5 28.3 -o dem_himalayas_E81p5_N28p3_short.vrt
+  ```

@@ -1,3 +1,4 @@
+import copy
 import h5py
 import numpy as np
 from pybind_isce3 import core
@@ -60,6 +61,20 @@ def test_properties_exist():
     attitude.reference_epoch
 
 
+def test_update_epoch():
+    attitude = dummy_attitude()
+    i = -1
+    old_epoch = attitude.reference_epoch
+    old_timestamp = old_epoch + core.TimeDelta(attitude.time[i])
+
+    new_epoch = old_epoch + core.TimeDelta(100.0)
+    attitude.update_reference_epoch(new_epoch)
+    assert attitude.reference_epoch == new_epoch
+
+    new_timestamp = attitude.reference_epoch + core.TimeDelta(attitude.time[i])
+    assert (new_timestamp - old_timestamp).total_seconds() < 1e-9
+
+
 def test_io():
     attitude = dummy_attitude()
     _, name = mkstemp()
@@ -71,3 +86,19 @@ def test_io():
     with h5py.File(name, "r") as h5:
         core.Attitude.load_from_h5(h5["/attitude"])
 
+
+def test_copy():
+    attitude = dummy_attitude()
+    # only modifiable attribute via python is epoch
+    epoch = attitude.reference_epoch + core.TimeDelta(1.0)
+    for a in (copy.copy(attitude), copy.deepcopy(attitude), attitude.copy()):
+        a.update_reference_epoch(epoch)
+        assert a.reference_epoch != attitude.reference_epoch
+
+
+def test_contains():
+    attitude = dummy_attitude()
+    assert not attitude.contains(attitude.start_time - 1.0)
+    assert not attitude.contains(attitude.end_time + 1.0)
+    mid = 0.5 * (attitude.start_time + attitude.end_time)
+    assert attitude.contains(mid)

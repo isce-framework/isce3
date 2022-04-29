@@ -295,8 +295,11 @@ class SplitSpectrum:
             )
 
         # remove the windowing effect from the spectrum 
-        spectrum_target = fft(slc_raster, n=fft_size) / \
-                              window_target
+        spectrum_target = fft(slc_raster, n=fft_size)
+        spectrum_target = np.divide(spectrum_target,
+                                    window_target,
+                                    out=np.zeros_like(spectrum_target),
+                                    where=window_target!=0)
         # apply new bandpass window to spectrum 
         slc_bandpassed = ifft(spectrum_target 
                       * window_bandpass
