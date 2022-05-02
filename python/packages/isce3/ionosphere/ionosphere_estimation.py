@@ -1000,53 +1000,7 @@ class IonosphereFilter:
         os.remove(temp_array)
 
         return filt_data, filt_data_sig
-    '''
-        data_shape, data_type = get_raster_info(input_data)
-        data_length, data_width = data_shape
-
-        # Determine the amount of padding
-        pad_length = 2 * (len(kernel_rows) // 2)
-        pad_width = 2 * (kernel_cols.shape[1] // 2)
-        pad_shape = (pad_length, pad_width)
-
-        # Determine number of blocks to process
-        lines_per_block = min(data_length,
-                            lines_per_block)
-
-        # Start block processing
-        block_params = block_param_generator(lines_per_block, data_shape, pad_shape)
-        for block_param in block_params:
-            # Read a block of data. If hdf5_dset is set, read a block of data
-            # directly from the hdf5 file. Otherwise, use gdal to read block of data
-            data_block = get_raster_block(input_data, block_param)
-
-            # Get if filtering needs to be performed with or without a mask
-            if mask_path is not None:
-                # Use gdal to extract a mask block, pad the mask (mask need to be same shape as input)
-                ds_mask = gdal.Open(mask_path,
-                                    gdal.GA_ReadOnly)
-                mask_block = ds_mask.GetRasterBand(1).ReadAsArray(0,
-                                                                block_param.read_start_line,
-                                                                block_param.data_width,
-                                                                block_param.read_length)
-                mask_block = np.pad(mask_block, block_param.block_pad,
-                                    mode='constant', constant_values=0)
-                filt_data_block = isce3.signal.convolve2D(data_block,
-                                                        mask_block,
-                                                        kernel_cols,
-                                                        kernel_rows,
-                                                        False)
-            else:
-                filt_data_block = isce3.signal.convolve2D(data_block,
-                                                        kernel_cols,
-                                                        kernel_rows,
-                                                        False)
-            # If no value provided for output_data, then overwrite existing
-            # input with filtered output
-            # Otherwise write filtered output to output_data
-            out_raster = input_data if output_data is None else output_data
-    '''
-
+ 
     def fill_nearest(self, data, invalid=None):
         """Replace the value of invalid 'data' cells (indicated by 'invalid')
         by the value of the nearest valid data cell
