@@ -8,6 +8,7 @@
 #include "focus/focus.h"
 #include "geocode/geocode.h"
 #include "geometry/geometry.h"
+#include "geogrid/geogrid.h"
 #include "image/image.h"
 #include "io/io.h"
 #include "math/math.h"
@@ -27,6 +28,7 @@ PYBIND11_MODULE(pybind_isce3, m) {
     addsubmodule_core(m);
     addsubmodule_geometry(m);
     addsubmodule_geocode(m);
+    addsubmodule_geogrid(m);
     addsubmodule_image(m);
     addsubmodule_io(m);
     addsubmodule_math(m);

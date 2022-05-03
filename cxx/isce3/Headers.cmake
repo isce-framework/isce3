@@ -83,8 +83,8 @@ focus/Presum.icc
 focus/RangeComp.h
 geocode/baseband.h
 geocode/geocodeSlc.h
-geocode/loadDem.h
 geometry/DEMInterpolator.h
+geometry/loadDem.h
 geometry/forward.h
 geometry/Shapes.h
 geometry/boundingbox.h
@@ -99,6 +99,7 @@ geometry/Topo.h
 geometry/Topo.icc
 geometry/TopoLayers.h
 geometry/metadataCubes.h
+geogrid/relocateRaster.h
 image/forward.h
 image/ResampSlc.h
 image/ResampSlc.icc

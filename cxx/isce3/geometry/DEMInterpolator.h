@@ -55,12 +55,25 @@ class isce3::geometry::DEMInterpolator {
             _interpMethod{method} {}
        
 
-        /** Read in subset of data from a DEM with a supported projection */
-        isce3::error::ErrorCode loadDEM(isce3::io::Raster& demRaster,
-                double min_x, double max_x, double min_y, double max_y);
 
-        /** Read in entire DEM with a supported projection */
-        void loadDEM(isce3::io::Raster &demRaster);
+        /** Read in subset of data from a DEM with a supported projection
+        * @param[in]  dem_raster              DEM raster
+        * @param[in]  minX                    Minimum X/easting position
+        * @param[in]  maxX                    Maximum X/easting position
+        * @param[in]  minY                    Minimum Y/northing position
+        * @param[in]  maxY                    Maximum Y/northing position
+        * @param[in]  dem_raster_band         DEM raster band (starting from 1)
+        */
+        isce3::error::ErrorCode loadDEM(isce3::io::Raster& demRaster,
+                double min_x, double max_x, double min_y, double max_y,
+                const int dem_raster_band = 1);
+
+        /** Read in entire DEM with a supported projection
+        * @param[in]  dem_raster              DEM raster
+        * @param[in]  dem_raster_band         DEM raster band (starting from 1)
+        */
+        void loadDEM(isce3::io::Raster &demRaster,
+                     const int dem_raster_band = 1);
 
         // Print stats
         void declare() const;

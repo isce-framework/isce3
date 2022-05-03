@@ -9,8 +9,8 @@
 #include <isce3/core/Poly2d.h>
 #include <isce3/core/Projections.h>
 #include <isce3/geocode/baseband.h>
-#include <isce3/geocode/loadDem.h>
 #include <isce3/geometry/DEMInterpolator.h>
+#include <isce3/geometry/loadDem.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
@@ -362,8 +362,9 @@ void geocodeSlc(
 
         // get a DEM interpolator for a block of DEM for the current geocoded
         // grid
-        isce3::geometry::DEMInterpolator demInterp = loadDEM(demRaster, geoGrid,
-                lineStart, geoBlockLength, geoGrid.width(), demBlockMargin);
+        isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
+                demRaster, geoGrid, lineStart, geoBlockLength, geoGrid.width(),
+                demBlockMargin);
 
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)

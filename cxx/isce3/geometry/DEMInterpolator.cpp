@@ -28,7 +28,7 @@ void isce3::geometry::DEMInterpolator::epsgCode(int epsgcode) {
  * Loads a DEM subset given the extents of a bounding box */
 isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         isce3::io::Raster& demRaster, double min_x, double max_x, double min_y,
-        double max_y)
+        double max_y, const int dem_raster_band)
 {
 
     // Initialize journal
@@ -318,7 +318,8 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
 
     if (!flag_dem_file_discontinuity) {
         // Read single block from DEM
-        demRaster.getBlock(_dem.data(), min_x_idx, min_y_idx, width, length);
+        demRaster.getBlock(_dem.data(), min_x_idx, min_y_idx, width, length,
+                           dem_raster_band);
 
     } else {
 
@@ -333,8 +334,9 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
             isce3::core::Matrix<float> dem_discontinuity_left;
 
             dem_discontinuity_left.resize(length, width_discontinuity_left);
-            demRaster.getBlock(dem_discontinuity_left.data(), min_x_idx, min_y_idx, 
-                               width_discontinuity_left, length);
+            demRaster.getBlock(dem_discontinuity_left.data(), min_x_idx,
+                               min_y_idx, width_discontinuity_left, length,
+                               dem_raster_band);
 
             _Pragma("omp parallel for schedule(dynamic)")
             for (long i=0; i < length; ++i) {
@@ -402,8 +404,10 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
             isce3::core::Matrix<float> dem_discontinuity_right;
 
             dem_discontinuity_right.resize(length, width_discontinuity_right);
-            demRaster.getBlock(dem_discontinuity_right.data(), min_x_idx_discontinuity_right, 
-                               min_y_idx, width_discontinuity_right, length);
+            demRaster.getBlock(dem_discontinuity_right.data(),
+                               min_x_idx_discontinuity_right, min_y_idx,
+                               width_discontinuity_right, length,
+                               dem_raster_band);
 
             _Pragma("omp parallel for schedule(dynamic)")
             for (long i=0; i < length; ++i) {
@@ -436,12 +440,13 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     return isce3::error::ErrorCode::Success;
 }
 
+
 // Load DEM into memory
 /** @param[in] demRaster input DEM raster to subset
   *
   * Loads the entire DEM */
 void isce3::geometry::DEMInterpolator::
-loadDEM(isce3::io::Raster & demRaster) {
+loadDEM(isce3::io::Raster & demRaster, const int dem_raster_band) {
 
     //Get the dimensions of the raster
     int width = demRaster.width();
@@ -472,7 +477,7 @@ loadDEM(isce3::io::Raster & demRaster) {
     _dem.resize(length, width);
 
     // Read in the DEM
-    demRaster.getBlock(_dem.data(), 0, 0, width, length);
+    demRaster.getBlock(_dem.data(), 0, 0, width, length, dem_raster_band);
 
     // Initialize internal interpolator
     _interp = std::unique_ptr<isce3::core::Interpolator<float>>(isce3::core::createInterpolator<float>(_interpMethod));
