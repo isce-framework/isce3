@@ -138,36 +138,45 @@ def insar_ionosphere_pair(cfg):
             run_insar_workflow(iono_insar_cfg, out_paths)
           
     elif iono_method in ['main_side_band', 'main_diff_ms_band']:
-
+        rerun_insar_pairs = 0
         for freq in iono_freq_pols.keys():
             iono_pol = iono_freq_pols[freq]
             try:
                 orig_pol = orig_freq_pols[freq]
             except:
                 orig_pol = []
+            print('iono_pol', freq, iono_pol)
+            print('orig_pol', freq, orig_pol)
             res_pol = [pol for pol in iono_pol if pol not in orig_pol]    
+            print('res_pol', freq, res_pol)
 
             # update frequency and polarizations for ionosphere
             if res_pol:
                 iono_insar_cfg['processing']['input_subset'][
                     'list_of_frequencies'][freq] = res_pol
+                rerun_insar_pairs =+ 1
+            else: 
+                del iono_insar_cfg['processing']['input_subset'][
+                    'list_of_frequencies'][freq] 
+        print(iono_insar_cfg['processing']['input_subset'][
+                    'list_of_frequencies'] )
+        if rerun_insar_pairs > 0 :
+            # update paths 
+            new_scratch = pathlib.Path(iono_path, f'{iono_method}')
+            iono_insar_cfg['product_path_group'][
+                'scratch_path'] = new_scratch
+            iono_insar_cfg['product_path_group'][
+                    'sas_output_file'] = f'{new_scratch}/RUNW.h5'
+            iono_insar_cfg['processing']['dense_offsets'][
+                'coregistered_slc_path'] = new_scratch
+            iono_insar_cfg['processing']['crossmul'][
+                'coregistered_slc_path'] = new_scratch
 
-                # update paths 
-                new_scratch = pathlib.Path(iono_path, f'{iono_method}')
-                iono_insar_cfg['product_path_group'][
-                    'scratch_path'] = new_scratch
-                iono_insar_cfg['product_path_group'][
-                        'sas_output_file'] = f'{new_scratch}/RUNW.h5'
-                iono_insar_cfg['processing']['dense_offsets'][
-                    'coregistered_slc_path'] = new_scratch
-                iono_insar_cfg['processing']['crossmul'][
-                    'coregistered_slc_path'] = new_scratch
+            new_scratch.mkdir(parents=True, exist_ok=True)
 
-                new_scratch.mkdir(parents=True, exist_ok=True)
-
-                _, out_paths = h5_prep.get_products_and_paths(iono_insar_cfg)
-                out_paths['RUNW'] = f'{new_scratch}/RUNW.h5'
-                run_insar_workflow(iono_insar_cfg, out_paths)
+            _, out_paths = h5_prep.get_products_and_paths(iono_insar_cfg)
+            out_paths['RUNW'] = f'{new_scratch}/RUNW.h5'
+            run_insar_workflow(iono_insar_cfg, out_paths)
         
     # restore original paths
     cfg['input_file_group']['input_file_path'] = orig_ref_str
@@ -270,7 +279,7 @@ def run(cfg: dict, runw_hdf5: str):
         runw_path_insar = runw_hdf5
     else:
         runw_path_insar = os.path.join(scratch_path, 'RUNW.h5')
-    print(runw_path_insar)
+
     # Start ionosphere phase estimation 
     # pull center frequency from frequency A, which is used for all method
     base_ref_slc_str = orig_ref_str

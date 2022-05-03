@@ -134,7 +134,7 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
             sec_slc_path = self.cfg['input_file_group']['secondary_file_path']
             iono_freq_pol = iono_cfg['list_of_frequencies']
 
-            iono_method_side = ['main_side_band', 'main_diff_ms_band', 'hybrid']
+            iono_method_side = ['main_side_band', 'main_diff_ms_band']
             # Extract main range bandwidth from reference SLC
             ref_slc = SLC(hdf5file=ref_slc_path)
             sec_slc = SLC(hdf5file=sec_slc_path)
@@ -268,25 +268,37 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                     'ionosphere_phase_correction'][
                     'list_of_frequencies'] = iono_freq_pol
 
-            if iono_method in ['main_side_band', 'main_diff_ms_band']:
-                # get common polarzations of freqA from reference and secondary
-                common_pol_refsec_freqB = set.intersection(
-                    set(ref_pols_freqB), set(sec_pols_freqB))
+            if iono_method in iono_method_side:
+                if not iono_freq_pol['B']:
+                    # If polarizations for frequency B are not given from user, then 
+                    # use polarzations in frequency A 
+                    if iono_freq_pol['A']:
+                        iono_freq_pol['B'] = iono_freq_pol['A']
+                    else:
+                        # get common polarzations of freqA from reference and secondary
+                        common_pol_refsec_freqB = set.intersection(
+                        set(ref_pols_freqB), set(sec_pols_freqB))
+                        # If common polarization found, but input polarizations are not given, 
+                        # then assign the common polarization for split_main_band                    
+                        if (common_pol_refsec_freqB):
+                            # Co-polarizations are found, split_main_band will be used for co-pols
+                            common_copol_ref_sec = [pol for pol in common_pol_refsec_freqB 
+                                if pol in ['VV', 'HH']]
+                            iono_freq_pol['B'] = common_copol_ref_sec
+                            
+                            # If common co-pols not found, cross-pol will be alternatively used.
+                            if not common_copol_ref_sec:
+                                iono_freq_pol['B'] = common_pol_refsec_freqB
 
-                # If common polarization found, but input polarizations are not given, 
-                # then assign the common polarization for split_main_band
-                if (common_pol_refsec_freqB) and (not iono_freq_pol['B']):
-                    # Co-polarizations are found, split_main_band will be used for co-pols
-                    common_copol_ref_sec = [pol for pol in common_pol_refsec_freqB 
-                        if pol in ['VV', 'HH']]
-                    iono_freq_pol['B'] = common_copol_ref_sec
-                    
-                    # If common co-pols not found, cross-pol will be alternatively used.
-                    if not common_copol_ref_sec:
-                        iono_freq_pol['B'] = common_pol_refsec_freqB
+                            info_str = f"{iono_freq_pol['B']} will be used for {iono_method}"
+                            info_channel.log(info_str)
+                            self.cfg['processing'][
+                                'ionosphere_phase_correction'][
+                                'list_of_frequencies'] = iono_freq_pol
 
-                    info_str = f"{iono_freq_pol['B']} will be used for {iono_method}"
-                    info_channel.log(info_str)
-                    self.cfg['processing'][
-                        'ionosphere_phase_correction'][
-                        'list_of_frequencies'] = iono_freq_pol
+                        else:
+                            # If no common polarizations found between reference and secondary, 
+                            # then throw errors. 
+                            err_str = "No common polarization between frequency B rasters"
+                            error_channel.log(err_str)
+                            raise FileNotFoundError(err_str)
