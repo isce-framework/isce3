@@ -43,15 +43,15 @@ def write_disp_block_hdf5(
     block_row : int
         block start index
     """    
+    # If hdf5 file and path exists, then write the data into file. 
     try:
         with h5py.File(hdf5_str, 'r+') as dst_h5:
-
             block_length, block_width = data.shape
             dst_h5[path].write_direct(data,
                 dest_sel=np.s_[block_row : block_row + block_length, 
                     :block_width])
     except:
-        print(f'{hdf5_str}:{path} does not exist')
+        pass
 
 def insar_ionosphere_pair(cfg):
     """Run insar workflow for ionosphere pairs
@@ -145,10 +145,7 @@ def insar_ionosphere_pair(cfg):
                 orig_pol = orig_freq_pols[freq]
             except:
                 orig_pol = []
-            print('iono_pol', freq, iono_pol)
-            print('orig_pol', freq, orig_pol)
             res_pol = [pol for pol in iono_pol if pol not in orig_pol]    
-            print('res_pol', freq, res_pol)
 
             # update frequency and polarizations for ionosphere
             if res_pol:
@@ -158,8 +155,7 @@ def insar_ionosphere_pair(cfg):
             else: 
                 del iono_insar_cfg['processing']['input_subset'][
                     'list_of_frequencies'][freq] 
-        print(iono_insar_cfg['processing']['input_subset'][
-                    'list_of_frequencies'] )
+                   
         if rerun_insar_pairs > 0 :
             # update paths 
             new_scratch = pathlib.Path(iono_path, f'{iono_method}')

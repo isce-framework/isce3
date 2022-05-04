@@ -127,47 +127,52 @@ class IonosphereEstimation:
         non_dispersive : numpy.ndarray 
             non-dispersive phase array
         """
-        # When side-band arrays is used,
-        # arrays should be resampled to have the same size with side-band arrays
-        if phi_side is not None:
-            phi_main = self.resample_freqA_array(
-                slant_main, 
-                slant_side, 
-                phi_main)
-            self.slant_main = slant_main
-            self.slant_side = slant_side
-
-            if phi_sub_low is not None:
-                phi_sub_low = self.resample_freqA_array(
-                    slant_main, 
-                    slant_side, 
-                    phi_sub_low)
-
-            if phi_sub_high is not None:
-                phi_sub_high = self.resample_freqA_array(
-                    slant_main, 
-                    slant_side, 
-                    phi_sub_high)
         
         if self.diversity_method == 'split_main_band':
+            if (phi_sub_low is None) or (phi_sub_high is None):
+                err_str = f"sub-band unwrapped interferogram array is required."
+                error_channel.log(err_str)
+                raise ValueError(err_str)
             phi_low = phi_sub_low
             phi_high = phi_sub_high
             # set up mask for areas where no-data values are located
             no_data_array = (phi_sub_high==no_data) |\
                             (phi_sub_low==no_data)
 
-        if self.diversity_method == 'main_side_band':
-            phi_low = phi_main
-            phi_high = phi_side
-            no_data_array = (phi_main==no_data) |\
-                            (phi_side==no_data)
+        if self.diversity_method in ['main_side_band', 'main_diff_ms_band']:
+            # When side-band arrays is used,
+            # arrays should be resampled to have the same size with side-band arrays
+            if (phi_main is None) or (phi_side is None):
+                err_str = f"unwrapped interferogram array main and side band"\
+                    "is required."
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+            
+            else:
+                phi_main = self.resample_freqA_array(
+                    slant_main, 
+                    slant_side, 
+                    phi_main)
+                self.slant_main = slant_main
+                self.slant_side = slant_side
 
-        if self.diversity_method == 'main_diff_ms_band':
-            phi_low = phi_main
-            phi_high = phi_side
-            no_data_array = (phi_main==no_data) |\
-                            (phi_side==no_data)
- 
+                if phi_sub_low is not None:
+                    phi_sub_low = self.resample_freqA_array(
+                        slant_main, 
+                        slant_side, 
+                        phi_sub_low)
+                if phi_sub_high is not None:
+                    phi_sub_high = self.resample_freqA_array(
+                        slant_main, 
+                        slant_side, 
+                        phi_sub_high)  
+
+                phi_low = phi_main
+                phi_high = phi_side
+                no_data_array = (phi_main==no_data) |\
+                                (phi_side==no_data)
+
+
         # correct unwrapped phase when correction coefficients are given
         if (comm_unwcor_coef is not None) and \
            (diff_unwcor_coef is not None):
@@ -560,10 +565,6 @@ class IonosphereEstimation:
 
         # estimate sigma from main- and side- band coherences
         if (main_coh is not None) & (side_coh is not None):      
-            # sig_phi_main = np.sqrt(1 - main_coh**2) / \
-            #     main_coh / np.sqrt(2 * number_looks)
-            # sig_phi_side = np.sqrt(1 - side_coh**2) / \
-            #     side_coh / np.sqrt(2 * number_looks)
             
             sig_phi_main = np.divide(np.sqrt(1 - main_coh**2),
                 main_coh / np.sqrt(2 * number_looks),

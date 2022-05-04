@@ -1,0 +1,161 @@
+runconfig:
+    name: gunw_workflow_default
+
+    groups:
+        pge_name_group:
+            pge_name: INSAR_L_PGE
+
+        input_file_group:
+            # REQUIRED - Two NISAR L1B RSLC formatted HDF5 files
+            input_file_path:
+            - @ISCETEST@/Sdelta_129_02.h5
+            - @ISCETEST@/Sdelta_129_02.h5
+
+        dynamic_ancillary_file_group:
+            # REQUIRED - Use the provided DEM as input
+            dem_file: @ISCETEST@/Sdelta_dem.tif
+
+        product_path_group:
+            # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
+            product_path: '.'
+
+            # REQUIRED - Directory where SAS can write temporary data
+            scratch_path: '.'
+
+            # REQUIRED - SAS writes output product to the following file. PGE may rename.
+            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
+            sas_output_file: @TEST_OUTPUT@
+
+        primary_executable:
+            product_type: @TEST_PRODUCT_TYPES@
+
+        debug_level_group:
+            debug_switch: false
+
+        # TODO OPTIONAL - To setup type of worker
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: False
+            gpu_id: 0
+
+        # ADT section - isce3 + pyre workflow
+        processing:
+            input_subset:
+                # Frequencies and polarisations to be processed
+                list_of_frequencies:
+                    # keys for frequency A and B are required.
+                    # valid options for polarizations
+                    # empty for all polarizations found in RSLC
+                    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+                    A: [HH]
+                    B: [HH]
+
+            # TODO OPTIONAL - Only checked when internet access is available
+            dem_download:
+                # OPTIONAL - s3 bucket / curl URL / local file
+                source:
+                top_left:
+                    x:
+                    y:
+                bottom_right:
+                    x:
+                    y:
+
+            # OPTIONAL - Mechanism to specify output posting and DEM
+            geocode:
+                runw_path: runw.h5
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                x_snap:
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                y_snap:
+
+                # OPTIONAL - Same as input DEM if not provided.
+                output_epsg:
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # If no provided, values will match spacing in provided DEM
+                output_posting:
+                    A:
+                        x_posting:
+                        y_posting:
+                    B:
+                        x_posting:
+                        y_posting:
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                top_left:
+                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    y_abs:
+                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    x_abs:
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                bottom_right:
+                    y_abs:
+                    x_abs:
+
+            geo2rdr:
+                topo_path: '.'
+                threshold: 1.0e-9
+                maxiter: 25
+
+            rdr2geo:
+                write_incidence: @TEST_RDR2GEO_FLAGS@
+                write_heading: @TEST_RDR2GEO_FLAGS@
+                write_local_incidence: @TEST_RDR2GEO_FLAGS@
+                write_local_psi: @TEST_RDR2GEO_FLAGS@
+                write_simulated_amplitude: @TEST_RDR2GEO_FLAGS@
+                write_layover_shadow: True
+
+            dem_margin: 0.1
+
+            coarse_resample:
+                lines_per_tile: 100
+
+            dense_offsets:
+                enabled: False
+                window_range: 16
+                window_azimuth: 16
+                offset_width: 1
+                offset_length: 1
+                correlation_surface_zoom: 8
+                correlation_surface_oversampling_factor: 32
+                correlation_surface_oversampling_method: 'sinc'
+
+            rubbersheet:
+                enabled: False
+                threshold: 0.01
+
+            fine_resample:
+                enabled: False
+                lines_per_tile: 100
+
+            crossmul:
+                coregistered_slc_path: @ISCETEST@/winnipeg.h5
+                range_looks: 11
+                azimuth_looks: 11
+                flatten: False
+                oversample: 2
+                rows_per_block: 1000
+                
+            filter_interferogram:
+                interferogram_path:
+                lines_per_block: 22
+                filter_type: boxcar
+
+            phase_unwrap:
+                crossmul_path: @ISCETEST@/winnipeg.h5
+            
+            ionosphere_phase_correction:
+                enabled: True
+                lines_per_block: 1000
+                spectral_diversity: 
+                list_of_frequencies:
+                   A: [HH]
+                   B: [HH]
+                
