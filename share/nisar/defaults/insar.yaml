@@ -6,8 +6,10 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            input_file_path:
+            # Required - File path to reference RSLC HDF5 file
+            reference_rslc_file_path:
+            # Required - File path to secondary RSLC HDF5 file
+            secondary_rslc_file_path:
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
@@ -260,14 +262,7 @@ runconfig:
                 windows_batch_azimuth: 1
 
             offsets_product:
-                # Flag to activate offsets product generation
                 enabled: False
-                # Margina round ref RSLC edges to exclude during cross-correlation
-                margin: 0
-                # Constant offset between ref and secondary RSLCs in slant range
-                gross_offset_range: 0
-                # Constant offset between ref and secondary RSLCs in azimuth
-                gross_offset_azimuth: 0
 
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).

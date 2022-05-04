@@ -101,9 +101,11 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
     # unpack info
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    input_hdf5 = cfg['input_file_group']['input_file_path']
     if is_insar:
-        secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
+        input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+        secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    else:
+        input_hdf5 = cfg['input_file_group']['input_file_path']
 
     if dst == "GCOV":
         dem_interp_method = cfg['processing']['dem_interpolation_method']
@@ -336,7 +338,7 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     common_path = 'science/LSAR'
     dst_meta_path = f'{common_path}/{dst}/metadata'
 
-    secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
+    secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Open secondary SLC
@@ -456,7 +458,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     dset.attrs["description"] = descr
 
     # Open reference SLC
-    ref_path = pcfg['input_file_group']['input_file_path']
+    ref_path = pcfg['input_file_group']['reference_rslc_file_path']
     ref_slc = SLC(hdf5file=ref_path)
     with h5py.File(ref_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():

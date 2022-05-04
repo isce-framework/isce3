@@ -7,9 +7,8 @@ runconfig:
 
         input_file_group:
             # REQUIRED - Two NISAR L1 RSLC formatted HDF5 files
-            input_file_path:
-            - @ISCETEST@/Sdelta_129_02.h5
-            - @ISCETEST@/Sdelta_138_02.h5
+            reference_rslc_file_path: @ISCETEST@/Sdelta_129_02.h5
+            secondary_rslc_file_path: @ISCETEST@/Sdelta_138_02.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
