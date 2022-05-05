@@ -130,8 +130,8 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
             # Extract split-spectrum dictionary
             split_cfg = iono_cfg['split_range_spectrum']
             iono_method = iono_cfg['spectral_diversity']
-            ref_slc_path = self.cfg['input_file_group']['input_file_path']
-            sec_slc_path = self.cfg['input_file_group']['secondary_file_path']
+            ref_slc_path = self.cfg['input_file_group']['reference_rslc_file_path']
+            sec_slc_path = self.cfg['input_file_group']['secondary_rslc_file_path']
             iono_freq_pol = iono_cfg['list_of_frequencies']
 
             iono_method_side = ['main_side_band', 'main_diff_ms_band']
