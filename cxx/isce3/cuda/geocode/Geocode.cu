@@ -18,8 +18,8 @@
 #include <isce3/cuda/geometry/gpuDEMInterpolator.h>
 #include <isce3/cuda/geometry/gpuGeometry.h>
 #include <isce3/except/Error.h>
-#include <isce3/geocode/loadDem.h>
 #include <isce3/geometry/DEMInterpolator.h>
+#include <isce3/geometry/loadDem.h>
 #include <isce3/product/GeoGridParameters.h>
 
 #include "Geocode.h"
@@ -269,7 +269,7 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number)
     _mask.resize(block_size);
 
     // prepare device DEMInterpolator
-    isce3::geometry::DEMInterpolator host_dem_interp = isce3::geocode::loadDEM(
+    isce3::geometry::DEMInterpolator host_dem_interp = isce3::geometry::loadDEM(
             _dem_raster, _geogrid, _line_start, _geo_block_length,
             _geogrid.width(), _dem_margin, _dem_interp_method);
     isce3::cuda::geometry::gpuDEMInterpolator dev_dem_interp(host_dem_interp);

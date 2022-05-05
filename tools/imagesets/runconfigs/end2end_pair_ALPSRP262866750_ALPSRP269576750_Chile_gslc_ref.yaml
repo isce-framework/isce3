@@ -7,8 +7,7 @@ runconfig:
 
         input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            input_file_path:
-            - output_rslc_ref/rslc.h5
+            input_file_path: output_rslc_ref/rslc.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input

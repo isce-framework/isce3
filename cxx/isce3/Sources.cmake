@@ -43,8 +43,8 @@ focus/Presum.cpp
 focus/RangeComp.cpp
 geocode/baseband.cpp
 geocode/geocodeSlc.cpp
-geocode/loadDem.cpp
 geometry/DEMInterpolator.cpp
+geometry/loadDem.cpp
 geometry/Geo2rdr.cpp
 geocode/GeocodeCov.cpp
 geocode/GeocodePolygon.cpp
@@ -53,6 +53,7 @@ geometry/RTC.cpp
 geometry/Topo.cpp
 geometry/TopoLayers.cpp
 geometry/metadataCubes.cpp
+geogrid/relocateRaster.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
 io/gdal/detail/MemoryMap.cpp

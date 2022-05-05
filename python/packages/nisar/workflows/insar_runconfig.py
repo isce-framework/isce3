@@ -164,8 +164,8 @@ class InsarRunConfig(Geo2rdrRunConfig):
             iono_method = iono_cfg['spectral_diversity']
 
             # Extract main range bandwidth from reference SLC
-            ref_slc_path = self.cfg['input_file_group']['input_file_path']
-            sec_slc_path = self.cfg['input_file_group']['secondary_file_path']
+            ref_slc_path = self.cfg['input_file_group']['reference_rslc_file_path']
+            sec_slc_path = self.cfg['input_file_group']['secondary_rslc_file_path']
         
             ref_slc = SLC(hdf5file=ref_slc_path)
             sec_slc = SLC(hdf5file=sec_slc_path)

@@ -101,9 +101,11 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
     # unpack info
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    input_hdf5 = cfg['input_file_group']['input_file_path']
     if is_insar:
-        secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
+        input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+        secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    else:
+        input_hdf5 = cfg['input_file_group']['input_file_path']
 
     if dst == "GCOV":
         dem_interp_method = cfg['processing']['dem_interpolation_method']
@@ -153,8 +155,10 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                                     f'{ident_path}/{dst_data}')
 
         # Delete flag isGeocoded if exist, and assign it again
+        ident = dst_h5[ident_path]
+        if 'isGeocoded' in ident:
+            del ident['isGeocoded']
         is_geocoded = dst in ['GCOV', 'GSLC', 'GUNW', 'GOFF']
-
         dst_h5[ident_path].create_dataset('isGeocoded',
                                           data=np.string_(str(is_geocoded)))
         desc = "Flag to indicate radar geometry or geocoded product"
@@ -334,7 +338,7 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     common_path = 'science/LSAR'
     dst_meta_path = f'{common_path}/{dst}/metadata'
 
-    secondary_hdf5 = cfg['input_file_group']['secondary_file_path']
+    secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Open secondary SLC
@@ -454,7 +458,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     dset.attrs["description"] = descr
 
     # Open reference SLC
-    ref_path = pcfg['input_file_group']['input_file_path']
+    ref_path = pcfg['input_file_group']['reference_rslc_file_path']
     ref_slc = SLC(hdf5file=ref_path)
     with h5py.File(ref_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
@@ -476,7 +480,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                              'RUNW'] else 'grids'
             product_path = f'{common_path}/{dst}'
             freq_path = f'{product_path}/{grid_swath}/frequency{freq}'
-            dst_h5[product_path].create_group(grid_swath)
+            dst_h5[product_path].require_group(grid_swath)
             dst_h5[f'{product_path}/{grid_swath}'].create_group(
                 f'frequency{freq}')
 
@@ -939,17 +943,17 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                          'crossCorrelationMethod',
                                          descr=descr, units=None, data=lay_cfg.get('cross_correlation_method'),
                                          long_name='cross correlation method')
-            # Add perpendicular and parallel baseline
-            descr = "Perpendicular component of the InSAR baseline"
-            _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
-                             "perpendicularBaseline",
-                             descr=descr, units="meters",
-                             long_name='perpendicular baseline')
-            _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
-                             "parallelBaseline",
-                             descr=descr.replace('Perpendicular', 'Parallel'),
-                             units="meters",
-                             long_name='parallel baseline')
+        # Add perpendicular and parallel baseline
+        descr = "Perpendicular component of the InSAR baseline"
+        _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+                            "perpendicularBaseline",
+                            descr=descr, units="meters",
+                            long_name='perpendicular baseline')
+        _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+                            "parallelBaseline",
+                            descr=descr.replace('Perpendicular', 'Parallel'),
+                            units="meters",
+                            long_name='parallel baseline')
 
 
 def get_off_params(pcfg, param_name, is_roff=False, pattern=None,

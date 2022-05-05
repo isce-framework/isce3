@@ -1,14 +1,18 @@
 #include "loadDem.h"
 #include <isce3/except/Error.h>
 
-isce3::geometry::DEMInterpolator isce3::geocode::loadDEM(
+using isce3::core::Vec3;
+
+namespace isce3 { namespace geometry {
+
+DEMInterpolator loadDEM(
         isce3::io::Raster& demRaster,
         const isce3::product::GeoGridParameters& geoGrid, int lineStart,
         int blockLength, int blockWidth, double demMargin,
         isce3::core::dataInterpMethod demInterpMethod)
 {
     // DEM interpolator
-    isce3::geometry::DEMInterpolator demInterp(0, demInterpMethod);
+    DEMInterpolator demInterp(0, demInterpMethod);
 
     // the epsg code of the input DEM
     int epsgcode = demRaster.getEPSG();
@@ -113,3 +117,90 @@ isce3::geometry::DEMInterpolator isce3::geocode::loadDEM(
 
     return demInterp;
 }
+
+
+isce3::error::ErrorCode loadDemFromProj(
+    isce3::io::Raster& dem_raster, const double minX, const double maxX,
+    const double minY, const double maxY, 
+    DEMInterpolator* dem_interp,
+    isce3::core::ProjectionBase* proj, const int dem_margin_x_in_pixels,
+    const int dem_margin_y_in_pixels, const int dem_raster_band) {
+
+    Vec3 geogrid_min_xy = {minX, std::min(minY, maxY), 0};
+    Vec3 geogrid_max_xy = {maxX, std::max(minY, maxY), 0};
+    double min_x, max_x, min_y, max_y;
+
+    if (proj == nullptr || proj->code() == dem_raster.getEPSG()) {
+
+        Vec3 dem_min_xy, dem_max_xy;
+
+        dem_min_xy = geogrid_min_xy;
+        dem_max_xy = geogrid_max_xy;
+        min_x = dem_min_xy[0];
+        max_x = dem_max_xy[0];
+        min_y = dem_min_xy[1];
+        max_y = dem_max_xy[1];
+    } else {
+        std::unique_ptr<isce3::core::ProjectionBase> dem_proj(
+                isce3::core::createProj(dem_raster.getEPSG()));
+        auto p1_llh = proj->inverse({geogrid_min_xy[0], geogrid_min_xy[1], 0});
+        auto p2_llh = proj->inverse({geogrid_min_xy[0], geogrid_max_xy[1], 0});
+        auto p3_llh = proj->inverse({geogrid_max_xy[0], geogrid_min_xy[1], 0});
+        auto p4_llh = proj->inverse({geogrid_max_xy[0], geogrid_max_xy[1], 0});
+
+        Vec3 p1_xy, p2_xy, p3_xy, p4_xy;
+
+        dem_proj->forward(p1_llh, p1_xy);
+        dem_proj->forward(p2_llh, p2_xy);
+        dem_proj->forward(p3_llh, p3_xy);
+        dem_proj->forward(p4_llh, p4_xy);
+        min_x = std::min(
+                std::min(p1_xy[0], p2_xy[0]), std::min(p3_xy[0], p4_xy[0]));
+        max_x = std::max(
+                std::max(p1_xy[0], p2_xy[0]), std::max(p3_xy[0], p4_xy[0]));
+        min_y = std::min(
+                std::min(p1_xy[1], p2_xy[1]), std::min(p3_xy[1], p4_xy[1]));
+        max_y = std::max(
+                std::max(p1_xy[1], p2_xy[1]), std::max(p3_xy[1], p4_xy[1]));
+    }
+
+    float margin_x = dem_margin_x_in_pixels * dem_raster.dx();
+    float margin_y = dem_margin_y_in_pixels * std::abs(dem_raster.dy());
+
+    min_x -= margin_x;
+    max_x += margin_x;
+    min_y -= margin_y;
+    max_y += margin_y;
+
+    isce3::error::ErrorCode error_code;
+    _Pragma("omp critical")
+    {
+        error_code = dem_interp->loadDEM(
+                dem_raster, min_x, max_x, min_y, max_y, dem_raster_band);
+    }
+    return error_code;
+}
+
+Vec3 getDemCoordsSameEpsg(double x, double y,
+        const DEMInterpolator& dem_interp, isce3::core::ProjectionBase*)
+{
+
+    Vec3 dem_coords = {x, y, dem_interp.interpolateXY(x, y)};
+    return dem_coords;
+}
+
+Vec3 getDemCoordsDiffEpsg(double x, double y,
+        const DEMInterpolator& dem_interp,
+        isce3::core::ProjectionBase* input_proj)
+{
+
+    auto input_coords_llh = input_proj->inverse({x, y, 0});
+    Vec3 dem_vect;
+    dem_interp.proj()->forward(input_coords_llh, dem_vect);
+    Vec3 dem_coords = {dem_vect[0], dem_vect[1],
+            dem_interp.interpolateXY(dem_vect[0], dem_vect[1])};
+
+    return dem_coords;
+}
+
+}}

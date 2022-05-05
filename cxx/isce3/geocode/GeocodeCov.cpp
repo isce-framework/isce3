@@ -10,8 +10,8 @@
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Projections.h>
 #include <isce3/core/TypeTraits.h>
-#include <isce3/geocode/loadDem.h>
 #include <isce3/geometry/DEMInterpolator.h>
+#include <isce3/geometry/loadDem.h>
 #include <isce3/geometry/RTC.h>
 #include <isce3/geometry/boundingbox.h>
 #include <isce3/geometry/geometry.h>
@@ -450,7 +450,7 @@ void Geocode<T>::geocodeInterp(
         }
 
         // load a block of DEM for the current geocoded grid
-        isce3::geometry::DEMInterpolator demInterp = isce3::geocode::loadDEM(
+        isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
                 demRaster, geogrid, lineStart, geoBlockLength, geogrid.width(),
                 _demBlockMargin, dem_interp_method);
 

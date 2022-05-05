@@ -23,9 +23,9 @@ def _grid_size(stop, start, sz):
     return int(np.ceil(np.abs((stop-start)/sz)))
 
 
-def create(cfg, frequency_group = None, frequency = None,
-           geocode_dict = None,
-           default_spacing_x = None, default_spacing_y = None):
+def create(cfg, workflow_name=None, frequency_group=None,
+           frequency=None, geocode_dict=None,
+           default_spacing_x=None, default_spacing_y=None):
     '''
     - frequency_group is the name of the sub-group that
     holds the fields x_posting and y_posting, which is usually
@@ -53,7 +53,10 @@ def create(cfg, frequency_group = None, frequency = None,
     if geocode_dict is None:
         geocode_dict = cfg['processing']['geocode']
 
-    input_hdf5 = cfg['input_file_group']['input_file_path']
+    if workflow_name == 'insar':
+       input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+    else:
+        input_hdf5 = cfg['input_file_group']['input_file_path']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     slc = SLC(hdf5file=input_hdf5)
 
