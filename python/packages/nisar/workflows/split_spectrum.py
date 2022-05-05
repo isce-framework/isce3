@@ -75,8 +75,8 @@ def run(cfg: dict):
     run bandpass
     '''
     # pull parameters from cfg
-    ref_hdf5 = cfg['input_file_group']['input_file_path']
-    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
 
     # Extract range split spectrum dictionary and corresponding parameters
     ionosphere_option = cfg['processing']['ionosphere_phase_correction']

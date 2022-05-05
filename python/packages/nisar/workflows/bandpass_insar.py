@@ -20,8 +20,8 @@ def run(cfg: dict):
     run bandpass
     '''
     # pull parameters from cfg
-    ref_hdf5 = cfg['input_file_group']['input_file_path']
-    sec_hdf5 = cfg['input_file_group']['secondary_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     blocksize = cfg['processing']['bandpass']['lines_per_block']
     window_function = cfg['processing']['bandpass']['window_function']
@@ -67,7 +67,7 @@ def run(cfg: dict):
             base_slc = sec_slc
 
             # update reference SLC path 
-            cfg['input_file_group']['input_file_path'] = ref_slc_output
+            cfg['input_file_group']['reference_rslc_file_path'] = ref_slc_output
             target_output = ref_slc_output
 
         elif target == 'sec':
@@ -76,7 +76,7 @@ def run(cfg: dict):
             base_slc = ref_slc
 
             # update secondary SLC path 
-            cfg['input_file_group']['secondary_file_path'] = sec_slc_output
+            cfg['input_file_group']['secondary_rslc_file_path'] = sec_slc_output
             target_output = sec_slc_output
 
         if os.path.exists(target_output):

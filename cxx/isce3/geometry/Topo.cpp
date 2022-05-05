@@ -20,7 +20,7 @@
 #include <isce3/product/RadarGridProduct.h>
 
 // isce3::geometry
-#include <isce3/geometry/RTC.h>
+#include <isce3/geometry/loadDem.h>
 #include "DEMInterpolator.h"
 #include "TopoLayers.h"
 

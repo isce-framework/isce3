@@ -6,8 +6,7 @@ runconfig:
             pge_name: GSLC_L_PGE
 
         input_file_group:
-            input_file_path:
-            - @ISCETEST@/envisat.h5
+            input_file_path: @ISCETEST@/envisat.h5
         dynamic_ancillary_file_group:
             dem_file: @ISCETEST@/geocode/zeroHeightDEM.geo
         product_path_group:

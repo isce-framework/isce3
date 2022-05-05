@@ -30,8 +30,8 @@ class SplitSpectrumRunConfig(RunConfig):
         iono_cfg = self.cfg['processing']['ionosphere_phase_correction']
         split_cfg = iono_cfg['split_range_spectrum']
         iono_freq_pol = iono_cfg['list_of_frequencies']
-        ref_slc_path = self.cfg['input_file_group']['input_file_path']
-        sec_slc_path = self.cfg['input_file_group']['secondary_file_path']
+        ref_slc_path = self.cfg['input_file_group']['reference_rslc_file_path']
+        sec_slc_path = self.cfg['input_file_group']['secondary_rslc_file_path']
         iono_method = iono_cfg['spectral_diversity']
 
         # Extract main range bandwidth from reference RSLC

@@ -327,59 +327,6 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
 
-/*
- Interpolate DEM at position (x, y) considering that input_proj and
- dem_interp have same coordinate systems. The function is written to
- have the same interface of getDemCoordsDiffEpsg()
- * @param[in]  x           X-coordinate in input coordinates
- * @param[in]  y           Y-coordinate in input coordinates
- * @param[in]  dem_interp  DEM interpolation object
- * @param[in]  input_proj  Input projection object
- * @returns                3-elements vector containing the x and
- * y coordinates over DEM projection coordinates, and interpolated
- * DEM value at that position: {x_dem, y_dem, z_dem}
- */
-inline isce3::core::Vec3 getDemCoordsSameEpsg(double x, double y,
-        const DEMInterpolator& dem_interp,
-        isce3::core::ProjectionBase* input_proj);
-
-/*
- Convert x and y coordinates to from input_proj coordinates to
- DEM (dem_interp) coordinates and interpolate DEM at that position.
- 3-elements vector containing the 
- * @param[in]  x           X-coordinate in input coordinates
- * @param[in]  y           Y-coordinate in input coordinates
- * @param[in]  dem_interp  DEM interpolation object
- * @param[in]  input_proj  Input projection object
- * @returns                3-elements vector containing the x and
- * y coordinates over DEM projection coordinates, and interpolated
- * DEM value at that position: {x_dem, y_dem, z_dem}
- */
-inline isce3::core::Vec3 getDemCoordsDiffEpsg(double x, double y,
-        const DEMInterpolator& dem_interp,
-        isce3::core::ProjectionBase* input_proj);
-
-/** Load DEM raster into a DEMInterpolator object around a given bounding box
- * in the same or different coordinate system as the DEM raster
- *
- * @param[in]  dem_raster              DEM raster
- * @param[in]  minX                    Minimum X/easting position
- * @param[in]  maxX                    Maximum X/easting position
- * @param[in]  minY                    Minimum Y/northing position
- * @param[in]  maxY                    Maximum Y/northing position
- * @param[out] dem_interp_block        DEM interpolation object
- * @param[in]  proj                    Projection object (nullptr to use same
- * DEM projection)
- * @param[in]  dem_margin_x_in_pixels  DEM X/easting margin in pixels
- * @param[in]  dem_margin_y_in_pixels  DEM Y/northing margin in pixels
- */
-isce3::error::ErrorCode loadDemFromProj(isce3::io::Raster& dem_raster,
-        const double minX, const double maxX, const double minY,
-        const double maxY, DEMInterpolator* dem_interp_block,
-        isce3::core::ProjectionBase* proj = nullptr,
-        const int dem_margin_x_in_pixels = 100,
-        const int dem_margin_y_in_pixels = 100);
-
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
                               isce3::core::Matrix<double>& w_arr,

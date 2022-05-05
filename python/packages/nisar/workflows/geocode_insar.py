@@ -188,7 +188,7 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
 
-    ref_hdf5 = cfg["input_file_group"]["input_file_path"]
+    ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     slc = SLC(hdf5file=ref_hdf5)
 
     # get doppler centroid
@@ -323,7 +323,7 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
         Path to output GUNW HDF5
     """
     # pull parameters from cfg
-    ref_hdf5 = cfg["input_file_group"]["input_file_path"]
+    ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
@@ -453,7 +453,7 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
 
     # Extract parameters from cfg dictionary
     dem_block_margin = cfg["processing"]["dem_margin"]
-    ref_hdf5 = cfg["input_file_group"]["input_file_path"]
+    ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]

@@ -115,51 +115,31 @@ class RunConfig:
         '''
         error_channel = journal.error('RunConfig.load')
 
-        # check input file value
-        input_path = self.cfg['input_file_group']['input_file_path']
-
         # check input HDF5(s) in cfg
-        if isinstance(input_path, list):
-            n_inputs = len(input_path)
-            if self.workflow_name in ['gcov', 'gslc']:
-                if n_inputs != 1:
-                    err_str = f'{n_inputs} inputs provided. Only one input file is allowed.'
-                    error_channel.log(err_str)
-                    raise ValueError(err_str)
-            elif self.workflow_name == 'insar':
-                if n_inputs == 2:
-                    secondary_path = input_path[1]
-                    if not os.path.isfile(secondary_path):
-                        err_str = f'{secondary_path} secondary RSLC not found.'
-                        error_channel.log(err_str)
-                        raise ValueError(err_str)
-                    self.cfg['input_file_group']['secondary_file_path'] = secondary_path
-                else:
-                    err_str = f"{n_inputs} provided. 2 input files are required for INSAR workflow."
-                    error_channel.log(err_str)
-                    raise FileNotFoundError(err_str)
-            else:
-                err_str = f'{self.workflow_name} unsupported'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
+        if self.workflow_name in ['gcov', 'gslc']:
+            # check input file value
+            input_path = self.cfg['input_file_group']['input_file_path']
 
-            input_path = input_path[0]
             if not os.path.isfile(input_path):
-                err_str = f'Reference SLC not found {input_path}'
+                err_str = f"{input_path} input not found."
+                error_channel.log(err_str)
+                raise FileNotFoundError(err_str)
+
+        elif self.workflow_name == 'insar':
+             ref_path = self.cfg['input_file_group']['reference_rslc_file_path']
+             sec_path = self.cfg['input_file_group']['secondary_rslc_file_path']
+             if not os.path.isfile(ref_path):
+                err_str = f'{ref_path} reference RSLC not found'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-
-        if not isinstance(input_path, str):
-            err_str = 'String type not provided for path to YAML.'
+             if not os.path.isfile(sec_path):
+                err_str = f'{secondary_path} secondary RSLC not found.'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+        else:
+            err_str = f'{self.workflow_name} unsupported'
             error_channel.log(err_str)
             raise ValueError(err_str)
-
-        if not os.path.isfile(input_path):
-            err_str = f"{input_path} input not found."
-            error_channel.log(err_str)
-            raise FileNotFoundError(err_str)
-
-        self.cfg['input_file_group']['input_file_path'] = input_path
 
         # ensure validity of DEM inputs
         helpers.check_dem(self.cfg['dynamic_ancillary_file_group']['dem_file'])
@@ -176,7 +156,10 @@ class RunConfig:
         check frequency and polarizations and fix as needed
         '''
         error_channel = journal.error('RunConfig.prep_frequency_and_polarizations')
-        input_path = self.cfg['input_file_group']['input_file_path']
+        if self.workflow_name == 'insar':
+            input_path = self.cfg['input_file_group']['reference_rslc_file_path']
+        else:
+            input_path = self.cfg['input_file_group']['input_file_path']
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
 
         slc = SLC(hdf5file=input_path)
@@ -219,7 +202,7 @@ class RunConfig:
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
         for freq in freq_pols.keys():
             # build geogrids only if pols not None
-            geogrids[freq] = geogrid.create(self.cfg, freq)
+            geogrids[freq] = geogrid.create(self.cfg, self.workflow_name, freq)
 
         # place geogrids in cfg for later processing
         self.cfg['processing']['geocode']['geogrids'] = geogrids
@@ -263,11 +246,12 @@ class RunConfig:
         frequency_ref = 'A'
         frequency_group = None
         cubes_geogrid = geogrid.create(
-            self.cfg, frequency_group = frequency_group,
-            frequency = frequency_ref,
-            geocode_dict = radar_grid_cubes_dict,
-            default_spacing_x = default_cube_geogrid_spacing_x,
-            default_spacing_y = default_cube_geogrid_spacing_y)
+            self.cfg, self.workflow_name,
+            frequency_group=frequency_group,
+            frequency=frequency_ref,
+            geocode_dict=radar_grid_cubes_dict,
+            default_spacing_x=default_cube_geogrid_spacing_x,
+            default_spacing_y=default_cube_geogrid_spacing_y)
 
         # place geogrid in cfg for later processing
         self.cfg['processing']['radar_grid_cubes']['geogrid'] = cubes_geogrid

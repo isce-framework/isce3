@@ -6,10 +6,8 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            input_file_path:
-            - input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/Snjoaq_14511_18034_014_180720_L090_CX_143_02.h5
-            - input_L1_RSLC_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02/Snjoaq_14511_18044_015_180814_L090_CX_143_02.h5
+            reference_rslc_file_path: input_L1_RSLC_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02/Snjoaq_14511_18034_014_180720_L090_CX_143_02.h5
+            secondary_rslc_file_path: input_L1_RSLC_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02/Snjoaq_14511_18044_015_180814_L090_CX_143_02.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input

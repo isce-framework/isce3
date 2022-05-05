@@ -40,12 +40,14 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
                     py::arg("raster_obj"))
 
             .def("load_dem",
-                    py::overload_cast<isce3::io::Raster&>(&DEMInterp::loadDEM))
+                    py::overload_cast<isce3::io::Raster&, int>
+                    (&DEMInterp::loadDEM),
+                    py::arg("raster"), py::arg("raster_band") = 1)
             .def("load_dem",
                     py::overload_cast<isce3::io::Raster&, double, double,
-                            double, double>(&DEMInterp::loadDEM),
+                            double, double, int>(&DEMInterp::loadDEM),
                     py::arg("raster"), py::arg("min_x"), py::arg("max_x"),
-                    py::arg("min_y"), py::arg("max_y"))
+                    py::arg("min_y"), py::arg("max_y"), py::arg("raster_band") = 1)
 
             .def("interpolate_lonlat", &DEMInterp::interpolateLonLat)
             .def("interpolate_xy", &DEMInterp::interpolateXY)

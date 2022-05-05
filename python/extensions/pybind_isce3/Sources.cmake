@@ -48,6 +48,8 @@ geometry/RTC.cpp
 geometry/metadataCubes.cpp
 geometry/ltpcoordinates.cpp
 geometry/pntintersect.cpp
+geogrid/relocateRaster.cpp
+geogrid/geogrid.cpp
 geometry/lookIncFromSr.cpp
 image/image.cpp
 image/ResampSlc.cpp
