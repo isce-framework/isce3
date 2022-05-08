@@ -104,10 +104,9 @@ def test_split_main_band_run():
     # run insar for prod_type
     insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
 
-
 def test_main_side_band_run():
     '''
-    Check if split_main_band runs without crashing
+    Check if main_side_band runs without crashing
     '''
 
     # Load yaml file
@@ -121,7 +120,7 @@ def test_main_side_band_run():
 
     # Create CLI input namespace with yaml text instead of filepath
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
-
+    
     # Initialize runconfig object
     insar_runcfg = InsarRunConfig(args)
     insar_runcfg.geocode_common_arg_load()
@@ -129,7 +128,6 @@ def test_main_side_band_run():
 
     out_paths = h5_prep.run(insar_runcfg.cfg)
     persist = Persistence(restart=True)
-
     # No CPU dense offsets. Turn off dense_offsets,
     # rubbersheet, and fine_resample to avoid test failure
     persist.run_steps['dense_offsets'] = False

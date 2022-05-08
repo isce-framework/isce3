@@ -73,7 +73,7 @@ runconfig:
                 y_snap:
 
                 # OPTIONAL - Same as input DEM if not provided.
-                output_epsg:
+                output_epsg: 4326
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If no provided, values will match spacing in provided DEM
