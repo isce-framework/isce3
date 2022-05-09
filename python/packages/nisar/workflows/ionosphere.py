@@ -429,7 +429,7 @@ def run(cfg: dict, runw_hdf5: str):
                     side_slant, np.s_[:])
             
         for block in range(0, nblocks):
-            info_channel.log("Ionosphere Phase Estimation block: ", block)
+            info_channel.log(f"Ionosphere Phase Estimation block: {block}")
             
             row_start = block * blocksize
             if (row_start + blocksize > rows_main):
