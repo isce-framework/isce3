@@ -140,5 +140,5 @@ def test_main_side_band_run():
 if __name__ == '__main__':
     test_ionosphere_methods()
     test_split_main_band_run()
-    test_main_side_band_run()
+   # test_main_side_band_run()
     
