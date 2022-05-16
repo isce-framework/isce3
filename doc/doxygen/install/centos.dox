@@ -8,7 +8,7 @@ ISCE3 has the following dependencies
 <li> Python 3.6 or above
 <li> Eigen 3.3.7 or above
 <li> Numpy
-<li> GDAL 2.3 or above with Python bindings
+<li> GDAL 3.0 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
 <li> CMake 3.18 or above
 <li> CUDA 9.0 or above (for GPU-based processing)
