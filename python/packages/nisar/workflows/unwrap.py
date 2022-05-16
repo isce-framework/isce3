@@ -190,6 +190,12 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         az_res = vs/az_bw
                         nlooks = rg_spac * az_spac / (rg_res * az_res)
 
+                    if snaphu_cfg['verbose']:
+                        # Increase output detail level of "isce3.unwrap.snaphu"
+                        # info channels.
+                        channel = journal.info("isce3.unwrap.snaphu")
+                        channel.detail = 2
+
                     # Unwrap with snaphu (none for power mode and tiling_params)
                     snaphu.unwrap(unw_raster, conn_comp_raster,
                                   igram_raster, corr_raster, nlooks,
@@ -202,7 +208,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                   corr_bias_model_params=None,
                                   phase_stddev_model_params=None,
                                   scratchdir=unwrap_scratch,
-                                  verbose=snaphu_cfg['verbose'], debug=snaphu_cfg['debug'])
+                                  debug=snaphu_cfg['debug'])
                     # Compute statistics (stats module supports isce3.io.Raster)
                     del unw_raster
                     unw_raster = isce3.io.Raster(unw_raster_path)

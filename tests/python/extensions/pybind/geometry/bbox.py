@@ -1,6 +1,6 @@
 import iscetest
 import pathlib
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 
 slc = str(pathlib.Path(iscetest.data) / "envisat.h5")
 

@@ -69,8 +69,6 @@ runconfig:
 
             geo2rdr:      include('geo2rdr_options', required=False)
 
-            dem_margin: num(required=False)
-
             dem_interpolation_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
             # Noise correction options (for ISRO)

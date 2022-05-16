@@ -14,12 +14,12 @@ namespace isce3 { namespace geometry {
  * @param[in] lineStart start line of the block of interest in the eocoded grid
  * @param[in] blockLength length of the block of interest in the eocoded grid
  * @param[in] blockWidth  width of the block of interest in the eocoded grid
- * @param[in] demMargin  extra margin for the dem relative to the geocoded grid
+ * @param[in] demMarginInPixels  DEM extra margin in pixels
  * @param[in] demInterpMethod  DEM interpolation method
  */
 isce3::geometry::DEMInterpolator loadDEM(isce3::io::Raster& demRaster,
         const isce3::product::GeoGridParameters& geoGrid, int lineStart,
-        int blockLength, int blockWidth, double demMargin,
+        int blockLength, int blockWidth, const int demMarginInPixels = 50,
         isce3::core::dataInterpMethod demInterpMethod =
                 isce3::core::BICUBIC_METHOD);
 

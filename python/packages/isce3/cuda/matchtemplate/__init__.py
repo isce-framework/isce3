@@ -1,1 +1,1 @@
-from pybind_isce3.cuda.matchtemplate import *
+from isce3.ext.isce3.cuda.matchtemplate import *

@@ -2,7 +2,7 @@
 import numpy as np
 from numpy.linalg import norm
 import numpy.testing as npt
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 import pytest
 
 np.random.seed(12345)  # I've got the same combination on my luggage!

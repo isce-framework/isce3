@@ -3,7 +3,7 @@
 import numpy as np
 import numpy.testing as npt
 
-from pybind_isce3 import geometry as geom
+from isce3.ext.isce3 import geometry as geom
 
 
 class TestLTPvectors:

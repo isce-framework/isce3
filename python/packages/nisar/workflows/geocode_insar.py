@@ -330,7 +330,6 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
-    dem_block_margin = cfg["processing"]["dem_margin"]
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
@@ -362,7 +361,6 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
     geo.doppler = grid_zero_doppler
     geo.threshold_geo2rdr = threshold_geo2rdr
     geo.numiter_geo2rdr = iteration_geo2rdr
-    geo.dem_block_margin = dem_block_margin
     geo.lines_per_block = lines_per_block
     geo.data_interpolator = interp_method
 
@@ -452,7 +450,6 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
     t_all = time.time()
 
     # Extract parameters from cfg dictionary
-    dem_block_margin = cfg["processing"]["dem_margin"]
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
@@ -507,7 +504,6 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             # Create geocode object other than offset and shadow layover datasets
             geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
                                                      dem_raster,
-                                                     dem_block_margin,
                                                      lines_per_block,
                                                      interp_method,
                                                      invalid_value=np.nan)
@@ -524,7 +520,6 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             '''
             geocode_conn_comp_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
                                                      dem_raster,
-                                                     dem_block_margin,
                                                      lines_per_block,
                                                      isce3.core.DataInterpMethod.NEAREST,
                                                      invalid_value=255)
@@ -546,7 +541,6 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
                                                             rdr_geometry,
                                                             dem_raster,
-                                                            dem_block_margin,
                                                             lines_per_block,
                                                             interp_method,
                                                             invalid_value=np.nan)
@@ -570,7 +564,6 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             geocode_shadow_obj = isce3.cuda.geocode.Geocode(geogrid,
                                                             rdr_geometry,
                                                             dem_raster,
-                                                            dem_block_margin,
                                                             lines_per_block,
                                                             isce3.core.DataInterpMethod.NEAREST,
                                                             invalid_value=127)

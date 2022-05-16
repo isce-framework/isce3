@@ -3,7 +3,7 @@ import os
 import numpy as np
 from osgeo import gdal
 import iscetest
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 from nisar.products.readers import SLC
 
 def test_run():
@@ -54,7 +54,6 @@ def test_run():
             threshold_geo2rdr=1.0e-9,
             numiter_geo2rdr=25,
             lines_per_block=1000,
-            dem_block_margin=0.1,
             flatten=False)
 
         out_raster.set_geotransform(geotrans)

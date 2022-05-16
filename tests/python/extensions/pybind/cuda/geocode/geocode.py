@@ -16,8 +16,6 @@ def test_cuda_geocode():
     dem_raster = isce3.io.Raster(os.path.join(iscetest.data,
                                              "geocode/zeroHeightDEM.geo"))
 
-    dem_margin = 0.1
-
     # define geogrid
     epsg = 4326
     geogrid = isce3.product.GeoGridParameters(start_x=-115.65,
@@ -49,8 +47,7 @@ def test_cuda_geocode():
         lines_per_block = 126 if suffix else 1000
 
         cu_geocode = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                               dem_raster, dem_margin,
-                                               lines_per_block,
+                                               dem_raster, lines_per_block,
                                                interp_method)
 
         output_raster = isce3.io.Raster(f"{xy}{suffix}.geo", geogrid.width,

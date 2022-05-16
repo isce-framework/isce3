@@ -4,7 +4,7 @@ import numpy as np
 import numpy.testing as npt
 from osgeo import gdal
 
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 
 def make_slc_data(shape):
     # create indices and reshape to raster shape

@@ -1,1 +1,1 @@
-from pybind_isce3.io.gdal import *
+from isce3.ext.isce3.io.gdal import *

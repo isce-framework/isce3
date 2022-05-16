@@ -3,7 +3,7 @@
 import os
 import numpy as np
 from osgeo import gdal
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 import iscetest
 from nisar.products.readers import SLC
 

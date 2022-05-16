@@ -4,9 +4,9 @@ import numpy.testing as npt
 import os
 
 from nisar.products.readers.Raw import open_rrsd
-from pybind_isce3 import geometry as geom
-from pybind_isce3.core import Ellipsoid
-from pybind_isce3.geometry import DEMInterpolator
+from isce3.ext.isce3 import geometry as geom
+from isce3.ext.isce3.core import Ellipsoid
+from isce3.ext.isce3.geometry import DEMInterpolator
 import iscetest
 
 

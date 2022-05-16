@@ -1,1 +1,1 @@
-from pybind_isce3.polsar import *
+from isce3.ext.isce3.polsar import *

@@ -2,9 +2,9 @@
 import numpy as np
 import numpy.testing as npt
 
-from pybind_isce3 import antenna as ant
-from pybind_isce3.core import Poly1d
-from pybind_isce3.core import Linspace
+from isce3.ext.isce3 import antenna as ant
+from isce3.ext.isce3.core import Poly1d
+from isce3.ext.isce3.core import Linspace
 
 # functions for conversion from (rad) to (mdeg) and vice versa
 

@@ -1,4 +1,4 @@
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 import numpy as np
 from scipy.signal import convolve2d
 

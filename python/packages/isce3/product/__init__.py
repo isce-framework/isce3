@@ -1,1 +1,1 @@
-from pybind_isce3.product import *
+from isce3.ext.isce3.product import *

@@ -1,7 +1,7 @@
 import copy
 import h5py
 import numpy as np
-from pybind_isce3 import core
+from isce3.ext.isce3 import core
 from tempfile import mkstemp
 
 def test_attitude():

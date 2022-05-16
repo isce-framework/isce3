@@ -30,7 +30,6 @@ def run(cfg):
     threshold_geo2rdr = cfg['processing']['geo2rdr']['threshold']
     iteration_geo2rdr = cfg['processing']['geo2rdr']['maxiter']
     lines_per_block = cfg['processing']['blocksize']['y']
-    dem_block_margin = cfg['processing']['dem_margin']
     flatten = cfg['processing']['flatten']
 
     # init parameters shared by frequency A and B
@@ -81,8 +80,7 @@ def run(cfg):
                                           native_doppler, image_grid_doppler,
                                           ellipsoid,
                                           threshold_geo2rdr, iteration_geo2rdr,
-                                          lines_per_block, dem_block_margin,
-                                          flatten)
+                                          lines_per_block, flatten)
 
                 # the rasters need to be deleted
                 del gslc_raster

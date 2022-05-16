@@ -1,0 +1,12 @@
+# -*- Makefile -*-
+
+
+# the isce3 python package
+isce3.pkg.stem := isce3
+isce3.pkg.root := python/packages/isce3/
+isce3.pkg.ext := ext/
+isce3.pkg.meta :=
+isce3.pkg.drivers :=
+
+
+# end of file
