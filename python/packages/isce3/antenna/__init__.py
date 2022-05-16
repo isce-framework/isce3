@@ -1,1 +1,1 @@
-from pybind_isce3.antenna import *
+from isce3.ext.isce3.antenna import *

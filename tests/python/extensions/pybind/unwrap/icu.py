@@ -3,7 +3,7 @@ Unit tests for CPU pybind ICU
 '''
 import numpy.testing as npt
 import numpy as np
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 from osgeo import gdal
 from osgeo import gdal_array
 import os

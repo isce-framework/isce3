@@ -13,15 +13,15 @@ import time
 import decimal
 import shutil
 from scipy.interpolate import interp2d
-import pybind_isce3 as isce3
+import isce3
 
 from shapely import wkt
 from alos_to_nisar_l0b import get_alos_orbit, set_h5_orbit, getset_attitude
 from isce3.stripmap.readers.l1.ALOS2.CEOS import ImageFile
-from pybind_isce3.product import RadarGridParameters
-from pybind_isce3.core import DateTime 
-from pybind_isce3.geometry import get_geo_perimeter_wkt
-from pybind_isce3.geometry import DEMInterpolator
+from isce3.product import RadarGridParameters
+from isce3.core import DateTime
+from isce3.geometry import get_geo_perimeter_wkt
+from isce3.geometry import DEMInterpolator
 from H5pyGroupWrapper import H5pyGroupWrapper
 
 '''

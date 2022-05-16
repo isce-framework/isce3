@@ -6,7 +6,7 @@ from osgeo import gdal
 import numpy as np
 
 import iscetest
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 from nisar.products.readers import SLC
 
 def test_run():

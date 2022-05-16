@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import isce3
 import numpy as np
-from pybind_isce3.unwrap import _snaphu_unwrap
+from isce3.ext.isce3.unwrap import _snaphu_unwrap
 
 
 @dataclass(frozen=True)

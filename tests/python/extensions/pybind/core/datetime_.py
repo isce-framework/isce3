@@ -2,7 +2,7 @@
 
 import numpy.testing as npt
 
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 
 def test_default_ctor():
     t = isce.core.DateTime()

@@ -1,0 +1,23 @@
+# -*- Makefile -*-
+
+
+# the python bindings
+isce3.ext.root := python/extensions/pybind_isce3/
+isce3.ext.stem := isce3
+isce3.ext.pkg := isce3.pkg
+isce3.ext.wraps := isce3.lib
+isce3.ext.capsule :=
+isce3.ext.extern := gdal hdf5 mpi eigen fftw pyre pybind11 python
+
+# if there is cuda
+ifdef cuda.dir
+  # add the package to the external dependencies
+  isce3.ext.extern += cuda
+else
+  # exclude the bindings for the CUDA code
+  isce3.ext.lib.directories.exclude := cuda
+endif
+
+isce3.ext.lib.c++.flags += $($(compiler.c++).std.c++17)
+
+# end of file

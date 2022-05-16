@@ -80,7 +80,7 @@ product/Grid.cpp
 unwrap/unwrap.cpp
 unwrap/ICU.cpp
 unwrap/Phass.cpp
-isce.cpp
+isce3.cpp
 )
 
 if(WITH_CUDA)
