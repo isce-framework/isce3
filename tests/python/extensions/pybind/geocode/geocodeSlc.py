@@ -54,7 +54,6 @@ def test_run():
             threshold_geo2rdr=1.0e-9,
             numiter_geo2rdr=25,
             lines_per_block=1000,
-            dem_block_margin=0.1,
             flatten=False)
 
         out_raster.set_geotransform(geotrans)

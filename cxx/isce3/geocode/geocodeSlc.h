@@ -24,7 +24,6 @@ namespace isce3 { namespace geocode {
  * \param[in]  thresholdGeo2rdr threshold for geo2rdr computations
  * \param[in]  numiterGeo2rdr   maximum number of iterations for Geo2rdr convergence
  * \param[in]  linesPerBlock    number of lines in each block
- * \param[in]  demBlockMargin   margin of a DEM block in degrees
  * \param[in]  flatten          flag to flatten the geocoded SLC
  * \param[in]  azCarrier        azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
  * \param[in]  rgCarrier        range carrier phase of the SLC data, in radians, as a function of azimuth and range
@@ -40,7 +39,7 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
                 const isce3::core::LUT2d<double>& imageGridDoppler,
                 const isce3::core::Ellipsoid& ellipsoid,
                 const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
-                const size_t& linesPerBlock, const double& demBlockMargin,
+                const size_t& linesPerBlock,
                 const bool flatten = true,
                 const AzRgFunc& azCarrier = AzRgFunc(),
                 const AzRgFunc& rgCarrier = AzRgFunc(),
@@ -66,7 +65,6 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  thresholdGeo2rdr threshold for geo2rdr computations
  * \param[in]  numiterGeo2rdr   maximum number of iterations for Geo2rdr convergence
  * \param[in]  linesPerBlock    number of lines in each block
- * \param[in]  demBlockMargin   margin of a DEM block in degrees
  * \param[in]  flatten          flag to flatten the geocoded SLC
  * \param[in]  azCarrier        azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
  * \param[in]  rgCarrier        range carrier phase of the SLC data, in radians, as a function of azimuth and range
@@ -83,7 +81,7 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
                 const isce3::core::LUT2d<double>& imageGridDoppler,
                 const isce3::core::Ellipsoid& ellipsoid,
                 const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
-                const size_t& linesPerBlock, const double& demBlockMargin,
+                const size_t& linesPerBlock,
                 const bool flatten = true,
                 const AzRgFunc& azCarrier = AzRgFunc(),
                 const AzRgFunc& rgCarrier = AzRgFunc(),

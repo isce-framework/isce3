@@ -88,7 +88,8 @@ runconfig:
                 threshold: 1.0e-8
                 maxiter: 25
 
-            dem_margin: 0.1
+            blocksize:
+                y: 1000
 
             coarse_resample:
                 lines_per_tile: 100

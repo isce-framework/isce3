@@ -192,8 +192,6 @@ runconfig:
                 write_simulated_amplitude: False
                 write_layover_shadow: True
 
-            dem_margin:
-
             coarse_resample:
                 # Path to coarse offsets directory (geo2rdr offsets)
                 offsets_dir:

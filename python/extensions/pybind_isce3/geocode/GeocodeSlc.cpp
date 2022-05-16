@@ -27,7 +27,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double> &,
             const isce3::core::Ellipsoid &,
             const double &, const int &,
-            const size_t &, const double &,
+            const size_t &,
             const bool,
             const AzRgFunc &,
             const AzRgFunc &,
@@ -44,7 +44,6 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("threshold_geo2rdr") = 1.0e-9,
         py::arg("numiter_geo2rdr") = 25,
         py::arg("lines_per_block") = 1000,
-        py::arg("dem_block_margin") = 0.1,
         py::arg("flatten") = true,
         py::arg("azimuth_carrier") = AzRgFunc(),
         py::arg("range_carrier") = AzRgFunc(),
@@ -78,8 +77,6 @@ void addbinding_geocodeslc(py::module & m)
             Maximum number of iterations for geo2rdr convergence
         lines_per_block: int
             Number of lines per block
-        dem_block_margin: float
-            Margin of a DEM block in degrees
         flatten: bool
             Flag to flatten the geocoded SLC
         azimuth_carrier: [LUT2d, Poly2d]
@@ -99,7 +96,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double> &,
             const isce3::core::Ellipsoid &,
             const double &, const int &,
-            const size_t & , const double &,
+            const size_t &,
             const bool,
             const AzRgFunc &,
             const AzRgFunc &,
@@ -117,7 +114,6 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("threshold_geo2rdr") = 1.0e-9,
         py::arg("numiter_geo2rdr") = 25,
         py::arg("lines_per_block") = 1000,
-        py::arg("dem_block_margin") = 0.1,
         py::arg("flatten") = true,
         py::arg("azimuth_carrier") = AzRgFunc(),
         py::arg("range_carrier") = AzRgFunc(),
@@ -153,8 +149,6 @@ void addbinding_geocodeslc(py::module & m)
             Maximum number of iterations for geo2rdr convergence
         lines_per_block: int
             Number of lines per block
-        dem_block_margin: float
-            Margin of a DEM block in degrees
         flatten: bool
             Flag to flatten the geocoded SLC
         azimuth_carrier: [LUT2d, Poly2d]

@@ -215,8 +215,6 @@ runconfig:
                 threshold: 1.0e-8
                 maxiter: 100
 
-            dem_margin:
-
             dem_interpolation_method: biquintic
 
             # OPTIONAL - if noise correction desired (for ISRO)

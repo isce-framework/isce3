@@ -64,8 +64,6 @@ runconfig:
             blocksize:
                 y: int(min=100, max=10000)
 
-            dem_margin: num(required=False)
-
             flatten: bool()
         
         # Worker options (e.g. enable/disable GPU processing, select GPU device ID)
