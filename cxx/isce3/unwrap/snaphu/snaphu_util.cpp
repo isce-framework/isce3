@@ -12,6 +12,7 @@
 #include <cmath>
 #include <csignal>
 #include <cstring>
+#include <iomanip>
 #include <sys/resource.h>
 
 #include "snaphu.h"
@@ -980,6 +981,8 @@ int CatchSignals(void (*SigHandler)(int)){
  */ 
 void SetDump(int signum){
 
+  auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+
   if(signum==SIGINT){
 
     /* exit if we receive another interrupt */
@@ -987,8 +990,12 @@ void SetDump(int signum){
 
     /* print nice message and set global variables so program knows to exit */
     fflush(NULL);
-    fprintf(sp0,"\n\nSIGINT signal caught.  Please wait for graceful exit\n");
-    fprintf(sp0,"(One more interrupt signal halts job)\n");
+    warnings << pyre::journal::at(__HERE__)
+             << pyre::journal::newline << pyre::journal::newline
+             << "SIGINT signal caught. Please wait for graceful exit"
+             << pyre::journal::newline
+             << "(One more interrupt signal halts job)"
+             << pyre::journal::endl;
     dumpresults_global=TRUE;
     requestedstop_global=TRUE;
 
@@ -999,13 +1006,17 @@ void SetDump(int signum){
 
     /* print a nice message, and set the dump variable */
     fflush(NULL);
-    fprintf(sp0,"\n\nSIGHUP signal caught.  Dumping results\n");
+    warnings << pyre::journal::at(__HERE__)
+             << pyre::journal::newline << pyre::journal::newline
+             << "SIGHUP signal caught. Dumping results"
+             << pyre::journal::endl;
     dumpresults_global=TRUE;
 
   }else{
     fflush(NULL);
-    fprintf(sp0,"WARNING: Invalid signal (%d) passed to signal handler\n",
-            signum);
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: Invalid signal (" << signum << ") passed to signal handler"
+             << pyre::journal::endl;
   }
 
   /* done */
@@ -1022,8 +1033,11 @@ void SetDump(int signum){
 void KillChildrenExit(int signum){
 
   fflush(NULL);
-  fprintf(sp0,"Parent received signal %d\nKilling children and exiting\n",
-          signum);
+  auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+  warnings << pyre::journal::at(__HERE__)
+           << "Parent received signal " << signum
+           << pyre::journal::newline << "Killing children and exiting"
+           << pyre::journal::endl;
   fflush(NULL);
   signal(SIGTERM,SIG_IGN);
   kill(0,SIGTERM);
@@ -1099,6 +1113,8 @@ int DisplayElapsedTime(time_t tstart, double cputimestart){
   time_t tstop;
   struct rusage usagebuf;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   cputime=-1.0;
   if(!getrusage(RUSAGE_CHILDREN,&usagebuf)){
     cputime=(double )(usagebuf.ru_utime.tv_sec
@@ -1118,16 +1134,22 @@ int DisplayElapsedTime(time_t tstart, double cputimestart){
     hours=(long )floor(cputime/3600);
     minutes=(long )floor((cputime-3600*hours)/60);
     seconds=cputime-3600*hours-60*minutes;
-    fprintf(sp1,"Elapsed processor time:   %ld:%02ld:%05.2f\n",
-            hours,minutes,seconds);
+    info << pyre::journal::at(__HERE__)
+         << "Elapsed processor time:   " << hours << ":"
+         << std::setfill('0') << std::setw(2) << minutes
+         << ":" << std::setw(5) << std::fixed << std::setprecision(2) << seconds
+         << pyre::journal::endl;
   }
   if(tstart>0 && tstop>0){
     walltime=tstop-tstart;
     hours=(long )floor(walltime/3600);
     minutes=(long )floor((walltime-3600*hours)/60);
     seconds=walltime-3600*hours-60*minutes;
-    fprintf(sp1,"Elapsed wall clock time:  %ld:%02ld:%02ld\n",
-            hours,minutes,(long )seconds);
+    info << pyre::journal::at(__HERE__)
+         << "Elapsed wall clock time:  " << hours << ":"
+         << std::setfill('0') << std::setw(2) << minutes << ":"
+         << std::setw(2) << ((long) seconds)
+         << pyre::journal::endl;
   }
 
   /* done */

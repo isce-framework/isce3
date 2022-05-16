@@ -5,6 +5,13 @@ import numpy as np
 import pytest
 from isce3.unwrap import snaphu
 
+import journal
+
+
+# Set journal application name and increase output verbosity level.
+journal.application("snaphu.py")
+journal.chronicler.detail = 2
+
 
 def simulate_terrain(
     length: int,

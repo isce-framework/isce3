@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <limits>
 
 #include <isce3/except/Error.h>
@@ -212,6 +213,14 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
   nodeT *firstfromnode, *firsttonode;
   boundaryT boundary[1]={};
 
+  auto firewall=pyre::journal::firewall_t("isce3.unwrap.snaphu");
+  auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+
+  /* a uniquely named channel that logs the current status of the tree solver */
+  /* (may produce very verbose output) */
+  constexpr int output_detail_level=2;
+  auto status=pyre::journal::info_t("isce3.unwrap.snaphu.status",output_detail_level);
+
   /* initialize some variables to zero to stop compiler warnings */
   from=NULL;
   to=NULL;
@@ -263,8 +272,11 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
   nmajor=0;
   nmajorprune=params->nmajorprune;
   prunecostthresh=params->prunecostthresh;;
-  fprintf(sp3,"Treesize: %-10ld Pivots: %-11ld Improvements: %-11ld",
-          treesize,ipivots,inondegen);
+  status << pyre::journal::at(__HERE__)
+         << "Treesize: " << std::left << std::setw(10) << treesize
+         << " Pivots: " << std::setw(11) << ipivots
+         << " Improvements: " << std::setw(11) << inondegen
+         << pyre::journal::endl;
 
   /* loop over each entering node (note, source already on tree) */
   while(treesize<nconnected){
@@ -328,8 +340,10 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
       /* signal handler disabled for all but primary (grid) networks */
       if(dumpresults_global){
         fflush(NULL);
-        fprintf(sp0,"\n\nDumping current solution to file %s\n",
-                outfile);
+        warnings << pyre::journal::at(__HERE__)
+                 << pyre::journal::newline << pyre::journal::newline
+                 << "Dumping current solution to file " << outfile
+                 << pyre::journal::endl;
         auto unwrappedphase = Array2D<float>(nrow,ncol);
         IntegratePhase(wrappedphase,unwrappedphase,flows,nrow,ncol);
         FlipPhaseArraySign(unwrappedphase,params,nrow,ncol);
@@ -342,7 +356,9 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
         }
         dumpresults_global=FALSE;
         fflush(NULL);
-        fprintf(sp0,"\n\nProgram continuing\n");
+        warnings << pyre::journal::at(__HERE__)
+                 << pyre::journal::newline << pyre::journal::newline
+                 << "Program continuing" << pyre::journal::endl;
       }
 
       /* swap candidate bag and candidate list pointers and sizes */
@@ -880,12 +896,11 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
       */
 
       /* display status */
-      fprintf(sp3,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-              "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-              "\b\b\b\b\b\b"
-              "Treesize: %-10ld Pivots: %-11ld Improvements: %-11ld",
-              treesize,ipivots,inondegen);
-      fflush(sp3);
+      status << pyre::journal::at(__HERE__)
+             << "Treesize: " << std::left << std::setw(10) << treesize
+             << " Pivots: " << std::setw(11) << ipivots
+             << " Improvements: " << std::setw(11) << inondegen
+             << pyre::journal::endl;
 
     } /* end of while loop on candidatebagnext */    
 
@@ -901,10 +916,11 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
   node1=source->next;
   while(node1!=source){
     if(node1->pred->level!=node1->level-1){
-      printf("Error detected: row %d, col%d, level %d "
-             "has pred row %d, col%d, level %d\n",
-             node1->row,node1->col,node1->level,node1->pred->row,node1->pred->col,
-             node1->pred->level);
+      firewall << pyre::journal::at(__HERE__)
+               << "Error detected: row " << node1->row << ", col " << node1->col
+               << ", level " << node1->level << " has pred row " << node1->pred->row
+               << ", col " << node1->pred->col << ", level " << node1->pred->level
+               << pyre::journal::endl;
     }
     node1=node1->next;
   }
@@ -922,8 +938,11 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
   /* sanity check that buckets are actually all empty after optimizer is done */
   for(i=0;i<bkts->size;i++){
     if(bkts->bucketbase[i]!=NULL){
-      printf("ERROR: bucket %ld not empty after TreeSolve (row=%d, col=%d)\n",
-             i,bkts->bucketbase[i]->row,bkts->bucketbase[i]->col);
+      firewall << pyre::journal::at(__HERE__)
+               << "ERROR: bucket " << i << " not empty after TreeSolve (row="
+               << bkts->bucketbase[i]->row << ", col="
+               << bkts->bucketbase[i]->col << ")"
+               << pyre::journal::endl;
       break;
     }
   }
@@ -936,12 +955,11 @@ long TreeSolve(Array2D<nodeT>& nodes, Array2D<nodesuppT>& nodesupp, nodeT *groun
                        nodesupp);
 
   /* clean up: set pointers for outputs */
-  fprintf(sp3,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-          "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b"
-          "\b\b\b\b\b\b"
-          "Treesize: %-10ld Pivots: %-11ld Improvements: %-11ld\n",
-          treesize,ipivots,inondegen);
-  fflush(sp3);
+  status << pyre::journal::at(__HERE__)
+         << "Treesize: " << std::left << std::setw(10) << treesize
+         << " Pivots: " << std::setw(11) << ipivots
+         << " Improvements: " << std::setw(11) << inondegen
+         << pyre::journal::endl;
   *candidatelistptr=*localcandidatelistptr;
   *candidatebagptr=*localcandidatebagptr;
   *candidatelistsizeptr=candidatelistsize;
@@ -1148,7 +1166,10 @@ nodeT *InitBoundary(nodeT *source, Array2D<nodeT>& nodes,
   /* make sure source is on edge */
   /* we already know source is not ground from check above */
   if(!IsRegionEdgeNode(mag,source->row,source->col,nrow,ncol)){
-    fprintf(sp0,"WARNING: Non edge node as source in InitBoundary()\n");
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: Non edge node as source in InitBoundary()"
+             << pyre::journal::endl;
   }
 
   /* get memory for node list */
@@ -1371,8 +1392,10 @@ nodeT *InitBoundary(nodeT *source, Array2D<nodeT>& nodes,
                            params,boundary->node);
   if(nconnectedptr!=NULL){
     if(nconnected+boundary->nboundary-1!=(*nconnectedptr)){
-      fprintf(sp1,
-              "WARNING: Changed number of connected nodes in InitBoundary()\n");
+      auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+      info << pyre::journal::at(__HERE__)
+           << "WARNING: Changed number of connected nodes in InitBoundary()"
+           << pyre::journal::endl;
     }
     (*nconnectedptr)=nconnected;
   }
@@ -2408,7 +2431,11 @@ long PruneTree(nodeT *source, Array2D<nodeT>& nodes, nodeT *ground, boundaryT *b
   }
 
   /* show status */
-  fprintf(sp3,"\n  Pruned %ld nodes\n",npruned);
+  constexpr int output_detail_level=2;
+  auto status=pyre::journal::info_t("isce3.unwrap.snaphu.status",output_detail_level);
+  status << pyre::journal::at(__HERE__)
+          << pyre::journal::newline << "  Pruned " << npruned << " nodes"
+          << pyre::journal::endl;
   
   /* return number of pruned nodes */
   return(npruned);
@@ -2508,7 +2535,10 @@ int InitNetwork(Array2D<short>& flows, long *ngroundarcsptr, long *ncycleptr,
     *nflowdoneptr=0;
     *mostflowptr=Short2DRowColAbsMax(flows,nrow,ncol);
     if(*mostflowptr*params->nshortcycle>LARGESHORT){
-      fprintf(sp1,"Maximum flow on network: %ld\n",*mostflowptr);
+      auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+      info << pyre::journal::at(__HERE__)
+           << "Maximum flow on network: " << *mostflowptr
+           << pyre::journal::endl;
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "((Maximum flow) * NSHORTCYCLE) too large");
@@ -3107,7 +3137,10 @@ long SelectSources(Array2D<nodeT>& nodes, Array2D<float>& mag, nodeT *ground, lo
   }
 
   /* show message about number of connected regions */
-  fprintf(sp1,"Found %ld valid set(s) of connected nodes\n",nsource);
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Found " << nsource << " valid set(s) of connected nodes"
+       << pyre::journal::endl;
 
   /* reset group values for all nodes */
   if(ground->group!=MASKED && ground->group!=BOUNDARYPTR){
@@ -3121,9 +3154,11 @@ long SelectSources(Array2D<nodeT>& nodes, Array2D<float>& mag, nodeT *ground, lo
          || nodes(row,col).group==BOUNDARYCANDIDATE
          || nodes(row,col).group==PRUNED){
         fflush(NULL);
-        fprintf(stderr,
-                "WARNING: weird nodes[%ld][%ld].group=%d in SelectSources()\n",
-                row,col,nodes(row,col).group);
+        auto firewall=pyre::journal::firewall_t("isce3.unwrap.snaphu");
+        firewall << pyre::journal::at(__HERE__)
+                 << "WARNING: weird nodes[" << row << "][" << col
+                 << "].group=" << nodes(row,col).group << " in SelectSources()"
+                 << pyre::journal::endl;
       }
 
       if(nodes(row,col).group!=MASKED && nodes(row,col).group!=BOUNDARYPTR){
@@ -3416,8 +3451,13 @@ int SetupIncrFlowCosts(Array2D<typename CostTag::Cost>& costs, Array2D<incrcostT
       strcpy(pl,"");
     }
     fflush(NULL);
-    fprintf(sp0,"%ld incremental cost%s clipped to avoid overflow (%.3f%%)\n",
-            iclipped,pl,((double )iclipped)/(2*narcs));
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << iclipped << " incremental cost" << pl
+             << " clipped to avoid overflow ("
+             << std::fixed << std::setprecision(3)
+             << ((double )iclipped)/(2*narcs) << "%)"
+             << pyre::journal::endl;
   }
 
   /* done */
@@ -3481,6 +3521,8 @@ int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
   nodeT *source;
   bucketT bkts[1]={};
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   /* get and initialize memory for ground, nodes, buckets, and child array */
   *nodesptr = Array2D<nodeT>(nrow-1, ncol-1);
   InitNodeNums(nrow-1,ncol-1,*nodesptr,ground);
@@ -3510,7 +3552,9 @@ int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
   auto arcstatus = MakeRowColArray2D<signed char>(nrow, ncol);
 
   /* calculate phase residues (integer numbers of cycles) */
-  fprintf(sp1,"Initializing flows with MST algorithm\n");
+  info << pyre::journal::at(__HERE__)
+       << "Initializing flows with MST algorithm"
+       << pyre::journal::endl;
   auto residue = Array2D<signed char>(nrow-1, ncol-1);
   CycleResidue(wrappedphase,residue,nrow,ncol);
 
@@ -3519,7 +3563,11 @@ int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
   auto& flows=*flowsptr;
 
   /* loop until no flows exceed the maximum flow */
-  fprintf(sp2,"Running approximate minimum spanning tree solver\n");
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+  verbose << pyre::journal::at(__HERE__)
+          << "Running approximate minimum spanning tree solver"
+          << pyre::journal::endl;
   while(TRUE){
 
     /* set up the source to be the first non-zero residue that we find */
@@ -3532,7 +3580,9 @@ int MSTInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
       }
     }
     if(source==NULL){
-      fprintf(sp1,"No residues found\n");
+      info << pyre::journal::at(__HERE__)
+           << "No residues found"
+           << pyre::journal::endl;
       break;
     }
 
@@ -3810,6 +3860,8 @@ signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
   long row, col, cliplimit, maxcol, excess, tempcharge, sign;
   long mostflow, maxcost;
 
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
 
   /* find maximum flow */
   mostflow=Short2DRowColAbsMax(flows,nrow,ncol);
@@ -3818,7 +3870,9 @@ signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
   if(mostflow<=maxflow){
     return(TRUE);
   }
-  fprintf(sp2,"Maximum flow on network: %ld\n",mostflow);
+  verbose << pyre::journal::at(__HERE__)
+          << "Maximum flow on network: " << mostflow
+          << pyre::journal::endl;
 
   /* set upper flow limit */
   cliplimit=(long )ceil(mostflow*CLIPFACTOR)+1;
@@ -3845,7 +3899,10 @@ signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
   maxcost+=INITMAXCOSTINCR;
   if(maxcost>=LARGESHORT){
     fflush(NULL);
-    fprintf(sp0,"WARNING: escaping ClipFlow loop to prevent cost overflow\n");
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: escaping ClipFlow loop to prevent cost overflow"
+             << pyre::journal::endl;
     return(TRUE);
   }
 
@@ -3911,7 +3968,9 @@ signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
   }
 
   /* return value indicates that flows have been clipped */
-  fprintf(sp2,"Flows clipped to %ld.  Rerunning MST solver.\n",cliplimit);
+  verbose << pyre::journal::at(__HERE__)
+          << "Flows clipped to " << cliplimit << ". Rerunning MST solver."
+          << pyre::journal::endl;
   return(FALSE);
 
 }
@@ -3924,6 +3983,11 @@ signed char ClipFlow(Array2D<signed char>& residue, Array2D<short>& flows,
  */
 int MCFInitFlows(Array2D<float>& wrappedphase, Array2D<short>* flowsptr,
                  Array2D<short>& mstcosts, long nrow, long ncol){
+
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Initializing flows with MCF algorithm"
+       << pyre::journal::endl;
 
   /* number of rows & cols of nodes in the residue network */
   const auto m=nrow-1;
