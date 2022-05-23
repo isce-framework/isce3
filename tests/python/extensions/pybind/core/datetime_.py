@@ -187,3 +187,24 @@ def test_isoformat():
     s = "2017-05-12T01:12:30.141592000"
     t = isce.core.DateTime(s)
     assert( t.isoformat() == s )
+
+def test_isoformat_roundtrip():
+    # DateTime.isoformat() only writes 9 digits, so choose eps < 1e-9
+    eps = 5e-10
+
+    # Construct a sequence of DateTimes separated by fixed intervals. The
+    # temporal spacing is not an integer number of nanoseconds.
+    n = 5
+    t0 = isce.core.DateTime(2022, 5, 4, 10, 3, 0.0)
+    dt = isce.core.TimeDelta(1.0 + eps)
+    times = [t0 + i * dt for i in range(n)]
+
+    # Converts DateTime -> str -> DateTime.
+    def roundtrip(t):
+        s = t.isoformat()
+        return isce.core.DateTime(s)
+
+    # Check that the tolerance of `is_close()` is loose enough to accommodate
+    # truncation of DateTimes due to serialization to text.
+    for t in times:
+        assert t.is_close(roundtrip(t))
