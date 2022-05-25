@@ -116,6 +116,13 @@ workflowdata = {
             "README.txt",
         ],
  
+        "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02":
+        [
+            "SanAnd_05518_12128_008_121105_L090_CX_138_02.h5",
+            "dem.tiff",
+            "README.txt",
+        ],
+ 
         "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02":
         [
             "SanAnd_05518_12128_008_121105_L090_CX_143_02.h5",
@@ -217,7 +224,7 @@ workflowtests = {
         "insar_UAVSAR_SanAnd_05518_12018-000_12128-008_143": 
             [
                 "L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
-                "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02",
+                "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02",
             ],
         "insar_UAVSAR_Snjoaq_14511_18034-014_18044-015_143":
             [
