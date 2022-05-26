@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.testing as npt
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 
 
 def test_crossmultiply():

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <cstring>
+#include <iomanip>
 #include <type_traits>
 
 #include <isce3/except/Error.h>
@@ -106,6 +107,8 @@ int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* m
   Array2D<short> scalarcosts;
   Array2D<bidircostT> bidircosts;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   /* initializations to silence compiler warnings */
   costtypesize=0;
 
@@ -156,7 +159,9 @@ int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* m
   if(strlen(infiles->costinfile)){
 
     /* read cost info from file */
-    fprintf(sp1,"Reading cost information from file %s\n",infiles->costinfile);
+    info << pyre::journal::at(__HERE__)
+         << "Reading cost information from file " << infiles->costinfile
+         << pyre::journal::endl;
     Read2DRowColFile(&costs,infiles->costinfile,
                      linelen,nlines,tileparams,costtypesize);
     (*costsptr)=costs;
@@ -183,7 +188,9 @@ int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* m
     /* call specific functions for building cost array and */
     /* set global pointers to functions for calculating and evaluating costs */
     if(params->costmode==TOPO){
-      fprintf(sp1,"Calculating topography-mode cost parameters\n");
+      info << pyre::journal::at(__HERE__)
+           << "Calculating topography-mode cost parameters"
+           << pyre::journal::endl;
       if constexpr(std::is_same<Cost,costT>{}){
         costs=BuildStatCostsTopo(wrappedphase,mag,unwrappedest,pwr,corr,
                                  rowweight,colweight,nrow,ncol,tileparams,
@@ -193,7 +200,9 @@ int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* m
                 "Bad Cost type in BuildCostArrays()");
       }
     }else if(params->costmode==DEFO){
-      fprintf(sp1,"Calculating deformation-mode cost parameters\n");
+      info << pyre::journal::at(__HERE__)
+           << "Calculating deformation-mode cost parameters"
+           << pyre::journal::endl;
       if constexpr(std::is_same<Cost,costT>{}){
         costs=BuildStatCostsDefo(wrappedphase,mag,unwrappedest,corr,
                                  rowweight,colweight,nrow,ncol,tileparams,
@@ -203,7 +212,9 @@ int BuildCostArrays(Array2D<typename CostTag::Cost>* costsptr, Array2D<short>* m
                 "Bad Cost type in BuildCostArrays()");
       }
     }else if(params->costmode==SMOOTH){
-      fprintf(sp1,"Calculating smooth-solution cost parameters\n");
+      info << pyre::journal::at(__HERE__)
+           << "Calculating smooth-solution cost parameters"
+           << pyre::journal::endl;
       if constexpr(std::is_same<Cost,smoothcostT>{}){
         costs=BuildStatCostsSmooth(wrappedphase,mag,unwrappedest,corr,
                                    rowweight,colweight,nrow,ncol,tileparams,
@@ -422,6 +433,9 @@ Array2D<costT> BuildStatCostsTopo(Array2D<float>& wrappedphase, Array2D<float>& 
 
   Array2D<float> ei;
 
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+
   /* get memory and set cost array pointers */
   auto costs=MakeRowColArray2D<costT>(nrow,ncol);
   auto rowcost=costs.block(0,0,nrow-1,ncol);
@@ -454,11 +468,15 @@ Array2D<costT> BuildStatCostsTopo(Array2D<float>& wrappedphase, Array2D<float>& 
   re=params->earthradius;
 
   /* despeckle the interferogram intensity */
-  fprintf(sp2,"Despeckling intensity image\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Despeckling intensity image"
+          << pyre::journal::endl;
   Despeckle(pwr,&ei,nrow,ncol);
 
   /* remove large-area average intensity */
-  fprintf(sp2,"Normalizing intensity\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Normalizing intensity"
+          << pyre::journal::endl;
   RemoveMean(ei,nrow,ncol,params->krowei,params->kcolei);
 
   /* dump normalized, despeckled intensity */
@@ -510,7 +528,9 @@ Array2D<costT> BuildStatCostsTopo(Array2D<float>& wrappedphase, Array2D<float>& 
   /* build array of mean wrapped phase differences in range */
   /* simple average of phase differences is biased, but mean phase */
   /*   differences usually near zero, so don't bother with complex average */
-  fprintf(sp2,"Building range cost arrays\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Building range cost arrays"
+          << pyre::journal::endl;
   CalcWrappedRangeDiffs(dpsi,avgdpsi,wrappedphase,kperpdpsi,kpardpsi,
                         nrow,ncol);
 
@@ -655,7 +675,9 @@ Array2D<costT> BuildStatCostsTopo(Array2D<float>& wrappedphase, Array2D<float>& 
 
   /* build array of mean wrapped phase differences in azimuth */
   /* biased, but not much, so don't bother with complex averaging */
-  fprintf(sp2,"Building azimuth cost arrays\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Building azimuth cost arrays"
+          << pyre::journal::endl;
   CalcWrappedAzDiffs(dpsi,avgdpsi,wrappedphase,kperpdpsi,kpardpsi,
                      nrow,ncol);
   
@@ -807,6 +829,9 @@ Array2D<costT> BuildStatCostsDefo(Array2D<float>& wrappedphase, Array2D<float>& 
   double glay, costscale;
   double nshortcycle, nshortcyclesq;
 
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+
   /* get memory and set cost array pointers */
   auto costs=MakeRowColArray2D<costT>(nrow,ncol);
   auto rowcost=costs.block(0,0,nrow-1,ncol);
@@ -835,7 +860,9 @@ Array2D<costT> BuildStatCostsDefo(Array2D<float>& wrappedphase, Array2D<float>& 
   /* build array of mean wrapped phase differences in range */
   /* simple average of phase differences is biased, but mean phase */
   /*   differences usually near zero, so don't bother with complex average */
-  fprintf(sp2,"Building range cost arrays\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Building range cost arrays"
+          << pyre::journal::endl;
   CalcWrappedRangeDiffs(dpsi,avgdpsi,wrappedphase,kperpdpsi,kpardpsi,
                         nrow,ncol);
 
@@ -898,7 +925,9 @@ Array2D<costT> BuildStatCostsDefo(Array2D<float>& wrappedphase, Array2D<float>& 
 
   /* build array of mean wrapped phase differences in azimuth */
   /* biased, but not much, so don't bother with complex averaging */
-  fprintf(sp2,"Building azimuth cost arrays\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Building azimuth cost arrays"
+          << pyre::journal::endl;
   CalcWrappedAzDiffs(dpsi,avgdpsi,wrappedphase,kperpdpsi,kpardpsi,
                      nrow,ncol);
 
@@ -983,6 +1012,9 @@ Array2D<smoothcostT> BuildStatCostsSmooth(Array2D<float>& wrappedphase, Array2D<
   double costscale;
   double nshortcycle, nshortcyclesq;
 
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+
   /* get memory and set cost array pointers */
   auto costs=MakeRowColArray2D<smoothcostT>(nrow,ncol);
   auto rowcost=costs.block(0,0,nrow-1,ncol);
@@ -1009,7 +1041,9 @@ Array2D<smoothcostT> BuildStatCostsSmooth(Array2D<float>& wrappedphase, Array2D<
   /* build array of mean wrapped phase differences in range */
   /* simple average of phase differences is biased, but mean phase */
   /*   differences usually near zero, so don't bother with complex average */
-  fprintf(sp2,"Building range cost arrays\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Building range cost arrays"
+          << pyre::journal::endl;
   CalcWrappedRangeDiffs(dpsi,avgdpsi,wrappedphase,kperpdpsi,kpardpsi,
                         nrow,ncol);
 
@@ -1060,7 +1094,9 @@ Array2D<smoothcostT> BuildStatCostsSmooth(Array2D<float>& wrappedphase, Array2D<
 
   /* build array of mean wrapped phase differences in azimuth */
   /* biased, but not much, so don't bother with complex averaging */
-  fprintf(sp2,"Building azimuth cost arrays\n");
+  verbose << pyre::journal::at(__HERE__)
+          << "Building azimuth cost arrays"
+          << pyre::journal::endl;
   CalcWrappedAzDiffs(dpsi,avgdpsi,wrappedphase,kperpdpsi,kpardpsi,
                      nrow,ncol);
 
@@ -1227,13 +1263,17 @@ int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase
 
   Array2D<float> pwr, pwr1, pwr2, corr;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   /* read intensity, if specified */
   if(strlen(infiles->ampfile)){
     ReadIntensity(&pwr,&pwr1,&pwr2,infiles,linelen,nlines,params,tileparams);
   }else{
     if(params->costmode==TOPO){
-      fprintf(sp1,"No brightness file specified.  ");
-      fprintf(sp1,"Using interferogram magnitude as intensity\n");
+      info << pyre::journal::at(__HERE__)
+           << "No brightness file specified. "
+           << "Using interferogram magnitude as intensity"
+           << pyre::journal::endl;
     }
     pwr = Array2D<float>(nrow, ncol);
     for(row=0;row<nrow;row++){
@@ -1249,7 +1289,9 @@ int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase
   }else if(pwr1.size() && pwr2.size() && params->havemagnitude){
 
     /* generate the correlation info from the interferogram and amplitude */
-    fprintf(sp1,"Generating correlation from interferogram and intensity\n");
+    info << pyre::journal::at(__HERE__)
+         << "Generating correlation from interferogram and intensity"
+         << pyre::journal::endl;
 
     /* get the correct number of looks, and make sure its odd */
     krowcorr=1+2*floor(params->ncorrlooksaz/(double )params->nlooksaz/2);
@@ -1258,8 +1300,10 @@ int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase
     /* calculate equivalent number of independent looks */
     params->ncorrlooks=(kcolcorr*(params->dr/params->rangeres))
       *(krowcorr*(params->da/params->azres))*params->nlooksother;
-    fprintf(sp1,"   (%.1f equivalent independent looks)\n",
-            params->ncorrlooks);
+    info << pyre::journal::at(__HERE__)
+         << "   (" << std::fixed << std::setprecision(1)
+         << params->ncorrlooks << " equivalent independent looks)"
+         << pyre::journal::endl;
 
     /* get real and imaginary parts of interferogram */
     auto realcomp = Array2D<float>(nrow, ncol);
@@ -1314,8 +1358,9 @@ int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase
     /* find biased default correlation using */
     /* inverse of unbias method used by BuildCostArrays() */
     corr = Array2D<float>(nrow, ncol);
-    fprintf(sp1,"No correlation file specified.  Assuming correlation = %g\n",
-           params->defaultcorr);
+    info << pyre::journal::at(__HERE__)
+         << "No correlation file specified. Assuming correlation = "
+         << params->defaultcorr << pyre::journal::endl;
     rho0=(params->rhosconst1)/(params->ncorrlooks)+(params->rhosconst2);
     rhomin=params->rhominfactor*rho0;
     if(params->defaultcorr>rhomin){
@@ -1359,8 +1404,11 @@ int GetIntensityAndCorrelation(Array2D<float>& mag, Array2D<float>& wrappedphase
   }
   if(iclipped){
     fflush(NULL);
-    fprintf(sp0,"WARNING: %ld illegal correlation values clipped to [0,1]\n",
-            iclipped);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: " << iclipped
+             << " illegal correlation values clipped to [0,1]"
+             << pyre::journal::endl;
   }
 
   /* dump correlation data if necessary */

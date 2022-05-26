@@ -1,1 +1,1 @@
-from pybind_isce3.image import *
+from isce3.ext.isce3.image import *

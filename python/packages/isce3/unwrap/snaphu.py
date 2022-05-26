@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import isce3
 import numpy as np
-from pybind_isce3.unwrap import _snaphu_unwrap
+from isce3.ext.isce3.unwrap import _snaphu_unwrap
 
 
 @dataclass(frozen=True)
@@ -784,7 +784,6 @@ def unwrap(
     corr_bias_model_params: Optional[CorrBiasModelParams] = None,
     phase_stddev_model_params: Optional[PhaseStddevModelParams] = None,
     scratchdir: Optional[os.PathLike] = None,
-    verbose: bool = False,
     debug: bool = False,
 ):
     r"""Performs 2-D phase unwrapping on an input interferogram using the SNAPHU
@@ -910,8 +909,6 @@ def unwrap(
         a temporary directory will be created and automatically removed from the
         filesystem at the end of processing. Otherwise, the directory and its
         contents will not be cleaned up. (default: None)
-    verbose : bool, optional
-        Print verbose output? (default: False)
     debug : bool, optional
         Dump intermediate data arrays to scratch directory for debugging?
         (default: False)
@@ -1099,7 +1096,6 @@ def unwrap(
             configstr += f"ESTIMATEFILE {tmp_unwest.resolve()}\n"
             configstr += f"ESTFILEFORMAT FLOAT_DATA\n"
 
-        configstr += f"VERBOSE {verbose}\n"
         configstr += f"DEBUG {debug}\n"
 
         # Ensure that debug outputs are written to the scratch directory.

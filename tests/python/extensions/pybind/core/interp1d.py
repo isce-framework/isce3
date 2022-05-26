@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import numpy.testing as npt
-import pybind_isce3.core as m
+import isce3.ext.isce3.core as m
 
 def test_bindings():
     # define a custom kernel in Python

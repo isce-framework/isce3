@@ -8,7 +8,7 @@ namespace isce3 { namespace geometry {
 DEMInterpolator loadDEM(
         isce3::io::Raster& demRaster,
         const isce3::product::GeoGridParameters& geoGrid, int lineStart,
-        int blockLength, int blockWidth, double demMargin,
+        int blockLength, int blockWidth, const int demMarginInPixels,
         isce3::core::dataInterpMethod demInterpMethod)
 {
     // DEM interpolator
@@ -90,15 +90,11 @@ DEMInterpolator loadDEM(
         maxX = geoGrid.startX() + geoGrid.spacingX() * (blockWidth - 1);
     }
 
-    // If not LonLat, scale to meters
-    demMargin = (epsgcode != 4326) ? isce3::core::decimaldeg2meters(demMargin)
-                                   : demMargin;
-
     // Account for margins
-    minX -= demMargin;
-    maxX += demMargin;
-    minY -= demMargin;
-    maxY += demMargin;
+    minX -= demMarginInPixels * demRaster.dx();
+    maxX += demMarginInPixels * demRaster.dx();
+    minY -= demMarginInPixels * std::abs(demRaster.dy());
+    maxY += demMarginInPixels * std::abs(demRaster.dy());
 
     std::cout << minX << " , " << maxX << " , " << minY << ", " << maxY
               << std::endl;

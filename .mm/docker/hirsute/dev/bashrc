@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# michael a.g. aïvázis <michael.aivazis@para-sim.com>
+# (c) 1998-2021 all rights reserved
+
+# the system profile
+if [ -r /etc/profile ]; then
+    source /etc/profile
+fi
+
+# umask
+umask u+rwx,g+rwx,o+rx
+# the language/encoding
+export LANG=en_US.UTF-8
+
+# prompt
+export PROMPT_COMMAND=prompter
+
+prompter() {
+  history -a
+  export PS1="$(python3 ${HOME}/prompt.py)"
+}
+
+# aliases
+alias d='ls -ahGF'
+alias dl='ls -ahGFl'
+# git
+alias git.hash='git log --format=format:"%h" -n 1'
+alias git.branch='git rev-parse --abbrev-ref HEAD'
+alias git.status='git status --porcelain --branch --ignored'
+alias git.tag='git describe --tags --long --always'
+
+# the location of the sources
+export SRCDIR=@SRCDIR@
+# mm 4.x
+alias mm='python3 ${SRCDIR}/mm/mm.py'
+
+# end of file

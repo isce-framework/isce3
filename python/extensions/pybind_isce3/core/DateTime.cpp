@@ -99,7 +99,7 @@ void addbinding(py::class_<DateTime> & pyDateTime)
         .def("is_close",
                 (bool (DateTime::*)(const DateTime &, const TimeDelta &) const)&DateTime::isClose,
                 py::arg("other"),
-                py::arg("tol") = TimeDelta(1e-10))
+                py::arg("tol") = TimeDelta(isce3::core::TOL_SECONDS))
 //        .def("day_of_year", &DateTime::dayOfYear)  // XXX not implemented
         .def("seconds_of_day", &DateTime::secondsOfDay)
 //        .def("day_of_week", &DateTime::dayOfWeek)  // XXX not implemented

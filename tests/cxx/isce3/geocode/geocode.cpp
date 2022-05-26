@@ -70,7 +70,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
     double threshold = 1.0e-9 ;
     int numiter = 25;
     size_t linesPerBlock = 1000;
-    double demBlockMargin = 0.1;
     int radarBlockMargin = 10;
 
     // output geocoded grid (can be different from DEM)
@@ -102,7 +101,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoObj.thresholdGeo2rdr(threshold);
     geoObj.numiterGeo2rdr(numiter);
     geoObj.linesPerBlock(linesPerBlock);
-    geoObj.demBlockMargin(demBlockMargin);
     geoObj.radarBlockMargin(radarBlockMargin);
     geoObj.dataInterpolator(method);
 
@@ -200,7 +198,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoComplexObj.thresholdGeo2rdr(threshold);
     geoComplexObj.numiterGeo2rdr(numiter);
     geoComplexObj.linesPerBlock(linesPerBlock);
-    geoComplexObj.demBlockMargin(demBlockMargin);
     geoComplexObj.radarBlockMargin(radarBlockMargin);
     geoComplexObj.dataInterpolator(method);
 
@@ -575,7 +572,6 @@ TEST(GeocodeTest, TestGeocodeSlc)
     double thresholdGeo2rdr = 1.0e-9;
     int numiterGeo2rdr = 25;
     size_t linesPerBlock = 1000;
-    double demBlockMargin = 0.1;
 
     // input radar grid
     char freq = 'A';
@@ -604,20 +600,18 @@ TEST(GeocodeTest, TestGeocodeSlc)
 
     bool flatten = false;
 
-    isce3::geocode::geocodeSlc<isce3::core::Poly2d> (
-            geocodedSlc, inputSlc, demRaster, radarGrid, geoGrid, orbit,
-            nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
-            numiterGeo2rdr, linesPerBlock, demBlockMargin, flatten);
+    isce3::geocode::geocodeSlc(geocodedSlc, inputSlc, demRaster, radarGrid,
+            geoGrid, orbit, nativeDoppler, imageGridDoppler, ellipsoid,
+            thresholdGeo2rdr, numiterGeo2rdr, linesPerBlock, flatten);
 
     isce3::io::Raster inputSlcY("yslc_rdr.bin", GA_ReadOnly);
 
     isce3::io::Raster geocodedSlcY("yslc_geo.bin", geoGridWidth, geoGridLength, 1,
                                   GDT_CFloat32, "ENVI");
 
-    isce3::geocode::geocodeSlc<isce3::core::LUT2d<double>> (
-            geocodedSlcY, inputSlcY, demRaster, radarGrid, geoGrid, orbit,
-            nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
-            numiterGeo2rdr, linesPerBlock, demBlockMargin, flatten);
+    isce3::geocode::geocodeSlc(geocodedSlcY, inputSlcY, demRaster, radarGrid,
+            geoGrid, orbit, nativeDoppler, imageGridDoppler, ellipsoid,
+            thresholdGeo2rdr, numiterGeo2rdr, linesPerBlock, flatten);
 
     double* _geoTrans = new double[6];
     _geoTrans[0] = geoGridStartX;

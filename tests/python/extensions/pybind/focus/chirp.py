@@ -1,5 +1,5 @@
 import numpy as np
-from pybind_isce3 import focus
+from isce3.ext.isce3 import focus
 
 def test_chirp():
     T = 1.0

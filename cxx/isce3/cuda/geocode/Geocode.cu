@@ -178,7 +178,6 @@ __host__
 Geocode::Geocode(const isce3::product::GeoGridParameters & geogrid,
                 const isce3::container::RadarGeometry & rdr_geom,
                 const Raster & dem_raster,
-                const double dem_margin,
                 const size_t lines_per_block,
                 const isce3::core::dataInterpMethod data_interp_method,
                 const isce3::core::dataInterpMethod dem_interp_method,
@@ -195,7 +194,6 @@ Geocode::Geocode(const isce3::product::GeoGridParameters & geogrid,
     _range_first_pixel(_rdr_geom.radarGrid().width() - 1),
     _range_last_pixel(0),
     _dem_raster(dem_raster),
-    _dem_margin(dem_margin),
     _interp_float_handle(data_interp_method),
     _interp_cfloat_handle(data_interp_method),
     _interp_double_handle(data_interp_method),
@@ -269,9 +267,10 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number)
     _mask.resize(block_size);
 
     // prepare device DEMInterpolator
+    int dem_margin_in_pixels = 50;
     isce3::geometry::DEMInterpolator host_dem_interp = isce3::geometry::loadDEM(
             _dem_raster, _geogrid, _line_start, _geo_block_length,
-            _geogrid.width(), _dem_margin, _dem_interp_method);
+            _geogrid.width(), dem_margin_in_pixels, _dem_interp_method);
     isce3::cuda::geometry::gpuDEMInterpolator dev_dem_interp(host_dem_interp);
     dev_dem_interp.initProjInterp();
 

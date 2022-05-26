@@ -11,7 +11,7 @@ import numpy.testing as npt
 from osgeo import gdal
 
 import iscetest
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 from nisar.products.readers import SLC
 
 

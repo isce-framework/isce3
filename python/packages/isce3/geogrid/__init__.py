@@ -1,1 +1,1 @@
-from pybind_isce3.geogrid import *
+from isce3.ext.isce3.geogrid import *

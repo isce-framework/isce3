@@ -53,16 +53,6 @@ class GeocodeInsarRunConfig(RunConfig):
             if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
                 self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True
 
-        if self.cfg['processing']['dem_margin'] is None:
-            '''
-            Default margin as the length of 50 pixels
-            (max of X and Y pixel spacing).
-            '''
-            dem_file = self.cfg['dynamic_ancillary_file_group']['dem_file']
-            dem_raster = isce3.io.Raster(dem_file)
-            dem_margin = 50 * max([dem_raster.dx, dem_raster.dy])
-            self.cfg['processing']['dem_margin'] = dem_margin
-
         # multilooks valid?
         az_looks = self.cfg['processing']['crossmul']['azimuth_looks']
         if az_looks > 1 and az_looks % 2 == 0:

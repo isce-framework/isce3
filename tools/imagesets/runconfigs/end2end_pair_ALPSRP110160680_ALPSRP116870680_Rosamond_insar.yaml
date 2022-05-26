@@ -6,10 +6,8 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
-            input_file_path:
-            - output_rslc_ref/rslc.h5
-            - output_rslc_sec/rslc.h5
+            reference_rslc_file_path: output_rslc_ref/rslc.h5
+            secondary_rslc_file_path: output_rslc_sec/rslc.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
@@ -89,8 +87,6 @@ runconfig:
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 25
-
-            dem_margin: 0.1
 
             coarse_resample:
                 lines_per_tile: 100

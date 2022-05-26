@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 import iscetest
 
 def test_LUT2d():

@@ -109,9 +109,6 @@ runconfig:
                 # number of lines in easting direction of a block of the geocoded grid
                 #x:  # currently not implemented
 
-            # extra margin in [degrees]. Margin of the DEM block relative to block of the geocoded grid 
-            dem_margin: 0.1
-
             # flag to flatten output GSLC
             flatten: True
 

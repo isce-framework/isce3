@@ -40,7 +40,6 @@ def run(cfg):
     
     # DEM parameters
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
-    dem_margin = cfg['processing']['dem_margin']
     dem_interp_method_enum = cfg['processing']['dem_interpolation_method_enum']
 
     # unpack geocode run parameters
@@ -206,7 +205,6 @@ def run(cfg):
         geo.doppler = zero_doppler
         geo.threshold_geo2rdr = threshold
         geo.numiter_geo2rdr = maxiter
-        geo.dem_block_margin = dem_margin
 
         # set data interpolator based on the geocode algorithm
         if output_mode == isce3.geocode.GeocodeOutputMode.INTERP:

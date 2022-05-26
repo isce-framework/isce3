@@ -19,13 +19,12 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
     pyGeocode
             .def(py::init<const isce3::product::GeoGridParameters&,
                          const isce3::container::RadarGeometry&,
-                         const isce3::io::Raster&, const double, const size_t,
+                         const isce3::io::Raster&, const size_t,
                          const isce3::core::dataInterpMethod,
                          const isce3::core::dataInterpMethod, const double,
                          const int, const double, const float>(),
                     py::arg("geogrid_params"), py::arg("radar_geometry"),
-                    py::arg("dem_raster"), py::arg("dem_margin"),
-                    py::arg("lines_per_block") = 1000,
+                    py::arg("dem_raster"), py::arg("lines_per_block") = 1000,
                     py::arg("data_interp_method") =
                             isce3::core::BILINEAR_METHOD,
                     py::arg("dem_interp_method") =
@@ -45,9 +44,6 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                 Radar grid describing input rasters
             dem_raster: Raster
                 DEM used to calculate radar grid indices
-            dem_margin: double
-                Extra margin applied to bounding box used to load DEM. Units
-                need to match geogrid_params EPSG units.
             lines_per_block: int
                 Number of lines to be processed
                 Defualt 1000

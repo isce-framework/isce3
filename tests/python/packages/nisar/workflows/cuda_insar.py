@@ -1,7 +1,7 @@
 import argparse
 import os
 
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 from nisar.workflows import h5_prep, insar
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence

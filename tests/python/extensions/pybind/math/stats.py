@@ -4,7 +4,7 @@ import numpy as np
 import numpy.testing as npt
 from osgeo import gdal, gdal_array
 import iscetest
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 
 
 def _create_raster(outpath, array, width, length, nbands, dtype,

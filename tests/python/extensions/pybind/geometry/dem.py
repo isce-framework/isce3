@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import pytest
+import isce3.ext.isce3.geometry as m
+from isce3.ext.isce3.core import DataInterpMethod
 from isce3.geometry import DEMInterpolator
 from isce3.io import Raster
-from pybind_isce3.core import DataInterpMethod
 import iscetest
 
 import os

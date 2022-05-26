@@ -1,0 +1,12 @@
+# -*- Makefile -*-
+
+
+# hirsute docker image for development
+# mount the host source directories at /usr/local/src in the instance
+hirsute.dev.root := .mm/docker/hirsute/
+hirsute.dev.name := dev
+hirsute.dev.tag := hirsute-dev
+hirsute.dev.launch.mounts := mm pyre isce3
+
+
+# end of file

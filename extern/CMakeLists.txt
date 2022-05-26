@@ -30,7 +30,7 @@ macro(getpackage_fftw)
 endmacro()
 
 macro(getpackage_gdal)
-    find_package(GDAL 2.3 REQUIRED)
+    find_package(GDAL 3.0 REQUIRED)
 endmacro()
 
 macro(getpackage_googletest)

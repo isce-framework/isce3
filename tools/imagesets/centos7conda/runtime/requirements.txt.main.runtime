@@ -1,5 +1,5 @@
 fftw>=3
-gdal>=2.3
+gdal>=3.0
 h5py
 hdf5>=1.10.2
 numpy

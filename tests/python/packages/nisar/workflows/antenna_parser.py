@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from nisar.products.readers.antenna import AntennaParser
-from pybind_isce3 import antenna as ant
+from isce3.ext.isce3 import antenna as ant
 import iscetest
 
 import os

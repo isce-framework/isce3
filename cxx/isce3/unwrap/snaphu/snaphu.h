@@ -16,6 +16,7 @@
 #include <string>
 
 #include <Eigen/Core>
+#include <pyre/journal.h>
 
 #include <isce3/except/Error.h>
 
@@ -99,10 +100,6 @@
 #define MINRES               SCHAR_MIN
 #define PROBCOSTP            (-99.999)
 #define NULLFILE             "/dev/null"
-#define DEF_ERRORSTREAM      stderr
-#define DEF_OUTPUTSTREAM     stdout
-#define DEF_VERBOSESTREAM    NULL
-#define DEF_COUNTERSTREAM    NULL
 #define DEF_INITONLY         FALSE
 #define DEF_INITMETHOD       MSTINIT
 #define DEF_UNWRAPPED        FALSE
@@ -110,7 +107,6 @@
 #define DEF_EVAL             FALSE
 #define DEF_WEIGHT           1
 #define DEF_COSTMODE         TOPO
-#define DEF_VERBOSE          FALSE
 #define DEF_AMPLITUDE        TRUE
 #define AUTOCALCSTATMAX      0
 #define MAXNSHORTCYCLE       8192
@@ -602,7 +598,6 @@ typedef struct paramST{
   signed char initmethod=0;     /* MST or MCF initialization */
   signed char costmode=0;       /* statistical cost mode */
   signed char dumpall=0;        /* dump intermediate files */
-  signed char verbose=0;        /* print verbose output */
   signed char amplitude=0;      /* intensity data is amplitude, not power */
   signed char havemagnitude=0;  /* flag: create correlation from other inputs */
   signed char flipphasesign=0;  /* flag: flip phase and flow array signs */
@@ -998,10 +993,6 @@ int ReadComplexFile(Array2D<float>* mag, Array2D<float>* phase, char *rifile,
 int ReadAltSampFile(Array2D<float>* arr1, Array2D<float>* arr2, char *infile,
                      long linelen, long nlines, tileparamT *tileparams);
 int SetDumpAll(outfileT *outfiles, paramT *params);
-int SetStreamPointers(void);
-int SetVerboseOut(paramT *params);
-int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol,
-                             paramT *params);
 int DumpIncrCostFiles(Array2D<incrcostT>& incrcosts, long iincrcostfile,
                       long nflow, long nrow, long ncol);
 int MakeTileDir(paramT *params, outfileT *outfiles);
@@ -1096,7 +1087,10 @@ int Write2DArray(Array2D<T>& array, const char *filename,
   }
   if(fclose(fp)){
     fflush(NULL);
-    //fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile
+             << " (disk full?)" << pyre::journal::endl;
   }
   return(0);
 }
@@ -1130,7 +1124,10 @@ int Write2DRowColArray(Array2D<T>& array, char *filename, long nrow,
   }
   if(fclose(fp)){
     fflush(NULL);
-    //fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
   return(0);
 }
@@ -1328,10 +1325,6 @@ int Read2DRowColFileRows(Array2D<T>* arr, char *filename, long linelen,
 /* flags used for signal handling */
 extern char dumpresults_global;
 extern char requestedstop_global;
-
-/* ouput stream pointers */
-/* sp0=error messages, sp1=status output, sp2=verbose, sp3=verbose counter */
-extern FILE *sp0, *sp1, *sp2, *sp3;
 
 /* node pointer for marking arc not on tree in apex array */
 /* this should be treat as a constant */
