@@ -264,7 +264,7 @@ def run(cfg: dict, runw_hdf5: str):
 
     # Run InSAR for sub-band SLCs (split-main-bands) or 
     # for main and side bands for iono_freq_pols (main-side-bands)
-    insar_ionosphere_pair(iono_insar_cfg)
+    # insar_ionosphere_pair(iono_insar_cfg)
               
     # Define methods to use subband or sideband
     iono_method_subbands = ['split_main_band']
@@ -608,6 +608,7 @@ def run(cfg: dict, runw_hdf5: str):
                 data_type=gdal.GDT_Float32, 
                 block_row=row_start, 
                 data_shape=[rows_output, cols_output])
+                
             # If filtering is not required, then write ionosphere phase 
             # at this point. 
             if not filter_bool:
@@ -664,105 +665,161 @@ def run(cfg: dict, runw_hdf5: str):
                     block_row=row_start, 
                     data_shape=[rows_output, cols_output])
 
-        # apply filter to entire scene to avoid discontinuity along 
-        # block boundaries
         if filter_bool:
-            disp_tif = gdal.Open(out_disp_path)
-            dispersive = disp_tif.ReadAsArray()
-            nondisp_tif = gdal.Open(out_nondisp_path)
-            non_dispersive = nondisp_tif.ReadAsArray()
-            mask_tif = gdal.Open(mask_path)
-            mask_array = mask_tif.ReadAsArray()
-            sig_disp_tif = gdal.Open(sig_phi_iono_path)
-            iono_std = sig_disp_tif.ReadAsArray()
-            sig_nondisp_tif = gdal.Open(sig_phi_nondisp_path)
-            nondisp_std = sig_nondisp_tif.ReadAsArray()
-            
-            # low pass filtering for dispersive phase
-            filt_disp, filt_data_sig = iono_filter_obj.low_pass_filter(
-                input_array=dispersive, 
-                input_sig=iono_std, 
-                mask=mask_array)
-
-            out_disp_path = os.path.join(
-                iono_path, iono_method, pol_comb_str, 'filt_dispersive')
-            ionosphere_estimation.write_array(out_disp_path, 
-                filt_disp, 
-                data_type=gdal.GDT_Float32)                
-
-            # low pass filtering for non-dispersive phase
-            filt_nondisp, filt_nondisp_sig = iono_filter_obj.low_pass_filter(
-                input_array=non_dispersive, 
-                input_sig=nondisp_std, 
-                mask=mask_array)
-
-            out_nondisp_path = os.path.join(
-                iono_path, iono_method, pol_comb_str, 'filt_nondispersive')
-            ionosphere_estimation.write_array(out_nondisp_path, 
-                filt_nondisp, 
-                data_type=gdal.GDT_Float32)
-
             # if unwrapping correction technique is not requested, 
             # save output to hdf5 at this point
             if not unwrap_correction_bool:
-                iono_hdf5_path = f'{dest_pol_path}/ionospherePhaseScreen'
-                write_disp_block_hdf5(runw_path_insar, 
-                    iono_hdf5_path, 
-                    filt_disp, 
-                    rows_output)
+                with h5py.File(runw_path_insar, 'a', libver='latest', swmr=True) as dst_h5:
+                    iono_hdf5_path = dst_h5[f'{dest_pol_path}/ionospherePhaseScreen']
+                    iono_sig_hdf5_path = \
+                        dst_h5[f'{dest_pol_path}/ionospherePhaseScreenUncertainty']
+                    print(runw_path_insar, f'{dest_pol_path}/ionospherePhaseScreen')
+                    
+                    # low pass filtering for dispersive phase
+                    iono_filter_obj.low_pass_filter(
+                        data_str=out_disp_path, 
+                        data_sig_str=sig_phi_iono_path, 
+                        mask_str=mask_path, 
+                        output_str=iono_hdf5_path, 
+                        output_sig_str=iono_sig_hdf5_path,
+                        iteration=filter_iterations)
 
-                iono_sig_hdf5_path = \
-                    f'{dest_pol_path}/ionospherePhaseScreenUncertainty'
-                write_disp_block_hdf5(runw_path_insar, 
-                    iono_sig_hdf5_path, 
-                    filt_data_sig, 
-                    rows_output)  
             else:
-                # Estimating phase unwrapping errors
-                com_unw_err, diff_unw_err = iono_phase_obj.compute_unwrapp_error(
-                    disp_array=filt_disp, 
-                    nondisp_array=filt_nondisp,
-                    main_runw=main_image, 
-                    side_runw=side_image,
-                    low_sub_runw=sub_low_image, 
-                    high_sub_runw=sub_high_image, 
-                    y_ref=None, 
-                    x_ref=None)
-
-                dispersive_unwcor, non_dispersive_unwcor = \
-                    iono_phase_obj.compute_disp_nondisp(
-                    phi_sub_low=sub_low_image, 
-                    phi_sub_high=sub_high_image,
-                    phi_main=main_image, 
-                    phi_side=side_image,
-                    slant_main=main_slant,
-                    slant_side=side_slant,
-                    comm_unwcor_coef=com_unw_err,
-                    diff_unwcor_coef=diff_unw_err)  
-
-                filt_disp, filt_data_sig = iono_filter_obj.low_pass_filter(
-                    input_array=dispersive_unwcor, 
-                    input_sig=iono_std, 
-                    mask=mask_array)
-
-                out_disp_path = os.path.join(
+                filt_disp_path = os.path.join(
                     iono_path, iono_method, pol_comb_str, 'filt_dispersive')
-                write_array(out_disp_path, 
-                    filt_disp, 
-                    data_type=gdal.GDT_Float32)   
-                
-                iono_hdf5_path = f'{dest_pol_path}/ionospherePhaseScreen'
-                write_disp_block_hdf5(runw_path_insar, 
-                    iono_hdf5_path, 
-                    filt_disp, 
-                    rows_output)
+                filt_disp_sig_path = os.path.join(
+                    iono_path, iono_method, pol_comb_str, 'filt_dispersive.sig')
+                iono_filter_obj.low_pass_filter(
+                    data_str=out_disp_path, 
+                    data_sig_str=sig_phi_iono_path, 
+                    mask_str=mask_path, 
+                    output_str=filt_disp_path, 
+                    output_sig_str=filt_disp_sig_path)
 
-                iono_sig_hdf5_path = \
-                    f'{dest_pol_path}/ionospherePhaseScreenUncertainty'
-                write_disp_block_hdf5(runw_path_insar, 
-                    iono_sig_hdf5_path, 
-                    filt_data_sig, 
-                    rows_output)
+                # low pass filtering for non-dispersive phase
+                filt_nondisp_path = os.path.join(
+                    iono_path, iono_method, pol_comb_str, 'filt_nondispersive')
+                filt_nondisp_sig_path = os.path.join(
+                    iono_path, iono_method, pol_comb_str, 'filt_nondispersive.sig')
+                iono_filter_obj.low_pass_filter(
+                    data_str=out_nondisp_path, 
+                    data_sig_str=sig_phi_nondisp_path, 
+                    mask_str=mask_path, 
+                    output_str=filt_nondisp_path,
+                    output_sig_str=filt_nondisp_sig_path)
+
+                disp_tif = gdal.Open(filt_disp_path)
+                nondisp_tif = gdal.Open(filt_nondisp_path)
+                disp_width = disp_tif.RasterXSize
+                disp_length = disp_tif.RasterYSize
+
+                for block in range(0, nblocks):
+            
+                    row_start = block * blocksize
+                    if (row_start + blocksize > rows_main):
+                        block_rows_data = rows_main - row_start
+                    else:
+                        block_rows_data = blocksize
+
+                    filt_disp = disp_tif.GetRasterBand(1).ReadAsArray(0,
+                        row_start,
+                        disp_width,
+                        block_rows_data)
+
+                    filt_nondisp = nondisp_tif.GetRasterBand(1).ReadAsArray(0,
+                        row_start,
+                        disp_width,
+                        block_rows_data)
+
+                    # initialize arrays by setting None
+                    sub_low_image = None
+                    sub_high_image = None
+                    main_image = None
+                    side_image = None
+                    
+                    if iono_method in iono_method_subbands:
+                        sub_low_image = np.empty([block_rows_data, cols_main], 
+                            dtype=float)
+                        sub_high_image = np.empty([block_rows_data, cols_main], 
+                            dtype=float)
+
+                        with h5py.File(sub_low_runw_str, 'r', 
+                            libver='latest', swmr=True) as src_low_h5, \
+                            h5py.File(sub_high_runw_str, 'r',
+                            libver='latest', swmr=True) as src_high_h5:
+                            
+                            # Read runw block for sub-bands
+                            src_low_h5[runw_path_freq_a].read_direct(
+                                sub_low_image, 
+                                np.s_[row_start : row_start + block_rows_data, :])
+                            src_high_h5[runw_path_freq_a].read_direct(
+                                sub_high_image, 
+                                np.s_[row_start : row_start + block_rows_data, :])
+  
+                    if iono_method in iono_method_sideband:
+
+                        main_image = np.empty([block_rows_data, cols_main], 
+                            dtype=float)
+                        side_image = np.empty([block_rows_data, cols_side], 
+                            dtype=float)
+                        
+                        with h5py.File(runw_freq_a_str, 'r', 
+                            libver='latest', swmr=True) as src_main_h5, \
+                            h5py.File(runw_freq_b_str, 'r',
+                            libver='latest', swmr=True) as src_side_h5:
+                            
+                            # Read runw block for main and side bands
+                            src_main_h5[runw_path_freq_a].read_direct(
+                                main_image, 
+                                np.s_[row_start : row_start + block_rows_data, :])
+                            src_side_h5[runw_path_freq_b].read_direct(
+                                side_image, 
+                                np.s_[row_start : row_start + block_rows_data, :])
+
+                    # Estimating phase unwrapping errors
+                    com_unw_err, diff_unw_err = iono_phase_obj.compute_unwrapp_error(
+                        disp_array=filt_disp, 
+                        nondisp_array=filt_nondisp,
+                        main_runw=main_image, 
+                        side_runw=side_image,
+                        low_sub_runw=sub_low_image, 
+                        high_sub_runw=sub_high_image, 
+                        y_ref=None, 
+                        x_ref=None)
+
+                    dispersive_unwcor, non_dispersive_unwcor = \
+                        iono_phase_obj.compute_disp_nondisp(
+                        phi_sub_low=sub_low_image, 
+                        phi_sub_high=sub_high_image,
+                        phi_main=main_image, 
+                        phi_side=side_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant,
+                        comm_unwcor_coef=com_unw_err,
+                        diff_unwcor_coef=diff_unw_err)  
+
+                    out_disp_path = os.path.join(
+                        iono_path, iono_method, pol_comb_str, f'dispersive')
+                    out_nondisp_path = os.path.join(
+                        iono_path, iono_method, pol_comb_str, 'non_dispersive')
+                
+                    ionosphere_estimation.write_array(out_disp_path, 
+                        dispersive, 
+                        data_type=gdal.GDT_Float32, 
+                        block_row=row_start, 
+                        data_shape=[rows_output, cols_output])
+
+                with h5py.File(runw_path_insar, 'a', libver='latest', swmr=True) as dst_h5:
+                    iono_hdf5_path = dst_h5[f'{dest_pol_path}/ionospherePhaseScreen']
+                    iono_sig_hdf5_path = \
+                        dst_h5[f'{dest_pol_path}/ionospherePhaseScreenUncertainty']
+
+                    iono_filter_obj.low_pass_filter(
+                        data_str=out_disp_path, 
+                        data_sig_str=sig_phi_iono_path, 
+                        mask_str=mask_path, 
+                        output_str=iono_hdf5_path, 
+                        output_sig_str=iono_sig_hdf5_path)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran INSAR in {t_all_elapsed:.3f} seconds")

@@ -38,37 +38,123 @@ def test_ionosphere_methods():
     phi0_LH = phi0H - phi0L
     phi_ms = phi0 - phi1    
 
-    iono_obj = ionosphere_estimation.IonosphereEstimation(
-        main_center_freq=f0,
-        side_center_freq=f1, 
-        low_center_freq=f0L, 
-        high_center_freq=f0H,
-        method='split_main_band')
-        
-    phi_n_LH, phi_iono_LH = iono_obj.estimate_iono_low_high(
+    phi_iono_LH, phi_n_LH = ionosphere_estimation.estimate_iono_low_high(
             f0=f0, 
             freq_low=f0L, 
             freq_high=f0H, 
             phi0_low=phi0L, 
             phi0_high=phi0H)
     
-    phi_n_ms, phi_iono_ms = iono_obj.estimate_iono_main_side(
+    phi_iono_ms, phi_n_ms = ionosphere_estimation.estimate_iono_main_side(
             f0=f0, 
             f1=f1, 
             phi0=phi0, 
             phi1=phi1)
     
-    phi_n_md, phi_iono_md = iono_obj.estimate_iono_main_diff(
+    phi_iono_md, phi_n_md = ionosphere_estimation.estimate_iono_main_diff(
             f0=f0, 
             f1=f1, 
             phi0=phi0, 
             phi1=phi1)
+    difference_ref_ls_abs = np.abs(phi0_iono - phi_iono_LH)
+    difference_ref_ms_abs = np.abs(phi0_iono - phi_iono_ms)
+    difference_ref_md_abs = np.abs(phi0_iono - phi_iono_md)
 
-    difference_lh_ms_abs = np.abs(phi_n_LH - phi_n_ms)
-    difference_lh_md_abs = np.abs(phi_n_LH - phi_n_md)
+    assert difference_ref_ls_abs < 1e-5
+    assert difference_ref_ms_abs < 1e-5
+    assert difference_ref_md_abs < 1e-5
 
-    assert difference_lh_ms_abs < 1e-5
-    assert difference_lh_md_abs < 1e-5
+def test_unwrap_error_methods():
+    f0 = 1.27e9
+    f1 = f0 + 60.0e6
+    BW = 20.0e6 # bandwidt
+    f0L = f0 - BW/3.0
+    f0H = f0 + BW/3.0
+    speed_of_light = 299792458.0
+
+    dtecx = np.linspace(1.0*1e16, 2*1e16, 100)
+    dtecy = np.linspace(1.0*1e16, 2*1e16, 100)
+    dtecxy1, dtecxy2 = np.meshgrid(dtecx, dtecy)
+    dTEC = dtecxy1 + dtecxy2
+    
+    phase = 0 
+    deltaR = (speed_of_light/f0/4.0/np.pi)*phase
+    
+    # simulate 2 dimensional phase for different center frequencies. 
+    phase0, _, _ = simulate_ifgrams(f0, deltaR, dTEC) 
+    phaseL, phi_low_non, phi_low_iono = simulate_ifgrams(f0L, deltaR, dTEC)
+    phaseH, phi_high_non, phi_high_iono = simulate_ifgrams(f0H, deltaR, dTEC)
+    phaseSideBand, phi_side_non, phi_side_iono = simulate_ifgrams(f1, deltaR, dTEC)
+
+    # unwrap errors 
+    common_ref_err = np.zeros([100, 100])
+    common_ref_err[40:60, 40:60] = common_ref_err[40:60, 40:60] - 2 * np.pi
+    diff_ref_err = np.zeros([100, 100])
+    diff_ref_err[50:100, 50:100] = diff_ref_err[50:100, 50:100] + 4 * np.pi
+    
+    # test for split_main_band
+    phi_iono_lh, phi_n_lh = ionosphere_estimation.estimate_iono_low_high(
+        f0, f0L, f0H, phaseL, phaseH)
+
+    # add unwrapping errors to subbands
+    phaseL_unwErr = phaseL.copy()
+    phaseH_unwErr = phaseH.copy()
+
+    phaseL_unwErr = phaseL_unwErr + common_ref_err
+    phaseH_unwErr = phaseH_unwErr + common_ref_err
+    phaseH_unwErr = phaseH_unwErr + diff_ref_err
+
+    # assume that ionosphere phase is correctly estimated through filtering
+    com_unw_err, diff_unw_err = ionosphere_estimation.compute_unwrapp_error_split_main_band(
+        f0=f0,freq_low=f0L, freq_high=f0H,
+        disp_array=phi_iono_lh, nondisp_array=phi_n_lh,
+        low_sub_runw=phaseL_unwErr, high_sub_runw=phaseH_unwErr)
+    
+    difference_comref_ls_abs = np.sum(np.abs(com_unw_err * 2*np.pi - common_ref_err))
+    difference_diffref_ls_abs = np.sum(np.abs(diff_unw_err* 2*np.pi - diff_ref_err))
+    
+    assert difference_comref_ls_abs < 1e-5
+    assert difference_diffref_ls_abs < 1e-5
+
+    # test for main_side_band
+    phi_iono_ms, phi_n_ms = ionosphere_estimation.estimate_iono_main_side(
+        f0, f1, phase0, phaseSideBand)
+
+    # add unwrapping errors to subbands
+    phaseSideBand_unwErr = phaseSideBand.copy()
+    phase0_unwErr = phase0.copy()
+
+    phase0_unwErr = phase0_unwErr + common_ref_err
+    phaseSideBand_unwErr = phaseSideBand_unwErr + common_ref_err
+    phaseSideBand_unwErr = phaseSideBand_unwErr + diff_ref_err
+
+    # assume that ionosphere phase is correctly estimated through filtering
+    com_unw_err, diff_unw_err = ionosphere_estimation.compute_unwrapp_error_main_side_band(
+        f0=f0, f1=f1, 
+        disp_array=phi_iono_ms, nondisp_array=phi_n_ms,
+        main_runw=phase0_unwErr, side_runw=phaseSideBand_unwErr)
+    
+    difference_comref_ms_abs = np.sum(np.abs(com_unw_err * 2*np.pi - common_ref_err))
+    difference_diffref_ms_abs = np.sum(np.abs(diff_unw_err* 2*np.pi - diff_ref_err))
+    
+    assert difference_comref_ms_abs < 1e-5
+    assert difference_diffref_ms_abs < 1e-5
+
+    # test for main_diff_main_side_band
+    phi_iono_md, phi_n_md = ionosphere_estimation.estimate_iono_main_diff(
+        f0, f1, phase0, phaseSideBand)
+
+    # assume that ionosphere phase is correctly estimated through filtering
+    com_unw_err, diff_unw_err = ionosphere_estimation.compute_unwrapp_error_main_diff_ms_band(
+        f0=f0, f1=f1, 
+        disp_array=phi_iono_ms, nondisp_array=phi_n_ms,
+        main_runw=phase0_unwErr, side_runw=phaseSideBand_unwErr)
+    
+    difference_comref_md_abs = np.sum(np.abs(com_unw_err * 2*np.pi - common_ref_err))
+    difference_diffref_md_abs = np.sum(np.abs(diff_unw_err* 2*np.pi - diff_ref_err))
+    
+    assert difference_comref_md_abs < 1e-5
+    assert difference_diffref_md_abs < 1e-5
 
 def test_split_main_band_run():
     '''
@@ -139,6 +225,7 @@ def test_main_side_band_run():
 
 if __name__ == '__main__':
     test_ionosphere_methods()
+    test_unwrap_error_methods()
     test_split_main_band_run()
     test_main_side_band_run()
     
