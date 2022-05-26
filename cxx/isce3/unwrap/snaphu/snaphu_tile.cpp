@@ -408,8 +408,14 @@ int GrowRegions(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, l
   Array2D<Cost> growregionscosts;
   Array2D<Cost>* growregionscostsptr=&growregionscosts;
 
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+
   /* set up */
-  fprintf(sp1,"Growing reliable regions\n");
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Growing reliable regions"
+       << pyre::journal::endl;
   minsize=params->minregionsize;
   costthresh=params->tilecostthresh;
   closestregion=0;
@@ -425,7 +431,7 @@ int GrowRegions(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, l
     }else{
       fflush(NULL);
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Illegal cost mode in GrowRegions().  This is a bug.");
+              "Illegal cost mode in GrowRegions(). This is a bug.");
     }
     temptileparams->firstrow=0;
     temptileparams->firstcol=0;
@@ -614,11 +620,13 @@ int GrowRegions(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, l
       }
     }
   }
-  fprintf(sp2,"Tile partitioned into %ld regions\n",regioncounter+1);
+  verbose << pyre::journal::at(__HERE__)
+          << "Tile partitioned into " << (regioncounter+1) << " regions"
+          << pyre::journal::endl;
 
   /* write regions array */
   /* write as shorts if multiple tiles */
-  if(params->ntilerow > 1 || params->ntilecol>1){
+  if(params->ntilerow>1 || params->ntilecol>1){
     auto regions=Array2D<short>(nrow,ncol);
     for(row=0;row<nrow;row++){
       for(col=0;col<ncol;col++){
@@ -631,7 +639,9 @@ int GrowRegions(Array2D<typename CostTag::Cost>& costs, Array2D<short>& flows, l
       }
     }
     auto regionfile=std::string(outfiles->outfile)+REGIONSUFFIX;
-    fprintf(sp2,"Writing region data to file %s\n",regionfile.c_str());
+    verbose << pyre::journal::at(__HERE__)
+            << "Writing region data to file " << regionfile
+            << pyre::journal::endl;
     Write2DArray(regions,regionfile.c_str(),nrow,ncol,sizeof(short));
   }
 
@@ -664,8 +674,14 @@ int GrowConnCompsMask(Array2D<typename CostTag::Cost>& costs, Array2D<short>& fl
   char realoutfile[MAXSTRLEN]={};
   FILE *conncompfp;
 
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+
   /* error checking */
-  fprintf(sp1,"Growing connected component mask\n");
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Growing connected component mask"
+       << pyre::journal::endl;
   minsize=params->minconncompfrac*nrow*ncol;
   maxncomps=params->maxncomps;
   costthresh=params->conncompthresh;
@@ -804,13 +820,17 @@ int GrowConnCompsMask(Array2D<typename CostTag::Cost>& costs, Array2D<short>& fl
       }
     }
   }
-  fprintf(sp2,"%ld connected components formed\n",regioncounter);
+  verbose << pyre::journal::at(__HERE__)
+          << regioncounter << " connected components formed"
+          << pyre::journal::endl;
 
   /* make sure we don't have too many components */
   if(regioncounter>maxncomps){
 
     /* copy regionsizes array and sort to find new minimum region size */
-    fprintf(sp2,"Keeping only %ld connected components\n",maxncomps);
+    verbose << pyre::journal::at(__HERE__)
+            << "Keeping only " << maxncomps << " connected components"
+            << pyre::journal::endl;
     auto sortedregionsizes=Array1D<long>(regioncounter);
     for(i=0;i<regioncounter;i++){
       sortedregionsizes[i]=regionsizes[i+1];
@@ -873,9 +893,10 @@ int GrowConnCompsMask(Array2D<typename CostTag::Cost>& costs, Array2D<short>& fl
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),
             "Bad conncompouttype in GrowConnCompMask()");
   }
-  fprintf(sp1,"Writing connected components to file %s"
-          " as %d-byte unsigned ints\n",
-          outfiles->conncompfile,((int )outtypesize));
+  info << pyre::journal::at(__HERE__)
+       << "Writing connected components to file " << outfiles->conncompfile
+       << " as " << ((int )outtypesize) << "-byte unsigned ints"
+       << pyre::journal::endl;
   conncompfp=OpenOutputFile(outfiles->conncompfile,realoutfile);
   for(row=0;row<nrow;row++){
     for(col=0;col<ncol;col++){
@@ -900,8 +921,11 @@ int GrowConnCompsMask(Array2D<typename CostTag::Cost>& costs, Array2D<short>& fl
   }
   if(fclose(conncompfp)){
     fflush(NULL);
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",
-            outfiles->conncompfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << outfiles->conncompfile
+             << " (disk full?)"
+             << pyre::journal::endl;
   }
 
   return(0);
@@ -917,6 +941,8 @@ long ThickenCosts(Array2D<incrcostT>& incrcosts, long nrow, long ncol){
 
   long row, col, templong, maxcost;
   double n;
+
+  auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
 
   /* initialize variable storing maximum cost */
   maxcost=-LARGEINT;
@@ -937,7 +963,9 @@ long ThickenCosts(Array2D<incrcostT>& incrcosts, long nrow, long ncol){
       templong=LRound(templong/n);
       if(templong>LARGESHORT){
         fflush(NULL);
-        fprintf(sp0,"WARNING: COSTS CLIPPED IN ThickenCosts()\n");
+        warnings << pyre::journal::at(__HERE__)
+                 << "WARNING: COSTS CLIPPED IN ThickenCosts()"
+                 << pyre::journal::endl;
         incrcosts(row,col).negcost=LARGESHORT;
       }else{
         incrcosts(row,col).negcost=templong;
@@ -964,7 +992,9 @@ long ThickenCosts(Array2D<incrcostT>& incrcosts, long nrow, long ncol){
       templong=LRound(templong/n);
       if(templong>LARGESHORT){
         fflush(NULL);
-        fprintf(sp0,"WARNING: COSTS CLIPPED IN ThickenCosts()\n");
+        warnings << pyre::journal::at(__HERE__)
+                 << "WARNING: COSTS CLIPPED IN ThickenCosts()"
+                 << pyre::journal::endl;
         incrcosts(row,col).negcost=LARGESHORT;
       }else{
         incrcosts(row,col).negcost=templong;
@@ -1174,7 +1204,10 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
   Array1D<candidateT> candidatebag, candidatelist;
 
   /* set up */
-  fprintf(sp1,"Assembling tiles\n");
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Assembling tiles"
+       << pyre::journal::endl;
   ntilerow=params->ntilerow;
   ntilecol=params->ntilecol;
   ntiles=ntilerow*ntilecol;
@@ -1331,13 +1364,18 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
 
   /* solve the secondary network problem */
   /* main loop: loop over flow increments and sources */
-  fprintf(sp1,"Running optimizer for secondary network\n");
-  fprintf(sp1,"Number of nodes in secondary network: %ld\n",nnodes);
+  info << pyre::journal::at(__HERE__)
+       << "Running optimizer for secondary network"
+       << pyre::journal::endl
+       << "Number of nodes in secondary network: " << nnodes
+       << pyre::journal::endl;
   maxnflowcycles=LRound(nnodes*params->maxcyclefraction);
   while(TRUE){ 
  
-    fprintf(sp1,"Flow increment: %ld  (Total improvements: %ld)\n",
-            nflow,ncycle);
+    info << pyre::journal::at(__HERE__)
+         << "Flow increment: " << nflow << "  (Total improvements: "
+         << ncycle << ")"
+         << pyre::journal::endl;
 
     /* set up the incremental (residual) cost arrays */
     SetupIncrFlowCosts(scndrycosts,incrcosts,scndryflows,nflow,ntiles,
@@ -1370,7 +1408,9 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
       }
       if(totalcost>oldtotalcost || (n>0 && totalcost==oldtotalcost)){
         fflush(NULL);
-        fprintf(sp1,"Caution: Unexpected increase in total cost\n");
+        info << pyre::journal::at(__HERE__)
+             << "Caution: Unexpected increase in total cost"
+             << pyre::journal::endl;
       }
       if(totalcost>mintotalcost){
         nincreasedcostiter++;
@@ -1390,8 +1430,11 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
     /* break if total cost increase is sustained */
     if(nincreasedcostiter>=params->maxflow){
       fflush(NULL);
-      fprintf(sp0,"WARNING: Unexpected sustained increase in total cost."
-              "  Breaking loop\n");
+      auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: Unexpected sustained increase in total cost."
+               << "  Breaking loop"
+               << pyre::journal::endl;
       break;
     }
 
@@ -1422,7 +1465,9 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
   /* remove temporary tile log files and tile directory */
   if(params->rmtmptile){
     fflush(NULL);
-    fprintf(sp1,"Removing temporary directory %s\n",params->tiledir);
+    info << pyre::journal::at(__HERE__)
+         << "Removing temporary directory " << params->tiledir
+         << pyre::journal::endl;
     for(tilerow=0;tilerow<ntilerow;tilerow++){
       for(tilecol=0;tilecol<ntilecol;tilecol++){
         auto filename=std::string(params->tiledir)+"/"
@@ -1436,9 +1481,10 @@ int AssembleTiles(outfileT *outfiles, paramT *params,
   /* Give notice about increasing overlap if there are edge artifacts */
   if(params->rowovrlp<ni || params->colovrlp<nj){
     fflush(NULL);
-    fprintf(sp1,
-            "SUGGESTION: Try increasing tile overlap and/or size"
-            " if solution has edge artifacts\n");
+    info << pyre::journal::at(__HERE__)
+         << "SUGGESTION: Try increasing tile overlap and/or size"
+         << " if solution has edge artifacts"
+         << pyre::journal::endl;
   }
 
   /* done */
@@ -2240,7 +2286,7 @@ int SetUpperEdge(long ncol, long tilerow, long tilecol, Array2D<Cost>& costs,
           (costs(0,col)+costsabove(0,col))/2;
       }else{
         throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-                "Illegal cost mode in SetUpperEdge().  This is a bug.");
+                "Illegal cost mode in SetUpperEdge(). This is a bug.");
       }
     }
   }else{
@@ -2267,7 +2313,7 @@ int SetUpperEdge(long ncol, long tilerow, long tilecol, Array2D<Cost>& costs,
       }
     }else{
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Illegal cost mode in SetUpperEdge().  This is a bug.");
+              "Illegal cost mode in SetUpperEdge(). This is a bug.");
     }
   }
 
@@ -2362,7 +2408,7 @@ int SetLowerEdge(long nrow, long ncol, long tilerow, long tilecol,
            +costsbelow(0,col))/2;
       }else{
         throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-                "Illegal cost mode in SetLowerEdge().  This is a bug.");
+                "Illegal cost mode in SetLowerEdge(). This is a bug.");
       }
     }
 
@@ -2406,7 +2452,7 @@ int SetLowerEdge(long nrow, long ncol, long tilerow, long tilecol,
       }
     }else{
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Illegal cost mode in SetLowerEdge().  This is a bug.");
+              "Illegal cost mode in SetLowerEdge(). This is a bug.");
     }
   }
 
@@ -2485,7 +2531,7 @@ int SetLeftEdge(long nrow, long prevncol, long tilerow, long tilecol,
            +lastcosts(row+nrow-1,prevncol-2))/2;
       }else{
         throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-                "Illegal cost mode in SetLeftEdge().  This is a bug.");
+                "Illegal cost mode in SetLeftEdge(). This is a bug.");
       }
     }
   }else{
@@ -2512,7 +2558,7 @@ int SetLeftEdge(long nrow, long prevncol, long tilerow, long tilecol,
       }
     }else{
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Illegal cost mode in SetLeftEdge().  This is a bug.");
+              "Illegal cost mode in SetLeftEdge(). This is a bug.");
     }
   }
 
@@ -2612,7 +2658,7 @@ int SetRightEdge(long nrow, long ncol, long tilerow, long tilecol,
            +nextcosts(row+nrow-1,0))/2;
       }else{
         throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-                "Illegal cost mode in SetRightEdge().  This is a bug.");
+                "Illegal cost mode in SetRightEdge(). This is a bug.");
       }
     }
 
@@ -2660,7 +2706,7 @@ int SetRightEdge(long nrow, long ncol, long tilerow, long tilecol,
       }
     }else{
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Illegal cost mode in SetRightEdge().  This is a bug.");
+              "Illegal cost mode in SetRightEdge(). This is a bug.");
     }
   }
 
@@ -3319,7 +3365,10 @@ int IntegrateSecondaryFlows(long linelen, long nlines, Array2D<nodeT>& /*scndryn
   outfileT readtileoutfiles[1]={};
 
   /* set up */
-  fprintf(sp1,"Integrating secondary flows\n");
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Integrating secondary flows"
+       << pyre::journal::endl;
   ntilerow=params->ntilerow;
   ntilecol=params->ntilecol;
   rowovrlp=params->rowovrlp;
@@ -3500,10 +3549,16 @@ int IntegrateSecondaryFlows(long linelen, long nlines, Array2D<nodeT>& /*scndryn
 
 
   /* close output file, free memory */
-  fprintf(sp1,"Output written to file %s\n",realoutfile);
+  info << pyre::journal::at(__HERE__)
+       << "Integrating secondary flows"
+       << "Output written to file " << realoutfile
+       << pyre::journal::endl;
   if(fclose(outfp)){
     fflush(NULL);
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
   return(0);
 
@@ -3679,7 +3734,10 @@ int AssembleTileConnComps(long linelen, long nlines,
   FILE *outfp;
 
   /* set up */
-  fprintf(sp1,"Assembling tile connected components\n");
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Assembling tile connected components"
+       << pyre::journal::endl;
   ntilerow=params->ntilerow;
   ntilecol=params->ntilecol;
   rowovrlp=params->rowovrlp;
@@ -3908,12 +3966,16 @@ int AssembleTileConnComps(long linelen, long nlines,
   } /* end loop over passes of tile reading */
 
   /* close output file */
-  fprintf(sp1,"Assembled connected components (%ld) output written to file %s\n",
-          nconncomp,realoutfile);
+  info << pyre::journal::at(__HERE__)
+       << "Assembled connected components (" << nconncomp
+       << ") output written to file " << realoutfile
+       << pyre::journal::endl;
   if(fclose(outfp)){
     fflush(NULL);
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",
-            realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
 
   /* done */

@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <csignal>
+#include <iomanip>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -25,13 +26,6 @@ namespace isce3::unwrap {
 /* flags used for signal handling */
 char dumpresults_global = FALSE;
 char requestedstop_global = FALSE;
-
-/* ouput stream pointers */
-/* sp0=error messages, sp1=status output, sp2=verbose, sp3=verbose counter */
-FILE *sp0 = NULL;
-FILE *sp1 = NULL;
-FILE *sp2 = NULL;
-FILE *sp3 = NULL;
 
 /* node pointer for marking arc not on tree in apex array */
 /* this should be treated as a constant */
@@ -66,15 +60,15 @@ void snaphuUnwrap(const std::string& configfile){
   double cputimestart;
   long linelen, nlines;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
 
   /* get current wall clock and CPU time */
   StartTimers(&tstart,&cputimestart);
 
-  /* set output stream pointers (may be reset after inputs parsed) */
-  SetStreamPointers();
-
   /* print greeting */
-  fprintf(sp1,"\n%s v%s\n",PROGRAMNAME,VERSION);
+  info << pyre::journal::at(__HERE__)
+       << PROGRAMNAME << " v" << VERSION
+       << pyre::journal::endl;
 
   /* set default parameters */
   SetDefaults(infiles,outfiles,params);
@@ -82,9 +76,6 @@ void snaphuUnwrap(const std::string& configfile){
 
   /* read input config file */
   ReadConfigFile(configfile.data(),infiles,outfiles,&linelen,params);
-
-  /* set verbose output if specified */
-  SetVerboseOut(params);
 
   /* set names of dump files if necessary */
   SetDumpAll(outfiles,params);
@@ -102,7 +93,9 @@ void snaphuUnwrap(const std::string& configfile){
   Unwrap(infiles,outfiles,params,linelen,nlines);
     
   /* finish up */
-  fprintf(sp1,"Program %s done\n",PROGRAMNAME);
+  info << pyre::journal::at(__HERE__)
+       << "Program " << PROGRAMNAME << " done"
+       << pyre::journal::endl;
   DisplayElapsedTime(tstart,cputimestart);
 
 } /* end of snaphuUnwrap() */
@@ -178,6 +171,8 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
   double tilecputimestart;
   time_t tiletstart;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   /* see if we need to do single-tile reoptimization and set up if so */
   if(params->onetilereopt){
     noptiter=2;
@@ -203,7 +198,9 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
         SetTileInitOutfile(iteroutfiles->outfile,iterparams->parentpid);
         StrNCopy(tileinitfile,iteroutfiles->outfile,MAXSTRLEN);
         iteroutfiles->outfileformat=TILEINITFILEFORMAT;
-        fprintf(sp1,"Starting first-round tile-mode unwrapping\n");
+        info << pyre::journal::at(__HERE__)
+             << "Starting first-round tile-mode unwrapping"
+             << pyre::journal::endl;
         
       }
       
@@ -218,7 +215,9 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
       iterparams->ntilecol=1;
       iterparams->rowovrlp=0;
       iterparams->colovrlp=0;
-      fprintf(sp1,"Starting second-round single-tile unwrapping\n");
+      info << pyre::journal::at(__HERE__)
+           << "Starting second-round single-tile unwrapping"
+           << pyre::journal::endl;
       
     }else{
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
@@ -315,17 +314,15 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
 
                 /* set up tile parameters */
                 pid=getpid();
-                fprintf(sp1,
-                        "Unwrapping tile at row %ld, column %ld (pid %ld)\n",
-                        nexttilerow,nexttilecol,(long )pid);
+                info << pyre::journal::at(__HERE__)
+                     << "Unwrapping tile at row " << nexttilerow
+                     << ", column " << nexttilecol << " (pid "
+                     << ((long )pid) << ")"
+                     << pyre::journal::endl;
                 SetupTile(nlines,linelen,iterparams,tileparams,
                           iteroutfiles,tileoutfiles,
                           nexttilerow,nexttilecol);
               
-                /* reset stream pointers for logging */
-                ChildResetStreamPointers(pid,nexttilerow,nexttilecol,
-                                         iterparams);
-
                 /* unwrap the tile */
                 UnwrapTile(iterinfiles,tileoutfiles,iterparams,tileparams,
                            nlines,linelen,tag);
@@ -390,8 +387,10 @@ int Unwrap(infileT *infiles, outfileT *outfiles, paramT *params,
               if(dotilemask(nexttilerow,nexttilecol)){
 
                 /* set up tile parameters */
-                fprintf(sp1,"Unwrapping tile at row %ld, column %ld\n",
-                        nexttilerow,nexttilecol);
+                info << pyre::journal::at(__HERE__)
+                     << "Unwrapping tile at row " << nexttilerow
+                     << ", column " << nexttilecol
+                     << pyre::journal::endl;
                 SetupTile(nlines,linelen,iterparams,tileparams,
                           iteroutfiles,tileoutfiles,
                           nexttilerow,nexttilecol);
@@ -460,6 +459,11 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
   using Cost=typename CostTag::Cost;
   Array2D<Cost> costs;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  constexpr int output_detail_level=2;
+  auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+  auto status=pyre::journal::info_t("isce3.unwrap.snaphu.status",output_detail_level);
+
   /* get size of tile */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
@@ -494,10 +498,14 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
   /* if in quantify-only mode, evaluate cost of unwrapped input then return */
   if(params->eval){
     mostflow=Short2DRowColAbsMax(flows,nrow,ncol);
-    fprintf(sp1,"Maximum flow on network: %ld\n",mostflow);
+    info << pyre::journal::at(__HERE__)
+         << "Maximum flow on network: " << mostflow
+         << pyre::journal::endl;
     Array1D<int> dummy;
     totalcost=EvaluateTotalCost(costs,flows,nrow,ncol,dummy,params,tag);
-    fprintf(sp1,"Total solution cost: %.9g\n",(double )totalcost);
+    info << pyre::journal::at(__HERE__) << "Total solution cost: "
+         << std::fixed << std::setprecision(9) << ((double )totalcost)
+         << pyre::journal::endl;
     return(1);
   }
 
@@ -528,7 +536,9 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 
     /* integrate the phase and write out if necessary */
     if(params->initonly || strlen(outfiles->initfile)){
-      fprintf(sp1,"Integrating phase\n");
+      info << pyre::journal::at(__HERE__)
+           << "Integrating phase"
+           << pyre::journal::endl;
       auto unwrappedphase=Array2D<float>(nrow,ncol);
       IntegratePhase(wrappedphase,unwrappedphase,flows,nrow,ncol);
       if(unwrappedest.size()){
@@ -538,12 +548,16 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 
       /* return if called in init only; otherwise, free memory and continue */
       if(params->initonly){
-        fprintf(sp1,"Writing output to file %s\n",outfiles->outfile);
+        info << pyre::journal::at(__HERE__)
+             << "Writing output to file " << outfiles->outfile
+             << pyre::journal::endl;
         WriteOutputFile(mag,unwrappedphase,outfiles->outfile,outfiles,
                         nrow,ncol);
         return(1);
       }else{
-        fprintf(sp2,"Writing initialization to file %s\n",outfiles->initfile);
+        verbose << pyre::journal::at(__HERE__)
+                << "Writing initialization to file " << outfiles->initfile
+                << pyre::journal::endl;
         WriteOutputFile(mag,unwrappedphase,outfiles->initfile,outfiles,
                         nrow,ncol);
       }
@@ -581,13 +595,20 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 
   /* main loop: loop over flow increments and sources */
   if(!allmasked){
-    fprintf(sp1,"Running nonlinear network flow optimizer\n");
-    fprintf(sp1,"Maximum flow on network: %ld\n",mostflow);
-    fprintf(sp2,"Number of nodes in network: %ld\n",(nrow-1)*(ncol-1)+1);
+    info << pyre::journal::at(__HERE__)
+         << "Running nonlinear network flow optimizer"
+         << pyre::journal::endl
+         << "Maximum flow on network: " << mostflow
+         << pyre::journal::endl;
+    verbose << pyre::journal::at(__HERE__)
+            << "Number of nodes in network: " << ((nrow-1)*(ncol-1)+1)
+            << pyre::journal::endl;
     while(TRUE){ 
  
-      fprintf(sp1,"Flow increment: %ld  (Total improvements: %ld)\n",
-              nflow,ncycle);
+      info << pyre::journal::at(__HERE__)
+           << "Flow increment: " << nflow
+           << "  (Total improvements: " << ncycle << ")"
+           << pyre::journal::endl;
 
       /* set up the incremental (residual) cost arrays */
       SetupIncrFlowCosts(costs,incrcosts,flows,nflow,nrow,narcrow,narcsperrow,
@@ -616,10 +637,14 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 
         /* show status if verbose */
         if(source->row==GROUNDROW){
-          fprintf(sp3,"Source %ld: (edge ground)\n",isource);
+          status << pyre::journal::at(__HERE__)
+                 << "Source " << isource << ": (edge ground)"
+                 << pyre::journal::endl;
         }else{
-          fprintf(sp3,"Source %ld: row, col = %d, %d\n",
-                  isource,source->row,source->col);
+          status << pyre::journal::at(__HERE__)
+                 << "Source " << isource << ": row, col = "
+                 << source->row << ", " << source->col
+                 << pyre::journal::endl;
         }
 
         /* run the solver, and increment nflowdone if no cycles are found */
@@ -635,9 +660,10 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
 
       /* evaluate and save the total cost (skip if first loop through nflow) */
       Array1D<int> dummy;
-      fprintf(sp2,"Current solution cost: %.16g\n",
-              (double )EvaluateTotalCost(costs,flows,nrow,ncol,dummy,params,tag));
-      fflush(NULL);
+      verbose << pyre::journal::at(__HERE__)
+              << "Current solution cost: " << std::fixed << std::setprecision(16)
+              << ((double )EvaluateTotalCost(costs,flows,nrow,ncol,dummy,params,tag))
+              << pyre::journal::endl;
       if(notfirstloop){
         oldtotalcost=totalcost;
         totalcost=EvaluateTotalCost(costs,flows,nrow,ncol,dummy,params,tag);
@@ -646,7 +672,9 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
         }
         if(totalcost>oldtotalcost || (n>0 && totalcost==oldtotalcost)){
           fflush(NULL);
-          fprintf(sp1,"Caution: Unexpected increase in total cost\n");
+          info << pyre::journal::at(__HERE__)
+               << "Caution: Unexpected increase in total cost"
+               << pyre::journal::endl;
         }
         if(totalcost > mintotalcost){
           nincreasedcostiter++;
@@ -667,8 +695,11 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
       mostflow=MaxNonMaskFlow(flows,mag,nrow,ncol);
       if(nincreasedcostiter>=mostflow){
         fflush(NULL);
-        fprintf(sp0,"WARNING: Unexpected sustained increase in total cost."
-                "  Breaking loop\n");
+        auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+        warnings << pyre::journal::at(__HERE__)
+                 << "WARNING: Unexpected sustained increase in total cost."
+                 << "  Breaking loop"
+                 << pyre::journal::endl;
         break;
       }
 
@@ -683,7 +714,9 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
         nflow=1;
         notfirstloop=TRUE;
       }
-      fprintf(sp2,"Maximum valid flow on network: %ld\n",mostflow);
+      verbose << pyre::journal::at(__HERE__)
+              << "Maximum valid flow on network: " << mostflow
+              << pyre::journal::endl;
 
       /* dump flow arrays if necessary */
       if(strlen(outfiles->flowfile)){
@@ -715,11 +748,16 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
   /* evaluate and display the maximum flow and total cost */
   Array1D<int> dummy;
   totalcost=EvaluateTotalCost(costs,flows,nrow,ncol,dummy,params,tag);
-  fprintf(sp1,"Maximum flow on network: %ld\n",mostflow);
-  fprintf(sp1,"Total solution cost: %.9g\n",(double )totalcost);
+  info << pyre::journal::at(__HERE__)
+       << "Maximum flow on network: " << mostflow
+       << pyre::journal::endl << "Total solution cost: "
+       << std::fixed << std::setprecision(9) << ((double )totalcost)
+       << pyre::journal::endl;
 
   /* integrate the wrapped phase using the solution flow */
-  fprintf(sp1,"Integrating phase\n");
+  info << pyre::journal::at(__HERE__)
+       << "Integrating phase"
+       << pyre::journal::endl;
   auto unwrappedphase=Array2D<float>(nrow,ncol);
   IntegratePhase(wrappedphase,unwrappedphase,flows,nrow,ncol);
 
@@ -732,7 +770,9 @@ int UnwrapTile(infileT *infiles, outfileT *outfiles, paramT *params,
   FlipPhaseArraySign(unwrappedphase,params,nrow,ncol);
 
   /* write the unwrapped output */
-  fprintf(sp1,"Writing output to file %s\n",outfiles->outfile);
+  info << pyre::journal::at(__HERE__)
+       << "Writing output to file " << outfiles->outfile
+       << pyre::journal::endl;
   WriteOutputFile(mag,unwrappedphase,outfiles->outfile,outfiles,
                   nrow,ncol);  
 

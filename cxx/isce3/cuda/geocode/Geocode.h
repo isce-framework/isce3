@@ -64,20 +64,18 @@ public:
      * \param[in] geogrid               Geogrid defining output product
      * \param[in] rdr_geom              Radar geometry describing input rasters
      * \param[in] dem_raster            DEM used to calculate radar grid indices
-     * \param[in] dem_margin            Extra margin applied to bounding box to
-     *                                  load DEM. Units are need to match
-     * geogrid EPSG units. \param[in] lines_per_block       Number of lines to
-     * be processed per block \param[in] data_interp_method    Data
-     * interpolation method \param[in] dem_interp_method     DEMinterpolation
-     * method \param[in] threshold             Convergence threshold for geo2rdr
+     * \param[in] lines_per_block       Number of lines to be processed per block
+     * \param[in] data_interp_method    Data interpolation method
+     * \param[in] dem_interp_method     DEMinterpolation method
+     * \param[in] threshold             Convergence threshold for geo2rdr
      * \param[in] maxiter               Maximum iterations for geo2rdr
      * \param[in] dr                    Step size for numerical gradient for
      *                                  geo2rdr
      * \param[in] invalid_value         Value assigned to invalid geogrid pixels
      */
-    Geocode(const isce3::product::GeoGridParameters& geogrid,
-            const isce3::container::RadarGeometry& rdr_geom,
-            const isce3::io::Raster& dem_raster, const double dem_margin,
+    Geocode(const isce3::product::GeoGridParameters & geogrid,
+            const isce3::container::RadarGeometry & rdr_geom,
+            const isce3::io::Raster & dem_raster,
             const size_t lines_per_block = 1000,
             const isce3::core::dataInterpMethod data_interp_method =
                     isce3::core::BILINEAR_METHOD,
@@ -151,9 +149,6 @@ private:
 
     // DEM used to calculate radar grid indices
     isce3::io::Raster _dem_raster;
-
-    // Extra margin for the dem relative to the geocoded grid
-    double _dem_margin;
 
     // radar grid boundaries of block last passed to setBlockRdrCoordGrid,
     // not for entire geogrid

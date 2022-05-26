@@ -66,8 +66,6 @@ runconfig:
 
             geo2rdr: include('geo2rdr_options', required=False)
 
-            dem_margin: num(required=False)
-
             # Coarse resample (geometry offsets only) options
             coarse_resample: include('coarse_resample_options', required=False)
 

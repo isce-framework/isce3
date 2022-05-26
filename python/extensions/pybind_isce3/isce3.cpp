@@ -21,7 +21,8 @@
 #include "cuda/cuda.h"
 #endif
 
-PYBIND11_MODULE(pybind_isce3, m) {
+PYBIND11_MODULE(isce3, m)
+{
     m.doc() = "InSAR Scientific Computing Environment (ISCE)";
     m.attr("__version__") = isce3::version_string;
 

@@ -3,9 +3,9 @@
 import numpy as np
 import numpy.testing as npt
 
-from pybind_isce3 import geometry as geom
-from pybind_isce3.core import Ellipsoid as ellips
-from pybind_isce3.geometry import DEMInterpolator as DEMInterp
+from isce3.ext.isce3 import geometry as geom
+from isce3.ext.isce3.core import Ellipsoid as ellips
+from isce3.ext.isce3.geometry import DEMInterpolator as DEMInterp
 
 
 class TestIntersect:

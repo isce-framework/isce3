@@ -96,7 +96,6 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   params->initmethod=DEF_INITMETHOD;
   params->costmode=DEF_COSTMODE;
   params->amplitude=DEF_AMPLITUDE;
-  params->verbose=DEF_VERBOSE;
 
   /* SAR and geometry parameters */
   params->orbitradius=DEF_ORBITRADIUS;
@@ -236,6 +235,8 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   long ni, nj, n;
   FILE *fp;
 
+  auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+
   /* make sure output file is writable (try opening in append mode) */
   /* file will be opened in write mode later, clobbering existing file */
   if((fp=fopen(outfiles->outfile,"a"))==NULL){
@@ -252,7 +253,9 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
     if(!strcmp(outfiles->outfile,infiles->infile) 
        && !params->eval && !params->regrowconncomps){
       fflush(NULL);
-      fprintf(sp0,"WARNING: output will overwrite input\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: output will overwrite input"
+               << pyre::journal::endl;
     }
   }
 
@@ -308,16 +311,18 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   if(params->costmode==TOPO && params->baseline<0){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "Baseline length must be nonnegative\n");
+            "Baseline length must be nonnegative");
   }
   if(params->costmode==TOPO && params->baseline==0){
     fflush(NULL);
-    fprintf(sp0,"WARNING: zero baseline may give unpredictable results\n");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: zero baseline may give unpredictable results"
+             << pyre::journal::endl;
   }
   if(params->ncorrlooks<=0){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
-            "Number of looks ncorrlooks must be positive\n");
+            "Number of looks ncorrlooks must be positive");
   }
   if(params->nearrange<=0){
     fflush(NULL);
@@ -413,14 +418,20 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   if(!strlen(infiles->corrfile)){
     if(params->ncorrlooksaz<params->nlooksaz){ 
       fflush(NULL);
-      fprintf(sp0,"NCORRLOOKSAZ cannot be smaller than NLOOKSAZ\n");
-      fprintf(sp0,"  setting NCORRLOOKSAZ to equal NLOOKSAZ\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "NCORRLOOKSAZ cannot be smaller than NLOOKSAZ"
+               << pyre::journal::newline
+               << "  setting NCORRLOOKSAZ to equal NLOOKSAZ"
+               << pyre::journal::endl;
       params->ncorrlooksaz=params->nlooksaz;
     }
     if(params->ncorrlooksrange<params->nlooksrange){ 
       fflush(NULL);
-      fprintf(sp0,"NCORRLOOKSRANGE cannot be smaller than NLOOKSRANGE\n");
-      fprintf(sp0,"  setting NCORRLOOKSRANGE to equal NLOOKSRANGE\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "NCORRLOOKSRANGE cannot be smaller than NLOOKSRANGE"
+               << pyre::journal::newline
+               << "  setting NCORRLOOKSRANGE to equal NLOOKSRANGE"
+               << pyre::journal::endl;
       params->ncorrlooksrange=params->nlooksrange;
     }
   }
@@ -702,7 +713,9 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
     if(params->rowovrlp<TILEOVRLPWARNTHRESH
        || params->colovrlp<TILEOVRLPWARNTHRESH){
       fflush(NULL);
-      fprintf(sp0,"WARNING: Tile overlap is small (may give bad results)\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: Tile overlap is small (may give bad results)"
+               << pyre::journal::endl;
     }
   }else{
     if(params->assembleonly){
@@ -712,11 +725,15 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
     }
     if(params->nthreads>1){
       fflush(NULL);
-      fprintf(sp0,"only one tile--disregarding multiprocessor option\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "only one tile--disregarding multiprocessor option"
+               << pyre::journal::endl;
     }
     if(params->rowovrlp || params->colovrlp){
       fflush(NULL);
-      fprintf(sp0,"only one tile--disregarding tile overlap values\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "only one tile--disregarding tile overlap values"
+               << pyre::journal::endl;
     }
     if(params->onetilereopt){
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -774,26 +791,36 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   if(params->maxncomps>UCHAR_MAX
      && params->conncompouttype==CONNCOMPOUTTYPEUCHAR){
     fflush(NULL);
-    fprintf(sp0,"WARNING: clipping max num conn comps to fit uchar out type\n");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: clipping max num conn comps to fit uchar out type"
+             << pyre::journal::endl;
     params->maxncomps=UCHAR_MAX;
   }
   if(params->maxncomps>UINT_MAX
      && params->conncompouttype==CONNCOMPOUTTYPEUINT){
     fflush(NULL);
-    fprintf(sp0,"WARNING: clipping max num conn comps to fit uint out type\n");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: clipping max num conn comps to fit uint out type"
+             << pyre::journal::endl;
     params->maxncomps=UINT_MAX;
   }
   if(strlen(outfiles->conncompfile)){
     if(params->initonly){
       fflush(NULL);
-      fprintf(sp0,"WARNING: connected component mask cannot be generated "
-              "in initialize-only mode\n         mask will not be output\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: connected component mask cannot be generated "
+               << "in initialize-only mode" << pyre::journal::newline
+               << "         mask will not be output"
+               << pyre::journal::endl;
       StrNCopy(outfiles->conncompfile,"",MAXSTRLEN);
     }
     if(params->costmode==NOSTATCOSTS){
       fflush(NULL);
-      fprintf(sp0,"WARNING: connected component mask cannot be generated "
-              "without statistical costs\n         mask will not be output\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: connected component mask cannot be generated "
+               << "without statistical costs" << pyre::journal::newline
+               << "         mask will not be output"
+               << pyre::journal::endl;
       StrNCopy(outfiles->conncompfile,"",MAXSTRLEN);
     }
   }
@@ -817,6 +844,7 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
   char buf[MAXLINELEN]={};
   FILE *fp;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
   
   /* open input config file */
   if(strlen(conffile)){
@@ -868,15 +896,21 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
   /* finish up */
   fclose(fp);
   if(nparams>1){
-    fprintf(sp1,"%ld parameters input from file %s (%ld lines total)\n",
-            nparams,conffile,nlines);
+    info << pyre::journal::at(__HERE__)
+         << nparams << " parameters input from file " << conffile
+         << " (" << nlines << " lines total)"
+         << pyre::journal::endl;
   }else{
     if(nlines>1){
-      fprintf(sp1,"%ld parameter input from file %s (%ld lines total)\n",
-              nparams,conffile,nlines);
+      info << pyre::journal::at(__HERE__)
+           << nparams << " parameter input from file " << conffile
+           << " (" << nlines << " lines total)"
+           << pyre::journal::endl;
     }else{
-      fprintf(sp1,"%ld parameter input from file %s (%ld line total)\n",
-              nparams,conffile,nlines);
+      info << pyre::journal::at(__HERE__)
+           << nparams << " parameter input from file " << conffile
+           << " (" << nlines << " line total)"
+           << pyre::journal::endl;
     }
   }
 
@@ -899,6 +933,8 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
   long nfields;
   char str1[MAXLINELEN]={}, str2[MAXLINELEN]={};
   signed char badparam;
+
+  auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
 
   /* set up */
   nparams=0;
@@ -985,8 +1021,6 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
       badparam=SetBooleanSignedChar(&(params->unwrapped),str2);
     }else if(!strcmp(str1,"DEBUG") || !strcmp(str1,"DUMPALL")){
       badparam=SetBooleanSignedChar(&(params->dumpall),str2);
-    }else if(!strcmp(str1,"VERBOSE")){
-      badparam=SetBooleanSignedChar(&(params->verbose),str2);
     }else if(!strcmp(str1,"INITMETHOD")){
       if(!strcmp(str2,"MST") || !strcmp(str2,"mst")){
         params->initmethod=MSTINIT;
@@ -1056,8 +1090,10 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
     }else if(!strcmp(str1,"KDS") || !strcmp(str1,"KSD")){
       if(!strcmp(str1,"KSD")){
         fflush(NULL);
-        fprintf(sp0,"WARNING: parameter KSD interpreted as KDS (%s:%ld)\n",
-                conffile,nlines);
+        warnings << pyre::journal::at(__HERE__)
+                 << "WARNING: parameter KSD interpreted as KDS ("
+                 << conffile << ":" << nlines << ")"
+                 << pyre::journal::endl;
       }
       badparam=StringToDouble(str2,&(params->kds));
     }else if(!strcmp(str1,"SPECULAREXP") || !strcmp(str1,"N")){
@@ -1226,8 +1262,9 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
       params->maxnflowcycles=USEMAXCYCLEFRACTION;
     }else if(!strcmp(str1,"SOURCEMODE")){
       fflush(NULL);
-      fprintf(sp0,
-              "WARNING: SOURCEMODE keyword no longer supported--ignoring\n");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: SOURCEMODE keyword no longer supported--ignoring"
+               << pyre::journal::endl;
     }else if(!strcmp(str1,"NCONNNODEMIN")){
       badparam=StringToLong(str2,&(params->nconnnodemin));
     }else if(!strcmp(str1,"NPROC") || !strcmp(str1,"NTHREADS")){
@@ -1388,7 +1425,10 @@ int WriteConfigLogFile(infileT *infiles,
       throw isce3::except::RuntimeError(ISCE_SRCINFO(),
               "Unable to write to log file " + std::string(outfiles->logfile));
     }
-    fprintf(sp1,"Logging run-time parameters to file %s\n",outfiles->logfile);
+    auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+    info << pyre::journal::at(__HERE__)
+         << "Logging run-time parameters to file " << outfiles->logfile
+         << pyre::journal::endl;
     
     /* print some run-time environment information */
     fprintf(fp,"# %s v%s\n",PROGRAMNAME,VERSION);
@@ -1465,7 +1505,6 @@ int WriteConfigLogFile(infileT *infiles,
     }else if(params->initmethod==MCFINIT){
       fprintf(fp,"INITMETHOD  MCF\n");
     }
-    LogBoolParam(fp,"VERBOSE",params->verbose);
 
     /* file formats */
     fprintf(fp,"\n# File Formats\n");
@@ -1780,8 +1819,12 @@ int WriteOutputFile(Array2D<float>& mag,
                         nrow,ncol,sizeof(float));
   }else{
     fflush(NULL);
-    fprintf(sp0,"WARNING: Illegal format specified for output file\n");
-    fprintf(sp0,"         using default floating-point format\n");
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: Illegal format specified for output file"
+             << pyre::journal::newline
+             << "         using default floating-point format"
+             << pyre::journal::endl;
     Write2DArray<float>(unwrappedphase,outfile,
                         nrow,ncol,sizeof(float));
   }
@@ -1810,8 +1853,11 @@ FILE *OpenOutputFile(const char *outfile, char *realoutfile){
     strcat(dumpfile,basename);
     if((fp=fopen(dumpfile,"w"))!=NULL){
       fflush(NULL);
-      fprintf(sp0,"WARNING: Can't write to file %s.  Dumping to file %s\n",
-             outfile,dumpfile);
+      auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: Can't write to file " << outfile
+               << ". Dumping to file " << dumpfile
+               << pyre::journal::endl;
       StrNCopy(realoutfile,dumpfile,MAXSTRLEN);
     }else{
       fflush(NULL);
@@ -1854,7 +1900,10 @@ int WriteAltLineFile(Array2D<float>& mag,
     }
   }
   if(fclose(fp)){
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
   return(0);
 }
@@ -1892,7 +1941,10 @@ int WriteAltSampFile(Array2D<float>& arr1,
   }
   if(fclose(fp)){
     fflush(NULL);
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
   return(0);
 }
@@ -1922,7 +1974,10 @@ int Write2DArray(void **array, char *filename, long nrow, long ncol,
   }
   if(fclose(fp)){
     fflush(NULL);
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
   return(0);
 }
@@ -1961,7 +2016,10 @@ int Write2DRowColArray(void **array, char *filename, long nrow,
   }
   if(fclose(fp)){
     fflush(NULL);
-    fprintf(sp0,"WARNING: problem closing file %s (disk full?)\n",realoutfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "WARNING: problem closing file " << realoutfile << " (disk full?)"
+             << pyre::journal::endl;
   }
   return(0);
 }
@@ -1983,6 +2041,8 @@ int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrap
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   /* check data size */
   if(tileparams->ncol>LARGESHORT || tileparams->nrow>LARGESHORT){
     fflush(NULL);
@@ -1999,7 +2059,9 @@ int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrap
   if(!params->unwrapped){
 
     /* read wrapped phase and possibly interferogram magnitude data */
-    fprintf(sp1,"Reading wrapped phase from file %s\n",infiles->infile);
+    info << pyre::journal::at(__HERE__)
+         << "Reading wrapped phase from file " << infiles->infile
+         << pyre::journal::endl;
     if(infiles->infileformat==COMPLEX_DATA){
       ReadComplexFile(&mag,&wrappedphase,infiles->infile,
                       linelen,nlines,tileparams);
@@ -2040,7 +2102,9 @@ int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrap
   }else{
 
     /* read unwrapped phase input */
-    fprintf(sp1,"Reading unwrapped phase from file %s\n",infiles->infile);
+    info << pyre::journal::at(__HERE__)
+         << "Reading unwrapped phase from file " << infiles->infile
+         << pyre::journal::endl;
     if(infiles->unwrappedinfileformat==ALT_LINE_DATA){
       ReadAltLineFile(&mag,&unwrappedphase,infiles->infile,
                       linelen,nlines,tileparams);
@@ -2080,10 +2144,13 @@ int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrap
 
   /* show which pixels read if tiling */
   if(tileparams->nrow!=nlines || tileparams->ncol!=linelen){
-    fprintf(sp2,
-            "Read %ldx%ld array of pixels starting at row,col %ld,%ld\n",
-            tileparams->nrow,tileparams->ncol,
-            tileparams->firstrow,tileparams->firstcol);
+    constexpr int output_detail_level=2;
+    auto verbose=pyre::journal::info_t("isce3.unwrap.snaphu",output_detail_level);
+    verbose << pyre::journal::at(__HERE__)
+            << "Read " << tileparams->nrow << "x" << tileparams->ncol
+            << " array of pixels starting at row,col "<< tileparams->firstrow
+            << "," << tileparams->firstcol
+            << pyre::journal::endl;
   }
 
   /* get memory for mag (power) image and set to unity if not passed */
@@ -2119,8 +2186,10 @@ int ReadMagnitude(Array2D<float>& mag, infileT *infiles, long linelen, long nlin
   Array2D<float> dummy;
 
   if(strlen(infiles->magfile)){
-    fprintf(sp1,"Reading interferogram magnitude from file %s\n",
-            infiles->magfile);
+    auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+    info << pyre::journal::at(__HERE__)
+         << "Reading interferogram magnitude from file " << infiles->magfile
+         << pyre::journal::endl;
     if(infiles->magfileformat==FLOAT_DATA){
       Read2DArray(&mag,infiles->magfile,linelen,nlines,tileparams,
                   sizeof(float *),sizeof(float));
@@ -2156,7 +2225,10 @@ int ReadByteMask(Array2D<float>& mag, infileT *infiles, long linelen, long nline
 
   /* read byte mask (memory allocated by read function) */
   if(strlen(infiles->bytemaskfile)){
-    fprintf(sp1,"Reading byte mask from file %s\n",infiles->bytemaskfile);
+    auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+    info << pyre::journal::at(__HERE__)
+         << "Reading byte mask from file " << infiles->bytemaskfile
+         << pyre::journal::endl;
     Read2DArray(&bytemask,infiles->bytemaskfile,linelen,nlines,
                 tileparams,sizeof(signed char *),sizeof(signed char));
   }
@@ -2200,8 +2272,10 @@ int ReadUnwrappedEstimateFile(Array2D<float>* unwrappedestptr, infileT *infiles,
   ncol=tileparams->ncol;
 
   /* read data */
-  fprintf(sp1,"Reading coarse unwrapped estimate from file %s\n",
-          infiles->estfile);
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Reading coarse unwrapped estimate from file " << infiles->estfile
+       << pyre::journal::endl;
   if(infiles->estfileformat==ALT_LINE_DATA){
     ReadAltLineFilePhase(unwrappedestptr,infiles->estfile,
                          linelen,nlines,tileparams);
@@ -2213,8 +2287,11 @@ int ReadUnwrappedEstimateFile(Array2D<float>* unwrappedestptr, infileT *infiles,
                     linelen,nlines,tileparams);
   }else{
     fflush(NULL);
-    fprintf(sp0,"Illegal file format specification for file %s\nAbort\n",
-            infiles->estfile);
+    auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+    warnings << pyre::journal::at(__HERE__)
+             << "Illegal file format specification for file "
+             << infiles->estfile << pyre::journal::newline << "Abort"
+             << pyre::journal::endl;
   }
 
   /* make sure data is valid */
@@ -2243,12 +2320,15 @@ int ReadWeightsFile(Array2D<short>* weightsptr,char *weightfile,
   long row, col, nrow, ncol;
   signed char printwarning;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
 
   /* set up and read data */
   nrow=tileparams->nrow;
   ncol=tileparams->ncol;
   if(strlen(weightfile)){
-    fprintf(sp1,"Reading weights from file %s\n",weightfile);
+    info << pyre::journal::at(__HERE__)
+         << "Reading weights from file " << weightfile
+         << pyre::journal::endl;
     Read2DRowColFile(weightsptr,weightfile,linelen,nlines,
                      tileparams,sizeof(short));
     auto rowweight=weightsptr->topRows(nrow-1);
@@ -2272,10 +2352,15 @@ int ReadWeightsFile(Array2D<short>* weightsptr,char *weightfile,
     }
     if(printwarning){
       fflush(NULL);
-      fprintf(sp0,"WARNING: Weights must be nonnegative.  Clipping to 0\n");
+      auto warnings=pyre::journal::warning_t("isce3.unwrap.snaphu");
+      warnings << pyre::journal::at(__HERE__)
+               << "WARNING: Weights must be nonnegative. Clipping to 0"
+               << pyre::journal::endl;
     }
   }else{
-    fprintf(sp1,"No weight file specified.  Assuming uniform weights\n");
+    info << pyre::journal::at(__HERE__)
+         << "No weight file specified. Assuming uniform weights"
+         << pyre::journal::endl;
     *weightsptr=MakeRowColArray2D<short>(nrow, ncol);
     auto rowweight=weightsptr->topRows(nrow-1);
     auto colweight=weightsptr->bottomRows(nrow);
@@ -2306,12 +2391,16 @@ int ReadIntensity(Array2D<float>* pwrptr, Array2D<float>* pwr1ptr, Array2D<float
   ncol=tileparams->ncol;
   Array2D<float> pwr, pwr1, pwr2;
 
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+
   /* read the data */
   if(strlen(infiles->ampfile2)){
 
     /* data is given in two separate files */
-    fprintf(sp1,"Reading brightness data from files %s and %s\n",
-            infiles->ampfile,infiles->ampfile2);
+    info << pyre::journal::at(__HERE__)
+         << "Reading brightness data from files "
+         << infiles->ampfile << " and " << infiles->ampfile2
+         << pyre::journal::endl;
     if(infiles->ampfileformat==FLOAT_DATA){
       Read2DArray(&pwr1,infiles->ampfile,linelen,nlines,tileparams,
                   sizeof(float *),sizeof(float));
@@ -2328,7 +2417,9 @@ int ReadIntensity(Array2D<float>* pwrptr, Array2D<float>* pwr1ptr, Array2D<float
   }else{
 
     /* data is in single file */
-    fprintf(sp1,"Reading brightness data from file %s\n",infiles->ampfile);
+    info << pyre::journal::at(__HERE__)
+         << "Reading brightness data from file " << infiles->ampfile
+         << pyre::journal::endl;
     if(infiles->ampfileformat==ALT_SAMPLE_DATA){
       ReadAltSampFile(&pwr1,&pwr2,infiles->ampfile,linelen,nlines,
                       tileparams);
@@ -2410,7 +2501,10 @@ int ReadCorrelation(Array2D<float>* corrptr, infileT *infiles,
   Array2D<float> corr, dummy;
 
   /* read the data */
-  fprintf(sp1,"Reading correlation data from file %s\n",infiles->corrfile);
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Reading correlation data from file " << infiles->corrfile
+       << pyre::journal::endl;
   if(infiles->corrfileformat==ALT_SAMPLE_DATA){
     ReadAltSampFile(&dummy,&corr,infiles->corrfile,linelen,nlines,tileparams);
   }else if(infiles->corrfileformat==ALT_LINE_DATA){
@@ -2750,112 +2844,6 @@ int SetDumpAll(outfileT *outfiles, paramT *params){
 }
 
 
-/* function: SetStreamPointers()
- * -----------------------------
- * Sets the default stream pointers (global variables).
- */
-int SetStreamPointers(void){
-
-  fflush(NULL);
-  if((sp0=DEF_ERRORSTREAM)==NULL){
-    if((sp0=fopen(NULLFILE,"w"))==NULL){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Unable to open null file " + std::string(NULLFILE));
-    }
-  }
-  if((sp1=DEF_OUTPUTSTREAM)==NULL){
-    if((sp1=fopen(NULLFILE,"w"))==NULL){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Unable to open null file " + std::string(NULLFILE));
-    }
-  }
-  if((sp2=DEF_VERBOSESTREAM)==NULL){
-    if((sp2=fopen(NULLFILE,"w"))==NULL){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Unable to open null file " + std::string(NULLFILE));
-    }
-  }
-  if((sp3=DEF_COUNTERSTREAM)==NULL){
-    if((sp3=fopen(NULLFILE,"w"))==NULL){
-      fflush(NULL);
-      throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-              "Unable to open null file " + std::string(NULLFILE));
-    }
-  }
-  return(0);
-}
-
-
-/* function: SetVerboseOut()
- * -------------------------
- * Set the global stream pointer sp2 to be stdout if the verbose flag
- * is set in the parameter data type.
- */
-int SetVerboseOut(paramT *params){
-
-  fflush(NULL);
-  if(params->verbose){
-    if(sp2!=stdout && sp2!=stderr && sp2!=stdin && sp2!=NULL){
-      fclose(sp2);
-    }
-    sp2=stdout;
-    if(sp3!=stdout && sp3!=stderr && sp3!=stdin && sp3!=NULL){
-      fclose(sp3);
-    }
-    sp3=stdout;
-  }
-  return(0);
-}
-
-
-/* function: ChildResetStreamPointers()
- * -----------------------------------
- * Reset the global stream pointers for a child.  Streams equal to stdout 
- * are directed to a log file, and errors are written to the screen.
- */
-int ChildResetStreamPointers(pid_t pid, long tilerow, long tilecol, 
-                             paramT *params){
-
-  FILE *logfp;
-  char cwd[MAXSTRLEN]={};
-
-  fflush(NULL);
-  const auto logfile=std::string(params->tiledir)+"/"+LOGFILEROOT
-    +std::to_string(tilerow)+"_"+std::to_string(tilecol);
-  if((logfp=fopen(logfile.c_str(),"w"))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Unable to open log file " + logfile);
-  }
-  fprintf(logfp,"%s (pid %ld): unwrapping tile at row %ld, column %ld\n\n",
-          PROGRAMNAME,(long )pid,tilerow,tilecol);
-  if(getcwd(cwd,MAXSTRLEN)!=NULL){
-    fprintf(logfp,"Current working directory is %s\n",cwd);
-  }
-  if(sp2==stdout || sp2==stderr){
-    sp2=logfp;
-  }
-  if(sp1==stdout || sp1==stderr){
-    sp1=logfp;
-  }
-  if(sp0==stdout || sp0==stderr){
-    sp0=logfp;
-  }
-  if(sp3!=stdout && sp3!=stderr && sp3!=stdin && sp3!=NULL){
-    fclose(sp3);
-  }
-  if((sp3=fopen(NULLFILE,"w"))==NULL){
-    fflush(NULL);
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(),
-            "Unable to open null file " + std::string(NULLFILE));
-  }
-  return(0);
-}
-
-
 /* function: DumpIncrCostFiles()
  * -----------------------------
  * Dumps incremental cost arrays, creating file names for them.
@@ -2935,7 +2923,10 @@ int MakeTileDir(paramT *params, outfileT *outfiles){
   }
 
   /* create tile directory */
-  fprintf(sp1,"Creating temporary directory %s\n",params->tiledir);
+  auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
+  info << pyre::journal::at(__HERE__)
+       << "Creating temporary directory " << params->tiledir
+       << pyre::journal::endl;
   if(mkdir(params->tiledir,TILEDIRMODE)){
     fflush(NULL);
     throw isce3::except::RuntimeError(ISCE_SRCINFO(),

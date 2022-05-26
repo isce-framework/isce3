@@ -2,7 +2,7 @@
 
 import h5py
 import numpy as np
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 from iscetest import data as test_data_dir
 from pathlib import Path
 import json

@@ -29,10 +29,10 @@ namespace isce3 { namespace geocode {
 inline float _getRadarGridOffset(
         isce3::core::Matrix<float>& offset_array, float y, float x)
 {
-    const long y_index = std::min(
-            std::max((long) y, (long) 0), (long) offset_array.length());
-    const long x_index =
-            std::min(std::max((long) x, (long) 0), (long) offset_array.width());
+    const long y_index = std::min(std::max(static_cast<long>(y), 0L),
+            static_cast<long>(offset_array.length()));
+    const long x_index = std::min(std::max(static_cast<long>(x), 0L),
+            static_cast<long>(offset_array.width()));
     return offset_array(y_index, x_index);
 }
 
@@ -266,22 +266,15 @@ void Geocode<T>::geocodeInterp(
     info << "flatten phase (0:false, 1:true): " << flatten
          << pyre::journal::newline;
 
-    if (std::isnan(_demBlockMargin))
-        // If _demBlockMargin is NaN, add margin of 50 (DEM) pixels
-        _demBlockMargin =
-                50.0 * std::max(geogrid.spacingX(), geogrid.spacingY());
-
-    info << "DEM block margin " << _demBlockMargin << pyre::journal::newline;
-
-    info << "remove phase screen (0: false, 1: true): "
-         << std::to_string(phase_screen_raster != nullptr)
-         << pyre::journal::newline;
-    info << "apply azimuth offset (0: false, 1: true): "
-         << std::to_string(offset_az_raster != nullptr)
-         << pyre::journal::newline;
-    info << "apply range offset (0: false, 1: true): "
-         << std::to_string(offset_rg_raster != nullptr)
-         << pyre::journal::newline;
+    info << "remove phase screen (0: false, 1: true): " 
+            << std::to_string(phase_screen_raster != nullptr)
+            << pyre::journal::newline;
+    info << "apply azimuth offset (0: false, 1: true): " 
+            << std::to_string(offset_az_raster != nullptr)
+            << pyre::journal::newline;
+    info << "apply range offset (0: false, 1: true): " 
+            << std::to_string(offset_rg_raster != nullptr)
+            << pyre::journal::newline;  
 
     // number of bands in the input raster
     int nbands = inputRaster.numBands();
@@ -449,10 +442,12 @@ void Geocode<T>::geocodeInterp(
             out_geo_dem_array.fill(std::numeric_limits<float>::quiet_NaN());
         }
 
-        // load a block of DEM for the current geocoded grid
+        // load a block of DEM for the current geocoded grid with a margin of
+        // 50 DEM pixels
+        int dem_margin_in_pixels = 50;
         isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
                 demRaster, geogrid, lineStart, geoBlockLength, geogrid.width(),
-                _demBlockMargin, dem_interp_method);
+                dem_margin_in_pixels, dem_interp_method);
 
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
@@ -898,106 +893,6 @@ void Geocode<T>::_baseband(isce3::core::Matrix<std::complex<T2>>& data,
     }
 }
 
-template<class T>
-void Geocode<T>::_loadDEM(isce3::io::Raster& demRaster,
-                          isce3::geometry::DEMInterpolator& demInterp,
-                          isce3::core::ProjectionBase* proj, int lineStart,
-                          int blockLength, int blockWidth, double demMargin)
-{
-    // Create projection for DEM
-    int epsgcode = demRaster.getEPSG();
-
-    // Initialize bounds
-    double minX = -1.0e64;
-    double maxX = 1.0e64;
-    double minY = -1.0e64;
-    double maxY = 1.0e64;
-
-    // Projection systems are different
-    if (epsgcode != proj->code()) {
-
-        // Create transformer to match the DEM
-        std::unique_ptr<isce3::core::ProjectionBase> demproj(
-                isce3::core::createProj(epsgcode));
-
-        // Skip factors
-        const int askip = std::max(static_cast<int>(blockLength / 10.), 1);
-        const int rskip = std::max(static_cast<int>(blockWidth / 10.), 1);
-
-        // Construct vectors of line/pixel indices to traverse perimeter
-        std::vector<int> lineInd, pixInd;
-
-        // Top edge
-        for (int j = 0; j < blockWidth; j += rskip) {
-            lineInd.emplace_back(0);
-            pixInd.emplace_back(j);
-        }
-
-        // Right edge
-        for (int i = 0; i < blockLength; i += askip) {
-            lineInd.emplace_back(i);
-            pixInd.emplace_back(blockWidth);
-        }
-
-        // Bottom edge
-        for (int j = blockWidth; j > 0; j -= rskip) {
-            lineInd.emplace_back(blockLength - 1);
-            pixInd.emplace_back(j);
-        }
-
-        // Left edge
-        for (int i = blockLength; i > 0; i -= askip) {
-            lineInd.emplace_back(i);
-            pixInd.emplace_back(0);
-        }
-
-        // Loop over the indices
-        for (int i = 0; i < lineInd.size(); ++i) {
-            Vec3 outpt = {_geoGridStartX + _geoGridSpacingX * (0.5 + pixInd[i]),
-                          _geoGridStartY +
-                                  _geoGridSpacingY * (0.5 + lineInd[i]),
-                          0.0};
-
-            Vec3 dempt;
-            if (!projTransform(proj, demproj.get(), outpt, dempt)) {
-                minX = std::min(minX, dempt[0]);
-                maxX = std::max(maxX, dempt[0]);
-                minY = std::min(minY, dempt[1]);
-                maxY = std::max(maxY, dempt[1]);
-            }
-        }
-    } else {
-        // Use the corners directly as the projection system is the same
-        double Y1 = _geoGridStartY + _geoGridSpacingY * lineStart;
-        double Y2 =
-                _geoGridStartY + _geoGridSpacingY * (lineStart + blockLength);
-        minY = std::min(Y1, Y2);
-        maxY = std::max(Y1, Y2);
-        minX = _geoGridStartX;
-        maxX = _geoGridStartX + _geoGridSpacingX * (blockWidth);
-    }
-
-    // If not LonLat, scale to meters
-    demMargin = (epsgcode != 4326) ? isce3::core::decimaldeg2meters(demMargin)
-                                   : demMargin;
-
-    // Account for margins
-    minX -= demMargin;
-    maxX += demMargin;
-    minY -= demMargin;
-    maxY += demMargin;
-
-    // load the DEM for this bounding box
-    demInterp.loadDEM(demRaster, minX, maxX, minY, maxY);
-
-    if (demInterp.width() == 0 || demInterp.length() == 0)
-        std::cout << "warning there are not enough DEM coverage in the "
-                     "bounding box. "
-                  << std::endl;
-
-    // declare the dem interpolator
-    demInterp.declare();
-}
 
 template<class T>
 int Geocode<T>::_geo2rdr(const isce3::product::RadarGridParameters& radar_grid,

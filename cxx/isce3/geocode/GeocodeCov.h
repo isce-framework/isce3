@@ -360,11 +360,6 @@ public:
 
     void linesPerBlock(size_t linesPerBlock) { _linesPerBlock = linesPerBlock; }
 
-    void demBlockMargin(double demBlockMargin)
-    {
-        _demBlockMargin = demBlockMargin;
-    }
-
     void radarBlockMargin(int radarBlockMargin)
     {
         _radarBlockMargin = radarBlockMargin;
@@ -471,11 +466,6 @@ private:
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
             geocodeMemoryMode geocode_memory_mode, pyre::journal::info_t& info);
-
-    void _loadDEM(isce3::io::Raster& demRaster,
-                  isce3::geometry::DEMInterpolator& demInterp,
-                  isce3::core::ProjectionBase* _proj, int lineStart,
-                  int blockLength, int blockWidth, double demMargin);
 
     std::string _get_nbytes_str(long nbytes);
 
@@ -590,9 +580,6 @@ private:
 
     // epsg code for the output geogrid
     int _epsgOut = 0;
-
-    // margin around a computed bounding box for DEM (in degrees)
-    double _demBlockMargin;
 
     // margin around the computed bounding box for radar dara (integer number of
     // lines/pixels)

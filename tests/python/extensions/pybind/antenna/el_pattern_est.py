@@ -5,10 +5,10 @@ import os
 import bisect
 from scipy.interpolate import interp1d
 
-from pybind_isce3.antenna import ElPatternEst
+from isce3.ext.isce3.antenna import ElPatternEst
 from nisar.products.readers.antenna.antenna_parser import AntennaParser
 from nisar.products.readers.Raw import open_rrsd
-from pybind_isce3.geometry import DEMInterpolator
+from isce3.ext.isce3.geometry import DEMInterpolator
 import iscetest
 
 

@@ -110,8 +110,6 @@ runconfig:
                 write_simulated_amplitude: @TEST_RDR2GEO_FLAGS@
                 write_layover_shadow: True
 
-            dem_margin: 0.1
-
             coarse_resample:
                 lines_per_tile: 100
 

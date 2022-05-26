@@ -81,7 +81,6 @@ runconfig:
             geo2rdr:
                 threshold: 1.0e-9
                 maxiter: 25
-            dem_margin: 0.1
 
             noise_correction:
                 apply_correction:

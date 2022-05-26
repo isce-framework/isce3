@@ -3,7 +3,7 @@
 import numpy.testing as npt
 import pytest
 
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 import iscetest
 
 def test_radargridparameters():

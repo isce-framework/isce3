@@ -7,7 +7,7 @@ import numpy as np
 import numpy.testing as npt
 
 import iscetest
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 from nisar.products.readers import SLC
 
 def test_point():

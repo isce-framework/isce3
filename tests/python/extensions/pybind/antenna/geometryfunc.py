@@ -2,9 +2,9 @@
 import numpy as np
 import numpy.testing as npt
 
-from pybind_isce3 import antenna as ant
-from pybind_isce3.core import Ellipsoid, Quaternion
-from pybind_isce3.geometry import DEMInterpolator as DEMInterp
+from isce3.ext.isce3 import antenna as ant
+from isce3.ext.isce3.core import Ellipsoid, Quaternion
+from isce3.ext.isce3.geometry import DEMInterpolator as DEMInterp
 
 
 class TestGeometryFunc:

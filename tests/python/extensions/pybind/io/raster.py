@@ -6,7 +6,7 @@ import numpy.testing as npt
 import os
 from osgeo import gdal, gdal_array
 
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 
 
 class commonClass:

@@ -3,7 +3,7 @@ import os
 import numpy as np
 from osgeo import gdal
 import iscetest
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 from nisar.products.readers import SLC
 
 geocode_modes = {'interp':isce.geocode.GeocodeOutputMode.INTERP,
@@ -23,7 +23,6 @@ def test_run():
     geo_obj.threshold_geo2rdr = 1e-9
     geo_obj.numiter_geo2rdr = 25
     geo_obj.lines_per_block = 1000
-    geo_obj.dem_block_margin = 1e-1
     geo_obj.radar_block_margin = 10
     geo_obj.data_interpolator = 'biquintic'
 

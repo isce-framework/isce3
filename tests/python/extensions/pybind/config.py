@@ -1,4 +1,4 @@
 def test_version_sanity():
-    from pybind_isce3 import __version__
+    from isce3.ext.isce3 import __version__
 
     assert len(__version__) > 0

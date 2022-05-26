@@ -1,0 +1,32 @@
+# -*- Makefile -*-
+
+
+# the C++ tests
+isce3.cxx.tests.stem := cxx/isce3
+isce3.cxx.tests.prerequisites := isce3.lib
+isce3.cxx.tests.extern := isce3.lib gdal hdf5 mpi eigen fftw pyre gtest
+
+#if there is cuda
+ifdef cuda.dir
+  # add it to the list of external dependencies
+  isce3.cxx.tests.extern += cuda
+# otherwise
+else
+  # exclude the cuda test cases
+  isce3.cxx.tests.directories.exclude := cuda
+endif
+
+# exclusions
+# mga's ampcor is out of sync
+isce3.cxx.tests.directories.exclude += cuda/matchtemplate/ampcor
+
+# compiling, linking, launching
+# c++
+isce3.cxx.tests.c++.defines += TESTDATA_DIR='"${isce3.home}/tests/data/"'
+isce3.cxx.tests.c++.flags += $($(compiler.c++).std.c++17)
+# cuda
+isce3.cxx.tests.cuda.defines += TESTDATA_DIR='"${isce3.home}/tests/data/"'
+isce3.cxx.tests.cuda.flags += $($(compiler.cuda).std.c++17) --expt-relaxed-constexpr
+
+
+# end of file

@@ -4,7 +4,7 @@ import itertools as it
 import numpy as np
 import numpy.testing as npt
 
-from pybind_isce3 import antenna as ant
+from isce3.ext.isce3 import antenna as ant
 
 
 class TestConstructors:

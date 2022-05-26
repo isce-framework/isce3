@@ -4,7 +4,7 @@ from isce3.core import TimeDelta
 import numpy.testing as npt
 
 def load_h5():
-    from pybind_isce3.core import Orbit
+    from isce3.ext.isce3.core import Orbit
     from iscetest import data
     from os import path
     import h5py

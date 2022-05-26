@@ -7,7 +7,7 @@ ISCE has the following dependencies
 <li> C++ compiler - gcc-6/ clang-6.0 or above
 <li> Python 3.6 or above
 <li> Numpy
-<li> GDAL 2.3 or above with Python bindings
+<li> GDAL 3.0 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
 <li> CMake 3.18 or above
 <li> ruamel yaml for python3.7

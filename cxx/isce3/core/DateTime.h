@@ -162,7 +162,7 @@ static const int DAYSPER400 = 146097;
 static const int DAYSPER4 = 1461;
 static const int MAXORDINAL = 3652059;
 
-static const double TOL_SECONDS = 1e-10;
+inline constexpr double TOL_SECONDS = 1e-9;
 
 // time section and fractional seconds are optional
 // to support trailing  white space, add ( )* to the

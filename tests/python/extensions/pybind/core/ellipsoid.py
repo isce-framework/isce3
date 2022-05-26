@@ -3,7 +3,7 @@
 import numpy as np
 import numpy.testing as npt
 
-import pybind_isce3 as isce
+import isce3.ext.isce3 as isce
 
 a = 6378137.0
 b = np.sqrt(1.0 - 0.0066943799901) * a

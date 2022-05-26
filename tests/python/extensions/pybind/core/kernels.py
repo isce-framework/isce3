@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # NOTE most kernels are tested in interp1d.py
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 import numpy as np
 
 def test_azimuth_acf():

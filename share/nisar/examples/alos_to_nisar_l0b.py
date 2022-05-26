@@ -6,7 +6,7 @@ import h5py
 import numpy
 import os
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
-import pybind_isce3 as isce3
+import isce3
 from nisar.products.readers.Raw import Raw
 from nisar.workflows.focus import make_doppler_lut
 

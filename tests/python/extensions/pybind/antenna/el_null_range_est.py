@@ -3,11 +3,11 @@ import numpy as np
 import numpy.testing as npt
 import os
 
-from pybind_isce3.antenna import ElNullRangeEst, ant2rgdop
+from isce3.ext.isce3.antenna import ElNullRangeEst, ant2rgdop
 from nisar.products.readers.antenna.antenna_parser import AntennaParser
 from nisar.products.readers.Raw import Raw
-from pybind_isce3.geometry import DEMInterpolator
-from pybind_isce3.core import TimeDelta
+from isce3.ext.isce3.geometry import DEMInterpolator
+from isce3.ext.isce3.core import TimeDelta
 from isce3.core import speed_of_light
 import iscetest
 

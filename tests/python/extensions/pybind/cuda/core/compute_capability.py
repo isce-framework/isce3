@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pybind_isce3.cuda.core import ComputeCapability, min_compute_capability
+from isce3.ext.isce3.cuda.core import ComputeCapability, min_compute_capability
 
 def test_init():
     compute = ComputeCapability(2, 0)

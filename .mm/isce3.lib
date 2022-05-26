@@ -1,0 +1,38 @@
+# -*- Makefile -*-
+
+
+# the isce3 lib
+isce3.lib.root := cxx/isce3/
+isce3.lib.stem := isce3
+isce3.lib.extern := gdal hdf5 mpi eigen fftw pyre
+# if we have cuda
+ifdef cuda.dir
+  # add it to the pile of external dependencies
+  isce3.lib.extern += cuda
+endif
+
+# mga's ampcor uses the old {grid} api; exclude it for now
+isce3.lib.directories.exclude += matchtemplate/ampcor
+# if there is no cuda
+ifndef cuda.dir
+  # exclude the cuda source
+  isce3.lib.directories.exclude += cuda
+endif
+
+# the files that have expansion tokens
+isce3.lib.headers.autogen := config.h.in
+isce3.lib.sources.autogen := config.cpp.in
+# the expansion rules
+isce3.lib.autogen := \
+  @PROJECT_VERSION_MAJOR@|$(isce3.major) \
+  @PROJECT_VERSION_MINOR@|$(isce3.minor) \
+  @PROJECT_VERSION_PATCH@|$(isce3.micro) \
+  @ISCE3_VERSION_FULL@|$(isce3.full) \
+  @ISCE3_WITH_CUDA_BOOL@|$(isce3.cuda)
+
+# use c++17 for both host and device code
+isce3.lib.c++.flags += $($(compiler.c++).std.c++17)
+isce3.lib.cuda.flags += $($(compiler.cuda).std.c++17) --expt-relaxed-constexpr
+
+
+# end of file

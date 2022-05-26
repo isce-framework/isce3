@@ -15,26 +15,26 @@ runconfig:
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            orbit: orbit.xml
+            orbit: 
 
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.
-            pointing: attitude.xml
+            pointing: 
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            external_calibration: cal.xml
+            external_calibration: 
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            internal_calibration: type7table.xml
+            internal_calibration: 
 
             # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
             # If not provided, no polarimetric calibration performed.
-            polarimetric_calibration: polcal.h5
+            polarimetric_calibration: 
 
             # Pre- and post-data take calibration data products, optional.
-            bookend_calibration: pre_post_cal.L0B.h5
+            bookend_calibration: 
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
@@ -42,7 +42,7 @@ runconfig:
 
             # Chirp replica file, optional.
             # If absent will generate LFM chirp using parameters in L0B product.
-            waveform: chirp.xml
+            waveform: 
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.

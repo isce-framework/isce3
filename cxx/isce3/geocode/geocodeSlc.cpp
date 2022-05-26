@@ -263,13 +263,12 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid, const double& thresholdGeo2rdr,
         const int& numiterGeo2rdr, const size_t& linesPerBlock,
-        const double& demBlockMargin, const bool flatten,
-        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase,
-        const std::complex<float> invalidValue)
+        const bool flatten, const AzRgFunc& azCarrierPhase,
+        const AzRgFunc& rgCarrierPhase, const std::complex<float> invalidValue)
 {
     geocodeSlc(outputRaster, inputRaster, demRaster, radarGrid, radarGrid,
             geoGrid, orbit,nativeDoppler, imageGridDoppler, ellipsoid,
-            thresholdGeo2rdr, numiterGeo2rdr, linesPerBlock, demBlockMargin,
+            thresholdGeo2rdr, numiterGeo2rdr, linesPerBlock,
             flatten, azCarrierPhase, rgCarrierPhase, invalidValue);
 }
 
@@ -326,7 +325,7 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& imageGridDoppler,
         const isce3::core::Ellipsoid& ellipsoid, const double& thresholdGeo2rdr,
         const int& numiterGeo2rdr, const size_t& linesPerBlock,
-        const double& demBlockMargin, const bool flatten,
+        const bool flatten,
         const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase,
         const std::complex<float> invalidValue)
 {
@@ -363,8 +362,7 @@ void geocodeSlc(
         // get a DEM interpolator for a block of DEM for the current geocoded
         // grid
         isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
-                demRaster, geoGrid, lineStart, geoBlockLength, geoGrid.width(),
-                demBlockMargin);
+                demRaster, geoGrid, lineStart, geoBlockLength, geoGrid.width());
 
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
@@ -534,7 +532,7 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::Ellipsoid& ellipsoid,                        \
         const double& thresholdGeo2rdr,                                 \
         const int& numiterGeo2rdr, const size_t& linesPerBlock,         \
-        const double& demBlockMargin, const bool flatten,               \
+        const bool flatten,                                             \
         const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
         const std::complex<float> invalidValue);                        \
 template void geocodeSlc<AzRgFunc>(                                     \
@@ -549,7 +547,7 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::Ellipsoid& ellipsoid,                        \
         const double& thresholdGeo2rdr,                                 \
         const int& numiterGeo2rdr, const size_t& linesPerBlock,         \
-        const double& demBlockMargin, const bool flatten,               \
+        const bool flatten,                                             \
         const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
         const std::complex<float> invalidValue)
 

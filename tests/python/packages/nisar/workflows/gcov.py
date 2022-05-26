@@ -2,7 +2,7 @@
 import argparse
 import os
 
-import pybind_isce3 as isce3
+import isce3.ext.isce3 as isce3
 from nisar.workflows import gcov, h5_prep
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 

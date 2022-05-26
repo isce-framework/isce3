@@ -153,6 +153,4 @@ runconfig:
             blocksize:
                 y: 1000
 
-            dem_margin:
-
             flatten: True
