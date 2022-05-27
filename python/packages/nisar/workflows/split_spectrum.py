@@ -20,12 +20,13 @@ def prep_subband_h5(full_hdf5: str,
                     sub_band_hdf5: str, 
                     freq_pols):
 
+    full_slc = SLC(hdf5file=full_hdf5)
     common_parent_path = 'science/LSAR'
-    swath_path = f'{common_parent_path}/SLC/swaths/'
-    freq_a_path = f'{swath_path}/frequencyA/'
-    freq_b_path = f'{swath_path}/frequencyB/'
-    metadata_path = f'{common_parent_path}/SLC/metadata/'
-    ident_path = f'{common_parent_path}/identification/'
+    swath_path = full_slc.SwathPath
+    freq_a_path = f'{swath_path}/frequencyA'
+    freq_b_path = f'{swath_path}/frequencyB'
+    metadata_path = full_slc.MetadataPath
+    ident_path = f'{common_parent_path}/identification'
     pol_a_path = f'{freq_a_path}/listOfPolarizations'
     pol_b_path = f'{freq_b_path}/listOfPolarizations'
         
