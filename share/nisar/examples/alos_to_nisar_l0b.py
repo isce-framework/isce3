@@ -3,18 +3,21 @@ import argparse
 import datetime
 import glob
 import h5py
+import isce3
 import numpy
 import os
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
-import isce3
+from nisar.antenna.antenna_pattern import CalPath
 from nisar.products.readers.Raw import Raw
+from nisar.products.readers.Raw.Raw import get_rcs2body
 from nisar.workflows.focus import make_doppler_lut
 
 def cmdLineParse():
     '''
     Command line parser.
     '''
-    parser = argparse.ArgumentParser(description="Package ALOS L0 stripmap data into NISAR L0B HDF5")
+    parser = argparse.ArgumentParser(description="Package ALOS L0 stripmap data into NISAR L0B HDF5",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-i', '--indir', dest='indir', type=str,
                         help="Folder containing one ALOS L0 module",
                         required=True)
@@ -153,6 +156,15 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
     days = [sv.DayOfYear for sv in ldr.attitude.statevectors]
     assert all(numpy.diff(days) >= 0), "Unexpected roll over in day of year."
 
+    # build quaternion for antenna to spacecraft body (RCS to Body) per
+    # mechanical boresight angle (MB).  Not sure if "NominalOffNadirAngle" is
+    # defined in exactly the same way, but it must be close for ALOS since
+    # it's steered to zero-Doppler.
+    q_rcs2body = get_rcs2body(el_deg=ldr.summary.NominalOffNadirAngle,
+                              side='right')
+    print(f"Using off-nadir angle {ldr.summary.NominalOffNadirAngle} degrees"
+          f" for beam number {ldr.summary.AntennaBeamNumber}.")
+
     times = []  # time stamps, seconds rel orbit epoch
     rpys = []   # (roll, pitch, yaw) Euler angle tuples, degrees
     qs = []     # (q0,q1,q2,q3) quaternion arrays
@@ -165,7 +177,7 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
         rpys.append(rpy)
         # Use time reference as orbit.
         times.append((t - orbit.reference_epoch).total_seconds())
-        q = alos_quaternion(t, rpy[::-1], orbit)
+        q = alos_quaternion(t, rpy[::-1], orbit) * q_rcs2body
         qs.append([q.w, q.x, q.y, q.z])
 
     # Write to HDF5.  isce3.core.Quaternion.save_to_h5 doesn't really cut it,
@@ -237,11 +249,36 @@ def constructNISARHDF5(args, ldr):
         inps.create_dataset('l0aGranules', data=numpy.string_([os.path.basename(args.indir)]))
 
         #Start populating telemetry
-        orbit_group = rrsd.create_group('telemetry/orbit')
+        orbit_group = rrsd.create_group('lowRateTelemetry/orbit')
         orbit = get_alos_orbit(ldr)
         set_h5_orbit(orbit_group, orbit)
-        attitude_group = rrsd.create_group("telemetry/attitude")
+        attitude_group = rrsd.create_group("lowRateTelemetry/attitude")
         getset_attitude(attitude_group, ldr, orbit)
+
+
+def makeDummyCalType(n, first_bcal=0, first_lcal=500, interval=1000):
+    '''Create a numpy array suitable for populating calType field.
+    '''
+    dtype = h5py.enum_dtype(dict(CalPath.__members__), basetype="uint8")
+    x = numpy.zeros(n, dtype=dtype)
+    x[:] = CalPath.HPA
+    x[first_bcal::interval] = CalPath.BYPASS
+    x[first_lcal::interval] = CalPath.LNA
+    return x
+
+
+def getNominalSpacing(prf, dr, orbit, look_angle, i=0):
+    """Return ground spacing along- and across-track
+    """
+    pos, vel = orbit.position[i], orbit.velocity[i]
+    vs = numpy.linalg.norm(vel)
+    ell = isce3.core.Ellipsoid()
+    lon, lat, h = ell.xyz_to_lon_lat(pos)
+    hdg = isce3.geometry.heading(lon, lat, vel)
+    a = ell.r_dir(hdg, lat)
+    ds = vs / prf * a / (a + h)
+    dg = dr / numpy.sin(look_angle)
+    return ds, dg
 
 
 def addImagery(h5file, ldr, imgfile, pol):
@@ -270,24 +307,26 @@ def addImagery(h5file, ldr, imgfile, pol):
     nPixels = image.description.NumberOfBytesOfSARDataPerRecord // image.description.NumberOfSamplesPerDataGroup
     nLines = image.description.NumberOfSARDataRecords
 
+    # Figure out nominal ground spacing
+    prf = firstrec.PRFInmHz / 1000./ (1 + (ldr.summary.NumberOfSARChannels == 4))
+    look_angle = numpy.radians(ldr.summary.NominalOffNadirAngle)
+    ds, dg = getNominalSpacing(prf, dr, get_alos_orbit(ldr), look_angle)
+    print('ds, dg =', ds, dg)
 
     freqA = '/science/LSAR/RRSD/swaths/frequencyA'
-
     #If this is first pol being written, add common information as well
     if freqA not in fid:
         freqA = fid.create_group(freqA)
-        freqA.create_dataset('centerFrequency', data=SOL / (ldr.summary.RadarWavelengthInm))
-        freqA.create_dataset('rangeBandwidth', data=ldr.calibration.header.BandwidthInMHz * 1.0e6)
-        freqA.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
-        freqA.create_dataset('chirpSlope', data=-((freqA['rangeBandwidth'][()])/(freqA['chirpDuration'][()])))
-        freqA.create_dataset('nominalAcquisitionPRF', data=firstrec.PRFInmHz / 1000./ (1 + (ldr.summary.NumberOfSARChannels == 4)))
-        freqA.create_dataset('slantRangeSpacing', data=dr)
-        freqA.create_dataset('slantRange', data=r0 + numpy.arange(nPixels) * dr)
+        freqA.create_dataset("listOfTxPolarizations", data=numpy.string_([txP]),
+            maxshape=2)
     else:
         freqA = fid[freqA]
 
-        #Add bunch of assertions here if you want to be super sure that values are not different between pols
-
+    txPolList = freqA["listOfTxPolarizations"]
+    if not numpy.string_(txP) in txPolList:
+        assert len(txPolList) == 1
+        txPolList.resize((2,))
+        txPolList[1] = txP
 
     ##Now add in transmit specific information
     txgrpstr = '/science/LSAR/RRSD/swaths/frequencyA/tx{0}'.format(txP)
@@ -303,6 +342,20 @@ def addImagery(h5file, ldr, imgfile, pol):
         txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
         txgrp.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(nLines,2))
+        txgrp.create_dataset('centerFrequency', data=SOL / (ldr.summary.RadarWavelengthInm))
+        txgrp.create_dataset('rangeBandwidth', data=ldr.calibration.header.BandwidthInMHz * 1.0e6)
+        txgrp.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
+        txgrp.create_dataset('chirpSlope', data=-((txgrp['rangeBandwidth'][()])/(txgrp['chirpDuration'][()])))
+        txgrp.create_dataset('nominalAcquisitionPRF', data=prf)
+        txgrp.create_dataset('slantRangeSpacing', data=dr)
+        txgrp.create_dataset('slantRange', data=r0 + numpy.arange(nPixels) * dr)
+        txgrp.create_dataset('listOfTxTRMs', data=numpy.asarray([1], dtype='uint8'))
+        txgrp.create_dataset('sceneCenterAlongTrackSpacing', data=ds)
+        txgrp.create_dataset('sceneCenterGroundRangeSpacing', data=dg)
+        # dummy calibration data
+        txgrp.create_dataset('txPhase', data=numpy.zeros((nLines,1), dtype='f4'))
+        txgrp.create_dataset('chirpCorrelator', data=numpy.ones((nLines,1,3), dtype='c8'))
+        txgrp.create_dataset('calType', data=makeDummyCalType(nLines))
     else:
         txgrp = fid[txgrpstr]
 
@@ -313,7 +366,14 @@ def addImagery(h5file, ldr, imgfile, pol):
         raise ValueError('Reparsing polarization {0}. Array already exists {1}'.format(pol, rximgstr))
 
     print('Dimensions: {0}L x {1}P'.format(nLines, nPixels))
-    fid.create_group(rximgstr)
+    rxgrp = fid.create_group(rximgstr)
+
+    # Dummy cal data
+    rxgrp.create_dataset('caltone', data=numpy.ones((nLines,1), dtype='c8'))
+    rxgrp.create_dataset('attenuation', data=numpy.ones((nLines,1), dtype='f4'))
+    rxgrp.create_dataset('TRMDataWindow', data=numpy.ones((nLines,1), dtype='u1'))
+    # Create List of RX TRMs
+    rxgrp.create_dataset('listOfRxTRMs', data=numpy.asarray([1], dtype='uint8'))
 
     ##Set up BFPQLUT
     assert firstrec.SARRawSignalData.dtype.itemsize <= 2
@@ -372,11 +432,10 @@ def addImagery(h5file, ldr, imgfile, pol):
         if linnum != nLines:
             rec = image.readNextLine()
 
-
     if firstInPol:
         #Adjust time records - ALOS provides this only to nearest millisec - not good enough
         tinp = txgrp['UTCtime'][:]
-        prf = freqA['nominalAcquisitionPRF'][()]
+        prf = txgrp['nominalAcquisitionPRF'][()]
         tarr = (tinp - tinp[0]) * 1000
         ref = numpy.arange(tinp.size) / prf
 
