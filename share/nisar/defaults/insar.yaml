@@ -259,9 +259,6 @@ runconfig:
                 # Number of offset estimates to process in batch along azimuth
                 windows_batch_azimuth: 1
 
-            offsets_product:
-                enabled: False
-
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).
                 # Not required as InSAR workflow allows using intermediate outputs
@@ -314,6 +311,10 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
+
+            offsets_product:
+                # Enable/disable offsets product generation
+                enabled: False
 
             fine_resample:
                 # Flag to enable/disable fine resampling
