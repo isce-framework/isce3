@@ -110,8 +110,6 @@ runconfig:
                 write_simulated_amplitude: @TEST_RDR2GEO_FLAGS@
                 write_layover_shadow: True
 
-            dem_margin: 0.1
-
             coarse_resample:
                 lines_per_tile: 100
 
@@ -140,7 +138,7 @@ runconfig:
                 flatten: False
                 oversample: 2
                 rows_per_block: 1000
-                
+
             filter_interferogram:
                 interferogram_path:
                 lines_per_block: 22
@@ -148,12 +146,23 @@ runconfig:
 
             phase_unwrap:
                 crossmul_path: @ISCETEST@/winnipeg.h5
-            
+
             ionosphere_phase_correction:
                 enabled: True
                 lines_per_block: 1000
-                spectral_diversity: 
+                spectral_diversity:
                 list_of_frequencies:
-                   A: [HH]
-                   B: 
-                
+                    A: [HH]
+                    B:
+                dispersive_filter:
+                    enabled: True
+                    filter_mask_type: coherence
+                    filter_coherence_threshold: 0.5
+                    filling_method: nearest
+                    unwrap_correction: False
+                    kernel_range: 800
+                    kernel_azimuth: 800
+                    sigma_range: 100
+                    sigma_azimuth: 100
+                    filter_iterations: 1
+
