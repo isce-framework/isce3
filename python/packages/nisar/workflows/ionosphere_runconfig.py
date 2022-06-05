@@ -1,7 +1,7 @@
 import journal
 import os
 import h5py
-import numpy as np 
+import numpy as np
 
 from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
@@ -141,13 +141,13 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
 
             rg_main_bandwidth = ref_slc.getSwathMetadata(
                 'A').processed_range_bandwidth
-            
+
             # extract the polarizations from reference and secondary hdf5
-            with h5py.File(ref_slc_path, 'r', libver='latest', 
+            with h5py.File(ref_slc_path, 'r', libver='latest',
                 swmr=True) as ref_h5, \
-                h5py.File(sec_slc_path, 'r', libver='latest', 
+                h5py.File(sec_slc_path, 'r', libver='latest',
                 swmr=True) as sec_h5:
-                
+
                 ref_pol_path = os.path.join(
                     ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
                 ref_pols_freqA = list(
@@ -159,7 +159,7 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                     np.array(sec_h5[sec_pol_path][()], dtype=str))
                 # If ionosphere estimation method using frequency B,
                 # then extract list of polarization from frequency B
-                # If frequency B does not exist, throw error.  
+                # If frequency B does not exist, throw error.
                 if iono_method in iono_method_side:
                     try:
                         ref_pol_path = os.path.join(
@@ -176,8 +176,8 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                             f"{iono_method} needs frequency B."
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
-                    
-                    # Check that main and side-band are at the same polarization. 
+
+                    # Check that main and side-band are at the same polarization.
                     # If not, throw an error.
                     if len(set.intersection(set(ref_pols_freqA), set(ref_pols_freqB))) == 0:
                         err_str = "No common polarization between frequency A and B rasters"
@@ -185,7 +185,7 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                         raise FileNotFoundError(err_str)
 
             if iono_method == 'split_main_band':
-                # If polarizations for frequency B are requested 
+                # If polarizations for frequency B are requested
                 # for split_main_band method, then throw error
                 if iono_freq_pol['B']:
                     err_str = f"Incorrect polarzations {iono_freq_pol['B']} for frequency B are requested. "\
@@ -197,15 +197,15 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
             common_pol_refsec_freqA = set.intersection(
                 set(ref_pols_freqA), set(sec_pols_freqA))
 
-            # If no common polarizations found between reference and secondary, 
-            # then throw errors. 
+            # If no common polarizations found between reference and secondary,
+            # then throw errors.
             if not common_pol_refsec_freqA:
                 err_str = "No common polarization between frequency A rasters"
                 error_channel.log(err_str)
                 raise FileNotFoundError(err_str)
-            
-            # If polarizations are given, then check if HDF5 has them. 
-            # If not, then throw error. 
+
+            # If polarizations are given, then check if HDF5 has them.
+            # If not, then throw error.
             if iono_freq_pol['A']:
                 for iono_pol in iono_freq_pol['A']:
                     if (iono_pol not in ref_pols_freqA) or \
@@ -215,8 +215,8 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
 
-            # If polarizations are given for iono estimation using side-band, 
-            # then check if HDF5 has them. If not, then throw error. 
+            # If polarizations are given for iono estimation using side-band,
+            # then check if HDF5 has them. If not, then throw error.
             if iono_method in iono_method_side:
                 if iono_freq_pol['B']:
                     for iono_pol in iono_freq_pol['B']:
@@ -226,7 +226,7 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                                 f"for ionosphere estimation are given, but not found"
                             error_channel.log(err_str)
                             raise FileNotFoundError(err_str)
-                
+
                 # list_of_frequencies should have one pol at least to run rdr2geo/geo2rdr
                 if 'B' not in freq_pols:
                     err_str = f"polarizations { iono_freq_pol['B']} of frequency B "\
@@ -234,29 +234,29 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                         f"list_of_frequencies in InSAR workflow should have frequency B key."
                     error_channel.log(err_str)
                     raise FileNotFoundError(err_str)
-                
-                # If polarizations for frequency A and B are given, 
-                # check if given polarzations are identical. 
+
+                # If polarizations for frequency A and B are given,
+                # check if given polarzations are identical.
                 if (iono_freq_pol['A']) and (iono_freq_pol['B']):
                     diff_pol = [i for i in iono_freq_pol['B'] if i not in iono_freq_pol['A']]
                     # when requested polarization are not same(ex. freqA : VV, freqB: HH)
                     # ionosphere will be computed from two different polarzations
-                    # But only one for each frequency is allowed. 
+                    # But only one for each frequency is allowed.
                     if diff_pol:
                         if (len(iono_freq_pol['A']) != 1) and (len(iono_freq_pol['B']) != 1):
                             err_str = f"different polarizations for frequency A and B are requested "\
                             f"for {iono_method}, but only one polarization is allowed for polarization combination"
                             error_channel.log(err_str)
-            
-            # If common polarization found, but input polarizations are not given, 
+
+            # If common polarization found, but input polarizations are not given,
             # then assign the common polarization for split_main_band
             if (common_pol_refsec_freqA) and (not iono_freq_pol['A']):
                 # Co-polarizations are found, split_main_band will be used for co-pols
-                common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA 
+                common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA
                     if pol in ['VV', 'HH']]
                 iono_freq_pol['A'] = common_copol_ref_sec
                 iono_freq_pol['B'] = None
-                
+
                 # If common co-pols not found, cross-pol will be alternatively used.
                 if not common_copol_ref_sec:
                     iono_freq_pol['A'] = common_pol_refsec_freqA
@@ -270,22 +270,22 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
 
             if iono_method in iono_method_side:
                 if not iono_freq_pol['B']:
-                    # If polarizations for frequency B are not given from user, then 
-                    # use polarzations in frequency A 
+                    # If polarizations for frequency B are not given from user, then
+                    # use polarzations in frequency A
                     if iono_freq_pol['A']:
                         iono_freq_pol['B'] = iono_freq_pol['A']
                     else:
                         # get common polarzations of freqA from reference and secondary
                         common_pol_refsec_freqB = set.intersection(
                         set(ref_pols_freqB), set(sec_pols_freqB))
-                        # If common polarization found, but input polarizations are not given, 
-                        # then assign the common polarization for split_main_band                    
+                        # If common polarization found, but input polarizations are not given,
+                        # then assign the common polarization for split_main_band
                         if (common_pol_refsec_freqB):
                             # Co-polarizations are found, split_main_band will be used for co-pols
-                            common_copol_ref_sec = [pol for pol in common_pol_refsec_freqB 
+                            common_copol_ref_sec = [pol for pol in common_pol_refsec_freqB
                                 if pol in ['VV', 'HH']]
                             iono_freq_pol['B'] = common_copol_ref_sec
-                            
+
                             # If common co-pols not found, cross-pol will be alternatively used.
                             if not common_copol_ref_sec:
                                 iono_freq_pol['B'] = common_pol_refsec_freqB
@@ -297,8 +297,8 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
                                 'list_of_frequencies'] = iono_freq_pol
 
                         else:
-                            # If no common polarizations found between reference and secondary, 
-                            # then throw errors. 
+                            # If no common polarizations found between reference and secondary,
+                            # then throw errors.
                             err_str = "No common polarization between frequency B rasters"
                             error_channel.log(err_str)
                             raise FileNotFoundError(err_str)
