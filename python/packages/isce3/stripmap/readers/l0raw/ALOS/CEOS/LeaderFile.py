@@ -93,7 +93,7 @@ class LeaderFile(object):
         #Specific check for ALOS stripmap, normal observation mode
         assert(record.SensorIDAndMode[0:9] == 'ALOS  -L ')
         assert(record.SensorIDAndMode[10] == "H")
-        assert(record.SensorIDAndMode[12:14] == "60")
+        assert(record.SensorIDAndMode[12:14] in ("60", "62")) # high res or polsar
         assert(record.SensorClockAngle == 90.0)
         assert(record.RangePulseCodeSpecifier == "LINEAR FM CHIRP")
         assert(record.QuantizationDescriptor == "UNIFORM I,Q")

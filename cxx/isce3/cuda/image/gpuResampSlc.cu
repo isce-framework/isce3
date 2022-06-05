@@ -78,7 +78,7 @@ void transformTile(const thrust::complex<float> *tile,
             || (intRg >= (inWidth - chipHalf));
 
         // Compute azimuth time at i index + azimuth offset
-        const double az = sensingStart + i / prf;
+        const double az = sensingStart + (i + rowStart) / prf;
 
         // Slant range at j index + range offset
         const double rng = startingRange + j * rangePixelSpacing;
