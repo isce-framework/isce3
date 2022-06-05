@@ -16,69 +16,62 @@ from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
-def prep_subband_h5(full_hdf5: str, 
-                    sub_band_hdf5: str, 
+def prep_subband_h5(full_hdf5: str,
+                    sub_band_hdf5: str,
                     freq_pols):
 
+    """Prepare HDF5 file for sub-band SLCs by copying data from
+     source SLC HDF5 file.
+
+    Parameters
+    ----------
+    full_hdf5 : str
+        path of source SLC HDF5 file
+    sub_band_hdf5 : str
+        path of sub-band SLC HDF5 file
+    freq_pols : dict
+        list of polarzations for frequency A and B
+
+    """
     full_slc = SLC(hdf5file=full_hdf5)
     common_parent_path = 'science/LSAR'
     swath_path = full_slc.SwathPath
-    freq_a_path = f'{swath_path}/frequencyA'
-    freq_b_path = f'{swath_path}/frequencyB'
     metadata_path = full_slc.MetadataPath
     ident_path = f'{common_parent_path}/identification'
-    pol_a_path = f'{freq_a_path}/listOfPolarizations'
-    pol_b_path = f'{freq_b_path}/listOfPolarizations'
-        
+
     with h5py.File(full_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
         h5py.File(sub_band_hdf5, 'w') as dst_h5:
-            
-        pols_freqA = list(
-                np.array(src_h5[pol_a_path][()], dtype=str))
-        try:
-            pols_freqB = list(
-                    np.array(src_h5[pol_b_path][()], dtype=str))
-        except:
-            pols_freqB = ['']
-            
-        if freq_pols['A']:
-            pols_a_excludes = [pol for pol in pols_freqA 
-                if pol not in freq_pols['A']]
-        else:
-            pols_a_excludes = pols_freqA
 
-        if freq_pols['B']:
-            pols_b_excludes = [pol for pol in pols_freqB 
-                if pol not in freq_pols['B']]
-        else:
-            pols_b_excludes = pols_freqB
+        for freq_ab in ['A', 'B']:
+            freq_key = f'frequency{freq_ab}'
 
-        if pols_a_excludes:
-            cp_h5_meta_data(src_h5, dst_h5, freq_a_path,
-                    excludes=pols_a_excludes)
-        else:
-            cp_h5_meta_data(src_h5, dst_h5, freq_a_path,
-                    excludes=[''])
-            
-        if pols_b_excludes:
-            try:
-                cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
-                        excludes=pols_b_excludes)
-            except:
-                pass
-        else:
-            try:
-                cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
+            if freq_key not in src_h5[swath_path]:
+                continue
+
+            freq_path = f'{swath_path}/{freq_key}'
+            pol_path = f'{freq_path}/listOfPolarizations'
+            pol_list = np.array(src_h5[pol_path][()], dtype=str) \
+                    if freq_key in src_h5[swath_path] else [""]
+
+            if len(pol_list) and (freq_pols[freq_ab] is not None):
+                pols_excludes = [pol for pol in pol_list
+                    if pol not in freq_pols[freq_ab]]
+            else:
+                pols_excludes = list(pol_list)
+
+            if len(pols_excludes):
+                cp_h5_meta_data(src_h5, dst_h5, freq_path,
+                        excludes=pols_excludes)
+            else:
+                cp_h5_meta_data(src_h5, dst_h5, freq_path,
                         excludes=[''])
-            except:
-                pass
 
         cp_h5_meta_data(src_h5, dst_h5, metadata_path,
                     excludes=[''])
         cp_h5_meta_data(src_h5, dst_h5, ident_path,
                     excludes=[''])
         cp_h5_meta_data(src_h5, dst_h5, swath_path,
-                    excludes=['frequencyA', 'frequencyB'])   
+                    excludes=['frequencyA', 'frequencyB'])
 
 def run(cfg: dict):
     '''
@@ -128,7 +121,6 @@ def run(cfg: dict):
                 high_band_output = f"{split_band_path}/sec_high_band_slc.h5"
             # Open RSLC product
             slc_product = SLC(hdf5file=hdf5_str)
-            # Extract metadata
             # meta data extraction
             meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
                 slc_product=slc_product,
@@ -224,7 +216,7 @@ def run(cfg: dict):
                                                        [rows, cols],
                                                        np.complex64,
                                                        chunks=(128, 128))
-                        
+
                         # Write bandpassed SLC to HDF5
                         dst_h5_low[dest_pol_path].write_direct(
                             subband_slc_low,
