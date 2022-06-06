@@ -258,11 +258,11 @@ def test_ionosphere_filter():
 
     # write data into files
     ionosphere_estimation.write_array(simul_disp_path,
-        phase0)
+        phase0, data_shape=np.shape(phase0))
     ionosphere_estimation.write_array(simul_disp_sig_path,
-        phase_sig)
+        phase_sig, data_shape=np.shape(phase_sig))
     ionosphere_estimation.write_array(mask_path,
-        maskraster)
+        maskraster, data_shape=np.shape(maskraster))
 
     #initialize ionosphere filter object
 
