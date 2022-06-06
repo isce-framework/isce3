@@ -66,6 +66,8 @@ runconfig:
 
             geo2rdr: include('geo2rdr_options', required=False)
 
+            dem_margin: num(required=False)
+
             # Coarse resample (geometry offsets only) options
             coarse_resample: include('coarse_resample_options', required=False)
 
@@ -506,25 +508,40 @@ ionosphere_phase_correction_options:
     # being 1/3 (fixed for now) of the total main range spectrum.
     # 'main_side_band' uses the additional NISAR 5 MHz side-band to estimate the
     # ionosphere phase screen. Main and side-bands are intended to be at the same polarization
-    spectral_diversity: enum('split_main_band', 'main_side_band', 'main_diff_ms_band', 'hybrid', required=False)
+    spectral_diversity: enum('split_main_band', 'main_side_band', 'main_diff_ms_band', required=False)
     split_range_spectrum: include('split_range_spectrum_options', required=False)
     list_of_frequencies: include('ionosphere_freq_pol_options', required=False)
     dispersive_filter: include('dispersive_filter_options', required=False)
     # Number of lines per block for block processing)
     lines_per_block: int(min=1, required=False)
 
-dispersive_filter_options: 
+dispersive_filter_options:
     # Boolean flag to enable/disable ionosphere phase correction
     enabled: bool(required=False)
+    # Source for mask generation
+    # median filter : use theoretical standard deviation calculated from coherence and
+    #                 detect area below 3 * std.
+    # coherence : define invalid region using coherence below 'filter_coherence_threshold'
+    # connected_components: define invalid region where connected_components equal to 0.
     filter_mask_type: enum('median_filter', 'coherence', 'connected_components', required=False)
-    filter_coherence_threshold: num(min=0, required=False)
+    # Median filter size for mask generation
+    median_filter_size: num(min=1, required=False)
+    # coherence threshold for mask generation
+    filter_coherence_threshold: num(min=0, max=1, required=False)
+    # Filling method for invalid regions
+    # nearest : apply nearest interpolation for whole invalid regions
+    # smoothed : apply lienar interpolation and nearest extrapolations
     filling_method: enum('nearest', 'smoothed', 'None', required=False)
+    # Flag for enabling/disabling of upwrapping error estimation/correction
     unwrap_correction: bool(required=False)
-    kernel_x: num(min=0, required=False)
-    kernel_y: num(min=0, required=False)
-    sigma_x: num(min=0, required=False)
-    sigma_y: num(min=0, required=False)
-    filter_iterations: num(min=1, required=False)
+    # 1D gaussian kernel size [pixels] in range/ azimuth
+    kernel_range: num(min=1, required=False)
+    kernel_azimuth: num(min=1, required=False)
+    # Gaussian filter standard deviation along range
+    sigma_range: num(min=1, required=False)
+    # Gaussian filter standard deviation along azimuth
+    sigma_azimuth: num(min=1, required=False)
+    filter_iterations: num(min=1, max=10, required=False)
 
 split_range_spectrum_options:
     # Number of lines per block for block processing)
