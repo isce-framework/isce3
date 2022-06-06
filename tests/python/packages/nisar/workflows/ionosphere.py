@@ -311,7 +311,19 @@ def test_ionosphere_filter():
     filt_iter_3_gdal = None
     del filt_iter_3_gdal
     # only compare the regions which is not affected by invalid region
-    difference = np.sum(filt_iter_1[:30, :30] - filt_iter_3[:30, :30] )
+    difference = np.sum(np.abs(filt_iter_1[:30, :30] - filt_iter_3[:30, :30] ))
+    assert difference < 1e-5
+
+def test_decimate_runw():
+    main_slant = np.arange(500, 1000, 2)
+    side_slant = np.arange(500, 1000, 4)
+    main_runw = np.reshape(np.arange(500, 1000, 2) ,[1, -1])
+
+    decimate_test = ionosphere_estimation.decimate_freqA_array(main_slant,
+        side_slant,
+        main_runw)
+
+    difference = np.sum(np.abs(decimate_test - side_slant))
     assert difference < 1e-5
 
 if __name__ == '__main__':
@@ -320,3 +332,4 @@ if __name__ == '__main__':
     test_split_main_band_run()
     test_main_side_band_run()
     test_ionosphere_filter()
+    test_decimate_runw()
