@@ -145,8 +145,6 @@ def insar_ionosphere_pair(cfg):
             _, out_paths = h5_prep.get_products_and_paths(iono_insar_cfg)
             out_paths['RUNW'] = f'{new_scratch}/RUNW.h5'
             run_insar_workflow(iono_insar_cfg, out_paths)
-            # mask_amp_from_rifg(iono_insar_cfg, out_paths['RIFG'],
-            #     out_mask=f'{new_scratch}/mask_amp_raster')
 
     elif iono_method in ['main_side_band', 'main_diff_ms_band']:
         rerun_insar_pairs = 0
@@ -315,7 +313,7 @@ def run(cfg: dict, runw_hdf5: str):
 
     # Run InSAR for sub-band SLCs (split-main-bands) or
     # for main and side bands for iono_freq_pols (main-side-bands)
-    # insar_ionosphere_pair(iono_insar_cfg)
+    insar_ionosphere_pair(iono_insar_cfg)
 
     # Define methods to use subband or sideband
     iono_method_subbands = ['split_main_band']
