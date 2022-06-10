@@ -1,8 +1,6 @@
 #include "symmetrize.h"
 
 #include <isce3/core/DenseMatrix.h>
-#include <isce3/geocode/GeocodeCov.h>
-#include <isce3/geometry/RTC.h>
 #include <isce3/math/complexOperations.h>
 
 namespace isce3 { namespace polsar {
@@ -83,7 +81,7 @@ void _symmetrizeCrossPolChannels(isce3::io::Raster& hv_raster,
 
 void symmetrizeCrossPolChannels(isce3::io::Raster& hv_raster,
         isce3::io::Raster& vh_raster, isce3::io::Raster& output_raster,
-        isce3::core::MemoryModeBlockY memory_mode, int hv_raster_band,
+        isce3::core::MemoryModeBlocksY memory_mode, int hv_raster_band,
         int vh_raster_band, int output_raster_band)
 {
 
@@ -102,14 +100,14 @@ void symmetrizeCrossPolChannels(isce3::io::Raster& hv_raster,
     int block_length, nblocks;
 
     switch (memory_mode) {
-    case isce3::core::MemoryModeBlockY::SingleBlockY:
+    case isce3::core::MemoryModeBlocksY::SingleBlockY:
         nblocks = 1;
         block_length = static_cast<int>(hv_raster.length());
         break;
-    case isce3::core::MemoryModeBlockY::AutoBlocksY: [[fallthrough]];
-    case isce3::core::MemoryModeBlockY::MultipleBlocksY:
+    case isce3::core::MemoryModeBlocksY::AutoBlocksY: [[fallthrough]];
+    case isce3::core::MemoryModeBlocksY::MultipleBlocksY:
         const int out_nbands = 1;
-        isce3::geocode::getBlocksNumberAndLength(hv_raster.length(),
+        isce3::core::getBlockProcessingParametersY(hv_raster.length(),
                 hv_raster.width(), out_nbands,
                 GDALGetDataTypeSizeBytes(hv_raster.dtype()), &info,
                 &block_length, &nblocks);

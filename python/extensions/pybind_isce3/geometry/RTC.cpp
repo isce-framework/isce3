@@ -69,7 +69,7 @@ void addbinding_apply_rtc(pybind11::module& m)
             py::arg("radar_grid_nlooks") = 1, py::arg("out_nlooks") = nullptr,
             py::arg("input_rtc") = nullptr, py::arg("output_rtc") = nullptr,
             py::arg("rtc_memory_mode") =
-                    isce3::core::MemoryModeBlockY::AutoBlocksY,
+                    isce3::core::MemoryModeBlocksY::AutoBlocksY,
             R"(This function computes and applies the radiometric terrain correction (RTC) to a multi-band
               raster.
 
@@ -121,7 +121,7 @@ void addbinding_apply_rtc(pybind11::module& m)
                   Raster containing pre-computed RTC area factor
               output_rtc : isce3.io.Raster, optional
                   Output RTC area factor (output)
-              rtc_memory_mode : isce3.core.memory_mode_block_y, optional
+              rtc_memory_mode : isce3.core.MemoryModeBlocksY, optional
                   Select memory mode
               )");
 }
@@ -136,8 +136,9 @@ void addbinding_compute_rtc(pybind11::module& m)
                     isce3::io::Raster&, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, isce3::geometry::rtcAreaMode,
                     rtcAlgorithm, double, float, float, isce3::io::Raster*,
-                    isce3::core::MemoryModeBlockY,
-                    isce3::core::dataInterpMethod, double, int, double>(
+                    isce3::core::MemoryModeBlocksY,
+                    isce3::core::dataInterpMethod, double, int, double,
+                    const long long, const long long>(
                     &isce3::geometry::computeRtc),
             py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
             py::arg("dem"), py::arg("output_raster"),
@@ -154,12 +155,16 @@ void addbinding_compute_rtc(pybind11::module& m)
                     std::numeric_limits<float>::quiet_NaN(),
             py::arg("radar_grid_nlooks") = 1, py::arg("out_nlooks") = nullptr,
             py::arg("rtc_memory_mode") =
-                    isce3::core::MemoryModeBlockY::AutoBlocksY,
+                    isce3::core::MemoryModeBlocksY::AutoBlocksY,
             py::arg("interp_method") =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
             py::arg("threshold") = defaults.threshold,
             py::arg("num_iter") = defaults.maxiter,
             py::arg("delta_range") = defaults.delta_range,
+            py::arg("min_block_size") =
+                    isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+            py::arg("max_block_size") =
+                    isce3::core::DEFAULT_MAX_BLOCK_SIZE,
             R"(This function computes and applies the radiometric terrain correction
              (RTC) to a multi-band raster.
 
@@ -194,7 +199,7 @@ void addbinding_compute_rtc(pybind11::module& m)
              out_nlooks : isce3.io.Raster, optional
                  Raster to which the number of radar-grid
               looks associated with the geogrid will be saved (output)
-             rtc_memory_mode : isce3.core.memory_mode_block_y, optional
+             rtc_memory_mode : isce3.core.MemoryModeBlocksY, optional
                  Select memory mode
              interp_method : isce3.core.DataInterpMethod, optional
                  Interpolation Method
@@ -204,6 +209,10 @@ void addbinding_compute_rtc(pybind11::module& m)
                  Maximum number of Newton-Raphson iterations
              delta_range : double, optional
                 Step size used for computing Doppler derivative
+             min_block_size : long long, optional
+                Minimum block size
+             max_block_size : long long, optional
+                Maximum block size
              )");
 }
 
@@ -220,8 +229,9 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     rtcOutputTerrainRadiometry, isce3::geometry::rtcAreaMode,
                     rtcAlgorithm, double, float, float, isce3::io::Raster*,
                     isce3::io::Raster*, isce3::io::Raster*,
-                    isce3::core::MemoryModeBlockY,
-                    isce3::core::dataInterpMethod, double, int, double>(
+                    isce3::core::MemoryModeBlocksY,
+                    isce3::core::dataInterpMethod, double, int, double,
+                    const long long, const long long>(
                     &isce3::geometry::computeRtc),
             py::arg("dem_raster"), py::arg("output_raster"),
             py::arg("radar_grid"), py::arg("orbit"), py::arg("input_dop"),
@@ -242,12 +252,16 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
             py::arg("radar_grid_nlooks") = 1, py::arg("out_geo_rdr") = nullptr,
             py::arg("out_geo_grid") = nullptr, py::arg("out_nlooks") = nullptr,
             py::arg("rtc_memory_mode") =
-                    isce3::core::MemoryModeBlockY::AutoBlocksY,
+                    isce3::core::MemoryModeBlocksY::AutoBlocksY,
             py::arg("interp_method") =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
             py::arg("threshold") = defaults.threshold,
             py::arg("num_iter") = defaults.maxiter,
             py::arg("delta_range") = defaults.delta_range,
+            py::arg("min_block_size") =
+                    isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+            py::arg("max_block_size") =
+                    isce3::core::DEFAULT_MAX_BLOCK_SIZE,
             R"(This function computes and applies the radiometric terrain correction
              (RTC) to a multi-band raster using a predefined geogrid.
 
@@ -302,7 +316,7 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
              out_nlooks : isce3.io.Raster, optional
                  Raster to which the number of radar-grid
               looks associated with the geogrid will be saved (output)
-             rtc_memory_mode : isce3.core.memory_mode_block_y, optional
+             rtc_memory_mode : isce3.core.MemoryModeBlocksY, optional
                  Select memory mode
              interp_method : isce3.core.DataInterpMethod, optional
                  Interpolation Method
@@ -312,5 +326,9 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                  Maximum number of Newton-Raphson iterations
              delta_range : double, optional
                  Step size used for computing Doppler derivative
+             min_block_size : long long, optional
+                Minimum block size
+             max_block_size : long long, optional
+                Maximum block size
              )");
 }

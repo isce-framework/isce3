@@ -1,6 +1,7 @@
 #pragma once
 
 #include <isce3/core/Constants.h>
+#include <isce3/core/blockProcessing.h>
 #include <isce3/io/Raster.h>
 
 namespace isce3 { namespace polsar {
@@ -28,8 +29,8 @@ namespace isce3 { namespace polsar {
  */
 void symmetrizeCrossPolChannels(isce3::io::Raster& hv_raster_band,
         isce3::io::Raster& vh_raster, isce3::io::Raster& output_raster,
-        isce3::core::MemoryModeBlockY memory_mode =
-                isce3::core::MemoryModeBlockY::AutoBlocksY,
+        isce3::core::MemoryModeBlocksY memory_mode =
+                isce3::core::MemoryModeBlocksY::AutoBlocksY,
         int hv_band = 1, int vh_raster_band = 1, int output_band = 1);
 
 }} // namespace isce3::polsar

@@ -10,6 +10,7 @@ core/Baseline.cpp
 core/Basis.cpp
 core/BicubicInterpolator.cpp
 core/BilinearInterpolator.cpp
+core/blockProcessing.cpp
 core/Constants.cpp
 core/DateTime.cpp
 core/detail/BuildOrbit.cpp
