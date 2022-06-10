@@ -60,8 +60,8 @@ class IonosphereEstimation:
 
         # Center frequency for frequency B is needed except
         # split_main_band.
-        if side_center_freq is None:
-            if method in ['main_side_band', 'main_diff_band']:
+        if side_center_freq is None and \
+            method in ['main_side_band', 'main_diff_ms_band']:
                 err_str = f"Center frequency for frequency B"\
                 f" is needed for {method}"
                 error_channel.log(err_str)
@@ -69,8 +69,8 @@ class IonosphereEstimation:
 
         # Center frequencies for sub-bands are needed except
         # main_side_band method.
-        if (low_center_freq is None) or (high_center_freq is None):
-            if method in ['split_main_band', 'main_diff_band']:
+        if  None in [low_center_freq, high_center_freq] and \
+            method is 'split_main_band':
                 err_str = f"Center frequency for frequency A"\
                     f" is needed for {method}"
                 error_channel.log(err_str)
@@ -186,8 +186,7 @@ class IonosphereEstimation:
 
         if self.diversity_method in ['main_side_band', 'main_diff_ms_band']:
             # correct unwrapped phase when correction coefficients are given
-            if (comm_unwcor_coef is not None) and \
-                (diff_unwcor_coef is not None):
+            if None not in [comm_unwcor_coef, diff_unwcor_coef]:
 
                 phi_main = phi_main - 2 * np.pi * comm_unwcor_coef
                 phi_side = phi_side - 2 * np.pi *\
@@ -436,19 +435,9 @@ class IonosphereEstimation:
                 slant_main,
                 slant_side,
                 main_coh)
-            if low_band_coh is not None:
-                low_band_coh = decimate_freqA_array(
-                    slant_main,
-                    slant_side,
-                    low_band_coh)
-            if high_band_coh is not None:
-                high_band_coh = decimate_freqA_array(
-                    slant_main,
-                    slant_side,
-                    high_band_coh)
 
         # estimate sigma from sub-band coherences
-        if (low_band_coh is not None) & (high_band_coh is not None):
+        if (low_band_coh is not None) and (high_band_coh is not None):
             sig_phi_low = np.sqrt(1 - low_band_coh**2) / \
                 low_band_coh / np.sqrt(2 * number_looks)
             sig_phi_high = np.sqrt(1 - high_band_coh**2) / \
@@ -456,7 +445,6 @@ class IonosphereEstimation:
 
         # estimate sigma from main- and side- band coherences
         if (main_coh is not None) & (side_coh is not None):
-
             sig_phi_main = np.divide(np.sqrt(1 - main_coh**2),
                 main_coh / np.sqrt(2 * number_looks),
                 out=np.zeros_like(main_coh),
@@ -1022,11 +1010,11 @@ class IonosphereFilter:
         self.outputdir = outputdir
 
     def low_pass_filter(self,
-            data_str,
-            data_sig_str,
-            mask_str,
-            output_str,
-            output_sig_str,
+            input_data,
+            input_std_dev,
+            mask_path,
+            filtered_output,
+            filtered_std_dev,
             lines_per_block):
         """Apply low_pass_filtering for dispersive and nondispersive
         with standard deviation. Before filtering, fill the gaps with
@@ -1034,26 +1022,24 @@ class IonosphereFilter:
 
         Parameters
         ----------
-        data_str : str
+        input_data : str
             file path for data to be filtered.
-        data_sig_str : str
+        input_std_dev : str
             file path for stardard deviation
             or nondispersive array
-        mask_str : str
+        mask_path : str
             file path for mask raster
             1: valid pixels,
             0: invalid pixels.
-        output_str : str
-            output file path to write the filetered data
-        output_sig_str : str
-            output file path to write filtered standard deviation.
-        lines_per_block : int
-            Lines to be processed per block.
+        filtered_output : str
+            output file path or h5py dataset to write the filtered data
+        filtered_std_dev : str
+            output file path or h5py dataset to write filtered standard deviation.
 
         Returns
         -------
         """
-        data_shape, data_type = get_raster_info(data_str)
+        data_shape, data_type = get_raster_info(input_data)
         data_length, data_width = data_shape
         # Determine number of blocks to process
         lines_per_block = min(data_length,
@@ -1064,39 +1050,53 @@ class IonosphereFilter:
         pad_shape = (pad_length, pad_width)
         block_params = block_param_generator(
                 lines_per_block, data_shape, pad_shape)
+
+        # Prepare to write output to files
+        if not isinstance(filtered_output, h5py.Dataset) and \
+            not os.path.isfile(filtered_output):
+            raster = isce3.io.Raster(path=filtered_output,
+                width=data_width,
+                length=data_length,
+                num_bands=1,
+                dtype=gdal.GDT_Float32,
+                driver_name='ENVI')
+            del raster
+        if not isinstance(filtered_std_dev, h5py.Dataset) and \
+            not os.path.isfile(filtered_std_dev):
+            raster = isce3.io.Raster(path=filtered_std_dev,
+                width=data_width,
+                length=data_length,
+                num_bands=1,
+                dtype=gdal.GDT_Float32,
+                driver_name='ENVI')
+            del raster
+
         for iter_cnt in range(self.iteration):
-            
+
             # Start block processing
             for block_param in block_params:
-                if iter_cnt == 0:
-                    data_block = read_block_array(data_str, block_param)
-                    data_sig_block = read_block_array(data_sig_str, block_param)
-                    mask_block = read_block_array(mask_str, block_param)
-
-                else:
-                    data_block = read_block_array(output_str, block_param)
-                    data_sig_block = read_block_array(output_sig_str, block_param)
-                    mask_block = read_block_array(mask_str, block_param)
+                block_data_path = filtered_output if iter_cnt > 0 else input_data
+                data_block = read_block_array(block_data_path, block_param)
+                block_sig_path = filtered_std_dev if iter_cnt > 0 else input_std_dev
+                data_sig_block = read_block_array(block_sig_path, block_param)
+                mask_block = read_block_array(mask_path, block_param)
 
                 data_block[mask_block==0] = np.nan
                 data_sig_block[mask_block==0] = np.nan
 
                 # filling gaps with smoothed or nearest values
-                if self.filling_method == "smoothed":
-                    filled_data = fill_with_smoothed(data_block)
-                    filled_data_sig = fill_with_smoothed(data_sig_block)
-
-                elif self.filling_method == "nearest":
-                    filled_data = fill_nearest(data_block)
-                    filled_data_sig = fill_nearest(data_sig_block)
-                # after filling gaps, filter the data
+                fill_method = fill_with_smoothed \
+                    if self.filling_method == "smoothed" else fill_nearest
+                filled_data = fill_method(data_block)
+                filled_data_sig = fill_method(data_sig_block)
 
                 if iter_cnt > 0 :
                     # Replace the valid pixels with original unfiltered data
                     # to avoid too much smoothed signal
-                    unfilt_data_block = read_block_array(data_str, block_param)
+                    unfilt_data_block = read_block_array(input_data, block_param)
                     data_block[mask_block==1] = unfilt_data_block[mask_block==1]
 
+                # after filling gaps, filter the data
                 filt_data, filt_data_sig = filter_data_with_sig(
                     input_array=filled_data,
                     sig_array=filled_data_sig,
@@ -1105,30 +1105,11 @@ class IonosphereFilter:
                     sig_kernel_x=self.sig_x,
                     sig_kernel_y=self.sig_y)
 
-                if not isinstance(output_str, h5py.Dataset) and \
-                    not os.path.isfile(output_str):
-
-                    raster = isce3.io.Raster(path=output_str,
-                        width=data_width,
-                        length=data_length,
-                        num_bands=1,
-                        dtype=gdal.GDT_Float32,
-                        driver_name='ENVI')
-                    del raster
-                if not isinstance(output_sig_str, h5py.Dataset) and \
-                    not os.path.isfile(output_sig_str):
-                    raster = isce3.io.Raster(path=output_sig_str,
-                        width=data_width,
-                        length=data_length,
-                        num_bands=1,
-                        dtype=gdal.GDT_Float32,
-                        driver_name='ENVI')
-                    del raster
-                write_array(output_str, filt_data,
+                write_array(filtered_output, filt_data,
                     block_row=block_param.write_start_line,
                     data_shape=data_shape)
 
-                write_array(output_sig_str, filt_data_sig,
+                write_array(filtered_std_dev, filt_data_sig,
                     block_row=block_param.write_start_line,
                     data_shape=data_shape)
 
@@ -1185,45 +1166,44 @@ def fill_with_smoothed(data):
     xx = xx.ravel()
     yy = yy.ravel()
     data = data.ravel()
-    # find x and y where valid values are located.
-    xx_wo_nan = list(xx[np.invert(np.isnan(data))])
-    yy_wo_nan = list(yy[np.invert(np.isnan(data))])
-    data_wo_nan = list(data[np.invert(np.isnan(data))])
 
-    xnew = list(xx[np.isnan(data)])
-    ynew = list(yy[np.isnan(data)])
+    is_nan_mask = np.isnan(data)
+    not_nan_mask = np.invert(is_nan_mask)
+    if np.all(not_nan_mask):
+        return data.reshape([rows, cols])
 
-    if xnew:
+    else:
+        # find x and y where valid values are located.
+        xx_wo_nan = xx[not_nan_mask]
+        yy_wo_nan = yy[not_nan_mask]
+        data_wo_nan = data[not_nan_mask]
+
+        xnew = xx[np.isnan(data)]
+        ynew = yy[np.isnan(data)]
+
         # linear interpolation with griddata
         znew = griddata((xx_wo_nan, yy_wo_nan),
                         data_wo_nan,
                         (xnew, ynew),
                         method='linear')
-
         data_filt = data.copy()
         data_filt[np.isnan(data)] = znew
-        cnt2 = np.sum(np.count_nonzero(np.isnan(data_filt)))
-        loop = 0
+        n_nonzero = np.sum(np.count_nonzero(np.isnan(data_filt)))
 
-        while (cnt2!=0 & loop<100):
-            loop += 1
+        if n_nonzero > 0:
             idx2= np.isnan(data_filt)
 
-            xx_wo_nan = list(xx[np.invert(np.isnan(data_filt))])
-            yy_wo_nan = list(yy[np.invert(np.isnan(data_filt))])
-            data_wo_nan = list(data_filt[np.invert(np.isnan(data_filt))])
-            xnew = list(xx[np.isnan(data_filt)])
-            ynew = list(yy[np.isnan(data_filt)])
+            xx_wo_nan = xx[np.invert(idx2)]
+            yy_wo_nan = yy[np.invert(idx2)]
+            data_wo_nan = data_filt[np.invert(idx2)]
+            xnew = xx[idx2]
+            ynew = yy[idx2]
 
             # extrapolation using nearest values
             znew_ext = griddata((xx_wo_nan, yy_wo_nan),
                 data_wo_nan, (xnew, ynew), method='nearest')
             data_filt[np.isnan(data_filt)] = znew_ext
-            cnt2 = np.sum(np.count_nonzero(np.isnan(data_filt)))
-
         return data_filt.reshape([rows, cols])
-    else:
-        return data
 
 def filter_data_with_sig(
         input_array,
