@@ -5,5 +5,4 @@
 
 template<typename T>
 void addbinding(pybind11::class_<isce3::geocode::Geocode<T>>&);
-void addbinding(pybind11::enum_<isce3::geocode::geocodeMemoryMode> &);
 void addbinding(pybind11::enum_<isce3::geocode::geocodeOutputMode> &);

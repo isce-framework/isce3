@@ -140,16 +140,16 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::Raster* phase_screen_raster = nullptr;
     isce3::io::Raster* offset_az_raster = nullptr;
     isce3::io::Raster* offset_rg_raster = nullptr;
-    isce3::geocode::geocodeMemoryMode geocode_memory_mode_1 =
-            isce3::geocode::geocodeMemoryMode::BLOCKS_GEOGRID;
-    isce3::geocode::geocodeMemoryMode geocode_memory_mode_2 =
-            isce3::geocode::geocodeMemoryMode::BLOCKS_GEOGRID_AND_RADARGRID;
+    isce3::core::GeocodeMemoryMode geocode_memory_mode_1 =
+            isce3::core::GeocodeMemoryMode::BlocksGeogrid;
+    isce3::core::GeocodeMemoryMode geocode_memory_mode_2 =
+            isce3::core::GeocodeMemoryMode::BlocksGeogridAndRadarGrid;
 
     isce3::geocode::geocodeOutputMode output_mode;
 
     // test small block size
-    const int min_block_size = 16;
-    const int max_block_size = isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE;
+    const long long min_block_size = 16;
+    const long long max_block_size = isce3::core::DEFAULT_MIN_BLOCK_SIZE;
 
     for (auto geocode_mode_str : geocode_mode_set) {
 

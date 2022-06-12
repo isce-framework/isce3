@@ -16,62 +16,62 @@ from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
-def prep_subband_h5(full_hdf5: str,
+def prep_subband_h5(src_rslc_hdf5: str,
                     sub_band_hdf5: str,
-                    freq_pols):
-
-    """Prepare HDF5 file for sub-band SLCs by copying data from
-     source SLC HDF5 file.
+                    iono_freq_pols : dict):
+    '''Prepare subband HDF5 with source/full HDF5
 
     Parameters
     ----------
-    full_hdf5 : str
-        path of source SLC HDF5 file
+    src_rslc_hdf5 : str
+        Path to source HDF5
     sub_band_hdf5 : str
-        path of sub-band SLC HDF5 file
-    freq_pols : dict
-        list of polarzations for frequency A and B
-
-    """
-    full_slc = SLC(hdf5file=full_hdf5)
+        Path to destination HDF5
+    iono_freq_pols : dict
+        list of polarizations for frequency A and B for ionosphere processing
+    '''
+    src_slc = SLC(hdf5file=src_rslc_hdf5)
     common_parent_path = 'science/LSAR'
-    swath_path = full_slc.SwathPath
-    metadata_path = full_slc.MetadataPath
-    ident_path = f'{common_parent_path}/identification'
 
-    with h5py.File(full_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
+    with h5py.File(src_rslc_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
         h5py.File(sub_band_hdf5, 'w') as dst_h5:
 
+        # copy non-frequency metadata
+        metadata_path = src_slc.MetadataPath
+        cp_h5_meta_data(src_h5, dst_h5, metadata_path, excludes=[''])
+
+        ident_path = f'{common_parent_path}/identification/'
+        cp_h5_meta_data(src_h5, dst_h5, ident_path, excludes=[''])
+
+        swath_path = src_slc.SwathPath
+        cp_h5_meta_data(src_h5, dst_h5, swath_path, excludes=['frequencyA',
+                                                              'frequencyB'])
+
+        # iterate over frequencies
         for freq_ab in ['A', 'B']:
             freq_key = f'frequency{freq_ab}'
 
+            # skip further processing if frequency key does not exists
             if freq_key not in src_h5[swath_path]:
                 continue
 
-            freq_path = f'{swath_path}/{freq_key}'
+            # get list of polarizations for current frequency in source HDF5
+            freq_path = f'{swath_path}/{freq_key}/'
             pol_path = f'{freq_path}/listOfPolarizations'
-            pol_list = np.array(src_h5[pol_path][()], dtype=str) \
-                    if freq_key in src_h5[swath_path] else [""]
+            src_pol_list = np.array(src_h5[pol_path][()], dtype=str)
 
-            if len(pol_list) and (freq_pols[freq_ab] is not None):
-                pols_excludes = [pol for pol in pol_list
-                    if pol not in freq_pols[freq_ab]]
+            # determine which polarizations rasters not to copy
+            if iono_freq_pols[freq_ab]:
+                # exclude pols found in src HDF5 but not in iono pols list
+                pols_excludes = [src_pol for src_pol in src_pol_list
+                                 if src_pol not in iono_freq_pols[freq_ab]]
             else:
-                pols_excludes = list(pol_list)
+                # copy everything
+                pols_excludes = ['']
 
-            if len(pols_excludes):
-                cp_h5_meta_data(src_h5, dst_h5, freq_path,
-                        excludes=pols_excludes)
-            else:
-                cp_h5_meta_data(src_h5, dst_h5, freq_path,
-                        excludes=[''])
+            cp_h5_meta_data(src_h5, dst_h5, freq_path,
+                            excludes=pols_excludes)
 
-        cp_h5_meta_data(src_h5, dst_h5, metadata_path,
-                    excludes=[''])
-        cp_h5_meta_data(src_h5, dst_h5, ident_path,
-                    excludes=[''])
-        cp_h5_meta_data(src_h5, dst_h5, swath_path,
-                    excludes=['frequencyA', 'frequencyB'])
 
 def run(cfg: dict):
     '''
@@ -105,7 +105,6 @@ def run(cfg: dict):
             f"{scratch_path}/ionosphere/split_spectrum/")
         split_band_path.mkdir(parents=True, exist_ok=True)
 
-        common_parent_path = 'science/LSAR'
         freq = 'A'
         pol_list = iono_freq_pol[freq]
         info_channel.log(f'Split the main band {pol_list} of the signal')

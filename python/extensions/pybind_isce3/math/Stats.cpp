@@ -31,7 +31,7 @@ void addbinding_stats(pybind11::module& m, const char * name)
 {
     m.def(name, &isce3::math::computeRasterStats<T>,
           py::arg("input_raster"),
-          py::arg("memory_mode") = isce3::core::MemoryModeBlockY::AutoBlocksY,
+          py::arg("memory_mode") = isce3::core::MemoryModeBlocksY::AutoBlocksY,
           R"(Compute raster statistics.
  
              Calculate statistics (min, max, mean, and standard deviation) 
@@ -41,7 +41,7 @@ void addbinding_stats(pybind11::module& m, const char * name)
              ----------
              input_raster : isce3.io.Raster
                  Input raster
-             memory_mode : isce3.core.memory_mode_block_y
+             memory_mode : isce3.core.MemoryModeBlocksY
                  Memory mode
 
     )");
@@ -76,7 +76,7 @@ void addbinding_stats_real_imag(pybind11::module& m)
     m.def("compute_raster_stats_real_imag", 
           &isce3::math::computeRasterStatsRealImag<T>,
           py::arg("input_raster"),
-          py::arg("memory_mode") = isce3::core::MemoryModeBlockY::AutoBlocksY,
+          py::arg("memory_mode") = isce3::core::MemoryModeBlocksY::AutoBlocksY,
           R"(Compute real and imaginary statistics separately from a
           complex-valued raster.
           
@@ -86,7 +86,7 @@ void addbinding_stats_real_imag(pybind11::module& m)
           ----------
           input_raster : isce3.io.Raster
               Input raster
-          memory_mode : isce3.core.memory_mode_block_y
+          memory_mode : isce3.core.MemoryModeBlocksY
               Memory mode
 
     )");

@@ -20,6 +20,7 @@ container/RSD.icc
 core/Attitude.h
 core/Baseline.h
 core/Basis.h
+core/blockProcessing.h
 core/Common.h
 core/Constants.h
 core/DateTime.h

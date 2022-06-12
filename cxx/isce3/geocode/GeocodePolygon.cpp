@@ -6,6 +6,7 @@
 
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Projections.h>
+#include <isce3/core/blockProcessing.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/RTC.h>
 #include <isce3/geometry/geometry.h>
@@ -212,8 +213,8 @@ void GeocodePolygon<T>::getPolygonMean(
         isce3::geometry::rtcAlgorithm rtc_algorithm =
                 isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
 
-        isce3::core::MemoryModeBlockY rtc_memory_mode =
-                isce3::core::MemoryModeBlockY::SingleBlockY;
+        isce3::core::MemoryModeBlocksY rtc_memory_mode =
+                isce3::core::MemoryModeBlocksY::SingleBlockY;
 
         computeRtc(radar_grid_cropped, _orbit, input_dop, dem_raster,
                    *rtc_raster, input_terrain_radiometry,

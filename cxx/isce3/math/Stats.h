@@ -1,5 +1,6 @@
 #include <isce3/core/TypeTraits.h>
 #include <isce3/core/Constants.h>
+#include <isce3/core/blockProcessing.h>
 #include <isce3/io/Raster.h>
 
 namespace isce3 { namespace math {
@@ -71,8 +72,8 @@ struct StatsRealImag {
 template<class T>
 std::vector<isce3::math::Stats<T>> computeRasterStats(
     isce3::io::Raster& input_raster,
-    isce3::core::MemoryModeBlockY memory_mode = 
-        isce3::core::MemoryModeBlockY::AutoBlocksY);
+    isce3::core::MemoryModeBlocksY memory_mode = 
+        isce3::core::MemoryModeBlocksY::AutoBlocksY);
 
 /** Compute real and imaginary statistics separately from a complex-valued
  * raster.
@@ -86,8 +87,8 @@ std::vector<isce3::math::Stats<T>> computeRasterStats(
 template<class T>
 std::vector<isce3::math::StatsRealImag<T>> computeRasterStatsRealImag(
     isce3::io::Raster& input_raster, 
-    isce3::core::MemoryModeBlockY memory_mode = 
-        isce3::core::MemoryModeBlockY::AutoBlocksY);
+    isce3::core::MemoryModeBlocksY memory_mode = 
+        isce3::core::MemoryModeBlocksY::AutoBlocksY);
 
 
 }}

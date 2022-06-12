@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 
 #include <isce3/core/Constants.h>
+#include <isce3/core/blockProcessing.h>
 #include <isce3/geometry/RTC.h>
 #include <isce3/io/Raster.h>
 
@@ -11,7 +12,7 @@ namespace py = pybind11;
 
 using isce3::core::parseDataInterpMethod;
 using isce3::geocode::Geocode;
-using isce3::geocode::geocodeMemoryMode;
+using isce3::core::GeocodeMemoryMode;
 using isce3::geocode::geocodeOutputMode;
 using isce3::geometry::rtcAlgorithm;
 using isce3::geometry::rtcInputTerrainRadiometry;
@@ -99,11 +100,11 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("offset_rg_raster") = nullptr,
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
-                    py::arg("memory_mode") = geocodeMemoryMode::AUTO,
+                    py::arg("memory_mode") = GeocodeMemoryMode::Auto,
                     py::arg("min_block_size") =
-                            isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
+                            isce3::core::DEFAULT_MIN_BLOCK_SIZE,
                     py::arg("max_block_size") =
-                            isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
+                            isce3::core::DEFAULT_MAX_BLOCK_SIZE,
                     py::arg("dem_interp_method") =
                             isce3::core::BIQUINTIC_METHOD);
 }
@@ -112,15 +113,6 @@ void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeOutputMode)
 {
     pyGeocodeOutputMode.value("INTERP", geocodeOutputMode::INTERP)
             .value("AREA_PROJECTION", geocodeOutputMode::AREA_PROJECTION);
-};
-
-void addbinding(pybind11::enum_<geocodeMemoryMode>& pyGeocodeMemoryMode)
-{
-    pyGeocodeMemoryMode.value("AUTO", geocodeMemoryMode::AUTO)
-            .value("SINGLE_BLOCK", geocodeMemoryMode::SINGLE_BLOCK)
-            .value("BLOCKS_GEOGRID", geocodeMemoryMode::BLOCKS_GEOGRID)
-            .value("BLOCKS_GEOGRID_AND_RADARGRID",
-                   geocodeMemoryMode::BLOCKS_GEOGRID_AND_RADARGRID);
 };
 
 template void addbinding(py::class_<Geocode<float>>&);

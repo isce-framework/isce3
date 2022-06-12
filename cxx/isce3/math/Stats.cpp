@@ -1,7 +1,6 @@
 #include "Stats.h"
 
 #include <pyre/journal.h>
-#include <isce3/geocode/GeocodeCov.h>
 #include <isce3/math/complexOperations.h>
 
 
@@ -225,7 +224,7 @@ void _runBlockRealImag(isce3::io::Raster& input_raster,
 template<class T>
 std::vector<isce3::math::Stats<T>> computeRasterStats(
     isce3::io::Raster& input_raster,
-    isce3::core::MemoryModeBlockY memory_mode) {
+    isce3::core::MemoryModeBlocksY memory_mode) {
 
     std::string info_str = "isce3.math.computeRasterStats";
     if (std::is_same<T, float>::value) {
@@ -250,11 +249,11 @@ std::vector<isce3::math::Stats<T>> computeRasterStats(
     int block_length, nblocks;
 
 
-    if (memory_mode == isce3::core::MemoryModeBlockY::SingleBlockY) {
+    if (memory_mode == isce3::core::MemoryModeBlocksY::SingleBlockY) {
         nblocks = 1;
         block_length = input_raster.length();
     } else {
-        isce3::geocode::getBlocksNumberAndLength(
+        isce3::core::getBlockProcessingParametersY(
             input_raster.length(), input_raster.width(), 
             nbands, GDALGetDataTypeSizeBytes(input_raster.dtype()), 
             &info, &block_length, &nblocks);
@@ -305,29 +304,29 @@ std::vector<isce3::math::Stats<T>> computeRasterStats(
 template std::vector<isce3::math::Stats<float>>
     computeRasterStats(
         isce3::io::Raster& input_raster,
-        isce3::core::MemoryModeBlockY memory_mode);
+        isce3::core::MemoryModeBlocksY memory_mode);
 
 template std::vector<isce3::math::Stats<double>>
     computeRasterStats(
         isce3::io::Raster& input_raster,
-        isce3::core::MemoryModeBlockY memory_mode);
+        isce3::core::MemoryModeBlocksY memory_mode);
 
 template std::vector<isce3::math::Stats<std::complex<float>>>
     computeRasterStats(
         isce3::io::Raster& input_raster,
-        isce3::core::MemoryModeBlockY memory_mode);
+        isce3::core::MemoryModeBlocksY memory_mode);
 
 template std::vector<isce3::math::Stats<std::complex<double>>>
     computeRasterStats(
         isce3::io::Raster& input_raster,
-        isce3::core::MemoryModeBlockY memory_mode);
+        isce3::core::MemoryModeBlocksY memory_mode);
 
 
 
 template<class T>
 std::vector<isce3::math::StatsRealImag<T>> computeRasterStatsRealImag(
     isce3::io::Raster& input_raster,
-    isce3::core::MemoryModeBlockY memory_mode) {
+    isce3::core::MemoryModeBlocksY memory_mode) {
 
     pyre::journal::info_t info("isce3.math.computeRasterStatsRealImag");
 
@@ -338,11 +337,11 @@ std::vector<isce3::math::StatsRealImag<T>> computeRasterStatsRealImag(
     int block_length, nblocks;
 
 
-    if (memory_mode == isce3::core::MemoryModeBlockY::SingleBlockY) {
+    if (memory_mode == isce3::core::MemoryModeBlocksY::SingleBlockY) {
         nblocks = 1;
         block_length = input_raster.length();
     } else {
-        isce3::geocode::getBlocksNumberAndLength(
+        isce3::core::getBlockProcessingParametersY(
             input_raster.length(), input_raster.width(), 
             nbands, GDALGetDataTypeSizeBytes(input_raster.dtype()), 
             &info, &block_length, &nblocks);
@@ -417,12 +416,12 @@ std::vector<isce3::math::StatsRealImag<T>> computeRasterStatsRealImag(
 template std::vector<isce3::math::StatsRealImag<float>>
     computeRasterStatsRealImag(
         isce3::io::Raster& input_raster,
-        isce3::core::MemoryModeBlockY memory_mode);
+        isce3::core::MemoryModeBlocksY memory_mode);
 
 template std::vector<isce3::math::StatsRealImag<double>>
     computeRasterStatsRealImag(
         isce3::io::Raster& input_raster,
-        isce3::core::MemoryModeBlockY memory_mode);
+        isce3::core::MemoryModeBlocksY memory_mode);
 
   
 }}

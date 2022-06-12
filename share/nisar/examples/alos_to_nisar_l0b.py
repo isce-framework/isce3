@@ -11,6 +11,7 @@ from nisar.antenna.antenna_pattern import CalPath
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.Raw.Raw import get_rcs2body
 from nisar.workflows.focus import make_doppler_lut
+from isce3.core import speed_of_light
 
 def cmdLineParse():
     '''
@@ -284,10 +285,7 @@ def getNominalSpacing(prf, dr, orbit, look_angle, i=0):
 def addImagery(h5file, ldr, imgfile, pol):
     '''
     Populate swaths segment of HDF5 file.
-    '''
-
-    #Speed of light - expose in isce3
-    SOL = 299792458.0
+    ''' 
 
     fid = h5py.File(h5file, 'r+')
     assert(len(pol) == 2)
@@ -303,7 +301,10 @@ def addImagery(h5file, ldr, imgfile, pol):
     #Range related parameters
     fsamp = ldr.summary.SamplingRateInMHz * 1.0e6
     r0 = firstrec.SlantRangeToFirstSampleInm
-    dr = SOL / (2 * fsamp)
+    dwp_delay = 2 * r0 / speed_of_light
+    print('RX data window position of the first record -> '
+          f'{dwp_delay * 1e3:.4f} (msec)')
+    dr = speed_of_light / (2 * fsamp)
     nPixels = image.description.NumberOfBytesOfSARDataPerRecord // image.description.NumberOfSamplesPerDataGroup
     nLines = image.description.NumberOfSARDataRecords
 
@@ -318,7 +319,7 @@ def addImagery(h5file, ldr, imgfile, pol):
     if freqA not in fid:
         freqA = fid.create_group(freqA)
         freqA.create_dataset("listOfTxPolarizations", data=numpy.string_([txP]),
-            maxshape=2)
+            maxshape=(2,))
     else:
         freqA = fid[freqA]
 
@@ -342,7 +343,7 @@ def addImagery(h5file, ldr, imgfile, pol):
         txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
         txgrp.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(nLines,2))
-        txgrp.create_dataset('centerFrequency', data=SOL / (ldr.summary.RadarWavelengthInm))
+        txgrp.create_dataset('centerFrequency', data=speed_of_light / (ldr.summary.RadarWavelengthInm))
         txgrp.create_dataset('rangeBandwidth', data=ldr.calibration.header.BandwidthInMHz * 1.0e6)
         txgrp.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
         txgrp.create_dataset('chirpSlope', data=-((txgrp['rangeBandwidth'][()])/(txgrp['chirpDuration'][()])))
@@ -400,9 +401,10 @@ def addImagery(h5file, ldr, imgfile, pol):
             print('Parsing Line number: {0} out of {1}'.format(linnum, nLines))
 
         if firstInPol:
-            txgrp['UTCtime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
+            tx_radar_time = rec.SensorAcquisitionmsecsOfDay * 1.0e-3 - dwp_delay 
+            txgrp['UTCtime'][linnum-1] = tx_radar_time
             txgrp['rangeLineIndex'][linnum-1] = rec.SARImageDataLineNumber
-            txgrp['radarTime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
+            txgrp['radarTime'][linnum-1] = tx_radar_time
 
         #Adjust range line
         rshift = int(numpy.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
