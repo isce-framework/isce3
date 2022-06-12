@@ -277,11 +277,11 @@ def test_ionosphere_filter():
 
     # run low pass filtering
     iono_filter_obj.low_pass_filter(
-        data_str=simul_disp_path,
-        data_sig_str=simul_disp_sig_path,
-        mask_str=mask_path,
-        output_str=filt_simul_disp_path,
-        output_sig_str=filt_simul_disp_sig_path,
+        input_data=simul_disp_path,
+        input_std_dev=simul_disp_sig_path,
+        mask_path=mask_path,
+        filtered_output=filt_simul_disp_path,
+        filtered_std_dev=filt_simul_disp_sig_path,
         lines_per_block=500)
 
     filt_iter_1_gdal = gdal.Open(filt_simul_disp_path)
@@ -299,11 +299,11 @@ def test_ionosphere_filter():
         filling_method=filling_method,
         outputdir='.')
     iono_filter_obj.low_pass_filter(
-        data_str=simul_disp_path,
-        data_sig_str=simul_disp_sig_path,
-        mask_str=mask_path,
-        output_str=filt_simul_disp_path,
-        output_sig_str=filt_simul_disp_sig_path,
+        input_data=simul_disp_path,
+        input_std_dev=simul_disp_sig_path,
+        mask_path=mask_path,
+        filtered_output=filt_simul_disp_path,
+        filtered_std_dev=filt_simul_disp_sig_path,
         lines_per_block=500)
 
     filt_iter_3_gdal = gdal.Open(filt_simul_disp_path)

@@ -724,11 +724,11 @@ def run(cfg: dict, runw_hdf5: str):
 
                     # low pass filtering for dispersive phase
                     iono_filter_obj.low_pass_filter(
-                        data_str=out_disp_path,
-                        data_sig_str=sig_phi_iono_path,
-                        mask_str=mask_path,
-                        output_str=iono_hdf5_path,
-                        output_sig_str=iono_sig_hdf5_path,
+                        input_data=out_disp_path,
+                        input_std_dev=sig_phi_iono_path,
+                        mask_path=mask_path,
+                        filtered_output=iono_hdf5_path,
+                        filtered_std_dev=iono_sig_hdf5_path,
                         lines_per_block=blocksize)
             else:
                 filt_disp_path = os.path.join(
@@ -736,11 +736,11 @@ def run(cfg: dict, runw_hdf5: str):
                 filt_disp_sig_path = os.path.join(
                     iono_path, iono_method, pol_comb_str, 'filt_dispersive.sig')
                 iono_filter_obj.low_pass_filter(
-                    data_str=out_disp_path,
-                    data_sig_str=sig_phi_iono_path,
-                    mask_str=mask_path,
-                    output_str=filt_disp_path,
-                    output_sig_str=filt_disp_sig_path,
+                    input_data=out_disp_path,
+                    input_std_dev=sig_phi_iono_path,
+                    mask_path=mask_path,
+                    filtered_output=filt_disp_path,
+                    filtered_std_dev=filt_disp_sig_path,
                     lines_per_block=blocksize)
 
                 # low pass filtering for non-dispersive phase
@@ -749,11 +749,11 @@ def run(cfg: dict, runw_hdf5: str):
                 filt_nondisp_sig_path = os.path.join(
                     iono_path, iono_method, pol_comb_str, 'filt_nondispersive.sig')
                 iono_filter_obj.low_pass_filter(
-                    data_str=out_nondisp_path,
-                    data_sig_str=sig_phi_nondisp_path,
-                    mask_str=mask_path,
-                    output_str=filt_nondisp_path,
-                    output_sig_str=filt_nondisp_sig_path,
+                    input_data=out_nondisp_path,
+                    input_std_dev=sig_phi_nondisp_path,
+                    mask_path=mask_path,
+                    filtered_output=filt_nondisp_path,
+                    filtered_std_dev=filt_nondisp_sig_path,
                     lines_per_block=blocksize)
 
                 disp_tif = gdal.Open(filt_disp_path)
@@ -868,11 +868,11 @@ def run(cfg: dict, runw_hdf5: str):
                         dst_h5[f'{dest_pol_path}/ionospherePhaseScreenUncertainty']
 
                     iono_filter_obj.low_pass_filter(
-                        data_str=out_disp_cor_path,
-                        data_sig_str=sig_phi_iono_path,
-                        mask_str=mask_path,
-                        output_str=iono_hdf5_path,
-                        output_sig_str=iono_sig_hdf5_path,
+                        input_data=out_disp_cor_path,
+                        input_std_dev=sig_phi_iono_path,
+                        mask_path=mask_path,
+                        filtered_output=iono_hdf5_path,
+                        filtered_std_dev=iono_sig_hdf5_path,
                         lines_per_block=blocksize)
 
     t_all_elapsed = time.time() - t_all
