@@ -259,6 +259,54 @@ runconfig:
                 # Number of offset estimates to process in batch along azimuth
                 windows_batch_azimuth: 1
 
+            offsets_product:
+                enabled: False
+                # Path to HDF5 file or directory with geometry-coregistered SLCs.
+                # Not required as we allow the use of intermediate outputs from
+                # the previous InSAR module, which is not user-specified
+                coregistered_slc_path:
+                # Lines per block
+                lines_per_block: 1000
+                # Margin round ref RSLC edges to exclude during cross-correlation
+                margin: 0
+                # Skip window along range
+                skip_range: 15
+                # Skip window along azimuth
+                skip_azimuth: 15
+                # Start pixel in reference RSLC along range
+                start_pixel_range:
+                # Start pixel in reference RSLC along azimuth
+                start_pixel_azimuth:
+                # Cross-correlation domain
+                cross_correlation_domain: 'frequency'
+                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                deramping_method: 'magnitude'
+                # Anti-aliasing oversampling factor to apply to reference/secondary SLC
+                # prior to cross-correlation computation
+                slc_oversampling_factor: 2
+                # File path to pixel by pixel gross offset (e.g. from reference velocity map)
+                gross_offset_filepath:
+                # Constant offset between ref and secondary RSLCs in slant range
+                gross_offset_range: 0
+                # Constant offset between ref and secondary RSLCs in azimuth
+                gross_offset_azimuth: 0
+                # Merge gross offset file
+                merge_gross_offset: False
+                # Correlation surface zoom for statistics
+                correlation_statistics_zoom: 21
+                # Correlation surface zoom
+                correlation_surface_zoom: 8
+                # Correlation surface oversampling factor
+                correlation_surface_oversampling_factor: 64
+                # Correlation surface oversampling method
+                correlation_surface_oversampling_method: 'sinc'
+                # Number of cuda streams
+                cuda_streams: 2
+                # Number of windows in range to process in batch
+                windows_batch_range: 10
+                # Number of windows in azimuth to process in batch
+                windows_batch_azimuth: 5
+
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).
                 # Not required as InSAR workflow allows using intermediate outputs
@@ -311,10 +359,6 @@ runconfig:
                     # Filter size (median/boxcar) in slant range
                     filter_size_range: 5
                     filter_size_azimuth: 5
-
-            offsets_product:
-                # Enable/disable offsets product generation
-                enabled: False
 
             fine_resample:
                 # Flag to enable/disable fine resampling

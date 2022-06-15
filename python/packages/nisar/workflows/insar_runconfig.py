@@ -70,6 +70,22 @@ class InsarRunConfig(Geo2rdrRunConfig):
             self.cfg['processing']['dense_offsets'][
                 'coregistered_slc_path'] = scratch_path
 
+        if self.cfg['processing']['offsets_product'][
+            'coregistered_slc_path'] is None:
+            self.cfg['processing']['offsets_product'][
+                'coregistered_slc_path'] = scratch_path
+
+        # Check a layer of offset exists
+        if self.cfg['processing']['offsets_product']['enabled']:
+            off_params = self.cfg['processing']['offsets_product']
+            layer_keys = [key for key in off_params.keys() if
+                          key.startswith('layer')]
+            # If no layer of offset is found, throw an exception
+            if not layer_keys:
+                err_str = "No offset layer specified; at least one layer is required"
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+
         # When running insar.py dense_offsets_path and geo2rdr_offsets_path
         # come from previous step through scratch_path
         if self.cfg['processing']['rubbersheet']['dense_offsets_path'] is None:
