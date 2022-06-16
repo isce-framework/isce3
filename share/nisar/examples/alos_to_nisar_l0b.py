@@ -6,6 +6,7 @@ import h5py
 import isce3
 import numpy
 import os
+from warnings import warn
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
 from nisar.antenna.antenna_pattern import CalPath
 from nisar.products.readers.Raw import Raw
@@ -383,15 +384,17 @@ def addImagery(h5file, ldr, imgfile, pol):
     lut[-2**15:] -= 2**16
     assert ldr.summary.DCBiasIComponent == ldr.summary.DCBiasQComponent
     lut -= ldr.summary.DCBiasIComponent
-    BAD_VALUE = -2**15
-    lut[BAD_VALUE] = numpy.nan
+    BAD_VALUE = 2**15
+    lut[BAD_VALUE] = 0
     rxlut = fid.create_dataset(os.path.join(rximgstr, 'BFPQLUT'), data=lut)
 
 
     #Create imagery layer
     compress = dict(chunks=(4, 512), compression="gzip", compression_opts=9, shuffle=True)
-    cpxtype = numpy.dtype([('r', numpy.int16), ('i', numpy.int16)])
+    cpxtype = numpy.dtype([('r', numpy.uint16), ('i', numpy.uint16)])
     rximg = fid.create_dataset(os.path.join(rximgstr, pol), dtype=cpxtype, shape=(nLines,nPixels), **compress)
+    # Per http://cfconventions.org/Data/cf-conventions/cf-conventions-1.9/cf-conventions.html#missing-data
+    rximg.attrs['_FillValue'] = BAD_VALUE
 
     ##Start populating the imagery
 
@@ -408,9 +411,9 @@ def addImagery(h5file, ldr, imgfile, pol):
 
         #Adjust range line
         rshift = int(numpy.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
-        write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.int16)
+        write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.uint16)
 
-        inarr = rec.SARRawSignalData[0,:].astype(numpy.int16)
+        inarr = rec.SARRawSignalData[0,:].astype(numpy.uint16)
 
         left = 2 * rec.ActualCountOfLeftFillPixels
         right = 2 * rec.ActualCountOfRightFillPixels
@@ -423,9 +426,12 @@ def addImagery(h5file, ldr, imgfile, pol):
             write_arr[:2*rshift] = inarr[-2*rshift:]
 
         if firstInPol:
+            # check if any samples at the very start of RX window are missing.
             inds = numpy.where(write_arr != BAD_VALUE)[0]
-            if len(inds) > 1:
-                txgrp['validSamplesSubSwath1'][linnum-1] = [inds[0], inds[-1]+1]
+            if (len(inds) > 0 and inds[0] > 0):
+                warn(f'The first {inds[0] // 2} range samples are missing. '
+                      f'They are filled with {BAD_VALUE}!')
+            txgrp['validSamplesSubSwath1'][linnum-1] = [0, nPixels]
 
         #Complex float 16 writes work with write_direct only
         rximg.write_direct(write_arr.view(cpxtype), dest_sel=numpy.s_[linnum-1])
