@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import gc
 import numpy as np
 import numpy.testing as npt
 from pathlib import Path
@@ -159,3 +160,22 @@ def test_dataset():
     assert( dataset.width == raster.width )
     assert( dataset.length == raster.length )
     assert( dataset.driver == raster.driver )
+
+def test_buffer_lifetime():
+    # Make a zero-filled array and create an in-memory Raster that references
+    # its data buffer.
+    array = np.zeros((500, 200))
+    raster = isce.io.gdal.Raster(array)
+
+    # Write some new values directly to the array.
+    array[:] = np.arange(100_000).reshape(500, 200)
+
+    # Delete the original array, decrementing its reference count, and (attempt
+    # to) force garbage collection.
+    del array
+    gc.collect()
+
+    # Check the Raster data values to test that (A) the underlying data buffer
+    # is still alive, and (B) it represents a view of the original array, not a
+    # copy.
+    assert np.array_equal(raster.data, np.arange(100_000.0).reshape(500, 200))
