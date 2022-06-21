@@ -12,6 +12,7 @@ runconfig:
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
+            orbit: include('external_orbit_options', required=False)
 
         product_path_group:
             # Directory where PGE will place results
@@ -100,6 +101,10 @@ runconfig:
         logging: include('log_nfo', required=False)
 
 ---
+external_orbit_options:
+    reference_orbit_file: str(required=False)
+    secondary_orbit_file: str(required=False)
+
 phase_unwrap_options:
     crossmul_path: str(required=False)
 

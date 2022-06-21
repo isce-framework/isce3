@@ -115,31 +115,38 @@ class RunConfig:
         '''
         error_channel = journal.error('RunConfig.load')
 
-        # check input HDF5(s) in cfg
+        # set input key and orbit group+key based on product
         if self.workflow_name in ['gcov', 'gslc']:
-            # check input file value
-            input_path = self.cfg['input_file_group']['input_file_path']
+            rslc_keys = ['input_file_path']
 
-            if not os.path.isfile(input_path):
-                err_str = f"{input_path} input not found."
-                error_channel.log(err_str)
-                raise FileNotFoundError(err_str)
-
+            orbit_group = self.cfg['dynamic_ancillary_file_group']
+            orbit_keys = ['orbit_file']
         elif self.workflow_name == 'insar':
-             ref_path = self.cfg['input_file_group']['reference_rslc_file_path']
-             sec_path = self.cfg['input_file_group']['secondary_rslc_file_path']
-             if not os.path.isfile(ref_path):
-                err_str = f'{ref_path} reference RSLC not found'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
-             if not os.path.isfile(sec_path):
-                err_str = f'{secondary_path} secondary RSLC not found.'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
+            rslc_keys = ['reference_rslc_file_path', 'secondary_rslc_file_path']
+
+            orbit_group = self.cfg['dynamic_ancillary_file_group']['orbit']
+            orbit_keys = ['reference_orbit_file', 'secondary_orbit_file']
         else:
             err_str = f'{self.workflow_name} unsupported'
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        # check input HDF5(s) in cfg
+        for rslc_key in rslc_keys:
+            rslc_path = self.cfg['input_file_group'][rslc_key]
+
+            if not os.path.isfile(rslc_path):
+                err_str = f'{rslc_path} RSLC not found'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+
+        # check possible external orbit(s)
+        for orbit_key in orbit_keys:
+            orbit_path = orbit_group[orbit_key]
+            if orbit_path is not None and not os.path.isfile(orbit_path):
+                err_str = f'External orbit file "{orbit_path}" is not valid'
+                error_channel.log(err_str)
+                raise FileNotFoundError(err_str)
 
         # ensure validity of DEM inputs
         helpers.check_dem(self.cfg['dynamic_ancillary_file_group']['dem_file'])

@@ -14,6 +14,7 @@ import journal
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
+from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_insar_runconfig import \
@@ -327,6 +328,7 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
@@ -355,7 +357,11 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
     geo = isce3.geocode.GeocodeFloat32()
 
     # init geocode members
-    orbit = slc.getOrbit()
+    if ref_orbit is not None:
+        orbit = load_orbit_from_xml(ref_orbit)
+    else:
+        orbit = slc.getOrbit()
+
     geo.orbit = orbit
     geo.ellipsoid = ellipsoid
     geo.doppler = grid_zero_doppler

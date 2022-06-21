@@ -1,6 +1,5 @@
-import numpy as np
-
 import journal
+import numpy as np
 
 import isce3
 from nisar.workflows.runconfig import RunConfig
