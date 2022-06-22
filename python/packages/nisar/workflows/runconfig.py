@@ -97,8 +97,7 @@ class RunConfig:
                 write_mode = self.cfg['logging']['write_mode']
             else:
                 write_mode = 'a'
-            journal.debug.journal.device = "journal.file"
-            journal.debug.journal.device.log = open(log_path, write_mode)
+            journal.logfile(log_path, mode=write_mode)
         else:
             self.args.restart = True
 

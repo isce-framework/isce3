@@ -87,8 +87,12 @@ if __name__ == "__main__":
     # convert CLI input to run configuration
     insar_runcfg = InsarRunConfig(args)
 
-    # determine what steps if any need to be rerun
-    persist = Persistence(insar_runcfg.args.restart)
+    # To allow persistence, a logfile is required. Raise exception
+    # if logfile is None and persistence is requested
+    logfile_path = insar_runcfg.cfg['logging']['path']
+    if (logfile_path is None) and insar_runcfg.args.restart:
+        raise ValueError('InSAR workflow persistence requires to specify a logfile')
+    persist = Persistence(logfile_path, insar_runcfg.args.restart)
 
     # run InSAR workflow
     if persist.run:
