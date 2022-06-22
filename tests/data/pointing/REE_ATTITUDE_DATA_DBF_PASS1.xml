@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+<radarPointing>
+  <productInformation>
+    <productName>REE-Attitude</productName>
+    <mission>NISAR</mission>
+    <validityStartDateTime>2022-01-01T00:02:55.000000000</validityStartDateTime>
+    <validityEndDateTime>2022-01-01T00:02:59.999425000</validityEndDateTime>
+    <fileClass>Custom</fileClass>
+    <fileType>FOE</fileType>
+    <creator>NASA JPL</creator>
+    <creationDateTime>2022-05-16T19:12:15.991627</creationDateTime>
+  </productInformation>
+  <LSAR>
+    <radarPointingStateVectorList count="6">
+      <radarPointingStateVector index="1">
+        <utc>2022-01-01T00:02:55.000000000</utc>
+        <yaw>-86.1525350614773</yaw>
+        <pitch>36.99997267463242</pitch>
+        <roll>-0.08071485253586881</roll>
+        <q0>0.6409551940231577</q0>
+        <q1>-0.689687025751629</q1>
+        <q2>0.29888029403453836</q2>
+        <q3>-0.155495387720781</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="2">
+        <utc>2022-01-01T00:02:55.999885000</utc>
+        <yaw>-86.15274412320669</yaw>
+        <pitch>36.9999724251356</pitch>
+        <roll>-0.0810825024013284</roll>
+        <q0>0.6412976162980668</q0>
+        <q1>-0.6893195311996931</q1>
+        <q2>0.29903444906948956</q2>
+        <q3>-0.15541669635775907</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="3">
+        <utc>2022-01-01T00:02:56.999770000</utc>
+        <yaw>-86.15295738924269</yaw>
+        <pitch>36.999972174576584</pitch>
+        <roll>-0.08145004739996753</roll>
+        <q0>0.6416398792010012</q0>
+        <q1>-0.6889518312757855</q1>
+        <q2>0.2991884709524931</q2>
+        <q3>-0.15533801353749618</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="4">
+        <utc>2022-01-01T00:02:57.999655000</utc>
+        <yaw>-86.15317486539494</yaw>
+        <pitch>36.999971922948</pitch>
+        <roll>-0.08181749965254768</roll>
+        <q0>0.6419819825014039</q0>
+        <q1>-0.6885839262030656</q1>
+        <q2>0.2993423596286815</q2>
+        <q3>-0.1552593393334887</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="5">
+        <utc>2022-01-01T00:02:58.999540000</utc>
+        <yaw>-86.15339653466023</yaw>
+        <pitch>36.99997167026974</pitch>
+        <roll>-0.08218483156794573</roll>
+        <q0>0.6423239262083886</q0>
+        <q1>-0.6882158159558729</q1>
+        <q2>0.2994961151185754</q2>
+        <q3>-0.15518067378805167</q3>
+      </radarPointingStateVector>
+      <radarPointingStateVector index="6">
+        <utc>2022-01-01T00:02:59.999425000</utc>
+        <yaw>-86.15362247891464</yaw>
+        <pitch>36.9999714164337</pitch>
+        <roll>-0.0825522008628761</roll>
+        <q0>0.6426657094241127</q0>
+        <q1>-0.6878475014673341</q1>
+        <q2>0.29964973710614373</q2>
+        <q3>-0.15510201709767232</q3>
+      </radarPointingStateVector>
+    </radarPointingStateVectorList>
+  </LSAR>
+</radarPointing>
