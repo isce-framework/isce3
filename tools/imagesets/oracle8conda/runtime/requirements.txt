@@ -3,13 +3,14 @@ fftw>=3
 gdal>=3.0
 h5py
 hdf5>=1.10.2
-libgcc-ng>=9,<10
-libstdcxx-ng>=9,<10
+libgcc-ng>=9
+libstdcxx-ng>=9
 matplotlib
 numpy
-pyre
+pyre>=1.11.2
 python>=3.6
 ruamel.yaml
 scipy
 shapely
+sysroot_linux-64>=2.17
 yamale
