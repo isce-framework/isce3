@@ -267,13 +267,17 @@ class ImageSet:
         TODO use a properly cached download e.g. via DVC
         """
 
-        mindata = ["L0B_RRSD_REE1",
-                   "L0B_RRSD_REE_NOISEST1",
-                   "L0B_RRSD_REE17_PTA",
-                   "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
-                   "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
-                   "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
-                  ]
+        mindata = [
+            "L0B_RRSD_ALPSRP264757150_Amazon",
+            "L0B_RRSD_REE1",
+            "L0B_RRSD_REE_NOISEST1",
+            "L0B_RRSD_REE17_PTA",
+            "L0B_RRSD_REE_CHANNEL4_EXTSCENE_PASS1",
+            "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
+            "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
+            "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
+        ]
+
         # Download files, preserving relative directory hierarchy
         for dataset in mindata:
             wfdatadir = pjoin(self.datadir, dataset)
@@ -371,13 +375,22 @@ class ImageSet:
         # create output directories
         os.makedirs(pjoin(testdir, f"output_{wfname}{suf}"), exist_ok=True)
         os.makedirs(pjoin(testdir, f"scratch_{wfname}{suf}"), exist_ok=True)
+
+        # check whether we're testing one of the D&C SAS workflows (Doppler, EL Edge, or
+        # EL Null products).
+        is_dnc_test = (
+            testname.startswith("doppler")
+            or testname.startswith("el_edge")
+            or testname.startswith("el_null")
+        )
+
         # copy test runconfig to test directory (for end-to-end testing, we need to
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
-        elif testname.startswith("soilm"):
+        elif testname.startswith("soilm") or is_dnc_test:
             # Executable-dependent.  Currently works only for Disaggregation.
             inputrunconfig = f"{testname}{suf}.txt"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
@@ -388,12 +401,14 @@ class ImageSet:
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
 
-        if not testname.startswith("soilm"):
-            cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
-        else:
+        if testname.startswith("soilm"):
             executable = pyname
             # Executable-dependent.  Currently works only for Disaggregation.
             cmd = [f"time {executable} runconfig_{wfname}{suf}.txt"]
+        elif is_dnc_test:
+            cmd = [f"time python3 -m {pyname} {arg} @runconfig_{wfname}{suf}.txt"]
+        else:
+            cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
 
         try:
             if not testname.startswith("soilm"):
@@ -405,6 +420,42 @@ class ImageSet:
                                 loghdlrname=f"wftest.{os.path.basename(testdir)}")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow test {testname} failed") from e
+
+    def doppler_test(self, tests=None):
+        """Test Doppler centroid product SAS."""
+        if tests is None:
+            tests = workflowtests["doppler"].items()
+        for testname, dataname in tests:
+            self.workflowtest(
+                "doppler",
+                testname,
+                dataname,
+                "nisar.workflows.gen_doppler_range_product",
+            )
+
+    def el_edge_test(self, tests=None):
+        """Test EL rising edge pointing product SAS."""
+        if tests is None:
+            tests = workflowtests["el_edge"].items()
+        for testname, dataname in tests:
+            self.workflowtest(
+                "el_edge",
+                testname,
+                dataname,
+                "nisar.workflows.gen_el_rising_edge_product",
+            )
+
+    def el_null_test(self, tests=None):
+        """Test EL null range product SAS."""
+        if tests is None:
+            tests = workflowtests["el_null"].items()
+        for testname, dataname in tests:
+            self.workflowtest(
+                "el_null",
+                testname,
+                dataname,
+                "nisar.workflows.gen_el_null_range_product",
+            )
 
     def rslctest(self, tests=None):
         if tests is None:
@@ -512,6 +563,9 @@ class ImageSet:
         Only run first test from each workflow
         """
         self.rslctest(tests=list(workflowtests['rslc'].items())[:1])
+        self.doppler_test(tests=list(workflowtests['doppler'].items())[:1])
+        self.el_edge_test(tests=list(workflowtests['el_edge'].items())[:1])
+        self.el_null_test(tests=list(workflowtests['el_null'].items())[:1])
         self.gslctest(tests=list(workflowtests['gslc'].items())[:1])
         self.gcovtest(tests=list(workflowtests['gcov'].items())[:1])
         self.insartest(tests=list(workflowtests['insar'].items())[:1])
