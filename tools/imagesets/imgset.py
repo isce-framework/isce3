@@ -594,10 +594,18 @@ class ImageSet:
         os.makedirs(pjoin(testdir, f"qa_{wfname}{suf}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}{suf}", "stdouterr.log")
         # run qa command
+        # XXX The QA software installs XML files which are subsequently required at
+        # runtime by the QA scripts. But figuring out the installed location of these
+        # files is complicated and depends on the platform & installation options. This
+        # is further complicated by the fact that the QA code expects these paths to be
+        # provided relative to the installed scripts location. In the future, we should
+        # do this the right way using `importlib.resources`. For now, let's just
+        # hardcode the relative path to the XML data directory.
         cmd = [f"time cfchecks.py output_{wfname}{suf}/{wfname}.h5",
                f"""time verify_{wfname}.py --fpdf qa_{wfname}{suf}/graphs.pdf \
                     --fhdf qa_{wfname}{suf}/stats.h5 --flog qa_{wfname}{suf}/qa.log --validate \
-                    --quality output_{wfname}{suf}/{wfname}.h5"""]
+                    --quality output_{wfname}{suf}/{wfname}.h5 \
+                    --xml_dir ../lib/python3.9/site-packages/EGG-INFO/scripts/xml"""]
         try:
             self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                             loghdlrname=f'wfqa.{os.path.basename(testdir)}')
@@ -659,7 +667,8 @@ class ImageSet:
                 if product == 'gunw':
                     cmd.append(f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
                                        --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
-                                       output_{wfname}/{product.upper()}_product.h5""")
+                                       output_{wfname}/{product.upper()}_product.h5 \
+                                       --xml_dir ../lib/python3.9/site-packages/EGG-INFO/scripts/xml""")
                 try:
                     self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
