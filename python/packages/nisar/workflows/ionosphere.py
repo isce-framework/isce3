@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
-import time
-import os
+import copy
 import journal
+import os
 import pathlib
+import time
 
+import h5py
 import numpy as np
 from osgeo import gdal
-import h5py
-import copy
 
-from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
+import isce3
+from isce3.ionosphere.main_band_estimation import (MainSideBandIonosphereEstimation,
+                                                   MainDiffMsBandIonosphereEstimation)
+from isce3.ionosphere.split_band_estimation import SplitBandIonosphereEstimation
+from isce3.ionosphere.ionosphere_filter import IonosphereFilter
+from isce3.splitspectrum import splitspectrum
+
+from nisar.products.readers import SLC
 from nisar.workflows import (crossmul, dense_offsets, h5_prep,
                              filter_interferogram, resample_slc,
                              rubbersheet, unwrap)
-from isce3.splitspectrum import splitspectrum
-from nisar.products.readers import SLC
-import isce3
-from isce3.ionosphere import ionosphere_estimation
+from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
+from nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def write_disp_block_hdf5(
@@ -217,45 +221,6 @@ def run_insar_workflow(cfg, out_paths):
     if 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
-def mask_amp_from_rifg(cfg, out_paths, out_mask):
-
-    scratch_path = cfg['product_path_group']['scratch_path']
-    iono_args = cfg['processing']['ionosphere_phase_correction']
-    iono_freq_pols = iono_args['list_of_frequencies']
-    iono_method = iono_args['spectral_diversity']
-    iono_path = os.path.join(scratch_path, 'ionosphere')
-    iono_method_path = os.path.join(iono_path, iono_method)
-    blocksize = iono_args['lines_per_block']
-    blocksize = 5000
-    rifg_str = out_paths
-    rifg_path = f"/science/LSAR/RIFG/swaths/frequencyA/interferogram"
-
-    with h5py.File(rifg_str, 'r', libver='latest', swmr=True) as src_h5:
-        for pol in iono_freq_pols['A']:
-            rifg_pol_path = os.path.join(rifg_path,
-                f"{pol}/wrappedInterferogram")
-            rifg_hdf5_str = f'HDF5:{rifg_str}:/{rifg_pol_path}'
-            rifg_raster= isce3.io.Raster(rifg_hdf5_str)
-            width = rifg_raster.width
-            length = rifg_raster.length
-            nblocks = int(np.ceil(length / blocksize))
-
-            rifg_image = np.zeros([length, width], dtype=complex)
-            src_h5[rifg_pol_path].read_direct(
-                            rifg_image,
-                            np.s_[: , :])
-            mask_raster = np.abs(rifg_image) > 10 ** -5
-            ionosphere_estimation.write_array(out_mask,
-                    mask_raster,
-                    data_type=gdal.GDT_Float32,
-                    block_row=0,
-                    data_shape=[length, width])
-            ionosphere_estimation.write_array(f'{out_mask}_amp',
-                    np.abs(rifg_image),
-                    data_type=gdal.GDT_Float32,
-                    block_row=0,
-                    data_shape=[length, width])
-
 def run(cfg: dict, runw_hdf5: str):
     '''
     Run ionosphere phase correction workflow with parameters
@@ -350,6 +315,10 @@ def run(cfg: dict, runw_hdf5: str):
         f0_low = low_sub_meta_data.center_freq
         f0_high = high_sub_meta_data.center_freq
 
+        f1 = None
+
+        IonosphereEstimationMethod = SplitBandIonosphereEstimation
+
     if iono_method in iono_method_sideband:
         # pull center frequency from frequency B
         ref_meta_data_b = splitspectrum.bandpass_meta_data.load_from_slc(
@@ -363,14 +332,16 @@ def run(cfg: dict, runw_hdf5: str):
         residual_pol_b =  list(set(
             iono_freq_pols['B']) - set(orig_freq_pols['B']))
 
-    if iono_method == 'split_main_band':
-        f1 = None
-    elif iono_method in ['main_side_band', 'main_diff_ms_band']:
         f0_low = None
         f0_high = None
 
+        if iono_method == "main_side_band":
+            IonosphereEstimationMethod = MainSideBandIonosphereEstimation
+        else:
+            IonosphereEstimationMethod = MainDiffMsBandIonosphereEstimation
+
     # Create object for ionosphere esimation
-    iono_phase_obj = ionosphere_estimation.IonosphereEstimation(
+    iono_phase_obj = IonosphereEstimationMethod(
         main_center_freq=f0,
         side_center_freq=f1,
         low_center_freq=f0_low,
@@ -378,7 +349,7 @@ def run(cfg: dict, runw_hdf5: str):
         method=iono_method)
 
     # Create object for ionosphere filter
-    iono_filter_obj = ionosphere_estimation.IonosphereFilter(
+    iono_filter_obj = IonosphereFilter(
         x_kernel=kernel_range_size,
         y_kernel=kernel_azimuth_size,
         sig_x=kernel_sigma_range,

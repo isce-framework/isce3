@@ -4,7 +4,7 @@ import numpy as np
 
 from ionosphere_estimation import IonosphereEstimation, decimate_freqA_array
 
-class SplitBandEstimation(IonosphereEstimation):
+class SplitBandIonosphereEstimation(IonosphereEstimation):
     '''Split band ionosphere estimation
     '''
     def __init__(self,
@@ -133,7 +133,7 @@ class SplitBandEstimation(IonosphereEstimation):
             slant_main=None,
             slant_side=None,
             threshold=0.5):
-        """Get mask from coherence
+        """Get mask from coherences
 
         Parameters
         ----------
@@ -162,7 +162,7 @@ class SplitBandEstimation(IonosphereEstimation):
         """
         return self.get_mask_array(main_array, side_array, low_band_array,
                                    high_band_array, slant_main, slant_side,
-                                   0)
+                                   threshold)
 
     def get_conn_component_mask_array(self,
             main_array=None,
@@ -514,4 +514,3 @@ def estimate_iono_low_high(
     dispersive = output[1].reshape(y_size, x_size)
 
     return dispersive, non_dispersive
-

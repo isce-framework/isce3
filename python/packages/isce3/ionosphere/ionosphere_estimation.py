@@ -16,7 +16,8 @@ from nisar.workflows.filter_interferogram import create_gaussian_kernel
 
 class IonosphereEstimation:
     '''
-    Estimate ionospheric phase screen
+    Base class used to estimate ionospheric phase screen
+    Not for standalone use!
     '''
     def __init__(self,
                  main_center_freq=None,
@@ -25,7 +26,7 @@ class IonosphereEstimation:
                  high_center_freq=None,
                  method=None):
 
-        """Initialized IonosphererEstimation Class
+        """Initialized IonosphererEstimation Base Class
 
         Parameters
         ----------
@@ -122,6 +123,8 @@ class IonosphereEstimation:
             2D dispersive array estimated from given methods
         nondisp_array : numpy.ndarray
             2D non-dispersive array estimated from given methods
+        compute_unwrapp_error_func : function
+            unwrapping function from derived class
         main_runw : numpy.ndarray
             2D runw array of main-band interferogram
         side_runw : numpy.ndarray
