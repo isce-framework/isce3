@@ -14,8 +14,7 @@ class IonosphereEstimation:
                  low_center_freq=None,
                  high_center_freq=None,
                  slant_main=None,
-                 slant_side=None,
-                 method=None):
+                 slant_side=None):
 
         """Initialized IonosphererEstimation Base Class
 
@@ -36,14 +35,6 @@ class IonosphereEstimation:
 
         error_channel = journal.error('ionosphere.IonosphereEstimation')
 
-        if method not in ['split_main_band', 'main_side_band',
-            'main_diff_ms_band']:
-            err_str = f"{method} not a valid diversity method type"
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        self.diversity_method = method
-
         # Center frequency for frequency A is needed for all methods.
         if main_center_freq is None:
             err_str = f"Center frequency for frequency A "\
@@ -57,7 +48,6 @@ class IonosphereEstimation:
         self.freq_high = high_center_freq
         self.slant_main = slant_main
         self.slant_side = slant_side
-        self.estimate_iono_std = None
 
     def get_mask_median_filter(self,
             disp,

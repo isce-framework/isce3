@@ -13,8 +13,7 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                  low_center_freq=None,
                  high_center_freq=None,
                  slant_main=None,
-                 slant_side=None,
-                 method=None):
+                 slant_side=None):
         """Initialized IonosphererEstimation Class
 
         Parameters
@@ -27,17 +26,14 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             center frequency of lower sub-band of the main band [Hz]
         high_center_freq : float
             center frequency of upper sub-band of the main band [Hz]
-        method : {'split_main_band', 'main_side_band',
-            'main_diff_ms_band'}
-            ionosphere estimation method
         """
-        super().__init__(self, main_center_freq, side_center_freq,
-                         low_center_freq, high_center_freq, method)
+        super().__init__(main_center_freq, side_center_freq, low_center_freq,
+                         high_center_freq)
 
         error_channel = journal.error('ionosphere.SplitBandEstimation')
 
         # Check if required center frequencies for sub-bands are present
-        if  None in [low_center_freq, high_center_freq]:
+        if low_center_freq is None or high_center_freq is None:
             err_str = "Center frequency for frequency A is needed."
             error_channel.log(err_str)
             raise ValueError(err_str)
@@ -109,8 +105,7 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             (phi_sub_low==no_data)
 
         # correct unwrapped phase when estimated unwrapping error are given
-        if None not in [comm_unwcor_coef, diff_unwcor_coef]:
-
+        if comm_unwcor_coef is not None and diff_unwcor_coef is not None:
             phi_sub_low = phi_sub_low - 2 * np.pi * comm_unwcor_coef
             phi_sub_high = phi_sub_high - 2 * np.pi *\
                 (comm_unwcor_coef + diff_unwcor_coef)
@@ -492,6 +487,7 @@ def estimate_iono_low_high(
     d[1,:] = phi0_high.flatten()
     coeff_mat = np.ones((2, 2))
 
+    #import ipdb; ipdb.set_trace()
     coeff_mat[0, 0] = freq_low / f0
     coeff_mat[0, 1] = f0 / freq_low
     coeff_mat[1, 0] = freq_high / f0

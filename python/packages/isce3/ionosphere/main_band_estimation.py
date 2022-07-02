@@ -13,8 +13,7 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
                  low_center_freq=None,
                  high_center_freq=None,
                  slant_main=None,
-                 slant_side=None,
-                 method=None):
+                 slant_side=None):
         """Initialized IonosphererEstimation Class
 
         Parameters
@@ -27,12 +26,9 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
             center frequency of lower sub-band of the main band [Hz]
         high_center_freq : float
             center frequency of upper sub-band of the main band [Hz]
-        method : {'split_main_band', 'main_side_band',
-            'main_diff_ms_band'}
-            ionosphere estimation method
         """
-        super().__init__(self, main_center_freq, side_center_freq,
-                         low_center_freq, high_center_freq, method)
+        super().__init__(main_center_freq, side_center_freq, low_center_freq,
+                         high_center_freq)
 
         self.estimate_iono = None
         self.estimate_sigma = None
@@ -90,7 +86,8 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
 
         # When side-band arrays is used,
         # arrays should be decimated to have the same size with side-band arrays
-        if None in [phi_main, phi_side]:
+        # Check if phi_main or phi_side is None
+        if phi_main is None or phi_side is None:
             err_str = "unwrapped interferogram array main and side band"\
                 "is required."
             error_channel.log(err_str)
@@ -104,8 +101,7 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
                         (phi_side==no_data)
 
         # correct unwrapped phase when correction coefficients are given
-        if None not in [comm_unwcor_coef, diff_unwcor_coef]:
-
+        if comm_unwcor_coef is not None and diff_unwcor_coef is not None:
             phi_main = phi_main - 2 * np.pi * comm_unwcor_coef
             phi_side = phi_side - 2 * np.pi *\
                 (comm_unwcor_coef + diff_unwcor_coef)
@@ -446,8 +442,8 @@ class MainSideBandIonosphereEstimation(MainBandIonosphereEstimation):
             'main_diff_ms_band'}
             ionosphere estimation method
         """
-        super().__init__(self, main_center_freq, side_center_freq,
-                         low_center_freq, high_center_freq, method)
+        super().__init__(main_center_freq, side_center_freq, low_center_freq,
+                         high_center_freq, method)
 
         self.estimate_iono = estimate_iono_main_side
         self.estimate_sigma = self.estimate_sigma_main_side
@@ -478,8 +474,8 @@ class MainDiffMsBandIonosphereEstimation(MainBandIonosphereEstimation):
             'main_diff_ms_band'}
             ionosphere estimation method
         """
-        super().__init__(self, main_center_freq, side_center_freq,
-                         low_center_freq, high_center_freq, method)
+        super().__init__(main_center_freq, side_center_freq, low_center_freq,
+                         high_center_freq, method)
 
         self.estimate_iono = estimate_iono_main_diff
         self.estimate_sigma = self.estimate_sigma_main_diff_

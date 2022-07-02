@@ -13,7 +13,7 @@ import isce3
 from isce3.ionosphere.main_band_estimation import (MainSideBandIonosphereEstimation,
                                                    MainDiffMsBandIonosphereEstimation)
 from isce3.ionosphere.split_band_estimation import SplitBandIonosphereEstimation
-from isce3.ionosphere.ionosphere_filter import IonosphereFilter
+from isce3.ionosphere.ionosphere_filter import IonosphereFilter, write_array
 from isce3.splitspectrum import splitspectrum
 
 from nisar.products.readers import SLC
@@ -345,8 +345,7 @@ def run(cfg: dict, runw_hdf5: str):
         main_center_freq=f0,
         side_center_freq=f1,
         low_center_freq=f0_low,
-        high_center_freq=f0_high,
-        method=iono_method)
+        high_center_freq=f0_high)
 
     # Create object for ionosphere filter
     iono_filter_obj = IonosphereFilter(
@@ -587,12 +586,12 @@ def run(cfg: dict, runw_hdf5: str):
             out_nondisp_path = os.path.join(
                 iono_path, iono_method, pol_comb_str, 'non_dispersive')
 
-            ionosphere_estimation.write_array(out_disp_path,
+            write_array(out_disp_path,
                 dispersive,
                 data_type=gdal.GDT_Float32,
                 block_row=row_start,
                 data_shape=[rows_output, cols_output])
-            ionosphere_estimation.write_array(out_nondisp_path,
+            write_array(out_nondisp_path,
                 non_dispersive,
                 data_type=gdal.GDT_Float32,
                 block_row=row_start,
@@ -618,12 +617,12 @@ def run(cfg: dict, runw_hdf5: str):
 
             # Write sigma of dispersive phase into the
             # ENVI format files
-            ionosphere_estimation.write_array(sig_phi_iono_path,
+            write_array(sig_phi_iono_path,
                 iono_std,
                 data_type=gdal.GDT_Float32,
                 block_row=row_start,
                 data_shape=[rows_output, cols_output])
-            ionosphere_estimation.write_array(sig_phi_nondisp_path,
+            write_array(sig_phi_nondisp_path,
                 nondisp_std,
                 data_type=gdal.GDT_Float32,
                 block_row=row_start,
@@ -678,7 +677,7 @@ def run(cfg: dict, runw_hdf5: str):
                     iono_path, iono_method, pol_comb_str, 'mask_array')
                 # Write sigma of dispersive phase into the
                 # ENVI format files
-                ionosphere_estimation.write_array(mask_path,
+                write_array(mask_path,
                     mask_array,
                     data_type=gdal.GDT_Float32,
                     block_row=row_start,
@@ -800,10 +799,10 @@ def run(cfg: dict, runw_hdf5: str):
                         nondisp_array=filt_nondisp,
                         main_runw=main_image,
                         side_runw=side_image,
+                        slant_main=main_slant,
+                        slant_side=side_slant,
                         low_sub_runw=sub_low_image,
-                        high_sub_runw=sub_high_image,
-                        y_ref=None,
-                        x_ref=None)
+                        high_sub_runw=sub_high_image)
 
                     dispersive_unwcor, non_dispersive_unwcor = \
                         iono_phase_obj.compute_disp_nondisp(
@@ -821,13 +820,13 @@ def run(cfg: dict, runw_hdf5: str):
                     out_nondisp_cor_path = os.path.join(
                         iono_path, iono_method, pol_comb_str, 'non_dispersive_cor')
 
-                    ionosphere_estimation.write_array(out_disp_cor_path,
+                    write_array(out_disp_cor_path,
                         dispersive_unwcor,
                         data_type=gdal.GDT_Float32,
                         block_row=row_start,
                         data_shape=[rows_output, cols_output])
 
-                    ionosphere_estimation.write_array(out_nondisp_cor_path,
+                    write_array(out_nondisp_cor_path,
                         non_dispersive_unwcor,
                         data_type=gdal.GDT_Float32,
                         block_row=row_start,
