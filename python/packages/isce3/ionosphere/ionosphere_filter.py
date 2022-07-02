@@ -1,3 +1,14 @@
+import os
+
+import h5py
+import isce3
+import numpy as np
+from osgeo import gdal
+from scipy.interpolate import griddata
+from scipy.ndimage import distance_transform_edt
+
+from nisar.workflows.filter_data import get_raster_info, block_param_generator
+from nisar.workflows.filter_interferogram import create_gaussian_kernel
 
 class IonosphereFilter:
     '''
@@ -68,7 +79,7 @@ class IonosphereFilter:
         Returns
         -------
         """
-        data_shape, data_type = get_raster_info(input_data)
+        data_shape, _ = get_raster_info(input_data)
         data_length, data_width = data_shape
         # Determine number of blocks to process
         lines_per_block = min(data_length,
@@ -171,41 +182,41 @@ def fill_with_smoothed(data):
 
     is_nan_mask = np.isnan(data)
     not_nan_mask = np.invert(is_nan_mask)
+
     if np.all(not_nan_mask):
         return data.reshape([rows, cols])
 
-    else:
-        # find x and y where valid values are located.
-        xx_wo_nan = xx[not_nan_mask]
-        yy_wo_nan = yy[not_nan_mask]
-        data_wo_nan = data[not_nan_mask]
+    # find x and y where valid values are located.
+    xx_wo_nan = xx[not_nan_mask]
+    yy_wo_nan = yy[not_nan_mask]
+    data_wo_nan = data[not_nan_mask]
 
-        xnew = xx[np.isnan(data)]
-        ynew = yy[np.isnan(data)]
+    xnew = xx[np.isnan(data)]
+    ynew = yy[np.isnan(data)]
 
-        # linear interpolation with griddata
-        znew = griddata((xx_wo_nan, yy_wo_nan),
-                        data_wo_nan,
-                        (xnew, ynew),
-                        method='linear')
-        data_filt = data.copy()
-        data_filt[np.isnan(data)] = znew
-        n_nonzero = np.sum(np.count_nonzero(np.isnan(data_filt)))
+    # linear interpolation with griddata
+    znew = griddata((xx_wo_nan, yy_wo_nan),
+                    data_wo_nan,
+                    (xnew, ynew),
+                    method='linear')
+    data_filt = data.copy()
+    data_filt[np.isnan(data)] = znew
+    n_nonzero = np.sum(np.count_nonzero(np.isnan(data_filt)))
 
-        if n_nonzero > 0:
-            idx2= np.isnan(data_filt)
+    if n_nonzero > 0:
+        idx2= np.isnan(data_filt)
 
-            xx_wo_nan = xx[np.invert(idx2)]
-            yy_wo_nan = yy[np.invert(idx2)]
-            data_wo_nan = data_filt[np.invert(idx2)]
-            xnew = xx[idx2]
-            ynew = yy[idx2]
+        xx_wo_nan = xx[np.invert(idx2)]
+        yy_wo_nan = yy[np.invert(idx2)]
+        data_wo_nan = data_filt[np.invert(idx2)]
+        xnew = xx[idx2]
+        ynew = yy[idx2]
 
-            # extrapolation using nearest values
-            znew_ext = griddata((xx_wo_nan, yy_wo_nan),
-                data_wo_nan, (xnew, ynew), method='nearest')
-            data_filt[np.isnan(data_filt)] = znew_ext
-        return data_filt.reshape([rows, cols])
+        # extrapolation using nearest values
+        znew_ext = griddata((xx_wo_nan, yy_wo_nan),
+            data_wo_nan, (xnew, ynew), method='nearest')
+        data_filt[np.isnan(data_filt)] = znew_ext
+    return data_filt.reshape([rows, cols])
 
 def filter_data_with_sig(
         input_array,
@@ -245,12 +256,6 @@ def filter_data_with_sig(
     kernel_cols = create_gaussian_kernel(kernel_width, sig_kernel_x)
     kernel_cols = np.reshape(kernel_cols, (1, len(kernel_cols)))
 
-    # Determine the amount of padding
-    pad_length = 2 * (len(kernel_rows) // 2)
-    pad_width = 2 * (kernel_cols.shape[1] // 2)
-    pad_shape = (pad_length, pad_width)
-
-    array_rows, array_cols = input_array.shape
     sig_array_sqr = sig_array**2
     input_div_sig = np.divide(input_array,
         sig_array_sqr,
@@ -395,3 +400,31 @@ def write_array(output_str,
 
         ds_data = None
         del ds_data
+
+
+def fill_nearest(data, invalid=None):
+    """Replace the value of invalid 'data' cells (indicated by 'invalid')
+    by the value of the nearest valid data cell
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        array containing holes to be filled.
+    invalid:
+        a binary array of same shape as 'data'.
+        data value are replaced where invalid is True
+        If None (default), use: invalid  = np.isnan(data)
+
+    Returns
+    -------
+    data[tuple(ind)]: numpy.ndarray
+        array with no data values filled with data values
+        from nearest neighborhood
+    """
+    if invalid is None:
+        invalid = np.isnan(data)
+
+    ind = distance_transform_edt(invalid,
+                                return_distances=False,
+                                return_indices=True)
+    return data[tuple(ind)]

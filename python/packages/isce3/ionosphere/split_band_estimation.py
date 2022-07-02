@@ -2,7 +2,7 @@ import journal
 
 import numpy as np
 
-from ionosphere_estimation import IonosphereEstimation, decimate_freqA_array
+from .ionosphere_estimation import IonosphereEstimation, decimate_freqA_array
 
 class SplitBandIonosphereEstimation(IonosphereEstimation):
     '''Split band ionosphere estimation
@@ -12,6 +12,8 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                  side_center_freq=None,
                  low_center_freq=None,
                  high_center_freq=None,
+                 slant_main=None,
+                 slant_side=None,
                  method=None):
         """Initialized IonosphererEstimation Class
 
@@ -91,7 +93,7 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
         error_channel = journal.error('SplitBandEstimation.compute_disp_nondisp')
 
         if phi_sub_high is None:
-            err_str = f"upper sub-band unwrapped interferogram "\
+            err_str = "upper sub-band unwrapped interferogram "\
                 "is required for split_main_band method."
             error_channel.log(err_str)
             raise ValueError(err_str)
@@ -317,17 +319,6 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             sig_phi_high = np.sqrt(1 - high_band_coh**2) / \
                 high_band_coh / np.sqrt(2 * number_looks)
 
-        # estimate sigma from main- and side- band coherences
-        if (main_coh is not None) & (side_coh is not None):
-            sig_phi_main = np.divide(np.sqrt(1 - main_coh**2),
-                main_coh / np.sqrt(2 * number_looks),
-                out=np.zeros_like(main_coh),
-                where=main_coh!=0)
-            sig_phi_side = np.divide(np.sqrt(1 - side_coh**2),
-                side_coh / np.sqrt(2 * number_looks),
-                out=np.zeros_like(side_coh),
-                where=side_coh!=0)
-
         sig_phi_iono, sig_nondisp = \
             self.estimate_sigma_split_main_band(
             sig_phi_low,
@@ -374,10 +365,10 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             nondisp_array,
             main_runw=None,
             side_runw=None,
+            slant_main=None,
+            slant_side=None,
             low_sub_runw=None,
-            high_sub_runw=None,
-            y_ref=None,
-            x_ref=None):
+            high_sub_runw=None):
         """Compute unwrapping error coefficients
 
         Parameters
@@ -410,9 +401,7 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             main_runw,
             side_runw,
             low_sub_runw,
-            high_sub_runw,
-            y_ref,
-            x_ref)
+            high_sub_runw)
 
         return com_unw_coeff, diff_unw_coeff
 

@@ -1,17 +1,6 @@
-import copy
-import os
-
-import h5py
 import journal
-import isce3
 import numpy as np
-from osgeo import gdal
-from scipy.interpolate import griddata
-from scipy.ndimage import median_filter, distance_transform_edt
-from scipy.signal import resample
-
-from nisar.workflows.filter_data import get_raster_info, block_param_generator
-from nisar.workflows.filter_interferogram import create_gaussian_kernel
+from scipy.ndimage import median_filter
 
 
 class IonosphereEstimation:
@@ -24,6 +13,8 @@ class IonosphereEstimation:
                  side_center_freq=None,
                  low_center_freq=None,
                  high_center_freq=None,
+                 slant_main=None,
+                 slant_side=None,
                  method=None):
 
         """Initialized IonosphererEstimation Base Class
@@ -64,6 +55,9 @@ class IonosphereEstimation:
         self.f1 = side_center_freq
         self.freq_low = low_center_freq
         self.freq_high = high_center_freq
+        self.slant_main = slant_main
+        self.slant_side = slant_side
+        self.estimate_iono_std = None
 
     def get_mask_median_filter(self,
             disp,
@@ -111,10 +105,10 @@ class IonosphereEstimation:
             compute_unwrapp_error_func=None,
             main_runw=None,
             side_runw=None,
+            slant_main=None,
+            slant_side=None,
             low_sub_runw=None,
-            high_sub_runw=None,
-            y_ref=None,
-            x_ref=None):
+            high_sub_runw=None):
         """Compute unwrapping error coefficients
 
         Parameters
@@ -145,14 +139,14 @@ class IonosphereEstimation:
         # frequency B grid
         if side_runw is not None:
             main_runw = decimate_freqA_array(
-                self.slant_main,
-                self.slant_side,
+                slant_main,
+                slant_side,
                 main_runw)
 
             if low_sub_runw is not None:
                 low_sub_runw = decimate_freqA_array(
-                    self.slant_main,
-                    self.slant_side,
+                    slant_main,
+                    slant_side,
                     low_sub_runw)
 
             if high_sub_runw is not None:
@@ -195,7 +189,7 @@ def decimate_freqA_array(
     decimated_array : numpy.ndarray
         decimated RUNW array
     """
-    height, width = target_runw.shape
+    _, width = target_runw.shape
 
     first_index = np.argmin(np.abs(slant_main - slant_side[0]))
     spacing_main = slant_main[1] - slant_main[0]
@@ -203,7 +197,6 @@ def decimate_freqA_array(
 
     resampling_scale_factor = int(np.round(spacing_side / spacing_main))
 
-    sub_width = int(width / resampling_scale_factor)
     x_cand = np.arange(1, width + 1)
 
     # find the maximum of the multiple of resampling_scale_factor

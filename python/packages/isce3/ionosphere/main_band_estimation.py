@@ -2,8 +2,7 @@ import journal
 
 import numpy as np
 
-from ionosphere_estimation import (MainBandIonosphereEstimation,
-                                   decimate_freqA_array)
+from .ionosphere_estimation import IonosphereEstimation, decimate_freqA_array
 
 class MainBandIonosphereEstimation(IonosphereEstimation):
     '''Main diff MS band ionosphere estimation
@@ -13,6 +12,8 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
                  side_center_freq=None,
                  low_center_freq=None,
                  high_center_freq=None,
+                 slant_main=None,
+                 slant_side=None,
                  method=None):
         """Initialized IonosphererEstimation Class
 
@@ -90,17 +91,14 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
         # When side-band arrays is used,
         # arrays should be decimated to have the same size with side-band arrays
         if None in [phi_main, phi_side]:
-            err_str = f"unwrapped interferogram array main and side band"\
+            err_str = "unwrapped interferogram array main and side band"\
                 "is required."
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        phi_main = decimate_freqA_array(
-            slant_main,
-            slant_side,
-            phi_main)
-        self.slant_main = slant_main
-        self.slant_side = slant_side
+        phi_main = decimate_freqA_array(slant_main,
+                                        slant_side,
+                                        phi_main)
 
         no_data_array = (phi_main==no_data) |\
                         (phi_side==no_data)
@@ -121,6 +119,129 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
         non_dispersive[no_data_array] = no_data
 
         return dispersive, non_dispersive
+
+    def get_coherence_mask_array(self,
+            main_array=None,
+            side_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            slant_main=None,
+            slant_side=None,
+            threshold=0.5):
+        """Get mask from coherences
+
+        Parameters
+        ----------
+        main_array : numpy.ndarray
+            coherence of main-band interferogram
+        side_array : numpy.ndarray
+            coherence of side-band interferogram
+        low_band_array : numpy.ndarray
+            coherencen of main-band interferogram
+        high_band_array : numpy.ndarray
+            coherence of side-band interferogram
+        slant_main : numpy.ndarray
+            slant range array of frequency A band
+        slant_side : numpy.ndarray
+            slant range array of frequency B band
+        threshold : float
+            thresholds for coherence
+
+        Returns
+        -------
+        mask_array : numpy.ndarray
+            2D mask array extracted from coherence or
+            connected components
+            1: valid pixels,
+            0: invalid pixels.
+        """
+        return self.get_mask_array(main_array, side_array, low_band_array,
+                                   high_band_array, slant_main, slant_side,
+                                   threshold)
+
+    def get_conn_component_mask_array(self,
+            main_array=None,
+            side_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            slant_main=None,
+            slant_side=None):
+        """Get mask from connected components
+
+        Parameters
+        ----------
+        main_array : numpy.ndarray
+            coherence of main-band interferogram
+        side_array : numpy.ndarray
+            coherence of side-band interferogram
+        low_band_array : numpy.ndarray
+            coherencen of main-band interferogram
+        high_band_array : numpy.ndarray
+            coherence of side-band interferogram
+        slant_main : numpy.ndarray
+            slant range array of frequency A band
+        slant_side : numpy.ndarray
+            slant range array of frequency B band
+
+        Returns
+        -------
+        mask_array : numpy.ndarray
+            2D mask array extracted from coherence or
+            connected components
+            1: valid pixels,
+            0: invalid pixels.
+        """
+        return self.get_mask_array(main_array, side_array, low_band_array,
+                                   high_band_array, slant_main, slant_side,
+                                   0)
+
+    def get_mask_array(self,
+            main_array=None,
+            side_array=None,
+            low_band_array=None,
+            high_band_array=None,
+            slant_main=None,
+            slant_side=None,
+            threshold=0.5):
+        """Get mask from coherence
+
+        Parameters
+        ----------
+        main_array : numpy.ndarray
+            coherence of main-band interferogram
+        side_array : numpy.ndarray
+            coherence of side-band interferogram
+        low_band_array : numpy.ndarray
+            coherencen of main-band interferogram
+        high_band_array : numpy.ndarray
+            coherence of side-band interferogram
+        slant_main : numpy.ndarray
+            slant range array of frequency A band
+        slant_side : numpy.ndarray
+            slant range array of frequency B band
+        threshold : float
+            thresholds for coherence
+
+        Returns
+        -------
+        mask_array : numpy.ndarray
+            2D mask array extracted from coherence or
+            connected components
+            1: valid pixels,
+            0: invalid pixels.
+        """
+        # decimate coherence or connected components
+        # when side array is also used.
+        if side_array is not None:
+            main_array = decimate_freqA_array(
+                slant_main,
+                slant_side,
+                main_array)
+
+        mask_array = (main_array > threshold) & \
+                     (side_array > threshold)
+
+        return mask_array
 
 
     def estimate_iono_std(
@@ -173,13 +294,6 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
                 slant_main,
                 slant_side,
                 main_coh)
-
-        # estimate sigma from sub-band coherences
-        if (low_band_coh is not None) and (high_band_coh is not None):
-            sig_phi_low = np.sqrt(1 - low_band_coh**2) / \
-                low_band_coh / np.sqrt(2 * number_looks)
-            sig_phi_high = np.sqrt(1 - high_band_coh**2) / \
-                high_band_coh / np.sqrt(2 * number_looks)
 
         # estimate sigma from main- and side- band coherences
         if (main_coh is not None) & (side_coh is not None):
@@ -267,10 +381,10 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
             nondisp_array,
             main_runw=None,
             side_runw=None,
+            slant_main=None,
+            slant_side=None,
             low_sub_runw=None,
-            high_sub_runw=None,
-            y_ref=None,
-            x_ref=None):
+            high_sub_runw=None):
         """Compute unwrapping error coefficients
 
         Parameters
@@ -303,9 +417,7 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
             main_runw,
             side_runw,
             low_sub_runw,
-            high_sub_runw,
-            y_ref,
-            x_ref)
+            high_sub_runw)
 
         return com_unw_coeff, diff_unw_coeff
 
@@ -496,7 +608,6 @@ def estimate_iono_main_diff(f0,
     coeff_mat[1,1] = (f0 - f1) / f0
     coeff_mat1 = np.linalg.pinv(coeff_mat)
     output = np.dot(coeff_mat1, d)
-    cov_x = np.linalg.inv(np.dot(coeff_mat.T, coeff_mat))
 
     non_dispersive = output[1].reshape(y_size, x_size)
     dispersive = output[0].reshape(y_size, x_size)
@@ -542,7 +653,6 @@ def estimate_iono_main_side(
 
     coeff_mat1 = np.linalg.pinv(coeff_mat)
     output = np.dot(coeff_mat1, d)
-    Covx = np.linalg.inv(np.dot(coeff_mat.T, coeff_mat))
 
     non_dispersive = output[0].reshape(y_size, x_size)
     dispersive = output[1].reshape(y_size, x_size)
