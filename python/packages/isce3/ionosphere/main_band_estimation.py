@@ -478,7 +478,7 @@ class MainDiffMsBandIonosphereEstimation(MainBandIonosphereEstimation):
                          high_center_freq, method)
 
         self.estimate_iono = estimate_iono_main_diff
-        self.estimate_sigma = self.estimate_sigma_main_diff_
+        self.estimate_sigma = self.estimate_sigma_main_diff
         self.compute_unwrap_err = compute_unwrapp_error_main_diff_ms_band
 
 def compute_unwrapp_error_main_diff_ms_band(
