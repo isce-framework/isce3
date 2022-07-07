@@ -7,8 +7,8 @@ from osgeo import gdal
 from scipy.interpolate import griddata
 from scipy.ndimage import distance_transform_edt
 
-from nisar.workflows.filter_data import get_raster_info, block_param_generator
-from nisar.workflows.filter_interferogram import create_gaussian_kernel
+from isce3.signal.filter_data import (create_gaussian_kernel, get_raster_info,
+                                      block_param_generator)
 
 class IonosphereFilter:
     '''
