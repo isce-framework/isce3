@@ -4,14 +4,14 @@ Wrapper for interferogram filtering
 
 import pathlib
 import time
+
 import h5py
-
-
+from isce3.signal.filter_data import filter_data, create_gaussian_kernel
 import journal
 import numpy as np
+
 from nisar.workflows.filter_interferogram_runconfig import \
     FilterInterferogramRunConfig
-from nisar.workflows.filter_data import filter_data
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -120,17 +120,6 @@ def get_mask(mask_args, freq, pol):
     elif 'general' in mask_args:
         mask = mask_args['general']
     return mask
-
-
-def create_gaussian_kernel(size, sigma):
-    '''
-    Create 1D gaussian kernel given kernel size
-    and standard deviation
-    '''
-    array = np.arange(-int(size / 2), int(size / 2) + 1)
-    return np.asarray([1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(
-        -float(x) ** 2 / (2 * sigma ** 2))
-                       for x in array])
 
 
 if __name__ == "__main__":

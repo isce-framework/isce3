@@ -299,3 +299,14 @@ def filter_data(input_data, lines_per_block,
             del raster
 
         write_raster_block(out_raster, filt_data_block, block_param)
+
+
+def create_gaussian_kernel(size, sigma):
+    '''
+    Create 1D gaussian kernel given kernel size
+    and standard deviation
+    '''
+    array = np.arange(-int(size / 2), int(size / 2) + 1)
+    return np.asarray([1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(
+        -float(x) ** 2 / (2 * sigma ** 2))
+                       for x in array])

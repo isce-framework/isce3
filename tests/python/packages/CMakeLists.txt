@@ -1,5 +1,6 @@
 set(TESTFILES
 isce3/core/gpu_check.py
+isce3/ionosphere/ionosphere.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/point_target_info.py

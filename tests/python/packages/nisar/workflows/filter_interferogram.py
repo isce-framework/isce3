@@ -1,12 +1,13 @@
 import argparse
 import os
-from osgeo import gdal
 
 import h5py
+from isce3.signal.filter_data import filter_data
 import iscetest
 import numpy as np
+from osgeo import gdal
+
 from nisar.workflows import filter_interferogram, h5_prep
-from nisar.workflows.filter_data import filter_data
 from nisar.workflows.filter_interferogram_runconfig import \
     FilterInterferogramRunConfig
 from scipy.signal import convolve2d

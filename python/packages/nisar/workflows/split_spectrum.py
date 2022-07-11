@@ -56,7 +56,7 @@ def prep_subband_h5(src_rslc_hdf5: str,
                 continue
 
             # get list of polarizations for current frequency in source HDF5
-            freq_path = f'{swath_path}/{freq_key}/'
+            freq_path = f'{swath_path}/{freq_key}'
             pol_path = f'{freq_path}/listOfPolarizations'
             src_pol_list = np.array(src_h5[pol_path][()], dtype=str)
 
