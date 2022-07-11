@@ -390,13 +390,13 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
         """
         com_unw_coeff, diff_unw_coeff = \
             super().compute_unwrapp_error(
-            disp_array,
-            nondisp_array,
-            compute_unwrapp_error_split_main_band,
-            main_runw,
-            side_runw,
-            low_sub_runw,
-            high_sub_runw)
+            disp_array=disp_array,
+            nondisp_array=nondisp_array,
+            compute_unwrapp_error_func=compute_unwrapp_error_split_main_band,
+            main_runw=main_runw,
+            side_runw=side_runw,
+            low_sub_runw=low_sub_runw,
+            high_sub_runw=high_sub_runw)
 
         return com_unw_coeff, diff_unw_coeff
 
