@@ -35,7 +35,7 @@ def test_split_main_band_run():
     insar_runcfg.yaml_check()
 
     out_paths = h5_prep.run(insar_runcfg.cfg)
-    persist = Persistence(restart=True)
+    persist = Persistence(restart=True, logfile_path='ionosphere.log')
 
     # No CPU dense offsets. Turn off dense_offsets,
     # rubbersheet, and fine_resample to avoid test failure
@@ -70,7 +70,8 @@ def test_main_side_band_run():
     insar_runcfg.yaml_check()
 
     out_paths = h5_prep.run(insar_runcfg.cfg)
-    persist = Persistence(restart=True)
+
+    persist = Persistence(restart=True, logfile_path='ionosphere.log')
     # No CPU dense offsets. Turn off dense_offsets,
     # rubbersheet, and fine_resample to avoid test failure
     persist.run_steps['dense_offsets'] = False
