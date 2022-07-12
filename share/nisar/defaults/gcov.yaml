@@ -11,7 +11,10 @@ runconfig:
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            dem_file: 
+            dem_file:
+
+            # External orbit file
+            orbit_file:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.

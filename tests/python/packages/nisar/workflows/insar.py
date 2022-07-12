@@ -37,7 +37,7 @@ def test_insar_run():
         insar_runcfg.yaml_check()
 
         out_paths = h5_prep.run(insar_runcfg.cfg)
-        persist = Persistence(restart=True)
+        persist = Persistence(restart=True, logfile_path='insar.log')
 
         # No CPU dense offsets. Turn off dense_offsets,
         # rubbersheet, and fine_resample to avoid test failure

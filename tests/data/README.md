@@ -121,6 +121,26 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5".
   The format is based on doc JPL D-102253.
 
+- **REE_L0B_DBF_EXTSCENE_PASS1_LINE3000_TRUNCATED.h5**
+
+  DBFed version of "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5" 
+  under subdir *pointing/*.
+
+- **REE_ANTPAT_CUTS_DBF.h5**
+
+  Antenna pattern with DBFed data for L0B product 
+  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5" under subdir *pointing/*.
+
+- **REE_ORBIT_DATA_DBF_PASS1.xml**
+  
+  External orbit file for L0B product "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5" 
+  under subdir *pointing/*.
+
+- **REE_ATTITUDE_DATA_DBF_PASS1.xml**
+  
+  External attitude file for L0B product "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5" 
+  under subdir *pointing/*.
+
 ## ALOS1
 
 - **ALOS1_PALSAR_ANTPAT_FIVE_BEAMS.h5**
@@ -138,6 +158,17 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   There are total *2500* range lines.
   The scene is cosidered homogenous suitable for antenna pattern measurement in 
   elevation direction.
+
+- **ALOS1_PALSAR_ANTPAT_BEAM343.h5**
+
+  Antenna pattern for beam # *7* of *ALOS1* whose zero-degree EL corresponds to  off-nadir 
+  angle around *34.3 deg*. The antenna pattern EL/AZ cuts are interpolated/smoothed version
+  provided by *ESA*.
+
+- **ALPSRP264757150-H1.0__A_HH_LINE4000-5000_RANGE0-2200.h5**
+
+  Truncated ALOS1 PALSAR L0B product containing simply *HH* product with 1000 range lines 
+  within [4000,5000) and 2200 range bins within [0, 2200) over the Amazon.
 
 ## Beamformer
 Multi-channel L0B Raw data and HDF5 antenna pattern cuts (NISAR antenna format *v2*) 

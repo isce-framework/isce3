@@ -1,7 +1,6 @@
 import os
 
 import journal
-import isce3
 import nisar.workflows.helpers as helpers
 from nisar.workflows.runconfig import RunConfig
 

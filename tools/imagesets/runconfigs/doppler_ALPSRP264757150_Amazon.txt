@@ -1,0 +1,9 @@
+input_L0B_RRSD_ALPSRP264757150_Amazon/ALPSRP264757150-H1.0__A.h5
+--az_block_dur
+5
+--time_interval
+3.0
+--polyfit
+--plot
+--out
+output_doppler

@@ -8,10 +8,21 @@ class Persistence():
     '''
     # init InSAR steps in reverse chronological run order
     insar_steps = ['geocode', 'ionosphere', 'unwrap', 'filter_interferogram', 'crossmul',
-                   'fine_resample', 'rubbersheet', 'dense_offsets', 'coarse_resample',
-                   'geo2rdr', 'rdr2geo', 'h5_prep', 'bandpass_insar']
+                   'fine_resample', 'rubbersheet', 'offsets_product', 'dense_offsets',
+                   'coarse_resample', 'geo2rdr', 'rdr2geo', 'h5_prep', 'bandpass_insar']
 
-    def __init__(self, restart=False):
+    def __init__(self, logfile_path, restart=False):
+        """
+        Construct a new `Persistence` object.
+
+        Parameters
+        ----------
+        logfile_path : path_like
+            Path to logfile from a previous InSAR workflow run.
+        restart : bool, optional
+            Whether to restart the workflow from the beginning or continue from a
+            previous checkpoint. (default: False)
+        """
         # bool flag that determines if insar.run is called
         # prevents calling of insar.run if last run was successful and no restart
         self.run = restart
@@ -23,7 +34,7 @@ class Persistence():
             self.run_steps[i] = restart
 
         if not restart:
-            self.read_log()
+            self.read_log(logfile_path)
 
         info_channel = journal.info("persistence.init")
         if self.run:
@@ -33,19 +44,18 @@ class Persistence():
         else:
             info_channel.log("No steps to be (re)run.")
 
-    def read_log(self):
+    def read_log(self, logfile_path):
         '''
         determine state of last run to determine this runs steps
         '''
-        # assume log file small enough to fit into memory for reverse read
-        path_log = journal.debug.journal.device.log.name
 
         # check for empty log from error free runconfig and yamlparse execution
-        if os.path.getsize(path_log) == 0:
-            self.__init__(True)
+        if (not os.path.isfile(logfile_path)) or \
+                (os.path.getsize(logfile_path) == 0):
+            self.__init__(logfile_path, True)
         else:
             # read log in reverse chronological order
-            for log_line in reversed(list(open(path_log, 'r'))):
+            for log_line in reversed(list(open(logfile_path, 'r'))):
                 # check for end of successful run
                 if 'successfully ran INSAR' in log_line:
                     break
@@ -71,4 +81,4 @@ class Persistence():
 
             # check if any steps need to be run or success msg not found
             if not success_msg_found:
-                self.__init__(True)
+                self.__init__(logfile_path, True)

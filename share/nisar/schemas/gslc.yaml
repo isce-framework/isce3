@@ -12,7 +12,10 @@ runconfig:
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
-       
+
+            # External orbit file
+            orbit_file: str(required=False)
+
         product_path_group:
             # Directory where PGE will place results
             product_path: str()

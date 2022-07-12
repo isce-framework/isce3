@@ -4,8 +4,9 @@ import time
 import journal
 from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
                              geocode_insar, h5_prep, filter_interferogram,
-                             rdr2geo, resample_slc, rubbersheet,
+                             offsets_product, rdr2geo, resample_slc, rubbersheet,
                              split_spectrum, unwrap, ionosphere)
+
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -38,6 +39,10 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if (run_steps['dense_offsets']) and \
             (cfg['processing']['dense_offsets']['enabled']):
         dense_offsets.run(cfg)
+
+    if (run_steps['offsets_product']) and \
+            (cfg['processing']['offsets_product']['enabled']):
+        offsets_product.run(cfg, out_paths['ROFF'])
 
     if run_steps['rubbersheet'] and \
             cfg['processing']['rubbersheet']['enabled']:
@@ -84,8 +89,12 @@ if __name__ == "__main__":
     # convert CLI input to run configuration
     insar_runcfg = InsarRunConfig(args)
 
-    # determine what steps if any need to be rerun
-    persist = Persistence(insar_runcfg.args.restart)
+    # To allow persistence, a logfile is required. Raise exception
+    # if logfile is None and persistence is requested
+    logfile_path = insar_runcfg.cfg['logging']['path']
+    if (logfile_path is None) and insar_runcfg.args.restart:
+        raise ValueError('InSAR workflow persistence requires to specify a logfile')
+    persist = Persistence(logfile_path, insar_runcfg.args.restart)
 
     # run InSAR workflow
     if persist.run:

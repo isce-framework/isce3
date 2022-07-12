@@ -12,7 +12,7 @@ RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/CFChecker \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/calTools \
- && cd /opt/QualityAssurance && git checkout 448db8d && rm -rf .git \
+ && cd /opt/QualityAssurance && git checkout 0ed82e7 && rm -rf .git \
  && cd /opt/CFChecker && git checkout R2 && rm -rf .git \
  && cd /opt/calTools && git checkout 483add3061a113d5e5945a6178e303f4df305dd4 && rm -rf .git \
  && cd /opt/SoilMoisture && git checkout 80e14ac && rm -rf .git

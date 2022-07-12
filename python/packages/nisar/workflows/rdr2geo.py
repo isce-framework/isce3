@@ -12,6 +12,7 @@ from osgeo import gdal
 import journal
 import isce3
 from nisar.products.readers import SLC
+from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import runconfig
 from nisar.workflows.rdr2geo_runconfig import Rdr2geoRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -25,8 +26,8 @@ def get_raster_obj(out_path: str, radargrid: isce3.product.RadarGridParameters,
     if not write2disk:
         return None
 
-    return  isce3.io.Raster(out_path, radargrid.width, radargrid.length, 1,
-                            dtype, 'ENVI')
+    return isce3.io.Raster(out_path, radargrid.width, radargrid.length, 1,
+                           dtype, 'ENVI')
 
 def run(cfg):
     '''
@@ -35,6 +36,7 @@ def run(cfg):
     # pull parameters from cfg
     input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     threshold = cfg['processing']['rdr2geo']['threshold']
@@ -44,7 +46,10 @@ def run(cfg):
 
     # get params from SLC
     slc = SLC(hdf5file=input_hdf5)
-    orbit = slc.getOrbit()
+    if ref_orbit is not None:
+        orbit = load_orbit_from_xml(ref_orbit)
+    else:
+        orbit = slc.getOrbit()
 
     # set defaults shared by both frequencies
     dem_raster = isce3.io.Raster(dem_file)

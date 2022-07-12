@@ -17,6 +17,7 @@ import isce3.unwrap.snaphu as snaphu
 
 from nisar.workflows import h5_prep
 from nisar.products.readers import SLC
+from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
@@ -181,9 +182,14 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         rg_res = isce3.core.speed_of_light / (2 * rg_bw)
                         # To compute azimuth resolution, get sensor speed at mid-scene
                         # And use azimuth processed bandwidth (copied from RSLC)
-                        ref_slc = SLC(hdf5file=ref_slc_hdf5)
+                        ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
+                        if ref_orbit is not None:
+                            orbit = load_orbit_from_xml(ref_orbit)
+                        else:
+                            ref_slc = SLC(hdf5file=ref_slc_hdf5)
+                            orbit = ref_slc.getOrbit()
+
                         radar_grid = ref_slc.getRadarGrid(freq)
-                        orbit = ref_slc.getOrbit()
                         _, v_mid = orbit.interpolate(radar_grid.sensing_mid)
                         vs = np.linalg.norm(v_mid)
                         az_bw = src_h5[f'{src_freq_group_path}/azimuthBandwidth'][()]

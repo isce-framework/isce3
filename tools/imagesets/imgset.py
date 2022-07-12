@@ -267,13 +267,17 @@ class ImageSet:
         TODO use a properly cached download e.g. via DVC
         """
 
-        mindata = ["L0B_RRSD_REE1",
-                   "L0B_RRSD_REE_NOISEST1",
-                   "L0B_RRSD_REE17_PTA",
-                   "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
-                   "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
-                   "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
-                  ]
+        mindata = [
+            "L0B_RRSD_ALPSRP264757150_Amazon",
+            "L0B_RRSD_REE1",
+            "L0B_RRSD_REE_NOISEST1",
+            "L0B_RRSD_REE17_PTA",
+            "L0B_RRSD_REE_CHANNEL4_EXTSCENE_PASS1",
+            "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
+            "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
+            "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
+        ]
+
         # Download files, preserving relative directory hierarchy
         for dataset in mindata:
             wfdatadir = pjoin(self.datadir, dataset)
@@ -371,13 +375,22 @@ class ImageSet:
         # create output directories
         os.makedirs(pjoin(testdir, f"output_{wfname}{suf}"), exist_ok=True)
         os.makedirs(pjoin(testdir, f"scratch_{wfname}{suf}"), exist_ok=True)
+
+        # check whether we're testing one of the D&C SAS workflows (Doppler, EL Edge, or
+        # EL Null products).
+        is_dnc_test = (
+            testname.startswith("doppler")
+            or testname.startswith("el_edge")
+            or testname.startswith("el_null")
+        )
+
         # copy test runconfig to test directory (for end-to-end testing, we need to
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
-        elif testname.startswith("soilm"):
+        elif testname.startswith("soilm") or is_dnc_test:
             # Executable-dependent.  Currently works only for Disaggregation.
             inputrunconfig = f"{testname}{suf}.txt"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
@@ -388,12 +401,14 @@ class ImageSet:
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         log = pjoin(testdir, f"output_{wfname}{suf}", "stdouterr.log")
 
-        if not testname.startswith("soilm"):
-            cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
-        else:
+        if testname.startswith("soilm"):
             executable = pyname
             # Executable-dependent.  Currently works only for Disaggregation.
             cmd = [f"time {executable} runconfig_{wfname}{suf}.txt"]
+        elif is_dnc_test:
+            cmd = [f"time python3 -m {pyname} {arg} @runconfig_{wfname}{suf}.txt"]
+        else:
+            cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
 
         try:
             if not testname.startswith("soilm"):
@@ -405,6 +420,42 @@ class ImageSet:
                                 loghdlrname=f"wftest.{os.path.basename(testdir)}")
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow test {testname} failed") from e
+
+    def doppler_test(self, tests=None):
+        """Test Doppler centroid product SAS."""
+        if tests is None:
+            tests = workflowtests["doppler"].items()
+        for testname, dataname in tests:
+            self.workflowtest(
+                "doppler",
+                testname,
+                dataname,
+                "nisar.workflows.gen_doppler_range_product",
+            )
+
+    def el_edge_test(self, tests=None):
+        """Test EL rising edge pointing product SAS."""
+        if tests is None:
+            tests = workflowtests["el_edge"].items()
+        for testname, dataname in tests:
+            self.workflowtest(
+                "el_edge",
+                testname,
+                dataname,
+                "nisar.workflows.gen_el_rising_edge_product",
+            )
+
+    def el_null_test(self, tests=None):
+        """Test EL null range product SAS."""
+        if tests is None:
+            tests = workflowtests["el_null"].items()
+        for testname, dataname in tests:
+            self.workflowtest(
+                "el_null",
+                testname,
+                dataname,
+                "nisar.workflows.gen_el_null_range_product",
+            )
 
     def rslctest(self, tests=None):
         if tests is None:
@@ -512,6 +563,9 @@ class ImageSet:
         Only run first test from each workflow
         """
         self.rslctest(tests=list(workflowtests['rslc'].items())[:1])
+        self.doppler_test(tests=list(workflowtests['doppler'].items())[:1])
+        self.el_edge_test(tests=list(workflowtests['el_edge'].items())[:1])
+        self.el_null_test(tests=list(workflowtests['el_null'].items())[:1])
         self.gslctest(tests=list(workflowtests['gslc'].items())[:1])
         self.gcovtest(tests=list(workflowtests['gcov'].items())[:1])
         self.insartest(tests=list(workflowtests['insar'].items())[:1])
@@ -540,10 +594,18 @@ class ImageSet:
         os.makedirs(pjoin(testdir, f"qa_{wfname}{suf}"), exist_ok=True)
         log = pjoin(testdir, f"qa_{wfname}{suf}", "stdouterr.log")
         # run qa command
+        # XXX The QA software installs XML files which are subsequently required at
+        # runtime by the QA scripts. But figuring out the installed location of these
+        # files is complicated and depends on the platform & installation options. This
+        # is further complicated by the fact that the QA code expects these paths to be
+        # provided relative to the installed scripts location. In the future, we should
+        # do this the right way using `importlib.resources`. For now, let's just
+        # hardcode the relative path to the XML data directory.
         cmd = [f"time cfchecks.py output_{wfname}{suf}/{wfname}.h5",
                f"""time verify_{wfname}.py --fpdf qa_{wfname}{suf}/graphs.pdf \
                     --fhdf qa_{wfname}{suf}/stats.h5 --flog qa_{wfname}{suf}/qa.log --validate \
-                    --quality output_{wfname}{suf}/{wfname}.h5"""]
+                    --quality output_{wfname}{suf}/{wfname}.h5 \
+                    --xml_dir ../lib/python3.9/site-packages/EGG-INFO/scripts/xml"""]
         try:
             self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                             loghdlrname=f'wfqa.{os.path.basename(testdir)}')
@@ -605,7 +667,8 @@ class ImageSet:
                 if product == 'gunw':
                     cmd.append(f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
                                        --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
-                                       output_{wfname}/{product.upper()}_product.h5""")
+                                       output_{wfname}/{product.upper()}_product.h5 \
+                                       --xml_dir ../lib/python3.9/site-packages/EGG-INFO/scripts/xml""")
                 try:
                     self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')

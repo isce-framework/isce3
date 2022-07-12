@@ -1,11 +1,12 @@
+import warnings
+
+import h5py
+import journal
+import numpy as np
+
 from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 import nisar.workflows.helpers as helpers
-import journal
-import os
-import h5py
-import numpy as np
-import warnings
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -69,6 +70,22 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if self.cfg['processing']['dense_offsets']['coregistered_slc_path'] is None:
             self.cfg['processing']['dense_offsets'][
                 'coregistered_slc_path'] = scratch_path
+
+        if self.cfg['processing']['offsets_product'][
+            'coregistered_slc_path'] is None:
+            self.cfg['processing']['offsets_product'][
+                'coregistered_slc_path'] = scratch_path
+
+        # Check a layer of offset exists
+        if self.cfg['processing']['offsets_product']['enabled']:
+            off_params = self.cfg['processing']['offsets_product']
+            layer_keys = [key for key in off_params.keys() if
+                          key.startswith('layer')]
+            # If no layer of offset is found, throw an exception
+            if not layer_keys:
+                err_str = "No offset layer specified; at least one layer is required"
+                error_channel.log(err_str)
+                raise ValueError(err_str)
 
         # When running insar.py dense_offsets_path and geo2rdr_offsets_path
         # come from previous step through scratch_path
@@ -166,21 +183,21 @@ class InsarRunConfig(Geo2rdrRunConfig):
             # Extract main range bandwidth from reference SLC
             ref_slc_path = self.cfg['input_file_group']['reference_rslc_file_path']
             sec_slc_path = self.cfg['input_file_group']['secondary_rslc_file_path']
-        
+
             ref_slc = SLC(hdf5file=ref_slc_path)
             sec_slc = SLC(hdf5file=sec_slc_path)
 
             # extract the polarizations from reference and secondary hdf5
-            with h5py.File(ref_slc_path, 'r', libver='latest', 
+            with h5py.File(ref_slc_path, 'r', libver='latest',
                 swmr=True) as ref_h5, \
-                h5py.File(sec_slc_path, 'r', libver='latest', 
+                h5py.File(sec_slc_path, 'r', libver='latest',
                 swmr=True) as sec_h5:
-                
+
                 ref_pol_path = os.path.join(
                     ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
                 ref_pols_freqA = list(
                     np.array(ref_h5[ref_pol_path][()], dtype=str))
-                
+
                 sec_pol_path = os.path.join(
                     sec_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
                 sec_pols_freqA = list(
@@ -193,15 +210,15 @@ class InsarRunConfig(Geo2rdrRunConfig):
             common_pol_refsec_freqA = set.intersection(
                 set(ref_pols_freqA), set(sec_pols_freqA))
 
-            # If no common polarizations found between reference and secondary, 
-            # then throw errors. 
+            # If no common polarizations found between reference and secondary,
+            # then throw errors.
             if not common_pol_refsec_freqA:
                 err_str = "No common polarization between frequency A rasters"
                 error_channel.log(err_str)
                 raise FileNotFoundError(err_str)
 
-            # If polarizations are given, then check if HDF5 has them. 
-            # If not, then throw error. 
+            # If polarizations are given, then check if HDF5 has them.
+            # If not, then throw error.
             if iono_freq_pol['A']:
                 for iono_pol in iono_freq_pol['A']:
                     if (iono_pol not in ref_pols_freqA) or \
@@ -210,14 +227,14 @@ class InsarRunConfig(Geo2rdrRunConfig):
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
 
-            # If common polarization found, but input polarizations are not given, 
+            # If common polarization found, but input polarizations are not given,
             # then assign the common polarization for split_main_band
             if (common_pol_refsec_freqA) and (not iono_freq_pol['A']):
                 # Co-polarizations are found, split_main_band will be used for co-pols
-                common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA 
+                common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA
                     if pol in ['VV', 'HH']]
                 iono_freq_pol['A'] = common_copol_ref_sec
-                    
+
                 # If common co-pols not found, cross-pol will be alternatively used.
                 if not common_copol_ref_sec:
                     iono_freq_pol['A'] = common_pol_refsec_freqA
@@ -245,7 +262,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                         "It is automatically set by 1/3 of range bandwidth of frequencyA"
                     warning_channel.log(info_str)
 
-                # If polarzations for frequency B are requested 
+                # If polarzations for frequency B are requested
                 # for split_main_band method, then throw error
                 if iono_freq_pol['B']:
                     err_str = f"Incorrect polarzations {iono_freq_pol['B']} for frequency B are requested. "\
@@ -256,16 +273,16 @@ class InsarRunConfig(Geo2rdrRunConfig):
             # methods that use side band
             if iono_method in ['main_side_band', 'main_diff_main_side_band']:
                 # extract the polarizations from reference and secondary hdf5
-                with h5py.File(ref_slc_path, 'r', libver='latest', 
+                with h5py.File(ref_slc_path, 'r', libver='latest',
                     swmr=True) as ref_h5, \
-                    h5py.File(sec_slc_path, 'r', libver='latest', 
+                    h5py.File(sec_slc_path, 'r', libver='latest',
                     swmr=True) as sec_h5:
-                    
+
                     ref_pol_path = os.path.join(
                         ref_slc.SwathPath, 'frequencyB', 'listOfPolarizations')
                     ref_pols_freqB = list(
                         np.array(ref_h5[ref_pol_path][()], dtype=str))
-                    
+
                     sec_pol_path = os.path.join(
                         sec_slc.SwathPath, 'frequencyB', 'listOfPolarizations')
                     sec_pols_freqB = list(
@@ -275,7 +292,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 common_pol_refsec_freqB = set.intersection(
                     set(ref_pols_freqB), set(sec_pols_freqB))
 
-                # when common polarzations are not found, throw error. 
+                # when common polarzations are not found, throw error.
                 if not common_pol_refsec_freqB:
                     err_str = "No common polarization between frequencyB rasters"
                     error_channel.log(err_str)
@@ -288,8 +305,8 @@ class InsarRunConfig(Geo2rdrRunConfig):
                     error_channel.log(err_str)
                     raise FileNotFoundError(err_str)
 
-                # If polarizations are given, then check if HDF5 has them. 
-                # If not, then throw error. 
+                # If polarizations are given, then check if HDF5 has them.
+                # If not, then throw error.
                 if iono_freq_pol['B']:
                     for iono_pol in iono_freq_pol['B']:
                         if (iono_pol not in ref_pols_freqB) or \
@@ -298,18 +315,18 @@ class InsarRunConfig(Geo2rdrRunConfig):
                                 "estimation are requested, but not found"
                             error_channel.log(err_str)
                             raise FileNotFoundError(err_str)
-                            
+
                 # Co-polarizations are found and input pol for freq B is not given
                 else:
                     common_pol_refsec_freq_ab = set.intersection(
                     set(common_pol_refsec_freqB), set(common_pol_ref_freq_a_b))
 
-                    # if pol of freq A is given, this pol is used for freq B. 
+                    # if pol of freq A is given, this pol is used for freq B.
                     if  iono_freq_pol['A']:
                         common_pol_refsec_freq_ab = set.intersection(
                         set(iono_freq_pol['A']), set(common_pol_refsec_freq_ab))
-            
-                    common_copol_ref_sec = [pol for pol in common_pol_refsec_freq_ab 
+
+                    common_copol_ref_sec = [pol for pol in common_pol_refsec_freq_ab
                         if pol in ['VV', 'HH']]
 
                     if common_copol_ref_sec:

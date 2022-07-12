@@ -14,6 +14,9 @@ def run(*, steps, imgset, **kwargs):
         "makedistrib",
         "fetchdata",
         "rslctest",
+        "doppler_test",
+        "el_edge_test",
+        "el_null_test",
         "gslctest",
         "gcovtest",
         "insartest",
@@ -67,6 +70,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--imgset", default="oracle8conda")
     parser.add_argument("-B", "--projblddir", default=f"{projsrcdir}/build-docker")
     parser.add_argument("-p", "--printlog", action='store_true')
-    parser.add_argument("-t", "--imgtag", default=None)    
+    parser.add_argument("-t", "--imgtag", default=None)
     parser.add_argument("steps", nargs="+")
     run(**vars(parser.parse_args()))

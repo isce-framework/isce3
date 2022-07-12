@@ -1,0 +1,11 @@
+--l0b
+input_L0B_RRSD_ALPSRP264757150_Amazon/ALPSRP264757150-H1.0__A.h5
+--ant
+input_L0B_RRSD_ALPSRP264757150_Amazon/ALOS1_PALSAR_ANTPAT_BEAM343.h5
+--az_block_dur
+5
+--ref_height
+100
+--plot
+--out
+output_el_edge
