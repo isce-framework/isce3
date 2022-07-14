@@ -148,12 +148,15 @@ class IonosphereEstimation:
         com_unw_coeff, diff_unw_coeff = \
             compute_unwrapp_error_func(
             f0=self.f0,
+            f1=self.f1,
             freq_low=self.freq_low,
             freq_high=self.freq_high,
             disp_array=disp_array,
             nondisp_array=nondisp_array,
             low_sub_runw=low_sub_runw,
-            high_sub_runw=high_sub_runw)
+            high_sub_runw=high_sub_runw,
+            main_runw=main_runw,
+            side_runw=side_runw,)
 
         return com_unw_coeff, diff_unw_coeff
 

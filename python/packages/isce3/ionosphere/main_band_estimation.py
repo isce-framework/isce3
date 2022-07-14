@@ -449,7 +449,7 @@ class MainSideBandIonosphereEstimation(MainBandIonosphereEstimation):
 
         self.estimate_iono = estimate_iono_main_side
         self.estimate_sigma = self.estimate_sigma_main_side
-        self.compute_unwrap_err = compute_unwrapp_error_main_side_band,
+        self.compute_unwrap_err = compute_unwrapp_error_main_side_band
 
 class MainDiffMsBandIonosphereEstimation(MainBandIonosphereEstimation):
     '''Main diff MS band ionosphere estimation
@@ -489,7 +489,11 @@ def compute_unwrapp_error_main_diff_ms_band(
         disp_array,
         nondisp_array,
         main_runw,
-        side_runw):
+        side_runw,
+        freq_low=None,
+        freq_high=None,
+        low_sub_runw=None,
+        high_sub_runw=None):
 
     """Compute unwrapping error coefficients for main_diff_ms_band
     method.
@@ -531,7 +535,11 @@ def compute_unwrapp_error_main_side_band(
         disp_array,
         nondisp_array,
         main_runw,
-        side_runw):
+        side_runw,
+        freq_low=None,
+        freq_high=None,
+        low_sub_runw=None,
+        high_sub_runw=None):
 
     """Compute unwrapping error coefficients.
 

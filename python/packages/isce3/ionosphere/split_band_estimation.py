@@ -408,7 +408,10 @@ def compute_unwrapp_error_split_main_band(
         disp_array,
         nondisp_array,
         low_sub_runw,
-        high_sub_runw):
+        high_sub_runw,
+        f1=None,
+        main_runw=None,
+        side_runw=None):
 
     """Compute unwrapping error coefficients.
 
