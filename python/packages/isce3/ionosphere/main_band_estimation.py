@@ -2,10 +2,10 @@ import journal
 
 import numpy as np
 
-from .ionosphere_estimation import IonosphereEstimation, decimate_freqA_array
+from .ionosphere_estimation import IonosphereEstimation, decimate_freq_a_array
 
 class MainBandIonosphereEstimation(IonosphereEstimation):
-    '''Main diff MS band ionosphere estimation
+    '''Virtual class for main band ionosphere estimation methods
     '''
     def __init__(self,
                  main_center_freq=None,
@@ -93,7 +93,7 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        phi_main = decimate_freqA_array(slant_main,
+        phi_main = decimate_freq_a_array(slant_main,
                                         slant_side,
                                         phi_main)
 
@@ -229,7 +229,7 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
         # decimate coherence or connected components
         # when side array is also used.
         if side_array is not None:
-            main_array = decimate_freqA_array(
+            main_array = decimate_freq_a_array(
                 slant_main,
                 slant_side,
                 main_array)
@@ -286,7 +286,7 @@ class MainBandIonosphereEstimation(IonosphereEstimation):
             if slant_side is None:
                 slant_side = self.slant_side
 
-            main_coh = decimate_freqA_array(
+            main_coh = decimate_freq_a_array(
                 slant_main,
                 slant_side,
                 main_coh)

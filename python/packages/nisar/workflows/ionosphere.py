@@ -25,7 +25,7 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def write_disp_block_hdf5(
-        hdf5_str,
+        hdf5_path,
         path,
         data,
         rows,
@@ -34,7 +34,7 @@ def write_disp_block_hdf5(
 
     Parameters
     ----------
-    hdf5_str : str
+    hdf5_path : str
         output HDF5 file name
     path : str
         HDF5 path for dataset
@@ -45,15 +45,17 @@ def write_disp_block_hdf5(
     block_row : int
         block start index
     """
-    # If hdf5 file and path exists, then write the data into file.
-    try:
-        with h5py.File(hdf5_str, 'r+') as dst_h5:
-            block_length, block_width = data.shape
-            dst_h5[path].write_direct(data,
-                dest_sel=np.s_[block_row : block_row + block_length,
-                    :block_width])
-    except:
-        pass
+
+    error_channel = journal.error('ionosphere.write_disp_block_hdf5')
+    if not os.path.isfile(hdf5_path):
+        err_str = f"{hdf5_path} not found"
+        error_channel.log(err_str)
+        raise FileNotFoundError(err_str)
+    with h5py.File(hdf5_path, 'r+') as dst_h5:
+        block_length, block_width = data.shape
+        dst_h5[path].write_direct(data,
+            dest_sel=np.s_[block_row : block_row + block_length,
+                :block_width])
 
 def insar_ionosphere_pair(cfg):
     """Run insar workflow for ionosphere pairs
@@ -118,13 +120,6 @@ def insar_ionosphere_pair(cfg):
                 'coregistered_slc_path'] = new_scratch
             iono_insar_cfg['processing']['crossmul'][
                 'coregistered_slc_path'] = new_scratch
-
-            filter_args = iono_insar_cfg['processing']['filter_interferogram']
-            filter_type = filter_args['filter_type']
-
-            if filter_type == 'no_filter':
-                iono_insar_cfg['processing']['filter_interferogram'][
-                    'filter_type'] = 'boxcar'
 
             # update frequency and polarizations for ionosphere
             if iono_freq_pols['A']:

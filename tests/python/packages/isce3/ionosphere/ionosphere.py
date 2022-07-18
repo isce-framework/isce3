@@ -2,7 +2,7 @@ import numpy as np
 from osgeo import gdal
 
 import isce3
-from isce3.ionosphere.ionosphere_estimation import decimate_freqA_array
+from isce3.ionosphere.ionosphere_estimation import decimate_freq_a_array
 from isce3.ionosphere.ionosphere_filter import IonosphereFilter, write_array
 from isce3.ionosphere.main_band_estimation import (compute_unwrapp_error_main_diff_ms_band,
                                                    compute_unwrapp_error_main_side_band,
@@ -247,7 +247,7 @@ def test_decimate_runw():
     side_slant = np.arange(500, 1000, 4)
     main_runw = np.reshape(np.arange(500, 1000, 2) ,[1, -1])
 
-    decimate_test = decimate_freqA_array(main_slant,
+    decimate_test = decimate_freq_a_array(main_slant,
         side_slant,
         main_runw)
 

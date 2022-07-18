@@ -2,7 +2,7 @@ import journal
 
 import numpy as np
 
-from .ionosphere_estimation import IonosphereEstimation, decimate_freqA_array
+from .ionosphere_estimation import IonosphereEstimation, decimate_freq_a_array
 
 class SplitBandIonosphereEstimation(IonosphereEstimation):
     '''Split band ionosphere estimation
@@ -95,7 +95,7 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             raise ValueError(err_str)
 
         if phi_sub_low is None:
-            err_str = f"lower sub-band unwrapped interferogram "\
+            err_str = "lower sub-band unwrapped interferogram "\
                 "is required for split_main_band method."
             error_channel.log(err_str)
             raise ValueError(err_str)
@@ -241,12 +241,12 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                 slant_side = self.slant_side
 
             if low_band_array is not None:
-                low_band_array = decimate_freqA_array(
+                low_band_array = decimate_freq_a_array(
                     slant_main,
                     slant_side,
                     low_band_array)
             if high_band_array is not None:
-                high_band_array = decimate_freqA_array(
+                high_band_array = decimate_freq_a_array(
                     slant_main,
                     slant_side,
                     high_band_array)
@@ -302,7 +302,7 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             if slant_side is None:
                 slant_side = self.slant_side
 
-            main_coh = decimate_freqA_array(
+            main_coh = decimate_freq_a_array(
                 slant_main,
                 slant_side,
                 main_coh)

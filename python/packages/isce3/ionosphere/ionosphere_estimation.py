@@ -128,19 +128,19 @@ class IonosphereEstimation:
         # decimate coherences array of frequency A to
         # frequency B grid
         if side_runw is not None:
-            main_runw = decimate_freqA_array(
+            main_runw = decimate_freq_a_array(
                 slant_main,
                 slant_side,
                 main_runw)
 
             if low_sub_runw is not None:
-                low_sub_runw = decimate_freqA_array(
+                low_sub_runw = decimate_freq_a_array(
                     slant_main,
                     slant_side,
                     low_sub_runw)
 
             if high_sub_runw is not None:
-                high_sub_runw = decimate_freqA_array(
+                high_sub_runw = decimate_freq_a_array(
                     slant_main,
                     slant_side,
                     high_sub_runw)
@@ -160,7 +160,7 @@ class IonosphereEstimation:
 
         return com_unw_coeff, diff_unw_coeff
 
-def decimate_freqA_array(
+def decimate_freq_a_array(
         slant_main,
         slant_side,
         target_runw):
