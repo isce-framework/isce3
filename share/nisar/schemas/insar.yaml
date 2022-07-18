@@ -712,14 +712,20 @@ dem_download_options:
         y: num(required=False)
 
 geocode_options:
-    # Required for geocode standalone
+    # Required for geocode standalone of RUNW
     runw_path: str(required=False)
+
+    # Required for geocode standalone of ROFF
+    roff_path: str(required=False)
 
     # DEM interpolation method. BILINEAR is default.
     interp_method: enum('BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
 
     # Rasters in RUNW to geocode
-    datasets: include('gunw_datasets', required=False)
+    gunw_datasets: include('gunw_datasets', required=False)
+
+    # Rasters in ROFF to geocode
+    goff_datasets: include('goff_datasets', required=False)
 
     # Same as input DEM if not provided.
     output_epsg: int(min=1024, max=32767, required=False)
@@ -764,6 +770,15 @@ gunw_datasets:
     layover_shadow_mask: bool(required=False)
     along_track_offset: bool(required=False)
     slant_range_offset: bool(required=False)
+
+goff_datasets:
+    along_track_offset: bool(required=False)
+    along_track_offset_variance: bool(required=False)
+    correlation_surface_peak: bool(required=False)
+    cross_offset_variance: bool(required=False)
+    slant_range_offset: bool(required=False)
+    slant_range_offset_variance: bool(required=False)
+    snr: bool(required=False)
 
 worker_options:
     # Enable/disable internet connection (e.g. for download DEM)

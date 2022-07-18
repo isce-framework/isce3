@@ -272,6 +272,10 @@ runconfig:
                 lines_per_block: 1000
                 # Margin round ref RSLC edges to exclude during cross-correlation
                 margin: 0
+                # Number of lines of offset raster
+                offset_length:
+                # Number of samples of offset raster
+                offset_width:
                 # Skip window along range
                 skip_range: 15
                 # Skip window along azimuth
@@ -309,6 +313,14 @@ runconfig:
                 windows_batch_range: 10
                 # Number of windows in azimuth to process in batch
                 windows_batch_azimuth: 5
+                # First layer of offsets (same as dense_offsets params)
+                layer1:
+                    window_range: 64
+                    window_azimuth: 64
+                    half_search_range: 16
+                    half_search_azimuth: 16
+                    skip_range: 15
+                    skip_azimuth: 15
 
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).
