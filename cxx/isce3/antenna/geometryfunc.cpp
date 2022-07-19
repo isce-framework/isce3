@@ -22,7 +22,7 @@ using VecXd = Eigen::VectorXd;
  * @param[in] az_phi : either azimuth or phi angle in radians depending
  * on the "frame" object.
  * @param[in] pos_ecef : antenna/spacecraft position in ECEF (m,m,m)
- * @param[in] vel_ecef : spacecraft velocity scaled by -2/wavalength in
+ * @param[in] vel_ecef : spacecraft velocity scaled by 2/wavalength in
  * ECEF (m/s,m/s,m/s)
  * @param[in] quat : isce3 quaternion object for transformation from antenna
  * body-fixed to ECEF
@@ -75,7 +75,7 @@ std::tuple<double, double, bool> ant::ant2rgdop(double el_theta, double az_phi,
         throw isce3::except::InvalidArgument(
                 ISCE_SRCINFO(), "Bad value for wavelength!");
 
-    const auto vel_ecef_cst = (-2. / wavelength) * vel_ecef;
+    const auto vel_ecef_cst = (2. / wavelength) * vel_ecef;
 
     return _get_sr_dop_conv(el_theta, az_phi, pos_ecef, vel_ecef_cst, quat,
             dem_interp, abs_tol, max_iter, frame, ellips);
@@ -93,7 +93,7 @@ std::tuple<VecXd, VecXd, bool> ant::ant2rgdop(
                 ISCE_SRCINFO(), "Bad value for wavelength!");
 
     // initialization and vector allocations
-    const auto vel_ecef_cst = (-2. / wavelength) * vel_ecef;
+    const auto vel_ecef_cst = (2. / wavelength) * vel_ecef;
     auto ang_size = el_theta.size();
     VecXd slantrange(ang_size);
     VecXd doppler(ang_size);

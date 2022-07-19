@@ -72,7 +72,7 @@ class TestDopplerLutFromRaw:
     # TxRx Polarization of the echo product
     txrx_pol = 'HH'
 
-    # frequency band ''A or 'B'
+    # frequency band 'A' or 'B'
     freq_band = 'A'
 
     # abosulte MSE tolerance in Doppler centroid estimation in (Hz)
@@ -97,9 +97,9 @@ class TestDopplerLutFromRaw:
     # get ISCE3 Raw object from L0B file
     raw_obj = open_rrsd(os.path.join(iscetest.data, filename))
 
-    # get number of bad values for thwe first range line
+    # get number of bad values for the first range line
     dset = raw_obj.getRawDataset(freq_band, txrx_pol)[0]
-    num_bad_vals = np.where(np.isnan(dset))[0].size
+    num_bad_vals = np.sum(np.isnan(dset) | np.isclose(dset, 0))
 
     # get ref epoch and mid azimuth pulse time of the echo
     ref_epoch, az_tm = raw_obj.getPulseTimes(freq_band, txrx_pol[0])

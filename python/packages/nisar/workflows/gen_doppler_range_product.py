@@ -10,9 +10,11 @@ from datetime import datetime
 
 from nisar.workflows import doppler_lut_from_raw
 from nisar.workflows.doppler_lut_from_raw import set_logger
-from nisar.products.readers.Raw import open_rrsd
+from nisar.products.readers.Raw import Raw
 from isce3.core import TimeDelta, Linspace
 from nisar.products.readers.antenna import AntennaParser
+from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.readers.attitude import load_attitude_from_xml
 
 
 def cmd_line_parser():
@@ -36,10 +38,11 @@ def cmd_line_parser():
     )
     prs.add_argument('filename_l0b', type=str,
                      help='Filename of HDF5 L0B product')
-    prs.add_argument('-antenna_file', type=str, dest='antenna_file',
+    prs.add_argument('--antenna_file', type=str, dest='antenna_file',
                      help='Filename of HDF5 Antenna product used to extract '
                      'averaged azimuth angle for EL cuts of TX + RX pol of '
-                     'first beam. If not provided, the azimuth angle is '
+                     'first beam. It also uses for Doppler ambiguity '
+                     'calculation. If not provided, the azimuth angle is '
                      'assumed to be zero!')
     prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
                      dest='freq_band', help='Frequency band such as "A".')
@@ -76,6 +79,14 @@ def cmd_line_parser():
     prs.add_argument('-o', '--out', type=str, dest='out_path', default='.',
                      help='Output directory to dump Doppler product as well as'
                      'PNG plots.')
+    prs.add_argument('--orbit', type=str, dest='orbit_file',
+                     help='Filename of an external orbit XML file. The orbit '
+                     'data will be used in place of those in L0B. Default is '
+                     'orbit data stored in L0B.')
+    prs.add_argument('--attitude', type=str, dest='attitude_file',
+                     help='Filename of an external attitude XML '
+                     'file. The attitude data will be used in place of those '
+                     'in L0B. Default is attitude data stored in L0B.')
 
     return prs.parse_args()
 
@@ -107,12 +118,8 @@ def gen_doppler_range_product(args):
     # set logger
     logger = set_logger("DopplerRangeProduct")
 
-    # get keyword args for function "doppler_lut_from_raw"
-    kwargs = {key: val for key, val in args.__dict__.items() if
-              'file' not in key}
-
     # get Raw object
-    raw_obj = open_rrsd(args.filename_l0b)
+    raw_obj = Raw(hdf5file=args.filename_l0b)
     # get the SAR band char
     sar_band_char = raw_obj.sarBand
     logger.info(f'SAR band char -> {sar_band_char}')
@@ -122,13 +129,37 @@ def gen_doppler_range_product(args):
     # currently, the nunderlying module simply support DBF or single channel
     op_mode = 'DBF'
 
+    # build orbit and attitude object if external files are provided
+    if args.orbit_file is None:
+        orbit = None
+    else:
+        logger.info('Parsing external orbit XML file')
+        orbit = load_orbit_from_xml(args.orbit_file)
+
+    if args.attitude_file is None:
+        attitude = None
+    else:
+        logger.info('Parsing external attitude XML file')
+        attitude = load_attitude_from_xml(args.attitude_file)
+
+    # build antenna object if provided
+    if args.antenna_file is None:
+        ant = None
+    else:
+        ant = AntennaParser(args.antenna_file)
+
+    # get keyword args for function "doppler_lut_from_raw"
+    kwargs = {key: val for key, val in vars(args).items() if
+              'file' not in key}
+
     # generate Doppler LUT2d from Raw L0B
     dop_lut, ref_utc, mask_rgb, corr_coef, txrx_pol, centerfreq, _ = \
-        doppler_lut_from_raw(raw_obj, logger=logger, **kwargs)
+        doppler_lut_from_raw(raw_obj, orbit=orbit, attitude=attitude,
+                             ant=ant, logger=logger,  **kwargs)
 
-    # check out antenna file to extract azimuth angle for EL cuts used for
+    # check out antenna object to extract azimuth angle for EL cuts used for
     # Doppler CSV product
-    if args.antenna_file is None:
+    if ant is None:
         az_ang_deg = 0.0
         logger.warning(
             'No antenna file! Azimuth angle for Doppler product is '
@@ -137,14 +168,18 @@ def gen_doppler_range_product(args):
     else:
         logger.info(
             'Extracting the azimuth angle of EL cuts from antenna file.')
-        ant_obj = AntennaParser(args.antenna_file)
 
-        ant_tx = ant_obj.el_cut(pol=txrx_pol[0])
-        az_ang = ant_tx.cut_angle
-        # if RX pol is different from TX pol then take average of both
+        ant_rx = ant.el_cut(pol=txrx_pol[1])
+        az_ang = ant_rx.cut_angle
+        # if TX pol is different from RX pol then take average of both
         if txrx_pol[0] != txrx_pol[1]:
-            ant_rx = ant_obj.el_cut(pol=txrx_pol[1])
-            az_ang += ant_rx.cut_angle
+            # To cover TX L/R circular pol, the following condition is needed
+            if txrx_pol[1] == 'H':
+                tx_pol = 'V'
+            else:
+                tx_pol = 'H'
+            ant_tx = ant.el_cut(pol=tx_pol)
+            az_ang += ant_tx.cut_angle
             az_ang *= 0.5
         az_ang_deg = np.rad2deg(az_ang)
         logger.info(
@@ -186,7 +221,7 @@ def gen_doppler_range_product(args):
                         tm_utc_str, centerfreq, dop_lut.data[i_row, i_col],
                         sr, az_ang_deg,
                         mask_rgb[i_row, i_col] * corr_coef[i_row, i_col])
-                    )
+                )
 
     # total elapsed time
     logger.info(f'Elapsed time -> {time.time() - tic:.1f} (sec)')
