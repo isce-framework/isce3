@@ -81,7 +81,7 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   That is the same antenna patterns used to generate the respective 4-channel L0B 
   products.
 
-- **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000.h5**
+- **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5**
 
   Truncated version of first pass of repeat-pass four-channel *V*-polarized NISAR-like
   simulated *REE* L0B product over heterogenous urban-like simulated extended scene.
@@ -92,33 +92,25 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   direction used in elevation pointing over heterogenous scene.
   The caltone has been already applied to individual RX channels via RxCal prior to its
   L0B file generation. Thus, RX channels are balanced out.
-  The shape of echo is rangeline-by-rangebin-by-channel!
-  As of 4/18/2022, this is considered an older spec for DM2 (diagnostic mode 2) and simply 
-  kept for the sake of an old unit test.
+  Echo dataset has a shape of channel-by-rangeline-by-rangebin.
+  This dataset is useful to test EL null-range product generation.
 
 - **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5**
 
-  Similar to "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000.h5" with exception of no
+  Similar to "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5" with exception of no
   RxCal (caltone) has been applied. Thus, the RX channels are imbalance!
-  Besides, echo has different shape of channel-by-rangeline-by-rangebin! 
-  The shape of the echo is based on a newly proposed spec for DM2 as of 4/18/2022.
-  This dataset is useful to test generation of EL null-range product with caltone flag.  
-
-- **REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5**
-
-  Calibrated version of "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5" with the
-  same shape. Thus, the RX channels are balanced via applying caltones.  
+  This dataset is useful to test generation of EL null-range product with caltone flag.
 
 - **REE_ORBIT_CHANNEL4_EXTSCENE_PASS1.xml**
 
   External Orbit XML file covering original full version of dataset 
-  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5".
+  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5".
   The format is based on doc JPL D-102253.
 
 - **REE_ATTITUDE_CHANNEL4_EXTSCENE_PASS1.xml**
 
   External Attitude XML file covering original full version of dataset 
-  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5".
+  "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5".
   The format is based on doc JPL D-102253.
 
 - **REE_L0B_DBF_EXTSCENE_PASS1_LINE3000_TRUNCATED.h5**
