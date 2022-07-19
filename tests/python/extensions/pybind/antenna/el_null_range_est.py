@@ -27,7 +27,7 @@ class TestElNullRangeEst:
     # of target reflectivity variations provided decent SNR.
     # The antenna file contains respective four NISAR nominal EL cut
     # patterns used in that REE L0B sim.
-    _l0b_file = "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000.h5"
+    _l0b_file = "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5"
     _ant_file = "REE_ANTPAT_CUTS_BEAM4.h5"
 
     # DEM mean ref used in sim echo L0B
@@ -72,7 +72,7 @@ class TestElNullRangeEst:
 
     # Parse echoes for all channels at once
     echo = _raw_obj.getRawDataset('A', txrx_pol)[:]
-    _, _, num_channel = echo.shape
+    num_channel, _, _, = echo.shape
 
     # check the number of echo channels v.s. that of antenna beams
     if (num_channel < 2):
@@ -265,16 +265,16 @@ Null location')
             # estimate null locations in both Echo and Antenna domain
             tm_null, echo_null, ant_null, flag_null =\
                 el_null_obj.genNullRangeDoppler(
-                    self.echo[:, :, nn], self.echo[:, :, nn+1],
-                    self.beam.copol_pattern[nn, :],
-                    self.beam.copol_pattern[nn+1, :],
+                    self.echo[nn], self.echo[nn+1],
+                    self.beam.copol_pattern[nn],
+                    self.beam.copol_pattern[nn+1],
                     self.sr_start, el_ang_start,
                     el_ang_step, az_ang, self.az_time_mid)
 
             # validate null locations
             self._validate_ant_null_loc(
-                abs(self.beam.copol_pattern[nn, :]),
-                abs(self.beam.copol_pattern[nn+1, :]),
+                abs(self.beam.copol_pattern[nn]),
+                abs(self.beam.copol_pattern[nn+1]),
                 az_ang, el_ang_start, el_ang_step,
                 ant_null, echo_null, tm_null, flag_null,
                 err_msg=f' for null # {nn} and {nn+1}')

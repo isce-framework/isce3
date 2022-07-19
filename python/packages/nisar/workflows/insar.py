@@ -77,6 +77,9 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['geocode'] and 'GUNW' in out_paths:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
 
+    if run_steps['geocode'] and 'GOFF' in out_paths:
+        geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], is_goff=True)
+
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran INSAR in {t_all_elapsed:.3f} seconds")
 
