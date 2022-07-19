@@ -226,7 +226,8 @@ def filter_data_with_sig(
         sig_kernel_x,
         sig_kernel_y,
         mask_array=None):
-    """
+    """ Filter input array by applying weighting 
+    based on the statndard deviations
     Parameters
     ----------
     input_array : numpy.ndarray

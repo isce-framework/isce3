@@ -82,7 +82,6 @@ class IonosphereEstimation:
             number_looks=looks,
             resample_flag=False)
 
-        median_filter_size = median_filter_size
         mask_array = np.abs(disp - median_filter(disp,
             median_filter_size)) < 3 * std_iono
 
