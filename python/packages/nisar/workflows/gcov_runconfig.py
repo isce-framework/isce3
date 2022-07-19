@@ -1,6 +1,5 @@
-import numpy as np
-
 import journal
+import numpy as np
 
 import isce3
 from nisar.workflows.runconfig import RunConfig
@@ -35,13 +34,13 @@ class GCOVRunConfig(RunConfig):
             geocode_dict['geogrid_upsampling'] = 1.0
 
         if geocode_dict['memory_mode'] == 'single_block':
-            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.SINGLE_BLOCK
+            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.SingleBlock
         elif geocode_dict['memory_mode'] == 'geogrid':
-            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID
+            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.BlocksGeogrid
         elif geocode_dict['memory_mode'] == 'geogrid_and_radargrid':
-            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID
+            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.BlocksGeogridAndRadarGrid
         elif geocode_dict['memory_mode'] == 'auto' or (geocode_dict['memory_mode'] is None):
-            geocode_dict['memory_mode'] = isce3.geocode.GeocodeMemoryMode.AUTO
+            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.Auto
         else:
             err_msg = f"ERROR memory_mode: {geocode_dict['memory_mode']}"
             raise ValueError(err_msg)

@@ -6,11 +6,13 @@ import h5py
 import isce3
 import numpy
 import os
+from warnings import warn
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
 from nisar.antenna.antenna_pattern import CalPath
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.Raw.Raw import get_rcs2body
 from nisar.workflows.focus import make_doppler_lut
+from isce3.core import speed_of_light
 
 def cmdLineParse():
     '''
@@ -284,10 +286,7 @@ def getNominalSpacing(prf, dr, orbit, look_angle, i=0):
 def addImagery(h5file, ldr, imgfile, pol):
     '''
     Populate swaths segment of HDF5 file.
-    '''
-
-    #Speed of light - expose in isce3
-    SOL = 299792458.0
+    ''' 
 
     fid = h5py.File(h5file, 'r+')
     assert(len(pol) == 2)
@@ -303,7 +302,10 @@ def addImagery(h5file, ldr, imgfile, pol):
     #Range related parameters
     fsamp = ldr.summary.SamplingRateInMHz * 1.0e6
     r0 = firstrec.SlantRangeToFirstSampleInm
-    dr = SOL / (2 * fsamp)
+    dwp_delay = 2 * r0 / speed_of_light
+    print('RX data window position of the first record -> '
+          f'{dwp_delay * 1e3:.4f} (msec)')
+    dr = speed_of_light / (2 * fsamp)
     nPixels = image.description.NumberOfBytesOfSARDataPerRecord // image.description.NumberOfSamplesPerDataGroup
     nLines = image.description.NumberOfSARDataRecords
 
@@ -318,7 +320,7 @@ def addImagery(h5file, ldr, imgfile, pol):
     if freqA not in fid:
         freqA = fid.create_group(freqA)
         freqA.create_dataset("listOfTxPolarizations", data=numpy.string_([txP]),
-            maxshape=2)
+            maxshape=(2,))
     else:
         freqA = fid[freqA]
 
@@ -342,7 +344,7 @@ def addImagery(h5file, ldr, imgfile, pol):
         txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
         txgrp.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(nLines,2))
-        txgrp.create_dataset('centerFrequency', data=SOL / (ldr.summary.RadarWavelengthInm))
+        txgrp.create_dataset('centerFrequency', data=speed_of_light / (ldr.summary.RadarWavelengthInm))
         txgrp.create_dataset('rangeBandwidth', data=ldr.calibration.header.BandwidthInMHz * 1.0e6)
         txgrp.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
         txgrp.create_dataset('chirpSlope', data=-((txgrp['rangeBandwidth'][()])/(txgrp['chirpDuration'][()])))
@@ -382,15 +384,17 @@ def addImagery(h5file, ldr, imgfile, pol):
     lut[-2**15:] -= 2**16
     assert ldr.summary.DCBiasIComponent == ldr.summary.DCBiasQComponent
     lut -= ldr.summary.DCBiasIComponent
-    BAD_VALUE = -2**15
-    lut[BAD_VALUE] = numpy.nan
+    BAD_VALUE = 2**15
+    lut[BAD_VALUE] = 0
     rxlut = fid.create_dataset(os.path.join(rximgstr, 'BFPQLUT'), data=lut)
 
 
     #Create imagery layer
     compress = dict(chunks=(4, 512), compression="gzip", compression_opts=9, shuffle=True)
-    cpxtype = numpy.dtype([('r', numpy.int16), ('i', numpy.int16)])
+    cpxtype = numpy.dtype([('r', numpy.uint16), ('i', numpy.uint16)])
     rximg = fid.create_dataset(os.path.join(rximgstr, pol), dtype=cpxtype, shape=(nLines,nPixels), **compress)
+    # Per http://cfconventions.org/Data/cf-conventions/cf-conventions-1.9/cf-conventions.html#missing-data
+    rximg.attrs['_FillValue'] = BAD_VALUE
 
     ##Start populating the imagery
 
@@ -400,15 +404,16 @@ def addImagery(h5file, ldr, imgfile, pol):
             print('Parsing Line number: {0} out of {1}'.format(linnum, nLines))
 
         if firstInPol:
-            txgrp['UTCtime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
+            tx_radar_time = rec.SensorAcquisitionmsecsOfDay * 1.0e-3 - dwp_delay 
+            txgrp['UTCtime'][linnum-1] = tx_radar_time
             txgrp['rangeLineIndex'][linnum-1] = rec.SARImageDataLineNumber
-            txgrp['radarTime'][linnum-1] = rec.SensorAcquisitionmsecsOfDay * 1.0e-3
+            txgrp['radarTime'][linnum-1] = tx_radar_time
 
         #Adjust range line
         rshift = int(numpy.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
-        write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.int16)
+        write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.uint16)
 
-        inarr = rec.SARRawSignalData[0,:].astype(numpy.int16)
+        inarr = rec.SARRawSignalData[0,:].astype(numpy.uint16)
 
         left = 2 * rec.ActualCountOfLeftFillPixels
         right = 2 * rec.ActualCountOfRightFillPixels
@@ -421,9 +426,12 @@ def addImagery(h5file, ldr, imgfile, pol):
             write_arr[:2*rshift] = inarr[-2*rshift:]
 
         if firstInPol:
+            # check if any samples at the very start of RX window are missing.
             inds = numpy.where(write_arr != BAD_VALUE)[0]
-            if len(inds) > 1:
-                txgrp['validSamplesSubSwath1'][linnum-1] = [inds[0], inds[-1]+1]
+            if (len(inds) > 0 and inds[0] > 0):
+                warn(f'The first {inds[0] // 2} range samples are missing. '
+                      f'They are filled with {BAD_VALUE}!')
+            txgrp['validSamplesSubSwath1'][linnum-1] = [0, nPixels]
 
         #Complex float 16 writes work with write_direct only
         rximg.write_direct(write_arr.view(cpxtype), dest_sel=numpy.s_[linnum-1])

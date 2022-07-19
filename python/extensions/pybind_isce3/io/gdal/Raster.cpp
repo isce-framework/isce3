@@ -102,7 +102,7 @@ void addbinding(py::class_<Raster> & pyRaster)
                 py::arg("access") = GA_ReadOnly)
         .def(py::init([](const std::string & path, char access)
                 {
-                    return std::make_unique<Raster>(path, toGDALAccess(access));
+                    return Raster(path, toGDALAccess(access));
                 }),
                 "Open an existing file containing a single raster band as a GDAL raster",
                 py::arg("path"),
@@ -114,7 +114,7 @@ void addbinding(py::class_<Raster> & pyRaster)
                 py::arg("access") = GA_ReadOnly)
         .def(py::init([](const std::string & path, int band, char access)
                 {
-                    return std::make_unique<Raster>(path, band, toGDALAccess(access));
+                    return Raster(path, band, toGDALAccess(access));
                 }),
                 "Open an existing file as a GDAL dataset and fetch the specified raster band",
                 py::arg("path"),
@@ -129,14 +129,14 @@ void addbinding(py::class_<Raster> & pyRaster)
                 py::arg("driver") = Raster::defaultDriver())
         .def(py::init([](const std::string & path, int width, int length, py::object datatype, const std::string & driver)
                 {
-                    return std::make_unique<Raster>(path, width, length, toGDALDataType(datatype), driver);
+                    return Raster(path, width, length, toGDALDataType(datatype), driver);
                 }),
                 py::arg("path"),
                 py::arg("width"),
                 py::arg("length"),
                 py::arg("datatype"),
                 py::arg("driver") = Raster::defaultDriver())
-        .def(py::init([](py::buffer buf) { return std::make_unique<Raster>(toRaster(buf)); }))
+        .def(py::init([](py::buffer buf) { return toRaster(buf); }), py::keep_alive<1, 2>())
         .def("dataset", py::overload_cast<>(&Raster::dataset, py::const_),
                 "Get the dataset containing the raster")
         .def_property_readonly("band", &Raster::band, "Band index (1-based)")

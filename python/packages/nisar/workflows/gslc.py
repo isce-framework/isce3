@@ -13,6 +13,7 @@ from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.compute_stats import compute_stats_complex_data
+from nisar.products.readers.orbit import load_orbit_from_xml
 
 
 def run(cfg):
@@ -27,6 +28,7 @@ def run(cfg):
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    orbit_file = cfg["dynamic_ancillary_file_group"]['orbit_file']
     threshold_geo2rdr = cfg['processing']['geo2rdr']['threshold']
     iteration_geo2rdr = cfg['processing']['geo2rdr']['maxiter']
     lines_per_block = cfg['processing']['blocksize']['y']
@@ -34,7 +36,13 @@ def run(cfg):
 
     # init parameters shared by frequency A and B
     slc = SLC(hdf5file=input_hdf5)
-    orbit = slc.getOrbit()
+
+    # if provided, load an external orbit from the runconfig file;
+    # othewise, load the orbit from the RSLC metadata
+    if orbit_file is not None:
+        orbit = load_orbit_from_xml(orbit_file)
+    else:
+        orbit = slc.getOrbit()
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)

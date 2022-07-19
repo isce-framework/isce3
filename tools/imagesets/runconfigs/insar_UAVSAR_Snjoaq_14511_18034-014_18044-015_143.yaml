@@ -87,9 +87,10 @@ runconfig:
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 25
+                lines_per_block: 1000
 
-            blocksize:
-                y: 1000
+            rdr2geo:
+                lines_per_block: 1000
 
             coarse_resample:
                 lines_per_tile: 100

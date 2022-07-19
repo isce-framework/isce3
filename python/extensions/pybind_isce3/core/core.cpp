@@ -2,6 +2,7 @@
 
 #include "Attitude.h"
 #include "Basis.h"
+#include "blockProcessing.h"
 #include "Constants.h"
 #include "DateTime.h"
 #include "Ellipsoid.h"
@@ -83,6 +84,7 @@ void addsubmodule_core(py::module & m)
     add_constants(m_core);
     addbinding(pyAttitude);
     addbinding(pyBasis);
+    addbinding_block_processing(m_core);
     addbinding_basis(m_core);
     addbinding(pyDateTime);
     addbinding(pyEllipsoid);

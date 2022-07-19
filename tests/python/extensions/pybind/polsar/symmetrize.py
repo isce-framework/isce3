@@ -36,8 +36,8 @@ def test_run():
     band = 1
     dtype = gdal.GDT_CFloat32
     memory_mode_list = [
-        isce3.core.memory_mode_block_y.SingleBlockY,
-        isce3.core.memory_mode_block_y.MultipleBlocksY] 
+        isce3.core.MemoryModeBlocksY.SingleBlockY,
+        isce3.core.MemoryModeBlocksY.MultipleBlocksY] 
     symmetrization_error_threshold = 1e-6
    
     # set file paths

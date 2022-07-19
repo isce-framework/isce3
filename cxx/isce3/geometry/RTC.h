@@ -10,6 +10,7 @@
 #include <pyre/journal.h>
 
 #include <isce3/core/Constants.h>
+#include <isce3/core/blockProcessing.h>
 #include <isce3/error/ErrorCode.h>
 
 namespace isce3 { namespace geometry {
@@ -29,9 +30,6 @@ enum rtcOutputTerrainRadiometry {
     SIGMA_NAUGHT = 0,
     GAMMA_NAUGHT = 1,
 };
-
-constexpr static int AP_DEFAULT_MIN_BLOCK_SIZE = 1 << 22;       // 4MB
-constexpr static long long AP_DEFAULT_MAX_BLOCK_SIZE = 1 << 28; // 256MB
 
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
 enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
@@ -90,8 +88,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
         float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
         isce3::io::Raster* input_rtc = nullptr,
         isce3::io::Raster* output_rtc = nullptr,
-        isce3::core::MemoryModeBlockY rtc_memory_mode =
-                isce3::core::MemoryModeBlockY::AutoBlocksY);
+        isce3::core::MemoryModeBlocksY rtc_memory_mode = 
+                isce3::core::MemoryModeBlocksY::AutoBlocksY);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor
@@ -129,8 +127,8 @@ void computeRtc(isce3::product::RadarGridProduct& product,
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         size_t nlooks_az = 1, size_t nlooks_rg = 1,
         isce3::io::Raster* out_nlooks = nullptr,
-        isce3::core::MemoryModeBlockY rtc_memory_mode =
-                isce3::core::MemoryModeBlockY::AutoBlocksY);
+        isce3::core::MemoryModeBlocksY rtc_memory_mode = 
+                isce3::core::MemoryModeBlocksY::AutoBlocksY);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor
@@ -159,6 +157,8 @@ void computeRtc(isce3::product::RadarGridProduct& product,
  * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
  * @param[in]  delta_range         Step size used for computing derivative of
  * doppler
+ * @param[in]  min_block_size       Minimum block size (per thread)
+ * @param[in]  max_block_size       Maximum block size (per thread)
  * */
 void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit, const isce3::core::LUT2d<double>& dop,
@@ -172,11 +172,13 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
-        isce3::core::MemoryModeBlockY rtc_memory_mode =
-                isce3::core::MemoryModeBlockY::AutoBlocksY,
+        isce3::core::MemoryModeBlocksY rtc_memory_mode = 
+                isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8,
+        const long long min_block_size = isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+        const long long max_block_size = isce3::core::DEFAULT_MAX_BLOCK_SIZE);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor
@@ -218,6 +220,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  num_iter            Maximum number of Newton-Raphson iterations
  * @param[in]  delta_range         Step size used for computing derivative of
  * doppler
+ * @param[in]  min_block_size       Minimum block size (per thread)
+ * @param[in]  max_block_size       Maximum block size (per thread)
  * */
 void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         const isce3::product::RadarGridParameters& radarGrid,
@@ -235,11 +239,13 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_nlooks = nullptr,
-        isce3::core::MemoryModeBlockY rtc_memory_mode =
-                isce3::core::MemoryModeBlockY::AutoBlocksY,
+        isce3::core::MemoryModeBlocksY rtc_memory_mode = 
+                isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8,
+        const long long min_block_size = isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+        const long long max_block_size = isce3::core::DEFAULT_MAX_BLOCK_SIZE);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor using the Bilinear Distribution (D. Small) algorithm @cite small2011.
@@ -305,6 +311,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * @param[in] num_iter             Maximum number of Newton-Raphson iterations
  * @param[in] delta_range          Step size used for computing derivative of
  * doppler
+ * @param[in]  min_block_size       Minimum block size (per thread)
+ * @param[in]  max_block_size       Maximum block size (per thread)
  * */
 void computeRtcAreaProj(isce3::io::Raster& dem,
         isce3::io::Raster& output_raster,
@@ -321,53 +329,22 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
         isce3::io::Raster* out_nlooks = nullptr,
-        isce3::core::MemoryModeBlockY rtc_memory_mode =
-                isce3::core::MemoryModeBlockY::AutoBlocksY,
+        isce3::core::MemoryModeBlocksY rtc_memory_mode = 
+                isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
                 isce3::core::dataInterpMethod::BIQUINTIC_METHOD,
-        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8);
+        double threshold = 1e-8, int num_iter = 100, double delta_range = 1e-8,
+        const long long min_block_size = isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+        const long long max_block_size = isce3::core::DEFAULT_MAX_BLOCK_SIZE);
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
         int length, int width, isce3::core::Matrix<double>& w_arr,
         double& w_total, int plane_orientation);
 
-std::string getNbytesStr(long long nbytes);
-
-/** Set the block size (in X and Y) to be processed by each thread
- *
- * @param[in]  array_length        Length of the data to be processed
- * @param[in]  array_width         Width of the data to be processed
- * @param[in]  nbands              Number of the bands to be processed
- * @param[in]  type_size           Type size of the data to be processed
- * @param[in]  channel             Pyre info channel
- * @param[in]  upsampling          Data upsampling
- * @param[out] block_length_with_upsampling Upsampled block length
- * @param[out] block_length                 Block length
- * @param[out] nblock_y                     Number of blocks in the Y direction
- * @param[out] block_width_with_upsampling  Upsampled block width
- * @param[out] block_width                  Block width
- * @param[out] nblock_x                     Number of blocks in the X direction
- * @param[in]  min_block_size               Minimum block size in Bytes (per
- * thread)
- * @param[in]  max_block_size               Maximum block size in Bytes (per
- * thread)
- * @param[in]  nblocks_per_thread           Target number of blocks per thread
- */
-void areaProjGetNBlocks(const int array_length, const int array_width,
-        const int nbands = 1,
-        const size_t type_size = 4, // Float32
-        pyre::journal::info_t* channel = nullptr, const double upsampling = 1,
-        int* block_length_with_upsampling = nullptr,
-        int* block_length = nullptr, int* nblock_y = nullptr,
-        int* block_width_with_upsampling = nullptr, int* block_width = nullptr,
-        int* nblock_x = nullptr,
-        const int min_block_size = AP_DEFAULT_MIN_BLOCK_SIZE,
-        const long long max_block_size = AP_DEFAULT_MAX_BLOCK_SIZE,
-        const int nblocks_per_thread = 4);
-
-double computeUpsamplingFactor(const DEMInterpolator& dem_interp,
-        const isce3::product::RadarGridParameters& radar_grid,
-        const isce3::core::Ellipsoid& ellps);
+double
+computeUpsamplingFactor(const DEMInterpolator& dem_interp,
+                        const isce3::product::RadarGridParameters& radar_grid,
+                        const isce3::core::Ellipsoid& ellps);
 
 double computeFacet(isce3::core::Vec3 xyz_center, isce3::core::Vec3 xyz_left,
         isce3::core::Vec3 xyz_right, isce3::core::Vec3 target_to_sensor_xyz,

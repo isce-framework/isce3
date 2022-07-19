@@ -14,6 +14,7 @@ import journal
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
+from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_insar_runconfig import \
@@ -21,17 +22,19 @@ from nisar.workflows.geocode_insar_runconfig import \
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
 
-def run(cfg, runw_hdf5, output_hdf5):
+def run(cfg, input_hdf5, output_hdf5, is_goff=False):
     """ Run geocode insar on user specified hardware
 
     Parameters
     ----------
     cfg : dict
         Dictionary containing run configuration
-    runw_hdf5 : str
-        Path input RUNW HDF5
+    input_hdf5 : str
+        Path input RUNW or ROFF HDF5
     output_hdf5 : str
-        Path to output GUNW HDF5
+        Path to output GUNW or GOFF HDF5
+    is_goff: bool
+        Flag indicating to geocode GOFF
     """
     use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
                                            cfg['worker']['gpu_id'])
@@ -39,9 +42,9 @@ def run(cfg, runw_hdf5, output_hdf5):
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
-        gpu_run(cfg, runw_hdf5, output_hdf5)
+        gpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
     else:
-        cpu_run(cfg, runw_hdf5, output_hdf5)
+        cpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
 
 
 def get_shadow_input_output(scratch_path, freq, dst_freq_path):
@@ -63,7 +66,7 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     dataset_path : str
         HDF5 path to geocoded shadow layover dataset
     """
-    raster_ref = scratch_path / 'rdr2geo' / f'freq{freq}' / 'layoverShadowMask.rdr'
+    raster_ref =f'{str(scratch_path)}/rdr2geo/freq{freq}/layoverShadowMask.rdr'
     input_raster = isce3.io.Raster(str(raster_ref))
 
     # access the HDF5 dataset for layover shadow mask
@@ -72,8 +75,8 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     return input_raster, dataset_path
 
 
-def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5,
-                        dataset_name):
+def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
+                        dataset_name, off_layer=None, is_goff=False):
     """ Create input raster object and output dataset path for datasets outside
 
     Parameters
@@ -84,10 +87,12 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5,
         HDF5 path to input frequency group of output dataset
     pol : str
         Polarity of input dataset
-    runw_hdf5 : str
-        Path to input RUNW HDF5
+    input_hdf5 : str
+        Path to input RUNW or ROFF HDF5
     dataset_name : str
         Name of dataset to be geocoded
+    is_goff: str
+        Flag to geocode ROFF layers
 
     Returns
     -------
@@ -97,15 +102,20 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5,
         HDF5 path to geocoded shadow layover dataset
     """
 
-    if dataset_name in ['alongTrackOffset', 'slantRangeOffset']:
+    if dataset_name in ['alongTrackOffset', 'slantRangeOffset'] and not is_goff:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}'
     else:
         src_group_path = f'{src_freq_path}/interferogram/{pol}'
         dst_group_path = f'{dst_freq_path}/interferogram/{pol}'
 
+    if is_goff:
+        src_group_path = f'{src_freq_path}/pixelOffsets/{pol}/{off_layer}'
+        dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}/{off_layer}'
+
+
     # prepare input raster
-    input_raster_str = (f"HDF5:{runw_hdf5}:/{src_group_path}/{dataset_name}")
+    input_raster_str = (f"HDF5:{input_hdf5}:/{src_group_path}/{dataset_name}")
     input_raster = isce3.io.Raster(input_raster_str)
 
     # access the HDF5 dataset for a given frequency and pol
@@ -114,7 +124,7 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, runw_hdf5,
     return input_raster, dataset_path
 
 
-def get_offset_radar_grid(offset_cfg, radar_grid_slc):
+def get_offset_radar_grid(offset_cfg, radar_grid_slc, is_goff=False):
     ''' Create radar grid object for offset datasets
 
     Parameters
@@ -123,31 +133,69 @@ def get_offset_radar_grid(offset_cfg, radar_grid_slc):
         Dictionary containing offset run configuration
     radar_grid_slc : SLC
         Object containing SLC properties
+    is_goff: bool
+        Flag to geocode ROFF
     '''
     # Define margin used during dense offsets execution
+    error_channel = journal.error('geocode_insar.get_offset_radar_grid')
     margin = max(offset_cfg['margin'],
                  offset_cfg['gross_offset_range'],
                  offset_cfg['gross_offset_azimuth'])
+    rg_start = offset_cfg['start_pixel_range']
+    az_start = offset_cfg['start_pixel_azimuth']
+    off_length = offset_cfg['offset_length']
+    off_width = offset_cfg['offset_width']
+
+    if is_goff:
+        az_search = np.inf
+        rg_search = np.inf
+        az_window = np.inf
+        rg_window = np.inf
+        layer_keys = [key for key in offset_cfg if key.startswith('layer')]
+        if not layer_keys:
+            err_str = 'No offset layer found'
+            error_channel.log(err_str)
+            raise KeyError(err_str)
+        # Extract search/chip windows per layer; default to inf if not found
+        for key in layer_keys:
+            az_search = min(offset_cfg[key].get('half_search_azimuth', np.inf),
+                            az_search)
+            rg_search = min(offset_cfg[key].get('half_search_range', np.inf),
+                            rg_search)
+            az_window = min(offset_cfg[key].get('window_azimuth', np.inf),
+                            az_window)
+            rg_window = min(offset_cfg[key].get('window_range', np.inf),
+                            rg_window)
+        # Check if any value is Inf and raise exception
+        if np.inf in [az_search, rg_search, az_window, rg_window]:
+            err_str = "Half search or chip window is Inf"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+    else:
+        az_search = offset_cfg['half_search_azimuth']
+        rg_search = offset_cfg['half_search_range']
+        az_window = offset_cfg['window_azimuth']
+        rg_window = offset_cfg['window_range']
 
     # If not allocated, determine shape of the offsets
-    if offset_cfg['offset_length'] is None:
-        length_margin = 2 * margin + 2 * offset_cfg[
-            'half_search_azimuth'] + \
-                        offset_cfg['window_azimuth']
-        offset_cfg['offset_length'] = (radar_grid_slc.length - length_margin
-                                       ) // offset_cfg['skip_azimuth']
-    if offset_cfg['offset_width'] is None:
-        width_margin = 2 * margin + 2 * offset_cfg[
-            'half_search_range'] + \
-                       offset_cfg['window_range']
-        offset_cfg['offset_width'] = (radar_grid_slc.width -
-                                      width_margin) // offset_cfg['skip_azimuth']
+    if off_length is None:
+        length_margin = 2 * margin + 2 * az_search + az_window
+        off_length = (radar_grid_slc.length - length_margin) \
+                     // offset_cfg['skip_azimuth']
+    if off_width is None:
+        width_margin = 2 * margin + 2 * rg_search + rg_window
+        off_width = (radar_grid_slc.width - width_margin) // \
+                    offset_cfg['skip_azimuth']
     # Determine the starting range and sensing start for the offset radar grid
+    if rg_start is None:
+        rg_start = margin + rg_search
+    if az_start is None:
+        az_start = margin + az_search
     offset_starting_range = radar_grid_slc.starting_range + \
-                            (offset_cfg['start_pixel_range'] + offset_cfg['window_range']//2)\
+                            (rg_start + rg_window//2)\
                             * radar_grid_slc.range_pixel_spacing
     offset_sensing_start = radar_grid_slc.sensing_start + \
-                           (offset_cfg['start_pixel_azimuth'] + offset_cfg['window_azimuth']//2)\
+                           (az_start + az_window//2)\
                            / radar_grid_slc.prf
     # Range spacing for offsets
     offset_range_spacing = radar_grid_slc.range_pixel_spacing * offset_cfg['skip_range']
@@ -160,8 +208,8 @@ def get_offset_radar_grid(offset_cfg, radar_grid_slc):
                                                    offset_starting_range,
                                                    offset_range_spacing,
                                                    radar_grid_slc.lookside,
-                                                   offset_cfg['offset_length'],
-                                                   offset_cfg['offset_width'],
+                                                   off_length,
+                                                   off_width,
                                                    radar_grid_slc.ref_epoch)
     return radar_grid
 
@@ -221,14 +269,14 @@ def _snake_to_camel_case(snake_case_str):
     return (splitted_snake_case_str[0] +
             ''.join(w.title() for w in splitted_snake_case_str[1:]))
 
-def get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
-                     scratch_path=''):
+def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
+                     off_layer_dict=None, scratch_path='', is_goff=False):
     '''
     Geocode rasters with a shared geogrid.
 
     Parameters
     ----------
-    gunw_datasets : dict
+    geo_datasets : dict
         Dict of all dataset names and whether or not to geocode as key/value
     desired : list
         List of dataset names to be geocoded for ?
@@ -236,8 +284,8 @@ def get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
         Frequency of datasets to be geocoded
     pol_list : list
         List of polarizations of frequency to be geocoded
-    runw_hdf5: str
-        Path to input RUNW HDF5
+    input_hdf5: str
+        Path to input RUNW or ROFF HDF5
     dst_h5 : h5py.File
         h5py.File object where geocoded data is to be written
     scratch_path : str
@@ -248,53 +296,67 @@ def get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
     '''
     get_ds_names = lambda ds_dict, desired: [
         x for x, y in ds_dict.items() if y and x in desired]
-
-    src_freq_path = f"/science/LSAR/RUNW/swaths/frequency{freq}"
-    dst_freq_path = f"/science/LSAR/GUNW/grids/frequency{freq}"
+    product = 'OFF' if is_goff else 'UNW'
+    src_freq_path = f"/science/LSAR/R{product}/swaths/frequency{freq}"
+    dst_freq_path = f"/science/LSAR/G{product}/grids/frequency{freq}"
 
     input_rasters = []
     geocoded_rasters = []
     geocoded_datasets = []
 
     skip_layover_shadow = False
-    ds_names = [x for x, y in gunw_datasets.items() if y and x in desired]
+    ds_names = [x for x, y in geo_datasets.items() if y and x in desired]
     for ds_name in ds_names:
         for pol in pol_list:
-            if  skip_layover_shadow:
+            if skip_layover_shadow:
                 continue
-
-            if ds_name  == "layover_shadow_mask":
-                input_raster, out_ds_path = get_shadow_input_output(
+            input_raster = []
+            out_ds_path = []
+            if ds_name == "layover_shadow_mask":
+                raster, path = get_shadow_input_output(
                     scratch_path, freq, dst_freq_path)
                 skip_layover_shadow = True
+                input_raster.append(raster)
+                out_ds_path.append(path)
+            elif is_goff:
+                ds_name_camel_case = _snake_to_camel_case(ds_name)
+                for layer in off_layer_dict:
+                    raster, path = get_ds_input_output(src_freq_path,
+                                                       dst_freq_path,
+                                                       pol, input_hdf5, ds_name_camel_case,
+                                                       layer, is_goff=True)
+                    input_raster.append(raster)
+                    out_ds_path.append(path)
             else:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
-                input_raster, out_ds_path = get_ds_input_output(
-                    src_freq_path, dst_freq_path, pol, runw_hdf5, ds_name_camel_case)
+                raster, path = get_ds_input_output(
+                    src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case)
+                input_raster.append(raster)
+                out_ds_path.append(path)
 
-            input_rasters.append(input_raster)
+            for input, path in zip(input_raster, out_ds_path):
+                input_rasters.append(input)
 
-            # Prepare output raster
-            # Access the HDF5 dataset for a given frequency and pol
-            geocoded_dataset = dst_h5[out_ds_path]
-            geocoded_datasets.append(geocoded_dataset)
+                # Prepare output raster access the HDF5 dataset for a given frequency and pol
+                geocoded_dataset = dst_h5[path]
+                geocoded_datasets.append(geocoded_dataset)
 
-            # Construct the output ratster directly from HDF5 dataset
-            geocoded_raster = isce3.io.Raster(
-                f"IH5:::ID={geocoded_dataset.id.id}".encode("utf-8"),
-                update=True)
+                # Construct the output raster directly from HDF5 dataset
+                geocoded_raster = isce3.io.Raster(
+                    f"IH5:::ID={geocoded_dataset.id.id}".encode("utf-8"),
+                    update=True)
 
-            geocoded_rasters.append(geocoded_raster)
+                geocoded_rasters.append(geocoded_raster)
 
     return geocoded_rasters, geocoded_datasets, input_rasters
 
-def cpu_geocode_rasters(cpu_geo_obj, gunw_datasets, desired, freq, pol_list,
-                        runw_hdf5, dst_h5, radar_grid, dem_raster,
-                        scratch_path='', compute_stats=True):
+def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
+                        input_hdf5, dst_h5, radar_grid, dem_raster, off_layer_dict=None,
+                        scratch_path='', compute_stats=True, is_goff=False):
 
     geocoded_rasters, geocoded_datasets, input_rasters = \
-        get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5,
-                         dst_h5, scratch_path)
+        get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
+                         dst_h5, off_layer_dict, scratch_path, is_goff)
 
     if input_rasters:
         geocode_tuples = zip(input_rasters, geocoded_rasters)
@@ -310,32 +372,37 @@ def cpu_geocode_rasters(cpu_geo_obj, gunw_datasets, desired, freq, pol_list,
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
 
-def cpu_run(cfg, runw_hdf5, output_hdf5):
+def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     """ Geocode RUNW products on CPU
 
     Parameters
     ----------
     cfg : dict
         Dictionary containing run configuration
-    runw_hdf5 : str
-        Path input RUNW HDF5
+    input_hdf5 : str
+        Path input RUNW or ROFF HDF5
     output_hdf5 : str
         Path to output GUNW HDF5
+    is_goff: bool
+        Flag indicating to geocode ROFF
     """
     # pull parameters from cfg
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
-    gunw_datasets = cfg["processing"]["geocode"]["datasets"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    offset_cfg = cfg["processing"]["dense_offsets"]
+    offset_cfg = cfg["processing"]["offsets_product"] if is_goff else \
+        cfg["processing"]["dense_offsets"]
+    geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
+        cfg["processing"]["geocode"]["gunw_datasets"]
 
     slc = SLC(hdf5file=ref_hdf5)
 
@@ -355,7 +422,11 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
     geo = isce3.geocode.GeocodeFloat32()
 
     # init geocode members
-    orbit = slc.getOrbit()
+    if ref_orbit is not None:
+        orbit = load_orbit_from_xml(ref_orbit)
+    else:
+        orbit = slc.getOrbit()
+
     geo.orbit = orbit
     geo.ellipsoid = ellipsoid
     geo.doppler = grid_zero_doppler
@@ -388,29 +459,44 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
             else:
                 radar_grid = radar_grid_slc
 
-            desired = ['coherence_magnitude', 'unwrapped_phase']
-            geo.data_interpolator = interp_method
-            cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, radar_grid, dem_raster)
+            if not is_goff:
+                desired = ['coherence_magnitude', 'unwrapped_phase']
+                geo.data_interpolator = interp_method
+                cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, radar_grid, dem_raster)
 
-            desired = ["connected_components"]
-            geo.data_interpolator = 'NEAREST'
-            cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, radar_grid, dem_raster)
+                desired = ["connected_components"]
+                geo.data_interpolator = 'NEAREST'
+                cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, radar_grid, dem_raster)
 
-            desired = ['along_track_offset', 'slant_range_offset']
-            geo.data_interpolator = interp_method
-            radar_grid_offset = get_offset_radar_grid(offset_cfg,
-                                                      radar_grid_slc)
-            cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, radar_grid_offset,
-                                dem_raster)
+                desired = ['along_track_offset', 'slant_range_offset']
+                geo.data_interpolator = interp_method
+                radar_grid_offset = get_offset_radar_grid(offset_cfg,
+                                                          radar_grid_slc)
+                cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, radar_grid_offset,
+                                    dem_raster)
 
-            desired = ["layover_shadow_mask"]
-            geo.data_interpolator = 'NEAREST'
-            cpu_geocode_rasters(geo, gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, radar_grid_slc, dem_raster,
-                                scratch_path, compute_stats=False)
+                desired = ["layover_shadow_mask"]
+                geo.data_interpolator = 'NEAREST'
+                cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, radar_grid_slc, dem_raster,
+                                    scratch_path=scratch_path, compute_stats=False)
+            else:
+                desired = ['along_track_offset', 'slant_range_offset',
+                           'along_track_offset_variance',
+                           'correlation_surface_peak',
+                           'cross_offset_variance', 'slant_range_offset', 'snr']
+                layer_keys = [key for key in offset_cfg.keys() if
+                              key.startswith('layer')]
+                radar_grid = get_offset_radar_grid(offset_cfg,
+                                                   slc.getRadarGrid(freq),
+                                                   is_goff=True)
+                geo.data_interpolator = interp_method
+                cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, radar_grid, dem_raster,
+                                    off_layer_dict=layer_keys, is_goff=True)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
@@ -418,15 +504,14 @@ def cpu_run(cfg, runw_hdf5, output_hdf5):
 
             add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5)
 
-
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
 
-def gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
-                        gpu_geocode_obj, scratch_path='', compute_stats=True):
+def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
+                        gpu_geocode_obj, off_layer_dict=None, scratch_path='', compute_stats=True, is_goff=False):
     geocoded_rasters, geocoded_datasets, input_rasters = \
-        get_raster_lists(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h5,
-                         scratch_path)
+        get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
+                         off_layer_dict, scratch_path, is_goff)
 
     if input_rasters:
         gpu_geocode_obj.geocode_rasters(geocoded_rasters, input_rasters)
@@ -435,17 +520,20 @@ def gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list, runw_hdf5, dst_h
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
 
-def gpu_run(cfg, runw_hdf5, output_hdf5):
+
+def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     """ Geocode RUNW products on GPU
 
     Parameters
     ----------
     cfg : dict
         Dictionary containing run configuration
-    runw_hdf5 : str
-        Path input RUNW HDF5
+    prof_hdf5 : str
+        Path input RUNW or ROFF HDF5
     output_hdf5 : str
         Path to output GUNW HDF5
+    is_goff: bool
+        Flag indicating to geocode ROFF
     """
     t_all = time.time()
 
@@ -456,11 +544,13 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
-    gunw_datasets = cfg["processing"]["geocode"]["datasets"]
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
-    offset_cfg = cfg["processing"]["dense_offsets"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    offset_cfg = cfg["processing"]["offsets_product"] if is_goff else \
+        cfg["processing"]["dense_offsets"]
+    geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
+        cfg["processing"]["geocode"]["gunw_datasets"]
 
     if interp_method == 'BILINEAR':
         interp_method = isce3.core.DataInterpMethod.BILINEAR
@@ -494,83 +584,111 @@ def gpu_run(cfg, runw_hdf5, output_hdf5):
             if az_looks > 1 or rg_looks > 1:
                 # Multilook radar grid if needed
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
+            if not is_goff:
+                desired = ['coherence_magnitude', 'unwrapped_phase']
+                # Create radar grid geometry used by most datasets
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid,
+                                                             slc.getOrbit(),
+                                                             grid_zero_doppler)
 
-            desired = ['coherence_magnitude', 'unwrapped_phase']
-            # Create radar grid geometry used by most datasets
-            rdr_geometry = isce3.container.RadarGeometry(radar_grid,
-                                                         slc.getOrbit(),
-                                                         grid_zero_doppler)
+                # Create geocode object other than offset and shadow layover datasets
+                geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                                         dem_raster,
+                                                         lines_per_block,
+                                                         interp_method,
+                                                         invalid_value=np.nan)
 
-            # Create geocode object other than offset and shadow layover datasets
-            geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                                     dem_raster,
-                                                     lines_per_block,
-                                                     interp_method,
-                                                     invalid_value=np.nan)
+                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_obj)
 
-            gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, geocode_obj)
+                desired = ["connected_components"]
+                '''
+                connected_components raster has type unsigned char and an invalid
+                value of NaN becomes 0 which conflicts with 0 being used to indicate
+                an unmasked value/pixel. 255 is chosen as it is the most distant
+                value from components assigned in ascending order [0, 1, ...)
+                '''
+                geocode_conn_comp_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                                                   dem_raster,
+                                                                   lines_per_block,
+                                                                   isce3.core.DataInterpMethod.NEAREST,
+                                                                   invalid_value=255)
 
-            desired = ["connected_components"]
-            '''
-            connected_components raster has type unsigned char and an invalid
-            value of NaN becomes 0 which conflicts with 0 being used to indicate
-            an unmasked value/pixel. 255 is chosen as it is the most distant
-            value from components assigned in ascending order [0, 1, ...)
-            '''
-            geocode_conn_comp_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                                     dem_raster,
-                                                     lines_per_block,
-                                                     isce3.core.DataInterpMethod.NEAREST,
-                                                     invalid_value=255)
+                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_conn_comp_obj)
 
-            gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, geocode_conn_comp_obj)
+                desired = ['along_track_offset', 'slant_range_offset']
 
-            desired = ['along_track_offset', 'slant_range_offset']
-            # If needed create geocode object for offset datasets
-            # Create offset unique radar grid
-            radar_grid = get_offset_radar_grid(offset_cfg,
-                                               slc.getRadarGrid(freq))
+                # If needed create geocode object for offset datasets
+                # Create offset unique radar grid
+                radar_grid = get_offset_radar_grid(offset_cfg,
+                                                   slc.getRadarGrid(freq))
 
-            # Create radar grid geometry required by offset datasets
-            rdr_geometry = isce3.container.RadarGeometry(radar_grid,
-                                                         slc.getOrbit(),
-                                                         grid_zero_doppler)
+                # Create radar grid geometry required by offset datasets
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid,
+                                                             slc.getOrbit(),
+                                                             grid_zero_doppler)
 
-            geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                            rdr_geometry,
-                                                            dem_raster,
-                                                            lines_per_block,
-                                                            interp_method,
-                                                            invalid_value=np.nan)
+                geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
+                                                                rdr_geometry,
+                                                                dem_raster,
+                                                                lines_per_block,
+                                                                interp_method,
+                                                                invalid_value=np.nan)
+                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_offset_obj)
 
-            gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, geocode_offset_obj)
+                desired = ["layover_shadow_mask"]
+                # If needed create geocode object for shadow layover dataset
+                # Create radar grid geometry required by layover shadow
+                rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),
+                                                             slc.getOrbit(),
+                                                             grid_zero_doppler)
 
-            desired = ["layover_shadow_mask"]
-            # If needed create geocode object for shadow layover dataset
-            # Create radar grid geometry required by layover shadow
-            rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),
-                                                         slc.getOrbit(),
-                                                         grid_zero_doppler)
+                '''
+                layover shadow raster has type char and an invalid
+                value of NaN becomes 0 which conflicts with 0 being used
+                to indicate an unmasked value/pixel. 127 is chosen as it is
+                the most distant value from the allowed set of [0, 1, 2, 3].
+                '''
+                geocode_shadow_obj = isce3.cuda.geocode.Geocode(geogrid,
+                                                                rdr_geometry,
+                                                                dem_raster,
+                                                                lines_per_block,
+                                                                isce3.core.DataInterpMethod.NEAREST,
+                                                                invalid_value=127)
+                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_shadow_obj,
+                                    scratch_path=scratch_path, compute_stats=False)
+            else:
 
-            '''
-            layover shadow raster has type char and an invalid
-            value of NaN becomes 0 which conflicts with 0 being used
-            to indicate an unmasked value/pixel. 127 is chosen as it is
-            the most distant value from the allowed set of [0, 1, 2, 3].
-            '''
-            geocode_shadow_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                            rdr_geometry,
-                                                            dem_raster,
-                                                            lines_per_block,
-                                                            isce3.core.DataInterpMethod.NEAREST,
-                                                            invalid_value=127)
+                desired=['along_track_offset', 'slant_range_offset',
+                         'along_track_offset_variance',
+                         'correlation_surface_peak',
+                         'cross_offset_variance',
+                         'slant_range_offset_variance', 'snr']
+                layer_keys = [key for key in offset_cfg.keys() if
+                              key.startswith('layer')]
 
-            gpu_geocode_rasters(gunw_datasets, desired, freq, pol_list,
-                                runw_hdf5, dst_h5, geocode_shadow_obj, scratch_path,
-                                compute_stats=False)
+                radar_grid = get_offset_radar_grid(offset_cfg,
+                                                   slc.getRadarGrid(freq),
+                                                   is_goff=True)
+                #  Create radar grid geometry required by offset datasets
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid,
+                                                             slc.getOrbit(),
+                                                             grid_zero_doppler)
+
+                geocode_obj = isce3.cuda.geocode.Geocode(geogrid,
+                                                         rdr_geometry,
+                                                         dem_raster,
+                                                         lines_per_block,
+                                                         interp_method,
+                                                         invalid_value=np.nan)
+
+                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5,
+                                    dst_h5, geocode_obj,
+                                    off_layer_dict=layer_keys, is_goff=True)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
@@ -604,3 +722,13 @@ if __name__ == "__main__":
 
     # Run geocode
     run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"])
+
+    # Check if need to geocode offset product
+    enabled = geocode_insar_runconfig.cfg['processing']['offset_product']['enabled']
+    roff_path = geocode_insar_runconfig.cfg['processing']['geocode'][
+        'roff_path']
+    if roff_path is not None:
+        out_paths['ROFF'] = roff_path
+    if enabled:
+        run(geocode_insar_runconfig.cfg, out_paths['ROFF'],
+            out_paths['GOFF'], is_goff=True)

@@ -4,7 +4,7 @@ eigen
 git
 gmock
 gtest
-gxx_linux-64>=9,<10
+gxx_linux-64>=9,<12
 ninja
 pybind11
 pytest

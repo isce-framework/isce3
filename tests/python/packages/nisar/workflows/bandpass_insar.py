@@ -34,7 +34,7 @@ def test_bandpass_run():
     # insar.run(runconfig.cfg)
     out_paths = h5_prep.run(runconfig.cfg)
 
-    persist = Persistence(restart=True)
+    persist = Persistence('insar.log', restart=True)
     persist.run_steps['dense_offsets'] = False
     insar.run(runconfig.cfg, out_paths, persist.run_steps)
 

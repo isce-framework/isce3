@@ -12,8 +12,8 @@ TEST(PolsarSymmetrizeTest, symmetrize)
 {
     using T = float;
 
-    const auto memory_mode_set = {isce3::core::MemoryModeBlockY::SingleBlockY,
-            isce3::core::MemoryModeBlockY::MultipleBlocksY};
+    const auto memory_mode_set = {isce3::core::MemoryModeBlocksY::SingleBlockY,
+            isce3::core::MemoryModeBlocksY::MultipleBlocksY};
 
     const int width = 10, length = 10, nbands = 1;
 

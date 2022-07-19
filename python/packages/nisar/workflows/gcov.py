@@ -20,6 +20,8 @@ from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.workflows.h5_prep import set_get_geo_info
+from nisar.products.readers.orbit import load_orbit_from_xml
+
 
 def run(cfg):
     '''
@@ -37,10 +39,12 @@ def run(cfg):
 
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
-    
+
     # DEM parameters
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     dem_interp_method_enum = cfg['processing']['dem_interpolation_method_enum']
+
+    orbit_file = cfg["dynamic_ancillary_file_group"]['orbit_file']
 
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
@@ -71,10 +75,10 @@ def run(cfg):
     threshold = geo2rdr_dict['threshold']
     maxiter = geo2rdr_dict['maxiter']
 
-    if (flag_apply_rtc and output_terrain_radiometry == 
+    if (flag_apply_rtc and output_terrain_radiometry ==
             isce3.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT):
         output_radiometry_str = "radar backscatter sigma0"
-    elif (flag_apply_rtc and output_terrain_radiometry == 
+    elif (flag_apply_rtc and output_terrain_radiometry ==
             isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT):
         output_radiometry_str = 'radar backscatter gamma0'
     elif input_terrain_radiometry == isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
@@ -131,7 +135,7 @@ def run(cfg):
             temp_raster = isce3.io.Raster(temp_ref)
             input_raster_dict[pol] = temp_raster
         # symmetrize cross-polarimetric channels (if applicable)
-        if (flag_symmetrize_cross_pol_channels and 
+        if (flag_symmetrize_cross_pol_channels and
                 'HV' in input_pol_list and
                 'VH' in input_pol_list):
 
@@ -146,18 +150,18 @@ def run(cfg):
             # create output symmetrized HV object
             symmetrized_hv_obj = isce3.io.Raster(
                 symmetrized_hv_temp.name,
-                hv_raster_obj.width, 
-                hv_raster_obj.length, 
+                hv_raster_obj.width,
+                hv_raster_obj.length,
                 hv_raster_obj.num_bands,
-                hv_raster_obj.datatype(), 
+                hv_raster_obj.datatype(),
                 'GTiff')
 
             # call symmetrization function
             isce3.polsar.symmetrize_cross_pol_channels(
-                hv_raster_obj, 
-                vh_raster_obj, 
+                hv_raster_obj,
+                vh_raster_obj,
                 symmetrized_hv_obj)
-            
+
             # ensure changes are flushed to disk by closing & re-opening the
             # raster.
             del symmetrized_hv_obj
@@ -197,7 +201,12 @@ def run(cfg):
             error_channel.log(err_str)
             raise NotImplementedError(err_str)
 
-        orbit = slc.getOrbit()
+        # if provided, load an external orbit from the runconfig file;
+        # othewise, load the orbit from the RSLC metadata
+        if orbit_file is not None:
+            orbit = load_orbit_from_xml(orbit_file)
+        else:
+            orbit = slc.getOrbit()
 
         # init geocode members
         geo.orbit = orbit
@@ -219,7 +228,7 @@ def run(cfg):
             dir=scratch_path, suffix='.tif')
 
         output_raster_obj = isce3.io.Raster(temp_output.name,
-                geogrid.width, geogrid.length, 
+                geogrid.width, geogrid.length,
                 input_raster_obj.num_bands,
                 gdal.GDT_Float32, 'GTiff')
 
@@ -233,8 +242,8 @@ def run(cfg):
                     dir=scratch_path, suffix='.tif')
                 out_off_diag_terms_obj = isce3.io.Raster(
                     temp_off_diag.name,
-                    geogrid.width, geogrid.length, 
-                    nbands_off_diag_terms, 
+                    geogrid.width, geogrid.length,
+                    nbands_off_diag_terms,
                     gdal.GDT_CFloat32, 'GTiff')
 
         if flag_save_nlooks:
@@ -252,7 +261,7 @@ def run(cfg):
             temp_rtc = tempfile.NamedTemporaryFile(
                 dir=scratch_path, suffix='.tif')
             out_geo_rtc_obj = isce3.io.Raster(
-                temp_rtc.name, 
+                temp_rtc.name,
                 geogrid.width, geogrid.length, 1,
                 gdal.GDT_Float32, "GTiff")
         else:
@@ -262,7 +271,7 @@ def run(cfg):
         if flag_save_dem:
             temp_interpolated_dem = tempfile.NamedTemporaryFile(
                 dir=scratch_path, suffix='.tif')
-            if (output_mode == 
+            if (output_mode ==
                     isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
                 interpolated_dem_width = geogrid.width + 1
                 interpolated_dem_length = geogrid.length + 1
@@ -270,13 +279,13 @@ def run(cfg):
                 interpolated_dem_width = geogrid.width
                 interpolated_dem_length = geogrid.length
             out_geo_dem_obj = isce3.io.Raster(
-                temp_interpolated_dem.name, 
-                interpolated_dem_width, 
+                temp_interpolated_dem.name,
+                interpolated_dem_width,
                 interpolated_dem_length, 1,
                 gdal.GDT_Float32, "GTiff")
         else:
             temp_interpolated_dem = None
-            out_geo_dem_obj = None 
+            out_geo_dem_obj = None
 
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
@@ -310,7 +319,7 @@ def run(cfg):
 
         if flag_save_nlooks:
             del out_geo_nlooks_obj
-    
+
         if flag_save_rtc:
             del out_geo_rtc_obj
 
@@ -359,17 +368,17 @@ def run(cfg):
 
             # save nlooks
             if flag_save_nlooks:
-                _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds, 
+                _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds,
                                    yds, xds, 'numberOfLooks',
-                                   long_name = 'number of looks', 
+                                   long_name = 'number of looks',
                                    units = '',
                                    valid_min = 0)
 
             # save rtc
             if flag_save_rtc:
-                _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds, 
+                _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds,
                                    yds, xds, 'areaNormalizationFactor',
-                                   long_name = 'RTC area factor', 
+                                   long_name = 'RTC area factor',
                                    units = '',
                                    valid_min = 0)
 
@@ -380,7 +389,7 @@ def run(cfg):
                 The DEM is interpolated over the geogrid pixels vertices
                 rather than the pixels centers.
                 '''
-                if (output_mode == 
+                if (output_mode ==
                     isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
                     dem_geogrid = isce3.product.GeoGridParameters(
                         start_x=geogrid.start_x - geogrid.spacing_x / 2,
@@ -396,10 +405,10 @@ def run(cfg):
                     yds_dem = yds
                     xds_dem = xds
 
-                _save_hdf5_dataset(temp_interpolated_dem.name, hdf5_obj, 
-                                   root_ds, yds_dem, xds_dem, 
+                _save_hdf5_dataset(temp_interpolated_dem.name, hdf5_obj,
+                                   root_ds, yds_dem, xds_dem,
                                    'interpolatedDem',
-                                   long_name='Interpolated DEM', 
+                                   long_name='Interpolated DEM',
                                    units='')
 
             # save GCOV off-diagonal elements
@@ -410,13 +419,13 @@ def run(cfg):
                         if (b2 <= b1):
                             continue
                         off_diag_terms_list.append(p1.upper()+p2.upper())
-                _save_list_cov_terms(cov_elements_list + off_diag_terms_list, 
+                _save_list_cov_terms(cov_elements_list + off_diag_terms_list,
                                      freq_group)
                 _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                                    yds, xds, off_diag_terms_list,
-                                   long_name = output_radiometry_str, 
+                                   long_name = output_radiometry_str,
                                    units = '',
-                                   valid_min = clip_min, 
+                                   valid_min = clip_min,
                                    valid_max = clip_max)
 
             t_freq_elapsed = time.time() - t_freq
@@ -441,9 +450,9 @@ def run(cfg):
             computer cubes values outside radar-grid boundaries
             '''
             native_doppler.bounds_error = False
-            add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, 
-                                         cube_geogrid, radar_grid_cubes_heights, 
-                                         radar_grid, orbit, native_doppler, 
+            add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name,
+                                         cube_geogrid, radar_grid_cubes_heights,
+                                         radar_grid, orbit, native_doppler,
                                          zero_doppler, threshold, maxiter)
 
     t_all_elapsed = time.time() - t_all
@@ -496,7 +505,7 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     if compute_stats:
         raster = isce3.io.Raster(ds_filename)
 
-        if (raster.datatype() == gdal.GDT_CFloat32 or 
+        if (raster.datatype() == gdal.GDT_CFloat32 or
                 raster.datatype() == gdal.GDT_CFloat64):
             stats_real_imag_vector = \
                 isce3.math.compute_raster_stats_real_imag(raster)
@@ -552,7 +561,7 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
             dset.attrs.create('min_real_value', data=stats_obj.min_real)
             dset.attrs.create('mean_real_value', data=stats_obj.mean_real)
             dset.attrs.create('max_real_value', data=stats_obj.max_real)
-            dset.attrs.create('sample_standard_deviation_real', 
+            dset.attrs.create('sample_standard_deviation_real',
                               data=stats_obj.sample_stddev_real)
 
             dset.attrs.create('min_imag_value', data=stats_obj.min_imag)

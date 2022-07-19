@@ -11,18 +11,21 @@ runconfig:
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            dem_file: 
+            dem_file:
+
+            # External orbit file
+            orbit_file:
 
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
-            product_path: 
+            product_path:
 
             # REQUIRED - Directory where SAS can write temporary data
-            scratch_path: 
+            scratch_path:
 
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            sas_output_file: 
+            sas_output_file:
 
         primary_executable:
             product_type: GSLC
@@ -111,10 +114,10 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            radar_grid_cubes: 
-    
+            radar_grid_cubes:
+
                 # List of heights in meters
-                heights: 
+                heights:
 
                 # OPTIONAL - Same as the geocode group output_epsg if not provided
                 output_epsg:
@@ -125,8 +128,8 @@ runconfig:
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
                 y_snap:
@@ -135,7 +138,7 @@ runconfig:
                 x_snap:
 
                 # OPTIONAL - Can control with absolute values or with snap values
-                top_left:        
+                top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
                     y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
@@ -144,7 +147,7 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
                     y_abs:
-                    x_abs:  
+                    x_abs:
 
             geo2rdr:
                 threshold: 1.0e-8

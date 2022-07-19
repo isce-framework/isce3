@@ -10,6 +10,7 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/core/blockProcessing.h>
 
 // isce3::io
 #include <isce3/io/Raster.h>
@@ -28,34 +29,6 @@ enum geocodeOutputMode {
     INTERP = 0,
     AREA_PROJECTION = 1,
 };
-
-/** Enumeration type to indicate memory management */
-enum geocodeMemoryMode {
-    AUTO = 0,
-    SINGLE_BLOCK = 1,
-    BLOCKS_GEOGRID = 2,
-    BLOCKS_GEOGRID_AND_RADARGRID = 3
-};
-
-constexpr static long long DEFAULT_MAX_BLOCK_SIZE = 1 << 29; // 512MB
-/** Compute the number of blocks and their length for block processing
- * in the length direction
- *
- * @param[in]  array_length        Length of the data to be processed
- * @param[in]  array_width         Width of the data to be processed
- * @param[in]  nbands              Number of the bands to be processed
- * @param[in]  type_size           Type size of the data to be processed
- * @param[in]  channel             Pyre info channel
- * @param[out] block_length        Block length
- * @param[out] nblock_y            Number of blocks in the Y direction
- * @param[in]  max_block_size      Maximum block size in Bytes (per thread)
- */
-void getBlocksNumberAndLength(const int array_length, const int array_width,
-        const int nbands = 1,
-        const size_t type_size = 4, // Float32
-        pyre::journal::info_t* channel = nullptr, int* block_length = nullptr,
-        int* nblock_y = nullptr,
-        const long long max_block_size = DEFAULT_MAX_BLOCK_SIZE);
 
 template<class T>
 class Geocode {
@@ -151,11 +124,12 @@ public:
             isce3::io::Raster* offset_rg_raster = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
-            geocodeMemoryMode geocode_memory_mode = geocodeMemoryMode::AUTO,
-            const int min_block_size =
-                    isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
-            const int max_block_size =
-                    isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
+            isce3::core::GeocodeMemoryMode geocode_memory_mode =
+                isce3::core::GeocodeMemoryMode::Auto,
+            const long long min_block_size =
+                    isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+            const long long max_block_size =
+                    isce3::core::DEFAULT_MAX_BLOCK_SIZE,
             isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
@@ -299,11 +273,12 @@ public:
             isce3::io::Raster* out_geo_rtc = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
-            geocodeMemoryMode geocode_memory_mode = geocodeMemoryMode::AUTO,
-            const int min_block_size =
-                    isce3::geometry::AP_DEFAULT_MIN_BLOCK_SIZE,
-            const int max_block_size =
-                    isce3::geometry::AP_DEFAULT_MAX_BLOCK_SIZE,
+            isce3::core::GeocodeMemoryMode geocode_memory_mode =
+                isce3::core::GeocodeMemoryMode::Auto,
+            const long long min_block_size =
+                    isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+            const long long max_block_size =
+                    isce3::core::DEFAULT_MAX_BLOCK_SIZE,
             isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
@@ -465,7 +440,9 @@ private:
             double abs_cal_factor, float clip_min, float clip_max,
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
-            geocodeMemoryMode geocode_memory_mode, pyre::journal::info_t& info);
+            isce3::core::GeocodeMemoryMode geocode_memory_mode,
+            const long long min_block_size, const long long max_block_size,
+            pyre::journal::info_t& info);
 
     std::string _get_nbytes_str(long nbytes);
 

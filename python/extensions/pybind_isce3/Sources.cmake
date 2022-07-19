@@ -11,6 +11,7 @@ container/RadarGeometry.cpp
 core/core.cpp
 core/Attitude.cpp
 core/Basis.cpp
+core/blockProcessing.cpp
 core/Constants.cpp
 core/DateTime.cpp
 core/Ellipsoid.cpp

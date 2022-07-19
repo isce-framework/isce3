@@ -63,7 +63,7 @@ def test_geocode_run():
                 h_runw[f'{runw_product_path}/{ds_name}'][:, :] = arr_mlook
 
         # disable unused runw dataset
-        runconfig.cfg['processing']['geocode']['datasets']['connected_components'] = False
+        runconfig.cfg['processing']['geocode']['gunw_datasets']['connected_components'] = False
 
         # run geocodeing of runw
         geocode_insar.run(runconfig.cfg, out_paths['RUNW'], out_paths['GUNW'])

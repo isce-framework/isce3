@@ -73,7 +73,7 @@ def cmd_line_parser():
                      help=('Balance out RX channels by applying caltone '
                            'coefficients extracted from L0B.')
                      )
-    prs.add_argument('--ref_height', type=float, dest='ref_height',
+    prs.add_argument('-r', '--ref_height', type=float, dest='ref_height',
                      default=0.0,
                      help=('Reference height in (m) w.r.t WGS84 ellipsoid. It '
                            'will be simply used if "dem_file" is not provided')
@@ -177,7 +177,7 @@ def gen_el_null_range_product(args):
             # report possible invalid items/Rows
             # add three for header line + null_zero + 0-based index to "nn"
             if not mask_valid[nn]:
-                logger.warning(f'Row # {nn + 3} may have invalid slant range '
+                logger.warning(f'Row # {nn + 2} may have invalid slant range '
                                'due to TX gap overlap!')
             if not null_flag[nn]:
                 logger.warning(
@@ -191,11 +191,6 @@ def gen_el_null_range_product(args):
 def dt2str(dt: 'isce3.core.DateTime', fmt: str = '%Y%m%dT%H%M%S') -> str:
     """isce3 DateTime to a desired string format."""
     return datetime.fromisoformat(dt.isoformat().split('.')[0]).strftime(fmt)
-
-
-def mdeg2rad(mdeg: float) -> float:
-    """milli degrees to radians """
-    return np.deg2rad(1e-3 * mdeg)
 
 
 if __name__ == "__main__":

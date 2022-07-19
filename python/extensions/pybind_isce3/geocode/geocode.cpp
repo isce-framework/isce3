@@ -33,8 +33,6 @@ void addsubmodule_geocode(py::module & m)
         pyGeocodePolygonCFloat64(geocode, "GeocodePolygonCFloat64");
 
     // forward declare bound enums
-    py::enum_<isce3::geocode::geocodeMemoryMode>
-        pyGeocodeMemoryMode(geocode, "GeocodeMemoryMode");
     py::enum_<isce3::geocode::geocodeOutputMode>
         pyGeocodeOutputMode(geocode, "GeocodeOutputMode");
 
@@ -49,7 +47,6 @@ void addsubmodule_geocode(py::module & m)
     addbinding(pyGeocodePolygonCFloat32);
     addbinding(pyGeocodePolygonCFloat64);
 
-    addbinding(pyGeocodeMemoryMode);
     addbinding(pyGeocodeOutputMode);
 
 }

@@ -1,7 +1,6 @@
 import os
 
 import journal
-import isce3
 import nisar.workflows.helpers as helpers
 from nisar.workflows.runconfig import RunConfig
 
@@ -42,16 +41,29 @@ class GeocodeInsarRunConfig(RunConfig):
             self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
 
         # create empty dict if geocode_datasets not in geocode
-        if 'datasets' not in self.cfg['processing']['geocode']:
-            self.cfg['processing']['geocode']['datasets'] = {}
+        for datasets in ['gunw_datasets', 'goff_datasets']:
+            if datasets not in self.cfg['processing']['geocode']:
+                self.cfg['processing']['geocode'][datasets] = {}
 
-        # default to True for datasets not found
-        gunw_datasets = ["connected_components", "coherence_magnitude",
-                         "unwrapped_phase", "along_track_offset",
-                         "slant_range_offset", "layover_shadow_mask"]
-        for gunw_dataset in gunw_datasets:
-            if gunw_dataset not in self.cfg['processing']['geocode']['datasets']:
-                self.cfg['processing']['geocode']['datasets'][gunw_dataset] = True
+        # Initialize GUNW and GOFF names
+        gunw_datasets = ['connected_components', 'coherence_magnitude',
+                         'unwrapped_phase', 'along_track_offset',
+                         'slant_range_offset', 'layover_shadow_mask']
+        goff_datasets = ['along_track_offset', 'snr',
+                         'along_track_offset_variance',
+                         'correlation_surface_peak',
+                         'cross_offset_variance',
+                         'slant_range_offset',
+                         'slant_range_offset_variance']
+        # insert both geocode datasets in dict keyed on datasets name
+        geocode_datasets = {'gunw_datasets': gunw_datasets,
+                            'goff_datasets': goff_datasets}
+        for dataset_group in geocode_datasets:
+            for dataset in geocode_datasets[dataset_group]:
+                if dataset not in self.cfg['processing']['geocode'][
+                   dataset_group]:
+                   self.cfg['processing']['geocode'][dataset_group][
+                            dataset] = True
 
         # multilooks valid?
         az_looks = self.cfg['processing']['crossmul']['azimuth_looks']
@@ -66,21 +78,3 @@ class GeocodeInsarRunConfig(RunConfig):
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        # To geocode the offsets we need the offset field shape and
-        # the start pixel in range and azimuth. Note, margin and gross_offsets
-        # are allocated as defaults in share/nisar/defaults/insar.yaml
-        geocode_azimuth_offset = self.cfg['processing']['geocode']['datasets'][
-                'along_track_offset']
-        geocode_range_offset = self.cfg['processing']['geocode']['datasets'][
-                'slant_range_offset']
-        if geocode_azimuth_offset or geocode_range_offset:
-            offset_cfg = self.cfg['processing']['dense_offsets']
-            margin = max(offset_cfg['margin'],
-                         offset_cfg['gross_offset_range'],
-                         offset_cfg['gross_offset_azimuth'])
-            if offset_cfg['start_pixel_range'] is None:
-               offset_cfg['start_pixel_range'] = margin + offset_cfg[
-                          'half_search_range']
-            if offset_cfg['start_pixel_azimuth'] is None:
-               offset_cfg['start_pixel_azimuth'] = margin + offset_cfg[
-                          'half_search_azimuth']

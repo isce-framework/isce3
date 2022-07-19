@@ -16,59 +16,62 @@ from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
-def prep_subband_h5(full_hdf5: str, 
-                    sub_band_hdf5: str, 
-                    freq_pols):
+def prep_subband_h5(src_rslc_hdf5: str,
+                    sub_band_hdf5: str,
+                    iono_freq_pols : dict):
+    '''Prepare subband HDF5 with source/full HDF5
 
+    Parameters
+    ----------
+    src_rslc_hdf5 : str
+        Path to source HDF5
+    sub_band_hdf5 : str
+        Path to destination HDF5
+    iono_freq_pols : dict
+        list of polarizations for frequency A and B for ionosphere processing
+    '''
+    src_slc = SLC(hdf5file=src_rslc_hdf5)
     common_parent_path = 'science/LSAR'
-    swath_path = f'{common_parent_path}/SLC/swaths/'
-    freq_a_path = f'{swath_path}/frequencyA/'
-    freq_b_path = f'{swath_path}/frequencyB/'
-    metadata_path = f'{common_parent_path}/SLC/metadata/'
-    ident_path = f'{common_parent_path}/identification/'
-    pol_a_path = f'{freq_a_path}/listOfPolarizations'
-    pol_b_path = f'{freq_b_path}/listOfPolarizations'
-        
-    with h5py.File(full_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
+
+    with h5py.File(src_rslc_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
         h5py.File(sub_band_hdf5, 'w') as dst_h5:
-            
-        pols_freqA = list(
-                np.array(src_h5[pol_a_path][()], dtype=str))
-        pols_freqB = list(
-                np.array(src_h5[pol_b_path][()], dtype=str))
-        
-        if freq_pols['A']:
-            pols_a_excludes = [pol for pol in pols_freqA 
-                if pol not in freq_pols['A']]
-        else:
-            pols_a_excludes = pols_freqA
 
-        if freq_pols['B']:
-            pols_b_excludes = [pol for pol in pols_freqB 
-                if pol not in freq_pols['B']]
-        else:
-            pols_b_excludes = pols_freqB
+        # copy non-frequency metadata
+        metadata_path = src_slc.MetadataPath
+        cp_h5_meta_data(src_h5, dst_h5, metadata_path, excludes=[''])
 
-        if pols_a_excludes:
-            cp_h5_meta_data(src_h5, dst_h5, freq_a_path,
-                    excludes=pols_a_excludes)
-        else:
-            cp_h5_meta_data(src_h5, dst_h5, freq_a_path,
-                    excludes=[''])
-            
-        if pols_b_excludes:
-            cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
-                    excludes=pols_b_excludes)
-        else:
-            cp_h5_meta_data(src_h5, dst_h5, freq_b_path,
-                    excludes=[''])
+        ident_path = f'{common_parent_path}/identification/'
+        cp_h5_meta_data(src_h5, dst_h5, ident_path, excludes=[''])
 
-        cp_h5_meta_data(src_h5, dst_h5, metadata_path,
-                    excludes=[''])
-        cp_h5_meta_data(src_h5, dst_h5, ident_path,
-                    excludes=[''])
-        cp_h5_meta_data(src_h5, dst_h5, swath_path,
-                    excludes=['frequencyA', 'frequencyB'])   
+        swath_path = src_slc.SwathPath
+        cp_h5_meta_data(src_h5, dst_h5, swath_path, excludes=['frequencyA',
+                                                              'frequencyB'])
+
+        # iterate over frequencies
+        for freq_ab in ['A', 'B']:
+            freq_key = f'frequency{freq_ab}'
+
+            # skip further processing if frequency key does not exists
+            if freq_key not in src_h5[swath_path]:
+                continue
+
+            # get list of polarizations for current frequency in source HDF5
+            freq_path = f'{swath_path}/{freq_key}/'
+            pol_path = f'{freq_path}/listOfPolarizations'
+            src_pol_list = np.array(src_h5[pol_path][()], dtype=str)
+
+            # determine which polarizations rasters not to copy
+            if iono_freq_pols[freq_ab]:
+                # exclude pols found in src HDF5 but not in iono pols list
+                pols_excludes = [src_pol for src_pol in src_pol_list
+                                 if src_pol not in iono_freq_pols[freq_ab]]
+            else:
+                # copy everything
+                pols_excludes = ['']
+
+            cp_h5_meta_data(src_h5, dst_h5, freq_path,
+                            excludes=pols_excludes)
+
 
 def run(cfg: dict):
     '''
@@ -102,7 +105,6 @@ def run(cfg: dict):
             f"{scratch_path}/ionosphere/split_spectrum/")
         split_band_path.mkdir(parents=True, exist_ok=True)
 
-        common_parent_path = 'science/LSAR'
         freq = 'A'
         pol_list = iono_freq_pol[freq]
         info_channel.log(f'Split the main band {pol_list} of the signal')
@@ -118,7 +120,6 @@ def run(cfg: dict):
                 high_band_output = f"{split_band_path}/sec_high_band_slc.h5"
             # Open RSLC product
             slc_product = SLC(hdf5file=hdf5_str)
-            # Extract metadata
             # meta data extraction
             meta_data = splitspectrum.bandpass_meta_data.load_from_slc(
                 slc_product=slc_product,
@@ -154,8 +155,6 @@ def run(cfg: dict):
                     h5py.File(low_band_output, 'r+') as dst_h5_low, \
                     h5py.File(high_band_output, 'r+') as dst_h5_high:
                 # Copy HDF5 metadata for low high band
-                # cp_h5_meta_data(src_h5, dst_h5_low, f'{common_parent_path}')
-                # cp_h5_meta_data(src_h5, dst_h5_high, f'{common_parent_path}')
                 for pol in pol_list:
                     raster_str = f'HDF5:{hdf5_str}:/{slc_product.slcPath(freq, pol)}'
                     slc_raster = isce3.io.Raster(raster_str)
@@ -215,7 +214,7 @@ def run(cfg: dict):
                                                        [rows, cols],
                                                        np.complex64,
                                                        chunks=(128, 128))
-                        
+
                         # Write bandpassed SLC to HDF5
                         dst_h5_low[dest_pol_path].write_direct(
                             subband_slc_low,

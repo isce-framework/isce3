@@ -9,7 +9,7 @@ void addbinding_symmetrize(pybind11::module& m)
     m.def("symmetrize_cross_pol_channels",
             &isce3::polsar::symmetrizeCrossPolChannels, py::arg("hv_raster"),
             py::arg("vh_raster"), py::arg("output_raster"),
-            py::arg("memory_mode") = isce3::core::MemoryModeBlockY::AutoBlocksY,
+            py::arg("memory_mode") = isce3::core::MemoryModeBlocksY::AutoBlocksY,
             py::arg("hv_raster_band") = 1, py::arg("vh_raster_band") = 1,
             py::arg("output_raster_band") = 1,
             R"(Symmetrize cross-polarimetric channels.
@@ -26,7 +26,7 @@ void addbinding_symmetrize(pybind11::module& m)
               Raster containing the VH polarization channel
           output_raster : isce3.io.Raster
               Output symmetrized raster
-          memory_mode : isce3.core.memory_mode_block_y, optional
+          memory_mode : isce3.core.MemoryModeBlocksY, optional
               Select memory mode
           hv_raster_band : int
               Band (starting from 1) containing the HV polarization channel
