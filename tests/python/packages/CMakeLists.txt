@@ -1,5 +1,6 @@
 set(TESTFILES
 isce3/core/gpu_check.py
+isce3/ionosphere/ionosphere.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/point_target_info.py
@@ -22,6 +23,7 @@ nisar/workflows/gslc.py
 nisar/workflows/insar.py
 nisar/workflows/filter_interferogram.py
 nisar/workflows/bandpass_insar.py
+nisar/workflows/ionosphere.py
 nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py

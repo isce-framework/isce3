@@ -156,18 +156,54 @@ runconfig:
 
             ionosphere_phase_correction:
                 enabled: False
+                # Number of lines per blocks
+                lines_per_block: 1000
+                # ionosphere estimation methods
+                #(split_main_band, main_side_band, main_diff_ms_band)
                 spectral_diversity: split_main_band
+                # Polarization to be used for ionosphere estimation.
+                # Split_main_band method does not require frequency B.
                 list_of_frequencies:
-                   A: 
-                   B: 
+                   A:
+                   B:
+                # Options for split_main_band method
                 split_range_spectrum:
-                   lines_per_block: 1000
-                   low_band_bandwidth:
-                   high_band_bandwidth:
-                   window_function: tukey
-                   # Shape parameter. For Kaiser, 0 <= shape < Inf.
-                   # For Cosine and Tukey, 0 <= shape <= 1.
-                   window_shape: 0.25
+                    lines_per_block: 1000
+                    # Bandwidth for lower sub-band SLC in Hz
+                    # If unspecified, it is automatically set by the workflow
+                    low_band_bandwidth:
+                    # Bandwidth for upper sub-band SLC in Hz
+                    # If unspecified, it is automatically set by the workflow
+                    high_band_bandwidth:
+                    window_function: tukey
+                    # Shape parameter. For Kaiser, 0 <= shape < Inf.
+                    # For Cosine and Tukey, 0 <= shape <= 1.
+                    window_shape: 0.25
+                # Options for dispersive filter
+                dispersive_filter:
+                    # Apply filtering to dispersive layer
+                    enabled: True
+                    # Filter type for dispersive raster
+                    # (median_filter, coherence, connected_components)
+                    filter_mask_type: coherence
+                    # Median filter size for mask generation
+                    median_filter_size: 15
+                    # Coherence thresholds 0<= thresholds <=1
+                    filter_coherence_threshold: 0.5
+                    # Filling method for invalid regions
+                    # (nearest, smoothed)
+                    filling_method: nearest
+                    # Unwrapping correction bool. If False, only filtering
+                    # is applied
+                    unwrap_correction: False
+                    # Kernel size in pixels
+                    kernel_range: 800
+                    kernel_azimuth: 800
+                    # Sigma for gaussian filtering in pixel
+                    sigma_range: 100
+                    sigma_azimuth: 100
+                    # Number of iteration for low pass filtering
+                    filter_iterations: 1
 
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
