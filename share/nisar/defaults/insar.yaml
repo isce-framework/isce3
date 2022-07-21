@@ -424,7 +424,7 @@ runconfig:
                 azimuth_looks: 11
                 flatten: True
                 oversample: 2
-                rows_per_block: 8192
+                lines_per_block: 1024
 
             filter_interferogram:
                 interferogram_path:

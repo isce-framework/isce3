@@ -68,7 +68,6 @@ polsar/symmetrize.cpp
 polsar/polsar.cpp
 signal/signal.cpp
 signal/convolve2D.cpp
-signal/Covariance.cpp
 signal/Crossmul.cpp
 signal/CrossMultiply.cpp
 signal/flatten.cpp

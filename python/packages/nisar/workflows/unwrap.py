@@ -41,7 +41,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     ref_slc_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    lines_per_block = cfg['processing']['crossmul']['rows_per_block']
+    lines_per_block = cfg['processing']['crossmul']['lines_per_block']
     unwrap_args = cfg['processing']['phase_unwrap']
 
     # Create error and info channels

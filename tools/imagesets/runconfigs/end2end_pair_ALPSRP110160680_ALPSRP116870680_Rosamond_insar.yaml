@@ -125,7 +125,7 @@ runconfig:
                 flatten: True
                 range_looks: 11
                 azimuth_looks: 11
-                rows_per_block: 4096
+                lines_per_block: 4096
 
             filter_interferogram:
                 lines_per_block: 150

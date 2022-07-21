@@ -104,7 +104,7 @@ runconfig:
                 flatten: True
                 range_looks: 11
                 azimuth_looks: 11
-                rows_per_block: 4096
+                lines_per_block: 4096
 
             filter_interferogram:
                 lines_per_block: 150
@@ -114,7 +114,7 @@ runconfig:
                     filter_size_azimuth: 7
                     sigma_range: 0.25
                     sigma_azimuth: 0.25
-                    
+
             phase_unwrap:
                 crossmul_path:
                 algorithm: icu

@@ -507,23 +507,25 @@ crossmul_options:
     # Number of looks in azimuth direction
     azimuth_looks: int(min=1,  required=False)
 
-    # Flatten is False disables flatten
-    # Flatten is True runs flatten and sets data directory to scratch
-    # Flatten is str assumes value is path to data directory
+    # flatten is False disables flatten
+    # flatten is True runs flatten in crossmul
+    # flatten_path is the path to data directory
     # Data directory contains range offset rasters
-    # The following directory tree is required:
+    # The following directory tree is required in flatten_path:
     # flatten
     # └── geo2rdr
     #     └── freq(A,B)
     #         └── range.off
-    # Flatten defaults to True
-    flatten: any(bool(), str(min=1))
+    # flatten defaults to True
+    # flatten_path defaults to scratch_path
+    flatten: bool(required=False)
+    flatten_path: str(min=1, required=False)
 
     # Oversampling factor (avoids aliasing during interferogram formation)
     oversample: int(min=1, required=False)
 
     # Number of lines per block to process in batch
-    rows_per_block: int(min=1, required=False)
+    lines_per_block: int(min=1, required=False)
 
 filter_interferogram_options:
     # Path to HDF5 or directory containing complex interferogram

@@ -28,10 +28,11 @@ TEST(Crossmul, RunCrossmul)
     int width = referenceSlc.width();
     int length = referenceSlc.length();
 
-
     // a raster object for the interferogram
     isce3::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
-    isce3::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
+
+    isce3::io::Raster coherence("/vsimem/dummyCoh", width, length, 1, GDT_Float32,
+                                "ENVI");
 
     // HDF5 file with required metadata
     std::string h5file(TESTDATA_DIR "envisat.h5");
@@ -39,9 +40,8 @@ TEST(Crossmul, RunCrossmul)
     //H5 object
     isce3::io::IH5File file(h5file);
 
-    // Create a product and swath
+    // Create a product
     isce3::product::RadarGridProduct product(file);
-    const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
     isce3::core::LUT1d<double> dop1 =
@@ -51,32 +51,17 @@ TEST(Crossmul, RunCrossmul)
     // the second Doppler is the same as the first
     isce3::core::LUT1d<double> dop2 = dop1;
 
-    // get the pulse repetition frequency (PRF)
-    double prf = swath.nominalAcquisitionPRF();
-
     //instantiate the Crossmul class
     isce3::signal::Crossmul crsmul;
 
     // set Doppler polynomials for refernce and secondary SLCs
     crsmul.doppler(dop1, dop2);
 
-    // set prf
-    crsmul.prf(prf);
-
-    // set commonAzimuthBandwidth
-    crsmul.commonAzimuthBandwidth(2000.0);
-
-    // set beta parameter for cosine filter in commonAzimuthBandwidth filter
-    crsmul.beta(0.25);
-
     // set number of interferogram looks in range
     crsmul.rangeLooks(1);
 
     // set number of interferogram looks in azimuth
     crsmul.azimuthLooks(1);
-
-    // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthBandFilter(false);
 
     // running crossmul
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
@@ -100,23 +85,27 @@ TEST(Crossmul, RunCrossmul)
       ASSERT_LT(max_err, 1.0e-6);
 }
 
-TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
+TEST(Crossmul, RunCrossmulMLook)
 {
-    //This test creates an interferogram between an SLC and itself with azimuth
-    //common band filtering and checks if the
+    //This test creates an interferogram between an SLC and itself and checks if the
     //interferometric phase is zero.
 
     //a raster object for the reference SLC
     isce3::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
-    // get the length and width of the SLC
-    int width = referenceSlc.width();
-    int length = referenceSlc.length();
+    // define looks
+    const int rngLooks = 3;
+    const int azLooks = 13;
 
+    // get the length and width of the SLC
+    const int width = referenceSlc.width() / rngLooks;
+    const int length = referenceSlc.length() / azLooks;
 
     // a raster object for the interferogram
     isce3::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
-    isce3::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
+
+    isce3::io::Raster coherence("/vsimem/dummyCoh", width, length, 1, GDT_Float32,
+                                "ENVI");
 
     // HDF5 file with required metadata
     std::string h5file(TESTDATA_DIR "envisat.h5");
@@ -124,9 +113,8 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     //H5 object
     isce3::io::IH5File file(h5file);
 
-    // Create a product and swath
+    // Create a product
     isce3::product::RadarGridProduct product(file);
-    const isce3::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
     isce3::core::LUT1d<double> dop1 =
@@ -136,32 +124,17 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     // the second Doppler is the same as the first
     isce3::core::LUT1d<double> dop2 = dop1;
 
-    // get the pulse repetition frequency (PRF)
-    double prf = swath.nominalAcquisitionPRF();
-
     //instantiate the Crossmul class
     isce3::signal::Crossmul crsmul;
 
     // set Doppler polynomials for refernce and secondary SLCs
     crsmul.doppler(dop1, dop2);
 
-    // set prf
-    crsmul.prf(prf);
-
-    // set commonAzimuthBandwidth
-    crsmul.commonAzimuthBandwidth(2000.0);
-
-    // set beta parameter for cosine filter in commonAzimuthBandwidth filter
-    crsmul.beta(0.25);
-
     // set number of interferogram looks in range
-    crsmul.rangeLooks(1);
+    crsmul.rangeLooks(rngLooks);
 
     // set number of interferogram looks in azimuth
-    crsmul.azimuthLooks(1);
-
-    // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthBandFilter(true);
+    crsmul.azimuthLooks(azLooks);
 
     // running crossmul
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
@@ -180,11 +153,10 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
         if (std::abs(err) > max_err){
             max_err = std::abs(err);
         }
-    }
+      }
 
-    ASSERT_LT(max_err, 1.0e-6);
+      ASSERT_LT(max_err, 1.0e-6);
 }
-
 
 
 int main(int argc, char * argv[]) {
