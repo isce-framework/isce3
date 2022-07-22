@@ -107,10 +107,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
         flatten = self.cfg['processing']['crossmul']['flatten']
         if flatten:
-            if isinstance(flatten, bool):
-                self.cfg['processing']['crossmul']['flatten'] = scratch_path
-        else:
-            self.cfg['processing']['crossmul']['flatten'] = None
+            self.cfg['processing']['crossmul']['flatten_path'] = scratch_path
 
         # Check dictionary for interferogram filtering
         mask_options = self.cfg['processing']['filter_interferogram']['mask']
