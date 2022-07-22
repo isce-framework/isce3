@@ -8,45 +8,60 @@ import numpy as np
 desc = __doc__
 
 
-def get_chip (x, i, j, nchip=64):
+class MissingNull(Exception):
+    """Raised when mainlobe null(s) cannot be determined"""
+
+    pass
+
+class UnsupportedWindow(Exception):
+    """Raised if window_type input is not supported."""
+
+    pass
+
+class ViolatesMonotonicity(Exception):
+    """Raised if point target samples are not strictly monotonic."""
+
+    pass
+
+def get_chip(x, i, j, nchip=64):
     i = int(i)
     j = int(j)
-    chip = np.zeros ((nchip,nchip), dtype=x.dtype)
+    chip = np.zeros((nchip, nchip), dtype=x.dtype)
     nchip2 = nchip // 2
     i0 = i - nchip2 + 1
     i1 = i0 + nchip
     j0 = j - nchip2 + 1
     j1 = j0 + nchip
-    #FIXME handle edge cases by zero-padding
-    chip[:,:] = x[i0:i1, j0:j1]
+    # FIXME handle edge cases by zero-padding
+    chip[:, :] = x[i0:i1, j0:j1]
     return i0, j0, chip
 
 
-def estimate_frequency (z):
-    cx = np.sum (z[:,1:] * z[:,:-1].conj())
-    cy = np.sum (z[1:,:] * z[:-1,:].conj())
-    return np.angle ([cx, cy])
+def estimate_frequency(z):
+    cx = np.sum(z[:, 1:] * z[:, :-1].conj())
+    cy = np.sum(z[1:, :] * z[:-1, :].conj())
+    return np.angle([cx, cy])
 
 
-def shift_frequency (z, fx, fy):
-    x, y = np.meshgrid (list(range(z.shape[1])), list(range(z.shape[0])))
-    z *= np.exp (1j * fx * x)
-    z *= np.exp (1j * fy * y)
+def shift_frequency(z, fx, fy):
+    x, y = np.meshgrid(list(range(z.shape[1])), list(range(z.shape[0])))
+    z *= np.exp(1j * fx * x)
+    z *= np.exp(1j * fy * y)
     return z
 
 
-def oversample (x, nov, baseband=False, return_slopes=False):
+def oversample(x, nov, baseband=False, return_slopes=False):
     m, n = x.shape
-    assert (m==n)
+    assert m == n
 
-    if (not baseband):
+    if not baseband:
         # shift the data to baseband
-        fx, fy = estimate_frequency (x)
-        x = shift_frequency (x, -fx, -fy)
+        fx, fy = estimate_frequency(x)
+        x = shift_frequency(x, -fx, -fy)
 
-    X = np.fft.fft2 (x)
+    X = np.fft.fft2(x)
     # Zero-pad high frequencies in the spectrum.
-    Y = np.zeros ((n*nov, n*nov), dtype=X.dtype)
+    Y = np.zeros((n * nov, n * nov), dtype=X.dtype)
     n2 = n // 2
     Y[:n2, :n2] = X[:n2, :n2]
     Y[-n2:, -n2:] = X[-n2:, -n2:]
@@ -54,347 +69,636 @@ def oversample (x, nov, baseband=False, return_slopes=False):
     Y[-n2:, :n2] = X[-n2:, :n2]
     # Split Nyquist bins symmetrically.
     assert n % 2 == 0
-    Y[:n2,n2] = Y[:n2,-n2] = 0.5 * X[:n2,n2]
-    Y[-n2:,n2] = Y[-n2:,-n2] = 0.5 * X[-n2:,n2]
-    Y[n2,:n2] = Y[-n2,:n2] = 0.5 * X[n2,:n2]
-    Y[n2,-n2:] = Y[-n2,-n2:] = 0.5 * X[n2,-n2:]
-    Y[n2,n2] = Y[n2,-n2] = Y[-n2,n2] = Y[-n2,-n2] = 0.25 * X[n2,n2]
+    Y[:n2, n2] = Y[:n2, -n2] = 0.5 * X[:n2, n2]
+    Y[-n2:, n2] = Y[-n2:, -n2] = 0.5 * X[-n2:, n2]
+    Y[n2, :n2] = Y[-n2, :n2] = 0.5 * X[n2, :n2]
+    Y[n2, -n2:] = Y[-n2, -n2:] = 0.5 * X[n2, -n2:]
+    Y[n2, n2] = Y[n2, -n2] = Y[-n2, n2] = Y[-n2, -n2] = 0.25 * X[n2, n2]
     # Back to time domain.
-    y = np.fft.ifft2 (Y)
+    y = np.fft.ifft2(Y)
     # NOTE account for scaling of different-sized DFTs.
-    y *= nov**2
+    y *= nov ** 2
 
-    if (not baseband):
+    if not baseband:
         # put the phase back on
-        y = shift_frequency (y, fx/nov, fy/nov)
+        y = shift_frequency(y, fx / nov, fy / nov)
 
-    y = np.asarray (y, dtype=x.dtype)
+    y = np.asarray(y, dtype=x.dtype)
     if return_slopes:
         return (y, fx, fy)
     return y
 
 
-def estimate_resolution (x, dt=1.0):
+def estimate_resolution(x, dt=1.0):
     # Find the peak.
-    y = abs (x)**2
-    i = np.argmax (y)
+    y = abs(x) ** 2
+    i = np.argmax(y)
     # Construct a function with zeros at the -3dB points.
     u = y - 0.5 * y[i]
     # Make sure the interval contains a peak.  If not, return interval width.
-    if ((u[0] >= 0.0) or (u[-1] >= 0.0)):
-        print('Warning: Interval does not contain a well-defined peak.',
-              file=sys.stderr)
-        return dt * len (x)
+    if (u[0] >= 0.0) or (u[-1] >= 0.0):
+        print(
+            "Warning: Interval does not contain a well-defined peak.", file=sys.stderr
+        )
+        return dt * len(x)
     # Take its absolute value so can search for minima instead of intersections.
-    z = abs (u)
+    z = abs(u)
     # Find the points on each side of the peak.
     left = z[:i]
-    ileft = np.argmin (left)
+    ileft = np.argmin(left)
     right = z[i:]
-    iright = i + np.argmin (right)
+    iright = i + np.argmin(right)
     # Return the distance between -3dB crossings, scaled by the sample spacing.
     return dt * (iright - ileft)
 
-def find_null_to_null(matched_output, num_nulls_main, fs_bw_ratio, main_peak_idx):
+
+def comp_kaiserwin_peak_to_nth_null_dist(beta, num_nulls_main=2):
+    """
+    Compute distance between peak to nth null for a Kaiser window
+
+    Parameters:
+    -----------
+    beta: float
+        Kaiser window parameter
+    num_nulls_main: int
+        number of nulls included in the mainlobe from each side of mainlobe peak
+        num_nulls_main = 1: mainlobe extends out to 1st null
+        num_nulls_main = 2: mainlobe extends out to 2nd null
+
+    Returns:
+    --------
+    peak_to_nth_null_dist: float
+        Distance from the peak to the nth null, relative to the signal resolution (not the 
+        sample bin spacing)
+    
+    References:
+    -----------
+    [1] A.Nuttall, "Some windows with very good sidelobe behavior," in IEEE Transactions
+           on Acoustics, Speech, and Signal Processing, vol.29, no.1, pp.84 - 91, February
+           1981, doi: 10.1109 / TASSP.1981.1163506.
+    """
+
+    peak_to_nth_null_dist = np.sqrt(num_nulls_main ** 2 + (beta / np.pi) ** 2)
+
+    return peak_to_nth_null_dist
+
+
+def comp_coswin_peak_to_2nd_null_dist(eta):
+    """
+    Compute distance between peak to 2nd null for a Raised Cosine window
+
+    The cosine-on-pedestal weighting function :math:`c_p(f,\eta)` is given by
+  
+    .. math:: 
+        c_p(f,\eta) = \frac{1+ \eta}{2} + \frac{1 - \eta}{2}\cos \left( \frac{2 \pi f}{B}\right)
+
+    where :math:`f` is frequency in Hertz, :math:`\eta` is the window pedestal height, 
+    :math:`B` is bandwidth in Hertz, :math:`\frac{-B}{2}\le f \le \frac{B}{2}` and 
+    :math: `0\le \eta \le 1`.     
+
+
+    Parameters:
+    -----------
+    eta: float
+        Raised Cosine window parameter
+
+    Returns:
+    --------
+    peak_to_2nd_null_dist: float
+        Distance from the peak to the 2nd null, relative to the signal resolution (not the 
+        sample bin spacing)
+
+    References:
+    -----------
+    S. Hensley, S. Oveisgharan, S. Saatchi, M. Simard, R. Ahmed and Z. Haddad,
+    "An Error Model for Biomass Estimates Derived From Polarimetric Radar Backscatter,"
+    in IEEE Transactions on Geoscience and Remote Sensing, vol. 52, no. 7, pp. 4065-4082,
+    July 2014, doi: 10.1109/TGRS.2013.2279400.
+    """
+
+    # Closed form solution for Raised Cosine window null position is only available for mainlobe
+    # width which includes first sidelobes, i.e. num_nulls_main=2
+    num_nulls_main = 2
+
+    if eta <= 1 / 7:
+        peak_to_2nd_null_dist = (num_nulls_main + 1)
+    else:
+        peak_to_2nd_null_dist = num_nulls_main
+
+    return peak_to_2nd_null_dist
+
+
+def search_first_null(matched_output, mainlobe_peak_idx):
     """Compute mainlobe null locations as sample index for ISLR and PSLR.
 
+    Null locations are first nulls to the left and right of the mainlobe.
+
     Parameters:
     -----------
-    matched_output: complex array, Range or Azimuth cuts
-    num_nulls_main: int, num_nulls_main = 2 if mainlobe includes first sidelobes
-    fs_bw_ratio: float, Fsampling/bandwidth
+    matched_output: array of float
+        Range or Azimuth cuts of point target or 2-D antenna pattern
+    mainlobe_peak_idx: int
+        index of mainlobe peak
 
     Returns:
     --------
-    nullLeftIdx: null location left of mainlobe peak
-    nullRightIdx: null location right of mainlobe peak
+    null_left_idx: int
+        null location left of mainlobe peak in sample index
+    null_right_idx: int
+        null location right of mainlobe peak in sample index
     """
-    
-    #Search at least 1 sample beyond expected null
-    num_samples_null = int(np.round(fs_bw_ratio))
-    num_samples_search = num_samples_null + 2
-    
-    if (num_nulls_main == 1):
-        first_peak_left_idx = main_peak_idx
-        first_peak_right_idx = main_peak_idx
-        
-        search_samples_left_stop = first_peak_left_idx - num_samples_search
-        search_samples_right_stop = first_peak_right_idx + num_samples_search
-               
-        samples_left = matched_output[first_peak_left_idx : search_samples_left_stop : -1]
-        samples_right = matched_output[first_peak_right_idx : search_samples_right_stop] 
-    elif (num_nulls_main == 2):
-        first_peak_left_idx = main_peak_idx - int(np.round(1.5 * fs_bw_ratio))
-        first_peak_right_idx = main_peak_idx + int(np.round(1.5 * fs_bw_ratio))
-        
-        search_samples_left_stop = first_peak_left_idx - num_samples_search
-        search_samples_right_stop = first_peak_right_idx + num_samples_search
 
-        samples_left = matched_output[first_peak_left_idx : search_samples_left_stop : -1]
-        samples_right = matched_output[first_peak_right_idx : search_samples_right_stop]
-    else:
-        raise Exception("The variable num_nulls_main cannot be greater than 2.")
+    samples_left = matched_output[: mainlobe_peak_idx + 1][::-1]
+    samples_right = matched_output[mainlobe_peak_idx:]
 
-    #Search for left null
-    diffsign_left = np.sign(np.diff(samples_left))
-    if np.any(diffsign_left == 1):
-        null_left_idx = first_peak_left_idx - np.where(diffsign_left[:-1] + diffsign_left[1:] == 0)[0][0] - 1
-    else:
-        null_left_idx = first_peak_left_idx - num_samples_null
-            
-    #Search for right null
-    diffsign_right = np.sign(np.diff(samples_right))
-    if np.any(diffsign_right == 1):
-        null_right_idx = first_peak_right_idx + np.where(diffsign_right[:-1] + diffsign_right[1:] == 0)[0][0] + 1
-    else:
-        null_right_idx = first_peak_right_idx + num_samples_null
-    
+    # Find the signs of derivatives of samples left and right the mainlobe peak
+    diff_left = np.diff(samples_left)
+    diff_right = np.diff(samples_right)
+
+    # Raise ViolatesMonotonicity Exception if two adjacent point target
+    # samples are exactly equal.
+    if np.any(diff_left == 0):
+        raise ViolatesMonotonicity(
+            "Some adjacent point target samples to the left of the mainlobe peak are equal."
+        )
+
+    if np.any(diff_right == 0):
+        raise ViolatesMonotonicity(
+            "Some adjacent point target samples to the right of the mainlobe peak are equal."
+        )
+
+    diffsign_left = np.sign(diff_left)
+    diffsign_right = np.sign(diff_right)
+
+    # Raise MissingNull Exception if no Null(s) can be located
+    if not np.any(diffsign_left > 0):
+        raise MissingNull(
+            "The pattern to the left of mainlobe is monotonic. Null cannot be determined"
+        )
+
+    if not np.any(diffsign_right > 0):
+        raise MissingNull(
+            "The pattern to the right of mainlobe is monotonic. Null cannot be determined"
+        )
+
+    min_left_idx = np.where(diffsign_left[:-1] + diffsign_left[1:] == 0)[0][0]
+    min_right_idx = np.where(diffsign_right[:-1] + diffsign_right[1:] == 0)[0][0]
+
+    null_left_idx = mainlobe_peak_idx - min_left_idx - 1
+    null_right_idx = mainlobe_peak_idx + min_right_idx + 1
+
     return null_left_idx, null_right_idx
 
-def islr_pslr(data_in_linear, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, search_null=False):
-    """Compute point target integrated sidelobe ratio (ISLR) and peak to sidelobe ratio (PSLR).
-    
+
+def compute_islr_pslr(
+    data_in_linear,
+    fs_bw_ratio=1.2,
+    num_sidelobes=10,
+    predict_null=False,
+    window_type='rect',
+    window_parameter=0
+):
+    """
+    Computes integrated sidelobe ratio (ISLR) and peak to sidelobe ratio (PSLR) of a point 
+    target impulse response.
+
+    ISLR mainlobe nulls can be located based on provided Fs/BW ratio and window_type/window_parameter
+    or it can be computed based on null search. If former is selected (predict_null=True),
+    first sidelobes are included in the mainlobe for ISLR calculations.
+    If latter is selected, first sidelobes are not included as part of mainlobe in
+    ISLR calculations. PSLR calculation is based on null search only. It does not include first
+    sidelobe as part of mainlobe in its calculations.
+
+
     Parameters:
     -----------
-    fs_bw_ratio: float, optional, sampling frequency to bandwidth ratio
-    search_null: if search_null is True, then apply algorithm to find mainlobe null locations
-        for ISLR computation. Otherwise, specify null locations based on default Fs/B samples,
-        i.e, mainlobe null is located at Fs/B samples from the peak of mainlobe
-        PSLR Exception: mainlobe does not include first sidelobe, search is always
-        conducted to find the locations of first null regardless of search_null parameter.
-    num_nulls_main: int, optional maximum is 2. Mainlobe could include up to 2 nulls.
-    num_lobes: float, optional total number of sidelobes for ISLR computation,
-        if num_nulls_main=2,default is 12. If num_nulls_main=1, default is 11.
-    data_in_linear: complex array, Linear Point target range or azimuth cut in complex numbers
+    data_in_linear: array of complex
+        Range or azimuth cut (as linear amplitude) through a point target
+    fs_bw_ratio: float
+        optional, sampling frequency to bandwidth ratio
+        fs_bw_ratio = Fs / BW
+    num_sidelobes: float
+        optional total number of sidelobes for ISLR computation,
+        default is 10.
+    predict_null: boolean
+        optional, if predict_null is True, mainlobe null locations are computed based 
+        on Fs/bandwidth ratio and winodw_type/window_parameter for ISLR calculations.
+        i.e, mainlobe null is located at Fs/B * peak-to-nth-null-dist.  
+        Otherwise, mainlobe null locations are computed based on null search algorithm.
+        PSLR Exception: mainlobe does not include first sidelobes, search is always
+        conducted to find the locations of first null regardless of predict_null parameter.
+    window_type: str
+        optional, user provided window types used for tapering
+        
+        'rect': 
+		Rectangular window is applied
+        'cosine': 
+		Raised-Cosine window
+        'kaiser': 
+		Kaiser Window
+    window_parameter: float
+        optional window parameter. For a Kaiser window, this is the beta
+        parameter. For a raised cosine window, it is the pedestal height.
+        It is ignored if `window_type = 'rect'`.
 
     Returns:
     --------
-    1. islr_dB: float, ISLR in dB
-    2. pslr_dB: float, PSLR in dB
+    islr_db: float
+        ISLR in dB
+    pslr_db: float
+        PSLR in dB
     """
-    
-    data_in_pwr_linear = np.abs(data_in_linear)**2
-    data_in_pwr_dB = 10*np.log10(data_in_pwr_linear)
-    zmax_idx = np.argmax(data_in_pwr_linear)
-    plsr_main_lobe = 1
-    
-    if search_null:
-        null_main_left_idx, null_main_right_idx = find_null_to_null(data_in_pwr_dB, num_nulls_main, fs_bw_ratio, zmax_idx)
-        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, fs_bw_ratio, zmax_idx)
-		
-        num_samples_sidelobe = zmax_idx - null_first_left_idx
-        num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
-    else:
-        num_samples_search = int(np.round(num_nulls_main * fs_bw_ratio))
-        null_main_left_idx = zmax_idx - num_samples_search
-        null_main_right_idx = zmax_idx + num_samples_search
 
-        null_first_left_idx, null_first_right_idx = find_null_to_null(data_in_pwr_dB, plsr_main_lobe, fs_bw_ratio, zmax_idx)
-        num_samples_sidelobe = zmax_idx - null_first_left_idx
-        num_samples_side_total = int(np.round(num_lobes * num_samples_sidelobe))
-  
-    sidelobe_left_idx = null_first_left_idx - num_samples_side_total
-    sidelobe_right_idx = null_first_right_idx + num_samples_side_total
+    if (window_type != 'rect') and (window_type != 'kaiser') and (window_type != 'cosine'):
+        raise UnsupportedWindow(
+            'The input window type is not supported. Only rect, kaiser, and cosine windows are supported'
+        )
 
-    #ISLR: Mainlobe could include 2nd null
+    data_in_pwr_linear = np.abs(data_in_linear) ** 2
+    data_in_pwr_db = 10 * np.log10(data_in_pwr_linear)
+    peak_idx = np.argmax(data_in_pwr_linear)
+
+    # Theoretical nulls are based on Fs/BW ratio and window_type/window_parameter
+    if predict_null:
+        # If predict option is selected, first sidelobes are always included in the mainlobe
+        num_nulls_main = 2
+        if window_type == "rect":
+            samples_null_to_peak = int(np.round(num_nulls_main * fs_bw_ratio))
+        elif window_type == "kaiser":
+            peak_2_null_dist = comp_kaiserwin_peak_to_nth_null_dist(
+                window_parameter,
+                num_nulls_main
+                )
+            samples_null_to_peak = int(np.round(peak_2_null_dist * fs_bw_ratio))
+        elif window_type == "cosine":
+            peak_2_null_dist = comp_coswin_peak_to_2nd_null_dist(window_parameter)
+            samples_null_to_peak = int(np.round(peak_2_null_dist * fs_bw_ratio))
+
+        # Compute number of samples between mainlobe peak and first null to its left and right
+        null_main_left_idx = peak_idx - samples_null_to_peak
+        null_main_right_idx = peak_idx + samples_null_to_peak
+        num_samples_side_total = int(np.round(num_sidelobes * samples_null_to_peak))
+
+        # PSLR is always computed based on manual null search
+        null_first_left_idx, null_first_right_idx = search_first_null(
+            data_in_pwr_db, peak_idx
+        )
+
+        sidelobe_left_idx = null_main_left_idx - num_samples_side_total
+        sidelobe_right_idx = null_main_right_idx + num_samples_side_total
+    else:  
+       # Search for mainlobe nulls
+        null_first_left_idx, null_first_right_idx = search_first_null(
+            data_in_pwr_db, peak_idx
+        )
+        null_main_left_idx = null_first_left_idx
+        null_main_right_idx = null_first_right_idx
+
+        # Compute number of samples between mainlobe peak and first null to its left
+        samples_null_to_peak = peak_idx - null_first_left_idx
+        num_samples_side_total = int(np.round(num_sidelobes * samples_null_to_peak))
+
+        sidelobe_left_idx = null_first_left_idx - num_samples_side_total
+        sidelobe_right_idx = null_first_right_idx + num_samples_side_total
+
+    # ISLR
     islr_mainlobe = data_in_pwr_linear[null_main_left_idx : null_main_right_idx + 1]
     
-    islr_sidelobe_range = np.r_[sidelobe_left_idx : null_main_left_idx, null_main_right_idx + 1 : sidelobe_right_idx + 1]
-    islr_sidelobe = data_in_pwr_linear[islr_sidelobe_range]   
-    
+    # Check if index is out of bounds
+    if sidelobe_left_idx<0: 
+        sidelobe_left_idx = 0
+
+    # Check if index is out of bounds
+    if sidelobe_right_idx>len(data_in_pwr_linear)-1:
+        sidelobe_right_idx = len(data_in_pwr_linear)-1    
+         
+    islr_sidelobe_range = np.r_[
+        sidelobe_left_idx:null_main_left_idx,
+        null_main_right_idx + 1 : sidelobe_right_idx + 1,
+    ]
+    islr_sidelobe = data_in_pwr_linear[islr_sidelobe_range]
+
     pwr_total = np.sum(data_in_pwr_linear)
     islr_main_pwr = np.sum(islr_mainlobe)
     islr_side_pwr = np.sum(islr_sidelobe)
 
-    islr_dB = 10*np.log10(islr_side_pwr / islr_main_pwr)
+    islr_db = 10 * np.log10(islr_side_pwr / islr_main_pwr)
 
-    #PSLR
-    pslr_sidelobe_range = np.r_[sidelobe_left_idx : null_first_left_idx, null_first_right_idx + 1 : sidelobe_right_idx + 1]
-    pslr_main_lobe = data_in_pwr_linear[null_first_left_idx : null_first_right_idx]
-    pslr_side_lobe = data_in_pwr_linear[pslr_sidelobe_range]
-    
-    pwr_main_max = np.amax(pslr_main_lobe)
-    pwr_side_max = max(pslr_side_lobe)
-    
-    pslr_dB = 10*np.log10(pwr_side_max / pwr_main_max)
-    
-    return islr_dB, pslr_dB
-	
+    # PSLR
+    pslr_sidelobe_range = np.r_[
+        sidelobe_left_idx:null_first_left_idx,
+        null_first_right_idx + 1 : sidelobe_right_idx + 1,
+    ]
+    pslr_mainlobe = data_in_pwr_linear[null_first_left_idx:null_first_right_idx + 1]
+    pslr_sidelobe = data_in_pwr_linear[pslr_sidelobe_range]
 
-def dB (x):
-    return 20.0 * np.log10 (abs (x))
+    pwr_mainlobe_max = np.amax(pslr_mainlobe)
+    pwr_sidelobe_max = np.amax(pslr_sidelobe)
+
+    pslr_db = 10 * np.log10(pwr_sidelobe_max / pwr_mainlobe_max)
+
+    return islr_db, pslr_db
 
 
-def plot_profile (t, x, title=None):
+def dB(x):
+    return 20.0 * np.log10(abs(x))
+
+
+def plot_profile(t, x, title=None):
     import matplotlib.pyplot as plt
 
-    peak = abs (x).max()
+    peak = abs(x).max()
     fig = plt.figure()
-    ax1 = fig.add_subplot (111)
-    ax1.plot (t, dB(x) - dB(peak), '-k')
-    ax1.set_ylim ((-40,0.3))
-    ax1.set_ylabel ("Power (dB)")
+    ax1 = fig.add_subplot(111)
+    ax1.plot(t, dB(x) - dB(peak), "-k")
+    ax1.set_ylim((-40, 0.3))
+    ax1.set_ylabel("Power (dB)")
     ax2 = ax1.twinx()
-    phase_color = '0.75'
-    ax2.plot (t, np.angle (x), color=phase_color)
-    ax2.set_ylim ((-np.pi, np.pi))
-    ax2.set_ylabel ("Phase (rad)")
-    ax2.spines['right'].set_color(phase_color)
-    ax2.tick_params (axis='y', colors=phase_color)
-    ax2.yaxis.label.set_color (phase_color)
-    ax1.set_xlim ((-15,15))
-    ax1.spines['top'].set_visible (False)
-    ax2.spines['top'].set_visible (False)
+    phase_color = "0.75"
+    ax2.plot(t, np.angle(x), color=phase_color)
+    ax2.set_ylim((-np.pi, np.pi))
+    ax2.set_ylabel("Phase (rad)")
+    ax2.spines["right"].set_color(phase_color)
+    ax2.tick_params(axis="y", colors=phase_color)
+    ax2.yaxis.label.set_color(phase_color)
+    ax1.set_xlim((-15, 15))
+    ax1.spines["top"].set_visible(False)
+    ax2.spines["top"].set_visible(False)
     if title:
-        ax1.set_title (title)
+        ax1.set_title(title)
     return fig
 
 
-def analyze_point_target (slc, i, j, nov=32, plot=False, cuts=False,
-                          chipsize=64, fs_bw_ratio=1.2, num_nulls_main=2, num_lobes=12, search_null=False):
+def analyze_point_target(
+    slc,
+    i,
+    j,
+    nov=32,
+    plot=False,
+    cuts=False,
+    chipsize=64,
+    fs_bw_ratio=1.2,
+    num_sidelobes=10,
+    predict_null=False,
+    window_type='rect',
+    window_parameter=0
+):
     """Measure point-target attributes.
 
-    Inputs:
-        slc
-            Single look complex image (2D array).
-
-        i, j
-            Row and column indeces where point-target is expected.
-
-        nov
+    Parameters
+    ----------
+        slc: array of 2D
+            complex image (2D array).
+        i, j: int
+            Row and column indices where point-target is expected.
+        nov: int
             Amount of oversampling.
-
-        plot
+        plot: bool
             Generate interactive plots.
-
-        cuts
+        cuts: bool
             Include cuts through the peak in the output dictionary.
+        chipsize: int
+            number of samples around the point target to be included for
+            point target metric analysis
+        fs_bw_ratio: float
+            optional, sampling frequency to bandwidth ratio
+            Only used when predict_null=True
+            fs_bw_ratio = Fs / BW
+        num_sidelobes: float
+            optional total number of sidelobes for ISLR computation,
+            default is 10.
+        predict_null: boolean
+            optional, if predict_null is True, mainlobe null locations are computed based 
+            on Fs/bandwidth ratio and window_type/window_parameter, when computing
+            ISLR calculations. Otherwise, mainlobe null locations are computed based on null
+            search algorithm.
+            PSLR Exception: mainlobe does not include first sidelobes, search is always
+            conducted to find the locations of first null regardless of predict_null parameter.
+        window_type: str
+            optional, user provided window types used for tapering
+           
+            'rect': 
+                Rectangular window is applied
+            'cosine': 
+                Raised-Cosine window
+            'kaiser': 
+                Kaiser Window            
+        window_parameter: float
+            optional, window parameter. For a Kaiser window, this is the beta parameter.
+            For a Raised Cosine window, it is the pedestal height.
+            It is ignored if `window_type='rect'`.
 
-    Outputs:
+    Returns:
+    --------
         Dictionary of point target attributes.  If plot=true then return the
         dictionary and a list of figures.
     """
+    
+    # Check if i or j indices are out of bounds w.r.t slc image
+    if i > slc.shape[0] or i < 0 or j > slc.shape[1] or j < 0:
+        raise ValueError('User provided target location (lon/lat/height) points to a spot '
+        'outside of RSLC image. This could be due to residual azimuth/range delays or '
+        'incorrect geometry info or incorrect user provided target location info.')
 
-    chip_i0, chip_j0, chip = get_chip (slc, i, j, nchip=chipsize)
+    chip_i0, chip_j0, chip = get_chip(slc, i, j, nchip=chipsize)
 
-    chip, fx, fy = oversample (chip, nov=nov, return_slopes=True)
+    chip, fx, fy = oversample(chip, nov=nov, return_slopes=True)
 
-    k = np.argmax (abs (chip))
-    ichip, jchip = np.unravel_index (k, chip.shape)
-    chipmax = chip[ichip,jchip]
+    k = np.argmax(abs(chip))
+    ichip, jchip = np.unravel_index(k, chip.shape)
+    chipmax = chip[ichip, jchip]
 
-    imax = chip_i0 + ichip * 1.0/nov
-    jmax = chip_j0 + jchip * 1.0/nov
+    imax = chip_i0 + ichip * 1.0 / nov
+    jmax = chip_j0 + jchip * 1.0 / nov
 
-    az_slice = chip[:,jchip]
-    rg_slice = chip[ichip,:]
+    az_slice = chip[:, jchip]
+    rg_slice = chip[ichip, :]
 
-    dr = estimate_resolution (rg_slice, 1.0/nov)
-    da = estimate_resolution (az_slice, 1.0/nov)
+    dr = estimate_resolution(rg_slice, 1.0 / nov)
+    da = estimate_resolution(az_slice, 1.0 / nov)
 
     # Find PSLR and ISLR of range and azimuth cuts
     fs_bw_ratio_ov = nov * fs_bw_ratio
-    dr_islr_dB, dr_pslr_dB = islr_pslr(rg_slice, fs_bw_ratio=fs_bw_ratio_ov, num_nulls_main=num_nulls_main, num_lobes=num_lobes, search_null=search_null)
-    da_islr_dB, da_pslr_dB = islr_pslr(az_slice, fs_bw_ratio=fs_bw_ratio_ov, num_nulls_main=num_nulls_main, num_lobes=num_lobes, search_null=search_null)
-    
+    range_islr_db, range_pslr_db = compute_islr_pslr(
+        rg_slice,
+        fs_bw_ratio=fs_bw_ratio_ov,
+        num_sidelobes=num_sidelobes,
+        predict_null=predict_null,
+        window_type=window_type,
+        window_parameter=window_parameter
+    )
+    azimuth_islr_db, azimuth_pslr_db = compute_islr_pslr(
+        az_slice,
+        fs_bw_ratio=fs_bw_ratio_ov,
+        num_sidelobes=num_sidelobes,
+        predict_null=predict_null,
+        window_type=window_type,
+        window_parameter=window_parameter
+    )
+
     d = {
-        'magnitude': abs (chipmax),
-        'phase': np.angle (chipmax),
-        'range': {
-            'index': jmax,
-            'offset': jmax-j,
-            'phase ramp': fx,
-            'resolution': dr,
-            'ISLR': dr_islr_dB,
-            'PSLR': dr_pslr_dB,
+        "magnitude": abs(chipmax),
+        "phase": np.angle(chipmax),
+        "range": {
+            "index": jmax,
+            "offset": jmax - j,
+            "phase ramp": fx,
+            "resolution": dr,
+            "ISLR": range_islr_db,
+            "PSLR": range_pslr_db,
         },
-        'azimuth': {
-            'index': imax,
-            'offset': imax-i,
-            'phase ramp': fy,
-            'resolution': da,
-            'ISLR': da_islr_dB,
-            'PSLR': da_pslr_dB,
+        "azimuth": {
+            "index": imax,
+            "offset": imax - i,
+            "phase ramp": fy,
+            "resolution": da,
+            "ISLR": azimuth_islr_db,
+            "PSLR": azimuth_pslr_db,
         },
     }
 
-    idx = np.arange (chip.shape[0], dtype=float)
-    ti = chip_i0 + idx/nov - i
-    tj = chip_j0 + idx/nov - j
+    idx = np.arange(chip.shape[0], dtype=float)
+    ti = chip_i0 + idx / nov - i
+    tj = chip_j0 + idx / nov - j
     if cuts:
-        d['range']['magnitude cut'] = list (np.abs (rg_slice))
-        d['range']['phase cut'] = list (np.angle (rg_slice))
-        d['range']['cut'] = list (tj)
-        d['azimuth']['magnitude cut'] = list (np.abs (az_slice))
-        d['azimuth']['phase cut'] = list (np.angle (az_slice))
-        d['azimuth']['cut'] = list (ti)
+        d["range"]["magnitude cut"] = list(np.abs(rg_slice))
+        d["range"]["phase cut"] = list(np.angle(rg_slice))
+        d["range"]["cut"] = list(tj)
+        d["azimuth"]["magnitude cut"] = list(np.abs(az_slice))
+        d["azimuth"]["phase cut"] = list(np.angle(az_slice))
+        d["azimuth"]["cut"] = list(ti)
     if plot:
-        figs = [plot_profile (tj, rg_slice, title='Range'),
-                plot_profile (ti, az_slice, title='Azimuth')]
+        figs = [
+            plot_profile(tj, rg_slice, title="Range"),
+            plot_profile(ti, az_slice, title="Azimuth"),
+        ]
         return d, figs
     return d
 
 
-def tofloatvals (x):
+def tofloatvals(x):
     """Map all values in a (possibly nested) dictionary to Python floats.
 
     Modifies the dictionary in-place and returns None.
     """
     for k in x:
         if type(x[k]) == dict:
-            tofloatvals (x[k])
+            tofloatvals(x[k])
         elif type(x[k]) == list:
             x[k] = [float(xki) for xki in x[k]]
         else:
-            x[k] = float (x[k])
+            x[k] = float(x[k])
 
 
-def main (argv):
+def main(argv):
     from argparse import ArgumentParser
     import matplotlib.pyplot as plt
     import json
 
-    parser = ArgumentParser (description=desc)
-    parser.add_argument ('-1', action='store_true', dest='one_based',
-                         help='Use one-based (Fortran) indexes.')
-    parser.add_argument ('-i', action='store_true', help='Interactive plots.')
-    parser.add_argument ('--cuts', action='store_true',
-                         help='Add range/azimuth slices to output JSON.')
-    parser.add_argument ('--chipsize', type=int, default=64)
-    parser.add_argument ('filename')
-    parser.add_argument ('n', type=int)
-    parser.add_argument ('row', type=float)
-    parser.add_argument ('column', type=float)
-    parser.add_argument ('--fs-bw-ratio', type=float, default=1.2,
-                         required=False, help='nisar oversampling ratio')
-    parser.add_argument ('--mlobe-nulls', type=int, default=2,
-                         required=False, help='number of nulls in mainlobe, default=2')
-    parser.add_argument ('--num-lobes', type=float, default=12,
-                         required=False, help='total number of lobes, including mainlobe, default=12')
-    parser.add_argument('-s', '--search-null',
-                         action='store_true', default='False', help='Search for mainlobe null or use default mainlobe sample spacing')
-    args = parser.parse_args (argv[1:])
+    parser = ArgumentParser(description=desc)
+    parser.add_argument(
+        "-1",
+        action="store_true",
+        dest="one_based",
+        help="Use one-based (Fortran) indexes.",
+    )
+    parser.add_argument(
+        "-i", 
+        action="store_true", 
+        help="Interactive plots."
+    )
+    parser.add_argument(
+        "--cuts",
+        action="store_true", 
+        help="Add range/azimuth slices to output JSON."
+    )
+    parser.add_argument(
+        "--chipsize", 
+        type=int, 
+        default=64,
+        required=False,
+        help="Number of samples around the point target to be analyzed."
+    )
+    parser.add_argument("filename")
+    parser.add_argument("n", type=int, help='number of range bins in a range line')
+    parser.add_argument("row", type=float, help='point target azimuth bin location')
+    parser.add_argument("column", type=float, help='point target range bin loction')
+    parser.add_argument(
+        "--nov",
+        type=int,
+        default=32,
+        required=False,
+        help="Point target samples oversampling factor",
+    )
+    parser.add_argument(
+        "--fs-bw-ratio",
+        type=float,
+        default=1.2,
+        required=False,
+        help="Input data oversampling factor. Only used when --predict-null requested.",
+    )
+    parser.add_argument(
+        "--num-sidelobes",
+        type=float,
+        default=10,
+        required=False,
+        help="total number of lobes, including mainlobe, default=10",
+    )
+    parser.add_argument(
+        "-n",
+        "--predict-null",
+        action="store_true",
+        default=False,
+        help="default is false. If true, locate mainlobe nulls based on  Fs/BW ratio instead of search",
+    )
+    parser.add_argument(
+        "--window-type",
+        type=str,
+        default='rect',
+        required=False,
+        help="Type of window used to taper impulse response sidelobes: 'rect', 'kaiser', 'cosine'. Only used when --predict-null requested.",
+    )
+    parser.add_argument(
+        "--window-parameter",
+        type=float,
+        default=0,
+        required=False,
+        help="Window parameter for Kaiser and Raised Cosine windows",
+    )
+    args = parser.parse_args(argv[1:])
 
-    n, i, j = [getattr (args,x) for x in ('n', 'row', 'column')]
+    n, i, j = [getattr(args, x) for x in ("n", "row", "column")]
     if args.one_based:
-        i, j = i-1, j-1
+        i, j = i - 1, j - 1
 
-    x = np.memmap (args.filename, dtype='complex64', mode='r')
-    m = len (x) // n
-    x = x.reshape ((m,n))
+    x = np.memmap(args.filename, dtype="complex64", mode="r")
+    m = len(x) // n
+    x = x.reshape((m, n))
 
-    info = analyze_point_target (x, i, j, plot=args.i, cuts=args.cuts,
-                                 chipsize=args.chipsize, fs_bw_ratio=args.fs_bw_ratio,
-                                 num_nulls_main=args.mlobe_nulls, num_lobes=args.num_lobes, search_null=args.search_null)
+    info = analyze_point_target(
+        x,
+        i,
+        j,
+        nov = args.nov,
+        plot=args.i,
+        cuts=args.cuts,
+        chipsize=args.chipsize,
+        fs_bw_ratio=args.fs_bw_ratio,
+        num_sidelobes=args.num_sidelobes,
+        predict_null=args.predict_null,
+        window_type=args.window_type,
+        window_parameter=args.window_parameter
+    )
     if args.i:
         info = info[0]
 
-    tofloatvals (info)
-    print (json.dumps (info, indent=2))
+    tofloatvals(info)
+
+    print(json.dumps(info, indent=2))
 
     if args.i:
         plt.show()
 
 
-if __name__ == '__main__':
-    main (sys.argv)
+if __name__ == "__main__":
+    main(sys.argv)

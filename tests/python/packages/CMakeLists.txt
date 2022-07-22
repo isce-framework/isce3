@@ -30,6 +30,7 @@ nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py
 nisar/workflows/antenna_parser.py
 nisar/antenna/beamformer.py
+nisar/workflows/point_target_analysis.py
 )
 
 if(WITH_CUDA)
