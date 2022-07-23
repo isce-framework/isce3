@@ -10,6 +10,7 @@ nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
 nisar/workflows/crossmul.py
 #nisar/workflows/el_null_range_from_raw_ant.py
+nisar/antenna/beamformer.py
 nisar/workflows/doppler_lut_from_raw.py
 nisar/workflows/focus.py
 nisar/workflows/gen_doppler_range_product.py
@@ -31,6 +32,7 @@ nisar/workflows/unwrap.py
 nisar/workflows/antenna_parser.py
 nisar/antenna/beamformer.py
 nisar/workflows/point_target_analysis.py
+nisar/workflows/noise_estimator.py
 )
 
 if(WITH_CUDA)
