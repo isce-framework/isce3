@@ -67,7 +67,6 @@ product/serialization/serializeProduct.cpp
 product/serialization/serializeProductMetadata.cpp
 product/radargrid/radargrid.cpp
 signal/convolve.cpp
-signal/covariance.cpp
 signal/crossmul.cpp
 signal/crossmultiply.cpp
 signal/decimate.cpp

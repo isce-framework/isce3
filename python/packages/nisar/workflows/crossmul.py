@@ -7,15 +7,17 @@ import pathlib
 import time
 
 import h5py
-import journal
 import isce3
-
+import journal
+import numpy as np
 from osgeo import gdal
+gdal.UseExceptions()
+
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
+from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.compute_stats import compute_stats_real_data
 
 
 def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
@@ -26,10 +28,11 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
     sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
-    flatten = cfg['processing']['crossmul']['flatten']
+    crossmul_params = cfg['processing']['crossmul']
+    flatten = crossmul_params['flatten']
 
-    if flatten is not None:
-        flatten_path = cfg['processing']['crossmul']['flatten']
+    if flatten:
+        flatten_path = crossmul_params['flatten_path']
 
     if output_hdf5 is None:
         output_hdf5 = cfg['product_path_group']['sas_output_file']
@@ -53,14 +56,14 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     else:
         crossmul = isce3.signal.Crossmul()
 
-    crossmul.range_looks = cfg['processing']['crossmul']['range_looks']
-    crossmul.az_looks = cfg['processing']['crossmul']['azimuth_looks']
-    crossmul.oversample = cfg['processing']['crossmul']['oversample']
-    crossmul.rows_per_block = cfg['processing']['crossmul']['rows_per_block']
+    crossmul.range_looks = crossmul_params['range_looks']
+    crossmul.az_looks = crossmul_params['azimuth_looks']
+    crossmul.oversample_factor = crossmul_params['oversample']
+    crossmul.lines_per_block = crossmul_params['lines_per_block']
 
     # check if user provided path to raster(s) is a file or directory
     coregistered_slc_path = pathlib.Path(
-        cfg['processing']['crossmul']['coregistered_slc_path'])
+        crossmul_params['coregistered_slc_path'])
     coregistered_is_file = coregistered_slc_path.is_file()
     if not coregistered_is_file and not coregistered_slc_path.is_dir():
         err_str = f"{coregistered_slc_path} is invalid; needs to be a file or directory."
@@ -68,7 +71,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
         raise ValueError(err_str)
 
     t_all = time.time()
-    with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
+    with h5py.File(output_hdf5, 'a', libver='latest') as dst_h5, \
+            h5py.File(ref_hdf5, 'r', libver='latest', swmr=True) as ref_h5:
         for freq, pol_list in freq_pols.items():
             # get 2d doppler, discard azimuth dependency, and set crossmul dopplers
             ref_dopp = isce3.core.avg_lut2d_to_lut1d(
@@ -79,25 +83,39 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
 
             freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
 
-            if flatten is not None:
+            # prepare flattening and range filter parameters
+            rdr_grid = ref_slc.getRadarGrid(freq)
+            crossmul.range_pixel_spacing = rdr_grid.range_pixel_spacing
+            crossmul.wavelength = rdr_grid.wavelength
+
+            # enable/disable flatten accordingly
+            if flatten:
                 # set frequency dependent range offset raster
                 flatten_raster = isce3.io.Raster(
                     f'{flatten_path}/geo2rdr/freq{freq}/range.off')
-
-                # prepare range filter parameters
-                rdr_grid = ref_slc.getRadarGrid(freq)
-                rg_pxl_spacing = rdr_grid.range_pixel_spacing
-                wavelength = rdr_grid.wavelength
-                rg_sample_freq = isce3.core.speed_of_light / 2.0 / rg_pxl_spacing
-                rg_bandwidth = ref_slc.getSwathMetadata(
-                    freq).processed_range_bandwidth
-
-                # set crossmul range filter
-                crossmul.set_rg_filter(rg_sample_freq, rg_bandwidth,
-                                       rg_pxl_spacing, wavelength)
+            else:
+                flatten_raster = None
 
             for pol in pol_list:
                 pol_group_path = f'{freq_group_path}/interferogram/{pol}'
+
+                # access the HDF5 dataset for a given frequency and polarization
+                ifg_dataset_path = f'{pol_group_path}/wrappedInterferogram'
+                ifg_dataset = dst_h5[ifg_dataset_path]
+
+                coh_dataset_path = f'{pol_group_path}/coherenceMagnitude'
+                coh_dataset = dst_h5[coh_dataset_path]
+
+                # compute multilook interferogram and coherence
+                # Construct the output raster directly from HDF5 dataset
+                ifg_raster = isce3.io.Raster(
+                    f"IH5:::ID={ifg_dataset.id.id}".encode("utf-8"),
+                    update=True)
+
+                # Construct the output raster directly from HDF5 dataset
+                coh_raster = isce3.io.Raster(
+                    f"IH5:::ID={coh_dataset.id.id}".encode("utf-8"),
+                    update=True)
 
                 # prepare reference input raster
                 ref_raster_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
@@ -105,50 +123,23 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
 
                 # prepare secondary input raster
                 if coregistered_is_file:
-                    raster_str = f'HDF5:{sec_hdf5}:/{sec_slc.slcPath(freq, pol)}'
+                    sec_raster_str = f'HDF5:{sec_hdf5}:/{sec_slc.slcPath(freq, pol)}'
                 else:
-                    raster_str = str(coregistered_slc_path / f'{resample_type}_resample_slc/'
-                                                             f'freq{freq}/{pol}/coregistered_secondary.slc')
+                    sec_raster_str = str(coregistered_slc_path / f'{resample_type}_resample_slc/'
+                                         f'freq{freq}/{pol}/coregistered_secondary.slc')
 
-                sec_slc_raster = isce3.io.Raster(raster_str)
+                sec_slc_raster = isce3.io.Raster(sec_raster_str)
 
-                # access the HDF5 dataset for a given frequency and polarization
-                dataset_path = f'{pol_group_path}/wrappedInterferogram'
-                igram_dataset = dst_h5[dataset_path]
+                # Compute multilooked interferogram and coherence raster
+                crossmul.crossmul(ref_slc_raster, sec_slc_raster, ifg_raster,
+                                  coh_raster, flatten_raster)
 
-                # Construct the output ratster directly from HDF5 dataset
-                igram_raster = isce3.io.Raster(
-                    f"IH5:::ID={igram_dataset.id.id}".encode("utf-8"),
-                    update=True)
+                del ifg_raster
 
-                # call crossmul with coherence if multilooked
-                if crossmul.range_looks > 1 or crossmul.az_looks > 1:
-                    # access the HDF5 dataset for a given frequency and polarization
-                    dataset_path = f'{pol_group_path}/coherenceMagnitude'
-                    coherence_dataset = dst_h5[dataset_path]
+                # Allocate raster statistics for coherence
+                compute_stats_real_data(coh_raster, coh_dataset)
 
-                    # Construct the output ratster directly from HDF5 dataset
-                    coherence_raster = isce3.io.Raster(
-                        f"IH5:::ID={coherence_dataset.id.id}".encode("utf-8"),
-                        update=True)
-
-                    if flatten is not None:
-                        crossmul.crossmul(ref_slc_raster, sec_slc_raster,
-                                          flatten_raster,
-                                          igram_raster, coherence_raster)
-                    else:
-                        crossmul.crossmul(ref_slc_raster, sec_slc_raster,
-                                          igram_raster, coherence_raster)
-
-                    # Allocate raster statistics for coherence
-                    compute_stats_real_data(coherence_raster, coherence_dataset)
-
-                    del coherence_raster
-                else:
-                    # no coherence without multilook
-                    crossmul.crossmul(ref_slc_raster, sec_slc_raster,
-                                      igram_raster)
-                del igram_raster
+                del coh_raster
 
                 # Allocate stats for rubbersheet offsets
                 stats_offsets(dst_h5, freq, pol)

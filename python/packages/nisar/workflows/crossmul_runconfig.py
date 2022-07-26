@@ -22,13 +22,15 @@ class CrossmulRunConfig(RunConfig):
         error_channel = journal.error('CrossmulRunConfig.yaml_check')
 
         scratch_path = self.cfg['product_path_group']['scratch_path']
+        crossmul_cfg = self.cfg['processing']['crossmul']
         # if coregistered_slc_path not provided, use scratch_path as source for coregistered SLCs
-        if 'coregistered_slc_path' not in self.cfg['processing']['crossmul']:
-            self.cfg['processing']['crossmul']['coregistered_slc_path'] = scratch_path
+        if 'coregistered_slc_path' not in crossmul_cfg:
+            crossmul_cfg['coregistered_slc_path'] = scratch_path
 
         # check whether coregistered_slc_path is a directory or file
-        coregistered_slc_path = self.cfg['processing']['crossmul']['coregistered_slc_path']
-        if not os.path.isdir(coregistered_slc_path) and not os.path.isfile(coregistered_slc_path):
+        coregistered_slc_path = crossmul_cfg['coregistered_slc_path']
+        if not os.path.isdir(coregistered_slc_path) \
+                and not os.path.isfile(coregistered_slc_path):
             err_str = f"{coregistered_slc_path} is invalid; needs to be a file or directory."
             error_channel.log(err_str)
             raise ValueError(err_str)
@@ -58,16 +60,16 @@ class CrossmulRunConfig(RunConfig):
         #     └── freq(A,B)
         #         └── range.off
         # flatten defaults to bool True
-        flatten = self.cfg['processing']['crossmul']['flatten']
+        # flatten_path defaults to scratch_path
+        flatten = crossmul_cfg['flatten']
         if flatten:
-            # check if flatten is bool and if true as scratch path (str)
-            if isinstance(flatten, bool):
-                self.cfg['processing']['crossmul']['flatten'] = scratch_path
-                flatten = scratch_path
-            # check if required frequency range offsets exist
-            helpers.check_mode_directory_tree(flatten, 'geo2rdr', frequencies)
-        else:
-            self.cfg['processing']['crossmul']['flatten'] = None
+            if 'flatten_path' in crossmul_cfg:
+                flatten_path = crossmul_cfg['flatten_path']
+            else:
+                flatten_path = scratch_path
 
-        if 'oversample' not in self.cfg['processing']['crossmul']:
-            self.cfg['processing']['crossmul']['oversample'] = 2
+            # check if required frequency range offsets exist
+            helpers.check_mode_directory_tree(flatten_path, 'geo2rdr',
+                                              frequencies)
+
+            crossmul_cfg['flatten_path'] = flatten_path

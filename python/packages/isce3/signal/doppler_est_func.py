@@ -291,7 +291,7 @@ def unwrap_doppler(dop, prf):
     ValueError
         For non-positive prf
     TypeError:
-        Bad data stype for dop
+        Bad data types for dop
 
     """
     raise TypeError('Unsupported data type for doppler')
@@ -307,12 +307,16 @@ def _unwrap_doppler_scalar(dop: float, prf: float) -> float:
 
 @unwrap_doppler.register(np.ndarray)
 def _unwrap_doppler_array(dop: np.ndarray, prf: float) -> np.ndarray:
-    """Unwrap doppler values stored as numpy array"""
+    """Unwrap doppler values stored as numpy array.
+
+    For 2-D array, unwrap operates along the first axis.
+
+    """
     if prf <= 0.0:
         raise ValueError('prf must be a positive value')
-    freq2phs = 2 * np.pi / prf
-    phs2freq = 1.0 / freq2phs
-    return phs2freq*np.unwrap(freq2phs * dop)
+    frq2phs = 2 * np.pi / prf
+    phs2frq = 1. / frq2phs
+    return phs2frq * np.unwrap(frq2phs * dop, axis=0)
 
 
 @unwrap_doppler.register(cl.abc.Sequence)
@@ -320,9 +324,9 @@ def _unwrap_doppler_sequence(dop: cl.abc.Sequence, prf: float) -> np.ndarray:
     """Unwrap doppler values stored as Sequence """
     if prf <= 0.0:
         raise ValueError('prf must be a positive value')
-    freq2phs = 2 * np.pi / prf
-    phs2freq = 1.0 / freq2phs
-    return phs2freq*np.unwrap(freq2phs * np.asarray(dop))
+    frq2phs = 2 * np.pi / prf
+    phs2frq = 1. / frq2phs
+    return phs2frq * np.unwrap(frq2phs * np.asarray(dop))
 
 # List of helper functions
 

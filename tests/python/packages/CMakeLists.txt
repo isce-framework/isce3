@@ -1,5 +1,6 @@
 set(TESTFILES
 isce3/core/gpu_check.py
+isce3/ionosphere/ionosphere.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/point_target_info.py
@@ -9,6 +10,7 @@ nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
 nisar/workflows/crossmul.py
 #nisar/workflows/el_null_range_from_raw_ant.py
+nisar/antenna/beamformer.py
 nisar/workflows/doppler_lut_from_raw.py
 nisar/workflows/focus.py
 nisar/workflows/gen_doppler_range_product.py
@@ -22,12 +24,15 @@ nisar/workflows/gslc.py
 nisar/workflows/insar.py
 nisar/workflows/filter_interferogram.py
 nisar/workflows/bandpass_insar.py
+nisar/workflows/ionosphere.py
 nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py
 nisar/workflows/antenna_parser.py
 nisar/antenna/beamformer.py
+nisar/workflows/point_target_analysis.py
+nisar/workflows/noise_estimator.py
 )
 
 if(WITH_CUDA)

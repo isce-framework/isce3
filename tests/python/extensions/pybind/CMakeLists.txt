@@ -37,7 +37,6 @@ io/raster.py
 math/stats.py
 polsar/symmetrize.py
 signal/convolve2D.py
-signal/covariance.py
 signal/crossmul.py
 signal/crossmultiply.py
 signal/filter2D.py

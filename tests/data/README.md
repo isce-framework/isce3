@@ -180,6 +180,15 @@ and then post-processed and converted into L0B product via its python utility to
   The total number of range lines is *70*. The total number of range bins is 28927. 
   The Tx range lines types are of HPA, LNA, and BYPASS. BYPASS range line interval is 20.
 
+
+## RSCL for point target analysis
+
+  **rslc_pt.h5
+
+  This NISAR RSLC product is focused using ISCE3 focus.py from an REE simulated raw data set with single
+  point target. The transmit and receive polarizations are HH.
+
+
 ## Geoid EGM96
 
 - **egm96_15.gtx**

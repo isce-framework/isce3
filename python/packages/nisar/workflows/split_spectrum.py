@@ -56,7 +56,7 @@ def prep_subband_h5(src_rslc_hdf5: str,
                 continue
 
             # get list of polarizations for current frequency in source HDF5
-            freq_path = f'{swath_path}/{freq_key}/'
+            freq_path = f'{swath_path}/{freq_key}'
             pol_path = f'{freq_path}/listOfPolarizations'
             src_pol_list = np.array(src_h5[pol_path][()], dtype=str)
 
@@ -75,7 +75,7 @@ def prep_subband_h5(src_rslc_hdf5: str,
 
 def run(cfg: dict):
     '''
-    run bandpass
+    run split spectrum
     '''
     # pull parameters from cfg
     ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
@@ -154,6 +154,7 @@ def run(cfg: dict):
             with h5py.File(hdf5_str, 'r', libver='latest', swmr=True) as src_h5, \
                     h5py.File(low_band_output, 'r+') as dst_h5_low, \
                     h5py.File(high_band_output, 'r+') as dst_h5_high:
+
                 # Copy HDF5 metadata for low high band
                 for pol in pol_list:
                     raster_str = f'HDF5:{hdf5_str}:/{slc_product.slcPath(freq, pol)}'

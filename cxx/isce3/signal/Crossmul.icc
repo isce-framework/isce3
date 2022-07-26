@@ -19,7 +19,7 @@
 void isce3::signal::Crossmul::
 doppler(isce3::core::LUT1d<double> refSlcDoppler, isce3::core::LUT1d<double> secSlcDoppler)
 {
-    
+
     _refDoppler = refSlcDoppler;
 
     _secDoppler = secSlcDoppler;
@@ -39,9 +39,9 @@ rangeLooks(int rangeLooks)
 
     _rangeLooks = rangeLooks ;
     if (_rangeLooks > 1 or _azimuthLooks > 1) {
-        _doMultiLook = true;
+        _multiLookEnabled = true;
     } else {
-        _doMultiLook = false;
+        _multiLookEnabled = false;
     }
 }
 
@@ -58,16 +58,16 @@ azimuthLooks(int azimuthLooks)
 
     _azimuthLooks = azimuthLooks ;
     if (_rangeLooks > 1 or _azimuthLooks > 1) {
-        _doMultiLook = true;
+        _multiLookEnabled = true;
     } else {
-        _doMultiLook = false;
+        _multiLookEnabled = false;
     }
 }
 
 /** @param[in] refSpectrum the spectrum of a block of a complex data
-@param[in] secSpectrum the spectrum of a block of complex data 
+@param[in] secSpectrum the spectrum of a block of complex data
 @param[in] rangeFrequencies the frequencies in range direction
-@param[in] blockRowsData number of rows in refSpectrum and secSpectrum
+@param[in] linesPerBlock number of rows in refSpectrum and secSpectrum
 @param[in] fft_size number of columns in refSpectrum and secSpectrum
 @param[out] estimated frequency shift between refSpectrum and secSpectrum
 */
@@ -75,17 +75,17 @@ void isce3::signal::Crossmul::
 rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
                     std::valarray<std::complex<float>> &secSpectrum,
                     std::valarray<double> &rangeFrequencies,
-            size_t blockRowsData,
-            size_t fft_size,
+                    size_t linesPerBlock,
+                    size_t fft_size,
                     double &frequencyShift)
 {
 
-    std::valarray<float> refAvgSpectrum(fft_size); 
+    std::valarray<float> refAvgSpectrum(fft_size);
     refAvgSpectrum = 0.0;
-    std::valarray<float> secAvgSpectrum(fft_size); 
+    std::valarray<float> secAvgSpectrum(fft_size);
     secAvgSpectrum = 0.0;
 
-    for (size_t line = 0; line < blockRowsData; ++line){
+    for (size_t line = 0; line < linesPerBlock; ++line){
         for (size_t col = 0; col < fft_size; ++col){
             refAvgSpectrum[col] += std::abs(refSpectrum[line*fft_size + col]);
             secAvgSpectrum[col] += std::abs(secSpectrum[line*fft_size + col]);

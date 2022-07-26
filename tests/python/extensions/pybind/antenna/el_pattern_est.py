@@ -7,7 +7,7 @@ from scipy.interpolate import interp1d
 
 from isce3.ext.isce3.antenna import ElPatternEst
 from nisar.products.readers.antenna.antenna_parser import AntennaParser
-from nisar.products.readers.Raw import open_rrsd
+from nisar.products.readers.Raw import Raw
 from isce3.ext.isce3.geometry import DEMInterpolator
 import iscetest
 
@@ -15,8 +15,8 @@ import iscetest
 # static method
 def replace_nan_echo(echo, rnd_seed=10):
     """
-    Replace NaN values by a Gaussian random noise
-    whose STD deteremined by std of non-nan values
+    Replace NaN or Zero values by a Gaussian random noise
+    whose STD deteremined by std of non-nan and non-zero values
     per range line
 
     Parameters
@@ -30,19 +30,21 @@ def replace_nan_echo(echo, rnd_seed=10):
             Corrected echo with the same type and shape.
 
     """
+    const_iq = 1. / np.sqrt(2.)
     # seed number for Gaussian noise random generator
     # to replace bad values of echo if any.
     rnd_gen = np.random.RandomState(rnd_seed)
     # get number of range lines and range bins
-    nrgl, nrgb = echo.shape
+    nrgl, _ = echo.shape
     # replace bad values (NaN) with Gaussian noise with std determined
     # by non-nan range bins per range line
     for line in range(nrgl):
-        std_iq = np.nanstd(echo[line, :])/np.sqrt(2.)
-        idx_nan = np.where(np.isnan(echo[line, :]))[0]
-        echo[line, idx_nan] = std_iq * (rnd_gen.randn(len(idx_nan)) +
-                                        1j*rnd_gen.randn(len(idx_nan)))
-    return echo
+        mask_bad = np.isnan(echo[line]) | np.isclose(echo[line], 0)
+        num_bad = mask_bad.sum()
+        if num_bad > 0:
+            std_iq = const_iq * np.std(echo[line, ~mask_bad])
+            echo[line, mask_bad] = std_iq * (rnd_gen.randn(num_bad) +
+                                             1j*rnd_gen.randn(num_bad))
 
 
 # Test Fixture
@@ -89,28 +91,29 @@ class TestElPatternEst:
     dem_obj = DEMInterpolator(height=_mean_dem)
 
     # Following lines are parsed/obtained from L0B product
-    _raw_obj = open_rrsd(os.path.join(iscetest.data, _filename))
+    _raw_obj = Raw(hdf5file=os.path.join(iscetest.data, _filename))
 
     # get orbit object
     orbit_obj = _raw_obj.getOrbit()
 
     # get azimuth mid time of the echo
-    _, _tm_echo = _raw_obj.getPulseTimes()[_slice_rgl]
+    _, _tm_echo = _raw_obj.getPulseTimes(_freq_band, _txrx_pol[0])[_slice_rgl]
     az_tm_mid = _tm_echo.mean()
 
     # get chirp parameters
-    _, _, chp_rate, chp_dur = _raw_obj.getChirpParameters()
+    _, _, chp_rate, chp_dur = _raw_obj.getChirpParameters(_freq_band,
+                                                          _txrx_pol[0])
 
     # get slant range vector , start and spacing in meters
-    _sr_vec = _raw_obj.getSlantRange()
-    sr_start = _sr_vec[0]
-    sr_spacing = _sr_vec[1] - _sr_vec[0]
+    _sr_lsp = _raw_obj.getRanges(_freq_band, _txrx_pol[0])
+    sr_start = _sr_lsp.first
+    sr_spacing = _sr_lsp.spacing
 
     # get decoded float raw echo data for desired range lines
     echo = _raw_obj.getRawDataset(_freq_band, _txrx_pol)[_slice_rgl]
 
-    # replace bad values (NaN) with Gaussian noise
-    echo[:, :] = replace_nan_echo(echo)
+    # replace bad values (NaN or zeros) with Gaussian noise in place
+    replace_nan_echo(echo)
 
     def _parse_el_cut(self, beam=3, max_db=2.4, step_deg=0.02):
         """Prase one-way power pattern of EL cut with EL angles for

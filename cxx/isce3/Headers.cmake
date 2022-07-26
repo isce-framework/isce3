@@ -146,8 +146,6 @@ product/GeoGridProduct.h
 product/RadarGridParameters.h
 product/Serialization.h
 product/Swath.h
-signal/Covariance.h
-signal/Covariance.icc
 signal/Crossmul.h
 signal/Crossmul.icc
 signal/CrossMultiply.h

@@ -12,10 +12,12 @@ except ImportError:
 
 from isce3.signal import (cheby_equi_ripple_filter, corr_doppler_est,
                           sign_doppler_est, unwrap_doppler)
-from isce3.core import LUT2d
+from isce3.core import LUT2d, speed_of_light
+from isce3.antenna import Frame
 
 
-def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
+def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
+                         orbit=None, attitude=None, ant=None,
                          num_rgb_avg=16, az_block_dur=4.0, time_interval=2.0,
                          dop_method='CDE', subband=False,
                          polyfit_deg=3, polyfit=False, out_path='.',
@@ -45,13 +47,23 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
 
     Parameters
     ----------
-    raw_obj : nisar.products.readers.Raw.RawBase
+    raw : nisar.products.readers.Raw.RawBase
         Raw L0B product parser base object
     freq_band : {'A', 'B'}
         Frequency band in multi-band TX chirp.
     txrx_pol : str, optional
         TxRx polarization such as {'HH', 'HV',...}. If not provided the first
         product under `freq_band` will be used.
+    orbit : isce3.core.Orbit, optional
+        If specified, this will be used in place of the orbit data
+        stored in L0B.
+    attitude : isce3.core.Attitude, optional
+        If specified, this will be used in place of attitude data
+        stored in L0B.
+    ant : nisar.products.readers.antenna.AntennaParser, optional
+        Antenna HDF5 product parser object. If not provided, the elevation
+        and azimith angles of unit look vector used in absolute doppler
+        and ambiguity computation will be set to zero degrees.
     num_rgb_avg : int, default=16
         Number of range bins to be averaged in final Doppler values.
     az_block_dur : float, default=4.0
@@ -147,6 +159,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
     ripple_flt = 0.2  # passband ripple of subband filter (dB)
     rolloff_flt = 1.25  # roll-off of subband filter
     stopatt_flt = 27.0  # stop-band attenuation of subband filter (dB)
+
     # check inputs
     if polyfit_deg < 1:
         raise ValueError('polyfit_deg must be greater than 0')
@@ -168,14 +181,14 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
             plot = False
 
     # Check frequency band
-    if freq_band not in raw_obj.polarizations:
+    if freq_band not in raw.polarizations:
         raise ValueError(
             'Wrong frequency band! The available bands -> '
-            f'{list(raw_obj.polarizations)}'
+            f'{list(raw.polarizations)}'
         )
     logger.info(f"Frequency band -> '{freq_band}'")
     #  check for txrx_pol
-    list_txrx_pols = raw_obj.polarizations[freq_band]
+    list_txrx_pols = raw.polarizations[freq_band]
     if txrx_pol is None:
         txrx_pol = list_txrx_pols[0]
     elif txrx_pol not in list_txrx_pols:
@@ -183,19 +196,21 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
             f'Wrong TxRx polarization! The available ones -> {list_txrx_pols}')
     logger.info(f"TxRx Pol -> '{txrx_pol}'")
 
-    # Get chirp parameters
+    # Get chirp parameters and wavelength
     centerfreq, samprate, _, pulsewidth = \
-        raw_obj.getChirpParameters(freq_band, txrx_pol[0])
+        raw.getChirpParameters(freq_band, txrx_pol[0])
 
-    bandwidth = raw_obj.getRangeBandwidth(freq_band, txrx_pol[0])
+    wavelength = speed_of_light / centerfreq
+
+    bandwidth = raw.getRangeBandwidth(freq_band, txrx_pol[0])
 
     # Get Pulse/azimuth time and ref epoch
-    epoch_utc, az_time = raw_obj.getPulseTimes(freq_band,
-                                               txrx_pol[0])
+    epoch_utc, az_time = raw.getPulseTimes(freq_band,
+                                           txrx_pol[0])
     epoch_utc_str = epoch_utc.isoformat()
     # get PRF and check for dithering
-    prf = raw_obj.getNominalPRF(freq_band, txrx_pol[0])
-    dithered = raw_obj.isDithered(freq_band, txrx_pol[0])
+    prf = raw.getNominalPRF(freq_band, txrx_pol[0])
+    dithered = raw.isDithered(freq_band, txrx_pol[0])
     pri = 1. / prf
 
     if dithered:
@@ -207,7 +222,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
     logger.info(f'PRF -> {prf:.3f} (Hz)')
 
     # Get raw dataset
-    raw_dset = raw_obj.getRawDataset(freq_band, txrx_pol)
+    raw_dset = raw.getRawDataset(freq_band, txrx_pol)
     if raw_dset.ndim > 2:
         raise NotImplementedError(
             'Multi-channel Raw echo aka Diagnostic Mode 2 '
@@ -301,8 +316,51 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
         raise ValueError(
             f'Unexpected time-domain Doppler method "{dop_method}"')
 
+    # get orbit object and update its ref epoch if necessary to match
+    # that of L0B echo for both internal and external cases.
+    # This is needed for absolute Doppler and ambiguity computation.
+    if orbit is None:
+        logger.info('Orbit data stored in L0B will be used.')
+        orbit = raw.getOrbit()
+    else:  # use external orbit data
+        logger.info('External orbit data will be used.')
+    if orbit.reference_epoch != epoch_utc:
+        logger.warning(
+            'Reference epoch of orbit, '
+            f'{orbit.reference_epoch.isoformat()}, and that'
+            f' of L0B pulse time, {epoch_utc_str}, '
+            'does not match!'
+        )
+        logger.warning('Reference epoch of L0B pulsetime will be used!')
+        orbit = orbit.copy()
+        orbit.update_reference_epoch(epoch_utc)
+
+    # get attitude object and update its ref epoch if necessary to match
+    # that of L0B echo for both internal and external cases.
+    # This is needed for absolute Doppler and ambiguity computation.
+    if attitude is None:
+        logger.info('Attitude data stored in L0B will be used.')
+        attitude = raw.getAttitude()
+    else:  # use external attitude data
+        logger.info('External attitude data will be used.')
+    if attitude.reference_epoch != epoch_utc:
+        logger.warning(
+            'Reference epoch of attitude, '
+            f'{attitude.reference_epoch.isoformat()}, and that'
+            f' of L0B pulse time, {epoch_utc_str}, '
+            'does not match!'
+        )
+        logger.warning('Reference epoch of L0B pulsetime will be used!')
+        attitude = attitude.copy()
+        attitude.update_reference_epoch(epoch_utc)
+
+    # get ~mid-swath look vector in antenna frame to be used for doppler
+    # ambiguity calculations from orbit+attitude data for all azimuth blocks
+    look_vec_ant = _compute_look_vector_ant(raw, ant, freq_band, txrx_pol)
+    logger.info(f'Look vector in antenna XYZ -> {look_vec_ant}')
+
     # Get slant ranges per range  block centered at each block
-    sr_lsp = raw_obj.getRanges(freq_band, txrx_pol[0])
+    sr_lsp = raw.getRanges(freq_band, txrx_pol[0])
     sr_spacing = sr_lsp.spacing * num_rgb_avg
     sr_start = sr_lsp.first + 0.5 * sr_spacing
     sr_stop = sr_start + (num_blk_rg - 1) * sr_spacing
@@ -328,7 +386,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
         tot_pulses, len_az_blk_dur, len_tm_int, num_blk_az)
 
     # parse valid subswath index for all range lines used later
-    valid_sbsw_all = raw_obj.getSubSwaths(freq_band, txrx_pol[0])
+    valid_sbsw_all = raw.getSubSwaths(freq_band, txrx_pol[0])
     # initialized output mask array for averaged range bins for
     # all azimuth blocks
     mask_rgb_avg_all = np.zeros((num_blk_az, num_blk_rg), dtype='bool')
@@ -363,7 +421,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
         # create a mask for invalid/bad range bins for any reason
         # invalid values are either nan or zero but this does not include
         # TX gaps that may be filled with TX chirp!
-        mask_bad = (np.isnan(echo) | (echo == 0.0)).sum(axis=0) > 0
+        mask_bad = (np.isnan(echo) | np.isclose(echo, 0)).sum(axis=0) > 0
 
         # build a mask array of range bins assuming fixed PRF within
         # each azimuth block. This is needed in case the TX gaps are filled
@@ -379,7 +437,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
         # decimate the range bins mask to fill in mask for averaged range bins
         # per azimuth block. Make sure a valid averaged block contains all
         # valid range bins otherwise set to invalid.
-        mask_rgb_avg_all[n_azblk, :] = mask_valid_rgb[
+        mask_rgb_avg_all[n_azblk] = mask_valid_rgb[
             :num_blk_rg * num_rgb_avg].reshape((num_blk_rg, num_rgb_avg)).sum(
                 axis=1) == num_rgb_avg
 
@@ -395,19 +453,19 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
             # Loop over range lines for one azimuth block
             for line in range(num_lines):
                 # apply subband BPF in freq domain
-                rgc_line_fft = fft.fft(echo[line, :], nfft)
+                rgc_line_fft = fft.fft(echo[line], nfft)
                 # first band
                 rgc_line_fft_edge = rgc_line_fft * coef_bpf_fft_first
-                echo_sub_first[line, :] = fft.ifft(
+                echo_sub_first[line] = fft.ifft(
                     rgc_line_fft_edge)[slice_grp_del]
                 # last band
                 rgc_line_fft_edge = rgc_line_fft * coef_bpf_fft_last
-                echo_sub_last[line, :] = fft.ifft(
+                echo_sub_last[line] = fft.ifft(
                     rgc_line_fft_edge)[slice_grp_del]
                 # mid band
                 rgc_line_fft *= coeff_lpf_fft
                 # go back to time and get rid of all group delays
-                echo[line, :] = fft.ifft(rgc_line_fft)[slice_grp_del]
+                echo[line] = fft.ifft(rgc_line_fft)[slice_grp_del]
 
         # estimate doppler per band, per azimuth block over all range blocks
         dop_cnt = np.zeros(num_blk_rg, dtype="float32")
@@ -419,7 +477,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
 
         if subband:
             dop_cnt_bands = np.zeros((3, num_blk_rg), dtype="float32")
-            dop_cnt_bands[1, :] = dop_cnt
+            dop_cnt_bands[1] = dop_cnt
             for n_blk in range(num_blk_rg):
                 slice_rgb = slice(n_blk * num_rgb_avg,
                                   (n_blk + 1) * num_rgb_avg)
@@ -431,7 +489,7 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
                 # sum correlation coeff among all three bands
                 corr_coef[n_azblk, n_blk] += (corr_coef_low + corr_coef_high)
             # average correlation coeff among all three bands
-            corr_coef[n_azblk, :] /= 3.0
+            corr_coef[n_azblk] /= 3.0
 
             # perform doppler unwrapping over three bands
             dop_cnt_bands = unwrap_doppler(dop_cnt_bands, prf)
@@ -442,12 +500,18 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
             pf_coef_subbands = np.polyfit(fcnt_rf_subbands, dop_cnt_bands, 1)
 
             # eval doppler centroid at the center freq of the chirp
-            # IF version: pf_coef_subbands[1, :]
+            # IF version: pf_coef_subbands[1]
             dop_cnt = np.polyval(pf_coef_subbands, centerfreq)
 
-        # collect doppler centroid vectors
+        # get valid dopplers in range
+        dop_cnt_valid = dop_cnt[mask_rgb_avg_all[n_azblk]]
+
+        # Unwrap only valid Doppler values along range
+        dop_cnt_valid = unwrap_doppler(dop_cnt_valid, prf)
+
+        # Polyfit valid-only doppler centroids over slant ranges
         if polyfit:  # replace actual value by polyfitted ones
-            sr_valid = slrg_per_blk[mask_rgb_avg_all[n_azblk, :]]
+            sr_valid = slrg_per_blk[mask_rgb_avg_all[n_azblk]]
             # check if the number of valid range blocks > polyfit_deg
             if sr_valid.size <= polyfit_deg:
                 raise RuntimeError(
@@ -455,20 +519,43 @@ def doppler_lut_from_raw(raw_obj, freq_band='A', txrx_pol=None,
                     f'{polyfit_deg + 1} valid range blocks or '
                     f'{(polyfit_deg + 1) * num_rgb_avg} valid range bins!'
                 )
-            dop_cnt_valid = dop_cnt[mask_rgb_avg_all[n_azblk, :]]
             pf_coef_dop_cnt = np.polyfit(sr_valid, dop_cnt_valid, polyfit_deg)
-            dop_cnt_map[n_azblk, :] = np.polyval(pf_coef_dop_cnt, slrg_per_blk)
+            dop_cnt_map[n_azblk] = np.polyval(pf_coef_dop_cnt, slrg_per_blk)
             # given estimation of invalid range bins from polyfit,
             # set the mask to be all True after polyeval!
-            mask_rgb_avg_all[n_azblk, :] = True
+            mask_rgb_avg_all[n_azblk] = True
         else:  # keep the actual values
-            dop_cnt_map[n_azblk, :] = dop_cnt
+            # store the valid Dopplers unwrapped over ranges
+            dop_cnt[mask_rgb_avg_all[n_azblk]] = dop_cnt_valid
+            dop_cnt_map[n_azblk] = dop_cnt
 
-        # plot Doppler centroid per azimuth block
+        # plot ambiguous Doppler centroid purely extracted from echo
+        # per azimuth block
         if plot:
-            _plot_save_dop(n_azblk, slrg_per_blk, dop_cnt, az_time_blk,
-                           epoch_utc_str, out_path, freq_band, txrx_pol,
-                           polyfit_deg, mask_rgb_avg_all[n_azblk, :])
+            _plot_save_dop(n_azblk, slrg_per_blk, dop_cnt,
+                           az_time_blk[n_azblk], epoch_utc_str, out_path,
+                           freq_band, txrx_pol, polyfit_deg,
+                           mask_rgb_avg_all[n_azblk])
+
+        # calculate absolute doppler and its ambiguity number to be added
+        # to estimated ambiguous doppler centroid for final LUT2d
+        # Use median (or mean) of measured ambiguous doppler over slant ranges
+        # obatained from echo to be used in doppler ambiguity calculation.
+        # Perhaps Median is more suited in case of skewed Doppler outliers
+        # due to presence of man-made or non-homogenous targets in homogenous
+        # scene.
+        dop_echo = np.median(dop_cnt_valid)
+        dop_abs, dop_amb_num = _compute_doppler_abs_ambiguity(
+            orbit, attitude, az_time_blk[n_azblk], look_vec_ant,
+            prf, wavelength, dop_echo)
+
+        logger.info('Absolute Doppler calculated from attitude for block # '
+                    f'{n_azblk + 1} -> {dop_abs:.1f} (Hz)')
+        logger.info('Calculated Doppler ambiguity number from attitude '
+                    f'for block # {n_azblk + 1} -> {dop_amb_num}')
+        # Adjust estimated Doppler centroids if doppler ambiguity is non zero.
+        if dop_amb_num:
+            dop_cnt_map[n_azblk] += dop_amb_num * prf
 
     # form Doppler LUT2d object
     dop_lut = LUT2d(slrg_per_blk, az_time_blk, dop_cnt_map)
@@ -493,7 +580,119 @@ def set_logger(name: str) -> logging.Logger:
 
     return logger
 
+
 # list of  private helper functions:
+
+
+def _compute_look_vector_ant(raw, ant, freq_band, txrx_pol):
+    """
+    Compute look vector or antenna pointing unit vector in antenna
+    Cartesian coordinate.
+
+    In case of multi-beam, EL angle is extratced from the middle beam
+    (~mid swath) with RX polarization while the azimuth angle is the averaged
+    one from Tx+Rx polarizations of middle beam!
+
+    Parameters
+    ----------
+    raw : nisar.products.readers.Raw.RawBase
+    ant : nisar.products.readers.antenna.AntennaParser
+    freq_band : {'A', 'B'}
+    txrx_pol : str
+
+    Returns
+    -------
+    np.ndarray(float)
+        Three-element unit look vector in antenna XYZ
+
+    Notes
+    -----
+    In case `ant` is set to None, the EL and AZ angles of look vector
+    will be assumed to be zero radians and the antenna frame will be assumed
+    to be "EL-AND-AZ".
+
+    """
+    # check whether antenna object exists
+    if ant is None:
+        el_ang = 0  # in (rad)
+        az_ang = 0  # in (rad)
+        frame = Frame()
+    else:
+        # get mid beam number from raw object for a desired freq and pol
+        list_rx_beams = raw.getListOfRxTRMs(freq_band, txrx_pol)
+        mid_beam = list_rx_beams[list_rx_beams.size // 2]
+
+        # Get elevation angle of the peak at around mid swath for RX pol only
+        ant_rx_el = ant.el_cut(beam=mid_beam, pol=txrx_pol[1])
+        idx_peak = abs(ant_rx_el.copol_pattern).argmax()
+        el_ang = ant_rx_el.angle[idx_peak]  # in (rad)
+
+        # Get azimuth angle from EL cut at around mid swath for Tx+Rx pol
+
+        az_ang = ant_rx_el.cut_angle  # in (rad)
+        # if TX pol is different from RX pol then take average of both
+        if txrx_pol[0] != txrx_pol[1]:
+            # To cover TX L/R circular pol, the following condition is needed
+            if txrx_pol[1] == 'H':
+                tx_pol = 'V'
+            else:
+                tx_pol = 'H'
+            ant_tx_el = ant.el_cut(beam=mid_beam, pol=tx_pol)
+            az_ang += ant_tx_el.cut_angle
+            az_ang *= 0.5
+        frame = ant.frame
+
+    return frame.sph2cart(el_ang, az_ang)
+
+
+def _compute_doppler_abs_ambiguity(orbit, attitude, az_time, look_vec,
+                                   prf, wavelength, dop_echo):
+    """
+    Compute absolute Doppler centroid and its ambiguity number w.r.t nominal
+    PRF at a desired azimuth time for a unit look vector in antenna frame.
+
+    Both mechanical (attitude) and electrical (antenna) aspects
+    are taken into account per knowledge.
+
+    Parameters
+    ----------
+    orbit : isce3.core.Orbit
+    attitude : isce3.core.Attitude
+    az_time : float
+        azimuth time w.r.t. reference epoch of orbit/attitude in (sec)
+    look_vec : np.ndarray(float)
+        Three-element unit look vector in antenna Cartesian coordinate
+    prf : float
+        Pulse repetition frequency in (Hz).
+        It is the nominal/mean value for dithered case.
+    wavelength : float
+        Wavelength at the center of the TX chirp in (m)
+    dop_echo : float
+        Doppler value estimated from echo in (Hz)
+
+    Returns
+    -------
+    float
+        Absolute doppler centroid in (Hz)
+    int
+        Ambiguity number of PRF, a signed value!
+
+    Notes
+    -----
+    It's assumed that orbit and attitude objects have the same reference epoch
+    and the azimuth time is seconds from their common reference epoch.
+
+
+    """
+    # Get quaternion and convert look vector from antenna to ECEF
+    quat = attitude.interpolate(az_time)
+    lk_vec_ecef = quat.rotate(look_vec)
+    # get velocity vector and compute doppler
+    _, vel = orbit.interpolate(az_time)
+    dop = 2.0 / wavelength * vel.dot(lk_vec_ecef)
+    # get doppler ambiguity
+    amb_num = round((dop - dop_echo) / prf)
+    return dop, amb_num
 
 
 def _plot_subband_filters(samprate: float, centerfreq: float,
@@ -524,7 +723,7 @@ def _plot_subband_filters(samprate: float, centerfreq: float,
 
 
 def _plot_save_dop(n_azblk: int, slrg_per_blk: np.ndarray, dop_cnt: np.ndarray,
-                   az_time_blk: np.ndarray, epoch_utc_str: str, out_path: str,
+                   az_time: float, epoch_utc_str: str, out_path: str,
                    freq_band: str, txrx_pol: str, polyfit_deg: int,
                    mask_valid_rgb: np.ndarray):
     """Plot Doppler as a function Slant range and save it as PNG file"""
@@ -548,8 +747,8 @@ def _plot_save_dop(n_azblk: int, slrg_per_blk: np.ndarray, dop_cnt: np.ndarray,
             bbox=plt_props)
     ax.grid(True)
     ax.set_title(
-        'Doppler Centroids\n@ azimuth-time = '
-        f'{az_time_blk[n_azblk]:.3f} sec\nsince {epoch_utc_str}'
+        'Doppler Centroids from Raw Echo\n@ azimuth-time = '
+        f'{az_time:.3f} sec\nsince {epoch_utc_str}'
     )
     ax.set_ylabel("Doppler (Hz)")
     ax.set_xlabel("Slant Range (Km)")
