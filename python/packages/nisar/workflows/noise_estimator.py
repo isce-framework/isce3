@@ -14,7 +14,8 @@ desc = __doc__
 
 def cmd_line_parse():
     parser = argparse.ArgumentParser(
-        description=desc, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description=desc, formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        fromfile_prefix_chars="@",
     )
     parser.add_argument(
         "-i",
