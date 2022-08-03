@@ -79,15 +79,10 @@ workflowdata = {
              "README.txt",
         ],
 
-        "L0B_RRSD_REE_NOISEST1":
+        "L0B_RRSD_REE_BF_NET":
         [
-            "L0B_RRSD_REE_NOISEST1.h5",
+            "L0B_RRSD_REE_BF_NET.h5",
             "README.txt",
-        ],
-
-        "L0B_RRSD_REE17_PTA":
-        [
-            "rslc_ree17.h5",
         ],
 
         "L0B_RRSD_REE_CHANNEL4_EXTSCENE_PASS1":
@@ -99,6 +94,12 @@ workflowdata = {
             "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5",
             "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_UNCALIB.h5",
             "REE_ORBIT_CHANNEL4_EXTSCENE_PASS1.xml",
+        ],
+
+        "L1_RSLC_REE_PTA":
+        [
+            "L1_RSLC_REE_PTA.h5",
+            "README.txt",
         ],
 
         "L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F":
@@ -324,11 +325,11 @@ workflowtests = {
     },
 
     'noisest': {"noisest_" + name: "L0B_RRSD_" + name for name in [
-        "REE_NOISEST1",
+        "REE_BF_NET",
     ]},
 
-    'pta': {"pta_" + name: "L0B_RRSD_" + name for name in [
-        "REE17_PTA",
+    'pta': {"pta_" + name: "L1_RSLC_" + name for name in [
+        "REE_PTA",
     ]},
 
     'soilm': {"soilm_" + name: "L2_GCOV_" + name for name in [

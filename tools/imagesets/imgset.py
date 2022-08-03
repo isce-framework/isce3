@@ -272,9 +272,9 @@ class ImageSet:
         mindata = [
             "L0B_RRSD_ALPSRP264757150_Amazon",
             "L0B_RRSD_REE1",
-            "L0B_RRSD_REE_NOISEST1",
-            "L0B_RRSD_REE17_PTA",
+            "L0B_RRSD_REE_BF_NET",
             "L0B_RRSD_REE_CHANNEL4_EXTSCENE_PASS1",
+            "L1_RSLC_REE_PTA",
             "L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05",
             "L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03",
             "L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02",
@@ -386,6 +386,10 @@ class ImageSet:
             or testname.startswith("el_null")
         )
 
+        # check whether we're testing one of the CalTools workflows (Noise Estimation or
+        # Point Target Analysis).
+        is_caltools_test = testname.startswith("noisest") or testname.startswith("pta")
+
         # copy test runconfig to test directory (for end-to-end testing, we need to
         # distinguish between the runconfig files for each individual workflow)
         if testname.startswith("end2end"):
@@ -404,7 +408,7 @@ class ImageSet:
                 inputrunconfig = f"{testname}{suf}{alg_suffix}"
                 shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                                 pjoin(testdir, f"runconfig_{wfname}{suf}{alg_suffix}"))
-        elif is_dnc_test:
+        elif is_dnc_test or is_caltools_test:
             inputrunconfig = f"{testname}{suf}.txt"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                             pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
@@ -418,7 +422,7 @@ class ImageSet:
             executable = pyname
             # Execute the SoilMoisture SAS inside the Conda environment used for its build
             cmd = [f"time conda run -n {soilm_conda_env} {executable} @runconfig_{wfname}{suf}.txt"]
-        elif is_dnc_test:
+        elif is_dnc_test or is_caltools_test:
             cmd = [f"time python3 -m {pyname} {arg} @runconfig_{wfname}{suf}.txt"]
         else:
             cmd = [f"time python3 -m {pyname} {arg} runconfig_{wfname}{suf}.yaml"]
@@ -521,37 +525,28 @@ class ImageSet:
 
 
     def noisesttest(self, tests=None):
+        """Test Noise Estimation tool."""
         if tests is None:
             tests = workflowtests['noisest'].items()
         for testname, dataname in tests:
-            print(f"\nRunning CalTool noise estimate test {testname}\n")
-            testdir = os.path.abspath(pjoin(self.testdir, testname))
-            os.makedirs(pjoin(testdir, f"output_noisest"), exist_ok=True)
-            log = pjoin(testdir, f"output_noisest", "stdouterr.log")
-            cmd = [f"""time noise_evd_estimate.py -i input_{dataname}/{workflowdata[dataname][0]} \
-                                                  -r -c 10 -o output_noisest/noise_est_output_bcal.txt"""]
-            try:
-                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
-                                loghdlrname=f'wftest.{os.path.basename(testdir)}')
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"CalTool noise estimate test {testname} failed") from e
+            self.workflowtest(
+                "noisest",
+                testname,
+                dataname,
+                "nisar.workflows.noise_estimator",
+            )
 
     def ptatest(self, tests=None):
+        """Test Point Target Analysis tool."""
         if tests is None:
             tests = workflowtests['pta'].items()
         for testname, dataname in tests:
-            print(f"\nRunning CalTool point target analyzer test {testname}\n")
-            testdir = os.path.abspath(pjoin(self.testdir, testname))
-            os.makedirs(pjoin(testdir, f"output_pta"), exist_ok=True)
-            log = pjoin(testdir, f"output_pta", "stdouterr.log")
-            cmd = [f"""time point_target_analysis.py -i input_{dataname}/rslc_ree17.h5\
-                            -f 'A' -p 'HH' -c 3.177 -54.58 0 --fs-bw-ratio 2 --mlobe-nulls 2 \
-                            --search-null --num-lobes 10 --num-search-pix 6 -o output_pta/pta.json"""]
-            try:
-                self.distribrun(testdir, cmd, logfile=log, dataname=dataname, nisarimg=True,
-                                loghdlrname=f'wftest.{os.path.basename(testdir)}')
-            except subprocess.CalledProcessError as e:
-                raise RuntimeError(f"CalTool point target analyzer tool test {testname} failed") from e
+            self.workflowtest(
+                "pta",
+                testname,
+                dataname,
+                "nisar.workflows.point_target_analysis",
+            )
 
     def soilmtest(self, tests=None):
         if tests is None:

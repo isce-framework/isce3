@@ -1,0 +1,12 @@
+--input
+input_L1_RSLC_REE_PTA/L1_RSLC_REE_PTA.h5
+--freq
+A
+--polarization
+HH
+--LLH
+-54.58
+3.177
+0
+--output
+output_pta/out.json
