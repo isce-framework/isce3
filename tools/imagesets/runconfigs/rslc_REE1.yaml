@@ -14,10 +14,10 @@ runconfig:
             dem_file: null
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            orbit: null
+            orbit: input_L0B_RRSD_REE1/orbit.xml
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.
-            pointing: null
+            pointing: input_L0B_RRSD_REE1/attitude.xml
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
             external_calibration: null
@@ -131,8 +131,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 64
-                    azimuth: 64
+                    range: 2048
+                    azimuth: 2048
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
                 kernel:
@@ -162,7 +162,7 @@ runconfig:
             dry_troposphere_model: nodelay
             dem:
                 # Height (in meters) to use if DEM unavailable.
-                reference_height: 661.0
+                reference_height: 0.0
                 # How to interpolate the digital elevation model.  One of
                 # nearest, bilinear, bicubic, biquintic, or sinc
                 interp_method: biquintic

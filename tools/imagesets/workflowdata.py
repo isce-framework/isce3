@@ -6,6 +6,8 @@ workflowdata = {
         [
             "REE_L0B_out17.h5",
             "README.txt",
+            "attitude.xml",
+            "orbit.xml",
         ],
 
         # and so forth

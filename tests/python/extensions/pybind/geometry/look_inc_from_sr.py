@@ -26,7 +26,7 @@ class TestLookIncAngles:
     orbit_obj = _raw_obj.getOrbit()
 
     # get slant range vector
-    sr_vec = _raw_obj.getSlantRange()
+    sr_vec = np.array(_raw_obj.getRanges())
 
     # get azimuth mid time of the echo
     _, tm_echo = _raw_obj.getPulseTimes()
