@@ -1,5 +1,10 @@
-gcc
-gfortran
-make
-netcdf-cxx4
-netcdf-fortran
+numpy
+h5py
+gdal
+rasterio
+scikit-learn
+python>=3.6
+georasters
+xarray
+esda
+dill

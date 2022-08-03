@@ -1,0 +1,56 @@
+--Folder path to NISAR GCOV data (T)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001.h5
+--Folder path to NISAR GCOV data (T-12days)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200914T135152_20200914T135219_P01101_M_P_001.h5
+--Folder path to NISAR GCOV data (T-24days)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200902T135152_20200902T135219_P01101_M_P_001.h5
+--Folder path to NISAR GCOV 200m data (T)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001_200m.h5
+--Folder path to NISAR GCOV 200m data (T-12days)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200914T135152_20200914T135219_P01101_M_P_001_200m.h5
+--Folder path to NISAR GCOV 200m data (T-24days)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200902T135152_20200902T135219_P01101_M_P_001_200m.h5
+--Folder path and file to static ancillary data: Alpha Table (HH/VV)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/alphatable.nc
+--Folder path and file to static ancillary data: EZlat200m
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lat200m.float32
+--Folder path and file to static ancillary data: EZlon200m
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lon200m.float32
+--Folder path and file to static ancillary data: EZlat1km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lat01km.float32
+--Folder path and file to static ancillary data: EZlon1km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lon01km.float32
+--Folder path and file to static ancillary data: EZlat3km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lat03km.float32
+--Folder path and file to static ancillary data: EZlon3km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lon03km.float32
+--Folder path and file to static ancillary data: EZlat9km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lat09km.float32
+--Folder path and file to static ancillary data: EZlon9km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/EASE2_lon09km.float32
+--Folder path and file to static ancillary data: Landcover1km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/dominantIGBP_M01_B20120101_003.uint8
+--Folder path and file to static ancillary data: WaterFrac1km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/waterfrac_M01_002.float32
+--Folder path and file to static ancillary data: WaterFrac3km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/waterfrac_M03_002.float32
+--Folder path and file to static ancillary data: Clay200m
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/clay05cmD_EASE2_200m_int8.nc
+--Folder path and file to static ancillary data: BD200m
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/BD05cmD_EASE2_200m.nc
+--Folder path and file to static ancillary data: Urban1km
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/UrbanFraction_M01_001.float32
+--Folder path and file to static ancillary data: dem1km slope
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/DEMSLPSTD_M01_002.float32
+--Folder path to ECMWF sol moisture
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/uERA5_SD_TP_ST_SM.nc
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Average)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_average_09_1.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Min)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_min_09_1.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Max)
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_max_09_1.dat
+--Log file name with path
+output_soilm/NISAR_SM_20200926.log
+--Output HDF5 file name with path
+output_soilm/NISAR_SM_20200926.h5

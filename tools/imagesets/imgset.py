@@ -16,6 +16,8 @@ runconfigdir = f"{thisdir}/runconfigs"
 art_base = "https://cae-artifactory.jpl.nasa.gov/artifactory/general-develop/gov/nasa/jpl/nisar/adt/data"
 container_testdir = f"/tmp/test"
 
+soilm_conda_env = 'SoilMoisture'
+
 # Query docker info
 docker_info = subprocess.check_output("docker info".split()).decode("utf-8")
 docker_runtimes = " ".join(line for line in docker_info.split("\n") if "Runtimes:" in line)
@@ -390,8 +392,19 @@ class ImageSet:
             inputrunconfig = f"{testname}_{wfname}{suf}.yaml"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
-        elif testname.startswith("soilm") or is_dnc_test:
-            # Executable-dependent.  Currently works only for Disaggregation.
+        elif testname.startswith("soilm"):
+            # For R3.1, the SAS uses six configuration files with suffixes
+            # _pmi.txt:    PMI algorithm, plaintext format
+            # _r3.txt:     DSG and TSR algorithms, plaintext format
+            # _rgs_a.csv:  RGS algorithm, ancillary files, CSV format
+            # _rgs_i.csv:  RGS algorithm, ancillary files, CSV format
+            # _rgs_p.csv:  RGS algorithm, ancillary files, CSV format
+            # .txt:        Top-level, Python argparse() text format
+            for alg_suffix in ['_pmi.txt', '_r3.txt', '_rgs_a.csv', '_rgs_i.csv', '_rgs_p.csv', '.txt']:
+                inputrunconfig = f"{testname}{suf}{alg_suffix}"
+                shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                                pjoin(testdir, f"runconfig_{wfname}{suf}{alg_suffix}"))
+        elif is_dnc_test:
             inputrunconfig = f"{testname}{suf}.txt"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                             pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
@@ -403,8 +416,8 @@ class ImageSet:
 
         if testname.startswith("soilm"):
             executable = pyname
-            # Executable-dependent.  Currently works only for Disaggregation.
-            cmd = [f"time {executable} runconfig_{wfname}{suf}.txt"]
+            # Execute the SoilMoisture SAS inside the Conda environment used for its build
+            cmd = [f"time conda run -n {soilm_conda_env} {executable} @runconfig_{wfname}{suf}.txt"]
         elif is_dnc_test:
             cmd = [f"time python3 -m {pyname} {arg} @runconfig_{wfname}{suf}.txt"]
         else:
@@ -544,19 +557,13 @@ class ImageSet:
         if tests is None:
             tests = workflowtests['soilm'].items()
         for testname, dataname in tests:
-            # Note:  we will eventually have multiple SM executables, each
-            # of which implements a different algorithm.  These executables
-            # will run the same input test data.  It's TBD whether they'll
-            # be able to share the same runconfig.  The output files should
-            # be either written to different directories by executable or
-            # should be named to indicate which executable was used, or both.
-            #
-            # Also, the current plan is for two of the SM executables to be
-            # Fortran 90 binaries and the other two to be Python modules.
-            soilm_bindir = '/opt/conda/envs/SoilMoisture/bin'
-            executables = [ 'NISAR_SM_DISAGG_SAS' ]
-            for executable in executables:
-                self.workflowtest("soilm", testname, dataname, f"{soilm_bindir}/{executable}")
+            # For R3.1, invoke the Soil Moisture SAS by executing a top-level
+            # executable Python script.  The top-level script will invoke
+            # each of the four Soil Moisture algorithms and combine their
+            # intermediate soil moisture output products into the final soil
+            # moisture product.
+            executable = 'sm_run_sas.py'
+            self.workflowtest("soilm", testname, dataname, f"{executable}")
 
     def mintests(self):
         """
