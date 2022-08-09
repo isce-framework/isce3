@@ -403,7 +403,6 @@ def prep_ds(cfg, output_hdf5, dst):
         else:
             prep_ds_insar(cfg, dst, dst_h5)
 
-
 def prep_ds_gslc_gcov(cfg, dst, dst_h5):
     '''
     Prepare datasets for GSLC and GCOV

@@ -3,16 +3,14 @@
 
 #pragma once
 
-// std
+#include <string>
 #include <valarray>
-
-// isce3::core
 #include <isce3/core/DateTime.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Constants.h>
-
-// isce3::io
+#include <isce3/product/SubSwaths.h>
 #include <isce3/io/Raster.h>
+#include <isce3/except/Error.h>
 
 // Declaration
 namespace isce3 {
@@ -31,7 +29,10 @@ class isce3::product::Swath {
         /** Get slant range array */
         inline const std::valarray<double> & slantRange() const { return _slantRange; }
         /** Set slant range array */
-        inline void slantRange(const std::valarray<double> & rng) { _slantRange = rng; }
+        inline void slantRange(const std::valarray<double> & rng) {
+            _slantRange = rng;
+            _subSwaths.width(_slantRange.size());
+            }
 
         /** Get the range pixel spacing */
         inline double rangePixelSpacing() const { return _slantRange[1] - _slantRange[0]; }
@@ -39,7 +40,10 @@ class isce3::product::Swath {
         /** Get zero Doppler time array */
         inline const std::valarray<double> & zeroDopplerTime() const { return _zeroDopplerTime; }
         /** Set zero Doppler time array */
-        inline void zeroDopplerTime(const std::valarray<double> & t) { _zeroDopplerTime = t; }
+        inline void zeroDopplerTime(const std::valarray<double> & t) {
+            _zeroDopplerTime = t;
+            _subSwaths.length(_zeroDopplerTime.size());
+            }
 
         /** Get the number of samples */
         inline size_t samples() const { return _slantRange.size(); }
@@ -110,18 +114,44 @@ class isce3::product::Swath {
         /** Set reference epoch */
         inline void refEpoch(const isce3::core::DateTime & epoch) { _refEpoch = epoch; }
 
-        /** Get valid array indices */
-        inline std::array<size_t, 2> validSamples() const { return {_validStart, _validEnd}; }
-        /** Set valid array indices */
-        inline void validSamples(const std::array<size_t, 2> & valid) {
-            _validStart = valid[0];
-            _validEnd = valid[1];
+        /** Get SubSwaths object */
+        inline isce3::product::SubSwaths& subSwaths() {
+            return _subSwaths;
         }
+        
+        inline const isce3::product::SubSwaths& subSwaths() const {
+            return _subSwaths;
+        }
+
+        /** Set SubSwaths object */
+        inline void subSwaths(const isce3::product::SubSwaths &v) {
+            _subSwaths = v;
+            if (_subSwaths.width() != _slantRange.size()) {
+                std::string error_msg = "WARNING the number of range samples";
+                error_msg += " of SubSwaths (";
+                error_msg += std::to_string(_subSwaths.width());
+                error_msg += ") and Swath (" + _slantRange.size();
+                error_msg += ") objects differ.";
+                throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+            }
+            if (_subSwaths.length() != _zeroDopplerTime.size()) {
+                std::string error_msg = "WARNING the number of azimuth lines";
+                error_msg += " of SubSwaths (";
+                error_msg += std::to_string(_subSwaths.length());
+                error_msg += ") and Swath (" + _zeroDopplerTime.size();
+                error_msg += ") objects differ.";
+                throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+            }
+        }
+
 
     private:
         // Coordinates
         std::valarray<double> _slantRange;
         std::valarray<double> _zeroDopplerTime;
+
+        // Valid samples sub-swath
+        isce3::product::SubSwaths _subSwaths;
 
         // Other metadata
         double _acquiredCenterFrequency;

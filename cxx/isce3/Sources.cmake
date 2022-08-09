@@ -73,6 +73,7 @@ product/RadarGridParameters.cpp
 product/GeoGridParameters.cpp
 product/RadarGridProduct.cpp
 product/GeoGridProduct.cpp
+product/SubSwaths.cpp
 signal/Crossmul.cpp
 signal/CrossMultiply.cpp
 signal/filter2D.cpp

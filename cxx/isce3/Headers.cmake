@@ -145,6 +145,7 @@ product/RadarGridProduct.h
 product/GeoGridProduct.h
 product/RadarGridParameters.h
 product/Serialization.h
+product/SubSwaths.h
 product/Swath.h
 signal/Crossmul.h
 signal/Crossmul.icc
