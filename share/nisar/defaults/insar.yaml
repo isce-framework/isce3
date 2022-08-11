@@ -240,6 +240,8 @@ runconfig:
             dense_offsets:
                 # Flag to enable/disable dense offsets estimation
                 enabled: True
+                # Lines per block to process in batch
+                lines_per_block: 1000
                 # Path to HDF5 file or directory with geometry-coregistered SLCs.
                 # Not required as we allow the use of intermediate outputs from
                 # the previous InSAR module, which is not user-specified

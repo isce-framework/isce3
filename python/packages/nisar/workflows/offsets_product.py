@@ -63,15 +63,18 @@ def run(cfg: dict, output_hdf5: str = None):
                 out_dir.mkdir(parents=True, exist_ok=True)
 
                 # Create a memory-mappable (ENVI) version of the ref SLC
+                copy_raster(ref_hdf5, freq, pol,
+                            offs_params['lines_per_block'],
+                            str(out_dir / 'reference'), format='ENVI')
                 ref_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
-                copy_raster(ref_str, str(out_dir / 'reference'))
                 ref_raster = isce3.io.Raster(ref_str)
 
                 # Create a memory mappable version (ENVI) of secondary
                 if coreg_slc_path.is_file():
-                    sec_str = f'HDF5:{sec_hdf5}:/{sec_slc.slcPath(freq, pol)}'
                     sec_path = str(out_dir / 'secondary')
-                    copy_raster(sec_str, sec_path)
+                    copy_raster(sec_hdf5, freq, pol,
+                                offs_params['lines_per_block'],
+                                sec_path, format='ENVI')
                 else:
                     sec_path = str(coreg_slc_path /
                                    f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
