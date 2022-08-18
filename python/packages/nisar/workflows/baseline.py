@@ -110,9 +110,7 @@ def compute_baseline(target_llh,
     # (i.e., parallel to the LOS direction)
     # parallel baseline in refernce LOS direction is positive
     parallel_baseline = baseline * costheta
-    if costheta**2 > 1:
-        print(ref_rng, baseline, sec_rng)
-        print(sec_xyz, ref_xyz)
+    
     # project the baseline to the normal to to the reference LOS direction
     perp_baseline_temp = baseline * np.sqrt(1 - costheta ** 2)
 
