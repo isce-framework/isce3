@@ -5,8 +5,8 @@ import numpy.testing as npt
 import isce3.ext.isce3 as isce
 import iscetest
 
-def test_radargridparameters():
-    # Create RadarGridParameters object
+def test_swaths():
+    # Create Swath object
     swath = isce.product.Swath(iscetest.data + "envisat.h5", 'A')
 
     # Check its values

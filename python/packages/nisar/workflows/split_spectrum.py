@@ -7,6 +7,7 @@ import time
 import h5py
 import isce3
 import journal
+import nisar
 import numpy as np
 from isce3.splitspectrum import splitspectrum
 from nisar.h5 import cp_h5_meta_data
@@ -173,11 +174,9 @@ def run(cfg: dict):
                             block_rows_data = blocksize
 
                         dest_pol_path = f"{dest_freq_path}/{pol}"
-                        target_slc_image = np.empty([block_rows_data, cols],
-                                                    dtype=complex)
 
-                        src_h5[dest_pol_path].read_direct(
-                            target_slc_image,
+                        target_slc_image = nisar.types.read_c4_dataset_as_c8(
+                            src_h5[dest_pol_path],
                             np.s_[row_start: row_start + block_rows_data, :])
 
                         subband_slc_low, subband_meta_low = \

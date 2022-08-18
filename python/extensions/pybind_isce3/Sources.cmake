@@ -75,6 +75,7 @@ signal/filter2D.cpp
 product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
+product/SubSwaths.cpp
 product/Swath.cpp
 product/Grid.cpp
 unwrap/unwrap.cpp

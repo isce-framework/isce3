@@ -25,7 +25,7 @@ struct RadarGridParams {
     double sensing_mid;
     double prf;
     double starting_range;
-    double range_pxl_spacing;
+    double range_pixel_spacing;
     size_t length;
     size_t width;
 };

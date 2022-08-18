@@ -218,6 +218,9 @@ dense_offsets_options:
     # Flag to enable/disable dense offsets estimation. Default: True
     enabled: bool(required=False)
 
+    # Lines per block to process in batch
+    lines_per_block: int(min=1, required=False)
+
     # Path to HDF5 file or directory with geometry-coregistered SLCs.
     # Not required as we allow the use of intermediate outputs from
     # the previous InSAR module, which is not user-specified

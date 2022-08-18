@@ -17,6 +17,8 @@ from ruamel.yaml import YAML
 import sys
 import tempfile
 from typing import List, Union, Optional
+from isce3.io import Raster as RasterIO
+
 
 # TODO some CSV logger
 log = logging.getLogger("focus")
@@ -217,9 +219,12 @@ def get_dem(cfg: Struct):
     fn = cfg.dynamic_ancillary_file_group.dem_file
     if fn:
         log.info(f"Loading DEM {fn}")
-        dem.load_dem(fn)
+        log.info("Out-of-bound DEM values will be set to "
+                 f"{cfg.processing.dem.reference_height} (m).")
+        dem.load_dem(RasterIO(fn))
     else:
-        log.warning("No DEM given, using height=0.")
+        log.warning(f"No DEM given, using ref height "
+                    "{cfg.processing.dem.reference_height} (m).")
     return dem
 
 

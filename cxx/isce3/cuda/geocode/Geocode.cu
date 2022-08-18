@@ -109,7 +109,7 @@ __global__ void geoToRdrIndices(double* rdr_x, double* rdr_y, bool* mask,
 
     // convert aztime and range to indices
     double y = (t - radargrid.sensing_start) * radargrid.prf;
-    double x = (r - radargrid.starting_range) / radargrid.range_pxl_spacing;
+    double x = (r - radargrid.starting_range) / radargrid.range_pixel_spacing;
 
     // check if indinces in bounds and set accordingly
     const bool not_in_rdr_grid =
@@ -209,7 +209,7 @@ Geocode::Geocode(const isce3::product::GeoGridParameters & geogrid,
     _radar_grid.sensing_mid = _rdr_geom.radarGrid().sensingMid();
     _radar_grid.prf = _rdr_geom.radarGrid().prf();
     _radar_grid.starting_range = _rdr_geom.radarGrid().startingRange();
-    _radar_grid.range_pxl_spacing = _rdr_geom.radarGrid().rangePixelSpacing();
+    _radar_grid.range_pixel_spacing = _rdr_geom.radarGrid().rangePixelSpacing();
     _radar_grid.length = _rdr_geom.gridLength();
     _radar_grid.width = _rdr_geom.gridWidth();
 
