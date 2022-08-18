@@ -3,6 +3,7 @@
 #include <string>
 #include <valarray>
 
+#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
@@ -32,13 +33,24 @@ void addbinding(pybind11::class_<Swath> & pySwath)
         .def_property_readonly("range_pixel_spacing", &Swath::rangePixelSpacing)
         .def_property_readonly("samples", &Swath::samples)
         .def_property_readonly("lines", &Swath::lines)
-        .def_property_readonly("processed_wavelength", &Swath::processedWavelength)
+        .def("sub_swaths",
+                py::overload_cast<>(&Swath::subSwaths))
+        .def("sub_swaths",
+                py::overload_cast<>(&Swath::subSwaths, py::const_))
+        .def("sub_swaths",
+                py::overload_cast<const isce3::product::SubSwaths&>(
+                        &Swath::subSwaths),
+                py::arg("sub_swaths"))
+        .def_property_readonly("processed_wavelength",
+                &Swath::processedWavelength)
         .def_property("slant_range",
                 py::overload_cast<>(&Swath::slantRange, py::const_),
-                py::overload_cast<const std::valarray<double> &>(&Swath::slantRange))
+                py::overload_cast<const std::valarray<double> &>(
+                        &Swath::slantRange))
         .def_property("zero_doppler_time",
                 py::overload_cast<>(&Swath::zeroDopplerTime, py::const_),
-                py::overload_cast<const std::valarray<double> &>(&Swath::zeroDopplerTime))
+                py::overload_cast<const std::valarray<double> &>(
+                        &Swath::zeroDopplerTime))
         .def_property("acquired_center_frequency",
                 py::overload_cast<>(&Swath::acquiredCenterFrequency, py::const_),
                 py::overload_cast<double>(&Swath::acquiredCenterFrequency))

@@ -1,5 +1,7 @@
 #include "IH5.h"
 
+#include <cstring>
+
 #include <isce3/core/Constants.h>
 
 ///////////////////////// UTILITIES ///////////////////////////////////

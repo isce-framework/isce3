@@ -4,6 +4,7 @@
 // Copyright: 2017-2018
 
 #include "gpuTopo.h"
+#include <cmath>
 
 #include <isce3/core/Basis.h>
 #include <isce3/core/DenseMatrix.h>
@@ -133,7 +134,8 @@ void setOutputTopoLayers(const Vec3& targetLLH,
     const Vec3 input_coords_xyz_m_dx = ellipsoid.lonLatToXyz(input_coords_llh_m_dx);
     double dx = (input_coords_xyz_p_dx - input_coords_xyz_m_dx).norm();
 
-    double alpha = (bb - aa) / dx;
+    // Compute east-west slope using plus-minus sign from deltaX() (usually positive)
+    double alpha = std::copysign((bb - aa) / dx, (bb - aa) * demInterp.deltaX());
 
     // North-south slope using central difference
     aa = demInterp.interpolateXY(dem_vect[0], dem_vect[1] - demInterp.deltaY());
@@ -148,7 +150,8 @@ void setOutputTopoLayers(const Vec3& targetLLH,
     const Vec3 input_coords_xyz_m_dy = ellipsoid.lonLatToXyz(input_coords_llh_m_dy);
     double dy = (input_coords_xyz_p_dy - input_coords_xyz_m_dy).norm();
 
-    double beta = (bb - aa) / dy;
+    // Compute north-south slope using plus-minus sign from deltaY() (usually negative)
+    double beta = std::copysign((bb - aa) / dy, (bb - aa) * demInterp.deltaY());
 
     // Compute local incidence angle
     enu /= enu.norm();

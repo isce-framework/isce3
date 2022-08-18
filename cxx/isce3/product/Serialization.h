@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <string>
+
 // isce3::core
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
@@ -23,6 +25,8 @@
 #include <isce3/product/Metadata.h>
 #include <isce3/product/Swath.h>
 #include <isce3/product/Grid.h>
+
+#include <string>
 
 //! The isce namespace
 namespace isce3 {
@@ -96,6 +100,44 @@ namespace isce3 {
             // Get reference epoch
             isce3::core::DateTime refEpoch = isce3::io::getRefEpoch(group, "zeroDopplerTime");
             swath.refEpoch(refEpoch);
+
+            // Sub-swaths
+            int num_of_sub_swaths = 1;
+            if (isce3::io::exists(fgroup, "numberOfSubSwaths")) {
+                isce3::io::loadFromH5(fgroup, "numberOfSubSwaths", num_of_sub_swaths);
+            }
+
+            swath.subSwaths().numSubSwaths(num_of_sub_swaths);
+
+            for (int i=1; i<=num_of_sub_swaths; ++i) {
+                if (!isce3::io::exists(fgroup, "validSamplesSubSwath" +
+                                      std::to_string(i))) {
+                    break;
+                }
+
+                std::vector<int> image_dims = getImageDims(fgroup,
+                    "validSamplesSubSwath" + std::to_string(i));
+
+                if (image_dims[0] != t_array.size()) {
+                    std::string error_msg = "ERROR the valid-samples";
+                    error_msg += " arrays for sub-swath " + std::to_string(i);
+                    error_msg += " has length ";
+                    error_msg += std::to_string(image_dims[0]);
+                    error_msg += " whereas dataset zeroDopplerTime has";
+                    error_msg += " length ";
+                    error_msg += std::to_string(t_array.size());
+                    throw isce3::except::RuntimeError(ISCE_SRCINFO(), error_msg);
+                }
+
+                isce3::core::Matrix<int> valid_samples_sub_swath_array(
+                    image_dims[0], image_dims[1]);
+
+                isce3::io::loadFromH5(
+                    fgroup, "validSamplesSubSwath" + std::to_string(i),
+                    valid_samples_sub_swath_array);
+
+                swath.subSwaths().setValidSamplesArray(i, valid_samples_sub_swath_array);
+            }
 
             // Load other parameters
             double value;
