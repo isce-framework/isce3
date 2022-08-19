@@ -42,6 +42,7 @@ def test_split_main_band_run():
     persist.run_steps['dense_offsets'] = False
     persist.run_steps['rubbersheet'] = False
     persist.run_steps['fine_resample'] = False
+    persist.run_steps['baseline'] = False
 
     # run insar for prod_type
     insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
