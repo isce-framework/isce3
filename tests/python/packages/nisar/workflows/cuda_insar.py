@@ -40,6 +40,7 @@ def test_insar_run():
         out_paths = h5_prep.run(insar_runcfg.cfg)
 
         persist = Persistence('insar.log', restart=True)
+        persist.run_steps['baseline'] = False
 
         # run insar for prod_type
         insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)

@@ -946,7 +946,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
         cubes_shape = None
         if dst in ['RIFG', 'ROFF', 'RUNW']:
             cube_ref_dataset = f'{grid_path}/coordinateX'
-            cubes_shape = dst_h5[cube_ref_dataset].shape
+            if cube_ref_dataset in dst_h5:
+                cubes_shape = dst_h5[cube_ref_dataset].shape
         else: 
             cube_ref_dataset = f'{grid_path}/slantRange'
             if cube_ref_dataset in dst_h5:
