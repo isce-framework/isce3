@@ -43,7 +43,7 @@ input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_0
 --Folder path and file to static ancillary data: dem1km slope
 input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/DEMSLPSTD_M01_002.float32
 --Folder path to ECMWF sol moisture
-input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/uERA5_SD_TP_ST_SM.nc
+input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/ERA5_SD_TP_ST_SM.nc
 --Folder path and file to static ancillary data: SMAP_Climatology Data (Average)
 input_L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001/ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_average_09_1.dat
 --Folder path and file to static ancillary data: SMAP_Climatology Data (Min)
