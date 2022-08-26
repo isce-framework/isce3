@@ -1,5 +1,3 @@
-! BPH generated 2020-05-15 with REE_SRC v14.6.2 and ReeUtilPy v1.6.0
-
 ! Author : Hirad Ghaemi
 ! Contact : Hirad.Ghaemi@jpl.nasa.gov
 ! Copyright 2015, by the California Institute of Technology.
@@ -91,6 +89,10 @@ Whether or not use input file for S/C position,velocity, and attitude (YES or NO
 
 Name of the input S/C-PVA file and output LUT file (-) = LUT_SC_PVA.dat
 
+Interpolator method used for final state vectors from input LUT (HERMITE or SPLINE) = HERMITE 
+
+Order of the Hermite interpolator (-) = 4
+
 
 
 ### ANTENNA PARAMETERS
@@ -128,7 +130,7 @@ Polarization mode of transmit (SINGLE,DUAL,or QUAD) = SINGLE !SINGLE !DUAL !SING
 
 Polarization type (V : vertical ,H : horizontal ,L : left-circular ,R : right-circular, S: linear-slant, or C: compact) = H !H
 
-Center frequency (MHz) = 1257.5 
+Center frequency (MHz) = 1260.0
 
 Nominal PRF  (Hz) = 1650.0515641113786 ! PRI = integer multiple of ADC clocks
 
@@ -216,7 +218,7 @@ All Chirp bandwidths in multi-band chirp (MHz) =  20.0
 
 All chirp pulse widths in multi-band chirp (us) = 20.0
 
-All Center frequencies in multi-band chirp (MHz) = 1257.5
+All Center frequencies in multi-band chirp (MHz) = 1260
 
 Chirp slope used for all chirp bands (UP or DOWN) = UP
 
@@ -276,9 +278,9 @@ ENBWs of Transfer functions for all H-pol receive channels (MHz) =  105.0
 
 ENBWs of Transfer functions for all V-pol receive channels (MHz) =  105.5
 
-Frequency centroids of Transfer functions for all H-pol receive channels (MHz) = 1257.5
+Frequency centroids of Transfer functions for all H-pol receive channels (MHz) = 1260
 
-Frequency centroids of Transfer functions for all V-pol receive channels (MHz) = 1257.5
+Frequency centroids of Transfer functions for all V-pol receive channels (MHz) = 1260
 
 Stop-band attenuation used for rejecting out-of ENBW frequencies in all receive channels (dB) = 40.0
 
@@ -410,6 +412,12 @@ Angular resolutions for latitude and longitude in output LUT (deg,deg) = 0.5,0.5
 Interpolation method used for generating output LUT (LINEAR or SPLINE) = LINEAR
 
 Whether or not use input file for tropospheric calculation (YES or NO) = NO
+
+Name of the input and ouput LUT for troposphere one-way range delay map (-) = LUT_TROPO_DEL_MAP.dat
+
+Look angle and DEM height resolutions for output troposphere range delay map LUT (deg,m) = 0.01,10.0
+
+
 
  
 

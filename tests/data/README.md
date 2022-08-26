@@ -68,7 +68,9 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   noise, zero Doppler geometry.  Designed to test backproject and focus.py.
   REE input file preserved here (REE_L0B_out17.rdf).  Orbit and attitude data
   were dumped to NISAR XML format files in the `focus` subdirectory, which
-  also contains a runconfig file for focus.py.
+  also contains a runconfig file for focus.py.  The target is located at
+  longitude -54.579586258 deg, latitude 3.177088785 deg, height 0.0 m.  The
+  file was generated using REE v14.8.6 and ReeUtilPy v2.9.4.
 
 - **REE_ANTPAT_CUTS_BEAM4.h5**
 
