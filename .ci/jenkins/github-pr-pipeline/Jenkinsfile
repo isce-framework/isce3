@@ -1,0 +1,131 @@
+#!groovy
+
+pipeline {
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+  }
+  agent any
+  environment {
+    // Personal Access Token (PAT) for writing to github status API
+    GITHUB_STATUS_PAT = credentials('236fc01e-7a9f-40c4-8dda-853846ee3881')
+  }
+  stages {
+    stage("Set up Docker images with ISCE3 build prereqs") {
+      steps {
+        sh "python3 tools/run.py setup"
+      }
+    }
+    stage("Configure ISCE3") {
+      steps {
+        sh "python3 tools/run.py configure"
+      }
+    }
+    stage("Build ISCE3") {
+      parallel {
+        stage("Compile ISCE3 source") {
+          steps {
+            sh "python3 tools/run.py build"
+          }
+        }
+        stage("Build and deploy ISCE3 documentation") {
+          steps {
+            sh "python3 tools/run.py docsbuild"
+            //sh "python3 tools/run.py prdocs"
+          }
+        }
+      }
+    }
+    stage("Run ISCE3 unit tests") {
+      steps {
+        sh "python3 tools/run.py test"
+      }
+    }
+    stage("Build ISCE3 redistributable image") {
+      steps {
+        sh "python3 tools/run.py makepkg"
+        sh "python3 tools/run.py makedistrib"
+      }
+    }
+    /*
+    XXX Workflow tests are disabled in this job until we adopt a large file
+    management solution w/ caching (e.g. git-lfs). Disk utilization is
+    currently too high and causes the CI server to crash.
+    stage("Fetch workflow test data") {
+      steps {
+        sh "python3 tools/run.py fetchdata"
+      }
+    }
+    stage("Run workflow tests") {
+      parallel {
+        stage("Run RSLC test") {
+          steps {
+            sh "python3 tools/run.py rslctest"
+          }
+        }
+        stage("Run GSLC test") {
+          steps {
+            sh "python3 tools/run.py gslctest"
+          }
+        }
+        stage("Run GCOV test") {
+          steps {
+            sh "python3 tools/run.py gcovtest"
+          }
+        }
+      }
+    }
+    */
+  }
+  post {
+    always {
+      echo "Publishing xUnit test result report"
+      xunit (
+        thresholds: [
+          skipped (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          ),
+          failed (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          )
+        ],
+        tools: [
+          CTest (
+            pattern: 'build-docker/Testing/*/Test.xml',
+            skipNoTestFiles: false,
+            failIfNotNew: true,
+            deleteOutputFiles: true,
+            stopProcessingIfError: true
+          )
+        ]
+      )
+      deleteDir()
+    }
+    success {
+      echo 'I succeeded!'
+      sh '''curl "https://api.github.com/repos/isce-framework/isce3/statuses/$GIT_COMMIT" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_STATUS_PAT" \
+            -d "{\\"state\\": \\"success\\", \\"description\\": \\"Jenkins build\\", \\"target_url\\": \\"$BUILD_URL\\"}"
+          '''
+    }
+    unstable {
+      echo 'I am unstable :/'
+    }
+    failure {
+      echo 'I failed :('
+      sh '''curl "https://api.github.com/repos/isce-framework/isce3/statuses/$GIT_COMMIT" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_STATUS_PAT" \
+            -d "{\\"state\\": \\"failure\\", \\"description\\": \\"Jenkins build\\", \\"target_url\\": \\"$BUILD_URL\\"}"
+          '''
+    }
+    changed {
+      echo 'Things were different before...'
+    }
+  }
+}
