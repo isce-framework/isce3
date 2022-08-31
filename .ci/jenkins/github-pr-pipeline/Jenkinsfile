@@ -5,7 +5,7 @@ pipeline {
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '10'))
   }
-  agent any
+  agent { label 'opera-adt-build-fleet-gpu' }
   environment {
     // Personal Access Token (PAT) for writing to github status API
     GITHUB_STATUS_PAT = credentials('236fc01e-7a9f-40c4-8dda-853846ee3881')
