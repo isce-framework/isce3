@@ -42,11 +42,9 @@ def run(cfg, input_hdf5, output_hdf5, is_goff=False):
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
-        gpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
-        print('gpu_runwwwwwwww')
+
     else:
         cpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
-        print('cpu_runwwwwwwww')
 
 
 def get_shadow_input_output(scratch_path, freq, dst_freq_path):
@@ -272,7 +270,8 @@ def _snake_to_camel_case(snake_case_str):
             ''.join(w.title() for w in splitted_snake_case_str[1:]))
 
 def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
-                     off_layer_dict=None, scratch_path='', is_goff=False):
+                     off_layer_dict=None, scratch_path='', is_goff=False, 
+                     iono_sideband=False):
     '''
     Geocode rasters with a shared geogrid.
 
@@ -307,10 +306,8 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     geocoded_datasets = []
 
     skip_layover_shadow = False
-    print(geo_datasets.items())
     ds_names = [x for x, y in geo_datasets.items() if y and x in desired]
     for ds_name in ds_names:
-        print(ds_name)
         for pol in pol_list:
             if skip_layover_shadow:
                 continue
@@ -331,13 +328,22 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                                                        layer, is_goff=True)
                     input_raster.append(raster)
                     out_ds_path.append(path)
+            elif iono_sideband and ds_name in ['ionosphere_phase_screen', 
+                           'ionosphere_phase_screen_uncertainty']:
+                iono_src_freq_path = f"/science/LSAR/R{product}/swaths/frequencyB"
+                iono_dst_freq_path = f"/science/LSAR/G{product}/grids/frequencyA"
+                ds_name_camel_case = _snake_to_camel_case(ds_name)
+                raster, path = get_ds_input_output(
+                    iono_src_freq_path, iono_dst_freq_path, pol, input_hdf5, 
+                        ds_name_camel_case)
+                input_raster.append(raster)
+                out_ds_path.append(path)
             else:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
                     src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case)
                 input_raster.append(raster)
                 out_ds_path.append(path)
-                print(out_ds_path)
             for input, path in zip(input_raster, out_ds_path):
                 input_rasters.append(input)
 
@@ -356,12 +362,12 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
 
 def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         input_hdf5, dst_h5, radar_grid, dem_raster, off_layer_dict=None,
-                        scratch_path='', compute_stats=True, is_goff=False):
+                        scratch_path='', compute_stats=True, is_goff=False,
+                        iono_sideband=False):
 
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
-                         dst_h5, off_layer_dict, scratch_path, is_goff)
-
+                         dst_h5, off_layer_dict, scratch_path, is_goff, iono_sideband)
     if input_rasters:
         geocode_tuples = zip(input_rasters, geocoded_rasters)
         for input_raster, geocoded_raster in geocode_tuples:
@@ -407,6 +413,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
         cfg["processing"]["dense_offsets"]
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
         cfg["processing"]["geocode"]["gunw_datasets"]
+    iono_args = cfg['processing']['ionosphere_phase_correction']
+    iono_method = iono_args['spectral_diversity']
+    iono_method_sideband = ['main_side_band', 'main_diff_ms_band']
 
     slc = SLC(hdf5file=ref_hdf5)
 
@@ -464,11 +473,24 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 radar_grid = radar_grid_slc
 
             if not is_goff:
-                desired = ['coherence_magnitude', 'unwrapped_phase', 
-                    'ionosphere_phase_screen', 'ionosphere_phase_screen_uncertainty']
+                desired = ['coherence_magnitude', 'unwrapped_phase']
                 geo.data_interpolator = interp_method
                 cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, radar_grid, dem_raster)
+                
+                desired = ['ionosphere_phase_screen', 
+                           'ionosphere_phase_screen_uncertainty']
+
+                if iono_method in iono_method_sideband:
+                    if freq == 'B':
+                        cpu_geocode_rasters(geo_freqA, geo_datasets, desired, freq, pol_list,
+                                        input_hdf5, dst_h5, radar_grid, dem_raster, 
+                                        iono_sideband=True)  
+                    else: 
+                        geo_freqA = geo
+                else:
+                    cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
+                                        input_hdf5, dst_h5, radar_grid, dem_raster)       
 
                 desired = ["connected_components"]
                 geo.data_interpolator = 'NEAREST'
@@ -591,7 +613,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
             if not is_goff:
                 desired = ['coherence_magnitude', 'unwrapped_phase', 
-                    'ionosphere_phase_screen', 'ionosphere_phase_screen_uncertainty']
+                           'ionosphere_phase_screen', 
+                           'ionosphere_phase_screen_uncertainty']
              # Create radar grid geometry used by most datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              slc.getOrbit(),
