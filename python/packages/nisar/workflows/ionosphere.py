@@ -364,6 +364,7 @@ def run(cfg: dict, runw_hdf5: str):
         swath_path = f"/science/LSAR/RUNW/swaths"
         dest_freq_path = f"{swath_path}/frequencyA"
         dest_pol_path = f"{dest_freq_path}/interferogram/{pol_a}"
+        output_pol_path = dest_pol_path
         runw_path_freq_a = f"{dest_pol_path}/unwrappedPhase"
         rcoh_path_freq_a = f"{dest_pol_path}/coherenceMagnitude"
         rcom_path_freq_a = f"{dest_pol_path}/connectedComponents"
@@ -375,6 +376,7 @@ def run(cfg: dict, runw_hdf5: str):
             pol_comb_str = f"{pol_a}_{pol_b}"
             dest_freq_path_b = f"{swath_path}/frequencyB"
             dest_pol_path_b = f"{dest_freq_path_b}/interferogram/{pol_b}"
+            output_pol_path = dest_pol_path_b
             runw_path_freq_b = f"{dest_pol_path_b}/unwrappedPhase"
             rcoh_path_freq_b = f"{dest_pol_path_b}/coherenceMagnitude"
             rcom_path_freq_b = f"{dest_pol_path_b}/connectedComponents"
@@ -626,7 +628,7 @@ def run(cfg: dict, runw_hdf5: str):
             # If filtering is not required, then write ionosphere phase
             # at this point.
             if not filter_bool:
-                iono_hdf5_path = f'{dest_pol_path}/ionospherePhaseScreen'
+                iono_hdf5_path = f'{output_pol_path}/ionospherePhaseScreen'
                 write_disp_block_hdf5(runw_path_insar,
                     iono_hdf5_path,
                     dispersive,
@@ -634,7 +636,7 @@ def run(cfg: dict, runw_hdf5: str):
                     row_start)
 
                 iono_sig_hdf5_path = \
-                    f'{dest_pol_path}/ionospherePhaseScreenUncertainty'
+                    f'{output_pol_path}/ionospherePhaseScreenUncertainty'
                 write_disp_block_hdf5(runw_path_insar,
                     iono_sig_hdf5_path,
                     iono_std,
@@ -683,9 +685,9 @@ def run(cfg: dict, runw_hdf5: str):
             # save output to hdf5 at this point
             if not unwrap_correction_bool:
                 with h5py.File(runw_path_insar, 'a', libver='latest', swmr=True) as dst_h5:
-                    iono_hdf5_path = dst_h5[f'{dest_pol_path}/ionospherePhaseScreen']
+                    iono_hdf5_path = dst_h5[f'{output_pol_path}/ionospherePhaseScreen']
                     iono_sig_hdf5_path = \
-                        dst_h5[f'{dest_pol_path}/ionospherePhaseScreenUncertainty']
+                        dst_h5[f'{output_pol_path}/ionospherePhaseScreenUncertainty']
 
                     # low pass filtering for dispersive phase
                     iono_filter_obj.low_pass_filter(
@@ -828,9 +830,9 @@ def run(cfg: dict, runw_hdf5: str):
                         data_shape=[rows_output, cols_output])
 
                 with h5py.File(runw_path_insar, 'a', libver='latest', swmr=True) as dst_h5:
-                    iono_hdf5_path = dst_h5[f'{dest_pol_path}/ionospherePhaseScreen']
+                    iono_hdf5_path = dst_h5[f'{output_pol_path}/ionospherePhaseScreen']
                     iono_sig_hdf5_path = \
-                        dst_h5[f'{dest_pol_path}/ionospherePhaseScreenUncertainty']
+                        dst_h5[f'{output_pol_path}/ionospherePhaseScreenUncertainty']
 
                     iono_filter_obj.low_pass_filter(
                         input_data=out_disp_cor_path,

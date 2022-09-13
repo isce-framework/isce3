@@ -43,8 +43,10 @@ def run(cfg, input_hdf5, output_hdf5, is_goff=False):
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
         gpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
+        print('gpu_runwwwwwwww')
     else:
         cpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
+        print('cpu_runwwwwwwww')
 
 
 def get_shadow_input_output(scratch_path, freq, dst_freq_path):
@@ -305,8 +307,10 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     geocoded_datasets = []
 
     skip_layover_shadow = False
+    print(geo_datasets.items())
     ds_names = [x for x, y in geo_datasets.items() if y and x in desired]
     for ds_name in ds_names:
+        print(ds_name)
         for pol in pol_list:
             if skip_layover_shadow:
                 continue
@@ -333,7 +337,7 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                     src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case)
                 input_raster.append(raster)
                 out_ds_path.append(path)
-
+                print(out_ds_path)
             for input, path in zip(input_raster, out_ds_path):
                 input_rasters.append(input)
 
@@ -460,7 +464,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 radar_grid = radar_grid_slc
 
             if not is_goff:
-                desired = ['coherence_magnitude', 'unwrapped_phase']
+                desired = ['coherence_magnitude', 'unwrapped_phase', 
+                    'ionosphere_phase_screen', 'ionosphere_phase_screen_uncertainty']
                 geo.data_interpolator = interp_method
                 cpu_geocode_rasters(geo, geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, radar_grid, dem_raster)
@@ -585,8 +590,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 # Multilook radar grid if needed
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
             if not is_goff:
-                desired = ['coherence_magnitude', 'unwrapped_phase']
-                # Create radar grid geometry used by most datasets
+                desired = ['coherence_magnitude', 'unwrapped_phase', 
+                    'ionosphere_phase_screen', 'ionosphere_phase_screen_uncertainty']
+             # Create radar grid geometry used by most datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              slc.getOrbit(),
                                                              grid_zero_doppler)

@@ -47,6 +47,8 @@ class GeocodeInsarRunConfig(RunConfig):
 
         # Initialize GUNW and GOFF names
         gunw_datasets = ['connected_components', 'coherence_magnitude',
+                         'ionosphere_phase_screen', 
+                         'ionosphere_phase_screen_uncertainty',
                          'unwrapped_phase', 'along_track_offset',
                          'slant_range_offset', 'layover_shadow_mask']
         goff_datasets = ['along_track_offset', 'snr',
