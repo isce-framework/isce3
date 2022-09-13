@@ -41,6 +41,7 @@ def run(cfg, input_hdf5, output_hdf5, is_goff=False):
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
+        print(device)
         isce3.cuda.core.set_device(device)
 
     else:
@@ -480,7 +481,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 
                 desired = ['ionosphere_phase_screen', 
                            'ionosphere_phase_screen_uncertainty']
-
                 if iono_method in iono_method_sideband:
                     if freq == 'B':
                         cpu_geocode_rasters(geo_freqA, geo_datasets, desired, freq, pol_list,
@@ -534,11 +534,13 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
 
-def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
-                        gpu_geocode_obj, off_layer_dict=None, scratch_path='', compute_stats=True, is_goff=False):
+def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list, 
+                        input_hdf5, dst_h5, gpu_geocode_obj, 
+                        off_layer_dict=None, scratch_path='', 
+                        compute_stats=True, is_goff=False, iono_sideband=False):
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
-                         off_layer_dict, scratch_path, is_goff)
+                         off_layer_dict, scratch_path, is_goff, iono_sideband)
 
     if input_rasters:
         gpu_geocode_obj.geocode_rasters(geocoded_rasters, input_rasters)
@@ -578,6 +580,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
         cfg["processing"]["dense_offsets"]
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
         cfg["processing"]["geocode"]["gunw_datasets"]
+    iono_args = cfg['processing']['ionosphere_phase_correction']
+    iono_method = iono_args['spectral_diversity']
+    iono_method_sideband = ['main_side_band', 'main_diff_ms_band']
 
     if interp_method == 'BILINEAR':
         interp_method = isce3.core.DataInterpMethod.BILINEAR
@@ -612,10 +617,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 # Multilook radar grid if needed
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
             if not is_goff:
-                desired = ['coherence_magnitude', 'unwrapped_phase', 
-                           'ionosphere_phase_screen', 
-                           'ionosphere_phase_screen_uncertainty']
-             # Create radar grid geometry used by most datasets
+                desired = ['coherence_magnitude', 'unwrapped_phase']
+                # Create radar grid geometry used by most datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              slc.getOrbit(),
                                                              grid_zero_doppler)
@@ -628,6 +631,24 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                          invalid_value=np.nan)
 
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_obj)
+
+                desired = ['ionosphere_phase_screen', 
+                           'ionosphere_phase_screen_uncertainty']
+                if iono_method in iono_method_sideband:
+                    if freq == 'B':
+                        geogrid_freqA = geogrids['A']
+                        geocode_iono_obj = isce3.cuda.geocode.Geocode(geogrid_freqA, 
+                                                         rdr_geometry,
+                                                         dem_raster,
+                                                         lines_per_block,
+                                                         interp_method,
+                                                         invalid_value=np.nan)
+                        
+                        gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_obj)
+                else:
+                    gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_obj)
 
                 desired = ["connected_components"]
