@@ -41,9 +41,8 @@ def run(cfg, input_hdf5, output_hdf5, is_goff=False):
     if use_gpu:
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
-        print(device)
         isce3.cuda.core.set_device(device)
-
+        gpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
     else:
         cpu_run(cfg, input_hdf5, output_hdf5, is_goff=is_goff)
 
@@ -635,7 +634,12 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                 desired = ['ionosphere_phase_screen', 
                            'ionosphere_phase_screen_uncertainty']
-                if iono_method in iono_method_sideband:
+                '''
+                ionosphere_phase_screens estimated from main_side_band or 
+                main_diff_ms_band are defined on radargrid of frequencyB. 
+                The ionosphere at frequencyB is geocoded to geogrid of frequencyA. 
+                '''
+                 if iono_method in iono_method_sideband:
                     if freq == 'B':
                         geogrid_freqA = geogrids['A']
                         geocode_iono_obj = isce3.cuda.geocode.Geocode(geogrid_freqA, 
@@ -646,8 +650,13 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                          invalid_value=np.nan)
                         
                         gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                    input_hdf5, dst_h5, geocode_obj)
+                                    input_hdf5, dst_h5, geocode_obj, iono_sideband=True)
                 else:
+                    geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                            dem_raster,
+                                            lines_per_block,
+                                            interp_method,
+                                            invalid_value=np.nan)
                     gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_obj)
 
