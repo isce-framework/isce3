@@ -639,7 +639,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 main_diff_ms_band are defined on radargrid of frequencyB. 
                 The ionosphere at frequencyB is geocoded to geogrid of frequencyA. 
                 '''
-                 if iono_method in iono_method_sideband:
+                if iono_method in iono_method_sideband:
                     if freq == 'B':
                         geogrid_freqA = geogrids['A']
                         geocode_iono_obj = isce3.cuda.geocode.Geocode(geogrid_freqA, 
