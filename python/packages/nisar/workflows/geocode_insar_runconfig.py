@@ -37,9 +37,6 @@ class GeocodeInsarRunConfig(RunConfig):
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
         helpers.check_hdf5_freq_pols(runw_path, freq_pols)
 
-        if 'interp_method' not in self.cfg['processing']['geocode']:
-            self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
-
         # create empty dict if geocode_datasets not in geocode
         for datasets in ['gunw_datasets', 'goff_datasets']:
             if datasets not in self.cfg['processing']['geocode']:

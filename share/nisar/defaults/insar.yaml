@@ -108,6 +108,9 @@ runconfig:
                 # OPTIONAL - Set lines to be processed per block
                 lines_per_block: 1000
 
+                # OPTIONAL - Set default data interpolation method to bilinear
+                interp_method: BILINEAR
+
             radar_grid_cubes:
 
                 # List of heights in meters
