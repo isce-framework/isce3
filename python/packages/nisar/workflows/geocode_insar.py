@@ -633,6 +633,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
             if az_looks > 1 or rg_looks > 1:
                 # Multilook radar grid if needed
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
+
             if not is_goff:
                 desired = ['coherence_magnitude', 'unwrapped_phase']
                 # Create radar grid geometry used by most datasets
@@ -659,9 +660,11 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                     main_diff_ms_band are defined on radargrid of frequencyB.
                     The ionosphere at frequencyB is geocoded to geogrid of frequencyA.
                     '''
-                    geogrid_iono = geogrids['A'] if freq == 'B' else
+                    geogrid_iono =
                     if freq == 'B':
-                        geogrid_iono =
+                        geogrid_iono = geogrids['A']
+                    else:
+                        geogrid_iono = geogrid
 
                     geocode_iono_obj = \
                         isce3.cuda.geocode.Geocode(geogrid_iono,
@@ -672,7 +675,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                    invalid_value=np.nan)
 
                     gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                        input_hdf5, dst_h5, geocode_obj,
+                                        input_hdf5, dst_h5, geocode_iono_obj,
                                         iono_sideband=True)
 
                 desired = ["connected_components"]
