@@ -19,9 +19,9 @@ DEMInterpolator loadDEM(
 
     // Initialize bounds
     double minX = std::numeric_limits<double>::max();
-    double maxX = std::numeric_limits<double>::min();
+    double maxX = std::numeric_limits<double>::lowest();
     double minY = std::numeric_limits<double>::max();
-    double maxY = std::numeric_limits<double>::min();
+    double maxY = std::numeric_limits<double>::lowest();
 
     // If the projection systems are different
     if (epsgcode != geoGrid.epsg()) {
