@@ -18,14 +18,14 @@ runconfig:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
-            product_path: 
+            product_path: product_path
 
             # Directory where SAS can write temporary data
-            scratch_path:
+            scratch_path: .
 
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
-            sas_output_file: 
+            sas_output_file: gcov.h5
 
         primary_executable:
             product_type: GCOV
