@@ -454,6 +454,13 @@ void geocodeSlc(
             }
         } // end loops over lines and pixel of output grid
 
+        // Fill the output block with the default value before checking validity
+        isce3::core::EArray2D<std::complex<float>> geoDataBlock(geoBlockLength,
+                                                                geoGrid.width());
+        // assume all values invalid by default
+        // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
+        geoDataBlock.fill(invalidValue);
+
         // Extra margin for interpolation to avoid gaps between blocks in output
         int interp_margin = 5;
 
@@ -467,8 +474,14 @@ void geocodeSlc(
                                   static_cast<int>(radarGrid.width() - 1));
 
         if (azimuthFirstLine > azimuthLastLine ||
-            rangeFirstPixel > rangeLastPixel)
+            rangeFirstPixel > rangeLastPixel) {
+            // No valid pixels in this block, so set to invalid and continue
+            for (size_t band = 0; band < nbands; ++band) {
+                outputRaster.setBlock(geoDataBlock.data(), 0, lineStart,
+                                    geoGrid.width(), geoBlockLength, band + 1);
+            }
             continue;
+        }
 
         // shape of the required block of data in the radar coordinates
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
@@ -477,15 +490,9 @@ void geocodeSlc(
         // define the matrix based on the rasterbands data type
         isce3::core::EArray2D<std::complex<float>> rdrDataBlock(rdrBlockLength,
                                                                 rdrBlockWidth);
-        isce3::core::EArray2D<std::complex<float>> geoDataBlock(geoBlockLength,
-                                                                geoGrid.width());
 
         // fill both radar data block with zero
         rdrDataBlock.fill(0);
-
-        // assume all values invalid by default
-        // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
-        geoDataBlock.fill(invalidValue);
 
         // for each band in the input:
         for (size_t band = 0; band < nbands; ++band) {
