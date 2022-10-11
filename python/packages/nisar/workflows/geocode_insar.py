@@ -478,9 +478,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                            'ionosphere_phase_screen_uncertainty']
                 if is_iono_method_sideband and freq = 'B':
                     '''
-                    ionosphere_phase_screens estimated from main_side_band or
-                    main_diff_ms_band are defined on radargrid of frequencyB.
-                    The ionosphere at frequencyB is geocoded to geogrid of
+                    ionosphere_phase_screens from main_side_band or
+                    main_diff_ms_band are computed on radargrid of frequencyB.
+                    The ionosphere_phase_screens is geocoded on geogrid of
                     frequencyA.
                     '''
                     geo_grid = geogrids['A']
@@ -658,9 +658,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 if not is_iono_method_sideband or \
                         (is_iono_method_sideband and freq = 'B'):
                     '''
-                    ionosphere_phase_screens estimated from main_side_band or
-                    main_diff_ms_band are defined on radargrid of frequencyB.
-                    The ionosphere at frequencyB is geocoded to geogrid of frequencyA.
+                    ionosphere_phase_screens from main_side_band or
+                    main_diff_ms_band are computed on radargrid of frequencyB.
+                    The ionosphere_phase_screens is geocoded on geogrid of
+                    frequencyA.
                     '''
                     if (is_iono_method_sideband and freq = 'B'):
                         geogrid_iono = geogrids['A']
