@@ -13,15 +13,28 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Vector.h>
 #include <isce3/focus/Backproject.h>
-#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/RadarGridParameters.h>
 
+using isce3::geometry::detail::Geo2RdrParams;
 using isce3::geometry::Geo2rdr;
 using isce3::geometry::geo2rdr;
 
 namespace py = pybind11;
+
+void addbinding(py::class_<Geo2RdrParams> &pyGeo2RdrParams)
+{
+    pyGeo2RdrParams
+        .def(py::init<const double, const double, const double>(),
+            py::arg("threshold") = 1e-8,
+            py::arg("maxiter") = 50,
+            py::arg("delta_range") = 10)
+        .def_readwrite("threshold", &Geo2RdrParams::threshold)
+        .def_readwrite("maxiter", &Geo2RdrParams::maxiter)
+        .def_readwrite("delta_range", &Geo2RdrParams::delta_range)
+        ;
+}
 
 void addbinding(py::class_<Geo2rdr> & pyGeo2Rdr)
 {

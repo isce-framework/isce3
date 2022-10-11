@@ -1,9 +1,3 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
-//
-// Author: Piyush Agram
-// Copyright 2019
-
 // header file
 #include "boundingbox.h"
 
@@ -52,7 +46,7 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
         std::string errstr = "At least 2 points per edge should be requested "
                              "for perimeter estimation. " +
                              std::to_string(pointsPerEdge) + " requested. ";
-        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr); 
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
     }
 
     //Journal for warning
@@ -120,7 +114,7 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
         rdr2geo(tline, rng, dopp,
                 orbit, ellipsoid, demInterp, llh,
                 radarGrid.wavelength(), radarGrid.lookSide(),
-                threshold, numiter, 0); 
+                threshold, numiter, 0);
 
         //Transform point to projection
         int status = proj->forward(llh, mapxyz);
@@ -344,7 +338,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
     if (max_height == min_height && !_isValid(bbox_min)) {
         std::string errstr = "Bounding box not found for given parameters.";
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
-    } 
+    }
     else if (max_height == min_height) {
         return bbox_min;
     }
@@ -409,4 +403,200 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
 
     return bbox_min;
 }
-//end of file
+
+isce3::geometry::RadarGridBoundingBox isce3::geometry::getRadarBoundingBox(
+        const isce3::product::GeoGridParameters& geo_grid,
+        const isce3::product::RadarGridParameters& radar_grid,
+        const isce3::core::Orbit& orbit,
+        isce3::geometry::DEMInterpolator& dem_interp,
+        const isce3::core::LUT2d<double>& doppler,
+        const int interp_margin,
+        const isce3::geometry::detail::Geo2RdrParams& g2r_params,
+        const int geogrid_expansion_threshold)
+{
+    float minVal, maxVal, meanVal;
+    dem_interp.computeMinMaxMeanHeight(minVal, maxVal, meanVal);
+
+    float height_range[2] = {minVal, maxVal};
+
+    isce3::geometry::RadarGridBoundingBox rdrBBox;
+
+    // First and last line of the data block in radar coordinates
+    rdrBBox.firstAzimuthLine = static_cast<int>(radar_grid.length() - 1);
+    rdrBBox.lastAzimuthLine = 0;
+
+    // First and last pixel of the data block in radar coordinates
+    rdrBBox.firstRangeSample = static_cast<int>(radar_grid.width() - 1);
+    rdrBBox.lastRangeSample = 0;
+
+    auto proj = isce3::core::makeProjection(geo_grid.epsg());
+    const isce3::core::Ellipsoid& ellipsoid = proj->ellipsoid();
+
+    // two matrices whose indices indicates the expansion directions of
+    // the geocoded grid in x and y directions.
+    // If computing the radar grid for a corner of the geocoded grid
+    // fails, we expand the geocoded boundary towards the outside of the
+    // geo-grid and try again. This can be iterated until finding a converged
+    // point or until exhausting the number of iterations of the expansion.
+    isce3::core::Matrix<int> geogrid_expansion_x(2, 2);
+    isce3::core::Matrix<int> geogrid_expansion_y(2, 2);
+
+    // top-left corner
+    geogrid_expansion_x(0,0) = -1;
+    geogrid_expansion_y(0,0) = -1;
+
+    // top-right corner
+    geogrid_expansion_x(0,1) = 1;
+    geogrid_expansion_y(0,1) = -1;
+
+    // bottom-left corner
+    geogrid_expansion_x(1,0) = -1;
+    geogrid_expansion_y(1,0) = 1;
+
+    // bottom-right corner
+    geogrid_expansion_x(1,1) = 1;
+    geogrid_expansion_y(1,1) = 1;
+
+    // flag indicating if geo2rdr computation converges for all four
+    // corners of the geocoded grid
+    bool all_converged = true;
+
+    std::string bad_corners = "";
+    // looping over the four corners of the geocoded grid
+    for (size_t line = 0; line < 2; ++line) {
+
+        // y in the geocoded grid for current corner
+        double y0 = geo_grid.startY() + geo_grid.spacingY() * line * geo_grid.length();
+
+        for (size_t pixel = 0; pixel < 2; ++pixel) {
+
+            // x in the geocoded grid for current corner
+            double x0 = geo_grid.startX() + geo_grid.spacingX() * pixel * geo_grid.width();
+
+            // check if geo2rdr converges for current corner
+            bool corner_converge = false;
+
+            // looping over range of heights (min and max height of the inout DEM)
+            for (size_t i_h_min_max = 0; i_h_min_max < 2; ++i_h_min_max) {
+                // try with min and max height
+                float height = height_range[i_h_min_max];
+
+                double aztime = radar_grid.sensingMid();
+                double srange = radar_grid.startingRange();
+
+                // track number of time geo2rdr called for current corner
+                // at min or max height
+                int corner_iterations = 0;
+
+                // init 0 = geo2rdr not converged
+                int geostat = 0;
+                while (geostat == 0
+                        and corner_iterations < geogrid_expansion_threshold) {
+                    // expand the geogrid corner. For the first iteration,
+                    // there is no expansion. If geo2rdr converges, there will
+                    // be no expansion.
+                    double x = x0 + corner_iterations * geogrid_expansion_x(line, pixel) * geo_grid.spacingX();
+                    double y = y0 + corner_iterations * geogrid_expansion_y(line, pixel) * geo_grid.spacingY();
+
+                    // coordinate in the output projection system
+                    const isce3::core::Vec3 xyz {x, y, 0.0};
+
+                    // transform the xyz in the output projection system to llh
+                    isce3::core::Vec3 llh = proj->inverse(xyz);
+
+                    // interpolate the height from the DEM for this pixel
+                    llh[2] = height;
+
+                    geostat = isce3::geometry::geo2rdr(
+                        llh, ellipsoid, orbit, doppler, aztime, srange,
+                        radar_grid.wavelength(), radar_grid.lookSide(),
+                        g2r_params.threshold, g2r_params.maxiter,
+                        g2r_params.delta_range);
+
+                    corner_iterations += 1;
+                }
+
+                // if no convergence over entire expansion threshold skip:
+                // az/rg first/last boundary check
+                // marking current corner as converged
+                if (geostat == 0)
+                    continue;
+
+                // mark current corner as converged
+                corner_converge = true;
+
+                // get the row and column index in the radar grid
+                double azimuth_coord = (aztime - radar_grid.sensingStart()) * radar_grid.prf();
+                double range_coord = (srange - radar_grid.startingRange()) /
+                              radar_grid.rangePixelSpacing();
+                rdrBBox.firstAzimuthLine = std::min(
+                        rdrBBox.firstAzimuthLine, static_cast<int>(std::floor(azimuth_coord)));
+                rdrBBox.lastAzimuthLine = std::max(
+                        rdrBBox.lastAzimuthLine, static_cast<int>(std::ceil(azimuth_coord)));
+                rdrBBox.firstRangeSample = std::min(
+                        rdrBBox.firstRangeSample, static_cast<int>(std::floor(range_coord)));
+                rdrBBox.lastRangeSample = std::max(
+                        rdrBBox.lastRangeSample, static_cast<int>(std::ceil(range_coord)));
+            } // min and max height loop
+
+            // if no corner converge, store failed corner and skip
+            // first/last az/rg index computations
+            if (!corner_converge) {
+                std::string line_dir = geogrid_expansion_y(line, pixel) == 1 ? "north" : "south";
+                std::string pixel_dir = geogrid_expansion_x(line, pixel) == 1 ? "east" : "west";
+                bad_corners += "("  + line_dir + pixel_dir + ") ";
+                all_converged = false;
+                continue;
+            }
+        } // pixel loop
+    } // line loop
+
+    // check if the computed bounding box overlaps with
+    // the input radar grid
+    bool is_valid_bound = true;
+    int max_azimuth = radar_grid.length() - 1;
+    int max_range = radar_grid.width() - 1;
+
+    if (!all_converged) {
+        const std::string err_str =
+        "ERROR: geo2rdr computations did not converge for at corner(s) "
+        + bad_corners;
+
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), err_str);
+    }
+
+    // Non-overlap warning to be appended with non-overlap specifics
+    std::string err_str = "ERROR: The computed radar bounding box does not overlap with the input radar grid.";
+
+    if ((rdrBBox.firstAzimuthLine <= 0) and (rdrBBox.lastAzimuthLine <= 0)) {
+        err_str += " Azimuth first and last <= 0.";
+        is_valid_bound = false;
+    }
+    if ((rdrBBox.firstAzimuthLine >= max_azimuth) and (rdrBBox.lastAzimuthLine >= max_azimuth)) {
+        err_str += " Azimuth first and last >= max azimuth.";
+        is_valid_bound = false;
+    }
+    if ((rdrBBox.firstRangeSample <= 0) and (rdrBBox.lastRangeSample <= 0)) {
+        err_str += " Range first and last <= 0.";
+        is_valid_bound = false;
+    }
+    if ((rdrBBox.firstRangeSample >= max_range) and (rdrBBox.lastRangeSample >= max_range)) {
+        err_str += " Range first and last >= max range.";
+        is_valid_bound = false;
+    }
+
+    if (!is_valid_bound) {
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(), err_str);
+    }
+
+    // get the bounding in radar coordinates with a margin
+    rdrBBox.firstAzimuthLine = std::max(rdrBBox.firstAzimuthLine - interp_margin, 0);
+    rdrBBox.firstRangeSample = std::max(rdrBBox.firstRangeSample - interp_margin, 0);
+
+    rdrBBox.lastAzimuthLine = std::min(rdrBBox.lastAzimuthLine + interp_margin,
+                               static_cast<int>(radar_grid.length() - 1));
+    rdrBBox.lastRangeSample = std::min(rdrBBox.lastRangeSample + interp_margin,
+                              static_cast<int>(radar_grid.width() - 1));
+
+    return rdrBBox;
+}

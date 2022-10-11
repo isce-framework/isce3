@@ -3,20 +3,43 @@
 #include <cstdlib>
 #include <ogr_geometry.h>
 #include <string>
+#include <pybind11/stl.h>
 
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Projections.h>
+#include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/boundingbox.h>
 #include <isce3/product/RadarGridParameters.h>
-
+#include <isce3/product/GeoGridParameters.h>
 using namespace isce3::core;
 using namespace isce3::geometry;
 using isce3::product::RadarGridParameters;
+using isce3::product::GeoGridParameters;
 namespace py = pybind11;
+
+void addbinding(py::class_<RadarGridBoundingBox> &pyRadarBoundingBox)
+{
+    pyRadarBoundingBox
+        .def(py::init<const int, const int, const int, const int>(),
+            py::arg("first_azimuth_line"),
+            py::arg("last_azimuth_line"),
+            py::arg("first_range_sample"),
+            py::arg("last_range_sample"))
+        .def_readwrite("first_azimuth_line",
+                &RadarGridBoundingBox::firstAzimuthLine)
+        .def_readwrite("last_azimuth_line",
+                &RadarGridBoundingBox::lastAzimuthLine)
+        .def_readwrite("first_range_sample",
+                &RadarGridBoundingBox::firstRangeSample)
+        .def_readwrite("last_range_sample",
+                &RadarGridBoundingBox::lastRangeSample)
+        ;
+}
 
 void addbinding_boundingbox(py::module& m)
 {
+    const isce3::geometry::detail::Geo2RdrParams defaults;
     // TODO actually bind the C++ functions.  For now avoid wrapping the GDAL
     // output types by defining a new function that just returns the WKT string.
     m.def(
@@ -53,5 +76,49 @@ void addbinding_boundingbox(py::module& m)
     From there, walk along the Far Range edge to Late Time, Far Range.
     From there, walk along the Late Time edge to Late Time, Near Range.
     From there, walk along the Near Range edge back to Early Time, Near Range.
+    )")
+    .def("get_radar_bbox",
+            &isce3::geometry::getRadarBoundingBox,
+            py::arg("geo_grid"),
+            py::arg("radar_grid"),
+            py::arg("orbit"),
+            py::arg("dem") = DEMInterpolator(0.),
+            py::arg("doppler") = LUT2d<double>(),
+            py::arg("margin") = 5,
+            py::arg("geo2rdr_params") = defaults,
+            py::arg("geogrid_expansion_threshold") = 100,
+            R"(
+    Compute the bounding box of a geocoded grid in the radar coordinates. An
+    exception is raised if any corners fails to convergers or any computed
+    bounding box index is overlaps or is out of bounds.
+
+    Parameters
+    ----------
+    geoGrid: GeoGridParameters
+        Geo grid whose radar grid bounding box indices are to be computed
+    radarGrid: RadarGridParameters
+        Radar grid that computed indices are computed with respect to
+    orbit: Orbit
+        Orbit object
+    demInterp: DEMInterpolator
+        DEM to be interpolated over geo grid
+    doppler: LUT2d
+        LUT2d doppler model of the radar image grid
+    margin: int
+        Margin to add to estimated bounding box in  pixels (default 5)
+    geo2rdr_params: isce3.geometry.detail.geo2rdr_params
+        Structure containing the following geo2rdr parameters:
+        Azimuth time threshold for convergence (default 1e-8 sec)
+        Max number of iterations for convergence (default: 50)
+        Step size used for computing derivative of doppler (default: 10 m)
+    geogrid_expansion_threshold: int
+        Number of geogrid expansions if geo2rdr fails (default: 100)
+
+    Returns
+    -------
+    _: RadarGridBoundingBox
+        Radar grid bouding box object with indices for:
+        first_azimuth_line,last_azimuth_line, first_range_sample,
+        last_range_sample
     )");
 }

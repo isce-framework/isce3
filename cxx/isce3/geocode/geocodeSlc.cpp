@@ -362,8 +362,9 @@ void geocodeSlc(
 
         // get a DEM interpolator for a block of DEM for the current geocoded
         // grid
-        isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
-                demRaster, geoGrid, lineStart, geoBlockLength, geoGrid.width());
+        isce3::geometry::DEMInterpolator demInterp =
+            isce3::geometry::DEMRasterToInterpolator(demRaster, geoGrid,
+                    lineStart, geoBlockLength, geoGrid.width());
 
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
@@ -589,8 +590,9 @@ void geocodeSlc(
 
     // get a DEM interpolator for a block of DEM for the current geocoded
     // grid
-    isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
-            demRaster, geoGrid, 0, geoGrid.length(), geoGrid.width());
+    isce3::geometry::DEMInterpolator demInterp =
+        isce3::geometry::DEMRasterToInterpolator(demRaster, geoGrid, 0,
+                geoGrid.length(), geoGrid.width());
 
     // X and Y indices (in the radar coordinates) for the
     // geocoded pixels (after geo2rdr computation)

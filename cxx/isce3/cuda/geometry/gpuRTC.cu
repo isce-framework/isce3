@@ -319,9 +319,9 @@ void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& de
     const float upsample_factor = computeUpsamplingFactor(
             dem_interp_h, ellps_h, radarGrid.rangePixelSpacing());
 
-    float max_hgt, avg_hgt;
+    float min_hgt, max_hgt, avg_hgt;
     pyre::journal::info_t info("gpuRTC");
-    dem_interp_h.computeHeightStats(max_hgt, avg_hgt, info);
+    dem_interp_h.computeMinMaxMeanHeight(min_hgt, max_hgt, avg_hgt);
     isce3::cuda::geometry::gpuDEMInterpolator flat_interp(avg_hgt);
 
     // Create hostside device objects

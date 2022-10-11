@@ -30,6 +30,7 @@ class isce3::geometry::DEMInterpolator {
         inline DEMInterpolator() :
             _haveRaster{false},
             _refHeight{0.0},
+            _minValue{0.0},
             _meanValue{0.0},
             _maxValue{0.0},
             _interpMethod{isce3::core::BILINEAR_METHOD} {}
@@ -38,6 +39,7 @@ class isce3::geometry::DEMInterpolator {
         inline DEMInterpolator(float height, int epsg = 4326) :
             _haveRaster{false},
             _refHeight{height},
+            _minValue{height},
             _meanValue{height},
             _maxValue{height},
             _epsgcode{epsg},
@@ -49,12 +51,11 @@ class isce3::geometry::DEMInterpolator {
                                int epsg = 4326) :
             _haveRaster{false},
             _refHeight{height},
+            _minValue{height},
             _meanValue{height},
             _maxValue{height},
             _epsgcode{epsg},
             _interpMethod{method} {}
-       
-
 
         /** Read in subset of data from a DEM with a supported projection
         * @param[in]  dem_raster              DEM raster
@@ -78,9 +79,12 @@ class isce3::geometry::DEMInterpolator {
         // Print stats
         void declare() const;
 
-        /** Compute max and mean DEM height */
-        void computeHeightStats(float &maxValue, float &meanValue,
-                                pyre::journal::info_t &info);
+        /** Compute min, max, and mean DEM height
+         * @param[out] minValue Minimum DEM height
+         * @param[out] maxValue Maximum DEM height
+         * @param[out] meanValue Mean DEM height */
+        void computeMinMaxMeanHeight(float &minValue, float &maxValue,
+                                     float &meanValue);
 
         /** Interpolate at a given longitude and latitude */
         double interpolateLonLat(double lon, double lat) const;
@@ -123,10 +127,13 @@ class isce3::geometry::DEMInterpolator {
         void refHeight(double h) { _refHeight = h; }
 
         /** Get mean height value */
-        inline double meanHeight() const { return _meanValue; }
+        inline float meanHeight() const { return _meanValue; }
 
         /** Get max height value */
-        inline double maxHeight() const { return _maxValue; }
+        inline float maxHeight() const { return _maxValue; }
+
+        /** Get min height value */
+        inline float minHeight() const { return _minValue; }
 
         /** Get pointer to underlying DEM data */
         float * data() { return _dem.data(); }
@@ -167,6 +174,7 @@ class isce3::geometry::DEMInterpolator {
         // Constant value if no raster is provided
         float _refHeight;
         // Statistics
+        float _minValue;
         float _meanValue;
         float _maxValue;
         // Pointer to a ProjectionBase

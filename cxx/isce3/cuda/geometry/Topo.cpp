@@ -172,8 +172,8 @@ topo(Raster & demRaster, TopoLayers & layers) {
         computeDEMBounds(demRaster, demInterp, lineStart, blockLength);
 
         // Compute max and mean DEM height for the subset
-        float demmax, dem_avg;
-        demInterp.computeHeightStats(demmax, dem_avg, info);
+        float demmin, demmax, dem_avg;
+        demInterp.computeMinMaxMeanHeight(demmin, demmax, dem_avg);
         // Reset reference height using mean
         demInterp.refHeight(dem_avg);
 

@@ -268,7 +268,8 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number)
 
     // prepare device DEMInterpolator
     int dem_margin_in_pixels = 50;
-    isce3::geometry::DEMInterpolator host_dem_interp = isce3::geometry::loadDEM(
+    isce3::geometry::DEMInterpolator host_dem_interp =
+        isce3::geometry::DEMRasterToInterpolator(
             _dem_raster, _geogrid, _line_start, _geo_block_length,
             _geogrid.width(), dem_margin_in_pixels, _dem_interp_method);
     isce3::cuda::geometry::gpuDEMInterpolator dev_dem_interp(host_dem_interp);

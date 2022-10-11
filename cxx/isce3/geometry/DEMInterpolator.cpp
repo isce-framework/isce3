@@ -76,7 +76,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     [-180 - delta_x, 360 + delta_x] and the relative difference between min_x
     and max_x is preserved. Then, if max_x is less than min_x due to wrap-around,
     we add 360 to max_x to ensure that it's greater than min_x.
-    
+
     A similar transformation is applied to the DEM extents to normalize them
     to the same range.
 
@@ -136,7 +136,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     ------------------------------------------------------------------
     Condition A:
     ------------------------------------------------------------------
-    
+
         Instead of using conventions 1 and 2 above, we can define the valid
     longitude domain using the DEM eastern edge:
 
@@ -154,7 +154,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
 
         To account for one extra pixel in the edges, we can consider the
     domain as:
-    
+
         [lon_domain_min, lon_domain_max] = [
             `dem_xf` - 360 - delta_x, `dem_xf` + delta_x]
 
@@ -179,7 +179,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     Condition B becomes:
         - There's no DEM file discontinuity between `min_x` and `max_x`;
         - `max_x` > dem_x0` + 360 + delta_x
-    
+
     These tests can be simplified as:
         - min_x > 180 (no DEM file discontinuity and user positions are at the
         eastern side of the DEM);
@@ -199,7 +199,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         max_x -= 360;
     }
 
-    /* 
+    /*
    ==================================================================
     DEM file discontinuity - Dateline crossing (example 1):
 
@@ -207,7 +207,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
                                      *-------------*
    -180 deg                             +180 deg
        *------------------------------------*
-    dem_x0                               dem_xf 
+    dem_x0                               dem_xf
                                     (~ dem_x0 + 360)
 
     ==================================================================
@@ -217,7 +217,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
                                      *-------------*
      0 deg                              +360 deg
        *------------------------------------*
-    dem_x0                               dem_xf 
+    dem_x0                               dem_xf
                                     (~ dem_x0 + 360)
 
     ==================================================================
@@ -326,7 +326,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         // Fill DEM array with NaN values
         _dem.fill(std::numeric_limits<float>::quiet_NaN());
 
-        // Read DEM in two blocks "unrolling" the western side of the DEM around 
+        // Read DEM in two blocks "unrolling" the western side of the DEM around
         // the DEM file discontinuity
         const long width_discontinuity_left = demRaster.width() - min_x_idx;
 
@@ -379,7 +379,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         const double position_diff = std::abs(wrapped_next_pixel_idx_ideal -
                                               wrapped_next_pixel_idx);
         if (position_diff > position_diff_threshold) {
-            warning << "DEM position differences at the left and right sides" 
+            warning << "DEM position differences at the left and right sides"
                     << " of the DEM file discontinuity exceed"
                     << " error threshold: " << position_diff << " (threshold: "
                     << position_diff_threshold << ")."
@@ -397,7 +397,7 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
             static_cast<long>(std::ceil((max_x - 360 - dem_x0) / delta_x)));
 
         // Compute the width of the block to be loaded
-        const long width_discontinuity_right = (max_x_idx_discontinuity_right - 
+        const long width_discontinuity_right = (max_x_idx_discontinuity_right -
                                            min_x_idx_discontinuity_right);
 
         if (width_discontinuity_right > 1) {
@@ -499,35 +499,57 @@ declare() const {
          << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::endl;
 }
 
-/** @param[out] maxValue Maximum DEM height
-  * @param[out] meanValue Mean DEM height
-  * @param[in] info Pyre journal channel for printing info. */
 void isce3::geometry::DEMInterpolator::
-computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) {
-    // Announce myself
-    info << "Computing DEM statistics" << pyre::journal::newline;
-    // If we don't have a DEM, just use reference height
-    if (!_haveRaster) {
-        maxValue = _refHeight;
-        meanValue = _refHeight;
-    } else {
-        maxValue = -10000.0;
-        float sum = 0.0;
-        for (int i = 0; i < int(_dem.length()); ++i) {
-            for (int j = 0; j < int(_dem.width()); ++j) {
+computeMinMaxMeanHeight(float &minValue, float &maxValue, float &meanValue) {
+    pyre::journal::info_t info("isce.core.DEMInterpolator.computeMinMaxMeanHeight");
+
+    // Default to reference height
+    minValue = _refHeight;
+    maxValue = _refHeight;
+    meanValue = _refHeight;
+
+    // If a DEM raster exists, proceeed to computations
+    if (_haveRaster) {
+        info << "Computing DEM statistics" << pyre::journal::newline;
+
+        minValue = std::numeric_limits<float>::max();
+        maxValue = std::numeric_limits<float>::min();
+        double sum = 0.0;
+        auto n_valid = _dem.length() * _dem.width();
+        // loop over all values in DEM raster
+#pragma omp parallel for collapse(2) reduction(min : minValue)  \
+                                     reduction(max : maxValue)  \
+                                     reduction(+ : sum)         \
+                                     reduction(- : n_valid)
+        for (size_t i = 0; i < _dem.length(); ++i) {
+            for (size_t j = 0; j < _dem.width(); ++j) {
                 float value = _dem(i,j);
-                if (value > maxValue)
-                    maxValue = value;
+
+                // skip NaN and decrement denominator
+                if (std::isnan(value)) {
+                    n_valid--;
+                    continue;
+                }
+
+                maxValue = std::max(value, maxValue);
+                minValue = std::min(value, minValue);
                 sum += value;
             }
         }
-        meanValue = sum / (_dem.width() * _dem.length());
+        meanValue = sum / n_valid;
+
+        // Store updated statistics
+        _minValue = minValue;
+        _meanValue = meanValue;
+        _maxValue = maxValue;
+
+    } else {
+        info << "No DEM raster. Stats not updated." << pyre::journal::newline;
     }
-    // Store updated statistics
-    _meanValue = meanValue;
-    _maxValue = maxValue;
+
     // Announce results
-    info << "Max DEM height: " << maxValue << pyre::journal::newline
+    info << "Min DEM height: " << minValue << pyre::journal::newline
+         << "Max DEM height: " << maxValue << pyre::journal::newline
          << "Average DEM height: " << meanValue << pyre::journal::newline;
 }
 

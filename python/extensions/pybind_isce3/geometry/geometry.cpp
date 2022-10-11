@@ -23,6 +23,10 @@ void addsubmodule_geometry(py::module & m)
         pyGeo2Rdr(geometry, "Geo2Rdr");
     py::class_<isce3::geometry::Topo>
         pyRdr2Geo(geometry, "Rdr2Geo");
+    py::class_<isce3::geometry::RadarGridBoundingBox>
+        pyRadarGridBoundingBox(geometry, "RadarGridBoundingBox");
+    py::class_<isce3::geometry::detail::Geo2RdrParams>
+        pyGeo2RdrParams(geometry, "Geo2RdrParams");
 
     // forward declare bound enums
     py::enum_<isce3::geometry::rtcInputTerrainRadiometry>
@@ -42,6 +46,8 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyOutputTerrainRadiometry);
     addbinding(pyRtcAlgorithm);
     addbinding(pyRtcAreaMode);
+    addbinding(pyRadarGridBoundingBox);
+    addbinding(pyGeo2RdrParams);
 
     addbinding_apply_rtc(geometry);
     addbinding_compute_rtc(geometry);
@@ -53,4 +59,5 @@ void addsubmodule_geometry(py::module & m)
     addbinding_ltp_coordinates(geometry);
     addbinding_pnt_intersect(geometry);
     addbinding_look_inc_from_sr(geometry);
+    addbinding_DEM_raster2interpolator(geometry);
 }
