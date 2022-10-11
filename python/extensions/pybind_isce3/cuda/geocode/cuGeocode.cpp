@@ -15,7 +15,7 @@ using isce3::cuda::geocode::Geocode;
 
 void addbinding(pybind11::class_<Geocode>& pyGeocode)
 {
-    const isce3::geometry::detail::Geo2RdrParams defaults;
+    const isce3::geometry::detail::Geo2RdrParams g2r_defaults;
     pyGeocode
             .def(py::init<const isce3::product::GeoGridParameters&,
                          const isce3::container::RadarGeometry&,
@@ -29,9 +29,9 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                             isce3::core::BILINEAR_METHOD,
                     py::arg("dem_interp_method") =
                             isce3::core::BIQUINTIC_METHOD,
-                    py::arg("threshold") = defaults.threshold,
-                    py::arg("maxiter") = defaults.maxiter,
-                    py::arg("delta_range") = defaults.delta_range,
+                    py::arg("threshold") = g2r_defaults.threshold,
+                    py::arg("maxiter") = g2r_defaults.maxiter,
+                    py::arg("delta_range") = g2r_defaults.delta_range,
                     py::arg("invalid_value") = 0.0,
                     R"(
             Create CUDA geocode object.

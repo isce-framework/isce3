@@ -8,7 +8,9 @@
 #include <Eigen/Dense>
 
 #include <isce3/core/Constants.h>
+#include <isce3/geometry/loadDem.h>
 #include <isce3/io/Raster.h>
+#include <isce3/product/GeoGridParameters.h>
 
 namespace py = pybind11;
 
@@ -61,6 +63,16 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
                     py::overload_cast<isce3::core::dataInterpMethod>(
                             &DEMInterp::interpMethod))
 
+            .def("compute_min_max_mean_height",
+                    [](DEMInterp& self) {
+                        float dem_min, dem_max, dem_avg;
+                        self.computeMinMaxMeanHeight(dem_min, dem_max,
+                                                     dem_avg);
+                    })
+            .def_property_readonly("mean_height", &DEMInterp::meanHeight)
+            .def_property_readonly("min_height", &DEMInterp::minHeight)
+            .def_property_readonly("max_height", &DEMInterp::maxHeight)
+
             // Define all these as readonly even though writable in C++ API.
             // Probably better to just convert your data to a GDAL format than
             // try to build a DEM on the fly.
@@ -93,4 +105,81 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
                     py::overload_cast<>(&DEMInterp::length, py::const_))
             .def_property_readonly("epsg_code",
                     py::overload_cast<>(&DEMInterp::epsgCode, py::const_));
+}
+
+void addbinding_DEM_raster2interpolator(py::module& m)
+{
+    m.def("dem_raster_to_interpolator",
+        py::overload_cast<isce3::io::Raster &,
+            const isce3::product::GeoGridParameters &, const int,
+            const isce3::core::dataInterpMethod>
+            (&isce3::geometry::DEMRasterToInterpolator),
+        py::arg("dem_raster"),
+        py::arg("geo_grid"),
+        py::arg("dem_margin_in_pixels") = 50,
+        py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
+        R"(
+    Returns a DEM interpolator for a geocoded grid.
+
+    The geocoded grid and the input raster of the DEM can be in different or
+    same projection systems
+
+    Parameters
+    ----------
+    dem_raster: isce3.io.Raster
+        Raster of the DEM
+    geo_grid: isce3.product.GeoGridParameters
+        Parameters of the geocoded grid
+    dem_margin_in_pixels: int
+        DEM extra margin in pixels
+    dem_interp_method: isce3.core.DataInterpMethod
+        DEM interpolation method
+
+    Returns
+    -------
+    _: isce3.geometry.DEMInterpolator
+        DEM interpolator for given DEM raster and geo grid.
+        )")
+    .def("dem_raster_to_interpolator",
+        py::overload_cast<isce3::io::Raster &,
+            const isce3::product::GeoGridParameters &,
+            const int, const int, const int, const int,
+            const isce3::core::dataInterpMethod>
+            (&isce3::geometry::DEMRasterToInterpolator),
+        py::arg("dem_raster"),
+        py::arg("geo_grid"),
+        py::arg("line_start"),
+        py::arg("block_length"),
+        py::arg("block_width"),
+        py::arg("dem_margin_in_pixels") = 50,
+        py::arg("dem_interp_method") = isce3::core::BIQUINTIC_METHOD,
+        R"(
+    Returns a DEM interpolator for a block within a geocoded grid.
+
+    The geocoded grid and the input raster of the DEM can be in different or
+    same projection systems
+
+    Parameters
+    ----------
+    dem_raster: isce3.io.Raster
+        Raster of the DEM
+    geo_grid: isce3.product.GeoGridParameters
+        Parameters of the geocoded grid
+    line_start: int
+        Starting line of block of interest in geocoded grid
+    block_length: int
+        Length of block of interest in geocoded grid
+    block_width: int
+        Width of block of interest in geocoded grid
+    dem_margin_in_pixels: int
+        DEM extra margin in pixels
+    dem_interp_method: isce3.core.DataInterpMethod
+        DEM interpolation method
+
+    Returns
+    -------
+    _: isce3.geometry.DEMInterpolator
+        DEM interpolator for given DEM raster and geo grid.
+        )")
+    ;
 }

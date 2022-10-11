@@ -32,7 +32,7 @@ ENV PROJ_LIB=$conda_prefix/share/proj
 ENV MPLCONFIGDIR=/tmp
 
 ENV CUDA_VERSION_MAJOR 11
-ENV CUDA_VERSION_MINOR 7
+ENV CUDA_VERSION_MINOR 4
 ENV CUDA_PKG_VERSION "${CUDA_VERSION_MAJOR}-${CUDA_VERSION_MINOR}"
 
 RUN yum install -y \
@@ -44,4 +44,4 @@ RUN yum install -y \
 # https://github.com/NVIDIA/nvidia-container-runtime#environment-variables-oci-spec
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.0"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}"

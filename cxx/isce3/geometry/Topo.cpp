@@ -156,8 +156,8 @@ topo(Raster & demRaster, TopoLayers & layers)
         computeDEMBounds(demRaster, demInterp, lineStart, blockLength);
 
         // Compute max and mean DEM height for the subset
-        float demmax, dem_avg;
-        demInterp.computeHeightStats(demmax, dem_avg, info);
+        float demmin, demmax, dem_avg;
+        demInterp.computeMinMaxMeanHeight(demmin, demmax, dem_avg);
         // Reset reference height for DEMInterpolator
         demInterp.refHeight(dem_avg);
 
@@ -278,8 +278,10 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
              << pyre::journal::endl;
 
         // Compute max and mean DEM height for the subset
-        float demmax, dem_avg;
-        demInterp.computeHeightStats(demmax, dem_avg, info);
+        float demmin, demmax, dem_avg;
+        demInterp.computeMinMaxMeanHeight(demmin, demmax, dem_avg);
+        // Reset reference height for DEMInterpolator
+        demInterp.refHeight(dem_avg);
 
         // Reset output block sizes in layers
         layers.setBlockSize(blockLength, _radarGrid.width());

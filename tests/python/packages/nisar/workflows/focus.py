@@ -1,5 +1,6 @@
 import iscetest
 from nisar.workflows import focus
+from nisar.workflows.point_target_analysis import slc_pt_performance
 import nisar
 from pathlib import Path
 import numpy as np
@@ -32,6 +33,14 @@ def test_focus():
     filename = cfg.runconfig.groups.product_path_group.sas_output_file
 
     assert slc_is_baseband(filename)
+
+    # Check that target shows up where expected.
+    llh = [-54.579586258, 3.177088785, 0.0]  # units (deg, deg, m)
+    cr = slc_pt_performance(filename, "A", "HH", llh, predict_null=False,
+                            nov=128)
+    # NISAR requirement is 10% absolute, 1/128 relative.
+    assert abs(cr["range"]["offset"]) <= 1 / 128.
+    assert abs(cr["azimuth"]["offset"]) <= 1 / 128.
 
     # Check that epochs are consistent.
     rslc = nisar.products.readers.SLC(hdf5file=filename)

@@ -6,22 +6,41 @@
 
 namespace isce3 { namespace geometry {
 
-/** returns a DEM interpolator for a block of geocoded grid
- * Note the geocoded grid and the inpit raster of the DEM can be in
+
+/** returns a DEM interpolator for a geocoded grid.
+ * The geocoded grid and the input raster of the DEM can be in
  * different or same projection systems
  * @param[in] demRaster a raster of the DEM
  * @param[in] geoGrid  parameters of the geocoded grid
- * @param[in] lineStart start line of the block of interest in the eocoded grid
- * @param[in] blockLength length of the block of interest in the eocoded grid
- * @param[in] blockWidth  width of the block of interest in the eocoded grid
  * @param[in] demMarginInPixels  DEM extra margin in pixels
  * @param[in] demInterpMethod  DEM interpolation method
  */
-isce3::geometry::DEMInterpolator loadDEM(isce3::io::Raster& demRaster,
-        const isce3::product::GeoGridParameters& geoGrid, int lineStart,
-        int blockLength, int blockWidth, const int demMarginInPixels = 50,
-        isce3::core::dataInterpMethod demInterpMethod =
-                isce3::core::BICUBIC_METHOD);
+DEMInterpolator DEMRasterToInterpolator(
+        isce3::io::Raster& demRaster,
+        const isce3::product::GeoGridParameters& geoGrid,
+        const int demMarginInPixels = 50,
+        const isce3::core::dataInterpMethod demInterpMethod =
+            isce3::core::BIQUINTIC_METHOD);
+
+
+/** returns a DEM interpolator for a block of geocoded grid.
+ * The geocoded grid and the inpit raster of the DEM can be in
+ * different or same projection systems
+ * @param[in] demRaster a raster of the DEM
+ * @param[in] geoGrid  parameters of the geocoded grid
+ * @param[in] lineStart start line of the block of interest in the geocoded grid
+ * @param[in] blockLength length of the block of interest in the geocoded grid
+ * @param[in] blockWidth  width of the block of interest in the geocoded grid
+ * @param[in] demMarginInPixels  DEM extra margin in pixels
+ * @param[in] demInterpMethod  DEM interpolation method
+ */
+isce3::geometry::DEMInterpolator DEMRasterToInterpolator(
+        isce3::io::Raster& demRaster,
+        const isce3::product::GeoGridParameters& geoGrid, const int lineStart,
+        const int blockLength, const int blockWidth,
+        const int demMarginInPixels = 50,
+        const isce3::core::dataInterpMethod demInterpMethod =
+            isce3::core::BIQUINTIC_METHOD);
 
 
 /** Load DEM raster into a DEMInterpolator object around a given bounding box
@@ -67,7 +86,7 @@ isce3::core::Vec3 getDemCoordsSameEpsg(double x, double y,
 /*
  Convert x and y coordinates to from input_proj coordinates to
  DEM (dem_interp) coordinates and interpolate DEM at that position.
- 3-elements vector containing the 
+ 3-elements vector containing the
  * @param[in]  x           X-coordinate in input coordinates
  * @param[in]  y           Y-coordinate in input coordinates
  * @param[in]  dem_interp  DEM interpolation object

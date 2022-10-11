@@ -5,11 +5,26 @@ using isce3::core::Vec3;
 
 namespace isce3 { namespace geometry {
 
-DEMInterpolator loadDEM(
+
+DEMInterpolator DEMRasterToInterpolator(
         isce3::io::Raster& demRaster,
-        const isce3::product::GeoGridParameters& geoGrid, int lineStart,
-        int blockLength, int blockWidth, const int demMarginInPixels,
-        isce3::core::dataInterpMethod demInterpMethod)
+        const isce3::product::GeoGridParameters& geoGrid,
+        const int demMarginInPixels,
+        const isce3::core::dataInterpMethod demInterpMethod)
+{
+        int lineStart = 0;
+        int blockLength = geoGrid.length();
+        int blockWidth = geoGrid.width();
+        return DEMRasterToInterpolator(demRaster, geoGrid, lineStart,
+                blockLength, blockWidth, demMarginInPixels, demInterpMethod);
+}
+
+DEMInterpolator DEMRasterToInterpolator(
+        isce3::io::Raster& demRaster,
+        const isce3::product::GeoGridParameters& geoGrid, const int lineStart,
+        const int blockLength, const int blockWidth,
+        const int demMarginInPixels,
+        const isce3::core::dataInterpMethod demInterpMethod)
 {
     // DEM interpolator
     DEMInterpolator demInterp(0, demInterpMethod);
@@ -19,9 +34,9 @@ DEMInterpolator loadDEM(
 
     // Initialize bounds
     double minX = std::numeric_limits<double>::max();
-    double maxX = std::numeric_limits<double>::min();
+    double maxX = std::numeric_limits<double>::lowest();
     double minY = std::numeric_limits<double>::max();
-    double maxY = std::numeric_limits<double>::min();
+    double maxY = std::numeric_limits<double>::lowest();
 
     // If the projection systems are different
     if (epsgcode != geoGrid.epsg()) {
@@ -117,7 +132,7 @@ DEMInterpolator loadDEM(
 
 isce3::error::ErrorCode loadDemFromProj(
     isce3::io::Raster& dem_raster, const double minX, const double maxX,
-    const double minY, const double maxY, 
+    const double minY, const double maxY,
     DEMInterpolator* dem_interp,
     isce3::core::ProjectionBase* proj, const int dem_margin_x_in_pixels,
     const int dem_margin_y_in_pixels, const int dem_raster_band) {

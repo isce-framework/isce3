@@ -217,15 +217,15 @@ void Geocode<T>::geocodeInterp(
     info << "flatten phase (0:false, 1:true): " << flatten
          << pyre::journal::newline;
 
-    info << "remove phase screen (0: false, 1: true): " 
+    info << "remove phase screen (0: false, 1: true): "
             << std::to_string(phase_screen_raster != nullptr)
             << pyre::journal::newline;
-    info << "apply azimuth offset (0: false, 1: true): " 
+    info << "apply azimuth offset (0: false, 1: true): "
             << std::to_string(offset_az_raster != nullptr)
             << pyre::journal::newline;
-    info << "apply range offset (0: false, 1: true): " 
+    info << "apply range offset (0: false, 1: true): "
             << std::to_string(offset_rg_raster != nullptr)
-            << pyre::journal::newline;  
+            << pyre::journal::newline;
 
     // number of bands in the input raster
     int nbands = inputRaster.numBands();
@@ -396,7 +396,8 @@ void Geocode<T>::geocodeInterp(
         // load a block of DEM for the current geocoded grid with a margin of
         // 50 DEM pixels
         int dem_margin_in_pixels = 50;
-        isce3::geometry::DEMInterpolator demInterp = isce3::geometry::loadDEM(
+        isce3::geometry::DEMInterpolator demInterp =
+            isce3::geometry::DEMRasterToInterpolator(
                 demRaster, geogrid, lineStart, geoBlockLength, geogrid.width(),
                 dem_margin_in_pixels, dem_interp_method);
 

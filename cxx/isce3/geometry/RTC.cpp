@@ -884,9 +884,9 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     printf("\rRTC progress: 100%%");
     std::cout << std::endl;
 
-    float max_hgt, avg_hgt;
+    float min_hgt, max_hgt, avg_hgt;
 
-    dem_interp.computeHeightStats(max_hgt, avg_hgt, info);
+    dem_interp.computeMinMaxMeanHeight(min_hgt, max_hgt, avg_hgt);
     DEMInterpolator flat_interp(avg_hgt);
 
     if (input_terrain_radiometry ==

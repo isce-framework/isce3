@@ -223,8 +223,8 @@ def get_dem(cfg: Struct):
                  f"{cfg.processing.dem.reference_height} (m).")
         dem.load_dem(RasterIO(fn))
     else:
-        log.warning(f"No DEM given, using ref height "
-                    "{cfg.processing.dem.reference_height} (m).")
+        log.warning("No DEM given, using ref height "
+                    f"{cfg.processing.dem.reference_height} (m).")
     return dem
 
 
