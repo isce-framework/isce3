@@ -476,7 +476,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                 desired = ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']
-                if is_iono_method_sideband and freq = 'B':
+                if is_iono_method_sideband and freq == 'B':
                     '''
                     ionosphere_phase_screens from main_side_band or
                     main_diff_ms_band are computed on radargrid of frequencyB.
@@ -488,16 +488,19 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                 geo_grid.spacing_x, geo_grid.spacing_y,
                                 geo_grid.width, geo_grid.length,
                                 geo_grid.epsg)
-
-                if not is_iono_method_sideband or \
-                        (is_iono_method_sideband and freq = 'B'):
                     cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
                                         freq, pol_list, input_hdf5, dst_h5,
                                         radar_grid, dem_raster,
                                         iono_sideband=True)
 
+                if not is_iono_method_sideband:
+                    cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                        freq, pol_list, input_hdf5, dst_h5,
+                                        radar_grid, dem_raster,
+                                        iono_sideband=False)
+
                 # reset geocode_obj geogrid
-                if is_iono_method_sideband and freq = 'B':
+                if is_iono_method_sideband and freq == 'B':
                     geo_grid = geogrids['B']
                     geocode_obj.geogrid(geo_grid.start_x, geo_grid.start_y,
                                 geo_grid.spacing_x, geo_grid.spacing_y,
@@ -656,17 +659,19 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 desired = ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']
                 if not is_iono_method_sideband or \
-                        (is_iono_method_sideband and freq = 'B'):
+                        (is_iono_method_sideband and freq == 'B'):
                     '''
                     ionosphere_phase_screens from main_side_band or
                     main_diff_ms_band are computed on radargrid of frequencyB.
                     The ionosphere_phase_screens is geocoded on geogrid of
                     frequencyA.
                     '''
-                    if (is_iono_method_sideband and freq = 'B'):
+                    if (is_iono_method_sideband and freq == 'B'):
                         geogrid_iono = geogrids['A']
+                        iono_sideband_bool = True
                     else:
                         geogrid_iono = geogrid
+                        iono_sideband_bool = False
 
                     geocode_iono_obj = \
                         isce3.cuda.geocode.Geocode(geogrid_iono,
@@ -678,7 +683,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                     gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                         input_hdf5, dst_h5, geocode_iono_obj,
-                                        iono_sideband=True)
+                                        iono_sideband=iono_sideband_bool)
 
                 desired = ["connected_components"]
                 '''
@@ -687,11 +692,12 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 an unmasked value/pixel. 255 is chosen as it is the most distant
                 value from components assigned in ascending order [0, 1, ...)
                 '''
-                geocode_conn_comp_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                                                   dem_raster,
-                                                                   lines_per_block,
-                                                                   isce3.core.DataInterpMethod.NEAREST,
-                                                                   invalid_value=255)
+                geocode_conn_comp_obj = \
+                    isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                               dem_raster,
+                                               lines_per_block,
+                                               isce3.core.DataInterpMethod.NEAREST,
+                                               invalid_value=255)
 
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_conn_comp_obj)
