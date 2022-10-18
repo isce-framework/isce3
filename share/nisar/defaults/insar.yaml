@@ -72,6 +72,10 @@ runconfig:
 
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
+                # Optional - path to RUNW product to geocode
+                runw_path:
+                # Optional - path to ROFF product to geocode
+                roff_path:
                 # OPTIONAL - To control output grid in same units as output EPSG
                 x_snap:
 

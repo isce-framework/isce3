@@ -414,21 +414,23 @@ def run(cfg: dict, runw_hdf5: str):
             else:
                 runw_freq_b_str = runw_path_insar
 
-            main_array_str = f'HDF5:{runw_freq_a_str}:/{runw_path_freq_a}'
-            main_runw_array = isce3.io.Raster(main_array_str)
-            rows_main = main_runw_array.length
-            cols_main = main_runw_array.width
+            main_raster_str = f'HDF5:{runw_freq_a_str}:/{runw_path_freq_a}'
+            main_runw_raster = isce3.io.Raster(main_raster_str)
+            rows_main = main_runw_raster.length
+            cols_main = main_runw_raster.width
             nblocks = int(np.ceil(rows_main / blocksize))
 
-            side_array_str = f'HDF5:{runw_freq_b_str}:/{runw_path_freq_b}'
-            side_runw_array = isce3.io.Raster(side_array_str)
-            rows_side = side_runw_array.length
-            cols_side = side_runw_array.width
+            side_raster_str = f'HDF5:{runw_freq_b_str}:/{runw_path_freq_b}'
+            side_runw_raster = isce3.io.Raster(side_raster_str)
+            rows_side = side_runw_raster.length
+            cols_side = side_runw_raster.width
 
             main_slant = np.empty([cols_main], dtype=float)
             side_slant = np.empty([cols_side], dtype=float)
             rows_output = rows_side
             cols_output = cols_side
+            del main_runw_raster
+            del side_runw_raster
 
             with h5py.File(runw_freq_a_str, 'r',
                 libver='latest', swmr=True) as src_main_h5, \

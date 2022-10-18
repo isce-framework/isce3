@@ -724,7 +724,7 @@ if __name__ == "__main__":
     run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"])
 
     # Check if need to geocode offset product
-    enabled = geocode_insar_runconfig.cfg['processing']['offset_product']['enabled']
+    enabled = geocode_insar_runconfig.cfg['processing']['offsets_product']['enabled']
     roff_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'roff_path']
     if roff_path is not None:

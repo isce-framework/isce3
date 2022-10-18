@@ -369,7 +369,7 @@ def igram_phase_to_vrt(raster_path, output_path):
             <Description>Phase</Description>
             <PixelFunctionType>phase</PixelFunctionType>
             <SimpleSource>
-            <SourceFilename>{igram_path}</SourceFilename>
+            <SourceFilename>{raster_path}</SourceFilename>
             </SimpleSource>
             </VRTRasterBand>
             </VRTDataset>'''

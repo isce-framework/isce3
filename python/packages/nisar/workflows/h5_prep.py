@@ -254,7 +254,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         for freq in freq_pols.keys():
             if dst in ['ROFF', 'GOFF']:
                 cal_path = f'{dst_meta_path}/calibrationInformation'
-                dst_h5[f'{dst_meta_path}'].create_group('calibrationInformation')
+                dst_h5[f'{dst_meta_path}'].require_group('calibrationInformation')
                 dst_h5[cal_path].create_group(f'frequency{freq}')
             else:
                pol_list = freq_pols[freq]
@@ -878,7 +878,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                  long_name='cross correlation method')
             else:
                 offs_path = f'{proc_path}/pixelOffsets'
-                dst_h5[proc_path].create_group(f'pixelOffsets')
+                dst_h5[proc_path].require_group(f'pixelOffsets')
                 freq_path = f'{offs_path}/frequency{freq}'
                 dst_h5[offs_path].create_group(f'frequency{freq}')
                 descr='Reference RSLC starting pixel long along-track direction'
