@@ -45,7 +45,9 @@ def test_geocode_run():
         out_paths = h5_prep.run(runconfig.cfg)
 
         # insert rdr2geo outputs into RUNW HDF5
-        rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude'}
+        rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude',
+                        'z': 'ionospherePhaseScreen'}
+
         runw_product_path = 'science/LSAR/RUNW/swaths/frequencyA/interferogram/HH'
         az_looks = runconfig.cfg['processing']['crossmul']['azimuth_looks']
         rg_looks = runconfig.cfg['processing']['crossmul']['range_looks']
