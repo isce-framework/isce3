@@ -291,6 +291,11 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
         h5py.File object where geocoded data is to be written
     scratch_path : str
         Path to scratch where layover shadow raster is saved
+    is_goff : bool
+        Flag to geocode ROFF layers
+    iono_sideband : bool
+        Flag to geocode ionosphere phase screen estimated from 
+        side-band
 
     Returns
     -------
@@ -328,8 +333,15 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                                                        layer, is_goff=True)
                     input_raster.append(raster)
                     out_ds_path.append(path)
+
             elif iono_sideband and ds_name in ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']:
+                '''
+                ionosphere_phase_screens from main_side_band or
+                main_diff_ms_band are computed on radargrid of frequencyB.
+                The ionosphere_phase_screens is geocoded on geogrid of
+                frequencyA.
+                '''
                 iono_src_freq_path = f"/science/LSAR/R{product}/swaths/frequencyB"
                 iono_dst_freq_path = f"/science/LSAR/G{product}/grids/frequencyA"
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
