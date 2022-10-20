@@ -26,7 +26,7 @@ namespace py = pybind11;
 void addbinding(py::class_<Geo2RdrParams> &pyGeo2RdrParams)
 {
     pyGeo2RdrParams
-        .def(py::init<const double, const double, const double>(),
+        .def(py::init<const double, const int, const double>(),
             py::arg("threshold") = 1e-8,
             py::arg("maxiter") = 50,
             py::arg("delta_range") = 10)
