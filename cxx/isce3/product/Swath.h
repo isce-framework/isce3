@@ -130,7 +130,7 @@ class isce3::product::Swath {
                 std::string error_msg = "WARNING the number of range samples";
                 error_msg += " of SubSwaths (";
                 error_msg += std::to_string(_subSwaths.width());
-                error_msg += ") and Swath (" + _slantRange.size();
+                error_msg += ") and Swath (" + std::to_string(_slantRange.size());
                 error_msg += ") objects differ.";
                 throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
             }
@@ -138,7 +138,7 @@ class isce3::product::Swath {
                 std::string error_msg = "WARNING the number of azimuth lines";
                 error_msg += " of SubSwaths (";
                 error_msg += std::to_string(_subSwaths.length());
-                error_msg += ") and Swath (" + _zeroDopplerTime.size();
+                error_msg += ") and Swath (" + std::to_string(_zeroDopplerTime.size());
                 error_msg += ") objects differ.";
                 throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
             }
