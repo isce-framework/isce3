@@ -163,8 +163,8 @@ ResampSlc::referenceProduct(const isce3::product::RadarGridProduct& refProduct,
 }
 
 // Announce my properties to the world
-inline void ResampSlc::declare(int inLength, int inWidth, int outLength,
-                               int outWidth) const
+inline void ResampSlc::declare(size_t inLength, size_t inWidth, size_t outLength,
+                               size_t outWidth) const
 {
     // Make info channel
     pyre::journal::info_t channel("isce.core.ResampSlc");
@@ -187,12 +187,12 @@ inline size_t ResampSlc::linesPerTile() const { return _linesPerTile; }
 inline void ResampSlc::linesPerTile(size_t value) { _linesPerTile = value; }
 
 // Compute number of tiles given a specified nominal tile size
-inline int ResampSlc::_computeNumberOfTiles(int outLength, int linesPerTile)
+inline size_t ResampSlc::_computeNumberOfTiles(size_t outLength, size_t linesPerTile)
 {
     // Compute floor(nTiles)
-    int nTiles = outLength / linesPerTile;
+    size_t nTiles = outLength / linesPerTile;
     // See if there are any leftover lines to add an extra tile
-    int extraLines = outLength - nTiles * linesPerTile;
+    size_t extraLines = outLength - nTiles * linesPerTile;
     if (extraLines > 0) {
         nTiles += 1;
     }

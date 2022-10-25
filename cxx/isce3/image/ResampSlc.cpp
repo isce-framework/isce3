@@ -31,8 +31,8 @@ void ResampSlc::resamp(
     Raster azOffsetRaster(azOffsetFilename, GA_ReadOnly);
 
     // Make output raster; geometry defined by offset rasters
-    const int outLength = rgOffsetRaster.length();
-    const int outWidth = rgOffsetRaster.width();
+    const size_t outLength = rgOffsetRaster.length();
+    const size_t outWidth = rgOffsetRaster.width();
     Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32,
                      "ISCE");
 
@@ -52,24 +52,24 @@ void ResampSlc::resamp(isce3::io::Raster& inputSlc,
     // Set the band number for input SLC
     _inputBand = inputBand;
     // Cache width of SLC image
-    const int inLength = inputSlc.length();
-    const int inWidth = inputSlc.width();
+    const size_t inLength = inputSlc.length();
+    const size_t inWidth = inputSlc.width();
     // Cache output length and width from offset images
-    const int outLength = rgOffsetRaster.length();
-    const int outWidth = rgOffsetRaster.width();
+    const size_t outLength = rgOffsetRaster.length();
+    const size_t outWidth = rgOffsetRaster.width();
 
     // Initialize resampling methods
     _prepareInterpMethods(isce3::core::SINC_METHOD, chipSize - 1);
 
     // Determine number of tiles needed to process image
-    const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
+    const size_t nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
     std::cout << "Resampling using " << nTiles << " tiles of " << _linesPerTile
               << " lines per tile\n";
     // Start timer
     auto timerStart = std::chrono::steady_clock::now();
 
     // For each full tile of _linesPerTile lines...
-    for (int tileCount = 0; tileCount < nTiles; tileCount++) {
+    for (size_t tileCount = 0; tileCount < nTiles; tileCount++) {
 
         // Make a tile for representing input SLC data
         Tile_t tile;
@@ -111,7 +111,7 @@ void ResampSlc::resamp(isce3::io::Raster& inputSlc,
 void ResampSlc::_initializeOffsetTiles(Tile_t& tile, Raster& azOffsetRaster,
                                        Raster& rgOffsetRaster,
                                        Tile<float>& azOffTile,
-                                       Tile<float>& rgOffTile, int outWidth)
+                                       Tile<float>& rgOffTile, size_t outWidth)
 {
     // Copy size properties and initialize azimuth offset tiles
     azOffTile.width(outWidth);
@@ -138,19 +138,21 @@ void ResampSlc::_initializeOffsetTiles(Tile_t& tile, Raster& azOffsetRaster,
 
 // Initialize tile bounds
 void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
-                                const Tile<float>& azOffTile, int outLength,
+                                const Tile<float>& azOffTile, size_t outLength,
                                 int rowBuffer, int chipHalf)
 {
     // Cache geometry values
-    const int inLength = inputSlc.length();
-    const int inWidth = inputSlc.width();
-    const int outWidth = azOffTile.width();
+    const size_t inLength = inputSlc.length();
+    const size_t inWidth = inputSlc.width();
+    const size_t outWidth = azOffTile.width();
 
     // Compute minimum row index needed from input image
     tile.firstImageRow(outLength - 1);
     bool haveOffsets = false;
-    for (int i = 0; i < std::min(rowBuffer, azOffTile.length()); ++i) {
-        for (int j = 0; j < outWidth; ++j) {
+    for (size_t i = 0;
+         i < std::min(static_cast<size_t>(rowBuffer), azOffTile.length());
+         ++i) {
+        for (size_t j = 0; j < outWidth; ++j) {
             // Get azimuth offset for pixel
             const double azOff = azOffTile(i, j);
             // Skip null values
@@ -160,7 +162,7 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
                 haveOffsets = true;
             }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(
+            const size_t imageLine = static_cast<size_t>(
                     i + azOff + azOffTile.rowStart() - chipHalf);
             // Update minimum row index
             tile.firstImageRow(std::min(tile.firstImageRow(), imageLine));
@@ -168,7 +170,7 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
     }
     // Final update
     if (haveOffsets) {
-        tile.firstImageRow(std::max(tile.firstImageRow(), 0));
+        tile.firstImageRow(std::max(tile.firstImageRow(), static_cast<size_t>(0)));
     } else {
         tile.firstImageRow(0);
     }
@@ -176,9 +178,9 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
     // Compute maximum row index needed from input image
     tile.lastImageRow(0);
     haveOffsets = false;
-    for (int i = std::max(azOffTile.length() - rowBuffer, 0);
+    for (size_t i = std::max(azOffTile.length() - rowBuffer, static_cast<size_t>(0));
          i < azOffTile.length(); ++i) {
-        for (int j = 0; j < outWidth; ++j) {
+        for (size_t j = 0; j < outWidth; ++j) {
             // Get azimuth offset for pixel
             const double azOff = azOffTile(i, j);
             // Skip null values
@@ -188,7 +190,7 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
                 haveOffsets = true;
             }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(
+            const size_t imageLine = static_cast<size_t>(
                     i + azOff + azOffTile.rowStart() + chipHalf);
             // Update maximum row index
             tile.lastImageRow(std::max(tile.lastImageRow(), imageLine));
@@ -210,9 +212,9 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
                       tile.length(), _inputBand);
 
     // Remove carrier from input data
-    for (int i = 0; i < tile.length(); i++) {
+    for (size_t i = 0; i < tile.length(); i++) {
         const double az =  _sensingStart + (i + tile.firstImageRow()) / _prf;
-        for (int j = 0; j < inWidth; j++) {
+        for (size_t j = 0; j < inWidth; j++) {
             const double rng = _startingRange + j * _rangePixelSpacing;
             // Evaluate the pixel's carrier phase
             const double phase = _rgCarrier.eval(az, rng)
@@ -227,7 +229,7 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
 // Interpolate tile to perform transformation
 void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                                const Tile<float>& rgOffTile,
-                               const Tile<float>& azOffTile, int inLength,
+                               const Tile<float>& azOffTile, size_t inLength,
                                bool flatten, int chipSize)
 {
     if (flatten && !_haveRefData) {
@@ -236,9 +238,9 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
     }
 
     // Cache geometry values
-    const int inWidth = tile.width();
-    const int outWidth = azOffTile.width();
-    const int outLength = azOffTile.length();
+    const size_t inWidth = tile.width();
+    const size_t outWidth = azOffTile.width();
+    const size_t outLength = azOffTile.length();
     int chipHalf = chipSize / 2;
 
     // Allocate valarray for output image block
@@ -247,7 +249,7 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
     imgOut = _invalid_value;
 
     // From this point on, transformation is multithreaded
-    int tileLine = 0;
+    size_t tileLine = 0;
     _Pragma("omp parallel shared(imgOut)")
     {
 
@@ -256,13 +258,13 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
         isce3::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
 
         // Loop over lines to perform interpolation
-        for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
+        for (size_t i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
             // Compute azimuth time at i index
             const double az = _sensingStart + i / _prf;
 
             // Loop over width
-            _Pragma("omp for") for (int j = 0; j < outWidth; ++j)
+            _Pragma("omp for") for (size_t j = 0; j < outWidth; ++j)
             {
 
                 // Unpack offsets (units of bins)
@@ -270,8 +272,8 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                 const float rgOff = rgOffTile(tileLine, j);
 
                 // Break into fractional and integer parts
-                const int intAz = static_cast<int>(i + azOff);
-                const int intRg = static_cast<int>(j + rgOff);
+                const size_t intAz = static_cast<size_t>(i + azOff);
+                const size_t intRg = static_cast<size_t>(j + rgOff);
                 const double fracAz = i + azOff - intAz;
                 const double fracRg = j + rgOff - intRg;
 
