@@ -35,9 +35,9 @@ geo2rdr(isce3::io::Raster & topoRaster,
 
     // Create output rasters
     Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
-        GDT_Float32, "ISCE");
+        GDT_Float64, "ISCE");
     Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
-        GDT_Float32, "ISCE");
+        GDT_Float64, "ISCE");
 
     // Call main geo2rdr with offsets set to zero
     geo2rdr(topoRaster, rgoffRaster, azoffRaster, azshift, rgshift);
@@ -122,7 +122,7 @@ geo2rdr(isce3::io::Raster & topoRaster,
         // Valarrays to hold input block from topo rasters
         std::valarray<double> x(blockSize), y(blockSize), hgt(blockSize);
         // Valarrays to hold block of geo2rdr results
-        std::valarray<float> rgoff(blockSize), azoff(blockSize);
+        std::valarray<double> rgoff(blockSize), azoff(blockSize);
 
         // Read block of topo data
         topoRaster.getBlock(x, 0, lineStart, demWidth, blockLength, 1);
@@ -161,8 +161,8 @@ geo2rdr(isce3::io::Raster & topoRaster,
 
                 // Save result if valid
                 if (!isOutside) {
-                    rgoff[index] = ((slantRange - r0) / dmrg) - float(pixel);
-                    azoff[index] = ((aztime - t0) / dtaz) - float(line);
+                    rgoff[index] = ((slantRange - r0) / dmrg) - static_cast<double>(pixel);
+                    azoff[index] = ((aztime - t0) / dtaz) - static_cast<double>(line);
                     converged += geostat;
                 } else {
                     rgoff[index] = NULL_VALUE;
