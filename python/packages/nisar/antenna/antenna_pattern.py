@@ -1,8 +1,10 @@
 import numpy as np
 from typing import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum, EnumMeta, unique
 
+def default_correction_factor():
+    return np.ones(12, dtype=complex)
 
 @unique
 class CalPath(IntEnum):
@@ -41,7 +43,7 @@ class TxTrmInfo:
     channels: Sequence[int]
     correlator_tap2: Sequence[Sequence[complex]]
     cal_path_mask: Sequence[CalPath]
-    tx_correction_factor: Sequence[complex] = np.ones(12, dtype=complex)
+    tx_correction_factor: Sequence[complex] = field(default_factory=default_correction_factor)
 
 
 @dataclass
@@ -101,7 +103,7 @@ class RxTrmInfo:
     dbf_fs: float = 96e6
     adc_fs: float = 240e6
     ta_lut_fs: float = 48e6
-    rx_correction_factor: Sequence[complex] = np.ones(12, dtype=complex)
+    rx_correction_factor: Sequence[complex] = field(default_factory=default_correction_factor)
 
 
 def get_tx_and_rx_trm_info(
@@ -121,8 +123,8 @@ def get_tx_and_rx_trm_info(
     ta_dbf_switch,
     num_lut_items=256,
     num_chan_qfsp=4,
-    rx_correction_factor=np.ones(12, dtype=complex),
-    tx_correction_factor=np.ones(12, dtype=complex),
+    rx_correction_factor=field(default_factory=default_correction_factor),
+    tx_correction_factor=field(default_factory=default_correction_factor),
 ):
 
     """This function instantiates TxTrmInfo and RxTrmInfo objects.
