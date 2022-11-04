@@ -18,17 +18,21 @@ runconfig:
             sas_config_file: ./rslc_config.yaml
 
         primary_executable:
-            product_type: SLC
+            product_type: RSLC
 
         worker:
             gpu_enabled: False
 
         processing:
             output_grid:
-                start_time: 2021-07-01T03:20:03.461103958
-                end_time: 2021-07-01T03:20:03.539283375
-                start_range: 967124.5530972595
+                # target is at
+                # t = 2021-07-01T03:20:03.499890765
+                # r = 967524.2763552681
+                start_time: 2021-07-01T03:20:03.457785502
+                end_time: 2021-07-01T03:20:03.542654995
+                start_range: 967124.5530779377
                 end_range: 967930.2453281345
+                output_prf: 1520
 
             range_window:
                 kind: Kaiser
