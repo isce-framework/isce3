@@ -6,6 +6,7 @@ import pathlib
 import time
 import journal
 import isce3
+import copy
 from nisar.products.readers import SLC
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -38,6 +39,8 @@ def compute_baseline(target_llh,
         doppler LUT2D for the reference acquisition
     sec_doppler: object
         doppler LUT2D for the secondary acquisition
+    ref_radargrid: object
+        radarGridParameters object for the reference acquisition
     sec_radargrid: object
         radarGridParameters object for the secondary acquisition
     ellipsoid: object
@@ -74,13 +77,10 @@ def compute_baseline(target_llh,
             maxiter=geo2rdr_parameters["maxiter"],
             delta_range=geo2rdr_parameters["delta_range"])
     except:
-        # print('ref: target_llh', target_llh)
-        # print('ref: look', ref_radargrid.lookside)
-        # print('ref: wavelength', ref_doppler)
-
-        # print('ref: not good')
+        # geo2rdr may fail in areas outside swath.
         ref_aztime = np.nan
         ref_rng = np.nan
+
     # get sensor position and velocity at ref_aztime
     ref_xyz, ref_velocity = ref_orbit.interpolate(ref_aztime)
 
@@ -98,7 +98,6 @@ def compute_baseline(target_llh,
             maxiter=geo2rdr_parameters["maxiter"],
             delta_range=geo2rdr_parameters["delta_range"])
     except:
-        # print('notgood')
         sec_aztime = np.nan
         sec_rng = np.nan
 
@@ -110,8 +109,11 @@ def compute_baseline(target_llh,
 
     # compute the cosine of the angle between the baseline vector and the
     # reference LOS vector (refernce sensor to target)
-    costheta = (ref_rng ** 2 + baseline ** 2 - sec_rng ** 2) / (
-        2.0 * ref_rng * baseline)
+    if baseline == 0:
+        costheta = 1
+    else:
+        costheta = (ref_rng ** 2 + baseline ** 2 - sec_rng ** 2) / (
+            2.0 * ref_rng * baseline)
 
     # project the baseline to LOS to get the parallel component of the baseline
     # (i.e., parallel to the LOS direction)
@@ -123,9 +125,9 @@ def compute_baseline(target_llh,
 
     # get the direction sign of the perpendicular baseline.
     direction = np.sign(
-        np.dot(np.cross(target_xyz - ref_xyz, sec_xyz - ref_xyz), ref_velocity)
-    )
-
+        np.dot(np.cross(target_xyz - ref_xyz, sec_xyz - ref_xyz), ref_velocity))
+    direction = np.sign(
+        np.dot(ref_velocity, np.cross(target_xyz - ref_xyz, sec_xyz - ref_xyz)))
     perpendicular_baseline = direction * perp_baseline_temp
 
     return parallel_baseline, perpendicular_baseline
@@ -153,6 +155,8 @@ def add_baseline(output_paths,
         orbit object for the reference acquisition
     sec_orbit: object
         orbit object for the secondary acquisition
+    ref_radargrid: object
+        radarGridParameters object for the reference acquisition
     sec_radargrid: object
         radarGridParameters object for the secondary acquisition
     doppler: object
@@ -173,24 +177,31 @@ def add_baseline(output_paths,
     """
 
     common_parent_path = 'science/LSAR'
-
-    if "RIFG" in output_paths.keys():
-        output_hdf5 = output_paths["RIFG"]
-        dst_meta_path = f'{common_parent_path}/RIFG/metadata'
+    if "RIFG" in output_paths.keys() or "ROFF" in output_paths.keys() or\
+        "RUNW" in output_paths.keys():
+        radar_or_geo = 'radar'
+        product_id = list(output_paths.keys())[0]
+        output_hdf5 = output_paths[f"{product_id}"]
+        dst_meta_path = f'{common_parent_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/geolocationGrid"
         cube_ref_dataset = f'{grid_path}/coordinateX'
-    else:
-        output_hdf5 = output_paths["GUNW"]
-        dst_meta_path = f'{common_parent_path}/GUNW/metadata'
+    elif "GUNW" in output_paths.keys() or "GOFF" in output_paths.keys():
+        product_id = "GUNW"
+        radar_or_geo = 'geo'
+        output_hdf5 = output_paths[f"{product_id}"]
+        dst_meta_path = f'{common_parent_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/radarGrid"
         cube_ref_dataset = f'{grid_path}/slantRange'
-    print(output_hdf5)
-    with h5py.File(output_hdf5, "r+") as src_h5:
+
+    residual_output_paths = copy.deepcopy(output_paths)
+    del residual_output_paths[f'{product_id}']
+
+    with h5py.File(output_hdf5, "a") as src_h5:
+        cubes_shape = src_h5[cube_ref_dataset].shape
+
         # Create metadata if baselines do not exist in h5 file
         if metadata_path_dict["perpendicularBaseline"] not in src_h5:
-            print(cube_ref_dataset)
-            print(metadata_path_dict["perpendicularBaseline"])
-            cubes_shape = src_h5[cube_ref_dataset].shape
+
             descr = "Perpendicular component of the InSAR baseline"
             h5_prep._create_datasets(src_h5[grid_path], cubes_shape, np.float32,
                             "perpendicularBaseline",
@@ -209,30 +220,35 @@ def add_baseline(output_paths,
         coordY = src_h5[metadata_path_dict["coordY"]][:]
         ds_bperp = src_h5[metadata_path_dict["perpendicularBaseline"]]
         ds_bpar = src_h5[metadata_path_dict["parallelBaseline"]]
-        geo2rdr_parameters['delta_range'] = 1e-7
+        geo2rdr_parameters['delta_range'] = 1e-8
         epsg_code = src_h5[metadata_path_dict["epsg"]][()]
         proj = isce3.core.make_projection(epsg_code)
         ellipsoid = proj.ellipsoid
 
-        if "GUNW" in output_paths.keys():
+        if radar_or_geo =='geo':
             _, meta_height, meta_width = np.shape(ref_times)
         else:
             meta_height = len(ref_times)
             meta_width = len(ref_rnges)
 
+        bperp_raster_path = f"IH5:::ID={ds_bperp.id.id}".encode("utf-8")
+        bperp_raster = isce3.io.Raster(bperp_raster_path, update=True)
+        bpar_raster_path = f"IH5:::ID={ds_bpar.id.id}".encode("utf-8")
+        bpar_raster = isce3.io.Raster(bpar_raster_path, update=True)
+
         par_baseline = np.zeros([meta_height, meta_width], dtype=np.float32)
         perp_baseline = np.zeros([meta_height, meta_width], dtype=np.float32)
 
         for kk, h in enumerate(height_levels):
-
             # when we allow a block of geo2rdr run on an array
             # the following two 'for loops' can be eliminated
             for height_ind in range(meta_height):
                 for width_ind in range(meta_width):
 
-                    if "GUNW" in output_paths.keys():
+                    if radar_or_geo =='geo':
                         # sample UAVSAR datasets have some large NOVALUE data
-                        if (coordX[width_ind] == -1.00e12) or (coordY[height_ind] == -1.00e12):
+                        if (coordX[width_ind] == -1.00e12) or \
+                           (coordY[height_ind] == -1.00e12):
                             continue
                         target_proj = np.array([coordX[width_ind], coordY[height_ind], h])
                     else:
@@ -260,29 +276,65 @@ def add_baseline(output_paths,
             ds_bpar[kk, :, :] = par_baseline
             ds_bperp[kk, :, :] = perp_baseline
 
-        if "RUNW" in output_paths:
+        # compute statistics
+        data_names = ['perpendicularBaseline', 'parallelBaseline']
+        for data_name in data_names:
+            dataset = src_h5[metadata_path_dict[data_name]]
+            raster_path = f"IH5:::ID={dataset.id.id}".encode("utf-8")
+            baseline_raster = isce3.io.Raster(raster_path)
+            compute_stats_real_data(baseline_raster, dataset)
+            del baseline_raster
 
-            perp_base_path = metadata_path_dict["perpendicularBaseline"].replace('RIFG', 'RUNW')
-            para_base_path = metadata_path_dict["parallelBaseline"].replace('RIFG', 'RUNW')
+        # if "RUNW" in output_paths:
+        if len(residual_output_paths) > 0:
+            for residual_key in residual_output_paths.keys():
+                perp_base_path = metadata_path_dict["perpendicularBaseline"
+                                ].replace(f"{product_id}", f"{residual_key}")
+                para_base_path = metadata_path_dict["parallelBaseline"
+                                ].replace(f"{product_id}", f"{residual_key}")
+                grid_path = grid_path.replace(f"{product_id}", f"{residual_key}")
 
-            with h5py.File(output_paths["RUNW"], "r+") as h5_runw:
-                runw_ds_bperp = h5_runw[f"{perp_base_path}"]
-                runw_ds_bpar = h5_runw[f"{para_base_path}"]
-                runw_ds_bperp[:] = ds_bperp[:]
-                runw_ds_bpar[:] = ds_bpar[:]
-                print(perp_base_path,output_paths["RUNW"])
+                with h5py.File(output_paths[f"{residual_key}"], "r+") as h5_resi:
+                    if perp_base_path not in h5_resi:
+                        descr = "Perpendicular component of the InSAR baseline"
+                        h5_prep._create_datasets(h5_resi[grid_path], cubes_shape, np.float32,
+                                        "perpendicularBaseline",
+                                        descr=descr, units="meters",
+                                        long_name='perpendicular baseline')
+                        h5_prep._create_datasets(h5_resi[grid_path], cubes_shape, np.float32,
+                                        "parallelBaseline",
+                                        descr=descr.replace('Perpendicular', 'Parallel'),
+                                        units="meters",
+                                        long_name='parallel baseline')
+                    runw_ds_bperp = h5_resi[f"{perp_base_path}"]
+                    runw_ds_bpar = h5_resi[f"{para_base_path}"]
+                    runw_ds_bperp[:] = ds_bperp[:]
+                    runw_ds_bpar[:] = ds_bpar[:]
 
-                perp_base_dataset_path = f'{perp_base_path}'
-                perp_baseh_dataset = h5_runw[perp_base_dataset_path]
-
-                perp_baseline_raster = isce3.io.Raster(
-                        f"IH5:::ID={perp_baseh_dataset.id.id}".encode("utf-8"),
-                        update=True)
-            # perp_raster_path = f"HDF5:{output_paths['RUNW']}:/{perp_base_path}"
-            # perp_baseline_raster = isce3.io.Raster(perp_raster_path)
-                compute_stats_real_data(perp_baseline_raster, perp_baseh_dataset)
+                    # copy attributes from RIFG to RUNW
+                    copy_attr(ds_bpar, runw_ds_bpar)
+                    copy_attr(ds_bperp, runw_ds_bperp)
 
     return None
+
+def copy_attr(src_ds, dst_ds):
+    """Copy statistics from one to another.
+
+    Parameters
+    ----------
+    src_ds: dict
+        HDF5 dataset for source
+    dst_ds: h5py.File
+        h5py file for target
+    Returns
+    -------
+    None
+
+    """
+    dst_ds.attrs.create('min_value', src_ds.attrs['min_value'])
+    dst_ds.attrs.create('mean_value', src_ds.attrs['mean_value'])
+    dst_ds.attrs.create('max_value', src_ds.attrs['max_value'])
+    dst_ds.attrs.create('sample_stddev', src_ds.attrs['sample_stddev'])
 
 def run(cfg: dict, output_paths):
     """computes the parallel and perpendicular baseline cubes
@@ -302,8 +354,10 @@ def run(cfg: dict, output_paths):
     """
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     sec_hdf5 = cfg["input_file_group"]["secondary_rslc_file_path"]
-    ref_orbit_path = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
-    sec_orbit_path = cfg['dynamic_ancillary_file_group']['orbit']['secondary_orbit_file']
+    ref_orbit_path = cfg['dynamic_ancillary_file_group']['orbit'][
+                         'reference_orbit_file']
+    sec_orbit_path = cfg['dynamic_ancillary_file_group']['orbit'][
+                         'secondary_orbit_file']
 
     info_channel = journal.info("baseline.run")
     info_channel.log("starting baseline")
@@ -317,14 +371,13 @@ def run(cfg: dict, output_paths):
     # import external orbit if file exists
     if ref_orbit_path is not None:
         ref_orbit = load_orbit_from_xml(ref_orbit_path)
-        print('Im here')
     else:
         ref_orbit = ref_slc.getOrbit()
 
     if sec_orbit_path is not None:
         sec_orbit = load_orbit_from_xml(sec_orbit_path)
     else:
-        sec_orbit = ref_slc.getOrbit()
+        sec_orbit = sec_slc.getOrbit()
 
     ref_radargrid = ref_slc.getRadarGrid()
     sec_radargrid = sec_slc.getRadarGrid()
@@ -338,39 +391,44 @@ def run(cfg: dict, output_paths):
     geo2rdr_parameters = cfg["processing"]["geo2rdr"]
     common_path = 'science/LSAR'
 
-    # if "GUNW" in output_paths:
+    radar_products = {f"{dst}": output_paths[f"{dst}"]
+                    for dst in output_paths.keys()
+                    if dst.startswith('R')}
+    geo_products = {f"{dst}": output_paths[f"{dst}"]
+                    for dst in output_paths.keys()
+                    if dst.startswith('G')}
 
-    #     dst_meta_path = f'{common_path}/GUNW/metadata'
-    #     grid_path = f"{dst_meta_path}/radarGrid"
-    #     output_paths_gunw = {"GUNW": output_paths["GUNW"]}
-    #     metadata_path_dict = {
-    #         "heights": f"{grid_path}/heightAboveEllipsoid",
-    #         "azimuthTime": f"{grid_path}/zeroDopplerAzimuthTime",
-    #         "slantRange": f"{grid_path}/slantRange",
-    #         "coordX": f"{grid_path}/xCoordinates",
-    #         "coordY": f"{grid_path}/yCoordinates",
-    #         "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
-    #         "parallelBaseline": f"{grid_path}/parallelBaseline",
-    #         "epsg": f"{grid_path}/epsg",
-    #         }
+    if "GUNW" in output_paths or "GOFF" in output_paths:
+        # only GUNW product have information requred to compute baesline.
+        product_id = "GUNW"
+        dst_meta_path = f'{common_path}/{product_id}/metadata'
+        grid_path = f"{dst_meta_path}/radarGrid"
+        metadata_path_dict = {
+            "heights": f"{grid_path}/heightAboveEllipsoid",
+            "azimuthTime": f"{grid_path}/zeroDopplerAzimuthTime",
+            "slantRange": f"{grid_path}/slantRange",
+            "coordX": f"{grid_path}/xCoordinates",
+            "coordY": f"{grid_path}/yCoordinates",
+            "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
+            "parallelBaseline": f"{grid_path}/parallelBaseline",
+            "epsg": f"{grid_path}/epsg",
+            }
 
-    #     add_baseline(output_paths_gunw,
-    #                 ref_orbit,
-    #                 sec_orbit,
-    #                 ref_radargrid,
-    #                 sec_radargrid,
-    #                 ref_doppler,
-    #                 sec_doppler,
-    #                 ellipsoid,
-    #                 metadata_path_dict,
-    #                 geo2rdr_parameters)
+        add_baseline(geo_products,
+                    ref_orbit,
+                    sec_orbit,
+                    ref_radargrid,
+                    sec_radargrid,
+                    ref_doppler,
+                    sec_doppler,
+                    ellipsoid,
+                    metadata_path_dict,
+                    geo2rdr_parameters)
 
-    if "RIFG" in output_paths:
-        dst_meta_path = f'{common_path}/RIFG/metadata'
+    if len(radar_products)>0:
+        product_id = list(radar_products.keys())[0]
+        dst_meta_path = f'{common_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/geolocationGrid"
-        output_paths_rgrid = {"RIFG": output_paths["RIFG"]}
-        if "RUNW" in output_paths:
-            output_paths_rgrid["RUNW"] = output_paths["RUNW"]
 
         metadata_path_dict = {
             "heights": f"{grid_path}/heightAboveEllipsoid",
@@ -383,7 +441,7 @@ def run(cfg: dict, output_paths):
             "epsg": f"{grid_path}/epsg",
             }
 
-        add_baseline(output_paths_rgrid,
+        add_baseline(radar_products,
                     ref_orbit,
                     sec_orbit,
                     ref_radargrid,
