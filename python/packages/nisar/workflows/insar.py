@@ -26,7 +26,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
             
     if run_steps['h5_prep']:
         h5_prep.run(cfg)
-            
+
     if run_steps['rdr2geo']:
         rdr2geo.run(cfg)
 
