@@ -64,8 +64,8 @@ def test_compute_baseline():
                             ref_radargrid,
                             ellipsoid,
                             geo2rdr_parameters)
-    assert parb < 1e-5
-    assert perb < 1e-5
+    assert np.nanmean(parb) < 1e-5
+    assert np.nanmean(perb) < 1e-5
 
 def test_add_baseline():
     '''
@@ -232,11 +232,11 @@ def validate_baseline(output_path, perp_path, par_path):
     '''
 
     with h5py.File(output_path) as src_h5:
-        perp_base = src_h5[perp_path]
-        par_base = src_h5[par_path]
+        perp_base = np.array(src_h5[perp_path])
+        par_base = np.array(src_h5[par_path])
 
-        assert perp_base < 1e-5
-        assert par_base < 1e-5
+        assert np.nanmean(perp_base) < 1e-5
+        assert np.nanmean(par_base) < 1e-5
 
 if __name__ == '__main__':
     test_compute_baseline()
