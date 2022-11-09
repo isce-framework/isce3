@@ -37,7 +37,7 @@ def check_error(f_test, dtype, tol, test_type):
 
     # Retrieve data
 
-    test = np.fromfile(f_test, dtype=dtype).astype('float64')
+    test = np.fromfile(f_test, dtype=dtype)
     test = np.ma.masked_array(test, mask=np.abs(test) > 999.0)
 
     # Calculate average error
@@ -55,8 +55,8 @@ def test_geo2rdr_validate():
 
     # Get files to compare
     fnames = ['azimuth.off', 'range.off']
-    dtypes = [np.float32, np.float32]
-    tols = [1.0e-8, 1.0e-8]
+    dtypes = [np.float64, np.float64]
+    tols = [1.0e-9, 1.0e-9]
 
     # Check errors
     scratch_path = '.'

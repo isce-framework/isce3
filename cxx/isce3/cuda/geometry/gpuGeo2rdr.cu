@@ -29,7 +29,7 @@ void runGeo2rdrBlock(isce3::core::Ellipsoid ellps,
                      isce3::cuda::core::OrbitView orbit,
                      isce3::cuda::core::gpuLUT1d<double> doppler,
                      double * x, double * y, double * hgt,
-                     float * azoff, float * rgoff,
+                     double * azoff, double * rgoff,
                      isce3::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
                      double t0, double r0, size_t length, size_t width,
@@ -77,8 +77,8 @@ void runGeo2rdrBlock(isce3::core::Ellipsoid ellps,
 
         // Save result if valid
         if (!isOutside) {
-            rgoff[index_flat] = ((slantRange - r0) / dmrg) - float(rbin);
-            azoff[index_flat] = ((aztime - t0) / dtaz) - float(line + lineStart);
+            rgoff[index_flat] = ((slantRange - r0) / dmrg) - static_cast<double>(rbin);
+            azoff[index_flat] = ((aztime - t0) / dtaz) - static_cast<double>(line + lineStart);
         } else {
             rgoff[index_flat] = NULL_VALUE;
             azoff[index_flat] = NULL_VALUE;
@@ -97,8 +97,8 @@ runGPUGeo2rdr(const isce3::core::Ellipsoid& ellipsoid,
               const std::valarray<double> & x,
               const std::valarray<double> & y,
               const std::valarray<double> & hgt,
-              std::valarray<float> & azoff,
-              std::valarray<float> & rgoff,
+              std::valarray<double> & azoff,
+              std::valarray<double> & rgoff,
               int topoEPSG, size_t lineStart, size_t blockWidth,
               double t0, double r0,
               size_t length, size_t width,
@@ -112,14 +112,14 @@ runGPUGeo2rdr(const isce3::core::Ellipsoid& ellipsoid,
 
     // Allocate memory on device topo data and results
     double *x_d, *y_d, *hgt_d;
-    float *azoff_d, *rgoff_d;
+    double *azoff_d, *rgoff_d;
     const size_t nbytes_double = x.size() * sizeof(double);
     const size_t nbytes_float = x.size() * sizeof(float);
     checkCudaErrors(cudaMalloc(&x_d, nbytes_double));
     checkCudaErrors(cudaMalloc(&y_d, nbytes_double));
     checkCudaErrors(cudaMalloc(&hgt_d, nbytes_double));
-    checkCudaErrors(cudaMalloc(&azoff_d, nbytes_float));
-    checkCudaErrors(cudaMalloc(&rgoff_d, nbytes_float));
+    checkCudaErrors(cudaMalloc(&azoff_d, nbytes_double));
+    checkCudaErrors(cudaMalloc(&rgoff_d, nbytes_double));
 
     // Copy topo data to device
     checkCudaErrors(cudaMemcpy(x_d, &x[0], nbytes_double, cudaMemcpyHostToDevice));
@@ -157,8 +157,8 @@ runGPUGeo2rdr(const isce3::core::Ellipsoid& ellipsoid,
     checkCudaErrors(cudaPeekAtLastError());
 
     // Copy geo2rdr results from device to host
-    checkCudaErrors(cudaMemcpy(&azoff[0], azoff_d, nbytes_float, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(&rgoff[0], rgoff_d, nbytes_float, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&azoff[0], azoff_d, nbytes_double, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&rgoff[0], rgoff_d, nbytes_double, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(&totalconv, totalconv_d, sizeof(unsigned int),
                                cudaMemcpyDeviceToHost));
 

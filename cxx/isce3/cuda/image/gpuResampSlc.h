@@ -31,7 +31,7 @@ namespace isce3 {
                const isce3::core::Poly2d & azCarrier,
                const isce3::core::LUT1d<double> & dopplerLUT,
                isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
-               int inWidth, int inLength, double startingRange, double rangePixelSpacing,
+               size_t inWidth, size_t inLength, double startingRange, double rangePixelSpacing,
                double sensingStart, double prf, double wavelength, double refStartingRange,
                double refRangePixelSpacing, double refWavelength,
                bool flatten, int chipSize, const std::complex<float> invalid_value

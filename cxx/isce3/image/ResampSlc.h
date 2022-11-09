@@ -115,7 +115,7 @@ public:
     bool haveRefData() const { return _haveRefData; }
 
     // Convenience functions
-    void declare(int, int, int, int) const;
+    void declare(size_t, size_t, size_t, size_t) const;
 
     /* Generic resamp entry point from externally created rasters
      *
@@ -184,22 +184,72 @@ protected:
     double _refRangePixelSpacing;
     double _refWavelength;
 
-    // Tile initialization for input offsets
-    void _initializeOffsetTiles(Tile_t&, isce3::io::Raster&, isce3::io::Raster&,
-                                Tile<float>&, Tile<float>&, int);
+    /*
+     * Initialize az/range offset tiles and load from az/range offset rasters
+     * for current block
+     *
+     * \param[in]  tile             tile object containing input block
+     *                              start/stop indices and dimensions
+     * \param[in]  azOffsetRaster   raster containing azimuth offsets (from
+     *                              geo2rdr)
+     * \param[in]  rgOffsetRaster   raster containing range offsets (from
+     *                              geo2rdr)
+     * \param[out] azOffTile        tile object containing azimuth offsets for
+     *                              current block
+     * \param[out] rgOffTile        tile object containing range offsets for
+     *                              current block
+     * \param[in]  outWidth         width of az/range offset tiles
+    */
+    void _initializeOffsetTiles(Tile_t& tile,
+                                isce3::io::Raster& azOffsetRaster,
+                                isce3::io::Raster& rgOffsetRaster,
+                                Tile<float>& azOffTile,
+                                Tile<float>& rgOffTile,
+                                size_t outWidth);
 
-    // Tile initialization for input SLC data
-    void _initializeTile(Tile_t&, isce3::io::Raster&, const Tile<float>&, int,
-                         int, int);
+    /*
+     * Initialize input SLC tile
+     *
+     * \param[out] til e            tile object containing input block
+     *                              start/stop indices and dimensions
+     * \param[out] inputSlc         raster containing input SLC used to
+     *                              populate tile object
+     * \param[in]  azOffTile        tile object containing azimuth offsets for
+     *                              current block used to determine tile
+     *                              start/stop indices and dimensions
+     * \param[in]  outLength        length output for current block
+     * \param[in]  rowBuffer
+     * \param[in]  chipHalf         half of the size of the chip used by the
+     *                              sinc interpolator
+    */
+    void _initializeTile(Tile_t& tile, isce3::io::Raster& inputSlc,
+                         const Tile<float>& azOffTile, size_t outLength,
+                         int rowBuffer, int chipHalf);
 
-    // Tile transformation
+
+    /*
+     * Transfrom input SLC tile/block by sinc interpolating
+     *
+     * \param[in]  tile             tile object containing input block
+     *                              start/stop indices and dimensions
+     * \param[in]  outputSlc        raster containing transformed/output SLC
+     * \param[out] rgOffTile        tile object containing range offsets for
+     *                              current block
+     * \param[in]  azOffTile        tile object containing azimuth offsets for
+     *                              current block
+     * \param[in]  inLength         input length for current block
+     * \param[in]  flatten          whether or not to flatten transformed SLC
+     *                              block
+     * \param[in]  chipSize         size of the chip used by the sinc
+     *                              interpolator
+    */
     void _transformTile(Tile_t& tile, isce3::io::Raster& outputSlc,
                         const Tile<float>& rgOffTile,
-                        const Tile<float>& azOffTile, int inLength,
+                        const Tile<float>& azOffTile, size_t inLength,
                         bool flatten, int chipSize);
 
     // Convenience functions
-    int _computeNumberOfTiles(int, int);
+    size_t _computeNumberOfTiles(size_t, size_t);
 
     // Initialize interpolator pointer
     void _prepareInterpMethods(isce3::core::dataInterpMethod, int);

@@ -72,6 +72,12 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   longitude -54.579586258 deg, latitude 3.177088785 deg, height 0.0 m.  The
   file was generated using REE v14.8.6 and ReeUtilPy v2.9.4.
 
+- **REE_RSLC_out17.h5**
+
+  This is an RSLC product generated from the "out17" L0B data.  It only covers
+  a small chip around the target and can be used for testing the point target
+  analysis software.
+
 - **REE_ANTPAT_CUTS_BEAM4.h5**
 
   Four-beam *NISAR* antenna pattern file. The original full *2-D* version of patterns
@@ -183,14 +189,6 @@ and then post-processed and converted into L0B product via its python utility to
   The Tx range lines types are of HPA, LNA, and BYPASS. BYPASS range line interval is 20.
 
 
-## RSCL for point target analysis
-
-  **rslc_pt.h5
-
-  This NISAR RSLC product is focused using ISCE3 focus.py from an REE simulated raw data set with single
-  point target. The transmit and receive polarizations are HH.
-
-
 ## Geoid EGM96
 
 - **egm96_15.gtx**
@@ -216,3 +214,12 @@ and then post-processed and converted into L0B product via its python utility to
   ```
   $ stage_dem.py -b 81.45 28.29 81.5 28.3 -o dem_himalayas_E81p5_N28p3_short.vrt
   ```
+
+## Point Target
+
+- **search_first_null.pkl**
+
+  Python pickle archive of a slice of a point target impulse response function
+  in dB as well as the index of the peak.  This is an example from a point
+  target simulation where the analysis script once failed to find the null
+  width.

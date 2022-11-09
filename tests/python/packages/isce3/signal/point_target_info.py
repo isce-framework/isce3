@@ -4,6 +4,8 @@ import numpy.testing as npt
 import isce3
 from isce3.signal import point_target_info as pt
 from numpy.fft import fftfreq, fftshift, fft, ifft
+import pickle
+from pathlib import Path
 
 class RectNotch:
     def __init__(self, freq: float, bandwidth: float):
@@ -91,7 +93,7 @@ def test_kaiser_win():
         main_peak_idx = np.argmax(z_pwr_db)
 
         #Test null search algorithm
-        null_left_idx, null_right_idx = pt.search_first_null(
+        null_left_idx, null_right_idx = pt.search_first_null_pair(
             z_pwr_db, main_peak_idx
         )
 
@@ -197,6 +199,34 @@ def test_cosine_win():
         islr_max_err, 
         "ISLR of Raised Cosine window(s) do not match with their bench mark(s)",
     )
+
+
+def test_search_null_pair():
+    # This data has a pair of equal values at one of the sidelobe peaks.
+    fn = Path(iscetest.data) / "search_first_null.pkl"
+    with open(fn, "rb") as f:
+        d = pickle.load(f)
+    ileft, iright = pt.search_first_null_pair(d["matched_output"],
+                                              d["mainlobe_peak_idx"])
+    # obtained correct values by plotting the data
+    true_left, true_right = 949, 1073
+    npt.assert_equal(ileft, true_left)
+    npt.assert_equal(iright, true_right)
+
+    # Stick another equal value right next to the main peak.
+    x = d["matched_output"][:]
+    ipeak = d["mainlobe_peak_idx"]
+    x[ipeak + 1] = x[ipeak]
+    ileft, iright = pt.search_first_null_pair(x, ipeak)
+    npt.assert_equal(ileft, true_left)
+    npt.assert_equal(iright, true_right)
+
+    # Try again where now we have two equal values at a null.
+    x[true_right - 1] = x[true_right]
+    ileft, iright = pt.search_first_null_pair(x, ipeak)
+    npt.assert_equal(ileft, true_left)
+    npt.assert_equal(iright, true_right)
+
 
 if __name__ == "__main__":
     test_kaiser_win()

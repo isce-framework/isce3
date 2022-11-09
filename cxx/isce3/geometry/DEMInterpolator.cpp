@@ -513,7 +513,7 @@ computeMinMaxMeanHeight(float &minValue, float &maxValue, float &meanValue) {
         info << "Computing DEM statistics" << pyre::journal::newline;
 
         minValue = std::numeric_limits<float>::max();
-        maxValue = std::numeric_limits<float>::min();
+        maxValue = -std::numeric_limits<float>::max();
         double sum = 0.0;
         auto n_valid = _dem.length() * _dem.width();
         // loop over all values in DEM raster

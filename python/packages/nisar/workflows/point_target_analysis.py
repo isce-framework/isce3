@@ -5,6 +5,7 @@ import numpy as np
 import argparse
 import isce3
 from nisar.products.readers import SLC
+from nisar.types import ComplexFloat16Decoder
 from isce3.signal import point_target_info as pti
 import warnings
 import json
@@ -112,6 +113,12 @@ def cmd_line_parse():
         help="Point target impulse reponse window tapering parameter."
     )
     parser.add_argument(
+        "--shift-domain",
+        choices=("time", "frequency"),
+        default="time",
+        help="Estimate shift in time domain or frequency domain."
+    )
+    parser.add_argument(
         "-o",
         "--output",
         dest="output_file",
@@ -188,6 +195,7 @@ def slc_pt_performance(
     cuts=False,
     window_type='rect',
     window_parameter=0,
+    shift_domain='time',
     pta_output=None
 ):
     """This function runs point target performance test on Level-1 RSLC.
@@ -235,6 +243,12 @@ def slc_pt_performance(
         optional window parameter. For a Kaiser window, this is the beta
         parameter. For a raised cosine window, it is the pedestal height.
         It is ignored if `window_type = 'rect'`.
+    shift_domain: {time, frequency}
+        If 'time' then estimate peak location using max of oversampled data.
+        If 'frequency' then estimate a phase ramp in the frequency domain.
+        Default is 'time' but 'frequency' is useful when target is well
+        focused, has high SNR, and is the only target in the neighborhood
+        (often the case in point target simulations).
     pta_output: str
         point target metrics output JSON file (directory+filename)
 
@@ -251,15 +265,12 @@ def slc_pt_performance(
     if product_type == "GSLC":
         raise NotImplementedError("support for GSLC products is not yet implemented") 
 
-    # Read RSLC data
+    # Open RSLC data
     slc = SLC(hdf5file=slc_input)
-    slc_data = np.asarray(slc.getSlcDataset(freq_group, polarization), "c8")
- 
+    slc_data = ComplexFloat16Decoder(slc.getSlcDataset(freq_group, polarization))
+
     #Convert input LLH (lat, lon, height) coordinates into (slant range, azimuth)
     slc_pixel, slc_line = get_radar_grid_coords(cr_llh, slc, freq_group)
-
-    slc_pixel = int(np.round(slc_pixel))
-    slc_line = int(np.round(slc_line))
 
     #compute point target performance metrics
     performance_dict = pti.analyze_point_target(
@@ -274,7 +285,8 @@ def slc_pt_performance(
         num_sidelobes,
         predict_null,
         window_type,
-        window_parameter
+        window_parameter,
+        shift_domain=shift_domain,
     )
    
     if plots:
@@ -324,7 +336,8 @@ if __name__ == "__main__":
         cuts,
         window_type,
         window_parameter,
-        pta_output
+        shift_domain = inputs.shift_domain,
+        pta_output = pta_output,
     )
 
     if plots:

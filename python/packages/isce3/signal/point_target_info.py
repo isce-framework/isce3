@@ -4,6 +4,7 @@ Analyze a point target in a complex*8 file.
 """
 import sys
 import numpy as np
+from warnings import warn
 
 desc = __doc__
 
@@ -15,11 +16,6 @@ class MissingNull(Exception):
 
 class UnsupportedWindow(Exception):
     """Raised if window_type input is not supported."""
-
-    pass
-
-class ViolatesMonotonicity(Exception):
-    """Raised if point target samples are not strictly monotonic."""
 
     pass
 
@@ -48,6 +44,32 @@ def shift_frequency(z, fx, fy):
     z *= np.exp(1j * fx * x)
     z *= np.exp(1j * fy * y)
     return z
+
+
+def measure_location_from_spectrum(x):
+    """
+    Estimate location of a target, assuming there's just one.
+
+    Parameters
+    ----------
+    x : array_like
+        Two-dimensional chip of data containing a single point-like target.
+
+    Returns
+    -------
+    xy : tuple of float
+        (column, row) location of target, in samples.
+    """
+    X = np.fft.fft2(x)
+    # Estimate location of target, assuming there's just one.
+    tx, ty = estimate_frequency(X)
+    # scale to pixels
+    tx *= -X.shape[1] / (2 * np.pi)
+    ty *= -X.shape[0] / (2 * np.pi)
+    # ensure positive
+    tx %= X.shape[1]
+    ty %= X.shape[0]
+    return tx, ty
 
 
 def oversample(x, nov, baseband=False, return_slopes=False):
@@ -188,7 +210,42 @@ def comp_coswin_peak_to_2nd_null_dist(eta):
     return peak_to_2nd_null_dist
 
 
-def search_first_null(matched_output, mainlobe_peak_idx):
+def locate_null(t, half, n=0):
+    """Locate null in impulse response.
+
+    Parameters:
+    -----------
+    t : array_like
+        Time axis of data
+    half : array_like
+        Impulse response magnitude, starting at peak and decreasing,
+        e.g., the right half or the reversed left half.
+    n : int
+        Which null to find, n=0 for first null after peak (default).
+
+    Returns:
+    --------
+    location : t.dtype
+        Time axis indexed at location of null
+    """
+    assert len(t) == len(half)
+    if np.any(half > half[0]):
+        raise ValueError("IRF not sorted correctly")
+    dx = np.diff(half)
+    # Exclude any points where adjacent values are equal.
+    # Note that len(dx) == len(x) - 1.  If points i and i+1 are equal, exclude
+    # point i in order to err in favor of the largest possible null location.
+    unequal = np.where(dx != 0.0)[0]
+    t = t[unequal]
+    dx = np.diff(half[unequal])
+    # Nulls occur where derivative goes from negative to positive.
+    nulls = np.where(np.diff(np.sign(dx)) == 2)[0] + 1
+    if len(nulls) <= n:
+        raise MissingNull("Insufficient nulls found in impulse response.")
+    return t[nulls[n]]
+
+
+def search_first_null_pair(matched_output, mainlobe_peak_idx):
     """Compute mainlobe null locations as sample index for ISLR and PSLR.
 
     Null locations are first nulls to the left and right of the mainlobe.
@@ -207,47 +264,12 @@ def search_first_null(matched_output, mainlobe_peak_idx):
     null_right_idx: int
         null location right of mainlobe peak in sample index
     """
-
-    samples_left = matched_output[: mainlobe_peak_idx + 1][::-1]
-    samples_right = matched_output[mainlobe_peak_idx:]
-
-    # Find the signs of derivatives of samples left and right the mainlobe peak
-    diff_left = np.diff(samples_left)
-    diff_right = np.diff(samples_right)
-
-    # Raise ViolatesMonotonicity Exception if two adjacent point target
-    # samples are exactly equal.
-    if np.any(diff_left == 0):
-        raise ViolatesMonotonicity(
-            "Some adjacent point target samples to the left of the mainlobe peak are equal."
-        )
-
-    if np.any(diff_right == 0):
-        raise ViolatesMonotonicity(
-            "Some adjacent point target samples to the right of the mainlobe peak are equal."
-        )
-
-    diffsign_left = np.sign(diff_left)
-    diffsign_right = np.sign(diff_right)
-
-    # Raise MissingNull Exception if no Null(s) can be located
-    if not np.any(diffsign_left > 0):
-        raise MissingNull(
-            "The pattern to the left of mainlobe is monotonic. Null cannot be determined"
-        )
-
-    if not np.any(diffsign_right > 0):
-        raise MissingNull(
-            "The pattern to the right of mainlobe is monotonic. Null cannot be determined"
-        )
-
-    min_left_idx = np.where(diffsign_left[:-1] + diffsign_left[1:] == 0)[0][0]
-    min_right_idx = np.where(diffsign_right[:-1] + diffsign_right[1:] == 0)[0][0]
-
-    null_left_idx = mainlobe_peak_idx - min_left_idx - 1
-    null_right_idx = mainlobe_peak_idx + min_right_idx + 1
-
-    return null_left_idx, null_right_idx
+    t = np.arange(len(matched_output))
+    left = slice(mainlobe_peak_idx, 0, -1)
+    right = slice(mainlobe_peak_idx, None)
+    ileft = locate_null(t[left], matched_output[left])
+    iright = locate_null(t[right], matched_output[right])
+    return ileft, iright
 
 
 def compute_islr_pslr(
@@ -340,7 +362,7 @@ def compute_islr_pslr(
         num_samples_side_total = int(np.round(num_sidelobes * samples_null_to_peak))
 
         # PSLR is always computed based on manual null search
-        null_first_left_idx, null_first_right_idx = search_first_null(
+        null_first_left_idx, null_first_right_idx = search_first_null_pair(
             data_in_pwr_db, peak_idx
         )
 
@@ -348,7 +370,7 @@ def compute_islr_pslr(
         sidelobe_right_idx = null_main_right_idx + num_samples_side_total
     else:  
        # Search for mainlobe nulls
-        null_first_left_idx, null_first_right_idx = search_first_null(
+        null_first_left_idx, null_first_right_idx = search_first_null_pair(
             data_in_pwr_db, peak_idx
         )
         null_main_left_idx = null_first_left_idx
@@ -441,7 +463,8 @@ def analyze_point_target(
     num_sidelobes=10,
     predict_null=False,
     window_type='rect',
-    window_parameter=0
+    window_parameter=0,
+    shift_domain='time',
 ):
     """Measure point-target attributes.
 
@@ -449,8 +472,9 @@ def analyze_point_target(
     ----------
         slc: array of 2D
             complex image (2D array).
-        i, j: int
+        i, j: float
             Row and column indices where point-target is expected.
+            (Need not be integer.)
         nov: int
             Amount of oversampling.
         plot: bool
@@ -487,6 +511,12 @@ def analyze_point_target(
             optional, window parameter. For a Kaiser window, this is the beta parameter.
             For a Raised Cosine window, it is the pedestal height.
             It is ignored if `window_type='rect'`.
+        shift_domain: {time, frequency}
+            If 'time' then estimate peak location using max of oversampled data.
+            If 'frequency' then estimate a phase ramp in the frequency domain.
+            Default is 'time' but 'frequency' is useful when target is well
+            focused, has high SNR, and is the only target in the neighborhood
+            (often the case in point target simulations).
 
     Returns:
     --------
@@ -500,16 +530,29 @@ def analyze_point_target(
         'outside of RSLC image. This could be due to residual azimuth/range delays or '
         'incorrect geometry info or incorrect user provided target location info.')
 
-    chip_i0, chip_j0, chip = get_chip(slc, i, j, nchip=chipsize)
+    chip_i0, chip_j0, chip0 = get_chip(slc, i, j, nchip=chipsize)
 
-    chip, fx, fy = oversample(chip, nov=nov, return_slopes=True)
+    chip, fx, fy = oversample(chip0, nov=nov, return_slopes=True)
 
-    k = np.argmax(abs(chip))
+    k = np.argmax(np.abs(chip))
     ichip, jchip = np.unravel_index(k, chip.shape)
     chipmax = chip[ichip, jchip]
 
-    imax = chip_i0 + ichip * 1.0 / nov
-    jmax = chip_j0 + jchip * 1.0 / nov
+    if shift_domain == 'time':
+        imax = chip_i0 + ichip * 1.0 / nov
+        jmax = chip_j0 + jchip * 1.0 / nov
+    elif shift_domain == 'frequency':
+        tx, ty = measure_location_from_spectrum(chip0)
+        imax = chip_i0 + ty
+        jmax = chip_j0 + tx
+        if (abs(tx - jchip / nov) > 1) or (abs(ty - ichip / nov) > 1):
+            warn(f"Spectral estimate of chip max at ({ty}, {tx}) differs from "
+                 f"time domain estimate at ({ichip / nov}, {jchip / nov}) by "
+                 "more than one pixel.  Magnitude and phase is reported using "
+                 "time-domain estimate.")
+    else:
+        raise ValueError("Expected shift_domain in {'time', 'frequency'} but"
+                         f" got {shift_domain}.")
 
     az_slice = chip[:, jchip]
     rg_slice = chip[ichip, :]
@@ -591,11 +634,12 @@ def tofloatvals(x):
 
 
 def main(argv):
-    from argparse import ArgumentParser
+    import argparse
     import matplotlib.pyplot as plt
     import json
 
-    parser = ArgumentParser(description=desc)
+    parser = argparse.ArgumentParser(description=desc,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "-1",
         action="store_true",
@@ -665,6 +709,12 @@ def main(argv):
         required=False,
         help="Window parameter for Kaiser and Raised Cosine windows",
     )
+    parser.add_argument(
+        "--shift-domain",
+        choices=("time", "frequency"),
+        default="time",
+        help="Estimate shift in time domain or frequency domain."
+    )
     args = parser.parse_args(argv[1:])
 
     n, i, j = [getattr(args, x) for x in ("n", "row", "column")]
@@ -687,7 +737,8 @@ def main(argv):
         num_sidelobes=args.num_sidelobes,
         predict_null=args.predict_null,
         window_type=args.window_type,
-        window_parameter=args.window_parameter
+        window_parameter=args.window_parameter,
+        shift_domain=args.shift_domain
     )
     if args.i:
         info = info[0]

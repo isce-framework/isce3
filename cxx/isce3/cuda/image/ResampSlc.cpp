@@ -32,8 +32,8 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     Raster azOffsetRaster(azOffsetFilename, GA_ReadOnly);
 
     // Make output raster; geometry defined by offset rasters
-    const int outLength = rgOffsetRaster.length();
-    const int outWidth = rgOffsetRaster.width();
+    const size_t outLength = rgOffsetRaster.length();
+    const size_t outWidth = rgOffsetRaster.width();
     Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32, "ISCE");
 
     // Call generic resamp
@@ -51,11 +51,11 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
     // Set the band number for input SLC
     _inputBand = inputBand;
     // Cache width of SLC image
-    const int inLength = inputSlc.length();
-    const int inWidth = inputSlc.width();
+    const size_t inLength = inputSlc.length();
+    const size_t inWidth = inputSlc.width();
     // Cache output length and width from offset images
-    const int outLength = rgOffsetRaster.length();
-    const int outWidth = rgOffsetRaster.width();
+    const size_t outLength = rgOffsetRaster.length();
+    const size_t outWidth = rgOffsetRaster.width();
 
     // Check if reference data is available
     if (flatten && !this->haveRefData()) {
@@ -107,7 +107,6 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
                 this->wavelength(), this->refStartingRange(),
                 this->refRangePixelSpacing(), this->refWavelength(), flatten,
                 chipSize, _invalid_value);
-
     }
 
     // Print out timing information and reset

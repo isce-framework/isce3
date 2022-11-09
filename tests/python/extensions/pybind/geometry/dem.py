@@ -9,6 +9,7 @@ import iscetest
 import os
 import collections as cl
 import numpy.testing as npt
+import numpy as np
 
 from osgeo import gdal
 
@@ -58,6 +59,20 @@ def test_constructor_raster_obj():
     npt.assert_allclose(dem_obj.data.mean(), dem_info.mean,
                         err_msg='Wrong mean DEM height')
 
+def test_compute_min_max_mean_height():
+    # filename of the DEM ratster
+    filename_dem = 'dem_himalayas_E81p5_N28p3_short.tiff'
+    file_raster = os.path.join(iscetest.data, filename_dem)
+    dem = DEMInterpolator(Raster(file_raster))
+    # compute min/max/mean heights
+    dem.compute_min_max_mean_height()
+    # validate computed values
+    npt.assert_allclose(np.nanmin(dem.data), dem.min_height,
+                        err_msg='Wrong computed min DEM height')
+    npt.assert_allclose(np.nanmax(dem.data), dem.max_height,
+                        err_msg='Wrong computed max DEM height')
+    npt.assert_allclose(np.nanmean(dem.data), dem.mean_height,
+                        err_msg='Wrong computed mean DEM height')
 
 def test_methods():
     # pybind11::enum_ is not iterable

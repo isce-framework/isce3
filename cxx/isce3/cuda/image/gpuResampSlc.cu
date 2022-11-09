@@ -36,10 +36,10 @@ void transformTile(const thrust::complex<float> *tile,
                    const gpuLUT1d<double> dopplerLUT,
                    gpuSinc2dInterpolator<thrust::complex<float>> interp,
                    bool flatten,
-                   int outWidth,
-                   int outLength,
-                   int inWidth,
-                   int inLength,
+                   size_t outWidth,
+                   size_t outLength,
+                   size_t inWidth,
+                   size_t inLength,
                    double startingRange,
                    double rangePixelSpacing,
                    double sensingStart,
@@ -148,15 +148,15 @@ gpuTransformTile(isce3::image::Tile<std::complex<float>> & tile,
                const isce3::core::Poly2d & azCarrier,
                const isce3::core::LUT1d<double> & dopplerLUT,
                isce3::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
-               int inWidth, int inLength, double startingRange, double rangePixelSpacing,
+               size_t inWidth, size_t inLength, double startingRange, double rangePixelSpacing,
                double sensingStart, double prf, double wavelength, double refStartingRange,
                double refRangePixelSpacing, double refWavelength,
                bool flatten, int chipSize,
                const std::complex<float> invalid_value) {
 
     // Cache geometry values
-    const int outWidth = azOffTile.width();
-    const int outLength = azOffTile.length();
+    const size_t outWidth = azOffTile.width();
+    const size_t outLength = azOffTile.length();
 
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
