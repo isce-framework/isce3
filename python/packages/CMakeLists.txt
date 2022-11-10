@@ -32,6 +32,7 @@ set (list_of_exe
      nisar/workflows/gen_doppler_range_product.py
      nisar/workflows/geo2rdr.py
      nisar/workflows/geocode_insar.py
+     nisar/workflows/get_product_geometry.py
      nisar/workflows/gcov.py
      nisar/workflows/gslc.py
      nisar/workflows/insar.py

@@ -10,17 +10,24 @@ namespace isce3 { namespace geometry {
 
 /**  Compute geometry vectors and metadata cube values for a given target
  * point and write to the corresponding arrays.
+ * 
+ * Each output value is saved onto the first band of its
+ * associated raster file.
+ * 
+ * The line-of-sight (LOS) and along-track unit vectors are referenced to
+ * ENU coordinates computed wrt targets.
+ * 
+ * The terrain normal unit vector is required for computing the local-
+ * incidence angle, projection angle, and simulated radar brightness. The
+ * lookside is required for computing the projection angle and simulated
+ * radar brightness.
  *
  * @param[in]  array_pos_i                      Output array line
  * @param[in]  array_pos_j                      Output array column
  * @param[in]  native_azimuth_time              Native Doppler azimuth time
  * @param[in]  target_llh                       Target lat/lon/height vector
- * @param[in]  target_proj                      Target coordinates in the output
- * projection system
  * @param[in]  orbit                            Reference orbit
  * @param[in]  ellipsoid                        Reference ellipsoid
- * @param[in]  proj_los_and_along_track_vectors ProjectionBase object for
- * representing LOS and along-track unit vectors
  * @param[out] incidence_angle_raster           Incidence angle cube raster
  * @param[out] incidence_angle_array            Incidence angle cube array
  * @param[out] los_unit_vector_x_raster         LOS (target-to-sensor) unit
@@ -39,13 +46,22 @@ namespace isce3 { namespace geometry {
  * @param[out] elevation_angle_array            Elevation cube array
  * @param[out] ground_track_velocity_raster     Ground-track velocity raster
  * @param[out] ground_track_velocity_array      Ground-track velocity array
+ * @param[out] local_incidence_angle_raster     Local-incidence angle raster
+ * @param[out] local_incidence_angle_array      Local-incidence angle array
+ * @param[out] projection_angle_raster          Projection angle raster
+ * @param[out] projection_angle_array           Projection angle array
+ * @param[out] simulated_radar_brightness_raster Simulated radar brightness raster
+ * @param[out] simulated_radar_brightness_array Simulated radar brightness array
+ * @param[in]  terrain_normal_unit_vec_enu      Terrain normal vector (required
+ * to compute local-incidence, projection angles, and simulated radar brightness)
+ * @param[in]  lookside                         Look side (required to compute
+ * the projection angle and simulated radar brightness)
  */
 inline void writeVectorDerivedCubes(const int array_pos_i,
         const int array_pos_j, const double native_azimuth_time,
         const isce3::core::Vec3& target_llh,
-        const isce3::core::Vec3& target_proj, const isce3::core::Orbit& orbit,
+        const isce3::core::Orbit& orbit,
         const isce3::core::Ellipsoid& ellipsoid,
-        const isce3::core::ProjectionBase* proj_los_and_along_track_vectors,
         isce3::io::Raster* incidence_angle_raster,
         isce3::core::Matrix<float>& incidence_angle_array,
         isce3::io::Raster* los_unit_vector_x_raster,
@@ -59,7 +75,15 @@ inline void writeVectorDerivedCubes(const int array_pos_i,
         isce3::io::Raster* elevation_angle_raster,
         isce3::core::Matrix<float>& elevation_angle_array,
         isce3::io::Raster* ground_track_velocity_raster,
-        isce3::core::Matrix<double>& ground_track_velocity_array);
+        isce3::core::Matrix<double>& ground_track_velocity_array,
+        isce3::io::Raster* local_incidence_angle_raster,
+        isce3::core::Matrix<float>& local_incidence_angle_array,
+        isce3::io::Raster* projection_angle_raster,
+        isce3::core::Matrix<float>& projection_angle_array,
+        isce3::io::Raster* simulated_radar_brightness_raster,
+        isce3::core::Matrix<float>& simulated_radar_brightness_array,
+        isce3::core::Vec3* terrain_normal_unit_vec_enu = nullptr,
+        isce3::core::LookSide* lookside = nullptr);
 
 /** Make metadata radar grid cubes
  *
@@ -81,10 +105,11 @@ inline void writeVectorDerivedCubes(const int array_pos_i,
  * then be used to interpolate the metadata cubes and generate
  * high-resolution maps of the corresponding radar geometry variable.
  *
+ * Each output layer is saved onto the first band of its
+ * associated raster file.
+ * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
- * the projection defined by the epsg_los_and_along_track_vectors code.
- * In the case of ENU, i.e. epsg_los_and_along_track_vectors equals to 0
- * or 4326, ENU coordinates are computed wrt targets.
+ * ENU coordinates computed wrt targets.
  *
  * @param[in]  radar_grid                  Radar grid
  * @param[in]  geogrid                     Geogrid to be
@@ -93,8 +118,6 @@ inline void writeVectorDerivedCubes(const int array_pos_i,
  * @param[in]  orbit                       Reference orbit
  * @param[in]  native_doppler              Native image Doppler
  * @param[in]  grid_doppler                Grid Doppler
- * @param[in]  epsg_los_and_along_track_vectors EPSG code for LOS and
- * along-track unit vectors (0 or 4326 for ENU coordinates)
  * @param[out] slant_range_raster          Slant-range (in meters)
  * cube raster
  * @param[out] azimuth_time_raster         Azimuth time (in seconds)
@@ -122,7 +145,6 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         const std::vector<double>& heights, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& native_doppler,
         const isce3::core::LUT2d<double>& grid_doppler,
-        const int epsg_los_and_along_track_vectors = 0,
         isce3::io::Raster* slant_range_raster = nullptr,
         isce3::io::Raster* azimuth_time_raster = nullptr,
         isce3::io::Raster* incidence_angle_raster = nullptr,
@@ -155,10 +177,11 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * then be used to interpolate the metadata cubes and generate
  * high-resolution maps of the corresponding radar geometry variable.
  *
+ * Each output layer is saved onto the first band of its
+ * associated raster file.
+ * 
  * The line-of-sight (LOS) and along-track unit vectors are referenced to
- * the projection defined by the epsg_los_and_along_track_vectors code.
- * In the case of ENU, i.e. epsg_los_and_along_track_vectors equals to 0
- * or 4326, ENU coordinates are computed wrt targets.
+ * ENU coordinates computed wrt targets.
  *
  * @param[in]  radar_grid                Cube radar grid
  * @param[in]  heights                   Cube heights
@@ -166,8 +189,6 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
  * @param[in]  native_doppler            Native image Doppler
  * @param[in]  grid_doppler              Grid Doppler.
  * @param[in]  epsg                      Output geolocation EPSG
- * @param[in]  epsg_los_and_along_track_vectors EPSG code for LOS and
- * along-track unit vectors (0 or 4326 for ENU coordinates)
  * @param[out] coordinate_x_raster       Geolocation coordinate X raster
  * @param[out] coordinate_y_raster       Geolocation coordinage Y raster
  * @param[out] incidence_angle_raster    Incidence angle (in degrees wrt
@@ -193,7 +214,6 @@ void makeGeolocationGridCubes(
         const std::vector<double>& heights, const isce3::core::Orbit& orbit,
         const isce3::core::LUT2d<double>& native_doppler,
         const isce3::core::LUT2d<double>& grid_doppler, const int epsg,
-        const int epsg_los_and_along_track_vectors = 0,
         isce3::io::Raster* coordinate_x_raster = nullptr,
         isce3::io::Raster* coordinate_y_raster = nullptr,
         isce3::io::Raster* incidence_angle_raster = nullptr,

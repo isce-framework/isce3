@@ -54,6 +54,7 @@ geometry/RTC.cpp
 geometry/Topo.cpp
 geometry/TopoLayers.cpp
 geometry/metadataCubes.cpp
+geogrid/getRadarGrid.cpp
 geogrid/relocateRaster.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp

@@ -487,6 +487,12 @@ class RawBase(Base, family='nisar.productreader.raw'):
                 swaths[i, ...] = f[txpath][name][:]
         return swaths
 
+    def getProductLevel(self):
+        '''
+        Returns the product level
+        '''
+        return "L0B"
+
 
     def computeTxCalRatio(self, frequency='A', tx=None):
         """Get TX-path multi-channel complex weighting over all range lines.

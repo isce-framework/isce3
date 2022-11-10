@@ -75,7 +75,6 @@ isce3::product::GeoGridProduct::
 GeoGridProduct(const Metadata & meta, const std::map<char, isce3::product::Grid> & grids) :
     _metadata(meta), _grids(grids) {}
 
-
 /** @param[in] look String representation of look side */
 void
 isce3::product::GeoGridProduct::

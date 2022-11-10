@@ -10,17 +10,15 @@ from ..protocols import ProductReader
 
 def get_hdf5_file_root_path(filename: str, root_path: str = None) -> str:
     '''
-    Return root path from HDF5 file. If a root path is provided as
-    a parameter and it exists, it will have precedence over the 
-    root path from the HDF5 file
+    Return root path from NISAR product (HDF5 file).
 
     Parameters
     ----------
     filename : str
         HDF5 filename
-    root_path : str
-        Preliminary root path to check (e.g., XSAR, PSAR) before default root 
-        path list
+    root_path : str (optional)
+        Preliminary root path to check before default root
+        path list. This option is intended for non-standard NISAR products.
 
     Returns
     -------
@@ -32,12 +30,12 @@ def get_hdf5_file_root_path(filename: str, root_path: str = None) -> str:
     error_channel = journal.error('get_hdf5_file_root_path')
 
     SCIENCE_PATH = '/science/'
-    NISAR_FREQ_BAND_LIST = ['SSAR', 'LSAR']
+    NISAR_SENSOR_LIST = ['SSAR', 'LSAR']
     with h5py.File(filename, 'r', libver='latest', swmr=True) as f:
         if root_path is not None and root_path in f:
             return root_path
         science_group = f[SCIENCE_PATH]
-        for freq_band in NISAR_FREQ_BAND_LIST:
+        for freq_band in NISAR_SENSOR_LIST:
             if freq_band not in science_group:
                 continue
             return SCIENCE_PATH + freq_band
@@ -46,6 +44,7 @@ def get_hdf5_file_root_path(filename: str, root_path: str = None) -> str:
                  f" band group LSAR or SSAR in file: {filename}")
 
     error_channel.log(error_msg)
+
 
 class Base(pyre.component,
            family='nisar.productreader.base',
@@ -62,7 +61,7 @@ class Base(pyre.component,
     _RootPath.doc = 'Absolute path to SAR data from L-SAR/S-SAR'
 
     _IdentificationPath = pyre.properties.str(default='identification')
-    _IdentificationPath.doc = 'Absolute path ath to unique product identification information'
+    _IdentificationPath.doc = 'Absolute path to unique product identification information'
 
     _ProductType = pyre.properties.str(default=None)
     _ProductType.doc = 'The type of the product.'
@@ -132,7 +131,7 @@ class Base(pyre.component,
         '''
         Returns metadata corresponding to given frequency.
         '''
-        raise NotImplementedError
+        return isce3.product.Grid(self.filename, frequency)
 
     @pyre.export
     def getOrbit(self):
@@ -294,5 +293,11 @@ class Base(pyre.component,
         Compute the bounding box as a polygon in given projection system.
         '''
         raise NotImplementedError
+
+    def getProductLevel(self):
+        '''
+        Returns the product level
+        '''
+        return "undefined"
 
 # end of file

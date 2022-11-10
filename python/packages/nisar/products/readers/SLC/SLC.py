@@ -27,7 +27,7 @@ class SLC(Base, family='nisar.productreader.slc'):
         '''
         Constructor to initialize product with HDF5 file.
         '''
-        ###Read base product information like Identification
+        # Read base product information like Identification
         super().__init__(**kwds)
 
         # Set error channel
@@ -36,7 +36,6 @@ class SLC(Base, family='nisar.productreader.slc'):
         self.identification.productType = \
             get_hdf5_file_product_type(
                 self.filename,
-                product_type = self.productType,
                 root_path = self.RootPath)
 
         if (self.productType != self.productValidationType):
@@ -92,4 +91,8 @@ class SLC(Base, family='nisar.productreader.slc'):
         dataset_path = os.path.join(self.SwathPath, f'frequency{frequency}', polarization)
         return dataset_path
 
-
+    def getProductLevel(self):
+        '''
+        Returns the product level
+        '''
+        return "L1"

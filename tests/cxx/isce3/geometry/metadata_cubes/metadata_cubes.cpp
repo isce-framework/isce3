@@ -125,8 +125,8 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
             los_unit_test[0] = los_unit_vector_x_array(i, j);
             los_unit_test[1] = los_unit_vector_y_array(i, j);
             /*
-            Obtain height term considering that the vector is unitary
-            the lign-of-sight vector points upwards (i.e. height term
+            Obtain height term considering that the vector is unitary and
+            the line-of-sight vector points upwards (i.e. height term
             is positive) from the target to the sensor.
             */
             los_unit_test[2] = std::sqrt(
@@ -135,23 +135,10 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
 
             // 3. Estimate platform position
             isce3::core::Vec3 sat_xyz_test, sat_llh_test, los_xyz_test;
-            if (proj->code() == 4326) {
-                // For epsg == 4326, vectors are given in ENU
-                los_xyz_test =
-                        enu2xyz.dot(los_unit_test).normalized();
-                sat_xyz_test = target_xyz + slant_range_test * los_xyz_test;
-
-            } else {
-                const isce3::core::Vec3 target_to_sat_next_proj =
-                        target_proj + los_unit_test;
-                const isce3::core::Vec3 target_to_sat_next_llh = 
-                        proj->inverse(target_to_sat_next_proj);
-                const isce3::core::Vec3 target_to_sat_next_xyz = 
-                        ellipsoid.lonLatToXyz(target_to_sat_next_llh);
-                los_xyz_test = 
-                        (target_to_sat_next_xyz - target_xyz).normalized();
-                sat_xyz_test = target_xyz + slant_range_test * los_xyz_test;
-            }
+            // Vectors are given in ENU
+            los_xyz_test =
+                    enu2xyz.dot(los_unit_test).normalized();
+            sat_xyz_test = target_xyz + slant_range_test * los_xyz_test;
 
             /* 
             3. Evaluate platform position from LOS vector and slant-range
@@ -183,22 +170,9 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
             const isce3::core::Vec3 vel_unit_xyz = vel_xyz.normalized();
             isce3::core::Vec3 along_track_unit_vector_xyz_test;
 
-            if (proj->code() == 4326) {
-                /* along-track unit vector is given in ENU */
-                along_track_unit_vector_xyz_test =
-                        enu2xyz.dot(along_track_unit_vector_test).normalized();
-            } else {
-                const isce3::core::Vec3 sat_llh =
-                        ellipsoid.xyzToLonLat(sat_xyz);
-                isce3::core::Vec3 sat_proj = proj->forward(sat_llh);
-                const isce3::core::Vec3 sat_next_proj =
-                        sat_proj + along_track_unit_vector_test;
-                const isce3::core::Vec3 sat_next_llh =
-                        proj->inverse(sat_next_proj);
-                const isce3::core::Vec3 sat_next_xyz =
-                        ellipsoid.lonLatToXyz(sat_next_llh);
-                along_track_unit_vector_xyz_test = (sat_next_xyz - sat_xyz).normalized();
-            }
+            /* along-track unit vector is given in ENU */
+            along_track_unit_vector_xyz_test =
+                    enu2xyz.dot(along_track_unit_vector_test).normalized();
 
             // 4. Check along-track unit vector
             ASSERT_NEAR(along_track_unit_vector_xyz_test[0], vel_unit_xyz[0],
@@ -455,13 +429,11 @@ TEST(radarGridCubeTest, testRadarGridCube)
         isce3::product::GeoGridParameters geogrid(x0, y0, dx, dy, width, length,
                                                   epsg);
 
-        const int epsg_los_and_along_track_vectors = epsg;
-
         // Make cubes
         std::cout << "calling makeRadarGridCubes() with geogrid EPSG:" << epsg
                   << std::endl;
         isce3::geometry::makeRadarGridCubes(radar_grid, geogrid, heights, orbit,
-                zero_doppler, zero_doppler, epsg_los_and_along_track_vectors,
+                zero_doppler, zero_doppler,
                 &slant_range_raster, &azimuth_time_raster,
                 &incidence_angle_raster, &los_unit_vector_x_raster,
                 &los_unit_vector_y_raster, &along_track_unit_vector_x_raster,
@@ -705,7 +677,6 @@ TEST(metadataCubesTest, testMetadataCubes) {
     int numiter_geo2rdr = 25;
     double delta_range = 1e-6;
     int epsg = 4326;
-    int epsg_los_and_along_track_vectors = epsg;
 
     std::vector<double> heights = {0.0, 1000.0};
 
@@ -740,7 +711,7 @@ TEST(metadataCubesTest, testMetadataCubes) {
 
     // Make cubes
     isce3::geometry::makeGeolocationGridCubes(radar_grid, heights, orbit,
-            zero_doppler, zero_doppler, epsg, epsg_los_and_along_track_vectors,
+            zero_doppler, zero_doppler, epsg,
             &coordinate_x_raster, &coordinate_y_raster, &incidence_angle_raster,
             &los_unit_vector_x_raster, &los_unit_vector_y_raster,
             &along_track_unit_vector_x_raster,

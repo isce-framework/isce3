@@ -49,6 +49,7 @@ geometry/RTC.cpp
 geometry/metadataCubes.cpp
 geometry/ltpcoordinates.cpp
 geometry/pntintersect.cpp
+geogrid/getRadarGrid.cpp
 geogrid/relocateRaster.cpp
 geogrid/geogrid.cpp
 geometry/lookIncFromSr.cpp
@@ -78,6 +79,7 @@ product/RadarGridParameters.cpp
 product/SubSwaths.cpp
 product/Swath.cpp
 product/Grid.cpp
+product/GeoGridProductClass.cpp
 unwrap/unwrap.cpp
 unwrap/ICU.cpp
 unwrap/Phass.cpp
