@@ -281,7 +281,7 @@ def copy_raster(infile, freq, pol,
 
     # Get RSLC dimension through GDAL
     gdal_ds = gdal.Open(f'HDF5:{infile}:/{rslc.slcPath(freq, pol)}')
-    rslc_length, rslc_width = gdal_ds.RasterYSize, gdal_ds.RasterYSize
+    rslc_length, rslc_width = gdal_ds.RasterYSize, gdal_ds.RasterXSize
 
     # Create output file
     driver = gdal.GetDriverByName(format)

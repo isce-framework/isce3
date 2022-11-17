@@ -214,7 +214,7 @@ def get_offset_radar_grid(offset_cfg, radar_grid_slc, is_goff=False):
     return radar_grid
 
 
-def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
+def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, is_goff=False):
     ''' Write radar grid cube to HDF5
 
     Parameters
@@ -249,7 +249,8 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
         length=int(radar_grid_cubes_geogrid.length),
         epsg=radar_grid_cubes_geogrid.epsg)
 
-    cube_group_path = '/science/LSAR/GUNW/metadata/radarGrid'
+    product = 'GOFF' if is_goff else 'GUNW'
+    cube_group_path = f'/science/LSAR/{product}/metadata/radarGrid'
 
     native_doppler = slc.getDopplerCentroid(frequency=freq)
     grid_zero_doppler = isce3.core.LUT2d()
@@ -561,7 +562,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5)
+            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, is_goff)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
@@ -791,7 +792,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5)
+            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5, is_goff)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
