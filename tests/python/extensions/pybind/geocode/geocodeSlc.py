@@ -1,190 +1,267 @@
 #!/usr/bin/env python3
 import os
+from pathlib import Path
+import pytest
+import types
+
 import numpy as np
 from osgeo import gdal
+
 import iscetest
 import isce3.ext.isce3 as isce
 from nisar.products.readers import SLC
 
-def test_run_raster():
+
+@pytest.fixture(scope='session')
+def unit_test_params():
     '''
-    run geocodeSlc bindings with same parameters as C++ test to make sure it does not crash
+    test parameters shared by all geocode_slc tests
     '''
     # load h5 for doppler and orbit
-    rslc = SLC(hdf5file=os.path.join(iscetest.data, "envisat.h5"))
+    params = types.SimpleNamespace()
 
     # define geogrid
     geogrid = isce.product.GeoGridParameters(start_x=-115.65,
-        start_y=34.84,
-        spacing_x=0.0002,
-        spacing_y=-8.0e-5,
-        width=500,
-        length=500,
-        epsg=4326)
+                                             start_y=34.84,
+                                             spacing_x=0.0002,
+                                             spacing_y=-8.0e-5,
+                                             width=500,
+                                             length=500,
+                                             epsg=4326)
+
+    params.geogrid = geogrid
 
     # define geotransform
-    geotrans = [geogrid.start_x, geogrid.spacing_x, 0.0,
-            geogrid.start_y, 0.0, geogrid.spacing_y]
+    params.geotrans = [geogrid.start_x, geogrid.spacing_x, 0.0,
+                       geogrid.start_y, 0.0, geogrid.spacing_y]
+
+    input_h5_path = os.path.join(iscetest.data, "envisat.h5")
+
+    params.radargrid = isce.product.RadarGridParameters(input_h5_path)
+
+    # init SLC object and extract necessary test params from it
+    rslc = SLC(hdf5file=input_h5_path)
+
+    params.orbit = rslc.getOrbit()
 
     img_doppler = rslc.getDopplerCentroid()
-    native_doppler = isce.core.LUT2d(img_doppler.x_start,
+    params.img_doppler = img_doppler
+
+    params.native_doppler = isce.core.LUT2d(img_doppler.x_start,
             img_doppler.y_start, img_doppler.x_spacing,
             img_doppler.y_spacing, np.zeros((geogrid.length,geogrid.width)))
 
-    dem_raster = isce.io.Raster(os.path.join(iscetest.data, "geocode/zeroHeightDEM.geo"))
+    # create DEM raster object
+    params.dem_raster = isce.io.Raster(os.path.join(iscetest.data,
+                                       "geocode/zeroHeightDEM.geo"))
 
-    radargrid = isce.product.RadarGridParameters(os.path.join(iscetest.data, "envisat.h5"))
-
-    # set output shape (common to both geocode_slc methods)
-    out_shape = (geogrid.width, geogrid.length)
-
-    # geocode same 2 rasters as C++ version with both array and raster inputs
-    for xy in ['x', 'y']:
-        # input same for both input types
-        in_path = os.path.join(iscetest.data, f"geocodeslc/{xy}.slc")
-
-        # output file name for geocodeSlc raster mode
-        out_path = f"{xy}_raster.geo"
-
-        # prepare output raster
-        output_raster = isce.io.Raster(out_path, geogrid.width,
-                                  geogrid.length, 1, gdal.GDT_CFloat32,
-                                  "ENVI")
-
-        # prepare input raster
-        input_raster = isce.io.Raster(in_path)
-
-        isce.geocode.geocode_slc(
-            output_raster=output_raster,
-            input_raster=input_raster,
-            dem_raster=dem_raster,
-            radargrid=radargrid,
-            geogrid=geogrid,
-            orbit=rslc.getOrbit(),
-            native_doppler=native_doppler,
-            image_grid_doppler=img_doppler,
-            ellipsoid=isce.core.Ellipsoid(),
-            threshold_geo2rdr=1.0e-9,
-            numiter_geo2rdr=25,
-            lines_per_block=1000,
-            flatten=False)
-
-        # set geotransform
-        output_raster.set_geotransform(geotrans)
+    return params
 
 
-def test_run_array():
+def geocode_slc_test_cases(radargrid):
     '''
-    run geocodeSlc bindings with same parameters as C++ test to make sure it does not crash
+    Generator for geocodeSlc test cases
+
+    Given a radar grid, generate correction LUT2ds in range and azimuth
+    directions. Returns axis, offset mode name, range and azimuth correction
+    LUT2ds and offset corrected radar grid.
     '''
-    # load h5 for doppler and orbit
-    rslc = SLC(hdf5file=os.path.join(iscetest.data, "envisat.h5"))
+    # multiplicative factor applied to range pixel spacing and azimuth time
+    # interval to be added to starting range and azimuth time of radar grid
+    offset_factor = 10
+    rg_pxl_spacing = radargrid.range_pixel_spacing
+    range_offset = offset_factor * rg_pxl_spacing
+    az_time_interval = 1 / radargrid.prf
+    azimuth_offset = offset_factor * az_time_interval
 
-    # define geogrid
-    geogrid = isce.product.GeoGridParameters(start_x=-115.65,
-        start_y=34.84,
-        spacing_x=0.0002,
-        spacing_y=-8.0e-5,
-        width=500,
-        length=500,
-        epsg=4326)
+    # despite uniform value LUT2d set to interp mode nearest just in case
+    method = isce.core.DataInterpMethod.NEAREST
 
-    # define geotransform
-    geotrans = [geogrid.start_x, geogrid.spacing_x, 0.0,
-            geogrid.start_y, 0.0, geogrid.spacing_y]
+    # array of ones to be multiplied by respective offset value
+    # shape unchanging; no noeed to be in loop as only starting values change
+    ones = np.ones(radargrid.shape)
 
-    img_doppler = rslc.getDopplerCentroid()
-    native_doppler = isce.core.LUT2d(img_doppler.x_start,
-            img_doppler.y_start, img_doppler.x_spacing,
-            img_doppler.y_spacing, np.zeros((geogrid.length,geogrid.width)))
+    for axis in 'xy':
+        for offset_mode in ['', 'rg', 'az', 'rg_az']:
+            # create radar and apply positive offsets in range and azimuth
+            offset_radargrid = radargrid.copy()
 
-    dem_raster = isce.io.Raster(os.path.join(iscetest.data, "geocode/zeroHeightDEM.geo"))
+            # apply offsets as required by mode
+            if 'rg' in offset_mode:
+                offset_radargrid.starting_range += range_offset
+            if 'az' in offset_mode:
+                offset_radargrid.sensing_start += azimuth_offset
 
-    radargrid = isce.product.RadarGridParameters(os.path.join(iscetest.data, "envisat.h5"))
+            # slant range vector for LUT2d
+            srange_vec = np.linspace(offset_radargrid.starting_range,
+                                     offset_radargrid.end_range,
+                                     radargrid.width)
 
-    # set output shape (common to both geocode_slc methods)
-    out_shape = (geogrid.width, geogrid.length)
+            # azimuth vector for LUT2d
+            az_time_vec = np.linspace(offset_radargrid.sensing_start,
+                                      offset_radargrid.sensing_stop,
+                                      radargrid.length)
 
-    # geocode same 2 rasters as C++ version with both array and raster inputs
-    for xy in ['x', 'y']:
-        # input same for both input types
-        in_path = os.path.join(iscetest.data, f"geocodeslc/{xy}.slc")
+            # corrections LUT2ds will use the negative offsets
+            # should cancel positive offset applied to radar grid
+            srange_correction = isce.core.LUT2d()
+            if 'rg' in offset_mode:
+                srange_correction = isce.core.LUT2d(srange_vec, az_time_vec,
+                                                    range_offset * ones,
+                                                    method)
 
-        # output file name for geocodeSlc array mode
-        out_path = f"{xy}_array.geo"
+            az_time_correction = isce.core.LUT2d()
+            if 'az' in offset_mode:
+                az_time_correction = isce.core.LUT2d(srange_vec, az_time_vec,
+                                                     azimuth_offset * ones,
+                                                     method)
 
-        # empty array to be written to by geocode_slc array mode
-        out_data = np.zeros(out_shape, dtype=np.complex64)
+            yield (axis, offset_mode, srange_correction, az_time_correction,
+                   offset_radargrid)
 
-        # load input as array
-        ds = gdal.Open(in_path, gdal.GA_ReadOnly)
-        in_data = ds.GetRasterBand(1).ReadAsArray()
 
-        isce.geocode.geocode_slc(
-            geo_data_block=out_data,
-            rdr_data_block=in_data,
-            dem_raster=dem_raster,
-            radargrid=radargrid,
-            geogrid=geogrid,
-            orbit=rslc.getOrbit(),
-            native_doppler= native_doppler,
-            image_grid_doppler=img_doppler,
-            ellipsoid=isce.core.Ellipsoid(),
-            threshold_geo2rdr=1.0e-9,
-            numiter_geo2rdr=25,
-            azimuth_first_line=0,
-            range_first_pixel=0,
-            flatten=False)
+def run_geocode_slc_raster(test_case, unit_test_params):
+    '''
+    wrapper for geocode_slc raster mode
+    '''
+    # extract test specific params
+    (axis, correction_mode, srange_correction, az_time_correction,
+     test_rdrgrid) = test_case
 
-        # prepare output raster and set geotransform
-        out_raster = isce.io.Raster(out_path, geogrid.width,
-                                    geogrid.length, 1,
-                                    gdal.GDT_CFloat32,  "ENVI")
-        out_raster.set_geotransform(geotrans)
-        del out_raster
+    in_raster = isce.io.Raster(os.path.join(iscetest.data,
+                                            f"geocodeslc/{axis}.slc"))
 
-        # write output to raster
-        ds = gdal.Open(out_path, gdal.GA_Update)
-        ds.GetRasterBand(1).WriteArray(out_data)
-        ds = None
+    Path(f"{axis}{correction_mode}_raster.geo").touch()
+    out_raster = isce.io.Raster(f"{axis}_{correction_mode}_raster.geo",
+                                 unit_test_params.geogrid.width,
+                                 unit_test_params.geogrid.length, 1,
+                                 gdal.GDT_CFloat32, "ENVI")
 
-def test_validate():
+    isce.geocode.geocode_slc(output_raster=out_raster,
+        input_raster=in_raster,
+        dem_raster=unit_test_params.dem_raster,
+        radargrid=test_rdrgrid,
+        geogrid=unit_test_params.geogrid,
+        orbit=unit_test_params.orbit,
+        native_doppler=unit_test_params.native_doppler,
+        image_grid_doppler=unit_test_params.img_doppler,
+        ellipsoid=isce.core.Ellipsoid(),
+        threshold_geo2rdr=1.0e-9,
+        numiter_geo2rdr=25,
+        lines_per_block=1000,
+        flatten=False,
+        az_time_correction=az_time_correction,
+        srange_correction=srange_correction)
+
+    # set geotransform
+    out_raster.set_geotransform(unit_test_params.geotrans)
+
+
+def run_geocode_slc_array(test_case, unit_test_params):
+    '''
+    wrapper for geocode_slc array mode
+    '''
+    # extract test specific params
+    (axis, correction_mode, srange_correction, az_time_correction,
+     test_rdrgrid) = test_case
+
+    out_shape = (unit_test_params.geogrid.width,
+                 unit_test_params.geogrid.length)
+
+    # load input as array
+    in_path = os.path.join(iscetest.data, f"geocodeslc/{axis}.slc")
+    ds = gdal.Open(in_path, gdal.GA_ReadOnly)
+    in_data = ds.GetRasterBand(1).ReadAsArray()
+
+    # output file name for geocodeSlc array mode
+    out_path = f"{axis}_{correction_mode}_array.geo"
+    Path(out_path).touch()
+
+    # empty array to be written to by geocode_slc array mode
+    out_data = np.zeros(out_shape, dtype=np.complex64)
+
+    isce.geocode.geocode_slc(
+        geo_data_block=out_data,
+        rdr_data_block=in_data,
+        dem_raster=unit_test_params.dem_raster,
+        radargrid=test_rdrgrid,
+        geogrid=unit_test_params.geogrid,
+        orbit=unit_test_params.orbit,
+        native_doppler= unit_test_params.native_doppler,
+        image_grid_doppler=unit_test_params.img_doppler,
+        ellipsoid=isce.core.Ellipsoid(),
+        threshold_geo2rdr=1.0e-9,
+        numiter_geo2rdr=25,
+        azimuth_first_line=0,
+        range_first_pixel=0,
+        flatten=False,
+        az_time_correction=az_time_correction,
+        srange_correction=srange_correction)
+
+    # set geotransform in output raster
+    out_raster = isce.io.Raster(out_path, unit_test_params.geogrid.width,
+                                unit_test_params.geogrid.length, 1,
+                                gdal.GDT_CFloat32,  "ENVI")
+    out_raster.set_geotransform(unit_test_params.geotrans)
+    del out_raster
+
+    # write output to raster
+    ds = gdal.Open(out_path, gdal.GA_Update)
+    ds.GetRasterBand(1).WriteArray(out_data)
+
+
+def test_run(unit_test_params):
+    '''
+    run geocodeSlc bindings with same parameters as C++ test to make sure it
+    does not crash for both raster and array modes
+    '''
+    # run raster mode for all test cases
+    for test_case in geocode_slc_test_cases(unit_test_params.radargrid):
+        run_geocode_slc_raster(test_case, unit_test_params)
+
+    # run array mode for all test cases in seperate loop to avoid
+    # isce3.io.raster-related? glitches
+    for test_case in geocode_slc_test_cases(unit_test_params.radargrid):
+        run_geocode_slc_array(test_case, unit_test_params)
+
+
+def test_validate(unit_test_params):
     '''
     validate test outputs
     '''
+    # get geotransform from test data
+    x0 = np.radians(unit_test_params.geotrans[0] + unit_test_params.geotrans[1] / 2.0)
+    dx = np.radians(unit_test_params.geotrans[1])
+    y0 = np.radians(unit_test_params.geotrans[3] + unit_test_params.geotrans[5] / 2.0)
+    dy = np.radians(unit_test_params.geotrans[5])
 
-    # check values of 4 geocoded rasters (2 directions + 2 input types)
-    for xy in ['x', 'y']:
+    # check values of geocoded outputs
+    for axis, correction_mode, *_, \
+        in geocode_slc_test_cases(unit_test_params.radargrid):
+
         for mode in ['array', 'raster']:
-            # get phase of complex test data and mask zeros
-            test_raster = f"{xy}_{mode}.geo"
+            # get phase of complex test data and mask NaN (default invalid val)
+            test_raster = f"{axis}_{correction_mode}_{mode}.geo"
             ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
             test_arr = np.angle(ds.GetRasterBand(1).ReadAsArray())
-            test_mask = test_arr == 0.0
+            # mask with NaN since NaN is used to mark invalid pixels
+            test_mask = np.isnan(test_arr)
             test_arr = np.ma.masked_array(test_arr, mask=test_mask)
             ds = None
-
-            # get geotransform from test data
-            geo_trans = isce.io.Raster(test_raster).get_geotransform()
-            x0 = np.radians(geo_trans[0] + geo_trans[1] / 2.0)
-            dx = np.radians(geo_trans[1])
-            y0 = np.radians(geo_trans[3] + geo_trans[5] / 2.0)
-            dy = np.radians(geo_trans[5])
 
             # use geotransform to make lat/lon mesh
             pixels, lines = test_arr.shape
             meshx, meshy = np.meshgrid(np.arange(lines), np.arange(pixels))
-            grid_lon = np.ma.masked_array(x0 + meshx * dx, mask=test_mask)
-            grid_lat = np.ma.masked_array(y0 + meshy * dy, mask=test_mask)
 
             # calculate and check error within bounds
-            if xy == 'x':
-                err = np.nanmax(test_arr - grid_lon)
+            if axis == 'x':
+                grid_lon = np.ma.masked_array(x0 + meshx * dx, mask=test_mask)
+
+                err = np.nanmax(np.abs(test_arr - grid_lon))
             else:
-                err = np.nanmax(test_arr - grid_lat)
-            assert(err < 1.0e-5), f'{test_raster} max error fail'
+                grid_lat = np.ma.masked_array(y0 + meshy * dy, mask=test_mask)
 
+                err = np.nanmax(np.abs(test_arr - grid_lat))
 
-if __name__ == "__main__":
-    test_run()
-    test_validate()
+            # check max diff of masked arrays
+            assert(err < 1.0e-6), f'{test_raster} max error fail'

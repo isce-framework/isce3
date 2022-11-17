@@ -28,6 +28,9 @@ namespace isce3 { namespace geocode {
  * \param[in]  flatten          flag to flatten the geocoded SLC
  * \param[in]  azCarrier        azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
  * \param[in]  rgCarrier        range carrier phase of the SLC data, in radians, as a function of azimuth and range
+ * \param[in]  azTimeCorrection geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+ * \param[in]  sRangeCorrection geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+ * \param[in]  correctSRngFlat  flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
  * \param[in]  invalidValue     invalid pixel fill value
  */
 template<typename AzRgFunc = isce3::core::Poly2d>
@@ -44,6 +47,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
                 const bool flatten = true,
                 const AzRgFunc& azCarrier = AzRgFunc(),
                 const AzRgFunc& rgCarrier = AzRgFunc(),
+                const isce3::core::LUT2d<double>& azTimeCorrection = {},
+                const isce3::core::LUT2d<double>& sRangeCorrection = {},
+                const bool correctSRngFlat = false,
                 const std::complex<float> invalidValue =
                     std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                         std::numeric_limits<float>::quiet_NaN()));
@@ -69,6 +75,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  flatten          flag to flatten the geocoded SLC
  * \param[in]  azCarrier        azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
  * \param[in]  rgCarrier        range carrier phase of the SLC data, in radians, as a function of azimuth and range
+ * \param[in]  azTimeCorrection geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+ * \param[in]  sRangeCorrection geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+ * \param[in]  correctSRngFlat  flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
  * \param[in]  invalidValue     invalid pixel fill value
  */
 template<typename AzRgFunc = isce3::core::Poly2d>
@@ -86,6 +95,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
                 const bool flatten = true,
                 const AzRgFunc& azCarrier = AzRgFunc(),
                 const AzRgFunc& rgCarrier = AzRgFunc(),
+                const isce3::core::LUT2d<double>& azTimeCorrection = {},
+                const isce3::core::LUT2d<double>& sRangeCorrection = {},
+                const bool correctSRngFlat = false,
                 const std::complex<float> invalidValue =
                     std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                         std::numeric_limits<float>::quiet_NaN()));
@@ -113,6 +125,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  flatten          flag to flatten the geocoded SLC
  * \param[in]  azCarrier        azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
  * \param[in]  rgCarrier        range carrier phase of the SLC data, in radians, as a function of azimuth and range
+ * \param[in]  azTimeCorrection geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+ * \param[in]  sRangeCorrection geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+ * \param[in]  correctSRngFlat  flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
  * \param[in]  invalidValue     invalid pixel fill value
  */
 template<typename AzRgFunc = isce3::core::Poly2d>
@@ -132,6 +147,9 @@ void geocodeSlc(
         const bool flatten = true,
         const AzRgFunc& azCarrier = AzRgFunc(),
         const AzRgFunc& rgCarrier = AzRgFunc(),
+        const isce3::core::LUT2d<double>& azTimeCorrection = {},
+        const isce3::core::LUT2d<double>& sRangeCorrection = {},
+        const bool correctSRngFlat = false,
         const std::complex<float> invalidValue =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                         std::numeric_limits<float>::quiet_NaN()));
@@ -160,6 +178,9 @@ void geocodeSlc(
  * \param[in]  flatten          flag to flatten the geocoded SLC
  * \param[in]  azCarrier        azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
  * \param[in]  rgCarrier        range carrier phase of the SLC data, in radians, as a function of azimuth and range
+ * \param[in]  azTimeCorrection geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+ * \param[in]  sRangeCorrection geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+ * \param[in]  correctSRngFlat  flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
  * \param[in]  invalidValue     invalid pixel fill value
  */
 template<typename AzRgFunc = isce3::core::Poly2d>
@@ -180,6 +201,9 @@ void geocodeSlc(
         const bool flatten = true,
         const AzRgFunc& azCarrier = AzRgFunc(),
         const AzRgFunc& rgCarrier = AzRgFunc(),
+        const isce3::core::LUT2d<double>& azTimeCorrection = {},
+        const isce3::core::LUT2d<double>& sRangeCorrection = {},
+        const bool correctSRngFlat = false,
         const std::complex<float> invalidValue =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                         std::numeric_limits<float>::quiet_NaN()));

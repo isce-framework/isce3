@@ -20,7 +20,7 @@
 template <typename T>
 isce3::core::LUT2d<T>::
 LUT2d(double xstart, double ystart, double dx, double dy, const isce3::core::Matrix<T> & data,
-      isce3::core::dataInterpMethod method, bool boundsError) : 
+      isce3::core::dataInterpMethod method, bool boundsError) :
           _haveData(true), _boundsError(boundsError), _refValue(data(0,0)),
           _xstart(xstart), _ystart(ystart), _dx(dx), _dy(dy), _data(data) {
     _setInterpolator(method);
@@ -39,7 +39,7 @@ LUT2d(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord
           _haveData(true), _boundsError(boundsError), _refValue(data(0,0)) {
     // Set the data
     setFromData(xcoord, ycoord, data);
-    // Save interpolation data 
+    // Save interpolation data
     _setInterpolator(method);
 }
 
@@ -98,7 +98,7 @@ setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & 
     _data = data;
     _haveData = true;
     _refValue = data(0,0);
-} 
+}
 
 // Evaluate LUT at coordinate
 /** @param[in] y Y-coordinate for evaluation
@@ -106,7 +106,7 @@ setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & 
   * @param[out] value Interpolated value */
 template <typename T>
 T isce3::core::LUT2d<T>::
-eval(double y, double x) const {
+eval(const double y, const double x) const {
     /*
      * Evaluate the LUT at the given coordinates.
      */
