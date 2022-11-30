@@ -17,6 +17,10 @@ runconfig:
             orbit:
                 reference_orbit_file:
                 secondary_orbit_file:
+        
+            weather_model:
+                reference_weather_model_file_path:
+                secondary_weather_model_file_path:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
@@ -211,7 +215,16 @@ runconfig:
                     sigma_azimuth: 100
                     # Number of iteration for low pass filtering
                     filter_iterations: 1
-
+            
+            troposphere_delay:
+                enabled: False
+                # pyAPS package is used for default
+                package: pyaps
+                # Delay is along the line of sight
+                algorithm: conventional
+                # Delay type is 'combo'
+                delay_product: ['combo']
+    
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
                 threshold: 1.0e-8

@@ -13,7 +13,10 @@ runconfig:
             # Digital elevation model
             dem_file: str()
             orbit: include('external_orbit_options', required=False)
-
+           
+            # Weather model
+            weather_model: include('weather_model_options', required=False)
+ 
         product_path_group:
             # Directory where PGE will place results
             product_path: str()
@@ -104,6 +107,10 @@ runconfig:
 external_orbit_options:
     reference_orbit_file: str(required=False)
     secondary_orbit_file: str(required=False)
+
+weather_model_options:
+     reference_weather_model_file_path: str(required=False)
+     secondary_weather_model_file_path: str(required=False)
 
 phase_unwrap_options:
     crossmul_path: str(required=False)
@@ -673,6 +680,17 @@ ionosphere_freq_pol_options:
     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
     A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
     B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+
+troposphere_delay_options:
+    # Boolean flag to enable/disable troposphere delay computation 
+    enabled: bool(required=False)
+    # Package used by troposphere delay computation
+    package: enum('pyaps', 'raider', required=False)
+    # Algorithms. 'zenith' is the zenith delay, 
+    algorithm: enum('zenith', 'conventional', 'raytracing', required=False)
+    # Delay products. They should be one or more of 'wet', 'hydro', and 'combo'
+    delay_product: list(str(), min=1, max=3, required=False)
+
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
