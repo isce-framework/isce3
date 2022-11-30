@@ -381,34 +381,6 @@ void * IH5Dataset::GetInternalHandle(const char *)
      return _dataset;
 }
 
-#if GDAL_VERSION_MAJOR == 2
-const char *IH5Dataset::GetProjectionRef()
-#elif GDAL_VERSION_MAJOR == 3
-const char *IH5Dataset::_GetProjectionRef()
-#endif
-{
-    if( pszProjection == nullptr )
-        return "";
-
-    return pszProjection;
-}
-
-/************************************************************************/
-/*                           SetProjection()                            */
-/************************************************************************/
-
-#if GDAL_VERSION_MAJOR == 2
-CPLErr IH5Dataset::SetProjection( const char *pszProjectionIn )
-#elif GDAL_VERSION_MAJOR == 3
-CPLErr IH5Dataset::_SetProjection( const char *pszProjectionIn)
-#endif
-{
-    CPLFree( pszProjection );
-    pszProjection = CPLStrdup( pszProjectionIn );
-
-    return CE_None;
-}
-
 /************************************************************************/
 /*                          GetGeoTransform()                           */
 /************************************************************************/
@@ -447,49 +419,12 @@ int IH5Dataset::GetGCPCount()
 }
 
 /************************************************************************/
-/*                          GetGCPProjection()                          */
-/************************************************************************/
-#if GDAL_VERSION_MAJOR == 2
-const char *IH5Dataset::GetGCPProjection()
-#elif GDAL_VERSION_MAJOR == 3
-const char *IH5Dataset::_GetGCPProjection()
-#endif
-{
-    return pszGCPProjection;
-}
-
-/************************************************************************/
 /*                              GetGCPs()                               */
 /************************************************************************/
 
 const GDAL_GCP *IH5Dataset::GetGCPs()
 {
     return pasGCPList;
-}
-
-/************************************************************************/
-/*                              SetGCPs()                               */
-/************************************************************************/
-#if GDAL_VERSION_MAJOR == 2
-CPLErr IH5Dataset::SetGCPs( int nNewCount, const GDAL_GCP *pasNewGCPList,
-                            const char *inpGCPProjection )
-#elif GDAL_VERSION_MAJOR == 3
-CPLErr IH5Dataset::_SetGCPs( int nNewCount, const GDAL_GCP *pasNewGCPList,
-                            const char *inpGCPProjection )
-#endif
-{
-    GDALDeinitGCPs( nGCPCount, pasGCPList );
-    CPLFree( pasGCPList );
-
-    if( inpGCPProjection == nullptr )
-        pszGCPProjection = CPLStrdup("");
-    else
-        pszGCPProjection = inpGCPProjection;
-
-    nGCPCount = nNewCount;
-    pasGCPList = GDALDuplicateGCPs( nGCPCount, pasNewGCPList );
-
-    return CE_None;
 }
 
 /************************************************************************/
