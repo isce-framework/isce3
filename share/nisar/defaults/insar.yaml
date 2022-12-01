@@ -220,9 +220,9 @@ runconfig:
                 enabled: False
                 # pyAPS package is used for default
                 package: pyaps
-                # Delay is along the line of sight
-                algorithm: conventional
-                # Delay type is 'combo'
+                # Conventional line of sight delay
+                delay_direction: line_of_sight_mapping
+                # Delay product is 'combo'
                 delay_product: ['combo']
     
             geo2rdr:
