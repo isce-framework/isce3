@@ -107,12 +107,20 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     else:
         input_hdf5 = cfg['input_file_group']['input_file_path']
 
+    rtc_algorithm = ''
     if dst == "GCOV":
         dem_interp_method = cfg['processing']['dem_interpolation_method']
-        geocode_algorithm = cfg['processing']['geocode']['algorithm_type']
+        geocoding_algorithm = cfg['processing']['geocode']['algorithm_type']
+        rtc_algorithm = cfg['processing']['rtc']['algorithm_type']
+    elif dst == "GSLC":
+        dem_interp_method = 'biquintic'
+        geocoding_algorithm = 'sinc'
+    elif dst == "GUNW":
+        dem_interp_method = 'biquintic'
+        geocoding_algorithm = cfg["processing"]["geocode"]["interp_method"]
     else:
-        dem_interp_method = None
-        geocode_algorithm = None
+        dem_interp_method = ''
+        geocoding_algorithm = ''
 
     # Remove existing HDF5 and start from scratch
     try:
@@ -205,15 +213,30 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                             f'{dst_meta_path}/geolocationGrid',
                             excludes=['zeroDopplerTime', 'slantRange'],
                             attach_scales_list=[yds, xds])
-        if dst in ["GCOV", "GUNW"]:
-            algorithms_ds = (dst_meta_path +
-                             'processingInformation/algorithms/geocoding')
-            dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                   data=np.string_(geocode_algorithm))
-            algorithms_ds = (dst_meta_path +
-                            'processingInformation/algorithms/demInterpolation')
-            dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                   data=np.string_(dem_interp_method))
+        if dst in ["GCOV", "GSLC", "GUNW"]:
+            # Geocoding algorithm
+            algorithms_ds = f'{dst_meta_path}/processingInformation/algorithms/geocoding'
+            dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
+                                   data=np.string_(geocoding_algorithm))
+            desc = "Geocoding algorithm"
+            dset.attrs["description"] = np.string_(desc)
+
+            # DEM interpolation method
+            algorithms_ds = \
+                f'{dst_meta_path}/processingInformation/algorithms/demInterpolation'
+            dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
+                                          data=np.string_(dem_interp_method))
+            desc = "DEM interpolation method"
+            dset.attrs["description"] = np.string_(desc)
+
+        if dst in ["GCOV"]:
+            # RTC algorithm
+            algorithms_ds = \
+                f'{dst_meta_path}/processingInformation/algorithms/radiometricTerrainCorrection'
+            dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
+                                          data=np.string_(rtc_algorithm))
+            desc = "Radiometric terrain correction (RTC) algorithm"
+            dset.attrs["description"] = np.string_(desc)
 
         # copy processingInformation/inputs group
         cp_h5_meta_data(src_h5, dst_h5,
