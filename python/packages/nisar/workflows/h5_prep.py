@@ -947,11 +947,11 @@ def prep_ds_insar(pcfg, dst, dst_h5):
         if dst in ['RIFG', 'ROFF', 'RUNW']:
             cube_ref_dataset = f'{grid_path}/coordinateX'
             if cube_ref_dataset in dst_h5:
-                cubes_shape = dst_h5[cube_ref_dataset].shape
+                cubes_shape = dst_h5[cube_ref_dataset].shape[1:]
         else: 
             cube_ref_dataset = f'{grid_path}/slantRange'
             if cube_ref_dataset in dst_h5:
-                cubes_shape = dst_h5[cube_ref_dataset].shape
+                cubes_shape = dst_h5[cube_ref_dataset].shape[1:]
         if cubes_shape:
             descr = "Perpendicular component of the InSAR baseline"
             _create_datasets(dst_h5[grid_path], cubes_shape, np.float32,

@@ -110,24 +110,23 @@ def compute_baseline(target_llh,
     # compute the cosine of the angle between the baseline vector and the
     # reference LOS vector (refernce sensor to target)
     if baseline == 0:
-        costheta = 1
+        cos_vbase_los = 1
     else:
-        costheta = (ref_rng ** 2 + baseline ** 2 - sec_rng ** 2) / (
+        cos_vbase_los = (ref_rng ** 2 + baseline ** 2 - sec_rng ** 2) / (
             2.0 * ref_rng * baseline)
 
     # project the baseline to LOS to get the parallel component of the baseline
     # (i.e., parallel to the LOS direction)
     # parallel baseline in refernce LOS direction is positive
-    parallel_baseline = baseline * costheta
+    parallel_baseline = baseline * cos_vbase_los
 
     # project the baseline to the normal to to the reference LOS direction
-    perp_baseline_temp = baseline * np.sqrt(1 - costheta ** 2)
+    perp_baseline_temp = baseline * np.sqrt(1 - cos_vbase_los ** 2)
 
     # get the direction sign of the perpendicular baseline.
+    # positive perpendicular baseline is defined at below to LOS vector
     direction = np.sign(
         np.dot(np.cross(target_xyz - ref_xyz, sec_xyz - ref_xyz), ref_velocity))
-    direction = np.sign(
-        np.dot(ref_velocity, np.cross(target_xyz - ref_xyz, sec_xyz - ref_xyz)))
     perpendicular_baseline = direction * perp_baseline_temp
 
     return parallel_baseline, perpendicular_baseline
@@ -181,23 +180,24 @@ def add_baseline(output_paths,
         "RUNW" in output_paths.keys():
         radar_or_geo = 'radar'
         product_id = list(output_paths.keys())[0]
-        output_hdf5 = output_paths[f"{product_id}"]
+        output_hdf5 = output_paths[product_id]
         dst_meta_path = f'{common_parent_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/geolocationGrid"
         cube_ref_dataset = f'{grid_path}/coordinateX'
     elif "GUNW" in output_paths.keys() or "GOFF" in output_paths.keys():
         product_id = "GUNW"
         radar_or_geo = 'geo'
-        output_hdf5 = output_paths[f"{product_id}"]
+        output_hdf5 = output_paths[product_id]
         dst_meta_path = f'{common_parent_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/radarGrid"
         cube_ref_dataset = f'{grid_path}/slantRange'
-
+    # remove product_id from copy of output_paths to track 
+    # other products to insert baseline into
     residual_output_paths = copy.deepcopy(output_paths)
-    del residual_output_paths[f'{product_id}']
+    del residual_output_paths[product_id]
 
     with h5py.File(output_hdf5, "a") as src_h5:
-        cubes_shape = src_h5[cube_ref_dataset].shape
+        cubes_shape = src_h5[cube_ref_dataset].shape[1:]
 
         # Create metadata if baselines do not exist in h5 file
         if metadata_path_dict["perpendicularBaseline"] not in src_h5:
@@ -226,9 +226,9 @@ def add_baseline(output_paths,
         ellipsoid = proj.ellipsoid
 
         if radar_or_geo =='geo':
-            _, meta_height, meta_width = np.shape(ref_times)
+            _, meta_row, meta_width = np.shape(ref_times)
         else:
-            meta_height = len(ref_times)
+            meta_row = len(ref_times)
             meta_width = len(ref_rnges)
 
         bperp_raster_path = f"IH5:::ID={ds_bperp.id.id}".encode("utf-8")
@@ -236,45 +236,45 @@ def add_baseline(output_paths,
         bpar_raster_path = f"IH5:::ID={ds_bpar.id.id}".encode("utf-8")
         bpar_raster = isce3.io.Raster(bpar_raster_path, update=True)
 
-        par_baseline = np.zeros([meta_height, meta_width], dtype=np.float32)
-        perp_baseline = np.zeros([meta_height, meta_width], dtype=np.float32)
+        par_baseline = np.zeros([meta_row, meta_width], dtype=np.float32)
+        perp_baseline = np.zeros([meta_row, meta_width], dtype=np.float32)
 
-        for kk, h in enumerate(height_levels):
-            # when we allow a block of geo2rdr run on an array
-            # the following two 'for loops' can be eliminated
-            for height_ind in range(meta_height):
-                for width_ind in range(meta_width):
+        # compute 2 dimension baselines for middle height
+        height_ind = int(len(height_levels)/2)
+        h = height_levels[height_ind]
 
-                    if radar_or_geo =='geo':
-                        # sample UAVSAR datasets have some large NOVALUE data
-                        if (coordX[width_ind] == -1.00e12) or \
-                           (coordY[height_ind] == -1.00e12):
-                            continue
-                        target_proj = np.array([coordX[width_ind], coordY[height_ind], h])
-                    else:
-                        if (coordX[kk, height_ind, width_ind] == -1.00e12) or \
-                            (coordY[kk, height_ind, width_ind] == -1.00e12):
-                            continue
-                        target_proj = np.array([coordX[kk, height_ind, width_ind], \
-                            coordY[kk, height_ind, width_ind], h])
+        # when we allow a block of geo2rdr run on an array
+        # the following two 'for loops' can be eliminated
+        for row_ind in range(meta_row):
+            for col_ind in range(meta_width):
 
-                    target_llh = proj.inverse(target_proj)
-                    parallel_baseline, perpendicular_baseline = compute_baseline(
-                        target_llh,
-                        ref_orbit,
-                        sec_orbit,
-                        ref_doppler,
-                        sec_doppler,
-                        ref_radargrid,
-                        sec_radargrid,
-                        ellipsoid,
-                        geo2rdr_parameters)
+                if radar_or_geo =='geo':
+                    target_proj = np.array([coordX[col_ind], coordY[row_ind], h])
+                else:
+                    # sample UAVSAR datasets have some large NOVALUE data
+                    if (coordX[height_ind, row_ind, col_ind] == -1.00e12) or \
+                        (coordY[height_ind, row_ind, col_ind] == -1.00e12):
+                        continue
+                    target_proj = np.array([coordX[height_ind, row_ind, col_ind], \
+                        coordY[height_ind, row_ind, col_ind], h])
 
-                    par_baseline[height_ind, width_ind] = parallel_baseline
-                    perp_baseline[height_ind, width_ind] = perpendicular_baseline
+                target_llh = proj.inverse(target_proj)
+                parallel_baseline, perpendicular_baseline = compute_baseline(
+                    target_llh,
+                    ref_orbit,
+                    sec_orbit,
+                    ref_doppler,
+                    sec_doppler,
+                    ref_radargrid,
+                    sec_radargrid,
+                    ellipsoid,
+                    geo2rdr_parameters)
 
-            ds_bpar[kk, :, :] = par_baseline
-            ds_bperp[kk, :, :] = perp_baseline
+                par_baseline[row_ind, col_ind] = parallel_baseline
+                perp_baseline[row_ind, col_ind] = perpendicular_baseline
+
+            ds_bpar[:, :] = par_baseline
+            ds_bperp[:, :] = perp_baseline
 
         # compute statistics
         data_names = ['perpendicularBaseline', 'parallelBaseline']
@@ -285,16 +285,17 @@ def add_baseline(output_paths,
             compute_stats_real_data(baseline_raster, dataset)
             del baseline_raster
 
-        # if "RUNW" in output_paths:
-        if len(residual_output_paths) > 0:
+        # Copy baselines to the other products if more than one products
+        # are requested
+        if residual_output_paths:
             for residual_key in residual_output_paths.keys():
                 perp_base_path = metadata_path_dict["perpendicularBaseline"
-                                ].replace(f"{product_id}", f"{residual_key}")
+                                ].replace(product_id, residual_key)
                 para_base_path = metadata_path_dict["parallelBaseline"
-                                ].replace(f"{product_id}", f"{residual_key}")
-                grid_path = grid_path.replace(f"{product_id}", f"{residual_key}")
+                                ].replace(product_id, residual_key)
+                grid_path = grid_path.replace(product_id, residual_key)
 
-                with h5py.File(output_paths[f"{residual_key}"], "r+") as h5_resi:
+                with h5py.File(output_paths[residual_key], "r+") as h5_resi:
                     if perp_base_path not in h5_resi:
                         descr = "Perpendicular component of the InSAR baseline"
                         h5_prep._create_datasets(h5_resi[grid_path], cubes_shape, np.float32,
@@ -306,16 +307,14 @@ def add_baseline(output_paths,
                                         descr=descr.replace('Perpendicular', 'Parallel'),
                                         units="meters",
                                         long_name='parallel baseline')
-                    runw_ds_bperp = h5_resi[f"{perp_base_path}"]
-                    runw_ds_bpar = h5_resi[f"{para_base_path}"]
-                    runw_ds_bperp[:] = ds_bperp[:]
-                    runw_ds_bpar[:] = ds_bpar[:]
+                    residual_ds_bperp = h5_resi[perp_base_path]
+                    residual_ds_bpar = h5_resi[para_base_path]
+                    residual_ds_bperp[:] = ds_bperp[:]
+                    residual_ds_bpar[:] = ds_bpar[:]
 
                     # copy attributes from RIFG to RUNW
-                    copy_attr(ds_bpar, runw_ds_bpar)
-                    copy_attr(ds_bperp, runw_ds_bperp)
-
-    return None
+                    copy_attr(ds_bpar, residual_ds_bpar)
+                    copy_attr(ds_bperp, residual_ds_bperp)
 
 def copy_attr(src_ds, dst_ds):
     """Copy statistics from one to another.
@@ -391,16 +390,16 @@ def run(cfg: dict, output_paths):
     geo2rdr_parameters = cfg["processing"]["geo2rdr"]
     common_path = 'science/LSAR'
 
-    radar_products = {f"{dst}": output_paths[f"{dst}"]
+    radar_products = {dst: output_paths[dst]
                     for dst in output_paths.keys()
                     if dst.startswith('R')}
-    geo_products = {f"{dst}": output_paths[f"{dst}"]
+    geo_products = {dst: output_paths[dst]
                     for dst in output_paths.keys()
                     if dst.startswith('G')}
-
-    if "GUNW" in output_paths or "GOFF" in output_paths:
+    print(geo_products)
+    if geo_products:
         # only GUNW product have information requred to compute baesline.
-        product_id = "GUNW"
+        product_id =  list(geo_products.keys())[0]
         dst_meta_path = f'{common_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/radarGrid"
         metadata_path_dict = {
@@ -425,7 +424,7 @@ def run(cfg: dict, output_paths):
                     metadata_path_dict,
                     geo2rdr_parameters)
 
-    if len(radar_products)>0:
+    if radar_products:
         product_id = list(radar_products.keys())[0]
         dst_meta_path = f'{common_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/geolocationGrid"
@@ -461,6 +460,7 @@ if __name__ == "__main__":
     args = yaml_parser.parse()
 
     # convert CLI input to run configuration
-    insar_runcfg = InsarRunConfig(args)
-    _, out_paths = h5_prep.get_products_and_paths(insar_runcfg.cfg)
-    run(insar_runcfg.cfg, output_paths=out_paths)
+    runcfg = InsarRunConfig(args)
+    _, out_paths = h5_prep.get_products_and_paths(runcfg.cfg)
+
+    run(runcfg.cfg, out_paths)
