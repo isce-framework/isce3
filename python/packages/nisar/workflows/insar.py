@@ -5,7 +5,7 @@ import journal
 from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
                              geocode_insar, h5_prep, filter_interferogram,
                              offsets_product, rdr2geo, resample_slc, rubbersheet,
-                             split_spectrum, unwrap, ionosphere)
+                             split_spectrum, unwrap, ionosphere, troposhere)
 
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
@@ -76,6 +76,9 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     if run_steps['geocode'] and 'GUNW' in out_paths:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
+    
+    if run_steps['geocode'] and 'GUNW' in out_paths and run_steps['troposphere']:
+        troposhere.run(cfg, out_paths['GUNW'])
 
     if run_steps['geocode'] and 'GOFF' in out_paths:
         geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], is_goff=True)
