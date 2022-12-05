@@ -2,7 +2,7 @@
 import argparse
 import os
 
-from nisar.workflows import defaults, gslc, h5_prep
+from nisar.workflows import defaults, gslc_array, h5_prep
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 
 import iscetest
@@ -18,7 +18,7 @@ def test_run():
         test_yaml = fh_test_yaml.read(). \
             replace('@ISCETEST@', iscetest.data). \
             replace('@TEST_BLOCK_SZ_X@', '133'). \
-            replace('@TEST_BLOCK_SZ_Y@', '1000')
+            replace('@TEST_BLOCK_SZ_Y@', '275')
 
     # create CLI input namespace with yaml text instead of file path
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
@@ -36,7 +36,7 @@ def test_run():
         h5_prep.run(runconfig.cfg)
 
         # geocode test raster
-        gslc.run(runconfig.cfg)
+        gslc_array.run(runconfig.cfg)
 
 
 if __name__ == '__main__':

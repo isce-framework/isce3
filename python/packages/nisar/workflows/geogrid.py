@@ -30,12 +30,12 @@ def create(cfg, workflow_name=None, frequency_group=None,
     - frequency_group is the name of the sub-group that
     holds the fields x_posting and y_posting, which is usually
     the frequency groups "A" or "B". If these fields
-    are direct member of the output_posting group, e.g 
+    are direct member of the output_posting group, e.g
     for radar_grid_cubes, the frequency_group should be left
      as None.
     - frequency is the frequency name, if not provided, it will be
     the same as the frequency_group.
-    - geocode_dict overwrites the default geocode_dict from 
+    - geocode_dict overwrites the default geocode_dict from
     processing.geocode
     - default_spacing_x is default pixel spacing in the X-direction
     - default_spacing_y is default pixel spacing in the Y-direction
@@ -74,7 +74,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
     else:
         spacing_x = geocode_dict['output_posting'][frequency_group]['x_posting']
         spacing_y = geocode_dict['output_posting'][frequency_group]['y_posting']
-    
+
     end_x = geocode_dict['bottom_right']['x_abs']
     end_y = geocode_dict['bottom_right']['y_abs']
 
@@ -110,7 +110,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
                     err_str = f'Expected positive pixel spacing in the X/longitude direction'
                     err_str += f' for DEM {dem_file}. Actual value: {spacing_x}.'
                     error_channel.log(err_str)
-                    raise ValueError(err_str)   
+                    raise ValueError(err_str)
 
             # copy Y spacing from DEM
             if spacing_y is None:
@@ -159,19 +159,19 @@ def create(cfg, workflow_name=None, frequency_group=None,
         if start_x is not None:
             end_x_from_function = geogrid.start_x + geogrid.spacing_x * geogrid.width
             geogrid.start_x = start_x
-            geogrid.width = int(np.ceil((end_x_from_function - start_x) / 
+            geogrid.width = int(np.ceil((end_x_from_function - start_x) /
                                         geogrid.spacing_x))
 
         # restore runconfig end_x (if provided)
         if end_x is not None:
-            geogrid.width = int(np.ceil((end_x - geogrid.start_x) / 
+            geogrid.width = int(np.ceil((end_x - geogrid.start_x) /
                                         geogrid.spacing_x))
 
         # restore runconfig start_y (if provided)
         if start_y is not None:
             end_y_from_function = geogrid.start_y + geogrid.spacing_y * geogrid.length
             geogrid.start_y = start_y
-            geogrid.length = int(np.ceil((end_y_from_function - start_y) / 
+            geogrid.length = int(np.ceil((end_y_from_function - start_y) /
                                          geogrid.spacing_y))
 
         # restore runconfig end_y (if provided)

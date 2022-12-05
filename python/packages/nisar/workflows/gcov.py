@@ -431,7 +431,7 @@ def run(cfg):
             t_freq_elapsed = time.time() - t_freq
             info_channel.log(f'frequency {frequency} ran in {t_freq_elapsed:.3f} seconds')
 
-            if frequency.upper() == 'B':
+            if frequency.upper() == 'B' and 'A' in freq_pols:
                 continue
 
             cube_geogrid = isce3.product.GeoGridParameters(
