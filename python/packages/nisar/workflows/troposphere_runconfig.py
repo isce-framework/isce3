@@ -25,7 +25,6 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
         info_channel = journal.applicationfo('InsarTroposphereRunConfig.yaml_check')
         
         # Check the weater model files
-
         dynamic_weather_model_cfg = self.cfg['dynamic_ancillary_file_group']['weather_model']
         
         weather_model = dynamic_weather_model_cfg['weather_model']
@@ -48,9 +47,6 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
         # Create defaults for troposphere delay computation
         tropo_cfg = self.cfg['processing']['troposphere_delay']
         
-        # not sure if we need this, but put it here just in case
-        #cfg['primary_executable']['product_type'] = "GUNW"
-
         # The default is not enabled
         if tropo_cfg['enabled'] is None:
             tropo_cfg['enabled'] = False
@@ -73,7 +69,7 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
 
         # Check the troposphere delay product
         if not isinstance(tropo_cfg['delay_product'],list):
-            err_str = "the inputs of the delay_product should be the list type (e.g. ['combo'])"
+            err_str = "the inputs of the delay_product should be the list type (e.g. ['comb'])"
             raise ValueError(err_str)
         else:
             for delay_product in tropo_cfg['delay_product']:

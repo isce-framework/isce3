@@ -109,6 +109,7 @@ external_orbit_options:
     secondary_orbit_file: str(required=False)
 
 weather_model_options:
+     weahter_model: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', required=False)
      reference_weather_model_file_path: str(required=False)
      secondary_weather_model_file_path: str(required=False)
 
@@ -686,11 +687,11 @@ troposphere_delay_options:
     enabled: bool(required=False)
     # Package used by troposphere delay computation
     package: enum('pyaps', 'raider', required=False)
-    # Algorithms. 'zenith' is the zenith delay, 
-    algorithm: enum('zenith', 'conventional', 'raytracing', required=False)
+    # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
+    # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package 
+    delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
     # Delay products. They should be one or more of 'wet', 'hydro', and 'combo'
     delay_product: list(str(), min=1, max=3, required=False)
-
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

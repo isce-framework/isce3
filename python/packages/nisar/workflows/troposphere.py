@@ -76,8 +76,10 @@ def run(cfg:dict,gunw_hdf5:str):
     secondary_weather_model_file = tropo_weather_model_cfg['secondary_weather_model_file_path']
 
     tropo_package = tropo_cfg['package'].lower()
-    tropo_delay_direction = tropo_cfg['delay_direction'].lower() 
+    tropo_delay_direction = tropo_cfg['delay_direction'].lower()
     tropo_delay_product = tropo_cfg['delay_product'].lower()
+
+    t_all = time.time()
 
     with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
         
@@ -133,12 +135,14 @@ def run(cfg:dict,gunw_hdf5:str):
                 assert tropo_delay_datacube.shape == ia_cube.shape
                 
                 radarGrid = f.get('science/LSAR/GUNW/metadata/radarGrid')
-                radarGrid.create_dataset(f'tropoDelay_{tropo_delay_direction}_{delay_product}',tropo_delay_datacube)
+                radarGrid.create_dataset(f'tropoDelay_{tropo_delay_direction}_{delay_product}',data = tropo_delay_datacube, dtype=np.float32,compression = 'gzip')
             
             # raider package
             else:
                 print('raider package is under development currently')
 
+    t_all_elapsed = time.time() - t_all
+    info_channel.log(f"successfully ran troposhere delay  in {t_all_elapsed:.3f} seconds")
 
 if __name__ == "__main__":
     

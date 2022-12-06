@@ -19,6 +19,7 @@ runconfig:
                 secondary_orbit_file:
         
             weather_model:
+                weather_mdoel: ERA5
                 reference_weather_model_file_path:
                 secondary_weather_model_file_path:
 
@@ -222,8 +223,8 @@ runconfig:
                 package: pyaps
                 # Conventional line of sight delay
                 delay_direction: line_of_sight_mapping
-                # Delay product is 'combo'
-                delay_product: ['combo']
+                # Delay product is 'comb'
+                delay_product: ['comb']
     
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
