@@ -12,8 +12,7 @@ from osgeo import gdal, osr
 import pyaps3 as pa #pyAPS package
 
 from nisar.workflows import h5_prep
-from troposphere_runconfig import InsarTroposphereRunConfig
-#from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
+from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 def utm_to_wgs84(epsg, x, y):
@@ -140,6 +139,7 @@ def run(cfg:dict,gunw_hdf5:str):
             # raider package
             else:
                 print('raider package is under development currently')
+                info_channel.log("raider package is under development currently")
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran troposhere delay  in {t_all_elapsed:.3f} seconds")
