@@ -943,22 +943,26 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                          descr=descr, units=None, data=lay_cfg.get('cross_correlation_method'),
                                          long_name='cross correlation method')
         # Add perpendicular and parallel baseline
-        cubes_shape = None
+        baseline_cubes_shape = None
         if dst in ['RIFG', 'ROFF', 'RUNW']:
             cube_ref_dataset = f'{grid_path}/coordinateX'
             if cube_ref_dataset in dst_h5:
-                cubes_shape = dst_h5[cube_ref_dataset].shape[1:]
-        else: 
+                cube_row = dst_h5[cube_ref_dataset].shape[1]
+                cube_col = dst_h5[cube_ref_dataset].shape[2]
+                baseline_cubes_shape = [3, cube_row, cube_col]
+        else:
             cube_ref_dataset = f'{grid_path}/slantRange'
             if cube_ref_dataset in dst_h5:
-                cubes_shape = dst_h5[cube_ref_dataset].shape[1:]
-        if cubes_shape:
+                cube_row = dst_h5[cube_ref_dataset].shape[1]
+                cube_col = dst_h5[cube_ref_dataset].shape[2]
+                baseline_cubes_shape = [3, cube_row, cube_col]
+        if baseline_cubes_shape:
             descr = "Perpendicular component of the InSAR baseline"
-            _create_datasets(dst_h5[grid_path], cubes_shape, np.float32,
+            _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "perpendicularBaseline",
                             descr=descr, units="meters",
                             long_name='perpendicular baseline')
-            _create_datasets(dst_h5[grid_path], cubes_shape, np.float32,
+            _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "parallelBaseline",
                             descr=descr.replace('Perpendicular', 'Parallel'),
                             units="meters",

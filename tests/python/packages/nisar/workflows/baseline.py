@@ -2,12 +2,10 @@ import argparse
 import os
 
 import h5py
-# from isce3.signal.filter_data import filter_data
 import iscetest
 import numpy as np
 from osgeo import gdal
 
-# from nisar.workflows import filter_interferogram, h5_prep
 from nisar.workflows import h5_prep, insar
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.products.readers import SLC

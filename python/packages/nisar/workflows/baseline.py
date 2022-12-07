@@ -197,7 +197,9 @@ def add_baseline(output_paths,
     del residual_output_paths[product_id]
 
     with h5py.File(output_hdf5, "a") as src_h5:
-        cubes_shape = src_h5[cube_ref_dataset].shape[1:]
+        cube_row = src_h5[cube_ref_dataset].shape[1]
+        cube_col = src_h5[cube_ref_dataset].shape[2]
+        cubes_shape = [3, cube_row, cube_col]
 
         # Create metadata if baselines do not exist in h5 file
         if metadata_path_dict["perpendicularBaseline"] not in src_h5:
@@ -241,40 +243,42 @@ def add_baseline(output_paths,
 
         # compute 2 dimension baselines for middle height
         height_ind = int(len(height_levels)/2)
-        h = height_levels[height_ind]
+        middle_height = (height_levels[0] + height_levels[-1])/2
+        height_list = [height_levels[0], middle_height, height_levels[-1]]
 
-        # when we allow a block of geo2rdr run on an array
-        # the following two 'for loops' can be eliminated
-        for row_ind in range(meta_row):
-            for col_ind in range(meta_width):
+        for height_ind, h in enumerate(height_list):
+            # when we allow a block of geo2rdr run on an array
+            # the following two 'for loops' can be eliminated
+            for row_ind in range(meta_row):
+                for col_ind in range(meta_width):
 
-                if radar_or_geo =='geo':
-                    target_proj = np.array([coordX[col_ind], coordY[row_ind], h])
-                else:
-                    # sample UAVSAR datasets have some large NOVALUE data
-                    if (coordX[height_ind, row_ind, col_ind] == -1.00e12) or \
-                        (coordY[height_ind, row_ind, col_ind] == -1.00e12):
-                        continue
-                    target_proj = np.array([coordX[height_ind, row_ind, col_ind], \
-                        coordY[height_ind, row_ind, col_ind], h])
+                    if radar_or_geo =='geo':
+                        target_proj = np.array([coordX[col_ind], coordY[row_ind], h])
+                    else:
+                        # sample UAVSAR datasets have some large NOVALUE data
+                        if (coordX[height_ind, row_ind, col_ind] == -1.00e12) or \
+                            (coordY[height_ind, row_ind, col_ind] == -1.00e12):
+                            continue
+                        target_proj = np.array([coordX[height_ind, row_ind, col_ind], \
+                            coordY[height_ind, row_ind, col_ind], h])
 
-                target_llh = proj.inverse(target_proj)
-                parallel_baseline, perpendicular_baseline = compute_baseline(
-                    target_llh,
-                    ref_orbit,
-                    sec_orbit,
-                    ref_doppler,
-                    sec_doppler,
-                    ref_radargrid,
-                    sec_radargrid,
-                    ellipsoid,
-                    geo2rdr_parameters)
+                    target_llh = proj.inverse(target_proj)
+                    parallel_baseline, perpendicular_baseline = compute_baseline(
+                        target_llh,
+                        ref_orbit,
+                        sec_orbit,
+                        ref_doppler,
+                        sec_doppler,
+                        ref_radargrid,
+                        sec_radargrid,
+                        ellipsoid,
+                        geo2rdr_parameters)
 
-                par_baseline[row_ind, col_ind] = parallel_baseline
-                perp_baseline[row_ind, col_ind] = perpendicular_baseline
+                    par_baseline[row_ind, col_ind] = parallel_baseline
+                    perp_baseline[row_ind, col_ind] = perpendicular_baseline
 
-            ds_bpar[:, :] = par_baseline
-            ds_bperp[:, :] = perp_baseline
+                ds_bpar[height_ind, :, :] = par_baseline
+                ds_bperp[height_ind, :, :] = perp_baseline
 
         # compute statistics
         data_names = ['perpendicularBaseline', 'parallelBaseline']
