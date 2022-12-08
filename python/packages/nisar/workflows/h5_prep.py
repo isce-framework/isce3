@@ -949,13 +949,13 @@ def prep_ds_insar(pcfg, dst, dst_h5):
             if cube_ref_dataset in dst_h5:
                 cube_row = dst_h5[cube_ref_dataset].shape[1]
                 cube_col = dst_h5[cube_ref_dataset].shape[2]
-                baseline_cubes_shape = [3, cube_row, cube_col]
+                baseline_cubes_shape = [2, cube_row, cube_col]
         else:
             cube_ref_dataset = f'{grid_path}/slantRange'
             if cube_ref_dataset in dst_h5:
                 cube_row = dst_h5[cube_ref_dataset].shape[1]
                 cube_col = dst_h5[cube_ref_dataset].shape[2]
-                baseline_cubes_shape = [3, cube_row, cube_col]
+                baseline_cubes_shape = [2, cube_row, cube_col]
         if baseline_cubes_shape:
             descr = "Perpendicular component of the InSAR baseline"
             _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,

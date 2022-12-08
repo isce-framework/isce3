@@ -197,9 +197,24 @@ def add_baseline(output_paths,
     del residual_output_paths[product_id]
 
     with h5py.File(output_hdf5, "a") as src_h5:
+
+        height_levels = src_h5[metadata_path_dict["heights"]][:]
+        ref_times = src_h5[metadata_path_dict["azimuthTime"]][:]
+        ref_rnges = src_h5[metadata_path_dict["slantRange"]][:]
+        coordX = src_h5[metadata_path_dict["coordX"]][:]
+        coordY = src_h5[metadata_path_dict["coordY"]][:]
+        geo2rdr_parameters['delta_range'] = 1e-8
+        epsg_code = src_h5[metadata_path_dict["epsg"]][()]
+        proj = isce3.core.make_projection(epsg_code)
+        ellipsoid = proj.ellipsoid
+
         cube_row = src_h5[cube_ref_dataset].shape[1]
         cube_col = src_h5[cube_ref_dataset].shape[2]
-        cubes_shape = [3, cube_row, cube_col]
+        # produce baselines for two heights levels
+        if len(height_levels) == 1:
+            cubes_shape = [1, cube_row, cube_col]
+        else:
+            cubes_shape = [2, cube_row, cube_col]
 
         # Create metadata if baselines do not exist in h5 file
         if metadata_path_dict["perpendicularBaseline"] not in src_h5:
@@ -215,17 +230,8 @@ def add_baseline(output_paths,
                             units="meters",
                             long_name='parallel baseline')
 
-        height_levels = src_h5[metadata_path_dict["heights"]][:]
-        ref_times = src_h5[metadata_path_dict["azimuthTime"]][:]
-        ref_rnges = src_h5[metadata_path_dict["slantRange"]][:]
-        coordX = src_h5[metadata_path_dict["coordX"]][:]
-        coordY = src_h5[metadata_path_dict["coordY"]][:]
         ds_bperp = src_h5[metadata_path_dict["perpendicularBaseline"]]
         ds_bpar = src_h5[metadata_path_dict["parallelBaseline"]]
-        geo2rdr_parameters['delta_range'] = 1e-8
-        epsg_code = src_h5[metadata_path_dict["epsg"]][()]
-        proj = isce3.core.make_projection(epsg_code)
-        ellipsoid = proj.ellipsoid
 
         if radar_or_geo =='geo':
             _, meta_row, meta_width = np.shape(ref_times)
@@ -241,10 +247,12 @@ def add_baseline(output_paths,
         par_baseline = np.zeros([meta_row, meta_width], dtype=np.float32)
         perp_baseline = np.zeros([meta_row, meta_width], dtype=np.float32)
 
-        # compute 2 dimension baselines for middle height
-        height_ind = int(len(height_levels)/2)
-        middle_height = (height_levels[0] + height_levels[-1])/2
-        height_list = [height_levels[0], middle_height, height_levels[-1]]
+        # compute baselines for 2 height levels assuming the linear variation
+        # of the baselines along the heights
+        if len(height_levels) > 1:
+            height_list = [height_levels[0], height_levels[-1]]
+        else:
+            height_list = [height_levels[0]]
 
         for height_ind, h in enumerate(height_list):
             # when we allow a block of geo2rdr run on an array
@@ -255,12 +263,14 @@ def add_baseline(output_paths,
                     if radar_or_geo =='geo':
                         target_proj = np.array([coordX[col_ind], coordY[row_ind], h])
                     else:
+                        height_level_ind = np.argmin(np.abs(height_levels-h))
+
                         # sample UAVSAR datasets have some large NOVALUE data
-                        if (coordX[height_ind, row_ind, col_ind] == -1.00e12) or \
-                            (coordY[height_ind, row_ind, col_ind] == -1.00e12):
+                        if (coordX[height_level_ind, row_ind, col_ind] == -1.00e12) or \
+                            (coordY[height_level_ind, row_ind, col_ind] == -1.00e12):
                             continue
-                        target_proj = np.array([coordX[height_ind, row_ind, col_ind], \
-                            coordY[height_ind, row_ind, col_ind], h])
+                        target_proj = np.array([coordX[height_level_ind, row_ind, col_ind], \
+                            coordY[height_level_ind, row_ind, col_ind], h])
 
                     target_llh = proj.inverse(target_proj)
                     parallel_baseline, perpendicular_baseline = compute_baseline(
@@ -400,7 +410,6 @@ def run(cfg: dict, output_paths):
     geo_products = {dst: output_paths[dst]
                     for dst in output_paths.keys()
                     if dst.startswith('G')}
-    print(geo_products)
     if geo_products:
         # only GUNW product have information requred to compute baesline.
         product_id =  list(geo_products.keys())[0]
