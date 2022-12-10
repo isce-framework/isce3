@@ -5,6 +5,8 @@ isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/point_target_info.py
 isce3/unwrap/snaphu.py
+nisar/mixed_mode/logic.py
+nisar/mixed_mode/processing.py
 nisar/products/readers/attitude.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
