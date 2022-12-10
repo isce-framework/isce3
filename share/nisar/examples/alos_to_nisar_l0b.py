@@ -8,7 +8,7 @@ import numpy
 import os
 from warnings import warn
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
-from nisar.antenna.antenna_pattern import CalPath
+from nisar.antenna import CalPath
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.Raw.Raw import get_rcs2body
 from nisar.workflows.focus import make_doppler_lut
