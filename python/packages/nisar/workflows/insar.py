@@ -77,7 +77,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['geocode'] and 'GUNW' in out_paths:
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
     
-    if run_steps['geocode'] and 'GUNW' in out_paths and run_steps['troposphere']:
+    if 'GUNW' in out_paths and run_steps['troposphere']:
         troposhere.run(cfg, out_paths['GUNW'])
 
     if run_steps['geocode'] and 'GOFF' in out_paths:
