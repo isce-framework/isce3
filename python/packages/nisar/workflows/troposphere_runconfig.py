@@ -29,35 +29,33 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
             'InsarTroposphereRunConfig.yaml_check')
 
         # Check the weater model files
-        dynamic_weather_model_cfg = self.cfg['dynamic_ancillary_file_group']['weather_model']
+        dynamic_weather_model_cfg = self.cfg['dynamic_ancillary_file_group']['troposhere_weather_model']
 
-        weather_model_type = dynamic_weather_model_cfg['weather_model_type'].upper(
-        )
-        if weather_model_type not in ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA']:
-            err_str = f"unidentified weather model, {weather_model_type}, \
-                        please try one of 'ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA'"
+        ref_weather_model_file = dynamic_weather_model_cfg['reference_file_path']
+        sec_weather_model_file = dynamic_weather_model_cfg['secondary_file_path']
+
+        if (ref_weather_model_file is None) or (not os.path.exists(ref_weather_model_file)):
+            err_str = 'reference weather model file cannot be None or found,\
+                    please specify the weather model'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        ref_weather_model_file = dynamic_weather_model_cfg['reference_weather_model_file_path']
-        sec_weather_model_file = dynamic_weather_model_cfg['secondary_weather_model_file_path']
-
-        if ref_weather_model_file is None:
-            err_str = 'reference weather model file cannot be None, please specify the weather model'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        if sec_weather_model_file is None:
-            err_str = 'secondary weather model file cannot be None, please specify the weather model'
+        if (sec_weather_model_file is None) or (not os.path.exists(sec_weather_model_file)):
+            err_str = 'secondary weather model file cannwot be None or found,\
+                    please specify the weather model'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         # Create defaults for troposphere delay computation
         tropo_cfg = self.cfg['processing']['troposphere_delay']
 
-        # The default is not enabled
-        if tropo_cfg['enabled'] is None:
-            tropo_cfg['enabled'] = False
+        weather_model_type = tropo_cfg['weather_model_type'].upper()
+
+        if weather_model_type not in ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA']:
+            err_str = f"unidentified weather model, {weather_model_type},\
+                    lease try one of 'ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA'"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
 
         # Check the external tropo delay  package
         if tropo_cfg['package'].lower() not in ['pyaps', 'raider']:
@@ -68,24 +66,24 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
         # Check the delay direction
         if tropo_cfg['delay_direction'].lower() not in ['zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing']:
             err_str = f"unidentified delay direction {tropo_cfg['delay_direction']},\
-                        please use one of 'zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing'")
+                        please use one of 'zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing'"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         # If the delay direction is 'line_of_sight_raytracing', the package must be 'raider'
         if tropo_cfg['delay_direction'].lower() == 'line_of_sight_raytracing' and tropo_cfg['package'].lower() != 'raider':
-            err_str="for line_of_sight_raytracing delay type, the package must be 'raider'"
+            err_str = "for line_of_sight_raytracing delay type, the package must be 'raider'"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         # Check the troposphere delay product
         if not isinstance(tropo_cfg['delay_product'], list):
-            err_str="the inputs of the delay_product should be the list type (e.g. ['comb'])"
+            err_str = "the inputs of the delay_product should be the list type (e.g. ['comb'])"
             raise ValueError(err_str)
         else:
             for delay_product in tropo_cfg['delay_product']:
                 if delay_product.lower() not in ['wet', 'hydro', 'comb']:
-                    err_str=f"unidentified delay product '{tropo_cfg['delay_product']}', \
+                    err_str = f"unidentified delay product '{tropo_cfg['delay_product']}', \
                                 it should be one or more of 'wet', 'hydro', and 'comb'"
                     raise ValueError(err_str)
 
@@ -93,4 +91,4 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
             if len(tropo_cfg['delay_product']) == 0:
                 info_channel.log(
                     "the delay product is empty, the 'comb' will be applied")
-                tropo_cfg['delay_product']=['comb']
+                tropo_cfg['delay_product'] = ['comb']
