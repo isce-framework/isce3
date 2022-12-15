@@ -25,11 +25,10 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
         '''
 
         error_channel = journal.error('InsarTroposphereRunConfig.yaml_check')
-        info_channel = journal.applicationfo(
-            'InsarTroposphereRunConfig.yaml_check')
+        info_channel = journal.info( 'InsarTroposphereRunConfig.yaml_check')
 
         # Check the weater model files
-        dynamic_weather_model_cfg = self.cfg['dynamic_ancillary_file_group']['troposhere_weather_model']
+        dynamic_weather_model_cfg = self.cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
 
         ref_weather_model_file = dynamic_weather_model_cfg['reference_file_path']
         sec_weather_model_file = dynamic_weather_model_cfg['secondary_file_path']

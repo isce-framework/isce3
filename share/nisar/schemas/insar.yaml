@@ -14,8 +14,8 @@ runconfig:
             dem_file: str()
             orbit: include('external_orbit_options', required=False)
            
-            # Weather model
-            weather_model: include('weather_model_options', required=False)
+            # Troposphere weather model
+            troposphere_weather_model: include('troposphere_weather_model_options', required=False)
  
         product_path_group:
             # Directory where PGE will place results
@@ -66,6 +66,8 @@ runconfig:
 
             ionosphere_phase_correction: include('ionosphere_phase_correction_options', required=False)
 
+            troposphere_delay: include('troposphere_delay_options', required=False)
+
             rdr2geo: include('rdr2geo_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
@@ -108,10 +110,9 @@ external_orbit_options:
     reference_orbit_file: str(required=False)
     secondary_orbit_file: str(required=False)
 
-weather_model_options:
-     weahter_model: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', required=False)
-     reference_weather_model_file_path: str(required=False)
-     secondary_weather_model_file_path: str(required=False)
+troposphere_weather_model_options:
+     reference_file_path: str(required=False)
+     secondary_file_path: str(required=False)
 
 phase_unwrap_options:
     crossmul_path: str(required=False)
@@ -687,6 +688,8 @@ troposphere_delay_options:
     enabled: bool(required=False)
     # Package used by troposphere delay computation
     package: enum('pyaps', 'raider', required=False)
+    # Weather model type
+    weather_model_type: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', required=False)
     # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
     # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package 
     delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
