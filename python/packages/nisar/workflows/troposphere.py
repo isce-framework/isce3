@@ -54,7 +54,7 @@ def transform_xy_to_latlon(epsg, x, y):
 
     # Transform to lat/lon
     lat_lon_radar = np.array(
-        transformer_xy_to_wgs84.TransformPoints(x_y_pnts_radar))
+        transformer_xy_to_latlon.TransformPoints(x_y_pnts_radar))
 
     # Lat lon of data cube
     lat_datacube = lat_lon_radar[:, 0].reshape(x.shape)
@@ -141,7 +141,8 @@ def run(cfg: dict, gunw_hdf5: str):
             # pyaps package
             if tropo_package == 'pyaps':
 
-                if delay_product == 'hydro':
+                delay_type = delay_product
+                if delay_type == 'hydro':
                     delay_type = 'dry'
 
                 tropo_delay_datacube_list = []
@@ -184,18 +185,21 @@ def run(cfg: dict, gunw_hdf5: str):
                         (phs_ref - phs_second)*4.0*np.pi/wavelength)
 
                 # Tropo delay datacube
-                tropo_delay_datacube = np.stack(tropo_datacube_list)
-                tropo_datacube_list = None
+                tropo_delay_datacube = np.stack(tropo_delay_datacube_list)
+                tropo_delay_datacube_list = None
 
                 radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
                 radar_grid.create_dataset(f'tropoDelay_{tropo_delay_direction}_{delay_product}',
                                           data=tropo_delay_datacube, dtype=np.float32, compression='gzip')
+                
 
             # raider package
             else:
                 print('raider package is under development currently')
                 info_channel.log(
                     "raider package is under development currently")
+            
+            f.close()
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
@@ -210,6 +214,5 @@ if __name__ == "__main__":
 
     # convert CLI input to run configuration
     tropo_runcfg = InsarTroposphereRunConfig(args)
-    print(tropo_runcfg.cfg)
-    #_, out_paths = h5_prep.get_products_and_paths(tropo_runcfg.cfg)
-    #run(tropo_runcfg.cfg, gunw_hdf5=out_paths['GUNW'])
+    _, out_paths = h5_prep.get_products_and_paths(tropo_runcfg.cfg)
+    run(tropo_runcfg.cfg, gunw_hdf5=out_paths['GUNW'])
