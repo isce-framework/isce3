@@ -5,11 +5,28 @@ import os
 import pathlib
 import time
 
+from datetime import datetime
+import pyproj
+
 import h5py
 import numpy as np
 from osgeo import gdal, osr
 
-import pyaps3 as pa  # pyAPS package
+import pyaps3 as pa
+import RAiDER
+
+from RAiDER.llreader import BoundingBox
+from RAiDER.losreader import Zenith, Conventional, Raytracing
+
+from RAiDER.models.ecmwf import ECMWF
+from RAiDER.models.era5 import ERA5
+from RAiDER.models.gmao import GMAO
+from RAiDER.models.hres import HRES
+from RAiDER.models.hrrr import HRRR
+from RAiDER.models.merra2 import MERRA2
+from RAiDER.models.ncmr import NCMR
+from RAiDER.delay import tropo_delay
+
 
 from nisar.workflows import h5_prep
 from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
@@ -188,17 +205,82 @@ def run(cfg: dict, gunw_hdf5: str):
                 tropo_delay_datacube = np.stack(tropo_delay_datacube_list)
                 tropo_delay_datacube_list = None
 
-                radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
-                radar_grid.create_dataset(f'tropoDelay_{tropo_delay_direction}_{delay_product}',
-                                          data=tropo_delay_datacube, dtype=np.float32, compression='gzip')
-                
 
             # raider package
             else:
-                print('raider package is under development currently')
-                info_channel.log(
-                    "raider package is under development currently")
-            
+
+                # Acquisition time for reference and secondary images
+                acquisition_time_ref = str(np.array(
+                    f['science/LSAR/identification/referenceZeroDopplerStartTime']).astype(str))
+                acquisition_time_second = str(np.array(
+                    f['science/LSAR/identification/secondaryZeroDopplerStartTime']).astype(str))
+
+                datetime_reference = datetime.strptime(
+                    acquisition_time_ref, '%Y-%M-%DT%HH:%%MM:%SS')
+                dateimte_secondary = datetime.strptime(
+                    acquisition_time_second, '%Y-%M-%DT%HH:%%MM:%SS')
+
+                x_spacing = float(
+                    np.array(f['science/LSAR/GUNW/grids/frequencyA/xCoordinateSpacing']))
+                y_spacing = float(
+                    np.array(f['science/LSAR/GUNW/grids/frequencyA/yCoordinateSpacing']))
+
+                if x_spacing != y_spacing:
+                    err_str = f'x = {x_spacing} and y = {y_spacing} spacing should be equal'
+                    raise ValueError(err_str)
+
+                # Cube Spacing
+                cube_spacing = x_spacing
+
+                # AOI bounding box
+                min_lat = np.min(lat_datacube)
+                max_lat = np.max(lat_datacube)
+                min_lon = np.min(lon_datacube)
+                max_lon = np.max(lon_datacube)
+
+                aoi = BoundingBox([min_lat, maxx_lat, min_lon, max_lon])
+
+                # Line of sight
+                los = Zenith()
+
+                # Line of sight mapping direction
+                if tropo_delay_direction == 'line_of_sight_mapping':
+                    los = Conventional()
+                if tropo_delay_direction == 'line_of_sight_raytracing':
+                    los = Raytracing()
+
+                # Height levels
+                height_levels = list(height_radar_grid)
+
+                # Tropodelay computation
+                tropo_delay_reference, _ = tropo_delay(dt=datetime_reference,
+                                                       weather_model_file=reference_weather_model_file,
+                                                       aoi=aoi,
+                                                       los=los,
+                                                       height_levels=height_levels,
+                                                       out_proj=epsg,
+                                                       cube_spacing_m=cube_spacing)
+
+                tropo_delay_secondary, _ = tropo_delay(dt=datetime_scondary,
+                                                       weather_model_file=secondary_weather_model_file,
+                                                       aoi=aoi,
+                                                       los=los,
+                                                       height_levels=height_levels,
+                                                       out_proj=epsg,
+                                                       cube_spacing_m=cube_spacing)
+
+                # Troposphere delay by raider package
+                tropo_delay = tropo_delay_reference[delay_product] - \
+                    tropo_delay_secondary[delay_product]
+
+                # Covert it to radians
+                tropo_delay_datacube = tropo_delay*4.0*np.pi/wavelength
+
+            # Write to GUWN product
+            radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
+            radar_grid.create_dataset(f'tropoDelay_{tropo_delay_direction}_{delay_product}',
+                                      data=tropo_delay_datacube, dtype=np.float32, compression='gzip')
+
             f.close()
 
     t_all_elapsed = time.time() - t_all
