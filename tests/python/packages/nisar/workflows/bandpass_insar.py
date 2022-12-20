@@ -36,6 +36,8 @@ def test_bandpass_run():
 
     persist = Persistence('insar.log', restart=True)
     persist.run_steps['dense_offsets'] = False
+    # input test data is missing mandatory metadata that 
+    # causes the test fail 
     persist.run_steps['baseline'] = False
 
     insar.run(runconfig.cfg, out_paths, persist.run_steps)
