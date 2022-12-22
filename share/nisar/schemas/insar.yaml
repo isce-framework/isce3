@@ -689,7 +689,7 @@ troposphere_delay_options:
     # Package used by troposphere delay computation
     package: enum('pyaps', 'raider', required=False)
     # Weather model type
-    weather_model_type: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', required=False)
+    weather_model_type: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', 'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR',required=False)
     # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
     # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package 
     delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)

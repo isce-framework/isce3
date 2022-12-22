@@ -72,7 +72,7 @@ def transform_xy_to_latlon(epsg, x, y):
     lon_datacube = lat_lon_radar[:, 1].reshape(x.shape)
 
     # 0.1 degrees is aded  to make sure the weather model cover the entire image
-    margin = 0.1/scratch/xhuang/isce3_test/output_insar/
+    margin = 0.1
 
     # Extent of the data cube
     cube_extent = (np.nanmin(lat_datacube)-margin, np.nanmax(lat_datacube)+margin,
