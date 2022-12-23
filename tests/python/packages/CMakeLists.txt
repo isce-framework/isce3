@@ -8,6 +8,7 @@ isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
 nisar/mixed_mode/logic.py
 nisar/mixed_mode/processing.py
+nisar/products/readers/antenna_parser.py
 nisar/products/readers/attitude.py
 nisar/products/readers/instrument_parser.py
 nisar/products/readers/orbit.py
@@ -33,7 +34,6 @@ nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py
-nisar/workflows/antenna_parser.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/noise_estimator.py
 )

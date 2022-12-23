@@ -141,6 +141,27 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   External attitude file for L0B product "REE_L0B_CHANNEL4_EXTSCENE_PASS1_LINE3000_CALIB.h5" 
   under subdir *pointing/*.
 
+## DM2
+
+Subdirectory "dm2" contains a group of simulated REE multi-channel NISAR-DM2-like L0B
+products and their respective antenna and DEM files. These are, e.g., useful for testing
+D&C pointing products such as Doppler and Null-range products.
+
+- **REE_L0B_AMAZON_PASS1_RGL_4500-9500_RGB_10-2440.h5**
+
+  Truncated version, in both range and azimuth, of REE-simulated 6-channel repeat-pass
+  NISAR-DM2 like HH-Pol 5MHz single-band L0B product over Amazon w/ topography.
+
+- **REE_ANTPAT_CUTS_AMAZON.h5**
+
+  Respective HDF5 antenna product with 6 beams related to 6 TX/RX channels for both
+  H and V polarizations.
+  
+- **REE_DEM_AMAZON_PASS1.tif**
+
+  Respective DEM Geotiff raster over the entire scene used in the simulation for the
+  first pass.
+
 ## ALOS1
 
 - **ALOS1_PALSAR_ANTPAT_FIVE_BEAMS.h5**

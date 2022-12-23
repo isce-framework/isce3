@@ -4,6 +4,7 @@ from nisar.workflows.gen_doppler_range_product import gen_doppler_range_product
 import numpy.testing as npt
 import argparse
 import os
+import warnings
 
 
 class TestGenDopplerRangeProduct:
@@ -27,24 +28,42 @@ class TestGenDopplerRangeProduct:
     orb_nisar = 'REE_ORBIT_DATA_DBF_PASS1.xml'
     att_nisar = 'REE_ATTITUDE_DATA_DBF_PASS1.xml'
 
+    # DM2 L0B product with dem raster file.
+    # This is truncated 6-channel NISAR-like DM2 over Amazon scene
+    # w/ topography
+    subdir_dm2 = 'dm2'
+    l0b_dm2 = 'REE_L0B_AMAZON_PASS1_RGL_4500-9500_RGB_10-2440.h5'
+    ant_dm2 = 'REE_ANTPAT_CUTS_AMAZON.h5'
+    dem_dm2 = 'REE_DEM_AMAZON_PASS1.tif'
+
     # set input arguments for ALOS1 case
     args_alos1 = argparse.Namespace(
         filename_l0b=os.path.join(iscetest.data, l0b_alos1),
-        freq_band='A', txrx_pol='HH', num_rgb_avg=32,
+        freq_band='A', txrx_pol='HH', num_rgb_avg=32, ref_height=0.0,
         dop_method='CDE', az_block_dur=0.8753, time_interval=0.2918,
-        subband=False, polyfit=False, polyfit_deg=3,
+        subband=False, polyfit=False, polyfit_deg=3, dem_file=None,
         plot=True, out_path='.', orbit_file=None, attitude_file=None,
         antenna_file=os.path.join(iscetest.data, ant_alos1))
 
-    # set input arguments for NISAR case
+    # set input arguments for DBF NISAR case
     args_nisar = argparse.Namespace(
         filename_l0b=os.path.join(iscetest.data, sub_dir, l0b_nisar),
-        freq_band='A', txrx_pol='VV', num_rgb_avg=16,
-        dop_method='CDE', az_block_dur=1.0, time_interval=0.5,
+        freq_band='A', txrx_pol='VV', num_rgb_avg=16, ref_height=0.0,
+        dop_method='CDE', az_block_dur=1.0, time_interval=0.5, dem_file=None,
         subband=False, polyfit=True, polyfit_deg=3, plot=False, out_path='.',
         orbit_file=os.path.join(iscetest.data, sub_dir, orb_nisar),
         attitude_file=os.path.join(iscetest.data, sub_dir, att_nisar),
         antenna_file=os.path.join(iscetest.data, sub_dir, ant_nisar))
+
+    # set input arguments for DM2 NISAR case
+    args_dm2 = argparse.Namespace(
+        filename_l0b=os.path.join(iscetest.data, subdir_dm2, l0b_dm2),
+        freq_band='A', txrx_pol='HH', num_rgb_avg=8, ref_height=0.0,
+        dop_method='CDE', az_block_dur=2.5, time_interval=0.11,
+        subband=False, polyfit=True, polyfit_deg=3,
+        plot=False, out_path='.', orbit_file=None, attitude_file=None,
+        antenna_file=os.path.join(iscetest.data, subdir_dm2, ant_dm2),
+        dem_file=os.path.join(iscetest.data, subdir_dm2, dem_dm2))
 
     def test_correct_args(self):
         # use ALOS1 set for this test
@@ -58,5 +77,16 @@ class TestGenDopplerRangeProduct:
             gen_doppler_range_product(self.args_alos1)
 
     def test_ext_orbit_att_polyfit(self):
-        # use NISAR set for this test
+        # use NISAR DBF set for this test
         gen_doppler_range_product(self.args_nisar)
+
+    def test_dm2_dem_ant(self):
+        # use NISAR DM2 case for this test
+        # check if subdir "dm2" exists and then
+        # run the test
+        dm2_dir = os.path.join(iscetest.data, self.subdir_dm2)
+        if os.path.exists(dm2_dir):
+            gen_doppler_range_product(self.args_dm2)
+        else:
+            warnings.warn(
+                f'Subdir "{self.subdir_dm2}" with DM2 files does not exist!')

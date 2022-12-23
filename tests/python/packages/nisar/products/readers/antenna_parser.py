@@ -50,6 +50,13 @@ class TestAntennaParser:
     def test_version(self):
         npt.assert_equal(self.prs.version, "v2.0")
 
+    def test_beam_numbers(self):
+        list_beams = [1, 2, 3, 4, 5]
+        for pol in ['H', 'V']:
+            npt.assert_equal(self.prs.beam_numbers(pol), list_beams,
+                             err_msg="Wrong list of beam numbers for"
+                             f" {pol} Pol")
+
     def test_el_cut(self):
         elcut = self.prs.el_cut()
 
@@ -127,3 +134,40 @@ class TestAntennaParser:
         npt.assert_allclose(elcut.copol_pattern[-1, :], pattern,
                             atol=self.atol, rtol=self.rtol,
                             err_msg="Wrong 'cxpol' for last beam")
+
+    def test_locate_beam_peak_overlap(self):
+        for pol in ['H', 'V']:
+            num_beams = self.prs.num_beams(pol)
+            el_peaks, az_peaks = self.prs.locate_beams_peak(pol)
+            # check the values are unique, ascending order and have right size
+            el_sort = sorted(set(el_peaks))
+            npt.assert_equal(el_sort, el_peaks,
+                             err_msg='Non monotonically ascending peaks'
+                             f' for pol "{pol}"!')
+            # get EL angle for the first beam and last beam
+            ant_first = self.prs.el_cut(1, pol)
+            el_first = ant_first.angle[0]
+            npt.assert_array_less(el_first, el_peaks,
+                                  err_msg='One of more peaks are too small'
+                                  f' for pol "{pol}"!')
+            ant_last = self.prs.el_cut(num_beams, pol)
+            el_last = ant_last.angle[-1]
+            npt.assert_array_less(el_peaks, el_last,
+                                  err_msg='One of more peaks are too large'
+                                  f' for pol "{pol}"!')
+            # check azimuth angle
+            az_avg = 0.5 * (ant_first.cut_angle + ant_last.cut_angle)
+            npt.assert_allclose(az_peaks, az_avg,
+                                err_msg='Wrong azimuth for peaks'
+                                f' for pol "{pol}"!')
+            # now check overlap/transition regions agianst peak location
+            el_trans, az_trans = self.prs.locate_beams_overlap(pol)
+            npt.assert_equal(el_trans.size, num_beams - 1,
+                             err_msg='Wrong size for overlap values'
+                             f' for pol "{pol}"!')
+            npt.assert_array_less(el_peaks[:-1], el_trans,
+                                  err_msg='Wrong EL overlap values'
+                                  f' for pol "{pol}"!')
+            npt.assert_allclose(az_peaks, az_trans,
+                                err_msg='Wrong azimuth for overlap values'
+                                f' for pol "{pol}"!')
