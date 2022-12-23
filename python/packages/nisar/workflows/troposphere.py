@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
 import copy
-import journal
-import os
-import pathlib
-import time
-
 from datetime import datetime
-import pyproj
-
 import h5py
+import journal
 import numpy as np
+import os
 from osgeo import gdal, osr
-
+import pathlib
 from scipy.interpolate import RegularGridInterpolator
+import time
 
 import pyaps3 as pa
 
@@ -21,11 +17,9 @@ from RAiDER.llreader import BoundingBox
 from RAiDER.losreader import Zenith, Conventional, Raytracing
 from RAiDER.delay import tropo_delay as raider_tropo_delay
 
-
 from nisar.workflows import h5_prep
 from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-
 
 def transform_xy_to_latlon(epsg, x, y):
     '''
@@ -260,8 +254,12 @@ def run(cfg: dict, gunw_hdf5: str):
                                                               cube_spacing_m=cube_spacing)
 
                 # Troposphere delay by raider package
-                tropo_delay = tropo_delay_reference[delay_product] - \
-                    tropo_delay_secondary[delay_product]
+                if delay_product == 'comb':
+                    tropo_delay = tropo_delay_reference['wet'] + tropo_delay_reference['hydro'] - \
+                            tropo_delay_secondary['wet'] - tropo_delay_secondary['hydro']
+                else:
+                    tropo_delay = tropo_delay_reference[delay_product] - \
+                            tropo_delay_secondary[delay_product]
 
                 # Convert it to radians units
                 tropo_delay_datacube = tropo_delay*4.0*np.pi/wavelength
