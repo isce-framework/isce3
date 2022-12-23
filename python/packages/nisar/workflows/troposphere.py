@@ -314,5 +314,5 @@ if __name__ == "__main__":
     # convert CLI input to run configuration
     tropo_runcfg = InsarTroposphereRunConfig(args)
     _, out_paths = h5_prep.get_products_and_paths(tropo_runcfg.cfg)
-    run(tropo_runcfg.cfg, gunw_hdf5=os.path.join(
-        '/scratch/xhuang/isce3_test', out_paths['GUNW']))
+    run(tropo_runcfg.cfg, gunw_hdf5 = out_paths['GUNW'])
+

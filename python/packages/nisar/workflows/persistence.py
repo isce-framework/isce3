@@ -7,7 +7,7 @@ class Persistence():
     basic class that determines InSAR persistence
     '''
     # init InSAR steps in reverse chronological run order
-    insar_steps = ['geocode', 'ionosphere', 'unwrap', 'filter_interferogram', 'crossmul',
+    insar_steps = ['troposphere','geocode', 'ionosphere', 'unwrap', 'filter_interferogram', 'crossmul',
                    'fine_resample', 'rubbersheet', 'offsets_product', 'dense_offsets',
                    'coarse_resample', 'geo2rdr', 'rdr2geo', 'h5_prep', 'bandpass_insar']
 
