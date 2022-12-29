@@ -143,7 +143,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
         .def_property_readonly("data", [](const LUT2d<T>& self) {
             return self.data().map();
         })
-        .def("eval", py::overload_cast<double,double>(&LUT2d<T>::eval, py::const_))
+        .def("eval", py::overload_cast<const double, const double>(&LUT2d<T>::eval, py::const_))
         .def("eval", py::overload_cast<double,const Eigen::Ref<const Eigen::VectorXd>&>(&LUT2d<T>::eval, py::const_))
         ;
 }

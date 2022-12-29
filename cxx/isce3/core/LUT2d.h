@@ -74,7 +74,7 @@ class isce3::core::LUT2d {
         inline void boundsError(bool flag) { _boundsError = flag; }
 
         // Evaluate LUT
-        T eval(double y, double x) const;
+        T eval(const double y, const double x) const;
 
         Eigen::Matrix<T, Eigen::Dynamic, 1>
         eval(double y, const Eigen::Ref<const Eigen::VectorXd>& x) const;

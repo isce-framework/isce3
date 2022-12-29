@@ -17,10 +17,10 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: to_be_populated_by_test_code
-       
+
         primary_executable:
             product_type: GSLC
-       
+
         debug_level_group:
             debug_switch: false
 
@@ -74,5 +74,6 @@ runconfig:
                 threshold: 1.0e-9
                 maxiter: 25
             blocksize:
-                y: 1000
+                x: @TEST_BLOCK_SZ_X@
+                y: @TEST_BLOCK_SZ_Y@
             flatten: True

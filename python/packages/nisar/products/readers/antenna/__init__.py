@@ -1,1 +1,1 @@
-from .antenna_parser import AntennaParser
+from .antenna_parser import AntennaParser, AntPatCut

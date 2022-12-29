@@ -75,6 +75,7 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::overload_cast<>(&RadarGridParameters::sensingStart, py::const_),
                 py::overload_cast<const double&>(&RadarGridParameters::sensingStart))
         .def_property_readonly("sensing_mid", &RadarGridParameters::sensingMid)
+        .def_property_readonly("sensing_stop", &RadarGridParameters::sensingStop)
         .def_property("ref_epoch",
                 py::overload_cast<>(&RadarGridParameters::refEpoch, py::const_),
                 py::overload_cast<const DateTime &>(&RadarGridParameters::refEpoch))

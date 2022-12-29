@@ -214,7 +214,7 @@ def get_offset_radar_grid(offset_cfg, radar_grid_slc, is_goff=False):
     return radar_grid
 
 
-def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
+def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, is_goff=False):
     ''' Write radar grid cube to HDF5
 
     Parameters
@@ -223,9 +223,6 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
         Dictionary containing run configuration
     freq : str
         Frequency in HDF5 to add cube to
-    radar_grid : isce3.product.radar_grid
-        Radar grid of current frequency of datasets other than offset and shadow
-        layover datasets
     orbit : isce3.core.orbit
         Orbit object of current SLC
     dst_h5: str
@@ -249,8 +246,10 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5):
         length=int(radar_grid_cubes_geogrid.length),
         epsg=radar_grid_cubes_geogrid.epsg)
 
-    cube_group_path = '/science/LSAR/GUNW/metadata/radarGrid'
+    product = 'GOFF' if is_goff else 'GUNW'
+    cube_group_path = f'/science/LSAR/{product}/metadata/radarGrid'
 
+    radar_grid = slc.getRadarGrid(freq)
     native_doppler = slc.getDopplerCentroid(frequency=freq)
     grid_zero_doppler = isce3.core.LUT2d()
     '''
@@ -294,7 +293,7 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     is_goff : bool
         Flag to geocode ROFF layers
     iono_sideband : bool
-        Flag to geocode ionosphere phase screen estimated from 
+        Flag to geocode ionosphere phase screen estimated from
         side-band
 
     Returns
@@ -561,7 +560,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5)
+            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, is_goff)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
@@ -602,6 +601,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     # Extract parameters from cfg dictionary
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
@@ -635,6 +635,12 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     grid_zero_doppler = isce3.core.LUT2d()
     dem_raster = isce3.io.Raster(dem_file)
 
+    # init geocode members
+    if ref_orbit is not None:
+        orbit = load_orbit_from_xml(ref_orbit)
+    else:
+        orbit = slc.getOrbit()
+
     with h5py.File(output_hdf5, "a", libver='latest', swmr=True) as dst_h5:
 
         get_ds_names = lambda ds_dict, desired: [
@@ -654,8 +660,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
             if not is_goff:
                 desired = ['coherence_magnitude', 'unwrapped_phase']
                 # Create radar grid geometry used by most datasets
-                rdr_geometry = isce3.container.RadarGeometry(radar_grid,
-                                                             slc.getOrbit(),
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
                 # Create geocode object other than offset and shadow layover datasets
@@ -722,8 +727,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                    slc.getRadarGrid(freq))
 
                 # Create radar grid geometry required by offset datasets
-                rdr_geometry = isce3.container.RadarGeometry(radar_grid,
-                                                             slc.getOrbit(),
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
                 geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
@@ -739,7 +743,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 # If needed create geocode object for shadow layover dataset
                 # Create radar grid geometry required by layover shadow
                 rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),
-                                                             slc.getOrbit(),
+                                                             orbit,
                                                              grid_zero_doppler)
 
                 '''
@@ -772,7 +776,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                    is_goff=True)
                 #  Create radar grid geometry required by offset datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
-                                                             slc.getOrbit(),
+                                                             orbit,
                                                              grid_zero_doppler)
 
                 geocode_obj = isce3.cuda.geocode.Geocode(geogrid,
@@ -791,7 +795,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5)
+            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5, is_goff)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")

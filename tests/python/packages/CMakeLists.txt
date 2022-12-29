@@ -5,12 +5,16 @@ isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/signal/point_target_info.py
 isce3/unwrap/snaphu.py
+nisar/antenna/beamformer.py
+nisar/mixed_mode/logic.py
+nisar/mixed_mode/processing.py
+nisar/products/readers/antenna_parser.py
 nisar/products/readers/attitude.py
+nisar/products/readers/instrument_parser.py
 nisar/products/readers/orbit.py
 nisar/products/readers/raw.py
 nisar/workflows/crossmul.py
 #nisar/workflows/el_null_range_from_raw_ant.py
-nisar/antenna/beamformer.py
 nisar/workflows/doppler_lut_from_raw.py
 nisar/workflows/focus.py
 nisar/workflows/gen_doppler_range_product.py
@@ -21,6 +25,7 @@ nisar/workflows/geocode_insar.py
 #nisar/workflows/gen_el_null_range_product.py
 nisar/workflows/gen_el_rising_edge_product.py
 nisar/workflows/gslc.py
+nisar/workflows/gslc_array.py
 nisar/workflows/insar.py
 nisar/workflows/filter_interferogram.py
 nisar/workflows/bandpass_insar.py
@@ -30,8 +35,6 @@ nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
 nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py
-nisar/workflows/antenna_parser.py
-nisar/antenna/beamformer.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/noise_estimator.py
 )

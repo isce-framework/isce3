@@ -34,6 +34,9 @@ void addbinding_geocodeslc(py::module & m)
             const bool,
             const AzRgFunc &,
             const AzRgFunc &,
+            const isce3::core::LUT2d<double> &,
+            const isce3::core::LUT2d<double> &,
+            const bool,
             const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("output_raster"),
         py::arg("input_raster"),
@@ -50,6 +53,9 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("flatten") = true,
         py::arg("azimuth_carrier") = AzRgFunc(),
         py::arg("range_carrier") = AzRgFunc(),
+        py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+        py::arg("srange_correction") = isce3::core::LUT2d<double>(),
+        py::arg("correct_srange_flatten") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
@@ -86,6 +92,12 @@ void addbinding_geocodeslc(py::module & m)
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
             Range carrier phase of the SLC data, in radians, as a function of azimuth and range
+        az_time_correction: LUT2d
+             geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+        srange_correction: LUT2d
+            geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+        correct_srange_flatten: bool
+            flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
         )");
@@ -103,6 +115,9 @@ void addbinding_geocodeslc(py::module & m)
             const bool,
             const AzRgFunc &,
             const AzRgFunc &,
+            const isce3::core::LUT2d<double> &,
+            const isce3::core::LUT2d<double> &,
+            const bool,
             const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("output_raster"),
         py::arg("input_raster"),
@@ -120,6 +135,9 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("flatten") = true,
         py::arg("azimuth_carrier") = AzRgFunc(),
         py::arg("range_carrier") = AzRgFunc(),
+        py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+        py::arg("srange_correction") = isce3::core::LUT2d<double>(),
+        py::arg("correct_srange_flatten") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
@@ -158,6 +176,12 @@ void addbinding_geocodeslc(py::module & m)
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
             Range carrier phase of the SLC data, in radians, as a function of azimuth and range
+        az_time_correction: LUT2d
+             geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+        srange_correction: LUT2d
+            geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+        correct_srange_flatten: bool
+            flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
         )");
@@ -176,6 +200,9 @@ void addbinding_geocodeslc(py::module & m)
             const bool,
             const AzRgFunc&,
             const AzRgFunc&,
+            const isce3::core::LUT2d<double> &,
+            const isce3::core::LUT2d<double> &,
+            const bool,
             const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_block"),
         py::arg("rdr_data_block"),
@@ -191,6 +218,9 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("flatten") = true,
         py::arg("az_carrier") = AzRgFunc(),
         py::arg("rg_carrier") = AzRgFunc(),
+        py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+        py::arg("srange_correction") = isce3::core::LUT2d<double>(),
+        py::arg("correct_srange_flatten") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
@@ -229,6 +259,12 @@ void addbinding_geocodeslc(py::module & m)
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
             Range carrier phase of the SLC data, in radians, as a function of azimuth and range
+        az_time_correction: LUT2d
+             geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+        srange_correction: LUT2d
+            geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+        correct_srange_flatten: bool
+            flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
         )");
@@ -248,6 +284,9 @@ void addbinding_geocodeslc(py::module & m)
             const bool,
             const AzRgFunc&,
             const AzRgFunc&,
+            const isce3::core::LUT2d<double> &,
+            const isce3::core::LUT2d<double> &,
+            const bool,
             const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_block"),
         py::arg("rdr_data_block"),
@@ -264,6 +303,9 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("flatten") = true,
         py::arg("az_carrier") = AzRgFunc(),
         py::arg("rg_carrier") = AzRgFunc(),
+        py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+        py::arg("srange_correction") = isce3::core::LUT2d<double>(),
+        py::arg("correct_srange_flatten") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
@@ -304,6 +346,12 @@ void addbinding_geocodeslc(py::module & m)
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
             Range carrier phase of the SLC data, in radians, as a function of azimuth and range
+        az_time_correction: LUT2d
+             geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
+        srange_correction: LUT2d
+            geo2rdr slant range additive correction, in meters, as a function of azimuth and range
+        correct_srange_flatten: bool
+            flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
         )");

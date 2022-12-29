@@ -154,6 +154,7 @@ runconfig:
                 maxiter: 25
 
             blocksize:
+                x: 1000
                 y: 1000
 
             flatten: True

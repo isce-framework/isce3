@@ -5,13 +5,12 @@ import os
 import h5py
 import pyre
 import journal
+import numpy as np
 from nisar.products.readers.Base import (Base,
-                                        get_hdf5_file_root_path)
+                                         get_hdf5_file_root_path)
 
 
-def open_product(filename: str,
-                 product_type: str = None,
-                 root_path: str = None):
+def open_product(filename: str, root_path: str = None):
     '''
     Open NISAR product (HDF5 file), instantianting an object
     of an existing product class (e.g. RSLC, RRSD), if
@@ -21,11 +20,9 @@ def open_product(filename: str,
     ----------
     filename : str
         HDF5 filename
-    product_type : str
-        Preliminary product type to check (e.g. RCOV) before default product type list
-    root_path : str
-        Preliminary root path to check (e.g., XSAR, PSAR) before default root
-        path list
+    root_path : str (optional)
+        Preliminary root path to check before default root
+        path list. This option is intended for non-standard products.
 
     Returns
     -------
@@ -35,11 +32,9 @@ def open_product(filename: str,
     '''
 
     if root_path is None:
-        root_path = get_hdf5_file_root_path(
-            filename, root_path = root_path)
-    product_type = get_hdf5_file_product_type(
-        filename, product_type = product_type,
-        root_path = root_path)
+        root_path = get_hdf5_file_root_path(filename, root_path = root_path)
+
+    product_type = get_hdf5_file_product_type(filename, root_path = root_path)
 
     # set keyword arguments for class constructors
     kwargs = {}
@@ -57,61 +52,50 @@ def open_product(filename: str,
         from nisar.products.readers.Raw import Raw
         return Raw(**kwargs)
 
+    elif (product_type in ['GCOV', 'GSLC', 'GUNW', 'GOFF']):
+        # return GenericL2Product obj
+        from nisar.products.readers.GenericProduct \
+            import GenericL2Product
+        kwargs['_ProductType'] = product_type
+        return GenericL2Product(**kwargs)
+
     kwargs['_ProductType'] = product_type
 
     # return ProductFactory obj
     return GenericProduct(**kwargs)
 
 
-def get_hdf5_file_product_type(filename,
-                               product_type = None,
-                               root_path = None):
+def get_hdf5_file_product_type(filename: str, root_path: str = None) -> str:
     '''
-    Return product type from HDF5 file. If a product type is
-    provided as a parameter and it exists, it will have precedence
-    over the product type from the HDF5 file
+    Return product type from NISAR product (HDF5 file).
 
     Parameters
     ----------
     filename : str
         HDF5 filename
-    product_type : str
-        Preliminary product type to check (e.g. RCOV) before default product type list
-    root_path : str
-        Preliminary root path to check (e.g., XSAR, PSAR) before default root
-        path list
+    root_path : str (optional)
+        Preliminary root path to check before default root
+        path list. This option is intended for non-standard NISAR products.
 
     Returns
     -------
     str
         Product type
     '''
-    # The product group name should be "RSLC" per the spec.
-    # However, early sample products used "SLC" instead.
-    # We maintain compatibility with both options.
-
-    error_channel = journal.error('get_hdf5_file_product_type')
-
     if root_path is None:
-        root_path = get_hdf5_file_root_path(
-            filename, root_path=root_path)
-    NISAR_PRODUCT_LIST = ['RRSD', 'RSLC', 'SLC', 'RIFG', 'RUNW',
-                          'GCOV', 'GSLC', 'GUNW']
+        root_path = get_hdf5_file_root_path(filename, root_path=root_path)
+
     with h5py.File(filename, 'r', libver='latest', swmr=True) as f:
-        g = f[root_path]
-        if product_type is not None and product_type in g:
-            return product_type
-        for product in NISAR_PRODUCT_LIST:
-            if product not in g:
-                continue
-            if product in ['SLC', 'RSLC']:
-                return 'RSLC'
-            return product
+        product_type_ds = f[root_path+'/identification/productType']
+        product_type = str(np.asarray(product_type_ds, dtype=str))
 
-    error_msg = ("HDF5 could not find NISAR product group"
-                 f" in file: {filename}")
+        # The product group name should be "RSLC" per the spec.
+        # However, early sample products used "SLC" instead.
+        # We maintain compatibility with both options.
 
-    error_channel.log(error_msg)
+        if product_type == 'SLC':
+            return 'RSLC'
+        return product_type
 
 
 class GenericProduct(Base, family='nisar.productreader.product'):
@@ -124,23 +108,15 @@ class GenericProduct(Base, family='nisar.productreader.product'):
         Constructor to initialize product with HDF5 file.
         '''
 
-        ###Read base product information like Identification
+        # Read base product information like Identification
         super().__init__(**kwds)
 
         # Set error channel
         self.error_channel = journal.error('GenericProduct')
 
         self.identification.productType = \
-            get_hdf5_file_product_type(
-                self.filename,
-                product_type = self.productType,
-                root_path = self.RootPath)
-
-        if (self.productValidationType != 'BASE' and
-                self.productValidationType != self.productType):
-            self.error_channel.log(
-                f'Expecting product {self.productValidationType}'
-                f' but {self.productType} found')
+            get_hdf5_file_product_type(self.filename,
+                                       root_path = self.RootPath)
 
         self.parsePolarizations()
 
@@ -176,3 +152,15 @@ class GenericProduct(Base, family='nisar.productreader.product'):
                     self.polarizations[freq] = [p.upper() for p in polList]
                 if flag_found_folder:
                     break
+
+    def getProductLevel(self):
+        '''
+        Returns the product level
+        '''
+        if self.productType in ['GCOV', 'GSLC', 'GUNW', 'GOFF']:
+            return "L2"
+        if self.productType in ['RSLC', 'RIFG', 'RUNW', 'ROFF']:
+            return "L1"
+        if self.productType in ['RRSD']:
+            return "L0B"
+        return "undefined"

@@ -100,6 +100,7 @@ geometry/Topo.h
 geometry/Topo.icc
 geometry/TopoLayers.h
 geometry/metadataCubes.h
+geogrid/getRadarGrid.h
 geogrid/relocateRaster.h
 image/forward.h
 image/ResampSlc.h
@@ -147,6 +148,7 @@ product/RadarGridParameters.h
 product/Serialization.h
 product/SubSwaths.h
 product/Swath.h
+product/Grid.h
 signal/Crossmul.h
 signal/Crossmul.icc
 signal/CrossMultiply.h

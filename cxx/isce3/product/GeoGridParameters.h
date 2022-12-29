@@ -84,6 +84,7 @@ public:
     /** Get epsg code for geocoded grid */
     CUDA_HOSTDEV constexpr int epsg() const { return _epsg; };
 
+
 protected:
     /** start X position for the geocoded grid */
     double _startX = 0.0;
@@ -164,4 +165,6 @@ bbox2GeoGridScaled(const isce3::product::RadarGridParameters& radar_grid,
                    const double margin = 0.0, const int points_per_edge = 11,
                    const double threshold = 1.0e-8, const int numiter = 15,
                    const double height_threshold = 100);
+
+
 }} // namespace isce3::product

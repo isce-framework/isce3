@@ -1,11 +1,41 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import h5py
-import collections as cl
 import numpy as np
+import re
+from dataclasses import dataclass
+import typing
 
 from isce3 import antenna as ant
+
+
+@dataclass(frozen=True)
+class AntPatCut:
+    """
+    Antenna pattern cut(s) information, either relative or absolute patterns,
+    in either elevation (EL) or azimuth (AZ) direction for single beam or
+    multiple-beam antenna system.
+
+    Attributes
+    ----------
+    cut_angle : float
+        AZ/EL angle in radians for EL/AZ cut(s).
+    angle : np.ndarray(float)
+        EL/AZ angles in radians common among all beams if multi-beam.
+    copol_pattern : np.ndarray(float or complex)
+        1-D or 2-D array of Co-pol EL/AZ complex or real amplutide pattern(s).
+        Unit is (V/m) for absolute pattern (electric fields) and
+        unitless otherwise.
+        In case of multi-beam, the array is 2-D with shape (beams, angles).
+    cxpol_pattern : np.ndarray(float or complex) or None, optional
+        1-D or 2-D array of X-pol EL/AZ complex or real amplutide pattern(s).
+        Unit is (V/m) for absolute pattern (electric fields) and
+        unitless otherwise.
+        In case of multi-beam, the array is 2-D with shape (beams, angles).
+
+    """
+    cut_angle: float
+    angle: np.ndarray
+    copol_pattern: np.ndarray
+    cxpol_pattern: typing.Optional[np.ndarray] = None
 
 
 class AntennaParser:
@@ -106,14 +136,33 @@ class AntennaParser:
     def frame(self):
         return ant.Frame(self._gridtype())
 
+    def beam_numbers(self, pol='H'):
+        """List of all RX beam numbers for a desired pol
+
+        Parameters
+        ----------
+        pol : str, default='H'
+            Polarization of the beam , either
+            `H` or `V'. It is case insensitive.
+
+        Returns
+        -------
+        list of int
+
+        """
+        pol = self._check_pol(pol)
+        re_pat = self._form_rx_regpat(pol)
+        return [int(re_pat.fullmatch(grp).group()[2:4]) for grp in
+                self._fid if re_pat.fullmatch(grp)]
+
     def num_beams(self, pol='H'):
         """Number of individual [RX] beams for each pol.
 
         Parameters
         ----------
-            pol : str, default='H' 
-                Polarization of the beam , either
-                `H` or `V'. It is case insensitive.
+        pol : str, default='H'
+            Polarization of the beam , either
+            `H` or `V'. It is case insensitive.
 
         Returns
         -------
@@ -129,6 +178,99 @@ class AntennaParser:
         pol = self._check_pol(pol)
         return len([rx for rx in self.rx_beams if 'DBF' not in
                     rx.upper() and pol in rx.upper()])
+
+    def locate_beams_peak(self, pol='H'):
+        """Get peak locations in EL direction for beams.
+
+        Use a 2nd-order polyfit around estimated peak to get the exact peak
+        locations in EL direction.
+
+        Returns
+        -------
+        np.ndarray(float)
+            EL angles of the peak in radians.
+        float
+            Common azimuth angle of EL-cut peaks in radians.
+
+        """
+        num_beams = self.num_beams(pol)
+        el_loc = np.zeros(num_beams, dtype='f8')
+        az_ang = 0.0
+        for beam in range(num_beams):
+            ant_el = self.el_cut(beam + 1, pol)
+            # get approximate peak power locaton first
+            pow_db = 20 * np.log10(abs(ant_el.copol_pattern))
+            idx_pk = pow_db.argmax()
+            # pick 5 points rather than 3, two extra just in case.
+            # perform second-order polyfit (gain in dB versus EL angle in rad)
+            # and then find the peak where the first derivative is zero.
+            el_slice = slice(max(idx_pk - 2, 0),
+                             min(idx_pk + 3, ant_el.angle.size))
+            pf_coef = np.polyfit(ant_el.angle[el_slice], pow_db[el_slice],
+                                 deg=2)
+            el_loc[beam] = - pf_coef[1] / (2 * pf_coef[0])
+            # get averaged azimuth angles among all EL-cut patterns
+            az_ang += ant_el.cut_angle
+        az_ang /= num_beams
+        return el_loc, az_ang
+
+    def locate_beams_overlap(self, pol='H'):
+        """Get overlap location of adjacent beams in EL direction.
+
+        The number of locations is equal to number of beams minus one.
+        In case of single beam, None will return.
+
+        These locations in EL direction are useful for single-tap DBF,
+        relative antenna pattern estimation, etc.
+
+        Parameters
+        ----------
+        pol : str, default='H'
+            Polarization of the beam , either `H` or `V'.
+            It is case insensitive.
+
+        Returns
+        -------
+        np.ndarray(float) or None
+            `N-1` EL angles in radians for N beam. In case of N=1,
+            None will be returned.
+        float, optional
+            Common azimuth angle of EL-cut peaks in radians. Only
+            returned if N>1.
+
+        Raises
+        ------
+        RuntimeError
+            If number of transition points is not equal the total beams
+            minus one.
+            If the transition points are not monotonically increasing
+
+        Notes
+        -----
+        No fitting is performed and thus the accuracy of the boundaries is
+        limited to within around half of EL angle resolution.
+
+        """
+        ant_el = self.el_cut_all(pol)
+        # check wether it is single beam or multiple beam
+        num_beams = ant_el.copol_pattern.shape[0]
+        if num_beams == 1:
+            return None
+        # multi beam
+        # find dominant beams per max absolute amplitude or power
+        idx_max = abs(ant_el.copol_pattern).argmax(axis=0)
+        idx_trans = np.where(np.diff(idx_max) == 1)[0]
+        if idx_trans.size != num_beams - 1:
+            raise RuntimeError(f'Expected {num_beams - 1} transition '
+                               'points but got {idx_trans.size}!')
+        if not np.all(sorted(set(idx_trans)) == idx_trans):
+            raise RuntimeError('Transition points are not monotonically '
+                               'increasing!')
+        # EL angle at transition point where two adjacent beams are
+        # equally dominant
+        ela_trans = 0.5 * (ant_el.angle[idx_trans] +
+                           ant_el.angle[idx_trans + 1])
+        return ela_trans, ant_el.cut_angle
 
     def el_cut(self, beam=1, pol='H'):
         """Parse an Elevation cut pattern from a `RX` beam.
@@ -147,16 +289,7 @@ class AntennaParser:
 
         Returns
         -------
-        cl.namedtuple
-            angle : np.ndarray (float or complex) 
-                Elevation angles in radians.
-            copol_pattern : np.ndarray (float or complex) 
-                Co-pol 1-D elevation pattern in V/m.
-            cxpol_pattern : np.ndarray (float or complex) 
-                Cross-pol 1-D elevation pattern in V/m. 
-                None if there no x-pol pattern!
-            cut_angle : float 
-                Azimuth angle in radians for obtaining elevation cut.
+        AntPatCut
 
         Raises
         ------
@@ -185,7 +318,7 @@ class AntennaParser:
 
         Returns
         -------
-        cl.namedtuple
+        AntPatCut
             angle : np.ndarray (float or complex) 
                 Azimuth angles in radians.
             copol_pattern : np.ndarray (float or complex) 
@@ -221,7 +354,7 @@ class AntennaParser:
 
         Returns
         -------
-        cl.namedtuple
+        AntPatCut
             angle : np.ndarray (float)
                 Uniformly-spaced elevation angles in radians.
             copol_pattern : np.ndarray (float or complex) 
@@ -243,7 +376,8 @@ class AntennaParser:
             1, pol, 'elevation', out_keys=("angle", "copol_pattern"))
         if num_beam > 1:
             beam_last = self._get_ang_cut(
-                num_beam, pol, 'elevation', out_keys=("angle",))
+                num_beam, pol, 'elevation', out_keys=("angle",
+                                                      "copol_pattern"))
         else:
             beam_last = beam_first
         num_ang = int(np.ceil((beam_last.angle[-1] - beam_first.angle[0]) / (
@@ -267,9 +401,12 @@ class AntennaParser:
             cut_ang_ave += beam.cut_angle
 
         out["cut_angle"] = cut_ang_ave / num_beam
-        return cl.namedtuple('el_cut', out)(*out.values())
+        return AntPatCut(**out)
 
     # Helper functions listed below this line
+    def _form_rx_regpat(self, pol: str) -> re.match:
+        """Form a regular expression pattern for RX."""
+        return re.compile(f'RX[0-9][0-9][{pol.upper()}]')
 
     def _check_pol(self, pol: str) -> str:
         """Check and get upper-case polarization type.
@@ -296,7 +433,7 @@ class AntennaParser:
     def _get_ang_cut(self, beam: int, pol: str, cut_name: str,
                      out_keys: tuple = ("angle", "copol_pattern",
                                         "cxpol_pattern"),
-                     ang_attr: str = "cut_angle") -> cl.namedtuple:
+                     ang_attr: str = "cut_angle") -> AntPatCut:
         """Get angle and co/cross 1-D patterns.
 
         """
@@ -313,7 +450,7 @@ class AntennaParser:
             out[key] = grp_cut.get(key)[()]
             if ang_attr and key == "angle":
                 out[ang_attr] = grp_cut[key].attrs.get(ang_attr)
-        return cl.namedtuple(cut_name+'_cut', out)(*out.values())
+        return AntPatCut(**out)
 
     def _gridtype(self) -> str:
         """Get spherical grid type.

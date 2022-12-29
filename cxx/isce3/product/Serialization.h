@@ -191,26 +191,28 @@ namespace isce3 {
             freqString.push_back(freq);
             isce3::io::IGroup fgroup = group.openGroup(freqString);
 
+            // Get X and Y coordinates spacing
+            double dx, dy;
+            isce3::io::loadFromH5(fgroup, "xCoordinateSpacing", dx);
+            grid.spacingX(dx);
+
+            isce3::io::loadFromH5(fgroup, "yCoordinateSpacing", dy);
+            grid.spacingY(dy);
+
             // Load X-coordinates
             std::valarray<double> x_array;
             isce3::io::loadFromH5(fgroup, "xCoordinates", x_array);
-            grid.startX(x_array[0]);
+            grid.startX(x_array[0] - 0.5 * dx);
             grid.width(x_array.size());
 
             // Load Y-coordinates
             std::valarray<double> y_array;
             isce3::io::loadFromH5(fgroup, "yCoordinates", y_array);
-            grid.startY(y_array[0]);
+            grid.startY(y_array[0] - 0.5 * dy);
             grid.length(y_array.size());
 
-            // Get X-coordinate spacing
+            // Read other parameters
             double value;
-            isce3::io::loadFromH5(fgroup, "xCoordinateSpacing", value);
-            grid.spacingX(value);
-
-            isce3::io::loadFromH5(fgroup, "yCoordinateSpacing", value);
-            grid.spacingY(value);
-
             isce3::io::loadFromH5(fgroup, "rangeBandwidth", value);
             grid.rangeBandwidth(value);
 
