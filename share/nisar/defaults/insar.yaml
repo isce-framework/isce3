@@ -445,6 +445,9 @@ runconfig:
                     filter_size_range: 9
                     filter_size_azimuth: 9
 
+            baseline:
+                mode: 'top_bottom'
+
             phase_unwrap:
                 # Path to HDF5 file or directory containing the input interferogram
                 # and coherence (normalized magnitude of complex correlation) rasters
