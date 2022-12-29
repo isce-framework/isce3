@@ -146,18 +146,21 @@ def test_add_baseline():
                 coordY2 = np.ones([1, 2, 2])*coordY
                 coordZ2 = np.ones([1, 2, 2])*coordZ
 
-                del h5_src[metadata_path_dict['coordX']]
+                if metadata_path_dict['coordX'] in h5_src:
+                    del h5_src[metadata_path_dict['coordX']]
                 h5_src.create_dataset(metadata_path_dict['coordX'],
                                     dtype=np.float32,
                                     shape=[1,2,2], data=coordX2)
 
-                del h5_src[metadata_path_dict['coordY']]
+                if metadata_path_dict['coordY'] in h5_src:
+                    del h5_src[metadata_path_dict['coordY']]
                 h5_src.create_dataset(metadata_path_dict['coordY'],
                                     dtype=np.float32,
                                     shape=[1,2,2], data= coordY2)
                 h5_src[metadata_path_dict['coordY']][:] = coordY2
 
-                del h5_src[metadata_path_dict['heights']]
+                if metadata_path_dict['heights'] in h5_src:
+                    del h5_src[metadata_path_dict['heights']]
                 h5_src.create_dataset(metadata_path_dict['heights'],
                                         dtype=np.float32,
                                         shape=[1])
