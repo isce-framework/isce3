@@ -169,6 +169,13 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if algorithm not in self.cfg['processing']['phase_unwrap']:
             self.cfg['processing']['phase_unwrap'][algorithm]={}
 
+        # Check baseline computation mode
+        mode_type = self.cfg['processing']['baseline']['mode']
+        if mode_type.lower() not in ['3d_full', 'top_bottom']:
+            err_str = f"{mode_type} not a valid baseline estimation mode"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
+
         iono_cfg = self.cfg['processing']['ionosphere_phase_correction']
 
         # If ionosphere phase correction is enabled, check defaults

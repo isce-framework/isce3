@@ -966,26 +966,23 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                          descr=descr, units=None, data=lay_cfg.get('cross_correlation_method'),
                                          long_name='cross correlation method')
         # Add perpendicular and parallel baseline
-        baseline_cubes_shape = None
+        # For radar/geogrid domain product, coordinateX/slantRange
+        # is chosen to determine the dimension of baseline
         if dst in ['RIFG', 'ROFF', 'RUNW']:
-            # For radar domain product, coordinateX is chosen 
-            # to determine the dimension of baseline
-            cube_ref_dataset = f'{grid_path}/coordinateX'
-            if cube_ref_dataset in dst_h5:
-                cube_row = dst_h5[cube_ref_dataset].shape[1]
-                cube_col = dst_h5[cube_ref_dataset].shape[2]
-                baseline_cubes_shape = [2, cube_row, cube_col]
+            cube_ref_dataset_name = 'coordinateX'
         else:
-            # For geogrid domain product, slantRange is chosen 
-            # to determine the dimension of baseline
-            cube_ref_dataset = f'{grid_path}/slantRange'
-            if cube_ref_dataset in dst_h5:
-                cube_row = dst_h5[cube_ref_dataset].shape[1]
-                cube_col = dst_h5[cube_ref_dataset].shape[2]
-                baseline_cubes_shape = [2, cube_row, cube_col]
+            cube_ref_dataset_name = 'slantRange'
+
+        baseline_cubes_shape = None
+        cube_ref_dataset = f'{grid_path}/{cube_ref_dataset_name}'
+        if cube_ref_dataset in dst_h5:
+            cube_row = dst_h5[cube_ref_dataset].shape[1]
+            cube_col = dst_h5[cube_ref_dataset].shape[2]
+            baseline_cubes_shape = [2, cube_row, cube_col]
+
         # if input data does not have mandatory metadata, 
         # baseline cannot be estimated, so does not create the baselines
-        if baseline_cubes_shape:
+        if baseline_cubes_shape is not None:
             descr = "Perpendicular component of the InSAR baseline"
             _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "perpendicularBaseline",
@@ -996,7 +993,6 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                             descr=descr.replace('Perpendicular', 'Parallel'),
                             units="meters",
                             long_name='parallel baseline')
-
 
 def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
                    get_min=False):

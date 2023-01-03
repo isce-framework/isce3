@@ -3,125 +3,106 @@ import os
 
 import h5py
 import iscetest
-import numpy as np
+import pytest
+import types
 from osgeo import gdal
+import numpy as np
 
-from nisar.workflows import h5_prep, insar
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.products.readers import SLC
 from nisar.workflows import baseline
 import isce3
 
-def test_compute_baseline():
+
+@pytest.fixture(scope='session')
+def unit_test_params():
+    '''
+    test parameters shared by all baseline tests
+    '''
+    # load h5 for doppler and orbit
+    params = types.SimpleNamespace()
+    test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
+    with open(test_yaml) as fh_test_yaml:
+        test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
+            replace('@TEST_OUTPUT@', 'RIFG.h5'). \
+            replace('@TEST_PRODUCT_TYPES@', 'RIFG'). \
+            replace('@TEST_RDR2GEO_FLAGS@', 'True')
+    # Create CLI input namespace with yaml text instead of filepath
+    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
+    # Initialize runconfig object
+    insar_runcfg = InsarRunConfig(args)
+    insar_runcfg.geocode_common_arg_load()
+    insar_runcfg.yaml_check()
+    cfg = insar_runcfg.cfg
+    refslc_path = cfg["input_file_group"]["reference_rslc_file_path"]
+    scratch_path = cfg['product_path_group']['scratch_path']
+    params.baseline_dir_path = f'{scratch_path}/baseline'
+    os.makedirs(params.baseline_dir_path, exist_ok=True)
+    params.ref_slc = SLC(hdf5file=refslc_path)
+    params.ellipsoid = isce3.core.Ellipsoid()
+    params.ref_orbit = params.ref_slc.getOrbit()
+    params.ref_radargrid = params.ref_slc.getRadarGrid()
+    # native-doppler
+    params.ref_doppler = params.ref_slc.getDopplerCentroid(frequency='A')
+    params.ref_doppler.bounds_error = False
+    params.geo2rdr_parameters = {'threshold': 1.0e-8,
+                                 'maxiter': 50,
+                                 'delta_range': 1.0e-8}
+    params.coord_x = -97.71044127296169
+    params.coord_y = 49.4759022631287
+    params.coord_z = 240
+    params.epsg = 4326
+    
+    return params
+
+
+def test_compute_baseline(unit_test_params):
     '''
     Check if compute_baseline runs without crashing and returns zero-baseline
     '''
 
-    # Load yaml file
-    test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
-    with open(test_yaml) as fh_test_yaml:
-        test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
-            replace('@TEST_OUTPUT@', 'RIFG.h5'). \
-            replace('@TEST_PRODUCT_TYPES@', 'RIFG'). \
-            replace('@TEST_RDR2GEO_FLAGS@', 'True')
+    grid_x = np.ones([2, 2]) * unit_test_params.coord_x
+    grid_y = np.ones([2, 2]) * unit_test_params.coord_y
+    grid_z = np.ones([2, 2]) * unit_test_params.coord_z
+    
+    coord_set = np.zeros([3, 2, 2])
+    coord_set[0, :, :] = grid_x
+    coord_set[1, :, :] = grid_y
+    coord_set[2, :, :] = grid_z
 
-    # Create CLI input namespace with yaml text instead of filepath
-    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
-
-    # Initialize runconfig object
-    insar_runcfg = InsarRunConfig(args)
-    insar_runcfg.geocode_common_arg_load()
-    insar_runcfg.yaml_check()
-    cfg = insar_runcfg.cfg
-    refslc_path = cfg["input_file_group"]["reference_rslc_file_path"]
-    scratch_path = cfg['product_path_group']['scratch_path']
-    baseline_dir_path = f'{scratch_path}/baseline'
-    os.makedirs(baseline_dir_path, exist_ok=True)
-    ref_slc = SLC(hdf5file=refslc_path)
-    ellipsoid = isce3.core.Ellipsoid()
-    ref_orbit = ref_slc.getOrbit()
-
-    ref_radargrid = ref_slc.getRadarGrid()
-
-    # native-doppler
-    ref_doppler = ref_slc.getDopplerCentroid(frequency='A')
-    ref_doppler.bounds_error = False
-
-    # proj = isce3.core.make_projection(4326)
-    geo2rdr_parameters = {'threshold': 1.0e-8,
-                          'maxiter': 50,
-                          'delta_range': 1.0e-8}
-    coordX = -97.71044127296169
-    coordY = 49.4759022631287
-    coordZ = 240
-
-    topovrt_path = baseline.write_xyz(baseline_dir_path,
-                             np.ones([2, 2])*coordX,
-                             np.ones([2, 2])*coordY,
-                             np.ones([2, 2])*coordZ)
+    ref_rngs = np.ones([2, 2]) * 13774.94775418
+    ref_azts = np.ones([2, 2]) * 172802.73308736
 
     parb, perb = baseline.compute_baseline(
-        baseline_dir_path,
-        topovrt_path,
-        ref_orbit,
-        ref_orbit,
-        ref_doppler,
-        ref_doppler,
-        ref_radargrid,
-        ref_radargrid,
-        ellipsoid,
-        4326,
-        geo2rdr_parameters,
-        use_gpu=False
-        )
+        ref_rngs,
+        ref_azts,
+        ref_rngs,
+        ref_azts,
+        coord_set,
+        unit_test_params.ref_orbit,
+        unit_test_params.ref_orbit,
+        unit_test_params.ref_doppler,
+        unit_test_params.ref_doppler,
+        unit_test_params.ref_radargrid,
+        unit_test_params.ref_radargrid,
+        unit_test_params.ellipsoid,
+        unit_test_params.epsg,
+        unit_test_params.geo2rdr_parameters,
+        use_gpu=False)
 
     assert np.nanmean(parb) < 1e-5
     assert np.nanmean(perb) < 1e-5
 
-def test_add_baseline():
+def test_add_baseline(unit_test_params):
     '''
     test the add_baseline without crushing and wrong values
     '''
-
-    # Load yaml file
-    test_yaml = os.path.join(iscetest.data, 'insar_test.yaml')
-    with open(test_yaml) as fh_test_yaml:
-        test_yaml = fh_test_yaml.read().replace('@ISCETEST@', iscetest.data). \
-            replace('@TEST_OUTPUT@', 'RIFG.h5'). \
-            replace('@TEST_PRODUCT_TYPES@', 'RIFG'). \
-            replace('@TEST_RDR2GEO_FLAGS@', 'True')
-
-    # Create CLI input namespace with yaml text instead of filepath
-    args = argparse.Namespace(run_config_path=test_yaml, log_file=False)
-
-    # Initialize runconfig object
-    insar_runcfg = InsarRunConfig(args)
-    insar_runcfg.geocode_common_arg_load()
-    insar_runcfg.yaml_check()
-    cfg = insar_runcfg.cfg
-    refslc_path = cfg["input_file_group"]["reference_rslc_file_path"]
-    scratch_path = cfg['product_path_group']['scratch_path']
-    baseline_dir_path = f'{scratch_path}/baseline'
-
-    ref_slc = SLC(hdf5file=refslc_path)
-    ellipsoid = isce3.core.Ellipsoid()
-    ref_orbit = ref_slc.getOrbit()
-
-    ref_radargrid = ref_slc.getRadarGrid()
-
-    # native-doppler
-    ref_doppler = ref_slc.getDopplerCentroid(frequency='A')
-    ref_doppler.bounds_error = False
-
-    proj = isce3.core.make_projection(4326)
-    geo2rdr_parameters = {'threshold': 1.0e-8,
-                          'maxiter': 50,
-                          'delta_range': 1.0e-8}
+    common_path = 'science/LSAR'
 
     output_paths = dict({'RIFG': 'RIFG.h5', 'RUNW': 'RUNW.h5', 'GUNW': 'GUNW.h5'})
     for dst in ['RIFG', 'GUNW']:
-        with h5py.File(output_paths[dst], 'a', libver='latest', swmr=True) as h5_src:
-            common_path = 'science/LSAR'
+        with h5py.File(output_paths[dst], 'a') as h5_src:
+            
             product_path = f'{common_path}/{dst}'
             if dst in ['RIFG']:
                 grid_path = f'{product_path}/metadata/geolocationGrid'
@@ -134,36 +115,32 @@ def test_add_baseline():
                     "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
                     "parallelBaseline": f"{grid_path}/parallelBaseline",
                     "epsg": f"{grid_path}/epsg",
-                    "baseline_dir": baseline_dir_path,
-                    "use_gpu": False
                     }
+
                 # winnipeg data does not have coordinate X and Y in metadata cube
                 # we need to create to compute the baseline
-                coordX = -97.71044127296169
-                coordY = 49.4759022631287
-                coordZ = 240
-                coordX2 = np.ones([1, 2, 2])*coordX
-                coordY2 = np.ones([1, 2, 2])*coordY
-                coordZ2 = np.ones([1, 2, 2])*coordZ
+                grid_x = np.ones([1, 2, 2]) * unit_test_params.coord_x
+                grid_y = np.ones([1, 2, 2]) * unit_test_params.coord_y
 
                 if metadata_path_dict['coordX'] in h5_src:
                     del h5_src[metadata_path_dict['coordX']]
                 h5_src.create_dataset(metadata_path_dict['coordX'],
                                     dtype=np.float32,
-                                    shape=[1,2,2], data=coordX2)
+                                    shape=[1,2,2], data=grid_x)
 
                 if metadata_path_dict['coordY'] in h5_src:
                     del h5_src[metadata_path_dict['coordY']]
                 h5_src.create_dataset(metadata_path_dict['coordY'],
                                     dtype=np.float32,
-                                    shape=[1,2,2], data= coordY2)
-                h5_src[metadata_path_dict['coordY']][:] = coordY2
+                                    shape=[1,2,2], data=grid_y)
+                h5_src[metadata_path_dict['coordY']][:] = grid_y
 
                 if metadata_path_dict['heights'] in h5_src:
                     del h5_src[metadata_path_dict['heights']]
                 h5_src.create_dataset(metadata_path_dict['heights'],
                                         dtype=np.float32,
-                                        shape=[1])
+                                        shape=[1], 
+                                        data=unit_test_params.coord_z)
 
                 if metadata_path_dict['epsg'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['epsg'],
@@ -188,19 +165,20 @@ def test_add_baseline():
                                         dtype=np.int,
                                         shape=[2])
 
-                target_proj = np.array([-97.71044127296169, 49.4759022631287, 240])
-                output_paths_rifg = {"RIFG": output_paths["RIFG"], "RUNW": output_paths["RUNW"]}
+                output_paths_rifg = {"RIFG": output_paths["RIFG"], 
+                                     "RUNW": output_paths["RUNW"]}
 
                 baseline.add_baseline(output_paths_rifg,
-                                ref_orbit,
-                                ref_orbit,
-                                ref_radargrid,
-                                ref_radargrid,
-                                ref_doppler,
-                                ref_doppler,
-                                ellipsoid,
+                                unit_test_params.ref_orbit,
+                                unit_test_params.ref_orbit,
+                                unit_test_params.ref_radargrid,
+                                unit_test_params.ref_radargrid,
+                                unit_test_params.ref_doppler,
+                                unit_test_params.ref_doppler,
                                 metadata_path_dict,
-                                geo2rdr_parameters,
+                                unit_test_params.geo2rdr_parameters,
+                                use_gpu=False,
+                                baseline_dir_path=unit_test_params.baseline_dir_path,
                                 baseline_mode='top_bottom')
 
                 validate_baseline(output_paths_rifg["RIFG"],
@@ -214,9 +192,6 @@ def test_add_baseline():
                 product_path = f'{common_path}/{dst}'
                 grid_path = f'{product_path}/metadata/geolocationGrid'
                 grid_path = grid_path.replace('geolocation', 'radar')
-                heights = f"{grid_path}/heightAboveEllipsoid"
-                coordX = f"{grid_path}/xCoordinates"
-                coordY = f"{grid_path}/yCoordinates"
                 cube_ref_dataset = f'{grid_path}/slantRange'
 
                 metadata_path_dict = {
@@ -228,34 +203,48 @@ def test_add_baseline():
                     "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
                     "parallelBaseline": f"{grid_path}/parallelBaseline",
                     "epsg": f"{grid_path}/epsg",
-                    "baseline_dir": baseline_dir_path,
-                    "use_gpu": False
                     }
-                if coordX not in h5_src:
-                    h5_src.create_dataset(coordX,
+
+                x_array = np.ones(2) * unit_test_params.coord_x
+                y_array = np.ones(2) * unit_test_params.coord_y
+                if metadata_path_dict['coordX'] not in h5_src:
+                    h5_src.create_dataset(metadata_path_dict['coordX'],
                                         dtype=np.float32,
-                                        shape=[1])
-                    h5_src.create_dataset(coordY,
+                                        shape=[2], 
+                                        data=x_array)
+                if metadata_path_dict['coordY'] not in h5_src:
+                    h5_src.create_dataset(metadata_path_dict['coordY'],
                                         dtype=np.float32,
-                                        shape=[1])
-                    h5_src.create_dataset(heights,
+                                        shape=[2], 
+                                        data=y_array)
+                if metadata_path_dict['heights'] not in h5_src:
+                    h5_src.create_dataset(metadata_path_dict['heights'],
                                         dtype=np.float32,
-                                        shape=[1])
-                    h5_src.create_dataset(cube_ref_dataset,
+                                        shape=[1],
+                                        data=unit_test_params.coord_z)
+                if metadata_path_dict['epsg'] not in h5_src:
+                    h5_src.create_dataset(metadata_path_dict['epsg'],
+                                        dtype=np.int,
+                                        data=4326)
+                if metadata_path_dict['slantRange'] not in h5_src:
+                    h5_src.create_dataset(metadata_path_dict['slantRange'],
                                         dtype=np.float32,
-                                        shape=[1])
+                                        shape=[1, 2, 2])
                 output_paths_gunw = {"GUNW": output_paths["GUNW"]}
 
                 baseline.add_baseline(output_paths_gunw,
-                                ref_orbit,
-                                ref_orbit,
-                                ref_radargrid,
-                                ref_radargrid,
-                                ref_doppler,
-                                ref_doppler,
-                                ellipsoid,
+                                unit_test_params.ref_orbit,
+                                unit_test_params.ref_orbit,
+                                unit_test_params.ref_radargrid,
+                                unit_test_params.ref_radargrid,
+                                unit_test_params.ref_doppler,
+                                unit_test_params.ref_doppler,
                                 metadata_path_dict,
-                                geo2rdr_parameters)
+                                unit_test_params.geo2rdr_parameters,
+                                use_gpu=False,
+                                baseline_dir_path=unit_test_params.baseline_dir_path,
+                                baseline_mode='top_bottom')
+
                 validate_baseline(output_paths_gunw["GUNW"],
                     perp_path=metadata_path_dict["perpendicularBaseline"],
                     par_path=metadata_path_dict["parallelBaseline"])
@@ -272,6 +261,6 @@ def validate_baseline(output_path, perp_path, par_path):
         assert np.nanmean(perp_base) < 1e-5
         assert np.nanmean(par_base) < 1e-5
 
-if __name__ == '__main__':
-    test_compute_baseline()
-    test_add_baseline()
+# if __name__ == '__main__':
+#     # test_compute_baseline()
+#     test_add_baseline()
