@@ -14,6 +14,7 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file:
+            water_mask_file:
             orbit:
                 reference_orbit_file:
                 secondary_orbit_file:
