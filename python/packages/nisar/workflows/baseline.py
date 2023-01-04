@@ -42,7 +42,8 @@ def read_geo2rdr(scratch):
 
 
 def write_xyz_data(data, output):
-    """Read geo2rdr products.
+    """Save x/y/z data for geo2rdr and produce
+    VRT file. 
 
     Parameters
     ----------
@@ -261,10 +262,20 @@ def compute_baseline(ref_rngs,
 
     Parameters
     ----------
-    baseline_dir_path: str
-        baseline directory for processing
-    topovrt_path: str
-        vrt file path for topo
+    ref_rngs : numpy.ndarray
+        2 dimensional range distance for reference 
+        acquisition with size [N, M]
+    ref_azts: numpy.ndarray
+        2 dimensional azimuth time for reference 
+        acquisition with size [N, M]
+    sec_rngs: numpy.ndarray
+        2 dimensional range distance for secondary 
+        acquisition with size [N, M]
+    sec_azts: numpy.ndarray
+        2 dimensional azimuth time for secondary 
+        acquisition with size [N, M]
+    coord_set: numpy.ndarray
+        set of 2 dimensional x/y/z with size [3, N, M]
     ref_orbit: isce3.core.Orbit
         orbit object for the reference acquisition
     sec_orbit: isce3.core.Orbit
@@ -279,6 +290,8 @@ def compute_baseline(ref_rngs,
         radarGridParameters object for the secondary acquisition
     ellipsoid: isce3.core.Ellipsoid
         an instance of the Ellipsoid class
+    epsg_code: int
+        epsg code for coord_set
     geo2rdr_parameters: dict
         A dictionary representing the parameters used in geo2rdr computation.
         The dictionary includes three keys: threshold, maxiter, delta_range
@@ -325,9 +338,6 @@ def compute_baseline(ref_rngs,
 
                 # compute the baseline
                 baseline = np.linalg.norm(sec_xyz - ref_xyz)
-
-                ref_rng = np.linalg.norm(target_xyz - ref_xyz)
-                sec_rng = np.linalg.norm(target_xyz - sec_xyz)
 
                 # compute the cosine of the angle between the baseline vector and the
                 # reference LOS vector (refernce sensor to target)
@@ -637,7 +647,7 @@ def run(cfg: dict, output_paths):
     cfg: dict
         a dictionary of the insar.py configuration workflow
     output_paths: dict
-        a dictionary conatining the the different InSAR product paths
+        a dictionary conatining the different InSAR product paths
         e.g.: output_paths={"RIFG": "/home/process/insar_rifg.h5",
                             "GUNW": "/home/process/insar_gunw.h5"}
 
