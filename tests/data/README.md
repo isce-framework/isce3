@@ -70,7 +70,7 @@ Note that these files may be stored in a separate location outside *isce3* repo.
   were dumped to NISAR XML format files in the `focus` subdirectory, which
   also contains a runconfig file for focus.py.  The target is located at
   longitude -54.579586258 deg, latitude 3.177088785 deg, height 0.0 m.  The
-  file was generated using REE v14.8.6 and ReeUtilPy v2.9.4.
+  file was generated using REE v14.8.6 and ReeUtilPy v2.11.1.
 
 - **REE_RSLC_out17.h5**
 
@@ -196,8 +196,8 @@ All the files are sitting under sub-directory *bf*.
 Short L0B dataset containing proper NISAR-like tx-chirp calibration data including 
 BYPASS CAL, LNA CAL and HPA CAL . The DBF tables are stored in a newly introduced 
 (on *09/18/2022*) instrument HDF5 file, while the DBF-related RD/WD/WL values
-are temporarily stored in a numpy binary file *RD_WD_WL.npy* for the sake of unit testing.
-The "ReeUtilPy" version for generating these datasets is *v2.9.5*.
+are stored in L0B product per new L0B spec (12/13/2022).
+The "ReeUtilPy" version for generating these datasets is *v2.10.2*.
 The respective REE RDF (config) file is *hrdf_ree_short.rdf* set up on *09/18/2022*. 
 
 - **REE_ANTPAT_CUTS_DATA.h5**
@@ -213,6 +213,8 @@ The respective REE RDF (config) file is *hrdf_ree_short.rdf* set up on *09/18/20
   It containes 5 noise-only range lines out of *176*. Total number of range bins is *6486*.
   BYPASS CAL and LNA CAL intervals are *40* and *80* pulses, respectively. 
   The first range line is BYPASS.
+  This product contains DBF-related RD/WD/WL arrays and proper def/value for
+  "diagnosticModeFlag" under "identification" group.
 
 - **REE_INSTRUMENT_TABLE.h5**
   

@@ -212,7 +212,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     {"boundingPolygon"," zeroDopplerStartTime", "zeroDopplerEndTime"}
     are populated with dummy values.
     """
-    ident.create_dataset('diagnosticModeFlag', data=numpy.string_("False"))
+    ident.create_dataset('diagnosticModeFlag', data=numpy.uint8(0))
     ident.create_dataset('isGeocoded', data=numpy.string_("False"))
     ident.create_dataset('listOfFrequencies', data=numpy.string_(["A"]))
     ident.create_dataset('lookDirection', data = numpy.string_("Right"))

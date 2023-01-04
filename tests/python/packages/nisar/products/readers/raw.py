@@ -23,6 +23,7 @@ def test_raw():
     attitude = raw.getAttitude()
     r = raw.getRanges(frequency=freq, tx=tx)
     t = raw.getPulseTimes(frequency=freq, tx=tx)
+    num_rgl = t[1].size
     side = raw.identification.lookDirection
     fc = raw.getCenterFrequency(frequency=freq, tx=tx)
     t, grid = raw.getRadarGrid(frequency=freq, tx=tx)
@@ -31,7 +32,10 @@ def test_raw():
     prf = raw.getNominalPRF(freq, tx)
     bandwidth = raw.getRangeBandwidth(freq, tx)
     caltone = raw.getCaltone(freq, pol)
-    
+    dm_flag = raw.identification.diagnosticModeFlag
+    rd, wd, wl = raw.getRdWdWl(freq, pol)
+    list_rx_trm = raw.getListOfRxTRMs(freq, pol)
+
     # Verify assumptions.
     npt.assert_equal(orbit.reference_epoch, attitude.reference_epoch)
     npt.assert_equal(side, "right")
@@ -40,7 +44,16 @@ def test_raw():
     npt.assert_equal(ds.ndim, 2)
     npt.assert_equal(ds.dtype, np.complex64)
     print(f'Datatype of raw dataset before decoding -> {ds.dtype_storage}')
-    
+    npt.assert_equal(dm_flag, 0,
+                     err_msg='Bad value for "diagnosticModeFlag"!')
+    print(f'Diagnostic Mode Name -> "{raw.identification.diagnosticModeName}"')
+    # check shape/size of RD/WD/WL
+    rd_shape = rd.shape
+    npt.assert_((rd_shape==wd.shape) and (rd_shape==wl.shape),
+                msg='Shape mismatch between RD, WD, and WL arrays')
+    npt.assert_equal(rd_shape, (num_rgl, list_rx_trm.size),
+                     err_msg='Wrong shape for RD/WD/WL!')
+
     # Check quaternion convention.
     # RCS frame has Y-axis nearly parallel to velocity (for small rotations).
     # In this case they should be exactly aligned since roll == pitch == 0.

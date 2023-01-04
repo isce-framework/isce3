@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import journal
+import numpy as np
+from numbers import Integral
+from warnings import warn
+
 
 class Identification(object):
     '''
@@ -17,9 +21,11 @@ class Identification(object):
         self.lookDirection = None
         self.orbitPassDirection = None
         self.zdStartTime = None
-        self.zdStopTime = None
+        self.zdEndTime = None
         self.boundingPolygon = None
         self.listOfFrequencies = None
+        self.diagnosticModeFlag = None
+        self.diagnosticModeName = None
 
         ###Information from mission planning
         self.isUrgentObservation = None
@@ -84,6 +90,56 @@ class Identification(object):
         self.listOfFrequencies = extractWithIterator(h5grp, 'listOfFrequencies',
                                       bytestring, self.context['error'],
                                       'List of frequencies could not be determined')
+
+        # Note that to avoid test failure for old-spec data products, the
+        # field is directly extracted and evaluated to see if it holds a
+        # proper value.
+        # If old spec with scalar string value, it shall be either of
+        # {"False", "True"}. "False" is for Science/DBF mode and "True is
+        # for Multi-channel/DM2. A warning will be issued if otherwise.
+        # This will avoid the unit test failure based on "winnipeg.h5".
+        # For other obsolete data types such as numpy.ndarray(bool)
+        # used in "envisat.h5", a warning will be issued to avoid test failure.
+        # If new spec, the integer scalar value shall be either of {0, 1, 2}.
+        # The final value will be an integer. In case of old/obsolete spec it
+        # will be always set to 0 value, that is "Science" mode.
+        self.diagnosticModeFlag = h5grp['diagnosticModeFlag'][()]
+
+        # check for either another old sepc or new spec
+        if isinstance(self.diagnosticModeFlag, Integral):
+            # new spec assumes uint8 with either values {0, 1, 2}
+            if self.diagnosticModeFlag not in range(3):
+                raise ValueError('"diagnosticModeFlag" of new spec shall be'
+                                 ' either of {0, 1, 2}!')
+        elif isinstance(self.diagnosticModeFlag, bytes):
+            # old spec assumes bytestring with either "True" or "False
+            self.diagnosticModeFlag = self.diagnosticModeFlag.decode()
+            # check str value and if it is Not "False", issue warning
+            if self.diagnosticModeFlag == 'False':
+                # assumes science/DBF mode
+                self.diagnosticModeFlag = np.uint8(0)
+            elif self.diagnosticModeFlag == 'True':
+                # assumes Multi-channel DM2
+                self.diagnosticModeFlag = np.uint8(2)
+            else:
+                # bad value, assumes science/DBF given it is not being used!
+                self.diagnosticModeFlag = np.uint8(0)
+                warn(
+                    '"diagnosticModeFlag" for old spec with scalar string shall'
+                    ' be either "False" or "True" rather than '
+                    f'"{self.diagnosticModeFlag}"')
+        else:
+            # simply issue warning for other unsupported data types
+            # and assume they are science mode.
+            warn('The datatype "diagnosticModeFlag" is not supported!'
+                 ' Either string (old spec) or integer (new spec) scalar!')
+            self.diagnosticModeFlag = np.uint8(0)
+
+        # provide a name for each flag as an extra attribute/info for clarity
+        self.diagnosticModeName = {0: 'Science/DBF',
+                                   1: 'Single-channel/DM1',
+                                   2: 'Multi-channel/DM2'
+                                   }.get(self.diagnosticModeFlag)
 
         ###Mission planning info to be added
         ###Processing type info to be added

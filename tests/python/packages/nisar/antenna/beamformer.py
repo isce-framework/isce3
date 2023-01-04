@@ -86,9 +86,6 @@ class TestElevationBeamformer:
     l0b_file = 'REE_L0B_ECHO_DATA.h5'
     ant_file = 'REE_ANTPAT_CUTS_DATA.h5'
     instrument_file = 'REE_INSTRUMENT_TABLE.h5'
-    # Note that DBF-related RD/WD/WL values are temporarily stored in the
-    # numpy binary file. Evetually, they need to be provided by L0B file!
-    rd_wd_wl_file = 'RD_WD_WL.npy'
 
     # common input parameters
     txrx_pol = 'HH'
@@ -132,12 +129,14 @@ class TestElevationBeamformer:
 
     # Parse DBF-related RD/WD/WL, time-to-angle(TA) and angle-to-coeffs(AC)
     # tables to be used only  Rx DBF pattern test cases
-    # Get DBF-related RD/WD/WL arrays for all RX channels from numpy file
-    # Eventually these values shall be parsed from L0B via Raw object!
-    # Sampling rate in (Hz) for range window parameters RD/WD/WL
+    # Get DBF-related RD/WD/WL arrays for all RX channels simply for
+    # the first range line.
+    _rd = _raw.getRD(freq_band, txrx_pol)[0]
+    _wd = _raw.getWD(freq_band, txrx_pol)[0]
+    _wl = _raw.getWL(freq_band, txrx_pol)[0]
+    # Sampling rate in (Hz) for range window parameters RD/WD/WL in NISAR case
     _fs_win = 240e6
-    _rd, _wd, _wl = np.load(
-        os.path.join(iscetest.data, sub_dir, rd_wd_wl_file))
+
     _ta_switch = _ins.get_time2angle(txrx_pol[1])
     _fs_ta = _ins.sampling_rate_ta(txrx_pol[1])
     _dbf_coef = _ins.get_angle2coef(txrx_pol[1])
