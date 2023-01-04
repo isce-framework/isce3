@@ -116,8 +116,8 @@ runconfig:
                     azimuth: 1024
             azcomp:
                 block_size:
-                    range: 128
-                    azimuth: 128
+                    range: 32768
+                    azimuth: 1024
                 azimuth_resolution: 6.0
                 kernel:
                     type: Knab

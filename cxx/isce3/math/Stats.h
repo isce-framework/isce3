@@ -5,37 +5,44 @@
 
 namespace isce3 { namespace math {
 
-/** Statistics struct (real valued)
+/** Statistics struct
+ *
+ * For complex T, min and max are complex but they are
+ * selected using the elements' magnitudes. The sample
+ * standard deviation is real-valued calculated using
+ * the elements' magnitudes.
 */
 template<class T>
 struct Stats {
+    /** Expected element type of input data. */
+    using type = T;
     using T_real = typename isce3::real<T>::type;
     T min = std::numeric_limits<T_real>::quiet_NaN();
     T max = std::numeric_limits<T_real>::quiet_NaN();
     T mean = 0;
 
-    double sample_stddev = 0;
     long long n_valid = 0;
-};
 
-/** Statistics struct (complex valued)
- * 
- * For complex T, min and max are complex but they are 
- * selected using the elements' magnitudes. The sample 
- * standard deviation is real-valued calculated using
- * the elements' magnitudes.
- * 
-*/
-template<class T>
-struct Stats<std::complex<T>> {
-    std::complex<T> min = std::complex(std::numeric_limits<T>::quiet_NaN(),
-                                       std::numeric_limits<T>::quiet_NaN());
-    std::complex<T> max = std::complex(std::numeric_limits<T>::quiet_NaN(),
-                                       std::numeric_limits<T>::quiet_NaN());
-    std::complex<T> mean = 0;
+    T_real sample_stddev() const;
 
-    double sample_stddev = 0;
-    long long n_valid = 0;
+    /** Update statistics with independent data using Chan's method */
+    void update(const Stats<T>& other);
+
+    /** Accumulate a data point using Welford's online algorithm. */
+    void update(const T& value);
+
+    /** Calculate stats of a new block of data using Welford's algorithm and
+     *  update current estimate with Chan's method. */
+    void update(const T* values, size_t size, size_t stride = 1);
+
+    /** Initialize stats from block of data. */
+    Stats(const T* values, size_t size, size_t stride = 1);
+
+    Stats() = default;
+
+private:
+    double real_valued_mean = 0;
+    double square_diff_sum = 0;
 };
 
 /** Statistics struct
@@ -46,18 +53,27 @@ struct Stats<std::complex<T>> {
 */
 template<class T>
 struct StatsRealImag {
-    using T_real = typename isce3::real<T>::type;
-    T_real min_real = std::numeric_limits<T_real>::quiet_NaN();
-    T_real max_real = std::numeric_limits<T_real>::quiet_NaN();
-    T_real mean_real = 0;
-    double sample_stddev_real = 0;
+    /** Expected element type of input data. */
+    using type = std::complex<T>;
 
-    T_real min_imag = std::numeric_limits<T_real>::quiet_NaN();
-    T_real max_imag = std::numeric_limits<T_real>::quiet_NaN();
-    T_real mean_imag = 0;
-    double sample_stddev_imag = 0;
-
+    Stats<T> real;
+    Stats<T> imag;
     long long n_valid = 0;
+
+    /** Update statistics with independent data using Chan's method */
+    void update(const StatsRealImag<T>& other);
+
+    /** Accumulate a data point using Welford's online algorithm. */
+    void update(const std::complex<T>& value);
+
+    /** Calculate stats of a new block of data using Welford's algorithm and
+     *  update current estimate with Chan's method. */
+    void update(const std::complex<T>* values, size_t size, size_t stride = 1);
+
+    /** Initialize from block of data. */
+    StatsRealImag(const std::complex<T>* values, size_t size, size_t stride = 1);
+
+    StatsRealImag() = default;
 };
 
 /** Compute raster statistics.
@@ -89,6 +105,5 @@ std::vector<isce3::math::StatsRealImag<T>> computeRasterStatsRealImag(
     isce3::io::Raster& input_raster, 
     isce3::core::MemoryModeBlocksY memory_mode = 
         isce3::core::MemoryModeBlocksY::AutoBlocksY);
-
 
 }}
