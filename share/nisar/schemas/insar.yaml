@@ -12,6 +12,7 @@ runconfig:
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
+            # water mask (1: water, 0: non-water)
             water_mask_file: str(required=False)
             orbit: include('external_orbit_options', required=False)
 
