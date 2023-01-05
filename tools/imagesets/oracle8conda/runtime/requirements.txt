@@ -9,6 +9,7 @@ matplotlib
 numpy
 pyre>=1.11.2
 python>=3.6
+pyaps3>=0.3
 ruamel.yaml
 scipy
 shapely
