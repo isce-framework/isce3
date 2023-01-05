@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
-import copy
-from datetime import datetime
 import h5py
 import journal
 import numpy as np
 import os
 from osgeo import gdal, osr
-import pathlib
-from scipy.interpolate import RegularGridInterpolator
 import time
 
 import pyaps3 as pa
 
-import RAiDER
-from RAiDER.llreader import BoundingBox
-from RAiDER.losreader import Zenith, Conventional, Raytracing
-from RAiDER.delay import tropo_delay as raider_tropo_delay
-
+import isce3
 from nisar.workflows import h5_prep
 from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -75,9 +67,9 @@ def transform_xy_to_latlon(epsg, x, y):
     return lat_datacube, lon_datacube, cube_extent
 
 
-def run(cfg: dict, gunw_hdf5: str):
+def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     '''
-    Compute the troposphere delay datacube and added to the  GUNW product
+    Compute the troposphere delay datacube
 
     Parameters
      ----------
@@ -88,12 +80,11 @@ def run(cfg: dict, gunw_hdf5: str):
 
     Returns
      -------
-       None
+     troposphere_delay_datacube: dict
+        troposphere delay datacube dictionary
     '''
 
-    # Create error and info channels
-    info_channel = journal.info("troposphere.run")
-    info_channel.log("starting insar_troposphere_delay computation")
+    error_channel = journal.error('troposphere.run')
 
     # Fetch the configurations
     tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
@@ -108,12 +99,14 @@ def run(cfg: dict, gunw_hdf5: str):
     tropo_delay_product = [product.lower()
                            for product in tropo_cfg['delay_product']]
 
-    t_all = time.time()
+    
+    # Troposphere delay datacube
+    troposphere_delay_datacube = dict()
 
     with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
 
         # Fetch the GUWN Incidence Angle Datacube
-        ia_cube = np.array(
+        inc_angle_cube = np.array(
             f['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'])
         xcoord_radar_grid = np.array(
             f['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'])
@@ -122,14 +115,14 @@ def run(cfg: dict, gunw_hdf5: str):
         height_radar_grid = np.array(
             f['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'])
 
-        expected_ia_cube_shape = (
+        expected_inc_angle_cube_shape = (
             height_radar_grid.shape[0], ycoord_radar_grid.shape[0], xcoord_radar_grid.shape[0])
 
         # EPSG code
         epsg = int(np.array(f['science/LSAR/GUNW/metadata/radarGrid/epsg']))
 
         # Wavelenth in meters
-        wavelength = 299792458.0 / \
+        wavelength = isce3.core.speed_of_light / \
             float(
                 np.array(f['/science/LSAR/GUNW/grids/frequencyA/centerFrequency']))
 
@@ -153,16 +146,16 @@ def run(cfg: dict, gunw_hdf5: str):
                 tropo_delay_datacube_list = []
                 for index, hgt in enumerate(height_radar_grid):
                     if tropo_delay_direction == 'zenith':
-                        inc_datacube = np.zeros(x_2d_radar.shape)
+                        inc_angle_datacube = np.zeros(x_2d_radar.shape)
                     else:
-                        inc_datacube = ia_cube[index, :, :]
+                        inc_angle_datacube = inc_angle_cube[index, :, :]
 
-                    dem_datacube = np.full(inc_datacube.shape, hgt)
+                    dem_datacube = np.full(inc_angle_datacube.shape, hgt)
 
                     # Delay for the reference image
                     ref_aps_estimator = pa.PyAPS(reference_weather_model_file,
                                                  dem=dem_datacube,
-                                                 inc=inc_datacube,
+                                                 inc=inc_angle_datacube,
                                                  lat=lat_datacube,
                                                  lon=lon_datacube,
                                                  grib=weather_model_type,
@@ -175,7 +168,7 @@ def run(cfg: dict, gunw_hdf5: str):
                     # Delay for the secondary image
                     second_aps_estimator = pa.PyAPS(secondary_weather_model_file,
                                                     dem=dem_datacube,
-                                                    inc=inc_datacube,
+                                                    inc=inc_angle_datacube,
                                                     lat=lat_datacube,
                                                     lon=lon_datacube,
                                                     grib=weather_model_type,
@@ -195,112 +188,78 @@ def run(cfg: dict, gunw_hdf5: str):
 
             # raider package
             else:
+                err_str = 'raider package is under development'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
 
-                # Acquisition time for reference and secondary images
-                acquisition_time_ref = str(np.array(
-                    f['science/LSAR/identification/referenceZeroDopplerStartTime']).astype(str))
-                acquisition_time_second = str(np.array(
-                    f['science/LSAR/identification/secondaryZeroDopplerStartTime']).astype(str))
 
-                datetime_reference = datetime.strptime(
-                    acquisition_time_ref, '%Y-%m-%dT%H:%M:%S')
-                dateimte_secondary = datetime.strptime(
-                    acquisition_time_second, '%Y-%m-%dT%H:%M:%S')
+            # Save to the dictionary in memory
+            tropo_delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_product}'
+            troposphere_delay_datacube[tropo_delay_product]  = tropo_delay_datacube
 
-                x_cube_spacing = (
-                    max(xcoord_radar_grid) - min(xcoord_radar_grid))/(len(xcoord_radar_grid)-1)
-                y_cube_spacing = (
-                    max(ycoord_radar_grid) - min(ycoord_radar_grid))/(len(ycoord_radar_grid)-1)
-
-                # Cube spacing using the minimum spacing
-                cube_spacing = min(x_cube_spacing, y_cube_spacing)
-
-                # AOI bounding box
-                min_lat = np.min(lat_datacube)
-                max_lat = np.max(lat_datacube)
-                min_lon = np.min(lon_datacube)
-                max_lon = np.max(lon_datacube)
-
-                aoi = BoundingBox([min_lat, max_lat, min_lon, max_lon])
-
-                # Default of line of sight is zenith
-                los = Zenith()
-
-                # Line of sight mapping direction
-                # TODO: The Conventional and Raytraying will be implemented soon
-                if tropo_delay_direction == 'line_of_sight_mapping':
-                    los = Conventional()
-                if tropo_delay_direction == 'line_of_sight_raytracing':
-                    los = Raytracing()
-
-                # Height levels
-                height_levels = list(height_radar_grid)
-
-                # Tropodelay computation
-                tropo_delay_reference, _ = raider_tropo_delay(dt=datetime_reference,
-                                                              weather_model_file=reference_weather_model_file,
-                                                              aoi=aoi,
-                                                              los=los,
-                                                              height_levels=height_levels,
-                                                              out_proj=epsg,
-                                                              cube_spacing_m=cube_spacing)
-
-                tropo_delay_secondary, _ = raider_tropo_delay(dt=dateimte_secondary,
-                                                              weather_model_file=secondary_weather_model_file,
-                                                              aoi=aoi,
-                                                              los=los,
-                                                              height_levels=height_levels,
-                                                              out_proj=epsg,
-                                                              cube_spacing_m=cube_spacing)
-
-                # Troposphere delay by raider package
-                if delay_product == 'comb':
-                    tropo_delay = tropo_delay_reference['wet'] + tropo_delay_reference['hydro'] - \
-                            tropo_delay_secondary['wet'] - tropo_delay_secondary['hydro']
-                else:
-                    tropo_delay = tropo_delay_reference[delay_product] - \
-                            tropo_delay_secondary[delay_product]
-
-                # Convert it to radians units
-                tropo_delay_datacube = tropo_delay*4.0*np.pi/wavelength
-
-                # Interpolate to radar grid to keep its dimension consistent with other datacubes
-                tropo_delay_interpolator = RegularGridInterpolator((tropo_delay_reference.z,
-                                                                    tropo_delay_reference.y,
-                                                                    tropo_delay_reference.x),
-                                                                   tropo_delay_datacube,
-                                                                   method='linear')
-
-                # Interoplate the troposhphere delay
-                tropo_delay_datacube_list = []
-                for index, hgt in enumerate(height_radar_grid):
-
-                    heights = np.full(len(xcoord_radar_grid)
-                                      * len(ycoord_radar_grid), hgt)
-
-                    pnts = np.stack(
-                        (heights, y_2d_radar.flatten(), x_2d_radar.flatten()), axis=-1)
-
-                    # Interpolate
-                    tropo_delay = tropo_delay_interpolator(
-                        pnts).reshape(x_2d_radar.shape)
-
-                    tropo_delay_datacube_list.append(tropo_delay)
-
-                # Stack together to create the troposphere delay datacube
-                tropo_delay_datacube = np.stack(tropo_delay_datacube_list)
-                tropo_delay_datacube_list = None
-
-            # Write to GUWN product
-            radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
-            radar_grid.create_dataset(f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_product}',
-                                      data=tropo_delay_datacube, dtype=np.float32, compression='gzip')
 
         f.close()
 
+    return troposphere_delay_datacube
+
+
+def write_to_GUNW_product(tropo_delay_datacube: dict, gunw_hdf5: str):
+    '''
+    Write the troposphere delay datacube to GUNW product
+
+    Parameters
+     ----------
+     tropo_delay_datacube: dict
+        troposphere delay datacube dictionary
+      gunw_hdf5: str
+         gunw hdf5 file
+ 
+    Returns
+     -------
+       None
+    '''
+    
+    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
+
+        for product in tropo_delay_datacube.keys():
+
+             radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
+             radar_grid.create_dataset(product,
+                                       data=tropo_delay_datacube[product],
+                                       dtype=np.float32,
+                                       compression='gzip')
+        f.close()
+
+def run(cfg: dict, gunw_hdf5: str):
+    '''
+    compute the troposphere delay and write to GUNW product
+
+    Parameters
+     ----------
+     cfg: dict
+        runconfig dictionary
+     gunw_hdf5: str
+        gunw hdf5 file
+
+    Returns
+     -------
+        None
+    '''
+
+    # Create error and info channels
+    info_channel = journal.info("troposphere.run")
+    info_channel.log("starting insar_troposphere_delay computation")
+
+    t_all = time.time()
+    
+    # Compute the troposphere delay datacube
+    tropo_delay_datacube = compute_troposphere_delay(cfg, gunw_hdf5)
+    
+    # Write to GUNW product
+    write_to_GUNW_product(tropo_delay_datacube, gunw_hdf5)
+
     t_all_elapsed = time.time() - t_all
-    info_channel.log(
-        f"successfully ran troposhere delay  in {t_all_elapsed:.3f} seconds")
+    info_channel.log(f"successfully ran troposphere delay  in {t_all_elapsed:.3f} seconds")
 
 
 if __name__ == "__main__":

@@ -33,14 +33,14 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
         sec_weather_model_file = dynamic_weather_model_cfg['secondary_file_path']
 
         if (ref_weather_model_file is None) or (not os.path.exists(ref_weather_model_file)):
-            err_str = 'reference weather model file cannot be None or found,\
-                    please specify the weather model'
+            err_str = 'reference weather model file cannot be None or not found,\
+                    please specify the reference weather model'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         if (sec_weather_model_file is None) or (not os.path.exists(sec_weather_model_file)):
-            err_str = 'secondary weather model file cannwot be None or found,\
-                    please specify the weather model'
+            err_str = 'secondary weather model file cannwot be None or not found,\
+                    please specify the secondary weather model'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
