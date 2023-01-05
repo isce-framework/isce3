@@ -503,6 +503,50 @@ def verify_uniform_pri(t: np.ndarray, atol=0.0, rtol=0.001):
     return np.allclose(dt, pri, atol=atol, rtol=rtol)
 
 
+class BackgroundWriter(isce3.io.BackgroundWriter):
+    """
+    Compute statistics and write RSLC data in a background thread.
+
+    Parameters
+    ----------
+    range_cor : np.ndarray
+        1D range correction to apply to data before writing, e.g., phasors that
+        shift the frequency to baseband.  Length should match number of columns
+        (range bins) in `dset`.
+    dset : h5py.Dataset
+        HDF5 dataset to write blocks to.  Shape should be 2D (azimuth, range).
+        Data type is complex32 (pairs of float16).
+    """
+    def __init__(self, range_cor, dset, **kw):
+        self.range_cor = range_cor
+        self.dset = dset
+        self.stats = isce3.math.StatsRealImagFloat32()
+        super().__init__(**kw)
+
+    def write(self, z, block):
+        """
+        Compute `range_cor * z` then write it to file and accumulate statistics.
+
+        Parameters
+        ----------
+        z : np.ndarray
+            An arbitrary 2D chunk of data to store in `dset`.
+        block : tuple[slice]
+            Pair of slices describing the (azimuth, range) selection of `dset`
+            where the chunk should be stored.
+        """
+        # scale and deramp
+        z *= self.range_cor[None, block[1]]
+        # accumulate stats
+        s = isce3.math.StatsRealImagFloat32(z)
+        amax = np.max(np.abs([s.real.max, s.real.min, s.imag.max, s.imag.min]))
+        log.debug(f"scaled max component = {amax}")
+        self.stats.update(s)
+        # convert to float16 and write to HDF5
+        zf = to_complex32(z)
+        self.dset.write_direct(zf, dest_sel=block)
+
+
 def resample(raw: np.ndarray, t: np.ndarray,
              grid: isce3.product.RadarGridParameters, swaths: np.ndarray,
              orbit: isce3.core.Orbit, doppler: isce3.core.LUT2d, L=12.0,
@@ -828,6 +872,7 @@ def focus(runconfig):
             continue
 
         deramp = get_range_deramp(ogrid[frequency])
+        writer = BackgroundWriter(scale * deramp, acdata)
 
         for i in range(0, ogrid[frequency].length, na):
             # h5py doesn't follow usual slice rules, raises exception
@@ -843,17 +888,17 @@ def focus(runconfig):
                 backproject(z, ogeom, rcfile.data, igeom, dem, fc, azres,
                             kernel, atmos, vars(cfg.processing.azcomp.rdr2geo),
                             vars(cfg.processing.azcomp.geo2rdr))
-                log.debug(f"max(abs(z)) = {np.max(np.abs(z))}")
-                z *= deramp[None, j:jmax]
-                zf = to_complex32(scale * z)
-                acdata.write_direct(zf, dest_sel=block)
+                writer.queue_write(z, block)
+
+        writer.notify_finished()
+        slc.write_stats(frequency, pol, writer.stats)
 
         # Raster/GDAL creates a .hdr file we have to clean up manually.
         hdr = fd.name.replace(".c8", ".hdr")
         if cfg.processing.delete_tempfiles:
             delete_safely(hdr)
 
-        slc.compute_stats(frequency, pol)
+    log.info("All done!")
 
 
 def configure_logging():

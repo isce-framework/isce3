@@ -285,9 +285,6 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
     int nvalid_x_conj_y = 0;
 
     isce3::math::Stats<std::complex<double>> stats;
-    std::complex<double> total = 0;
-    double total_real_valued = 0;
-    double total_square = 0;
 
     for (size_t line = 0; line < length; ++line) {
         for (size_t pixel = 0; pixel < width; ++pixel) {
@@ -326,18 +323,7 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
                 continue;
             }
 
-            stats.n_valid++;
-            if (isnan(std::abs(stats.min)) or
-                    std::abs(slc_x_conj_y_array[index]) < std::abs(stats.min)) {
-                stats.min = slc_x_conj_y_array[index];
-            }
-            if (isnan(std::abs(stats.max)) or
-                    std::abs(slc_x_conj_y_array[index]) > std::abs(stats.max)) {
-                stats.max = slc_x_conj_y_array[index];
-            }
-            total += slc_x_conj_y_array[index];
-            total_real_valued += std::abs(slc_x_conj_y_array[index]);
-            total_square += std::pow(std::abs(slc_x_conj_y_array[index]), 2);
+            stats.update(slc_x_conj_y_array[index]);
 
             if (isnan(norm_off_diag)) {
                 continue;
@@ -355,17 +341,6 @@ TEST(GeocodeTest, CheckGeocodeCovFullCovResults) {
 
         }
     }
-
-    stats.mean = total / static_cast<double>(stats.n_valid);
-    double mean_real_valued = total_real_valued / stats.n_valid;
-
-    double sample_stddev_factor = (
-        static_cast<double>(stats.n_valid)) /
-        (static_cast<double>(stats.n_valid - 1));
-
-    stats.sample_stddev = std::sqrt(sample_stddev_factor *
-                                    (total_square / stats.n_valid -
-                                     std::pow(mean_real_valued, 2)));
 
     double rmse_x = std::sqrt(square_sum_x / nvalid_x);
     double rmse_y = std::sqrt(square_sum_y / nvalid_y);
@@ -440,8 +415,6 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
         double square_sum_x = 0; // sum of square differences
         double square_sum_y = 0; // sum of square differences
 
-        double total_x = 0, total_y = 0;
-        double total_square_x = 0, total_square_y = 0;
         for (size_t line = 0; line < length; ++line) {
             for (size_t pixel = 0; pixel < width; ++pixel) {
                 size_t index = line * width + pixel;
@@ -449,15 +422,7 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
                     gridLon = x0 + pixel * dx;
                     errX = geoX[index] - gridLon;
                     square_sum_x += pow(errX, 2);
-                    stats_x.n_valid++;
-                    total_x += geoX[index];
-                    total_square_x += std::pow(geoX[index], 2);
-                    if (isnan(stats_x.min) or geoX[index] < stats_x.min) {
-                        stats_x.min = geoX[index];
-                    }
-                    if (isnan(stats_x.max) or geoX[index] > stats_x.max) {
-                        stats_x.max = geoX[index];
-                    }
+                    stats_x.update(geoX[index]);
                     if (std::abs(errX) > maxErrX) {
                         maxErrX = std::abs(errX);
                     }
@@ -466,35 +431,13 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
                     gridLat = y0 + line * dy;
                     errY = geoY[index] - gridLat;
                     square_sum_y += pow(errY, 2);
-                    stats_y.n_valid++;
-                    total_y += geoY[index];
-                    total_square_y += std::pow(geoY[index], 2);
-                    if (isnan(stats_y.min) or geoX[index] < stats_y.min) {
-                        stats_y.min = geoY[index];
-                    }
-                    if (isnan(stats_y.max) or geoX[index] > stats_y.max) {
-                        stats_y.max = geoY[index];
-                    }
+                    stats_y.update(geoY[index]);
                     if (std::abs(errY) > maxErrY) {
                         maxErrY = std::abs(errY);
                     }
                 }
             }
         }
-
-        stats_x.mean = total_x / stats_x.n_valid;
-        stats_y.mean = total_y / stats_y.n_valid;
-
-        double sample_stddev_factor = (
-            static_cast<double>(stats_x.n_valid)) /
-            (static_cast<double>(stats_x.n_valid - 1));
-
-        stats_x.sample_stddev = std::sqrt(sample_stddev_factor *
-                                          (total_square_x / stats_x.n_valid -
-                                           std::pow(stats_x.mean, 2)));
-        stats_y.sample_stddev = std::sqrt(sample_stddev_factor *
-                                          (total_square_y / stats_y.n_valid -
-                                           std::pow(stats_y.mean, 2)));
 
         double rmse_x = std::sqrt(square_sum_x / stats_x.n_valid);
         double rmse_y = std::sqrt(square_sum_y / stats_y.n_valid);
@@ -827,28 +770,28 @@ void checkStatsReal(isce3::math::Stats<T> computed_stats,
         std::cout << "min: " << isce3_stats.min << ", " << raster_min << std::endl;
         std::cout << "mean: " << isce3_stats.mean << ", " << raster_mean << std::endl;
         std::cout << "max: " << isce3_stats.max << ", " << raster_max << std::endl;
-        std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << raster_stddev << std::endl;
-        std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << raster_sample_stddev << std::endl;
+        std::cout << "sample_stddev: " << isce3_stats.sample_stddev() << ", " << raster_stddev << std::endl;
+        std::cout << "sample_stddev: " << isce3_stats.sample_stddev() << ", " << raster_sample_stddev << std::endl;
 
         std::cout << "=== real =====================" << std::endl;
         std::cout << "min: " << isce3_stats.min << ", " << computed_stats.min << std::endl;
         std::cout << "mean: " << isce3_stats.mean << ", " << computed_stats.mean << std::endl;
         std::cout << "max: " << isce3_stats.max << ", " << computed_stats.max << std::endl;
-        std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << computed_stats.sample_stddev << std::endl;
+        std::cout << "sample_stddev: " << isce3_stats.sample_stddev() << ", " << computed_stats.sample_stddev() << std::endl;
         std::cout << "n_valid: " << isce3_stats.n_valid << ", " << computed_stats.n_valid << std::endl;
 
         // Compare Stats struct values with GDAL metadata saved by GeocodeCov
         ASSERT_NEAR(isce3_stats.min, raster_min, 1.0e-15);
         ASSERT_NEAR(isce3_stats.mean, raster_mean, 1.0e-15);
         ASSERT_NEAR(isce3_stats.max, raster_max, 1.0e-15);
-        ASSERT_NEAR(isce3_stats.sample_stddev, raster_sample_stddev , 1.0e-15);
+        ASSERT_NEAR(isce3_stats.sample_stddev(), raster_sample_stddev, 1.0e-15);
 
         // Compare Stats struct values with unitest values
         ASSERT_NEAR(isce3_stats.min, computed_stats.min, 1.0e-7);
         ASSERT_NEAR(isce3_stats.mean, computed_stats.mean, 1.0e-7);
         ASSERT_NEAR(isce3_stats.max, computed_stats.max, 1.0e-7);
 
-        ASSERT_NEAR(isce3_stats.sample_stddev, computed_stats.sample_stddev, 1.0e-7);
+        ASSERT_NEAR(isce3_stats.sample_stddev(), computed_stats.sample_stddev(), 1.0e-7);
 
         ASSERT_EQ(isce3_stats.n_valid, computed_stats.n_valid);
 
@@ -867,7 +810,7 @@ void checkStatsComplex(isce3::math::Stats<T> computed_stats,
     std::cout << "min: " << isce3_stats.min << ", " << computed_stats.min << std::endl;
     std::cout << "mean: " << isce3_stats.mean << ", " << computed_stats.mean << std::endl;
     std::cout << "max: " << isce3_stats.max << ", " << computed_stats.max << std::endl;
-    std::cout << "sample_stddev: " << isce3_stats.sample_stddev << ", " << computed_stats.sample_stddev << std::endl;
+    std::cout << "sample_stddev: " << isce3_stats.sample_stddev() << ", " << computed_stats.sample_stddev() << std::endl;
     std::cout << "n_valid: " << isce3_stats.n_valid << ", " << computed_stats.n_valid << std::endl;
 
     // Compare Stats struct values with unitest values
@@ -875,9 +818,9 @@ void checkStatsComplex(isce3::math::Stats<T> computed_stats,
     ASSERT_LT(std::abs(isce3_stats.mean - computed_stats.mean), 1.0e-15);
     ASSERT_LT(std::abs(isce3_stats.max - computed_stats.max), 1.0e-15);
 
-    if (!isnan(computed_stats.sample_stddev)) {
-        ASSERT_LT(std::abs(isce3_stats.sample_stddev -
-                           computed_stats.sample_stddev), 1.0e-8);
+    if (!isnan(computed_stats.sample_stddev())) {
+        ASSERT_LT(std::abs(isce3_stats.sample_stddev() -
+                           computed_stats.sample_stddev()), 1.0e-8);
     }
 
     ASSERT_EQ(isce3_stats.n_valid, computed_stats.n_valid);

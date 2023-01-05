@@ -8,7 +8,7 @@ import numpy
 import os
 from warnings import warn
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
-from nisar.antenna.antenna_pattern import CalPath
+from nisar.antenna import CalPath
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.Raw.Raw import get_rcs2body
 from nisar.workflows.focus import make_doppler_lut
@@ -212,7 +212,7 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     {"boundingPolygon"," zeroDopplerStartTime", "zeroDopplerEndTime"}
     are populated with dummy values.
     """
-    ident.create_dataset('diagnosticModeFlag', data=numpy.string_("False"))
+    ident.create_dataset('diagnosticModeFlag', data=numpy.uint8(0))
     ident.create_dataset('isGeocoded', data=numpy.string_("False"))
     ident.create_dataset('listOfFrequencies', data=numpy.string_(["A"]))
     ident.create_dataset('lookDirection', data = numpy.string_("Right"))

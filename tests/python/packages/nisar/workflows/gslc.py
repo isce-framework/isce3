@@ -15,8 +15,10 @@ def test_run():
 
     # load text then substitude test directory paths since data dir is read only
     with open(test_yaml) as fh_test_yaml:
-        test_yaml = ''.join(
-                [line.replace('@ISCETEST@', iscetest.data) for line in fh_test_yaml])
+        test_yaml = fh_test_yaml.read(). \
+            replace('@ISCETEST@', iscetest.data). \
+            replace('@TEST_BLOCK_SZ_X@', '133'). \
+            replace('@TEST_BLOCK_SZ_Y@', '1000')
 
     # create CLI input namespace with yaml text instead of file path
     args = argparse.Namespace(run_config_path=test_yaml, log_file=False)

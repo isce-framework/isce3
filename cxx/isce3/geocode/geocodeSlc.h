@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <isce3/core/EMatrix.h>
 #include <isce3/core/forward.h>
+#include <isce3/core/LUT2d.h>
 #include <isce3/core/Poly2d.h>
 #include <isce3/io/forward.h>
 #include <isce3/product/forward.h>

@@ -11,8 +11,7 @@
 #include "detail/Geo2Rdr.h"
 
 //Declaration
-namespace isce3{
-    namespace geometry{
+namespace isce3{ namespace geometry{
 
 /* Light container defining the indices of a radar grid bounding box */
 struct RadarGridBoundingBox {
@@ -153,5 +152,4 @@ RadarGridBoundingBox getRadarBoundingBox(
         const isce3::geometry::detail::Geo2RdrParams& g2r_params = {},
         const int geogrid_expansion_threshold = 100);
 
-}
-}
+}} // namespace isce3::geometry

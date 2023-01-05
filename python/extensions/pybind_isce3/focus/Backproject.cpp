@@ -86,8 +86,11 @@ void addbinding_backproject(py::module& m)
                 g2rparams.delta_range = py::float_(geo2rdr_params["delta_range"]);
             }
 
-            backproject(out_data, out_geometry, in_data, in_geometry, dem, fc,
-                    ds, kernel, atm, r2gparams, g2rparams);
+            {
+                py::gil_scoped_release release;
+                backproject(out_data, out_geometry, in_data, in_geometry, dem,
+                    fc, ds, kernel, atm, r2gparams, g2rparams);
+            }
             },
             R"(
                 Focus in azimuth via time-domain backprojection.

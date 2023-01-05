@@ -431,7 +431,7 @@ def run(cfg):
             t_freq_elapsed = time.time() - t_freq
             info_channel.log(f'frequency {frequency} ran in {t_freq_elapsed:.3f} seconds')
 
-            if frequency.upper() == 'B':
+            if frequency.upper() == 'B' and 'A' in freq_pols:
                 continue
 
             cube_geogrid = isce3.product.GeoGridParameters(
@@ -558,17 +558,17 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         elif stats_real_imag_vector is not None:
 
             stats_obj = stats_real_imag_vector[band]
-            dset.attrs.create('min_real_value', data=stats_obj.min_real)
-            dset.attrs.create('mean_real_value', data=stats_obj.mean_real)
-            dset.attrs.create('max_real_value', data=stats_obj.max_real)
+            dset.attrs.create('min_real_value', data=stats_obj.real.min)
+            dset.attrs.create('mean_real_value', data=stats_obj.real.mean)
+            dset.attrs.create('max_real_value', data=stats_obj.real.max)
             dset.attrs.create('sample_standard_deviation_real',
-                              data=stats_obj.sample_stddev_real)
+                              data=stats_obj.real.sample_stddev)
 
-            dset.attrs.create('min_imag_value', data=stats_obj.min_imag)
-            dset.attrs.create('mean_imag_value', data=stats_obj.mean_imag)
-            dset.attrs.create('max_imag_value', data=stats_obj.max_imag)
+            dset.attrs.create('min_imag_value', data=stats_obj.imag.min)
+            dset.attrs.create('mean_imag_value', data=stats_obj.imag.mean)
+            dset.attrs.create('max_imag_value', data=stats_obj.imag.max)
             dset.attrs.create('sample_standard_deviation_imag',
-                              data=stats_obj.sample_stddev_imag)
+                              data=stats_obj.imag.sample_stddev)
 
         if valid_min is not None:
             dset.attrs.create('valid_min', data=valid_min)

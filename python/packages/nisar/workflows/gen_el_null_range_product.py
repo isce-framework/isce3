@@ -6,7 +6,6 @@ data which will be used for pointing analyses by D&C team
 import os
 import time
 import argparse as argp
-import numpy as np
 from datetime import datetime
 
 from nisar.products.readers.Raw import Raw
@@ -62,7 +61,7 @@ def cmd_line_parser():
                      'file. The attitude data will be used in place of those '
                      'in L0B. Default is attitude data stored in L0B.')
     prs.add_argument('-a', '--az_block_dur', type=float, dest='az_block_dur',
-                     default=2.0, help='Duration of azimuth block in seconds.'
+                     default=3.0, help='Duration of azimuth block in seconds.'
                      ' This value will be limited by total azimuth duration.'
                      ' The value must be equal or larger than the mean PRI.')
     prs.add_argument('-o', '--out', type=str, dest='out_path', default='.',
@@ -160,8 +159,10 @@ def gen_el_null_range_product(args):
 
     # naming convention of CSV file and product spec is defined in Doc:
     # See reference [1]
-    name_csv = (f'{prefix_name_csv}_{sar_band_char}_{op_mode}_NULL_'
-                f'{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv')
+    name_csv = (
+        f'{prefix_name_csv}_{sar_band_char}{args.freq_band}_{op_mode}_NULL_'
+        f'{txrx_pol}_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv'
+        )
     file_csv = os.path.join(args.out_path, name_csv)
     logger.info(
         f'Dump EL Null-Range product in "CSV" format to file ->\n {file_csv}')

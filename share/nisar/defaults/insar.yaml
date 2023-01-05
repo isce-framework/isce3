@@ -462,6 +462,11 @@ runconfig:
                     filter_size_range: 9
                     filter_size_azimuth: 9
 
+            baseline:
+                # 3D_full: compute baselines for all heights in metadata cube
+                # top_bottom: compute baselines for top and bottom heights
+                mode: 'top_bottom'
+
             phase_unwrap:
                 # Path to HDF5 file or directory containing the input interferogram
                 # and coherence (normalized magnitude of complex correlation) rasters

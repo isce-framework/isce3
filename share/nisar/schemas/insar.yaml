@@ -95,6 +95,8 @@ runconfig:
             # Phase unwrapping options (e.g. unwrapping algorithm)
             phase_unwrap: include('phase_unwrap_options', required=False)
 
+            # Baseline estimation options
+            baseline: include('baseline_options', required=False)
 
         # To setup type of worker
         worker: include('worker_options', required=False)
@@ -575,6 +577,11 @@ freq_pol_masks:
     HV: str(required=False)
     VH: str(required=False)
     VV: str(required=False)
+
+baseline_options:
+    # 3D_full: compute baselines for all heights in metadata cube
+    # top_bottom: compute baselines for top and bottom heights
+    mode: enum('3D_full', 'top_bottom', required=False)
 
 radar_grid_cubes_options:
 

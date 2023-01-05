@@ -89,9 +89,11 @@ void addbinding_cuda_backproject(py::module& m)
                 throw DomainError(ISCE_SRCINFO(), "batch size must be > 0");
             }
 
-            backproject(out_data, out_geometry, in_data, in_geometry, dem, fc,
-                        ds, kernel, atm, r2gparams, g2rparams, batch);
-
+            {
+                py::gil_scoped_release release;
+                backproject(out_data, out_geometry, in_data, in_geometry, dem,
+                    fc, ds, kernel, atm, r2gparams, g2rparams, batch);
+            }
             },
             R"(
                 Focus in azimuth via time-domain backprojection.

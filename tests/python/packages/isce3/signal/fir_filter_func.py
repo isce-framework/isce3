@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import iscetest
-from isce3.signal import cheby_equi_ripple_filter
-
+from isce3.signal import (cheby_equi_ripple_filter,
+    design_shaped_lowpass_filter, design_shaped_bandpass_filter)
 import numpy as np
 import numpy.testing as npt
 import bisect
+import scipy.signal as sig
+import pytest
 
 
 def est_centroid_spectrum(pow_spec, freq):
@@ -97,3 +99,117 @@ pass-band region')
                         err_msg='Wrong stop-band attenuation on the left')
     npt.assert_allclose(min_att_right, stopatt, rtol=rtol_stop,
                         err_msg='Wrong stop-band attenuation on the right')
+
+
+def db2amp(x):
+    return 10.0**(x / 20.0)
+
+
+def transition_region(bandwidth, transition_width):
+    "bounds of transition region straddle cutoff at width/2"
+    a = bandwidth * (1 - transition_width / 2) / 2
+    b = bandwidth * (1 + transition_width / 2) / 2
+    return a, b
+
+
+@pytest.mark.parametrize("width,tw,att,odd", [
+    (77/96, 0.20, 40, True),
+    (40/96, 0.20, 40, True),
+    (20/96, 0.20, 40, True),
+    ( 5/96, 0.20, 40, True),
+    (40/96, 0.20, 40, False),
+    (40/96, 0.10, 50, False),
+])
+def test_lowpass(width, tw, att, odd):
+    # design standard low pass filter
+    h = design_shaped_lowpass_filter(width, stopatt=att, transition_width=tw,
+                                     force_odd_len=odd)
+    if odd:
+        npt.assert_(len(h) % 2 == 1)
+    # compute frequency response
+    f, H = sig.freqz(h, fs=1.0)
+    # bounds of transition region
+    a, b = transition_region(width, tw)
+    # should have unit gain in passband with ripple < -att
+    atol = db2amp(-att)
+    mask_pass = abs(f) < a
+    npt.assert_allclose(np.abs(H[mask_pass]), 1.0, atol=atol)
+    # should have less than -att gain in stopband
+    mask_stop = abs(f) > b
+    npt.assert_allclose(np.abs(H[mask_stop]), 0.0, atol=atol)
+    # should have half amplitude at passband edges
+    npt.assert_allclose(np.interp(width/2, f, abs(H)), 0.5, atol=atol)
+
+
+def coswin(t, eta):
+    a = (1 + eta) / 2
+    b = (1 - eta) / 2
+    return a + b * np.cos(2 * np.pi * t)
+
+
+def kaiser(t, beta):
+    return np.i0(beta * np.sqrt(1 - 4*t**2)) / np.i0(beta)
+
+
+@pytest.mark.parametrize("width,window,window_fun", [
+    (40/96, ("cosine", 1.00), coswin),  # boxcar
+    (40/96, ("cosine", 0.70), coswin),  # NISAR performance model
+    (20/96, ("cosine", 0.70), coswin),
+    (40/96, ("cosine", 0.08), coswin),  # Hamming
+    (40/96, ("cosine", 0.00), coswin),  # Hann
+    (40/96, ("kaiser", 0.00), kaiser),  # boxcar
+    (40/96, ("kaiser", 1.60), kaiser),  # NISAR RSLC product spec
+    (20/96, ("kaiser", 1.60), kaiser),
+    (40/96, ("kaiser", 4.50), kaiser),
+])
+def test_lowpass_shape(width, window, window_fun):
+    tw = 0.2
+    odd = True
+    att = 40.0
+    atol = db2amp(-att)
+    # design filter with shaped passband
+    h = design_shaped_lowpass_filter(width, stopatt=att, transition_width=tw,
+                                     force_odd_len=odd, window=window)
+    f, H = sig.freqz(h, fs=1.0)
+    a, b = transition_region(width, tw)
+    # should have shape of window in passband
+    mask_pass = abs(f) < a
+    name, shape = window
+    expected = window_fun(f[mask_pass] / width, shape)
+    npt.assert_allclose(np.abs(H[mask_pass]), expected, atol=atol)
+    # should have less than -att gain in stopband
+    mask_stop = abs(f) > b
+    npt.assert_allclose(np.abs(H[mask_stop]), 0.0, atol=atol)
+
+
+def wrapped_distance(x, fs=1.0):
+    xm = x % fs
+    return np.where(xm > fs/2, fs - xm, xm)
+
+
+@pytest.mark.parametrize("width,fc", [
+    (40/96, (1239   - 1257.5) / 96),    # intersect L40 and L80
+    (20/96, (1229   - 1257.5) / 96),    # intersect L20 and L80
+    ( 5/96, (1221.5 - 1257.5) / 96),    # intersect L05 and L80
+    (20/48, (1229   - 1239  ) / 48),    # intersect L20 and L40
+    ( 5/48, (1221.5 - 1239  ) / 48),    # intersect L05 and L40
+    ( 5/24, (1221.5 - 1229  ) / 24),    # intersect L05 and L20
+    ( 5/96, (1293.5 - 1257.5) / 96),    # intersect AUX and L80
+])
+def test_bandpass(width, fc):
+    tw = 0.2
+    att = 40
+    odd = True
+    atol = db2amp(-att)
+    # design bandpass filter with unit passband
+    h = design_shaped_bandpass_filter(width, fc, stopatt=att,
+                                      transition_width=tw, force_odd_len=odd)
+    # compute frequency response over entire unit circle
+    f, H = sig.freqz(h, fs=1.0, whole=True)
+    a, b = transition_region(width, tw)
+    # should have unit gain in passband with ripple < -att
+    mask_pass = wrapped_distance(f - fc) < a
+    npt.assert_allclose(np.abs(H[mask_pass]), 1.0, atol=atol)
+    # should have less than -att gain in stopband
+    mask_stop = wrapped_distance(f - fc) > b
+    npt.assert_allclose(np.abs(H[mask_stop]), 0.0, atol=atol)

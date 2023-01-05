@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from functools import partial
 import os
 import numpy as np
 import numpy.testing as npt
@@ -94,26 +95,84 @@ def test_run():
                         err_msg="sample stddev values differ (imaginary part)")
 
     # compare first image ("real") with real part of the complex image
-    npt.assert_allclose(stats_real_obj.min, stats_real_imag_obj.min_real,
+    npt.assert_allclose(stats_real_obj.min, stats_real_imag_obj.real.min,
                         atol=atol, err_msg="min values differ (real part)")
-    npt.assert_allclose(stats_real_obj.mean, stats_real_imag_obj.mean_real,
+    npt.assert_allclose(stats_real_obj.mean, stats_real_imag_obj.real.mean,
                         atol=atol, err_msg="mean values differ (real part)")
-    npt.assert_allclose(stats_real_obj.max, stats_real_imag_obj.max_real,
+    npt.assert_allclose(stats_real_obj.max, stats_real_imag_obj.real.max,
                         atol=atol, err_msg="max values differ (real part)")
     npt.assert_allclose(stats_real_obj.sample_stddev, 
-                        stats_real_imag_obj.sample_stddev_real, atol=atol,
+                        stats_real_imag_obj.real.sample_stddev, atol=atol,
                         err_msg="sample stddev values differ (real part)")
 
     # compare first image ("imag") with imaginary part of the complex image
-    npt.assert_allclose(stats_imag_obj.min, stats_real_imag_obj.min_imag,
+    npt.assert_allclose(stats_imag_obj.min, stats_real_imag_obj.imag.min,
                         atol=atol, err_msg="min values differ (imaginary part)")
-    npt.assert_allclose(stats_imag_obj.mean, stats_real_imag_obj.mean_imag,
+    npt.assert_allclose(stats_imag_obj.mean, stats_real_imag_obj.imag.mean,
                         atol=atol, err_msg="mean values differ (imaginary part)")
-    npt.assert_allclose(stats_imag_obj.max, stats_real_imag_obj.max_imag,
+    npt.assert_allclose(stats_imag_obj.max, stats_real_imag_obj.imag.max,
                         atol=atol, err_msg="max values differ (imaginary part)")
     npt.assert_allclose(stats_imag_obj.sample_stddev,
-                        stats_real_imag_obj.sample_stddev_imag, atol=atol,
+                        stats_real_imag_obj.imag.sample_stddev, atol=atol,
                         err_msg="sample stddev values differ (imaginary part)")
+
+
+def test_array():
+    shape = (5, 3)
+    np.random.seed(0)
+    x = np.random.normal(size=shape).astype("f4")
+    y = np.random.normal(size=shape).astype("f4")
+    z = (x + 1j * y).astype("c8")
+
+    assert_allclose = partial(npt.assert_allclose, rtol=1e-6)
+
+    # ctor
+    s = isce3.math.StatsFloat32(x)
+    assert_allclose(s.mean, x.mean())
+    assert_allclose(s.min, x.min())
+    assert_allclose(s.max, x.max())
+    assert_allclose(s.sample_stddev, x.std(ddof=1))
+
+    # update with array
+    s2 = isce3.math.StatsFloat32()
+    s2.update(x)
+    assert_allclose(s2.min, s.min)
+    assert_allclose(s2.max, s.max)
+    assert_allclose(s2.mean, s.mean)
+    assert_allclose(s2.sample_stddev, s.sample_stddev)
+
+    # update with stats
+    s3 = isce3.math.StatsFloat32(x)
+    s3.update(s)
+    assert_allclose(s3.min, s.min)
+    assert_allclose(s3.max, s.max)
+    assert_allclose(s3.mean, s.mean)
+    # stddev differs because 2*n-1 != 2*(n-1)
+    npt.assert_(s3.n_valid == 2 * s.n_valid)
+
+    # real/imag
+    sri = isce3.math.StatsRealImagFloat32(z)
+    sri2 = isce3.math.StatsRealImagFloat32()
+    sri2.update(z)
+    sri2.update(sri)
+
+
+def test_strided_array():
+    np.random.seed(12345)
+    full = np.random.normal(size=(10, 10)).astype("float32")
+    even_rows = full[::2, :]
+    even_cols = full[:, ::2]
+
+    # Make sure test will trap wrong stride by checking that stdev of views
+    # are noticeably different from the stdev of the full array.
+    assert not np.isclose(full.std(ddof=1), even_rows.std(ddof=1))
+    assert not np.isclose(full.std(ddof=1), even_cols.std(ddof=1))
+
+    s = isce3.math.StatsFloat32(even_rows)
+    npt.assert_allclose(s.sample_stddev, even_rows.std(ddof=1))
+
+    s = isce3.math.StatsFloat32(even_cols)
+    npt.assert_allclose(s.sample_stddev, even_cols.std(ddof=1))
 
 
 if __name__ == "__main__":

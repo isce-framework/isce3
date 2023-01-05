@@ -5,7 +5,7 @@ import os
 from nisar.workflows.noise_estimator import extract_cal_lines, noise_est_avg, noise_est_evd
 
 def get_test_file():
-    raw_data_file = os.path.join(iscetest.data, "bf", "REE_L0B_ECHO_DATA.h5")
+    raw_data_file = os.path.join(iscetest.data, "bf", "REE_L0B_ECHO_DATA_NOISE_EST.h5")
 
     return raw_data_file
 

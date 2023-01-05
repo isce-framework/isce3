@@ -107,12 +107,20 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     else:
         input_hdf5 = cfg['input_file_group']['input_file_path']
 
+    rtc_algorithm = ''
     if dst == "GCOV":
         dem_interp_method = cfg['processing']['dem_interpolation_method']
-        geocode_algorithm = cfg['processing']['geocode']['algorithm_type']
+        geocoding_algorithm = cfg['processing']['geocode']['algorithm_type']
+        rtc_algorithm = cfg['processing']['rtc']['algorithm_type']
+    elif dst == "GSLC":
+        dem_interp_method = 'biquintic'
+        geocoding_algorithm = 'sinc'
+    elif dst == "GUNW":
+        dem_interp_method = 'biquintic'
+        geocoding_algorithm = cfg["processing"]["geocode"]["interp_method"]
     else:
-        dem_interp_method = None
-        geocode_algorithm = None
+        dem_interp_method = ''
+        geocoding_algorithm = ''
 
     # Remove existing HDF5 and start from scratch
     try:
@@ -205,15 +213,30 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
                             f'{dst_meta_path}/geolocationGrid',
                             excludes=['zeroDopplerTime', 'slantRange'],
                             attach_scales_list=[yds, xds])
-        if dst in ["GCOV", "GUNW"]:
-            algorithms_ds = (dst_meta_path +
-                             'processingInformation/algorithms/geocoding')
-            dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                   data=np.string_(geocode_algorithm))
-            algorithms_ds = (dst_meta_path +
-                            'processingInformation/algorithms/demInterpolation')
-            dst_h5.require_dataset(algorithms_ds, (), "S27",
-                                   data=np.string_(dem_interp_method))
+        if dst in ["GCOV", "GSLC", "GUNW"]:
+            # Geocoding algorithm
+            algorithms_ds = f'{dst_meta_path}/processingInformation/algorithms/geocoding'
+            dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
+                                   data=np.string_(geocoding_algorithm))
+            desc = "Geocoding algorithm"
+            dset.attrs["description"] = np.string_(desc)
+
+            # DEM interpolation method
+            algorithms_ds = \
+                f'{dst_meta_path}/processingInformation/algorithms/demInterpolation'
+            dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
+                                          data=np.string_(dem_interp_method))
+            desc = "DEM interpolation method"
+            dset.attrs["description"] = np.string_(desc)
+
+        if dst in ["GCOV"]:
+            # RTC algorithm
+            algorithms_ds = \
+                f'{dst_meta_path}/processingInformation/algorithms/radiometricTerrainCorrection'
+            dset = dst_h5.require_dataset(algorithms_ds, (), "S27",
+                                          data=np.string_(rtc_algorithm))
+            desc = "Radiometric terrain correction (RTC) algorithm"
+            dset.attrs["description"] = np.string_(desc)
 
         # copy processingInformation/inputs group
         cp_h5_meta_data(src_h5, dst_h5,
@@ -943,17 +966,33 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                          descr=descr, units=None, data=lay_cfg.get('cross_correlation_method'),
                                          long_name='cross correlation method')
         # Add perpendicular and parallel baseline
-        descr = "Perpendicular component of the InSAR baseline"
-        _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+        # For radar/geogrid domain product, coordinateX/slantRange
+        # is chosen to determine the dimension of baseline
+        if dst in ['RIFG', 'ROFF', 'RUNW']:
+            cube_ref_dataset_name = 'coordinateX'
+        else:
+            cube_ref_dataset_name = 'slantRange'
+
+        baseline_cubes_shape = None
+        cube_ref_dataset = f'{grid_path}/{cube_ref_dataset_name}'
+        if cube_ref_dataset in dst_h5:
+            cube_row = dst_h5[cube_ref_dataset].shape[1]
+            cube_col = dst_h5[cube_ref_dataset].shape[2]
+            baseline_cubes_shape = [2, cube_row, cube_col]
+
+        # if input data does not have mandatory metadata, 
+        # baseline cannot be estimated, so does not create the baselines
+        if baseline_cubes_shape is not None:
+            descr = "Perpendicular component of the InSAR baseline"
+            _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "perpendicularBaseline",
                             descr=descr, units="meters",
                             long_name='perpendicular baseline')
-        _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+            _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "parallelBaseline",
                             descr=descr.replace('Perpendicular', 'Parallel'),
                             units="meters",
                             long_name='parallel baseline')
-
 
 def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
                    get_min=False):
