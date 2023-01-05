@@ -446,6 +446,8 @@ runconfig:
                     filter_size_azimuth: 9
 
             baseline:
+                # 3D_full: compute baselines for all heights in metadata cube
+                # top_bottom: compute baselines for top and bottom heights
                 mode: 'top_bottom'
 
             phase_unwrap:

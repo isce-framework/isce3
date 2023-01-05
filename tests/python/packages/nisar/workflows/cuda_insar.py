@@ -40,6 +40,8 @@ def test_insar_run():
         out_paths = h5_prep.run(insar_runcfg.cfg)
 
         persist = Persistence('insar.log', restart=True)
+        # the baseline step is disabled because the winnipeg test dataset
+        # is missing some required metadata.
         persist.run_steps['baseline'] = False
 
         # run insar for prod_type

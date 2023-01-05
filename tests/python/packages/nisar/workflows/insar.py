@@ -44,6 +44,8 @@ def test_insar_run():
         persist.run_steps['dense_offsets'] = False
         persist.run_steps['rubbersheet'] = False
         persist.run_steps['fine_resample'] = False
+        # the baseline step is disabled because the winnipeg test dataset
+        # is missing some required metadata.
         persist.run_steps['baseline'] = False
 
         # run insar for prod_type

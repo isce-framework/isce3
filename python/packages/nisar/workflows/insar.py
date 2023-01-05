@@ -23,7 +23,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     if run_steps['bandpass_insar']:
         bandpass_insar.run(cfg)
-            
+
     if run_steps['h5_prep']:
         h5_prep.run(cfg)
 
@@ -79,10 +79,10 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     if run_steps['geocode'] and 'GOFF' in out_paths:
         geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], is_goff=True)
-    
+
     if run_steps['baseline']:
         baseline.run(cfg, out_paths)
-        
+
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran INSAR in {t_all_elapsed:.3f} seconds")
 

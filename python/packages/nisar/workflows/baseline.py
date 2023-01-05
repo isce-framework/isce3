@@ -27,9 +27,10 @@ def read_geo2rdr(scratch):
 
     Returns
     -------
-    off_arr: numpy.ndarray
-        off_arr[0] : range offset
-        off_arr[1] : azimuth offset
+    rg_off: numpy.ndarray
+        The range offsets.
+    az_off: numpy.ndarray
+        The azimuth offsets.
     """
     off_arr = [[]] * 2
     for i, off_type in enumerate(['range', 'azimuth']):
@@ -42,8 +43,7 @@ def read_geo2rdr(scratch):
 
 
 def write_xyz_data(data, output):
-    """Save x/y/z data for geo2rdr and produce
-    VRT file. 
+    """Save x/y/z data to ENVI format file.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ def write_xyz_data(data, output):
     output: str
         path for output file
     """
-    Gdal_type = gdal.GDT_Float32
+    gdal_type = gdal.GDT_Float32
     image_size = data.shape
 
     if len(image_size) == 3:
@@ -63,7 +63,7 @@ def write_xyz_data(data, output):
 
     # create the 3-band raster file
     dst_ds = gdal.GetDriverByName('ENVI').Create(
-                    output, nx, ny, nim, Gdal_type)
+                    output, nx, ny, nim, gdal_type)
     if nim == 1:
         dst_ds.GetRasterBand(1).WriteArray(np.squeeze(data))
     else:
@@ -71,8 +71,6 @@ def write_xyz_data(data, output):
             # write to disk
             dst_ds.GetRasterBand(im_ind+1).WriteArray(
                 np.squeeze(data[im_ind, :, :]))
-    dst_ds.FlushCache()
-    dst_ds = None
 
 
 def write_xyz(scratch_path,
@@ -80,8 +78,8 @@ def write_xyz(scratch_path,
               y_array,
               height_array,
               epsg_code):
-    """Compute slant range distance and azimuth time
-    from geo2rdr outputs.
+    """Save x/y/z data to raster files for geo2rdr
+    and produce VRT file.
 
     Parameters
     ----------
@@ -158,19 +156,20 @@ def _get_rgrid_dopp_orbit(slc_obj, orbit_path=None):
     '''
     Internal helper to get radargrid, doppler, and orbit
     from SLC object to avoid repeating code
+
     Parameters
     ----------
-    slc_obj: nisar.productreader.slc
-        SLC objet
-    orbit_path: str
-        orbit file path
-
+    slc_obj: nisar.products.readers.SLC
+        SLC object
+    orbit_path: str or None, optional
+        External orbit XML file path. If not provided, defaults to the
+        orbit data contained within the RSLC product.
     Returns
     -------
     radargrid: isce3.product.RadarGridParameters
-        A component of the baseline parallel to the los vector
-        from the reference sensor position to the target.
-    doppler: isce3.product.RadarGridParameters
+        radargrid of frequency A if frequency A exists
+        radargrid of frequency A if not
+    doppler: isce3.product.LUT2d
         doppler LUT2D
     orbit: isce3.core.Orbit
         orbit object
@@ -263,16 +262,16 @@ def compute_baseline(ref_rngs,
     Parameters
     ----------
     ref_rngs : numpy.ndarray
-        2 dimensional range distance for reference 
+        2 dimensional range distance for reference
         acquisition with size [N, M]
     ref_azts: numpy.ndarray
-        2 dimensional azimuth time for reference 
+        2 dimensional azimuth time for reference
         acquisition with size [N, M]
     sec_rngs: numpy.ndarray
-        2 dimensional range distance for secondary 
+        2 dimensional range distance for secondary
         acquisition with size [N, M]
     sec_azts: numpy.ndarray
-        2 dimensional azimuth time for secondary 
+        2 dimensional azimuth time for secondary
         acquisition with size [N, M]
     coord_set: numpy.ndarray
         set of 2 dimensional x/y/z with size [3, N, M]
@@ -384,6 +383,7 @@ def add_baseline(output_paths,
                  baseline_mode='top_bottom'):
     """Add perpendicular and parallel components of spatial baseline
     datasets to the metadata cubes of InSAR products.
+
     If the parallel and perpendicular baseline cubes are already present
     in the product, then they will be overwritten.
 
@@ -624,9 +624,9 @@ def copy_attr(src_ds, dst_ds):
 
     Parameters
     ----------
-    src_ds: dict
+    src_ds: h5py.Dataset
         HDF5 dataset for source
-    dst_ds: h5py.File
+    dst_ds: h5py.Dataset
         h5py file for target
     """
     dst_ds.attrs.create('min_value', src_ds.attrs['min_value'])
