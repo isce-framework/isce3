@@ -103,7 +103,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     # Troposphere delay datacube
     troposphere_delay_datacube = dict()
 
-    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
+    with h5py.File(gunw_hdf5, 'r', libver='latest', swmr=True) as f:
 
         # Fetch the GUWN Incidence Angle Datacube
         inc_angle_cube = np.array(
@@ -226,8 +226,7 @@ def write_to_GUNW_product(tropo_delay_datacube: dict, gunw_hdf5: str):
              radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
              radar_grid.create_dataset(product,
                                        data=tropo_delay_datacube[product],
-                                       dtype=np.float32,
-                                       compression='gzip')
+                                       dtype=np.float32)
         f.close()
 
 def run(cfg: dict, gunw_hdf5: str):
