@@ -144,25 +144,25 @@ def test_add_baseline(unit_test_params):
 
                 if metadata_path_dict['epsg'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['epsg'],
-                                        dtype=np.int,
+                                        dtype=np.int64,
                                         data=4326)
                 if metadata_path_dict['slantRange'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['slantRange'],
-                                        dtype=np.int,
+                                        dtype=np.float64,
                                         shape=[2])
                 if metadata_path_dict['azimuthTime'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['azimuthTime'],
-                                        dtype=np.int,
+                                        dtype=np.float64,
                                         shape=[2])
                 if h5_src[metadata_path_dict['azimuthTime']].shape[0] == 0:
                     del h5_src[metadata_path_dict['azimuthTime']]
                     h5_src.create_dataset(metadata_path_dict['azimuthTime'],
-                                        dtype=np.int,
+                                        dtype=np.float64,
                                         shape=[2])
                 if h5_src[metadata_path_dict['slantRange']].shape[0] == 0:
                     del h5_src[metadata_path_dict['slantRange']]
                     h5_src.create_dataset(metadata_path_dict['slantRange'],
-                                        dtype=np.int,
+                                        dtype=np.float64,
                                         shape=[2])
 
                 output_paths_rifg = {"RIFG": output_paths["RIFG"], 
@@ -224,7 +224,7 @@ def test_add_baseline(unit_test_params):
                                         data=unit_test_params.coord_z)
                 if metadata_path_dict['epsg'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['epsg'],
-                                        dtype=np.int,
+                                        dtype=np.int64,
                                         data=4326)
                 if metadata_path_dict['slantRange'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['slantRange'],
