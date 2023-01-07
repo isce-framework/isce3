@@ -12,6 +12,8 @@ runconfig:
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
+            # water mask (1: water, 0: non-water)
+            water_mask_file: str(required=False)
             orbit: include('external_orbit_options', required=False)
            
             # Troposphere weather model
@@ -36,7 +38,8 @@ runconfig:
             product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)
-            product_accuracy: enum('P','M','N','F','T', required=False)
+            product_accuracy: enum('P','M','N','F', required=False)
+            urgent_request_id: list(str(), required=False)
 
         debug_level_group:
             debug_switch: bool()
