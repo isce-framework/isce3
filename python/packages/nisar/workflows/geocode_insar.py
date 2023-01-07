@@ -336,9 +336,9 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
             elif iono_sideband and ds_name in ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']:
                 '''
-                ionosphere_phase_screens from main_side_band or
+                ionosphere_phase_screen from main_side_band or
                 main_diff_ms_band are computed on radargrid of frequencyB.
-                The ionosphere_phase_screens is geocoded on geogrid of
+                The ionosphere_phase_screen is geocoded on geogrid of
                 frequencyA.
                 '''
                 iono_src_freq_path = f"/science/LSAR/R{product}/swaths/frequencyB"
@@ -425,6 +425,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
         cfg["processing"]["geocode"]["gunw_datasets"]
     iono_args = cfg['processing']['ionosphere_phase_correction']
+    iono_enabled = iono_args['enabled']
     iono_method = iono_args['spectral_diversity']
     is_iono_method_sideband = iono_method in ['main_side_band',
                                               'main_diff_ms_band']
@@ -484,31 +485,33 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster)
+                if iono_enabled:
 
-                desired = ['ionosphere_phase_screen',
-                           'ionosphere_phase_screen_uncertainty']
-                if is_iono_method_sideband and freq == 'B':
-                    '''
-                    ionosphere_phase_screens from main_side_band or
-                    main_diff_ms_band are computed on radargrid of frequencyB.
-                    The ionosphere_phase_screens is geocoded on geogrid of
-                    frequencyA.
-                    '''
-                    geo_grid = geogrids['A']
-                    geocode_obj.geogrid(geo_grid.start_x, geo_grid.start_y,
-                                geo_grid.spacing_x, geo_grid.spacing_y,
-                                geo_grid.width, geo_grid.length,
-                                geo_grid.epsg)
-                    cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                        freq, pol_list, input_hdf5, dst_h5,
-                                        radar_grid, dem_raster,
-                                        iono_sideband=True)
+                    desired = ['ionosphere_phase_screen',
+                            'ionosphere_phase_screen_uncertainty']
+                    if is_iono_method_sideband and freq == 'A':
+                        '''
+                        ionosphere_phase_screen from main_side_band or
+                        main_diff_ms_band are computed on radargrid of frequencyB.
+                        The ionosphere_phase_screen is geocoded on geogrid of
+                        frequencyA.
+                        '''
+                        radar_grid_iono = slc.getRadarGrid('B')
+                        iono_sideband_bool = True
+                        if az_looks > 1 or rg_looks > 1:
+                            radar_grid_iono = radar_grid_iono.multilook(
+                                az_looks, rg_looks)
 
-                if not is_iono_method_sideband:
-                    cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                        freq, pol_list, input_hdf5, dst_h5,
-                                        radar_grid, dem_raster,
-                                        iono_sideband=False)
+                    if not is_iono_method_sideband:
+                        radar_grid_iono = radar_grid
+                        iono_sideband_bool = False
+
+                    if (not is_iono_method_sideband) or \
+                       (is_iono_method_sideband and freq == 'A'):
+                        cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
+                                            freq, pol_list, input_hdf5, dst_h5,
+                                            radar_grid_iono, dem_raster,
+                                            iono_sideband=iono_sideband_bool)
 
                 # reset geocode_obj geogrid
                 if is_iono_method_sideband and freq == 'B':
@@ -614,6 +617,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
         cfg["processing"]["geocode"]["gunw_datasets"]
     iono_args = cfg['processing']['ionosphere_phase_correction']
+    iono_enabled = iono_args['enabled']
     iono_method = iono_args['spectral_diversity']
     is_iono_method_sideband = iono_method in ['main_side_band',
                                               'main_diff_ms_band']
@@ -673,34 +677,58 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_obj)
 
-                desired = ['ionosphere_phase_screen',
-                           'ionosphere_phase_screen_uncertainty']
-                if not is_iono_method_sideband or \
-                        (is_iono_method_sideband and freq == 'B'):
-                    '''
-                    ionosphere_phase_screens from main_side_band or
-                    main_diff_ms_band are computed on radargrid of frequencyB.
-                    The ionosphere_phase_screens is geocoded on geogrid of
-                    frequencyA.
-                    '''
-                    if (is_iono_method_sideband and freq == 'B'):
-                        geogrid_iono = geogrids['A']
-                        iono_sideband_bool = True
+                if iono_enabled:
+                    desired = ['ionosphere_phase_screen',
+                            'ionosphere_phase_screen_uncertainty']
+                    geocode_iono_bool = True
+
+                    if is_iono_method_sideband:
+                        '''
+                        ionosphere_phase_screen from main_side_band or
+                        main_diff_ms_band are computed on radargrid of frequencyB.
+                        The ionosphere_phase_screen is geocoded on geogrid of
+                        frequencyA.
+                        '''
+                        if freq == 'A':
+                            radar_grid_iono = slc.getRadarGrid('B')
+                            if az_looks > 1 or rg_looks > 1:
+                                radar_grid_iono = radar_grid_iono.multilook(
+                                    az_looks, rg_looks)
+                            iono_sideband_bool = True
+                            iono_freq = 'B'
+                            rdr_geometry_iono = \
+                                isce3.container.RadarGeometry(radar_grid_iono,
+                                                            slc.getOrbit(),
+                                                            grid_zero_doppler)
+                        else:
+                            '''
+                            The method using sideband produces only one
+                            ionosphere from frequency A and B interferogram.
+                            The ionosphere layer does not exist in freq B.
+                            '''
+                            geocode_iono_bool = False
                     else:
-                        geogrid_iono = geogrid
+                        '''
+                        The method using split_main_band produces 
+                        can have two ionosphere layers in A and B.
+                        '''
                         iono_sideband_bool = False
+                        iono_freq = freq
+                        rdr_geometry_iono = rdr_geometry
 
-                    geocode_iono_obj = \
-                        isce3.cuda.geocode.Geocode(geogrid_iono,
-                                                   rdr_geometry,
-                                                   dem_raster,
-                                                   lines_per_block,
-                                                   interp_method,
-                                                   invalid_value=np.nan)
+                    if geocode_iono_bool:
+                        geocode_iono_obj = \
+                            isce3.cuda.geocode.Geocode(geogrid,
+                                                    rdr_geometry_iono,
+                                                    dem_raster,
+                                                    lines_per_block,
+                                                    interp_method,
+                                                    invalid_value=np.nan)
 
-                    gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                        input_hdf5, dst_h5, geocode_iono_obj,
-                                        iono_sideband=iono_sideband_bool)
+                        gpu_geocode_rasters(geo_datasets, desired,
+                                            iono_freq, pol_list, input_hdf5,
+                                            dst_h5, geocode_iono_obj,
+                                            iono_sideband=iono_sideband_bool)
 
                 desired = ["connected_components"]
                 '''

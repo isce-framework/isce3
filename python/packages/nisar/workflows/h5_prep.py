@@ -471,6 +471,14 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     common_path = 'science/LSAR'
     freq_pols = cfg['input_subset']['list_of_frequencies']
     geogrids =cfg['geocode']['geogrids']
+    iono_args = cfg['ionosphere_phase_correction']
+    iono_method = iono_args['spectral_diversity']
+    iono_method_sideband = ['main_side_band', 'main_diff_ms_band']
+
+    if iono_method in iono_method_sideband:
+        is_iono_method_sideband = True
+    else:
+        is_iono_method_sideband = False
 
     # Create list of frequencies
     id_group = dst_h5[f'{common_path}/identification']
@@ -776,19 +784,30 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                       'connectedComponents', descr=descr, units=" ",
                                       grids=grids_val,
                                       long_name='connected components')
-                      descr = "Ionosphere phase screen"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
-                                      'ionospherePhaseScreen', chunks=(128, 128),
-                                      descr=descr, units="radians",
-                                      grids=grids_val,
-                                      long_name='ionosphere phase screen')
-                      descr = "Uncertainty of split spectrum ionosphere phase screen"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
-                                      'ionospherePhaseScreenUncertainty',
-                                      chunks=(128, 128),
-                                      descr=descr, units="radians",
-                                      grids=grids_val,
-                                      long_name='ionosphere phase screen uncertainty')
+                      # Do not create ionosphere in frequency A
+                      # if side-band method is enabled
+                      if is_iono_method_sideband and freq == 'A' and dst == 'RUNW':
+                          pass
+                      else:
+                          descr = "Split spectrum Ionosphere phase screen"
+                          _create_datasets(dst_h5[pol_path], 
+                                           igram_shape, np.float32,
+                                           'ionospherePhaseScreen', 
+                                            chunks=(128, 128),
+                                            descr=descr, units="radians",
+                                            grids=grids_val,
+                                            long_name='ionosphere \
+                                            phase screen')
+
+                          descr = "Uncertainty of split spectrum ionosphere phase screen"
+                          _create_datasets(
+                                    dst_h5[pol_path], igram_shape, np.float32,
+                                    'ionospherePhaseScreenUncertainty',
+                                    chunks=(128, 128),
+                                    descr=descr, units="radians",
+                                    grids=grids_val,
+                                    long_name='ionosphere phase screen uncertainty')
+
             # Allocate datasets in metadata
             cal_path = f'{product_path}/metadata/calibrationInformation'
             proc_path = f'{product_path}/metadata/processingInformation/parameters'
