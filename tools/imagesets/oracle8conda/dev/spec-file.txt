@@ -142,7 +142,6 @@ https://conda.anaconda.org/conda-forge/linux-64/xcb-util-keysyms-0.4.0-h166bdaf_
 https://conda.anaconda.org/conda-forge/linux-64/xcb-util-renderutil-0.3.9-h166bdaf_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/xcb-util-wm-0.4.1-h166bdaf_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/xorg-libx11-1.7.2-h7f98852_0.tar.bz2
-https://conda.anaconda.org/conda-forge/noarch/appdirs-1.4.4-pyh9f0ad1d_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/attrs-22.2.0-pyh71513ae_0.conda
 https://conda.anaconda.org/conda-forge/noarch/backoff-2.2.1-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/brotli-1.0.9-h166bdaf_8.tar.bz2
@@ -170,7 +169,7 @@ https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyh9f0ad1d_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/numpy-1.24.1-py39h223a676_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/openjpeg-2.5.0-hfec8fc6_2.conda
 https://conda.anaconda.org/conda-forge/noarch/packaging-22.0-pyhd8ed1ab_0.conda
-https://conda.anaconda.org/conda-forge/linux-64/pluggy-1.0.0-py39hf3d152e_4.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/pluggy-1.0.0-pyhd8ed1ab_5.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/ply-3.11-py_1.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/pybind11-global-2.10.3-py39h4b4f3f3_0.conda
 https://conda.anaconda.org/conda-forge/noarch/pycparser-2.21-pyhd8ed1ab_0.tar.bz2
@@ -206,9 +205,10 @@ https://conda.anaconda.org/conda-forge/linux-64/postgresql-15.1-h3248436_2.conda
 https://conda.anaconda.org/conda-forge/linux-64/proj-9.1.0-h8ffa02c_1.conda
 https://conda.anaconda.org/conda-forge/linux-64/pulseaudio-16.1-h126f2b6_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/pybind11-2.10.3-py39h4b4f3f3_0.conda
-https://conda.anaconda.org/conda-forge/linux-64/pytest-7.2.0-py39hf3d152e_1.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/pytest-7.2.0-pyhd8ed1ab_2.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.8.2-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.17.21-py39hb9d737c_2.tar.bz2
+https://conda.anaconda.org/conda-forge/linux-64/scipy-1.9.1-py39h8ba3f38_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/shapely-2.0.0-py39hc9151fd_0.conda
 https://conda.anaconda.org/conda-forge/linux-64/sip-6.7.5-py39h5a03fae_0.conda
 https://conda.anaconda.org/conda-forge/noarch/tqdm-4.64.1-pyhd8ed1ab_0.tar.bz2
@@ -245,6 +245,4 @@ https://conda.anaconda.org/conda-forge/linux-64/pyqt-5.15.7-py39h18e9c17_2.tar.b
 https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_1.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/cdsapi-0.5.1-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/linux-64/matplotlib-3.6.2-py39hf3d152e_0.tar.bz2
-https://conda.anaconda.org/conda-forge/noarch/pooch-1.6.0-pyhd8ed1ab_0.tar.bz2
-https://conda.anaconda.org/conda-forge/linux-64/scipy-1.10.0-py39h7360e5f_0.conda
 https://conda.anaconda.org/conda-forge/noarch/pyaps3-0.3.2-pyhd8ed1ab_1.conda
