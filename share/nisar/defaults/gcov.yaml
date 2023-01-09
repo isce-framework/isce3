@@ -85,6 +85,12 @@ runconfig:
                azimuth_looks: 1
                range_looks:   1
 
+            # Output imagery and secondary layers' compression
+            # Options: 'gzip' (gzip with h5py default compression level `4`)
+            # 'gzip9' (gzip with maximum compression level `9`),
+            # 'lzf', 'szip', or 'none' (no compression)
+            output_data_compression: 'gzip9'
+
             # OPTIONAL - to control behavior of RTC module
             # (only applicable if geocode.apply_rtc is True)
             rtc:
@@ -123,10 +129,10 @@ runconfig:
 
                 # OPTIONAL - Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1
-               
+
                 # Save the number of looks used to compute GCOV
                 save_nlooks: True
-               
+
                 # Save the RTC area factor used to compute GCOV
                 save_rtc: True
 
