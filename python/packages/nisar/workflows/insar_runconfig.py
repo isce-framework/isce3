@@ -175,7 +175,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
         iono_cfg = self.cfg['processing']['ionosphere_phase_correction']
         # If ionosphere phase correction is enabled, check defaults
         if iono_cfg['enabled']:
-            ionosphere_cfg_check(self.cfg, info_channel, error_channel)
+            ionosphere_cfg_check(self.cfg)
 
         if 'interp_method' not in self.cfg['processing']['geocode']:
             self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
