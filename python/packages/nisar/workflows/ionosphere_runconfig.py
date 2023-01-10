@@ -7,17 +7,13 @@ from nisar.products.readers import SLC
 from nisar.workflows.runconfig import RunConfig
 
 
-def common_ionosphere_cfg_check(cfg, info_channel, error_channel):
+def common_ionosphere_cfg_check(cfg):
     """Check ionosphere runconfig for all methods
 
     Parameters
     ----------
     cfg: dict
         Dictionary with user-defined parameters
-    info_channel: journal.info
-        journal info channel to print information
-    error_channel: journal.error
-        journal error channel to print error message
 
     Returns
     -------
@@ -36,6 +32,8 @@ def common_ionosphere_cfg_check(cfg, info_channel, error_channel):
     sec_pols_freqB: list
         frequency B polarization list for secondary SLC
     """
+    error_channel = journal.error('CommonIonosphere.yaml_check')
+    info_channel = journal.info('CommonIonosphere.yaml_check')
 
     # Extract frequencies and polarizations to process
     freq_pols = cfg['processing']['input_subset'][
@@ -72,14 +70,12 @@ def common_ionosphere_cfg_check(cfg, info_channel, error_channel):
         swmr=True) as sec_h5:
 
         # available polarizations in frequency A of reference SLC
-        ref_pol_path = os.path.join(
-            ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
+        ref_pol_path = f'{ref_slc.SwathPath}/frequencyA/listOfPolarizations'
         ref_pols_freqA = list(
             np.array(ref_h5[ref_pol_path][()], dtype=str))
 
         # available polarizations in frequency A of secondary SLC
-        sec_pol_path = os.path.join(
-            sec_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
+        sec_pol_path = f'{sec_slc.SwathPath}/frequencyA/listOfPolarizations'
         sec_pols_freqA = list(
             np.array(sec_h5[sec_pol_path][()], dtype=str))
 
@@ -129,7 +125,7 @@ def common_ionosphere_cfg_check(cfg, info_channel, error_channel):
                 error_channel.log(err_str)
                 raise FileNotFoundError(err_str)
 
-    # get common polarzations of freqA from reference and secondary
+    # get common polarizations of freqA from reference and secondary
     common_pol_refsec_freqA = set.intersection(
         set(ref_pols_freqA), set(sec_pols_freqA))
 
@@ -143,8 +139,8 @@ def common_ionosphere_cfg_check(cfg, info_channel, error_channel):
     if (common_pol_refsec_freqA) and (not iono_freq_pol['A']):
         '''
         If input polarization (frequency A) for ionosphere is not given,
-        the polarzations assigned for InSAR workflow are copied.
-        However, the polarzation of InSAR workflow flow is cross-pol,
+        the polarizations assigned for InSAR workflow are copied.
+        However, the polarization of InSAR workflow flow is cross-pol,
         then available co-polarizations are used instead.
         '''
         # common co-poliarzations in reference and secondary SLC
@@ -179,22 +175,21 @@ def common_ionosphere_cfg_check(cfg, info_channel, error_channel):
         return ref_pols_freqA, sec_pols_freqA, ref_pols_freqB, sec_pols_freqB
 
 
-def split_main_band_cfg_check(cfg, info_channel, error_channel):
+def split_main_band_cfg_check(cfg):
     """Check ionosphere runconfig for split_main_band method
 
     Parameters
     ----------
     cfg: dict
         Dictionary with user-defined parameters
-    info_channel: journal.info
-        journal info channel to print information
-    error_channel: journal.error
-        journal error channel to print error message
     """
+
+    error_channel = journal.error('SplitMainBandIonosphere.yaml_check')
+    info_channel = journal.info('SplitMainBandIonosphere.yaml_check')
 
     # check common ionosphere options
     ref_pols_freqA, sec_pols_freqA, rg_main_bandwidth = \
-        common_ionosphere_cfg_check(cfg, info_channel, error_channel)
+        common_ionosphere_cfg_check(cfg)
 
     # Extract split-spectrum dictionary
     iono_cfg = cfg['processing']['ionosphere_phase_correction']
@@ -209,7 +204,7 @@ def split_main_band_cfg_check(cfg, info_channel, error_channel):
     # If polarizations for frequency B are requested
     # for split_main_band method, then throw error
     if iono_freq_pol['B']:
-        err_str = f"Incorrect polarzations {iono_freq_pol['B']} "\
+        err_str = f"Incorrect polarizations {iono_freq_pol['B']} "\
             "for frequency B are requested. "\
             f"{iono_method} should not have polarizations in frequency B."
         error_channel.log(err_str)
@@ -221,36 +216,34 @@ def split_main_band_cfg_check(cfg, info_channel, error_channel):
     # split the main range bandwidth into two 1/3 sub-bands.
     if split_cfg['low_band_bandwidth'] is None:
         split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
-        info_str = "low band width for low sub-bands are not given;"\
+        info_str = "low bandwidth for low sub-bands are not given;"\
             "It is automatically set by 1/3 of range bandwidth of frequencyA"
         info_channel.log(info_str)
 
     if split_cfg['high_band_bandwidth'] is None:
         split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
-        info_str = "high band width for high sub-band are not given;"\
+        info_str = "high bandwidth for high sub-band are not given;"\
             "It is automatically set by 1/3 of range bandwidth of frequencyA"
         info_channel.log(info_str)
 
 
-def sideband_cfg_check(cfg, info_channel, error_channel):
+def sideband_cfg_check(cfg):
     """Check ionosphere runconfig for methods using sideband
 
     Parameters
     ----------
     cfg: dict
         Dictionary with user-defined parameters
-    info_channel: journal.info
-        journal info channel to print information
-    error_channel: journal.error
-        journal error channel to print error message
     """
 
+    error_channel = journal.error('SidebandIonosphere.yaml_check')
+    info_channel = journal.info('SidebandIonosphere.yaml_check')
     # check common ionosphere options
     ref_pols_freqA, sec_pols_freqA, \
     ref_pols_freqB, sec_pols_freqB = \
-        common_ionosphere_cfg_check(cfg, info_channel, error_channel)
+        common_ionosphere_cfg_check(cfg)
 
-    # get common polarzations of freqB from reference and secondary
+    # get common polarizations of freqB from reference and secondary
     common_pol_refsec_freqB = set.intersection(
         set(ref_pols_freqB), set(sec_pols_freqB))
 
@@ -285,13 +278,13 @@ def sideband_cfg_check(cfg, info_channel, error_channel):
                 raise FileNotFoundError(err_str)
 
     # If polarizations for frequency A and B are given,
-    # check if given polarzations are identical.
+    # check if given polarizations are identical.
     if (iono_freq_pol['A']) and (iono_freq_pol['B']):
         diff_pol = [i for i in iono_freq_pol['B']
                     if i not in iono_freq_pol['A']]
         # when requested polarization are not same
         # (ex. freqA : VV, freqB: HH)
-        # ionosphere will be computed from two different polarzations
+        # ionosphere will be computed from two different polarizations
         # But only one for each frequency is allowed.
         if diff_pol:
             if (len(iono_freq_pol['A']) != 1) and \
@@ -309,13 +302,14 @@ def sideband_cfg_check(cfg, info_channel, error_channel):
         1) if polarization (frequency B) for InSAR are given,
            then copy them to ionosphere
         2) if polarization (frequency B) for InSAR are not given,
-           search the co-polarzation
+           search the co-polarization
             (i.e. HH or VV)
             If polarizations (frequency A) for InSAR are given,
             2-1) If polarizations (frequency A) for InSAR are co-pol,
                     then copy frequency A to ionosphere
-            2-2)  If polarizations (frequency A) for InSAR are cross-pol
-                    then use the filtered co-pol for ionosphere.
+            2-2) If polarizations (frequency A) for InSAR are cross-pol
+                    then use the common co-pol between reference and secondary
+                    for ionosphere.
         '''
         # case 1
         if 'B' in freq_pols:
@@ -364,18 +358,16 @@ def sideband_cfg_check(cfg, info_channel, error_channel):
         'list_of_frequencies'] = iono_freq_pol
 
 
-def ionosphere_cfg_check(cfg, info_channel, error_channel):
+def ionosphere_cfg_check(cfg):
     """Check ionosphere runconfig
 
     Parameters
     ----------
     cfg: dict
         Dictionary with user-defined parameters
-    info_channel: journal.info
-        journal info channel to print information
-    error_channel: journal.error
-        journal error channel to print error message
     """
+
+    error_channel = journal.error('Ionosphere.yaml_check')
 
     # Extract ionosphere options
     iono_cfg = cfg['processing']['ionosphere_phase_correction']
@@ -389,9 +381,9 @@ def ionosphere_cfg_check(cfg, info_channel, error_channel):
         raise ValueError(err_str)
 
     if iono_method in iono_method_side:
-        sideband_cfg_check(cfg, info_channel, error_channel)
+        sideband_cfg_check(cfg)
     else:
-        split_main_band_cfg_check(cfg, info_channel, error_channel)
+        split_main_band_cfg_check(cfg)
 
 
 class InsarIonosphereRunConfig(RunConfig):
@@ -505,4 +497,4 @@ class InsarIonosphereRunConfig(RunConfig):
             self.cfg['processing']['phase_unwrap'][algorithm]={}
 
         # check ionosphere runfigs
-        ionosphere_cfg_check(self.cfg, info_channel, error_channel)
+        ionosphere_cfg_check(self.cfg)
