@@ -216,13 +216,13 @@ def split_main_band_cfg_check(cfg):
     # split the main range bandwidth into two 1/3 sub-bands.
     if split_cfg['low_band_bandwidth'] is None:
         split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
-        info_str = "low bandwidth for low sub-bands are not given;"\
+        info_str = "low bandwidth for low sub-band is not given;"\
             "It is automatically set by 1/3 of range bandwidth of frequencyA"
         info_channel.log(info_str)
 
     if split_cfg['high_band_bandwidth'] is None:
         split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
-        info_str = "high bandwidth for high sub-band are not given;"\
+        info_str = "high bandwidth for high sub-band is not given;"\
             "It is automatically set by 1/3 of range bandwidth of frequencyA"
         info_channel.log(info_str)
 
@@ -280,8 +280,8 @@ def sideband_cfg_check(cfg):
     # If polarizations for frequency A and B are given,
     # check if given polarizations are identical.
     if (iono_freq_pol['A']) and (iono_freq_pol['B']):
-        diff_pol = [i for i in iono_freq_pol['B']
-                    if i not in iono_freq_pol['A']]
+        diff_pol = [pol for pol in iono_freq_pol['B']
+                    if pol not in iono_freq_pol['A']]
         # when requested polarization are not same
         # (ex. freqA : VV, freqB: HH)
         # ionosphere will be computed from two different polarizations
