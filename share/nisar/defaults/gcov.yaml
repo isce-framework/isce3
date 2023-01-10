@@ -185,6 +185,12 @@ runconfig:
                     y_abs:
                     x_abs:
 
+                # Minimum block size in MB per thread
+                min_block_size:
+
+                # Maximum block size in MB per thread
+                max_block_size:
+
             radar_grid_cubes: 
     
                 # List of heights in meters
@@ -218,7 +224,7 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
                     y_abs:
-                    x_abs:                    
+                    x_abs:
 
             geo2rdr:
                 threshold: 1.0e-8

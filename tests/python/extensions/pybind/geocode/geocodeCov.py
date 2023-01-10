@@ -22,7 +22,6 @@ def test_run():
     geo_obj.ellipsoid = isce.core.Ellipsoid()
     geo_obj.threshold_geo2rdr = 1e-9
     geo_obj.numiter_geo2rdr = 25
-    geo_obj.lines_per_block = 1000
     geo_obj.radar_block_margin = 10
     geo_obj.data_interpolator = 'biquintic'
 

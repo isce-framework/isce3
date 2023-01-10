@@ -163,7 +163,7 @@ void getBlockProcessingParametersXY(const int array_length, const int array_widt
 
 
     // set nblocks and block size (X-axis)
-    int _block_width = 1;
+    int _block_width = array_width;
     if (flag_2d) {
         _nblocks_x = std::max(_nblocks_x, 1);
         _block_width =

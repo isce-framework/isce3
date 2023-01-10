@@ -252,6 +252,12 @@ geocode_options:
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 
+    # Minimum block size in MB per thread
+    min_block_size: num(min=0, required=False)
+
+    # Maximum block size in MB per thread
+    max_block_size: num(min=0, required=False)
+
 noise_correction_options:
     # Enable/disable noise correction
     apply_correction: bool(required=False)

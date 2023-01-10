@@ -32,8 +32,6 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                           &Geocode<T>::thresholdGeo2rdr)
             .def_property("numiter_geo2rdr", nullptr,
                           &Geocode<T>::numiterGeo2rdr)
-            .def_property("lines_per_block", nullptr,
-                          &Geocode<T>::linesPerBlock)
             .def_property("radar_block_margin", nullptr,
                     &Geocode<T>::radarBlockMargin)
             .def_property("data_interpolator",

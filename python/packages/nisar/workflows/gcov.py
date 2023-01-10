@@ -64,6 +64,18 @@ def run(cfg):
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
     flag_save_dem = geocode_dict['save_dem']
+    min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
+    max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
+
+    # optional keyword arguments , i.e. arguments that may or may not be
+    # included in the call to geocode()
+    optional_geo_kwargs = {}
+
+    # read min/max block size converting MB to B
+    if min_block_size_mb is not None:
+        optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
+    if max_block_size_mb is not None:
+        optional_geo_kwargs['max_block_size'] = max_block_size_mb * (2**20)
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
@@ -316,7 +328,8 @@ def run(cfg):
                     input_rtc=None,
                     output_rtc=None,
                     dem_interp_method=dem_interp_method_enum,
-                    memory_mode=memory_mode)
+                    memory_mode=memory_mode,
+                    **optional_geo_kwargs)
 
         del output_raster_obj
 
