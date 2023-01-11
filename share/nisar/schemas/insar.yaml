@@ -435,6 +435,11 @@ rubbersheet_options:
     # from previous steps (not user-specified)
     dense_offsets_path: str(required=False)
 
+    # Path to offsets product directory (offsets, snr, covariance).
+    # Not required as InSAR workflow allows using intermediate outputs
+    # from previous steps (not user-specified)
+    offsets_product_path: str(required=False)
+
     # Path to geo2rdr offset path
     geo2rdr_offsets_path: str(required=False)
 

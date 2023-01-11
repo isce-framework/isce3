@@ -124,19 +124,23 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
     return input_raster, dataset_path
 
 
-def get_offset_radar_grid(offset_cfg, radar_grid_slc, is_goff=False):
+def get_offset_radar_grid(cfg, radar_grid_slc):
     ''' Create radar grid object for offset datasets
 
     Parameters
     ----------
-    offset_cfg : dict
-        Dictionary containing offset run configuration
+    cfg : dict
+        Dictionary containing processing parameters
     radar_grid_slc : SLC
         Object containing SLC properties
     is_goff: bool
         Flag to geocode ROFF
     '''
     # Define margin used during dense offsets execution
+    if cfg['processing']['dense_offsets']['enabled']:
+        offset_cfg = cfg['processing']['dense_offsets']
+    else:
+        offset_cfg = cfg['processing']['offsets_product']
     error_channel = journal.error('geocode_insar.get_offset_radar_grid')
     margin = max(offset_cfg['margin'],
                  offset_cfg['gross_offset_range'],
@@ -146,7 +150,7 @@ def get_offset_radar_grid(offset_cfg, radar_grid_slc, is_goff=False):
     off_length = offset_cfg['offset_length']
     off_width = offset_cfg['offset_width']
 
-    if is_goff:
+    if cfg['processing']['offsets_product']['enabled']:
         az_search = np.inf
         rg_search = np.inf
         az_window = np.inf
@@ -423,8 +427,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    offset_cfg = cfg["processing"]["offsets_product"] if is_goff else \
-        cfg["processing"]["dense_offsets"]
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
         cfg["processing"]["geocode"]["gunw_datasets"]
     iono_args = cfg['processing']['ionosphere_phase_correction']
@@ -532,7 +534,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                 desired = ['along_track_offset', 'slant_range_offset']
                 geocode_obj.data_interpolator = interp_method
-                radar_grid_offset = get_offset_radar_grid(offset_cfg,
+                radar_grid_offset = get_offset_radar_grid(cfg,
                                                           radar_grid_slc)
 
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
@@ -548,6 +550,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                     scratch_path=scratch_path,
                                     compute_stats=False)
             else:
+                offset_cfg = cfg['processing']['offsets_product']
                 desired = ['along_track_offset', 'slant_range_offset',
                            'along_track_offset_variance',
                            'correlation_surface_peak',
@@ -555,6 +558,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                            'snr']
                 layer_keys = [key for key in offset_cfg.keys() if
                               key.startswith('layer')]
+
                 radar_grid = get_offset_radar_grid(offset_cfg,
                                                    slc.getRadarGrid(freq),
                                                    is_goff=True)
@@ -619,8 +623,6 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    offset_cfg = cfg["processing"]["offsets_product"] if is_goff else \
-        cfg["processing"]["dense_offsets"]
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] if is_goff else \
         cfg["processing"]["geocode"]["gunw_datasets"]
     iono_args = cfg['processing']['ionosphere_phase_correction']
@@ -733,7 +735,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                 # If needed create geocode object for offset datasets
                 # Create offset unique radar grid
-                radar_grid = get_offset_radar_grid(offset_cfg,
+                radar_grid = get_offset_radar_grid(cfg,
                                                    slc.getRadarGrid(freq))
 
                 # Create radar grid geometry required by offset datasets
@@ -772,7 +774,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                     input_hdf5, dst_h5, geocode_shadow_obj,
                                     scratch_path=scratch_path, compute_stats=False)
             else:
-
+                offset_cfg = cfg['processing']['offsets_product']
                 desired=['along_track_offset', 'slant_range_offset',
                          'along_track_offset_variance',
                          'correlation_surface_peak',
@@ -781,9 +783,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                 layer_keys = [key for key in offset_cfg.keys() if
                               key.startswith('layer')]
 
-                radar_grid = get_offset_radar_grid(offset_cfg,
-                                                   slc.getRadarGrid(freq),
-                                                   is_goff=True)
+                radar_grid = get_offset_radar_grid(cfg,
+                                                   slc.getRadarGrid(freq))
                 #  Create radar grid geometry required by offset datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              orbit,
