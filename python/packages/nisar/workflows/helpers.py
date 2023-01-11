@@ -8,6 +8,8 @@ import pathlib
 
 from osgeo import gdal
 import h5py
+import nisar
+import numpy as np
 
 import journal
 
@@ -221,3 +223,106 @@ def check_hdf5_freq_pols(h5_path: str, freq_pols: dict):
                     err_str = f"{pol} not found in {freq} group of swath/grid group of {h5_path}"
                     error_channel.log(err_str)
                     raise ValueError(err_str)
+
+
+def copy_raster(infile, freq, pol,
+                lines_per_block, outfile, file_type="ENVI"):
+    '''
+    Copy RSLC dataset to GDAL format and convert real and
+    imaginary parts from float16 to float32
+
+    Parameters
+    ----------
+    infile: str
+        Path to RSLC HDF5
+    freq: str
+        RSLC frequency band to process ('A' or 'B')
+    pol: str
+        RSLC polarization to process
+    outfile: str
+        Output filename
+    file_type: str
+        GDAL-friendly file format
+    '''
+
+    # Open RSLC HDF5 file dataset
+    rslc = SLC(hdf5file=infile)
+    hdf5_ds = rslc.getSlcDataset(freq, pol)
+
+    # Get RSLC dimension through GDAL
+    gdal_ds = gdal.Open(f'HDF5:{infile}:/{rslc.slcPath(freq, pol)}')
+    rslc_length, rslc_width = gdal_ds.RasterYSize, gdal_ds.RasterXSize
+
+    # Create output file
+    driver = gdal.GetDriverByName(file_type)
+    out_ds = driver.Create(outfile, rslc_width, rslc_length,
+                           1, gdal.GDT_CFloat32)
+
+    # Start block processing
+    lines_per_block = min(rslc_length, lines_per_block)
+    num_blocks = int(np.ceil(rslc_length / lines_per_block))
+
+    # Iterate over blocks to convert and write
+    for block in range(num_blocks):
+        line_start = block * lines_per_block
+
+        # Check for last block and compute block length accordingly
+        if block == num_blocks - 1:
+            block_length = rslc_length - line_start
+        else:
+            block_length = lines_per_block
+
+        # Read a block of data from RSLC and convert real and imag part to float32
+        s = np.s_[line_start:line_start + block_length, :]
+        data_block = nisar.types.read_c4_dataset_as_c8(hdf5_ds, s)
+
+        # Write to GDAL raster
+        out_ds.GetRasterBand(1).WriteArray(data_block[0:block_length],
+                                           yoff=line_start, xoff=0)
+    out_ds.FlushCache()
+
+
+def complex_raster_path_from_h5(slc, freq, pol, hdf5_path, lines_per_block,
+                                c32_output_path):
+    '''
+    Get path for io.raster based on raster datatype. If datatype is not
+    complex64,convert and save to temporary file. Raster object generated here
+    to avoid potential artifacts caused by copying for Raster objects.
+
+    Parameters
+    ----------
+    slc: nisar.products.readers.SLC
+        RSLC object
+    freq: str
+        RSLC frequency band to process ('A' or 'B')
+    pol: str
+        RSLC polarization to process
+    hdf5_path: str
+        Source HDF5 file
+    lines_per_block: int
+        Lines per block to be converted and written to complex32 (if needed)
+    c32_output_path: str
+        GDAL-friendly file format
+
+    Returns
+    -------
+    raster_path: str
+        isce3.io.Raster-friendly path to raster dataset
+    file_path: str
+        File containing raster dataset. Differs from raster_path if when output
+        is HDF5
+    '''
+    if slc.is_dataset_complex64(freq, pol):
+        # If SLC dataset is complex64 HDF5, return GDAL path to HDF5 dataset
+        slc_h5_path = f'/{slc.SwathPath}/frequency{freq}/{pol}'
+        raster_path = f'HDF5:{hdf5_path}:{slc_h5_path}'
+        file_path = hdf5_path
+    else:
+        # If SLC dataset is not complex64 HDF5, covert to complex32, write to
+        # ENVI raster, and return path ENVI raster
+        copy_raster(hdf5_path, freq, pol, lines_per_block,
+                    c32_output_path, file_type='ENVI')
+        raster_path = c32_output_path
+        file_path = c32_output_path
+
+    return raster_path, file_path
