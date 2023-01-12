@@ -4,11 +4,11 @@ runconfig:
     groups:
         pge_name_group:
             pge_name: enum('GCOV_L_PGE')
-       
+
         input_file_group:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path: str()
-       
+
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
@@ -16,28 +16,33 @@ runconfig:
             # External orbit file
             orbit_file: str(required=False)
 
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file: str(required=False)
+
         product_path_group:
             # Directory where PGE will place results
             product_path: str()
             product_counter: int(min=1, max=999, required=False)
-       
+
             # Directory where SAS can write temporary data
             scratch_path: str()
-       
+
             # Intermediate file name.  SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
             sas_output_file: str()
-       
+
         primary_executable:
             product_type: enum('GCOV')
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)
-            product_accuracy: enum('P', 'M', 'N', 'F', 'T', required=False)
-       
+            product_accuracy: enum('P', 'M', 'N', 'F', required=False)
+            urgent_request_id: list(str(), required=False)
+
         debug_level_group:
             debug_switch: bool()
-       
+
         #adt section - isce3 + pyre workflow
         processing:
             # Mechanism to select frequencies and polarizations
@@ -47,10 +52,10 @@ runconfig:
                     # List of polarization channels to process. Default empty representing all
                     A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
                     B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
-               
+
                 # Compute cross-elements (True) or diagonals only (False). Default: False
                 fullcovariance: bool(required=False)
-        
+
                 # Perform polarimetric symmetrization. It's only applicable
                 # for quad-polarimetric datasets (i.e. datasets that include
                 # HV and VH), otherwise, the flag is ignored.
@@ -62,15 +67,20 @@ runconfig:
             # Pre-processing (before geocoding) options
             pre_process: include('pre_process_options', required=False)
 
+            # Output imagery and secondary layers' compression
+            # Option `gzip` uses h5py default compression level (e.g., `4`)
+            # whereas `gzip9` uses the maximum compression level `9`
+            output_data_compression: enum('gzip', 'gzip9', 'lzf', 'szip', 'none', required=False)
+
             # Radiometric Terrain Correction (RTC)
             rtc: include('rtc_options', required=False)
-        
+
             # Geocode options: (e.g. output posting)
             geocode: include('geocode_options', required=False)
 
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
-            geo2rdr:      include('geo2rdr_options', required=False)
+            geo2rdr: include('geo2rdr_options', required=False)
 
             dem_interpolation_method: enum('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
@@ -95,7 +105,7 @@ radar_grid_cubes_options:
 
     # Same as input DEM if not provided.
     output_epsg: int(min=1024, max=32767, required=False)
-               
+
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
     output_posting:
@@ -104,21 +114,21 @@ radar_grid_cubes_options:
 
     # To control output grid in same units as output EPSG
     x_snap: num(min=0, required=False)
-               
+
     # To control output grid in same units as output EPSG
     y_snap: num(min=0, required=False)
-               
-    top_left:    
+
+    top_left:
         # Set top-left y in same units as output EPSG
         y_abs: num(required=False)
-       
+
         # Set top-left x in same units as output EPSG
         x_abs: num(required=False)
-               
-    bottom_right:  
+
+    bottom_right:
         # Set bottom-right y in same units as output EPSG
         y_abs: num(required=False)
-       
+
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 
@@ -245,6 +255,12 @@ geocode_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+    # Minimum block size in MB per thread
+    min_block_size: num(min=0, required=False)
+
+    # Maximum block size in MB per thread
+    max_block_size: num(min=0, required=False)
 
 noise_correction_options:
     # Enable/disable noise correction

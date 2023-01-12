@@ -29,21 +29,16 @@ void cuArraysCopyC2R(cuArrays<float2> *image1, cuArrays<float> *image2, int stri
 
 // same routine name overloaded for different data type
 // extract data from a large image
-void cuArraysCopyExtract(cuArrays<float> *imagesIn, cuArrays<float> *imagesOut, cuArrays<int2> *offset, cudaStream_t stream);
-void cuArraysCopyExtract(cuArrays<float> *imagesIn, cuArrays<float> *imagesOut, int2 offset, cudaStream_t stream);
-void cuArraysCopyExtract(cuArrays<float2> *imagesIn, cuArrays<float> *imagesOut, int2 offset, cudaStream_t stream);
-void cuArraysCopyExtract(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, int2 offset, cudaStream_t stream);
-void cuArraysCopyExtract(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, cuArrays<int2> *offsets, cudaStream_t stream);
-void cuArraysCopyExtract(cuArrays<float3> *imagesIn, cuArrays<float3> *imagesOut, int2 offset, cudaStream_t stream);
+template<typename T>
+void cuArraysCopyExtract(cuArrays<T> *imagesIn, cuArrays<T> *imagesOut, cuArrays<int2> *offset, cudaStream_t);
+template<typename T_in, typename T_out>
+void cuArraysCopyExtract(cuArrays<T_in> *imagesIn, cuArrays<T_out> *imagesOut, int2 offset, cudaStream_t);
 
-void cuArraysCopyInsert(cuArrays<float2> *imageIn, cuArrays<float2> *imageOut, int offsetX, int offersetY, cudaStream_t stream);
-void cuArraysCopyInsert(cuArrays<float3> *imageIn, cuArrays<float3> *imageOut, int offsetX, int offersetY, cudaStream_t stream);
-void cuArraysCopyInsert(cuArrays<float> *imageIn, cuArrays<float> *imageOut, int offsetX, int offsetY, cudaStream_t stream);
-void cuArraysCopyInsert(cuArrays<int> *imageIn, cuArrays<int> *imageOut, int offsetX, int offersetY, cudaStream_t stream);
+template<typename T>
+void cuArraysCopyInsert(cuArrays<T> *in, cuArrays<T> *out, int offsetX, int offsetY, cudaStream_t);
 
-void cuArraysCopyPadded(cuArrays<float> *imageIn, cuArrays<float> *imageOut,cudaStream_t stream);
-void cuArraysCopyPadded(cuArrays<float> *imageIn, cuArrays<float2> *imageOut,cudaStream_t stream);
-void cuArraysCopyPadded(cuArrays<float2> *imageIn, cuArrays<float2> *imageOut,cudaStream_t stream);
+template<typename T_in, typename T_out>
+void cuArraysCopyPadded(cuArrays<T_in> *imageIn, cuArrays<T_out> *imageOut,cudaStream_t stream);
 void cuArraysSetConstant(cuArrays<float> *imageIn, float value, cudaStream_t stream);
 
 void cuArraysR2C(cuArrays<float> *image1, cuArrays<float2> *image2, cudaStream_t stream);
@@ -58,9 +53,16 @@ void cuDerampMethod1(cuArrays<float2> *images, cudaStream_t stream);
 void cuArraysPadding(cuArrays<float2> *image1, cuArrays<float2> *image2, cudaStream_t stream);
 void cuArraysPaddingMany(cuArrays<float2> *image1, cuArrays<float2> *image2, cudaStream_t stream);
 
-//in cuCorrNormalization.cu: utities to normalize the cross correlation function
+//in cuCorrNormalization.cu: utilities to normalize the cross correlation function
 void cuArraysSubtractMean(cuArrays<float> *images, cudaStream_t stream);
 void cuCorrNormalize(cuArrays<float> *templates, cuArrays<float> *images, cuArrays<float> *results, cudaStream_t stream);
+
+template<int Size>
+void cuCorrNormalizeFixed(cuArrays<float> *correlation, cuArrays<float> *reference, cuArrays<float> *secondary, cudaStream_t stream);
+
+// in cuCorrNormalizationSAT.cu: to normalize the cross correlation function with sum area table
+void cuCorrNormalizeSAT(cuArrays<float> *correlation, cuArrays<float> *reference, cuArrays<float> *secondary,
+    cuArrays<float> * referenceSum2, cuArrays<float> *secondarySAT, cuArrays<float> *secondarySAT2, cudaStream_t stream);
 
 //in cuOffset.cu: utitilies for determining the max locaiton of cross correlations or the offset
 void cuArraysMaxloc2D(cuArrays<float> *images, cuArrays<int2> *maxloc, cuArrays<float> *maxval, cudaStream_t stream);

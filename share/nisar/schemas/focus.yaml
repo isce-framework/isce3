@@ -55,7 +55,8 @@ runconfig:
       composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID')
       processing_type: enum('PR', 'UR') # production, urgent response
       mission_id: enum('NISAR')
-      product_accuracy: enum('P', 'M', 'N', 'F', 'T')
+      product_accuracy: enum('P', 'M', 'N', 'F', required=False)
+      urgent_request_id: list(str(), required=False)
     debug_level_group:
       debug_switch: bool()
     geometry:

@@ -69,6 +69,16 @@ public:
     /** Get start y position for geocoded grid */
     CUDA_HOSTDEV constexpr double startY() const { return _startY; };
 
+    /** Get end x position for geocoded grid */
+    CUDA_HOSTDEV constexpr double endX() const {
+        return _startX + _spacingX * _width;
+    };
+
+    /** Get end y position for geocoded grid */
+    CUDA_HOSTDEV constexpr double endY() const {
+        return _startY + _spacingY * _length;
+    };
+
     /** Get x spacing for geocoded grid */
     CUDA_HOSTDEV constexpr double spacingX() const { return _spacingX; };
 
