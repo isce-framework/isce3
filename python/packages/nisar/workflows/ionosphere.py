@@ -59,6 +59,7 @@ def write_disp_block_hdf5(
 
 def decimate_freq_a_offset(iono_insar_cfg, original_dict):
     """Decimate range and azimuth offsets
+
     Parameters
     ----------
     iono_insar_cfg : dict
@@ -92,11 +93,7 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         resample_type = 'fine'
     else:
         resample_type = 'coarse'
-    resamp_args = iono_insar_cfg['processing'][f'{resample_type}_resample']
-    decimated_offset_dir = iono_dir_path
-
-    if resamp_args['offsets_dir'] is None:
-        resamp_args['offsets_dir'] = scratch_path
+    decimated_offset_dir = offsets_dir
 
     # Set up for decimation
     swath_path = f"/science/LSAR/RUNW/swaths"
@@ -104,6 +101,8 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
     dest_freq_path_b = f"{swath_path}/frequencyB"
     rslant_path_a = f"{dest_freq_path}/interferogram/slantRange"
     rslant_path_b = f"{dest_freq_path_b}/interferogram/slantRange"
+    rspc_path_a = f"{dest_freq_path}/interferogram/slantRangeSpacing"
+    rspc_path_b = f"{dest_freq_path_b}/interferogram/slantRangeSpacing"
 
     # Read slant range array from main and side bands
     with h5py.File(runw_freq_a_str, 'r',
@@ -114,9 +113,9 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         # Read slant range block from HDF5
         main_slant = np.array(src_main_h5[rslant_path_a])
         side_slant = np.array(src_side_h5[rslant_path_b])
+        spacing_main = np.array(src_main_h5[rspc_path_a])
+        spacing_side = np.array(src_side_h5[rspc_path_b])
 
-    spacing_main = main_slant[1] - main_slant[0]
-    spacing_side = side_slant[1] - side_slant[0]
     resampling_scale_factor = int(np.round(spacing_side / spacing_main))
     if resample_type == 'coarse':
         decimate_list = ['coarse']
@@ -131,11 +130,7 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
             offsets_path = f'{offsets_dir}/{coarse_offset_path}'
             offsets_b_path = f'{decimated_offset_dir}/{coarse_offset_b_path}'
 
-            rg_off_path = str(f'{offsets_path}/range.off')
-            az_off_path = str(f'{offsets_path}/azimuth.off')
-
-            rg_b_off_path = str(f'{offsets_b_path}/range.off')
-            az_b_off_path = str(f'{offsets_b_path}/azimuth.off')
+            raster_ext = 'off'
         else:
             # We checked the existence of HH/VV offsets in resample_slc_runconfig.py
             # Select the first offsets available between HH and VV
@@ -151,70 +146,56 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
             else:
                 offsets_path = f'{freq_offsets_path}/VV'
                 offsets_b_path = f'{freq_offsets_b_path}/VV'
+            raster_ext = 'off.vrt'
 
-            rg_off_path = str(f'{offsets_path}/range.off.vrt')
-            az_off_path = str(f'{offsets_path}/azimuth.off.vrt')
+        rg_off_path = str(f'{offsets_path}/range.{raster_ext}')
+        az_off_path = str(f'{offsets_path}/azimuth.{raster_ext}')
 
-            rg_b_off_path = str(f'{offsets_b_path}/range.off.vrt')
-            az_b_off_path = str(f'{offsets_b_path}/azimuth.off.vrt')
+        rg_b_off_path = str(f'{offsets_b_path}/range.{raster_ext}')
+        az_b_off_path = str(f'{offsets_b_path}/azimuth.{raster_ext}')
 
         # create new offset directory in ionosphere scratch
         os.makedirs(offsets_b_path, exist_ok=True)
 
-        rg_off_raster = isce3.io.Raster(rg_off_path)
-        rows_main = rg_off_raster.length
-        cols_main = rg_off_raster.width
-        del rg_off_raster
-
-        nblocks = int(np.ceil(rows_main / blocksize))
-
-        # decimate frequency A offset
+        # open raster as GDAL datasets for decimation
         rg_off_obj = gdal.Open(rg_off_path)
         az_off_obj = gdal.Open(az_off_path)
 
-        for block in range(0, nblocks):
-            row_start = block * blocksize
-            if (row_start + blocksize > rows_main):
-                block_rows_data = rows_main - row_start
-            else:
-                block_rows_data = blocksize
+        # get dimensions for block processing
+        rows_main = rg_off_obj.RasterYSize
+        cols_main = rg_off_obj.RasterXSize
+        nblocks = int(np.ceil(rows_main / blocksize))
 
-            rg_off = rg_off_obj.ReadAsArray(0, row_start,
-                                            cols_main,
-                                            block_rows_data)
-            rg_off_side = decimate_freq_a_array(
-                            main_slant,
-                            side_slant,
-                            rg_off) / resampling_scale_factor
-            rows_output, cols_output = rg_off_side.shape
-            write_array(rg_b_off_path,
-                        rg_off_side,
-                        data_type=gdal.GDT_Float32,
-                        block_row=row_start,
-                        data_shape=[rows_main, cols_output],
-                        file_type='ISCE')
+        for off_obj, b_off_path in zip([rg_off_obj, az_off_obj],
+                                        [rg_b_off_path, az_b_off_path]):
+            off_scale_factor = [resampling_scale_factor 
+                                if 'range' in b_off_path else 1]
 
-            az_off = az_off_obj.ReadAsArray(0, row_start,
-                                            cols_main,
-                                            block_rows_data)
-            az_off_side = decimate_freq_a_array(
-                            main_slant,
-                            side_slant,
-                            az_off)
-            write_array(az_b_off_path,
-                        az_off_side,
-                        data_type=gdal.GDT_Float32,
-                        block_row=row_start,
-                        data_shape=[rows_main, cols_output],
-                        file_type='ISCE')
+            for block in range(0, nblocks):
+                row_start = block * blocksize
+                if (row_start + blocksize > rows_main):
+                    block_rows_data = rows_main - row_start
+                else:
+                    block_rows_data = blocksize
 
-        rg_off_obj = None
-        az_off_obj = None
-        del rg_off_obj
-        del az_off_obj
+                offset_arr = off_obj.ReadAsArray(0, row_start,
+                                                 cols_main,
+                                                 block_rows_data)
 
+                off_side = decimate_freq_a_array(
+                                main_slant,
+                                side_slant,
+                                offset_arr) / off_scale_factor
 
-def create_ionosphere(iono_insar_cfg, input_runw, output_runw):
+                rows_output, cols_output = off_side.shape
+                write_array(b_off_path,
+                            off_side,
+                            data_type=gdal.GDT_Float32,
+                            block_row=row_start,
+                            data_shape=[rows_main, cols_output],
+                            file_type='ISCE')
+
+def init_iono_attrs_datasets(iono_insar_cfg, input_runw, output_runw):
     """create ionosphere layers (frequency B) in output RUNW if not exists
 
     Parameters
@@ -294,7 +275,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
 
     If interferograms to be used for ionosphere estimation do not exist,
     they are generated by modifying original_cfg.
-    for example, the frequency A and B interferograms are requested in VV polarization
+    For example, the frequency A and B interferograms are requested in VV polarization
     while ionosphere is estimated in HH polarization, the addtional HH interferogram
     is created.
 
@@ -318,22 +299,22 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     split_slc_path = os.path.join(iono_path, 'split_spectrum')
 
     # Keep original_cfg before changing it
-    orig_dict = dict()
-    orig_dict['scratch_path'] = scratch_path
-    orig_dict['reference_rslc_file_path'] = \
+    partial_orig_cfg_dict = dict()
+    partial_orig_cfg_dict['scratch_path'] = scratch_path
+    partial_orig_cfg_dict['reference_rslc_file_path'] = \
         original_cfg['input_file_group']['reference_rslc_file_path']
-    orig_dict['secondary_rslc_file_path'] = \
+    partial_orig_cfg_dict['secondary_rslc_file_path'] = \
         original_cfg['input_file_group']['secondary_rslc_file_path']
-    orig_dict['coregistered_slc_path'] = \
+    partial_orig_cfg_dict['coregistered_slc_path'] = \
         original_cfg['processing']['crossmul']['coregistered_slc_path']
-    orig_dict['list_of_frequencies'] = \
+    partial_orig_cfg_dict['list_of_frequencies'] = \
         original_cfg['processing']['input_subset']['list_of_frequencies']
-    orig_dict['output_runw'] = runw_hdf5
+    partial_orig_cfg_dict['output_runw'] = runw_hdf5
     if original_cfg['processing']['fine_resample']['enabled']:
         resample_type = 'fine'
     else:
         resample_type = 'coarse'
-    orig_dict['offsets_dir'] = original_cfg['processing'][
+    partial_orig_cfg_dict['offsets_dir'] = original_cfg['processing'][
         f'{resample_type}_resample']['offsets_dir']
 
     orig_scratch_path = scratch_path
@@ -398,7 +379,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             out_paths['RUNW'] = f'{new_scratch}/RUNW.h5'
 
             run_insar_workflow(iono_insar_cfg,
-                               orig_dict,
+                               partial_orig_cfg_dict,
                                out_paths)
 
     elif iono_method in ['main_side_band', 'main_diff_ms_band']:
@@ -410,7 +391,6 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             except:
                 orig_pol = []
             res_pol = [pol for pol in iono_pol if pol not in orig_pol]
-
             # update frequency and polarizations for ionosphere
             if res_pol:
                 iono_insar_cfg['processing']['input_subset'][
@@ -431,12 +411,6 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 'coregistered_slc_path'] = new_scratch
             iono_insar_cfg['processing']['crossmul'][
                 'coregistered_slc_path'] = new_scratch
-            iono_insar_cfg['processing']['fine_resample'][
-                'offsets_dir'] = new_scratch
-            iono_insar_cfg['processing']['coarse_resample'][
-                'offsets_dir'] = new_scratch
-            iono_insar_cfg['processing']['crossmul'][
-                'flatten_path'] = new_scratch
 
             new_scratch.mkdir(parents=True, exist_ok=True)
 
@@ -444,19 +418,20 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             out_paths['RUNW'] = f'{new_scratch}/RUNW.h5'
 
             run_insar_workflow(iono_insar_cfg,
-                               orig_dict,
+                               partial_orig_cfg_dict,
                                out_paths)
 
     # restore original paths
     original_cfg['input_file_group']['reference_rslc_file_path'] = \
-        orig_dict['reference_rslc_file_path']
+        partial_orig_cfg_dict['reference_rslc_file_path']
     original_cfg['input_file_group']['secondary_rslc_file_path'] = \
-        orig_dict['secondary_rslc_file_path']
-    original_cfg['product_path_group']['scratch_path'] = orig_dict['scratch_path']
+        partial_orig_cfg_dict['secondary_rslc_file_path']
+    original_cfg['product_path_group']['scratch_path'] = \
+        partial_orig_cfg_dict['scratch_path']
     original_cfg['processing']['dense_offsets']['coregistered_slc_path'] = \
-        orig_dict['coregistered_slc_path']
+        partial_orig_cfg_dict['coregistered_slc_path']
     original_cfg['processing']['crossmul']['coregistered_slc_path'] = \
-        orig_dict['coregistered_slc_path']
+        partial_orig_cfg_dict['coregistered_slc_path']
 
     original_cfg['processing']['input_subset'][
             'list_of_frequencies'] = orig_freq_pols
@@ -477,9 +452,11 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
     Parameters
     ---------
     iono_insar_cfg: dict
-        InSAR workflow dictionary with ionosphere pairs
+        InSAR workflow runconfig dictionary modified with ionosphere pairs 
+        and ionosphere specific conditions
     original_dict: dict
         dictionary containing following parameters
+        from original InSAR runconfig
         - scratch_path
         - reference_rslc_file_path
         - secondary_rslc_file_path
@@ -487,7 +464,6 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
         - list_of_frequencies
         - output_runw
         - offsets_dir
-
     out_paths: dict
         output files (RIFG, RUNW)for out_paths
     '''
@@ -500,7 +476,7 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
     # decimate offsets for frequency B and create ionosphere layers
     if 'B' in iono_freq_pol:
         decimate_freq_a_offset(iono_insar_cfg, original_dict)
-        create_ionosphere(iono_insar_cfg,
+        init_iono_attrs_datasets(iono_insar_cfg,
                           out_paths['RUNW'],
                           original_dict['output_runw'])
 
@@ -960,7 +936,6 @@ def run(cfg: dict, runw_hdf5: str):
                     row_start)
             else:
                 info_channel.log(f'{mask_type} is used for mask construction')
-
                 if mask_type == "coherence":
                     mask_array = iono_phase_obj.get_coherence_mask_array(
                         main_array=main_coh_image,
