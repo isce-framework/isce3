@@ -39,6 +39,7 @@ runconfig:
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
             urgent_request_id: list(str(), required=False)
+            processing_center: str(required=False)
 
         debug_level_group:
             debug_switch: bool()
