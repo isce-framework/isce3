@@ -14,9 +14,11 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file:
+            water_mask_file:
             orbit:
                 reference_orbit_file:
                 secondary_orbit_file:
+            tec_file:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
@@ -372,6 +374,10 @@ runconfig:
                 # Not required as InSAR workflow allows using intermediate outputs
                 # from previous steps (not user-specified)
                 dense_offsets_path:
+                # Path to offsets product outputs (offsets, snr, covariance).
+                # Not required as InSAR workflow allows using intermediate outputs
+                # from previous steps (not user-specified)
+                offsets_product_path:
                 # Path to geo2rdr offsets
                 geo2rdr_offsets_path:
                 # Flag to enable/disable rubbersheet step
@@ -445,6 +451,11 @@ runconfig:
                     filter_size_range: 9
                     filter_size_azimuth: 9
 
+            baseline:
+                # 3D_full: compute baselines for all heights in metadata cube
+                # top_bottom: compute baselines for top and bottom heights
+                mode: 'top_bottom'
+
             phase_unwrap:
                 # Path to HDF5 file or directory containing the input interferogram
                 # and coherence (normalized magnitude of complex correlation) rasters
@@ -452,6 +463,32 @@ runconfig:
                 # the previous InSAR module, which is not user-specified.
                 # Required for running stand-alone phase unwrapping
                 crossmul_path:
+                # Mask and fill wrapped InSAR phase prior to unwrapping
+                preprocess_wrapped_phase:
+                    # Enable/disable preprocessing of wrapped igram
+                    enabled: False
+                    # Mask for outlier identification. User-provided or data-driven
+                    mask:
+                        # Path to user-provided mask
+                        mask_path:
+                        # Type of data-driven mask to compute. Data-driven masking
+                        # is ignored if mask_path is provided. mask_type can be:
+                        # 1) median_filter: compute mask with median absolute deviation thresholding
+                        # 2) coherence: compute mask with normalized InSAR coherence thresholding
+                        mask_type: coherence
+                        # Threshold for invalid pixels. If mask_type is coherence (median_filter)
+                        # values below (above) threshold are classified as outliers
+                        outlier_threshold: 0.5
+                        # Size of median filter kernel (same shape in range/azimuth). Only used if
+                        # "mask_type" is "median_filter"
+                        median_filter_size: 25
+                    # Algorithm to fill invalid wrapped igram pixels
+                    filling_method: distance_interpolator
+                    # Distance interpolator options based on Chen et al. 2015
+                    # https://doi.org/10.1002/2015GL065031
+                    distance_interpolator:
+                        # Distance/radius of the sampling window (pixels)
+                        distance: 2
                 # Unwrapping algorithm to use
                 algorithm: icu
                 # Default parameters for ICU

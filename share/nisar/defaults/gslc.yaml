@@ -16,6 +16,10 @@ runconfig:
             # External orbit file
             orbit_file:
 
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file:
+
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: product_path

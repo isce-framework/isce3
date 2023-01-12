@@ -69,7 +69,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
 
     double threshold = 1.0e-9 ;
     int numiter = 25;
-    size_t linesPerBlock = 1000;
     int radarBlockMargin = 10;
 
     // output geocoded grid (can be different from DEM)
@@ -100,7 +99,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoObj.ellipsoid(ellipsoid);
     geoObj.thresholdGeo2rdr(threshold);
     geoObj.numiterGeo2rdr(numiter);
-    geoObj.linesPerBlock(linesPerBlock);
     geoObj.radarBlockMargin(radarBlockMargin);
     geoObj.dataInterpolator(method);
 
@@ -197,7 +195,6 @@ TEST(GeocodeTest, TestGeocodeCov) {
     geoComplexObj.ellipsoid(ellipsoid);
     geoComplexObj.thresholdGeo2rdr(threshold);
     geoComplexObj.numiterGeo2rdr(numiter);
-    geoComplexObj.linesPerBlock(linesPerBlock);
     geoComplexObj.radarBlockMargin(radarBlockMargin);
     geoComplexObj.dataInterpolator(method);
 

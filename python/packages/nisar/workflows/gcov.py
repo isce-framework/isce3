@@ -37,6 +37,9 @@ def run(cfg):
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
     scratch_path = cfg['product_path_group']['scratch_path']
 
+    output_data_compression = cfg['processing']['output_data_compression']
+    if not output_data_compression or output_data_compression.lower == 'none':
+        output_data_compression = None
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
 
@@ -61,6 +64,18 @@ def run(cfg):
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
     flag_save_dem = geocode_dict['save_dem']
+    min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
+    max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
+
+    # optional keyword arguments , i.e. arguments that may or may not be
+    # included in the call to geocode()
+    optional_geo_kwargs = {}
+
+    # read min/max block size converting MB to B
+    if min_block_size_mb is not None:
+        optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
+    if max_block_size_mb is not None:
+        optional_geo_kwargs['max_block_size'] = max_block_size_mb * (2**20)
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
@@ -313,7 +328,8 @@ def run(cfg):
                     input_rtc=None,
                     output_rtc=None,
                     dem_interp_method=dem_interp_method_enum,
-                    memory_mode=memory_mode)
+                    memory_mode=memory_mode,
+                    **optional_geo_kwargs)
 
         del output_raster_obj
 
@@ -356,6 +372,7 @@ def run(cfg):
             # save GCOV imagery
             _save_hdf5_dataset(temp_output.name, hdf5_obj, root_ds,
                                yds, xds, cov_elements_list,
+                               output_data_compression=output_data_compression,
                                long_name=output_radiometry_str,
                                units='',
                                valid_min=clip_min,
@@ -370,6 +387,7 @@ def run(cfg):
             if flag_save_nlooks:
                 _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds,
                                    yds, xds, 'numberOfLooks',
+                                   output_data_compression=output_data_compression,
                                    long_name = 'number of looks',
                                    units = '',
                                    valid_min = 0)
@@ -378,6 +396,7 @@ def run(cfg):
             if flag_save_rtc:
                 _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds,
                                    yds, xds, 'areaNormalizationFactor',
+                                   output_data_compression=output_data_compression,
                                    long_name = 'RTC area factor',
                                    units = '',
                                    valid_min = 0)
@@ -408,6 +427,7 @@ def run(cfg):
                 _save_hdf5_dataset(temp_interpolated_dem.name, hdf5_obj,
                                    root_ds, yds_dem, xds_dem,
                                    'interpolatedDem',
+                                   output_data_compression=output_data_compression,
                                    long_name='Interpolated DEM',
                                    units='')
 
@@ -423,6 +443,7 @@ def run(cfg):
                                      freq_group)
                 _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                                    yds, xds, off_diag_terms_list,
+                                   output_data_compression=output_data_compression,
                                    long_name = output_radiometry_str,
                                    units = '',
                                    valid_min = clip_min,
@@ -470,9 +491,11 @@ def _save_list_cov_terms(cov_elements_list, dataset_group):
 
 
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
-                       yds, xds, ds_name, standard_name=None,
-                       long_name=None, units=None, fill_value=None,
-                       valid_min=None, valid_max=None, compute_stats=True):
+                       yds, xds, ds_name,
+                       output_data_compression=None,
+                       standard_name=None, long_name=None, units=None,
+                       fill_value=None, valid_min=None, valid_max=None,
+                       compute_stats=True):
     '''
     write temporary raster file contents to HDF5
 
@@ -490,6 +513,8 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         x-axis dataset
     ds_name : string
         name of dataset to be added to root_path
+    output_data_compression : str or None, optional
+        Output imagery and secondary layers' compression
     standard_name : string, optional
     long_name : string, optional
     units : string, optional
@@ -514,6 +539,15 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         else:
             stats_vector = isce3.math.compute_raster_stats_float32(raster)
 
+    compression_kwargs = {}
+    if (output_data_compression == 'gzip9'):
+        # maximum compression
+        compression_kwargs['compression'] = 'gzip'
+        # maximum compression
+        compression_kwargs['compression_opts'] = 9
+    elif output_data_compression is not None:
+        compression_kwargs['compression'] = output_data_compression
+
     gdal_ds = gdal.Open(ds_filename)
     nbands = gdal_ds.RasterCount
     for band in range(nbands):
@@ -527,7 +561,8 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         if h5_ds in h5py_obj:
             del h5py_obj[h5_ds]
 
-        dset = h5py_obj.create_dataset(h5_ds, data=data)
+        dset = h5py_obj.create_dataset(h5_ds, data=data, **compression_kwargs)
+
         dset.dims[0].attach_scale(yds)
         dset.dims[1].attach_scale(xds)
         dset.attrs['grid_mapping'] = np.string_("projection")

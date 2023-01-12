@@ -16,6 +16,10 @@ runconfig:
             # External orbit file
             orbit_file:
 
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file:
+
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: product_path
@@ -61,11 +65,11 @@ runconfig:
 
                 # OPTIONAL - If we want full covariance instead of diagonals only. Default False
                 fullcovariance:   False
-        
+
                 # Perform polarimetric symmetrization. It's only applicable
                 # for quad-polarimetric datasets (i.e. datasets that include
                 # HV and VH), otherwise, the flag is ignored.
-                # If enabled, the output product's "HV" dataset will contain symmetrized 
+                # If enabled, the output product's "HV" dataset will contain symmetrized
                 # HV/VH data and the "VH" dataset will be omitted from the output.
                 symmetrize_cross_pol_channels:  True
 
@@ -81,9 +85,15 @@ runconfig:
                     y:
 
             # OPTIONAL - if amplitude data needs to be mulitlooked before GCOV generation
-            pre_process:   
+            pre_process:
                azimuth_looks: 1
                range_looks:   1
+
+            # Output imagery and secondary layers' compression
+            # Options: 'gzip' (gzip with h5py default compression level `4`)
+            # 'gzip9' (gzip with maximum compression level `9`),
+            # 'lzf', 'szip', or 'none' (no compression)
+            output_data_compression: 'gzip9'
 
             # OPTIONAL - to control behavior of RTC module
             # (only applicable if geocode.apply_rtc is True)
@@ -117,16 +127,16 @@ runconfig:
 
                 # OPTIONAL - Apply RTC
                 apply_rtc: True
- 
+
                 # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
                 memory_mode:
 
                 # OPTIONAL - Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1
-               
+
                 # Save the number of looks used to compute GCOV
                 save_nlooks: True
-               
+
                 # Save the RTC area factor used to compute GCOV
                 save_rtc: True
 
@@ -155,8 +165,8 @@ runconfig:
                 # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
                     A:
-                        x_posting: 
-                        y_posting: 
+                        x_posting:
+                        y_posting:
                     B:
                         x_posting:
                         y_posting:
@@ -168,7 +178,7 @@ runconfig:
                 x_snap:
 
                 # OPTIONAL - Can control with absolute values or with snap values
-                top_left:        
+                top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
                     y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
@@ -179,10 +189,16 @@ runconfig:
                     y_abs:
                     x_abs:
 
-            radar_grid_cubes: 
-    
+                # Minimum block size in MB per thread
+                min_block_size:
+
+                # Maximum block size in MB per thread
+                max_block_size:
+
+            radar_grid_cubes:
+
                 # List of heights in meters
-                heights: 
+                heights:
 
                 # OPTIONAL - Same as the geocode group output_epsg if not provided
                 output_epsg:
@@ -193,8 +209,8 @@ runconfig:
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
                 output_posting:
-                    x_posting: 
-                    y_posting: 
+                    x_posting:
+                    y_posting:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
                 y_snap:
@@ -203,7 +219,7 @@ runconfig:
                 x_snap:
 
                 # OPTIONAL - Can control with absolute values or with snap values
-                top_left:        
+                top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
                     y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
@@ -212,7 +228,7 @@ runconfig:
                 # OPTIONAL - Can control with absolute values or with snap values
                 bottom_right:
                     y_abs:
-                    x_abs:                    
+                    x_abs:
 
             geo2rdr:
                 threshold: 1.0e-8

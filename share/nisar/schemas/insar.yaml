@@ -12,7 +12,13 @@ runconfig:
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
+            # water mask (1: water, 0: non-water)
+            water_mask_file: str(required=False)
             orbit: include('external_orbit_options', required=False)
+
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file: str(required=False)
 
         product_path_group:
             # Directory where PGE will place results
@@ -33,7 +39,8 @@ runconfig:
             product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)
-            product_accuracy: enum('P','M','N','F','T', required=False)
+            product_accuracy: enum('P','M','N','F', required=False)
+            urgent_request_id: list(str(), required=False)
 
         debug_level_group:
             debug_switch: bool()
@@ -90,6 +97,8 @@ runconfig:
             # Phase unwrapping options (e.g. unwrapping algorithm)
             phase_unwrap: include('phase_unwrap_options', required=False)
 
+            # Baseline estimation options
+            baseline: include('baseline_options', required=False)
 
         # To setup type of worker
         worker: include('worker_options', required=False)
@@ -115,6 +124,8 @@ phase_unwrap_options:
     phass: include('phass_options', required=False)
 
     snaphu: include('snaphu_options', required=False)
+
+    preprocess_wrapped_phase: include('preprocess_wrapped_phase_options', required=False)
 
 icu_options:
     correlation_threshold_increments: num(min=0, max=1, required=False)
@@ -196,6 +207,21 @@ connected_components_options:
     min_frac_area: num(required=False)
     cost_thresh: int(required=False)
     max_ncomps: int(required=False)
+
+preprocess_wrapped_phase_options:
+    enabled: bool(required=False)
+    mask: include('unwrap_mask_options', required=False)
+    filling_method: enum('distance_interpolator', required=False)
+    distance_interpolator: include('distance_interp_options', required=False)
+
+unwrap_mask_options:
+    mask_type: enum('median_filter', 'coherence', required=False)
+    mask_path: str(required=False)
+    outlier_threshold: num(min=0, required=False)
+    median_filter_size: int(min=1, required=False)
+
+distance_interp_options:
+    distance: int(required=False)
 
 coarse_resample_options:
     # Path to coarse/fine offset directory
@@ -413,6 +439,11 @@ rubbersheet_options:
     # from previous steps (not user-specified)
     dense_offsets_path: str(required=False)
 
+    # Path to offsets product directory (offsets, snr, covariance).
+    # Not required as InSAR workflow allows using intermediate outputs
+    # from previous steps (not user-specified)
+    offsets_product_path: str(required=False)
+
     # Path to geo2rdr offset path
     geo2rdr_offsets_path: str(required=False)
 
@@ -566,6 +597,11 @@ freq_pol_masks:
     HV: str(required=False)
     VH: str(required=False)
     VV: str(required=False)
+
+baseline_options:
+    # 3D_full: compute baselines for all heights in metadata cube
+    # top_bottom: compute baselines for top and bottom heights
+    mode: enum('3D_full', 'top_bottom', required=False)
 
 radar_grid_cubes_options:
 

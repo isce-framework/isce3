@@ -86,8 +86,8 @@ public:
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
      * @param[in]  geocode_memory_mode Select memory mode
-     * @param[in]  min_block_size       Minimum block size (per thread)
-     * @param[in]  max_block_size       Maximum block size (per thread)
+     * @param[in]  min_block_size      Minimum block size (per thread)
+     * @param[in]  max_block_size      Maximum block size (per thread)
      * @param[in]  dem_interp_method   DEM interpolation method
      */
     void geocode(const isce3::product::RadarGridParameters& radar_grid,
@@ -168,6 +168,9 @@ public:
      * geometry)
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  geocode_memory_mode Select memory mode
+     * @param[in]  min_block_size      Minimum block size (per thread)
+     * @param[in]  max_block_size      Maximum block size (per thread)
      * @param[in]  dem_interp_method   DEM interpolation method
      */
     template<class T_out>
@@ -197,6 +200,12 @@ public:
             isce3::io::Raster* offset_rg_raster = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::core::GeocodeMemoryMode geocode_memory_mode =
+                isce3::core::GeocodeMemoryMode::Auto,
+            const long long min_block_size =
+                    isce3::core::DEFAULT_MIN_BLOCK_SIZE,
+            const long long max_block_size =
+                    isce3::core::DEFAULT_MAX_BLOCK_SIZE,
             isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::dataInterpMethod::BIQUINTIC_METHOD);
 
@@ -238,9 +247,9 @@ public:
      * geo-coordinates).
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
      * @param[in]  max_block_size      Maximum block size (per thread)
-     * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  dem_interp_method   DEM interpolation method
      */
     template<class T_out>
@@ -332,8 +341,6 @@ public:
     void thresholdGeo2rdr(double threshold) { _threshold = threshold; }
 
     void numiterGeo2rdr(int numiter) { _numiter = numiter; }
-
-    void linesPerBlock(size_t linesPerBlock) { _linesPerBlock = linesPerBlock; }
 
     void radarBlockMargin(int radarBlockMargin)
     {
@@ -521,6 +528,11 @@ private:
             const double range_pixel_spacing, const double prf,
             const isce3::core::LUT2d<double>& doppler_lut);
 
+    void _print_parameters(pyre::journal::info_t& channel, 
+                           isce3::core::GeocodeMemoryMode& geocode_memory_mode,
+                           const long long min_block_size,
+                           const long long max_block_size);
+
     // isce3::core objects
     isce3::core::Orbit _orbit;
     isce3::core::Ellipsoid _ellipsoid;
@@ -529,7 +541,6 @@ private:
 
     double _threshold = 1e-8;
     int _numiter = 100;
-    size_t _linesPerBlock = 1000;
 
     // radar grids parameters
     isce3::core::LUT2d<double> _doppler;
