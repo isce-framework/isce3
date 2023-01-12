@@ -18,6 +18,7 @@ runconfig:
             orbit:
                 reference_orbit_file:
                 secondary_orbit_file:
+            tec_file:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.

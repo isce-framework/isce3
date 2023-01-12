@@ -16,6 +16,10 @@ runconfig:
             # External orbit file
             orbit_file: str(required=False)
 
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file: str(required=False)
+
         product_path_group:
             # Directory where PGE will place results
             product_path: str()
