@@ -474,11 +474,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     iono_args = cfg['ionosphere_phase_correction']
     iono_method = iono_args['spectral_diversity']
     iono_method_sideband = ['main_side_band', 'main_diff_ms_band']
-
-    if iono_method in iono_method_sideband:
-        is_iono_method_sideband = True
-    else:
-        is_iono_method_sideband = False
+    is_iono_method_sideband = iono_method in iono_method_sideband
 
     # Create list of frequencies
     id_group = dst_h5[f'{common_path}/identification']
