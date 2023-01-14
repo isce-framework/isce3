@@ -394,6 +394,8 @@ def write_array(output_str,
         if block_row == 0:
             driver = gdal.GetDriverByName(file_type)
             ds_data = driver.Create(output_str, data_cols, data_rows, 1, data_type)
+            ds_data.WriteArray(input_array, xoff=0, yoff=block_row)
+
         else:
             ds_data = gdal.Open(output_str, gdal.GA_Update)
             ds_data.WriteArray(input_array, xoff=0, yoff=block_row)

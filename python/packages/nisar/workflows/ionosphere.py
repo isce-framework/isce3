@@ -116,7 +116,7 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         spacing_main = np.array(src_main_h5[rspc_path_a])
         spacing_side = np.array(src_side_h5[rspc_path_b])
 
-    resampling_scale_factor = int(np.round(spacing_side / spacing_main))
+    resampling_scale_factor = float(int(np.round(spacing_side / spacing_main)))
     if resample_type == 'coarse':
         decimate_list = ['coarse']
     elif resample_type == 'fine':
@@ -161,6 +161,8 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         rg_off_obj = gdal.Open(rg_off_path)
         az_off_obj = gdal.Open(az_off_path)
 
+        band = rg_off_obj.GetRasterBand(1)
+        datatype = band.DataType 
         # get dimensions for block processing
         rows_main = rg_off_obj.RasterYSize
         cols_main = rg_off_obj.RasterXSize
@@ -169,7 +171,7 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         for off_obj, b_off_path in zip([rg_off_obj, az_off_obj],
                                         [rg_b_off_path, az_b_off_path]):
             off_scale_factor = [resampling_scale_factor 
-                                if 'range' in b_off_path else 1]
+                                if 'range' in b_off_path else 1 ]
 
             for block in range(0, nblocks):
                 row_start = block * blocksize
@@ -190,10 +192,10 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
                 rows_output, cols_output = off_side.shape
                 write_array(b_off_path,
                             off_side,
-                            data_type=gdal.GDT_Float32,
+                            data_type=datatype,
                             block_row=row_start,
                             data_shape=[rows_main, cols_output],
-                            file_type='ISCE')
+                            file_type='ENVI')
 
 def init_iono_attrs_datasets(iono_insar_cfg, input_runw, output_runw):
     """create ionosphere layers (frequency B) in output RUNW if not exists

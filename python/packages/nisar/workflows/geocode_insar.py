@@ -709,14 +709,17 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                             iono_sideband_bool = True
                             iono_freq = 'B'
                             rdr_geometry_iono = \
-                                isce3.container.RadarGeometry(radar_grid_iono,
-                                                            slc.getOrbit(),
-                                                            grid_zero_doppler)
+                                isce3.container.RadarGeometry(
+                                    radar_grid_iono,
+                                    slc.getOrbit(),
+                                    grid_zero_doppler)
                         else:
                             '''
-                            The method using sideband produces only one
+                            The methods using sideband (e.g., main_side_band, 
+                            and main_ms_diff_band) produce only one
                             ionosphere from frequency A and B interferogram.
-                            The ionosphere layer does not exist in freq B.
+                            The ionosphere of radargrid (frequency B) is 
+                            geocoded only to geogrid in frequency A.
                             '''
                             geocode_iono_bool = False
                     else:
