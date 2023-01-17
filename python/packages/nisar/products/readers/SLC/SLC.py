@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from logging import error
 import os
 import h5py
 import pyre
@@ -9,6 +8,7 @@ from ..Base import Base
 from .Identification import Identification
 from nisar.products.readers.GenericProduct import \
     get_hdf5_file_product_type
+from nisar.types import complex32
 
 PRODUCT = 'RSLC'
 
@@ -96,3 +96,42 @@ class SLC(Base, family='nisar.productreader.slc'):
         Returns the product level
         '''
         return "L1"
+
+
+    def is_dataset_complex64(self, freq, pol):
+        '''
+        Determine if RSLC raster is of data type complex64
+
+        Parameters
+        ----------
+        freq: str
+            Frequency of raster to check
+        pol: str
+            Polarization of raster to check
+        '''
+        # Set error channel
+        error_channel = journal.error('SLC.is_dataset_complex64')
+
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as h:
+            freq_path = f'/{self.SwathPath}/frequency{freq}'
+            if freq_path not in h:
+                err_str = f'Frequency {freq} not found in SLC'
+                error_channel.log(err_str)
+                raise LookupError(err_str)
+
+            slc_path = self.slcPath(freq, pol)
+            if slc_path not in h:
+                err_str = f'Polarization {pol} for frequency {freq} not found in SLC'
+                error_channel.log(err_str)
+                raise LookupError(err_str)
+
+            # h5py raises TypeError when reading complex32 dataset without
+            # astype(complex32). Use try except to determine return.
+            try:
+                # Try printing invalid datatype to force TypeError if complex32
+                print(h[slc_path].dtype)
+                # No errors if RSLC dataset is complex64
+                return True
+            except TypeError:
+                # Else if RSLC dataset is complex32
+                return False

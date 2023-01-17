@@ -30,10 +30,13 @@ class InsarRunConfig(Geo2rdrRunConfig):
         freq_pols = self.cfg['processing']['input_subset'][
             'list_of_frequencies']
 
-        # If dense_offsets is disabled and rubbersheet is enabled
-        # throw an exception and do not run the workflow
-        if not self.cfg['processing']['dense_offsets']['enabled'] and \
-                self.cfg['processing']['rubbersheet']['enabled']:
+        # If dense_offsets or offsets product is disabled and
+        # rubbersheet is enabled throw an exception and do not run the workflow
+        flag_dense_offset = self.cfg['processing']['dense_offsets']['enabled']
+        flag_offset_product = self.cfg['processing']['offsets_product'][
+            'enabled']
+        enable_flag = flag_dense_offset or flag_offset_product
+        if not enable_flag and self.cfg['processing']['rubbersheet']['enabled']:
             err_str = "Dense_offsets must be enabled to run rubbersheet"
             error_channel.log(err_str)
             raise ValueError(err_str)
@@ -69,6 +72,14 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if self.cfg['processing']['coarse_resample']['offsets_dir'] is None:
             self.cfg['processing']['coarse_resample']['offsets_dir'] = scratch_path
 
+        # If dense_offsets and offsets_product are both enabled, switch off
+        # offsets_product and execute only dense_offsets
+        if self.cfg['processing']['offsets_product']['enabled'] and \
+            self.cfg['processing']['dense_offsets']['enabled']:
+            warning_channel.log('Dense offsets and offsets product both enabled'
+                                'switching off offsets product and run dense offsets')
+            self.cfg['processing']['offsets_product']['enabled'] = False
+
         if self.cfg['processing']['dense_offsets']['coregistered_slc_path'] is None:
             self.cfg['processing']['dense_offsets'][
                 'coregistered_slc_path'] = scratch_path
@@ -91,9 +102,15 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
         # When running insar.py dense_offsets_path and geo2rdr_offsets_path
         # come from previous step through scratch_path
-        if self.cfg['processing']['rubbersheet']['dense_offsets_path'] is None:
+        if self.cfg['processing']['rubbersheet']['dense_offsets_path'] is None and \
+                flag_dense_offset:
             self.cfg['processing']['rubbersheet'][
                 'dense_offsets_path'] = scratch_path
+
+        if self.cfg['processing']['rubbersheet']['offsets_product_path'] is None and \
+                flag_offset_product:
+            self.cfg['processing']['rubbersheet'][
+                'offsets_product_path'] = scratch_path
 
         if self.cfg['processing']['rubbersheet']['geo2rdr_offsets_path'] is None:
             self.cfg['processing']['rubbersheet'][
@@ -229,7 +246,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 for iono_pol in iono_freq_pol['A']:
                     if (iono_pol not in ref_pols_freqA) or \
                        (iono_pol not in sec_pols_freqA):
-                        err_str = f"polarzations {iono_pol} for ionosphere estimation are requested, but not found"
+                        err_str = f"polarizations {iono_pol} for ionosphere estimation are requested, but not found"
                         error_channel.log(err_str)
                         raise FileNotFoundError(err_str)
 

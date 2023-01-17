@@ -18,7 +18,11 @@ runconfig:
            
             # Troposphere weather model
             troposphere_weather_model: include('troposphere_weather_model_options', required=False)
- 
+
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file: str(required=False)
+
         product_path_group:
             # Directory where PGE will place results
             product_path: str()
@@ -40,6 +44,7 @@ runconfig:
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P','M','N','F', required=False)
             urgent_request_id: list(str(), required=False)
+            processing_center: str(required=False)
 
         debug_level_group:
             debug_switch: bool()
@@ -130,6 +135,8 @@ phase_unwrap_options:
 
     snaphu: include('snaphu_options', required=False)
 
+    preprocess_wrapped_phase: include('preprocess_wrapped_phase_options', required=False)
+
 icu_options:
     correlation_threshold_increments: num(min=0, max=1, required=False)
     seed: int(min=0, required=False)
@@ -210,6 +217,21 @@ connected_components_options:
     min_frac_area: num(required=False)
     cost_thresh: int(required=False)
     max_ncomps: int(required=False)
+
+preprocess_wrapped_phase_options:
+    enabled: bool(required=False)
+    mask: include('unwrap_mask_options', required=False)
+    filling_method: enum('distance_interpolator', required=False)
+    distance_interpolator: include('distance_interp_options', required=False)
+
+unwrap_mask_options:
+    mask_type: enum('median_filter', 'coherence', required=False)
+    mask_path: str(required=False)
+    outlier_threshold: num(min=0, required=False)
+    median_filter_size: int(min=1, required=False)
+
+distance_interp_options:
+    distance: int(required=False)
 
 coarse_resample_options:
     # Path to coarse/fine offset directory
@@ -426,6 +448,11 @@ rubbersheet_options:
     # Not required as InSAR workflow allows using intermediate outputs
     # from previous steps (not user-specified)
     dense_offsets_path: str(required=False)
+
+    # Path to offsets product directory (offsets, snr, covariance).
+    # Not required as InSAR workflow allows using intermediate outputs
+    # from previous steps (not user-specified)
+    offsets_product_path: str(required=False)
 
     # Path to geo2rdr offset path
     geo2rdr_offsets_path: str(required=False)

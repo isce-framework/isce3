@@ -38,6 +38,8 @@ matchtemplate/pycuampcor/cuArraysCopy.cu
 matchtemplate/pycuampcor/cuArraysPadding.cu
 matchtemplate/pycuampcor/cuCorrFrequency.cu
 matchtemplate/pycuampcor/cuCorrNormalization.cu
+matchtemplate/pycuampcor/cuCorrNormalizationSAT.cu
+matchtemplate/pycuampcor/cuCorrNormalizer.cu
 matchtemplate/pycuampcor/cuCorrTimeDomain.cu
 matchtemplate/pycuampcor/cuDeramp.cu
 matchtemplate/pycuampcor/cuEstimateStats.cu

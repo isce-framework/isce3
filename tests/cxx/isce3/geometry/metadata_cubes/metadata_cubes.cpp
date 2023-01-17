@@ -517,7 +517,6 @@ TEST(radarGridCubeTest, testRadarGridCube)
         geo_obj.ellipsoid(ellipsoid);
         geo_obj.thresholdGeo2rdr(threshold_geo2rdr);
         geo_obj.numiterGeo2rdr(numiter_geo2rdr);
-        geo_obj.linesPerBlock(1000);
         geo_obj.radarBlockMargin(100);
         geo_obj.dataInterpolator(method);
 

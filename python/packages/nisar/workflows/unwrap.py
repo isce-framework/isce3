@@ -5,7 +5,6 @@ Wrapper for phase unwrapping
 '''
 
 import pathlib
-import os
 import time
 
 import h5py
@@ -17,6 +16,7 @@ import isce3.unwrap.snaphu as snaphu
 
 from nisar.workflows import h5_prep
 from nisar.products.readers import SLC
+from isce3.unwrap.preprocess import preprocess_wrapped_igram as preprocess
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -89,6 +89,36 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 # Create unwrapping scratch directory to store temporary rasters
                 unwrap_scratch = scratch_path / f'unwrap/freq{freq}/{pol}'
                 unwrap_scratch.mkdir(parents=True, exist_ok=True)
+
+                # If enabled, preprocess wrapped phase: remove invalid pixels
+                # and fill their location with a filling algorithm
+                if unwrap_args['preprocess_wrapped_phase']['enabled']:
+                    # Extract preprocessing dictionary and open arrays
+                    preproc_cfg = unwrap_args['preprocess_wrapped_phase']
+                    filling_method = preproc_cfg['filling_method']
+                    igram = open_raster(igram_path)
+                    coherence = open_raster(corr_path)
+                    mask = open_raster(preproc_cfg['mask']['mask_path']) if \
+                        preproc_cfg['mask']['mask_path'] is not None else None
+
+                    if filling_method == 'distance_interpolator':
+                        distance = preproc_cfg['distance_interpolator']['distance']
+
+                    igram_filt = preprocess(igram, coherence,
+                                            mask,
+                                            preproc_cfg['mask']['mask_type'],
+                                            preproc_cfg['mask']['outlier_threshold'],
+                                            preproc_cfg['mask']['median_filter_size'],
+                                            filling_method, distance)
+                    # Save filtered/filled wrapped interferogram
+                    igram_path = f'{unwrap_scratch}/wrapped_igram.filt'
+
+                    driver = gdal.GetDriverByName('ENVI')
+                    length, width = igram_filt.shape
+                    out_ds = driver.Create(igram_path, width, length, 1,
+                                           gdal.GDT_CFloat32)
+                    out_ds.GetRasterBand(1).WriteArray(igram_filt)
+                    out_ds.FlushCache()
 
                 # Run unwrapping based on user-defined algorithm
                 algorithm = unwrap_args['algorithm']
@@ -608,6 +638,28 @@ def filter_nan(file_path, out_file, lines_per_block,
             out_ds.GetRasterBand(band + 1).WriteArray(data_block,
                                                       xoff=0, yoff=line_start)
             out_ds.FlushCache()
+
+
+def open_raster(filename, band=1):
+    '''
+    Open GDAL-friendly raster and allocate 'band'
+    in numpy array
+
+    Parameters
+    ----------
+    filename: str
+        Path to the GDAL-friendly raster
+    band: int
+        Band number to extract
+
+    Returns
+    -------
+    raster: np.ndarray
+        Raster band allocated in numpy array
+    '''
+    ds = gdal.Open(filename, gdal.GA_ReadOnly)
+    raster = ds.GetRasterBand(band).ReadAsArray()
+    return raster
 
 
 if __name__ == "__main__":
