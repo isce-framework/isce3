@@ -128,5 +128,5 @@ macro(getpackage_pyre)
 endmacro()
 
 macro(getpackage_python)
-    find_package(Python 3.6 REQUIRED COMPONENTS Interpreter Development)
+    find_package(Python 3.7 REQUIRED COMPONENTS Interpreter Development)
 endmacro()
