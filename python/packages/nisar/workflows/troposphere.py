@@ -99,21 +99,18 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     tropo_delay_product = [product.lower()
                            for product in tropo_cfg['delay_product']]
 
-    
     # Troposphere delay datacube
     troposphere_delay_datacube = dict()
 
     with h5py.File(gunw_hdf5, 'r', libver='latest', swmr=True) as f:
 
         # Fetch the GUWN Incidence Angle Datacube
-        inc_angle_cube = np.array(
-            f['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'])
-        xcoord_radar_grid = np.array(
-            f['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'])
-        ycoord_radar_grid = np.array(
-            f['science/LSAR/GUNW/metadata/radarGrid/yCoordinates'])
-        height_radar_grid = np.array(
-            f['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'])
+        rdr_grid_path = 'science/LSAR/GUNW/metadata/radarGrid'
+
+        inc_angle_cube = np.array(f[f'{rdr_grid_path}/incidenceAngle'])
+        xcoord_radar_grid = np.array(f[f'{rdr_grid_path}/xCoordinates'])
+        ycoord_radar_grid = np.array(f[f'{rdr_grid_path}/yCoordinates'])
+        height_radar_grid = np.array(f[f'{rdr_grid_path}/heightAboveEllipsoid'])
 
         expected_inc_angle_cube_shape = (
             height_radar_grid.shape[0], ycoord_radar_grid.shape[0], xcoord_radar_grid.shape[0])
@@ -192,11 +189,9 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 error_channel.log(err_str)
                 raise ValueError(err_str)
 
-
             # Save to the dictionary in memory
             tropo_delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_product}'
             troposphere_delay_datacube[tropo_delay_product]  = tropo_delay_datacube
-
 
         f.close()
 

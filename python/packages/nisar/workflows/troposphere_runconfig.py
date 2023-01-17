@@ -7,47 +7,44 @@ import os
 
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 
-class InsarTroposphereRunConfig(Geo2rdrRunConfig):
+def troposphere_delay_check(cfg):
     '''
-    Troposhphere RunConfig
+    Check the troposphere delay yaml
+
+    Parameters
+     ----------
+     cfg: dict
+        configuration dictionary
+
+     Returns
+     -------
+     None
     '''
 
-    def __init__(self, args):
-        super().__init__(args)
-        self.load_geocode_yaml_to_dict()
-        self.geocode_common_arg_load()
-        self.yaml_check()
+    error_channel = journal.error('InsarTroposphereRunConfig.yaml_check')
+    info_channel = journal.info('InsarTroposphereRunConfig.yaml_check')
+    
+    tropo_cfg = cfg['processing']['troposphere_delay']
 
-    def yaml_check(self):
-        '''
-        Check submodule paths from YAML
-        '''
-
-        error_channel = journal.error('InsarTroposphereRunConfig.yaml_check')
-        info_channel = journal.info('InsarTroposphereRunConfig.yaml_check')
+    # only if the troposphere is enabled
+    if tropo_cfg['enabled']:
 
         # Check the weater model files
-        dynamic_weather_model_cfg = self.cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
+        dynamic_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
+    
+        for option in ['reference','secondary']:
 
-        ref_weather_model_file = dynamic_weather_model_cfg['reference_file_path']
-        sec_weather_model_file = dynamic_weather_model_cfg['secondary_file_path']
+            weather_model_file = dynamic_weather_model_cfg[f'{option}_file_path']
 
-        if (ref_weather_model_file is None) or (not os.path.exists(ref_weather_model_file)):
-            err_str = 'reference weather model file cannot be None or not found,\
-                    please specify the reference weather model'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
+            if (weather_model_file is None) or (not os.path.exists(weather_model_file)):
+                err_str = f'{option} weather model file cannot be None or not found,\
+                        please specify the {option} weather model'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
 
-        if (sec_weather_model_file is None) or (not os.path.exists(sec_weather_model_file)):
-            err_str = 'secondary weather model file cannwot be None or not found,\
-                    please specify the secondary weather model'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        # Create defaults for troposphere delay computation
-        tropo_cfg = self.cfg['processing']['troposphere_delay']
 
         weather_model_type = tropo_cfg['weather_model_type'].upper()
+        
         # Check the weather model
         if weather_model_type not in ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA',
                                       'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR']:
@@ -109,3 +106,15 @@ class InsarTroposphereRunConfig(Geo2rdrRunConfig):
                 info_channel.log(
                     "the delay product is empty, the 'comb' will be applied")
                 tropo_cfg['delay_product'] = ['comb']
+
+
+class InsarTroposphereRunConfig(Geo2rdrRunConfig):
+    ''' 
+    Troposhphere RunConfig
+    '''
+
+    def __init__(self, args):
+        super().__init__(args)
+        self.load_geocode_yaml_to_dict()
+        self.geocode_common_arg_load()
+        troposphere_delay_check(self.cfg)
