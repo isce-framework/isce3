@@ -54,6 +54,8 @@ def run(cfg):
     geocode_algorithm = geocode_dict['algorithm_type']
     output_mode = geocode_dict['output_mode']
     flag_apply_rtc = geocode_dict['apply_rtc']
+    flag_apply_valid_samples_sub_swath_masking = \
+        geocode_dict['apply_valid_samples_sub_swath_masking']
     memory_mode = geocode_dict['memory_mode']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
     abs_cal_factor = geocode_dict['abs_rad_cal']
@@ -124,6 +126,12 @@ def run(cfg):
     for frequency in freq_pols.keys():
 
         t_freq = time.time()
+
+        # get sub_swaths metadata
+        if flag_apply_valid_samples_sub_swath_masking:
+            sub_swaths = slc.getSwathMetadata(frequency).sub_swaths()
+        else:
+            sub_swaths = None
 
         # unpack frequency dependent parameters
         radar_grid = slc.getRadarGrid(frequency)
@@ -318,8 +326,8 @@ def run(cfg):
                     rtc_algorithm=rtc_algorithm,
                     abs_cal_factor=abs_cal_factor,
                     flag_upsample_radar_grid=flag_upsample_radar_grid,
-                    clip_min = clip_min,
-                    clip_max = clip_max,
+                    clip_min=clip_min,
+                    clip_max=clip_max,
                     radargrid_nlooks=radar_grid_nlooks,
                     out_off_diag_terms=out_off_diag_terms_obj,
                     out_geo_nlooks=out_geo_nlooks_obj,
@@ -327,6 +335,7 @@ def run(cfg):
                     out_geo_dem=out_geo_dem_obj,
                     input_rtc=None,
                     output_rtc=None,
+                    sub_swaths=sub_swaths,
                     dem_interp_method=dem_interp_method_enum,
                     memory_mode=memory_mode,
                     **optional_geo_kwargs)

@@ -197,6 +197,9 @@ geocode_options:
     # Apply RTC
     apply_rtc: bool(required=False)
 
+    # OPTIONAL - Apply RSLC metadata valid-samples sub-swath masking
+    apply_valid_samples_sub_swath_masking: bool(required=False)
+
     memory_mode: enum('auto', 'single_block', 'geogrid', 'geogrid_and_radargrid', required=False)
 
     # Processing upsampling factor on top of the input geogrid

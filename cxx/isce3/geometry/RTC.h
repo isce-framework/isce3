@@ -54,7 +54,7 @@ enum rtcAlgorithm { RTC_BILINEAR_DISTRIBUTION = 0, RTC_AREA_PROJECTION = 1 };
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
- * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+ * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN.
@@ -104,7 +104,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
- * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+ * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN..
@@ -143,7 +143,7 @@ void computeRtc(isce3::product::RadarGridProduct& product,
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
- * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+ * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN..
@@ -202,7 +202,7 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
- * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+ * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN..
@@ -260,7 +260,7 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
  * @param[in]  output_terrain_radiometry Output terrain radiometry
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
- * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+ * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN..
@@ -293,7 +293,7 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
  * @param[in]  output_terrain_radiometry Output terrain radiometry
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
- * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+ * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
  * be set to NaN..
