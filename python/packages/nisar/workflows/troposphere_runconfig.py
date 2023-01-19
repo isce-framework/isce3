@@ -23,8 +23,8 @@ def troposphere_delay_check(cfg):
      None
     '''
 
-    error_channel = journal.error('InsarTroposphereRunConfig.yaml_check')
-    info_channel = journal.info('InsarTroposphereRunConfig.yaml_check')
+    error_channel = journal.error('InsarTroposphereRunConfig.troposphere_delay_check')
+    info_channel = journal.info('InsarTroposphereRunConfig.troposphere_delay_check')
 
     tropo_cfg = cfg['processing']['troposphere_delay']
     rslc_cfg = cfg['input_file_group']
@@ -86,44 +86,45 @@ def troposphere_delay_check(cfg):
                 raise ValueError(err_str)
 
         weather_model_type = tropo_cfg['weather_model_type'].upper()
-
+        
         # Check the weather model
-        if weather_model_type not in ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA',
-                                      'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR']:
-
+        weather_model_types = ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA',
+                                'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR']
+        
+        if weather_model_type not in weather_model_types:
+            weather_model_types = ','.join(weather_model_types)
             err_str = f"unidentified weather model {weather_model_type}," + \
-                        'please try one of' + \
-                        "'ERA5', 'ERAINT', 'HRES', 'NARR'," + \
-                        "'MERRA', 'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR'"
-
+                        f'please try one of "{weather_model_types}"'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        # Check the external tropo delay  package
-        if tropo_cfg['package'].lower() not in ['pyaps', 'raider']:
+        # Check the external tropo delay package
+        tropo_pkg = tropo_cfg['package'].lower()
+        if tropo_pkg not in ['pyaps', 'raider']:
             err_str = f"unidentified package {tropo_cfg['package']}," + \
                     " please use either pyaps or raider"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         # Further check the weather model that supported by pyAPS or RAiDER
-        if (tropo_cfg['package'].lower() == 'pyaps') and \
+        if (tropo_pkg  == 'pyaps') and \
                 weather_model_type not in ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA']:
             err_str = f'weather model {weather_model_type} is not supported by pyAPS package'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        if (tropo_cfg['package'].lower() == 'raider') and \
+        if (tropo_pkg  == 'raider') and \
                 weather_model_type not in ['ERA5', 'HRES', 'MERRA', 'ECWMF',
                                            'ERAI', 'GMAO', 'HRRR', 'NCMR']:
-            err_str = f'weather model {weather_model_type} is not supported by RAiDER  package'
+            err_str = f'weather model {weather_model_type} is not supported by RAiDER package'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         # Check the delay direction
-        if tropo_cfg['delay_direction'].lower() not in ['zenith',
-                                                        'line_of_sight_mapping',
-                                                        'line_of_sight_raytracing']:
+        tropo_direction = tropo_cfg['delay_direction'].lower()
+        if tropo_direction not in ['zenith',
+                                   'line_of_sight_mapping',
+                                   'line_of_sight_raytracing']:
             err_str = f"unidentified delay direction {tropo_cfg['delay_direction']}," + \
                         "please use one of 'zenith', 'line_of_sight_mapping'," + \
                         " 'line_of_sight_raytracing'"
@@ -131,19 +132,20 @@ def troposphere_delay_check(cfg):
             raise ValueError(err_str)
 
         # If the delay direction is 'line_of_sight_raytracing', the package must be 'raider'
-        if tropo_cfg['delay_direction'].lower() == 'line_of_sight_raytracing' and \
-                tropo_cfg['package'].lower() != 'raider':
+        if tropo_direction == 'line_of_sight_raytracing' and \
+                tropo_pkg != 'raider':
             err_str = "for line_of_sight_raytracing delay type, the package must be 'raider'"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         # Check the troposphere delay product
-        if not isinstance(tropo_cfg['delay_product'], list):
+        delay_products = tropo_cfg['delay_product']
+        if not isinstance(delay_products, list):
             err_str = "the inputs of the delay_product should be the list type (e.g. ['comb'])"
             error_channel.log(err_str)
             raise ValueError(err_str)
         else:
-            for delay_product in tropo_cfg['delay_product']:
+            for delay_product in delay_products:
                 if delay_product.lower() not in ['wet', 'hydro', 'comb']:
                     err_str = f"unidentified delay product '{tropo_cfg['delay_product']}'," + \
                                 "it should be one or more of 'wet', 'hydro', and 'comb'"
@@ -151,7 +153,7 @@ def troposphere_delay_check(cfg):
                     raise ValueError(err_str)
 
             # Check if it is an empty list
-            if len(tropo_cfg['delay_product']) == 0:
+            if len(delay_products) == 0:
                 info_channel.log(
                     "the delay product is empty, the 'comb' will be applied")
                 tropo_cfg['delay_product'] = ['comb']
