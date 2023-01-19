@@ -21,8 +21,6 @@ FROM $distrib_img
 
 RUN conda install testfixtures scikit-image --channel conda-forge
 RUN conda install cfunits --channel conda-forge
-# Install 'make' and 'install' (from coreutils) in order to build SoilMoisture. 
-RUN conda install make coreutils --channel conda-forge
 
 # Soil Moisture
 COPY soilmoisture-spec-file.txt /tmp/spec-file.txt
@@ -39,6 +37,3 @@ RUN cd /opt/QualityAssurance && python setup.py install
 RUN cd /opt/CFChecker && python setup.py install
 RUN cd /opt/calTools && python setup.py install
 RUN cd /opt/SoilMoisture/src/release/r32 && conda run -n SoilMoisture make install
-
-# Needed so that SoilMoisture RGS software doesn't try to create /.local
-ENV XDG_DATA_HOME /tmp
