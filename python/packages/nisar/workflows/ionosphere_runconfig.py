@@ -238,8 +238,8 @@ def sideband_cfg_check(cfg):
                                               set(iono_cfg_freq_pol['B']))
 
         if common_pol_freq_ab:
-            iono_cfg_freq_pol['A'] = common_pol_freq_ab
-            iono_cfg_freq_pol['B'] = common_pol_freq_ab
+            iono_cfg_freq_pol['A'] = list(common_pol_freq_ab)
+            iono_cfg_freq_pol['B'] = list(common_pol_freq_ab)
         else:
             min_num_pol = np.nanmin([len(iono_cfg_freq_pol['A']),
                                      len(iono_cfg_freq_pol['B'])])
