@@ -38,13 +38,13 @@ def troposphere_delay_check(cfg):
 
             # Check the weather model file
             weather_model_file = dynamic_weather_model_cfg[f'{option}_troposphere_file']
-            
+
             if (weather_model_file is None) or (not os.path.exists(weather_model_file)):
                 err_str = f'{option} weather model file cannot be None or not found,' + \
                         f'please specify the {option} weather model'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-            
+
             # Check the RSLC file
             rslc_file = rslc_cfg[f'{option}_rslc_file_path']
 
@@ -53,24 +53,24 @@ def troposphere_delay_check(cfg):
                         f'please specify the {option} RSLC file'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-            
+
             # Check the days difference between weather model and RSLC
             grbs = pygrib.open(weather_model_file)
             if grbs is None:
                 err_str = f'{weather_model_file} is not a GRIB file'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-            
+
             # Check if there are messages in the GRIB file
             if grbs.messages <= 0:
                 err_str = 'there are no messages in the GRIB file'
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-            
+
             # Weather model valid date of message 1
             grb_msg = grbs.message(1)
             weather_model_date = grb_msg.validDate
-            
+
             with h5py.File(rslc_file, 'r', libver='latest', swmr=True) as f:
                 rslc_start_time = str(np.array(f['science/LSAR/identification/zeroDopplerStartTime']).astype(str))
                 rslc_date = datetime.strptime(rslc_start_time, '%Y-%m-%dT%H:%M:%S')
@@ -78,7 +78,7 @@ def troposphere_delay_check(cfg):
 
             diff = rslc_date - weather_model_date
             hours =  abs(diff.total_seconds()) / 3600.0
-            
+
             # Check if it is more than 1 day (i.e. > 24 hours)
             if hours > 24.0:
                 err_str = 'days difference between weather model and RSLC should be within one day'
@@ -86,11 +86,11 @@ def troposphere_delay_check(cfg):
                 raise ValueError(err_str)
 
         weather_model_type = tropo_cfg['weather_model_type'].upper()
-        
+
         # Check the weather model
         weather_model_types = ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA',
                                 'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR']
-        
+
         if weather_model_type not in weather_model_types:
             weather_model_types = ','.join(weather_model_types)
             err_str = f"unidentified weather model {weather_model_type}," + \
@@ -139,28 +139,15 @@ def troposphere_delay_check(cfg):
             raise ValueError(err_str)
 
         # Check the troposphere delay product
-        delay_products = tropo_cfg['delay_product']
-        if not isinstance(delay_products, list):
-            err_str = "the inputs of the delay_product should be the list type (e.g. ['comb'])"
+        delay_product = tropo_cfg['delay_product'].lower()
+        if delay_product not in ['wet', 'hydro', 'comb']:
+            err_str = f"unidentified delay product '{tropo_cfg['delay_product']}'," + \
+                        "it should be one or more of 'wet', 'hydro', and 'comb'"
             error_channel.log(err_str)
             raise ValueError(err_str)
-        else:
-            for delay_product in delay_products:
-                if delay_product.lower() not in ['wet', 'hydro', 'comb']:
-                    err_str = f"unidentified delay product '{tropo_cfg['delay_product']}'," + \
-                                "it should be one or more of 'wet', 'hydro', and 'comb'"
-                    error_channel.log(err_str)
-                    raise ValueError(err_str)
-
-            # Check if it is an empty list
-            if len(delay_products) == 0:
-                info_channel.log(
-                    "the delay product is empty, the 'comb' will be applied")
-                tropo_cfg['delay_product'] = ['comb']
-
 
 class InsarTroposphereRunConfig(RunConfig):
-    ''' 
+    '''
     Troposhphere RunConfig
     '''
     def __init__(self, args):

@@ -10,7 +10,6 @@ import pyaps3 as pa
 from scipy.interpolate import RegularGridInterpolator
 import yaml
 
-
 def get_dem_info(dem_file: str):
     '''
     get dem information
@@ -124,13 +123,13 @@ def test_troposphere_aps_run():
         tropo_package = cfg['processing']['troposphere_delay']['package']
         tropo_weather_model_type = cfg['processing']['troposphere_delay']['weather_model_type']
         tropo_delay_direction = cfg['processing']['troposphere_delay']['delay_direction']
-        tropo_delay_product = cfg['processing']['troposphere_delay']['delay_product'][0]
+        tropo_delay_product = cfg['processing']['troposphere_delay']['delay_product']
 
         # Dictionary key
         delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'
-        
+
         # Test if there is any NaN value in the datacube
-        assert (not np.isnan(tropo_delay_datacube[delay_product]).any()) 
+        assert (not np.isnan(tropo_delay_datacube[delay_product]).any())
 
         # Troposphere delay in centimeters
         delay_datacube = wavelength * \
@@ -179,12 +178,11 @@ def test_troposphere_aps_run():
 
         f.close()
 
-    # Compare tropospheric delay interpolated from low resolution data cube with the 
+    # Compare tropospheric delay interpolated from low resolution data cube with the
     # delay computed at high resolution. An absolute tolerance of 1 centimeter
-    # is considered for the comparison. 
+    # is considered for the comparison.
     np.testing.assert_allclose(
         high_resolution_tropo_delay, tropo_delay_from_datacube, atol=1.0)
-
 
 if __name__ == '__main__':
     test_troposphere_aps_run()

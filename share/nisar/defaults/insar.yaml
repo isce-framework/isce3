@@ -229,7 +229,7 @@ runconfig:
                 # Conventional line of sight delay
                 delay_direction: line_of_sight_mapping
                 # Delay product is 'comb'
-                delay_product: ['comb']
+                delay_product: comb
     
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
