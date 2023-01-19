@@ -89,7 +89,12 @@ def _cfg_freq_pol_check(cfg, freq):
 
     # If polarizations are given in iono config, then check if HDF5 has them.
     iono_cfg = cfg['processing']['ionosphere_phase_correction']
-    iono_cfg_freq_pol = iono_cfg['list_of_frequencies'][freq]
+
+    if iono_cfg['list_of_frequencies'] is None:
+        iono_cfg_freq_pol = None
+    else:
+        iono_cfg_freq_pol = iono_cfg['list_of_frequencies'][freq]
+
     if iono_cfg_freq_pol:
         set_iono_cfg_freq_pol = set(iono_cfg_freq_pol)
 
@@ -140,6 +145,8 @@ def _cfg_freq_pol_check(cfg, freq):
         # use h5 common crosspols
         else:
             iono_cfg_freq_pol = list(h5_common_pols)
+    cfg['processing']['ionosphere_phase_correction'][
+            'list_of_frequencies'][freq] = iono_cfg_freq_pol
 
 
 def split_main_band_cfg_check(cfg):
@@ -210,21 +217,6 @@ def sideband_cfg_check(cfg):
     iono_method = iono_cfg['spectral_diversity']
     iono_cfg_freq_pol = iono_cfg['list_of_frequencies']
 
-    # If more than 1 polarization for frequency A and B are given,
-    # check if given polarizations are identical.
-    # when requested polarization are not same
-    # (ex. freqA : VV, freqB: HH)
-    # ionosphere will be computed from two different polarizations
-    # But only one for each frequency is allowed.
-    if (len(iono_cfg_freq_pol['A']) > 1) and (len(iono_cfg_freq_pol['B']) > 1):
-        if set(iono_cfg_freq_pol['A']) != set(iono_cfg_freq_pol['B']):
-            err_str = f"different polarizations for frequency A "\
-                f"and B are requested for {iono_method}, "\
-                "but only one polarization is allowed for "\
-                "polarization combination."
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
     # Extract frequencies and polarizations to process InSAR
     cfg_freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
@@ -234,13 +226,16 @@ def sideband_cfg_check(cfg):
 
     _cfg_freq_pol_check(cfg, 'B')
 
-    # If numbers of the 'list_of_polarizations' for ionosphere
-    # in frequency A and B are different
-    # find common polarizations from A and B.
+    '''
+    If the numbers of the 'list_of_polarizations' for ionosphere in frequencies 
+    A and B are different, find common polarizations from A and B. 
+    If the common polarizations are not found, identify the minimum number of 
+    polarizations between frequencies A and B and use only the same number of 
+    polarizations in chronological order.
+    '''
     if len(iono_cfg_freq_pol['A']) != len(iono_cfg_freq_pol['B']):
         common_pol_freq_ab = set.intersection(set(iono_cfg_freq_pol['A']),
                                               set(iono_cfg_freq_pol['B']))
-
 
         if common_pol_freq_ab:
             iono_cfg_freq_pol['A'] = common_pol_freq_ab
@@ -287,7 +282,8 @@ def ionosphere_cfg_check(cfg):
     # if any polarizations and frequencies are not given,
     # default is None for both polarizations.
     if iono_cfg_freq_pol is None:
-        iono_cfg_freq_pol = {'A': None, 'B': None}
+        cfg['processing']['ionosphere_phase_correction'][
+            'list_of_frequencies'] = {'A': None, 'B': None}
 
     _cfg_freq_pol_check(cfg, 'A')
 
