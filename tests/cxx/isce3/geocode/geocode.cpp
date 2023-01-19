@@ -22,6 +22,7 @@
 #include <isce3/product/GeoGridParameters.h>
 #include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/Serialization.h>
+#include <isce3/product/SubSwaths.h>
 
 std::set<std::string> geocode_mode_set = {"interp", "area_proj"};
 
@@ -138,6 +139,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::Raster* phase_screen_raster = nullptr;
     isce3::io::Raster* offset_az_raster = nullptr;
     isce3::io::Raster* offset_rg_raster = nullptr;
+    isce3::product::SubSwaths * sub_swaths = nullptr;
+    isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr;
     isce3::core::GeocodeMemoryMode geocode_memory_mode_1 =
             isce3::core::GeocodeMemoryMode::BlocksGeogrid;
     isce3::core::GeocodeMemoryMode geocode_memory_mode_2 =
@@ -178,8 +181,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
                     rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor,
                     clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
                     out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
-                    input_rtc, output_rtc, phase_screen_raster,
-                    offset_az_raster, offset_rg_raster, geocode_memory_mode_1,
+                    phase_screen_raster, offset_az_raster, offset_rg_raster,
+                    input_rtc, output_rtc, sub_swaths,
+                    out_valid_samples_sub_swath_mask, geocode_memory_mode_1,
                     min_block_size, max_block_size);
         }
     }
@@ -226,9 +230,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
             rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
             abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
             &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem, out_geo_nlooks,
-            out_geo_rtc, input_rtc, output_rtc, phase_screen_raster,
-            offset_az_raster, offset_rg_raster, geocode_memory_mode_2,
-            min_block_size, max_block_size);
+            phase_screen_raster, offset_az_raster, offset_rg_raster, out_geo_rtc,
+            input_rtc, output_rtc, sub_swaths, out_valid_samples_sub_swath_mask,
+            geocode_memory_mode_2, min_block_size, max_block_size);
 
     //  load complex raster containing X conj(Y)
     isce3::io::Raster slc_x_conj_y_raster("x_conj_y_slc_rdr.bin");

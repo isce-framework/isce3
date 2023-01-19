@@ -189,7 +189,7 @@ void addbinding_compute_rtc(pybind11::module& m)
              rtc_algorithm : isce3.geometry.RtcAlgorithm, optional
                  RTC algorithm 
              geogrid_upsampling : double, optional
-                Geogrid upsampling (in each direction)
+                Geogrid upsampling
              rtc_min_value_db : float, optional
                  Minimum value for the RTC area factor. Radar
               data with RTC area factor below this limit are ignored.

@@ -10,6 +10,7 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
+#include <isce3/product/SubSwaths.h>
 #include <isce3/core/blockProcessing.h>
 
 // isce3::io
@@ -43,7 +44,7 @@ public:
      * @param[in]  flag_az_baseband_doppler Shift SLC azimuth spectrum to
      * baseband (using Doppler centroid) before interpolation
      * @param[in]  flatten             Flatten the geocoded SLC
-     * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+     * @param[in]  geogrid_upsampling  Geogrid upsampling
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
      * @param[in]  flag_apply_rtc      Apply radiometric terrain correction
      * (RTC)
@@ -54,10 +55,9 @@ public:
      * the input raster (1 for real and 2 for complex rasters).
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit will be set to NaN.
-     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
-     * direction) used to compute the radiometric terrain correction RTC.
-     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
-     * or RTC_AREA_PROJECTION)
+     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute
+     * the radiometric terrain correction RTC.
+     * @param[in]  rtc_algorithm       RTC algorithm
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -85,6 +85,9 @@ public:
      * radar-grid geometry)
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  sub_swaths          Sub-swaths metadata
+     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * sub-swath mask raster
      * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
      * @param[in]  max_block_size      Maximum block size (per thread)
@@ -124,8 +127,10 @@ public:
             isce3::io::Raster* offset_rg_raster = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::product::SubSwaths* sub_swaths = nullptr,
+            isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
-                isce3::core::GeocodeMemoryMode::Auto,
+                    isce3::core::GeocodeMemoryMode::Auto,
             const long long min_block_size =
                     isce3::core::DEFAULT_MIN_BLOCK_SIZE,
             const long long max_block_size =
@@ -145,10 +150,9 @@ public:
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit will be set to NaN.
-     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
-     * direction) used to compute the radiometric terrain correction RTC.
-     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
-     * or RTC_AREA_PROJECTION)
+     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
+     * radiometric terrain correction RTC.
+     * @param[in]  rtc_algorithm       RTC algorithm
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -168,6 +172,9 @@ public:
      * geometry)
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  sub_swaths          Sub-swaths metadata
+     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * sub-swath mask raster
      * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
      * @param[in]  max_block_size      Maximum block size (per thread)
@@ -200,6 +207,8 @@ public:
             isce3::io::Raster* offset_rg_raster = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::product::SubSwaths* sub_swaths = nullptr,
+            isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
                 isce3::core::GeocodeMemoryMode::Auto,
             const long long min_block_size =
@@ -215,7 +224,7 @@ public:
      * @param[in]  input_raster        Input raster
      * @param[out] output_raster       Output raster
      * @param[in]  dem_raster          Input DEM raster
-     * @param[in]  geogrid_upsampling  Geogrid upsampling (in each direction)
+     * @param[in]  geogrid_upsampling  Geogrid upsampling
      * @param[in]  flag_upsample_radar_grid Double the radar grid sampling rate
      * @param[in]  flag_apply_rtc      Apply radiometric terrain correction
      * (RTC)
@@ -223,10 +232,9 @@ public:
      * @param[in]  output_terrain_radiometry Output terrain radiometry
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit will be set to NaN.
-     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each
-     * direction) used to compute the radiometric terrain correction RTC.
-     * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION
-     * or RTC_AREA_PROJECTION)
+     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
+     * radiometric terrain correction RTC.
+     * @param[in]  rtc_algorithm       RTC algorithm
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -247,6 +255,9 @@ public:
      * geo-coordinates).
      * @param[in]  in_rtc              Input RTC area factor (in slant-range).
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  sub_swaths          Sub-swaths metadata
+     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * sub-swath mask raster
      * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
      * @param[in]  max_block_size      Maximum block size (per thread)
@@ -282,8 +293,10 @@ public:
             isce3::io::Raster* out_geo_rtc = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::product::SubSwaths* sub_swaths = nullptr,
+            isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
-                isce3::core::GeocodeMemoryMode::Auto,
+                    isce3::core::GeocodeMemoryMode::Auto,
             const long long min_block_size =
                     isce3::core::DEFAULT_MIN_BLOCK_SIZE,
             const long long max_block_size =
@@ -447,6 +460,8 @@ private:
             double abs_cal_factor, float clip_min, float clip_max,
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
+            isce3::product::SubSwaths * sub_swaths,
+            isce3::io::Raster* out_valid_samples_sub_swath_mask,
             isce3::core::GeocodeMemoryMode geocode_memory_mode,
             const long long min_block_size, const long long max_block_size,
             pyre::journal::info_t& info);
@@ -482,6 +497,11 @@ private:
      * geo-coordinates)
      * @param[out] out_geo_rtc        Output RTC area factor array (in
      * geo-coordinates)
+     * @param[in]  sub_swaths         Sub-swaths metadata
+     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * sub-swath mask raster
+     * * @param[out] out_valid_samples_sub_swath_mask_array Output valid-pixels
+     * sub-swath mask array
      */
     template<class T_out>
     inline void _interpolate(const isce3::core::Matrix<T_out>& rdrDataBlock,
@@ -498,7 +518,10 @@ private:
             double abs_cal_factor, float clip_min, float clip_max,
             bool flag_run_rtc, const isce3::core::Matrix<float>& rtc_area,
             isce3::io::Raster* out_geo_rtc,
-            isce3::core::Matrix<float>& out_geo_rtc_arraya);
+            isce3::core::Matrix<float>& out_geo_rtc_array,
+            isce3::product::SubSwaths * sub_swaths,
+            isce3::io::Raster* out_valid_samples_sub_swath_mask,
+            isce3::core::Matrix<short>& out_valid_samples_sub_swath_mask_array);
 
     /**
      * param[in,out] data a matrix of data that needs to be base-banded in
