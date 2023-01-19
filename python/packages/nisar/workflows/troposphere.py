@@ -61,8 +61,8 @@ def transform_xy_to_latlon(epsg, x, y):
     margin = 0.1
 
     # Extent of the data cube
-    cube_extent = (np.nanmin(lat_datacube)-margin, np.nanmax(lat_datacube)+margin,
-                   np.nanmin(lon_datacube)-margin, np.nanmax(lon_datacube)+margin)
+    cube_extent = (np.nanmin(lat_datacube) - margin, np.nanmax(lat_datacube) + margin,
+                   np.nanmin(lon_datacube) - margin, np.nanmax(lon_datacube) + margin)
 
     return lat_datacube, lon_datacube, cube_extent
 
@@ -76,7 +76,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
      cfg: dict
         runconfig dictionary
      gunw_hdf5: str
-        gunw hdf5 file
+        NISAR GUNW hdf5 file
 
     Returns
      -------
@@ -91,8 +91,8 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     tropo_cfg = cfg['processing']['troposphere_delay']
 
     weather_model_type = tropo_cfg['weather_model_type'].upper()
-    reference_weather_model_file = tropo_weather_model_cfg['reference_file_path']
-    secondary_weather_model_file = tropo_weather_model_cfg['secondary_file_path']
+    reference_weather_model_file = tropo_weather_model_cfg['reference_troposphere_file']
+    secondary_weather_model_file = tropo_weather_model_cfg['secondary_troposphere_file']
 
     tropo_package = tropo_cfg['package'].lower()
     tropo_delay_direction = tropo_cfg['delay_direction'].lower()
@@ -219,9 +219,40 @@ def write_to_GUNW_product(tropo_delay_datacube: dict, gunw_hdf5: str):
         for product in tropo_delay_datacube.keys():
 
              radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
-             radar_grid.create_dataset(product,
-                                       data=tropo_delay_datacube[product],
-                                       dtype=np.float32)
+             
+             # Troposphere delay product information
+             products = product.split('_')
+             package = products[1]
+             delay_product = products[-1]
+             delay_direction = products[2:-1]
+            
+             # Dataset description 
+             descr = f"{delay_product.capitalize()} {'_'.join(delay_direction).capitalize()}" + \
+                     " Troposphere Delay Datacube by {package}"
+
+             # Delay Direction
+             if '_'.join(delay_direction) == 'line_of_sight_mapping':
+                 delay_direction = 'Lineofsight'
+             elif '_'.join(delay_direction) == 'line_of_sight_raytracing':
+                 delay_direction = 'Raytracing'
+             else:
+                 delay_direction = 'Zenith'
+
+             # Product name
+             product_name = f'{delay_product}{delay_direction}TroposphereDelay'
+
+             # If there is no troposphere delay product, then createa new one
+             if product_name not in radar_grid:
+                 h5_prep._create_datasets(radar_grid, [0], np.float64,
+                                          product_name, descr = descr,
+                                          units='radians',
+                                          data=tropo_delay_datacube[product].astype(np.float64))
+
+             # If there exists the product, overwrite the old one
+             else:
+                 tropo_delay = radar_grid[product_name]
+                 tropo_delay[:] = tropo_delay_datacube[product].astype(np.float64)
+
         f.close()
 
 def run(cfg: dict, gunw_hdf5: str):
@@ -253,7 +284,7 @@ def run(cfg: dict, gunw_hdf5: str):
     write_to_GUNW_product(tropo_delay_datacube, gunw_hdf5)
 
     t_all_elapsed = time.time() - t_all
-    info_channel.log(f"successfully ran troposphere delay  in {t_all_elapsed:.3f} seconds")
+    info_channel.log(f"successfully ran troposphere delay in {t_all_elapsed:.3f} seconds")
 
 
 if __name__ == "__main__":

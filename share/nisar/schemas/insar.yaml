@@ -121,8 +121,8 @@ external_orbit_options:
     secondary_orbit_file: str(required=False)
 
 troposphere_weather_model_options:
-     reference_file_path: str(required=False)
-     secondary_file_path: str(required=False)
+     reference_troposphere_file: str(required=False)
+     secondary_troposphere_file: str(required=False)
 
 phase_unwrap_options:
     crossmul_path: str(required=False)

@@ -13,8 +13,8 @@ runconfig:
             # REQUIRED - Use the provided DEM as input
             dem_file: troposphere/dem.tif
             troposphere_weather_model:
-               reference_troposphere_file: troposphere/aps_weather_model/ERA5_N38.26050518740136_N39.48557856973074_W123.52887464635715_W121.6221049408457_20120419_16.grb
-               secondary_troposphere_file: troposphere/aps_weather_model/ERA5_N38.26050518740136_N39.48557856973074_W123.52887464635715_W121.6221049408457_20121105_22.grb
+               reference_file_path: troposphere/raider_weather_model/ERA-5_2012_04_19_T16_37_23_38N_40N_124W_122W.nc
+               secondary_file_path: troposphere/raider_weather_model/ERA-5_2012_11_05_T22_48_18_38N_40N_124W_122W.nc
 
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -166,7 +166,7 @@ runconfig:
             
             troposphere_delay:
                 enabled: True
-                package: pyaps
+                package: raider
                 weather_model_type: ERA5
                 delay_direction: zenith
                 delay_product: ['comb']

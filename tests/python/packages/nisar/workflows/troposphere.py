@@ -64,14 +64,14 @@ def test_troposphere_aps_run():
 
         weather_reference_file = \
             os.path.join(
-                iscetest.data, tropo_weather_model_cfg['reference_file_path'])
+                iscetest.data, tropo_weather_model_cfg['reference_troposphere_file'])
         weather_secondary_file = \
             os.path.join(
-                iscetest.data, tropo_weather_model_cfg['secondary_file_path'])
+                iscetest.data, tropo_weather_model_cfg['secondary_troposphere_file'])
 
-        cfg['dynamic_ancillary_file_group']['troposphere_weather_model']['reference_file_path'] = \
+        cfg['dynamic_ancillary_file_group']['troposphere_weather_model']['reference_troposphere_file'] = \
             weather_reference_file
-        cfg['dynamic_ancillary_file_group']['troposphere_weather_model']['secondary_file_path'] = \
+        cfg['dynamic_ancillary_file_group']['troposphere_weather_model']['secondary_troposphere_file'] = \
             weather_secondary_file
 
         dem_file = os.path.join(
@@ -128,6 +128,9 @@ def test_troposphere_aps_run():
 
         # Dictionary key
         delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'
+        
+        # Test if there is any NaN value in the datacube
+        assert (not np.isnan(tropo_delay_datacube[delay_product]).any()) 
 
         # Troposphere delay in centimeters
         delay_datacube = wavelength * \
@@ -171,14 +174,16 @@ def test_troposphere_aps_run():
         reference_delay = reference_obj.getdelay()
         secondary_delay = secondary_obj.getdelay()
 
-        # Troposphere delay computed by the package
-        tropo_delay_from_package = (reference_delay - secondary_delay) * 100.0
+        # Troposphere delay computed at high resolution (i.e., product spacing)
+        high_resolution_tropo_delay = (reference_delay - secondary_delay) * 100.0
 
         f.close()
 
-    # error within 1 centimeters
+    # Compare tropospheric delay interpolated from low resolution data cube with the 
+    # delay computed at high resolution. An absolute tolerance of 1 centimeter
+    # is considered for the comparison. 
     np.testing.assert_allclose(
-        tropo_delay_from_package, tropo_delay_from_datacube, atol=1.0)
+        high_resolution_tropo_delay, tropo_delay_from_datacube, atol=1.0)
 
 
 if __name__ == '__main__':

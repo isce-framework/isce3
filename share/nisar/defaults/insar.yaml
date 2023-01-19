@@ -22,8 +22,8 @@ runconfig:
 
             # Troposphere weather model files
             troposphere_weather_model:
-                reference_file_path:
-                secondary_file_path:
+                reference_troposphere_file:
+                secondary_troposphere_file:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
