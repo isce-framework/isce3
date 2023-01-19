@@ -229,10 +229,10 @@ def sideband_cfg_check(cfg):
     _cfg_freq_pol_check(cfg, 'B')
 
     '''
-    If the numbers of the 'list_of_polarizations' for ionosphere in frequencies 
-    A and B are different, find common polarizations from A and B. 
-    If the common polarizations are not found, identify the minimum number of 
-    polarizations between frequencies A and B and use only the same number of 
+    If the numbers of the 'list_of_polarizations' for ionosphere in frequencies
+    A and B are different, find common polarizations from A and B.
+    If the common polarizations are not found, identify the minimum number of
+    polarizations between frequencies A and B and use only the same number of
     polarizations in order specified in iono config.
     '''
     if len(iono_cfg_freq_pol['A']) != len(iono_cfg_freq_pol['B']):
