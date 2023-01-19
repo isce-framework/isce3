@@ -518,7 +518,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                        (is_iono_method_sideband and freq == 'A'):
                         cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
                                             freq, pol_list, input_hdf5, dst_h5,
-                                            radar_grid_iono, dem_raster,
+                                            radar_grid_iono, dem_raster, 
+                                            block_size,
                                             iono_sideband=iono_sideband_bool)
 
                 # reset geocode_obj geogrid
