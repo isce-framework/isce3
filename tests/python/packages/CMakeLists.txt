@@ -26,7 +26,6 @@ nisar/workflows/geocode_insar.py
 #nisar/workflows/gen_el_null_range_product.py
 nisar/workflows/gen_el_rising_edge_product.py
 nisar/workflows/gslc.py
-nisar/workflows/gslc_array.py
 nisar/workflows/insar.py
 nisar/workflows/filter_interferogram.py
 nisar/workflows/bandpass_insar.py
