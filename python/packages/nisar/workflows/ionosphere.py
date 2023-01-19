@@ -414,12 +414,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 'coregistered_slc_path'] = new_scratch
             iono_insar_cfg['processing']['crossmul'][
                 'coregistered_slc_path'] = new_scratch
-            iono_insar_cfg['processing']['fine_resample'][
-                'offsets_dir'] = new_scratch
-            iono_insar_cfg['processing']['coarse_resample'][
-                'offsets_dir'] = new_scratch
-            iono_insar_cfg['processing']['crossmul'][
-                'flatten_path'] = new_scratch
+
             new_scratch.mkdir(parents=True, exist_ok=True)
 
             _, out_paths = h5_prep.get_products_and_paths(iono_insar_cfg)
