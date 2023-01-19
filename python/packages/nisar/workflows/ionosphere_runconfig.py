@@ -158,8 +158,10 @@ def split_main_band_cfg_check(cfg):
         Dictionary with user-defined parameters
     """
 
-    error_channel = journal.error('SplitMainBandIonosphere.yaml_check')
-    info_channel = journal.info('SplitMainBandIonosphere.yaml_check')
+    error_channel = journal.error(
+        'ionosphere_runconfig.split_main_band_cfg_check')
+    info_channel = journal.info(
+        'ionosphere_runconfig.split_main_band_cfg_check')
 
     # Extract split-spectrum dictionary
     iono_cfg = cfg['processing']['ionosphere_phase_correction']
@@ -209,8 +211,8 @@ def sideband_cfg_check(cfg):
         Dictionary with user-defined parameters
     """
 
-    error_channel = journal.error('SidebandIonosphere.yaml_check')
-    info_channel = journal.info('SidebandIonosphere.yaml_check')
+    error_channel = journal.error('ionosphere_runconfig.sideband_cfg_check')
+    info_channel = journal.info('ionosphere_runconfig.sideband_cfg_check')
 
     # get options for ionosphere estimation method using sideband
     iono_cfg = cfg['processing']['ionosphere_phase_correction']
