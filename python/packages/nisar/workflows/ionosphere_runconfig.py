@@ -231,7 +231,7 @@ def sideband_cfg_check(cfg):
     A and B are different, find common polarizations from A and B. 
     If the common polarizations are not found, identify the minimum number of 
     polarizations between frequencies A and B and use only the same number of 
-    polarizations in chronological order.
+    polarizations in order specified in iono config.
     '''
     if len(iono_cfg_freq_pol['A']) != len(iono_cfg_freq_pol['B']):
         common_pol_freq_ab = set.intersection(set(iono_cfg_freq_pol['A']),
