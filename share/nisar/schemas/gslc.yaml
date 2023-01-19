@@ -40,6 +40,7 @@ runconfig:
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
             urgent_request_id: list(str(), required=False)
+            processing_center: str(required=False)
 
         debug_level_group:
             debug_switch: bool()
@@ -74,6 +75,9 @@ runconfig:
                 y: int(min=100, max=10000)
 
             flatten: bool()
+
+        # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
+        output: include('output_options', required=False)
 
         # Worker options (e.g. enable/disable GPU processing, select GPU device ID)
         worker: include('worker_options', required=False)
@@ -212,3 +216,20 @@ worker_options:
     # Index of the GPU to use for processing, optional. Defaults to the
     # first available CUDA device. Ignored if *gpu_enabled* is False.
     gpu_id: int(min=0, required=False)
+
+output_options:
+    # Data type of GSLC raster (default complex64_zero_mantissa)
+    data_type: enum('complex32', 'complex64', 'complex64_zero_mantissa', required=False)
+
+    # Enable/disable gzip compression of GSLC raster (default True)
+    compression_enabled: bool(required=False)
+
+    # Level of compression applied to GSLC raster (default 4)
+    # 1 - least compression, 9 - best compresssion
+    compression_level: int(min=1, max=9, required=False)
+
+    # Chunk size of GSLC raster (default [128, 128])
+    chunk_size: list(int(min=4), min=2, max=2, required=False)
+
+    # Enable/disable shuffle filtering of GSLC raster (default True)
+    shuffle: bool(required=False)

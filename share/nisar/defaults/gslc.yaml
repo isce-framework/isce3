@@ -49,6 +49,23 @@ runconfig:
             # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: 0
 
+        # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
+        output:
+          # Data type of GSLC raster
+          data_type: complex64_zero_mantissa
+
+          # Enable gzip compression of GSLC raster
+          compression_enabled: True
+
+          # Level of compression applied to GSLC raster
+          compression_level: 4
+
+          # Chunk size of GSLC raster
+          chunk_size: [128, 128]
+
+          # Enable shuffle filtering of GSLC raster
+          shuffle: True
+
         # ADT section - isce3 + pyre workflow
         processing:
             input_subset:

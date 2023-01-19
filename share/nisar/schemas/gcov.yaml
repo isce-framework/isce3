@@ -39,6 +39,7 @@ runconfig:
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
             urgent_request_id: list(str(), required=False)
+            processing_center: str(required=False)
 
         debug_level_group:
             debug_switch: bool()
@@ -195,6 +196,9 @@ geocode_options:
 
     # Apply RTC
     apply_rtc: bool(required=False)
+
+    # OPTIONAL - Apply RSLC metadata valid-samples sub-swath masking
+    apply_valid_samples_sub_swath_masking: bool(required=False)
 
     memory_mode: enum('auto', 'single_block', 'geogrid', 'geogrid_and_radargrid', required=False)
 

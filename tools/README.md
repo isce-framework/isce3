@@ -3,7 +3,7 @@
 ### Requirements
 
 You must have these available on the host system:
-* Python 3.6+
+* Python 3.7+
 * Docker
 
 To run CUDA tests, you will also need:

@@ -107,7 +107,7 @@ runconfig:
                 # number of lines in northing direction of a block of the geocoded grid 
                 y: 1000 # 2000
                 # number of lines in easting direction of a block of the geocoded grid
-                #x:  # currently not implemented
+                x: 1000
 
             # flag to flatten output GSLC
             flatten: True

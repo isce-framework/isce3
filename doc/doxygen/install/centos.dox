@@ -5,9 +5,9 @@
 ISCE3 has the following dependencies
 <ol>
 <li> C++ compiler - GCC 7.5 or above
-<li> Python 3.6 or above
+<li> Python 3.7 or above
 <li> Eigen 3.3.7 or above
-<li> Numpy
+<li> Numpy 1.20 or above
 <li> GDAL 3.0 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
 <li> CMake 3.18 or above

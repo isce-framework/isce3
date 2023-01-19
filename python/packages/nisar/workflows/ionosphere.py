@@ -324,6 +324,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                     'list_of_frequencies'])
     orig_product_type = original_cfg['primary_executable']['product_type']
 
+
     iono_insar_cfg = original_cfg.copy()
     iono_insar_cfg['primary_executable'][
                 'product_type'] = 'RUNW'
@@ -413,7 +414,12 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 'coregistered_slc_path'] = new_scratch
             iono_insar_cfg['processing']['crossmul'][
                 'coregistered_slc_path'] = new_scratch
-
+            iono_insar_cfg['processing']['fine_resample'][
+                'offsets_dir'] = new_scratch
+            iono_insar_cfg['processing']['coarse_resample'][
+                'offsets_dir'] = new_scratch
+            iono_insar_cfg['processing']['crossmul'][
+                'flatten_path'] = new_scratch
             new_scratch.mkdir(parents=True, exist_ok=True)
 
             _, out_paths = h5_prep.get_products_and_paths(iono_insar_cfg)
@@ -608,7 +614,6 @@ def run(cfg: dict, runw_hdf5: str):
         if 'A' in orig_freq_pols:
             residual_pol_a =  list(set(
                 iono_freq_pols['A']) - set(orig_freq_pols['A']))
-
         else:
             residual_pol_a = list(iono_freq_pols['A'])
 
