@@ -1,14 +1,303 @@
-import journal
 import os
+
 import h5py
+import journal
 import numpy as np
 
 from nisar.products.readers import SLC
-from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
+from nisar.workflows.runconfig import RunConfig
 
-class InsarIonosphereRunConfig(Geo2rdrRunConfig):
+
+def _get_rslc_h5_freq_pols(slc_h5_path, freq):
+    '''
+    Attempt to retrieve for frequencies A and B polarizations rom RSLC HDF5 as
+    a list. If a frequency not found, it is represented as an emtpy list.
+
+    Parameters
+    ----------
+    slc_h5_path: str
+        Path to RSLC HDF5 file
+    freq: ['A', 'B']
+        Frequency whos polarizations are to be extracted from HDF5
+
+    Returns
+    -------
+    list
+        List of polarizations for given frequency. List is empty if no
+        polarizations found.
+    '''
+    with h5py.File(slc_h5_path, 'r', libver='latest', swmr=True) as h:
+        # Load SLC object from HDF5 for swath path
+        slc = SLC(hdf5file=slc_h5_path)
+        swath_path = slc.SwathPath
+
+        # Check if frequency is in HDF5 swath path
+        freq = f'frequency{freq}'
+        if freq not in h[swath_path]:
+            return []
+
+        # Return polarizations for given frequency as a list
+        pol_path = f'{swath_path}/{freq}/listOfPolarizations'
+        return list(h[pol_path][()].astype('str'))
+
+
+def _cfg_freq_pol_check(cfg, freq):
+    """Check ionosphere polarizations for given frequency
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary with user-defined parameters
+    freq: ['A', 'B']
+        Frequency whos polarizations are to be checked
+    """
+    freq = freq.upper()
+    error_channel = \
+        journal.error('ionosphere_runconfig._cfg_freq_pol_check')
+
+    # available polarizations in frequency A of reference SLC
+    ref_slc_path = cfg['input_file_group']['reference_rslc_file_path']
+    h5_ref_pols = _get_rslc_h5_freq_pols(ref_slc_path, freq)
+
+    # available polarizations in frequency A of secondary SLC
+    sec_slc_path = cfg['input_file_group']['secondary_rslc_file_path']
+    h5_sec_pols = _get_rslc_h5_freq_pols(sec_slc_path, freq)
+
+    # check if both ref and sec that freq + pols exist
+    fails = []
+    for refsec, pols_freq in zip(['reference', 'secondary'],
+                                 [h5_ref_pols, h5_sec_pols]):
+        if not pols_freq:
+            fails.append(refsec)
+
+    if fails:
+        err_str = f' SLC HDF5(s) missing frequency {freq}'
+        err_str = ', '.join(fails) + err_str
+        error_channel.log(err_str)
+        raise LookupError(err_str)
+
+    # get common polarizations of freq from reference and secondary
+    h5_common_pols = set.intersection(set(h5_ref_pols), set(h5_sec_pols))
+
+    # If no common frequency A polarizations found between reference and
+    # secondary HDF5s, then raise exception.
+    if not h5_common_pols:
+        err_str = "No common polarization between reference and secondary"\
+            f" frequency {freq} rasters"
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    # If polarizations are given in iono config, then check if HDF5 has them.
+    iono_cfg = cfg['processing']['ionosphere_phase_correction']
+
+    if iono_cfg['list_of_frequencies'] is None:
+        iono_cfg_freq_pol = None
+    else:
+        iono_cfg_freq_pol = iono_cfg['list_of_frequencies'][freq]
+
+    if iono_cfg_freq_pol:
+        set_iono_cfg_freq_pol = set(iono_cfg_freq_pol)
+
+        # container to store which errors occurred
+        fails = []
+
+        # iterate reference and seconday polarizations from h5 for given
+        # frequency
+        for refsec, pols_freq in zip(['reference', 'secondary'],
+                                     [h5_ref_pols, h5_sec_pols]):
+            # check for intersection in polarizations
+            if not set_iono_cfg_freq_pol.intersection(set(pols_freq)):
+                fails.append(refsec)
+
+        # raise error if any non-intersection found
+        if fails:
+            err_str = ' SLC HDF5(s) polarizations do not intersect with'\
+                ' polarizations in ionosphere configuration'
+            err_str = f'Frequency {freq}' + ', '.join(fails) + err_str
+            error_channel.log(err_str)
+            raise LookupError(err_str)
+    # If iono config polarizations not given
+    else:
+        '''
+        If input polarization (frequency A) for ionosphere is not given,
+        the polarizations assigned for InSAR workflow are copied.
+        However, the polarization of InSAR workflow flow is cross-pol,
+        then available co-polarizations are used instead.
+        '''
+        # common co-poliarzations in reference and secondary SLC
+        set_copol = set(('VV', 'HH'))
+
+        # find copols in h5 common pols
+        h5_common_copol_ref_sec = h5_common_pols.intersection(set_copol)
+
+        # find common copols in h5 and frequency A iono config
+        cfg_freq_pols = cfg['processing']['input_subset'][
+            'list_of_frequencies']
+        h5_iono_cfg_common_copol_ref_sec = set.intersection(
+            set(h5_common_copol_ref_sec), set(cfg_freq_pols['A']))
+
+        # use common copols in h5 and frequency A iono config if any found
+        if h5_iono_cfg_common_copol_ref_sec:
+            iono_cfg_freq_pol = list(h5_iono_cfg_common_copol_ref_sec)
+        # use h5 common copols
+        elif h5_common_copol_ref_sec:
+            iono_cfg_freq_pol = list(h5_common_copol_ref_sec)
+        # use h5 common crosspols
+        else:
+            iono_cfg_freq_pol = list(h5_common_pols)
+    cfg['processing']['ionosphere_phase_correction'][
+            'list_of_frequencies'][freq] = iono_cfg_freq_pol
+
+
+def split_main_band_cfg_check(cfg):
+    """Check ionosphere runconfig for split_main_band method
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary with user-defined parameters
+    """
+
+    error_channel = journal.error(
+        'ionosphere_runconfig.split_main_band_cfg_check')
+    info_channel = journal.info(
+        'ionosphere_runconfig.split_main_band_cfg_check')
+
+    # Extract split-spectrum dictionary
+    iono_cfg = cfg['processing']['ionosphere_phase_correction']
+    split_cfg = iono_cfg['split_range_spectrum']
+    iono_method = iono_cfg['spectral_diversity']
+    iono_freq_pol = iono_cfg['list_of_frequencies']
+    ref_slc_path = cfg['input_file_group']['reference_rslc_file_path']
+
+    # Extract main range bandwidth from reference SLC
+    ref_slc = SLC(hdf5file=ref_slc_path)
+
+    rg_main_bandwidth = ref_slc.getSwathMetadata(
+        'A').processed_range_bandwidth
+
+    # If polarizations for frequency B are requested
+    # for split_main_band method, then throw error
+    if iono_freq_pol['B']:
+        err_str = f"Incorrect polarizations {iono_freq_pol['B']} "\
+            "for frequency B are requested. "\
+            f"{iono_method} should not have polarizations in frequency B."
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    # if "split_main_band" is selected,
+    # check if "low_bandwidth" and "high_bandwidth" are assigned.
+    # If "low_bandwidth" or 'high_bandwidth" is not allocated,
+    # split the main range bandwidth into two 1/3 sub-bands.
+    if split_cfg['low_band_bandwidth'] is None:
+        split_cfg['low_band_bandwidth'] = rg_main_bandwidth / 3.0
+        info_str = "low bandwidth for low sub-band is not given;"\
+            "It is automatically set by 1/3 of range bandwidth of frequencyA"
+        info_channel.log(info_str)
+
+    if split_cfg['high_band_bandwidth'] is None:
+        split_cfg['high_band_bandwidth'] = rg_main_bandwidth / 3.0
+        info_str = "high bandwidth for high sub-band is not given;"\
+            "It is automatically set by 1/3 of range bandwidth of frequencyA"
+        info_channel.log(info_str)
+
+
+def sideband_cfg_check(cfg):
+    """Check ionosphere runconfig for methods using sideband
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary with user-defined parameters
+    """
+
+    error_channel = journal.error('ionosphere_runconfig.sideband_cfg_check')
+    info_channel = journal.info('ionosphere_runconfig.sideband_cfg_check')
+
+    # get options for ionosphere estimation method using sideband
+    iono_cfg = cfg['processing']['ionosphere_phase_correction']
+    iono_method = iono_cfg['spectral_diversity']
+    iono_cfg_freq_pol = iono_cfg['list_of_frequencies']
+
+    # Extract frequencies and polarizations to process InSAR
+    cfg_freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
+
+    # Assign config pols to iono config pols if they exit
+    if not iono_cfg_freq_pol['B'] and 'B' in cfg_freq_pols:
+        iono_cfg_freq_pol['B'] = cfg_freq_pols['B']
+
+    _cfg_freq_pol_check(cfg, 'B')
+
+    '''
+    If the numbers of the 'list_of_polarizations' for ionosphere in frequencies
+    A and B are different, find common polarizations from A and B.
+    If the common polarizations are not found, identify the minimum number of
+    polarizations between frequencies A and B and use only the same number of
+    polarizations in order specified in iono config.
+    '''
+    if len(iono_cfg_freq_pol['A']) != len(iono_cfg_freq_pol['B']):
+        common_pol_freq_ab = set.intersection(set(iono_cfg_freq_pol['A']),
+                                              set(iono_cfg_freq_pol['B']))
+
+        if common_pol_freq_ab:
+            iono_cfg_freq_pol['A'] = list(common_pol_freq_ab)
+            iono_cfg_freq_pol['B'] = list(common_pol_freq_ab)
+        else:
+            min_num_pol = np.nanmin([len(iono_cfg_freq_pol['A']),
+                                     len(iono_cfg_freq_pol['B'])])
+            iono_cfg_freq_pol['A'] = iono_cfg_freq_pol['A'][:min_num_pol]
+            iono_cfg_freq_pol['B'] = iono_cfg_freq_pol['B'][:min_num_pol]
+
+    info_str = \
+        f"A: {iono_cfg_freq_pol['A']}, B {iono_cfg_freq_pol['B']} "\
+        f"will be used for {iono_method}."
+    info_channel.log(info_str)
+    cfg['processing'][
+        'ionosphere_phase_correction'][
+        'list_of_frequencies'] = iono_cfg_freq_pol
+
+
+def ionosphere_cfg_check(cfg):
+    """Check ionosphere runconfig
+
+    Parameters
+    ----------
+    cfg: dict
+        Dictionary with user-defined parameters
+    """
+    error_channel = journal.error('ionosphere_runconfig.ionosphere_cfg_check')
+
+    # Extract ionosphere options
+    iono_cfg = cfg['processing']['ionosphere_phase_correction']
+    iono_method = iono_cfg['spectral_diversity']
+    iono_method_side = ['main_side_band', 'main_diff_ms_band']
+
+    if not iono_cfg['enabled']:
+        err_str = f'Ionosphere phase correction must be enabled '\
+                  f'to execute {iono_method}.'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    iono_cfg = cfg['processing']['ionosphere_phase_correction']
+    iono_cfg_freq_pol = iono_cfg['list_of_frequencies']
+
+    # if any polarizations and frequencies are not given,
+    # default is None for both polarizations.
+    if iono_cfg_freq_pol is None:
+        cfg['processing']['ionosphere_phase_correction'][
+            'list_of_frequencies'] = {'A': None, 'B': None}
+
+    _cfg_freq_pol_check(cfg, 'A')
+
+    if iono_method in iono_method_side:
+        sideband_cfg_check(cfg)
+    else:
+        split_main_band_cfg_check(cfg)
+
+
+class InsarIonosphereRunConfig(RunConfig):
     def __init__(self, args):
-        super().__init__(args)
+        super().__init__(args, 'insar')
         self.load_geocode_yaml_to_dict()
         self.geocode_common_arg_load()
         self.yaml_check()
@@ -17,10 +306,9 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
         '''
         Check submodule paths from YAML
         '''
+        error_channel = journal.error('InsarIonosphereRunConfig.yaml_check')
 
         scratch_path = self.cfg['product_path_group']['scratch_path']
-        error_channel = journal.error('InsarIonosphereRunConfig.yaml_check')
-        info_channel = journal.info('InsarIonosphereRunConfig.yaml_check')
 
         # Extract frequencies and polarizations to process
         freq_pols = self.cfg['processing']['input_subset'][
@@ -68,13 +356,13 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
             # Otherwise check that mask for individual freq/pols are correctly assigned
             for freq, pol_list in freq_pols.items():
                 if freq in mask_options:
-                   for pol in pol_list:
-                       if pol in mask_options[freq]:
-                          mask_file = mask_options[freq][pol]
-                          if mask_file is not None and not os.path.isfile(mask_file):
-                             err_str = f"{mask_file} is invalid; needs to be a file"
-                             error_channel.log(err_str)
-                             raise ValueError(err_str)
+                    for pol in pol_list:
+                        if pol in mask_options[freq]:
+                            mask_file = mask_options[freq][pol]
+                            if mask_file is not None and not os.path.isfile(mask_file):
+                                err_str = f"{mask_file} is invalid; needs to be a file"
+                                error_channel.log(err_str)
+                                raise ValueError(err_str)
 
         # Check filter_type and if not allocated, create a default cfg dictionary
         # filter_type will be present at runtime because is allocated in share/nisar/defaults
@@ -115,189 +403,5 @@ class InsarIonosphereRunConfig(Geo2rdrRunConfig):
         if algorithm not in self.cfg['processing']['phase_unwrap']:
             self.cfg['processing']['phase_unwrap'][algorithm]={}
 
-        # Create defaults for ionosphere phase correction
-        iono_cfg = self.cfg['processing']['ionosphere_phase_correction']
-        # If ionosphere phase correction is enabled, check defaults
-
-        if not iono_cfg['enabled']:
-            err_str = 'Ionosphere phase correction must be enabled to execute split-spectrum'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-
-        # Extract split-spectrum dictionary
-        split_cfg = iono_cfg['split_range_spectrum']
-        iono_method = iono_cfg['spectral_diversity']
-        ref_slc_path = self.cfg['input_file_group']['reference_rslc_file_path']
-        sec_slc_path = self.cfg['input_file_group']['secondary_rslc_file_path']
-        iono_freq_pol = iono_cfg['list_of_frequencies']
-
-        iono_method_side = ['main_side_band', 'main_diff_ms_band']
-        # Extract main range bandwidth from reference SLC
-        ref_slc = SLC(hdf5file=ref_slc_path)
-        sec_slc = SLC(hdf5file=sec_slc_path)
-
-        rg_main_bandwidth = ref_slc.getSwathMetadata(
-            'A').processed_range_bandwidth
-
-        # extract the polarizations from reference and secondary hdf5
-        with h5py.File(ref_slc_path, 'r', libver='latest',
-            swmr=True) as ref_h5, \
-            h5py.File(sec_slc_path, 'r', libver='latest',
-            swmr=True) as sec_h5:
-
-            ref_pol_path = os.path.join(
-                ref_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
-            ref_pols_freqA = list(
-                np.array(ref_h5[ref_pol_path][()], dtype=str))
-
-            sec_pol_path = os.path.join(
-                sec_slc.SwathPath, 'frequencyA', 'listOfPolarizations')
-            sec_pols_freqA = list(
-                np.array(sec_h5[sec_pol_path][()], dtype=str))
-            # If ionosphere estimation method using frequency B,
-            # then extract list of polarization from frequency B
-            # If frequency B does not exist, throw error.
-            if iono_method in iono_method_side:
-                pol_path = \
-                        f"{ref_slc.SwathPath}/frequencyB/listOfPolarizations"
-                        
-                err_str = f"SLC HDF5 needs frequencyB for {iono_method}"
-                if 'frequencyB' not in ref_h5[ref_slc.SwathPath]:
-                    err_str = "reference" + err_str
-                    error_channel.log(err_str)
-                    raise ValueError(err_str)
-                ref_pols_freqB = list(
-                    np.array(ref_h5[ref_pol_path][()], dtype=str))
-                    
-                if 'frequencyB' not in sec_h5[ref_slc.SwathPath]:
-                    err_str = "secondary" + err_str
-                    error_channel.log(err_str)
-                    raise ValueError(err_str)
-                sec_pols_freqB = list(
-                    np.array(sec_h5[ref_pol_path][()], dtype=str))
-
-                # Check that main and side-band are at the same polarization.
-                # If not, throw an error.
-                if not set.intersection(set(ref_pols_freqA), set(ref_pols_freqB)):
-                    err_str = "No common polarization between frequency A and B rasters"
-                    error_channel.log(err_str)
-                    raise FileNotFoundError(err_str)
-
-        if iono_method == 'split_main_band':
-            # If polarizations for frequency B are requested
-            # for split_main_band method, then throw error
-            if iono_freq_pol['B']:
-                err_str = f"Incorrect polarzations {iono_freq_pol['B']} for frequency B are requested. "\
-                    f"{iono_method} should not have polarizations in frequency B."
-                error_channel.log(err_str)
-                raise FileNotFoundError(err_str)
-
-        # get common polarzations of freqA from reference and secondary
-        common_pol_refsec_freqA = set.intersection(
-            set(ref_pols_freqA), set(sec_pols_freqA))
-
-        # If no common polarizations found between reference and secondary,
-        # then throw errors.
-        if not common_pol_refsec_freqA:
-            err_str = "No common polarization between frequency A rasters"
-            error_channel.log(err_str)
-            raise FileNotFoundError(err_str)
-
-        # If polarizations are given, then check if HDF5 has them.
-        # If not, then throw error.
-        if iono_freq_pol['A']:
-            for iono_pol in iono_freq_pol['A']:
-                if (iono_pol not in ref_pols_freqA) or \
-                    (iono_pol not in sec_pols_freqA):
-                    err_str = f"polarizations {iono_pol} of frequency A "\
-                        f"for ionosphere estimation are given, but not found"
-                    error_channel.log(err_str)
-                    raise FileNotFoundError(err_str)
-
-        # If polarizations are given for iono estimation using side-band,
-        # then check if HDF5 has them. If not, then throw error.
-        if iono_method in iono_method_side:
-            if iono_freq_pol['B']:
-                for iono_pol in iono_freq_pol['B']:
-                    if (iono_pol not in ref_pols_freqB) or \
-                        (iono_pol not in sec_pols_freqB):
-                        err_str = f"polarizations {iono_pol} of frequency B "\
-                            f"for ionosphere estimation are given, but not found"
-                        error_channel.log(err_str)
-                        raise FileNotFoundError(err_str)
-
-            # list_of_frequencies should have one pol at least to run rdr2geo/geo2rdr
-            if 'B' not in freq_pols:
-                err_str = f"polarizations { iono_freq_pol['B']} of frequency B "\
-                    f"for ionosphere estimation are requested, "\
-                    f"list_of_frequencies in InSAR workflow should have frequency B key."
-                error_channel.log(err_str)
-                raise FileNotFoundError(err_str)
-
-            # If polarizations for frequency A and B are given,
-            # check if given polarzations are identical.
-            if (iono_freq_pol['A']) and (iono_freq_pol['B']):
-                diff_pol = [i for i in iono_freq_pol['B'] if i not in iono_freq_pol['A']]
-                # when requested polarization are not same(ex. freqA : VV, freqB: HH)
-                # ionosphere will be computed from two different polarzations
-                # But only one for each frequency is allowed.
-                if diff_pol:
-                    if (len(iono_freq_pol['A']) != 1) and (len(iono_freq_pol['B']) != 1):
-                        err_str = f"different polarizations for frequency A and B are requested "\
-                        f"for {iono_method}, but only one polarization is allowed for polarization combination"
-                        error_channel.log(err_str)
-
-        # If common polarization found, but input polarizations are not given,
-        # then assign the common polarization for split_main_band
-        if (common_pol_refsec_freqA) and (not iono_freq_pol['A']):
-            # Co-polarizations are found, split_main_band will be used for co-pols
-            common_copol_ref_sec = [pol for pol in common_pol_refsec_freqA
-                if pol in ['VV', 'HH']]
-            iono_freq_pol['A'] = common_copol_ref_sec
-            iono_freq_pol['B'] = None
-
-            # If common co-pols not found, cross-pol will be alternatively used.
-            if not common_copol_ref_sec:
-                iono_freq_pol['A'] = common_pol_refsec_freqA
-                iono_freq_pol['B'] = None
-
-            info_str = f"{iono_freq_pol['A']} will be used for split_main_band"
-            info_channel.log(info_str)
-            self.cfg['processing'][
-                'ionosphere_phase_correction'][
-                'list_of_frequencies'] = iono_freq_pol
-
-        if iono_method in iono_method_side:
-            if not iono_freq_pol['B']:
-                # If polarizations for frequency B are not given from user, then
-                # use polarzations in frequency A
-                if iono_freq_pol['A']:
-                    iono_freq_pol['B'] = iono_freq_pol['A']
-                else:
-                    # get common polarzations of freqA from reference and secondary
-                    common_pol_refsec_freqB = set.intersection(
-                    set(ref_pols_freqB), set(sec_pols_freqB))
-                    # If common polarization found, but input polarizations are not given,
-                    # then assign the common polarization for split_main_band
-                    if (common_pol_refsec_freqB):
-                        # Co-polarizations are found, split_main_band will be used for co-pols
-                        common_copol_ref_sec = [pol for pol in common_pol_refsec_freqB
-                            if pol in ['VV', 'HH']]
-                        iono_freq_pol['B'] = common_copol_ref_sec
-
-                        # If common co-pols not found, cross-pol will be alternatively used.
-                        if not common_copol_ref_sec:
-                            iono_freq_pol['B'] = common_pol_refsec_freqB
-
-                        info_str = f"{iono_freq_pol['B']} will be used for {iono_method}"
-                        info_channel.log(info_str)
-                        self.cfg['processing'][
-                            'ionosphere_phase_correction'][
-                            'list_of_frequencies'] = iono_freq_pol
-
-                    else:
-                        # If no common polarizations found between reference and secondary,
-                        # then throw errors.
-                        err_str = "No common polarization between frequency B rasters"
-                        error_channel.log(err_str)
-                        raise FileNotFoundError(err_str)
+        # check ionosphere runfigs
+        ionosphere_cfg_check(self.cfg)

@@ -88,6 +88,12 @@ def insar_ionosphere_pair(cfg):
         'coregistered_slc_path']
     orig_freq_pols = copy.deepcopy(cfg['processing']['input_subset'][
                     'list_of_frequencies'])
+    if cfg['processing']['fine_resample']['enabled']:
+        resample_type = 'fine'
+    else:
+        resample_type = 'coarse'
+    orig_offsets_dir = cfg['processing'][
+        f'{resample_type}_resample']['offsets_dir']
     orig_product_type = cfg['primary_executable']['product_type']
     iono_insar_cfg = cfg.copy()
 
@@ -175,7 +181,12 @@ def insar_ionosphere_pair(cfg):
                 'coregistered_slc_path'] = new_scratch
             iono_insar_cfg['processing']['crossmul'][
                 'coregistered_slc_path'] = new_scratch
-
+            iono_insar_cfg['processing']['fine_resample'][
+                'offsets_dir'] = new_scratch
+            iono_insar_cfg['processing']['coarse_resample'][
+                'offsets_dir'] = new_scratch
+            iono_insar_cfg['processing']['crossmul'][
+                'flatten_path'] = new_scratch
             new_scratch.mkdir(parents=True, exist_ok=True)
 
             _, out_paths = h5_prep.get_products_and_paths(iono_insar_cfg)
@@ -322,10 +333,17 @@ def run(cfg: dict, runw_hdf5: str):
         f1 = ref_meta_data_b.center_freq
 
         # find polarizations which are not processed in InSAR workflow
-        residual_pol_a =  list(set(
-            iono_freq_pols['A']) - set(orig_freq_pols['A']))
-        residual_pol_b =  list(set(
-            iono_freq_pols['B']) - set(orig_freq_pols['B']))
+        if 'A' in orig_freq_pols:
+            residual_pol_a =  list(set(
+                iono_freq_pols['A']) - set(orig_freq_pols['A']))
+        else:
+            residual_pol_a = list(iono_freq_pols['A'])
+
+        if 'B' in orig_freq_pols:
+            residual_pol_b =  list(set(
+                iono_freq_pols['B']) - set(orig_freq_pols['B']))
+        else:
+            residual_pol_b = list(iono_freq_pols['B'])
 
         f0_low = None
         f0_high = None
