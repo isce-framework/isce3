@@ -1,0 +1,44 @@
+--Folder path to NISAR GCOV data
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/NISAR_L2_PR_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001.h5
+--Folder path to NISAR GCOV T-12 data
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/NISAR_L2_PR_GCOV_022_045_A_017_4020_HH_20220914T135152_20220914T135219_P01101_P_P_J_001.h5
+--Folder path to NISAR GCOV T-24 data
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/NISAR_L2_PR_GCOV_021_045_A_017_4020_HH_20220902T135152_20220902T135219_P01101_P_P_J_001.h5
+--Folder path and file to static ancillary data: Alpha table (HH/HV)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/alphatable.nc
+--Folder path and file to static ancillary HDF5 data:
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/sm_static_ancillary.h5
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Average)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAP_L3_E_17000_nf_average_09_1.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Min)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAP_L3_E_17000_nf_min_09_1.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Max)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAP_L3_E_17000_nf_max_09_1.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Average--ALL)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAP_L3_E_17000_nf_average_year.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Min--ALL)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAP_L3_E_17000_nf_min_year.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Max--ALL)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAP_L3_E_17000_nf_max_year.dat
+--Folder path and file to static ancillary data: SMAP_Climatology Data (Alpha Zero Uncertainty, HH)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAPC_Alpha0_Uncertainty_HH.bin
+ --Folder path and file to static ancillary data: SMAP_Climatology Data (Alpha Zero Uncertainty, VV)
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/SMAPC/SMAPC_Alpha0_Uncertainty_VV.bin
+--PMI datacubes
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/ni_cube_30_50_220828v2.h5
+--Mapping worldcover lulc to datacube index
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/WldCvr_cbmap221204.txt
+--Folder path and file to static ancillary data: mv table
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/eps2mvMironov_002.float32
+--Folder path to ECMWF sol moisture
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/A4S10040600100700001.nc
+--Folder path to Vegetation Water Content dynamic files: file 1
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/vwc_M01_264_200m.h5
+--Folder path to Vegetation Water Content dynamic files: file 2
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/vwc_M01_276_200m.h5
+--Folder path to Vegetation Water Content dynamic files: file 3
+input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/vwc_M01_288_200m.h5
+--Log file name with path
+output_soilm/stdouterr.log
+--Output HDF5 file name with path
+output_soilm/soilm.h5
