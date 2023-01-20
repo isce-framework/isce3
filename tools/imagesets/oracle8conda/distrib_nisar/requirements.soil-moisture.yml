@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - netcdf-cxx4
+  - netcdf-fortran
+  - gcc
+  - gfortran
+  - make
+  - coreutils
