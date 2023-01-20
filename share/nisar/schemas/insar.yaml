@@ -15,7 +15,7 @@ runconfig:
             # water mask (1: water, 0: non-water)
             water_mask_file: str(required=False)
             orbit: include('external_orbit_options', required=False)
-           
+
             # Troposphere weather model
             troposphere_weather_model: include('troposphere_weather_model_options', required=False)
 
@@ -721,16 +721,16 @@ ionosphere_freq_pol_options:
     B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
 
 troposphere_delay_options:
-    # Boolean flag to enable/disable troposphere delay computation 
+    # Boolean flag to enable/disable troposphere delay computation
     enabled: bool(required=False)
     # Package used by troposphere delay computation
     package: enum('pyaps', 'raider', required=False)
     # Weather model type
     weather_model_type: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', 'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR',required=False)
     # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
-    # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package 
+    # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package
     delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
-    # Delay products. They should be one or more of 'wet', 'hydro', and 'comb'
+    # Delay products. They should be one of 'wet', 'hydro', and 'comb'
     delay_product: enum('wet','hydro','comb', required=False)
 
 geo2rdr_options:
