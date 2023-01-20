@@ -6,6 +6,13 @@ runconfig:
             input_file_path:
             - /tmp/ALPSRP037370690.L0B.h5
 
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # If Product SAS and QA SAS are run back-to-back,
+            # this field should be identical to `sas_output_file`.
+            # Otherwise, this field should contain the filename of the single
+            # NISAR product for QA to process.
+            qa_input_file: ./slc.h5
+
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
             dem_file: null
@@ -41,16 +48,25 @@ runconfig:
             # If absent will generate LFM chirp using parameters in L0B product.
             waveform: null
 
+            # Locations of the corner reflectors in the input product.
+            # Only required if `absolute_calibration_factor` or
+            # `point_target_analyzer` runconfig params are set to True for QA.
+            corner_reflector_file: null
+
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: /out
             # Directory where SAS can write temporary data
             scratch_path: .
             # SAS writes output product to the following file. PGE may rename.
-            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             sas_output_file: ./slc.h5
             # Echo processor config (including defaults) to file.
             sas_config_file: null
+
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # Output directory to store all QA output files.
+            # Defaults to './qa'
+            qa_output_dir: ./qa
 
         primary_executable:
             # Handy to set to "SLC" until other ISCE tools updated.
@@ -234,3 +250,126 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+
+        qa:
+            workflows:
+                # True to run the validate workflow. Default: False
+                validate: False
+
+                # True to run the qa_reports workflow. Default: False
+                qa_reports: False
+
+                # True to run the absolute_calibration_factor workflow. Default: False
+                absolute_calibration_factor: False
+
+                # True to run the nesz workflow. Default: False
+                nesz: False
+
+                # True to run the point_target_analyzer workflow. Default: False
+                point_target_analyzer: False
+
+            qa_reports:
+                power_image:
+                    # True to compute power in linear units when generating
+                    # the power image for the browse images and graphical
+                    # summary PDF. False for decibel units.
+                    # Defaults to True.
+                    linear_units: true
+
+                    # Number of looks along each axis of the Frequency A
+                    # image arrays for multilooking the power image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, will default to computing the nlooks
+                    # values that would produce an approx. `num_mpix` MPix
+                    # browse image.
+                    nlooks_freqa: null
+
+                    # Number of looks along each axis of the Frequency B
+                    # image arrays for multilooking the power image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, will default to computing the nlooks
+                    # values that would produce an approx. `num_mpix` MPix
+                    # browse image.
+                    nlooks_freqb: null
+
+                    # The approx. size (in megapixels) for the final
+                    # multilooked browse image(s). Defaults to 4.0 MPix.
+                    # If `nlooks_freq*` parameter(s) is not None, nlooks
+                    # values will take precedence.
+                    num_mpix: 4.0
+
+                    # Defines the middle percentile range of the image array
+                    # that the colormap covers. Must be in the range [0.0, 100.0].
+                    # Defaults to 95.0.
+                    middle_percentile: 95.0
+
+                    # The gamma correction parameter.
+                    # Gamma will be applied as follows:
+                    # array_out = normalized_array ^ gamma
+                    # where normalized_array is a copy of the image with values
+                    # scaled to the range [0,1].
+                    # The image colorbar will be defined with respect to the input
+                    # image values prior to normalization and gamma correction.
+                    # Defaults to None (no normalization, no gamma correction)
+                    gamma: null
+
+                    # Preferred tile shape for processing images by batches.
+                    # Actual tile shape used during processing might
+                    # be smaller due to shape of image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Defaults to [1024, 1024] to use all columns
+                    # (i.e. full rows of data).
+                    tile_shape: [1024, 1024]
+
+                histogram:
+                    # The step size to decimate the input array for computing
+                    # the power and phase histograms.
+                    # For example, [2,3] means every 2nd azimuth line and
+                    # every 3rd range line will be used to compute the histograms.
+                    # Defaults to [10,10].
+                    # Format: [<azimuth>, <range>]
+                    decimation_ratio: [10,10]
+
+                    # Starting value (in dB) for the range of the power
+                    # histogram edges. Defaults to -80.0.
+                    pow_histogram_start: -80.0
+
+                    # Endpoint value (in dB) for the range of the power
+                    # histogram edges. Defaults to 20.0.
+                    pow_histogram_endpoint: 20.0
+                    # True to compute phase in radians units, False for
+                    # degrees units. Defaults to True.
+                    phs_in_radians: true
+
+                    # Preferred tile shape for processing images by batches.
+                    # Actual tile shape used during processing might
+                    # be smaller due to shape of image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Defaults to [1024, 1024] to use all columns
+                    # (i.e. full rows of data).
+                    tile_shape: [1024, 1024]
+
+            absolute_calibration_factor:
+
+                # Placeholder: Attribute 1 description for runconfig. Each new line
+                # of text will be a separate line in the runconfig template.
+                # `attr1` is a non-negative float value. Default: 2.3
+                attr1: 2.3
+
+            nesz:
+
+                # Placeholder: Attribute 1 description for runconfig. Each new line
+                # of text will be a separate line in the runconfig template.
+                # `attr1` is a non-negative float value. Default: 11.9
+                attr1: 11.3
+
+            point_target_analyzer:
+
+                # Placeholder: Attribute 1 description for runconfig. Each new line
+                # of text will be a separate line in the runconfig template.
+                # `attr1` is a non-negative float value. Default: 2300.5
+                attr1: 2300.5

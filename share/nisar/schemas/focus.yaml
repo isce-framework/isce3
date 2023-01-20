@@ -9,6 +9,14 @@ runconfig:
     input_file_group:
       # REQUIRED List of NISAR raw data products in L0B format
       input_file_path: list(str(), min=1)
+
+      # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+      # If Product SAS and QA SAS are run back-to-back,
+      # this field should be identical to `sas_output_file`.
+      # Otherwise, this field is the filename of the single
+      # NISAR product for QA to process.
+      qa_input_file: str(required=False)
+
     ## The SAS will function without the following ancillary files but will produce
     ## products that do not meet all requirements.  These files are expected to
     ## be provided in routine processing.  The R1 SAS has not implemented any
@@ -39,6 +47,12 @@ runconfig:
       # Chirp replica file, optional.
       # If absent will generate LFM chirp using parameters in L0B product.
       waveform: str(required=False)
+
+      # Locations of the corner reflectors in the input product.
+      # Only required if `absolute_calibration_factor` or
+      # `point_target_analyzer` runconfig params are set to True for QA.
+      corner_reflector_file: str(required=False)
+
     product_path_group:
       # Directory where PGE will place results
       product_path: str()
@@ -50,6 +64,12 @@ runconfig:
       sas_output_file: str()
       sas_config_file: str()
       product_counter: int(min=1, max=999)
+
+      # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+      # Output directory to store all QA output files.
+      # Defaults to './qa'
+      qa_output_dir: str(required=False)
+
     primary_executable:
       product_type: str()
       composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID')
@@ -235,5 +255,44 @@ spectral_window:
   shape: num(min=0.0, required=False)
 
 qa_options:
-  validate: bool()  # enable file format validation
-  quality: bool()   # produce a data summary
+  # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
+  workflows: include('workflows_options', required=False)
+  qa_reports: include('qa_reports_options', required=False)
+  absolute_calibration_factor: include('absolute_calibration_factor_options', required=False)
+  nesz: include('nesz_options', required=False)
+  point_target_analyzer: include('point_target_analyzer_options', required=False)
+
+# `workflows` determines whether or not to run each part of QA.
+# By default, they are all True.
+workflows_options:
+  validate: bool(required=False)
+  qa_reports: bool(required=False)
+  absolute_calibration_factor: bool(required=False)
+  nesz: bool(required=False)
+  point_target_analyzer: bool(required=False)
+
+qa_reports_options:
+  power_image:
+    linear_units: bool(required=False)
+    nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
+    nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
+    num_mpix: num(min=0.0, required=False)
+    middle_percentile: num(min=0.0, max=100.0, required=False)
+    gamma: num(min=0.0, required=False)
+    tile_shape: list(int(min=1), min=2, max=2, required=False)
+  histogram:
+    decimation_ratio: list(int(min=1), min=2, max=2, required=False)
+    pow_histogram_start: num(required=False)
+    pow_histogram_endpoint: num(required=False)
+    phs_in_radians: bool(required=False)
+    tile_shape: list(int(min=1), min=2, max=2, required=False)
+
+absolute_calibration_factor_options:
+  attr1: num(min=0.0, required=False)
+
+nesz_options:
+  attr1: num(min=0.0, required=False)
+
+point_target_analyzer_options:
+  attr1: num(min=0.0, required=False)
+

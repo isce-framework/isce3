@@ -1,0 +1,181 @@
+runconfig:
+    name: gunw_workflow_default
+
+    groups:
+        pge_name_group:
+            pge_name: INSAR_L_PGE
+
+        input_file_group:
+            reference_rslc_file_path: '.'
+            secondary_rslc_file_path: '.'
+
+        dynamic_ancillary_file_group:
+            # REQUIRED - Use the provided DEM as input
+            dem_file: troposphere/dem.tif
+            troposphere_weather_model:
+               reference_troposphere_file: troposphere/aps_weather_model/ERA5_N38.26050518740136_N39.48557856973074_W123.52887464635715_W121.6221049408457_20120419_16.grb
+               secondary_troposphere_file: troposphere/aps_weather_model/ERA5_N38.26050518740136_N39.48557856973074_W123.52887464635715_W121.6221049408457_20121105_22.grb
+
+        product_path_group:
+            # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
+            product_path: '.'
+
+            # REQUIRED - Directory where SAS can write temporary data
+            scratch_path: '.'
+
+            # REQUIRED - SAS writes output product to the following file. PGE may rename.
+            # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
+            sas_output_file: '.'
+
+        primary_executable:
+            product_type: RIFG_RUNW_GUNW
+
+        debug_level_group:
+            debug_switch: False
+
+        # ADT section - isce3 + pyre workflow
+        processing:
+            input_subset:
+                # Frequencies and polarisations to be processed
+                list_of_frequencies:
+                    # keys for frequency A and B are required.
+                    # valid options for polarizations
+                    # empty for all polarizations found in RSLC
+                    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+                    A: [HH]
+
+            # OPTIONAL - Mechanism to specify output posting and DEM
+            geocode:
+                # OPTIONAL - To control output grid in same units as output EPSG
+                x_snap:
+
+                # OPTIONAL - To control output grid in same units as output EPSG
+                y_snap:
+
+                # OPTIONAL - Same as input DEM if not provided.
+                output_epsg: 32611
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # If no provided, values will match spacing in provided DEM
+                output_posting:
+                    A:
+                        x_posting: 80
+                        y_posting: 80
+                    B:
+                        x_posting:
+                        y_posting:
+                # OPTIONAL - Can control with absolute values or with snap values
+                top_left:
+                    # OPTIONAL - Set top-left y in same units as output EPSG
+                    y_abs:
+                    # OPTIONAL - Set top-left x in same units as output EPSG
+                    x_abs:
+
+                # OPTIONAL - Can control with absolute values or with snap values
+                bottom_right:
+                    y_abs:
+                    x_abs:
+            rdr2geo:
+                lines_per_block: 3000
+
+            geo2rdr:
+                threshold: 1.0e-8
+                maxiter: 25
+                lines_per_block: 3000
+
+            coarse_resample:
+                lines_per_tile: 1000
+
+            dense_offsets:
+                enabled: False
+
+            offsets_product:
+                enabled: False
+                skip_range: 15
+                skip_azimuth: 15
+                margin: 250
+                layer1:
+                   window_range: 64
+                   window_azimuth: 64
+                   half_search_range: 20
+                   half_search_azimuth: 20 
+                layer2:
+                   window_range: 96
+                   window_azimuth: 96
+                   half_search_range: 32
+                   half_search_azimuth: 32 
+                layer3:
+                   window_range: 128
+                   window_azimuth: 128
+                   half_search_range: 28
+                   half_search_azimuth: 28
+
+            rubbersheet:
+                enabled: False
+
+            fine_resample:
+                enabled: False
+
+            crossmul:
+                flatten: False
+                range_looks: 31
+                azimuth_looks: 31
+                lines_per_block: 4096
+
+            filter_interferogram:
+                lines_per_block: 150
+                filter_type: no_filter
+                boxcar:
+                    filter_size_range: 7
+                    filter_size_azimuth: 7
+
+            phase_unwrap:
+                crossmul_path:
+                #preprocess_wrapped_phase:
+                #  enabled: True
+                #  mask:
+                #    mask_type: median_filter
+                #    outlier_threshold: 0.75
+                #    median_filter_size: 11
+                #  filling_method: distance_interpolator
+                #  distance_interpolator:
+                #    radius: 2
+                #  fill_smoothed:
+                #    iterations: 10
+                #    kernel_size: 11
+                algorithm: icu
+                icu:
+                  buffer_lines: 3700
+
+            ionosphere_phase_correction:
+                enabled: False
+                lines_per_block: 1000
+                spectral_diversity: split_main_band
+                list_of_frequencies:
+                   A: [HH]
+                dispersive_filter:
+                   enabled: True
+                   filter_mask_type: coherence
+                   filling_method: nearest
+                   filter_iterations: 1
+                   unwrap_correction: False
+                   kernel_range: 500
+                   kernel_azimuth: 500
+                   sigma_range: 150
+                   sigma_azimuth: 150
+            
+            troposphere_delay:
+                enabled: True
+                package: pyaps
+                weather_model_type: ERA5
+                delay_direction: zenith
+                delay_product: comb
+
+        # TODO OPTIONAL - To setup type of worker
+        worker:
+            # OPTIONAL - To prevent downloading DEM / other data automatically. Default True
+            internet_access: False
+
+            # OPTIONAL - To explicitly use GPU capability if available. Default False
+            gpu_enabled: True
+

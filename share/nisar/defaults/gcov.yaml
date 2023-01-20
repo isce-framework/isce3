@@ -9,6 +9,13 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path:
 
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # If Product SAS and QA SAS are run back-to-back,
+            # this field should be identical to `sas_output_file`.
+            # Otherwise, this field should contain the filename of the single
+            # NISAR product for QA to process.
+            qa_input_file: gcov.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file:
@@ -30,6 +37,11 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: gcov.h5
+
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # Output directory to store all QA output files.
+            # Defaults to './qa'
+            qa_output_dir: ./qa
 
         primary_executable:
             product_type: GCOV
@@ -246,3 +258,11 @@ runconfig:
 
                 # OPTIONAL -
                 correction_type:
+
+        qa:
+            workflows:
+                # True to run the validate workflow. Default: False
+                validate: False
+
+                # True to run the qa_reports workflow. Default: False
+                qa_reports: False

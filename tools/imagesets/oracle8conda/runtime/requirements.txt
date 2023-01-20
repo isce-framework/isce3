@@ -8,6 +8,7 @@ libstdcxx-ng>=9
 matplotlib
 numpy>=1.20
 pyre>=1.11.2
+pyaps3>=0.3
 python>=3.7
 ruamel.yaml
 scipy

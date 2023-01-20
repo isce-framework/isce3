@@ -9,6 +9,13 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path: str()
 
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # If Product SAS and QA SAS are run back-to-back,
+            # this field should be identical to `sas_output_file`.
+            # Otherwise, this field is the filename of the single
+            # NISAR product for QA to process.
+            qa_input_file: str(required=False)
+
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
@@ -32,6 +39,11 @@ runconfig:
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
             sas_output_file: str()
+
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # Output directory to store all QA output files.
+            # Defaults to './qa'
+            qa_output_dir: str(required=False)
 
         primary_executable:
             product_type: enum('GCOV')
@@ -141,11 +153,12 @@ geo2rdr_options:
     maxiter: int(min=1, required=False)
 
 qa_options:
-    # Enable/disable file format validation
-    validate: bool(required=False)
+  # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
+  workflows: include('workflows_options', required=False)
 
-    # Produce a data summary
-    quality: bool(required=False)
+workflows_options:
+  validate: bool(required=False)
+  qa_reports: bool(required=False)
 
 log_nfo:
     # Path to log file
