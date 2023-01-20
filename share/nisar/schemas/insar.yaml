@@ -16,6 +16,9 @@ runconfig:
             water_mask_file: str(required=False)
             orbit: include('external_orbit_options', required=False)
 
+            # Troposphere weather model
+            troposphere_weather_model: include('troposphere_weather_model_options', required=False)
+
             # TEC file used for geolocation correction. If no file present, no
             # TEC correction is applied
             tec_file: str(required=False)
@@ -71,6 +74,8 @@ runconfig:
 
             ionosphere_phase_correction: include('ionosphere_phase_correction_options', required=False)
 
+            troposphere_delay: include('troposphere_delay_options', required=False)
+
             rdr2geo: include('rdr2geo_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
@@ -114,6 +119,10 @@ runconfig:
 external_orbit_options:
     reference_orbit_file: str(required=False)
     secondary_orbit_file: str(required=False)
+
+troposphere_weather_model_options:
+     reference_troposphere_file: str(required=False)
+     secondary_troposphere_file: str(required=False)
 
 phase_unwrap_options:
     crossmul_path: str(required=False)
@@ -710,6 +719,19 @@ ionosphere_freq_pol_options:
     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
     A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
     B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+
+troposphere_delay_options:
+    # Boolean flag to enable/disable troposphere delay computation
+    enabled: bool(required=False)
+    # Package used by troposphere delay computation
+    package: enum('pyaps', 'raider', required=False)
+    # Weather model type
+    weather_model_type: enum('ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA', 'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR',required=False)
+    # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
+    # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package
+    delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
+    # Delay products. They should be one of 'wet', 'hydro', and 'comb'
+    delay_product: enum('wet','hydro','comb', required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

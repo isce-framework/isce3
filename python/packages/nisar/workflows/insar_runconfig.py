@@ -8,8 +8,9 @@ import numpy as np
 from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 import nisar.workflows.helpers as helpers
-from nisar.workflows.ionosphere_runconfig import ionosphere_cfg_check
 
+from nisar.workflows.troposphere_runconfig import troposphere_delay_check
+from nisar.workflows.ionosphere_runconfig import ionosphere_cfg_check
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -239,3 +240,6 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
             # Set write flag True
             self.cfg['processing']['rdr2geo']['write_layover_shadow'] = True
+
+        # Check the troposphere delay
+        troposphere_delay_check(self.cfg)

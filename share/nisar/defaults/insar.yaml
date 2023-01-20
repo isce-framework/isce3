@@ -20,6 +20,11 @@ runconfig:
                 secondary_orbit_file:
             tec_file:
 
+            # Troposphere weather model files
+            troposphere_weather_model:
+                reference_troposphere_file:
+                secondary_troposphere_file:
+
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: product_path
@@ -213,7 +218,19 @@ runconfig:
                     sigma_azimuth: 100
                     # Number of iteration for low pass filtering
                     filter_iterations: 1
-
+            
+            troposphere_delay:
+                # Boolean flag to activate (True) troposphere delay computation
+                enabled: False
+                # pyAPS package is used for default
+                package: pyaps
+                # Weather model type
+                weather_model_type: ERA5 
+                # Conventional line of sight delay
+                delay_direction: line_of_sight_mapping
+                # Delay product is 'comb'
+                delay_product: comb
+    
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
                 threshold: 1.0e-8
