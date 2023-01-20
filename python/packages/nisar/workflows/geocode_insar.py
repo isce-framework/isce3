@@ -499,6 +499,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                     pol_list_iono = freq_pols_iono[freq]
                     desired = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
+                    geocode_iono_bool = True
                     if is_iono_method_sideband and freq == 'A':
                         '''
                         ionosphere_phase_screen from main_side_band or
@@ -511,13 +512,16 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                         if az_looks > 1 or rg_looks > 1:
                             radar_grid_iono = radar_grid_iono.multilook(
                                 az_looks, rg_looks)
+                    if is_iono_method_sideband and freq == 'B':
+                        geocode_iono_bool = False
 
                     if not is_iono_method_sideband:
                         radar_grid_iono = radar_grid
                         iono_sideband_bool = False
+                        if pol_list_iono == None:
+                            geocode_iono_bool = False
 
-                    if (not is_iono_method_sideband) or \
-                       (is_iono_method_sideband and freq == 'A'):
+                    if geocode_iono_bool:
                         cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
                                             freq, pol_list_iono, input_hdf5, dst_h5,
                                             radar_grid_iono, dem_raster,
@@ -735,6 +739,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                         iono_sideband_bool = False
                         iono_freq = freq
                         rdr_geometry_iono = rdr_geometry
+                        if pol_list_iono == None:
+                            geocode_iono_bool = False
 
                     if geocode_iono_bool:
                         geocode_iono_obj = \
