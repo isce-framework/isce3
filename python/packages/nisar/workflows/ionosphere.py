@@ -162,7 +162,7 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         az_off_obj = gdal.Open(az_off_path)
 
         band = rg_off_obj.GetRasterBand(1)
-        datatype = band.DataType 
+        datatype = band.DataType
         # get dimensions for block processing
         rows_main = rg_off_obj.RasterYSize
         cols_main = rg_off_obj.RasterXSize
@@ -170,7 +170,7 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
 
         for off_obj, b_off_path in zip([rg_off_obj, az_off_obj],
                                         [rg_b_off_path, az_b_off_path]):
-            off_scale_factor = [resampling_scale_factor 
+            off_scale_factor = [resampling_scale_factor
                                 if 'range' in b_off_path else 1 ]
 
             for block in range(0, nblocks):
@@ -220,7 +220,7 @@ def init_iono_attrs_datasets(iono_insar_cfg, input_runw, output_runw):
     with h5py.File(input_runw, 'r') as src_h5, \
         h5py.File(output_runw, 'a') as dst_h5:
         freq = 'B'
-        pol_list = iono_freq_pols[freq]
+        pol_list = iono_freq_pols['A']
         for pol in pol_list:
             dest_freq_path = f"{swath_path}/frequency{freq}"
             dest_pol_path = f"{dest_freq_path}/interferogram/{pol}"
@@ -455,7 +455,7 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
     Parameters
     ---------
     iono_insar_cfg: dict
-        InSAR workflow runconfig dictionary modified with ionosphere pairs 
+        InSAR workflow runconfig dictionary modified with ionosphere pairs
         and ionosphere specific conditions
     original_dict: dict
         dictionary containing following parameters
@@ -668,7 +668,7 @@ def run(cfg: dict, runw_hdf5: str):
             pol_comb_str = f"{pol_a}_{pol_b}"
             dest_freq_path_b = f"{swath_path}/frequencyB"
             dest_pol_path_b = f"{dest_freq_path_b}/interferogram/{pol_b}"
-            output_pol_path = dest_pol_path_b
+            output_pol_path = f"{dest_freq_path_b}/interferogram/{pol_a}"
             runw_path_freq_b = f"{dest_pol_path_b}/unwrappedPhase"
             rcoh_path_freq_b = f"{dest_pol_path_b}/coherenceMagnitude"
             rcom_path_freq_b = f"{dest_pol_path_b}/connectedComponents"

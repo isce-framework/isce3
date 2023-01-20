@@ -378,7 +378,7 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
 def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         input_hdf5, dst_h5, radar_grid, dem_raster,
                         block_size, off_layer_dict=None, scratch_path='',
-                        compute_stats=True, is_goff=False, 
+                        compute_stats=True, is_goff=False,
                         iono_sideband=False):
 
     geocoded_rasters, geocoded_datasets, input_rasters = \
@@ -434,8 +434,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     iono_method = iono_args['spectral_diversity']
     is_iono_method_sideband = iono_method in ['main_side_band',
                                               'main_diff_ms_band']
+    freq_pols_iono = iono_args["list_of_frequencies"]
 
-    slc = SLC(hdf5file=ref_hdf5) 
+    slc = SLC(hdf5file=ref_hdf5)
     info_channel = journal.info("geocode.run")
     info_channel.log("starting geocode")
 
@@ -494,7 +495,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size)
                 if iono_enabled:
-
+                    # polarizations for ionosphere can be independent to insar pol
+                    pol_list_iono = freq_pols_iono[freq]
                     desired = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
                     if is_iono_method_sideband and freq == 'A':
@@ -517,8 +519,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                     if (not is_iono_method_sideband) or \
                        (is_iono_method_sideband and freq == 'A'):
                         cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                            freq, pol_list, input_hdf5, dst_h5,
-                                            radar_grid_iono, dem_raster, 
+                                            freq, pol_list_iono, input_hdf5, dst_h5,
+                                            radar_grid_iono, dem_raster,
                                             block_size,
                                             iono_sideband=iono_sideband_bool)
 
@@ -633,6 +635,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
     iono_method = iono_args['spectral_diversity']
+    freq_pols_iono = iono_args["list_of_frequencies"]
     is_iono_method_sideband = iono_method in ['main_side_band',
                                               'main_diff_ms_band']
 
@@ -693,9 +696,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                 if iono_enabled:
                     desired = ['ionosphere_phase_screen',
-                            'ionosphere_phase_screen_uncertainty']
+                               'ionosphere_phase_screen_uncertainty']
                     geocode_iono_bool = True
-
+                    pol_list_iono = freq_pols_iono[freq]
                     if is_iono_method_sideband:
                         '''
                         ionosphere_phase_screen from main_side_band or
@@ -717,16 +720,16 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                     grid_zero_doppler)
                         else:
                             '''
-                            The methods using sideband (e.g., main_side_band, 
+                            The methods using sideband (e.g., main_side_band,
                             and main_ms_diff_band) produce only one
                             ionosphere from frequency A and B interferogram.
-                            The ionosphere of radargrid (frequency B) is 
+                            The ionosphere of radargrid (frequency B) is
                             geocoded only to geogrid in frequency A.
                             '''
                             geocode_iono_bool = False
                     else:
                         '''
-                        The method using split_main_band produces 
+                        The method using split_main_band produces
                         can have two ionosphere layers in A and B.
                         '''
                         iono_sideband_bool = False
@@ -743,8 +746,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                     invalid_value=np.nan)
 
                         gpu_geocode_rasters(geo_datasets, desired,
-                                            iono_freq, pol_list, input_hdf5,
-                                            dst_h5, geocode_iono_obj,
+                                            iono_freq, pol_list_iono,
+                                            input_hdf5, dst_h5,
+                                            geocode_iono_obj,
                                             iono_sideband=iono_sideband_bool)
 
                 desired = ["connected_components"]
