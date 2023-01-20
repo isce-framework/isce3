@@ -398,9 +398,9 @@ class ImageSet:
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         elif testname.startswith("soilm"):
             # For R3.2, the Soil Moisture SAS uses one plaintext configuration file.
-                inputrunconfig = f"{testname}{suf}.txt"
-                shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
-                                pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
+            inputrunconfig = f"{testname}{suf}.txt"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
         elif is_dnc_test or is_caltools_test:
             inputrunconfig = f"{testname}{suf}.txt"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
