@@ -83,7 +83,7 @@ workflowdata = {
 
         "L0B_RRSD_REE_BF_NET":
         [
-            "L0B_RRSD_REE_BF_NET.h5",
+            "NISAR_L0_PR_RRSD_016_095_A_152S_20210701T000000_20210701T000000_A00001_F_P_J_001.h5",
             "README.txt",
         ],
 
@@ -98,9 +98,17 @@ workflowdata = {
             "REE_ORBIT_CHANNEL4_EXTSCENE_PASS1.xml",
         ],
 
+        "L0B_RRSD_DM2_REE_AMAZON_PASS1":
+        [
+            "README.txt",
+            "NISAR_ANTPAT_20221222T161043.h5",
+            "NISAR_L0_PR_RRSD_001_014_A_033S_20220102T101135_20220102T101137_A00001_F_P_J_001.h5",
+            "REE_DEM_AMAZON_PASS1.tif",
+        ],
+
         "L1_RSLC_REE_PTA":
         [
-            "L1_RSLC_REE_PTA.h5",
+            "NISAR_L1_PR_RSLC_016_158_A_003_2000_SHNA_A_20210701T032003_20210701T032003_A00000_F_P_J_001.h5",
             "README.txt",
         ],
 
@@ -221,6 +229,7 @@ workflowtests = {
 
     "doppler": {"doppler_" + name: "L0B_RRSD_" + name for name in [
         "ALPSRP264757150_Amazon",
+        "DM2_REE_AMAZON_PASS1",
     ]},
 
     "el_edge": {"el_edge_" + name: "L0B_RRSD_" + name for name in [
@@ -229,6 +238,7 @@ workflowtests = {
 
     "el_null": {"el_null_" + name: "L0B_RRSD_" + name for name in [
         "REE_CHANNEL4_EXTSCENE_PASS1",
+        "DM2_REE_AMAZON_PASS1",
     ]},
 
     'gslc': {"gslc_" + name: "L1_RSLC_" + name for name in [
