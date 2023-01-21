@@ -67,8 +67,8 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
     original_dict: dict
         dictionary containing following parameters
         - scratch_path
-        - reference_rslc_file_path
-        - secondary_rslc_file_path
+        - reference_rslc_file
+        - secondary_rslc_file
         - coregistered_slc_path
         - list_of_frequencies
         - output_runw
@@ -303,10 +303,10 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     # Keep original_cfg before changing it
     partial_orig_cfg_dict = dict()
     partial_orig_cfg_dict['scratch_path'] = scratch_path
-    partial_orig_cfg_dict['reference_rslc_file_path'] = \
-        original_cfg['input_file_group']['reference_rslc_file_path']
-    partial_orig_cfg_dict['secondary_rslc_file_path'] = \
-        original_cfg['input_file_group']['secondary_rslc_file_path']
+    partial_orig_cfg_dict['reference_rslc_file'] = \
+        original_cfg['input_file_group']['reference_rslc_file']
+    partial_orig_cfg_dict['secondary_rslc_file'] = \
+        original_cfg['input_file_group']['secondary_rslc_file']
     partial_orig_cfg_dict['coregistered_slc_path'] = \
         original_cfg['processing']['crossmul']['coregistered_slc_path']
     partial_orig_cfg_dict['list_of_frequencies'] = \
@@ -426,10 +426,10 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                                out_paths)
 
     # restore original paths
-    original_cfg['input_file_group']['reference_rslc_file_path'] = \
-        partial_orig_cfg_dict['reference_rslc_file_path']
-    original_cfg['input_file_group']['secondary_rslc_file_path'] = \
-        partial_orig_cfg_dict['secondary_rslc_file_path']
+    original_cfg['input_file_group']['reference_rslc_file'] = \
+        partial_orig_cfg_dict['reference_rslc_file']
+    original_cfg['input_file_group']['secondary_rslc_file'] = \
+        partial_orig_cfg_dict['secondary_rslc_file']
     original_cfg['product_path_group']['scratch_path'] = \
         partial_orig_cfg_dict['scratch_path']
     original_cfg['processing']['dense_offsets']['coregistered_slc_path'] = \
@@ -463,8 +463,8 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
         dictionary containing following parameters
         from original InSAR runconfig
         - scratch_path
-        - reference_rslc_file_path
-        - secondary_rslc_file_path
+        - reference_rslc_file
+        - secondary_rslc_file
         - coregistered_slc_path
         - list_of_frequencies
         - output_runw
