@@ -15,34 +15,23 @@ runconfig:
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
-            orbit: 
+            orbit: input_L0B_RRSD_REE2/orbit.xml
 
             # Refined pointing, optional.
             # Defaults to attitude within L0B product.
-            pointing: 
+            pointing: input_L0B_RRSD_REE2/attitude.xml
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            external_calibration: 
+            external_calibration: input_L0B_RRSD_REE2/NISAR_LCAL_20220101T120000_01.yaml
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            internal_calibration: 
-
-            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-            # If not provided, no polarimetric calibration performed.
-            polarimetric_calibration: 
-
-            # Pre- and post-data take calibration data products, optional.
-            bookend_calibration: 
+            internal_calibration: input_L0B_RRSD_REE2/NISAR_LINS_202201001T120000_01.h5
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
             antenna_pattern: input_L0B_RRSD_REE2/REE_ANTPAT_CUTS_DATA.h5
-
-            # Chirp replica file, optional.
-            # If absent will generate LFM chirp using parameters in L0B product.
-            waveform: 
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
@@ -170,6 +159,28 @@ runconfig:
                 # Transition width as a fraction of output bandwidth.
                 width: 0.15
 
+            radio_frequency_interference:
+                # Whether to attempt RFI detection and record related metadata.
+                # Defaults to True
+                detection_enabled: True
+                # Whether to attemt RFI removal. Default to False.
+                mitigation_enabled: False
+                # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
+                # eigenvalue decomposition.
+                mitigation_algorithm: ST-EVD
+                # Coherent processing interval length (pulses).  Defaults to 32.
+                cpi_length: 32
+                # Number of subdivisions in range.  Defaults to 1.
+                num_range_blocks: 1
+                # Maximum allowable number of emitters suppressed per CPI.
+                # Whenever the limit is exceeded it's assumed that the detection
+                # was unreliable and mitigation is disabled for the block.
+                max_emitters: 16
+                # Difference between sorted eigenvalues signifying the
+                # transition between interference and signal subspaces
+                # (dB/index).  Defaults to 1.0
+                detection_threshold: 1.0
+
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
@@ -274,8 +285,6 @@ runconfig:
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
-                # radio frequency interference mitigation
-                rfi_removal: True
                 # azimuth resampling and gap-filling
                 presum_blu: True
                 # range compression

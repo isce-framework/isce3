@@ -24,17 +24,9 @@ runconfig:
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
             internal_calibration: null
-            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-            # If not provided, no polarimetric calibration performed.
-            polarimetric_calibration: null
-            # Pre- and post-data take calibration data products, optional.
-            bookend_calibration: null
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
             antenna_pattern: null
-            # Chirp replica file, optional.
-            # If absent will generate LFM chirp using parameters in L0B product.
-            waveform: null
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_rslc
@@ -180,8 +172,6 @@ runconfig:
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
-                # radio frequency interference mitigation
-                rfi_removal: True
                 # azimuth resampling and gap-filling
                 presum_blu: True
                 # range compression

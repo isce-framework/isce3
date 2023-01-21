@@ -33,20 +33,9 @@ runconfig:
             # If not provided, no secondary elevation antenna pattern correction.
             internal_calibration: null
 
-            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-            # If not provided, no polarimetric calibration performed.
-            polarimetric_calibration: null
-
-            # Pre- and post-data take calibration data products, optional.
-            bookend_calibration: null
-
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
             antenna_pattern: null
-
-            # Chirp replica file, optional.
-            # If absent will generate LFM chirp using parameters in L0B product.
-            waveform: null
 
             # Locations of the corner reflectors in the input product.
             # Only required if `absolute_calibration_factor` or
@@ -76,12 +65,6 @@ runconfig:
             relative_orbit_number: 1
             frame_number: 1
 
-        # TODO
-        archive: {}
-
-        # TODO
-        qaqc: {}
-
         worker:
             # Whether or not to use GPU, optional. Defaults to True if available.
             gpu_enabled: null
@@ -89,9 +72,6 @@ runconfig:
             # Index of the GPU to use for processing, optional. Defaults to the
             # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: 0
-
-        # TODO
-        profiler: {}
 
         processing:
             output_grid:
@@ -127,6 +107,29 @@ runconfig:
             azimuth_window:
                 kind: Kaiser
                 shape: 0.0
+
+            radio_frequency_interference:
+                # Whether to attempt RFI detection and record related metadata.
+                # Defaults to True
+                detection_enabled: True
+                # Whether to attemt RFI removal. Default to False.
+                # Requires that RFI detection is also enabled.
+                mitigation_enabled: False
+                # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
+                # eigenvalue decomposition. Currently, only 'ST-EVD' is supported.
+                mitigation_algorithm: ST-EVD
+                # Coherent processing interval length (pulses).  Defaults to 32.
+                cpi_length: 32
+                # Number of subdivisions in range.  Defaults to 1.
+                num_range_blocks: 1
+                # Maximum allowable number of emitters suppressed per CPI.
+                # Whenever the limit is exceeded it's assumed that the detection
+                # was unreliable and mitigation is disabled for the block.
+                max_emitters: 16
+                # Difference between sorted eigenvalues signifying the
+                # transition between interference and signal subspaces
+                # (dB/index).  Defaults to 1.0
+                detection_threshold: 1.0
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
@@ -238,8 +241,6 @@ runconfig:
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
-                # radio frequency interference mitigation
-                rfi_removal: True
                 # azimuth resampling and gap-filling
                 presum_blu: True
                 # range compression

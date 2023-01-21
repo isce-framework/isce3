@@ -12,10 +12,7 @@ runconfig:
             pointing:
             external_calibration:
             internal_calibration:
-            polarimetric_calibration:
-            bookend_calibration:
             antenna_pattern:
-            waveform:
         product_path_group:
             product_path: output_rslc_sec
             scratch_path: scratch_rslc_sec
@@ -143,7 +140,6 @@ runconfig:
             encoding_scale_factor: 0.01
             delete_tempfiles: true
             is_enabled:
-                rfi_removal: true
                 presum_blu: true
                 rangecomp: true
                 eap: true

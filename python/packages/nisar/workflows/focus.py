@@ -91,8 +91,6 @@ def get_window(win: Struct, msg=''):
 
 
 def get_chirp(cfg: Struct, raw: Raw, frequency: str, tx: str):
-    if cfg.dynamic_ancillary_file_group.waveform:
-        log.warning("Ignoring input waveform file.  Using analytic chirp.")
     chirp = raw.getChirp(frequency, tx)
     log.info(f"Chirp length = {len(chirp)}")
     window = get_window(cfg.processing.range_window, msg="Range window: ")
