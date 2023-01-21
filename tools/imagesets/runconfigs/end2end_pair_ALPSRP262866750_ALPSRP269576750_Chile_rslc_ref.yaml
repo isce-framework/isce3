@@ -146,5 +146,6 @@ runconfig:
                 range_cor: true
                 azcomp: true
         qa:
-            validate: true
-            quality: true
+            workflows:
+                validate: true
+                qa_reports: true

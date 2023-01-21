@@ -299,5 +299,6 @@ runconfig:
         # The PGE wrapper uses the qa group to control whether or not to run the qa SAS
         # program and which qa option(s) to enable. By default the qa SAS is not run.
         qa:
-            validate: true
-            quality: true
+            workflows:
+                validate: true
+                qa_reports: true

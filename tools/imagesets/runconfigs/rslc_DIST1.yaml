@@ -184,5 +184,6 @@ runconfig:
                 # azimuth compression
                 azcomp: True
         qa:
-            validate: True
-            quality: True
+            workflows:
+                validate: true
+                qa_reports: true
