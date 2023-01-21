@@ -73,6 +73,10 @@ def troposphere_delay_check(cfg):
 
             with h5py.File(rslc_file, 'r', libver='latest', swmr=True) as f:
                 rslc_start_time = str(np.array(f['science/LSAR/identification/zeroDopplerStartTime']).astype(str))
+
+                # Make sure that timestamp format is 'YYYY-MM-DDTH:M:S' where the second has no decmials
+                rslc_start_time = rslc_start_time[:19]
+
                 rslc_date = datetime.strptime(rslc_start_time, '%Y-%m-%dT%H:%M:%S')
                 f.close()
 
