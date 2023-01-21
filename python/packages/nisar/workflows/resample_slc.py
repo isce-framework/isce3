@@ -21,7 +21,7 @@ def run(cfg, resample_type):
     '''
     run resample_slc
     '''
-    input_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    input_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 

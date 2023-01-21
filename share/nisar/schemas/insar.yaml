@@ -6,8 +6,8 @@ runconfig:
             pge_name: enum('INSAR_L_PGE')
 
         input_file_group:
-            reference_rslc_file_path: str()
-            secondary_rslc_file_path: str()
+            reference_rslc_file: str()
+            secondary_rslc_file: str()
 
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # These field(s) should contain the filename of the

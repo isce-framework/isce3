@@ -7,9 +7,9 @@ runconfig:
 
         input_file_group:
             # Required - File path to reference RSLC HDF5 file
-            reference_rslc_file_path:
+            reference_rslc_file:
             # Required - File path to secondary RSLC HDF5 file
-            secondary_rslc_file_path:
+            secondary_rslc_file:
 
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # These field(s) should contain the filename of the

@@ -6,8 +6,8 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            reference_rslc_file_path: '.'
-            secondary_rslc_file_path: '.'
+            reference_rslc_file: '.'
+            secondary_rslc_file: '.'
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
