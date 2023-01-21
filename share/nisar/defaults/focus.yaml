@@ -355,22 +355,93 @@ runconfig:
                     tile_shape: [1024, 1024]
 
             absolute_calibration_factor:
+                # The frequency sub-band to use. Must be in {'A', 'B'} or null. Defaults
+                # to the science band in the RSLC product ('A' if available, otherwise
+                # 'B').
+                freq: null
 
-                # Placeholder: Attribute 1 description for runconfig. Each new line
-                # of text will be a separate line in the runconfig template.
-                # `attr1` is a non-negative float value. Default: 2.3
-                attr1: 2.3
+                # The transmit and receive polarization to use. Must be in {'HH', 'VV',
+                # 'HV', 'VH'} or null. Defaults to the first co-polarization channel
+                # found in the specified band ('HH' if available, otherwise 'VV').
+                pol: null
+
+                # The width, in pixels, of the square block of image data to extract
+                # centered around the target position for oversampling and peak
+                # finding. Must be >= 1. Defaults to 64.
+                nchip: 64
+
+                # The upsampling ratio. Must be >= 1. Defaults to 32.
+                upsample: 32
+
+                # Option controlling how the target peak position is estimated (time
+                # domain or frequency domain). Must be in {'time', 'freq'}. Defaults to
+                # 'time'.
+                peak_find_domain: time
+
+                # The width, in *oversampled* pixels, of the square sub-block of image
+                # data to extract centered around the target position for fitting a
+                # quadratic polynomial to the peak. Note that this is the size in pixels
+                # *after upsampling*. Must be >= 3. Defaults to 5.
+                nfit: 5
+
+                # The method for estimating the target signal power (rectangular box
+                # method or integrated power method). Must be in {'box', 'integrated'}.
+                # Defaults to 'box'.
+                power_method: box
+
+                # The minimum power threshold, measured in dB below the peak power, for
+                # estimating the target signal power using the integrated power method.
+                # Only used if power_method='integrated'. Defaults to 3.0.
+                pthresh: 3.0
 
             nesz:
+                # *REQUIRED* Frequency group in raw L0B H5 file. Must be in {'A', 'B'}.
+                freq_group:
 
-                # Placeholder: Attribute 1 description for runconfig. Each new line
-                # of text will be a separate line in the runconfig template.
-                # `attr1` is a non-negative float value. Default: 11.9
-                attr1: 11.3
+                # *REQUIRED* Tx and Rx polarizations in raw L0B file. Must be in {'HH',
+                # 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
+                pol:
+
+                # Start range bins for beams. A list of range sample indices or null.
+                # If rng_start and rng_stop are both null, noise power is estimated over
+                # the full rangeline. Defaults to null.
+                rng_start: null
+
+                # Stop range bins for beams. A list of range sample indices or null.
+                # If rng_start and rng_stop are both null, noise power is estimated over
+                # the full rangeline. Defaults to null.
+                rng_stop: null
+
+                # Noise estimation algorithm: 'avg' - mean of sum of squares, or 'evd' -
+                # Eigenvalue Decomposition. Defaults to 'avg'.
+                algorithm: avg
+
+                # Coherent processing interval in number of range lines. Only used when
+                # algorithm='evd'. Must be >= 1. Defaults to 2.
+                cpi: 2
 
             point_target_analyzer:
+                # *REQUIRED* Frequency group in the RSLC HDF5 file. Must be in {'A', 'B'}.
+                freq_group:
 
-                # Placeholder: Attribute 1 description for runconfig. Each new line
-                # of text will be a separate line in the runconfig template.
-                # `attr1` is a non-negative float value. Default: 2300.5
-                attr1: 2300.5
+                # *REQUIRED* Tx and Rx polarizations in RSLC HDF5 file. Must be in
+                # {'HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
+                pol:
+
+                # If true, locate mainlobe nulls based on Fs/BW ratio instead of
+                # searching. Defaults to false.
+                predict_null: False
+
+                # Number of sidelobes to be included for ISLR and PSLR computation. Must
+                # be >= 1. Defaults to 10.
+                num_sidelobes: 10
+
+                # Point target samples upsampling factor. Must be >= 1. Defaults to 32.
+                nov: 32
+
+                # Point target chip size. Must be >= 1. Defaults to 64.
+                chipsize: 64
+
+                # Estimate shift in time domain or frequency domain. Must be in {'time',
+                # 'frequency'}. Defaults to 'time'.
+                shift_domain: time

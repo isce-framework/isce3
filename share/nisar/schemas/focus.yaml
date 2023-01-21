@@ -300,11 +300,28 @@ qa_reports_options:
     tile_shape: list(int(min=1), min=2, max=2, required=False)
 
 absolute_calibration_factor_options:
-  attr1: num(min=0.0, required=False)
+  freq: enum('A', 'B', required=False)
+  pol: enum('HH', 'VV', 'HV', 'VH', required=False)
+  nchip: int(min=1, required=False)
+  upsample: int(min=1, required=False)
+  peak_find_domain: enum('time', 'freq', required=False)
+  nfit: int(min=3, required=False)
+  power_method: enum('box', 'integrated', required=False)
+  pthresh: num(required=False)
 
 nesz_options:
-  attr1: num(min=0.0, required=False)
+  freq_group: enum('A', 'B', required=True)
+  pol: enum('HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV', required=True)
+  rng_start: list(int(min=0), min=1, required=False)
+  rng_stop: list(int(min=0), min=1, required=False)
+  algorithm: enum('avg', 'evd', required=False)
+  cpi: int(min=1, required=False)
 
 point_target_analyzer_options:
-  attr1: num(min=0.0, required=False)
-
+  freq_group: enum('A', 'B', required=True)
+  pol: enum('HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV', required=True)
+  predict_null: bool(required=False)
+  num_sidelobes: int(min=1, required=False)
+  nov: int(min=1, required=False)
+  chipsize: int(min=1, required=False)
+  shift_domain: enum('time', 'frequency', required=False)
