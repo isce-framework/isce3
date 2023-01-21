@@ -364,7 +364,8 @@ def write_array(output_str,
         input_array,
         data_type=gdal.GDT_Float32,
         data_shape=None,
-        block_row=0):
+        block_row=0,
+        file_type='ENVI'):
     """write block array to file with gdal
 
     Parameters
@@ -391,10 +392,10 @@ def write_array(output_str,
                                0:cols])
     else:
         if block_row == 0:
-
-            driver = gdal.GetDriverByName('ENVI')
+            driver = gdal.GetDriverByName(file_type)
             ds_data = driver.Create(output_str, data_cols, data_rows, 1, data_type)
             ds_data.WriteArray(input_array, xoff=0, yoff=block_row)
+
         else:
             ds_data = gdal.Open(output_str, gdal.GA_Update)
             ds_data.WriteArray(input_array, xoff=0, yoff=block_row)
