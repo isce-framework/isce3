@@ -6,8 +6,8 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            reference_rslc_file_path: input_L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03/NISARP_32039_19049_005_190717_L090_CX_129_03.h5
-            secondary_rslc_file_path: input_L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02/NISARP_32039_19052_004_190726_L090_CX_129_02.h5
+            reference_rslc_file: input_L1_RSLC_UAVSAR_NISARP_32039_19049_005_190717_L090_CX_129_03/NISARP_32039_19049_005_190717_L090_CX_129_03.h5
+            secondary_rslc_file: input_L1_RSLC_UAVSAR_NISARP_32039_19052_004_190726_L090_CX_129_02/NISARP_32039_19052_004_190726_L090_CX_129_02.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input

@@ -652,8 +652,8 @@ def run(cfg: dict, output_paths):
                             "GUNW": "/home/process/insar_gunw.h5"}
 
     """
-    ref_hdf5 = cfg["input_file_group"]["reference_rslc_file_path"]
-    sec_hdf5 = cfg["input_file_group"]["secondary_rslc_file_path"]
+    ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
+    sec_hdf5 = cfg["input_file_group"]["secondary_rslc_file"]
     scratch_path = cfg['product_path_group']['scratch_path']
     ref_orbit_path = cfg['dynamic_ancillary_file_group']['orbit'][
                          'reference_orbit_file']

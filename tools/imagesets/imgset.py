@@ -355,7 +355,7 @@ class ImageSet:
         pyname : str
             Name of the isce3 module to execute (e.g. "nisar.workflows.focus") or,
             for Soil Moisture (SM) testing, the name of the SAS executable to run
-            (e.g. "NISAR_SM_DISAGG_SAS")
+            (e.g. "NISAR_SM_SAS")
         suf: str
             Suffix in runconfig and output directory name to differentiate between
             reference and secondary data in end-to-end tests
@@ -397,17 +397,10 @@ class ImageSet:
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
                             pjoin(testdir, f"runconfig_{wfname}{suf}.yaml"))
         elif testname.startswith("soilm"):
-            # For R3.1, the SAS uses six configuration files with suffixes
-            # _pmi.txt:    PMI algorithm, plaintext format
-            # _r3.txt:     DSG and TSR algorithms, plaintext format
-            # _rgs_a.csv:  RGS algorithm, ancillary files, CSV format
-            # _rgs_i.csv:  RGS algorithm, ancillary files, CSV format
-            # _rgs_p.csv:  RGS algorithm, ancillary files, CSV format
-            # .txt:        Top-level, Python argparse() text format
-            for alg_suffix in ['_pmi.txt', '_r3.txt', '_rgs_a.csv', '_rgs_i.csv', '_rgs_p.csv', '.txt']:
-                inputrunconfig = f"{testname}{suf}{alg_suffix}"
-                shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
-                                pjoin(testdir, f"runconfig_{wfname}{suf}{alg_suffix}"))
+            # For R3.2, the Soil Moisture SAS uses one plaintext configuration file.
+            inputrunconfig = f"{testname}{suf}.txt"
+            shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
+                            pjoin(testdir, f"runconfig_{wfname}{suf}.txt"))
         elif is_dnc_test or is_caltools_test:
             inputrunconfig = f"{testname}{suf}.txt"
             shutil.copyfile(pjoin(runconfigdir, inputrunconfig),
@@ -421,7 +414,7 @@ class ImageSet:
         if testname.startswith("soilm"):
             executable = pyname
             # Execute the SoilMoisture SAS inside the Conda environment used for its build
-            cmd = [f"time conda run -n {soilm_conda_env} {executable} @runconfig_{wfname}{suf}.txt"]
+            cmd = [f"time conda run -n {soilm_conda_env} {executable} runconfig_{wfname}{suf}.txt"]
         elif is_dnc_test or is_caltools_test:
             cmd = [f"time python3 -m {pyname} {arg} @runconfig_{wfname}{suf}.txt"]
         else:
@@ -552,12 +545,11 @@ class ImageSet:
         if tests is None:
             tests = workflowtests['soilm'].items()
         for testname, dataname in tests:
-            # For R3.1, invoke the Soil Moisture SAS by executing a top-level
-            # executable Python script.  The top-level script will invoke
-            # each of the four Soil Moisture algorithms and combine their
-            # intermediate soil moisture output products into the final soil
-            # moisture product.
-            executable = 'sm_run_sas.py'
+            # For R3.2, invoke the Soil Moisture SAS by executing a single
+            # Fortran binary executable.  This executable runs the three
+            # individual Soil Moisture algorithms in series to produce the
+            # final soil moisture product.
+            executable = 'NISAR_SM_SAS'
             self.workflowtest("soilm", testname, dataname, f"{executable}")
 
     def mintests(self):

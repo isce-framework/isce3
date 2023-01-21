@@ -34,7 +34,7 @@ def unit_test_params():
     insar_runcfg.geocode_common_arg_load()
     insar_runcfg.yaml_check()
     cfg = insar_runcfg.cfg
-    refslc_path = cfg["input_file_group"]["reference_rslc_file_path"]
+    refslc_path = cfg["input_file_group"]["reference_rslc_file"]
     scratch_path = cfg['product_path_group']['scratch_path']
     params.baseline_dir_path = f'{scratch_path}/baseline'
     os.makedirs(params.baseline_dir_path, exist_ok=True)

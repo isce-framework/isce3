@@ -27,8 +27,8 @@ def run(cfg: dict, output_hdf5: str = None):
     '''
 
     # Pull parameters from cfg
-    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
-    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
+    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offs_params = cfg['processing']['offsets_product']

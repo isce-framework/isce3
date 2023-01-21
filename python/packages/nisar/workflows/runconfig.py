@@ -121,7 +121,7 @@ class RunConfig:
             orbit_group = self.cfg['dynamic_ancillary_file_group']
             orbit_keys = ['orbit_file']
         elif self.workflow_name == 'insar':
-            rslc_keys = ['reference_rslc_file_path', 'secondary_rslc_file_path']
+            rslc_keys = ['reference_rslc_file', 'secondary_rslc_file']
 
             orbit_group = self.cfg['dynamic_ancillary_file_group']['orbit']
             orbit_keys = ['reference_orbit_file', 'secondary_orbit_file']
@@ -163,7 +163,7 @@ class RunConfig:
         '''
         error_channel = journal.error('RunConfig.prep_frequency_and_polarizations')
         if self.workflow_name == 'insar':
-            input_path = self.cfg['input_file_group']['reference_rslc_file_path']
+            input_path = self.cfg['input_file_group']['reference_rslc_file']
         else:
             input_path = self.cfg['input_file_group']['input_file_path']
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']

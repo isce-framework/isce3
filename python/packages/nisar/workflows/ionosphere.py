@@ -313,6 +313,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
         original_cfg['processing']['input_subset']['list_of_frequencies']
     partial_orig_cfg_dict['output_runw'] = runw_hdf5
     if original_cfg['processing']['fine_resample']['enabled']:
+
         resample_type = 'fine'
     else:
         resample_type = 'coarse'
@@ -338,13 +339,13 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
             ref_h5_path = os.path.join(split_slc_path,
                 f"ref_{split_str}_band_slc.h5")
             iono_insar_cfg['input_file_group'][
-                'reference_rslc_file_path'] = ref_h5_path
+                'reference_rslc_file'] = ref_h5_path
 
             # update secondary sub-band path
             sec_h5_path = os.path.join(split_slc_path,
                 f"sec_{split_str}_band_slc.h5")
             iono_insar_cfg['input_file_group'][
-                'secondary_rslc_file_path'] = sec_h5_path
+                'secondary_rslc_file'] = sec_h5_path
 
             # update output path
             new_scratch = pathlib.Path(orig_scratch_path,
@@ -437,6 +438,7 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
         partial_orig_cfg_dict['coregistered_slc_path']
 
     original_cfg['processing']['input_subset'][
+
             'list_of_frequencies'] = orig_freq_pols
     original_cfg['primary_executable'][
                 'product_type'] = orig_product_type
@@ -549,8 +551,8 @@ def run(cfg: dict, runw_hdf5: str):
 
     # Keep cfg before changing it
     orig_scratch_path = cfg['product_path_group']['scratch_path']
-    orig_ref_str = cfg['input_file_group']['reference_rslc_file_path']
-    orig_sec_str = cfg['input_file_group']['secondary_rslc_file_path']
+    orig_ref_str = cfg['input_file_group']['reference_rslc_file']
+    orig_sec_str = cfg['input_file_group']['secondary_rslc_file']
     orig_freq_pols = copy.deepcopy(cfg['processing']['input_subset'][
                     'list_of_frequencies'])
     iono_insar_cfg = cfg.copy()

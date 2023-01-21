@@ -56,11 +56,11 @@ def _cfg_freq_pol_check(cfg, freq):
         journal.error('ionosphere_runconfig._cfg_freq_pol_check')
 
     # available polarizations in frequency A of reference SLC
-    ref_slc_path = cfg['input_file_group']['reference_rslc_file_path']
+    ref_slc_path = cfg['input_file_group']['reference_rslc_file']
     h5_ref_pols = _get_rslc_h5_freq_pols(ref_slc_path, freq)
 
     # available polarizations in frequency A of secondary SLC
-    sec_slc_path = cfg['input_file_group']['secondary_rslc_file_path']
+    sec_slc_path = cfg['input_file_group']['secondary_rslc_file']
     h5_sec_pols = _get_rslc_h5_freq_pols(sec_slc_path, freq)
 
     # check if both ref and sec that freq + pols exist
@@ -168,7 +168,7 @@ def split_main_band_cfg_check(cfg):
     split_cfg = iono_cfg['split_range_spectrum']
     iono_method = iono_cfg['spectral_diversity']
     iono_freq_pol = iono_cfg['list_of_frequencies']
-    ref_slc_path = cfg['input_file_group']['reference_rslc_file_path']
+    ref_slc_path = cfg['input_file_group']['reference_rslc_file']
 
     # Extract main range bandwidth from reference SLC
     ref_slc = SLC(hdf5file=ref_slc_path)
