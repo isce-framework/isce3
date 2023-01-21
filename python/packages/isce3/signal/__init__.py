@@ -6,4 +6,7 @@ from .doppler_est_func import (corr_doppler_est, sign_doppler_est,
                                unwrap_doppler)
 from . import filter_data
 from . import point_target_info
+from . import compute_evd_cpi
+from . import rfi_detection_evd
+from . import rfi_mitigation_evd
 from .multi_channel_analysis import form_single_tap_dbf_echo
