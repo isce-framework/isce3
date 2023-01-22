@@ -21,6 +21,42 @@ def test_filter():
     npt.assert_(shift > 0)
 
 
+def test_rangecomp_delay():
+    """Make sure we understand how to bookkeep the starting range when using
+    a common-band filter for mixed-mode processing.
+
+    Assume that "starting range" is understood to mean the delay since the
+    *start* of the transmit event.
+    """
+    nraw = 1024
+    rawdata = np.zeros(nraw, dtype="c8")
+    rawdata[0] = 1
+
+    nchirp = 255
+    chirp = np.zeros(nchirp, dtype="c8")
+    chirp[0] = 1
+
+    # Common-band filter design will always have delay (n-1)/2
+    cb_filters = [
+        np.array([1.0]),
+        np.array([0, 1, 0.0]),
+        np.array([0, 0, 1, 0, 0.0])
+    ]
+
+    rc_modes = [RangeComp.Mode.Full, RangeComp.Mode.Same, RangeComp.Mode.Valid]
+    for mode in rc_modes:
+        for cb_filter in cb_filters:
+            cb_chirp = np.convolve(cb_filter, chirp, mode="full")
+            rc = RangeComp(cb_chirp, nraw, mode=mode)
+            rcdata = np.zeros(rc.output_size, "c8")
+            rc.rangecompress(rcdata, rawdata)
+            i = rc.first_valid_sample - (len(cb_filter) - 1) // 2
+            # NOTE negative for Mode.Valid is correct but not testable this way
+            if i >= 0:
+                npt.assert_allclose(rcdata[i], 1.0, err_msg=
+                    f"Incorrect delay for mode={mode} filter={cb_filter}")
+
+
 def test_rangecomp():
     # simulate raw data
     zsim = np.zeros(2048, dtype="c8")

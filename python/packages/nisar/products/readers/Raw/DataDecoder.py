@@ -1,4 +1,5 @@
 import logging
+from isce3.io import decode_bfpq_lut
 from nisar.types import complex32
 import numpy as np
 
@@ -16,7 +17,11 @@ class DataDecoder(object):
     def _decode_lut(self, key):
         z = self.dataset[key]
         assert self.table is not None
-        return self.table[z['r']] + 1j * self.table[z['i']]
+        # Only have 2D version in C++, fall back to Python otherwise
+        if z.ndim == 2:
+            return decode_bfpq_lut(self.table, z)
+        else:
+            return self.table[z['r']] + 1j * self.table[z['i']]
 
     def _decode_complex32(self, key):
         with self.dataset.astype(np.complex64):

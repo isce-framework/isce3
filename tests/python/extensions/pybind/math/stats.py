@@ -175,5 +175,19 @@ def test_strided_array():
     npt.assert_allclose(s.sample_stddev, even_cols.std(ddof=1))
 
 
+def test_str():
+    stats = isce3.math.StatsFloat32()
+    x = np.ones(10).astype("f4")
+    stats.update(x)
+    expected = "StatsFloat32(n_valid=10, mean=1.0, min=1.0, max=1.0, sample_stddev=0.0)"
+    assert str(stats) == expected
+
+    stats_cpx = isce3.math.StatsRealImagFloat32()
+    z = x + 1j * x
+    stats_cpx.update(z)
+    expected_cpx = f"StatsRealImagFloat32(real={expected}, imag={expected})"
+    assert str(stats_cpx) == expected_cpx
+
+
 if __name__ == "__main__":
     test_run()

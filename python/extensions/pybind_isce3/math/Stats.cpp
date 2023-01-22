@@ -11,6 +11,23 @@ namespace py = pybind11;
 using isce3::math::Stats;
 using isce3::math::StatsRealImag;
 
+
+std::string str_helper(const py::object obj,
+                       const std::vector<std::string>& attrs)
+{
+    std::string out = py::str(obj.attr("__class__").attr("__name__"));
+    out += "(";
+    for (auto it = attrs.begin(); it != attrs.end(); ++it) {
+        auto attr = *it;
+        auto cattr = attr.c_str();
+        out += attr + "=" + std::string(py::str(obj.attr(cattr)));
+        if (it != attrs.end() - 1)
+            out += ", ";
+    }
+    return out + ")";
+}
+
+
 template<typename T>
 void addbinding(py::class_<Stats<T>>& pyStats)
 {
@@ -43,6 +60,11 @@ void addbinding(py::class_<Stats<T>>& pyStats)
         return self.update(other);
     },
     "Update statistics with independent data using Chan's method");
+
+    pyStats.def("__str__", [](const py::object self) {
+        return str_helper(self,
+            {"n_valid", "mean", "min", "max", "sample_stddev"});
+    });
 }
 
 template void addbinding(py::class_<Stats<float>>&);
@@ -105,6 +127,10 @@ void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
     pyStatsRealImag.def("update", [](StatsRealImag<T>& self,
             const StatsRealImag<T>& other) {
         return self.update(other);
+    });
+
+    pyStatsRealImag.def("__str__", [](const py::object self) {
+        return str_helper(self, {"real", "imag"});
     });
 }
 

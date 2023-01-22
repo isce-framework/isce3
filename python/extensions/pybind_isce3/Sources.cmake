@@ -60,6 +60,7 @@ io/gdal/GDALAccess.cpp
 io/gdal/GDALDataType.cpp
 io/gdal/gdal.cpp
 io/gdal/Raster.cpp
+io/decode_bfpq_lut.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp
