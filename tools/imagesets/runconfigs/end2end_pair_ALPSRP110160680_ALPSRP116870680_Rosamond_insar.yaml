@@ -19,6 +19,10 @@ runconfig:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tiff
 
+            troposphere_weather_model:
+               reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/ERA5_N34_N36_W119_W117_20080218_06.grb
+               secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/ERA5_N34_N36_W119_W117_20080404_06.grb
+
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_insar
@@ -148,6 +152,13 @@ runconfig:
                 snaphu:
                     cost_mode: smooth
                     initialization_method: mcf
+
+            troposphere_delay:
+                enabled: True
+                package: pyaps
+                weather_model_type: ERA5
+                delay_direction: zenith
+                delay_product: comb
 
         # TODO OPTIONAL - To setup type of worker
         worker:

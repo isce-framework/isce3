@@ -19,6 +19,10 @@ runconfig:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/dem.tif
 
+            troposphere_weather_model:
+               reference_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/ERA5_N38_N40_W124_W121_20120419_16.grb
+               secondary_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/ERA5_N38_N40_W124_W121_20121105_22.grb
+
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_insar
@@ -145,6 +149,13 @@ runconfig:
             phase_unwrap:
                 crossmul_path:
                 algorithm: icu
+
+            troposphere_delay:
+                enabled: True
+                package: pyaps
+                weather_model_type: ERA5
+                delay_direction: zenith
+                delay_product: comb
 
         # TODO OPTIONAL - To setup type of worker
         worker:
