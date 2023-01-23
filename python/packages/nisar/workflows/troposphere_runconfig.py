@@ -46,7 +46,7 @@ def troposphere_delay_check(cfg):
                 raise ValueError(err_str)
 
             # Check the RSLC file
-            rslc_file = rslc_cfg[f'{option}_rslc_file_path']
+            rslc_file = rslc_cfg[f'{option}_rslc_file']
 
             if (rslc_file is None) or (not os.path.exists(rslc_file)):
                 err_str = f'{option} RSLC file cannot be None or not found,' + \
