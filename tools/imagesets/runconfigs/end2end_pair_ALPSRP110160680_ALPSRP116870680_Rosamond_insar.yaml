@@ -6,19 +6,15 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            reference_rslc_file: output_rslc_ref/rslc.h5
-            secondary_rslc_file: output_rslc_sec/rslc.h5
-
-            qa_rifg_input_file: output_insar/RIFG_product.h5
-            qa_runw_input_file: output_insar/RUNW_product.h5
-            qa_gunw_input_file: output_insar/GUNW_product.h5
-            qa_roff_input_file: output_insar/ROFF_product.h5
-            qa_goff_input_file: output_insar/GOFF_product.h5
+            reference_rslc_file: output_rslc_ref/rslc_20080218.h5
+            secondary_rslc_file: output_rslc_sec/rslc_20080404.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tiff
-
+            dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tif
+            #orbit:
+               #reference_orbit_path: #/scratch/vbrancat/data/NISAR/SampleProducts/SanAndreas/data/ext_orbit/orbit_05518_12018_000_120419_L090_CX_143_03.xml
+               #secondary_orbit_path: #/scratch/vbrancat/data/NISAR/SampleProducts/SanAndreas/data/ext_orbit/orbit_05518_12128_008_121105_L090_CX_143_02.xml
             troposphere_weather_model:
                reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/ERA5_N34_N36_W119_W117_20080218_06.grb
                secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/ERA5_N34_N36_W119_W117_20080404_06.grb
@@ -33,8 +29,6 @@ runconfig:
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_insar/product.h5
-
-            qa_output_dir: qa_insar
 
         primary_executable:
             product_type: ROFF_RIFG_RUNW_GOFF_GUNW
@@ -53,17 +47,6 @@ runconfig:
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
                     A: [HH]
 
-            # TODO OPTIONAL - Only checked when internet access is available
-            dem_download:
-                # OPTIONAL - s3 bucket / curl URL / local file
-                source:
-                top_left:
-                    x:
-                    y:
-                bottom_right:
-                    x:
-                    y:
-
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
                 # OPTIONAL - To control output grid in same units as output EPSG
@@ -79,8 +62,8 @@ runconfig:
                 # If no provided, values will match spacing in provided DEM
                 output_posting:
                     A:
-                        x_posting:
-                        y_posting:
+                        x_posting: 80
+                        y_posting: 80
                     B:
                         x_posting:
                         y_posting:
@@ -95,63 +78,94 @@ runconfig:
                 bottom_right:
                     y_abs:
                     x_abs:
+            rdr2geo:
+                lines_per_block: 3000
 
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 25
+                lines_per_block: 3000
 
             coarse_resample:
-                lines_per_tile: 100
+                lines_per_tile: 1000
 
             dense_offsets:
-                enabled: False
+                enabled: True
 
             offsets_product:
                 enabled: True
                 skip_range: 15
                 skip_azimuth: 15
-                margin: 150
+                margin: 250
                 layer1:
-                    window_range: 64
-                    window_azimuth: 64
-                    half_search_range: 20
-                    half_search_azimuth: 20
+                   window_range: 64
+                   window_azimuth: 64
+                   half_search_range: 20
+                   half_search_azimuth: 20
                 layer2:
-                    window_range: 96
-                    window_azimuth: 96
-                    half_search_range: 28
-                    half_search_azimuth: 28
+                   window_range: 96
+                   window_azimuth: 96
+                   half_search_range: 32
+                   half_search_azimuth: 32
                 layer3:
-                    window_range: 128
-                    window_azimuth: 128
-                    half_search_range: 32
-                    half_search_azimuth: 32
+                   window_range: 128
+                   window_azimuth: 128
+                   half_search_range: 28
+                   half_search_azimuth: 28
 
             rubbersheet:
-                enabled: False
+                enabled: True
 
             fine_resample:
-                enabled: False
+                enabled: True
 
             crossmul:
                 flatten: True
-                range_looks: 11
-                azimuth_looks: 11
+                range_looks: 31
+                azimuth_looks: 31
                 lines_per_block: 4096
 
             filter_interferogram:
                 lines_per_block: 150
-                filter_type: boxcar
+                filter_type: no_filter
                 boxcar:
                     filter_size_range: 7
                     filter_size_azimuth: 7
 
             phase_unwrap:
-                crossmul_path:
-                algorithm: snaphu
-                snaphu:
-                    cost_mode: smooth
-                    initialization_method: mcf
+                crossmul_path: output_insar/RIFG_product.h5
+                #preprocess_wrapped_phase:
+                #  enabled: True
+                #  mask:
+                #    mask_type: median_filter
+                #    outlier_threshold: 0.75
+                #    median_filter_size: 11
+                #  filling_method: distance_interpolator
+                #  distance_interpolator:
+                #    radius: 2
+                #  fill_smoothed:
+                #    iterations: 10
+                #    kernel_size: 11
+                algorithm: icu
+                icu:
+                  buffer_lines: 3700
+
+            ionosphere_phase_correction:
+                enabled: False
+                lines_per_block: 1000
+                spectral_diversity: split_main_band
+                list_of_frequencies:
+                   A: [HH]
+                dispersive_filter:
+                   enabled: True
+                   filter_mask_type: coherence
+                   filling_method: nearest
+                   filter_iterations: 1
+                   unwrap_correction: False
+                   kernel_range: 500
+                   kernel_azimuth: 500
+                   sigma_range: 150
+                   sigma_azimuth: 150
 
             troposphere_delay:
                 enabled: True
@@ -172,25 +186,3 @@ runconfig:
         logging:
             path: output_insar/insar.log
             write_mode: 'w'
-
-        qa:
-            rifg:
-                workflows:
-                    validate: True
-                    qa_reports: True
-            runw:
-                workflows:
-                    validate: True
-                    qa_reports: True
-            gunw:
-                workflows:
-                    validate: True
-                    qa_reports: True
-            roff:
-                workflows:
-                    validate: True
-                    qa_reports: True
-            goff:
-                workflows:
-                    validate: True
-                    qa_reports: True
