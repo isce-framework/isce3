@@ -9,6 +9,12 @@ runconfig:
             reference_rslc_file: output_rslc_ref/rslc_20080218.h5
             secondary_rslc_file: output_rslc_sec/rslc_20080404.h5
 
+            qa_rifg_input_file: output_insar/RIFG_product.h5
+            qa_runw_input_file: output_insar/RUNW_product.h5
+            qa_gunw_input_file: output_insar/GUNW_product.h5
+            qa_roff_input_file: output_insar/ROFF_product.h5
+            qa_goff_input_file: output_insar/GOFF_product.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tif
@@ -29,6 +35,8 @@ runconfig:
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_insar/product.h5
+
+            qa_output_dir: qa_insar
 
         primary_executable:
             product_type: ROFF_RIFG_RUNW_GOFF_GUNW
@@ -186,3 +194,25 @@ runconfig:
         logging:
             path: output_insar/insar.log
             write_mode: 'w'
+
+        qa:
+            rifg:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            runw:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            gunw:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            roff:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            goff:
+                workflows:
+                    validate: True
+                    qa_reports: True
