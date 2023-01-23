@@ -6,6 +6,7 @@ runconfig:
         input_file_group:
             input_file_path:
             -   input_L0B_RRSD_ALPSRP116870680_Rosamond/ALPSRP116870680.L0B.h5
+            qa_input_file: output_rslc_sec/rslc.h5
         dynamic_ancillary_file_group:
             dem_file:
             orbit:
@@ -18,6 +19,7 @@ runconfig:
             scratch_path: scratch_rslc_sec
             sas_output_file: output_rslc_sec/rslc.h5
             sas_config_file: output_rslc_sec/runconfig_rslc_sec.yaml
+            qa_output_dir: qa_rslc_sec
             product_counter: 1
         primary_executable:
             product_type: RSLC
@@ -149,3 +151,4 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                nesz: true

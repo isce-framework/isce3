@@ -9,6 +9,12 @@ runconfig:
             reference_rslc_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/SanAnd_05518_12018_000_120419_L090_CX_143_03.h5
             secondary_rslc_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02/SanAnd_05518_12128_008_121105_L090_CX_138_02.h5
 
+            qa_rifg_input_file: output_insar/RIFG_product.h5
+            qa_runw_input_file: output_insar/RUNW_product.h5
+            qa_gunw_input_file: output_insar/GUNW_product.h5
+            qa_roff_input_file: output_insar/ROFF_product.h5
+            qa_goff_input_file: output_insar/GOFF_product.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/dem.tif
@@ -23,6 +29,8 @@ runconfig:
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_insar/product.h5
+
+            qa_output_dir: qa_insar
 
         primary_executable:
             product_type: ROFF_RIFG_RUNW_GOFF_GUNW
@@ -150,3 +158,25 @@ runconfig:
         logging:
             path: output_insar/insar.log
             write_mode: 'w'
+
+        qa:
+            rifg:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            runw:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            gunw:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            roff:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            goff:
+                workflows:
+                    validate: True
+                    qa_reports: True

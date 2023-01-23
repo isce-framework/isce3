@@ -9,6 +9,7 @@ runconfig:
             # REQUIRED List of NISAR raw data products in L0B format.
             input_file_path:
             - input_L0B_RRSD_REE_NISAR_dithered/L0B_RRSD_REE_NISAR_dithered.h5
+            qa_input_file: output_rslc/rslc.h5
 
         dynamic_ancillary_file_group:
             # Antenna pattern data, optional.
@@ -25,6 +26,7 @@ runconfig:
             sas_output_file: output_rslc/rslc.h5
             # Echo processor config (including defaults) to file.
             sas_config_file: output_rslc/rslc_config.yaml
+            qa_output_dir: qa_rslc
             product_counter: 1
 
         primary_executable:
@@ -203,3 +205,4 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                nesz: true

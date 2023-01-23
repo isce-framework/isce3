@@ -568,7 +568,7 @@ class ImageSet:
 
     def workflowqa(self, wfname, testname, suf="", description=""):
         """
-        Run QA and CF compliance checking for the specified workflow using the NISAR distrib image.
+        Run QA for the specified workflow using the NISAR distrib image.
 
         Parameters
         -------------
@@ -595,30 +595,13 @@ class ImageSet:
         # provided relative to the installed scripts location. In the future, we should
         # do this the right way using `importlib.resources`. For now, let's just
         # hardcode the relative path to the XML data directory.
-        cmd = [f"time cfchecks.py output_{wfname}{suf}/{wfname}.h5",
-               f"""time verify_{wfname}.py --fpdf qa_{wfname}{suf}/graphs.pdf \
-                    --fhdf qa_{wfname}{suf}/stats.h5 --flog qa_{wfname}{suf}/qa.log --validate \
-                    --quality output_{wfname}{suf}/{wfname}.h5 \
-                    --xml_dir ../lib/python3.9/site-packages/EGG-INFO/scripts/xml"""]
+        runconfig = f"runconfig_{wfname}{suf}.yaml"
+        cmd = [f"time nisarqa {wfname}_qa {runconfig}"]
         try:
             self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                             loghdlrname=f'wfqa.{os.path.basename(testdir)}')
         except subprocess.CalledProcessError as e:
-            if testname in ['rslc_REE2', 'gslc_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03',
-                            'gslc_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02',
-                            'gslc_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02',
-                            'gslc_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02']:
-                # Don't exit workflow QA when it fails due to known memory issue reading large files
-                # QA tests that fail on both nisar-adt-dev-1 and nisar-adt-dev-2:
-                #     rslc_REE2
-                #     gslc_UAVSAR_Snjoaq_14511_18034_014_180720_L090_CX_143_02
-                #     gslc_UAVSAR_Snjoaq_14511_18044_015_180814_L090_CX_143_02
-                # Extra QA tests that fail on nisar-adt-dev-2:
-                #     gslc_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03
-                #     gslc_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02
-                print(f"Known failure running workflow QA on test {testname}")
-            else:
-                raise RuntimeError(f"Workflow QA on test {testname} failed") from e
+            raise RuntimeError(f"Workflow QA on test {testname} failed") from e
 
     def rslcqa(self, tests=None):
         if tests is None:
@@ -640,7 +623,7 @@ class ImageSet:
 
     def insarqa(self, tests=None):
         """
-        Run QA and CF compliance checking for InSAR workflow using the NISAR distrib image.
+        Run QA for InSAR workflow using the NISAR distrib image.
 
         InSAR QA is a special case since the workflow name is not the product name.
         Also, the --quality flag in verify_gunw.py cannot be used at the moment since
@@ -651,27 +634,24 @@ class ImageSet:
             tests = workflowtests['insar'].keys()
         for testname in tests:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
-            # run QA for each of the InSAR products
-            for product in ['rifg', 'runw', 'gunw']:
+            # Run QA for each of the InSAR products.
+            # QA validation and/or reports may be disabled for each individual product
+            # type in the runconfig.
+            # Note that the InSAR workflow doesn't always produce all output products --
+            # if any products are not generated, QA should be disabled for them in the
+            # runconfig file.
+            for product in ['rifg', 'runw', 'gunw', 'roff', 'goff']:
                 print(f"\nRunning workflow QA on test {testname} {product.upper()} product\n")
-                qadir = pjoin(testdir, f"qa_{product}")
+                qadir = pjoin(testdir, f"qa_insar")
                 os.makedirs(qadir, exist_ok=True)
                 log = pjoin(qadir,f"stdouterr.log")
-                cmd = [f"time cfchecks.py output_{wfname}/{product.upper()}_product.h5"]
-                if product == 'gunw':
-                    cmd.append(f"""time verify_gunw.py --fpdf qa_{product}/graphs.pdf \
-                                       --fhdf qa_{product}/stats.h5 --flog qa_{product}/qa.log --validate \
-                                       output_{wfname}/{product.upper()}_product.h5 \
-                                       --xml_dir ../lib/python3.9/site-packages/EGG-INFO/scripts/xml""")
+                runconfig = f"runconfig_{wfname}.yaml"
+                cmd = [f"time nisarqa {product}_qa {runconfig}"]
                 try:
                     self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
                 except subprocess.CalledProcessError as e:
-                    if product == 'gunw':
-                        raise RuntimeError(f"Workflow QA on test {testname} {product.upper()} product failed\n") from e
-                    else:
-                        # do not exit since CF checker errors are expected
-                        print(f"Found known errors running CF Checker on test {testname} {product.upper()} product\n")
+                    raise RuntimeError(f"Workflow QA on test {testname} {product.upper()} product failed\n") from e
 
     def end2endqa(self, tests=None):
         """

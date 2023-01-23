@@ -9,6 +9,7 @@ runconfig:
             # REQUIRED List of NISAR raw data products in L0B format.
             input_file_path:
             - input_L0B_RRSD_DIST2/REE_L0B_NISAR_DATA_PASS2.h5
+            qa_input_file: output_rslc/rslc.h5
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
             dem_file: null
@@ -36,6 +37,7 @@ runconfig:
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             sas_output_file: output_rslc/rslc.h5
             sas_config_file: output_rslc/rslc_config.yaml
+            qa_output_dir: qa_rslc
             product_counter: 1
         primary_executable:
             product_type: RSLC
@@ -186,3 +188,4 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                nesz: true

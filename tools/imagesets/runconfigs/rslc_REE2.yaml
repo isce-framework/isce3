@@ -9,6 +9,8 @@ runconfig:
             input_file_path:
             - input_L0B_RRSD_REE2/REE_L0B_ECHO_array144sq_03.h5
 
+            qa_input_file: output_rslc/rslc.h5
+
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
             dem_file:
@@ -46,6 +48,8 @@ runconfig:
 
             # Echo processor config (including defaults) to file.
             sas_config_file: output_rslc/rslc_config.yaml
+
+            qa_output_dir: qa_rslc
 
             product_counter: 1
 
@@ -302,3 +306,4 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                nesz: true
