@@ -111,28 +111,7 @@ runconfig:
       # Azimuth spectral window, optional.  Defaults to no weighting.
       azimuth_window: include('spectral_window', required=False)
 
-      radio_frequency_interference:
-        # Whether to attempt RFI detection and record related metadata.
-        # Defaults to True
-        detection_enabled: bool(required=False)
-        # Whether to attemt RFI removal. Default to False.
-        # Requires that RFI detection is also enabled.
-        mitigation_enabled: bool(required=False)
-        # Algorithm selection.  Defaults to 'ST-EVD' for slow-time eigenvalue
-        # decomposition.
-        mitigation_algorithm: enum('ST-EVD')
-        # Coherent processing interval length (pulses).  Defaults to 32.
-        cpi_length: int(min=2, required=False)
-        # Number of subdivisions in range.  Defaults to 1.
-        num_range_blocks: int(min=1, required=False)
-        # Maximum allowable number of emitters suppressed per CPI.  Whenever the
-        # limit is exceeded it's assumed that the detection was unreliable and
-        # mitigation is disabled for the block.  Defaults to 16.
-        max_emitters: int(min=0, required=False)
-        # Difference between sorted eigenvalues signifying the transition
-        # between interference and signal subspaces (dB/index).
-        # Defaults to 1.0
-        detection_threshold: num(required=False)
+      radio_frequency_interference: include('rfi_options', required=False)
 
       # Range filter parameters for mixed-mode cases.
       range_common_band_filter:
@@ -265,6 +244,29 @@ spectral_window:
   # Shape parameter. For Kaiser, 0 <= shape < Inf.
   # For Cosine, 0 <= shape <= 1
   shape: num(min=0.0, required=False)
+
+rfi_options:
+  # Whether to attempt RFI detection and record related metadata.
+  # Defaults to True
+  detection_enabled: bool(required=False)
+  # Whether to attemt RFI removal. Default to False.
+  # Requires that RFI detection is also enabled.
+  mitigation_enabled: bool(required=False)
+  # Algorithm selection.  Defaults to 'ST-EVD' for slow-time eigenvalue
+  # decomposition.
+  mitigation_algorithm: enum('ST-EVD')
+  # Coherent processing interval length (pulses).  Defaults to 32.
+  cpi_length: int(min=2, required=False)
+  # Number of subdivisions in range.  Defaults to 1.
+  num_range_blocks: int(min=1, required=False)
+  # Maximum allowable number of emitters suppressed per CPI.  Whenever the
+  # limit is exceeded it's assumed that the detection was unreliable and
+  # mitigation is disabled for the block.  Defaults to 16.
+  max_emitters: int(min=0, required=False)
+  # Difference between sorted eigenvalues signifying the transition
+  # between interference and signal subspaces (dB/index).
+  # Defaults to 1.0
+  detection_threshold: num(required=False)
 
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)

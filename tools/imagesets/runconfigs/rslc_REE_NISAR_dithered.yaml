@@ -189,8 +189,6 @@ runconfig:
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
-                # radio frequency interference mitigation
-                rfi_removal: True
                 # azimuth resampling and gap-filling
                 presum_blu: True
                 # range compression
