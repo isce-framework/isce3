@@ -29,7 +29,7 @@ runconfig:
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            internal_calibration: input_L0B_RRSD_REE2/NISAR_LINS_202201001T120000_01.h5
+            internal_calibration: input_L0B_RRSD_REE2/NISAR_LINS_20220101T120000_01.h5
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
