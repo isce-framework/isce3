@@ -15,6 +15,9 @@ runconfig:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tiff
 
+            # PLACEHOLDER - Sample of file name format
+            tec_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json
+
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_gcov_sec
@@ -45,7 +48,7 @@ runconfig:
                     # 'all' for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
                     # empty for no polarizations
-                    A: 
+                    A:
 
                 # OPTIONAL - If we want full covariance instead of diagonals only. Default False
                 fullcovariance:   False
@@ -53,7 +56,7 @@ runconfig:
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
                 # OPTIONAL - s3 bucket / curl URL / local file
-                source: 
+                source:
                 top_left:
                     x:
                     y:
@@ -62,7 +65,7 @@ runconfig:
                     y:
 
             # OPTIONAL - if amplitude data needs to be mulitlooked before GCOV generation
-            pre_process:   
+            pre_process:
                azimuth_looks: 1
                range_looks:   1
 
@@ -87,7 +90,7 @@ runconfig:
             geocode:
                 # OPTIONAL -
                 algorithm_type: area_projection
- 
+
                 # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
                 memory_mode:
 
@@ -99,28 +102,28 @@ runconfig:
 
                 save_nlooks: True
                 save_rtc: True
-                 
+
                 # OPTIONAL - Same as input DEM if not provided.
-                output_epsg: 
+                output_epsg:
 
                 # OPTIONAL - Spacing between pixels, in same units as output EPSG.
                 # If no provided, values will match spacing in provided DEM
                 output_posting:
                     A:
-                        x_posting:  
-                        y_posting:  
+                        x_posting:
+                        y_posting:
                     B:
-                        x_posting:  
-                        y_posting:  
+                        x_posting:
+                        y_posting:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                y_snap: 
+                y_snap:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                x_snap: 
+                x_snap:
 
                 # OPTIONAL - Can control with absolute values or with snap values
-                top_left:        
+                top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
                     y_abs:
                     # OPTIONAL - Set top-left x in same units as output EPSG
@@ -147,10 +150,10 @@ runconfig:
             # OPTIONAL - To explicitly use GPU capability if available. Default False
             gpu_enabled: False
             # TODO
-            #gpu_id: 0            
+            #gpu_id: 0
 
         # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
-        logging: 
+        logging:
             path: output_gcov_sec/gcov.log
             write_mode: 'w'
 
