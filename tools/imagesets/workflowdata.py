@@ -13,6 +13,10 @@ workflowdata = {
         # and so forth
         "L0B_RRSD_REE2":
         [
+            "attitude.xml",
+            "orbit.xml",
+            "NISAR_LCAL_20220101T120000_01.yaml",
+            "NISAR_LINS_20220101T120000_01.h5",
             "REE_L0B_ECHO_array144sq_03.h5",
             "REE_ANTPAT_CUTS_DATA.h5",
             "README.txt",
@@ -58,13 +62,15 @@ workflowdata = {
         "L0B_RRSD_ALPSRP110160680_Rosamond":
         [
             "ALPSRP110160680.L0B.h5",
-            "dem.tiff",
+            "dem.tif",
+            "ERA5_N34_N36_W119_W117_20080218_06.grb",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
             "ALPSRP116870680.L0B.h5",
-            "dem.tiff",
+            "dem.tif",
+            "ERA5_N34_N36_W119_W117_20080404_06.grb",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP264757150_Amazon":
@@ -141,6 +147,7 @@ workflowdata = {
         [
             "SanAnd_05518_12018_000_120419_L090_CX_143_03.h5",
             "dem.tif",
+            "ERA5_N38_N40_W124_W121_20120419_16.grb",
             "README.txt",
         ],
 
@@ -155,6 +162,7 @@ workflowdata = {
         [
             "SanAnd_05518_12128_008_121105_L090_CX_143_02.h5",
             "dem.tif",
+            "ERA5_N38_N40_W124_W121_20121105_22.grb",
             "README.txt",
         ],
 
@@ -271,7 +279,7 @@ workflowtests = {
         "insar_UAVSAR_SanAnd_05518_12018-000_12128-008_143":
             [
                 "L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
-                "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02",
+                "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02",
             ],
         "insar_UAVSAR_Snjoaq_14511_18034-014_18044-015_143":
             [
