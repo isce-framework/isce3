@@ -144,9 +144,9 @@ runconfig:
                   buffer_lines: 3700
 
             ionosphere_phase_correction:
-                enabled: False
+                enabled: True
                 lines_per_block: 1000
-                spectral_diversity: split_main_band
+                spectral_diversity: main_side_band
                 list_of_frequencies:
                    A: [HH]
                 dispersive_filter:
