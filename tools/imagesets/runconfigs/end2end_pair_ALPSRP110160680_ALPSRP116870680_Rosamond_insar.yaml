@@ -18,9 +18,13 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tif
+
             troposphere_weather_model:
                reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/ERA5_N34_N36_W119_W117_20080218_06.grb
                secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/ERA5_N34_N36_W119_W117_20080404_06.grb
+
+            # PLACEHOLDER - Sample of file name format
+            tec_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080218T062000_20080218T062020_v0.0.json
 
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -103,20 +107,20 @@ runconfig:
                 skip_azimuth: 15
                 margin: 250
                 layer1:
-                   window_range: 64
-                   window_azimuth: 64
-                   half_search_range: 20
-                   half_search_azimuth: 20
+                    window_range: 64
+                    window_azimuth: 64
+                    half_search_range: 20
+                    half_search_azimuth: 20
                 layer2:
-                   window_range: 96
-                   window_azimuth: 96
-                   half_search_range: 32
-                   half_search_azimuth: 32
+                    window_range: 96
+                    window_azimuth: 96
+                    half_search_range: 32
+                    half_search_azimuth: 32
                 layer3:
-                   window_range: 128
-                   window_azimuth: 128
-                   half_search_range: 28
-                   half_search_azimuth: 28
+                    window_range: 128
+                    window_azimuth: 128
+                    half_search_range: 28
+                    half_search_azimuth: 28
 
             rubbersheet:
                 enabled: True
@@ -148,17 +152,17 @@ runconfig:
                 lines_per_block: 1000
                 spectral_diversity: split_main_band
                 list_of_frequencies:
-                   A: [HH]
+                    A: [HH]
                 dispersive_filter:
-                   enabled: True
-                   filter_mask_type: coherence
-                   filling_method: nearest
-                   filter_iterations: 1
-                   unwrap_correction: False
-                   kernel_range: 500
-                   kernel_azimuth: 500
-                   sigma_range: 150
-                   sigma_azimuth: 150
+                    enabled: True
+                    filter_mask_type: coherence
+                    filling_method: nearest
+                    filter_iterations: 1
+                    unwrap_correction: False
+                    kernel_range: 500
+                    kernel_azimuth: 500
+                    sigma_range: 150
+                    sigma_azimuth: 150
 
             troposphere_delay:
                 enabled: True
