@@ -18,9 +18,6 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/dem.tif
-            #orbit:
-               #reference_orbit: #/scratch/vbrancat/data/NISAR/SampleProducts/SanAndreas/data/ext_orbit/orbit_05518_12018_000_120419_L090_CX_143_03.xml
-               #secondary_orbit: #/scratch/vbrancat/data/NISAR/SampleProducts/SanAndreas/data/ext_orbit/orbit_05518_12128_008_121105_L090_CX_143_02.xml
             troposphere_weather_model:
                reference_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/ERA5_N38_N40_W124_W121_20120419_16.grb
                secondary_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/ERA5_N38_N40_W124_W121_20121105_22.grb
@@ -141,19 +138,7 @@ runconfig:
                     filter_size_azimuth: 7
 
             phase_unwrap:
-                crossmul_path: output_insar/RIFG_product.h5
-                #preprocess_wrapped_phase:
-                #  enabled: True
-                #  mask:
-                #    mask_type: median_filter
-                #    outlier_threshold: 0.75
-                #    median_filter_size: 11
-                #  filling_method: distance_interpolator
-                #  distance_interpolator:
-                #    radius: 2
-                #  fill_smoothed:
-                #    iterations: 10
-                #    kernel_size: 11
+                crossmul_path:
                 algorithm: icu
                 icu:
                   buffer_lines: 3700
