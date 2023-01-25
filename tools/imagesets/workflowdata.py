@@ -64,6 +64,7 @@ workflowdata = {
             "ALPSRP110160680.L0B.h5",
             "dem.tif",
             "ERA5_N34_N36_W119_W117_20080218_06.grb",
+            "NISAR_ANCL_TEC_20230124T021043_20080218T062000_20080218T062020_v0.0.json",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
@@ -71,6 +72,7 @@ workflowdata = {
             "ALPSRP116870680.L0B.h5",
             "dem.tif",
             "ERA5_N34_N36_W119_W117_20080404_06.grb",
+            "NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP264757150_Amazon":
