@@ -18,9 +18,6 @@ runconfig:
             # PLACEHOLDER - Sample of file name format
             tec_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json
 
-            # PLACEHOLDER - Sample of file name format
-            tec_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json
-
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_gslc_sec
