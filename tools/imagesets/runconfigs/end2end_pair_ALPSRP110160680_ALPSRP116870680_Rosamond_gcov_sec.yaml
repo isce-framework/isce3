@@ -13,7 +13,10 @@ runconfig:
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            dem_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tiff
+            dem_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/dem.tif
+
+            # PLACEHOLDER - Sample of file name format
+            tec_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json
 
             # PLACEHOLDER - Sample of file name format
             tec_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json
