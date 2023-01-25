@@ -782,9 +782,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                       grids=grids_val,
                                       long_name='connected components')
 
-                if iono_args['enabled']:
+                if iono_args['enabled'] and dst in ['RUNW', 'GUNW']:
                    pol_list_iono = freq_pols_iono['A']
-
                    # polarizations for ionosphere can be independent to insar pol
                    for pol_iono in pol_list_iono:
                       # Do not create ionosphere in frequency A
