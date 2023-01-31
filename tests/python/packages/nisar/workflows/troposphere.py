@@ -135,6 +135,10 @@ def test_troposphere_aps_run():
         delay_datacube = wavelength * \
             tropo_delay_datacube[delay_product] / (np.pi * 4.0) * 100.0
 
+        # Make the Y coordinates ascending
+        ycoord_radar_grid = np.flip(ycoord_radar_grid)
+        delay_datacube = np.flip(delay_datacube, axis=1)
+
         # Troposphere delay interpolator
         tropo_delay_interpolator = RegularGridInterpolator((height_radar_grid,
                                                             ycoord_radar_grid,
