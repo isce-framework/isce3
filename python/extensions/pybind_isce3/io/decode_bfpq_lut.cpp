@@ -1,7 +1,6 @@
 #include "decode_bfpq_lut.h"
 #include <cstdint>
 #include <complex>
-#include <omp.h>
 #include <pybind11/numpy.h>
 #include <stdexcept>
 
