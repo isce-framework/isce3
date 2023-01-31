@@ -818,12 +818,10 @@ def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
     for cc, c_idx in enumerate(active_rx_idx):
 
         # get all indexes/addresses to angle-coefs table for each channel
-        stop_dbf = wd_dbf[c_idx] + wl_dbf[c_idx]
-        idx_ang = np.asarray(
-            [bisect.bisect_left(rx_trm_info.ta_dbf_switch[c_idx], rgb)
-             for rgb in range(wd_dbf[c_idx], stop_dbf)]
-        )
-
+        idx_ang = np.searchsorted(
+            rx_trm_info.ta_dbf_switch[c_idx], np.arange(
+                wd_dbf[c_idx], wd_dbf[c_idx] + wl_dbf[c_idx])
+            )
         # adjust index to angle-coeffs table per EL angle offset if necessary
         if idx_ofs[cc] != 0:
             idx_ang += idx_ofs[cc]
