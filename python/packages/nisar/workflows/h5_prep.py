@@ -1403,7 +1403,8 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
                                          ground_track_velocity_raster,
                                          threshold_geo2rdr,
                                          numiter_geo2rdr,
-                                         delta_range)
+                                         delta_range,
+                                         flag_set_output_rasters_geolocation=False)
 
 
 def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,

@@ -267,7 +267,7 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* elevation_angle_raster,
         isce3::io::Raster* ground_track_velocity_raster,
         const double threshold_geo2rdr, const int numiter_geo2rdr,
-        const double delta_range)
+        const double delta_range, bool flag_set_output_rasters_geolocation)
 {
 
     pyre::journal::info_t info("isce.geometry.makeRadarGridCubes");
@@ -419,6 +419,11 @@ void makeRadarGridCubes(const isce3::product::RadarGridParameters& radar_grid,
         writeArray(ground_track_velocity_raster, ground_track_velocity_array,
                    height_count);
     }
+
+    if (!flag_set_output_rasters_geolocation) {
+        return;
+    }
+
 
     double geotransform[] = {
             geogrid.startX(),  geogrid.spacingX(), 0, geogrid.startY(), 0,
