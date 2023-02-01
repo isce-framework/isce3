@@ -1,6 +1,5 @@
 set(SOURCES
 core/Device.cu
-core/Event.cu
 core/gpuBicubicInterpolator.cu
 core/gpuBilinearInterpolator.cu
 core/gpuLUT1d.cu
@@ -13,7 +12,6 @@ core/gpuSpline2dInterpolator.cu
 core/InterpolatorHandle.cu
 core/Orbit.cu
 core/ProjectionBaseHandle.cu
-core/Stream.cu
 except/Error.cpp
 focus/Backproject.cu
 fft/detail/CufftWrapper.cu
