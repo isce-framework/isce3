@@ -93,7 +93,7 @@ def troposphere_delay_check(cfg):
 
         # Check the weather model
         weather_model_types = ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA',
-                                'ECWMF', 'ERAI', 'GMAO', 'HRRR', 'NCMR']
+                                'ECMWF', 'ERAI', 'GMAO', 'HRRR', 'NCMR']
 
         if weather_model_type not in weather_model_types:
             weather_model_types = ','.join(weather_model_types)
@@ -118,7 +118,7 @@ def troposphere_delay_check(cfg):
             raise ValueError(err_str)
 
         if (tropo_pkg  == 'raider') and \
-                weather_model_type not in ['ERA5', 'HRES', 'MERRA', 'ECWMF',
+                weather_model_type not in ['ERA5', 'HRES', 'MERRA', 'ECMWF',
                                            'ERAI', 'GMAO', 'HRRR', 'NCMR']:
             err_str = f'weather model {weather_model_type} is not supported by RAiDER package'
             error_channel.log(err_str)
