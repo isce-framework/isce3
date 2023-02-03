@@ -6,7 +6,7 @@ from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
                              geocode_insar, h5_prep, filter_interferogram,
                              offsets_product, rdr2geo, resample_slc, rubbersheet,
                              split_spectrum, unwrap, ionosphere, baseline,
-                             troposphere)
+                             troposphere, solidearth_tides)
 
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
@@ -81,6 +81,10 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if 'GUNW' in out_paths and run_steps['troposphere'] and \
             cfg['processing']['troposphere_delay']['enabled']:
         troposphere.run(cfg, out_paths['GUNW'])
+
+    if 'GUNW' in out_paths and run_steps['solidearth_tides'] and \
+            cfg['processing']['solidearth_tides']['enabled']:
+        solidearth_tides.run(cfg, out_paths['GUNW'])
 
     if run_steps['geocode'] and 'GOFF' in out_paths:
         geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], is_goff=True)
