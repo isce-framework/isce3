@@ -143,12 +143,24 @@ def troposphere_delay_check(cfg):
             raise ValueError(err_str)
 
         # Check the troposphere delay product
-        delay_product = tropo_cfg['delay_product'].lower()
-        if delay_product not in ['wet', 'hydro', 'comb']:
-            err_str = f"unidentified delay product '{tropo_cfg['delay_product']}'," + \
-                        "it should be one or more of 'wet', 'hydro', and 'comb'"
+        delay_products = tropo_cfg['delay_product']
+        if not isinstance(delay_products, list):
+            err_str = 'the delay product must be the list() datatype'
             error_channel.log(err_str)
             raise ValueError(err_str)
+        else:
+            if len(delay_products) == 0:
+                err_str = 'no delay products are specified'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+            else:
+                for delay_product in delay_products:
+                    if delay_product not in ['wet', 'hydro', 'comb']:
+                        err_str = f"unidentified delay product '{delay_product}'," + \
+                                "it should be one or more of 'wet', 'hydro', and 'comb'"
+                        error_channel.log(err_str)
+                        raise ValueError(err_str)
+
 
 class InsarTroposphereRunConfig(RunConfig):
     '''

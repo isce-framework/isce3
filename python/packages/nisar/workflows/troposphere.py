@@ -96,7 +96,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
     tropo_package = tropo_cfg['package'].lower()
     tropo_delay_direction = tropo_cfg['delay_direction'].lower()
-    tropo_delay_product = tropo_cfg['delay_product'].lower()
+    tropo_delay_products = tropo_cfg['delay_product']
 
     # Troposphere delay datacube
     troposphere_delay_datacube = dict()
@@ -130,65 +130,70 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
         lat_datacube, lon_datacube, _ = transform_xy_to_latlon(
             epsg, x_2d_radar, y_2d_radar)
 
-        # pyaps package
-        if tropo_package == 'pyaps':
+        for tropo_delay_product in tropo_delay_products:
 
-            delay_type = tropo_delay_product
-            if delay_type == 'hydro':
-                delay_type = 'dry'
+            # pyaps package
+            if tropo_package == 'pyaps':
 
-            tropo_delay_datacube_list = []
-            for index, hgt in enumerate(height_radar_grid):
-                if tropo_delay_direction == 'zenith':
-                    inc_angle_datacube = np.zeros(x_2d_radar.shape)
-                else:
-                    inc_angle_datacube = inc_angle_cube[index, :, :]
+                delay_type = tropo_delay_product
+                if delay_type == 'hydro':
+                    delay_type = 'dry'
 
-                dem_datacube = np.full(inc_angle_datacube.shape, hgt)
+                tropo_delay_datacube_list = []
+                for index, hgt in enumerate(height_radar_grid):
+                    if tropo_delay_direction == 'zenith':
+                        inc_angle_datacube = np.zeros(x_2d_radar.shape)
+                    else:
+                        inc_angle_datacube = inc_angle_cube[index, :, :]
 
-                # Delay for the reference image
-                ref_aps_estimator = pa.PyAPS(reference_weather_model_file,
-                                             dem=dem_datacube,
-                                             inc=inc_angle_datacube,
-                                             lat=lat_datacube,
-                                             lon=lon_datacube,
-                                             grib=weather_model_type,
-                                             humidity='Q',
-                                             verb=False,
-                                             Del=delay_type)
+                    dem_datacube = np.full(inc_angle_datacube.shape, hgt)
 
-                phs_ref = ref_aps_estimator.getdelay()
+                    # Delay for the reference image
+                    ref_aps_estimator = pa.PyAPS(reference_weather_model_file,
+                                                 dem=dem_datacube,
+                                                 inc=inc_angle_datacube,
+                                                 lat=lat_datacube,
+                                                 lon=lon_datacube,
+                                                 grib=weather_model_type,
+                                                 humidity='Q',
+                                                 model=weather_model_type,
+                                                 verb=False,
+                                                 Del=delay_type)
 
-                # Delay for the secondary image
-                second_aps_estimator = pa.PyAPS(secondary_weather_model_file,
-                                                dem=dem_datacube,
-                                                inc=inc_angle_datacube,
-                                                lat=lat_datacube,
-                                                lon=lon_datacube,
-                                                grib=weather_model_type,
-                                                humidity='Q',
-                                                verb=False,
-                                                Del=delay_type)
+                    phs_ref = ref_aps_estimator.getdelay()
 
-                phs_second = second_aps_estimator.getdelay()
+                    # Delay for the secondary image
+                    second_aps_estimator = pa.PyAPS(secondary_weather_model_file,
+                                                    dem=dem_datacube,
+                                                    inc=inc_angle_datacube,
+                                                    lat=lat_datacube,
+                                                    lon=lon_datacube,
+                                                    grib=weather_model_type,
+                                                    humidity='Q',
+                                                    model=weather_model_type,
+                                                    verb=False,
+                                                    Del=delay_type)
 
-                # Convert the delay in meters to radians
-                tropo_delay_datacube_list.append(
-                    (phs_ref - phs_second)*4.0*np.pi/wavelength)
+                    phs_second = second_aps_estimator.getdelay()
 
-            # Tropo delay datacube
-            tropo_delay_datacube = np.stack(tropo_delay_datacube_list)
-            tropo_delay_datacube_list = None
+                    # Convert the delay in meters to radians
+                    tropo_delay_datacube_list.append(
+                        (phs_ref - phs_second) *4.0*np.pi/wavelength)
 
-        # raider package
-        else:
-            err_str = 'raider package is under development'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
+                # Tropo delay datacube
+                tropo_delay_datacube = np.stack(tropo_delay_datacube_list)
+                tropo_delay_datacube_list = None
 
-        # Save to the dictionary in memory
-        tropo_delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'
-        troposphere_delay_datacube[tropo_delay_product]  = tropo_delay_datacube
+                # Save to the dictionary in memory
+                tropo_delay_product_name = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_type}'
+                troposphere_delay_datacube[tropo_delay_product_name]  = tropo_delay_datacube
+
+            # raider package
+            else:
+                err_str = 'raider package is under development'
+                error_channel.log(err_str)
+                raise ValueError(err_str)
+
 
         f.close()
 
@@ -254,7 +259,7 @@ def write_to_GUNW_product(tropo_delay_datacube: dict, gunw_hdf5: str):
                      " Troposphere Delay Datacube Generated by {tropo_pkg}"
 
              # Product name
-             product_name = f'troposphericPhaseScreen'
+             product_name = f'{delay_product}TroposphericPhaseScreen'
 
              # If there is no troposphere delay product, then createa new one
              if product_name not in radar_grid:
