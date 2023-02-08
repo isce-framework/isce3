@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -633,7 +634,9 @@ TEST(GeocodeTest, TestGeocodeSlc)
             geocodedSlcRaster.setGeoTransform(_geoTrans);
 
             // geocodeSlc in array mode and write array to raster
-            isce3::geocode::geocodeSlc(geoDataArr, rdrDataArr, demRaster,
+            std::vector<isce3::geocode::EArray2dc64> geoDataVec = {geoDataArr};
+            std::vector<isce3::geocode::EArray2dc64> rdrDataVec = {rdrDataArr};
+            isce3::geocode::geocodeSlc(geoDataVec, rdrDataVec, demRaster,
                     radarGrid, radarGrid, geoGrid, orbit, nativeDoppler,
                     imageGridDoppler, ellipsoid, thresholdGeo2rdr,
                     numiterGeo2rdr, 0, 0, flatten);

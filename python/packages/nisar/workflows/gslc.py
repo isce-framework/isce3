@@ -83,7 +83,7 @@ def _block_generator(geo_grid, radar_grid, orbit, dem_interp,
         for i_blk_x in range(n_geo_block_x):
 
             # log current block info
-            i_blk = i_blk_x * n_geo_block_y + i_blk_x + 1
+            i_blk = i_blk_x * n_geo_block_y + i_blk_y + 1
             info_channel.log(f"running geocode SLC array block {i_blk} of {n_blocks}")
 
             # compute start index and end index for current geo x block
@@ -177,54 +177,62 @@ def run(cfg):
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
 
-            # loop over polarizations
+            # initialize source/rslc and destination/gslc datasets
+            rslc_datasets = []
+            gslc_datasets = []
             for polarization in pol_list:
-                t_pol = time.time()
-
                 # path and dataset to rdr SLC data in HDF5
                 rslc_ds_path = slc.slcPath(freq, polarization)
-                rslc_ds = src_h5[rslc_ds_path]
+                rslc_datasets.append(src_h5[rslc_ds_path])
 
                 # path and dataset to geo SLC data in HDF5
                 dataset_path = f'/science/LSAR/GSLC/grids/{frequency}/{polarization}'
-                gslc_dataset = dst_h5[dataset_path]
+                gslc_datasets.append(dst_h5[dataset_path])
 
-                # loop over blocks
-                for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
-                     _block_generator(geo_grid, radar_grid, orbit,
-                                      dem_interp,  lines_per_block,
-                                      columns_per_block,
-                                      geogrid_expansion_threshold):
+            # loop over blocks
+            for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
+                 _block_generator(geo_grid, radar_grid, orbit,
+                                  dem_interp,  lines_per_block,
+                                  columns_per_block,
+                                  geogrid_expansion_threshold):
 
-                    # unpack block parameters
-                    az_first = rdr_blk_slice[0].start
-                    rg_first = rdr_blk_slice[1].start
+                # unpack block parameters
+                az_first = rdr_blk_slice[0].start
+                rg_first = rdr_blk_slice[1].start
+
+                # init input/rslc and output/gslc blocks for each polarization
+                gslc_data_blks = []
+                rslc_data_blks = []
+                for rslc_dataset in rslc_datasets:
+                    # extract RSLC data block/array
+                    rslc_data_blks.append(
+                        nisar.types.read_c4_dataset_as_c8(rslc_dataset,
+                                                          rdr_blk_slice))
 
                     # prepare zero'd GSLC data block/array
-                    gslc_data_blk = np.zeros(geo_blk_shape, dtype=np.complex64)
+                    gslc_data_blks.append(
+                        np.zeros(geo_blk_shape, dtype=np.complex64))
 
-                    # extract RSLC data block/array
-                    rslc_data_blk = nisar.types.read_c4_dataset_as_c8(rslc_ds,
-                                                                      rdr_blk_slice)
+                # run geocodeSlc
+                isce3.geocode.geocode_slc(gslc_data_blks, rslc_data_blks,
+                                          dem_raster, radar_grid, blk_geo_grid,
+                                          orbit, native_doppler,
+                                          image_grid_doppler, ellipsoid,
+                                          threshold_geo2rdr,
+                                          iteration_geo2rdr,
+                                          az_first, rg_first, flatten)
 
-                    # run geocodeSlc
-                    isce3.geocode.geocode_slc(gslc_data_blk, rslc_data_blk,
-                                              dem_raster, radar_grid, blk_geo_grid,
-                                              orbit, native_doppler,
-                                              image_grid_doppler, ellipsoid,
-                                              threshold_geo2rdr,
-                                              iteration_geo2rdr,
-                                              az_first, rg_first, flatten)
-
+                # write geocoded blocks to respective HDF5 datasets
+                for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
+                                                       gslc_data_blks):
                     # write to GSLC block HDF5
                     gslc_dataset.write_direct(gslc_data_blk,
                                               dest_sel=geo_blk_slice)
 
+            # loop over polarizations and compute statistics
+            for gslc_dataset in gslc_datasets:
                 gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"), update=True)
                 compute_stats_complex_data(gslc_raster, gslc_dataset)
-
-                t_pol_elapsed = time.time() - t_pol
-                info_channel.log(f'polarization {polarization} ran in {t_pol_elapsed:.3f} seconds')
 
         cube_geogrid = isce3.product.GeoGridParameters(
             start_x=radar_grid_cubes_geogrid.start_x,
