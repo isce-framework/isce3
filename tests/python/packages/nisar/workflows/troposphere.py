@@ -123,7 +123,7 @@ def test_troposphere_aps_run():
         tropo_package = cfg['processing']['troposphere_delay']['package']
         tropo_weather_model_type = cfg['processing']['troposphere_delay']['weather_model_type']
         tropo_delay_direction = cfg['processing']['troposphere_delay']['delay_direction']
-        tropo_delay_product = cfg['processing']['troposphere_delay']['delay_product']
+        tropo_delay_product = cfg['processing']['troposphere_delay']['delay_product'][0]
 
         # Dictionary key
         delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'
@@ -161,6 +161,7 @@ def test_troposphere_aps_run():
                                  lon=lon,
                                  grib=tropo_weather_model_type,
                                  humidity='Q',
+                                 model=tropo_weather_model_type,
                                  verb=False,
                                  Del=tropo_delay_product)
 
@@ -171,6 +172,7 @@ def test_troposphere_aps_run():
                                  lon=lon,
                                  grib=tropo_weather_model_type,
                                  humidity='Q',
+                                 model=tropo_weather_model_type,
                                  verb=False,
                                  Del=tropo_delay_product)
 
