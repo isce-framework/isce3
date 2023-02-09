@@ -21,8 +21,6 @@ def solidearth_tides_check(cfg):
 
     error_channel = journal.error(
         'InsarSolidEarthTidesRunConfig.solidearth_tides_check')
-    info_channel = journal.info(
-        'InsarSolidEarthTidesRunConfig.solidearth_tides_check')
 
     solidearth_tides_cfg = cfg['processing']['solidearth_tides']
 
