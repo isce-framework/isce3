@@ -256,11 +256,9 @@ runconfig:
                 # Delay product is 'comb'
                 delay_product: comb
 
-            solidearth_tides:
+            solid_earth_tides:
                 # Boolean flag to activate (True) solid earth tides computation
-                enabled: False
-                # Step size in meters to speed up the calculation
-                step_size: 1000
+                enabled: True
 
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.

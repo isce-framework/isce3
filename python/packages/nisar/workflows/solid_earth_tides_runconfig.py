@@ -5,7 +5,7 @@ import journal
 from nisar.workflows.runconfig import RunConfig
 
 
-def solidearth_tides_check(cfg):
+def solid_earth_tides_check(cfg):
     '''
     Check the solid earth tides yaml
 
@@ -22,17 +22,11 @@ def solidearth_tides_check(cfg):
     error_channel = journal.error(
         'InsarSolidEarthTidesRunConfig.solidearth_tides_check')
 
-    solidearth_tides_cfg = cfg['processing']['solidearth_tides']
+    solid_earth_tides_cfg = cfg['processing']['solid_earth_tides']
 
     # Only if the solid earth tides  is enabled
-    if solidearth_tides_cfg['enabled']:
-
-        step_size = solidearth_tides_cfg['step_size']
-
-        if not isinstance(step_size, (int, float)):
-            err_str = 'the data type of the step size should be int or float'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
+    if solid_earth_tides_cfg['enabled']:
+        pass
 
 
 class InsarSolidEarthTidesRunConfig(RunConfig):

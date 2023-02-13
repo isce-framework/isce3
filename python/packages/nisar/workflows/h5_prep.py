@@ -1629,3 +1629,48 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     coordinates_list.append(height_dataset)
 
     return coordinates_list
+
+
+def add_solid_earth_phase_to_hdf5(solidearth_tides_datacube,
+                                  gunw_hdf5):
+    '''
+    Add the solid earth phase datacube to GUNW product
+
+    Parameters
+     ----------
+     solidearth_tides_datacube: np.ndarray
+        solid earth tides datacube
+      gunw_hdf5: str
+         gunw hdf5 file
+
+    Returns
+     -------
+       None
+    '''
+
+    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
+
+        radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
+
+        # Dataset description
+        descr = f"InSAR phase due to Solid Earth tides along line of sight direction"
+
+        # Product name
+        product_name = f'losSolidEarthTidesPhase'
+
+        # If there is no troposphere delay product, then createa new one
+        if product_name not in radar_grid:
+            _create_datasets(radar_grid, [0], np.float64,
+                             product_name, descr=descr,
+                             units='radians',
+                             data=solidearth_tides_datacube.astype(np.float64))
+
+        # If there exists the product, overwrite the old one
+        else:
+            solidearth_tides = radar_grid[product_name]
+            solidearth_tides[:] = solidearth_tides_datacube.astype(
+                np.float64)
+
+        f.close()
+
+

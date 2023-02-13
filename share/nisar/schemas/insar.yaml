@@ -99,7 +99,7 @@ runconfig:
             troposphere_delay: include('troposphere_delay_options', required=False)
 
             # Solid Earth tides
-            solidearth_tides: include('solidearth_tides_options', required=False)
+            solid_earth_tides: include('solid_earth_tides_options', required=False)
 
             rdr2geo: include('rdr2geo_options', required=False)
 
@@ -758,11 +758,9 @@ troposphere_delay_options:
     # Delay products. They should be one of 'wet', 'hydro', and 'comb'
     delay_product: enum('wet','hydro','comb', required=False)
 
-solidearth_tides_options:
+solid_earth_tides_options:
     # Boolean flag to enable/disable solid earth tides computation
     enabled: bool(required=False)
-    # Grid step in meters to speedup the calculation
-    step_size: num(min=1, required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

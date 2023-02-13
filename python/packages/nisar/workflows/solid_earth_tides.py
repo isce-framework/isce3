@@ -11,8 +11,8 @@ import time
 import pysolid
 
 import isce3
-from nisar.workflows import h5_prep
-from nisar.workflows.solidearth_tides_runconfig import InsarSolidEarthTidesRunConfig
+from nisar.workflows.h5_prep import add_solid_earth_phase_to_hdf5
+from nisar.workflows.solid_earth_tides_runconfig import InsarSolidEarthTidesRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -60,7 +60,7 @@ def transform_xy_to_latlon(epsg, x, y):
     lat_datacube = lat_lon_radar[:, 0].reshape(x.shape)
     lon_datacube = lat_lon_radar[:, 1].reshape(x.shape)
 
-    # 0.1 degrees is aded  to make sure the weather model cover the entire image
+    # 0.1 degrees is added  to make sure the weather model cover the entire image
     margin = 0.1
 
     # Extent of the data cube
@@ -90,10 +90,8 @@ def compute_solidearth_tides(cfg: dict, gunw_hdf5: str):
     error_channel = journal.error('solidearth_tides.compute_solidearth_tides')
 
     # Fetch the configurations
-    solidearth_tides_cfg = cfg['processing']['solidearth_tides']
+    solidearth_tides_cfg = cfg['processing']['solid_earth_tides']
 
-   # Step size to speed up the calcuation
-    step_size = solidearth_tides_cfg['step_size']
 
     with h5py.File(gunw_hdf5, 'r', libver='latest', swmr=True) as f:
 
@@ -112,19 +110,14 @@ def compute_solidearth_tides(cfg: dict, gunw_hdf5: str):
         epsg = f['science/LSAR/GUNW/metadata/radarGrid/epsg'][()]
 
         # Wavelenth in meters
-        wavelength = isce3.core.speed_of_light / f['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()]
+        wavelength = isce3.core.speed_of_light / \
+                f['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()]
 
         # Start time of the reference and secondary image
-        ref_start_time = f['science/LSAR/identification/referenceZeroDopplerStartTime'][()].astype(str)
-        sec_start_time = f['science/LSAR/identification/secondaryZeroDopplerStartTime'][()].astype(str)
-
-        # Make sure that timestamp format is 'YYYY-MM-DDTH:M:S' where the second has no decmials
-        ref_start_time = ref_start_time[:19]
-        sec_start_time = sec_start_time[:19]
-
-        # reference and secondary start time
-        ref_date = datetime.strptime(ref_start_time, '%Y-%m-%dT%H:%M:%S')
-        sec_date = datetime.strptime(sec_start_time, '%Y-%m-%dT%H:%M:%S')
+        ref_start_time = f['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
+                .astype('datetime64[s]').astype(datetime)
+        sec_start_time = f['science/LSAR/identification/secondaryZeroDopplerStartTime'][()]\
+                .astype('datetime64[s]').astype(datetime)
 
         # X and y for the entire datacube
         y_2d_radar = np.tile(ycoord_radar_grid, (len(xcoord_radar_grid), 1)).T
@@ -162,15 +155,13 @@ def compute_solidearth_tides(cfg: dict, gunw_hdf5: str):
                   'Y_STEP': y_step}
 
         # Solid earth tides for both reference and secondary dates
-        ref_tide_e, ref_tide_n, ref_tide_u = pysolid.calc_solid_earth_tides_grid(ref_date,
+        ref_tide_e, ref_tide_n, ref_tide_u = pysolid.calc_solid_earth_tides_grid(ref_start_time,
                                                                                  params,
-                                                                                 step_size=step_size,
                                                                                  display=False,
                                                                                  verbose=True)
 
-        sec_tide_e, sec_tide_n, sec_tide_u = pysolid.calc_solid_earth_tides_grid(sec_date,
+        sec_tide_e, sec_tide_n, sec_tide_u = pysolid.calc_solid_earth_tides_grid(sec_start_time,
                                                                                  params,
-                                                                                 step_size=step_size,
                                                                                  display=False,
                                                                                  verbose=True)
 
@@ -184,89 +175,42 @@ def compute_solidearth_tides(cfg: dict, gunw_hdf5: str):
 
         # Interpolation, the flip function applied here is to fit the scipy==1.8
         # which requires strict ascending or descending
-        # ref tide east
-        ref_tide_e_interp = RegularGridInterpolator(xy_samples,np.flip(ref_tide_e, axis=0))
-        ref_tide_e = ref_tide_e_interp(pnts).reshape(cube_shape)
+        # (ref - sec) tide east
+        ref_sec_tide_e_interp = RegularGridInterpolator(xy_samples,
+                                                        np.flip(ref_tide_e - sec_tide_e,
+                                                                axis=0))
+        ref_sec_tide_e = ref_sec_tide_e_interp(pnts).reshape(cube_shape)
 
-        # ref tide north
-        ref_tide_n_interp = RegularGridInterpolator(xy_samples,np.flip(ref_tide_n, axis=0))
-        ref_tide_n = ref_tide_n_interp(pnts).reshape(cube_shape)
+        # (ref - sec) tide north
+        ref_sec_tide_n_interp = RegularGridInterpolator(xy_samples,
+                                                        np.flip(ref_tide_n - sec_tide_n,
+                                                                axis=0))
+        ref_sec_tide_n = ref_sec_tide_n_interp(pnts).reshape(cube_shape)
 
-        # ref tide up
-        ref_tide_u_interp = RegularGridInterpolator(xy_samples,np.flip(ref_tide_u, axis=0))
-        ref_tide_u = ref_tide_u_interp(pnts).reshape(cube_shape)
+        # (ref - sec) tide up
+        ref_sec_tide_u_interp = RegularGridInterpolator(xy_samples,
+                                                        np.flip(ref_tide_u - sec_tide_u,
+                                                                axis=0))
+        ref_sec_tide_u = ref_sec_tide_u_interp(pnts).reshape(cube_shape)
 
-        # sec tide east
-        sec_tide_e_interp = RegularGridInterpolator(xy_samples,np.flip(sec_tide_e, axis=0))
-        sec_tide_e = sec_tide_e_interp(pnts).reshape(cube_shape)
 
-        # sec tide north
-        sec_tide_n_interp = RegularGridInterpolator(xy_samples,np.flip(sec_tide_n, axis=0))
-        sec_tide_n = sec_tide_n_interp(pnts).reshape(cube_shape)
-
-        # sec tide up
-        sec_tide_u_interp = RegularGridInterpolator(xy_samples,np.flip(sec_tide_u, axis=0))
-        sec_tide_u = sec_tide_u_interp(pnts).reshape(cube_shape)
-
-        # Azimuth angle, the minus sign is because of the anti-clockwise positive defination
+        # Azimuth angle, the minus sign is because of the anti-clockwise positive definition
         azimuth_angle = -np.arctan2(los_unit_vector_x_cube, los_unit_vector_y_cube)
 
         # Incidence angle in radians
         inc_angle = np.deg2rad(inc_angle_cube)
 
-        # Solidearth tides datacube along the LOS inn meters
-        solidearth_tides_datacube =(-(ref_tide_e - sec_tide_e) * np.sin(inc_angle) * np.sin(azimuth_angle)
-                                    + (ref_tide_n - sec_tide_n) * np.sin(inc_angle) * np.cos(azimuth_angle)
-                                    + (ref_tide_u - sec_tide_u) * np.cos(inc_angle))
+        # Solidearth tides datacube along the LOS in meters
+        los_solid_earth_tides_datacube =(-ref_sec_tide_e * np.sin(inc_angle) * np.sin(azimuth_angle)
+                                         + ref_sec_tide_n * np.sin(inc_angle) * np.cos(azimuth_angle)
+                                         + ref_sec_tide_u  * np.cos(inc_angle))
 
         # Convert to radians
-        solidearth_tides_datacube *= 4.0 * np.pi / wavelength
+        los_solid_earth_tides_datacube *= -4.0 * np.pi / wavelength
 
         f.close()
 
-    return solidearth_tides_datacube
-
-
-def write_to_GUNW_product(solidearth_tides_datacube: np.ndarray, gunw_hdf5: str):
-    '''
-    Write the solid earth tides datacube to GUNW product
-
-    Parameters
-     ----------
-     solidearth_tides_datacube: np.ndarray
-        solid earth tides datacube
-      gunw_hdf5: str
-         gunw hdf5 file
-
-    Returns
-     -------
-       None
-    '''
-
-    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
-
-        radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
-
-        # Dataset description
-        descr = f"Solid earth tides phase screen along line of sight"
-
-        # Product name
-        product_name = f'losSolidEarthTidesPhaseScreen'
-
-        # If there is no troposphere delay product, then createa new one
-        if product_name not in radar_grid:
-            h5_prep._create_datasets(radar_grid, [0], np.float64,
-                                     product_name, descr=descr,
-                                     units='radians',
-                                     data=solidearth_tides_datacube.astype(np.float64))
-
-        # If there exists the product, overwrite the old one
-        else:
-            solidearth_tides = radar_grid[product_name]
-            solidearth_tides[:] = solidearth_tides_datacube.astype(
-                np.float64)
-
-        f.close()
+    return los_solid_earth_tides_datacube
 
 
 def run(cfg: dict, gunw_hdf5: str):
@@ -292,10 +236,10 @@ def run(cfg: dict, gunw_hdf5: str):
     t_all = time.time()
 
     # Compute the solid earth tides  datacube
-    solidearth_tides_datacube = compute_solidearth_tides(cfg, gunw_hdf5)
+    los_solid_earth_tides_datacube = compute_solidearth_tides(cfg, gunw_hdf5)
 
     # Write to GUNW product
-    write_to_GUNW_product(solidearth_tides_datacube, gunw_hdf5)
+    add_solid_earth_phase_to_hdf5(los_solid_earth_tides_datacube, gunw_hdf5)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(
