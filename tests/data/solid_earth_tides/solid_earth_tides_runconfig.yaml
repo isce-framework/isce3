@@ -169,7 +169,7 @@ runconfig:
                 package: pyaps
                 weather_model_type: ERA5
                 delay_direction: zenith
-                delay_product: combi
+                delay_product: ['comb']
 
             solid_earth_tides:
                 enabled: True
