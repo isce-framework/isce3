@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import os
 from pathlib import Path
 import pytest
@@ -6,10 +7,89 @@ import types
 
 import numpy as np
 from osgeo import gdal
+from scipy import interpolate
 
 import iscetest
 import isce3.ext.isce3 as isce
+from isce3.atmosphere.tec_product import tec_lut2d_from_json
+from isce3.geometry import compute_incidence_angle
 from nisar.products.readers import SLC
+
+def make_tec_file(unit_test_params):
+    '''
+    create TEC file using radar grid from envisat.h5 that yields a uniform
+    slant range offset when processed with tec_lut2d_from_json()
+We ignore topside TEC and simulate total TEC at near and far ranges such that the slant range delay at near and far ranges are the same.   
+    solve for sub_orbital_tec from:
+    delta_r = K * sub_orbital_tec * TECU / center_freq**2 / np.cos(incidence)
+
+    yields:
+    sub_orbital_tec = delta_r * np.cos(incidence) * center_freq**2 / (TECU * K)
+    '''
+    radar_grid = unit_test_params.radargrid
+
+    # create linspace for radar grid sensing time
+    t_rdr_grid = np.linspace(radar_grid.sensing_start,
+                             radar_grid.sensing_stop + 1.0 / radar_grid.prf,
+                             radar_grid.length)
+
+    # TEC coefficients
+    K = 40.31 # its a constant in m3/s2
+    TECU = 1e16 # its a constant to convert the TEC product to electrons / m2
+
+    # set delta_r to value used to test slant range offset correction in
+    # geocode_slc_test_cases()
+    offset_factor = 10.0
+    delta_r = offset_factor * radar_grid.range_pixel_spacing
+
+    # compute common TEC coefficient used for both near and far TEC
+    common_tec_coeff = delta_r * unit_test_params.center_freq**2 / (K * TECU)
+
+    # get TEC times in ISO format
+    # +/- 50 sec from stop/start of radar grid
+    margin = 50.
+    # 10 sec increments - also snap to multiples of 10 sec
+    snap = 10.
+    start = np.floor(radar_grid.sensing_start / snap) * snap - margin
+    stop = np.ceil(radar_grid.sensing_stop / snap) * snap + margin
+    t_tec = np.arange(start, stop + 1.0, snap)
+    t_tec_iso_fmt = [(radar_grid.ref_epoch + isce.core.TimeDelta(t)).isoformat()[:-3]
+                     for t in t_tec]
+
+    # compute total TEC
+    total_tec = []
+    for rdr_grid_range in [radar_grid.starting_range,
+                           radar_grid.end_range]:
+        inc_angs = [compute_incidence_angle(t, rdr_grid_range,
+                                            unit_test_params.orbit,
+                                            isce.core.LUT2d(),
+                                            radar_grid,
+                                            isce.geometry.DEMInterpolator(),
+                                            isce.core.Ellipsoid())
+                    for t in t_rdr_grid]
+        total_tec_rdr_grid = common_tec_coeff * np.cos(inc_angs)
+
+        # near and far top TEC = 0 to allow sub orbital TEC = total TEC
+        # create extraplotor/interpolators for near and far
+        total_tec_interp = interpolate.interp1d(t_rdr_grid, total_tec_rdr_grid,
+                                                'linear',
+                                                fill_value="extrapolate")
+
+        # compute near and far total TEC
+        total_tec.append(total_tec_interp(t_tec))
+    total_tec_near, total_tec_far = total_tec
+
+    # load relevant TEC into dict and write to JSON
+    # top TEC = 0 to allow sub orbital TEC = total TEC
+    tec_zeros = list(np.zeros(total_tec_near.shape))
+    tec_dict ={}
+    tec_dict['utc'] = t_tec_iso_fmt
+    tec_dict['totTecNr'] = list(total_tec_near)
+    tec_dict['topTecNr'] = tec_zeros
+    tec_dict['totTecFr'] = list(total_tec_far)
+    tec_dict['topTecFr'] = tec_zeros
+    with open(unit_test_params.tec_json_path, 'w') as fp:
+        json.dump(tec_dict, fp)
 
 
 @pytest.fixture(scope='session')
@@ -47,13 +127,15 @@ def unit_test_params():
     img_doppler = rslc.getDopplerCentroid()
     params.img_doppler = img_doppler
 
+    params.center_freq = rslc.getSwathMetadata().processed_center_frequency
+
     params.native_doppler = isce.core.LUT2d(img_doppler.x_start,
             img_doppler.y_start, img_doppler.x_spacing,
             img_doppler.y_spacing, np.zeros((geogrid.length,geogrid.width)))
 
     # create DEM raster object
-    params.dem_raster = isce.io.Raster(os.path.join(iscetest.data,
-                                       "geocode/zeroHeightDEM.geo"))
+    params.dem_path = os.path.join(iscetest.data, "geocode/zeroHeightDEM.geo")
+    params.dem_raster = isce.io.Raster(params.dem_path)
 
     # half pixel offset and grid size in radians for validataion
     params.x0 = np.radians(params.geotrans[0] + params.geotrans[1] / 2.0)
@@ -61,10 +143,19 @@ def unit_test_params():
     params.y0 = np.radians(params.geotrans[3] + params.geotrans[5] / 2.0)
     params.dy = np.radians(params.geotrans[5])
 
+    # multiplicative factor applied to range pixel spacing and azimuth time
+    # interval to be added to starting range and azimuth time of radar grid
+    params.offset_factor = 10.0
+
+    # TEC JSON containing TEC values that generate range offsets that match the
+    # fixed range offset used to test range correction
+    params.tec_json_path = 'test_tec.json'
+    make_tec_file(params)
+
     return params
 
 
-def geocode_slc_test_cases(radargrid):
+def geocode_slc_test_cases(unit_test_params):
     '''
     Generator for geocodeSlc test cases
 
@@ -72,9 +163,9 @@ def geocode_slc_test_cases(radargrid):
     directions. Returns axis, offset mode name, range and azimuth correction
     LUT2ds and offset corrected radar grid.
     '''
-    # multiplicative factor applied to range pixel spacing and azimuth time
-    # interval to be added to starting range and azimuth time of radar grid
-    offset_factor = 10
+    radargrid = unit_test_params.radargrid
+    offset_factor = unit_test_params.offset_factor
+
     rg_pxl_spacing = radargrid.range_pixel_spacing
     range_offset = offset_factor * rg_pxl_spacing
     az_time_interval = 1 / radargrid.prf
@@ -88,12 +179,12 @@ def geocode_slc_test_cases(radargrid):
     ones = np.ones(radargrid.shape)
 
     for axis in 'xy':
-        for offset_mode in ['', 'rg', 'az', 'rg_az']:
+        for offset_mode in ['', 'rg', 'az', 'rg_az', 'tec']:
             # create radar and apply positive offsets in range and azimuth
             offset_radargrid = radargrid.copy()
 
             # apply offsets as required by mode
-            if 'rg' in offset_mode:
+            if 'rg' in offset_mode or 'tec' == offset_mode:
                 offset_radargrid.starting_range += range_offset
             if 'az' in offset_mode:
                 offset_radargrid.sensing_start += azimuth_offset
@@ -115,6 +206,14 @@ def geocode_slc_test_cases(radargrid):
                 srange_correction = isce.core.LUT2d(srange_vec, az_time_vec,
                                                     range_offset * ones,
                                                     method)
+            elif 'tec' == offset_mode:
+                srange_correction = \
+                    tec_lut2d_from_json(unit_test_params.tec_json_path,
+                                        unit_test_params.center_freq,
+                                        unit_test_params.orbit,
+                                        offset_radargrid,
+                                        isce.core.LUT2d(),
+                                        unit_test_params.dem_path)
 
             az_time_correction = isce.core.LUT2d()
             if 'az' in offset_mode:
@@ -290,7 +389,7 @@ def test_run_raster_mode(unit_test_params):
     sure it does not crash
     '''
     # run raster mode for all test cases
-    for test_case in geocode_slc_test_cases(unit_test_params.radargrid):
+    for test_case in geocode_slc_test_cases(unit_test_params):
         run_geocode_slc_raster(test_case, unit_test_params)
 
 
@@ -299,9 +398,8 @@ def test_run_array_mode(unit_test_params):
     run geocodeSlc array bindings with same parameters as C++ test to make sure
     it does not crash
     '''
-    # run array mode for all test cases in seperate loop to avoid
-    # isce3.io.raster-related? glitches
-    for test_case in geocode_slc_test_cases(unit_test_params.radargrid):
+    # run array mode for all test cases
+    for test_case in geocode_slc_test_cases(unit_test_params):
         run_geocode_slc_array(test_case, unit_test_params)
 
 
@@ -310,9 +408,8 @@ def test_run_arrays_mode(unit_test_params):
     run geocodeSlc list of array bindings with same parameters as C++ test to
     make sure it does not crash
     '''
-    # run array mode for all test cases in seperate loop to avoid
-    # isce3.io.raster-related? glitches
-    for test_case in geocode_slc_test_cases(unit_test_params.radargrid):
+    # run array mode for all test cases
+    for test_case in geocode_slc_test_cases(unit_test_params):
         run_geocode_slc_arrays(test_case, unit_test_params)
 
 
@@ -321,9 +418,9 @@ def test_run_arrays_exceptions(unit_test_params):
     run geocodeSlc list of array bindings with erroneous parameters to test
     input checking
     '''
-    # run array mode for all test cases in seperate loop to avoid
-    # isce3.io.raster-related? glitches
-    for test_case in geocode_slc_test_cases(unit_test_params.radargrid):
+    # run array mode for all test cases with forced erroneous inputs to ensure
+    # correct exceptions are raised
+    for test_case in geocode_slc_test_cases(unit_test_params):
         with np.testing.assert_raises(ValueError):
             run_geocode_slc_arrays(test_case, unit_test_params,
                                    extra_input=True)
@@ -332,7 +429,7 @@ def test_run_arrays_exceptions(unit_test_params):
             run_geocode_slc_arrays(test_case, unit_test_params,
                                    non_matching_shape=True)
 
-        # break out of loop - no need for further assert tests
+        # break out of loop - no need to repeat assert tests
         break
 
 
@@ -342,9 +439,9 @@ def validate_raster(unit_test_params, mode, raster_layer=1):
     '''
     # check values of geocoded outputs
     for axis, correction_mode, *_, \
-        in geocode_slc_test_cases(unit_test_params.radargrid):
+        in geocode_slc_test_cases(unit_test_params):
 
-        # get phase of complex test data and mask NaN (default invalid val)
+        # get phase of complex test data
         test_raster = f"{axis}_{correction_mode}_{mode}.geo"
         ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
         test_arr = np.angle(ds.GetRasterBand(raster_layer).ReadAsArray())
@@ -379,7 +476,7 @@ def test_raster_mode(unit_test_params):
 
 
 def test_array_mode(unit_test_params):
-    validate_raster(unit_test_params, 'raster')
+    validate_raster(unit_test_params, 'array')
 
 
 def test_arrays_mode(unit_test_params):

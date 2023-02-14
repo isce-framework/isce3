@@ -2,13 +2,13 @@ import numpy as np
 from osgeo import gdal
 
 import isce3
-from isce3.ionosphere.ionosphere_estimation import decimate_freq_a_array
-from isce3.ionosphere.ionosphere_filter import IonosphereFilter, write_array
-from isce3.ionosphere.main_band_estimation import (compute_unwrapp_error_main_diff_ms_band,
+from isce3.atmosphere.ionosphere_estimation import decimate_freq_a_array
+from isce3.atmosphere.ionosphere_filter import IonosphereFilter, write_array
+from isce3.atmosphere.main_band_estimation import (compute_unwrapp_error_main_diff_ms_band,
                                                    compute_unwrapp_error_main_side_band,
                                                    estimate_iono_main_side,
                                                    estimate_iono_main_diff)
-from isce3.ionosphere.split_band_estimation import (compute_unwrapp_error_split_main_band,
+from isce3.atmosphere.split_band_estimation import (compute_unwrapp_error_split_main_band,
                                                     estimate_iono_low_high)
 
 def simulate_ifgrams(f, dr, dTEC):

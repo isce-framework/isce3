@@ -10,11 +10,11 @@ import numpy as np
 from osgeo import gdal
 
 import isce3
-from isce3.ionosphere.main_band_estimation import (MainSideBandIonosphereEstimation,
+from isce3.atmosphere.main_band_estimation import (MainSideBandIonosphereEstimation,
                                                    MainDiffMsBandIonosphereEstimation)
-from isce3.ionosphere.split_band_estimation import SplitBandIonosphereEstimation
-from isce3.ionosphere.ionosphere_filter import IonosphereFilter, write_array
-from isce3.ionosphere.ionosphere_estimation import decimate_freq_a_array
+from isce3.atmosphere.split_band_estimation import SplitBandIonosphereEstimation
+from isce3.atmosphere.ionosphere_filter import IonosphereFilter, write_array
+from isce3.atmosphere.ionosphere_estimation import decimate_freq_a_array
 from isce3.splitspectrum import splitspectrum
 
 from nisar.products.readers import SLC

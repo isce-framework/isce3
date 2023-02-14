@@ -7,6 +7,7 @@ __version__ = extisce3.__version__
 
 # export the subpackages
 from . import antenna
+from . import atmosphere
 from . import container
 from . import core
 from . import focus
@@ -15,7 +16,6 @@ from . import geometry
 from . import geogrid
 from . import image
 from . import io
-from . import ionosphere
 from . import math
 from . import polsar
 from . import product
