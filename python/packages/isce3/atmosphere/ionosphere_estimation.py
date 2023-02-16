@@ -197,3 +197,36 @@ def decimate_freq_a_array(
         :, first_index:decimate_width_end:resampling_scale_factor]
 
     return decimated_array
+
+def interpolate_freq_b_array(
+        slant_main,
+        slant_side,
+        array_side):
+    """interpolate array that have the size of side band to have same size
+    with main band assuming slant_main and slant_side are evenly spaced
+
+    Parameters
+    ----------
+    slant_main : numpy.ndarray
+        slant range array of frequency A band
+    slant_side : numpy.ndarray
+        slant range array of frequency B band
+    array_side : numpy.ndarray
+        RUNW array of frequency B band
+        width of array_side should be same with length of slant_side
+
+    Returns
+    -------
+    array_main : numpy.ndarray
+        oversampled array
+    """
+    row_side, col_side = array_side.shape
+    array_main = np.zeros([row_side, len(slant_main)])
+
+    for row_ind in range(0, row_side):
+
+        array_main[row_ind, :] = np.interp(slant_main,
+                                           slant_side,
+                                           array_side[row_ind, :])
+
+    return array_main
