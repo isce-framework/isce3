@@ -500,18 +500,23 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                     desired = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
                     geocode_iono_bool = True
+                    input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband and freq == 'A':
                         '''
                         ionosphere_phase_screen from main_side_band or
                         main_diff_ms_band are computed on radargrid of frequencyB.
                         The ionosphere_phase_screen is geocoded on geogrid of
-                        frequencyA.
+                        frequencyA. Instead of geocoding ionosphere in the RUNW
+                        standard product (frequencyA), geocode the frequencyB in
+                        scratch/ionosphere/method/RUNW.h5 to avoid additional
+                        interpolation.
                         '''
                         radar_grid_iono = slc.getRadarGrid('B')
                         iono_sideband_bool = True
                         if az_looks > 1 or rg_looks > 1:
                             radar_grid_iono = radar_grid_iono.multilook(
                                 az_looks, rg_looks)
+                        input_hdf5_iono = f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
                     if is_iono_method_sideband and freq == 'B':
                         geocode_iono_bool = False
 
@@ -523,8 +528,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                     if geocode_iono_bool:
                         cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                            freq, pol_list_iono, input_hdf5, dst_h5,
-                                            radar_grid_iono, dem_raster,
+                                            freq, pol_list_iono, input_hdf5_iono,
+                                            dst_h5, radar_grid_iono, dem_raster,
                                             block_size,
                                             iono_sideband=iono_sideband_bool)
 
@@ -703,13 +708,18 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                'ionosphere_phase_screen_uncertainty']
                     geocode_iono_bool = True
                     pol_list_iono = freq_pols_iono[freq]
+                    input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband:
                         '''
                         ionosphere_phase_screen from main_side_band or
                         main_diff_ms_band are computed on radargrid of frequencyB.
                         The ionosphere_phase_screen is geocoded on geogrid of
-                        frequencyA.
+                        frequencyA. Instead of geocoding ionosphere in the RUNW standard
+                        product (frequencyA), geocode the frequencyB in ionosphere/RUNW.h5
+                        to avoid additional interpolation.
                         '''
+                        input_hdf5_iono = \
+                            f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
                         if freq == 'A':
                             radar_grid_iono = slc.getRadarGrid('B')
                             if az_looks > 1 or rg_looks > 1:
@@ -753,7 +763,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                         gpu_geocode_rasters(geo_datasets, desired,
                                             iono_freq, pol_list_iono,
-                                            input_hdf5, dst_h5,
+                                            input_hdf5_iono, dst_h5,
                                             geocode_iono_obj,
                                             iono_sideband=iono_sideband_bool)
 
