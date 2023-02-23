@@ -2,7 +2,7 @@ import iscetest
 import numpy as np
 import numpy.testing as npt
 import isce3
-from isce3.signal import point_target_info as pt
+from isce3.cal import point_target_info as pt
 from numpy.fft import fftfreq, fftshift, fft, ifft
 import pickle
 from pathlib import Path

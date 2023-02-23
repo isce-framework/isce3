@@ -23,6 +23,11 @@ from . import signal
 from . import splitspectrum
 from . import unwrap
 
+# Need to import `cal` after the other submodules that it depends on have been added as
+# attributes to `isce3` above. (If you try to import it in alphabetical order you will
+# get an AttributeError.)
+from . import cal
+
 # check for cuda
 if hasattr(extisce3, "cuda"):
     from . import cuda

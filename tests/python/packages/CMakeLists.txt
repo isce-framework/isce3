@@ -5,7 +5,7 @@ isce3/io/background.py
 isce3/signal/compute_evd_cpi.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
-isce3/signal/point_target_info.py
+isce3/cal/point_target_info.py
 isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
 nisar/mixed_mode/logic.py
