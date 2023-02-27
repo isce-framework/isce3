@@ -82,8 +82,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
             cfg['processing']['troposphere_delay']['enabled']:
         troposphere.run(cfg, out_paths['GUNW'])
 
-    if 'GUNW' in out_paths and run_steps['solid_earth_tides'] and \
-            cfg['processing']['solid_earth_tides']['enabled']:
+    if 'GUNW' in out_paths and run_steps['solid_earth_tides']:
         solid_earth_tides.run(cfg, out_paths['GUNW'])
 
     if run_steps['geocode'] and 'GOFF' in out_paths:

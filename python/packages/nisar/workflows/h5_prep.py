@@ -1631,15 +1631,17 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     return coordinates_list
 
 
-def add_solid_earth_phase_to_hdf5(solidearth_tides_datacube,
+def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
                                   gunw_hdf5):
     '''
     Add the solid earth phase datacube to GUNW product
 
     Parameters
      ----------
-     solidearth_tides_datacube: np.ndarray
-        solid earth tides datacube
+     solid_earth_tides: tuple
+        solid earth tides along  the los, east, north, and up
+        directions where the solid earth tides along los is a 3D datacube (radians)
+        and other directions are 2D grid (meters)
       gunw_hdf5: str
          gunw hdf5 file
 
@@ -1653,23 +1655,32 @@ def add_solid_earth_phase_to_hdf5(solidearth_tides_datacube,
         radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
 
         # Dataset description
-        descr = f"InSAR phase due to Solid Earth tides along line of sight direction"
+        descrs = ["InSAR phase datacube due to Solid Earth tides along line of sight direction",
+                  'Solid Earth tides along East direction',
+                  'Solid Earth tides along North direction',
+                  'Solid Earth tides along Up direction']
 
         # Product name
-        product_name = f'losSolidEarthTidesPhase'
+        product_names = ['losSolidEarthTidesPhase', 'eastSolidEarthTides',
+                         'northSolidEarthTides', 'upSolidEarthTides']
 
-        # If there is no troposphere delay product, then createa new one
-        if product_name not in radar_grid:
-            _create_datasets(radar_grid, [0], np.float64,
-                             product_name, descr=descr,
-                             units='radians',
-                             data=solidearth_tides_datacube.astype(np.float64))
+        # Units
+        solid_earth_tides_units = ['radians', 'meters', 'meters', 'meters']
 
-        # If there exists the product, overwrite the old one
-        else:
-            solidearth_tides = radar_grid[product_name]
-            solidearth_tides[:] = solidearth_tides_datacube.astype(
-                np.float64)
+        for index, product_name in enumerate(product_names):
+
+            # If there is no los solid earth tides phasey product, then createa new one
+            if product_name not in radar_grid:
+                _create_datasets(radar_grid, [0], np.float64,
+                                 product_name, descr=descrs[index],
+                                 units=solid_earth_tides_units[index],
+                                 data=solid_earth_tides[index].astype(np.float64))
+
+            # If there exists the product, overwrite the old one
+            else:
+                solid_earth_tides_set = radar_grid[product_name]
+                solid_earth_tides_set[:] = solid_earth_tides[index].astype(
+                    np.float64)
 
         f.close()
 

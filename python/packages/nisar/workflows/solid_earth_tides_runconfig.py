@@ -22,16 +22,11 @@ def solid_earth_tides_check(cfg):
     error_channel = journal.error(
         'InsarSolidEarthTidesRunConfig.solidearth_tides_check')
 
-    solid_earth_tides_cfg = cfg['processing']['solid_earth_tides']
-
-    # Only if the solid earth tides  is enabled
-    if solid_earth_tides_cfg['enabled']:
-        pass
 
 
 class InsarSolidEarthTidesRunConfig(RunConfig):
     '''
-    Solid Earth Tides  RunConfig
+    Solid Earth Tides RunConfig
     '''
 
     def __init__(self, args):
@@ -41,4 +36,4 @@ class InsarSolidEarthTidesRunConfig(RunConfig):
         if self.args.run_config_path is not None:
             self.load_geocode_yaml_to_dict()
             self.geocode_common_arg_load()
-            solidearth_tides_check(self.cfg)
+            solid_earth_tides_check(self.cfg)
