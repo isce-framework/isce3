@@ -15,7 +15,7 @@ RUN set -ex \
 
 COPY spec-file.txt /tmp/spec-file.txt
 RUN conda install --yes --file /tmp/spec-file.txt \
- && conda clean -tipsy \
+ && conda clean -ay \
  && rm -rf /opt/conda/pkgs \
  && rm /tmp/spec-file.txt
 
