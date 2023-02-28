@@ -169,7 +169,7 @@ runconfig:
                 package: raider
                 weather_model_type: ERA5
                 delay_direction: zenith
-                delay_product: ['comb']
+                delay_product: comb
 
         # TODO OPTIONAL - To setup type of worker
         worker:
