@@ -43,19 +43,23 @@ def transform_xy_to_latlon(epsg, x, y):
     srs_wgs84 = osr.SpatialReference()
     srs_wgs84.ImportFromEPSG(4326)
 
-    # Transformer
-    transformer_xy_to_latlon = osr.CoordinateTransformation(srs_src, srs_wgs84)
+    if epsg != 4326:
+        # Transform the xy to lat/lon
+        transformer_xy_to_latlon = osr.CoordinateTransformation(srs_src, srs_wgs84)
 
-    # Stack the x and y
-    x_y_pnts_radar = np.stack((x.flatten(), y.flatten()), axis=-1)
+        # Stack the x and y
+        x_y_pnts_radar = np.stack((x.flatten(), y.flatten()), axis=-1)
 
-    # Transform to lat/lon
-    lat_lon_radar = np.array(
-        transformer_xy_to_latlon.TransformPoints(x_y_pnts_radar))
+        # Transform to lat/lon
+        lat_lon_radar = np.array(
+            transformer_xy_to_latlon.TransformPoints(x_y_pnts_radar))
 
-    # Lat lon of data cube
-    lat_datacube = lat_lon_radar[:, 0].reshape(x.shape)
-    lon_datacube = lat_lon_radar[:, 1].reshape(x.shape)
+        # Lat lon of data cube
+        lat_datacube = lat_lon_radar[:, 0].reshape(x.shape)
+        lon_datacube = lat_lon_radar[:, 1].reshape(x.shape)
+    else:
+        lat_datacube = y.copy()
+        lon_datacube = x.copy()
 
     # 0.1 degrees is aded  to make sure the weather model cover the entire image
     margin = 0.1
@@ -106,21 +110,17 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
         # Fetch the GUWN Incidence Angle Datacube
         rdr_grid_path = 'science/LSAR/GUNW/metadata/radarGrid'
 
-        inc_angle_cube = np.array(f[f'{rdr_grid_path}/incidenceAngle'])
-        xcoord_radar_grid = np.array(f[f'{rdr_grid_path}/xCoordinates'])
-        ycoord_radar_grid = np.array(f[f'{rdr_grid_path}/yCoordinates'])
-        height_radar_grid = np.array(f[f'{rdr_grid_path}/heightAboveEllipsoid'])
-
-        expected_inc_angle_cube_shape = (
-            height_radar_grid.shape[0], ycoord_radar_grid.shape[0], xcoord_radar_grid.shape[0])
+        inc_angle_cube = f[f'{rdr_grid_path}/incidenceAngle'][()]
+        xcoord_radar_grid = f[f'{rdr_grid_path}/xCoordinates'][()]
+        ycoord_radar_grid = f[f'{rdr_grid_path}/yCoordinates'][()]
+        height_radar_grid = f[f'{rdr_grid_path}/heightAboveEllipsoid'][()]
 
         # EPSG code
-        epsg = int(np.array(f['science/LSAR/GUNW/metadata/radarGrid/epsg']))
+        epsg = int(f['science/LSAR/GUNW/metadata/radarGrid/epsg'][()])
 
         # Wavelenth in meters
         wavelength = isce3.core.speed_of_light / \
-            float(
-                np.array(f['/science/LSAR/GUNW/grids/frequencyA/centerFrequency']))
+                f['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()]
 
         # X and y for the entire datacube
         y_2d_radar = np.tile(ycoord_radar_grid, (len(xcoord_radar_grid), 1)).T
@@ -135,9 +135,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             # pyaps package
             if tropo_package == 'pyaps':
 
-                delay_type = tropo_delay_product
-                if delay_type == 'hydro':
-                    delay_type = 'dry'
+                delay_type = 'dry' if tropo_delay_product == 'hydro' else tropo_delay_product
 
                 tropo_delay_datacube_list = []
                 for index, hgt in enumerate(height_radar_grid):

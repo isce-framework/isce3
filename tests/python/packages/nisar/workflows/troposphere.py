@@ -93,29 +93,27 @@ def test_troposphere_aps_run():
         with h5py.File(gunw_hdf5, 'r') as hdf:
 
             # EPSG Code
-            epsg = int(
-                np.array(hdf['science/LSAR/GUNW/metadata/radarGrid/epsg']))
+            epsg = int(hdf['science/LSAR/GUNW/metadata/radarGrid/epsg'][()])
 
             # Incidence Angle Datacube
-            inc_angle_datacube = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'])
+            inc_angle_datacube = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'][()]
 
             # Coordinates X
-            xcoord_radar_grid = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'])
+            xcoord_radar_grid = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'][()]
 
             # Coordinate Y
-            ycoord_radar_grid = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/yCoordinates'])
+            ycoord_radar_grid = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/yCoordinates'][()]
 
             # Heights
-            height_radar_grid = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'])
+            height_radar_grid = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'][()]
 
             # Wavelength
             wavelength = isce3.core.speed_of_light / \
-                float(
-                    np.array(hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency']))
+                float(hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()])
 
             hdf.close()
 
