@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
+from datetime import datetime
 import h5py
 import journal
 import numpy as np
 import os
 from osgeo import gdal, osr
+from scipy.interpolate import RegularGridInterpolator
 import time
 
 import pyaps3 as pa
+
+import RAiDER
+from RAiDER.llreader import BoundingBox
+from RAiDER.losreader import Zenith, Conventional, Raytracing
+from RAiDER.delay import tropo_delay as raider_tropo_delay
 
 import isce3
 from nisar.workflows import h5_prep
@@ -130,10 +137,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
         lat_datacube, lon_datacube, _ = transform_xy_to_latlon(
             epsg, x_2d_radar, y_2d_radar)
 
-        for tropo_delay_product in tropo_delay_products:
+        # pyaps package
+        if tropo_package == 'pyaps':
 
-            # pyaps package
-            if tropo_package == 'pyaps':
+            for tropo_delay_product in tropo_delay_products:
 
                 delay_type = 'dry' if tropo_delay_product == 'hydro' else tropo_delay_product
 
@@ -186,11 +193,106 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 tropo_delay_product_name = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_type}'
                 troposphere_delay_datacube[tropo_delay_product_name]  = tropo_delay_datacube
 
-            # raider package
+        # raider package
+        else:
+
+            # Acquisition time for reference and secondary images
+            acquisition_time_ref = f['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
+                    .astype('datetime64[s]').astype(datetime)
+            acquisition_time_second = f['science/LSAR/identification/secondaryZeroDopplerStartTime'][()]\
+                    .astype('datetime64[s]').astype(datetime)
+
+            x_cube_spacing = (
+                max(xcoord_radar_grid) - min(xcoord_radar_grid))/(len(xcoord_radar_grid)-1)
+            y_cube_spacing = (
+                max(ycoord_radar_grid) - min(ycoord_radar_grid))/(len(ycoord_radar_grid)-1)
+
+            # Cube spacing using the minimum spacing
+            cube_spacing = min(x_cube_spacing, y_cube_spacing)
+
+            # To speed up the interpolation, the cube spacing is set >= 5km
+            if epsg != 4326:
+                cube_spacing = 5000 if cube_spacing < 5000 else cube_spacing
             else:
-                err_str = 'raider package is under development'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
+                cube_spacing = 0.05 if cube_spacing < 0.05 else cube_spacing
+
+            # AOI bounding box
+            min_lat = np.min(lat_datacube)
+            max_lat = np.max(lat_datacube)
+            min_lon = np.min(lon_datacube)
+            max_lon = np.max(lon_datacube)
+
+            aoi = BoundingBox([min_lat, max_lat, min_lon, max_lon])
+
+            # Default of line of sight is zenith
+            los = Zenith()
+
+            if tropo_delay_direction == 'line_of_sight_raytracing':
+                los = Raytracing()
+
+            # Height levels
+            height_levels = list(height_radar_grid)
+
+            # Tropodelay computation
+            tropo_delay_reference, _ = raider_tropo_delay(dt=acquisition_time_ref,
+                                                          weather_model_file=reference_weather_model_file,
+                                                          aoi=aoi,
+                                                          los=los,
+                                                          height_levels=height_levels,
+                                                          out_proj=epsg,
+                                                          cube_spacing_m=cube_spacing)
+
+            tropo_delay_secondary, _ = raider_tropo_delay(dt=acquisition_time_second,
+                                                          weather_model_file=secondary_weather_model_file,
+                                                          aoi=aoi,
+                                                          los=los,
+                                                          height_levels=height_levels,
+                                                          out_proj=epsg,
+                                                          cube_spacing_m=cube_spacing)
+
+
+            for tropo_delay_product in tropo_delay_products:
+
+                # Troposphere delay by raider package
+                if tropo_delay_product == 'comb':
+                    tropo_delay = tropo_delay_reference['wet'] + tropo_delay_reference['hydro'] - \
+                            tropo_delay_secondary['wet'] - tropo_delay_secondary['hydro']
+                else:
+                    tropo_delay = tropo_delay_reference[tropo_delay_product] - \
+                            tropo_delay_secondary[tropo_delay_product]
+
+                # Convert it to radians units
+                tropo_delay_datacube = tropo_delay*4.0*np.pi/wavelength
+
+                # Interpolate to radar grid to keep its dimension consistent with other datacubes
+                tropo_delay_interpolator = RegularGridInterpolator((tropo_delay_reference.z,
+                                                                    tropo_delay_reference.y,
+                                                                    tropo_delay_reference.x),
+                                                                   tropo_delay_datacube,
+                                                                   method='linear')
+
+                delay_type = 'dry' if tropo_delay_product == 'hydro' else tropo_delay_product
+
+                # Interoplate the troposhphere delay
+                hv, yv, xv = np.meshgrid(height_radar_grid,
+                                         ycoord_radar_grid,
+                                         xcoord_radar_grid,
+                                         indexing='ij')
+
+                pnts = np.stack(
+                        (hv.flatten(), yv.flatten(), xv.flatten()), axis=-1)
+
+                # Interpolate
+                tropo_delay_datacube = tropo_delay_interpolator(
+                        pnts).reshape(inc_angle_cube.shape)
+
+                # Line of sight mapping
+                if tropo_delay_direction == 'line_of_sight_mapping':
+                    tropo_delay_datacube /= np.cos(np.deg2rad(inc_angle_cube))
+
+                # Save to the dictionary in memory
+                tropo_delay_product_name = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_type}'
+                troposphere_delay_datacube[tropo_delay_product_name]  = tropo_delay_datacube
 
 
         f.close()

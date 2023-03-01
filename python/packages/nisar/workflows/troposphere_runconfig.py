@@ -54,31 +54,45 @@ def troposphere_delay_check(cfg):
                 error_channel.log(err_str)
                 raise ValueError(err_str)
 
-            # Check the days difference between weather model and RSLC
-            grbs = pygrib.open(weather_model_file)
-            if grbs is None:
-                err_str = f'{weather_model_file} is not a GRIB file'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
 
-            # Check if there are messages in the GRIB file
-            if grbs.messages <= 0:
-                err_str = 'there are no messages in the GRIB file'
-                error_channel.log(err_str)
-                raise ValueError(err_str)
-
-            # Weather model valid date of message 1
-            grb_msg = grbs.message(1)
-            weather_model_date = grb_msg.validDate
-
+            # RSLC start time
             with h5py.File(rslc_file, 'r', libver='latest', swmr=True) as f:
-                rslc_start_time = str(np.array(f['science/LSAR/identification/zeroDopplerStartTime']).astype(str))
+                rslc_date = f['science/LSAR/identification/zeroDopplerStartTime'][()]\
+                        .astype('datetime64[s]').astype(datetime)
 
-                # Make sure that timestamp format is 'YYYY-MM-DDTH:M:S' where the second has no decmials
-                rslc_start_time = rslc_start_time[:19]
 
-                rslc_date = datetime.strptime(rslc_start_time, '%Y-%m-%dT%H:%M:%S')
-                f.close()
+            # Troposphere package
+            tropo_pkg = tropo_cfg['package'].lower()
+
+            # pyAPS only supports the grib format weather model
+            if tropo_pkg == 'pyaps':
+
+                # Check the days difference between weather model and RSLC
+                grbs = pygrib.open(weather_model_file)
+                if grbs is None:
+                    err_str = f'{weather_model_file} is not a GRIB format'
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
+
+                # Check if there are messages in the GRIB file
+                if grbs.messages <= 0:
+                    err_str = 'there are no messages in the GRIB file'
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
+
+                # Weather model valid date of message 1
+                grb_msg = grbs.message(1)
+                weather_model_date = grb_msg.validDate
+            else:
+                #  Get the datetime of weather model in NetCDF format for RAiDER
+                try:
+                    with h5py.File(weather_model_file, 'r', libver='latest', swmr=True) as f:
+                        weather_model_date = datetime.strptime(f.attrs['datetime'].astype(str),
+                                                               '%Y_%m_%dT%H_%M_%S')
+                except OSError:
+                    err_str = f'{weather_model_file} is not a netCDF format'
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
 
             diff = rslc_date - weather_model_date
             hours =  abs(diff.total_seconds()) / 3600.0
@@ -103,7 +117,6 @@ def troposphere_delay_check(cfg):
             raise ValueError(err_str)
 
         # Check the external tropo delay package
-        tropo_pkg = tropo_cfg['package'].lower()
         if tropo_pkg not in ['pyaps', 'raider']:
             err_str = f"unidentified package {tropo_cfg['package']}," + \
                     " please use either pyaps or raider"
