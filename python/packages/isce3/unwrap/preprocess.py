@@ -1,6 +1,5 @@
 import journal
 import numpy as np
-import time
 import pathlib
 from osgeo import gdal
 
