@@ -17,6 +17,7 @@ import isce3.unwrap.snaphu as snaphu
 from nisar.workflows import h5_prep
 from nisar.products.readers import SLC
 from isce3.unwrap.preprocess import preprocess_wrapped_igram as preprocess
+from isce3.unwrap.preprocess import project_map_to_radar
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -101,10 +102,16 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     mask = open_raster(preproc_cfg['mask']['mask_path']) if \
                         preproc_cfg['mask']['mask_path'] is not None else None
 
+                    if 'water' in preproc_cfg['mask']['mask_type']:
+                        water_mask_path = cfg['dynamic_ancillary_file_group']['water_mask_file']
+                        water_mask = project_map_to_radar(cfg, water_mask_path, freq)
+                    else:
+                        water_mask = None
                     if filling_method == 'distance_interpolator':
                         distance = preproc_cfg['distance_interpolator']['distance']
 
                     igram_filt = preprocess(igram, coherence,
+                                            water_mask,
                                             mask,
                                             preproc_cfg['mask']['mask_type'],
                                             preproc_cfg['mask']['outlier_threshold'],

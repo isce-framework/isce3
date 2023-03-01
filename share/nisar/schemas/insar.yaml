@@ -247,7 +247,7 @@ preprocess_wrapped_phase_options:
     distance_interpolator: include('distance_interp_options', required=False)
 
 unwrap_mask_options:
-    mask_type: enum('median_filter', 'coherence', required=False)
+    mask_type: enum('median_filter', 'coherence', 'water', required=False)
     mask_path: str(required=False)
     outlier_threshold: num(min=0, required=False)
     median_filter_size: int(min=1, required=False)
