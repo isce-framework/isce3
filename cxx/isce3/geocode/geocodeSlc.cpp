@@ -572,7 +572,7 @@ void geocodeSlc(
 
             debug << "band: " << band << pyre::journal::newline;
             // get a block of data
-            debug << "get data block " << pyre::journal::newline;
+            debug << "get data block " << pyre::journal::endl;
             inputRaster.getBlock(rdrDataBlock.data(), rangeFirstPixel,
                                  azimuthFirstLine, rdrBlockWidth,
                                  rdrBlockLength, band + 1);

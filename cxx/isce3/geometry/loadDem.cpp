@@ -123,7 +123,7 @@ DEMInterpolator DEMRasterToInterpolator(
 
     if (demInterp.width() == 0 || demInterp.length() == 0) {
         pyre::journal::warning_t warning("isce.geometry.loadDem.DEMRasterToInterpolator");
-        warning << "warning there is not enough DEM coverage in the bounding box. "
+        warning << "there is not enough DEM coverage in the bounding box. "
                 << pyre::journal::endl;
     }
     // declare the dem interpolator
