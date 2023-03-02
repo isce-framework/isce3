@@ -371,7 +371,6 @@ void geocodeSlc(
 {
     validate_slice(radarGrid, slicedRadarGrid);
 
-    pyre::journal::info_t info("isce.geocode.geocodeSlc.geocodeSlc");
     pyre::journal::debug_t debug("isce.geocode.geocodeSlc.geocodeSlc");
 
     // number of bands in the input raster
