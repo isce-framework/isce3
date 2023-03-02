@@ -12,6 +12,7 @@ from isce3.atmosphere.ionosphere_filter import write_array
 def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
                              mask_type='coherence', threshold=0.5,
                              filter_size=9,
+                             filling_enabled=True,
                              filling_method='distance_interpolator',
                              distance=5):
     '''
@@ -110,15 +111,19 @@ def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
         error_channel.log(err_str)
         raise ValueError(err_str)
 
-    # Fill invalid interferogram pixels using user-defined algorithm
-    # Distance-based interpolator Chen et al. _[1]
-    if filling_method == 'distance_interpolator':
-        pha_filt = distance_interpolator(np.angle(igram), distance,
-                                         invalid_mask)
+    if filling_enabled:
+        # Fill invalid interferogram pixels using user-defined algorithm
+        # Distance-based interpolator Chen et al. _[1]
+        if filling_method == 'distance_interpolator':
+            pha_filt = distance_interpolator(np.angle(igram), distance,
+                                            invalid_mask)
+        else:
+            err_str = f"{filling_method} is an invalid selection for filling_method"
+            error_channel.log(err_str)
+            raise ValueError(err_str)
     else:
-        err_str = f"{filling_method} is an invalid selection for filling_method"
-        error_channel.log(err_str)
-        raise ValueError(err_str)
+        igram[invalid_mask==1] = 0
+        pha_filt = np.angle(igram)
     # Go to complex value
     igram_filt = np.exp(-1j * pha_filt)
 

@@ -243,6 +243,7 @@ connected_components_options:
 preprocess_wrapped_phase_options:
     enabled: bool(required=False)
     mask: include('unwrap_mask_options', required=False)
+    filling_enabled: bool(required=False)
     filling_method: enum('distance_interpolator', required=False)
     distance_interpolator: include('distance_interp_options', required=False)
 

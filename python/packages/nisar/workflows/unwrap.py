@@ -96,6 +96,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 if unwrap_args['preprocess_wrapped_phase']['enabled']:
                     # Extract preprocessing dictionary and open arrays
                     preproc_cfg = unwrap_args['preprocess_wrapped_phase']
+                    filling_enabled = preproc_cfg['filling_enabled']
                     filling_method = preproc_cfg['filling_method']
                     igram = open_raster(igram_path)
                     coherence = open_raster(corr_path)
@@ -116,6 +117,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                             preproc_cfg['mask']['mask_type'],
                                             preproc_cfg['mask']['outlier_threshold'],
                                             preproc_cfg['mask']['median_filter_size'],
+                                            filling_enabled,
                                             filling_method, distance)
                     # Save filtered/filled wrapped interferogram
                     igram_path = f'{unwrap_scratch}/wrapped_igram.filt'
