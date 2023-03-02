@@ -202,29 +202,19 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             acquisition_time_second = f['science/LSAR/identification/secondaryZeroDopplerStartTime'][()]\
                     .astype('datetime64[s]').astype(datetime)
 
-            x_cube_spacing = (
-                max(xcoord_radar_grid) - min(xcoord_radar_grid))/(len(xcoord_radar_grid)-1)
-            y_cube_spacing = (
-                max(ycoord_radar_grid) - min(ycoord_radar_grid))/(len(ycoord_radar_grid)-1)
-
-            # Cube spacing using the minimum spacing
-            cube_spacing = min(x_cube_spacing, y_cube_spacing)
-
-            # To speed up the interpolation, the cube spacing is set >= 5km
-            if epsg != 4326:
-                cube_spacing = 5000 if cube_spacing < 5000 else cube_spacing
-            else:
-                cube_spacing = 0.05 if cube_spacing < 0.05 else cube_spacing
-
             # AOI bounding box
+            margin = 0.1
             min_lat = np.min(lat_datacube)
             max_lat = np.max(lat_datacube)
             min_lon = np.min(lon_datacube)
             max_lon = np.max(lon_datacube)
 
-            aoi = BoundingBox([min_lat, max_lat, min_lon, max_lon])
+            aoi = BoundingBox([min_lat - margin,
+                               max_lat + margin,
+                               min_lon - margin,
+                               max_lon + margin])
 
-            # Default of line of sight is zenith
+            # Zenith
             los = Zenith()
 
             if tropo_delay_direction == 'line_of_sight_raytracing':
@@ -239,16 +229,14 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                                                           aoi=aoi,
                                                           los=los,
                                                           height_levels=height_levels,
-                                                          out_proj=epsg,
-                                                          cube_spacing_m=cube_spacing)
+                                                          out_proj=epsg)
 
             tropo_delay_secondary, _ = raider_tropo_delay(dt=acquisition_time_second,
                                                           weather_model_file=secondary_weather_model_file,
                                                           aoi=aoi,
                                                           los=los,
                                                           height_levels=height_levels,
-                                                          out_proj=epsg,
-                                                          cube_spacing_m=cube_spacing)
+                                                          out_proj=epsg)
 
 
             for tropo_delay_product in tropo_delay_products:
@@ -294,8 +282,6 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 tropo_delay_product_name = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{delay_type}'
                 troposphere_delay_datacube[tropo_delay_product_name]  = tropo_delay_datacube
 
-
-        f.close()
 
     return troposphere_delay_datacube
 
