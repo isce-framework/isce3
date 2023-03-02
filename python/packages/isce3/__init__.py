@@ -7,6 +7,7 @@ __version__ = extisce3.__version__
 
 # export the subpackages
 from . import antenna
+from . import atmosphere
 from . import container
 from . import core
 from . import focus
@@ -15,13 +16,17 @@ from . import geometry
 from . import geogrid
 from . import image
 from . import io
-from . import ionosphere
 from . import math
 from . import polsar
 from . import product
 from . import signal
 from . import splitspectrum
 from . import unwrap
+
+# Need to import `cal` after the other submodules that it depends on have been added as
+# attributes to `isce3` above. (If you try to import it in alphabetical order you will
+# get an AttributeError.)
+from . import cal
 
 # check for cuda
 if hasattr(extisce3, "cuda"):

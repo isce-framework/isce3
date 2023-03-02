@@ -6,7 +6,7 @@ import h5py
 import iscetest
 import numpy as np
 import isce3
-from isce3.ionosphere import ionosphere_estimation
+from isce3.atmosphere import ionosphere_estimation
 from nisar.workflows import h5_prep, insar
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence

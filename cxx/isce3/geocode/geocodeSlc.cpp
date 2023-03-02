@@ -1,6 +1,8 @@
 #include "geocodeSlc.h"
 
+#include <algorithm>
 #include <memory>
+#include <tuple>
 
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
@@ -327,6 +329,28 @@ validate_slice(const isce3::product::RadarGridParameters& fullGrid,
 }
 
 
+/**
+ * Check if arrays in a vector all have the same size
+ * @param[out] bool     true if all arrays have same size, else false
+ * @param[in]  arrays   vector of arrays
+ */
+inline bool
+array_sizes_consistent(const std::vector<EArray2dc64>& arrays) {
+    // Returns true if the two input arrays have unequal shapes.
+    auto unequal_array_dims = [](const auto& arr1, const auto& arr2) -> bool {
+        return (arr1.rows() != arr2.rows()) or (arr1.cols() != arr2.cols());
+    };
+
+    // Check that no adjacent pair of arrays had unequal dimensions.
+    const auto res = std::adjacent_find(
+        arrays.begin(),
+        arrays.end(),
+        unequal_array_dims
+    );
+    return res == arrays.end();
+}
+
+
 template<typename AzRgFunc>
 void geocodeSlc(
         isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
@@ -579,8 +603,8 @@ void geocodeSlc(
 
 template<typename AzRgFunc>
 void geocodeSlc(
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> geoDataBlock,
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> rdrDataBlock,
+        EArray2dc64 geoDataBlock,
+        const EArray2dc64 rdrDataBlock,
         isce3::io::Raster& demRaster,
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::product::GeoGridParameters& geoGrid,
@@ -597,8 +621,11 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& sRangeCorrection,
         const bool correctSRngFlat, const std::complex<float> invalidValue)
 {
+    std::vector<EArray2dc64> geoDataBlockVec = {geoDataBlock};
+    std::vector<EArray2dc64> rdrDataBlockVec = {rdrDataBlock};
     geocodeSlc(
-        geoDataBlock, rdrDataBlock, demRaster,radarGrid, radarGrid, geoGrid,
+        geoDataBlockVec, rdrDataBlockVec,
+        demRaster, radarGrid, radarGrid, geoGrid,
         orbit, nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
         numiterGeo2rdr, azimuthFirstLine, rangeFirstPixel, flatten,
         azCarrierPhase, rgCarrierPhase, azTimeCorrection,
@@ -608,8 +635,8 @@ void geocodeSlc(
 
 template<typename AzRgFunc>
 void geocodeSlc(
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> geoDataBlock,
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> rdrDataBlock,
+        EArray2dc64 geoDataBlock,
+        const EArray2dc64 rdrDataBlock,
         isce3::io::Raster& demRaster,
         const isce3::product::RadarGridParameters& radarGrid,
         const isce3::product::RadarGridParameters& slicedRadarGrid,
@@ -627,7 +654,85 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& sRangeCorrection,
         const bool correctSRngFlat, const std::complex<float> invalidValue)
 {
-    geoDataBlock.fill(invalidValue);
+    std::vector<EArray2dc64> geoDataBlockVec = {geoDataBlock};
+    std::vector<EArray2dc64> rdrDataBlockVec = {rdrDataBlock};
+    geocodeSlc(
+        geoDataBlockVec, rdrDataBlockVec,
+        demRaster, radarGrid, slicedRadarGrid, geoGrid,
+        orbit, nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
+        numiterGeo2rdr, azimuthFirstLine, rangeFirstPixel, flatten,
+        azCarrierPhase, rgCarrierPhase, azTimeCorrection,
+        sRangeCorrection, correctSRngFlat, invalidValue);
+}
+
+
+template<typename AzRgFunc>
+void geocodeSlc(
+        std::vector<EArray2dc64>& geoDataBlocks,
+        const std::vector<EArray2dc64>& rdrDataBlocks,
+        isce3::io::Raster& demRaster,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::product::GeoGridParameters& geoGrid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& nativeDoppler,
+        const isce3::core::LUT2d<double>& imageGridDoppler,
+        const isce3::core::Ellipsoid& ellipsoid,
+        const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
+        const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,
+        const bool flatten,
+        const AzRgFunc& azCarrierPhase,
+        const AzRgFunc& rgCarrierPhase,
+        const isce3::core::LUT2d<double>& azTimeCorrection,
+        const isce3::core::LUT2d<double>& sRangeCorrection,
+        const bool correctSRngFlat, const std::complex<float> invalidValue)
+{
+    geocodeSlc(
+        geoDataBlocks, rdrDataBlocks, demRaster, radarGrid, radarGrid, geoGrid,
+        orbit, nativeDoppler, imageGridDoppler, ellipsoid, thresholdGeo2rdr,
+        numiterGeo2rdr, azimuthFirstLine, rangeFirstPixel, flatten,
+        azCarrierPhase, rgCarrierPhase, azTimeCorrection,
+        sRangeCorrection, correctSRngFlat, invalidValue);
+}
+
+
+template<typename AzRgFunc>
+void geocodeSlc(
+        std::vector<EArray2dc64>& geoDataBlocks,
+        const std::vector<EArray2dc64>& rdrDataBlocks,
+        isce3::io::Raster& demRaster,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::product::RadarGridParameters& slicedRadarGrid,
+        const isce3::product::GeoGridParameters& geoGrid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::LUT2d<double>& nativeDoppler,
+        const isce3::core::LUT2d<double>& imageGridDoppler,
+        const isce3::core::Ellipsoid& ellipsoid,
+        const double& thresholdGeo2rdr, const int& numiterGeo2rdr,
+        const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,
+        const bool flatten,
+        const AzRgFunc& azCarrierPhase,
+        const AzRgFunc& rgCarrierPhase,
+        const isce3::core::LUT2d<double>& azTimeCorrection,
+        const isce3::core::LUT2d<double>& sRangeCorrection,
+        const bool correctSRngFlat, const std::complex<float> invalidValue)
+{
+    if (geoDataBlocks.size() != rdrDataBlocks.size()) {
+        std::string error_msg("number of geoDataBlocks != number of rdrDataBlocks");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    // check all input and output arrays are of the same size
+    if (!array_sizes_consistent(geoDataBlocks)) {
+        std::string error_msg("geoDataBlocks arrays do not have the same size");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+    if (!array_sizes_consistent(rdrDataBlocks)) {
+        std::string error_msg("rdrDataBlocks arrays do not have the same size");
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+    }
+
+    for (auto geoDataBlock : geoDataBlocks)
+        geoDataBlock.fill(invalidValue);
 
     validate_slice(radarGrid, slicedRadarGrid);
 
@@ -735,22 +840,29 @@ void geocodeSlc(
         }
     } // end loops over lines and pixel of output grid
 
-    // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
-    // Remove doppler and carriers as needd
-    carrierPhaseDeramp(rdrDataBlock, azCarrierPhase, rgCarrierPhase,
-            azimuthFirstLine, rangeFirstPixel, radarGrid);
+    // loop over pairs of radar and geo block array
+    for (auto [gIt, rIt] = std::tuple(geoDataBlocks.begin(), rdrDataBlocks.begin());
+            gIt != geoDataBlocks.end(); ++gIt, ++rIt) {
+        auto geoDataBlock = *gIt;
+        auto rdrDataBlock = *rIt;
 
-    // interpolate the data in radar grid to the geocoded grid.
-    interpolate(rdrDataBlock, geoDataBlock, rangeIndices, azimuthIndices,
-            azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
-            radarGrid, nativeDoppler);
+        // interpolate and carrierPhaseRerampAndFlatten will only modify valid pixels
+        // Remove doppler and carriers as needd
+        carrierPhaseDeramp(rdrDataBlock, azCarrierPhase, rgCarrierPhase,
+                azimuthFirstLine, rangeFirstPixel, radarGrid);
 
-    // Add back doppler and carriers as needd
-    carrierPhaseRerampAndFlatten(geoDataBlock, rdrDataBlock, azCarrierPhase,
-            rgCarrierPhase, nativeDoppler, rangeIndices,
-            azimuthIndices, radarGrid, flatten,
-            azimuthFirstLine, rangeFirstPixel, correctSRngFlat,
-            uncorrectedSRange);
+        // interpolate the data in radar grid to the geocoded grid.
+        interpolate(rdrDataBlock, geoDataBlock, rangeIndices, azimuthIndices,
+                azimuthFirstLine, rangeFirstPixel, sincInterp.get(),
+                radarGrid, nativeDoppler);
+
+        // Add back doppler and carriers as needd
+        carrierPhaseRerampAndFlatten(geoDataBlock, rdrDataBlock, azCarrierPhase,
+                rgCarrierPhase, nativeDoppler, rangeIndices,
+                azimuthIndices, radarGrid, flatten,
+                azimuthFirstLine, rangeFirstPixel, correctSRngFlat,
+                uncorrectedSRange);
+    }
 }
 
 #define EXPLICIT_INSTANTIATION(AzRgFunc)                                \
@@ -789,8 +901,8 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::LUT2d<double>& sRangeCorrection,             \
         const bool correctSRngFlat, const std::complex<float> invalidValue);\
 template void geocodeSlc<AzRgFunc>(                                     \
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> geoDataBlock,\
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> rdrDataBlock,\
+        EArray2dc64 geoDataBlock,                                       \
+        const EArray2dc64 rdrDataBlock,                                 \
         isce3::io::Raster& demRaster,                                   \
         const isce3::product::RadarGridParameters& radarGrid,           \
         const isce3::product::GeoGridParameters& geoGrid,               \
@@ -806,8 +918,43 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::LUT2d<double>& sRangeCorrection,             \
         const bool correctSRngFlat, const std::complex<float> invalidValue);\
 template void geocodeSlc<AzRgFunc>(                                     \
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> geoDataBlock,\
-        Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> rdrDataBlock,\
+        EArray2dc64 geoDataBlock,                                       \
+        const EArray2dc64 rdrDataBlock,                                 \
+        isce3::io::Raster& demRaster,                                   \
+        const isce3::product::RadarGridParameters& radarGrid,           \
+        const isce3::product::RadarGridParameters& slicedRadarGrid,     \
+        const isce3::product::GeoGridParameters& geoGrid,               \
+        const isce3::core::Orbit& orbit,                                \
+        const isce3::core::LUT2d<double>& nativeDoppler,                \
+        const isce3::core::LUT2d<double>& imageGridDoppler,             \
+        const isce3::core::Ellipsoid& ellipsoid,                        \
+        const double& thresholdGeo2rdr, const int& numiterGeo2rdr,      \
+        const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,  \
+        const bool flatten,                                             \
+        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
+        const isce3::core::LUT2d<double>& azTimeCorrection,             \
+        const isce3::core::LUT2d<double>& sRangeCorrection,             \
+        const bool correctSRngFlat, const std::complex<float> invalidValue);\
+template void geocodeSlc<AzRgFunc>(                                     \
+        std::vector<EArray2dc64>& geoDataBlocks,                        \
+        const std::vector<EArray2dc64>& rdrDataBlocks,                  \
+        isce3::io::Raster& demRaster,                                   \
+        const isce3::product::RadarGridParameters& radarGrid,           \
+        const isce3::product::GeoGridParameters& geoGrid,               \
+        const isce3::core::Orbit& orbit,                                \
+        const isce3::core::LUT2d<double>& nativeDoppler,                \
+        const isce3::core::LUT2d<double>& imageGridDoppler,             \
+        const isce3::core::Ellipsoid& ellipsoid,                        \
+        const double& thresholdGeo2rdr, const int& numiterGeo2rdr,      \
+        const size_t& azimuthFirstLine, const size_t& rangeFirstPixel,  \
+        const bool flatten,                                             \
+        const AzRgFunc& azCarrierPhase, const AzRgFunc& rgCarrierPhase, \
+        const isce3::core::LUT2d<double>& azTimeCorrection,             \
+        const isce3::core::LUT2d<double>& sRangeCorrection,             \
+        const bool correctSRngFlat, const std::complex<float> invalidValue);\
+template void geocodeSlc<AzRgFunc>(                                     \
+        std::vector<EArray2dc64>& geoDataBlocks,                        \
+        const std::vector<EArray2dc64>& rdrDataBlocks,                  \
         isce3::io::Raster& demRaster,                                   \
         const isce3::product::RadarGridParameters& radarGrid,           \
         const isce3::product::RadarGridParameters& slicedRadarGrid,     \
