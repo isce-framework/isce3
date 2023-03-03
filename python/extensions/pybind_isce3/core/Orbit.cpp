@@ -97,5 +97,26 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         .def("contains", &Orbit::contains,
             "Check if time falls in the valid interpolation domain.",
             py::arg("time"))
+
+        .def("crop", &Orbit::crop,
+            R"(
+            Create a new Orbit containing data in the requested interval
+
+            Parameters
+            ----------
+            start : isce3.core.DateTime
+                Beginning of time interval
+            end : isce3.core.DateTime
+                End of time interval
+            npad : int, optional
+                Minimal number of state vectors to include past each of
+                the given time bounds (useful to guarantee adequate
+                support for interpolation).
+
+            Returns
+            -------
+            isce3.core.Orbit
+                Orbit object with data containing start & end times)",
+            py::arg("start"), py::arg("end"), py::arg("npad") = 0)
         ;
 }
