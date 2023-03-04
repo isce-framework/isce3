@@ -20,7 +20,8 @@ from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_insar_runconfig import \
     GeocodeInsarRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.compute_stats import compute_stats_real_data
+from nisar.workflows.compute_stats import compute_stats_real_data, \
+    compute_water_mask_stats, compute_layover_shadow_stats
 
 def run(cfg, input_hdf5, output_hdf5, is_goff=False):
     """ Run geocode insar on user specified hardware
@@ -399,6 +400,12 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
+            if not is_goff:
+                water_mask_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/waterMask']
+                compute_water_mask_stats(water_mask_ds)
+                lay_shadow_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/layoverShadowMask']
+                compute_layover_shadow_stats(lay_shadow_ds)
+
 
 def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
     """ Geocode RUNW products on CPU
@@ -605,6 +612,11 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
+            if not is_goff:
+                water_mask_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/waterMask']
+                compute_water_mask_stats(water_mask_ds)
+                lay_shadow_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/layoverShadowMask']
+                compute_layover_shadow_stats(lay_shadow_ds)
 
 
 def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
