@@ -24,6 +24,7 @@ RUN conda install -q -y \
  && conda install -q -y -c conda-forge \
         ruamel.yaml \
         yamale \
+        pyaps3 \
  && conda clean --all --yes
 
 ARG SRCDIR

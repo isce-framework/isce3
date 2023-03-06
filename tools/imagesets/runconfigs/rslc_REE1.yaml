@@ -9,6 +9,7 @@ runconfig:
             # REQUIRED List of NISAR raw data products in L0B format.
             input_file_path:
             - input_L0B_RRSD_REE1/REE_L0B_out17.h5      
+            qa_input_file: output_rslc/rslc.h5
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
             dem_file: null
@@ -24,17 +25,9 @@ runconfig:
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
             internal_calibration: null
-            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-            # If not provided, no polarimetric calibration performed.
-            polarimetric_calibration: null
-            # Pre- and post-data take calibration data products, optional.
-            bookend_calibration: null
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
             antenna_pattern: null
-            # Chirp replica file, optional.
-            # If absent will generate LFM chirp using parameters in L0B product.
-            waveform: null
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_rslc
@@ -44,6 +37,7 @@ runconfig:
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             sas_output_file: output_rslc/rslc.h5
             sas_config_file: output_rslc/rslc_config.yaml
+            qa_output_dir: qa_rslc
             product_counter: 1
         primary_executable:
             # Handy to set to "SLC" until other ISCE tools updated.
@@ -131,8 +125,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 2048
-                    azimuth: 2048
+                    range: 32768
+                    azimuth: 1024
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
                 kernel:
@@ -181,8 +175,6 @@ runconfig:
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
-                # radio frequency interference mitigation
-                rfi_removal: True
                 # azimuth resampling and gap-filling
                 presum_blu: True
                 # range compression
@@ -193,3 +185,8 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+        qa:
+            workflows:
+                validate: true
+                qa_reports: true
+                nesz: true

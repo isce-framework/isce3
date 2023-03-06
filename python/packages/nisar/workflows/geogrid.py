@@ -54,7 +54,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
         geocode_dict = cfg['processing']['geocode']
 
     if workflow_name == 'insar':
-       input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+       input_hdf5 = cfg['input_file_group']['reference_rslc_file']
     else:
         input_hdf5 = cfg['input_file_group']['input_file_path']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']

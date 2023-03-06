@@ -51,13 +51,13 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   *infiles={};
   *outfiles={};
   *params={};
-  
+
   /* input files */
   StrNCopy(infiles->weightfile,DEF_WEIGHTFILE,MAXSTRLEN);
   StrNCopy(infiles->corrfile,DEF_CORRFILE,MAXSTRLEN);
   StrNCopy(infiles->ampfile,DEF_AMPFILE,MAXSTRLEN);
   StrNCopy(infiles->ampfile2,DEF_AMPFILE2,MAXSTRLEN);
-  StrNCopy(infiles->estfile,DEF_ESTFILE,MAXSTRLEN);  
+  StrNCopy(infiles->estfile,DEF_ESTFILE,MAXSTRLEN);
   StrNCopy(infiles->magfile,DEF_MAGFILE,MAXSTRLEN);
   StrNCopy(infiles->costinfile,DEF_COSTINFILE,MAXSTRLEN);
   StrNCopy(infiles->bytemaskfile,DEF_BYTEMASKFILE,MAXSTRLEN);
@@ -76,7 +76,7 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   StrNCopy(outfiles->rawcorrdumpfile,DEF_RAWCORRDUMPFILE,MAXSTRLEN);
   StrNCopy(outfiles->costoutfile,DEF_COSTOUTFILE,MAXSTRLEN);
   StrNCopy(outfiles->conncompfile,DEF_CONNCOMPFILE,MAXSTRLEN);
-  StrNCopy(outfiles->outfile,DEF_OUTFILE,MAXSTRLEN);  
+  StrNCopy(outfiles->outfile,DEF_OUTFILE,MAXSTRLEN);
   StrNCopy(outfiles->logfile,DEF_LOGFILE,MAXSTRLEN);
 
   /* file formats */
@@ -101,22 +101,22 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   params->orbitradius=DEF_ORBITRADIUS;
   params->altitude=DEF_ALTITUDE;
   params->earthradius=DEF_EARTHRADIUS;
-  params->bperp=DEF_BPERP; 
+  params->bperp=DEF_BPERP;
   params->transmitmode=DEF_TRANSMITMODE;
   params->baseline=DEF_BASELINE;
   params->baselineangle=DEF_BASELINEANGLE;
   params->nlooksrange=DEF_NLOOKSRANGE;
   params->nlooksaz=DEF_NLOOKSAZ;
   params->nlooksother=DEF_NLOOKSOTHER;
-  params->ncorrlooks=DEF_NCORRLOOKS;           
+  params->ncorrlooks=DEF_NCORRLOOKS;
   params->ncorrlooksrange=DEF_NCORRLOOKSRANGE;
   params->ncorrlooksaz=DEF_NCORRLOOKSAZ;
-  params->nearrange=DEF_NEARRANGE;         
-  params->dr=DEF_DR;               
-  params->da=DEF_DA;               
-  params->rangeres=DEF_RANGERES;         
-  params->azres=DEF_AZRES;            
-  params->lambda=DEF_LAMBDA;           
+  params->nearrange=DEF_NEARRANGE;
+  params->dr=DEF_DR;
+  params->da=DEF_DA;
+  params->rangeres=DEF_RANGERES;
+  params->azres=DEF_AZRES;
+  params->lambda=DEF_LAMBDA;
 
   /* scattering model parameters */
   params->kds=DEF_KDS;
@@ -149,7 +149,7 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   params->layfalloffconst=DEF_LAYFALLOFFCONST;
   params->sigsqshortmin=DEF_SIGSQSHORTMIN;
   params->sigsqlayfactor=DEF_SIGSQLAYFACTOR;
-  
+
   /* deformation mode parameters */
   params->defoazdzfactor=DEF_DEFOAZDZFACTOR;
   params->defothreshfactor=DEF_DEFOTHRESHFACTOR;
@@ -165,15 +165,15 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
   params->arcmaxflowconst=DEF_ARCMAXFLOWCONST;
   params->maxflow=DEF_MAXFLOW;
   params->krowei=DEF_KROWEI;
-  params->kcolei=DEF_KCOLEI;   
+  params->kcolei=DEF_KCOLEI;
   params->kperpdpsi=DEF_KPERPDPSI;
   params->kpardpsi=DEF_KPARDPSI;
-  params->threshold=DEF_THRESHOLD;  
-  params->initdzr=DEF_INITDZR;    
-  params->initdzstep=DEF_INITDZSTEP;    
+  params->threshold=DEF_THRESHOLD;
+  params->initdzr=DEF_INITDZR;
+  params->initdzstep=DEF_INITDZSTEP;
   params->maxcost=DEF_MAXCOST;
-  params->costscale=DEF_COSTSCALE;      
-  params->costscaleambight=DEF_COSTSCALEAMBIGHT;      
+  params->costscale=DEF_COSTSCALE;
+  params->costscaleambight=DEF_COSTSCALEAMBIGHT;
   params->dnomincangle=DEF_DNOMINCANGLE;
   params->srcrow=DEF_SRCROW;
   params->srccol=DEF_SRCCOL;
@@ -229,7 +229,7 @@ int SetDefaults(infileT *infiles, outfileT *outfiles, paramT *params){
  * Checks all parameters to make sure they are valid.  This is just a boring
  * function with lots of checks in it.
  */
-int CheckParams(infileT *infiles, outfileT *outfiles, 
+int CheckParams(infileT *infiles, outfileT *outfiles,
                 long linelen, long nlines, paramT *params){
 
   long ni, nj, n;
@@ -250,7 +250,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       fclose(fp);
       remove(outfiles->outfile);
     }
-    if(!strcmp(outfiles->outfile,infiles->infile) 
+    if(!strcmp(outfiles->outfile,infiles->infile)
        && !params->eval && !params->regrowconncomps){
       fflush(NULL);
       warnings << pyre::journal::at(__HERE__)
@@ -336,7 +336,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   }
   /* dr and da after multilooking can be larger than rangeres, azres */
   /*
-  if(params->rangeres<=(params->dr) 
+  if(params->rangeres<=(params->dr)
      || params->azres<=(params->da)){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -397,7 +397,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "Parameters rhosconst1 and rhosconst2 must be positive");
   }
-  if(!strlen(infiles->corrfile) 
+  if(!strlen(infiles->corrfile)
      && (params->defaultcorr<0 || params->defaultcorr>1)){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -416,7 +416,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
             "Numbers of looks must be positive integer");
   }
   if(!strlen(infiles->corrfile)){
-    if(params->ncorrlooksaz<params->nlooksaz){ 
+    if(params->ncorrlooksaz<params->nlooksaz){
       fflush(NULL);
       warnings << pyre::journal::at(__HERE__)
                << "NCORRLOOKSAZ cannot be smaller than NLOOKSAZ"
@@ -425,7 +425,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
                << pyre::journal::endl;
       params->ncorrlooksaz=params->nlooksaz;
     }
-    if(params->ncorrlooksrange<params->nlooksrange){ 
+    if(params->ncorrlooksrange<params->nlooksrange){
       fflush(NULL);
       warnings << pyre::journal::at(__HERE__)
                << "NCORRLOOKSRANGE cannot be smaller than NLOOKSRANGE"
@@ -435,7 +435,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       params->ncorrlooksrange=params->nlooksrange;
     }
   }
-    
+
   /* check pdf model parameters */
   if(params->azdzfactor<0){
     fflush(NULL);
@@ -504,7 +504,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "Parameter defolayconst must be positive");
   }
-  
+
   /* check algorithm parameters */
   /* be sure to check for things that will cause type overflow */
   /* or floating point exception */
@@ -600,7 +600,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
                                    *nlines/(double )params->ntilerow
                                    *linelen/(double )params->ntilecol);
   }
-  if(params->initmaxflow==AUTOCALCSTATMAX 
+  if(params->initmaxflow==AUTOCALCSTATMAX
      && !(params->ntilerow==1 && params->ntilecol==1)){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -609,8 +609,8 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   }
 
   /* masking parameters */
-  if(strlen(infiles->bytemaskfile) 
-     || params->edgemasktop || params->edgemaskbot  
+  if(strlen(infiles->bytemaskfile)
+     || params->edgemasktop || params->edgemaskbot
      || params->edgemaskleft || params->edgemaskright){
     if(params->initonly){
       fflush(NULL);
@@ -618,13 +618,13 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
               "Masking not applicable for initialize-only mode");
     }
   }
-  if(params->edgemasktop<0 || params->edgemaskbot<0  
+  if(params->edgemasktop<0 || params->edgemaskbot<0
      || params->edgemaskleft<0 || params->edgemaskright<0){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
             "edgemask parameters cannot be negative");
   }
-  if(params->edgemasktop+params->edgemaskbot>=nlines  
+  if(params->edgemasktop+params->edgemaskbot>=nlines
      || params->edgemaskleft+params->edgemaskright>=linelen){
     fflush(NULL);
     throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
@@ -647,7 +647,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
             /(double )params->ntilerow);
     nj=ceil((linelen+(params->ntilecol-1)*params->colovrlp)
             /(double )params->ntilecol);
-    if(params->ntilerow+params->rowovrlp > nlines 
+    if(params->ntilerow+params->rowovrlp > nlines
        || params->ntilecol+params->colovrlp > linelen
        || params->ntilerow*params->ntilerow > nlines
        || params->ntilecol*params->ntilecol > linelen){
@@ -655,7 +655,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
               "Tiles too small or overlap too large for given input");
     }
-    if(params->minregionsize 
+    if(params->minregionsize
        > ((nlines-(params->ntilerow-1)*(ni-params->rowovrlp))
           *(linelen-(params->ntilecol-1)*(nj-params->colovrlp)))){
       fflush(NULL);
@@ -697,7 +697,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       }
       params->rmtmptile=FALSE;     /* cowardly avoid removing tile dir input */
     }
-    if(params->piecefirstrow!=DEF_PIECEFIRSTROW 
+    if(params->piecefirstrow!=DEF_PIECEFIRSTROW
        || params->piecefirstcol!=DEF_PIECEFIRSTCOL
        || params->piecenrow!=DEF_PIECENROW
        || params->piecencol!=DEF_PIECENCOL){
@@ -760,7 +760,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
   if(!params->piecencol){
     params->piecencol=linelen;
   }
-  if(params->piecefirstrow<0 || params->piecefirstcol<0 
+  if(params->piecefirstrow<0 || params->piecefirstcol<0
      || params->piecenrow<1 || params->piecencol<1
      || params->piecefirstrow+params->piecenrow>nlines
      || params->piecefirstcol+params->piecencol>linelen){
@@ -775,7 +775,7 @@ int CheckParams(infileT *infiles, outfileT *outfiles,
       fflush(NULL);
       throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
               "No connected component output file specified");
-    }      
+    }
     params->unwrapped=TRUE;
   }
   if(params->minconncompfrac<0 || params->minconncompfrac>1){
@@ -845,7 +845,7 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
   FILE *fp;
 
   auto info=pyre::journal::info_t("isce3.unwrap.snaphu");
-  
+
   /* open input config file */
   if(strlen(conffile)){
     if((fp=fopen(conffile,"r"))==NULL){
@@ -856,7 +856,7 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
               "Unable to read configuration file " + std::string(conffile));
     }
   }else{
-    
+
     /* if we were given a zero-length name, just ignore it and go on */
     return(0);
   }
@@ -890,7 +890,7 @@ int ReadConfigFile(const char *conffile, infileT *infiles, outfileT *outfiles,
     if(parsestatus>0){
       nparams++;
     }
-    
+
   }
 
   /* finish up */
@@ -939,7 +939,7 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
   /* set up */
   nparams=0;
   badparam=FALSE;
-  
+
   /* read the first two fields */
   /* (str1, str2 same size as buf, so can't overflow them */
   nfields=sscanf(buf,"%s %s",str1,str2);
@@ -983,7 +983,7 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
         fflush(NULL);
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "Cannot specify both amplitude and power");
-      } 
+      }
       StrNCopy(infiles->ampfile,str2,MAXSTRLEN);
       params->amplitude=FALSE;
     }else if(!strcmp(str1,"PWRFILE2")){
@@ -991,7 +991,7 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
         fflush(NULL);
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "Cannot specify both amplitude and power");
-      } 
+      }
       StrNCopy(infiles->ampfile2,str2,MAXSTRLEN);
       params->amplitude=FALSE;
       infiles->ampfileformat=FLOAT_DATA;
@@ -1227,7 +1227,7 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
     }else if(!strcmp(str1,"TILEEDGEWEIGHT")){
       badparam=StringToDouble(str2,&(params->tileedgeweight));
     }else if(!strcmp(str1,"SCNDRYARCFLOWMAX")){
-      badparam=StringToLong(str2,&(params->scndryarcflowmax));  
+      badparam=StringToLong(str2,&(params->scndryarcflowmax));
     }else if(!strcmp(str1,"TILEDIR")){
       StrNCopy(params->tiledir,str2,MAXSTRLEN);
     }else if(!strcmp(str1,"ASSEMBLEONLY")){
@@ -1384,7 +1384,7 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
               "' (" + std::string(conffile) + ":" + std::to_string(nlines) +
               ")");
     }
-    
+
     /* give an error if we had trouble interpreting the line */
     if(badparam){
       fflush(NULL);
@@ -1393,12 +1393,12 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
               std::string(str1) + " (" + std::string(conffile) + ":" +
               std::to_string(nlines) + ")");
     }
-      
+
   }
 
   /* return number of parameters successfully parsed */
   return(nparams);
-  
+
 }
 
 
@@ -1406,9 +1406,9 @@ int ParseConfigLine(char *buf, const char *conffile, long nlines,
  * ------------------------------
  * Writes a text log file of configuration parameters and other
  * information.  The log file is in a format compatible to be used as
- * a configuration file.  
+ * a configuration file.
  */
-int WriteConfigLogFile(infileT *infiles, 
+int WriteConfigLogFile(infileT *infiles,
                        outfileT *outfiles, long linelen, paramT *params){
 
   FILE *fp;
@@ -1429,7 +1429,7 @@ int WriteConfigLogFile(infileT *infiles,
     info << pyre::journal::at(__HERE__)
          << "Logging run-time parameters to file " << outfiles->logfile
          << pyre::journal::endl;
-    
+
     /* print some run-time environment information */
     fprintf(fp,"# %s v%s\n",PROGRAMNAME,VERSION);
     time(t);
@@ -1546,7 +1546,7 @@ int WriteConfigLogFile(infileT *infiles,
     fprintf(fp,"NCORRLOOKS  %.8f\n",params->ncorrlooks);
     fprintf(fp,"NCORRLOOKSRANGE  %ld\n",params->ncorrlooksrange);
     fprintf(fp,"NCORRLOOKSAZ  %ld\n",params->ncorrlooksaz);
-      
+
     /* scattering model parameters */
     fprintf(fp,"\n# Scattering model parameters\n");
     fprintf(fp,"KDS  %.8f\n",params->kds);
@@ -1558,7 +1558,7 @@ int WriteConfigLogFile(infileT *infiles,
     fprintf(fp,"LAYMINEI  %.8f\n",params->layminei);
     fprintf(fp,"SLOPERATIOFACTOR  %.8f\n",params->sloperatiofactor);
     fprintf(fp,"SIGSQEI  %.8f\n",params->sigsqei);
-    
+
     /* decorrelation model paramters */
     fprintf(fp,"\n# Decorrelation model parameters\n");
     fprintf(fp,"DRHO  %.8f\n",params->drho);
@@ -1569,7 +1569,7 @@ int WriteConfigLogFile(infileT *infiles,
     fprintf(fp,"CSTD3  %.8f\n",params->cstd3);
     fprintf(fp,"DEFAULTCORR  %.8f\n",params->defaultcorr);
     fprintf(fp,"RHOMINFACTOR  %.8f\n",params->rhominfactor);
-      
+
     /* PDF model paramters */
     fprintf(fp,"\n# PDF model parameters\n");
     fprintf(fp,"DZLAYPEAK  %.8f\n",params->dzlaypeak);
@@ -1623,7 +1623,7 @@ int WriteConfigLogFile(infileT *infiles,
       fprintf(fp,"# PLPN  %.8g  (not set)\n",params->p);
       LogBoolParam(fp,"# BIDIRLPN",params->bidirlpn);
     }
-      
+
     /* file names for dumping intermediate arrays */
     fprintf(fp,"\n# File names for dumping intermediate arrays\n");
     LogStringParam(fp,"INITFILE",outfiles->initfile);
@@ -1711,7 +1711,7 @@ int WriteConfigLogFile(infileT *infiles,
 
 /* function: LogStringParam()
  * --------------------------
- * Writes a line to the log file stream for the given keyword/value 
+ * Writes a line to the log file stream for the given keyword/value
  * pair.
  */
 static
@@ -1751,7 +1751,7 @@ int LogBoolParam(FILE *fp, const char *key, signed char boolvalue){
  */
 static
 int LogFileFormat(FILE *fp, const char *key, signed char fileformat){
-  
+
   if(fileformat==COMPLEX_DATA){
     fprintf(fp,"%s  COMPLEX_DATA\n",key);
   }else if(fileformat==FLOAT_DATA){
@@ -1765,9 +1765,9 @@ int LogFileFormat(FILE *fp, const char *key, signed char fileformat){
 }
 
 
-/* function: GetNLines() 
+/* function: GetNLines()
  * ---------------------
- * Gets the number of lines of data in the input file based on the file 
+ * Gets the number of lines of data in the input file based on the file
  * size.
  */
 long GetNLines(infileT *infiles, long linelen, paramT *params){
@@ -1834,9 +1834,9 @@ int WriteOutputFile(Array2D<float>& mag,
 
 /* function: OpenOutputFile()
  * --------------------------
- * Opens a file for writing.  If unable to open the file, tries to 
+ * Opens a file for writing.  If unable to open the file, tries to
  * open a file in a dump path.  The name of the opened output file
- * is written into the string realoutfile, for which at least 
+ * is written into the string realoutfile, for which at least
  * MAXSTRLEN bytes should already be allocated.
  */
 FILE *OpenOutputFile(const char *outfile, char *realoutfile){
@@ -1877,7 +1877,7 @@ FILE *OpenOutputFile(const char *outfile, char *realoutfile){
  * ----------------------------
  * Writes magnitude and phase data from separate arrays to file.
  * Data type is float.  For each line of data, a full line of magnitude data
- * is written, then a full line of phase data.  Dumps the file to a 
+ * is written, then a full line of phase data.  Dumps the file to a
  * default directory if the file name/path passed in cannot be used.
  */
 static
@@ -1913,7 +1913,7 @@ int WriteAltLineFile(Array2D<float>& mag,
  * ----------------------------
  * Writes data from separate arrays to file, alternating samples.
  * Data type is float.  nrow and ncol are the sizes of each input
- * array.  Dumps the file to a default directory if the file name/path 
+ * array.  Dumps the file to a default directory if the file name/path
  * passed in cannot be used.
  */
 static
@@ -1951,12 +1951,12 @@ int WriteAltSampFile(Array2D<float>& arr1,
 
 
 /* function: Write2DArray()
- * ------------------------ 
+ * ------------------------
  * Write data in a two dimensional array to a file.  Data elements are
- * have the number of bytes specified by size (use sizeof() when 
- * calling this function.  
+ * have the number of bytes specified by size (use sizeof() when
+ * calling this function.
  */
-int Write2DArray(void **array, char *filename, long nrow, long ncol, 
+int Write2DArray(void **array, char *filename, long nrow, long ncol,
                  size_t size){
 
   int row;
@@ -1984,13 +1984,13 @@ int Write2DArray(void **array, char *filename, long nrow, long ncol,
 
 
 /* function: Write2DRowColArray()
- * ------------------------------ 
- * Write data in a 2-D row-and-column array to a file.  Data elements 
- * have the number of bytes specified by size (use sizeof() when 
+ * ------------------------------
+ * Write data in a 2-D row-and-column array to a file.  Data elements
+ * have the number of bytes specified by size (use sizeof() when
  * calling this function.  The format of the array is nrow-1 rows
  * of ncol elements, followed by nrow rows of ncol-1 elements each.
  */
-int Write2DRowColArray(void **array, char *filename, long nrow, 
+int Write2DRowColArray(void **array, char *filename, long nrow,
                         long ncol, size_t size){
 
   int row;
@@ -2133,7 +2133,7 @@ int ReadInputFile(infileT *infiles, Array2D<float>* magptr, Array2D<float>* wrap
               "Negative magnitude found in input magnitude data");
     }
 
-    
+
     /* flip the sign of the input unwrapped phase if flip flag is set */
     FlipPhaseArraySign(unwrappedphase,params,nrow,ncol);
 
@@ -2478,7 +2478,7 @@ int ReadIntensity(Array2D<float>* pwrptr, Array2D<float>* pwr1ptr, Array2D<float
       }
     }
   }
-  
+
   /* set output pointers */
   *pwrptr=pwr;
   *pwr1ptr=pwr1;
@@ -2532,7 +2532,7 @@ int ReadCorrelation(Array2D<float>* corrptr, infileT *infiles,
  * ---------------------------
  * Read in the data from a file containing magnitude and phase
  * data.  File should have one line of magnitude data, one line
- * of phase data, another line of magnitude data, etc.  
+ * of phase data, another line of magnitude data, etc.
  * ncol refers to the number of complex elements in one line of
  * data.
  */
@@ -2549,8 +2549,8 @@ int ReadAltLineFile(Array2D<float>* mag, Array2D<float>* phase, char *alfile,
             "Can't open file " + std::string(alfile));
   }
 
-  /* get number of lines based on file size and line length */ 
-  fseek(fp,0,SEEK_END);            
+  /* get number of lines based on file size and line length */
+  fseek(fp,0,SEEK_END);
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
     fflush(NULL);
@@ -2559,7 +2559,7 @@ int ReadAltLineFile(Array2D<float>* mag, Array2D<float>* phase, char *alfile,
             std::to_string(nlines) + "x" + std::to_string(linelen) +
             " array expected)");
   }
-  fseek(fp,0,SEEK_SET);                 
+  fseek(fp,0,SEEK_SET);
 
   /* get memory */
   nrow=tileparams->nrow;
@@ -2677,7 +2677,7 @@ int ReadComplexFile(Array2D<float>* mag, Array2D<float>* phase, char *rifile,
             "Can't open file " + std::string(rifile));
   }
 
-  /* get number of lines based on file size and line length */ 
+  /* get number of lines based on file size and line length */
   fseek(fp,0,SEEK_END);
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
@@ -2687,7 +2687,7 @@ int ReadComplexFile(Array2D<float>* mag, Array2D<float>* phase, char *rifile,
             std::to_string(nlines) + "x" + std::to_string(linelen) +
             " array expected)");
   }
-  fseek(fp,0,SEEK_SET);                 
+  fseek(fp,0,SEEK_SET);
 
   /* get memory */
   nrow=tileparams->nrow;
@@ -2730,7 +2730,7 @@ int ReadComplexFile(Array2D<float>* mag, Array2D<float>* phase, char *rifile,
 
   /* done */
   return(0);
-  
+
 }
 
 
@@ -2754,7 +2754,7 @@ int ReadAltSampFile(Array2D<float>* arr1, Array2D<float>* arr2, char *infile,
             "Can't open file " + std::string(infile));
   }
 
-  /* get number of lines based on file size and line length */ 
+  /* get number of lines based on file size and line length */
   fseek(fp,0,SEEK_END);
   filesize=ftell(fp);
   if(filesize!=(2*nlines*linelen*sizeof(float))){
@@ -2764,7 +2764,7 @@ int ReadAltSampFile(Array2D<float>* arr1, Array2D<float>* arr2, char *infile,
             std::to_string(nlines) + "x" + std::to_string(linelen) +
             " array expected)");
   }
-  fseek(fp,0,SEEK_SET);                 
+  fseek(fp,0,SEEK_SET);
 
   /* get memory */
   nrow=tileparams->nrow;
@@ -2871,7 +2871,7 @@ int DumpIncrCostFiles(Array2D<incrcostT>& incrcosts, long iincrcostfile,
     }
   }
   strncpy(incrcostfile,INCRCOSTFILEPOS,MAXSTRLEN-1);
-  sprintf(tempstr,".%ld_%ld",iincrcostfile,nflow);
+  snprintf(tempstr,MAXSTRLEN,".%ld_%ld",iincrcostfile,nflow);
   strncat(incrcostfile,tempstr,MAXSTRLEN-strlen(incrcostfile)-1);
   Write2DRowColArray(tempcosts,incrcostfile,
                      nrow,ncol,sizeof(short));
@@ -2886,7 +2886,7 @@ int DumpIncrCostFiles(Array2D<incrcostT>& incrcosts, long iincrcostfile,
     }
   }
   strncpy(incrcostfile,INCRCOSTFILENEG,MAXSTRLEN-1);
-  sprintf(tempstr,".%ld_%ld",iincrcostfile,nflow);
+  snprintf(tempstr,MAXSTRLEN,".%ld_%ld",iincrcostfile,nflow);
   strncat(incrcostfile,tempstr,MAXSTRLEN-strlen(incrcostfile)-1);
   Write2DRowColArray(tempcosts,incrcostfile,
                      nrow,ncol,sizeof(short));
@@ -2899,14 +2899,14 @@ int DumpIncrCostFiles(Array2D<incrcostT>& incrcosts, long iincrcostfile,
 
 /* function: MakeTileDir()
  * -----------------------
- * Create a temporary directory for tile files in directory of output file.  
+ * Create a temporary directory for tile files in directory of output file.
  * Save directory name in buffer in paramT structure.
  */
 int MakeTileDir(paramT *params, outfileT *outfiles){
 
   char path[MAXSTRLEN]={}, basename[MAXSTRLEN]={};
   struct stat statbuf[1]={};
-  
+
   /* create name for tile directory if necessary (use pid to make unique) */
   if(!strlen(params->tiledir)){
     ParseFilename(outfiles->outfile,path,basename);
@@ -2949,10 +2949,10 @@ int SetTileInitOutfile(char *outfile, long pid){
 
   char path[MAXSTRLEN]={}, basename[MAXSTRLEN]={};
   struct stat statbuf[1]={};
-  
+
   /* create name for output file (use pid to make unique) */
   ParseFilename(outfile,path,basename);
-  sprintf(outfile,"%s%s%ld_%s",path,TILEINITFILEROOT,pid,basename);
+  snprintf(outfile,MAXSTRLEN,"%s%s%ld_%s",path,TILEINITFILEROOT,pid,basename);
 
   /* see if file already exists and exit if so */
   if(!stat(outfile,statbuf)){
@@ -2963,7 +2963,7 @@ int SetTileInitOutfile(char *outfile, long pid){
 
   /* done */
   return(0);
-  
+
 }
 
 
@@ -2971,7 +2971,7 @@ int SetTileInitOutfile(char *outfile, long pid){
  * -------------------------
  * Given a filename, separates it into path and base filename.  Output
  * buffers should be at least MAXSTRLEN characters, and filename buffer
- * should be no more than MAXSTRLEN characters.  The output path 
+ * should be no more than MAXSTRLEN characters.  The output path
  * has a trailing "/" character.
  */
 int ParseFilename(const char *filename, char *path, char *basename){

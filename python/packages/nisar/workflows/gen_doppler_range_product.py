@@ -15,6 +15,8 @@ from isce3.core import TimeDelta, Linspace
 from nisar.products.readers.antenna import AntennaParser
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
+from isce3.io import Raster
+from isce3.geometry import DEMInterpolator
 
 
 def cmd_line_parser():
@@ -38,19 +40,27 @@ def cmd_line_parser():
     )
     prs.add_argument('filename_l0b', type=str,
                      help='Filename of HDF5 L0B product')
-    prs.add_argument('--antenna_file', type=str, dest='antenna_file',
+    prs.add_argument('--ant', type=str, dest='antenna_file',
                      help='Filename of HDF5 Antenna product used to extract '
                      'averaged azimuth angle for EL cuts of TX + RX pol of '
                      'first beam. It also uses for Doppler ambiguity '
                      'calculation. If not provided, the azimuth angle is '
-                     'assumed to be zero!')
+                     'assumed to be zero. This is required for multi-channel'
+                     ' L0B product (NISAR DM2)!')
+    prs.add_argument('--dem', type=str, dest='dem_file',
+                     help='DEM raster file in (GDAL-compatible format such'
+                     ' as GeoTIFF) containing heights w.r.t. WGS-84 ellipsoid.'
+                     ' Default is constant height set by "ref_height".')
+    prs.add_argument('--ref_height', type=float, dest='ref_height', default=0,
+                     help='Reference height in (m) w.r.t WGS84 ellipsoid.'
+                     ' It will be simply used if "dem" file is not provided')
     prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
                      dest='freq_band', help='Frequency band such as "A".')
     prs.add_argument('-p', '--pol', type=str, dest='txrx_pol',
                      choices=["HH", "VV", "HV", "VH"],
                      help='TxRx Polarization such as "HH". Default is the '
                      'first pol in the specified frequency band')
-    prs.add_argument('-r', '--rgb', type=int, dest='num_rgb_avg', default=16,
+    prs.add_argument('-r', '--rgb', type=int, dest='num_rgb_avg', default=8,
                      help='Number of range bins to be averaged in Doppler '
                      'Estimator block. Shall be equal or larger than 1.')
     prs.add_argument('-a', '--az_block_dur', type=float, dest='az_block_dur',
@@ -126,8 +136,26 @@ def gen_doppler_range_product(args):
 
     # operation mode, whether DBF (single or a composite channel) or
     # 'DM2' (multi-channel)
-    # currently, the nunderlying module simply support DBF or single channel
-    op_mode = 'DBF'
+    # TODO: the updated "diagnosticModeFlag" under "identification" in
+    # L0B product shall be used to tell us about "OP_MODE".
+    # For DM2, its value is 2. For DBF or single-channel SAR like
+    # ALOS1 PALSAR its value is 0.  To avoid failure for older L0B
+    # products, we use number of dimension of raw dataset to decide
+    # about "OP_MODE" for now!
+    # This requires checking frequency band.
+    if args.freq_band not in raw_obj.polarizations:
+        raise ValueError('Wrong frequency band! The available bands -> '
+                         f'{list(raw_obj.polarizations)}')
+    if args.txrx_pol is None:
+        txrx_pol = raw_obj.polarizations[args.freq_band][0]
+    else:
+        txrx_pol = args.txrx_pol
+    raw_dset = raw_obj.getRawDataset(args.freq_band, txrx_pol)
+    if raw_dset.ndim == 3:
+        op_mode = 'DM2'
+    else:  # single channel SAR
+        op_mode = 'DBF'
+    del raw_dset
 
     # build orbit and attitude object if external files are provided
     if args.orbit_file is None:
@@ -144,18 +172,26 @@ def gen_doppler_range_product(args):
 
     # build antenna object if provided
     if args.antenna_file is None:
+        if op_mode == 'DM2':
+            raise ValueError('Multi-channel (DM2) L0B requires Antenna file!')
         ant = None
     else:
         ant = AntennaParser(args.antenna_file)
 
+    # build DEM object
+    if args.dem_file is None:
+        dem = DEMInterpolator(args.ref_height)
+    else:
+        dem = DEMInterpolator(Raster(args.dem_file))
+
     # get keyword args for function "doppler_lut_from_raw"
     kwargs = {key: val for key, val in vars(args).items() if
-              'file' not in key}
+              'file' not in key and key != 'ref_height'}
 
     # generate Doppler LUT2d from Raw L0B
     dop_lut, ref_utc, mask_rgb, corr_coef, txrx_pol, centerfreq, _ = \
         doppler_lut_from_raw(raw_obj, orbit=orbit, attitude=attitude,
-                             ant=ant, logger=logger,  **kwargs)
+                             ant=ant, dem=dem, logger=logger, **kwargs)
 
     # check out antenna object to extract azimuth angle for EL cuts used for
     # Doppler CSV product
@@ -201,8 +237,10 @@ def gen_doppler_range_product(args):
 
     # naming convention of CSV file and product spec is defined in Doc:
     # See reference [1]
-    name_csv = (f'{PREFIX_NAME_CSV}_{sar_band_char}_{op_mode}_DOPP_'
-                f'{dt_utc_cur}_{dt_utc_start}_{dt_utc_stop}.csv')
+    name_csv = (
+        f'{PREFIX_NAME_CSV}_{sar_band_char}{args.freq_band}_{op_mode}_'
+        f'DOPP_{txrx_pol}_{dt_utc_cur}_{dt_utc_start}_{dt_utc_stop}.csv'
+        )
     file_csv = os.path.join(args.out_path, name_csv)
     logger.info(f'Dump Doppler product in "CSV" format to file -> {file_csv}')
 

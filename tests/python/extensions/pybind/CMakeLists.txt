@@ -31,6 +31,7 @@ geometry/rdr2geo.py
 geometry/rtc.py
 geometry/metadata_cubes.py
 image/resamp.py
+io/decode_bfpq_lut.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py

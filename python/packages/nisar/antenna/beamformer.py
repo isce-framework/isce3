@@ -1,475 +1,852 @@
+import bisect
+from abc import ABC, abstractmethod
 import numpy as np
-import numpy.matlib
-import warnings
-import isce3
-from isce3 import antenna as ant
-from isce3.core import Ellipsoid, Quaternion
-from isce3.geometry import DEMInterpolator as DEMInterp
+from scipy.interpolate import interp1d
+
+from isce3.antenna import ant2rgdop, ant2geo
+from isce3.core import Linspace, speed_of_light
 from nisar.antenna import CalPath
-from enum import IntEnum, unique
+from isce3.geometry import DEMInterpolator
 
 
-class ElevationBeamformer:
-    """Beamformer class that computes Tx & Rx beamformed gain patterns.
+class ElevationBeamformer(ABC):
+    """Abstract base class for general (Transmit or Receiver) beamformers in
+    Elevation (EL) direction.
 
-    Attributes:
-    -----------
-    orbit: isce3.core.Orbit
-        ISCE3 Orbit object
-    attitude: isce3.core.Attitude
-        ISCE3 Attitude object
-    dem: isce3.geometry.DEMInterpolator
-        ISCE3 DEMInterpolator object
-    slant_range: isce3.core.Linspace
-        ISCE3 SlantRange object
-    el_ant_info: namedtuple
-        Info about antenna elevation-cut complex multi-channel patterns
-        ant_gain_el: np.ndarray(complex)
-            2-D complex patterns of shape num_chan (beams) x (number of el angles)
-        el_angles_rad : np.ndarray(float)
-            array of elevation angles in (rad)
-        az_cut_angles_rad : float
-            AZ angle at which EL-cut patterns are provided in (rad)
-    tx_trm_info: nisar.antenna.TxTrmInfo
-        data class that contains all relevant attributes needed to compute Tx beamformed gain pattern
-    rx_trm_info: nisar.antenna.RxTrmInfo
-        data class that contains all relevant attributes needed to compute Rx beamformed gain pattern
-    tx_weight_norm: 2D array of complex
-        power normalized unity-gain Tx beamforming weight.
-        dim = [num of channel x num of HCAL pulses]
-    rx_weight_norm: 2D array of complex
-        power normalized unity-gain rx beamforming weight.
-        Power normalization is done prior to writing Angle-to-Coefficient LUT to HD5 file.
-        dim = [num of channel x num of entries in Angle to Coefficient LUT]
+    Parameters
+    ----------
+    orbit : isce3.core.Orbit
+        Orbit data for an interval spanning the datatake.
+    attitude : isce3.core.Attitude
+        Platform attitude data for an interval spanning the datatake.
+    dem_interp : isce3.geometry.DEMInterpolator
+        Digital elevation model (DEM) of the imaged surface.
+    el_ant_info : collections.namedtuple
+        Info about antenna multi-channel elevation-cut patterns
+        copol_pattern : np.ndarray(complex)
+            2-D array of complex multi-channel co-pol patterns of
+            shape (beams, el angles)
+        angle : np.ndarray(float)
+            Elevation angles in (rad)
+        cut_angle : float
+            AZ angle around which EL-cut patterns are provided in (rad)
+    trm_info: either nisar.antenna.TxTrmInfo or nisar.antenna.RxTrmInfo
+        data class that contains all relevant attributes to
+        compute weights needed to form active pattern in EL.
+    ref_epoch : isce3.core.DateTime
+        Reference epoch for all time tags in `trm_info`, pulse_time.
+        In case, orbit and attitude have different reference epochs,
+        the corresponding class attributes will be adjusted to this reference.
+        (Input objects will not be modified.)
+    norm_weight : bool, default=False
+        Whether or not power normalize weights.
+    interp_method : str, default='linear'
+        Interpolation method for final resampling of patterns in slant range.
+        It shall be one the values of `kind` in scipy.interpolate.interp1d.
+    num_pulse_skip: int, default=12
+        Number of pulses to skip in geomtery computation from antenna frame
+        to slant range for the sake of speed-up. The default value is around
+        the number of pulses in the air for mid swath of NISAR orbit.
+
+    Attributes
+    ----------
+    weights : np.ndarray(complex)
+        2-D array of complex weights
+    active_channel_idx : np.ndarray(int)
+        0-based channel indexes of only active channels
+
+    Raises
+    ------
+    ValueError
+        Reference epoch mismtach between orbit and attitude
+
     """
 
-    def __init__(
-        self, orbit, attitude, dem, slant_range, el_ant_info, tx_trm_info, rx_trm_info
-    ):
+    def __init__(self, orbit, attitude, dem_interp, el_ant_info, trm_info,
+                 ref_epoch, norm_weight=False, interp_method='linear',
+                 num_pulse_skip=12):
+        # check ref epoch of orbit/attitude
+        if orbit.reference_epoch != ref_epoch:
+            orbit = orbit.copy()
+            orbit.update_reference_epoch(ref_epoch)
+        if attitude.reference_epoch != ref_epoch:
+            attitude = attitude.copy()
+            attitude.update_reference_epoch(ref_epoch)
+
         self.orbit = orbit
         self.attitude = attitude
-        self.dem = dem
-        self.slant_range = slant_range
+        self.dem_interp = dem_interp
         self.el_ant_info = el_ant_info
-        self.tx_trm_info = tx_trm_info
-        self.rx_trm_info = rx_trm_info
-        self._tx_weight_norm = self._compute_transmit_pattern_weights()
-        self._rx_weight_norm, self._data_fs = self._compute_receive_pattern_weights()
+        self.trm_info = trm_info
+        self.ref_epoch = ref_epoch
+        self.norm_weight = norm_weight
+        self.interp_method = interp_method
+        self.num_pulse_skip = num_pulse_skip
 
-        if self.attitude.reference_epoch != self.orbit.reference_epoch:
-            raise ValueError(
-                "Orbit and attitude data must have the same reference epoch."
-            )
+        # pre-computed read-only attributes
+        self._weights = self._compute_weights()
+        self._active_channel_idx = np.asarray(trm_info.channels) - 1
 
-    def _compute_receive_pattern_weights(self):
-        """
-        Extract 12 weights for each range bin using TA LUT, AC LUT, rd, and L0B starting range.
-        Use rd, wd, wl, and L0B starting range to zero-out weights when beams are inactive.
+        # get peak location of first and last active beam in EL direction
+        self._el_peak_first, self._el_peak_last = self._peak_loc_beam_el()
 
-        Returns:
-        --------
-        rx_weight_norm: 2D array of complex
-            size = [num of chan x num of range bins], upsampled to DBF sampling frequency
-        """
+    @property
+    def weights(self):
+        return self._weights
 
-        rx_trm_info = self.rx_trm_info
-        channels = rx_trm_info.channels
-        num_chan = len(channels)
-        slant_range = self.slant_range
-        dbf_fs = rx_trm_info.dbf_fs
-        adc_fs = rx_trm_info.adc_fs
-        ta_lut_fs = rx_trm_info.ta_lut_fs
-        num_lut_items = rx_trm_info.num_lut_items
-        num_chan_qfsp = rx_trm_info.num_chan_qfsp
-        wd = rx_trm_info.wd
-        rd = rx_trm_info.rd
-        wl = rx_trm_info.wl
-        ac_chan_coef = rx_trm_info.ac_chan_coef
-        ta_dbf_switch = rx_trm_info.ta_dbf_switch
+    @property
+    def active_channel_idx(self):
+        return self._active_channel_idx
 
-        # Determine L0B sampling frequency
-        # slant range is uniformly spaced
-        data_fs = isce3.core.speed_of_light / (2 * slant_range.spacing)
+    @abstractmethod
+    def form_pattern(self, pulse_time, slant_range):
+        pass
 
-        # Upsample to on-board DBF sampling rate
-        num_range_bins = slant_range.size
-        num_range_bins_dbf_fs = round(dbf_fs / data_fs * num_range_bins)
-        rx_weight_norm = np.zeros((num_chan, num_range_bins_dbf_fs), dtype=np.complex)
+    @abstractmethod
+    def _compute_weights(self):
+        pass
 
-        # Range sample index at onboard DBF processing sampling frequency with respect to transmit event.
-        idx0_data = round(slant_range.first * 2 / isce3.core.speed_of_light * dbf_fs)
+    def _peak_loc_beam_el(self):
+        """Peak location in EL direction for the first and last beam
 
-        # Compute rd, wd, and wl based on data sampling rate factor data_fs / adc_fs
-        rd_dbf_fs = np.round(rd * dbf_fs / adc_fs).astype(int)
-        wd_dbf_fs = np.round(wd * dbf_fs / adc_fs).astype(int)
-        wl_dbf_fs = np.round(wl * dbf_fs / adc_fs).astype(int)
-
-        # Compute weights of all 12 channels.
-        for chan_idx, chan in enumerate(channels):
-            # Determine which qFSP that the channel belongs to.
-            # Channell indices read from L0B is one-based, needs to subtract one from it
-            qfsp = int((chan - 1) / num_chan_qfsp)
-
-            # Convert dbf_switch from 48 MHz to on-board DBF processing sampling rate
-            dbf_switch = np.round(ta_dbf_switch[qfsp] * dbf_fs / ta_lut_fs)
-
-            # Delay of this QFSP with respect to composite rangeline, in bins.
-            qfsp_offset = round(rd_dbf_fs[chan_idx] - idx0_data)
-
-            # Coefficient from AC table for this channel.
-            acc = ac_chan_coef[chan_idx]
-
-            # The first range bin at which 1st coeff in AC table will be applied
-            start = max(0, qfsp_offset)
-
-            for k in range(num_lut_items):
-                #  last range bin at which k'th coeff in AC table will be applied
-                stop = max(0, round(qfsp_offset + dbf_switch[k]))
-
-                rx_weight_norm[chan_idx, start:stop] = acc[k]
-                start = stop
-
-            # Zero out coefficients when beams are inactive
-            start_active = qfsp_offset + wd_dbf_fs[chan_idx]
-            stop_active = start_active + wl_dbf_fs[chan_idx]
-
-            rx_weight_norm[chan_idx, :start_active] = 0
-            rx_weight_norm[chan_idx, stop_active:] = 0
-
-        return rx_weight_norm, data_fs
-
-    def _compute_transmit_pattern_weights(self):
-        """
-        Returns:
+        Returns
         -------
-        tx_weight_norm: 2D array of complex
-            normalized Tx beamforming weight, dim = [# of channel x # of HCAL pulses]
+        tuple(float, float)
+            EL angles for the first and the last active beam in radians
+
         """
-
-        tx_trm = self.tx_trm_info
-        channels = tx_trm.channels
-        num_chan = len(channels)
-
-        # Each range line contains HCAL, BCAL or LCAL measurements in the header
-        # hcal_lines_idx, bcal_lines_idx, and lcal_lines_idx keep track of range line
-        # numbers for each type of measurements in the L0B file.
-        correlator_tap2 = tx_trm.correlator_tap2
-        (
-            hcal_lines_idx,
-            lcal_lines_idx,
-            bcal_lines_idx,
-            num_lines,
-        ) = self._compute_hcal_lines_idx_tx()
-
-        cal_interval = bcal_lines_idx[1] - bcal_lines_idx[0]
-
-        # Legacy L0B may not have BCAL_INTERVAL attribute, therefore it leads to
-        # missing lcal_lines_idx and bcal_lines_idx. If so, Tx weights are of unity-gain.
-        if (len(lcal_lines_idx) == 0) or (len(bcal_lines_idx) == 0):
-            tx_weight_norm = np.ones(
-                [num_chan, num_lines], dtype=np.complex_
-            ) / np.sqrt(num_chan)
-        else:
-            # Use only Correlator 2nd tap
-            num_bcal_lines_idx = len(bcal_lines_idx)
-            num_hcal_lines_idx = len(hcal_lines_idx)
-
-            correlator_tap2 = correlator_tap2.transpose()
-            data_cal_div = np.zeros(correlator_tap2.shape, dtype=np.complex_)
-
-            # TX complex divide: HCAL 2nd tap / BCAL 2nd tap (last BCAL before
-            # current block of HCAL lines)
-            # HCAL/BCAL is done on all HCAL lines. For BCAL range line, BCAL/BCAL
-            # is performed, but discarded afterwards.
-
-            for chan_idx, chan in enumerate(channels):
-                start_idx = 0
-                for i in range(num_bcal_lines_idx - 1):
-                    end_idx = bcal_lines_idx[i + 1]
-                    cal_div = (
-                        correlator_tap2[chan_idx, start_idx:end_idx]
-                        / correlator_tap2[chan_idx, bcal_lines_idx[i]]
-                    )
-                    data_cal_div[chan_idx, start_idx:end_idx] = cal_div
-
-                    start_idx = end_idx
-
-                # Last block of range lines that is outside of the loop above
-                data_cal_div[chan_idx, bcal_lines_idx[-1] :] = (
-                    correlator_tap2[chan_idx, bcal_lines_idx[-1] :]
-                    / correlator_tap2[chan_idx, bcal_lines_idx[-1]]
-                )
-
-            # Only computed HCAL Line weights are kept
-            tx_weight_norm = data_cal_div[:, hcal_lines_idx]
-
-            # Power normalize tx weights to unity-gain
-            for i in range(num_hcal_lines_idx):
-                tx_norm_factor = np.sqrt(np.sum(np.abs(tx_weight_norm[:, i]) ** 2))
-                tx_weight_norm[:, i] = tx_weight_norm[:, i] / tx_norm_factor
-
-        return tx_weight_norm
+        idx_first = abs(self.el_ant_info.copol_pattern[
+            self._active_channel_idx[0]]).argmax()
+        idx_last = abs(self.el_ant_info.copol_pattern[
+            self._active_channel_idx[-1]]).argmax()
+        return (self.el_ant_info.angle[idx_first],
+                self.el_ant_info.angle[idx_last])
 
     def _elaz2slantrange(self, pulse_time):
         """
-        Interpolate antenna elevation angles to corresponding slant ranges:
+        Get slant ranges over entire antenna elevation angle coverage
+        at a specific pulse time.
 
-        Parameters:
-        -----------
-        pulse_time: float or array of float
-            transmit pulse time of range line in seconds w.r.t radar product reference
+        Parameters
+        ----------
+        pulse_time : float
+            Transmit pulse time of range line in seconds w.r.t `ref_epoch`.
 
-        Returns:
-        --------
-        slant_range_el: array of float
+        Returns
+        -------
+        np.ndarray(float)
             Slant range computed at antenna pattern elevation angles
+
+        Notes
+        -----
+        The `pulse_time` is assumed to be wrt the same reference epoch as
+        that of orbit and attitude data.
+
         """
+        # No need for high accuracy in height tolerance when it comes to
+        # antenna EL pattern due to no changes in its phs/mag within 1 mdeg EL
+        # angle which is equivalent to around 10 m in height change
+        # at around mid swath.
+        abs_hgt_tol = 10.0  # (m)
 
-        tx_trm = self.tx_trm_info
-        el_angles_rad = self.el_ant_info.el_angles_rad
-        az_cut_angles_rad = self.el_ant_info.az_cut_angles_rad
-        fc = tx_trm.fc
-        orbit = self.orbit
-        dem = self.dem
-        attitude = self.attitude
-        sc_pos_vel = orbit.interpolate(pulse_time)
-        sc_pos_ecef = sc_pos_vel[0]
-        sc_vel_ecef = sc_pos_vel[1]
+        # get pos/vel in ECEF
+        pos_ecef, vel_ecef = self.orbit.interpolate(pulse_time)
 
-        q_ant2ecef = attitude.interpolate(pulse_time)
+        # get quaternion from antenna to ECEF
+        q_ant2ecef = self.attitude.interpolate(pulse_time)
 
-        wavelength = isce3.core.speed_of_light / fc
+        # convert "N" EL angles within peak location of [first, last] beam
+        # into geodetic location LLH and then compute mean DEM height
+        # across the entire swath at a desired pulse/azimuth time.
+        # "N" is determined by setting EL angle spacing = 150 mdeg.
+        ela_spacing = np.deg2rad(0.15)
+        num_ela = round((self._el_peak_last - self._el_peak_first) /
+                        ela_spacing) + 1
+        ela = np.linspace(self._el_peak_first, self._el_peak_last, num=num_ela)
+        llh, _ = ant2geo(ela, self.el_ant_info.cut_angle, pos_ecef, q_ant2ecef,
+                         self.dem_interp, abs_tol=abs_hgt_tol)
+        dem_avg = np.asarray(llh)[:, -1].mean()
+        # build a new DEM interplator based on locallly averaged height.
+        # This DEM will be used to avoid non-monotonic slant ranges issue
+        # with large topography due to overlays (non-homomorphism)
+        # As a result, there is an error between actual antenna patterns and
+        # the computed ones, but that error is miminized on average across
+        # the swath at an azimuth time. Besides, there is no way to get a
+        # unique el angle and thus antenna weight for a desired slant range
+        # in overlay case by starting from radar geometry.
+        dem_interp_avg = DEMInterpolator(dem_avg)
 
+        # set wavelength to 1.0 below given Doppler is not needed here!
         # Convert Elevation angle to slant range
-        slant_range_el, _, _ = ant.ant2rgdop(
-            el_angles_rad,
-            az_cut_angles_rad,
-            sc_pos_ecef,
-            sc_vel_ecef,
+        slant_range, _, _ = ant2rgdop(
+            self.el_ant_info.angle,
+            self.el_ant_info.cut_angle,
+            pos_ecef,
+            vel_ecef,
             q_ant2ecef,
-            wavelength,
-            dem,
+            1.0,
+            dem_interp_avg,
+            abs_tol=abs_hgt_tol
         )
+        return slant_range
 
-        return slant_range_el
 
-    def _compute_hcal_lines_idx_tx(self):
+class TxBMF(ElevationBeamformer):
+    """Transmit beamformer (TxBMF) in Elevation (EL) direction.
+
+    This class sets up Tx beamformer per transmit-receiver-module (TRM) info
+    and allows formation of active transmit pattern as a function of
+    slant range per polarization.
+
+    Parameters
+    ----------
+    orbit : isce3.core.Orbit
+    attitude : isce3.core.Attitude
+    dem_interp : isce3.geometry.DEMInterpolator
+    el_ant_info : collections.namedtuple
+        Info about antenna multi-channel elevation-cut patterns
+        copol_pattern : np.ndarray(complex)
+            2-D array of complex multi-channel co-pol patterns of
+            shape (beams, el angles)
+        angle : np.ndarray(float)
+            Elevation angles in (rad)
+        cut_angle : float
+            AZ angle around which EL-cut patterns are provided in (rad)
+    trm_info : nisar.antenna.TxTrmInfo
+        data class that contains all relevant attributes needed to
+        compute Tx weights needed to form active TX pattern
+    ref_epoch : isce3.core.DateTime
+        Reference epoch for all time tags in `trm_info`, pulse_time.
+        In case, or bit and attitude have difference reference epoch,
+        they will be adjusted to this reference.
+    norm_weight : bool, default=False
+        Whether or not power normalize TX weights.
+    interp_method : str, default='linear'
+        Interpolation method for final resampling of patterns in slant range.
+        It shall be one of the values of `kind` in scipy.interpolate.interp1d.
+    num_pulse_skip: int, default=12
+        Number of pulses to skip in geomtery computation from antenna frame
+        to slant range for the sake of speed-up. The default value is around
+        the number of pulses in the air for mid swath of NISAR orbit.
+
+    Attributes
+    ----------
+    weights : np.ndarray(complex)
+        2-D array with the shape (rangelines, active TX channels)
+    active_channel_idx : np.ndarray(int)
+        0-based Tx active channel indexes
+
+    Raises
+    ------
+    ValueError
+        Reference epoch mismtach between orbit and attitude
+        Mismatch between total number of beams and number of channels
+
+    """
+
+    def form_pattern(self, pulse_time, slant_range, channel_adj_factors=None,
+                     is_nearest=False):
         """
-        Each rangeline contains HCAL, BCAL or LCAL measurement in the header.
-        Based on cal_path_mask, determine rangeline numbers of each kind of 3 CAL measurements
-        within the L0B file.
+        Form transmit beamformed (BMF) pattern, as a function
+        of slant range @ each azimuth pulse time.
 
-        Returns:
-        -----------
-        hcal_line_idx: array of int
-            HCAL range line indices
-        bcal_line_idx: array of int
-            BCAL range line indices
-        lcal_line_idx: array of int
-            LCAL range line indices
+        Parameters
+        ----------
+        pulse_time : scalar or array of float
+             transmit time of range line in seconds w.r.t `ref_epoch`,
+             single or multiple range lines. In case of array, it is assumed
+             to be sorted in ascending order.
+        slant_range : isce3.core.Linspace
+            Slant ranges in meters.
+        channel_adj_factors : Sequence of complex, optional
+            These are extra fudge factors to balance/adjust Tx channels.
+            The TX weights will be multiplied by these factors per
+            channel. The size is total number of TX channels. If None,
+            no correction will be applied to TX weights.
+            Note that these factors will NOT be peak/power normalized.
+        is_nearest: bool, default=False
+            Whether to get neartest TX-TRM pulse index for a desired pulse
+            time. If False, the index search operation will be "floor".
+            Otherwise, it will be "nearest".
+
+        Returns
+        -------
+        np.ndarray(complex)
+            2D array Tx BMFed pattern with
+            shape (pulse_time.size, slant_range.size)
+
+        Riases
+        ------
+        ValueError
+            pulse_time is out of the range of time tags of `tx_trm_info`.
+            `channel_adj_factors` are zeros for all active TX channels.
+            Size of `channel_adj_factors` is not equal to total TX channels.
+
         """
+        # absolute tolerance in time error (sec) used for getting pulse index
+        atol_time_err = 5e-10
 
-        tx_trm = self.tx_trm_info
-        cal_path_mask = tx_trm.cal_path_mask
-        num_lines = len(cal_path_mask)
-        rng_lines_idx = np.arange(num_lines)
-
-        hcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.HPA]
-
-        lcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.LNA]
-        bcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.BYPASS]
-
-        return hcal_lines_idx, lcal_lines_idx, bcal_lines_idx, num_lines
-
-    def apply_weights_to_beams_tx(self, pulse_time):
-        """
-        Sum and average the product of antenna gain and Tx weights,
-        and interpolate beamformed gain pattern as a function of slant range
-        pulse time is used to infer slant range from elevation angles.
-
-        Parameters:
-        -----------
-        pulse_time: scalar or array of float
-             transmit time of range line in seconds w.r.t radar product reference, single or multiple range lines
-
-        Returns:
-        --------
-        bmf_sr_interp_tx: 1D or 2D array of complex
-            interpolated Tx beamformed gain as a function of slant range
-        """
-
-        tx_trm = self.tx_trm_info
-        channels = tx_trm.channels
-        slant_range = self.slant_range
-        fc = tx_trm.fc
-        transmit_time = tx_trm.transmit_time
-        tx_correction_factor = tx_trm.tx_correction_factor
-        tx_weight_norm = self._tx_weight_norm
-
-        ant_gain_el = self.el_ant_info.el_ant_gain
-        el_angles_rad = self.el_ant_info.el_angles_rad
-        az_cut_angles_rad = self.el_ant_info.az_cut_angles_rad
-        num_chan = len(channels)
-        slant_range_data_fs = np.asarray(slant_range)
-
-        # Apply Temperture Phase Correction
-        # tx_correction_factor is an array of complex numbers with size =  [num_chan]
-        # The phase of the out of cal-loop components that are not part of HCAL/BCAL/LCAL measurements
-        # may need to be accounted for. It could be through a calibration temperature correction table
-        # lookup that contains phase offset due to temperature dependence of out-of-cal loop components
-        # or through fixed phase offsets for each channel per polarization. This decision will be made
-        # later. If it is decided that look up into calibration measurements tables is required,
-        # it will be implemented later.  For R3.0, constant 1 is assumed for all channels
-        # with a placeholder included in the code.
-
-        bmf = np.zeros(tx_weight_norm.shape, dtype=complex)
-        for chan_idx in range(num_chan):
-            bmf[chan_idx] = tx_weight_norm[chan_idx] * tx_correction_factor[chan_idx]
-
-        # Compute HCAL, LCAL, and BCAL line indices
-        (
-            hcal_lines_idx,
-            lcal_lines_idx,
-            bcal_lines_idx,
-            num_lines,
-        ) = self._compute_hcal_lines_idx_tx()
-
-        assert tx_weight_norm.shape[0] == num_chan
-        assert ant_gain_el.shape[0] == num_chan
-
-        bmf = bmf.transpose() @ ant_gain_el
-
-        # Check if pulse time input is a single float or a list of floats
-        # pulse_time could be scalar or vector
+        if self.num_pulse_skip < 1:
+            raise ValueError('Number of pulses to be skipped shall be a'
+                             ' positive integer!')
         if np.isscalar(pulse_time):
             pulse_time = [pulse_time]
 
-        bmf_sr_interp_tx = []
-        for i, tx_time in enumerate(pulse_time):
-            pulse_idx = np.where(transmit_time == pulse_time[i])[0]
-            if pulse_idx in hcal_lines_idx:
-                bmf_pulse = np.squeeze(bmf[pulse_idx])
+        # check the pulse_time to be within time tag of TxTRM
+        if (pulse_time[0] < self.trm_info.time[0] or
+                pulse_time[-1] > self.trm_info.time[-1]):
+            raise ValueError(
+                f'Pulse time is out of Tx time tag [{self.trm_info.time[0]}, '
+                f'{self.trm_info.time[-1]}] (sec, sec)!'
+            )
+        # get total number of TX channels
+        _, num_chanl = self.trm_info.correlator_tap2.shape
 
-                # Interpolate Tx BMF gain as a function of slant range
-                slant_range_el = self._elaz2slantrange(pulse_time[i])
-                bmf_sr_interp = np.interp(
-                    slant_range_data_fs, slant_range_el, bmf_pulse
-                )
-                bmf_sr_interp_tx.append(bmf_sr_interp)
+        # apply correction/fudge factor to Tx weights along active channels
+        # if provided
+        if channel_adj_factors is not None:
+            # check the size of corection factor container
+            if len(channel_adj_factors) != num_chanl:
+                raise ValueError('Size of TX "channel adjustment factor" '
+                                 f'must be {num_chanl}')
+            # check if the correction factor is zero for all active channels
+            cor_fact = np.asarray(channel_adj_factors)[self.active_channel_idx]
+            if np.isclose(abs(cor_fact).max(), 0):
+                raise ValueError('"channel_adj_factors" are zeros for all '
+                                 'active TX channels!')
+            tx_weights = self.weights * cor_fact
+        else:
+            tx_weights = self.weights
+
+        # get the antenna EL patterns for active TX channels
+        ant_pat_el = self.el_ant_info.copol_pattern[self.active_channel_idx]
+
+        # initialize the tx pattern
+        tx_pat = np.zeros((len(pulse_time), slant_range.size), dtype='complex')
+
+        # get slant range vector from its Linspace to be used in the
+        # interpolation
+        sr = np.asarray(slant_range)
+
+        # loop over pulses
+        for pp, tm in enumerate(pulse_time):
+
+            # Get the respective pulse index
+            # Note that for floor operation, the closest TRM time which is less
+            # or equal to desired pulse time will be picked.
+            # This is due to possible step-like phase jumps between TX pulses
+            # dominated by random-like phase toggeling. The phase of TX can not
+            # noticeably vary faster than one PRI during which the TX-path
+            # phase is pretty constant! So, for all times limited between "i"
+            # (inclusive) and "i+1" (exclusive) pulses, the corresponding TX
+            # weights for pulse "i" shall be used. Super slow-varying thermal
+            # phase/amp gradient is ignored.
+            # On the other hand, in nearest case, the closest TRM time will be
+            # picked for a desired pulse time. That is either "i" or "i+1".
+
+            # Floor operation
+            idx_right = bisect.bisect_right(self.trm_info.time, tm)
+            idx_pulse = idx_right - 1
+            # Nearest opration
+            if is_nearest:
+                if (idx_right < self.trm_info.time.size and
+                    ((self.trm_info.time[idx_right] - tm) <
+                     (tm - self.trm_info.time[idx_pulse]))):
+                    idx_pulse = idx_right
             else:
-                raise ValueError("Pulse time input {} is not valid".format(pulse_time))
+                # Check for nano-second resolution time offset at the right
+                # side for "Floor" case to avoid precision issue assuming
+                # slow-time tags are within one nano-second resolution!
+                # That is, the acceptable max abs error is "0.5 nano second".
+                if (self.trm_info.time[idx_right] - tm) <= atol_time_err:
+                    idx_pulse = idx_right
 
-        bmf_sr_interp_tx = np.asarray(bmf_sr_interp_tx)
+            # form TX pattern in antenna EL angle domain
+            tx_pat_el = tx_weights[idx_pulse] @ ant_pat_el
 
-        return bmf_sr_interp_tx
+            # Compute the respective slant range for beamformed antenna pattern
+            # Simply calculate slant range for every few pulses where
+            # S/C pos/vel and DEM barely changes. This speeds up the process!
+            if (pp % self.num_pulse_skip == 0):
+                sr_ant = self._elaz2slantrange(tm)
 
-    def apply_weights_to_beams_rx(self, pulse_time):
+            # form TX BMF pattern at desird slant ranges
+            func_interp = interp1d(sr_ant, tx_pat_el, kind=self.interp_method,
+                                   fill_value='extrapolate', copy=False,
+                                   assume_sorted=True)
+            tx_pat[pp] = func_interp(sr)
+
+        return tx_pat
+
+    def _compute_weights(self):
+        """Compute TX weights for all range lines and active TX channels.
+
+        For those noise-only range lines, the nearest neighnors with
+        HCAL will be reported.
+
+        In case of missing BCAL, use the HCAL rather than HCAL/BCAL ratio.
+
+        Returns
+        -------
+        np.ndarray(complex)
+            2-D array with the shape (rangelines, active TX channels).
+
+        Raises
+        ------
+        ValueError:
+            Shape mistmatch between 2-D array of correlator and tx phase
+            if exists.
+        RuntimeError
+            For zero BCAL values.
+
+        Notes
+        -----
+        The weights are formed by |HCAL/(BCAL/BCAL[0])|*exp(j*TxPhase).
+        In case, TxPhase is not provided(None), use HCAL/(BCAL/BCAL[0])
+        as complex weights.
+
         """
-        Sum and average the product of antenna gain and conjugate transpose
-        of Rx weight, and interpolate beamformed gain pattern based on slant range
-        Antenna gain will first be converted to slant ranges, sampled at beamforming frequency
-        of 240 MHz. The final Rx beamformed pattern is interpolated to data sampling frequency.
+        return compute_transmit_pattern_weights(self.trm_info,
+                                                norm=self.norm_weight)
 
-        Parameters:
-        -----------
-        pulse_time: scalar or array of float
-            transmit time of range line in seconds w.r.t radar product reference, single or multiple range lines
 
-        Returns:
-        --------
-        bmf_sr_interp_rx: 1D or 2D array of complex
-            interpolated Tx beamformed gain as a function of slant range
-        slant_range_el: array of float
-            interpolated slant range of elevation angles
+class RxDBF(ElevationBeamformer):
+    """Receive digital beamformer (RxDBF) in Elevation (EL) direction.
+
+    This class sets up Rx beamformer per transmit-receiver-module (TRM) info
+    and allows  formation of active receive pattern as a function of
+    slant range per polarization.
+
+    Parameters
+    ----------
+    orbit : isce3.core.Orbit
+    attitude : isce3.core.Attitude
+    dem_interp : isce3.geometry.DEMInterpolator
+    el_ant_info : collections.namedtuple
+        Info about antenna multi-channel elevation-cut patterns
+        copol_pattern : np.ndarray(complex)
+            2-D array of complex multi-channel co-pol patterns of
+            shape (beams, el angles)
+        angle : np.ndarray(float)
+            Elevation angles in (rad)
+        cut_angle : float
+            AZ angle around which EL-cut patterns are provided in (rad)
+    trm_info : nisar.antenna.RxTrmInfo
+        data class that contains all relevant attributes needed to
+        compute Rx weights needed to form active RX pattern
+    ref_epoch : isce3.core.DateTime
+        Reference epoch for all time tags in `trm_info`, pulse_time.
+        In case, or bit and attitude have difference reference epoch,
+        they will be adjusted to this reference.
+    norm_weight : bool, default=False
+        Whether or not power normalize RX weights.
+    interp_method : str, default='linear'
+        Interpolation method for final resampling of patterns in slant range.
+        It shall be one of vlues of the `kind` in scipy.interpolate.interp1d.
+    num_pulse_skip: int, default=12
+        Number of pulses to skip in geomtery computation from antenna frame
+        to slant range for the sake of speed-up. The default value is around
+        the number of pulses in the air for mid swath of NISAR orbit.
+    el_ofs_dbf : float, default=0.0
+        Elevation angle offset (in radians) used in adjusting angle indexes
+        prior to grabing DBF coeffs from AC table in DBF process.
+
+    Attributes
+    ----------
+    weights : np.ndarray(complex)
+        2-D array with the shape (active RX channels, rangebins) @ DBF
+        sampling rate
+    active_channel_idx : np.ndarray(int)
+        0-based Rx active channel indexes
+    slant_range_dbf : isce3.core.Linspace
+        Slant ranges correspond to fast-time DBF weights @ TA sampling rate
+        ,`rx_trm_info.fs_ta`, used for all range lines within pulse time.
+
+    Raises
+    ------
+    ValueError
+        Reference epoch mismtach between orbit and attitude
+        Mismatch between total number of beams and number of channels
+
+    """
+
+    def __init__(self, orbit, attitude, dem_interp, el_ant_info, trm_info,
+                 ref_epoch, norm_weight=False, interp_method='linear',
+                 num_pulse_skip=12, el_ofs_dbf=0.0):
+        self.el_ofs_dbf = el_ofs_dbf
+        super().__init__(orbit, attitude, dem_interp, el_ant_info, trm_info,
+                         ref_epoch, norm_weight, interp_method, num_pulse_skip)
+
+    @property
+    def slant_range_dbf(self):
+        return self._slant_range_dbf
+
+    def form_pattern(self, pulse_time, slant_range, channel_adj_factors=None):
         """
+        Form receive digitally beamformed (DBF) pattern, as a function
+        of slant range @ each azimuth pulse time.
 
-        rx_weight_norm = self._rx_weight_norm
-        rx_trm = self.rx_trm_info
-        rx_correction_factor = rx_trm.rx_correction_factor
-        num_chan = len(rx_trm.channels)
-        ant_gain_el = self.el_ant_info.el_ant_gain
-        slant_range = self.slant_range
-        slant_range_data_fs = np.asarray(slant_range)
-        dbf_fs = rx_trm.dbf_fs
-        data_fs = self._data_fs
+        Parameters
+        ----------
+        pulse_time : scalar or array of float
+             transmit time of range line in seconds w.r.t `ref_epoch`,
+             single or multiple range lines. In case of array, it is assumed
+             to be sorted in ascending order.
+        slant_range : isce3.core.Linspace
+            Slant ranges in meters.
+        channel_adj_factors : Sequence of complex, optional
+            A place holder for applying possbile secondary Rx channel
+            corrections or any extra fudge factors to balance/adjust Rx
+            channels. The RX weights will be multiplied by these factors per
+            channel. The size is total number of RX channels. If None,
+            no correction will be applied to RX weights. Note that these
+            factors will NOT be peak/power normalized.
 
-        # Determine number of range bins after upsampling to DBF sampling frequency
-        num_range_bins_dbf_fs = len(rx_weight_norm[0])
+        Returns
+        -------
+        np.ndarray(complex)
+            2D array Rx DBFed pattern with
+            shape (pulse_time.size, slant_range.size)
 
-        # Check if pulse time input is a single float or a list of floats
-        if isinstance(pulse_time, float):
+        Raises
+        ------
+        ValueError
+            pulse_time is out of the range of time tags of `rx_trm_info`.
+            `channel_adj_factors` are zeros for all active RX channels.
+            Size of `channel_adj_factors` is not equal to total RX channels.
+
+        """
+        if self.num_pulse_skip < 1:
+            raise ValueError('Number of pulses to be skipped shall be a'
+                             ' positive integer!')
+        # get total number of RX channels
+        num_chanl, _ = self.trm_info.ac_dbf_coef.shape
+
+        if np.isscalar(pulse_time):
             pulse_time = [pulse_time]
 
-        # Multiply by possible phase offset fudge factor
-        rx_weight_corrected = np.zeros(rx_weight_norm.shape, dtype=complex)
-        for chan_idx in range(num_chan):
-            rx_weight_corrected[chan_idx] = (
-                rx_weight_norm[chan_idx] * rx_correction_factor[chan_idx]
+        # check the pulse_time to be within time tag of RxTRM
+        if (pulse_time[0] < self.trm_info.time[0] or
+                pulse_time[-1] > self.trm_info.time[-1]):
+            raise ValueError(
+                f'Pulse time is out of Rx time tag [{self.trm_info.time[0]}, '
+                f'{self.trm_info.time[-1]}] (sec, sec)!'
             )
 
-        # Compute product of beam weights and antenna gain
-        # Interpolate Antenna gain from angle to slant range in DBF processing sampling frequency
-        # Compute slant range spacing based on upsampling factor data_fs / dbf_fs
-        slant_range_spacing_dbf_fs = slant_range.spacing * data_fs / dbf_fs
-        slant_range_interp_dbf_fs = (
-            slant_range.first
-            + np.arange(num_range_bins_dbf_fs) * slant_range_spacing_dbf_fs
-        )
+        # EL-cut pattern with shape active beams by EL angles
+        ant_pat_el = self.el_ant_info.copol_pattern[self.active_channel_idx]
 
-        bmf_sr_interp_rx = []
-        for i, tx_time in enumerate(pulse_time):
-            rx_bf_gain_composite = 0
-            slant_range_el = self._elaz2slantrange(pulse_time[i])
-            for chan in range(num_chan):
-                # Interpolate elevation antenna gain of each channel to slant range at DBF sampling rate
-                ant_gain_sr_interp_ta_fs = np.interp(
-                    slant_range_interp_dbf_fs, slant_range_el, ant_gain_el[chan]
-                )
+        # get slant range vector from its Linspace to be used in the
+        # interpolation
+        sr = np.asarray(slant_range)
 
-                # Multiply weights by antenna gain of each channel in time (slant range) domain
-                rx_bf_gain = rx_weight_corrected[chan] * ant_gain_sr_interp_ta_fs
+        # resample RX weightings to the output slant range
+        # use simply nearest neighbor given RX weights are very finely sampled!
+        func_interp_wgt = interp1d(self.slant_range_dbf, self.weights,
+                                   kind='nearest', fill_value='extrapolate',
+                                   copy=False, assume_sorted=True, axis=1)
+        # RX weights with shape active beams by output slant ranges
+        rx_wgt = func_interp_wgt(sr)
 
-                # Downsample and interpolate Rx dbf gain to slant range of data sampling rate
-                if dbf_fs % data_fs == 0:
-                    rx_bf_gain = rx_bf_gain[:: int(dbf_fs / data_fs)]
-                else:
-                    rx_bf_gain = np.interp(
-                        slant_range, slant_range_interp_ta_fs, rx_bf_gain
-                    )
-                rx_bf_gain_composite += rx_bf_gain
+        # apply correction/fudge factor to Rx weights along active channels
+        # if provided
+        if channel_adj_factors is not None:
+            # check the size of corection factor container
+            if len(channel_adj_factors) != num_chanl:
+                raise ValueError('Size of RX "channel adjustment factor" '
+                                 f'must be {num_chanl}')
+            # check if the correction factor is zero for all active channels
+            cor_fact = np.asarray(channel_adj_factors)[self.active_channel_idx]
+            if np.isclose(abs(cor_fact).max(), 0):
+                raise ValueError('"channel_adj_factors" are zeros for all '
+                                 'active RX channels!')
+            rx_wgt *= cor_fact[:, None]
 
-            bmf_sr_interp_rx.append(rx_bf_gain_composite)
+        # initialize the RX DBF pattern
+        rx_pat = np.zeros((len(pulse_time), slant_range.size), dtype='complex')
 
-        bmf_sr_interp_rx = np.asarray(bmf_sr_interp_rx)
+        # loop over pulses
+        for pp, tm in enumerate(pulse_time):
+            # Compute the respective slant range for beamformed antenna pattern
+            # Simply calculate slant range for every few pulses where
+            # S/C pos/vel and DEM barely changes. This speeds up the process!
+            if (pp % self.num_pulse_skip == 0):
+                sr_ant = self._elaz2slantrange(tm)
 
-        return bmf_sr_interp_rx, slant_range_el
+            # resample EL-cut antenna patterns to the output slant range
+            func_interp_ant = interp1d(sr_ant, ant_pat_el,
+                                       kind=self.interp_method,
+                                       fill_value='extrapolate', axis=1,
+                                       copy=False, assume_sorted=True)
 
-    def form_two_way(self, pulse_time):
+            # form the RX DBF pattern for output slant ranges per pulse
+            rx_pat[pp] = (func_interp_ant(sr) * rx_wgt).sum(axis=0)
+
+        return rx_pat
+
+    def _compute_weights(self):
+        """Compute RX weights for all range bins and active RX channels.
+
+        Returns
+        -------
+        np.ndarray(complex)
+            2-D array with the shape (active RX channels, rangebins).
+
+        Raises
+        ------
+        ValueError:
+            Shape mistmatch between DBF TA and AC arrays
+
         """
-        Multiply Tx and Rx beamformed antenna patterns to
-        compute the resulting combined beamformed gain pattern
+        rx_weights, slant_range_dbf = compute_receive_pattern_weights(
+            self.trm_info, el_ofs=self.el_ofs_dbf, norm=self.norm_weight)
+        # set the read-only property for slant range values @ DBF clock rate
+        self._slant_range_dbf = slant_range_dbf
+        return rx_weights
 
-        Parameters:
-        -----------
-        pulse_time: scalar or array of float
-            transmit time of range line in seconds w.r.t radar product reference, single or multiple range lines
 
-        Returns:
-        --------
-        bmf_sr_interp: 1D or 2D array of complex
-            interpolated beamformed gain as a function of slant range at data sampling rate
-        bmf_sr_interp_tx: 1D or 2D array of complex
-            interpolated Tx beamformed gain as a function of slant range at data sampling rate
-        bmf_sr_interp_rx: 1D or 2D array of complex
-            interpolated Rx beamformed gain as a function of slant range at data sampling rate
-        slant_range_el: array of float
-            Slant range computed at antenna pattern elevation angles
-        """
+# List of public functions
 
-        bmf_sr_interp_tx = self.apply_weights_to_beams_tx(pulse_time)
-        bmf_sr_interp_rx, slant_range_el = self.apply_weights_to_beams_rx(pulse_time)
+def get_calib_range_line_idx(cal_path_mask):
+    """
+    Get range line index for each calbration path enumeration type
+    "CalPath" from calibration mask array stored in L0B product.
 
-        # Compute product of combined Tx and Rx gain pattern
-        bmf_sr_interp = bmf_sr_interp_tx * bmf_sr_interp_rx
+    Each rangeline contains either of calibration measurments HCAL,
+    BCAL or LCAL.
 
-        return bmf_sr_interp, bmf_sr_interp_tx, bmf_sr_interp_rx, slant_range_el
+    It also reports noise-only (no transmit) range line indexes.
+
+    Parameters
+    ----------
+    cal_path_mask : np.ndarray(CalPath)
+
+    Returns
+    -------
+    np.ndarray(uint32)
+        HPA CAL range line indices
+    np.ndarray(uint32)
+        BYPASS CAL range line indices
+    np.ndarray(uint32)
+        LNA CAL range line indices
+    np.ndarray(uint32)
+        Noise-only range line indices
+
+    """
+    rng_lines_idx = np.arange(cal_path_mask.size, dtype='uint32')
+    hcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.HPA]
+    lcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.LNA]
+    bcal_lines_idx = rng_lines_idx[cal_path_mask == CalPath.BYPASS]
+    noise_lines_idx = rng_lines_idx[cal_path_mask != CalPath.HPA]
+
+    return hcal_lines_idx, bcal_lines_idx, lcal_lines_idx, noise_lines_idx
+
+
+def compute_transmit_pattern_weights(tx_trm_info, norm=False):
+    """Compute TX weights for all range lines and active TX channels.
+
+    This is part of beam formed (BMF) Tx antenna pattern.
+    See [1]_ for detailed descripion of the Tx calibration algorithm.
+
+    Parameters
+    ----------
+    tx_trm_info : nisar.antenna.TxTrmInfo
+    norm : bool, default=False
+        Whether or not power-normalize the weights.
+
+    Returns
+    -------
+    np.ndarray(complex)
+        2-D array with the shape (rangelines, active TX channels).
+
+    Raises
+    ------
+    ValueError:
+        Shape mistmatch between 2-D array of correlator and tx phase if exists
+        Wrong size of correction factor
+    RuntimeError
+        For zero BCAL values.
+
+    Notes
+    -----
+    The weights are formed by |HCAL/(BCAL/BCAL[0])|*exp(j*TxPhase).
+    In case, TxPhase is not provided(None), use HCAL/(BCAL/BCAL[0])
+    as complex weights.
+
+    For those noise-only range lines, the nearest neighnors with
+    HCAL will be reported.
+    In case of missing BCAL, use the HCAL rather than HCAL/BCAL ratio.
+
+    References
+    ----------
+    .. [1] H. Ghaemi, "DSI SweepSAR On-Board DSP Algorithms Description ,"
+        JPL D-95646, Rev 14, 2018.
+
+    """
+    num_rgl, num_chanl = tx_trm_info.correlator_tap2.shape
+
+    # get the index of active TX channels
+    active_tx_idx = np.asarray(tx_trm_info.channels) - 1
+
+    # get range line index for each type of Cal Path
+    hcal_lines_idx, bcal_lines_idx, _, noise_lines_idx = \
+        get_calib_range_line_idx(tx_trm_info.cal_path_mask)
+
+    # initialize tx weights with 2nd tap of correlator
+    tx_weights = tx_trm_info.correlator_tap2[:, active_tx_idx]
+
+    # If BCAL exists compute ratio HCAL/(BCAL/BCAL[0])
+    if bcal_lines_idx.size:
+        # check BCAL to make sure it's non-zero value for active channels only!
+        if np.isclose(abs(tx_weights[bcal_lines_idx]).min(), 0):
+            raise RuntimeError('Zero-value BCAL data is encountered!')
+
+        for line_start, line_stop in zip(bcal_lines_idx[:-1],
+                                         bcal_lines_idx[1:]):
+            # normalize BCAL wrt to the first TX channel to get relative
+            # channel-to-channel BCAL
+            bcal_rel = tx_weights[line_start] / tx_weights[line_start, 0]
+            # get the ratio except for the last one
+            tx_weights[line_start:line_stop] /= bcal_rel
+
+        # get the last ratio
+        bcal_rel = (tx_weights[bcal_lines_idx[-1]] /
+                    tx_weights[bcal_lines_idx[-1], 0])
+        tx_weights[bcal_lines_idx[-1]:] /= bcal_rel
+
+    # Now fill in noise-only range lines with nearest neighbor values
+    # from HCAL ones
+    func_nearest = interp1d(hcal_lines_idx, tx_weights[hcal_lines_idx],
+                            kind='nearest', fill_value='extrapolate',
+                            assume_sorted=True, axis=0)
+    tx_weights[noise_lines_idx] = func_nearest(noise_lines_idx)
+
+    # power normalize across channels if requested
+    if norm:
+        # replace zero-value norms with unity to avoid bad normalization for
+        # bad/trivial values!
+        norm_vals = np.linalg.norm(tx_weights, axis=1)
+        norm_vals[np.isclose(norm_vals, 0)] = 1
+        tx_weights /= norm_vals[:, None]
+
+    # check if tx_phase exists and if so use it for the phase part of
+    # final weights
+    if tx_trm_info.tx_phase is None:
+        return tx_weights
+
+    # check the size of tx_phase
+    if tx_trm_info.tx_phase.shape != (num_rgl, num_chanl):
+        raise ValueError(
+            'Shape mismtach between "tx_phase" and "correlator_tap2"')
+    return abs(tx_weights) * np.exp(1j * tx_trm_info.tx_phase)
+
+
+def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
+    """Compute RX weights for all range bins and active RX channels.
+
+    This is part of digitally beam formed (DBF) Rx antenna pattern.
+    See [1]_ for detailed descripion of the DBF algorithm.
+
+    Parameters
+    ----------
+    rx_trm_info : nisar.antenna.RxTrmInfo
+    el_ofs : float, default=0.0
+        Elevation (EL) angle offset in radians.
+        This will adjust angle index used to grab DBF coeffs from
+        angle-to-coefficient (AC) table. This will account for any known
+        considerable mis-pointing in EL on DBF side of active RX pattern.
+    norm : bool, default=False
+        Whether or not power-normalize the weights.
+
+    Returns
+    -------
+    np.ndarray(complex)
+        2-D array of weights with shape (active RX channels, rangebins).
+    isce3.core.Linspace
+        Slant ranges in (m) @ sampling rate equals to `rx_trm_info.fs_ta`
+
+    Raises
+    ------
+    ValueError:
+        Shape mistmatch between DBF TA and AC arrays
+        Wrong size of correction factor
+
+    References
+    ----------
+    .. [1] H. Ghaemi, "DSI SweepSAR On-Board DSP Algorithms Description ,"
+        JPL D-95646, Rev 14, 2018.
+
+    """
+    # check the shape of two tables AC and TA to be consistent
+    num_chanl, num_coefs = rx_trm_info.ac_dbf_coef.shape
+    if rx_trm_info.ta_dbf_switch.shape != (num_chanl, num_coefs):
+        raise ValueError('Shape mismtach between TA and AC table!')
+
+    # get the index of active RX channels
+    active_rx_idx = np.asarray(rx_trm_info.channels) - 1
+
+    # Compute rd, wd, and wl based on data sampling rate of DBF process
+    # which is sampling rate of entires of TA table.
+    rd_dbf = np.round(rx_trm_info.rd * rx_trm_info.fs_ta /
+                      rx_trm_info.fs_win).astype(int)
+    wd_dbf = np.round(rx_trm_info.wd * rx_trm_info.fs_ta /
+                      rx_trm_info.fs_win).astype(int)
+    wl_dbf = np.round(rx_trm_info.wl * rx_trm_info.fs_ta /
+                      rx_trm_info.fs_win).astype(int)
+
+    max_idx_ta = np.size(rx_trm_info.ta_dbf_switch, axis=1) - 1
+
+    # get index adjustment to AC table per EL angle offset for all
+    # active channels
+    if abs(el_ofs) > 0:
+        # get (averaged) EL spacing for all active channels
+        el_spacing = np.diff(
+            rx_trm_info.el_ang_dbf[active_rx_idx]).mean(axis=1)
+        idx_ofs = np.int_(np.round(el_ofs / el_spacing))
+    else:  # no EL angle offset
+        idx_ofs = np.zeros(len(active_rx_idx), dtype='int')
+
+    # total number of range bins of a DBFed composite range line
+    dwp_first = rd_dbf[active_rx_idx[0]] + wd_dbf[active_rx_idx[0]]
+    dwp_last = rd_dbf[active_rx_idx[-1]] + wd_dbf[active_rx_idx[-1]]
+    num_rgb_dbf = dwp_last - dwp_first + wl_dbf[active_rx_idx[-1]]
+
+    # initialize the complex RX weights
+    rx_weights = np.zeros((active_rx_idx.size, num_rgb_dbf), dtype='complex')
+
+    # loop over active channels
+    for cc, c_idx in enumerate(active_rx_idx):
+
+        # get all indexes/addresses to angle-coefs table for each channel
+        idx_ang = np.searchsorted(
+            rx_trm_info.ta_dbf_switch[c_idx], np.arange(
+                wd_dbf[c_idx], wd_dbf[c_idx] + wl_dbf[c_idx])
+            )
+        # adjust index to angle-coeffs table per EL angle offset if necessary
+        if idx_ofs[cc] != 0:
+            idx_ang += idx_ofs[cc]
+
+        # check and limit (min, max) of final EL angle indexes
+        idx_ang[idx_ang < 0] = 0
+        idx_ang[idx_ang > max_idx_ta] = max_idx_ta
+
+        # [start, stop) range bins of composite range line
+        rgb_start = rd_dbf[c_idx] + wd_dbf[c_idx] - dwp_first
+        rgb_stop = rgb_start + wl_dbf[c_idx]
+        rx_weights[cc, rgb_start:rgb_stop] = \
+            rx_trm_info.ac_dbf_coef[c_idx, idx_ang]
+
+    # normalize the weights across channels per range bin if requested
+    if norm:
+        # replace zero-value norms with unity to avoid bad normalization for
+        # bad/trivial values!
+        norm_vals = np.linalg.norm(rx_weights, axis=0)
+        norm_vals[np.isclose(norm_vals, 0)] = 1
+        rx_weights /= norm_vals
+
+    # form slant range vector for composite/DBF range line @ rx_trm_info.fs_ta
+    sr_spacing = 0.5 * speed_of_light / rx_trm_info.fs_ta
+    sr_first = dwp_first * sr_spacing
+    sr_dbf = Linspace(sr_first, sr_spacing, num_rgb_dbf)
+
+    return rx_weights, sr_dbf

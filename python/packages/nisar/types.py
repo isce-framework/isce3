@@ -17,6 +17,18 @@ def read_c4_dataset_as_c8(ds: h5py.Dataset, key=np.s_[...]):
 
     Avoids h5py/numpy dtype bugs and uses numpy float16 -> float32 conversions
     which are about 10x faster than HDF5 ones.
+
+    Parameters
+    ----------
+    ds: h5py.Dataset
+        Path to the c4 HDF5 dataset
+    key: numpy.s_
+        Numpy slice to subset input dataset
+
+    Returns
+    -------
+    np.ndarray(numpy.complex64)
+        Complex array (numpy.complex64) from sliced input HDF5 dataset
     """
     # This avoids h5py exception:
     # TypeError: data type '<c4' not understood
@@ -27,6 +39,30 @@ def read_c4_dataset_as_c8(ds: h5py.Dataset, key=np.s_[...]):
     complex64 = np.dtype([("r", np.float32), ("i", np.float32)])
     # Cast safely and then view as native complex64 numpy dtype.
     return z.astype(complex64).view(np.complex64)
+
+def read_complex_dataset(ds: h5py.Dataset, key=np.s_[...]):
+    """
+    Read a complex dataset including complex float16 (c4) datasets, in which
+    case, the function `read_c4_dataset_as_c8` is called to avoid 
+    h5py/numpy dtype (TypeError) bugs
+
+    Parameters
+    ----------
+    ds: h5py.Dataset
+        Path to the complex HDF5 dataset
+    key: numpy.s_
+        Numpy slice to subset input dataset
+
+    Returns
+    -------
+    np.ndarray
+        Complex array from sliced input HDF5 dataset
+    """
+    try:
+        return ds[key]
+    except TypeError:
+        pass
+    return read_c4_dataset_as_c8(ds, key=key)
 
 
 class ComplexFloat16Decoder:

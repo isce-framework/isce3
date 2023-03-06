@@ -9,13 +9,13 @@ import time
 import h5py
 import isce3
 import journal
-import numpy as np
 from osgeo import gdal
 gdal.UseExceptions()
 
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.compute_stats import compute_stats_real_data
+from nisar.workflows.helpers import complex_raster_path_from_h5
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -25,11 +25,13 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     run crossmul
     '''
     # pull parameters from cfg
-    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
-    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
+    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     crossmul_params = cfg['processing']['crossmul']
+    scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     flatten = crossmul_params['flatten']
+    lines_per_block = crossmul_params['lines_per_block']
 
     if flatten:
         flatten_path = crossmul_params['flatten_path']
@@ -59,7 +61,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     crossmul.range_looks = crossmul_params['range_looks']
     crossmul.az_looks = crossmul_params['azimuth_looks']
     crossmul.oversample_factor = crossmul_params['oversample']
-    crossmul.lines_per_block = crossmul_params['lines_per_block']
+    crossmul.lines_per_block = lines_per_block
 
     # check if user provided path to raster(s) is a file or directory
     coregistered_slc_path = pathlib.Path(
@@ -71,9 +73,11 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
         raise ValueError(err_str)
 
     t_all = time.time()
-    with h5py.File(output_hdf5, 'a', libver='latest') as dst_h5, \
-            h5py.File(ref_hdf5, 'r', libver='latest', swmr=True) as ref_h5:
+    with h5py.File(output_hdf5, 'a', libver='latest') as dst_h5:
         for freq, pol_list in freq_pols.items():
+            # create output product
+            crossmul_dir = scratch_path / f'crossmul/freq{freq}'
+            crossmul_dir.mkdir(parents=True, exist_ok=True)
             # get 2d doppler, discard azimuth dependency, and set crossmul dopplers
             ref_dopp = isce3.core.avg_lut2d_to_lut1d(
                 ref_slc.getDopplerCentroid(frequency=freq))
@@ -97,6 +101,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
                 flatten_raster = None
 
             for pol in pol_list:
+                output_dir = crossmul_dir / f'{pol}'
+                output_dir.mkdir(parents=True, exist_ok=True)
                 pol_group_path = f'{freq_group_path}/interferogram/{pol}'
 
                 # access the HDF5 dataset for a given frequency and polarization
@@ -118,17 +124,25 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
                     update=True)
 
                 # prepare reference input raster
-                ref_raster_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
-                ref_slc_raster = isce3.io.Raster(ref_raster_str)
+                c32_output_path = str(output_dir / 'reference.slc')
+                raster_path, _ = complex_raster_path_from_h5(ref_slc, freq,
+                                                             pol, ref_hdf5,
+                                                             lines_per_block,
+                                                             c32_output_path)
+                ref_slc_raster = isce3.io.Raster(raster_path)
 
                 # prepare secondary input raster
                 if coregistered_is_file:
-                    sec_raster_str = f'HDF5:{sec_hdf5}:/{sec_slc.slcPath(freq, pol)}'
+                    c32_output_path = str(output_dir / 'secondary.slc')
+                    raster_path, _ = complex_raster_path_from_h5(sec_slc, freq,
+                                                                 pol, sec_hdf5,
+                                                                 lines_per_block,
+                                                                 c32_output_path)
                 else:
-                    sec_raster_str = str(coregistered_slc_path / f'{resample_type}_resample_slc/'
-                                         f'freq{freq}/{pol}/coregistered_secondary.slc')
+                    raster_path = str(coregistered_slc_path / f'{resample_type}_resample_slc/'
+                                       f'freq{freq}/{pol}/coregistered_secondary.slc')
 
-                sec_slc_raster = isce3.io.Raster(sec_raster_str)
+                sec_slc_raster = isce3.io.Raster(raster_path)
 
                 # Compute multilooked interferogram and coherence raster
                 crossmul.crossmul(ref_slc_raster, sec_slc_raster, ifg_raster,

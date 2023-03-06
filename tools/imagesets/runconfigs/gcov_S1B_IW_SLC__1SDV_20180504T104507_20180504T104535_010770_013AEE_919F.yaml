@@ -9,6 +9,8 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path: input_L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F/S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F.h5
 
+            qa_input_file: output_gcov/gcov.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_S1B_IW_SLC__1SDV_20180504T104507_20180504T104535_010770_013AEE_919F/nisar-dem/EPSG32718/EPSG32718.vrt
@@ -23,6 +25,8 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_gcov/gcov.h5
+
+            qa_output_dir: qa_gcov
 
         primary_executable:
             product_type: GCOV
@@ -150,3 +154,7 @@ runconfig:
             path: output_gcov/gcov.log
             write_mode: 'w'
 
+        qa:
+            workflows:
+                validate: true
+                qa_reports: true

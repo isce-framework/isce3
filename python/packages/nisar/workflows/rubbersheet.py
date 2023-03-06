@@ -25,12 +25,12 @@ def run(cfg: dict, output_hdf5: str = None):
     '''
 
     # Pull parameters from cfg dictionary
-    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     rubbersheet_params = cfg['processing']['rubbersheet']
-    dense_offsets_path = pathlib.Path(rubbersheet_params['dense_offsets_path'])
     geo2rdr_offsets_path = pathlib.Path(rubbersheet_params['geo2rdr_offsets_path'])
+    off_product_enabled = cfg['processing']['offsets_product']['enabled']
 
     # If not set, set output HDF5 file
     if output_hdf5 is None:
@@ -38,6 +38,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Set info and error channels
     info_channel = journal.info('rubbersheet.run')
+    error_channel = journal.error('rubbersheet.run')
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
@@ -60,64 +61,130 @@ def run(cfg: dict, output_hdf5: str = None):
                 out_dir = rubbersheet_dir / pol
                 out_dir.mkdir(parents=True, exist_ok=True)
                 pol_group_path = f'{freq_group_path}/pixelOffsets/{pol}'
-                dense_offsets_dir = dense_offsets_path / 'dense_offsets' / f'freq{freq}' / pol
+                if not off_product_enabled:
+                    dense_offsets_path = pathlib.Path(
+                        rubbersheet_params['dense_offsets_path'])
+                    dense_offsets_dir = dense_offsets_path / 'dense_offsets' / f'freq{freq}' / pol
+                    # Identify outliers
+                    offset_az_culled, offset_rg_culled = identify_outliers(
+                        str(dense_offsets_dir),
+                        rubbersheet_params)
+                    # Fill outliers holes
+                    offset_az = fill_outliers_holes(offset_az_culled,
+                                                    rubbersheet_params)
+                    offset_rg = fill_outliers_holes(offset_rg_culled,
+                                                    rubbersheet_params)
+                else:
+                    # Offsets product is enabled, implement pyramidal filling
+                    off_product_path = pathlib.Path(
+                        rubbersheet_params['offsets_product_path'])
+                    off_product_dir = off_product_path / 'offsets_product' / f'freq{freq}' / pol
+                    # Cull the outlier of the offsets layer at finest resolution
+                    offset_az, offset_rg = identify_outliers(
+                        str(off_product_dir / 'layer1'),
+                        rubbersheet_params)
 
-                # Identify outliers
-                offset_az_culled, offset_rg_culled = identify_outliers(
-                    dense_offsets_dir,
-                    rubbersheet_params)
-                # Fill outliers holes
-                offset_az_filled = fill_outliers_holes(offset_az_culled,
-                                                       str(out_dir / 'dense_offsets_azimuth_culled'),
-                                                       rubbersheet_params)
-                offset_rg_filled = fill_outliers_holes(offset_rg_culled,
-                                                       str(out_dir / 'dense_offsets_range_culled'),
-                                                       rubbersheet_params)
+                    layer_keys = [key for key in
+                                  cfg['processing']['offsets_product'].keys() if
+                                  key.startswith('layer') and key != 'layer1']
+
+                    # Loop over different layer keys (different from 1)
+                    length, width = offset_az.shape
+                    temp_off_az = np.zeros((length, width), dtype=np.float32)
+                    temp_off_rg = np.zeros((length, width), dtype=np.float32)
+                    for key in layer_keys:
+                        temp_off_az_culled, temp_off_rg_culled = identify_outliers(
+                            str(off_product_dir / key),
+                            rubbersheet_params)
+                        off_az_filled = fill_outliers_holes(
+                            temp_off_az_culled,
+                            rubbersheet_params)
+                        off_rg_filled = fill_outliers_holes(
+                            temp_off_rg_culled,
+                            rubbersheet_params)
+                        temp_off_az += off_az_filled
+                        temp_off_rg += off_rg_filled
+                    # Divide by the number of layers excluding layer1
+                    temp_off_az = temp_off_az / (len(layer_keys) - 1)
+                    temp_off_rg = temp_off_rg / (len(layer_keys) - 1)
+                    offset_az[np.isnan(offset_az)] = temp_off_az[
+                        np.isnan(offset_az)]
+                    offset_rg[np.isnan(offset_rg)] = temp_off_rg[
+                        np.isnan(offset_rg)]
+
                 # Update offset field in HDF5 file
-                offset_az = dst_h5[os.path.join(pol_group_path,
-                                                'alongTrackOffset')]
-                offset_rg = dst_h5[os.path.join(pol_group_path,
-                                                'slantRangeOffset')]
-                offset_az[...] = offset_az_filled
-                offset_rg[...] = offset_rg_filled
+                offset_az_prod = dst_h5[f'{pol_group_path}/alongTrackOffset']
+                offset_rg_prod = dst_h5[f'{pol_group_path}/slantRangeOffset']
+                offset_az_prod[...] = offset_az
+                offset_rg_prod[...] = offset_rg
+
+                # Save culled offsets to disk for resampling
+                off_path = [out_dir/'culled_az_offsets', out_dir/'culled_rg_offsets']
+                offsets = [offset_az, offset_rg]
+
+                for path, off_array in zip(off_path, offsets):
+                    write_to_disk(str(path), off_array)
 
                 # Expand culled offsets to SLC shape and save as temporary data
                 ref_raster_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
                 ref_raster_slc = isce3.io.Raster(ref_raster_str)
 
-                culled_offset_list = ['dense_offsets_azimuth_culled', 'dense_offsets_range_culled']
-                for offset in culled_offset_list:
-                    ds = gdal.Open(str(out_dir / offset), gdal.GA_ReadOnly)
-                    gdal.Translate(
-                        str(out_dir / offset.replace('culled', 'resampled')),
-                        ds, width=ref_raster_slc.width,
-                        height=ref_raster_slc.length, format="ENVI")
-                    ds = None
+                for path in off_path:
+                    outpath = str(path).replace('culled', 'resampled')
+                    ds = gdal.Open(str(path), gdal.GA_ReadOnly)
+                    gdal.Translate(outpath, ds,
+                                   width=ref_raster_slc.width,
+                                   height=ref_raster_slc.length, format="ENVI")
 
                 # Add geometric offsets to rubbersheet offsets using gdal_pixel functions
                 # The sum of geometric and rubbersheet offsets is stored in rubbersheet_folder
-                geo_offset_list = ['azimuth.off', 'range.off']
-                for geo_offset, culled_offset in zip(geo_offset_list, culled_offset_list):
-                    culled_offset_resampled = culled_offset.replace('culled', 'resampled')
-                    out_path =  f'{str(out_dir / geo_offset)}.vrt'
-                    write_vrt(str(geo_offset_dir / geo_offset), str(out_dir / culled_offset_resampled),
-                              out_path, ref_raster_slc.width, ref_raster_slc.length,
-                              'Float32', 'sum')
+                geo_path = ['azimuth.off', 'range.off']
+                for geo_off, out_off in zip(geo_path, off_path):
+                    out_path = f'{str(out_dir / geo_off)}.vrt'
+                    write_vrt(str(geo_offset_dir / geo_off),
+                              str(out_off).replace('culled', 'resampled'),
+                              out_path, ref_raster_slc.width,
+                              ref_raster_slc.length, 'Float32', 'sum')
+
     t_all_elapsed = time.time() - t_all
     info_channel.log(
         f"Successfully ran rubbersheet in {t_all_elapsed:.3f} seconds")
 
 
-def identify_outliers(dense_offsets_dir, rubbersheet_params):
+def write_to_disk(outpath, array, format='ENVI',
+                  datatype=gdal.GDT_Float32):
+    '''
+    Write numpy array to disk as a GDAl raster
+
+    Parameters
+    ----------
+    outpath: str
+        Path to save array on disk
+    array: numpy.ndarray
+        Numpy array to save locally
+    format: str
+        GDAL-friendly format for output raster
+    datatype: str
+        GDAL data type for output raster
+    '''
+
+    length, width = array.shape
+    driver = gdal.GetDriverByName(format)
+    ds = driver.Create(outpath, width, length, 1, datatype)
+    ds.GetRasterBand(1).WriteArray(array)
+    ds.FlushCache()
+
+
+def identify_outliers(offsets_dir, rubbersheet_params):
     """Identify outliers in the offset fields.
        Outliers are identified by thresholding a
        metric (SNR, offset covariance, offset median
        absolute deviation) suggested by the user
             Parameters
             ----------
-            dense_offsets_dir: str
-                Path to the dense offset fields where offsets
-                fields are located
+            offsets_dir: str
+                Path to the dense offset or offsets products directory
+                where pixel offsets are located
             rubbersheet_params: cfg
                 Dictionary containing rubbersheet parameters
 
@@ -137,8 +204,7 @@ def identify_outliers(dense_offsets_dir, rubbersheet_params):
     error_channel = journal.error('rubbersheet.run.identify_outliers')
 
     # Open offsets
-    ds = gdal.Open(os.path.join(dense_offsets_dir, 'dense_offsets'),
-                   gdal.GA_ReadOnly)
+    ds = gdal.Open(f'{offsets_dir}/dense_offsets')
     offset_az = ds.GetRasterBand(1).ReadAsArray()
     offset_rg = ds.GetRasterBand(2).ReadAsArray()
     ds = None
@@ -146,8 +212,7 @@ def identify_outliers(dense_offsets_dir, rubbersheet_params):
     # Identify outliers based on user-defined metric
     if metric == 'snr':
         # Open SNR
-        ds = gdal.Open(os.path.join(dense_offsets_dir, 'snr'),
-                       gdal.GA_ReadOnly)
+        ds = gdal.Open(f'{offsets_dir}/snr')
         snr = ds.GetRasterBand(1).ReadAsArray()
         ds = None
         mask_data = np.where(snr < threshold)
@@ -159,7 +224,7 @@ def identify_outliers(dense_offsets_dir, rubbersheet_params):
                 np.abs(offset_rg - median_rg) > threshold)
     elif metric == 'covariance':
         # Use offsets azimuth and range covariance elements
-        ds = gdal.Open(os.path.join(dense_offsets_dir, 'covariance'))
+        ds = gdal.Open(f'{offsets_dir}/covariance')
         cov_az = ds.GetRasterBand(1).ReadAsArray()
         cov_rg = ds.GetRasterBand(2).ReadAsArray()
         ds = None
@@ -193,7 +258,7 @@ def identify_outliers(dense_offsets_dir, rubbersheet_params):
     return offset_az, offset_rg
 
 
-def fill_outliers_holes(offset, output_path, rubbersheet_params):
+def fill_outliers_holes(offset, rubbersheet_params):
     """Fill no data values according to user-preference.
        No data values are filled using one of the following:
        - fill_smoothed: replace no data values with smoothed value
@@ -206,8 +271,6 @@ def fill_outliers_holes(offset, output_path, rubbersheet_params):
         ----------
         offset: array, float
             2D array with no data values (NaNs) to be filled
-        out_path: string
-            File path to the output filled array
         rubbersheet_params: cfg
             Dictionary containing rubbersheet parameters
             from runconfig
@@ -289,13 +352,6 @@ def fill_outliers_holes(offset, output_path, rubbersheet_params):
         err_str = "Not a valid filter option to filter rubbersheeted offsets"
         error_channel.log(err_str)
         raise ValueError(err_str)
-
-    # Save smoothed offsets locally
-    length, width = offset_smoothed.shape
-    output = gdal.GetDriverByName('ENVI').Create(output_path, width, length, 1,
-                                                 gdal.GDT_Float32)
-    output.GetRasterBand(1).WriteArray(offset_smoothed)
-    output.FlushCache()
 
     return offset_smoothed
 

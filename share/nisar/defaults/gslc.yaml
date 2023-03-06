@@ -9,12 +9,23 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path:
 
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # If Product SAS and QA SAS are run back-to-back,
+            # this field should be identical to `sas_output_file`.
+            # Otherwise, this field should contain the filename of the single
+            # NISAR product for QA to process.
+            qa_input_file: gslc.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file:
 
             # External orbit file
             orbit_file:
+
+            # TEC file used for geolocation correction. If no file present, no
+            # TEC correction is applied
+            tec_file:
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
@@ -26,6 +37,11 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: gslc.h5
+
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # Output directory to store all QA output files.
+            # Defaults to './qa'
+            qa_output_dir: ./qa
 
         primary_executable:
             product_type: GSLC
@@ -44,6 +60,23 @@ runconfig:
             # Index of the GPU to use for processing, optional. Defaults to the
             # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: 0
+
+        # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
+        output:
+          # Data type of GSLC raster
+          data_type: complex64_zero_mantissa
+
+          # Enable gzip compression of GSLC raster
+          compression_enabled: True
+
+          # Level of compression applied to GSLC raster
+          compression_level: 4
+
+          # Chunk size of GSLC raster
+          chunk_size: [128, 128]
+
+          # Enable shuffle filtering of GSLC raster
+          shuffle: True
 
         # ADT section - isce3 + pyre workflow
         processing:
@@ -158,3 +191,11 @@ runconfig:
                 y: 1000
 
             flatten: True
+
+        qa:
+            workflows:
+                # True to run the validate workflow. Default: False
+                validate: False
+
+                # True to run the qa_reports workflow. Default: False
+                qa_reports: False

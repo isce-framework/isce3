@@ -308,7 +308,7 @@ inline void setRefEpoch(H5obj& h5obj, const std::string& datasetPath,
 
     // Need to create string representation of DateTime manually
     char buffer[40];
-    sprintf(buffer, "seconds since %04d-%02d-%02d %02d:%02d:%02d",
+    snprintf(buffer, 40, "seconds since %04d-%02d-%02d %02d:%02d:%02d",
             refEpoch.year, refEpoch.months, refEpoch.days, refEpoch.hours,
             refEpoch.minutes, refEpoch.seconds);
     std::string unitsAttr {buffer};

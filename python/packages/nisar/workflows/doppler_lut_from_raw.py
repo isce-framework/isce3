@@ -14,12 +14,14 @@ from isce3.signal import (cheby_equi_ripple_filter, corr_doppler_est,
                           sign_doppler_est, unwrap_doppler)
 from isce3.core import LUT2d, speed_of_light
 from isce3.antenna import Frame
+from isce3.geometry import DEMInterpolator
+from isce3.signal import form_single_tap_dbf_echo
 
 
 def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
                          orbit=None, attitude=None, ant=None,
-                         num_rgb_avg=16, az_block_dur=4.0, time_interval=2.0,
-                         dop_method='CDE', subband=False,
+                         dem=None, num_rgb_avg=8, az_block_dur=4.0,
+                         time_interval=2.0, dop_method='CDE', subband=False,
                          polyfit_deg=3, polyfit=False, out_path='.',
                          plot=False, logger=None):
     """Generates 2-D Doppler LUT as a function of slant range and azimuth time.
@@ -64,7 +66,13 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
         Antenna HDF5 product parser object. If not provided, the elevation
         and azimith angles of unit look vector used in absolute doppler
         and ambiguity computation will be set to zero degrees.
-    num_rgb_avg : int, default=16
+        Note that this object is required for multi-channel (NISAR DM2)
+        raw product.
+    dem : isce3.geometry.DEMInrerpolator, optional
+        If None, the WGS84 ellipsoid will be used.
+        It is simply used for multi-channel (NISAR DM2) case where elevation
+        angles are converted into slant ranges at beams transition locations.
+    num_rgb_avg : int, default=8
         Number of range bins to be averaged in final Doppler values.
     az_block_dur : float, default=4.0
         Azimuth block duration in seconds defining time-domain correlator
@@ -108,9 +116,9 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
     The LUT2d product requires at least two blocks in each directions.
     In case of polyfit, the number of valid range bins must be larger than
     (polyfit_deg * num_rgb_avg).
-    NISAR Non-science multi-channel aka diagnostic mode # 2 (DM2) L0B product
-    is not supported. Simply single-channel SAR (non-NISAR) or composite DBFed
-    SAR data (NISAR science mode) are supported.
+    NISAR Non-science multi-channel aka diagnostic mode # 2 (DM2),
+    single-channel SAR (non-NISAR or DM1 NISAR) and composite DBFed
+    SAR data (NISAR science mode) L0 products are all supported.
 
     Returns
     -------
@@ -136,12 +144,11 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
     ValueError
         For bad input parameters or non-existent polarization and/or
         frequency band.
+        Missing `ant` object (None) in case of multi-channel (DM2) raw data.
     RuntimeError
         For dithered PRF.
         Less than 2 azimuth blocks.
         Too many invalid range bins w.r.t polyfit degree in case of polyfit.
-    NotImplementedError
-        For non-science multi-channel aka diagnostic mode # 2 (DM2).
 
     References
     ----------
@@ -223,14 +230,39 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
 
     # Get raw dataset
     raw_dset = raw.getRawDataset(freq_band, txrx_pol)
-    if raw_dset.ndim > 2:
-        raise NotImplementedError(
-            'Multi-channel Raw echo aka Diagnostic Mode 2 '
-            '(DM2) has not supported yet!'
-        )
-    tot_pulses, tot_rgbs = raw_dset.shape
-    logger.info(
-        f'Shape of the echo data (pulses, ranges) -> {tot_pulses, tot_rgbs}')
+    # multi channel (DM2) versus single channel
+    if raw_dset.ndim == 3:
+        logger.info('Multi-channel SAR (DM2) is assumed!')
+        is_multi_chanl = True
+        num_chnl, tot_pulses, tot_rgbs = raw_dset.shape
+        logger.info('Shape of the echo data (channel, pulses, ranges) -> '
+                    f'{num_chnl, tot_pulses, tot_rgbs}')
+        # existance of antenna object is a must!
+        if ant is None:
+            raise ValueError('Multi-channel (DM2) raw requires'
+                             ' antenna object!')
+        # get overlap boundaries between beams for only active RX channels
+        # these are beam "transition" points suitable for forming 1-tap DBFed
+        # composite echo range line later on!
+        el_trans, az_trans = ant.locate_beams_overlap(txrx_pol[1])
+        # pick those EL angles at beams transition that are within the list of
+        # active RX channels
+        list_rx_active = raw.getListOfRxTRMs(freq_band, txrx_pol)
+        logger.info(f'List of active RX channels -> {list_rx_active}')
+        el_trans = el_trans[list_rx_active[:-1] - 1]
+        logger.info(
+            f'EL angles @ beams transitions -> {np.rad2deg(el_trans)} (deg)')
+        logger.info('AZ angle for all beams transitions -> '
+                    f'{np.rad2deg(az_trans)} (deg)')
+        # initialize DEM object if None
+        if dem is None:
+            dem = DEMInterpolator()
+    else:  # single channel
+        logger.info('Single (composite) channel SAR is assumed!')
+        is_multi_chanl = False
+        tot_pulses, tot_rgbs = raw_dset.shape
+        logger.info('Shape of the echo data (pulses, ranges) -> '
+                    f'{tot_pulses, tot_rgbs}')
 
     # blocksize in range
     if num_rgb_avg > (tot_rgbs // 2):
@@ -414,9 +446,22 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
             'Block size (lines, ranges) for Doppler estimation -> '
             f'({num_lines, num_rgb_avg})'
         )
+        # azimuth time at mid part of the azimuth block
+        az_time_blk[n_azblk] += n_azblk * tm_int_pri_prod
+
+        # compute position, velocity and quaternion of the spacecraft at
+        # mid time of the azimuth block
+        quat_mid = attitude.interpolate(az_time_blk[n_azblk])
+        pos_mid, vel_mid = orbit.interpolate(az_time_blk[n_azblk])
 
         # get decoded raw echoes of one azimuth block and for all range bins
-        echo = raw_dset[slice_line]
+        if is_multi_chanl:
+            echo = form_single_tap_dbf_echo(raw_dset, slice_line,
+                                            el_trans, az_trans,
+                                            pos_mid, vel_mid, quat_mid,
+                                            sr_lsp, dem)
+        else:  # single channel
+            echo = raw_dset[slice_line]
 
         # create a mask for invalid/bad range bins for any reason
         # invalid values are either nan or zero but this does not include
@@ -440,9 +485,6 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
         mask_rgb_avg_all[n_azblk] = mask_valid_rgb[
             :num_blk_rg * num_rgb_avg].reshape((num_blk_rg, num_rgb_avg)).sum(
                 axis=1) == num_rgb_avg
-
-        # azimuth time at mid part of the azimuth block
-        az_time_blk[n_azblk] += n_azblk * tm_int_pri_prod
 
         # form mask for NaN values in echo and replace it with 0
         echo[np.isnan(echo)] = 0.0
@@ -546,8 +588,7 @@ def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
         # scene.
         dop_echo = np.median(dop_cnt_valid)
         dop_abs, dop_amb_num = _compute_doppler_abs_ambiguity(
-            orbit, attitude, az_time_blk[n_azblk], look_vec_ant,
-            prf, wavelength, dop_echo)
+            vel_mid, quat_mid, look_vec_ant, prf, wavelength, dop_echo)
 
         logger.info('Absolute Doppler calculated from attitude for block # '
                     f'{n_azblk + 1} -> {dop_abs:.1f} (Hz)')
@@ -645,7 +686,7 @@ def _compute_look_vector_ant(raw, ant, freq_band, txrx_pol):
     return frame.sph2cart(el_ang, az_ang)
 
 
-def _compute_doppler_abs_ambiguity(orbit, attitude, az_time, look_vec,
+def _compute_doppler_abs_ambiguity(vel, quat, look_vec,
                                    prf, wavelength, dop_echo):
     """
     Compute absolute Doppler centroid and its ambiguity number w.r.t nominal
@@ -656,10 +697,10 @@ def _compute_doppler_abs_ambiguity(orbit, attitude, az_time, look_vec,
 
     Parameters
     ----------
-    orbit : isce3.core.Orbit
-    attitude : isce3.core.Attitude
-    az_time : float
-        azimuth time w.r.t. reference epoch of orbit/attitude in (sec)
+    vel : np.ndarray(float)
+        3-element velocity vector of the spacecraft in ECEF
+    quat : isce3.core.Quaternion
+        Contains 4-element quaternion vector of the spacecraft attitude
     look_vec : np.ndarray(float)
         Three-element unit look vector in antenna Cartesian coordinate
     prf : float
@@ -684,11 +725,9 @@ def _compute_doppler_abs_ambiguity(orbit, attitude, az_time, look_vec,
 
 
     """
-    # Get quaternion and convert look vector from antenna to ECEF
-    quat = attitude.interpolate(az_time)
+    # convert look vector from antenna to ECEF
     lk_vec_ecef = quat.rotate(look_vec)
-    # get velocity vector and compute doppler
-    _, vel = orbit.interpolate(az_time)
+    # compute doppler
     dop = 2.0 / wavelength * vel.dot(lk_vec_ecef)
     # get doppler ambiguity
     amb_num = round((dop - dop_echo) / prf)

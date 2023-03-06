@@ -448,7 +448,121 @@ class RawBase(Base, family='nisar.productreader.raw'):
             polarization = self.polarizations[frequency][0]
         path_txrx = self._rawGroup(frequency, polarization)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
-            return fid[path_txrx]["caltone"][()]        
+            return fid[path_txrx]["caltone"][()]
+
+    def getRD(self, frequency='A', polarization=None):
+        """
+        Get round trip RX sample index (RD) of digital beam formed (DBF)
+        range lines. These integer indexes are provided at ADC clock rate
+        (240MHz for NISAR) for all RX channels and range lines.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        np.ndarray(uint32)
+            2-D array of integer values with shape = (rangelines, channels).
+
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            return fid[path_txrx]["RD"][()]
+
+    def getWD(self, frequency='A', polarization=None):
+        """
+        Get start sample index of RX data window (WD) w.r.t. RD of digital beam
+        formed (DBF) range lines. These integer indexes are provided at ADC
+        clock rate (240MHz for NISAR) for all RX channels and range lines.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        np.ndarray(uint32)
+            2-D array of integer values with shape = (rangelines, channels).
+
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            return fid[path_txrx]["WD"][()]
+
+    def getWL(self, frequency='A', polarization=None):
+        """
+        Get RX data window length (WL) of digital beam formed (DBF) range
+        lines. These integer values are provided at ADC clock rate
+        (240MHz for NISAR) for all RX channels and range lines.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        np.ndarray(uint32)
+            2-D array of integer values with shape = (rangelines, channels).
+
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            return fid[path_txrx]["WL"][()]
+
+    def getRdWdWl(self, frequency='A', polarization=None):
+        """
+        Get all three DBF-related parameters "RD", "WD", and "WL" in one
+        place for convenience.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        RD : np.ndarray(uint32)
+            2-D array of integer values with shape = (rangelines, channels)
+        WD : np.ndarray(uint32)
+            2-D array of integer values with shape = (rangelines, channels)
+        WL : np.ndarray(uint32)
+            2-D array of integer values with shape = (rangelines, channels)
+
+        See Also
+        --------
+        getRD
+        getWD
+        getWL
+
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            return (fid[path_txrx]["RD"][()], fid[path_txrx]["WD"][()],
+                    fid[path_txrx]["WL"][()])
 
     # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
     # since PRF isn't necessarily constant.  Return pulse times with grid?

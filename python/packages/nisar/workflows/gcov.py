@@ -14,6 +14,7 @@ import journal
 import numpy as np
 
 import isce3
+from nisar.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
@@ -21,6 +22,139 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.products.readers.orbit import load_orbit_from_xml
+
+
+
+
+def read_rslc_backscatter(ds: h5py.Dataset, key=np.s_[...]):
+    """
+    Read a complex HDF5 dataset and return the square of its magnitude
+
+    Avoids h5py/numpy dtype bugs and uses numpy float16 -> float32 conversions
+    which are about 10x faster than HDF5 ones.
+
+    Parameters
+    ----------
+    ds: h5py.Dataset
+        Path to RSLC HDF5 dataset
+    key: numpy.s_
+        Numpy slice to subset input dataset
+
+    Returns
+    -------
+    numpy.ndarray(numpy.float32)
+        RSLC backscatter as a numpy.ndarray(numpy.float32)
+    """
+    try:
+        backscatter = np.absolute(ds[key][:]) ** 2
+        return backscatter
+    except TypeError:
+        pass
+
+    # This context manager handles h5py exception:
+    # TypeError: data type '<c4' not understood
+    data_block_c4 = ds.astype(complex32)[key]
+
+    # backscatter = sqrt(r^2 + i^2) ^ 2
+    #             = r^2 + i^2
+    backscatter = data_block_c4['r'].astype(np.float32) ** 2
+    backscatter += data_block_c4['i'].astype(np.float32) ** 2
+    return backscatter
+
+
+def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
+                 flag_rslc_to_backscatter, pol_2=None, format="ENVI"):
+    '''
+    Copy RSLC dataset to GDAL format converting RSLC real and
+    imaginary parts from float16 to float32. If the flag
+    flag_rslc_to_backscatter is enabled, the 
+    RSLC complex values are converted to radar backscatter (square of
+    the RSLC magnitude): out = abs(RSLC)**2
+    
+    Optionally, the output raster can be created from the
+    symmetrization of two polarimetric channels
+    (`pol` and `pol_2`).
+
+    in_file: str
+        Path to RSLC HDF5
+    freq: str
+        RSLC frequency band to process ('A' or 'B')
+    pol: str
+        RSLC polarization to process
+    out_file: str
+        Output filename
+    lines_per_block: int
+        Number of lines per block
+    flag_rslc_to_backscatter: bool
+        Indicates if the RSLC complex values should be
+        convered to radar backscatter (square of
+        the RSLC magnitude)
+    pol_2: str, optional
+        Polarization associated with the second RSLC
+    format: str, optional
+        GDAL-friendly format
+
+    Returns
+    -------
+    isce3.io.Raster
+        output raster object
+    '''
+
+    # open RSLC HDF5 file dataset
+    rslc = SLC(hdf5file=in_file)
+    hdf5_ds = rslc.getSlcDataset(freq, pol)
+
+    # if provided, open RSLC HDF5 file dataset 2
+    if pol_2:
+        hdf5_ds_2 = rslc.getSlcDataset(freq, pol_2)
+
+    # get RSLC dimension through GDAL
+    gdal_ds = gdal.Open(f'HDF5:{in_file}:/{rslc.slcPath(freq, pol)}')
+    rslc_length, rslc_width = gdal_ds.RasterYSize, gdal_ds.RasterXSize
+
+    if flag_rslc_to_backscatter:
+        gdal_dtype = gdal.GDT_Float32
+    else:
+        gdal_dtype = gdal.GDT_CFloat32
+
+    # create output file
+    driver = gdal.GetDriverByName(format)
+    out_ds = driver.Create(out_file, rslc_width, rslc_length, 1, gdal_dtype)
+
+    # start block processing
+    lines_per_block = min(rslc_length, lines_per_block)
+    num_blocks = int(np.ceil(rslc_length / lines_per_block))
+
+    for block in range(num_blocks):
+        line_start = block * lines_per_block
+        if block == num_blocks - 1:
+            block_length = rslc_length - line_start
+        else:
+            block_length = lines_per_block
+
+        # read a block of data from the RSLC
+        if flag_rslc_to_backscatter:
+            data_block = read_rslc_backscatter(
+                hdf5_ds, np.s_[line_start:line_start + block_length, :])
+        else:
+            data_block = read_complex_dataset(
+                hdf5_ds, np.s_[line_start:line_start + block_length, :])
+
+        if pol_2:
+            # compute average with a block of data from the second RSLC
+            if flag_rslc_to_backscatter:
+                data_block += read_rslc_backscatter(
+                    hdf5_ds_2, np.s_[line_start:line_start + block_length, :])
+            else:
+                data_block += read_complex_dataset(
+                    hdf5_ds_2, np.s_[line_start:line_start + block_length, :])
+            data_block /= 2.0
+
+        # write to GDAL raster
+        out_ds.GetRasterBand(1).WriteArray(data_block, yoff=line_start, xoff=0)
+
+    out_ds.FlushCache()
+    return isce3.io.Raster(out_file)
 
 
 def run(cfg):
@@ -37,6 +171,9 @@ def run(cfg):
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
     scratch_path = cfg['product_path_group']['scratch_path']
 
+    output_data_compression = cfg['processing']['output_data_compression']
+    if not output_data_compression or output_data_compression.lower == 'none':
+        output_data_compression = None
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
 
@@ -51,6 +188,8 @@ def run(cfg):
     geocode_algorithm = geocode_dict['algorithm_type']
     output_mode = geocode_dict['output_mode']
     flag_apply_rtc = geocode_dict['apply_rtc']
+    flag_apply_valid_samples_sub_swath_masking = \
+        geocode_dict['apply_valid_samples_sub_swath_masking']
     memory_mode = geocode_dict['memory_mode']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
     abs_cal_factor = geocode_dict['abs_rad_cal']
@@ -61,6 +200,18 @@ def run(cfg):
     flag_save_nlooks = geocode_dict['save_nlooks']
     flag_save_rtc = geocode_dict['save_rtc']
     flag_save_dem = geocode_dict['save_dem']
+    min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
+    max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
+
+    # optional keyword arguments , i.e. arguments that may or may not be
+    # included in the call to geocode()
+    optional_geo_kwargs = {}
+
+    # read min/max block size converting MB to B
+    if min_block_size_mb is not None:
+        optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
+    if max_block_size_mb is not None:
+        optional_geo_kwargs['max_block_size'] = max_block_size_mb * (2**20)
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
@@ -99,7 +250,11 @@ def run(cfg):
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
-    exponent = 2
+
+    if flag_fullcovariance:
+        flag_rslc_to_backscatter = False
+    else:
+        flag_rslc_to_backscatter = True
 
     info_channel = journal.info("gcov.run")
     error_channel = journal.error("gcov.run")
@@ -109,6 +264,12 @@ def run(cfg):
     for frequency in freq_pols.keys():
 
         t_freq = time.time()
+
+        # get sub_swaths metadata
+        if flag_apply_valid_samples_sub_swath_masking:
+            sub_swaths = slc.getSwathMetadata(frequency).sub_swaths()
+        else:
+            sub_swaths = None
 
         # unpack frequency dependent parameters
         radar_grid = slc.getRadarGrid(frequency)
@@ -130,56 +291,60 @@ def run(cfg):
         # polarimetric symmetrization is performed
         pol_list = input_pol_list
         for pol in pol_list:
-            temp_ref = \
-                f'HDF5:"{input_hdf5}":/{slc.slcPath(frequency, pol)}'
-            temp_raster = isce3.io.Raster(temp_ref)
-            input_raster_dict[pol] = temp_raster
+            temp_ref = f'HDF5:"{input_hdf5}":/{slc.slcPath(frequency, pol)}'
+            input_raster_dict[pol] = temp_ref
+
         # symmetrize cross-polarimetric channels (if applicable)
         if (flag_symmetrize_cross_pol_channels and
                 'HV' in input_pol_list and
                 'VH' in input_pol_list):
 
-            # create output raster
+            # temporary file for the symmetrized HV polarization
             symmetrized_hv_temp = tempfile.NamedTemporaryFile(
                 dir=scratch_path, suffix='.tif')
 
-            # get cross-polarimetric channels from input_raster_dict
-            hv_raster_obj = input_raster_dict['HV']
-            vh_raster_obj = input_raster_dict['VH']
-
-            # create output symmetrized HV object
-            symmetrized_hv_obj = isce3.io.Raster(
-                symmetrized_hv_temp.name,
-                hv_raster_obj.width,
-                hv_raster_obj.length,
-                hv_raster_obj.num_bands,
-                hv_raster_obj.datatype(),
-                'GTiff')
-
             # call symmetrization function
-            isce3.polsar.symmetrize_cross_pol_channels(
-                hv_raster_obj,
-                vh_raster_obj,
-                symmetrized_hv_obj)
-
-            # ensure changes are flushed to disk by closing & re-opening the
-            # raster.
-            del symmetrized_hv_obj
-            symmetrized_hv_obj = isce3.io.Raster(
-                symmetrized_hv_temp.name)
+            info_channel.log('Symmetrizing polarization channels HV and VH')
+            input_raster = prepare_rslc(
+                input_hdf5, frequency, 'HV',
+                symmetrized_hv_temp.name, 2**11,  # 2**11 = 2048 lines
+                flag_rslc_to_backscatter=flag_rslc_to_backscatter,
+                pol_2='VH', format="ENVI")
 
             # Since HV and VH were symmetrized into HV, remove VH from
             # `pol_list` and `from input_raster_dict`.
             pol_list.remove('VH')
             input_raster_dict.pop('VH')
 
-            # Update `input_raster_dict` with the new `symmetrized_hv_obj`
-            input_raster_dict['HV'] = symmetrized_hv_obj
+            # Update `input_raster_dict` with the symmetrized polarization
+            input_raster_dict['HV'] = input_raster
 
         # construct input rasters
         input_raster_list = []
-        for pol in pol_list:
-            input_raster_list.append(input_raster_dict[pol])
+        for pol, input_raster in input_raster_dict.items():
+
+            # GDAL reference starting with HDF5 (RSLCs) are
+            # converted to backscatter. This step is only
+            # applied because h5py reads the NISAR C4 (4 bytes)
+            # format faster than GDAL reads it. We take
+            # advantage that we are reading the RLSC using
+            # h5py to convert the data to backscatter (square)
+            # and save it as float32.
+
+            if isinstance(input_raster, str):
+                info_channel.log(
+                    f'Computing radar samples backscatter ({pol})')
+                temp_pol_file = tempfile.NamedTemporaryFile(
+                    dir=scratch_path, suffix='.tif')
+                input_raster = prepare_rslc(
+                    input_hdf5, frequency, pol,
+                    temp_pol_file.name, 2**12,  # 2**12 = 4096 lines
+                    flag_rslc_to_backscatter=flag_rslc_to_backscatter,
+                    format="ENVI")
+
+            input_raster_list.append(input_raster)
+
+        info_channel.log(f'Preparing multi-band raster for geocoding')
 
         # set paths temporary files
         input_temp = tempfile.NamedTemporaryFile(
@@ -297,14 +462,13 @@ def run(cfg):
                     flag_apply_rtc=flag_apply_rtc,
                     input_terrain_radiometry=input_terrain_radiometry,
                     output_terrain_radiometry=output_terrain_radiometry,
-                    exponent=exponent,
                     rtc_min_value_db=rtc_min_value_db,
                     rtc_upsampling=rtc_upsampling,
                     rtc_algorithm=rtc_algorithm,
                     abs_cal_factor=abs_cal_factor,
                     flag_upsample_radar_grid=flag_upsample_radar_grid,
-                    clip_min = clip_min,
-                    clip_max = clip_max,
+                    clip_min=clip_min,
+                    clip_max=clip_max,
                     radargrid_nlooks=radar_grid_nlooks,
                     out_off_diag_terms=out_off_diag_terms_obj,
                     out_geo_nlooks=out_geo_nlooks_obj,
@@ -312,8 +476,10 @@ def run(cfg):
                     out_geo_dem=out_geo_dem_obj,
                     input_rtc=None,
                     output_rtc=None,
+                    sub_swaths=sub_swaths,
                     dem_interp_method=dem_interp_method_enum,
-                    memory_mode=memory_mode)
+                    memory_mode=memory_mode,
+                    **optional_geo_kwargs)
 
         del output_raster_obj
 
@@ -356,6 +522,7 @@ def run(cfg):
             # save GCOV imagery
             _save_hdf5_dataset(temp_output.name, hdf5_obj, root_ds,
                                yds, xds, cov_elements_list,
+                               output_data_compression=output_data_compression,
                                long_name=output_radiometry_str,
                                units='',
                                valid_min=clip_min,
@@ -370,6 +537,7 @@ def run(cfg):
             if flag_save_nlooks:
                 _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds,
                                    yds, xds, 'numberOfLooks',
+                                   output_data_compression=output_data_compression,
                                    long_name = 'number of looks',
                                    units = '',
                                    valid_min = 0)
@@ -378,6 +546,7 @@ def run(cfg):
             if flag_save_rtc:
                 _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds,
                                    yds, xds, 'areaNormalizationFactor',
+                                   output_data_compression=output_data_compression,
                                    long_name = 'RTC area factor',
                                    units = '',
                                    valid_min = 0)
@@ -408,6 +577,7 @@ def run(cfg):
                 _save_hdf5_dataset(temp_interpolated_dem.name, hdf5_obj,
                                    root_ds, yds_dem, xds_dem,
                                    'interpolatedDem',
+                                   output_data_compression=output_data_compression,
                                    long_name='Interpolated DEM',
                                    units='')
 
@@ -423,6 +593,7 @@ def run(cfg):
                                      freq_group)
                 _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                                    yds, xds, off_diag_terms_list,
+                                   output_data_compression=output_data_compression,
                                    long_name = output_radiometry_str,
                                    units = '',
                                    valid_min = clip_min,
@@ -470,9 +641,11 @@ def _save_list_cov_terms(cov_elements_list, dataset_group):
 
 
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
-                       yds, xds, ds_name, standard_name=None,
-                       long_name=None, units=None, fill_value=None,
-                       valid_min=None, valid_max=None, compute_stats=True):
+                       yds, xds, ds_name,
+                       output_data_compression=None,
+                       standard_name=None, long_name=None, units=None,
+                       fill_value=None, valid_min=None, valid_max=None,
+                       compute_stats=True):
     '''
     write temporary raster file contents to HDF5
 
@@ -490,6 +663,8 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         x-axis dataset
     ds_name : string
         name of dataset to be added to root_path
+    output_data_compression : str or None, optional
+        Output imagery and secondary layers' compression
     standard_name : string, optional
     long_name : string, optional
     units : string, optional
@@ -514,6 +689,15 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         else:
             stats_vector = isce3.math.compute_raster_stats_float32(raster)
 
+    compression_kwargs = {}
+    if (output_data_compression == 'gzip9'):
+        # maximum compression
+        compression_kwargs['compression'] = 'gzip'
+        # maximum compression
+        compression_kwargs['compression_opts'] = 9
+    elif output_data_compression is not None:
+        compression_kwargs['compression'] = output_data_compression
+
     gdal_ds = gdal.Open(ds_filename)
     nbands = gdal_ds.RasterCount
     for band in range(nbands):
@@ -527,7 +711,8 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         if h5_ds in h5py_obj:
             del h5py_obj[h5_ds]
 
-        dset = h5py_obj.create_dataset(h5_ds, data=data)
+        dset = h5py_obj.create_dataset(h5_ds, data=data, **compression_kwargs)
+
         dset.dims[0].attach_scale(yds)
         dset.dims[1].attach_scale(xds)
         dset.attrs['grid_mapping'] = np.string_("projection")
@@ -558,17 +743,17 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
         elif stats_real_imag_vector is not None:
 
             stats_obj = stats_real_imag_vector[band]
-            dset.attrs.create('min_real_value', data=stats_obj.min_real)
-            dset.attrs.create('mean_real_value', data=stats_obj.mean_real)
-            dset.attrs.create('max_real_value', data=stats_obj.max_real)
+            dset.attrs.create('min_real_value', data=stats_obj.real.min)
+            dset.attrs.create('mean_real_value', data=stats_obj.real.mean)
+            dset.attrs.create('max_real_value', data=stats_obj.real.max)
             dset.attrs.create('sample_standard_deviation_real',
-                              data=stats_obj.sample_stddev_real)
+                              data=stats_obj.real.sample_stddev)
 
-            dset.attrs.create('min_imag_value', data=stats_obj.min_imag)
-            dset.attrs.create('mean_imag_value', data=stats_obj.mean_imag)
-            dset.attrs.create('max_imag_value', data=stats_obj.max_imag)
+            dset.attrs.create('min_imag_value', data=stats_obj.imag.min)
+            dset.attrs.create('mean_imag_value', data=stats_obj.imag.mean)
+            dset.attrs.create('max_imag_value', data=stats_obj.imag.max)
             dset.attrs.create('sample_standard_deviation_imag',
-                              data=stats_obj.sample_stddev_imag)
+                              data=stats_obj.imag.sample_stddev)
 
         if valid_min is not None:
             dset.attrs.create('valid_min', data=valid_min)

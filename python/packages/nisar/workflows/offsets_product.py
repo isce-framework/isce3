@@ -7,7 +7,8 @@ import journal
 import numpy as np
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
-from nisar.workflows.dense_offsets import copy_raster, create_empty_dataset
+from nisar.workflows.dense_offsets import create_empty_dataset
+from nisar.workflows.helpers import copy_raster
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
@@ -26,8 +27,8 @@ def run(cfg: dict, output_hdf5: str = None):
     '''
 
     # Pull parameters from cfg
-    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
-    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
+    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offs_params = cfg['processing']['offsets_product']
@@ -65,7 +66,7 @@ def run(cfg: dict, output_hdf5: str = None):
                 # Create a memory-mappable (ENVI) version of the ref SLC
                 copy_raster(ref_hdf5, freq, pol,
                             offs_params['lines_per_block'],
-                            str(out_dir / 'reference'), format='ENVI')
+                            str(out_dir / 'reference'), file_type='ENVI')
                 ref_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
                 ref_raster = isce3.io.Raster(ref_str)
 
@@ -74,7 +75,7 @@ def run(cfg: dict, output_hdf5: str = None):
                     sec_path = str(out_dir / 'secondary')
                     copy_raster(sec_hdf5, freq, pol,
                                 offs_params['lines_per_block'],
-                                sec_path, format='ENVI')
+                                sec_path, file_type='ENVI')
                 else:
                     sec_path = str(coreg_slc_path /
                                    f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')

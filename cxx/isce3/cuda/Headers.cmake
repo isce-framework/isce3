@@ -4,7 +4,6 @@ container/RadarGeometry.h
 container/RadarGeometry.icc
 core/ComputeCapability.h
 core/Device.h
-core/Event.h
 core/forward.h
 core/gpuBasis.h
 core/gpuInterpolator.h
@@ -19,7 +18,6 @@ core/Kernels.icc
 core/Orbit.h
 core/OrbitView.h
 core/OrbitView.icc
-core/Stream.h
 except/Error.h
 focus/Backproject.h
 fft/detail/CufftWrapper.h
@@ -42,8 +40,6 @@ geometry/utilities.h
 image/forward.h
 image/gpuResampSlc.h
 image/ResampSlc.h
-io/DataStream.h
-io/DataStream.icc
 math/complexOperations.h
 signal/forward.h
 signal/gpuCrossMul.h

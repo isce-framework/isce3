@@ -43,7 +43,7 @@ class AntElPair:
 def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
                                freq_band='A', txrx_pol=None,
                                orbit=None, attitude=None,
-                               az_block_dur=2.0,
+                               az_block_dur=3.0,
                                apply_caltone=False, logger=None):
     """
     Get estimated null locations in elevation (EL) direction as a function
@@ -73,7 +73,7 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
     attitude : isce3.core.Attitude, optional
         If specified, this will be used in place of attitude data
         stored in L0B.
-    az_block_dur : float, default=2.0
+    az_block_dur : float, default=3.0
         Duration of azimuth block in seconds. The last azimuth block
         can have slightly larger duration depending on total azimuth
         duration.

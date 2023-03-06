@@ -9,6 +9,8 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path: input_L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05/SanAnd_05024_18038_006_180730_L090_CX_129_05.h5
 
+            qa_input_file: output_gslc/gslc.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_UAVSAR_SanAnd_05024_18038_006_180730_L090_CX_129_05/nisar-dem/EPSG32610/EPSG32610.vrt
@@ -23,6 +25,8 @@ runconfig:
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_gslc/gslc.h5
+
+            qa_output_dir: qa_gslc
 
         primary_executable:
             product_type: GSLC
@@ -105,10 +109,10 @@ runconfig:
 
             # the core module processes the data block by block to mange memory for large datasets
             blocksize:
-                # number of lines in northing direction of a block of the geocoded grid 
-                y: 2000
+                # number of lines in northing direction of a block of the geocoded grid
+                y: 200
                 # number of lines in easting direction of a block of the geocoded grid
-                #x:  # currently not implemented
+                x: 200
 
             # flag to flatten output GSLC
             flatten: True
@@ -124,7 +128,11 @@ runconfig:
             #gpu_id: 0
 
         # OPTIONAL - Location to save logs, use runconfig*_yaml.log if not specified
-        logging: 
+        logging:
             path: output_gslc/gslc.log
             write_mode: 'w'
 
+        qa:
+            workflows:
+                validate: true
+                qa_reports: true

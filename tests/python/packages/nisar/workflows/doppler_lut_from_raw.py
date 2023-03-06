@@ -138,7 +138,7 @@ class TestDopplerLutFromRaw:
         lut_shape = (self.num_az_blocks, num_sr)
         npt.assert_equal(
             dop_lut.data.shape,  lut_shape,
-            err_msg='Wrong shape of LUT2d {err_msg}'
+            err_msg=f'Wrong shape of LUT2d {err_msg}'
         )
         # check statistics of the LUT
         npt.assert_allclose(
@@ -231,7 +231,7 @@ class TestDopplerLutFromRaw:
             self.raw_obj, az_block_dur=self.az_block_dur,
             time_interval=self.time_interval, subband=True)
         # validate Doppler LUT axes, shape, statistics
-        self._validate_doppler_lut(dop_lut, num_rgb_avg=16,
+        self._validate_doppler_lut(dop_lut, num_rgb_avg=8,
                                    err_msg=' in joint time-frequency approach')
         # check filter coeffs
         npt.assert_equal(
@@ -246,6 +246,6 @@ class TestDopplerLutFromRaw:
             time_interval=self.time_interval, polyfit=True)
         # validate Doppler LUT axes, shape, statistics
         self._validate_doppler_lut(
-            dop_lut, num_rgb_avg=16,
+            dop_lut, num_rgb_avg=8,
             err_msg=' in time approach with polyfitted output'
         )
