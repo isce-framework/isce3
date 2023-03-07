@@ -320,9 +320,12 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     '''
     get_ds_names = lambda ds_dict, desired: [
         x for x, y in ds_dict.items() if y and x in desired]
-    product = 'OFF' if input_product_name is InputProduct.ROFF else 'UNW'
-    src_freq_path = f"/science/LSAR/R{product}/swaths/frequency{freq}"
-    dst_freq_path = f"/science/LSAR/G{product}/grids/frequency{freq}"
+    src_product = 'OFF' if input_product_name is InputProduct.ROFF else 'UNW'
+    if input_product_name is InputProduct.RIFG:
+        src_product = 'IFG'
+    dst_product = 'OFF' if input_product_name is InputProduct.ROFF else 'UNW'
+    src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequency{freq}"
+    dst_freq_path = f"/science/LSAR/G{dst_product}/grids/frequency{freq}"
 
     input_rasters = []
     geocoded_rasters = []
@@ -348,10 +351,9 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                     raster, path = get_ds_input_output(src_freq_path,
                                                        dst_freq_path,
                                                        pol, input_hdf5, ds_name_camel_case,
-                                                       layer, InputProduct.ROFF)
+                                                       layer, input_product_name)
                     input_raster.append(raster)
                     out_ds_path.append(path)
-
             elif iono_sideband and ds_name in ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']:
                 '''
@@ -371,7 +373,8 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
             else:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
-                    src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case)
+                    src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case,
+                    None, input_product_name)
                 input_raster.append(raster)
                 out_ds_path.append(path)
             for input, path in zip(input_raster, out_ds_path):
@@ -667,6 +670,11 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] \
             if input_product_name is InputProduct.ROFF else \
             cfg["processing"]["geocode"]["gunw_datasets"]
+
+    # RIFG product
+    if input_product_name is InputProduct.RIFG:
+        geo_datasets = {'coherence_magnitude': True, 'wrapped_interferogram': True}
+
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
     iono_method = iono_args['spectral_diversity']
@@ -847,7 +855,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_shadow_obj,
                                     scratch_path=scratch_path, compute_stats=False)
-            else:
+            elif input_product_name is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
                 desired=['along_track_offset', 'slant_range_offset',
                          'along_track_offset_variance',
@@ -876,7 +884,23 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     dst_h5, geocode_obj,
                                     off_layer_dict=layer_keys,
                                     input_product_name=InputProduct.ROFF)
+            else:
+                #RIFG
+                desired = ['coherence_magnitude', 'wrapped_interferogram']
+                # Create radar grid geometry required by RIFG product
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
+                                                             grid_zero_doppler)
 
+                # Create geocode object
+                geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                                         dem_raster,
+                                                         lines_per_block,
+                                                         interp_method,
+                                                         invalid_value=np.nan)
+
+                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
+                                    input_hdf5, dst_h5, geocode_obj,
+                                    input_product_name = InputProduct.RIFG)
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
