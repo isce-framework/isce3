@@ -27,7 +27,7 @@ from nisar.workflows.compute_stats import compute_stats_real_data, \
 
 class InputProduct(Enum):
     '''
-    The input product to geocode
+    The input product type to geocode
     '''
     # RUWN product
     RUNW = 1
@@ -37,7 +37,7 @@ class InputProduct(Enum):
     RIFG = 3
 
 
-def run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
+def run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Run geocode insar on user specified hardware
 
     Parameters
@@ -48,8 +48,8 @@ def run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
         Path input RUNW, ROFF, or RIFG HDF5
     output_hdf5 : str
         Path to output GUNW or GOFF HDF5
-    input_product_name: enum
-        Product name of the input_hdf5 to geocode
+    input_product_type: enum
+        Input product type of the input_hdf5 to geocode
     """
     use_gpu = isce3.core.gpu_check.use_gpu(cfg['worker']['gpu_enabled'],
                                            cfg['worker']['gpu_id'])
@@ -57,9 +57,9 @@ def run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
         # Set the current CUDA device.
         device = isce3.cuda.core.Device(cfg['worker']['gpu_id'])
         isce3.cuda.core.set_device(device)
-        gpu_run(cfg, input_hdf5, output_hdf5, input_product_name)
+        gpu_run(cfg, input_hdf5, output_hdf5, input_product_type)
     else:
-        cpu_run(cfg, input_hdf5, output_hdf5, input_product_name)
+        cpu_run(cfg, input_hdf5, output_hdf5, input_product_type)
 
 
 def get_shadow_input_output(scratch_path, freq, dst_freq_path):
@@ -91,7 +91,7 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
 
 
 def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
-                        dataset_name, off_layer=None, input_product_name=InputProduct.RUNW):
+                        dataset_name, off_layer=None, input_product_type=InputProduct.RUNW):
     """ Create input raster object and output dataset path for datasets outside
 
     Parameters
@@ -106,8 +106,8 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         Path to input RUNW or ROFF HDF5
     dataset_name : str
         Name of dataset to be geocoded
-    input_product_name: enum
-        Input product name (e.g. RUNW, ROFF, RIFG)
+    input_product_type: enum
+        Input product type, which is one of RUNW, ROFF, RIFG
 
     Returns
     -------
@@ -118,17 +118,17 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
     """
 
     if dataset_name in ['alongTrackOffset', 'slantRangeOffset'] and \
-            input_product_name is InputProduct.RUNW:
+            input_product_type is InputProduct.RUNW:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}'
     else:
         src_group_path = f'{src_freq_path}/interferogram/{pol}'
         dst_group_path = f'{dst_freq_path}/interferogram/{pol}'
 
-        if input_product_name is InputProduct.RIFG:
+        if input_product_type is InputProduct.RIFG:
             dst_group_path = f'{dst_freq_path}/wrapped_interferogram/{pol}'
 
-    if input_product_name is InputProduct.ROFF:
+    if input_product_type is InputProduct.ROFF:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}/{off_layer}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}/{off_layer}'
 
@@ -234,7 +234,7 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
     return radar_grid
 
 
-def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_name):
+def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type):
     ''' Write radar grid cube to HDF5
 
     Parameters
@@ -247,6 +247,8 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_name
         Orbit object of current SLC
     dst_h5: str
         Path to output GUNW HDF5
+    input_product_type: enum
+        Input product type
     '''
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
@@ -266,7 +268,7 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_name
         length=int(radar_grid_cubes_geogrid.length),
         epsg=radar_grid_cubes_geogrid.epsg)
 
-    product = 'GOFF' if input_product_name is InputProduct.ROFF else 'GUNW'
+    product = 'GOFF' if input_product_type is InputProduct.ROFF else 'GUNW'
     cube_group_path = f'/science/LSAR/{product}/metadata/radarGrid'
 
     radar_grid = slc.getRadarGrid(freq)
@@ -290,7 +292,7 @@ def _snake_to_camel_case(snake_case_str):
 
 def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                      off_layer_dict=None, scratch_path='',
-                     input_product_name=InputProduct.RUNW,
+                     input_product_type=InputProduct.RUNW,
                      iono_sideband=False):
     '''
     Geocode rasters with a shared geogrid.
@@ -311,8 +313,8 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
         h5py.File object where geocoded data is to be written
     scratch_path : str
         Path to scratch where layover shadow raster is saved
-    input_product_name : enum
-        Product name of the input_hdf5
+    input_product_type : enum
+        Product type of the input_hdf5
     iono_sideband : bool
         Flag to geocode ionosphere phase screen estimated from
         side-band
@@ -322,10 +324,10 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     '''
     get_ds_names = lambda ds_dict, desired: [
         x for x, y in ds_dict.items() if y and x in desired]
-    src_product = 'OFF' if input_product_name is InputProduct.ROFF else 'UNW'
-    if input_product_name is InputProduct.RIFG:
+    src_product = 'OFF' if input_product_type is InputProduct.ROFF else 'UNW'
+    if input_product_type is InputProduct.RIFG:
         src_product = 'IFG'
-    dst_product = 'OFF' if input_product_name is InputProduct.ROFF else 'UNW'
+    dst_product = 'OFF' if input_product_type is InputProduct.ROFF else 'UNW'
     src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequency{freq}"
     dst_freq_path = f"/science/LSAR/G{dst_product}/grids/frequency{freq}"
 
@@ -347,13 +349,13 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                 skip_layover_shadow = True
                 input_raster.append(raster)
                 out_ds_path.append(path)
-            elif input_product_name is InputProduct.ROFF:
+            elif input_product_type is InputProduct.ROFF:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 for layer in off_layer_dict:
                     raster, path = get_ds_input_output(src_freq_path,
                                                        dst_freq_path,
                                                        pol, input_hdf5, ds_name_camel_case,
-                                                       layer, input_product_name)
+                                                       layer, input_product_type)
                     input_raster.append(raster)
                     out_ds_path.append(path)
             elif iono_sideband and ds_name in ['ionosphere_phase_screen',
@@ -364,8 +366,8 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                 The ionosphere_phase_screen is geocoded on geogrid of
                 frequencyA.
                 '''
-                iono_src_freq_path = f"/science/LSAR/R{product}/swaths/frequencyB"
-                iono_dst_freq_path = f"/science/LSAR/G{product}/grids/frequencyA"
+                iono_src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequencyB"
+                iono_dst_freq_path = f"/science/LSAR/G{src_product}/grids/frequencyA"
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
                     iono_src_freq_path, iono_dst_freq_path, pol, input_hdf5,
@@ -376,7 +378,7 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
                     src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case,
-                    None, input_product_name)
+                    None, input_product_type)
                 input_raster.append(raster)
                 out_ds_path.append(path)
             for input, path in zip(input_raster, out_ds_path):
@@ -398,12 +400,12 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
 def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         input_hdf5, dst_h5, radar_grid, dem_raster,
                         block_size, off_layer_dict=None, scratch_path='',
-                        compute_stats=True, input_product_name = InputProduct.RUNW,
+                        compute_stats=True, input_product_type = InputProduct.RUNW,
                         iono_sideband=False):
 
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
-                         dst_h5, off_layer_dict, scratch_path, input_product_name,
+                         dst_h5, off_layer_dict, scratch_path, input_product_type,
                          iono_sideband)
     if input_rasters:
         geocode_tuples = zip(input_rasters, geocoded_rasters)
@@ -420,14 +422,14 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
-            if input_product_name != InputProduct.ROFF:
+            if input_product_type != InputProduct.ROFF:
                 water_mask_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/waterMask']
                 compute_water_mask_stats(water_mask_ds)
                 lay_shadow_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/layoverShadowMask']
                 compute_layover_shadow_stats(lay_shadow_ds)
 
 
-def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
+def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Geocode RUNW products on CPU
 
     Parameters
@@ -438,14 +440,14 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
         Path input RUNW or ROFF HDF5
     output_hdf5 : str
         Path to output GUNW HDF5
-    input_product_name: enum
-        Flag indicating to geocode ROFF
+    input_product_type: enum
+        Input product type
     """
     # pull parameters from cfg
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
-    if input_product_name is InputProduct.RIFG:
+    if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_ifgm_geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
@@ -457,11 +459,11 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] \
-            if input_product_name is InputProduct.ROFF else \
+            if input_product_type is InputProduct.ROFF else \
             cfg["processing"]["geocode"]["gunw_datasets"]
 
     # RIFG product
-    if input_product_name is InputProduct.RIFG:
+    if input_product_type is InputProduct.RIFG:
         geo_datasets = {'coherence_magnitude': True, 'wrapped_interferogram': True}
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
@@ -533,7 +535,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
             # set min/max block size from lines_per_block
             type_size = 4  # float32
             block_size = lines_per_block * geo_grid.width * type_size
-            if input_product_name is InputProduct.RUNW:
+            if input_product_type is InputProduct.RUNW:
                 desired = ['coherence_magnitude', 'unwrapped_phase']
 
                 geocode_obj.data_interpolator = interp_method
@@ -606,7 +608,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     radar_grid_slc, dem_raster, block_size,
                                     scratch_path=scratch_path,
                                     compute_stats=False)
-            elif input_product_name is InputProduct.ROFF:
+            elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
                 desired = ['along_track_offset', 'slant_range_offset',
                            'along_track_offset_variance',
@@ -625,7 +627,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     off_layer_dict=layer_keys,
-                                    input_product_name=InputProduct.ROFF)
+                                    input_product_type=InputProduct.ROFF)
             else:
                 #RIFG
                 # Geocode the coherence
@@ -634,7 +636,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
-                                    input_product_name=InputProduct.RIFG)
+                                    input_product_type=InputProduct.RIFG)
 
                 # Geocode the wrapped interferogram
                 desired = ['wrapped_interferogram']
@@ -642,12 +644,12 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                 cpu_geocode_rasters(geocode_cplx_obj, geo_datasets, desired, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size * 2,
-                                    input_product_name=InputProduct.RIFG)
+                                    input_product_type=InputProduct.RIFG)
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_name)
+            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
@@ -656,11 +658,11 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                         input_hdf5, dst_h5, gpu_geocode_obj,
                         off_layer_dict=None, scratch_path='',
                         compute_stats=True,
-                        input_product_name=InputProduct.RUNW,
+                        input_product_type=InputProduct.RUNW,
                         iono_sideband=False):
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
-                         dst_h5, off_layer_dict, scratch_path, input_product_name,
+                         dst_h5, off_layer_dict, scratch_path, input_product_type,
                          iono_sideband)
 
     if input_rasters:
@@ -669,14 +671,14 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
-            if input_product_name != InputProduct.ROFF:
+            if input_product_type != InputProduct.ROFF:
                 water_mask_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/waterMask']
                 compute_water_mask_stats(water_mask_ds)
                 lay_shadow_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/layoverShadowMask']
                 compute_layover_shadow_stats(lay_shadow_ds)
 
 
-def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
+def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Geocode RUNW products on GPU
 
     Parameters
@@ -687,8 +689,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
         Path input RUNW or ROFF HDF5
     output_hdf5 : str
         Path to output GUNW HDF5
-    input_product_name: enum
-        Input product name
+    input_product_type: enum
+        Input product type
     """
     t_all = time.time()
 
@@ -698,7 +700,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
-    if input_product_name is InputProduct.RIFG:
+    if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_ifgm_geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
@@ -706,11 +708,11 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] \
-            if input_product_name is InputProduct.ROFF else \
+            if input_product_type is InputProduct.ROFF else \
             cfg["processing"]["geocode"]["gunw_datasets"]
 
     # RIFG product
-    if input_product_name is InputProduct.RIFG:
+    if input_product_type is InputProduct.RIFG:
         geo_datasets = {'coherence_magnitude': True, 'wrapped_interferogram': True}
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
@@ -759,7 +761,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                 # Multilook radar grid if needed
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
 
-            if input_product_name is InputProduct.RUNW:
+            if input_product_type is InputProduct.RUNW:
                 desired = ['coherence_magnitude', 'unwrapped_phase']
                 # Create radar grid geometry used by most datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
@@ -893,7 +895,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_shadow_obj,
                                     scratch_path=scratch_path, compute_stats=False)
-            elif input_product_name is InputProduct.ROFF:
+            elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
                 desired=['along_track_offset', 'slant_range_offset',
                          'along_track_offset_variance',
@@ -921,7 +923,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     input_hdf5,
                                     dst_h5, geocode_obj,
                                     off_layer_dict=layer_keys,
-                                    input_product_name=InputProduct.ROFF)
+                                    input_product_type=InputProduct.ROFF)
             else:
                 #RIFG
                 desired = ['coherence_magnitude', 'wrapped_interferogram']
@@ -938,12 +940,12 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
 
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_obj,
-                                    input_product_name = InputProduct.RIFG)
+                                    input_product_type = InputProduct.RIFG)
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5, input_product_name)
+            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5, input_product_type)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
@@ -970,14 +972,14 @@ if __name__ == "__main__":
         out_paths['RUNW'] = runw_path
 
     # Run geocode RUNW
-    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"], input_product_name=InputProduct.RUNW)
+    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"], input_product_type=InputProduct.RUNW)
 
     rifg_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'rifg_path']
     if rifg_path is not None:
         out_paths['RIFG'] = rifg_path
     # Run geocode RIFG
-    run(geocode_insar_runconfig.cfg, out_paths["RIFG"], out_paths["GUNW"], input_product_name=InputProduct.RIFG)
+    run(geocode_insar_runconfig.cfg, out_paths["RIFG"], out_paths["GUNW"], input_product_type=InputProduct.RIFG)
 
     # Check if need to geocode offset product
     enabled = geocode_insar_runconfig.cfg['processing']['offsets_product']['enabled']

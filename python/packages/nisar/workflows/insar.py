@@ -77,15 +77,18 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         ionosphere.run(cfg, out_paths['RUNW'])
 
     if run_steps['geocode'] and 'GUNW' in out_paths:
+        # Geocode RIFG
         geocode_insar.run(cfg, out_paths['RIFG'], out_paths['GUNW'], InputProduct.RIFG)
+        # Geocode RUNW
         geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'], InputProduct.RUNW)
+
+    if run_steps['geocode'] and 'GOFF' in out_paths:
+        # Geocode ROFF
+        geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], InputProduct.ROFF)
 
     if 'GUNW' in out_paths and run_steps['troposphere'] and \
             cfg['processing']['troposphere_delay']['enabled']:
         troposphere.run(cfg, out_paths['GUNW'])
-
-    if run_steps['geocode'] and 'GOFF' in out_paths:
-        geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], InputProduct.ROFF)
 
     if run_steps['baseline']:
         baseline.run(cfg, out_paths)
