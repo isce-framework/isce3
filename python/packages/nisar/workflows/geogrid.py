@@ -25,7 +25,8 @@ def _grid_size(stop, start, sz):
 
 def create(cfg, workflow_name=None, frequency_group=None,
            frequency=None, geocode_dict=None,
-           default_spacing_x=None, default_spacing_y=None):
+           default_spacing_x=None, default_spacing_y=None,
+           is_geo_wrapped_ifgm=False):
     '''
     - frequency_group is the name of the sub-group that
     holds the fields x_posting and y_posting, which is usually
@@ -39,7 +40,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
     processing.geocode
     - default_spacing_x is default pixel spacing in the X-direction
     - default_spacing_y is default pixel spacing in the Y-direction
-
+    - is_geo_wrapped_ifgm is the flag indicating the geogrid of wrapped interferogram
     For production we only fix epsgcode and snap value and will
     rely on the rslc product metadta to compute the bounding box of the geocoded products
     there is a place holder in SLC product for compute Bounding box
@@ -68,12 +69,15 @@ def create(cfg, workflow_name=None, frequency_group=None,
     if frequency is None:
         frequency = frequency_group
 
+    output_posting_name = 'wrapped_interferogram_output_posting' \
+            if is_geo_wrapped_ifgm else 'output_posting'
+
     if frequency_group is None:
-        spacing_x = geocode_dict['output_posting']['x_posting']
-        spacing_y = geocode_dict['output_posting']['y_posting']
+        spacing_x = geocode_dict[output_posting_name]['x_posting']
+        spacing_y = geocode_dict[output_posting_name]['y_posting']
     else:
-        spacing_x = geocode_dict['output_posting'][frequency_group]['x_posting']
-        spacing_y = geocode_dict['output_posting'][frequency_group]['y_posting']
+        spacing_x = geocode_dict[output_posting_name][frequency_group]['x_posting']
+        spacing_y = geocode_dict[output_posting_name][frequency_group]['y_posting']
 
     end_x = geocode_dict['bottom_right']['x_abs']
     end_y = geocode_dict['bottom_right']['y_abs']

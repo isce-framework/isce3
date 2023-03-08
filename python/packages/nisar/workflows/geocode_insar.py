@@ -125,10 +125,12 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         src_group_path = f'{src_freq_path}/interferogram/{pol}'
         dst_group_path = f'{dst_freq_path}/interferogram/{pol}'
 
+        if input_product_name is InputProduct.RIFG:
+            dst_group_path = f'{dst_freq_path}/wrapped_interferogram/{pol}'
+
     if input_product_name is InputProduct.ROFF:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}/{off_layer}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}/{off_layer}'
-
 
     # prepare input raster
     input_raster_str = (f"HDF5:{input_hdf5}:/{src_group_path}/{dataset_name}")
@@ -443,6 +445,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
+    if input_product_name is InputProduct.RIFG:
+        geogrids = cfg["processing"]["geocode"]["wrapped_ifgm_geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
@@ -455,6 +459,11 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] \
             if input_product_name is InputProduct.ROFF else \
             cfg["processing"]["geocode"]["gunw_datasets"]
+
+    # RIFG product
+    if input_product_name is InputProduct.RIFG:
+        geo_datasets = {'coherence_magnitude': True, 'wrapped_interferogram': True}
+
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
     iono_method = iono_args['spectral_diversity']
@@ -586,7 +595,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     radar_grid_slc, dem_raster, block_size,
                                     scratch_path=scratch_path,
                                     compute_stats=False)
-            else:
+            elif input_product_name is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
                 desired = ['along_track_offset', 'slant_range_offset',
                            'along_track_offset_variance',
@@ -606,6 +615,15 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     dem_raster, block_size,
                                     off_layer_dict=layer_keys,
                                     input_product_name=InputProduct.ROFF)
+            else:
+                #RIFG
+                desired = ['coherence_magnitude', 'wrapped_interferogram']
+
+                geocode_obj.data_interpolator = interp_method
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                                    pol_list,input_hdf5, dst_h5, radar_grid,
+                                    dem_raster, block_size,
+                                    input_product_name=InputProduct.RIFG)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
@@ -662,6 +680,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
+    if input_product_name is InputProduct.RIFG:
+        geogrids = cfg["processing"]["geocode"]["wrapped_ifgm_geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
@@ -931,8 +951,15 @@ if __name__ == "__main__":
     if runw_path is not None:
         out_paths['RUNW'] = runw_path
 
-    # Run geocode
-    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"])
+    # Run geocode RUNW
+    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"], input_product_name=InputProduct.RUNW)
+
+    rifg_path = geocode_insar_runconfig.cfg['processing']['geocode'][
+        'rifg_path']
+    if rifg_path is not None:
+        out_paths['RIFG'] = rifg_path
+    # Run geocode RIFG
+    run(geocode_insar_runconfig.cfg, out_paths["RIFG"], out_paths["GUNW"], input_product_name=InputProduct.RIFG)
 
     # Check if need to geocode offset product
     enabled = geocode_insar_runconfig.cfg['processing']['offsets_product']['enabled']
