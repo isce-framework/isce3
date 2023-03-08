@@ -152,15 +152,25 @@ def gen_el_rising_edge_product(args):
         logger.info('Parsing external attitude XML file')
         attitude = load_attitude_from_xml(args.attitude_file)
 
+    # Get txrx_pol for the name of the pointing product if not provided.
+    # This requires checking frequency band.
+    if args.freq_band not in raw.polarizations:
+        raise ValueError('Wrong frequency band! The available bands -> '
+                         f'{list(raw.polarizations)}')
+    if args.txrx_pol is None:
+        txrx_pol = raw.polarizations[args.freq_band][0]
+    else:
+        txrx_pol = args.txrx_pol
+
     # get keyword args for function "el_rising_edge_from_raw_ant"
     kwargs = {key: val for key, val in vars(args).items() if
-              key in ['az_block_dur', 'freq_band', 'txrx_pol', 'beam_num',
-                      'out_path', 'plot']}
+              key in ['az_block_dur', 'freq_band', 'beam_num', 'out_path',
+                      'plot']}
     el_ofs, az_dtm, el_fl, sr_fl, lka_fl, msk, cvg, pf_echo, pf_ant, pf_wgt = \
         el_rising_edge_from_raw_ant(
             raw, ant, dem_interp=dem_interp, orbit=orbit, attitude=attitude,
             logger=logger, dbf_pow_norm=not args.no_dbf_norm,
-            apply_weight=not args.no_weight, **kwargs)
+            apply_weight=not args.no_weight, txrx_pol=txrx_pol, **kwargs)
 
     # get the first and last utc azimuth time w/o fractional seconds
     # in "%Y%m%dT%H%M%S" format to be used as part of CSV product filename.
@@ -172,8 +182,10 @@ def gen_el_rising_edge_product(args):
 
     # naming convention of CSV file and product spec is defined in Doc:
     # See reference [1]
-    name_csv = (f'{prefix_name_csv}_{sar_band_char}_{op_mode}_NULL_'
-                f'{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv')
+    name_csv = (
+        f'{prefix_name_csv}_{sar_band_char}{args.freq_band}_{op_mode}_NULL_'
+        f'{txrx_pol}_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv'
+        )
     file_csv = os.path.join(args.out_path, name_csv)
     logger.info(
         f'Dump EL Rising-edge product in "CSV" format to file ->\n {file_csv}')

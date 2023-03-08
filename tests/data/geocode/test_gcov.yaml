@@ -73,11 +73,11 @@ runconfig:
                         x_posting:
                         y_posting:
                 top_left:     #{optional} Can control with absolute values or with snap values
-                    y_abs: 34.84   #{optional} Set top-left y in same units as output EPSG
+                    y_abs: 34.85   #{optional} Set top-left y in same units as output EPSG
                     x_abs: -115.65   #{optional} Set top-left x in same units as output EPSG
                 bottom_right: #{optional} Can control with absolute values or with snap values
                     y_abs: 34.8
-                    x_abs: -115.55
+                    x_abs: -115.5
             geo2rdr:
                 threshold: 1.0e-9
                 maxiter: 25

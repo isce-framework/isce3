@@ -92,7 +92,7 @@ class LeaderFile(object):
         assert(record.SensorPlatformMissionIdentifier == 'ALOS')
         #Specific check for ALOS stripmap, normal observation mode
         assert(record.SensorIDAndMode[0:9] == 'ALOS  -L ')
-        assert(record.SensorIDAndMode[10] == "H")
+        assert(record.SensorIDAndMode[10] in ["H", "L"])
         assert(record.SensorIDAndMode[12:14] in ("60", "62")) # high res or polsar
         assert(record.SensorClockAngle == 90.0)
         assert(record.RangePulseCodeSpecifier == "LINEAR FM CHIRP")
@@ -197,7 +197,7 @@ class LeaderFile(object):
         assert(header.SecondRecordSubType == 18)
         assert(header.ThirdRecordSubType == 20)
         assert(header.RecordLength == 8192)
-        assert(header.NumberOfAttitudeDataPoints in [22,62])
+        assert(header.NumberOfAttitudeDataPoints in [21, 22, 62])
         record.header = header
 
         #Now parse the state vectors individually

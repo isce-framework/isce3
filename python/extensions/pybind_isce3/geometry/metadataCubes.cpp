@@ -29,6 +29,7 @@ void addbinding_metadata_cubes(py::module & m)
             py::arg("threshold_geo2rdr") = defaults.threshold,
             py::arg("numiter_geo2rdr") = defaults.maxiter,
             py::arg("delta_range") = defaults.delta_range,
+            py::arg("flag_set_output_rasters_geolocation") = false,
             R"(Make metadata radar grid cubes
 
                Metadata radar grid cubes describe the radar geometry
@@ -92,6 +93,8 @@ void addbinding_metadata_cubes(py::module & m)
                     Geo2rdr maximum number of iterations
                 delta_range : double, optional
                     Step size used for computing derivative of doppler
+                flag_set_output_rasters_geolocation : bool
+                    Set output rasters' geotransform and spatial reference
 
 )");
 

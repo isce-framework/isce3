@@ -6,12 +6,21 @@ runconfig:
             pge_name: INSAR_L_PGE
 
         input_file_group:
-            reference_rslc_file_path: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/SanAnd_05518_12018_000_120419_L090_CX_143_03.h5
-            secondary_rslc_file_path: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02/SanAnd_05518_12128_008_121105_L090_CX_138_02.h5
+            reference_rslc_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/SanAnd_05518_12018_000_120419_L090_CX_143_03.h5
+            secondary_rslc_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/SanAnd_05518_12128_008_121105_L090_CX_143_02.h5
+
+            qa_rifg_input_file: output_insar/RIFG_product.h5
+            qa_runw_input_file: output_insar/RUNW_product.h5
+            qa_gunw_input_file: output_insar/GUNW_product.h5
+            qa_roff_input_file: output_insar/ROFF_product.h5
+            qa_goff_input_file: output_insar/GOFF_product.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/dem.tif
+            troposphere_weather_model:
+               reference_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/ERA5_N38_N40_W124_W121_20120419_16.grb
+               secondary_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/ERA5_N38_N40_W124_W121_20121105_22.grb
 
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -23,6 +32,8 @@ runconfig:
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_insar/product.h5
+
+            qa_output_dir: qa_insar
 
         primary_executable:
             product_type: ROFF_RIFG_RUNW_GOFF_GUNW
@@ -39,18 +50,7 @@ runconfig:
                     # valid options for polarizations
                     # empty for all polarizations found in RSLC
                     # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    A: [HH, VV]
-
-            # TODO OPTIONAL - Only checked when internet access is available
-            dem_download:
-                # OPTIONAL - s3 bucket / curl URL / local file
-                source:
-                top_left:
-                    x:
-                    y:
-                bottom_right:
-                    x:
-                    y:
+                    A: [HH]
 
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
@@ -67,8 +67,8 @@ runconfig:
                 # If no provided, values will match spacing in provided DEM
                 output_posting:
                     A:
-                        x_posting:
-                        y_posting:
+                        x_posting: 80
+                        y_posting: 80
                     B:
                         x_posting:
                         y_posting:
@@ -83,24 +83,19 @@ runconfig:
                 bottom_right:
                     y_abs:
                     x_abs:
-
-            bandpass:
-                lines_per_block: 2000
+            rdr2geo:
+                lines_per_block: 3000
 
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 25
-                lines_per_block: 1000
-
-            rdr2geo:
-                lines_per_block: 1000
+                lines_per_block: 3000
 
             coarse_resample:
-                lines_per_tile: 100
+                lines_per_tile: 1000
 
             dense_offsets:
-                # OPTIONAL - Flag to enable/disable dense offsets estimation. Default True
-                enabled: False
+                enabled: True
 
             offsets_product:
                 enabled: True
@@ -108,35 +103,69 @@ runconfig:
                 skip_azimuth: 15
                 margin: 250
                 layer1:
-                    window_range: 64
-                    window_azimuth: 64
-                    half_search_range: 20
-                    half_search_azimuth: 20
+                   window_range: 64
+                   window_azimuth: 64
+                   half_search_range: 20
+                   half_search_azimuth: 20
                 layer2:
-                    window_range: 96
-                    window_azimuth: 96
-                    half_search_range: 32
-                    half_search_azimuth: 32
+                   window_range: 96
+                   window_azimuth: 96
+                   half_search_range: 32
+                   half_search_azimuth: 32
                 layer3:
-                    window_range: 128
-                    window_azimuth: 128
-                    half_search_range: 28
-                    half_search_azimuth: 28
+                   window_range: 128
+                   window_azimuth: 128
+                   half_search_range: 28
+                   half_search_azimuth: 28
 
             rubbersheet:
-                enabled: False
+                enabled: True
 
             fine_resample:
-                enabled: False
+                enabled: True
 
             crossmul:
                 flatten: True
-                range_looks: 11
-                azimuth_looks: 11
+                range_looks: 31
+                azimuth_looks: 31
+                lines_per_block: 4096
+
+            filter_interferogram:
+                lines_per_block: 150
+                filter_type: no_filter
+                boxcar:
+                    filter_size_range: 7
+                    filter_size_azimuth: 7
 
             phase_unwrap:
                 crossmul_path:
                 algorithm: icu
+                icu:
+                  buffer_lines: 3700
+
+            ionosphere_phase_correction:
+                enabled: True
+                lines_per_block: 1000
+                spectral_diversity: main_side_band
+                list_of_frequencies:
+                   A: [HH]
+                dispersive_filter:
+                   enabled: True
+                   filter_mask_type: coherence
+                   filling_method: nearest
+                   filter_iterations: 1
+                   unwrap_correction: False
+                   kernel_range: 500
+                   kernel_azimuth: 500
+                   sigma_range: 150
+                   sigma_azimuth: 150
+
+            troposphere_delay:
+                enabled: True
+                package: pyaps
+                weather_model_type: ERA5
+                delay_direction: zenith
+                delay_product: comb
 
         # TODO OPTIONAL - To setup type of worker
         worker:
@@ -150,3 +179,25 @@ runconfig:
         logging:
             path: output_insar/insar.log
             write_mode: 'w'
+
+        qa:
+            rifg:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            runw:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            gunw:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            roff:
+                workflows:
+                    validate: True
+                    qa_reports: True
+            goff:
+                workflows:
+                    validate: True
+                    qa_reports: True

@@ -13,6 +13,10 @@ workflowdata = {
         # and so forth
         "L0B_RRSD_REE2":
         [
+            "attitude.xml",
+            "orbit.xml",
+            "NISAR_LCAL_20220101T120000_01.yaml",
+            "NISAR_LINS_20220101T120000_01.h5",
             "REE_L0B_ECHO_array144sq_03.h5",
             "REE_ANTPAT_CUTS_DATA.h5",
             "README.txt",
@@ -58,13 +62,17 @@ workflowdata = {
         "L0B_RRSD_ALPSRP110160680_Rosamond":
         [
             "ALPSRP110160680.L0B.h5",
-            "dem.tiff",
+            "dem.tif",
+            "ERA5_N34_N36_W119_W117_20080218_06.grb",
+            "NISAR_ANCL_TEC_20230124T021043_20080218T062000_20080218T062020_v0.0.json",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
             "ALPSRP116870680.L0B.h5",
-            "dem.tiff",
+            "dem.tif",
+            "ERA5_N34_N36_W119_W117_20080404_06.grb",
+            "NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json",
             "README.txt",
         ],
         "L0B_RRSD_ALPSRP264757150_Amazon":
@@ -83,7 +91,7 @@ workflowdata = {
 
         "L0B_RRSD_REE_BF_NET":
         [
-            "L0B_RRSD_REE_BF_NET.h5",
+            "NISAR_L0_PR_RRSD_016_095_A_152S_20210701T000000_20210701T000000_A00001_F_P_J_001.h5",
             "README.txt",
         ],
 
@@ -98,9 +106,17 @@ workflowdata = {
             "REE_ORBIT_CHANNEL4_EXTSCENE_PASS1.xml",
         ],
 
+        "L0B_RRSD_DM2_REE_AMAZON_PASS1":
+        [
+            "README.txt",
+            "NISAR_ANTPAT_20221222T161043.h5",
+            "NISAR_L0_PR_RRSD_001_014_A_033S_20220102T101135_20220102T101137_A00001_F_P_J_001.h5",
+            "REE_DEM_AMAZON_PASS1.tif",
+        ],
+
         "L1_RSLC_REE_PTA":
         [
-            "L1_RSLC_REE_PTA.h5",
+            "NISAR_L1_PR_RSLC_016_158_A_003_2000_SHNA_A_20210701T032003_20210701T032003_A00000_F_P_J_001.h5",
             "README.txt",
         ],
 
@@ -133,6 +149,7 @@ workflowdata = {
         [
             "SanAnd_05518_12018_000_120419_L090_CX_143_03.h5",
             "dem.tif",
+            "ERA5_N38_N40_W124_W121_20120419_16.grb",
             "README.txt",
         ],
 
@@ -147,6 +164,7 @@ workflowdata = {
         [
             "SanAnd_05518_12128_008_121105_L090_CX_143_02.h5",
             "dem.tif",
+            "ERA5_N38_N40_W124_W121_20121105_22.grb",
             "README.txt",
         ],
 
@@ -180,71 +198,28 @@ workflowdata = {
             "README.txt",
         ],
 
-        "L2_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001":
+        "L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001":
         [
-            "ancillary/r3/alphatable.nc",
-            "ancillary/r3/clay05cmD_EASE2_200m_int8.nc",
-            "ancillary/r3/cube/201109/fr201109.dat",
-            "ancillary/r3/cube/201109/fr_header.dat",
-            "ancillary/r3/cube/201109/sv201109.dat",
-            "ancillary/r3/cube/201109/sv_header.dat",
-            "ancillary/r3/cube/201109/sh201109.dat",
-            "ancillary/r3/cube/201109/sh_header.dat",
-            "ancillary/r3/cube/201109/co201109.dat",
-            "ancillary/r3/cube/201109/co_header.dat",
-            "ancillary/r3/cube/201109/gr201109.dat",
-            "ancillary/r3/cube/201109/gr_header.dat",
-            "ancillary/r3/cube/201109/wt201109.dat",
-            "ancillary/r3/cube/201109/wt_header.dat",
-            "ancillary/r3/cube/201109/sb201109.dat",
-            "ancillary/r3/cube/201109/sb_header.dat",
-            "ancillary/r3/cube/201109/cl201109.dat",
-            "ancillary/r3/cube/201109/cl_header.dat",
-            "ancillary/r3/cube/201109/ba201109.dat",
-            "ancillary/r3/cube/201109/ba_header.dat",
-            "ancillary/r3/cube/201109/cubeset220129.txt",
-            "ancillary/r3/DEMSLPSTD_M01_002.float32",
-            "ancillary/r3/dominantIGBP_M01_B20120101_003.uint8",
-            "ancillary/r3/EASE2_lat01km.float32",
-            "ancillary/r3/EASE2_lat03km.float32",
-            "ancillary/r3/EASE2_lat09km.float32",
-            "ancillary/r3/EASE2_lat200m.float32",
-            "ancillary/r3/EASE2_lon01km.float32",
-            "ancillary/r3/EASE2_lon03km.float32",
-            "ancillary/r3/EASE2_lon09km.float32",
-            "ancillary/r3/EASE2_lon200m.float32",
-            "ancillary/r3/eps2mvMironov_002.float32",
-            "ancillary/r3/ERA5_SD_TP_ST_SM.nc",
-            "ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_average_09_1.dat",
-            "ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_max_09_1.dat",
-            "ancillary/r3/SMAPC/SMAP_L3_E_17000_nf_min_09_1.dat",
-            "ancillary/r3/UrbanFraction_M01_001.float32",
-            "ancillary/r3/vex12cdl_igbp_cbmap200824.txt",
-            "ancillary/r3/waterfrac_M01_002.float32",
-            "ancillary/r3/waterfrac_M03_002.float32",
-            "ancillary/r3/clayx100.173520x73080.byte1.gz",
-            "ancillary/r3/inc_ang_radx200.173520x73080.byte1.gz",
-            "ancillary/r3/lcv_crop.173520x73080.byte1.gz",
-            "ancillary/r3/lcv_igbp.173520x73080.byte1.gz",
-            "ancillary/r3/sandx100.173520x73080.byte1.gz",
-            "ancillary/r3/vwcx10.173520x73080.byte1.gz",
-            "ancillary/rgs/crop_type/cgls_200m.tif",
-            "ancillary/rgs/dem/SRTM.tif",
-            "ancillary/rgs/ecmwf/20200926.tif",
-            "ancillary/rgs/mask/mask_200m.tif",
-            "ancillary/rgs/models/RF.pkl",
-            "ancillary/rgs/modis_lst/20200926.tif",
-            "ancillary/rgs/modis_ndvi/20200926.tif",
-            "ancillary/rgs/modis_ndwi/20200926.tif",
-            "ancillary/rgs/rainfall/20200926.tif",
-            "ancillary/rgs/soil_texture/soil_texture.tif",
-            "gcov/fof.txt",
-            "gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200902T135152_20200902T135219_P01101_M_P_001_200m.h5",
-            "gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200902T135152_20200902T135219_P01101_M_P_001.h5",
-            "gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200914T135152_20200914T135219_P01101_M_P_001_200m.h5",
-            "gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200914T135152_20200914T135219_P01101_M_P_001.h5",
-            "gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001_200m.h5",
-            "gcov/NISAR_L2_PR_GCOV_001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001.h5",
+            "WldCvr_cbmap221204.txt",
+            "ni_cube_30_50_220828v2.h5",
+            "vwc_M01_288_200m.h5",
+            "vwc_M01_276_200m.h5",
+            "vwc_M01_264_200m.h5",
+            "eps2mvMironov_002.float32",
+            "alphatable.nc",
+            "A4S10040600100700001.nc",
+            "sm_static_ancillary.h5",
+            "NISAR_L2_PR_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001.h5",
+            "NISAR_L2_PR_GCOV_022_045_A_017_4020_HH_20220914T135152_20220914T135219_P01101_P_P_J_001.h5",
+            "NISAR_L2_PR_GCOV_021_045_A_017_4020_HH_20220902T135152_20220902T135219_P01101_P_P_J_001.h5",
+            "SMAPC/SMAPC_Alpha0_Uncertainty_HH.bin",
+            "SMAPC/SMAPC_Alpha0_Uncertainty_VV.bin",
+            "SMAPC/SMAP_L3_E_17000_nf_average_09_1.dat",
+            "SMAPC/SMAP_L3_E_17000_nf_average_year.dat",
+            "SMAPC/SMAP_L3_E_17000_nf_max_09_1.dat",
+            "SMAPC/SMAP_L3_E_17000_nf_max_year.dat",
+            "SMAPC/SMAP_L3_E_17000_nf_min_09_1.dat",
+            "SMAPC/SMAP_L3_E_17000_nf_min_year.dat",
             "README.txt",
         ],
     }
@@ -264,6 +239,7 @@ workflowtests = {
 
     "doppler": {"doppler_" + name: "L0B_RRSD_" + name for name in [
         "ALPSRP264757150_Amazon",
+        "DM2_REE_AMAZON_PASS1",
     ]},
 
     "el_edge": {"el_edge_" + name: "L0B_RRSD_" + name for name in [
@@ -272,6 +248,7 @@ workflowtests = {
 
     "el_null": {"el_null_" + name: "L0B_RRSD_" + name for name in [
         "REE_CHANNEL4_EXTSCENE_PASS1",
+        "DM2_REE_AMAZON_PASS1",
     ]},
 
     'gslc': {"gslc_" + name: "L1_RSLC_" + name for name in [
@@ -304,7 +281,7 @@ workflowtests = {
         "insar_UAVSAR_SanAnd_05518_12018-000_12128-008_143":
             [
                 "L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03",
-                "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_138_02",
+                "L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02",
             ],
         "insar_UAVSAR_Snjoaq_14511_18034-014_18044-015_143":
             [
@@ -335,6 +312,6 @@ workflowtests = {
     ]},
 
     'soilm': {"soilm_" + name: "L2_GCOV_" + name for name in [
-        "001_005_A_219_4020_HH_20200926T135152_20200926T135219_P01101_M_P_001",
+        "023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001",
     ]},
 }

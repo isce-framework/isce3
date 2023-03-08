@@ -7,7 +7,7 @@ from iscetest import data as test_data_dir
 from pathlib import Path
 import json
 
-from isce3.signal.point_target_info import analyze_point_target, tofloatvals
+from isce3.cal.point_target_info import analyze_point_target, tofloatvals
 
 c = isce.core.speed_of_light
 

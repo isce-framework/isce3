@@ -6,6 +6,13 @@ runconfig:
             input_file_path:
             - /tmp/ALPSRP037370690.L0B.h5
 
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # If Product SAS and QA SAS are run back-to-back,
+            # this field should be identical to `sas_output_file`.
+            # Otherwise, this field should contain the filename of the single
+            # NISAR product for QA to process.
+            qa_input_file: ./slc.h5
+
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
             dem_file: null
@@ -26,20 +33,14 @@ runconfig:
             # If not provided, no secondary elevation antenna pattern correction.
             internal_calibration: null
 
-            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-            # If not provided, no polarimetric calibration performed.
-            polarimetric_calibration: null
-
-            # Pre- and post-data take calibration data products, optional.
-            bookend_calibration: null
-
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
             antenna_pattern: null
 
-            # Chirp replica file, optional.
-            # If absent will generate LFM chirp using parameters in L0B product.
-            waveform: null
+            # Locations of the corner reflectors in the input product.
+            # Only required if `absolute_calibration_factor` or
+            # `point_target_analyzer` runconfig params are set to True for QA.
+            corner_reflector_file: null
 
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
@@ -47,10 +48,14 @@ runconfig:
             # Directory where SAS can write temporary data
             scratch_path: .
             # SAS writes output product to the following file. PGE may rename.
-            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             sas_output_file: ./slc.h5
             # Echo processor config (including defaults) to file.
             sas_config_file: null
+
+            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
+            # Output directory to store all QA output files.
+            # Defaults to './qa'
+            qa_output_dir: ./qa
 
         primary_executable:
             # Handy to set to "SLC" until other ISCE tools updated.
@@ -60,12 +65,6 @@ runconfig:
             relative_orbit_number: 1
             frame_number: 1
 
-        # TODO
-        archive: {}
-
-        # TODO
-        qaqc: {}
-
         worker:
             # Whether or not to use GPU, optional. Defaults to True if available.
             gpu_enabled: null
@@ -73,9 +72,6 @@ runconfig:
             # Index of the GPU to use for processing, optional. Defaults to the
             # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: 0
-
-        # TODO
-        profiler: {}
 
         processing:
             output_grid:
@@ -111,6 +107,29 @@ runconfig:
             azimuth_window:
                 kind: Kaiser
                 shape: 0.0
+
+            radio_frequency_interference:
+                # Whether to attempt RFI detection and record related metadata.
+                # Defaults to True
+                detection_enabled: True
+                # Whether to attemt RFI removal. Default to False.
+                # Requires that RFI detection is also enabled.
+                mitigation_enabled: False
+                # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
+                # eigenvalue decomposition. Currently, only 'ST-EVD' is supported.
+                mitigation_algorithm: ST-EVD
+                # Coherent processing interval length (pulses).  Defaults to 32.
+                cpi_length: 32
+                # Number of subdivisions in range.  Defaults to 1.
+                num_range_blocks: 1
+                # Maximum allowable number of emitters suppressed per CPI.
+                # Whenever the limit is exceeded it's assumed that the detection
+                # was unreliable and mitigation is disabled for the block.
+                max_emitters: 16
+                # Difference between sorted eigenvalues signifying the
+                # transition between interference and signal subspaces
+                # (dB/index).  Defaults to 1.0
+                detection_threshold: 1.0
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
@@ -158,8 +177,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 2048
-                    azimuth: 2048
+                    range: 32768
+                    azimuth: 1024
 
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
@@ -222,8 +241,6 @@ runconfig:
             # Processing stage switches, mostly for debug.
             # Any missing stages assumed True
             is_enabled:
-                # radio frequency interference mitigation
-                rfi_removal: True
                 # azimuth resampling and gap-filling
                 presum_blu: True
                 # range compression
@@ -234,3 +251,197 @@ runconfig:
                 range_cor: True
                 # azimuth compression
                 azcomp: True
+
+        qa:
+            workflows:
+                # True to run the validate workflow. Default: False
+                validate: False
+
+                # True to run the qa_reports workflow. Default: False
+                qa_reports: False
+
+                # True to run the absolute_calibration_factor workflow. Default: False
+                absolute_calibration_factor: False
+
+                # True to run the nesz workflow. Default: False
+                nesz: False
+
+                # True to run the point_target_analyzer workflow. Default: False
+                point_target_analyzer: False
+
+            qa_reports:
+                power_image:
+                    # True to compute power in linear units when generating
+                    # the power image for the browse images and graphical
+                    # summary PDF. False for decibel units.
+                    # Defaults to True.
+                    linear_units: true
+
+                    # Number of looks along each axis of the Frequency A
+                    # image arrays for multilooking the power image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, will default to computing the nlooks
+                    # values that would produce an approx. `num_mpix` MPix
+                    # browse image.
+                    nlooks_freqa: null
+
+                    # Number of looks along each axis of the Frequency B
+                    # image arrays for multilooking the power image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, will default to computing the nlooks
+                    # values that would produce an approx. `num_mpix` MPix
+                    # browse image.
+                    nlooks_freqb: null
+
+                    # The approx. size (in megapixels) for the final
+                    # multilooked browse image(s). Defaults to 4.0 MPix.
+                    # If `nlooks_freq*` parameter(s) is not None, nlooks
+                    # values will take precedence.
+                    num_mpix: 4.0
+
+                    # Defines the middle percentile range of the image array
+                    # that the colormap covers. Must be in the range [0.0, 100.0].
+                    # Defaults to 95.0.
+                    middle_percentile: 95.0
+
+                    # The gamma correction parameter.
+                    # Gamma will be applied as follows:
+                    # array_out = normalized_array ^ gamma
+                    # where normalized_array is a copy of the image with values
+                    # scaled to the range [0,1].
+                    # The image colorbar will be defined with respect to the input
+                    # image values prior to normalization and gamma correction.
+                    # Defaults to None (no normalization, no gamma correction)
+                    gamma: null
+
+                    # Preferred tile shape for processing images by batches.
+                    # Actual tile shape used during processing might
+                    # be smaller due to shape of image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Defaults to [1024, 1024] to use all columns
+                    # (i.e. full rows of data).
+                    tile_shape: [1024, 1024]
+
+                histogram:
+                    # The step size to decimate the input array for computing
+                    # the power and phase histograms.
+                    # For example, [2,3] means every 2nd azimuth line and
+                    # every 3rd range line will be used to compute the histograms.
+                    # Defaults to [10,10].
+                    # Format: [<azimuth>, <range>]
+                    decimation_ratio: [10,10]
+
+                    # Starting value (in dB) for the range of the power
+                    # histogram edges. Defaults to -80.0.
+                    pow_histogram_start: -80.0
+
+                    # Endpoint value (in dB) for the range of the power
+                    # histogram edges. Defaults to 20.0.
+                    pow_histogram_endpoint: 20.0
+                    # True to compute phase in radians units, False for
+                    # degrees units. Defaults to True.
+                    phs_in_radians: true
+
+                    # Preferred tile shape for processing images by batches.
+                    # Actual tile shape used during processing might
+                    # be smaller due to shape of image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Defaults to [1024, 1024] to use all columns
+                    # (i.e. full rows of data).
+                    tile_shape: [1024, 1024]
+
+            absolute_calibration_factor:
+                # The frequency sub-band to use. Must be in {'A', 'B'} or null. Defaults
+                # to the science band in the RSLC product ('A' if available, otherwise
+                # 'B').
+                freq: null
+
+                # The transmit and receive polarization to use. Must be in {'HH', 'VV',
+                # 'HV', 'VH'} or null. Defaults to the first co-polarization channel
+                # found in the specified band ('HH' if available, otherwise 'VV').
+                pol: null
+
+                # The width, in pixels, of the square block of image data to extract
+                # centered around the target position for oversampling and peak
+                # finding. Must be >= 1. Defaults to 64.
+                nchip: 64
+
+                # The upsampling ratio. Must be >= 1. Defaults to 32.
+                upsample: 32
+
+                # Option controlling how the target peak position is estimated (time
+                # domain or frequency domain). Must be in {'time', 'freq'}. Defaults to
+                # 'time'.
+                peak_find_domain: time
+
+                # The width, in *oversampled* pixels, of the square sub-block of image
+                # data to extract centered around the target position for fitting a
+                # quadratic polynomial to the peak. Note that this is the size in pixels
+                # *after upsampling*. Must be >= 3. Defaults to 5.
+                nfit: 5
+
+                # The method for estimating the target signal power (rectangular box
+                # method or integrated power method). Must be in {'box', 'integrated'}.
+                # Defaults to 'box'.
+                power_method: box
+
+                # The minimum power threshold, measured in dB below the peak power, for
+                # estimating the target signal power using the integrated power method.
+                # Only used if power_method='integrated'. Defaults to 3.0.
+                pthresh: 3.0
+
+            nesz:
+                # *REQUIRED* Frequency group in raw L0B H5 file. Must be in {'A', 'B'}.
+                freq_group:
+
+                # *REQUIRED* Tx and Rx polarizations in raw L0B file. Must be in {'HH',
+                # 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
+                pol:
+
+                # Start range bins for beams. A list of range sample indices or null.
+                # If rng_start and rng_stop are both null, noise power is estimated over
+                # the full rangeline. Defaults to null.
+                rng_start: null
+
+                # Stop range bins for beams. A list of range sample indices or null.
+                # If rng_start and rng_stop are both null, noise power is estimated over
+                # the full rangeline. Defaults to null.
+                rng_stop: null
+
+                # Noise estimation algorithm: 'avg' - mean of sum of squares, or 'evd' -
+                # Eigenvalue Decomposition. Defaults to 'avg'.
+                algorithm: avg
+
+                # Coherent processing interval in number of range lines. Only used when
+                # algorithm='evd'. Must be >= 1. Defaults to 2.
+                cpi: 2
+
+            point_target_analyzer:
+                # *REQUIRED* Frequency group in the RSLC HDF5 file. Must be in {'A', 'B'}.
+                freq_group:
+
+                # *REQUIRED* Tx and Rx polarizations in RSLC HDF5 file. Must be in
+                # {'HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
+                pol:
+
+                # If true, locate mainlobe nulls based on Fs/BW ratio instead of
+                # searching. Defaults to false.
+                predict_null: False
+
+                # Number of sidelobes to be included for ISLR and PSLR computation. Must
+                # be >= 1. Defaults to 10.
+                num_sidelobes: 10
+
+                # Point target samples upsampling factor. Must be >= 1. Defaults to 32.
+                nov: 32
+
+                # Point target chip size. Must be >= 1. Defaults to 64.
+                chipsize: 64
+
+                # Estimate shift in time domain or frequency domain. Must be in {'time',
+                # 'frequency'}. Defaults to 'time'.
+                shift_domain: time

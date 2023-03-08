@@ -67,6 +67,17 @@ public:
           const DateTime & reference_epoch,
           OrbitInterpMethod interp_method = OrbitInterpMethod::Hermite);
 
+    /** Create a new Orbit containing data in the requested interval
+     *
+     * \param[in] start Beginning of time interval
+     * \param[in] end   End of time interval
+     * \param[in] npad  Minimal number of state vectors to include past each of
+     *                  the given time bounds (useful to guarantee adequate
+     *                  support for interpolation).
+     * \returns Orbit object with data containing start & end times
+    */
+    Orbit crop(const DateTime& start, const DateTime& end, int npad = 0) const;
+
     /** Export list of state vectors */
     std::vector<StateVector> getStateVectors() const;
 

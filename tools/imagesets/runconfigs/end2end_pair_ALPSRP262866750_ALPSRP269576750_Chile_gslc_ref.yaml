@@ -9,6 +9,8 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path: output_rslc_ref/rslc.h5
 
+            qa_input_file: output_gslc_ref/gslc.h5
+
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L0B_RRSD_ALPSRP262866750_Chile/dem.tif
@@ -23,6 +25,8 @@ runconfig:
             # REQUIRED - SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: output_gslc_ref/gslc.h5
+
+            qa_output_dir: qa_gslc_ref
 
         primary_executable:
             product_type: GSLC
@@ -107,7 +111,7 @@ runconfig:
                 # number of lines in northing direction of a block of the geocoded grid 
                 y: 1000 # 2000
                 # number of lines in easting direction of a block of the geocoded grid
-                #x:  # currently not implemented
+                x: 1000
 
             # flag to flatten output GSLC
             flatten: True
@@ -127,4 +131,7 @@ runconfig:
             path: output_gslc_ref/gslc.log
             write_mode: 'w'
 
-
+        qa:
+            workflows:
+                validate: true
+                qa_reports: true

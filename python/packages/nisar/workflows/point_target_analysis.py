@@ -6,7 +6,7 @@ import argparse
 import isce3
 from nisar.products.readers import SLC
 from nisar.types import ComplexFloat16Decoder
-from isce3.signal import point_target_info as pti
+from isce3.cal import point_target_info as pti
 import warnings
 import json
 from nisar.products.readers.GenericProduct import get_hdf5_file_product_type

@@ -21,6 +21,7 @@
 #include "TimeDelta.h"
 #include "Poly1d.h"
 #include "Poly2d.h"
+#include "xyzToEnu.h"
 
 namespace py = pybind11;
 
@@ -123,4 +124,5 @@ void addsubmodule_core(py::module & m)
     addbinding_interp1d(m_core);
     addbinding_avgLUT2dToLUT1d(m_core);
     addbinding_makeprojection(m_core);
+    addbinding_xyzToEnu(m_core);
 }

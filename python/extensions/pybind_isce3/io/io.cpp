@@ -1,4 +1,5 @@
 #include "io.h"
+#include "decode_bfpq_lut.h"
 #include "Raster.h"
 #include "serialization.h"
 
@@ -13,5 +14,6 @@ void addsubmodule_io(py::module & m)
     py::class_<isce3::io::Raster> pyRaster(m_io, "Raster");
 
     addbinding(pyRaster);
+    addbinding_decode_bfpq_lut(m_io);
     addbinding_serialization(m_io);
 }

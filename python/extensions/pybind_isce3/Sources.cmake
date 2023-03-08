@@ -30,6 +30,7 @@ core/StateVector.cpp
 core/TimeDelta.cpp
 core/Poly1d.cpp
 core/Poly2d.cpp
+core/xyzToEnu.cpp
 focus/Backproject.cpp
 focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
@@ -60,6 +61,7 @@ io/gdal/GDALAccess.cpp
 io/gdal/GDALDataType.cpp
 io/gdal/gdal.cpp
 io/gdal/Raster.cpp
+io/decode_bfpq_lut.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp

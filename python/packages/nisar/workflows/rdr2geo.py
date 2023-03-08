@@ -34,7 +34,7 @@ def run(cfg):
     run rdr2geo
     '''
     # pull parameters from cfg
-    input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
+    input_hdf5 = cfg['input_file_group']['reference_rslc_file']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
     ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])

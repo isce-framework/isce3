@@ -102,8 +102,8 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
     # unpack info
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     if is_insar:
-        input_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
-        secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+        input_hdf5 = cfg['input_file_group']['reference_rslc_file']
+        secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     else:
         input_hdf5 = cfg['input_file_group']['input_file_path']
 
@@ -361,7 +361,7 @@ def copy_insar_meta(cfg, dst, src_h5, dst_h5, src_meta_path):
     common_path = 'science/LSAR'
     dst_meta_path = f'{common_path}/{dst}/metadata'
 
-    secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    secondary_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
     # Open secondary SLC
@@ -471,6 +471,11 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     common_path = 'science/LSAR'
     freq_pols = cfg['input_subset']['list_of_frequencies']
     geogrids =cfg['geocode']['geogrids']
+    iono_args = cfg['ionosphere_phase_correction']
+    iono_method = iono_args['spectral_diversity']
+    freq_pols_iono = iono_args['list_of_frequencies']
+    iono_method_sideband = ['main_side_band', 'main_diff_ms_band']
+    is_iono_method_sideband = iono_method in iono_method_sideband
 
     # Create list of frequencies
     id_group = dst_h5[f'{common_path}/identification']
@@ -480,7 +485,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     dset.attrs["description"] = descr
 
     # Open reference SLC
-    ref_path = pcfg['input_file_group']['reference_rslc_file_path']
+    ref_path = pcfg['input_file_group']['reference_rslc_file']
     ref_slc = SLC(hdf5file=ref_path)
     with h5py.File(ref_path, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
@@ -776,19 +781,40 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                       'connectedComponents', descr=descr, units=" ",
                                       grids=grids_val,
                                       long_name='connected components')
-                      descr = "Ionosphere phase screen"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
-                                      'ionospherePhaseScreen', chunks=(128, 128),
-                                      descr=descr, units="radians",
-                                      grids=grids_val,
-                                      long_name='ionosphere phase screen')
-                      descr = "Uncertainty of split spectrum ionosphere phase screen"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
-                                      'ionospherePhaseScreenUncertainty',
-                                      chunks=(128, 128),
-                                      descr=descr, units="radians",
-                                      grids=grids_val,
-                                      long_name='ionosphere phase screen uncertainty')
+
+                if iono_args['enabled'] and dst in ['RUNW', 'GUNW']:
+                   pol_list_iono = freq_pols_iono['A']
+                   # polarizations for ionosphere can be independent to insar pol
+                   for pol_iono in pol_list_iono:
+                      # Do not create ionosphere in frequency A
+                      # if side-band method is enabled
+                      if is_iono_method_sideband and freq == 'A' and dst == 'RUNW':
+                          pass
+                      else:
+                          if pol_iono not in dst_h5[igram_path]:
+                            dst_h5[igram_path].create_group(f'{pol_iono}')
+                          pol_iono_path = f'{igram_path}/{pol_iono}'
+
+                          descr = f"{iono_method} Ionosphere phase screen"
+                          _create_datasets(dst_h5[pol_iono_path],
+                                           igram_shape, np.float32,
+                                           'ionospherePhaseScreen',
+                                            chunks=(128, 128),
+                                            descr=descr, units="radians",
+                                            grids=grids_val,
+                                            long_name='ionosphere \
+                                            phase screen')
+
+                          descr = f"Uncertainty of {iono_method} ionosphere phase screen"
+                          _create_datasets(
+                                    dst_h5[pol_iono_path],
+                                    igram_shape, np.float32,
+                                    'ionospherePhaseScreenUncertainty',
+                                    chunks=(128, 128),
+                                    descr=descr, units="radians",
+                                    grids=grids_val,
+                                    long_name='ionosphere phase screen uncertainty')
+
             # Allocate datasets in metadata
             cal_path = f'{product_path}/metadata/calibrationInformation'
             proc_path = f'{product_path}/metadata/processingInformation/parameters'
@@ -966,17 +992,33 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                          descr=descr, units=None, data=lay_cfg.get('cross_correlation_method'),
                                          long_name='cross correlation method')
         # Add perpendicular and parallel baseline
-        descr = "Perpendicular component of the InSAR baseline"
-        _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+        # For radar/geogrid domain product, coordinateX/slantRange
+        # is chosen to determine the dimension of baseline
+        if dst in ['RIFG', 'ROFF', 'RUNW']:
+            cube_ref_dataset_name = 'coordinateX'
+        else:
+            cube_ref_dataset_name = 'slantRange'
+
+        baseline_cubes_shape = None
+        cube_ref_dataset = f'{grid_path}/{cube_ref_dataset_name}'
+        if cube_ref_dataset in dst_h5:
+            cube_row = dst_h5[cube_ref_dataset].shape[1]
+            cube_col = dst_h5[cube_ref_dataset].shape[2]
+            baseline_cubes_shape = [2, cube_row, cube_col]
+
+        # if input data does not have mandatory metadata,
+        # baseline cannot be estimated, so does not create the baselines
+        if baseline_cubes_shape is not None:
+            descr = "Perpendicular component of the InSAR baseline"
+            _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "perpendicularBaseline",
                             descr=descr, units="meters",
                             long_name='perpendicular baseline')
-        _create_datasets(dst_h5[grid_path], igram_shape, np.float64,
+            _create_datasets(dst_h5[grid_path], baseline_cubes_shape, np.float32,
                             "parallelBaseline",
                             descr=descr.replace('Perpendicular', 'Parallel'),
                             units="meters",
                             long_name='parallel baseline')
-
 
 def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
                    get_min=False):
@@ -1361,7 +1403,8 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
                                          ground_track_velocity_raster,
                                          threshold_geo2rdr,
                                          numiter_geo2rdr,
-                                         delta_range)
+                                         delta_range,
+                                         flag_set_output_rasters_geolocation=False)
 
 
 def _get_raster_from_hdf5_ds(group, ds_name, dtype, shape,

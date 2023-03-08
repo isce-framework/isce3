@@ -32,8 +32,6 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                           &Geocode<T>::thresholdGeo2rdr)
             .def_property("numiter_geo2rdr", nullptr,
                           &Geocode<T>::numiterGeo2rdr)
-            .def_property("lines_per_block", nullptr,
-                          &Geocode<T>::linesPerBlock)
             .def_property("radar_block_margin", nullptr,
                     &Geocode<T>::radarBlockMargin)
             .def_property("data_interpolator",
@@ -100,13 +98,105 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("offset_rg_raster") = nullptr,
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
+                    py::arg("sub_swaths") = nullptr,
+                    py::arg("out_valid_samples_sub_swath_mask") = nullptr,
                     py::arg("memory_mode") = GeocodeMemoryMode::Auto,
                     py::arg("min_block_size") =
                             isce3::core::DEFAULT_MIN_BLOCK_SIZE,
                     py::arg("max_block_size") =
                             isce3::core::DEFAULT_MAX_BLOCK_SIZE,
                     py::arg("dem_interp_method") =
-                            isce3::core::BIQUINTIC_METHOD);
+                            isce3::core::BIQUINTIC_METHOD,
+                    R"(
+                    Geocode data from slant-range to map coordinates
+
+                    Parameters
+                    ----------
+                    radar_grid: isce3.product.RadarGridParameters
+                        Radar grid
+                    input_raster: isce3.io.Raster
+                        Input raster
+                    output_raster: isce3.io.Raster
+                        Output raster
+                    dem_raster: isce3.io.Raster
+                        Input DEM raster
+                    output_mode: isce3.geocode.GeocodeOutputMode
+                        Geocode method
+                    flag_az_baseband_doppler: bool, optional
+                        Shift SLC azimuth spectrum to baseband (using Doppler
+                        centroid) before interpolation
+                    flatten: bool, optional
+                        Flatten the geocoded SLC
+                    geogrid_upsampling: int, optional
+                        Geogrid upsampling
+                    flag_upsample_radar_grid: bool, optional
+                        Double the radar grid sampling rate
+                    flag_apply_rtc: bool, optional
+                        Apply radiometric terrain correction (RTC)
+                    input_terrain_radiometry: isce3.geometry.RtcInputTerrainRadiometry, optional
+                        Input terrain radiometry
+                    output_terrain_radiometry: isce3.geometry.RtcOutputTerrainRadiometry, optional
+                        Output terrain radiometry
+                    exponent: int, optional
+                        Exponent to be applied to the input data. The value 0
+                        indicates that the exponent is based on the data type
+                        of the input raster (1 for real and 2 for complex rasters).
+                    rtc_min_value_db: float, optional
+                        Minimum value for the RTC area factor. Radar data with
+                        RTC area factor below this limit will be set to NaN.
+                    rtc_geogrid_upsampling: int, optional
+                        Geogrid upsampling to compute the radiometric terrain
+                        correction RTC.
+                    rtc_algorithm: isce3.geometry.RtcAlgorithm, optional
+                        RTC algorithm
+                    abs_cal_factor: float, optional
+                        Absolute calibration factor.
+                    clip_min: float, optional
+                        Clip (limit) minimum output values
+                    clip_max: float, optional
+                        Clip (limit) maximum output values
+                    min_nlooks: float, optional
+                        Minimum number of looks. Geogrid data below this limit
+                        will be set to NaN
+                    radar_grid_nlooks: float, optional
+                        Radar grid number of looks. This parameters determines
+                        the multilooking factor used to compute out_geo_nlooks.
+                    out_off_diag_terms: isce3.io.Raster, optional
+                        Output raster containing the off-diagonal terms of the
+                        covariance matrix.
+                    out_geo_rdr: isce3.io.Raster, optional
+                        Raster to which the radar-grid positions (range and
+                        azimuth) of the geogrid pixels vertices will be saved.
+                    out_geo_dem: isce3.io.Raster, optional
+                        Raster to which the interpolated DEM will be saved.
+                    out_nlooks: isce3.io.Raster, optional
+                        Raster to which the number of radar-grid looks
+                        associated with the geogrid will be saved.
+                    out_geo_rtc: isce3.io.Raster, optional
+                        Output RTC area factor (in geo-coordinates).
+                    phase_screen_raster: isce3.io.Raster, optional
+                        Phase screen to be removed before geocoding
+                    offset_az_raster: isce3.io.Raster, optional
+                        Azimuth offset raster (reference radar-grid geometry)
+                    offset_rg_raster: isce3.io.Raster, optional
+                        Range offset raster (reference radar-grid geometry)
+                    in_rtc: isce3.io.Raster, optional
+                        Input RTC area factor (in slant-range).
+                    out_rtc: isce3.io.Raster, optional
+                        Output RTC area factor (in slant-range).
+                    sub_swaths: isce3.product.SubSwaths, optional
+                        Sub-swaths metadata
+                    out_valid_samples_sub_swath_mask: isce3.io.Raster, optional
+                        Output valid-pixels sub-swath mask
+                    geocode_memory_mode: isce3.core.GeocodeMemoryMode
+                        Select memory mode
+                    min_block_size: int, optional
+                        Minimum block size (per thread)
+                    max_block_size: int, optional
+                        Maximum block size (per thread)
+                    dem_interp_method: isce3.core.DataInterpMethod, optional
+                        DEM interpolation method
+                    )");
 }
 
 void addbinding(pybind11::enum_<geocodeOutputMode>& pyGeocodeOutputMode)

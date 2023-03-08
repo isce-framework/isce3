@@ -5,7 +5,7 @@ import numpy as np
 from numpy import linalg as la
 import argparse
 from nisar.products.readers.Raw import Raw
-from nisar.antenna.antenna_pattern import CalPath
+from nisar.antenna import CalPath
 import json
 import warnings
 

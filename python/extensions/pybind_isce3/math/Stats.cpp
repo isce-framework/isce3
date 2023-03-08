@@ -4,11 +4,29 @@
 #include <complex>
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
 using isce3::math::Stats;
 using isce3::math::StatsRealImag;
+
+
+std::string str_helper(const py::object obj,
+                       const std::vector<std::string>& attrs)
+{
+    std::string out = py::str(obj.attr("__class__").attr("__name__"));
+    out += "(";
+    for (auto it = attrs.begin(); it != attrs.end(); ++it) {
+        auto attr = *it;
+        auto cattr = attr.c_str();
+        out += attr + "=" + std::string(py::str(obj.attr(cattr)));
+        if (it != attrs.end() - 1)
+            out += ", ";
+    }
+    return out + ")";
+}
+
 
 template<typename T>
 void addbinding(py::class_<Stats<T>>& pyStats)
@@ -17,8 +35,36 @@ void addbinding(py::class_<Stats<T>>& pyStats)
     pyStats.def_readonly("min", &Stats<T>::min);
     pyStats.def_readonly("max", &Stats<T>::max);
     pyStats.def_readonly("mean", &Stats<T>::mean);
-    pyStats.def_readonly("sample_stddev", &Stats<T>::sample_stddev);
+    pyStats.def_property_readonly("sample_stddev", &Stats<T>::sample_stddev);
     pyStats.def_readonly("n_valid", &Stats<T>::n_valid);
+
+    using ArrayT = py::array_t<T, py::array::c_style>;
+
+    pyStats.def(py::init([](ArrayT x) {
+        return Stats<T>(x.data(), x.size());
+    }),
+    "Calculate statistics of a block of data using Welford's algorithm.");
+
+    pyStats.def("update", [](Stats<T>& self, ArrayT x) {
+        const auto px = x.data();
+        const size_t n = x.size();
+        {
+            py::gil_scoped_release release;
+            self.update(px, n);
+        }
+    },
+    R"(Calculate stats of a new block of data using Welford's algorithm and
+    update current estimate with Chan's method.)");
+
+    pyStats.def("update", [](Stats<T>& self, const Stats<T>& other) {
+        return self.update(other);
+    },
+    "Update statistics with independent data using Chan's method");
+
+    pyStats.def("__str__", [](const py::object self) {
+        return str_helper(self,
+            {"n_valid", "mean", "min", "max", "sample_stddev"});
+    });
 }
 
 template void addbinding(py::class_<Stats<float>>&);
@@ -56,15 +102,36 @@ template<typename T>
 void addbinding(py::class_<StatsRealImag<T>>& pyStatsRealImag)
 {
     pyStatsRealImag.def(py::init<>());
-    pyStatsRealImag.def_readonly("min_real", &StatsRealImag<T>::min_real);
-    pyStatsRealImag.def_readonly("max_real", &StatsRealImag<T>::max_real);
-    pyStatsRealImag.def_readonly("mean_real", &StatsRealImag<T>::mean_real);
-    pyStatsRealImag.def_readonly("sample_stddev_real", &StatsRealImag<T>::sample_stddev_real);
-    pyStatsRealImag.def_readonly("min_imag", &StatsRealImag<T>::min_imag);
-    pyStatsRealImag.def_readonly("max_imag", &StatsRealImag<T>::max_imag);
-    pyStatsRealImag.def_readonly("mean_imag", &StatsRealImag<T>::mean_imag);
-    pyStatsRealImag.def_readonly("sample_stddev_imag", &StatsRealImag<T>::sample_stddev_imag);
+    pyStatsRealImag.def_readonly("real", &StatsRealImag<T>::real);
+    pyStatsRealImag.def_readonly("imag", &StatsRealImag<T>::imag);
     pyStatsRealImag.def_readonly("n_valid", &StatsRealImag<T>::n_valid);
+
+    using ArrayT = py::array_t<std::complex<T>, py::array::c_style>;
+
+    pyStatsRealImag.def(py::init([](ArrayT x) {
+        return StatsRealImag<T>(x.data(), x.size());
+    }),
+    "Calculate statistics of a block of data using Welford's algorithm.");
+
+    pyStatsRealImag.def("update", [](StatsRealImag<T>& self, ArrayT x) {
+        const auto px = x.data();
+        const size_t n = x.size();
+        {
+            py::gil_scoped_release release;
+            self.update(px, n);
+        }
+    },
+    R"(Calculate stats of a new block of data using Welford's algorithm and
+    update current estimate with Chan's method.)");
+
+    pyStatsRealImag.def("update", [](StatsRealImag<T>& self,
+            const StatsRealImag<T>& other) {
+        return self.update(other);
+    });
+
+    pyStatsRealImag.def("__str__", [](const py::object self) {
+        return str_helper(self, {"real", "imag"});
+    });
 }
 
 template void addbinding(py::class_<StatsRealImag<float>>&);

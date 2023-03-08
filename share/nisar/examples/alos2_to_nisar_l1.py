@@ -224,7 +224,7 @@ def construct_nisar_hdf5(outh5, ldr):
 
     # Fill up Identification
     ident_group = lsar_group.create_group('identification')
-    ident_group.create_dataset('diagnosticModeFlag', data=np.string_("False"))
+    ident_group.create_dataset('diagnosticModeFlag', data=np.uint8(0))
     ident_group.create_dataset('isGeocoded', data=np.string_("False"))
     ident_group.create_dataset('listOfFrequencies', data=np.string_(["A"]))
     ident_group.create_dataset('missionId', data=np.string_("ALOS-2"))

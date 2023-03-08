@@ -1,370 +1,286 @@
 import iscetest
+from isce3.geometry import DEMInterpolator
+from nisar.products.readers.antenna import AntennaParser
+from nisar.products.readers.instrument import InstrumentParser
+from nisar.products.readers.Raw import Raw
+from nisar.antenna import TxTrmInfo, RxTrmInfo, TxBMF, RxDBF
+from isce3.antenna import ant2rgdop
+
 import numpy as np
 import numpy.testing as npt
 import os
-from nisar.products.readers.antenna import AntennaParser
-from isce3.geometry import DEMInterpolator as DEMInterp
-from isce3.core import Ellipsoid, Quaternion
-from nisar.products.readers.Raw import Raw
-from isce3 import antenna as ant
-from nisar import antenna as bf_ant
-import h5py
-from collections import namedtuple
-from enum import IntEnum, unique
-from .instrument_parser import InstrumentParser
-import warnings
+from copy import deepcopy
 
 
-def get_test_file():
-    data_file = os.path.join(iscetest.data, "bf", "REE_L0B_ECHO_DATA.h5")
-    ant_file = os.path.join(iscetest.data, "bf", "REE_ANTPAT_CUTS_DATA.h5")
-    instrument_table_file = os.path.join(
-        iscetest.data, "bf", "instrumentTables_20220207.h5"
-    )
-
-    return ant_file, data_file, instrument_table_file
+#  Some helper functions
+def amp2db(amp):
+    """Complex amplitude to power in dB"""
+    return 20 * np.log10(abs(amp))
 
 
-def parse_ant(ant_file, pol):
+def amp2deg(amp):
+    """Complex amplitude to phase in deg"""
+    return np.angle(amp, deg=True)
+
+
+def ref_rxdbf_txbmf_from_ant(ant, orbit, attitude, dem_interp, slant_range,
+                             pulse_time_mid, txrx_pol):
+    """Get RX DBF and TX BMF EL-cut paterns from input antenna object to be
+    used as references for validation of final averaged beamformed patterns.
+
+    These complex beamformed patterns are resampled at mid
+    azimuth/pulse time as a function of slant range.
+
+    Parameters
+    ----------
+    ant : nisar.products.readers.antenna.AntennaParser
+    orbit : isce3.core.orbit
+    attitude : isce3.core.attitude
+    dem_interp : isce3.geometry.DEMInterpolator
+    slant_range : isce3.core.Linspace
+    pulse_time_mid : float
+            Mid pulse time in seconds wrt to a common ref epoch
+    txrx_pol : str
+            Two-character transmit-receive polarization
+
+    Returns
+    -------
+    np.ndarray(complex)
+        1-D complex EL-cut RX DBF pattern
+    np.ndarray(complex)
+        1-D complex EL-cut TX BMF pattern
+
     """
-    Parse antenna elevation gain pattern
-    Return elevation gain, azimuth cut angle and antenna gain for all beams.
+    # get RX DBF pattern for a certain RX pol
+    ant_rx_dbf_pat = ant.fid[
+        f'RX_DBF_{txrx_pol[1]}/elevation/copol_pattern'][()]
+    # get EL angles
+    ant_el_ang = ant.fid[f'RX_DBF_{txrx_pol[1]}/elevation/angle'][()]
+    # get azimuth angle for el cuts
+    ant_cut_angle = ant.fid[
+        f'RX_DBF_{txrx_pol[1]}/elevation/angle'].attrs['cut_angle']
+    # get TX BMF pattern for a certain TX pol
+    ant_tx_bmf_pat = ant.fid[
+        f'TX_BMF_{txrx_pol[1]}/elevation/copol_pattern'][()]
+    # calculate slant range from EL angle at mid pulse time
+    pos_mid, vel_mid = orbit.interpolate(pulse_time_mid)
+    quat_mid = attitude.interpolate(pulse_time_mid)
+    ant_sr, _, _ = ant2rgdop(ant_el_ang, ant_cut_angle, pos_mid, vel_mid,
+                             quat_mid, 1.0, dem_interp, abs_tol=10)
+    # interpolate antenna BMF pattern over output slant range
+    sr_out = np.asarray(slant_range)
+    ant_tx_bmf_out = np.interp(sr_out, ant_sr, ant_tx_bmf_pat)
+    ant_rx_dbf_out = np.interp(sr_out, ant_sr, ant_rx_dbf_pat)
 
-    Parameters:
-    -----------
-    ant_file: str
-        antenna gain H5 file
-    pol: str
-        Tx polarity H or V used to select antenna gain from antenna H5 file
-
-    Returns:
-    --------
-    el_gain_array: 2D array of complex
-        antenna elevation gain, dim = [# of chan x # of angels]
-    el_angles_rad: array of float
-        antenna elevation angles in radian
-    az_cut_angles_rad: float
-        scalar angle value of azimuth cut angle in radian
-    """
-
-    ant_parsed = AntennaParser(ant_file)
-    num_beams = ant_parsed.num_beams(pol)
-
-    el_cut_first_beam = ant_parsed.el_cut(1, pol)
-    az_cut_angles_rad = el_cut_first_beam.cut_angle
-    el_angles_rad = el_cut_first_beam.angle
-    num_angles = len(el_angles_rad)
-
-    el_gain_array = np.zeros((num_beams, num_angles), dtype=complex)
-    for beam in range(num_beams):
-        el_cut_beam = ant_parsed.el_cut(beam + 1, pol)
-        el_gain_array[beam] = el_cut_beam.copol_pattern
-
-    ElAntPattern = namedtuple(
-        "ElAntPattern", "el_ant_gain, el_angles_rad, az_cut_angles_rad"
-    )
-    el_ant_pattern = ElAntPattern(el_gain_array, el_angles_rad, az_cut_angles_rad)
-
-    return el_ant_pattern
+    return ant_rx_dbf_out, ant_tx_bmf_out
 
 
-def read_raw_data(data_file, freq_group, pols):
-    """
-    Parse raw L0B file
+# Main test fxiture
+class TestElevationBeamformer:
 
-    Parameters:
-    -----------
-    data_file: str
-        Raw L0B file
-    freq_group: {'A', 'B'}
-        L0B raw data frequency band char selection 'A' or 'B'
-    pols: {'HH', 'HV', 'VH', 'VV'}
-        L0B raw data file Tx and Rx pol selection 'HH', 'HV', 'VH', or 'VV'
+    # sub directory for all test files under "isce3/tests/data"
+    sub_dir = 'bf'
 
-    Returns:
-    --------
-    orbit: obj
-        ISCE3 data orbit object
-    attitude: obj
-        ISCE3 data attitude object
-    transmit_time: array of float
-        transmit time of range line in seconds w.r.t radar product reference
-    slant_range: isce3.core.Linspace object
-        data slant range bins
-    fc: float
-        data center frequency
-    list_tx_trm: array of int
-        Tx Modules activated for beamforming
-    list_rx_trm: array of int
-        Rx Modules activated for beamforming
-    rng_lines_idx: array of int
-        range line indices
-    cal_path_mask: int Enum
-        Calibration path mask generated for all range line
-        HPA = 0, LNA = 1, and BYPASS = 2
-    correlator_tap2: 2D array of complex
-        second tap of 3-tap correlator for all range lines
-    """
+    # List of input file under "sub_dir"
+    # Note that L0B contains BYPASS cal data!
+    l0b_file = 'REE_L0B_ECHO_DATA.h5'
+    ant_file = 'REE_ANTPAT_CUTS_DATA.h5'
+    instrument_file = 'REE_INSTRUMENT_TABLE.h5'
 
-    raw = Raw(hdf5file=data_file)
-    orbit = raw.getOrbit()
-    attitude = raw.getAttitude()
-    transmit_time = raw.getPulseTimes(freq_group, tx=pols[0])[-1]
-    fc = raw.getCenterFrequency(freq_group)
-    slant_range = raw.getRanges(freq_group, pols[0])
+    # common input parameters
+    txrx_pol = 'HH'
+    freq_band = 'A'
+    ref_height = 0.0  # (m)
 
-    list_tx_trm = raw.getListOfTxTRMs(freq_group, pols[0])
-    list_rx_trm = raw.getListOfRxTRMs(freq_group, pols)
-    rng_lines_idx = raw.getRangeLineIndex(freq_group, pols[0])
-    cal_path_mask = raw.getCalType(freq_group, tx=pols[0])
-    correlator_3taps = raw.getChirpCorrelator(freq_group, pols[0])
-    correlator_tap2 = correlator_3taps[..., 1]
+    # absolute tolerances used for phase (deg) and magnitude (dB) errors,
+    # both STD and MEAN errors.
+    atol_mag_db = 0.05
+    atol_phs_deg = 0.25
 
-    return (
-        orbit,
-        attitude,
-        transmit_time,
-        slant_range,
-        fc,
-        list_tx_trm,
-        list_rx_trm,
-        rng_lines_idx,
-        cal_path_mask,
-        correlator_tap2,
-    )
+    # build common objects from input file
+    _raw = Raw(hdf5file=os.path.join(iscetest.data, sub_dir, l0b_file))
+    _ant = AntennaParser(os.path.join(iscetest.data, sub_dir, ant_file))
+    _ins = InstrumentParser(os.path.join(iscetest.data, sub_dir,
+                                         instrument_file))
 
+    # Parse ref epoch, pulse time, slant range, orbit and attitude from Raw
+    ref_epoch, pulse_time = _raw.getPulseTimes(freq_band, txrx_pol[0])
+    orbit = _raw.getOrbit()
+    attitude = _raw.getAttitude()
+    slant_range = _raw.getRanges(freq_band, txrx_pol[0])
 
-def parse_instrument_table(cal_lut_file, pol):
-    """
-    Parse instrument table, including Angle to Coef. and Time to Angle tables
+    # pulse time tag used for forming active RX DBF and TX BMF EL paterns
+    # to be generated as either any subset of "pulse_time" or any values
+    # within [pule_time[0], pulse_time[-1]].
+    pulse_time_out = pulse_time[::3]
 
-    Parameters:
-    -----------
-    cal_lut_file: str
-        instrument table H5 file
-    pol: str
-        Rx polarity H or V used to select antenna gain from antenna H5 file
+    # form DEM interpolator object per ref height
+    dem_interp = DEMInterpolator(ref_height)
 
-    Returns:
-    --------
-    ac_angle_count: int
-        Angle to Coeff. Table number of angles
-    ac_chan_coef: 2D array of complex
-        Rx CAL path channel coeff., size = [num of chan x 256]
-    angle_low_idx: float
-        start angle for channel coeff. application
-    angle_high_idx: float
-        stop angle for channel coeff. application
-    ta_dbf_switch: array of int
-        Time to Angle Table entries
-    """
+    # Parse Tx-related Cal stuff used only for Tx BMF test cases
+    _tx_chanl = _raw.getListOfTxTRMs(freq_band, txrx_pol[0])
+    _corr_tap2 = _raw.getChirpCorrelator(freq_band, txrx_pol[0])[..., 1]
+    _cal_type = _raw.getCalType(freq_band, txrx_pol[0])
+    # build TxTRM  from Tx Cal stuff w/o optional "tx_phase"
+    tx_trm = TxTrmInfo(pulse_time, _tx_chanl, _corr_tap2, _cal_type)
+    # parse EL patterns for all beams on TX side used only for TX BMF
+    # test cases
+    el_pat_tx = _ant.el_cut_all(txrx_pol[0])
 
-    h5 = InstrumentParser(cal_lut_file)
+    # Parse DBF-related RD/WD/WL, time-to-angle(TA) and angle-to-coeffs(AC)
+    # tables to be used only  Rx DBF pattern test cases
+    # Get DBF-related RD/WD/WL arrays for all RX channels simply for
+    # the first range line.
+    _rd = _raw.getRD(freq_band, txrx_pol)[0]
+    _wd = _raw.getWD(freq_band, txrx_pol)[0]
+    _wl = _raw.getWL(freq_band, txrx_pol)[0]
+    # Sampling rate in (Hz) for range window parameters RD/WD/WL in NISAR case
+    _fs_win = 240e6
 
-    # Angle to Coef. Table: Angle count
-    ac_angle_count = h5.get_ac_angle_count(pol)
+    _ta_switch = _ins.get_time2angle(txrx_pol[1])
+    _fs_ta = _ins.sampling_rate_ta(txrx_pol[1])
+    _dbf_coef = _ins.get_angle2coef(txrx_pol[1])
+    _ela_dbf = _ins.el_angles_ac(txrx_pol[1])
+    # parse active RX channels
+    _rx_chanl = _raw.getListOfRxTRMs(freq_band, txrx_pol)
+    # build RxTRM object
+    rx_trm = RxTrmInfo(pulse_time, _rx_chanl, _rd, _wd, _wl, _dbf_coef,
+                       _ta_switch, _ela_dbf, _fs_win, _fs_ta)
+    # parse EL patterns for all beams on RX side used only for RX DBF
+    # test cases
+    if txrx_pol[0] == txrx_pol[1]:
+        el_pat_rx = deepcopy(el_pat_tx)
+    else:
+        el_pat_rx = _ant.el_cut_all(txrx_pol[1])
 
-    # Angle to Coef. Table: AC Coef.
-    ac_chan_coef = h5.get_ac_coef(pol)
+    # compute reference RX DBF & TX BMF EL-cut patterns as a function of
+    # slant_range at mid azimuth time for a desired TxRx polarization to be
+    # used for validation process.
+    _mid_time = pulse_time.mean()
+    ref_ant_rx_dbf, ref_ant_tx_bmf = ref_rxdbf_txbmf_from_ant(
+        _ant, orbit, attitude, dem_interp, slant_range, _mid_time, txrx_pol)
 
-    # Time to Angle Table: DBF Switch
-    ta_dbf_switch = h5.get_ta_dbf_switch(pol)
+    def _validate_el_pattern(self, el_pat_ref, el_pat, err_msg,
+                             ignore_mean=False):
+        """Validate EL beamformed pattern against its expected values (ref)
+        extracted from AntennaParser object
 
-    return ac_angle_count, ac_chan_coef, ta_dbf_switch
+        Parameters
+        ----------
+        el_pat_ref : np.ndarray(complex)
+                Reference 1-D complex EL pattern obtained from antenna file
+                as a function of slant range
+        el_pat : np.ndarray(complex)
+                Computed averaged 1-D complex EL pattern as a function of
+                slant range
+        err_msg : str, default=''
+                Extra error messages appended to the default one.
+        ignore_mean : bool, default=False
+                Ignore the mean computation and comparison for phase only.
+                In reality, both absolute end-to-end phase magnitude of TRMs
+                won't be available! Simulated data is an exception!
+                See Notes below.
 
+        Notes
+        -----
+        In general, the STD of the error (difference between Ref & computed)
+        shall be solely investigated here because the MEAN can be different
+        depending on whether the absolute phase/mag are captured in forming
+        computed patterns. Besides, we don't care about overall offset (mean)
+        in relative calibration (our main goal is relative calibration here).
+        However, per simulation data, MEAN values are computed and verified
+        except for one of TX BMF test case where the true TX-path phase is not
+        available. In that case, it is well expected to have a phase offset!
 
-def test_beamform():
-    # Test parameters
-    pols = "HH"
-    freq_group = "A"
-    dem_hgt = 0
-    dem = DEMInterp(dem_hgt)
+        """
+        # comple amp ratio
+        pat_ratio = el_pat / el_pat_ref
 
-    # rd, wd, wl @ 240 MHz
-    rd = np.array(
-        [
-            1387305,
-            1387305,
-            1387305,
-            1387305,
-            1446925,
-            1446925,
-            1446925,
-            1446925,
-            1536965,
-            1536965,
-            1536965,
-            1536965,
-        ]
-    )
-    wd = np.array(
-        [4670, 4670, 4670, 46750, 5670, 25285, 47100, 69115, 2390, 28350, 54650, 83960]
-    )
-    wl = np.array(
-        [
-            42080,
-            60620,
-            80235,
-            59970,
-            63445,
-            67145,
-            71290,
-            75575,
-            81570,
-            116950,
-            90650,
-            61340,
-        ]
-    )
+        # compare std [and MEAN] error defined by difference between
+        # Ref & Computed magnitudes of EL patterns in (dB)
+        pow_dif = amp2db(pat_ratio)
 
-    # Tx Parameters
-    # Constant phase offset based on temperature for each channel
-    tx_correction_factor = np.ones(12, dtype=complex)
+        npt.assert_allclose(pow_dif.std(), 0.0, atol=self.atol_mag_db,
+                            err_msg=f'Large STD Mag error (dB) {err_msg}')
 
-    # Rx Correction factor
-    rx_correction_factor = np.ones(12, dtype=complex)
+        npt.assert_allclose(pow_dif.mean(), 0.0, atol=self.atol_mag_db,
+                            err_msg=f'Large MEAN Mag error (dB) {err_msg}')
 
-    # Raw and Antenna file path
-    ant_file, data_file, instrument_table_file = get_test_file()
+        # compare std [and MEAN] error defined by difference between
+        # Ref & Computed phases of EL patterns in (deg) if requested
+        phs_dif = amp2deg(pat_ratio)
 
-    # Parse Antenna gain
-    el_ant_pattern = parse_ant(ant_file, pols[0])
+        npt.assert_allclose(phs_dif.std(), 0.0, atol=self.atol_phs_deg,
+                            err_msg=f'Large STD Phase error (deg) {err_msg}')
 
-    # Parse Raw data
-    (
-        orbit,
-        attitude,
-        transmit_time,
-        slant_range,
-        fc,
-        list_tx_trm,
-        list_rx_trm,
-        rng_lines_idx,
-        cal_path_mask,
-        correlator_tap2,
-    ) = read_raw_data(data_file, freq_group, pols)
+        if not ignore_mean:
+            npt.assert_allclose(
+                phs_dif.mean(), 0.0, atol=self.atol_phs_deg,
+                err_msg=f'Large MEAN Phase error (deg) {err_msg}'
+            )
 
-    # Rx: Parse instrument table for Rx weights
-    (
-        rx_ac_angle_count,
-        rx_ac_chan_coef,
-        rx_ta_dbf_switch,
-    ) = parse_instrument_table(instrument_table_file, pols[1])
+    def test_rx_dbf(self):
+        # construct RX DBF object
+        rx_dbf = RxDBF(self.orbit, self.attitude, self.dem_interp,
+                       self.el_pat_rx, self.rx_trm, self.ref_epoch,
+                       norm_weight=True)
+        # form RX DBF pattern w/o channel adjustment
+        rx_dbf_pat = rx_dbf.form_pattern(self.pulse_time_out, self.slant_range)
+        # validate slow-time averaged EL pattern as a function of range
+        self._validate_el_pattern(self.ref_ant_rx_dbf, rx_dbf_pat.mean(axis=0),
+                                  err_msg='for RX DBF')
 
-    # RX Parameters
-    # TA table sampling frequency
-    dbf_fs = 96e6
-    adc_fs = 240e6
-    dbf_switch_fs = 48e6
-    num_chan = len(list_rx_trm)
-    num_chan_qfsp = 4
-    pulse_time = transmit_time[1]
+    def test_rx_dbf_with_elofs_chanladj(self):
+        # Just to test the code and compare with the same ref pattern for now,
+        # consider trivial EL offset relative to DBF Coeffs angular resolution
+        # to avoid any noticeable changes in pattern per the abs tolerance.
+        el_ofs_deg = 0.01
+        # construct RX DBF object w/ el offset and channel adjustment.
+        rx_dbf = RxDBF(self.orbit, self.attitude, self.dem_interp,
+                       self.el_pat_rx, self.rx_trm, self.ref_epoch,
+                       norm_weight=True, el_ofs_dbf=np.deg2rad(el_ofs_deg))
+        # Total number of RX channels
+        num_chanl_rx, _ = self.rx_trm.ac_dbf_coef.shape
+        # fudge factor for RX or None
+        rx_chan_adj = np.ones(num_chanl_rx, dtype=complex)
+        # form RX DBF pattern w/o channel adjustment
+        rx_dbf_pat = rx_dbf.form_pattern(self.pulse_time_out, self.slant_range,
+                                         rx_chan_adj)
+        # validate slow-time averaged EL pattern as a function of range
+        self._validate_el_pattern(self.ref_ant_rx_dbf, rx_dbf_pat.mean(axis=0),
+                                  err_msg='for RX DBF w/ trivial EL angle'
+                                  'offset and uniform adjustment of channels')
 
-    # Instantiate antenna object
-    tx_trm, rx_trm = bf_ant.get_tx_and_rx_trm_info(
-        transmit_time,
-        fc,
-        list_tx_trm,
-        list_rx_trm,
-        correlator_tap2,
-        cal_path_mask,
-        dbf_fs,
-        adc_fs,
-        dbf_switch_fs,
-        rd,
-        wd,
-        wl,
-        rx_ac_chan_coef,
-        rx_ta_dbf_switch,
-        rx_ac_angle_count,
-        num_chan_qfsp,
-        rx_correction_factor,
-        tx_correction_factor,
-    )
+    def test_tx_bmf(self):
+        # construct TX BMF object
+        tx_bmf = TxBMF(self.orbit, self.attitude, self.dem_interp,
+                       self.el_pat_tx, self.tx_trm,
+                       self.ref_epoch, norm_weight=True)
+        # for TX BMF pattern w/o TX channel adjustment weights
+        tx_bmf_pat = tx_bmf.form_pattern(self.pulse_time_out, self.slant_range)
+        # validate slow-time averaged EL pattern as a function of range
+        # Notice that due to lack of absolute TX-path phase, there will be an
+        # offset between Ref and Computed ones. Set "ignore_mean" to True.
+        self._validate_el_pattern(self.ref_ant_tx_bmf, tx_bmf_pat.mean(axis=0),
+                                  ignore_mean=True, err_msg='for TX BMF')
 
-    # Instantiate Beamformer object
-    beamformer = bf_ant.ElevationBeamformer(
-        orbit, attitude, dem, slant_range, el_ant_pattern, tx_trm, rx_trm
-    )
-
-    # Determine combined Tx/Rx gain pattern based on pulse time
-    (
-        bmf_sr_interp,
-        bmf_sr_interp_tx,
-        bmf_sr_interp_rx,
-        slant_range_el,
-    ) = beamformer.form_two_way(pulse_time)
-
-    # Pass/Fail
-    #Rx/Tx Pwr difference margin in dB
-    rx_dbf_pwr_tol_db = 0.4
-    tx_bmf_pwr_tol_db = 0.4
-
-    #RMS residual margin = 1 deg
-    rx_dbf_res_phase_rms_tol_deg = 1.0
-
-    # Read REE Rx DBF and TX BMF gain patterns for verification
-    rx_dbf_path = f"/RX_DBF_{pols[1]}/elevation/copol_pattern"
-    tx_bmf_path = f"/TX_BMF_{pols[0]}/elevation/copol_pattern"
-
-    fid = h5py.File(ant_file, "r", libver="latest", swmr=True)
-    ree_rx_dbf = np.asarray(fid[rx_dbf_path])
-    ree_tx_bmf = np.asarray(fid[tx_bmf_path])
-
-    # Interpolate REE Rx DBF gain from angle to slant_range domain
-    slant_range_data_fs = np.asarray(slant_range)
-    ree_rx_dbf_slant_range = np.interp(slant_range_data_fs, slant_range_el, ree_rx_dbf)
-
-    # Interpolate REE Tx BMF gain from angle to slant_range domain
-    ree_tx_bmf_slant_range = np.interp(slant_range_data_fs, slant_range_el, ree_tx_bmf)
-
-    # Difference between REE and RX DBF
-    amp2pwr_db = lambda x: 20 * np.log10(np.abs(x))
-    rx_dbf_pwr_ratio_db = np.squeeze(
-        amp2pwr_db(np.abs(bmf_sr_interp_rx) / np.abs(ree_rx_dbf_slant_range))
-    )
-    tx_bmf_pwr_ratio_db = np.squeeze(
-        amp2pwr_db(np.abs(bmf_sr_interp_tx) / np.abs(ree_tx_bmf_slant_range))
-    )
-
-    # Apply -3dB mask to only compare swath of interest
-    # Use REE BMF patterns as benchmarks.
-    # Rx Mask
-    ree_rx_dbf_pwr_db = amp2pwr_db(ree_rx_dbf_slant_range)
-    mask_rx_3db = ree_rx_dbf_pwr_db > (ree_rx_dbf_pwr_db.max() - 3)
-    rx_dbf_pwr_diff_max_db = np.amax(np.abs(rx_dbf_pwr_ratio_db[mask_rx_3db]))
-
-    # Tx Mask
-    ree_tx_bmf_pwr_db = amp2pwr_db(ree_tx_bmf_slant_range)
-    mask_tx_3db = ree_tx_bmf_pwr_db > (ree_tx_bmf_pwr_db.max() - 3)
-    tx_bmf_pwr_diff_max_db = np.amax(np.abs(tx_bmf_pwr_ratio_db[mask_tx_3db]))
-
-    # Rx DBF residual phase
-    num_rng_bins = len(bmf_sr_interp_rx[0])
-    bmf_sr_interp_rx_phase_res = np.angle(bmf_sr_interp_rx, deg=True)
-
-    # Compute Rx DBF residual phase RMS
-    rx_bmf_res_phase_rms = np.sqrt(
-        np.sum(bmf_sr_interp_rx_phase_res ** 2) / num_rng_bins
-    )
-
-    # Compare Tx and Rx beamforming gain pattern power against those of REE
-    npt.assert_array_less(
-        rx_dbf_pwr_diff_max_db,
-        rx_dbf_pwr_tol_db,
-        "Rx DBF error is larger than expected",
-    )
-    npt.assert_array_less(
-        tx_bmf_pwr_diff_max_db,
-        tx_bmf_pwr_tol_db,
-        "Tx BMF error is larger than expected",
-    )
-    npt.assert_array_less(
-        rx_bmf_res_phase_rms,
-        rx_dbf_res_phase_rms_tol_deg,
-        "Rx DBF residual phase error is larger than expected",
-    )
-
-
-if __name__ == "__main__":
-    test_beamform()
+    def test_tx_bmf_with_txphase_chanladj(self):
+        # make a copy of the tx_trm object to be modified
+        tx_trm = deepcopy(self.tx_trm)
+        # set TX-path phases for TxTRMInfo from Raw
+        tx_trm.tx_phase = np.deg2rad(
+            self._raw.getTxPhase(self.freq_band, self.txrx_pol[0]))
+        # construct TX BMF object
+        tx_bmf = TxBMF(self.orbit, self.attitude, self.dem_interp,
+                       self.el_pat_tx, tx_trm,
+                       self.ref_epoch, norm_weight=True)
+        # form TX BMF pattern w/ TX channel adjustment weights
+        # fudge factors for Tx or None
+        _, num_chanl_tx = tx_trm.correlator_tap2.shape
+        tx_chanl_adj = np.ones(num_chanl_tx, dtype=complex)
+        tx_bmf_pat = tx_bmf.form_pattern(self.pulse_time_out, self.slant_range,
+                                         tx_chanl_adj)
+        # validate slow-time averaged EL pattern as a function of range
+        self._validate_el_pattern(self.ref_ant_tx_bmf, tx_bmf_pat.mean(axis=0),
+                                  err_msg='for TX BMF w/ Tx phase data and '
+                                  'uniform adjustment of channels')

@@ -14,8 +14,6 @@ core/projections/gpuGeocent.cpp
 core/projections/gpuPolar.cpp
 core/projections/gpuUTM.cpp
 core/sinc2dinterpolator/gpuSinc2dInterpolator.cpp
-core/stream/event.cu
-core/stream/stream.cu
 except/checkCudaErrors.cu
 fft/cuda-fft.cu
 fft/cuda-fftplan.cu
@@ -24,7 +22,6 @@ geometry/geo2rdr/gpuGeo2rdr.cpp
 geometry/geometry/gpuGeometry.cpp
 geometry/topo/gpuTopo.cpp
 image/resampslc/gpuResampSlc.cpp
-io/datastream/datastream.cu
 signal/gpuCrossMul.cpp
 signal/gpuFilter.cpp
 signal/gpuLooks.cpp

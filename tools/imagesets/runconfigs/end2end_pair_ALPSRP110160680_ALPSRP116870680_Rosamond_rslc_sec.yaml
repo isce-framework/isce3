@@ -6,21 +6,20 @@ runconfig:
         input_file_group:
             input_file_path:
             -   input_L0B_RRSD_ALPSRP116870680_Rosamond/ALPSRP116870680.L0B.h5
+            qa_input_file: output_rslc_sec/rslc.h5
         dynamic_ancillary_file_group:
             dem_file:
             orbit:
             pointing:
             external_calibration:
             internal_calibration:
-            polarimetric_calibration:
-            bookend_calibration:
             antenna_pattern:
-            waveform:
         product_path_group:
             product_path: output_rslc_sec
             scratch_path: scratch_rslc_sec
             sas_output_file: output_rslc_sec/rslc.h5
             sas_config_file: output_rslc_sec/runconfig_rslc_sec.yaml
+            qa_output_dir: qa_rslc_sec
             product_counter: 1
         primary_executable:
             product_type: RSLC
@@ -116,8 +115,8 @@ runconfig:
                     azimuth: 1024
             azcomp:
                 block_size:
-                    range: 128
-                    azimuth: 128
+                    range: 32768
+                    azimuth: 1024
                 azimuth_resolution: 6.0
                 kernel:
                     type: Knab
@@ -143,12 +142,13 @@ runconfig:
             encoding_scale_factor: 0.01
             delete_tempfiles: true
             is_enabled:
-                rfi_removal: true
                 presum_blu: true
                 rangecomp: true
                 eap: true
                 range_cor: true
                 azcomp: true
         qa:
-            validate: true
-            quality: true
+            workflows:
+                validate: true
+                qa_reports: true
+                nesz: true

@@ -6,7 +6,7 @@ import h5py
 import iscetest
 import numpy as np
 import isce3
-from isce3.ionosphere import ionosphere_estimation
+from isce3.atmosphere import ionosphere_estimation
 from nisar.workflows import h5_prep, insar
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
@@ -42,6 +42,7 @@ def test_split_main_band_run():
     persist.run_steps['dense_offsets'] = False
     persist.run_steps['rubbersheet'] = False
     persist.run_steps['fine_resample'] = False
+    persist.run_steps['baseline'] = False
 
     # run insar for prod_type
     insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)
@@ -77,6 +78,9 @@ def test_main_side_band_run():
     persist.run_steps['dense_offsets'] = False
     persist.run_steps['rubbersheet'] = False
     persist.run_steps['fine_resample'] = False
+    # the baseline step is disabled because the winnipeg test dataset
+    # is missing some required metadata.
+    persist.run_steps['baseline'] = False
 
     # run insar for prod_type
     insar.run(insar_runcfg.cfg, out_paths, persist.run_steps)

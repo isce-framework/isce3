@@ -11,7 +11,7 @@ from nisar.h5 import set_string
 from nisar.types import complex32
 from nisar.products.readers.Raw import Raw
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
-from nisar.workflows.compute_stats import compute_stats_complex_data
+from nisar.workflows.compute_stats import write_stats_complex_data
 
 
 log = logging.getLogger("SLCWriter")
@@ -373,15 +373,10 @@ class SLC(h5py.File):
             orbit, doppler, rslc_doppler, epsg, **tol)
 
 
-    def compute_stats(self, frequency, pol):
-        '''
-        Compute RSLC complex-valued statistics and save them as attributes
-        of the corresponding HDF5 dataset
-        '''
+    def write_stats(self, frequency, pol, stats):
         h5_ds = self.swath(frequency)[pol]
-        raster = isce3.io.Raster(f"IH5:::ID={h5_ds.id.id}".encode("utf-8"))
-        compute_stats_complex_data(raster, h5_ds)
-      
+        write_stats_complex_data(h5_ds, stats)
+
 
     def add_calibration_section(self, frequency, pol, 
                                 az_time_orig_vect: np.array, 

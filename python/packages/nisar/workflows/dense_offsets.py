@@ -8,10 +8,9 @@ import time
 import journal
 import numpy as np
 import isce3
-import nisar
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
+from nisar.workflows.helpers import copy_raster
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.dense_offsets_runconfig import \
     DenseOffsetsRunConfig
@@ -23,14 +22,16 @@ def run(cfg: dict):
     '''
 
     # Pull parameters from cfg
-    ref_hdf5 = cfg['input_file_group']['reference_rslc_file_path']
-    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file_path']
+    ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
+    sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offset_params = cfg['processing']['dense_offsets']
+    lines_per_block = offset_params['lines_per_block']
 
     # Initialize parameters shared between frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
+    sec_slc = SLC(hdf5file=sec_hdf5)
 
     # Get coregistered SLC path
     coregistered_slc_path = pathlib.Path(offset_params['coregistered_slc_path'])
@@ -71,11 +72,11 @@ def run(cfg: dict):
             # Create a memory mappable copy of reference SLC
             copy_raster(ref_hdf5, freq, pol,
                         offset_params['lines_per_block'],
-                        str(out_dir / 'reference'), format='ENVI')
+                        str(out_dir / 'reference.slc'), file_type='ENVI')
 
             ref_raster_str = f'HDF5:{ref_hdf5}:/{ref_slc.slcPath(freq, pol)}'
             ref_raster = isce3.io.Raster(ref_raster_str)
-            ampcor.referenceImageName = str(out_dir / 'reference')
+            ampcor.referenceImageName = str(out_dir / 'reference.slc')
             ampcor.referenceImageHeight = ref_raster.length
             ampcor.referenceImageWidth = ref_raster.width
 
@@ -83,10 +84,10 @@ def run(cfg: dict):
             # created in the previous step (resample slc). If secondary raster
             # is extracted from HDF5 file, needs to be made memory mappable
             if coregistered_slc_path.is_file():
-                 sec_raster_path = str(out_dir / 'secondary')
-                 copy_raster(sec_hdf5, freq, pol,
-                             offset_params['lines_per_block'],
-                             sec_raster_path, format='ENVI')
+                sec_raster_path = str(out_dir / 'secondary.slc')
+                copy_raster(sec_hdf5, freq, pol,
+                            offset_params['lines_per_block'],
+                            sec_raster_path, file_type='ENVI')
             else:
                  sec_raster_path = str(coregistered_slc_path /
                                        f'coarse_resample_slc/freq{freq}/{pol}/coregistered_secondary.slc')
@@ -257,67 +258,14 @@ def set_optional_attributes(ampcor_obj, cfg, length, width):
     return ampcor_obj
 
 
-def copy_raster(infile, freq, pol,
-                lines_per_block, outfile, format="ENVI"):
-    '''
-    Copy RSLC dataset to GDAL format and convert real and
-    imaginary parts from float16 to float32
-
-    infile: str
-        Path to RSLC HDF5
-    freq: str
-        RSLC frequency band to process ('A' or 'B')
-    pol: str
-        RSLC polarization to process
-    outfile: str
-        Output filename
-    format: str
-        GDAL-friendly format
-    '''
-
-    # Open RSLC HDF5 file dataset
-    rslc = SLC(hdf5file=infile)
-    hdf5_ds = rslc.getSlcDataset(freq, pol)
-
-    # Get RSLC dimension through GDAL
-    gdal_ds = gdal.Open(f'HDF5:{infile}:/{rslc.slcPath(freq, pol)}')
-    rslc_length, rslc_width = gdal_ds.RasterYSize, gdal_ds.RasterXSize
-
-    # Create output file
-    driver = gdal.GetDriverByName(format)
-    out_ds = driver.Create(outfile, rslc_width, rslc_length,
-                           1, gdal.GDT_CFloat32)
-
-    # Start block processing
-    lines_per_block = min(rslc_length, lines_per_block)
-    num_blocks = int(np.ceil(rslc_length / lines_per_block))
-
-    for block in range(num_blocks):
-        line_start = block * lines_per_block
-        if block == num_blocks - 1:
-            block_length = rslc_length - line_start
-        else:
-            block_length = lines_per_block
-        # Read a block of data from RSLC and convert real and imag part to float32
-        data_block = nisar.types.read_c4_dataset_as_c8(hdf5_ds,
-                                                       np.s_[
-                                                           line_start:line_start + block_length,
-                                                           :])
-        # Write to GDAL raster
-        out_ds.GetRasterBand(1).WriteArray(data_block[0:block_length],
-                                           yoff=line_start, xoff=0)
-    out_ds.FlushCache()
-
-
 def create_empty_dataset(filename, width, length,
-                         bands, dtype, interleave="bip", format="ENVI"):
+                         bands, dtype, interleave="bip", file_type="ENVI"):
     '''
     Create empty dataset with user-defined options
     '''
-    driver = gdal.GetDriverByName(format)
-    ds = driver.Create(filename, xsize=width, ysize=length,
-                       bands=bands, eType=dtype,
-                       options=[f"INTERLEAVE={interleave}"])
+    driver = gdal.GetDriverByName(file_type)
+    driver.Create(filename, xsize=width, ysize=length, bands=bands,
+                  eType=dtype, options=[f"INTERLEAVE={interleave}"])
 
 
 if __name__ == "__main__":
