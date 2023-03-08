@@ -103,7 +103,7 @@ void addbinding_geo2rdr(pybind11::module& m)
                 return std::make_pair(aztime, slant_range);
         },
         py::arg("lon_lat_height"),
-        py::arg("elliposid")=Ellipsoid(),
+        py::arg("ellipsoid")=Ellipsoid(),
         py::arg("orbit"),
         py::arg("doppler"),
         py::arg("wavelength"),
