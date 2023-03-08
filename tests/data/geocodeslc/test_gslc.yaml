@@ -64,6 +64,13 @@ runconfig:
                     B:
                         x_posting:
                         y_posting:
+                wrapped_interferogram_output_posting:
+                    A:
+                        x_posting:
+                        y_posting:
+                    B:
+                        x_posting:
+                        y_posting:
                 top_left:     #{optional} Can control with absolute values or with snap values
                     y_abs: 34.84   #{optional} Set top-left y in same units as output EPSG
                     x_abs: -115.65   #{optional} Set top-left x in same units as output EPSG

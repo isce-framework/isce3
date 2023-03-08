@@ -85,6 +85,14 @@ runconfig:
                         x_posting:
                         y_posting:
 
+                wrapped_interferogram_output_posting:
+                    A:
+                        x_posting:
+                        y_posting:
+                    B:
+                        x_posting:
+                        y_posting:
+
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
@@ -101,8 +109,8 @@ runconfig:
                 lines_per_block: 1000
                 window_function: tukey
                 window_shape: 0.25
-                range_fft_size: 
-                
+                range_fft_size:
+
             geo2rdr:
                 topo_path: '.'
                 threshold: 1.0e-9

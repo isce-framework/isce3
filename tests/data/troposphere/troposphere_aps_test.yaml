@@ -98,12 +98,12 @@ runconfig:
                    window_range: 64
                    window_azimuth: 64
                    half_search_range: 20
-                   half_search_azimuth: 20 
+                   half_search_azimuth: 20
                 layer2:
                    window_range: 96
                    window_azimuth: 96
                    half_search_range: 32
-                   half_search_azimuth: 32 
+                   half_search_azimuth: 32
                 layer3:
                    window_range: 128
                    window_azimuth: 128
@@ -163,7 +163,7 @@ runconfig:
                    kernel_azimuth: 500
                    sigma_range: 150
                    sigma_azimuth: 150
-            
+
             troposphere_delay:
                 enabled: True
                 package: pyaps

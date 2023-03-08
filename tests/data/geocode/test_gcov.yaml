@@ -17,10 +17,10 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RCOV workflow.
             sas_output_file: to_be_set_within_test_code
-       
+
         primary_executable:
             product_type: GCOV
-       
+
         debug_level_group:
             debug_switch: false
 
@@ -69,6 +69,14 @@ runconfig:
                     A:
                         x_posting:  0.002   #{required} In same units as output EPSG
                         y_posting:  8.0e-4   #{required} In same units as output EPSG
+                    B:
+                        x_posting:
+                        y_posting:
+
+                wrapped_interferogram_output_posting:
+                    A:
+                        x_posting:
+                        y_posting:
                     B:
                         x_posting:
                         y_posting:
