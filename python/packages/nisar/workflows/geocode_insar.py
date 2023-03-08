@@ -486,6 +486,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
 
     # init geocode object
     geocode_obj = isce3.geocode.GeocodeFloat32()
+    geocode_cplx_obj = isce3.geocode.GeocodeCFloat32()
 
     # init geocode members
     if ref_orbit is not None:
@@ -500,6 +501,13 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
     geocode_obj.numiter_geo2rdr = iteration_geo2rdr
     geocode_obj.data_interpolator = interp_method
 
+    geocode_cplx_obj.orbit = orbit
+    geocode_cplx_obj.ellipsoid = ellipsoid
+    geocode_cplx_obj.doppler = grid_zero_doppler
+    geocode_cplx_obj.threshold_geo2rdr = threshold_geo2rdr
+    geocode_cplx_obj.numiter_geo2rdr = iteration_geo2rdr
+    geocode_cplx_obj.data_interpolator = interp_method
+
     t_all = time.time()
     with h5py.File(output_hdf5, "a") as dst_h5:
         for freq, pol_list in freq_pols.items():
@@ -512,6 +520,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                         geo_grid.spacing_x, geo_grid.spacing_y,
                         geo_grid.width, geo_grid.length, geo_grid.epsg)
 
+            geocode_cplx_obj.geogrid(geo_grid.start_x, geo_grid.start_y,
+                                     geo_grid.spacing_x, geo_grid.spacing_y,
+                                     geo_grid.width, geo_grid.length, geo_grid.epsg)
+
             # Assign correct radar grid
             if az_looks > 1 or rg_looks > 1:
                 radar_grid = radar_grid_mlook
@@ -521,7 +533,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
             # set min/max block size from lines_per_block
             type_size = 4  # float32
             block_size = lines_per_block * geo_grid.width * type_size
-
             if input_product_name is InputProduct.RUNW:
                 desired = ['coherence_magnitude', 'unwrapped_phase']
 
@@ -605,9 +616,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                 layer_keys = [key for key in offset_cfg.keys() if
                               key.startswith('layer')]
 
+                # Here has problems, need to fix it.
                 radar_grid = get_offset_radar_grid(offset_cfg,
-                                                   slc.getRadarGrid(freq),
-                                                   InputProduct.ROFF)
+                                                   slc.getRadarGrid(freq))
 
                 geocode_obj.data_interpolator = interp_method
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
@@ -617,14 +628,21 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_name=InputProduct.RUNW):
                                     input_product_name=InputProduct.ROFF)
             else:
                 #RIFG
-                desired = ['coherence_magnitude', 'wrapped_interferogram']
-
+                # Geocode the coherence
+                desired = ['coherence_magnitude']
                 geocode_obj.data_interpolator = interp_method
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size,
                                     input_product_name=InputProduct.RIFG)
 
+                # Geocode the wrapped interferogram
+                desired = ['wrapped_interferogram']
+                geocode_cplx_obj.data_interpolator = interp_method
+                cpu_geocode_rasters(geocode_cplx_obj, geo_datasets, desired, freq,
+                                    pol_list,input_hdf5, dst_h5, radar_grid,
+                                    dem_raster, block_size * 2,
+                                    input_product_name=InputProduct.RIFG)
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
