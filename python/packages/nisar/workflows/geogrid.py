@@ -69,8 +69,9 @@ def create(cfg, workflow_name=None, frequency_group=None,
     if frequency is None:
         frequency = frequency_group
 
-    output_posting_name = 'wrapped_interferogram_output_posting' \
-            if is_geo_wrapped_ifgm else 'output_posting'
+    output_posting_name = 'output_posting'
+    if (workflow_name == 'insar') and is_geo_wrapped_ifgm:
+        output_posting_name = 'wrapped_interferogram_output_posting'
 
     if frequency_group is None:
         spacing_x = geocode_dict[output_posting_name]['x_posting']
