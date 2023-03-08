@@ -134,8 +134,6 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
         Dictionary containing processing parameters
     radar_grid_slc : SLC
         Object containing SLC properties
-    is_goff: bool
-        Flag to geocode ROFF
     '''
     # Define margin used during dense offsets execution
     if cfg['processing']['dense_offsets']['enabled']:
