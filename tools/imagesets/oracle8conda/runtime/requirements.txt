@@ -11,7 +11,7 @@ pyre>=1.11.2
 pyaps3>=0.3
 raider-base>=0.4.2
 pysolid>=0.2
-python==3.9.16
+python>=3.7
 ruamel.yaml
 scipy!=1.10.0
 shapely
