@@ -13,7 +13,9 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: @ISCETEST@/Sdelta_dem.tif
-
+            orbit:
+                reference_orbit_file:
+                secondary_orbit_file:
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
             product_path: '.'
@@ -101,8 +103,8 @@ runconfig:
                 lines_per_block: 1000
                 window_function: tukey
                 window_shape: 0.25
-                range_fft_size: 
-                
+                range_fft_size:
+
             geo2rdr:
                 topo_path: '.'
                 threshold: 1.0e-9
