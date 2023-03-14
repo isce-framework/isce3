@@ -15,6 +15,7 @@ target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
 
 # dependencies
 target_link_libraries(${ISCEEXTENSION} PUBLIC ${LISCE})
+target_link_libraries(${ISCEEXTENSION} PRIVATE OpenMP::OpenMP_CXX_Optional)
 
 if(WITH_CUDA)
     target_link_libraries(${ISCEEXTENSION} PUBLIC ${LISCECUDA})
