@@ -98,6 +98,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("offset_rg_raster") = nullptr,
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
+                    py::arg("input_layover_shadow_mask_raster") = nullptr,
                     py::arg("sub_swaths") = nullptr,
                     py::arg("out_valid_samples_sub_swath_mask") = nullptr,
                     py::arg("memory_mode") = GeocodeMemoryMode::Auto,
@@ -184,6 +185,10 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         Input RTC area factor (in slant-range).
                     out_rtc: isce3.io.Raster, optional
                         Output RTC area factor (in slant-range).
+                    input_layover_shadow_mask_raster: isce3.io.Raster, optional
+                        Input layover/shadow mask raster (in radar geometry).
+                        Samples identified as SHADOW or LAYOVER_AND_SHADOW are
+                        considered invalid.
                     sub_swaths: isce3.product.SubSwaths, optional
                         Sub-swaths metadata
                     out_valid_samples_sub_swath_mask: isce3.io.Raster, optional
