@@ -18,7 +18,7 @@ from nisar.workflows.compute_stats import compute_stats_complex_data
 from nisar.products.readers.orbit import load_orbit_from_xml
 
 
-def _block_generator(geo_grid, radar_grid, orbit, dem_interp,
+def _block_generator(geo_grid, radar_grid, orbit, dem_raster,
                      geo_lines_per_block, geo_cols_per_block,
                      geogrid_expansion_threshold=1):
     """
@@ -33,8 +33,10 @@ def _block_generator(geo_grid, radar_grid, orbit, dem_interp,
         Radar grid that computed indices are computed with respect to
     orbit: Orbit
         Orbit object
-    dem_interp: isce3.geometry.DEMInterpolator
-        DEM to be interpolated over geo grid
+    min_height: float
+        Min height of DEM
+    max_height: float
+        Max height of DEM
     geo_lines_per_block: int
         Line per geo block
     geo_cols_per_block: int
@@ -65,6 +67,11 @@ def _block_generator(geo_grid, radar_grid, orbit, dem_interp,
     # compute length and width of geo block
     geo_block_length = geo_lines_per_block * geo_grid.spacing_y
     geo_block_width = geo_cols_per_block * geo_grid.spacing_x
+
+    # compute max and min of DEM to use as extreme starting guesses for geo2rdr
+    # within get_radar_bbox
+    dem_interp = isce3.geometry.DEMInterpolator(dem_raster)
+    dem_interp.compute_min_max_mean_height()
 
     # iterate over number of y geo blocks
     # *_end is open
@@ -106,7 +113,9 @@ def _block_generator(geo_grid, radar_grid, orbit, dem_interp,
             # compute radar bounding box for current geo block
             try:
                 bbox = isce3.geometry.get_radar_bbox(blk_geo_grid, radar_grid,
-                                                     orbit, dem_interp,
+                                                     orbit,
+                                                     dem_interp.min_height,
+                                                     dem_interp.max_height,
                                                      geogrid_expansion_threshold=geogrid_expansion_threshold)
             except RuntimeError:
                 info_channel.log(f"no radar data found for block {i_blk} of {n_blocks}")
@@ -155,7 +164,6 @@ def run(cfg):
     else:
         orbit = slc.getOrbit()
     dem_raster = isce3.io.Raster(dem_file)
-    dem_interp = isce3.geometry.DEMInterpolator(dem_raster)
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
@@ -190,10 +198,10 @@ def run(cfg):
                 gslc_datasets.append(dst_h5[dataset_path])
 
             # loop over blocks
+            blk_t_block = time.perf_counter()
             for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
-                 _block_generator(geo_grid, radar_grid, orbit,
-                                  dem_interp,  lines_per_block,
-                                  columns_per_block,
+                 _block_generator(geo_grid, radar_grid, orbit, dem_raster,
+                                  lines_per_block, columns_per_block,
                                   geogrid_expansion_threshold):
 
                 # unpack block parameters

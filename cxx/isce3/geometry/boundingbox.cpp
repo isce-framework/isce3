@@ -321,7 +321,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
     }
     if (margin < 0.) {
         std::string errstr = "Margin should be a positive number. " +
-                             std::to_string(margin) + " requested. ";
+                             std::to_string(margin) + " requested.";
         throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
     }
 
@@ -414,10 +414,43 @@ isce3::geometry::RadarGridBoundingBox isce3::geometry::getRadarBoundingBox(
         const isce3::geometry::detail::Geo2RdrParams& g2r_params,
         const int geogrid_expansion_threshold)
 {
-    float minVal, maxVal, meanVal;
-    dem_interp.computeMinMaxMeanHeight(minVal, maxVal, meanVal);
+    // Compute extreme heights of DEM raster for geo2rdr computations
+    // min and max heights to be used with x and y values built from geo_grid
+    float min_height, max_height, mean_height;
+    dem_interp.computeMinMaxMeanHeight(min_height, max_height, mean_height);
 
-    float height_range[2] = {minVal, maxVal};
+    const auto rdr_bbox = isce3::geometry::getRadarBoundingBox(
+            geo_grid, radar_grid, orbit, min_height, max_height, doppler,
+            interp_margin, g2r_params, geogrid_expansion_threshold);
+    return rdr_bbox;
+}
+
+isce3::geometry::RadarGridBoundingBox isce3::geometry::getRadarBoundingBox(
+        const isce3::product::GeoGridParameters& geo_grid,
+        const isce3::product::RadarGridParameters& radar_grid,
+        const isce3::core::Orbit& orbit,
+        const float min_height, const float max_height,
+        const isce3::core::LUT2d<double>& doppler,
+        const int interp_margin,
+        const isce3::geometry::detail::Geo2RdrParams& g2r_params,
+        const int geogrid_expansion_threshold)
+{
+    // Check input arguments
+    if (max_height < min_height) {
+        std::string errstr = "max_height <  min_height";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
+    }
+
+    if (interp_margin < 0) {
+        std::string errstr = "Margin should be a nonnegative number. " +
+                             std::to_string(interp_margin) + " requested.";
+        throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
+    }
+
+    // min and max heights to be used with x and y values built from geo_grid
+    // TODO sanity check values for min and max height - what are sane values?
+    // between Marianas Trench and Everest?
+    float height_range[2] = {min_height, max_height};
 
     isce3::geometry::RadarGridBoundingBox rdrBBox;
 
@@ -476,7 +509,7 @@ isce3::geometry::RadarGridBoundingBox isce3::geometry::getRadarBoundingBox(
             // check if geo2rdr converges for current corner
             bool corner_converge = false;
 
-            // looping over range of heights (min and max height of the inout DEM)
+            // looping over range of heights (min and max height of the input DEM)
             for (size_t i_h_min_max = 0; i_h_min_max < 2; ++i_h_min_max) {
                 // try with min and max height
                 float height = height_range[i_h_min_max];

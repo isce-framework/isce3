@@ -19,7 +19,8 @@ def make_tec_file(unit_test_params):
     '''
     create TEC file using radar grid from envisat.h5 that yields a uniform
     slant range offset when processed with tec_lut2d_from_json()
-We ignore topside TEC and simulate total TEC at near and far ranges such that the slant range delay at near and far ranges are the same.   
+    We ignore topside TEC and simulate total TEC at near and far ranges such
+    that the slant range delay at near and far ranges are the same.
     solve for sub_orbital_tec from:
     delta_r = K * sub_orbital_tec * TECU / center_freq**2 / np.cos(incidence)
 

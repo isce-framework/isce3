@@ -78,7 +78,64 @@ void addbinding_boundingbox(py::module& m)
     From there, walk along the Near Range edge back to Early Time, Near Range.
     )")
     .def("get_radar_bbox",
-            &isce3::geometry::getRadarBoundingBox,
+            py::overload_cast<const isce3::product::GeoGridParameters&,
+                const isce3::product::RadarGridParameters&,
+                const isce3::core::Orbit&, const float,
+                const float, const isce3::core::LUT2d<double>&, const int,
+                const isce3::geometry::detail::Geo2RdrParams&, const int>
+                (&isce3::geometry::getRadarBoundingBox),
+            py::arg("geo_grid"),
+            py::arg("radar_grid"),
+            py::arg("orbit"),
+            py::arg("min_height") = isce3::core::GLOBAL_MIN_HEIGHT,
+            py::arg("max_height") = isce3::core::GLOBAL_MAX_HEIGHT,
+            py::arg("doppler") = LUT2d<double>(),
+            py::arg("margin") = 50,
+            py::arg("geo2rdr_params") = defaults,
+            py::arg("geogrid_expansion_threshold") = 100,
+            R"(
+    Compute the bounding box of a geocoded grid in the radar coordinates. An
+    exception is raised if any corners fails to convergers or any computed
+    bounding box index is overlaps or is out of bounds.
+
+    Parameters
+    ----------
+    geoGrid: GeoGridParameters
+        Geo grid whose radar grid bounding box indices are to be computed
+    radarGrid: RadarGridParameters
+        Radar grid that computed indices are computed with respect to
+    orbit: Orbit
+        Orbit object
+    min_height: float
+        Minimum height values used in geo2rdr computations
+    max_height: float
+        Maximum height values used in geo2rdr computations
+    doppler: LUT2d
+        LUT2d doppler model of the radar image grid
+    margin: int
+        Margin to add to estimated bounding box in  pixels (default 5)
+    geo2rdr_params: isce3.geometry.detail.geo2rdr_params
+        Structure containing the following geo2rdr parameters:
+        Azimuth time threshold for convergence (default 1e-8 sec)
+        Max number of iterations for convergence (default: 50)
+        Step size used for computing derivative of doppler (default: 10 m)
+    geogrid_expansion_threshold: int
+        Number of geogrid expansions if geo2rdr fails (default: 100)
+
+    Returns
+    -------
+    RadarGridBoundingBox
+        Radar grid bouding box object with indices for:
+        first_azimuth_line,last_azimuth_line, first_range_sample,
+        last_range_sample
+    )")
+    .def("get_radar_bbox",
+            py::overload_cast<const isce3::product::GeoGridParameters&,
+                const isce3::product::RadarGridParameters&,
+                const isce3::core::Orbit&, isce3::geometry::DEMInterpolator&,
+                const isce3::core::LUT2d<double>&, const int,
+                const isce3::geometry::detail::Geo2RdrParams&, const int>
+                (&isce3::geometry::getRadarBoundingBox),
             py::arg("geo_grid"),
             py::arg("radar_grid"),
             py::arg("orbit"),
@@ -101,7 +158,8 @@ void addbinding_boundingbox(py::module& m)
     orbit: Orbit
         Orbit object
     demInterp: DEMInterpolator
-        DEM to be interpolated over geo grid
+        DEM interpolator object used compute min and max height values used in
+        geo2rdr computations
     doppler: LUT2d
         LUT2d doppler model of the radar image grid
     margin: int
