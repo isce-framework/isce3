@@ -5,6 +5,7 @@
 #include <isce3/except/Error.h>
 
 #include <valarray>
+#include <Eigen/Core>
 
 namespace isce3::core {
 
@@ -14,6 +15,7 @@ template <typename T>
 class LUT1d {
 
     public:
+        using ArrayXt = Eigen::Array<T, Eigen::Dynamic, 1>;
         /** Default constructor */
         inline LUT1d() : _haveData(false), _refValue(0.0), _extrapolate{true} {
             std::valarray<double> x{0.0, 1.0};
@@ -107,7 +109,7 @@ class LUT1d {
 
         /** Evaluate the LUT */
         inline T eval(double x) const;
-
+        inline ArrayXt eval(const Eigen::Ref<const Eigen::ArrayXd>& x) const;
     // Data members
     private:
         bool _haveData;
