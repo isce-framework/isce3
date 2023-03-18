@@ -14,8 +14,9 @@ from isce3.atmosphere.main_band_estimation import (MainSideBandIonosphereEstimat
                                                    MainDiffMsBandIonosphereEstimation)
 from isce3.atmosphere.split_band_estimation import SplitBandIonosphereEstimation
 from isce3.atmosphere.ionosphere_filter import IonosphereFilter, write_array
-from isce3.atmosphere.ionosphere_estimation import (decimate_freq_a_array,
-                                                    interpolate_freq_b_array)
+from isce3.signal.interpolate_by_range import (decimate_freq_a_array,
+                                              interpolate_freq_b_array)
+
 from isce3.splitspectrum import splitspectrum
 
 from nisar.products.readers import SLC
@@ -236,8 +237,8 @@ def copy_iono_datasets(iono_insar_cfg,
     else:
         freq = 'B'
 
-    with h5py.File(input_runw, 'a',libver='latest', swmr=True) as src_h5, \
-        h5py.File(output_runw, 'a',libver='latest', swmr=True) as dst_h5:
+    with h5py.File(input_runw, 'a', libver='latest', swmr=True) as src_h5, \
+        h5py.File(output_runw, 'a', libver='latest', swmr=True) as dst_h5:
 
         pol_list = iono_freq_pols['A']
         for pol in pol_list:
@@ -257,6 +258,7 @@ def copy_iono_datasets(iono_insar_cfg,
             target_slc_array = isce3.io.Raster(target_array_str)
             rows_main = target_slc_array.length
             cols_main = target_slc_array.width
+            print(cols_main)
             if ('frequencyB' in src_h5[swath_path]):
 
                 if 'listOfPolarizations' not in dst_h5[freq_path]:
@@ -300,16 +302,16 @@ def copy_iono_datasets(iono_insar_cfg,
                     else:
                         block_rows_data = blocksize
 
-                    iono = np.empty([block_rows_data, cols_main], dtype=float)
                     for src_iono_path, dst_iono_path in zip(src_iono_paths, dst_iono_paths):
+                        iono = np.empty([block_rows_data, cols_main], dtype=float)
                         src_h5[src_iono_path].read_direct(
                             iono,
                             np.s_[row_start : row_start + block_rows_data, :])
                         if oversample_flag:
-                            iono2 = interpolate_freq_b_array(slant_main,
+                            iono = interpolate_freq_b_array(slant_main,
                                                             slant_side,
                                                             iono)
-                        dst_h5[dst_iono_path].write_direct(iono2,
+                        dst_h5[dst_iono_path].write_direct(iono,
                             dest_sel=np.s_[
                                     row_start:row_start+block_rows_data, :])
 
@@ -714,7 +716,6 @@ def run(cfg: dict, runw_hdf5: str):
             dest_freq_path_b = f"{swath_path}/frequencyB"
             dest_pol_path_b = f"{dest_freq_path_b}/interferogram/{pol_b}"
             output_pol_path = f"{dest_freq_path_b}/interferogram/{pol_a}"
-            output_pol_path_runw = output_pol_path 
             runw_path_freq_b = f"{dest_pol_path_b}/unwrappedPhase"
             rcoh_path_freq_b = f"{dest_pol_path_b}/coherenceMagnitude"
             rcom_path_freq_b = f"{dest_pol_path_b}/connectedComponents"
@@ -985,7 +986,7 @@ def run(cfg: dict, runw_hdf5: str):
                     rows_output,
                     row_start)
                 # oversample ionosphere of frequencyB to frequencyA
-                # and copyt them to standard RUNW product.
+                # and copy them to standard RUNW product.
                 if iono_method in iono_method_sideband:
                     copy_iono_datasets(iono_insar_cfg,
                         input_runw=iono_output,

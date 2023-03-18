@@ -90,24 +90,16 @@ class IonosphereFilter:
         pad_shape = (pad_length, pad_width)
 
         # Prepare to write output to files
-        if not isinstance(filtered_output, h5py.Dataset) and \
-            not os.path.isfile(filtered_output):
-            raster = isce3.io.Raster(path=filtered_output,
-                width=data_width,
-                length=data_length,
-                num_bands=1,
-                dtype=gdal.GDT_Float32,
-                driver_name='ENVI')
-            del raster
-        if not isinstance(filtered_std_dev, h5py.Dataset) and \
-            not os.path.isfile(filtered_std_dev):
-            raster = isce3.io.Raster(path=filtered_std_dev,
-                width=data_width,
-                length=data_length,
-                num_bands=1,
-                dtype=gdal.GDT_Float32,
-                driver_name='ENVI')
-            del raster
+        for output in [filtered_output, filtered_std_dev]:
+            if not isinstance(output, h5py.Dataset) and \
+                not os.path.isfile(output):
+                raster = isce3.io.Raster(path=output,
+                    width=data_width,
+                    length=data_length,
+                    num_bands=1,
+                    dtype=gdal.GDT_Float32,
+                    driver_name='ENVI')
+                del raster
 
         for iter_cnt in range(self.iteration):
 
@@ -115,15 +107,15 @@ class IonosphereFilter:
                 lines_per_block, data_shape, pad_shape)
             # Start block processing
             for block_param in block_params:
-                # # Prepare to write temp_files
-                filtered_iono_temp_input = f'{self.outputdir}/filtered_iono_temp{iter_cnt-1}'
-                filtered_std_temp_input = f'{self.outputdir}/filtered_iono_std_temp{iter_cnt-1}'
+                # Prepare to write temp_files
+                filtered_iono_temp_input_path = f'{self.outputdir}/filtered_iono_temp{iter_cnt-1}'
+                filtered_std_temp_input_path = f'{self.outputdir}/filtered_iono_std_temp{iter_cnt-1}'
 
-                block_data_path = filtered_iono_temp_input if iter_cnt > 0 else input_data
+                block_data_path = filtered_iono_temp_input_path if iter_cnt > 0 else input_data
                 data_block = read_block_array(block_data_path, block_param)
-                block_sig_path = filtered_std_temp_input if iter_cnt > 0 else input_std_dev
+                block_sig_path = filtered_std_temp_input_path if iter_cnt > 0 else input_std_dev
                 data_sig_block = read_block_array(block_sig_path, block_param)
-                mask_block = read_block_array(mask_path, block_param, constant_values=1)
+                mask_block = read_block_array(mask_path, block_param, fill_value=1)
 
                 data_block[mask_block==0] = np.nan
                 data_sig_block[mask_block==0] = np.nan
@@ -151,6 +143,8 @@ class IonosphereFilter:
                     sig_kernel_x=self.sig_x,
                     sig_kernel_y=self.sig_y)
 
+                # set output to HDF5 for final iteration
+                # otherwise write to temp file
                 if iter_cnt == self.iteration - 1 :
                     output_iono = filtered_output
                     output_std = filtered_std_dev
@@ -334,7 +328,7 @@ def filter_data_with_sig(
 
     return filt_data, filt_data_sig
 
-def read_block_array(raster, block_param, constant_values=0):
+def read_block_array(raster, block_param, fill_value=0):
     ''' Get a block of data from raster.
         Raster can be a HDF5 file or a GDAL-friendly raster
 
@@ -346,8 +340,8 @@ def read_block_array(raster, block_param, constant_values=0):
     block_param: BlockParam
         Object specifying size of block and where to read from raster,
         and amount of padding for the read array
-    constant_values: float
-
+    fill_value: float
+        Pads with a fill value.
     Returns
     -------
     data_block: np.ndarray
@@ -370,7 +364,7 @@ def read_block_array(raster, block_param, constant_values=0):
 
     # Pad igram_block with zeros according to pad_length/pad_width
     data_block = np.pad(data_block, block_param.block_pad,
-                         mode='constant', constant_values=constant_values)
+                         mode='constant', constant_values=fill_value)
 
     return data_block
 

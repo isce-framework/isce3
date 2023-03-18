@@ -784,7 +784,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
 
                 if iono_args['enabled'] and dst in ['RUNW', 'GUNW']:
                    pol_list_iono = freq_pols_iono['A']
-                   # polarizations for ionosphere can be independent to insar pol
+                   # polarizations for ionosphere can be independent of insar pol
                    for pol_iono in pol_list_iono:
                         if pol_iono not in dst_h5[igram_path]:
                             dst_h5[igram_path].create_group(f'{pol_iono}')
