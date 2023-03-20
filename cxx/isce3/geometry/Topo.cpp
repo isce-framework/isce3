@@ -58,7 +58,7 @@ void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
     { // Topo scope for creating output rasters
         // Initialize a TopoLayers object to handle block data and raster data
         // Create rasters for individual layers (provide output raster sizes)
-        TopoLayers layers(outdir, _radarGrid.width(), _radarGrid.length(),
+        TopoLayers layers(outdir, _radarGrid.length(), _radarGrid.width(),
                           _linesPerBlock, _computeMask);
 
         // Call topo with layers
@@ -138,7 +138,7 @@ topo(Raster & demRaster, TopoLayers & layers)
         if (block == (nBlocks - 1)) {
             blockLength = _radarGrid.length() - lineStart;
         } else {
-            blockLength = _linesPerBlock;
+            blockLength = std::min(_linesPerBlock,  _radarGrid.length());
         }
 
         // Diagnostics
@@ -263,7 +263,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
         if (block == (nBlocks - 1)) {
             blockLength = _radarGrid.length() - lineStart;
         } else {
-            blockLength = _linesPerBlock;
+            blockLength = std::min(_linesPerBlock, _radarGrid.length());
         }
 
         // Diagnostics
