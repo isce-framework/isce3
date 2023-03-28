@@ -90,7 +90,7 @@ def troposphere_delay_check(cfg):
                         weather_model_date = datetime.strptime(f.attrs['datetime'].astype(str),
                                                                '%Y_%m_%dT%H_%M_%S')
                 except OSError:
-                    err_str = f'{weather_model_file} is not a netCDF format'
+                    err_str = f'{weather_model_file} is not a netCDF format, and not supported by RAiDER package'
                     error_channel.log(err_str)
                     raise ValueError(err_str)
 
@@ -154,21 +154,6 @@ def troposphere_delay_check(cfg):
             err_str = "for line_of_sight_raytracing delay type, the package must be 'raider'"
             error_channel.log(err_str)
             raise ValueError(err_str)
-
-        # Check the troposphere delay product
-        delay_products = tropo_cfg['delay_product']
-        if not isinstance(delay_products, list):
-            err_str = 'the delay product must be the list() datatype'
-            error_channel.log(err_str)
-            raise ValueError(err_str)
-        else:
-            for delay_product in delay_products:
-                if delay_product not in ['wet', 'hydro', 'comb']:
-                    err_str = f"unidentified delay product '{delay_product}'," + \
-                            "it should be one or more of 'wet', 'hydro', and 'comb'"
-                    error_channel.log(err_str)
-                    raise ValueError(err_str)
-
 
 class InsarTroposphereRunConfig(RunConfig):
     '''

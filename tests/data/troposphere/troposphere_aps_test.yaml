@@ -169,7 +169,9 @@ runconfig:
                 package: pyaps
                 weather_model_type: ERA5
                 delay_direction: zenith
-                delay_product: ['comb']
+                enable_wet_product: False
+                enable_dry_product: False
+                enable_comb_product: True
 
         # TODO OPTIONAL - To setup type of worker
         worker:

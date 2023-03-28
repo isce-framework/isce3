@@ -1,4 +1,4 @@
-rnconfig:
+runconfig:
     name: gunw_workflow_default
 
     groups:
@@ -253,8 +253,10 @@ rnconfig:
                 weather_model_type: ERA5
                 # Conventional line of sight delay
                 delay_direction: line_of_sight_mapping
-                # Delay product is comb, i.e., wet + dry
-                delay_product: ['comb']
+                # Delay product, where comb product is the summation of wet and dry
+                enable_wet_product:  True
+                enable_dry_product: True
+                enable_comb_product: False
 
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.

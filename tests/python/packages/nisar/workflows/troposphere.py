@@ -121,7 +121,10 @@ def test_troposphere_aps_run():
         tropo_package = cfg['processing']['troposphere_delay']['package']
         tropo_weather_model_type = cfg['processing']['troposphere_delay']['weather_model_type']
         tropo_delay_direction = cfg['processing']['troposphere_delay']['delay_direction']
-        tropo_delay_product = cfg['processing']['troposphere_delay']['delay_product'][0]
+
+        for delay_type in ['wet', 'dry', 'comb']:
+            if cfg['processing']['troposphere_delay'][f'enable_{delay_type}_product']:
+                tropo_delay_product = delay_type
 
         # Dictionary key
         delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'

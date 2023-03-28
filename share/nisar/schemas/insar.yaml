@@ -752,8 +752,10 @@ troposphere_delay_options:
     # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
     # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package
     delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
-    # Delay products. They should be one of 'wet', 'hydro', and 'comb'
-    delay_product: list(str(), min=1, max=3, required=False)
+    # Boolean flag to enable/disable delay products, where comb product is the summation of wet and dry
+    enable_wet_product: bool(required=False)
+    enable_dry_product: bool(required=False)
+    enable_comb_product: bool(required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
