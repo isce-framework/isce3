@@ -125,6 +125,7 @@ void addbinding(py::class_<ICU> & pyICU)
                py::arg("igram"),
                py::arg("corr"),
                py::arg("seed")=0,
+               py::call_guard<py::gil_scoped_release>(),
                R"(
        Perform phase unwrapping using the ICU algorithm
        
