@@ -314,15 +314,15 @@ def project_map_to_radar(cfg, input_data_path, freq):
 
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
-
     # prepare input paths
     topo_paths = {xy: f'{rdr2geo_path}/freq{freq}/{xy}.rdr' for xy in 'xy'}
 
     # get input shape and type - input type also output type
-    input_shape, output_dtype = _get_gdal_raster_shape_type(topo_paths['x'])
+    input_shape, _ = _get_gdal_raster_shape_type(topo_paths['x'])
+    _, output_dtype = _get_gdal_raster_shape_type(input_data_path)
 
     # prepare block generator
-    lines_per_block = az_looks * 200
+    lines_per_block = az_looks * 10
     block_params = block_param_generator(
         lines_per_block, data_shape=input_shape, pad_shape=(0, 0))
 
@@ -358,7 +358,7 @@ def project_map_to_radar(cfg, input_data_path, freq):
 
         # read map bounded by decimated extents of xy block
         input_arr_block, [block_x0, block_y0, block_dx, block_dy] = \
-            _read_gdal_with_bbox(input_raster, bbox)
+            _read_gdal_with_bbox(input_data_raster, bbox)
 
         # prepare output array
         temp_output_arr = np.zeros(decimated_blocks['y'].shape,
