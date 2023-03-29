@@ -116,9 +116,10 @@ class IonosphereFilter:
                 block_sig_path = filtered_std_temp_input_path if iter_cnt > 0 else input_std_dev
                 data_sig_block = read_block_array(block_sig_path, block_param)
                 mask_block = read_block_array(mask_path, block_param, fill_value=1)
-
-                data_block[mask_block==0] = np.nan
-                data_sig_block[mask_block==0] = np.nan
+                mask0 = mask_block == 0
+                mask1 = mask_block == 1
+                data_block[mask0] = np.nan
+                data_sig_block[mask0] = np.nan
 
                 # filling gaps with smoothed or nearest values
                 fill_method = fill_with_smoothed \
@@ -130,9 +131,9 @@ class IonosphereFilter:
                     # Replace the valid pixels with original unfiltered data
                     # to avoid too much smoothed signal
                     unfilt_data_block = read_block_array(input_data, block_param)
-                    filled_data[mask_block==1] = unfilt_data_block[mask_block==1]
+                    filled_data[mask1] = unfilt_data_block[mask1]
                     unfilt_data_block = read_block_array(input_std_dev, block_param)
-                    filled_data_sig[mask_block==1] = unfilt_data_block[mask_block==1]
+                    filled_data_sig[mask1] = unfilt_data_block[mask1]
 
                 # after filling gaps, filter the data
                 filt_data, filt_data_sig = filter_data_with_sig(

@@ -258,7 +258,7 @@ def copy_iono_datasets(iono_insar_cfg,
             target_slc_array = isce3.io.Raster(target_array_str)
             rows_main = target_slc_array.length
             cols_main = target_slc_array.width
-            print(cols_main)
+
             if ('frequencyB' in src_h5[swath_path]):
 
                 if 'listOfPolarizations' not in dst_h5[freq_path]:
@@ -1051,7 +1051,7 @@ def run(cfg: dict, runw_hdf5: str):
                         filtered_std_dev=iono_sig_hdf5_path,
                         lines_per_block=blocksize)
                 # oversample ionosphere of frequencyB to frequencyA
-                # and copyt them to standard RUNW product.
+                # and copy them to standard RUNW product.
                 if iono_method in iono_method_sideband:
                     copy_iono_datasets(iono_insar_cfg,
                         input_runw=iono_output,
