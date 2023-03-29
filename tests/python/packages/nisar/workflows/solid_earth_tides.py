@@ -7,25 +7,26 @@ import isce3
 import iscetest
 import numpy as np
 from nisar.workflows import solid_earth_tides
+from nisar.workflows.solid_earth_tides import extract_params_from_gunw_hdf5
 import pysolid
 from scipy.interpolate import RegularGridInterpolator
 import yaml
 
-def get_dem_info(dem_file: str):
+def get_dem_info(dem_file_path: str):
     '''
     get dem information
 
     Parameters
-     ----------
-     dem_file: str
-        dem file
+    ----------
+    dem_file_path: str
+      dem file
 
     Returns
-     -------
-     (heights, y_2d, x_2d): tuple
+    -------
+    (heights, y_2d, x_2d): tuple
     '''
 
-    src_ds_dem = gdal.Open(dem_file)
+    src_ds_dem = gdal.Open(dem_file_path)
 
     # GeoTransform information
     ulx, xres, xskew, uly, yskew, yres = src_ds_dem.GetGeoTransform()
@@ -73,35 +74,17 @@ def test_solid_earth_tides_run():
         dem_pnts = np.stack(
                 (heights.flatten(), y_2d.flatten(), x_2d.flatten()), axis=-1)
 
-        with h5py.File(gunw_hdf5, 'r') as hdf:
-
-            # Fetch the GUWN Incidence Angle Datacube
-            rdr_grid_path = 'science/LSAR/GUNW/metadata/radarGrid'
-
-            inc_angle_cube = hdf[f'{rdr_grid_path}/incidenceAngle'][()]
-            los_unit_vector_x_cube = hdf[f'{rdr_grid_path}/losUnitVectorX'][()]
-            los_unit_vector_y_cube = hdf[f'{rdr_grid_path}/losUnitVectorY'][()]
-
-            xcoord_radar_grid = hdf[f'{rdr_grid_path}/xCoordinates'][()]
-            ycoord_radar_grid = hdf[f'{rdr_grid_path}/yCoordinates'][()]
-            height_radar_grid = hdf[f'{rdr_grid_path}/heightAboveEllipsoid'][()]
-
-            # EPSG code
-            epsg = hdf['science/LSAR/GUNW/metadata/radarGrid/epsg'][()]
-
-            # Wavelenth in meters
-            wavelength = isce3.core.speed_of_light / \
-                    hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()]
-
-            # Start time of the reference and secondary image
-            ref_start_time = hdf['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
-                    .astype('datetime64[s]').astype(datetime)
-            sec_start_time = hdf['science/LSAR/identification/secondaryZeroDopplerStartTime'][()]\
-                    .astype('datetime64[s]').astype(datetime)
-
-
-            hdf.close()
-
+        # Extract the HDF5 parameters
+        inc_angle_cube,\
+        los_unit_vector_x_cube,\
+        los_unit_vector_y_cube,\
+        xcoord_radar_grid,\
+        ycoord_radar_grid,\
+        height_radar_grid,\
+        epsg,\
+        wavelength,\
+        ref_start_time,\
+        sec_start_time = extract_params_from_gunw_hdf5(gunw_hdf5)
 
         # solid earth tides in centimeters
         solid_earth_tides_datacube = wavelength * \
@@ -125,53 +108,39 @@ def test_solid_earth_tides_run():
         # Test if there is any NaN value
         assert not np.isnan(solid_earth_tides_from_datacube).any()
 
-        # Incidence angle
-        inc_angle_cube = np.flip(inc_angle_cube, axis=1)
+        def intepolate_tide(data_cube,
+                            height_radar_grid,
+                            ycoord_radar_grid,
+                            xcoord_radar_grid,
+                            pnts,
+                            cube_shape):
+            cube_interp = RegularGridInterpolator((height_radar_grid,
+                                                  ycoord_radar_grid,
+                                                  xcoord_radar_grid),
+                                                  np.flip(data_cube,axis=1),
+                                                  method = 'linear')
 
-        # Incidence angle interpolator
-        inc_angle_interpolator = RegularGridInterpolator((height_radar_grid,
-                                                          ycoord_radar_grid,
-                                                          xcoord_radar_grid),
-                                                         inc_angle_cube,
-                                                         method='linear')
+            return cube_interp(pnts).reshape(cube_shape)
 
-        # Incidence angle from datacube via interpolation
-        inc_angle_from_datacube = inc_angle_interpolator(
-                dem_pnts).reshape(heights.shape)
 
-        # los unit vector x
-        los_unit_vector_x_cube = np.flip(los_unit_vector_x_cube, axis=1)
-
-        # los unit vector x interpolator
-        los_unit_vector_x_interpolator = RegularGridInterpolator((height_radar_grid,
-                                                                  ycoord_radar_grid,
-                                                                  xcoord_radar_grid),
-                                                                 los_unit_vector_x_cube,
-                                                                 method='linear')
-
-        # los unit vector x  from datacube via interpolation
-        los_unit_vector_x_from_datacube = los_unit_vector_x_interpolator(
-                dem_pnts).reshape(heights.shape)
-
-        # los unit vector y
-        los_unit_vector_y_cube = np.flip(los_unit_vector_y_cube, axis=1)
-
-        # los unit vector y interpolator
-        los_unit_vector_y_interpolator = RegularGridInterpolator((height_radar_grid,
-                                                                  ycoord_radar_grid,
-                                                                  xcoord_radar_grid),
-                                                                 los_unit_vector_y_cube,
-                                                                 method='linear')
-
-        # los unit vector y from datacube via interpolation
-        los_unit_vector_y_from_datacube = los_unit_vector_y_interpolator(
-                dem_pnts).reshape(heights.shape)
+        # los unit vector y, x, and incidence angle  from datacube via interpolation
+        inc_angle_from_datacube,\
+        los_unit_vector_x_from_datacube,\
+        los_unit_vector_y_from_datacube = [intepolate_tide(data_cube,
+                                                           height_radar_grid,
+                                                           ycoord_radar_grid,
+                                                           xcoord_radar_grid,
+                                                           dem_pnts,
+                                                           heights.shape) \
+                                            for data_cube in [inc_angle_cube,
+                                                              los_unit_vector_x_cube,
+                                                              los_unit_vector_y_cube]]
 
         # The following steps are to compute the high resolution solid earth tides
         # directly from the pySolid package with small step size = 1
 
         # Convert the X/Y to lat/lon
-        lat, lon, extents= solid_earth_tides.transform_xy_to_latlon(epsg, x_2d, y_2d)
+        lat, lon, extents= solid_earth_tides.transform_xy_to_latlon(int(epsg), x_2d, y_2d)
 
         # Size of dem
         y_size, x_size = lat.shape
@@ -198,18 +167,6 @@ def test_solid_earth_tides_run():
                   'X_STEP': x_step,
                   'Y_STEP': y_step}
 
-        # Solid earth tides for both reference and secondary dates using small step size
-        ref_tide_e, ref_tide_n, ref_tide_u = pysolid.calc_solid_earth_tides_grid(ref_start_time,
-                                                                                 params,
-                                                                                 display=False,
-                                                                                 step_size = 1,
-                                                                                 verbose=True)
-
-        sec_tide_e, sec_tide_n, sec_tide_u = pysolid.calc_solid_earth_tides_grid(sec_start_time,
-                                                                                 params,
-                                                                                 display=False,
-                                                                                 step_size = 1,
-                                                                                 verbose=True)
 
         # Points from the Lat/Lon fed into pySolid
         pnts = np.stack((lon.flatten(), lat.flatten()), axis=-1)
@@ -218,25 +175,26 @@ def test_solid_earth_tides_run():
         xy_samples = (x_samples, y_samples)
         shape = lat.shape
 
+        # Solid earth tides for both reference and secondary dates
+        ref_tides, sec_tides = [
+            pysolid.calc_solid_earth_tides_grid(start_time, params,
+                                                step_size = 1,
+                                                display=False,
+                                                verbose=True)
+            for start_time in [ref_start_time, sec_start_time]]
+
         # Interpolation, the flip function applied here is to fit the scipy==1.8
         # which requires strict ascending or descending
-        # (ref - sec) tide east
-        ref_sec_tide_e_interp = RegularGridInterpolator(xy_samples,
-                                                        np.flip(ref_tide_e - sec_tide_e,
-                                                                axis=0))
-        ref_sec_tide_e = ref_sec_tide_e_interp(pnts).reshape(shape)
+        # (ref - sec) tide
+        def intepolate_tide(ref_tide, sec_tide, xy_samples, pnts, cube_shape):
+            tide_interp = RegularGridInterpolator(xy_samples,
+                                                  np.flip(ref_tide - sec_tide,
+                                                  axis=0))
+            return tide_interp(pnts).reshape(cube_shape)
 
-        # (ref - sec) tide north
-        ref_sec_tide_n_interp = RegularGridInterpolator(xy_samples,
-                                                        np.flip(ref_tide_n - sec_tide_n,
-                                                                axis=0))
-        ref_sec_tide_n = ref_sec_tide_n_interp(pnts).reshape(shape)
-
-        # (ref - sec) tide up
-        ref_sec_tide_u_interp = RegularGridInterpolator(xy_samples,
-                                                        np.flip(ref_tide_u - sec_tide_u,
-                                                                axis=0))
-        ref_sec_tide_u = ref_sec_tide_u_interp(pnts).reshape(shape)
+        ref_sec_tide_e, ref_sec_tide_n, ref_sec_tide_u = [
+            intepolate_tide(ref_tide, sec_tide, xy_samples, pnts, lat.shape)
+            for ref_tide, sec_tide in zip(ref_tides, sec_tides)]
 
 
         # Azimuth angle, the minus sign is because of the anti-clockwise positive definition
@@ -252,7 +210,7 @@ def test_solid_earth_tides_run():
                                          + ref_sec_tide_u  * np.cos(inc_angle))
 
         # Convert to centimeters
-        high_resolution_solid_earth_tides  = -100.0 * los_solid_earth_tides_datacube
+        high_resolution_solid_earth_tides  = 100.0 * los_solid_earth_tides_datacube
 
 
         f.close()

@@ -1639,11 +1639,9 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
     Parameters
      ----------
      solid_earth_tides: tuple
-        solid earth tides along  the los, east, north, and up
-        directions where the solid earth tides along los is a 3D datacube (radians)
-        and other directions are 2D grid (meters)
+        solid earth tides along  the los and azimuth direction (radians)
       gunw_hdf5: str
-         gunw hdf5 file
+         GUNW HDF5 file where SET will be written
 
     Returns
      -------
@@ -1656,16 +1654,13 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
 
         # Dataset description
         descrs = ["InSAR phase datacube due to Solid Earth tides along line of sight direction",
-                  'Solid Earth tides along East direction',
-                  'Solid Earth tides along North direction',
-                  'Solid Earth tides along Up direction']
+                  'InSAR phase datacube due to Solid Earth tides along the azimuth direction']
 
-        # Product name
-        product_names = ['losSolidEarthTidesPhase', 'eastSolidEarthTides',
-                         'northSolidEarthTides', 'upSolidEarthTides']
+        # Product names
+        product_names = ['losSolidEarthTidesPhase', 'azimuthSolidEarthTidesPhase']
 
         # Units
-        solid_earth_tides_units = ['radians', 'meters', 'meters', 'meters']
+        solid_earth_tides_units = ['radians'] * 2
 
         for index, product_name in enumerate(product_names):
 

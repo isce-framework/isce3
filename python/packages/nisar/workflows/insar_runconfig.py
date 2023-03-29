@@ -11,7 +11,6 @@ import nisar.workflows.helpers as helpers
 
 from nisar.workflows.troposphere_runconfig import troposphere_delay_check
 from nisar.workflows.ionosphere_runconfig import ionosphere_cfg_check
-from nisar.workflows.solid_earth_tides_runconfig import solid_earth_tides_check
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -244,6 +243,3 @@ class InsarRunConfig(Geo2rdrRunConfig):
 
         # Check the troposphere delay
         troposphere_delay_check(self.cfg)
-
-        # Check the solid earth tides
-        solid_earth_tides_check(self.cfg)
