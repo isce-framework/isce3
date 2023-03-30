@@ -108,7 +108,7 @@ def test_solid_earth_tides_run():
         # Test if there is any NaN value
         assert not np.isnan(solid_earth_tides_from_datacube).any()
 
-        def intepolate_tide(data_cube,
+        def intepolate_cube(data_cube,
                             height_radar_grid,
                             ycoord_radar_grid,
                             xcoord_radar_grid,
@@ -126,7 +126,7 @@ def test_solid_earth_tides_run():
         # los unit vector y, x, and incidence angle  from datacube via interpolation
         inc_angle_from_datacube,\
         los_unit_vector_x_from_datacube,\
-        los_unit_vector_y_from_datacube = [intepolate_tide(data_cube,
+        los_unit_vector_y_from_datacube = [intepolate_cube(data_cube,
                                                            height_radar_grid,
                                                            ycoord_radar_grid,
                                                            xcoord_radar_grid,
