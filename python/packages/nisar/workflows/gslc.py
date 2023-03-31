@@ -10,12 +10,13 @@ import numpy as np
 import isce3
 import nisar
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
-from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
-from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.gslc_runconfig import GSLCRunConfig
-from nisar.workflows.compute_stats import compute_stats_complex_data
 from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.workflows import h5_prep
+from nisar.workflows.compute_stats import compute_stats_complex_data
+from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
+from nisar.workflows.geocode_corrections import get_az_srg_corrections
+from nisar.workflows.gslc_runconfig import GSLCRunConfig
+from nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def _block_generator(geo_grid, radar_grid, orbit, dem_raster,
@@ -185,6 +186,10 @@ def run(cfg):
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
 
+            # get azimuth and slant range geocoding corrections
+            az_correction, srg_correction = \
+                get_az_srg_corrections(cfg, slc, freq, orbit)
+
             # initialize source/rslc and destination/gslc datasets
             rslc_datasets = []
             gslc_datasets = []
@@ -228,7 +233,9 @@ def run(cfg):
                                           image_grid_doppler, ellipsoid,
                                           threshold_geo2rdr,
                                           iteration_geo2rdr,
-                                          az_first, rg_first, flatten)
+                                          az_first, rg_first, flatten,
+                                          az_time_correction=az_correction,
+                                          srange_correction=srg_correction)
 
                 # write geocoded blocks to respective HDF5 datasets
                 for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
