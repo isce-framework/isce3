@@ -23,3 +23,13 @@ RadarGridParameters(const Swath & swath, isce3::core::LookSide lookSide) :
 {
     validate();
 }
+
+bool isce3::product::RadarGridParameters::
+contains(const double aztime, const double srange) const {
+    const auto halfAzimuthTimeInterval = azimuthTimeInterval() / 2;
+    const auto halfRangePixelSpacing = rangePixelSpacing() / 2;
+    return aztime >= _sensingStart - halfAzimuthTimeInterval
+            and srange >= _startingRange - halfRangePixelSpacing
+            and aztime <= sensingStop() + halfAzimuthTimeInterval
+            and srange <= endingRange() + halfRangePixelSpacing;
+}

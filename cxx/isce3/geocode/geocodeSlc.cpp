@@ -499,10 +499,7 @@ void geocodeSlc(
                 }
 
                 // check if az time and slant within radar grid
-                if (aztime < slicedRadarGrid.sensingStart()
-                        || srange < slicedRadarGrid.startingRange()
-                        || aztime > slicedRadarGrid.sensingStop()
-                        || srange > slicedRadarGrid.endingRange()
+                if (!slicedRadarGrid.contains(aztime, srange)
                         || !nativeDoppler.contains(aztime, srange))
                     continue;
 
@@ -829,10 +826,7 @@ void geocodeSlc(
             double rangeCoord = (srange - radarGrid.startingRange()) /
                           radarGrid.rangePixelSpacing();
 
-            if (aztime < slicedRadarGrid.sensingStart()
-                    || srange < slicedRadarGrid.startingRange()
-                    || aztime > slicedRadarGrid.sensingStop()
-                    || srange > slicedRadarGrid.endingRange()
+            if (!slicedRadarGrid.contains(aztime, srange)
                     || !nativeDoppler.contains(aztime, srange))
                 continue;
 

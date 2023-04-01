@@ -37,3 +37,24 @@ def test_radargridparameters():
     # Check case of length != width.
     rect = grid[:10, :11]
     assert rect[:,10:11].shape == (10, 1)
+
+def test_radargridparameters_contains():
+    # Create RadarGridParameters object
+    grid = isce.product.RadarGridParameters(iscetest.data + "envisat.h5")
+
+    # Check if center of grid is in bounds
+    assert grid.contains(grid.sensing_mid, grid.mid_range)
+
+    # Check all permutations of out of bounds
+    az_too_short = grid.sensing_start - grid.az_time_interval
+    az_too_long = grid.sensing_stop + grid.az_time_interval
+    rg_too_short = grid.starting_range - grid.range_pixel_spacing
+    rg_too_long = grid.end_range + grid.range_pixel_spacing
+    assert grid.contains(az_too_short, rg_too_short) == False
+    assert grid.contains(az_too_short, grid.mid_range) == False
+    assert grid.contains(az_too_short, rg_too_long) == False
+    assert grid.contains(az_too_long, rg_too_short) == False
+    assert grid.contains(az_too_long, grid.mid_range) == False
+    assert grid.contains(az_too_long, rg_too_long) == False
+    assert grid.contains(grid.sensing_mid, rg_too_short) == False
+    assert grid.contains(grid.sensing_mid, rg_too_long) == False
