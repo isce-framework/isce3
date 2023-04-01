@@ -7,8 +7,8 @@ from osgeo import gdal
 from scipy.interpolate import griddata
 from scipy.ndimage import distance_transform_edt
 
-from isce3.signal.filter_data import (create_gaussian_kernel, get_raster_info,
-                                      block_param_generator)
+from isce3.core.block_param_generator import block_param_generator
+from isce3.signal.filter_data import create_gaussian_kernel, get_raster_info
 
 class IonosphereFilter:
     '''
@@ -226,7 +226,7 @@ def filter_data_with_sig(
         sig_kernel_x,
         sig_kernel_y,
         mask_array=None):
-    """ Filter input array by applying weighting 
+    """ Filter input array by applying weighting
     based on the statndard deviations
     Parameters
     ----------
