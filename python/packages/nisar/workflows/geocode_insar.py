@@ -126,7 +126,7 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         dst_group_path = f'{dst_freq_path}/interferogram/{pol}'
 
         if input_product_type is InputProduct.RIFG:
-            dst_group_path = f'{dst_freq_path}/wrapped_interferogram/{pol}'
+            dst_group_path = f'{dst_freq_path}/wrappedInterferogram/{pol}'
 
     if input_product_type is InputProduct.ROFF:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}/{off_layer}'
@@ -701,7 +701,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     if input_product_type is InputProduct.RIFG:
-        geogrids = cfg["processing"]["geocode"]["wrapped_ifgm_geogrids"]
+        geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]

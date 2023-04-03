@@ -26,7 +26,7 @@ def _grid_size(stop, start, sz):
 def create(cfg, workflow_name=None, frequency_group=None,
            frequency=None, geocode_dict=None,
            default_spacing_x=None, default_spacing_y=None,
-           is_geo_wrapped_ifgm=False):
+           is_geo_wrapped_igram=False):
     '''
     - frequency_group is the name of the sub-group that
     holds the fields x_posting and y_posting, which is usually
@@ -40,7 +40,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
     processing.geocode
     - default_spacing_x is default pixel spacing in the X-direction
     - default_spacing_y is default pixel spacing in the Y-direction
-    - is_geo_wrapped_ifgm is the flag indicating the geogrid of wrapped interferogram
+    - is_geo_wrapped_igram is the flag indicating the geogrid of wrapped interferogram
     For production we only fix epsgcode and snap value and will
     rely on the rslc product metadta to compute the bounding box of the geocoded products
     there is a place holder in SLC product for compute Bounding box
@@ -70,7 +70,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
         frequency = frequency_group
 
     output_posting_name = 'output_posting'
-    if (workflow_name == 'insar') and is_geo_wrapped_ifgm:
+    if (workflow_name == 'insar') and is_geo_wrapped_igram:
         output_posting_name = 'wrapped_interferogram_output_posting'
 
     if frequency_group is None:
@@ -205,6 +205,13 @@ def create(cfg, workflow_name=None, frequency_group=None,
     # snap all the things
     x_snap = geocode_dict['x_snap']
     y_snap = geocode_dict['y_snap']
+
+    # Change the snap if it is to geocode the wrapped interferogram
+    if (workflow_name == 'insar') and is_geo_wrapped_igram:
+        output_posting_name = 'wrapped_interferogram_output_posting'
+
+        x_snap = geocode_dict[output_posting_name]['x_snap']
+        y_snap = geocode_dict[output_posting_name]['y_snap']
 
     if x_snap is not None or y_snap is not None:
         # check snap values before proceeding

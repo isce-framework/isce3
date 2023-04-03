@@ -138,6 +138,11 @@ runconfig:
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
                 wrapped_interferogram_output_posting:
+                    # OPTIONAL - To control output grid in same units as output EPSG
+                    x_snap:
+                    # OPTIONAL - To control output grid in same units as output EPSG
+                    y_snap:
+
                     A:
                         x_posting:
                         y_posting:

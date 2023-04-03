@@ -745,8 +745,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                      long_name="zero doppler time spacing")
                 elif dst in ['GUNW']:
                     # Create the group for the wrapped interferogram
-                    wrapped_igram_path = f'{freq_path}/wrapped_interferogram'
-                    dst_h5[freq_path].create_group('wrapped_interferogram')
+                    wrapped_igram_path = f'{freq_path}/wrappedInterferogram'
+                    dst_h5[freq_path].create_group('wrappedInterferogram')
                     set_get_geo_info(dst_h5, wrapped_igram_path, wrapped_ifgm_geogrids[freq])
 
                     set_get_geo_info(dst_h5, igram_path, geogrids[freq])
@@ -788,7 +788,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                         "wrappedInterferogram",
                                         chunks=(128, 128),
                                         descr=descr, units="radians",
-                                        long_name='wrapped phase')
+                                        long_name='complex wrapped phase')
 
                    if dst in ['RIFG']:
                       descr = f"Interferogram between {pol} layers"

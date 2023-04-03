@@ -882,13 +882,7 @@ geocode_options:
 
     # Wrapped Interferogram output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
-    wrapped_interferogram_output_posting:
-        A:
-            x_posting: num(min=0, required=False)
-            y_posting: num(min=0, required=False)
-        B:
-            x_posting: num(min=0, required=False)
-            y_posting: num(min=0, required=False)
+    wrapped_interferogram_output_posting: include('wrapped_interferogram_output_posting_options',required=False)
 
     # To control output grid in same units as output EPSG
     x_snap: num(min=0, required=False)
@@ -929,6 +923,16 @@ goff_datasets:
     slant_range_offset: bool(required=False)
     slant_range_offset_variance: bool(required=False)
     snr: bool(required=False)
+
+wrapped_interferogram_output_posting_options:
+    x_snap: num(min=0, required=False)
+    y_snap: num(min=0, required=False)
+    A:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
+    B:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
 
 worker_options:
     # Enable/disable internet connection (e.g. for download DEM)
