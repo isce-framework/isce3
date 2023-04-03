@@ -66,6 +66,7 @@ def test_solid_earth_tides_run():
 
         # Compute the solid earth tides datacube in radians
         solid_earth_tides_components = solid_earth_tides.compute_solid_earth_tides(gunw_hdf5)
+        # Use the LOS component for the unit test
         solid_earth_tides_datacube = solid_earth_tides_components[0]
 
         # Compute the solid earth tides by test dem using datacube
