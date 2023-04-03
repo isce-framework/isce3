@@ -249,6 +249,35 @@ TEST(RadarGridTest, cropSame)
 
 }
 
+TEST(RadarGridTest, contains)
+{
+    //Reference epoch
+    isce3::core::DateTime t0("2017-02-12T01:12:30.0");
+
+    //Create radar grid from product
+    isce3::product::RadarGridParameters grid(10.0,
+                                           0.06, 1729.0, 800000.,
+                                           10.0, LookSide::Left, 8000, 1600,
+                                           t0);
+
+    //Test center of grid in bounds
+    ASSERT_EQ(grid.contains(grid.sensingMid(), grid.midRange()), true);
+
+    //Test all permutations of az and range out of bounds
+    const auto az_too_short = grid.sensingStart() - grid.azimuthTimeInterval();
+    const auto az_too_long = grid.sensingStop() + grid.azimuthTimeInterval();
+    const auto rg_too_short = grid.startingRange() - grid.rangePixelSpacing();
+    const auto rg_too_long = grid.endingRange() + grid.rangePixelSpacing();
+    ASSERT_EQ(grid.contains(az_too_short, rg_too_short), false);
+    ASSERT_EQ(grid.contains(az_too_short, grid.sensingMid()), false);
+    ASSERT_EQ(grid.contains(az_too_short, rg_too_long), false);
+    ASSERT_EQ(grid.contains(az_too_long, rg_too_short), false);
+    ASSERT_EQ(grid.contains(az_too_long, grid.sensingMid()), false);
+    ASSERT_EQ(grid.contains(az_too_long, rg_too_long), false);
+    ASSERT_EQ(grid.contains(grid.sensingMid(), rg_too_short), false);
+    ASSERT_EQ(grid.contains(grid.sensingMid(), rg_too_long), false);
+}
+
 
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);

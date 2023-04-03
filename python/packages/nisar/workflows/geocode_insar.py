@@ -618,8 +618,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 layer_keys = [key for key in offset_cfg.keys() if
                               key.startswith('layer')]
 
-                # Here has problems, need to fix it.
-                radar_grid = get_offset_radar_grid(offset_cfg,
+                radar_grid = get_offset_radar_grid(cfg,
                                                    slc.getRadarGrid(freq))
 
                 geocode_obj.data_interpolator = interp_method
@@ -963,8 +962,8 @@ if __name__ == "__main__":
     # Get a runconfig dictionary from command line args
     geocode_insar_runconfig = GeocodeInsarRunConfig(args)
 
-    # prepare RIFG HDF5
-    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'GUNW_STANDALONE'
+    # prepare the HDF5
+    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'ROFF_RIFG_RUNW_GOFF_GUNW'
     out_paths = h5_prep.run(geocode_insar_runconfig.cfg)
     runw_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'runw_path']

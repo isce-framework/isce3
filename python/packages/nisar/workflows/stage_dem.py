@@ -74,6 +74,21 @@ def check_dateline(poly):
         decomp = shapely.ops.polygonize(border_lines)
 
         polys = list(decomp)
+
+        # The Copernicus DEM used for NISAR processing has a longitude
+        # range [-180, +180]. The current version of gdal.Translate
+        # does not allow to perform dateline wrapping. Therefore, coordinates
+        # above 180 need to be wrapped down to -180 to match the Copernicus
+        # DEM longitude range
+        for polygon_count in range(2):
+            x, y = polys[polygon_count].exterior.coords.xy
+            if not any([k > 180 for k in x]):
+                continue
+
+            # Otherwise, wrap longitude values down to 360 deg
+            x_wrapped_minus_360 = np.asarray(x) - 360
+            polys[polygon_count] = Polygon(zip(x_wrapped_minus_360, y))
+
         assert (len(polys) == 2)
     else:
         # If dateline is not crossed, treat input poly as list
@@ -234,7 +249,7 @@ def determine_projection(polys):
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
-def translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax):
+def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     """Translate DEM from nisar-dem bucket. This
        function is decorated to perform retries
        using exponential backoff to make the remote
@@ -249,19 +264,31 @@ def translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax):
         Path to the input VRT file
     outpath: str
         Path to the translated output GTiff file
-    xmin: float
+    x_min: float
         Minimum longitude bound of the subwindow
-    xmax: float
+    x_max: float
         Maximum longitude bound of the subwindow
-    ymin: float
+    y_min: float
         Minimum latitude bound of the subwindow
-    ymax: float
+    y_max: float
         Maximum latitude bound of the subwindow
     """
 
     ds = gdal.Open(vrt_filename, gdal.GA_ReadOnly)
+
+    input_x_min, xres, _, input_y_max, _, yres = ds.GetGeoTransform()
+    length = ds.GetRasterBand(1).YSize
+    width = ds.GetRasterBand(1).XSize
+    input_y_min = input_y_max + (length * yres)
+    input_x_max = input_x_min + (width * xres)
+
+    x_min = max(x_min, input_x_min)
+    x_max = min(x_max, input_x_max)
+    y_min = max(y_min, input_y_min)
+    y_max = min(y_max, input_y_max)
+
     gdal.Translate(outpath, ds, format='GTiff',
-                   projWin=[xmin, ymax, xmax, ymin])
+                   projWin=[x_min, y_max, x_max, y_min])
     ds = None
 
 
@@ -447,7 +474,7 @@ def main(opts):
             check_aws_connection()
         except ImportError:
             import warnings
-            warnings.warn('boto3 is require to verify AWS connection'
+            warnings.warn('boto3 is require to verify AWS connection '
                           'proceeding without verifying connection')
         # Determine EPSG code
         epsg = determine_projection(polys)
