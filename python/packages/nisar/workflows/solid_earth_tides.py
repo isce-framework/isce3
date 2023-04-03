@@ -19,7 +19,7 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 
 def transform_xy_to_latlon(epsg, x, y, margin = 0.1):
     '''
-    Convert the x, y coordinates in the source projection to WGS84 lat/lon
+    Convert the x, y coordinates from the source projection to WGS84 lat/lon
 
     Parameters
      ----------
@@ -30,7 +30,7 @@ def transform_xy_to_latlon(epsg, x, y, margin = 0.1):
      y: numpy.ndarray
          y coordinates to be converted
      margin: float
-         margin added ouput cube extent to ensure  the solid earth tides cover the entire product
+         margin added ouput cube extent to ensure the solid earth tides cover the entire product
      Returns
      -------
      lat_datacube: numpy.ndarray

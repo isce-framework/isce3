@@ -1659,16 +1659,13 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
         # Product names
         product_names = ['losSolidEarthTidesPhase', 'azimuthSolidEarthTidesPhase']
 
-        # Units
-        solid_earth_tides_units = ['radians'] * 2
-
         for index, product_name in enumerate(product_names):
 
             # If there is no los solid earth tides phasey product, then createa new one
             if product_name not in radar_grid:
                 _create_datasets(radar_grid, [0], np.float64,
                                  product_name, descr=descrs[index],
-                                 units=solid_earth_tides_units[index],
+                                 units='radians',
                                  data=solid_earth_tides[index].astype(np.float64))
 
             # If there exists the product, overwrite the old one
