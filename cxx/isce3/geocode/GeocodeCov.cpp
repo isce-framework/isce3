@@ -10,6 +10,7 @@
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Projections.h>
 #include <isce3/core/TypeTraits.h>
+#include <isce3/core/Constants.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/loadDem.h>
 #include <isce3/geometry/RTC.h>
@@ -100,6 +101,36 @@ void Geocode<T>::geoGrid(double geoGridStartX, double geoGridStartY,
     _epsgOut = epsgcode;
 }
 
+
+static void _validateInputLayoverShadowMaskRaster(
+        isce3::io::Raster* input_layover_shadow_mask_raster,
+        const isce3::product::RadarGridParameters& radar_grid){
+
+    pyre::journal::error_t error("isce3.geocode.GeocodeCov");
+
+    if (input_layover_shadow_mask_raster->width() != radar_grid.width()) {
+        std::string err_str {
+            "ERROR the widths of the input layover/shadow mask (" +
+            std::to_string(input_layover_shadow_mask_raster->width()) +
+            ") and radar geometry (" +
+            std::to_string(radar_grid.width()) +
+            ") do not match"};
+        error << err_str << pyre::journal::endl;
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), err_str);
+    }
+
+    if (input_layover_shadow_mask_raster->length() != radar_grid.length()) {
+        std::string err_str {
+            "ERROR the lengths of the input layover/shadow mask (" +
+            std::to_string(input_layover_shadow_mask_raster->length()) +
+            ") and radar geometry (" +
+            std::to_string(radar_grid.length()) +
+            ") do not match"};
+        error << err_str << pyre::journal::endl;
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), err_str);
+    }
+}
+
 template<class T>
 void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster& input_raster, isce3::io::Raster& output_raster,
@@ -117,7 +148,9 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
         isce3::io::Raster* phase_screen_raster,
         isce3::io::Raster* offset_az_raster,
         isce3::io::Raster* offset_rg_raster, isce3::io::Raster* input_rtc,
-        isce3::io::Raster* output_rtc, isce3::product::SubSwaths* sub_swaths,
+        isce3::io::Raster* output_rtc,
+        isce3::io::Raster* input_layover_shadow_mask_raster,
+        isce3::product::SubSwaths* sub_swaths,
         isce3::io::Raster* out_valid_samples_sub_swath_mask,
         GeocodeMemoryMode geocode_memory_mode,
         const long long min_block_size, const long long max_block_size,
@@ -134,7 +167,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 abs_cal_factor, clip_min, clip_max, out_geo_rdr, out_geo_dem,
                 out_geo_rtc, phase_screen_raster, offset_az_raster,
-                offset_rg_raster, input_rtc, output_rtc, sub_swaths,
+                offset_rg_raster, input_rtc, output_rtc,
+                input_layover_shadow_mask_raster, sub_swaths,
                 out_valid_samples_sub_swath_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
@@ -147,7 +181,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 abs_cal_factor, clip_min, clip_max, out_geo_rdr, out_geo_dem,
                 out_geo_rtc, phase_screen_raster, offset_az_raster,
-                offset_rg_raster, input_rtc, output_rtc, sub_swaths,
+                offset_rg_raster, input_rtc, output_rtc,
+                input_layover_shadow_mask_raster, sub_swaths,
                 out_valid_samples_sub_swath_mask, 
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
@@ -158,7 +193,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 abs_cal_factor, clip_min, clip_max, out_geo_rdr, out_geo_dem,
                 out_geo_rtc, phase_screen_raster, offset_az_raster,
-                offset_rg_raster, input_rtc, output_rtc, sub_swaths,
+                offset_rg_raster, input_rtc, output_rtc,
+                input_layover_shadow_mask_raster, sub_swaths,
                 out_valid_samples_sub_swath_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
@@ -169,7 +205,8 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
                 abs_cal_factor, clip_min, clip_max, min_nlooks,
                 radar_grid_nlooks, out_off_diag_terms, out_geo_rdr, out_geo_dem,
-                out_geo_nlooks, out_geo_rtc, input_rtc, output_rtc, sub_swaths,
+                out_geo_nlooks, out_geo_rtc, input_rtc, output_rtc,
+                input_layover_shadow_mask_raster, sub_swaths,
                 out_valid_samples_sub_swath_mask,
                 geocode_memory_mode, min_block_size, max_block_size,
                 dem_interp_method);
@@ -182,7 +219,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor, clip_min,
                 clip_max, min_nlooks, radar_grid_nlooks, out_off_diag_terms,
                 out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
-                input_rtc, output_rtc, sub_swaths,
+                input_rtc, output_rtc, input_layover_shadow_mask_raster, sub_swaths,
                 out_valid_samples_sub_swath_mask, geocode_memory_mode,
                 min_block_size, max_block_size, dem_interp_method);
     else
@@ -193,7 +230,7 @@ void Geocode<T>::geocode(const isce3::product::RadarGridParameters& radar_grid,
                 rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor, clip_min,
                 clip_max, min_nlooks, radar_grid_nlooks, out_off_diag_terms,
                 out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
-                input_rtc, output_rtc, sub_swaths,
+                input_rtc, output_rtc, input_layover_shadow_mask_raster, sub_swaths,
                 out_valid_samples_sub_swath_mask, geocode_memory_mode,
                 min_block_size, max_block_size, dem_interp_method);
 }
@@ -214,7 +251,9 @@ void Geocode<T>::geocodeInterp(
         isce3::io::Raster* phase_screen_raster,
         isce3::io::Raster* offset_az_raster,
         isce3::io::Raster* offset_rg_raster, isce3::io::Raster* input_rtc,
-        isce3::io::Raster* output_rtc, isce3::product::SubSwaths* sub_swaths,
+        isce3::io::Raster* output_rtc,
+        isce3::io::Raster* input_layover_shadow_mask_raster,
+        isce3::product::SubSwaths* sub_swaths,
         isce3::io::Raster* out_valid_samples_sub_swath_mask,
         isce3::core::GeocodeMemoryMode geocode_memory_mode, const long long min_block_size,
         const long long max_block_size,
@@ -267,6 +306,20 @@ void Geocode<T>::geocodeInterp(
                 "int type of raster can only use nearest neighbor interp"};
             throw isce3::except::InvalidArgument(ISCE_SRCINFO(), err_str);
         }
+    }
+
+    isce3::core::Matrix<uint8_t> input_layover_shadow_mask;
+    if (input_layover_shadow_mask_raster != nullptr) {
+        info << "input layover/shadow mask provided: True" <<
+            pyre::journal::newline;
+        _validateInputLayoverShadowMaskRaster(
+            input_layover_shadow_mask_raster, radar_grid);
+
+        input_layover_shadow_mask.resize(
+                radar_grid.length(), radar_grid.width());
+        input_layover_shadow_mask_raster->getBlock(
+            input_layover_shadow_mask.data(), 0, 0,
+            radar_grid.width(), radar_grid.length(), 1);
     }
 
     // create data interpolator
@@ -682,7 +735,8 @@ void Geocode<T>::geocodeInterp(
                     flag_az_baseband_doppler, flatten, phase_screen_raster,
                     phase_screen_array, abs_cal_factor, clip_min, clip_max,
                     flag_apply_rtc, rtc_area, out_geo_rtc_band,
-                    out_geo_rtc_array, sub_swaths,
+                    out_geo_rtc_array, input_layover_shadow_mask_raster,
+                    input_layover_shadow_mask, sub_swaths,
                     out_valid_samples_sub_swath_mask,
                     out_valid_samples_sub_swath_mask_array);
 
@@ -758,6 +812,8 @@ inline void Geocode<T>::_interpolate(
         const isce3::core::Matrix<float>& rtc_area,
         isce3::io::Raster* out_geo_rtc,
         isce3::core::Matrix<float>& out_geo_rtc_array,
+        isce3::io::Raster* input_layover_shadow_mask_raster,
+        isce3::core::Matrix<uint8_t>& input_layover_shadow_mask_array,
         isce3::product::SubSwaths * sub_swaths,
         isce3::io::Raster* out_valid_samples_sub_swath_mask,
         isce3::core::Matrix<short>& out_valid_samples_sub_swath_mask_array)
@@ -803,11 +859,12 @@ inline void Geocode<T>::_interpolate(
             continue;
         }
 
+        int rdr_y_rslc = std::floor(rdrY + azimuthFirstLine);
+        int rdr_x_rslc = std::floor(rdrX + rangeFirstPixel);
+
         short sample_sub_swath_center = 1;
         if (sub_swaths != nullptr) {
             bool flag_skip = false;
-            int rdr_y_rslc = std::floor(rdrY + azimuthFirstLine);
-            int rdr_x_rslc = std::floor(rdrX + rangeFirstPixel);
             for (int yy = -interp_margin; yy <= interp_margin; ++yy) {
                 for (int xx = -interp_margin; xx <= interp_margin; ++xx) {
                     short sample_sub_swath = sub_swaths->getSampleSubSwath(
@@ -843,6 +900,35 @@ inline void Geocode<T>::_interpolate(
         }
         if (out_valid_samples_sub_swath_mask != nullptr) {
             out_valid_samples_sub_swath_mask_array(i, j) = sample_sub_swath_center;
+        }
+
+        /* 
+        check within the interpolation kernel (approximated by `interp_margin`)
+        if any of the samples is marked as shadow or layover-and-shadow
+        in which case we skip to the next position, i.e., we "break" the 
+        2 inner for-loop bellow (vars: yy and xx) and "continue" from the parent
+        for-loop (var: kk) above.
+        */
+        if (input_layover_shadow_mask_raster != nullptr) {
+            bool flag_skip = false;
+            for (int yy = -interp_margin; yy <= interp_margin; ++yy) {
+                for (int xx = -interp_margin; xx <= interp_margin; ++xx) {
+                    const uint8_t input_layover_shadow_value = \
+                            input_layover_shadow_mask_array(rdr_y_rslc + yy,
+                                                      rdr_x_rslc + xx);
+                    if (input_layover_shadow_value == SHADOW_VALUE ||
+                            input_layover_shadow_value == LAYOVER_AND_SHADOW_VALUE) {
+                        flag_skip = true;
+                        break;
+                    }
+                }
+                if (flag_skip) {
+                    break;
+                }
+            }
+            if (flag_skip) {
+                continue;
+            }
         }
 
         // Interpolate chip
@@ -1539,6 +1625,7 @@ void Geocode<T>::geocodeAreaProj(
         isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_dem,
         isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
         isce3::io::Raster* input_rtc, isce3::io::Raster* output_rtc,
+        isce3::io::Raster* input_layover_shadow_mask_raster,
         isce3::product::SubSwaths* sub_swaths,
         isce3::io::Raster* out_valid_samples_sub_swath_mask,
         GeocodeMemoryMode geocode_memory_mode, const long long min_block_size,
@@ -1547,6 +1634,7 @@ void Geocode<T>::geocodeAreaProj(
 {
 
     pyre::journal::info_t info("isce.geocode.GeocodeCov.geocodeAreaProj");
+    pyre::journal::error_t error("isce.geocode.GeocodeCov.geocodeAreaProj");
 
     if (std::isnan(geogrid_upsampling))
         geogrid_upsampling = 1;
@@ -1571,9 +1659,9 @@ void Geocode<T>::geocodeAreaProj(
                 abs_cal_factor, clip_min, clip_max, min_nlooks,
                 upsampled_radar_grid_nlooks, out_off_diag_terms, out_geo_rdr,
                 out_geo_dem, out_geo_nlooks, out_geo_rtc, input_rtc,
-                output_rtc, sub_swaths, out_valid_samples_sub_swath_mask,
-                geocode_memory_mode, min_block_size,
-                max_block_size, dem_interp_method);
+                output_rtc, input_layover_shadow_mask_raster, sub_swaths,
+                out_valid_samples_sub_swath_mask, geocode_memory_mode,
+                min_block_size, max_block_size, dem_interp_method);
         return;
     }
 
@@ -1698,9 +1786,34 @@ void Geocode<T>::geocodeAreaProj(
         if (is_radar_grid_single_block) {
             rtc_area.resize(
                     radar_grid_cropped.length(), radar_grid_cropped.width());
-            rtc_raster->getBlock(rtc_area.data(), 0, 0,
+            rtc_raster->getBlock(rtc_area.data(), offset_x, offset_y,
                     radar_grid_cropped.width(), radar_grid_cropped.length(), 1);
         }
+    }
+
+    isce3::core::Matrix<uint8_t> input_layover_shadow_mask;
+    if (input_layover_shadow_mask_raster != nullptr) {
+        info << "input layover/shadow mask provided: True" <<
+            pyre::journal::newline;
+
+        _validateInputLayoverShadowMaskRaster(
+            input_layover_shadow_mask_raster, radar_grid);
+
+        /*
+        if we are in radar-grid single block mode, read entire layover/shadow
+        mask now. Otherwise, the mask will be read in blocks within
+        _runBlock()
+        */
+        if (is_radar_grid_single_block) {
+            input_layover_shadow_mask.resize(
+                    radar_grid_cropped.length(), radar_grid_cropped.width());
+            input_layover_shadow_mask_raster->getBlock(
+                input_layover_shadow_mask.data(), offset_x, offset_y,
+                radar_grid_cropped.width(), radar_grid_cropped.length(), 1);
+        }
+    } else {
+        info << "input layover/shadow mask provided: False" <<
+            pyre::journal::newline;
     }
 
     // number of bands in the input raster
@@ -1820,7 +1933,8 @@ void Geocode<T>::geocodeAreaProj(
                         rtc_raster, input_raster, offset_y, offset_x,
                         output_raster, rtc_area, rtc_min_value, abs_cal_factor,
                         clip_min, clip_max, min_nlooks, radar_grid_nlooks,
-                        flag_upsample_radar_grid, sub_swaths, 
+                        flag_upsample_radar_grid, input_layover_shadow_mask_raster,
+                        input_layover_shadow_mask, sub_swaths, 
                         out_valid_samples_sub_swath_mask, geocode_memory_mode,
                         min_block_size, max_block_size, info);
             }
@@ -1840,7 +1954,8 @@ void Geocode<T>::geocodeAreaProj(
                         rtc_raster, input_raster, offset_y, offset_x,
                         output_raster, rtc_area, rtc_min_value, abs_cal_factor,
                         clip_min, clip_max, min_nlooks, radar_grid_nlooks,
-                        flag_upsample_radar_grid, sub_swaths,
+                        flag_upsample_radar_grid, input_layover_shadow_mask_raster,
+                        input_layover_shadow_mask, sub_swaths,
                         out_valid_samples_sub_swath_mask,
                         geocode_memory_mode, min_block_size, max_block_size,
                         info);
@@ -2018,7 +2133,10 @@ void Geocode<T>::_runBlock(
         isce3::io::Raster& output_raster, isce3::core::Matrix<float>& rtc_area,
         float rtc_min_value, double abs_cal_factor, float clip_min,
         float clip_max, float min_nlooks, float radar_grid_nlooks,
-        bool flag_upsample_radar_grid, isce3::product::SubSwaths * sub_swaths,
+        bool flag_upsample_radar_grid,
+        isce3::io::Raster* input_layover_shadow_mask_raster,
+        isce3::core::Matrix<uint8_t>& input_layover_shadow_mask,
+        isce3::product::SubSwaths * sub_swaths,
         isce3::io::Raster* out_valid_samples_sub_swath_mask,
         GeocodeMemoryMode geocode_memory_mode,
         const long long min_block_size, const long long max_block_size,
@@ -2307,6 +2425,7 @@ void Geocode<T>::_runBlock(
     int ybound = radar_grid.length() - 1;
 
     isce3::core::Matrix<float> rtc_area_block;
+    isce3::core::Matrix<uint8_t> input_layover_shadow_mask_block;
     std::vector<std::unique_ptr<isce3::core::Matrix<T2>>> rdrDataBlock;
     if (!is_radar_grid_single_block) {
 
@@ -2385,11 +2504,19 @@ void Geocode<T>::_runBlock(
                                            grid_size_x);
 
         if (flag_apply_rtc) {
-
             rtc_area_block.resize(
                     radar_grid_block.length(), radar_grid_block.width());
             rtc_raster->getBlock(rtc_area_block.data(), offset_x, offset_y,
                     radar_grid_block.width(), radar_grid_block.length(), 1);
+        }
+
+        if (input_layover_shadow_mask_raster != nullptr) {
+            input_layover_shadow_mask_block.resize(
+                    radar_grid_block.length(), radar_grid_block.width());
+            input_layover_shadow_mask_raster->getBlock(
+                input_layover_shadow_mask_block.data(),
+                offset_x, offset_y, radar_grid_block.width(),
+                radar_grid_block.length(), 1);
         }
 
         _getUpsampledBlock<T, T2>(rdrDataBlock, input_raster,
@@ -2719,6 +2846,36 @@ void Geocode<T>::_runBlock(
                     // Radar sample is out of bounds
                     else if (y - offset_y < 0 || x - offset_x < 0 ||
                              y >= ybound || x >= xbound) {
+                        continue;
+                    }
+
+                    /*
+                    If the sample is marked as shadow or layover-and-shadow,
+                    we continue to the next position. The input
+                    layover/shadow mask, if provided, is available as:
+                    - (1) a "single block" if `is_radar_grid_single_block`
+                        is true through the variable `input_layover_shadow_mask`
+                    - (2) multiple blocks with varying sizes if `is_radar_grid_single_block`
+                        is false through the variable `input_layover_shadow_mask_block`
+
+                    The `x` and `y` coordinates locate the point over the radar grid.
+                    If the layover shadow block is being read in multiple blocks, we
+                    also need to add `offset_x` and `offset_y` that represent the offsets
+                    in X- and Y- directions over the radar-grid coordinates.
+
+                    in which case we skip to the next position, i.e., we "break" the 
+                    2 inner for-loop bellow (vars: yy and xx) and "continue" from the parent
+                    for-loop (var: kk) above.
+                    */
+                    else if (input_layover_shadow_mask_raster != nullptr &&
+                             ((is_radar_grid_single_block &&
+                              (input_layover_shadow_mask(y, x) == SHADOW_VALUE ||
+                               input_layover_shadow_mask(y, x) == LAYOVER_AND_SHADOW_VALUE)) ||
+                              (!is_radar_grid_single_block &&
+                              (input_layover_shadow_mask_block(
+                                   y - offset_y, x - offset_x) == SHADOW_VALUE ||
+                               input_layover_shadow_mask_block(
+                                   y - offset_y, x - offset_x) == LAYOVER_AND_SHADOW_VALUE)))) {
                         continue;
                     }
 

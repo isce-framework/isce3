@@ -94,6 +94,16 @@ eval(double x) const {
     return result;
 }
 
+template<typename T>
+typename isce3::core::LUT1d<T>::ArrayXt
+isce3::core::LUT1d<T>::eval(const Eigen::Ref<const Eigen::ArrayXd> & x) const {
+    auto out = ArrayXt(x.size());
+    #pragma omp parallel for
+    for(Eigen::Index n=0; n < x.size(); ++n)
+      out(n) = eval(x(n));
+    return out;
+}
+
 template <typename T>
 isce3::core::LUT1d<T>
 isce3::core::avgLUT2dToLUT1d(const isce3::core::LUT2d<T> & lut2d,

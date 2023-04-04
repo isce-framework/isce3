@@ -156,6 +156,9 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 return out + ")";
         })
         .def("sensing_datetime", &RadarGridParameters::sensingDateTime,
-                py::arg("line") = 0);
+                py::arg("line") = 0)
+        .def("contains", &RadarGridParameters::contains,
+                py::arg("azimuth_time"),
+                py::arg("slant_range"))
         ;
 }
