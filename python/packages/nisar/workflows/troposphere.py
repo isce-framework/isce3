@@ -182,7 +182,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
                     # Convert the delay in meters to radians
                     tropo_delay_datacube_list.append(
-                        (phs_ref - phs_second) *4.0*np.pi/wavelength)
+                            -(phs_ref - phs_second) *4.0*np.pi/wavelength)
 
                 # Tropo delay datacube
                 tropo_delay_datacube = np.stack(tropo_delay_datacube_list)
@@ -252,7 +252,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                             tropo_delay_secondary[tropo_delay_product]
 
                 # Convert it to radians units
-                tropo_delay_datacube = tropo_delay*4.0*np.pi/wavelength
+                tropo_delay_datacube = -tropo_delay*4.0*np.pi/wavelength
 
                 # Interpolate to radar grid to keep its dimension consistent with other datacubes
                 tropo_delay_interpolator = RegularGridInterpolator((tropo_delay_reference.z,

@@ -181,7 +181,7 @@ def test_troposphere_aps_run():
         secondary_delay = secondary_obj.getdelay()
 
         # Troposphere delay computed at high resolution (i.e., product spacing)
-        high_resolution_tropo_delay = (reference_delay - secondary_delay) * 100.0
+        high_resolution_tropo_delay = -(reference_delay - secondary_delay) * 100.0
 
         f.close()
 
