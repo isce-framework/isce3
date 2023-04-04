@@ -200,8 +200,8 @@ def cal_solid_earth_tides(inc_angle_datacube,
                                      + ref_sec_tide_u  * np.cos(inc_angle))
 
     # Convert to phase screen
-    los_solid_earth_tides_datacube *= 4.0 * np.pi / wavelength
-    azimuth_solid_earth_tides_datacube *= 4.0 * np.pi / wavelength
+    los_solid_earth_tides_datacube *= -4.0 * np.pi / wavelength
+    azimuth_solid_earth_tides_datacube *= -4.0 * np.pi / wavelength
 
     return (los_solid_earth_tides_datacube,
             azimuth_solid_earth_tides_datacube)

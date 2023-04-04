@@ -211,7 +211,7 @@ def test_solid_earth_tides_run():
                                          + ref_sec_tide_u  * np.cos(inc_angle))
 
         # Convert to centimeters
-        high_resolution_solid_earth_tides  = 100.0 * los_solid_earth_tides_datacube
+        high_resolution_solid_earth_tides  = -100.0 * los_solid_earth_tides_datacube
 
 
         f.close()
