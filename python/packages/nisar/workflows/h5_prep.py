@@ -786,36 +786,31 @@ def prep_ds_insar(pcfg, dst, dst_h5):
 
                 if iono_args['enabled'] and dst in ['RUNW', 'GUNW']:
                    pol_list_iono = freq_pols_iono['A']
-                   # polarizations for ionosphere can be independent to insar pol
+                   # polarizations for ionosphere can be independent of insar pol
                    for pol_iono in pol_list_iono:
-                      # Do not create ionosphere in frequency A
-                      # if side-band method is enabled
-                      if is_iono_method_sideband and freq == 'A' and dst == 'RUNW':
-                          pass
-                      else:
-                          if pol_iono not in dst_h5[igram_path]:
+                        if pol_iono not in dst_h5[igram_path]:
                             dst_h5[igram_path].create_group(f'{pol_iono}')
-                          pol_iono_path = f'{igram_path}/{pol_iono}'
+                        pol_iono_path = f'{igram_path}/{pol_iono}'
 
-                          descr = f"{iono_method} Ionosphere phase screen"
-                          _create_datasets(dst_h5[pol_iono_path],
-                                           igram_shape, np.float32,
-                                           'ionospherePhaseScreen',
-                                            chunks=(128, 128),
-                                            descr=descr, units="radians",
-                                            grids=grids_val,
-                                            long_name='ionosphere \
-                                            phase screen')
+                        descr = f"{iono_method} Ionosphere phase screen"
+                        _create_datasets(dst_h5[pol_iono_path],
+                                        igram_shape, np.float32,
+                                        'ionospherePhaseScreen',
+                                        chunks=(128, 128),
+                                        descr=descr, units="radians",
+                                        grids=grids_val,
+                                        long_name='ionosphere \
+                                        phase screen')
 
-                          descr = f"Uncertainty of {iono_method} ionosphere phase screen"
-                          _create_datasets(
-                                    dst_h5[pol_iono_path],
-                                    igram_shape, np.float32,
-                                    'ionospherePhaseScreenUncertainty',
-                                    chunks=(128, 128),
-                                    descr=descr, units="radians",
-                                    grids=grids_val,
-                                    long_name='ionosphere phase screen uncertainty')
+                        descr = f"Uncertainty of {iono_method} ionosphere phase screen"
+                        _create_datasets(
+                                dst_h5[pol_iono_path],
+                                igram_shape, np.float32,
+                                'ionospherePhaseScreenUncertainty',
+                                chunks=(128, 128),
+                                descr=descr, units="radians",
+                                grids=grids_val,
+                                long_name='ionosphere phase screen uncertainty')
 
             # Allocate datasets in metadata
             cal_path = f'{product_path}/metadata/calibrationInformation'
