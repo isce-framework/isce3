@@ -476,6 +476,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     freq_pols_iono = iono_args['list_of_frequencies']
     iono_method_sideband = ['main_side_band', 'main_diff_ms_band']
     is_iono_method_sideband = iono_method in iono_method_sideband
+    rg_looks = cfg['crossmul']['range_looks']
+    az_looks = cfg['crossmul']['azimuth_looks']
 
     # Create list of frequencies
     id_group = dst_h5[f'{common_path}/identification']
@@ -501,6 +503,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
             az_vect = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTime'][()]
             rg_spac = src_h5[f'{slc_path}/slantRangeSpacing'][()]
             az_spac = src_h5[f'{ref_slc.SwathPath}/zeroDopplerTimeSpacing'][()]
+            center_az_spac = src_h5[f'{slc_path}/sceneCenterAlongTrackSpacing'][()]
+            center_rg_spac = src_h5[f'{slc_path}/sceneCenterGroundRangeSpacing'][()]
 
             # Create grids or swath group depending on product
             grid_swath = 'swaths' if dst in ['RIFG', 'ROFF',
@@ -541,13 +545,13 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                         "near mid-swath of the interferogram image"
                 _create_datasets(dst_h5[freq_path], [0], np.float32,
                                  "sceneCenterAlongTrackSpacing",
-                                  descr=descr, units="meters", data=1,
+                                  descr=descr, units="meters", data=center_az_spac*az_looks,
                                   long_name="scene center along track spacing")
                 descr = "Nominal ground range spacing in meters between consecutive pixels" \
                         "near mid-swath of the interferogram image"
                 _create_datasets(dst_h5[freq_path], [0], np.float32,
                                  "sceneCenterGroundRangeSpacing",
-                                  descr=descr, units="meters", data=1,
+                                  descr=descr, units="meters", data=center_rg_spac*rg_looks,
                                   long_name="scene center ground range spacing")
                 for sub in range(subswaths):
                    subswath = sub + 1
@@ -696,8 +700,6 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                              long_name='signal-to-noise ratio')
 
             # Form products inside interferogram
-            rg_looks = cfg['crossmul']['range_looks']
-            az_looks = cfg['crossmul']['azimuth_looks']
             igram_shape = (slc_lines // az_looks, slc_cols // rg_looks)
             grids_val = 'None'
             if dst in ['GUNW']:
@@ -826,14 +828,14 @@ def prep_ds_insar(pcfg, dst, dst_h5):
             descr = "Bulk along track time offset used to align reference and secondary image"
             _create_datasets(dst_h5[freq_path], [0], np.float32,
                              "bulkAlongTrackTimeOffset",
-                             descr=descr, units="seconds", data=1,
+                             descr=descr, units="seconds", data=0,
                              long_name='bulk along track time offset')
             _create_datasets(dst_h5[freq_path], [0], np.float32,
                              "bulkSlantRangeOffset",
                              descr=descr.replace('along track time',
                                                  'slant range'),
                              units="meters",
-                             data=1, long_name='bulk slant range offset')
+                             data=0, long_name='bulk slant range offset')
 
             if dst in ['RIFG', 'RUNW', 'GUNW']:
                 for pol in pol_list:
@@ -841,7 +843,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                     descr = "Constant wrapped reference phase used to balance the interferogram"
                     _create_datasets(dst_h5[pol_path], [0], np.float32,
                                      "referencePhase",
-                                     descr=descr, units="radians", data=1,
+                                     descr=descr, units="radians", data=0,
                                      long_name='reference phase')
             # Allocate metadata in processingInformation/parameters
             freq_path = f'{proc_path}/common/frequency{freq}'
@@ -860,7 +862,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                 descr = "Reference elevation above WGS84 Ellipsoid used for flattening"
                 _create_datasets(dst_h5[f'{freq_path}'], [0], np.float32,
                                  "referenceFlatteningElevation",
-                                 descr=descr, units="meters", data=1,
+                                 descr=descr, units="meters", data=0,
                                  long_name='reference flattening elevation')
 
             if dst in ['RIFG', 'RUNW', 'GUNW']:
