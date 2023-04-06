@@ -83,8 +83,11 @@ public:
      * radar-grid geometry)
      * @param[in]  offset_rg_raster    Range offset raster (reference
      * radar-grid geometry)
-     * @param[in]  in_rtc              Input RTC area factor (in slant-range).
-     * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
+     * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
+     * considered invalid.
      * @param[in]  sub_swaths          Sub-swaths metadata
      * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
      * sub-swath mask raster
@@ -127,6 +130,7 @@ public:
             isce3::io::Raster* offset_rg_raster = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
@@ -170,8 +174,11 @@ public:
      * radar-grid geometry)
      * @param[in]  offset_rg_raster    Range offset raster (reference radar-grid
      * geometry)
-     * @param[in]  in_rtc              Input RTC area factor (in slant-range).
-     * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
+     * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
+     * considered invalid.
      * @param[in]  sub_swaths          Sub-swaths metadata
      * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
      * sub-swath mask raster
@@ -207,6 +214,7 @@ public:
             isce3::io::Raster* offset_rg_raster = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
@@ -253,8 +261,11 @@ public:
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
-     * @param[in]  in_rtc              Input RTC area factor (in slant-range).
-     * @param[out] out_rtc             Output RTC area factor (in slant-range).
+     * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
+     * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
+     * considered invalid.
      * @param[in]  sub_swaths          Sub-swaths metadata
      * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
      * sub-swath mask raster
@@ -293,6 +304,7 @@ public:
             isce3::io::Raster* out_geo_rtc = nullptr,
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
+            isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
             isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
@@ -460,6 +472,8 @@ private:
             double abs_cal_factor, float clip_min, float clip_max,
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
+            isce3::io::Raster* input_layover_shadow_mask_raster,
+            isce3::core::Matrix<uint8_t>& input_layover_shadow_mask,
             isce3::product::SubSwaths * sub_swaths,
             isce3::io::Raster* out_valid_samples_sub_swath_mask,
             isce3::core::GeocodeMemoryMode geocode_memory_mode,
@@ -495,8 +509,14 @@ private:
      * @param[in] rtc_area            RTC area normalization factor array
      * @param[out] out_geo_rtc        Output RTC area factor raster (in
      * geo-coordinates)
-     * @param[out] out_geo_rtc        Output RTC area factor array (in
+     * @param[out] out_geo_rtc_array  Output RTC area factor array (in
      * geo-coordinates)
+     * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
+     * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
+     * considered invalid.
+     * @param[in]  input_layover_shadow_mask Input layover/shadow mask
+     * array (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
+     * considered invalid.
      * @param[in]  sub_swaths         Sub-swaths metadata
      * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
      * sub-swath mask raster
@@ -519,6 +539,8 @@ private:
             bool flag_run_rtc, const isce3::core::Matrix<float>& rtc_area,
             isce3::io::Raster* out_geo_rtc,
             isce3::core::Matrix<float>& out_geo_rtc_array,
+            isce3::io::Raster* input_layover_shadow_mask_raster,
+            isce3::core::Matrix<uint8_t>& input_layover_shadow_mask,
             isce3::product::SubSwaths * sub_swaths,
             isce3::io::Raster* out_valid_samples_sub_swath_mask,
             isce3::core::Matrix<short>& out_valid_samples_sub_swath_mask_array);

@@ -2,7 +2,8 @@ import numpy as np
 from osgeo import gdal
 
 import isce3
-from isce3.atmosphere.ionosphere_estimation import decimate_freq_a_array
+from isce3.signal.interpolate_by_range import decimate_freq_a_array
+
 from isce3.atmosphere.ionosphere_filter import IonosphereFilter, write_array
 from isce3.atmosphere.main_band_estimation import (compute_unwrapp_error_main_diff_ms_band,
                                                    compute_unwrapp_error_main_side_band,

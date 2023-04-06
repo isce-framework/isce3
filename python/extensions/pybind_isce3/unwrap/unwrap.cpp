@@ -19,5 +19,5 @@ void addsubmodule_unwrap(py::module & m)
     addbinding(pyPhass);
   
     m_unwrap.def("_snaphu_unwrap", &isce3::unwrap::snaphuUnwrap,
-            py::arg("configfile"));
+            py::arg("configfile"), py::call_guard<py::gil_scoped_release>());
 }

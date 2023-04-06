@@ -7,8 +7,8 @@ from osgeo import gdal
 from scipy.interpolate import griddata
 from scipy.ndimage import distance_transform_edt
 
-from isce3.signal.filter_data import (create_gaussian_kernel, get_raster_info,
-                                      block_param_generator)
+from isce3.core.block_param_generator import block_param_generator
+from isce3.signal.filter_data import create_gaussian_kernel, get_raster_info
 
 class IonosphereFilter:
     '''
@@ -86,43 +86,40 @@ class IonosphereFilter:
                             lines_per_block)
         # Determine the amount of padding
         pad_length = 2 * (self.y_kernel // 2)
-        pad_width = 2 * (self.y_kernel// 2)
+        pad_width = 2 * (self.x_kernel// 2)
         pad_shape = (pad_length, pad_width)
-        block_params = block_param_generator(
-                lines_per_block, data_shape, pad_shape)
 
         # Prepare to write output to files
-        if not isinstance(filtered_output, h5py.Dataset) and \
-            not os.path.isfile(filtered_output):
-            raster = isce3.io.Raster(path=filtered_output,
-                width=data_width,
-                length=data_length,
-                num_bands=1,
-                dtype=gdal.GDT_Float32,
-                driver_name='ENVI')
-            del raster
-        if not isinstance(filtered_std_dev, h5py.Dataset) and \
-            not os.path.isfile(filtered_std_dev):
-            raster = isce3.io.Raster(path=filtered_std_dev,
-                width=data_width,
-                length=data_length,
-                num_bands=1,
-                dtype=gdal.GDT_Float32,
-                driver_name='ENVI')
-            del raster
+        for output in [filtered_output, filtered_std_dev]:
+            if not isinstance(output, h5py.Dataset) and \
+                not os.path.isfile(output):
+                raster = isce3.io.Raster(path=output,
+                    width=data_width,
+                    length=data_length,
+                    num_bands=1,
+                    dtype=gdal.GDT_Float32,
+                    driver_name='ENVI')
+                del raster
 
         for iter_cnt in range(self.iteration):
 
+            block_params = block_param_generator(
+                lines_per_block, data_shape, pad_shape)
             # Start block processing
             for block_param in block_params:
-                block_data_path = filtered_output if iter_cnt > 0 else input_data
-                data_block = read_block_array(block_data_path, block_param)
-                block_sig_path = filtered_std_dev if iter_cnt > 0 else input_std_dev
-                data_sig_block = read_block_array(block_sig_path, block_param)
-                mask_block = read_block_array(mask_path, block_param)
+                # Prepare to write temp_files
+                filtered_iono_temp_input_path = f'{self.outputdir}/filtered_iono_temp{iter_cnt-1}'
+                filtered_std_temp_input_path = f'{self.outputdir}/filtered_iono_std_temp{iter_cnt-1}'
 
-                data_block[mask_block==0] = np.nan
-                data_sig_block[mask_block==0] = np.nan
+                block_data_path = filtered_iono_temp_input_path if iter_cnt > 0 else input_data
+                data_block = read_block_array(block_data_path, block_param)
+                block_sig_path = filtered_std_temp_input_path if iter_cnt > 0 else input_std_dev
+                data_sig_block = read_block_array(block_sig_path, block_param)
+                mask_block = read_block_array(mask_path, block_param, fill_value=1)
+                mask0 = mask_block == 0
+                mask1 = mask_block == 1
+                data_block[mask0] = np.nan
+                data_sig_block[mask0] = np.nan
 
                 # filling gaps with smoothed or nearest values
                 fill_method = fill_with_smoothed \
@@ -134,7 +131,9 @@ class IonosphereFilter:
                     # Replace the valid pixels with original unfiltered data
                     # to avoid too much smoothed signal
                     unfilt_data_block = read_block_array(input_data, block_param)
-                    data_block[mask_block==1] = unfilt_data_block[mask_block==1]
+                    filled_data[mask1] = unfilt_data_block[mask1]
+                    unfilt_data_block = read_block_array(input_std_dev, block_param)
+                    filled_data_sig[mask1] = unfilt_data_block[mask1]
 
                 # after filling gaps, filter the data
                 filt_data, filt_data_sig = filter_data_with_sig(
@@ -145,11 +144,20 @@ class IonosphereFilter:
                     sig_kernel_x=self.sig_x,
                     sig_kernel_y=self.sig_y)
 
-                write_array(filtered_output, filt_data,
+                # set output to HDF5 for final iteration
+                # otherwise write to temp file
+                if iter_cnt == self.iteration - 1 :
+                    output_iono = filtered_output
+                    output_std = filtered_std_dev
+                else:
+                    output_iono = f'{self.outputdir}/filtered_iono_temp{iter_cnt}'
+                    output_std = f'{self.outputdir}/filtered_iono_std_temp{iter_cnt}'
+
+                write_array(output_iono, filt_data,
                     block_row=block_param.write_start_line,
                     data_shape=data_shape)
 
-                write_array(filtered_std_dev, filt_data_sig,
+                write_array(output_std, filt_data_sig,
                     block_row=block_param.write_start_line,
                     data_shape=data_shape)
 
@@ -226,7 +234,7 @@ def filter_data_with_sig(
         sig_kernel_x,
         sig_kernel_y,
         mask_array=None):
-    """ Filter input array by applying weighting 
+    """ Filter input array by applying weighting
     based on the statndard deviations
     Parameters
     ----------
@@ -321,7 +329,7 @@ def filter_data_with_sig(
 
     return filt_data, filt_data_sig
 
-def read_block_array(raster, block_param):
+def read_block_array(raster, block_param, fill_value=0):
     ''' Get a block of data from raster.
         Raster can be a HDF5 file or a GDAL-friendly raster
 
@@ -333,7 +341,8 @@ def read_block_array(raster, block_param):
     block_param: BlockParam
         Object specifying size of block and where to read from raster,
         and amount of padding for the read array
-
+    fill_value: float
+        Pads with a fill value.
     Returns
     -------
     data_block: np.ndarray
@@ -356,7 +365,7 @@ def read_block_array(raster, block_param):
 
     # Pad igram_block with zeros according to pad_length/pad_width
     data_block = np.pad(data_block, block_param.block_pad,
-                         mode='constant', constant_values=0)
+                         mode='constant', constant_values=fill_value)
 
     return data_block
 

@@ -371,9 +371,11 @@ void geocodeSlc(
 {
     validate_slice(radarGrid, slicedRadarGrid);
 
+    pyre::journal::debug_t debug("isce.geocode.geocodeSlc.geocodeSlc");
+
     // number of bands in the input raster
     size_t nbands = inputRaster.numBands();
-    std::cout << "nbands: " << nbands << std::endl;
+    debug << "nbands: " << nbands << pyre::journal::endl;
     // create projection based on _epsg code
     std::unique_ptr<isce3::core::ProjectionBase> proj(
             isce3::core::createProj(geoGrid.epsg()));
@@ -386,10 +388,10 @@ void geocodeSlc(
     // Compute number of blocks in the output geocoded grid
     size_t nBlocks = (geoGrid.length() + linesPerBlock - 1) / linesPerBlock;
 
-    std::cout << "nBlocks: " << nBlocks << std::endl;
+    debug << "nBlocks: " << nBlocks << pyre::journal::endl;
     // loop over the blocks of the geocoded Grid
     for (size_t block = 0; block < nBlocks; ++block) {
-        std::cout << "block: " << block << std::endl;
+        debug << "block: " << block << pyre::journal::endl;
         // Get block extents (of the geocoded grid)
         size_t lineStart, geoBlockLength;
         lineStart = block * linesPerBlock;
@@ -497,10 +499,7 @@ void geocodeSlc(
                 }
 
                 // check if az time and slant within radar grid
-                if (aztime < slicedRadarGrid.sensingStart()
-                        || srange < slicedRadarGrid.startingRange()
-                        || aztime > slicedRadarGrid.sensingStop()
-                        || srange > slicedRadarGrid.endingRange()
+                if (!slicedRadarGrid.contains(aztime, srange)
                         || !nativeDoppler.contains(aztime, srange))
                     continue;
 
@@ -568,9 +567,9 @@ void geocodeSlc(
         // for each band in the input:
         for (size_t band = 0; band < nbands; ++band) {
 
-            std::cout << "band: " << band << std::endl;
+            debug << "band: " << band << pyre::journal::newline;
             // get a block of data
-            std::cout << "get data block " << std::endl;
+            debug << "get data block " << pyre::journal::endl;
             inputRaster.getBlock(rdrDataBlock.data(), rangeFirstPixel,
                                  azimuthFirstLine, rdrBlockWidth,
                                  rdrBlockLength, band + 1);
@@ -592,7 +591,7 @@ void geocodeSlc(
                     uncorrectedSRange);
 
             // set output
-            std::cout << "set output " << std::endl;
+            debug << "set output " << pyre::journal::endl;
             outputRaster.setBlock(geoDataBlock.data(), 0, lineStart,
                                   geoGrid.width(), geoBlockLength, band + 1);
         }
@@ -827,10 +826,7 @@ void geocodeSlc(
             double rangeCoord = (srange - radarGrid.startingRange()) /
                           radarGrid.rangePixelSpacing();
 
-            if (aztime < slicedRadarGrid.sensingStart()
-                    || srange < slicedRadarGrid.startingRange()
-                    || aztime > slicedRadarGrid.sensingStop()
-                    || srange > slicedRadarGrid.endingRange()
+            if (!slicedRadarGrid.contains(aztime, srange)
                     || !nativeDoppler.contains(aztime, srange))
                 continue;
 
