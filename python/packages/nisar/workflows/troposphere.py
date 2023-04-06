@@ -108,6 +108,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     tropo_delay_direction = tropo_cfg['delay_direction'].lower()
 
     tropo_delay_products = []
+    # comb is short for the summation of wet and dry components
     for delay_type in ['wet', 'dry', 'comb']:
         if tropo_cfg[f'enable_{delay_type}_product']:
             if (delay_type == 'dry') and \
@@ -240,10 +241,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                                                           height_levels=height_levels,
                                                           out_proj=epsg)
 
-
             for tropo_delay_product in tropo_delay_products:
 
-                # Troposphere delay by raider package
+                # Compute troposphere delay with raider package
+                # comb is the summation of wet and hydro components
                 if tropo_delay_product == 'comb':
                     tropo_delay = tropo_delay_reference['wet'] + tropo_delay_reference['hydro'] - \
                             tropo_delay_secondary['wet'] - tropo_delay_secondary['hydro']
@@ -252,7 +253,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                             tropo_delay_secondary[tropo_delay_product]
 
                 # Convert it to radians units
-                tropo_delay_datacube = -tropo_delay*4.0*np.pi/wavelength
+                tropo_delay_datacube = -tropo_delay * 4.0 * np.pi/wavelength
 
                 # Interpolate to radar grid to keep its dimension consistent with other datacubes
                 tropo_delay_interpolator = RegularGridInterpolator((tropo_delay_reference.z,
@@ -320,6 +321,8 @@ def write_to_GUNW_product(tropo_delay_datacubes: dict, gunw_hdf5: str):
              if delay_product == 'comb':
                  delay_product = 'combined'
 
+             # The 'hydro' term is used by radier package for the dry component,
+             # and the delay product name is changed to 'dry' to be same with the SET name
              if delay_product == 'hydro':
                  delay_product = 'dry'
 
