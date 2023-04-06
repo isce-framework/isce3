@@ -135,11 +135,12 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::Raster* out_geo_dem = nullptr;
     isce3::io::Raster* out_geo_nlooks = nullptr;
     isce3::io::Raster* out_geo_rtc = nullptr;
-    isce3::io::Raster* input_rtc = nullptr;
-    isce3::io::Raster* output_rtc = nullptr;
     isce3::io::Raster* phase_screen_raster = nullptr;
     isce3::io::Raster* offset_az_raster = nullptr;
     isce3::io::Raster* offset_rg_raster = nullptr;
+    isce3::io::Raster* input_rtc = nullptr;
+    isce3::io::Raster* output_rtc = nullptr;
+    isce3::io::Raster* input_layover_shadow_mask_raster = nullptr;
     isce3::product::SubSwaths * sub_swaths = nullptr;
     isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr;
     isce3::core::GeocodeMemoryMode geocode_memory_mode_1 =
@@ -183,9 +184,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
                     clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
                     out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
                     phase_screen_raster, offset_az_raster, offset_rg_raster,
-                    input_rtc, output_rtc, sub_swaths,
-                    out_valid_samples_sub_swath_mask, geocode_memory_mode_1,
-                    min_block_size, max_block_size);
+                    input_rtc, output_rtc, input_layover_shadow_mask_raster,
+                    sub_swaths, out_valid_samples_sub_swath_mask,
+                    geocode_memory_mode_1, min_block_size, max_block_size);
         }
     }
 
@@ -230,9 +231,11 @@ TEST(GeocodeTest, TestGeocodeCov) {
             input_terrain_radiometry, output_terrain_radiometry, exponent,
             rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
             abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
-            &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem, out_geo_nlooks,
-            phase_screen_raster, offset_az_raster, offset_rg_raster, out_geo_rtc,
-            input_rtc, output_rtc, sub_swaths, out_valid_samples_sub_swath_mask,
+            &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem,
+            out_geo_nlooks, out_geo_rtc, phase_screen_raster,
+            offset_az_raster, offset_rg_raster, input_rtc, output_rtc,
+            input_layover_shadow_mask_raster,
+            sub_swaths, out_valid_samples_sub_swath_mask,
             geocode_memory_mode_2, min_block_size, max_block_size);
 
     //  load complex raster containing X conj(Y)

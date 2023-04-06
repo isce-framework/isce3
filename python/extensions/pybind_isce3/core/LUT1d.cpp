@@ -2,6 +2,8 @@
 
 #include <valarray>
 #include <pybind11/stl.h>
+#include <pybind11/eigen.h>
+#include <Eigen/Dense>
 
 #include <isce3/core/LUT2d.h>
 
@@ -23,7 +25,9 @@ void addbinding(py::class_<LUT1d<T>> &pyLUT1d)
                 "coords getter")
         .def("values", (std::valarray<T>& (LUT1d<T>::*)()) &LUT1d<T>::values,
                 "values getter")
-        .def("eval", &LUT1d<T>::eval)
+        .def("eval", py::overload_cast<double>(&LUT1d<T>::eval, py::const_))
+        .def("eval", py::overload_cast<const Eigen::Ref<const Eigen::ArrayXd>& >(
+	        &LUT1d<T>::eval, py::const_))
         ;
 }
 
