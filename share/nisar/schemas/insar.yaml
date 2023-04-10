@@ -882,7 +882,7 @@ geocode_options:
 
     # Wrapped Interferogram output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
-    wrapped_interferogram_output_posting: include('wrapped_interferogram_output_posting_options',required=False)
+    wrapped_interferogram: include('wrapped_interferogram_options',required=False)
 
     # To control output grid in same units as output EPSG
     x_snap: num(min=0, required=False)
@@ -924,7 +924,8 @@ goff_datasets:
     slant_range_offset_variance: bool(required=False)
     snr: bool(required=False)
 
-wrapped_interferogram_output_posting_options:
+wrapped_interferogram_options:
+    interp_method: enum('SINC', 'BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
     x_snap: num(min=0, required=False)
     y_snap: num(min=0, required=False)
     A:

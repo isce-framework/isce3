@@ -137,7 +137,9 @@ runconfig:
                 # If not provided, spacing values will be taken from provided DEM.
                 # All postings/spacings must be > 0.
                 # ISCE3 output rasters always have North-up West-left orientation
-                wrapped_interferogram_output_posting:
+                wrapped_interferogram:
+                    # Default interpolation method is SINC method
+                    interp_method: SINC
                     # OPTIONAL - To control output grid in same units as output EPSG
                     x_snap:
                     # OPTIONAL - To control output grid in same units as output EPSG

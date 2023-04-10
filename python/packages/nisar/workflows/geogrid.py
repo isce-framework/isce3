@@ -71,7 +71,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
 
     output_posting_name = 'output_posting'
     if (workflow_name == 'insar') and is_geo_wrapped_igram:
-        output_posting_name = 'wrapped_interferogram_output_posting'
+        output_posting_name = 'wrapped_interferogram'
 
     if frequency_group is None:
         spacing_x = geocode_dict[output_posting_name]['x_posting']
@@ -208,8 +208,6 @@ def create(cfg, workflow_name=None, frequency_group=None,
 
     # Change the snap if it is to geocode the wrapped interferogram
     if (workflow_name == 'insar') and is_geo_wrapped_igram:
-        output_posting_name = 'wrapped_interferogram_output_posting'
-
         x_snap = geocode_dict[output_posting_name]['x_snap']
         y_snap = geocode_dict[output_posting_name]['y_snap']
 

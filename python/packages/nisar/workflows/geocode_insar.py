@@ -167,6 +167,9 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
     off_width = offset_cfg['offset_width']
 
     if cfg['processing']['offsets_product']['enabled']:
+        # In case both offset_product and dense_offsets are enabled,
+        # it is necessary to re-assgin the 'offsets_product' to offset_cfg
+        offset_cfg = cfg['processing']['offsets_product']
         az_search = np.inf
         rg_search = np.inf
         az_window = np.inf
@@ -192,6 +195,9 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
             error_channel.log(err_str)
             raise ValueError(err_str)
     else:
+        # In case both offset_product and dense_offsets are enabled,
+        # it is necessary to re-assgin the 'dense_offsets' to offset_cfg
+        offset_cfg = cfg['processing']['dense_offsets']
         az_search = offset_cfg['half_search_azimuth']
         rg_search = offset_cfg['half_search_range']
         az_window = offset_cfg['window_azimuth']
@@ -639,7 +645,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 # Geocode the wrapped interferogram
                 desired = ['wrapped_interferogram']
-                geocode_cplx_obj.data_interpolator = interp_method
+                geocode_cplx_obj.data_interpolator = cfg["processing"]["geocode"]\
+                        ['wrapped_interferogram']['interp_method']
                 cpu_geocode_rasters(geocode_cplx_obj, geo_datasets, desired, freq,
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size * 2,
@@ -710,10 +717,6 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             if input_product_type is InputProduct.ROFF else \
             cfg["processing"]["geocode"]["gunw_datasets"]
 
-    # RIFG product
-    if input_product_type is InputProduct.RIFG:
-        geo_datasets = {'coherence_magnitude': True, 'wrapped_interferogram': True}
-
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
     iono_method = iono_args['spectral_diversity']
@@ -729,6 +732,24 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         interp_method = isce3.core.DataInterpMethod.NEAREST
     if interp_method == 'BIQUINTIC':
         interp_method = isce3.core.DataInterpMethod.BIQUINTIC
+
+    # Interpolation method for the wrapped interferogram
+    wrapped_igram_interp_method = interp_method
+
+    if input_product_type is InputProduct.RIFG:
+        wrapped_igram_interp_method = cfg["processing"]["geocode"]\
+                ['wrapped_interferogram']['interp_method']
+
+        if wrapped_igram_interp_method  == 'SINC':
+            wrapped_igram_interp_method = isce3.core.DataInterpMethod.SINC
+        if wrapped_igram_interp_method == 'BILINEAR':
+            wrapped_igram_interp_method = isce3.core.DataInterpMethod.BILINEAR
+        if wrapped_igram_interp_method == 'BICUBIC':
+            wrapped_igram_interp_method = isce3.core.DataInterpMethod.BICUBIC
+        if wrapped_igram_interp_method == 'NEAREST':
+            wrapped_igram_interp_method = isce3.core.DataInterpMethod.NEAREST
+        if wrapped_igram_interp_method == 'BIQUINTIC':
+            wrapped_igram_interp_method = isce3.core.DataInterpMethod.BIQUINTIC
 
     info_channel = journal.info("geocode.run")
     info_channel.log("starting geocode")
@@ -926,20 +947,28 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             else:
                 #RIFG
                 desired = ['coherence_magnitude', 'wrapped_interferogram']
+                geo_datasets = ['coherence_magnitude', 'wrapped_interferogram']
+                interp_methods = [interp_method, wrapped_igram_interp_method]
+
                 # Create radar grid geometry required by RIFG product
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
-                # Create geocode object
-                geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                                         dem_raster,
-                                                         lines_per_block,
-                                                         interp_method,
-                                                         invalid_value=np.nan)
+                for idx in range(len(desired)):
+                    # Create geocode object, it seems that the SINC interpolation is not
+                    # supported by cuda geocode, the interplation method by coherence magnitude
+                    # is applied instead.
+                    geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                                             dem_raster,
+                                                             lines_per_block,
+                                                             data_interp_method=interp_methods[0],
+                                                             invalid_value=np.nan)
 
-                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                    input_hdf5, dst_h5, geocode_obj,
-                                    input_product_type = InputProduct.RIFG)
+                    # Geocode the coherence and wrapped interferogram
+                    gpu_geocode_rasters({geo_datasets[idx]:True}, [desired[idx]], freq, pol_list,
+                                        input_hdf5, dst_h5, geocode_obj,
+                                        input_product_type = InputProduct.RIFG)
+
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
