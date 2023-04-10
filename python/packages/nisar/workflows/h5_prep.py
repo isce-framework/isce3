@@ -1657,7 +1657,7 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
                   'InSAR phase datacube due to Solid Earth tides along the azimuth direction']
 
         # Product names
-        product_names = ['losSolidEarthTidesPhase', 'azimuthSolidEarthTidesPhase']
+        product_names = ['losSolidEarthTidesPhase', 'alongTrackSolidEarthTidesPhase']
 
         for index, product_name in enumerate(product_names):
 
