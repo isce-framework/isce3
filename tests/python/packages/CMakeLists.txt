@@ -32,7 +32,6 @@ nisar/workflows/filter_interferogram.py
 nisar/workflows/bandpass_insar.py
 nisar/workflows/ionosphere.py
 nisar/workflows/troposphere.py
-nisar/workflows/solid_earth_tides.py
 nisar/workflows/baseline.py
 nisar/workflows/process_args.py
 nisar/workflows/rdr2geo.py
