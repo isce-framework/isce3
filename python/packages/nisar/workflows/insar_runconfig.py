@@ -9,8 +9,9 @@ from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 import nisar.workflows.helpers as helpers
 
-from nisar.workflows.troposphere_runconfig import troposphere_delay_check
+from nisar.workflows.geocode_insar_runconfig import geocode_insar_cfg_check
 from nisar.workflows.ionosphere_runconfig import ionosphere_cfg_check
+from nisar.workflows.troposphere_runconfig import troposphere_delay_check
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):
@@ -202,34 +203,8 @@ class InsarRunConfig(Geo2rdrRunConfig):
         if iono_cfg['enabled']:
             ionosphere_cfg_check(self.cfg)
 
-
-        if 'interp_method' not in self.cfg['processing']['geocode']:
-            self.cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
-
-        # create empty dict if geocode_datasets not in geocode
-        for datasets in ['gunw_datasets', 'goff_datasets']:
-            if datasets not in self.cfg['processing']['geocode']:
-                self.cfg['processing']['geocode'][datasets] = {}
-
-        # Initialize GUNW and GOFF names
-        gunw_datasets = ['connected_components', 'coherence_magnitude',
-                         'ionosphere_phase_screen',
-                         'ionosphere_phase_screen_uncertainty',
-                         'unwrapped_phase', 'along_track_offset',
-                         'slant_range_offset', 'layover_shadow_mask']
-        goff_datasets = ['along_track_offset', 'snr',
-                         'along_track_offset_variance',
-                         'correlation_surface_peak', 'cross_offset_variance',
-                         'slant_range_offset', 'slant_range_offset_variance']
-        # insert both geocode datasets in dict keyed on datasets name
-        geocode_datasets = {'gunw_datasets': gunw_datasets,
-                            'goff_datasets': goff_datasets}
-        for dataset_group in geocode_datasets:
-            for dataset in geocode_datasets[dataset_group]:
-                if dataset not in self.cfg['processing']['geocode'][
-                    dataset_group]:
-                    self.cfg['processing']['geocode'][dataset_group][
-                        dataset] = True
+        # Check geocode_insar config options
+        geocode_insar_cfg_check(cfg)
 
         # Check if layover shadow output enabled
         if not self.cfg['processing']['rdr2geo']['write_layover_shadow']:
