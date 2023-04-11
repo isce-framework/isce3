@@ -864,6 +864,9 @@ geocode_options:
     # Rasters in RUNW to geocode
     gunw_datasets: include('gunw_datasets', required=False)
 
+    # Rasters in RIFG to geocode
+    unwrapped_datasets: include('unwrapped_datasets', required=False)
+
     # Rasters in ROFF to geocode
     goff_datasets: include('goff_datasets', required=False)
 
@@ -914,6 +917,10 @@ gunw_datasets:
     layover_shadow_mask: bool(required=False)
     along_track_offset: bool(required=False)
     slant_range_offset: bool(required=False)
+
+unwrapped_datasets:
+    coherence_magnitude: bool(required=False)
+    unwrapped_phase: bool(required=False)
 
 goff_datasets:
     along_track_offset: bool(required=False)

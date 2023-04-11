@@ -23,7 +23,7 @@ def geocode_insar_cfg_check(cfg):
         cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
 
     # create empty dict if geocode_datasets not in geocode
-    for datasets in ['gunw_datasets', 'goff_datasets']:
+    for datasets in ['gunw_datasets', 'goff_datasets', 'wrapped_datasets']:
         if datasets not in cfg['processing']['geocode']:
             cfg['processing']['geocode'][datasets] = {}
 
@@ -37,10 +37,12 @@ def geocode_insar_cfg_check(cfg):
                      'along_track_offset_variance',
                      'correlation_surface_peak', 'cross_offset_variance',
                      'slant_range_offset', 'slant_range_offset_variance']
+    wrapped_datasets = ['coherene_magnitude', 'wrapped_interferogram']
 
     # insert both geocode datasets in dict keyed on datasets name
     geocode_datasets = {'gunw_datasets': gunw_datasets,
-                        'goff_datasets': goff_datasets}
+                        'goff_datasets': goff_datasets,
+                        'wrapped_datasets': wrapped_datasets}
     for dataset_group in geocode_datasets:
         for dataset in geocode_datasets[dataset_group]:
             if dataset not in cfg['processing']['geocode'][dataset_group]:
