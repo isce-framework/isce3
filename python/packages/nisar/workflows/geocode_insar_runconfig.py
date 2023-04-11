@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import journal
 import nisar.workflows.helpers as helpers
@@ -44,7 +45,7 @@ class GeocodeInsarRunConfig(RunConfig):
 
         # Initialize GUNW and GOFF names
         gunw_datasets = ['connected_components', 'coherence_magnitude',
-                         'ionosphere_phase_screen', 
+                         'ionosphere_phase_screen',
                          'ionosphere_phase_screen_uncertainty',
                          'unwrapped_phase', 'along_track_offset',
                          'slant_range_offset', 'layover_shadow_mask']
@@ -76,4 +77,18 @@ class GeocodeInsarRunConfig(RunConfig):
             err_str = f"range looks = {rg_looks} not an odd integer."
             error_channel.log(err_str)
             raise ValueError(err_str)
+
+        # check the interpolation method for GPU
+        if self.cfg['worker']['gpu_enabled']:
+            igram_interp_method =  self.cfg['processing']['geocode']\
+                    ['wrapped_interferogram']['interp_method']
+
+            if igram_interp_method == 'SINC':
+                data_interp_method = self.cfg['processing']['geocode']['interp_method']
+                warns_msg = 'SINC interplation method is not supported by GPU,' +\
+                        f'the {data_interp_method} will be applied'
+                self.cfg['processing']['geocode']\
+                         ['wrapped_interferogram']['interp_method'] = data_interp_method
+                warnings.warn(warns_msg)
+                #error_channel.log(warns_msg)
 

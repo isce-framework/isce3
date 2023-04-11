@@ -955,13 +955,11 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                                              grid_zero_doppler)
 
                 for idx in range(len(desired)):
-                    # Create geocode object, it seems that the SINC interpolation is not
-                    # supported by cuda geocode, the interplation method by coherence magnitude
-                    # is applied instead.
+                    # Create geocode object
                     geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
                                                              dem_raster,
                                                              lines_per_block,
-                                                             data_interp_method=interp_methods[0],
+                                                             data_interp_method=interp_methods[idx],
                                                              invalid_value=np.nan)
 
                     # Geocode the coherence and wrapped interferogram
