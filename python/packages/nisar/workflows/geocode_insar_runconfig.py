@@ -90,5 +90,3 @@ class GeocodeInsarRunConfig(RunConfig):
                 self.cfg['processing']['geocode']\
                          ['wrapped_interferogram']['interp_method'] = data_interp_method
                 warnings.warn(warns_msg)
-                #error_channel.log(warns_msg)
-
