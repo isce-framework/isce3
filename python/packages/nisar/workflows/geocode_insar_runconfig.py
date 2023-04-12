@@ -95,7 +95,7 @@ class GeocodeInsarRunConfig(RunConfig):
         helpers.check_hdf5_freq_pols(runw_path, freq_pols)
 
         # Check geocode_insar runconfig values
-        geocode_insar_cfg_check(cfg)
+        geocode_insar_cfg_check(self.cfg)
 
         # multilooks valid?
         az_looks = self.cfg['processing']['crossmul']['azimuth_looks']

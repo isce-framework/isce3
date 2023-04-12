@@ -204,7 +204,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
             ionosphere_cfg_check(self.cfg)
 
         # Check geocode_insar config options
-        geocode_insar_cfg_check(cfg)
+        geocode_insar_cfg_check(self.cfg)
 
         # Check if layover shadow output enabled
         if not self.cfg['processing']['rdr2geo']['write_layover_shadow']:

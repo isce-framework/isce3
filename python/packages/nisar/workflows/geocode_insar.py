@@ -469,7 +469,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     elif input_product_type is InputProduct.RUNW:
         geo_datasets = cfg["processing"]["geocode"]["gunw_datasets"]
     else:
-        geo_datasets = cfg["processing"]["geocode"]["unwrapped_datasets"]
+        # RIFG
+        geo_datasets = cfg["processing"]["geocode"]["wrapped_datasets"]
 
     # if bool for all geocoded datasets is False return - no need to process
     if not any(geo_datasets.values()):

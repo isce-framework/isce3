@@ -146,11 +146,11 @@ runconfig:
                     y_snap:
 
                     A:
-                        x_posting:
-                        y_posting:
+                        x_posting: 30
+                        y_posting: 30
                     B:
-                        x_posting:
-                        y_posting:
+                        x_posting: 30
+                        y_posting: 30
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
