@@ -241,6 +241,61 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
     return radar_grid
 
 
+def _project_water_to_geogrid(input_water_path, geogrid):
+    """
+    Project water mask to geogrid of GUNW product.
+
+    Parameters
+    ----------
+    input_water_path : str
+        file path for input water mask
+    geogrid : isce3.product.GeoGridParameters
+        geogrid to map the water mask
+
+    """
+    inputraster = gdal.Open(input_water_path)
+    output_extent = (geogrid.start_x,
+                     geogrid.start_y + geogrid.length * geogrid.spacing_y,
+                     geogrid.start_x + geogrid.width * geogrid.spacing_x,
+                     geogrid.start_y)
+
+    gdalwarp_options = gdal.WarpOptions(format="MEM",
+                                        dstSRS=f"EPSG:{geogrid.epsg}",
+                                        xRes=geogrid.spacing_x,
+                                        yRes=np.abs(geogrid.spacing_y),
+                                        resampleAlg='mode',
+                                        outputBounds=output_extent)
+    dst_ds = gdal.Warp("", inputraster, options=gdalwarp_options)
+
+    projected_data = dst_ds.ReadAsArray()
+
+    return projected_data
+
+
+def add_water_mask(cfg, freq, geogrid, dst_h5):
+    """
+    Create water mask to HDF5 from given water mask
+
+    Parameters
+    ----------
+    cfg : dict
+        Dictionary containing processing parameters
+    freq : str
+        Frequency, A or B, of water mask raster
+    geogrid : isce3.product.GeoGridParameters
+        geogrid to map the water mask
+    dst_h5 : h5py.File
+        h5py.File object where geocoded data is to be written
+    """
+    water_mask_path = cfg['dynamic_ancillary_file_group']['water_mask_file']
+
+    if water_mask_path is not None:
+        freq_path = f'/science/LSAR/GUNW/grids/frequency{freq}'
+        water_mask_h5_path = f'{freq_path}/interferogram/waterMask'
+        water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
+        water_mask_interpret = water_mask.astype('uint8') != 0
+        dst_h5[water_mask_h5_path].write_direct(water_mask_interpret)
+
 def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type):
     ''' Write radar grid cube to HDF5
 
@@ -563,18 +618,23 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     desired = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
                     geocode_iono_bool = True
+                    input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband and freq == 'A':
                         '''
                         ionosphere_phase_screen from main_side_band or
                         main_diff_ms_band are computed on radargrid of frequencyB.
                         The ionosphere_phase_screen is geocoded on geogrid of
-                        frequencyA.
+                        frequencyA. Instead of geocoding ionosphere in the RUNW
+                        standard product (frequencyA), geocode the frequencyB in
+                        scratch/ionosphere/method/RUNW.h5 to avoid additional
+                        interpolation.
                         '''
                         radar_grid_iono = slc.getRadarGrid('B')
                         iono_sideband_bool = True
                         if az_looks > 1 or rg_looks > 1:
                             radar_grid_iono = radar_grid_iono.multilook(
                                 az_looks, rg_looks)
+                        input_hdf5_iono = f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
                     if is_iono_method_sideband and freq == 'B':
                         geocode_iono_bool = False
 
@@ -586,8 +646,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                     if geocode_iono_bool:
                         cpu_geocode_rasters(geocode_obj, geo_datasets, desired,
-                                            freq, pol_list_iono, input_hdf5, dst_h5,
-                                            radar_grid_iono, dem_raster,
+                                            freq, pol_list_iono, input_hdf5_iono,
+                                            dst_h5, radar_grid_iono, dem_raster,
                                             block_size,
                                             iono_sideband=iono_sideband_bool)
 
@@ -660,6 +720,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size * 2,
                                     input_product_type=InputProduct.RIFG)
+
+            # add water mask to GUNW product
+            add_water_mask(cfg, freq, geo_grid, dst_h5)
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
@@ -811,13 +874,18 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                'ionosphere_phase_screen_uncertainty']
                     geocode_iono_bool = True
                     pol_list_iono = freq_pols_iono[freq]
+                    input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband:
                         '''
                         ionosphere_phase_screen from main_side_band or
                         main_diff_ms_band are computed on radargrid of frequencyB.
                         The ionosphere_phase_screen is geocoded on geogrid of
-                        frequencyA.
+                        frequencyA. Instead of geocoding ionosphere in the RUNW standard
+                        product (frequencyA), geocode the frequencyB in ionosphere/RUNW.h5
+                        to avoid additional interpolation.
                         '''
+                        input_hdf5_iono = \
+                            f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
                         if freq == 'A':
                             radar_grid_iono = slc.getRadarGrid('B')
                             if az_looks > 1 or rg_looks > 1:
@@ -861,7 +929,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                         gpu_geocode_rasters(geo_datasets, desired,
                                             iono_freq, pol_list_iono,
-                                            input_hdf5, dst_h5,
+                                            input_hdf5_iono, dst_h5,
                                             geocode_iono_obj,
                                             iono_sideband=iono_sideband_bool)
 
@@ -977,6 +1045,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     gpu_geocode_rasters(geo_datasets, [desired_ds], freq, pol_list,
                                         input_hdf5, dst_h5, geocode_obj,
                                         input_product_type = InputProduct.RIFG)
+            # add water mask to GUNW product
+            add_water_mask(cfg, freq, geogrid, dst_h5)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':

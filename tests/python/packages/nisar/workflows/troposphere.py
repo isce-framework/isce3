@@ -93,37 +93,36 @@ def test_troposphere_aps_run():
         with h5py.File(gunw_hdf5, 'r') as hdf:
 
             # EPSG Code
-            epsg = int(
-                np.array(hdf['science/LSAR/GUNW/metadata/radarGrid/epsg']))
+            epsg = int(hdf['science/LSAR/GUNW/metadata/radarGrid/epsg'][()])
 
             # Incidence Angle Datacube
-            inc_angle_datacube = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'])
+            inc_angle_datacube = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'][()]
 
             # Coordinates X
-            xcoord_radar_grid = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'])
+            xcoord_radar_grid = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'][()]
 
             # Coordinate Y
-            ycoord_radar_grid = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/yCoordinates'])
+            ycoord_radar_grid = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/yCoordinates'][()]
 
             # Heights
-            height_radar_grid = np.array(
-                hdf['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'])
+            height_radar_grid = \
+                    hdf['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'][()]
 
             # Wavelength
             wavelength = isce3.core.speed_of_light / \
-                float(
-                    np.array(hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency']))
-
-            hdf.close()
+                float(hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()])
 
         # Troposphere product parameters
         tropo_package = cfg['processing']['troposphere_delay']['package']
         tropo_weather_model_type = cfg['processing']['troposphere_delay']['weather_model_type']
         tropo_delay_direction = cfg['processing']['troposphere_delay']['delay_direction']
-        tropo_delay_product = cfg['processing']['troposphere_delay']['delay_product']
+
+        for delay_type in ['wet', 'dry', 'comb']:
+            if cfg['processing']['troposphere_delay'][f'enable_{delay_type}_product']:
+                tropo_delay_product = delay_type
 
         # Dictionary key
         delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'
@@ -161,6 +160,7 @@ def test_troposphere_aps_run():
                                  lon=lon,
                                  grib=tropo_weather_model_type,
                                  humidity='Q',
+                                 model=tropo_weather_model_type,
                                  verb=False,
                                  Del=tropo_delay_product)
 
@@ -171,6 +171,7 @@ def test_troposphere_aps_run():
                                  lon=lon,
                                  grib=tropo_weather_model_type,
                                  humidity='Q',
+                                 model=tropo_weather_model_type,
                                  verb=False,
                                  Del=tropo_delay_product)
 
@@ -178,7 +179,7 @@ def test_troposphere_aps_run():
         secondary_delay = secondary_obj.getdelay()
 
         # Troposphere delay computed at high resolution (i.e., product spacing)
-        high_resolution_tropo_delay = (reference_delay - secondary_delay) * 100.0
+        high_resolution_tropo_delay = -(reference_delay - secondary_delay) * 100.0
 
         f.close()
 
