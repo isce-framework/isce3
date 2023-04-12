@@ -27,7 +27,7 @@ def transform_xy_to_latlon(epsg, x, y, margin = 0.1):
          extent of the datacube in south-north-west-east convention
      '''
 
-    # X, y to Lat/Lon
+    # x, y to Lat/Lon
     srs_src = osr.SpatialReference()
     srs_src.ImportFromEPSG(epsg)
 

@@ -115,8 +115,6 @@ def test_troposphere_aps_run():
             wavelength = isce3.core.speed_of_light / \
                 float(hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()])
 
-            hdf.close()
-
         # Troposphere product parameters
         tropo_package = cfg['processing']['troposphere_delay']['package']
         tropo_weather_model_type = cfg['processing']['troposphere_delay']['weather_model_type']
