@@ -91,12 +91,13 @@ runconfig:
                     interp_method: BILINEAR
                     x_snap:
                     y_snap:
-                    A:
-                        x_posting: 30
-                        y_posting: 30
-                    B:
-                        x_posting:
-                        y_posting:
+                    output_posting:
+                        A:
+                            x_posting: 30
+                            y_posting: 30
+                        B:
+                            x_posting:
+                            y_posting:
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
                     # OPTIONAL - Set top-left y in same units as output EPSG
