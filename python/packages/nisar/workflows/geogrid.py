@@ -69,16 +69,23 @@ def create(cfg, workflow_name=None, frequency_group=None,
     if frequency is None:
         frequency = frequency_group
 
+    geo_wrapped_igram = (workflow_name == 'insar') and is_geo_wrapped_igram
     output_posting_name = 'output_posting'
-    if (workflow_name == 'insar') and is_geo_wrapped_igram:
+    if geo_wrapped_igram:
         output_posting_name = 'wrapped_interferogram'
 
     if frequency_group is None:
         spacing_x = geocode_dict[output_posting_name]['x_posting']
         spacing_y = geocode_dict[output_posting_name]['y_posting']
     else:
-        spacing_x = geocode_dict[output_posting_name][frequency_group]['x_posting']
-        spacing_y = geocode_dict[output_posting_name][frequency_group]['y_posting']
+        if geo_wrapped_igram:
+            spacing_x = geocode_dict[output_posting_name]['output_posting']\
+                    [frequency_group]['x_posting']
+            spacing_y = geocode_dict[output_posting_name]['output_posting']\
+                    [frequency_group]['y_posting']
+        else:
+            spacing_x = geocode_dict[output_posting_name][frequency_group]['x_posting']
+            spacing_y = geocode_dict[output_posting_name][frequency_group]['y_posting']
 
     end_x = geocode_dict['bottom_right']['x_abs']
     end_y = geocode_dict['bottom_right']['y_abs']
@@ -207,7 +214,7 @@ def create(cfg, workflow_name=None, frequency_group=None,
     y_snap = geocode_dict['y_snap']
 
     # Change the snap if it is to geocode the wrapped interferogram
-    if (workflow_name == 'insar') and is_geo_wrapped_igram:
+    if geo_wrapped_igram:
         x_snap = geocode_dict[output_posting_name]['x_snap']
         y_snap = geocode_dict[output_posting_name]['y_snap']
 

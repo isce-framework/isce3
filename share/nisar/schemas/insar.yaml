@@ -875,13 +875,7 @@ geocode_options:
 
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
-    output_posting:
-        A:
-            x_posting: num(min=0, required=False)
-            y_posting: num(min=0, required=False)
-        B:
-            x_posting: num(min=0, required=False)
-            y_posting: num(min=0, required=False)
+    output_posting: include('output_posting_options', required=False)
 
     # Wrapped Interferogram output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
@@ -935,6 +929,9 @@ wrapped_interferogram_options:
     interp_method: enum('SINC', 'BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
     x_snap: num(min=0, required=False)
     y_snap: num(min=0, required=False)
+    output_posting: include('output_posting_options', required=False)
+
+output_posting_options:
     A:
         x_posting: num(min=0, required=False)
         y_posting: num(min=0, required=False)
