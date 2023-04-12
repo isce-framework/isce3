@@ -464,13 +464,16 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] \
-            if input_product_type is InputProduct.ROFF else \
-            cfg["processing"]["geocode"]["gunw_datasets"]
+    if input_product_type is InputProduct.ROFF:
+        geo_datasets = cfg["processing"]["geocode"]["goff_datasets"]
+    elif input_product_type is InputProduct.RUNW:
+        geo_datasets = cfg["processing"]["geocode"]["gunw_datasets"]
+    else:
+        geo_datasets = cfg["processing"]["geocode"]["unwrapped_datasets"]
 
-    # RIFG product
-    if input_product_type is InputProduct.RIFG:
-        geo_datasets = {'coherence_magnitude': True, 'wrapped_interferogram': True}
+    # if bool for all geocoded datasets is False return - no need to process
+    if not any(geo_datasets.values()):
+        return
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
@@ -947,23 +950,25 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             else:
                 #RIFG
                 desired = ['coherence_magnitude', 'wrapped_interferogram']
-                geo_datasets = ['coherence_magnitude', 'wrapped_interferogram']
                 interp_methods = [interp_method, wrapped_igram_interp_method]
 
                 # Create radar grid geometry required by RIFG product
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
-                for idx in range(len(desired)):
+                # Iterate over desired unwrapped datasets to account for
+                # possible use of different interpolation methods
+                for desired_ds, ds_interp_method in zip(desired,
+                                                        interp_methods):
                     # Create geocode object
                     geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
                                                              dem_raster,
                                                              lines_per_block,
-                                                             data_interp_method=interp_methods[idx],
+                                                             data_interp_method=ds_interp_method,
                                                              invalid_value=np.nan)
 
                     # Geocode the coherence and wrapped interferogram
-                    gpu_geocode_rasters({geo_datasets[idx]:True}, [desired[idx]], freq, pol_list,
+                    gpu_geocode_rasters(geo_datasets, [desired_ds], freq, pol_list,
                                         input_hdf5, dst_h5, geocode_obj,
                                         input_product_type = InputProduct.RIFG)
 
