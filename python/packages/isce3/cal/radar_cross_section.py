@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import warnings
 from collections.abc import Collection, Mapping
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.linalg import norm
@@ -20,7 +22,7 @@ def db2pow(x: ArrayLike) -> np.ndarray:
     return 10.0 ** np.divide(x, 10.0)
 
 
-def find_quadratic_poly2d_peak(coeffs: Collection[float]) -> Tuple[float, float]:
+def find_quadratic_poly2d_peak(coeffs: Collection[float]) -> tuple[float, float]:
     r"""
     Find the location of the peak of a quadratic bivariate polynomial.
 

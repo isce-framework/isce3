@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -6,7 +8,7 @@ import traceback
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import isce3
 import nisar
@@ -25,7 +27,7 @@ def estimate_abscal_factor(
     nfit: int = 5,
     power_method: str = "box",
     pthresh: float = 3.0,
-) -> List[Dict[str, Any]]:
+) -> List[dict[str, Any]]:
     r"""
     Estimate the absolute radiometric calibration factor of an RSLC product with one or
     more corner reflectors (CRs).
@@ -244,7 +246,7 @@ def estimate_abscal_factor(
     return results
 
 
-def parse_cmdline_args() -> Dict[str, Any]:
+def parse_cmdline_args() -> dict[str, Any]:
     """
     Parse command line arguments.
 

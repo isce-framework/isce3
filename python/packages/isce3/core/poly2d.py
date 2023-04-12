@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from collections.abc import Iterator
-from typing import Tuple
 
 import numpy as np
 import scipy.special
@@ -8,7 +9,7 @@ from numpy.typing import ArrayLike
 from isce3.ext.isce3.core import Poly2d
 
 
-def restricted_weak_compositions(N: int, K: int) -> Iterator[Tuple[int, ...]]:
+def restricted_weak_compositions(N: int, K: int) -> Iterator[tuple[int, ...]]:
     """
     Generate all possible K-restricted weak compositions of N.
 

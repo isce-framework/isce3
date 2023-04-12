@@ -1,6 +1,7 @@
-import csv
+from __future__ import annotations
+
 import os
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Optional
 
