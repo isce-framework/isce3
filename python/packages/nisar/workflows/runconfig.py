@@ -209,7 +209,8 @@ class RunConfig:
         for freq in freq_pols.keys():
             # build geogrids only if pols not None
             geogrids[freq] = geogrid.create(self.cfg, self.workflow_name, freq)
-            wrapped_igram_geogrids[freq] = geogrid.create(self.cfg, self.workflow_name, freq, is_geo_wrapped_igram=True)
+            wrapped_igram_geogrids[freq] = geogrid.create(self.cfg, self.workflow_name, freq,
+                                                          is_geo_wrapped_igram=True)
         # place geogrids in cfg for later processing
         self.cfg['processing']['geocode']['geogrids'] = geogrids
         self.cfg['processing']['geocode']['wrapped_igram_geogrids'] = wrapped_igram_geogrids

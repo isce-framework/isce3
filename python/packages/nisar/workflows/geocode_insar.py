@@ -5,6 +5,7 @@ collection of functions for NISAR geocode workflow
 """
 
 from enum import Enum
+
 import numpy as np
 import pathlib
 import shutil
@@ -330,10 +331,14 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     '''
     get_ds_names = lambda ds_dict, desired: [
         x for x, y in ds_dict.items() if y and x in desired]
-    src_product = 'OFF' if input_product_type is InputProduct.ROFF else 'UNW'
-    if input_product_type is InputProduct.RIFG:
-        src_product = 'IFG'
-    dst_product = 'OFF' if input_product_type is InputProduct.ROFF else 'UNW'
+
+    if input_product_type is InputProduct.ROFF:
+        src_product = 'OFF'
+        dst_product = 'OFF'
+    else:
+        src_product = 'IFG' if input_product_type is InputProduct.RIFG else 'UNW'
+        dst_product = 'UNW'
+
     src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequency{freq}"
     dst_freq_path = f"/science/LSAR/G{dst_product}/grids/frequency{freq}"
 
