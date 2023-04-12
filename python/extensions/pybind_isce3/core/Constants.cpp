@@ -1,5 +1,6 @@
 #include "Constants.h"
 #include <isce3/core/Constants.h>
+#include <isce3/core/Ellipsoid.h>
 
 namespace py = pybind11;
 
@@ -15,4 +16,5 @@ void add_constants(py::module & core)
 
     core.attr("speed_of_light") = py::float_(isce3::core::speed_of_light);
     core.attr("earth_spin_rate") = py::float_(isce3::core::EarthSpinRate);
+    core.attr("WGS84_ELLIPSOID") = isce3::core::Ellipsoid();
 }

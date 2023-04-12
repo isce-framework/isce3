@@ -277,8 +277,10 @@ runconfig:
                 weather_model_type: ERA5
                 # Conventional line of sight delay
                 delay_direction: line_of_sight_mapping
-                # Delay product is 'comb'
-                delay_product: comb
+                # Delay product, where comb product is the summation of wet and dry
+                enable_wet_product:  True
+                enable_dry_product: True
+                enable_comb_product: False
 
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
@@ -506,6 +508,10 @@ runconfig:
                 flatten: True
                 oversample: 2
                 lines_per_block: 1024
+                # If True, activates common band range filtering
+                common_band_range_filter: False
+                # If True, activates common band azimuth filtering
+                common_band_azimuth_filter: False
 
             filter_interferogram:
                 interferogram_path:
@@ -529,6 +535,12 @@ runconfig:
                 # the previous InSAR module, which is not user-specified.
                 # Required for running stand-alone phase unwrapping
                 crossmul_path:
+                # Number of looks in slant range and azimuth directions. If different than 1
+                # and different from range_looks and azimuth_looks in crossmul, produce a new
+                # multi-looked wrapped interferogram and coherence that will be used
+                # for unwrapping. Otherwise, uses wrapped interferogram and coherence in RIFG
+                range_looks: 10
+                azimuth_looks: 10
                 # Mask and fill wrapped InSAR phase prior to unwrapping
                 preprocess_wrapped_phase:
                     # Enable/disable preprocessing of wrapped igram

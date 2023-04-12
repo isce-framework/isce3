@@ -2,7 +2,8 @@ import journal
 
 import numpy as np
 
-from .ionosphere_estimation import IonosphereEstimation, decimate_freq_a_array
+from .ionosphere_estimation import IonosphereEstimation
+from isce3.signal.interpolate_by_range import decimate_freq_a_array
 
 class MainBandIonosphereEstimation(IonosphereEstimation):
     '''Virtual class for main band ionosphere estimation methods
