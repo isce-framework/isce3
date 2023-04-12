@@ -296,6 +296,7 @@ def add_water_mask(cfg, freq, geogrid, dst_h5):
         water_mask_interpret = water_mask.astype('uint8') != 0
         dst_h5[water_mask_h5_path].write_direct(water_mask_interpret)
 
+
 def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type):
     ''' Write radar grid cube to HDF5
 
@@ -723,6 +724,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
             # add water mask to GUNW product
             add_water_mask(cfg, freq, geo_grid, dst_h5)
+
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
@@ -1045,6 +1047,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     gpu_geocode_rasters(geo_datasets, [desired_ds], freq, pol_list,
                                         input_hdf5, dst_h5, geocode_obj,
                                         input_product_type = InputProduct.RIFG)
+
             # add water mask to GUNW product
             add_water_mask(cfg, freq, geogrid, dst_h5)
 
