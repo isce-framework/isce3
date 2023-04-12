@@ -151,6 +151,10 @@ phase_unwrap_options:
 
     algorithm: enum('icu', 'phass', 'snaphu', required=False)
 
+    range_looks: int(min=1, required=False)
+
+    azimuth_looks: int(min=1, required=False)
+
     icu: include('icu_options', required=False)
 
     phass: include('phass_options', required=False)
@@ -590,6 +594,10 @@ crossmul_options:
 
     # Number of lines per block to process in batch
     lines_per_block: int(min=1, required=False)
+
+    common_band_range_filter: bool(required=False)
+
+    common_band_azimuth_filter: bool(required=False)
 
 filter_interferogram_options:
     # Path to HDF5 or directory containing complex interferogram
