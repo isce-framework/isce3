@@ -1636,7 +1636,7 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
     Parameters
      ----------
      solid_earth_tides: tuple
-        solid earth tides along  the los and azimuth direction (radians)
+        solid earth tides along the los and azimuth direction (radians)
       gunw_hdf5: str
          GUNW HDF5 file where SET will be written
 
