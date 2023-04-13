@@ -942,12 +942,12 @@ wrapped_interferogram_options:
     output_posting: include('output_posting_options', required=False)
 
 output_posting_options:
-    A:
-        x_posting: num(min=0, required=False)
-        y_posting: num(min=0, required=False)
-    B:
-        x_posting: num(min=0, required=False)
-        y_posting: num(min=0, required=False)
+    A: include('posting_options', required=False)
+    B: include('posting_options', required=False)
+
+posting_options:
+    x_posting: num(min=0, required=False)
+    y_posting: num(min=0, required=False)
 
 worker_options:
     # Enable/disable internet connection (e.g. for download DEM)

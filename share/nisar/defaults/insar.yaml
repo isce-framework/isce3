@@ -147,11 +147,8 @@ runconfig:
 
                     output_posting:
                         A:
-                            x_posting: 30
-                            y_posting: 30
-                        B:
-                            x_posting: 30
-                            y_posting: 30
+                            x_posting: 20
+                            y_posting: 20
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:
