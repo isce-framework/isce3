@@ -4,10 +4,7 @@ import journal
 import numpy as np
 from osgeo import gdal
 
-from scipy.ndimage import median_filter
-from scipy.ndimage import map_coordinates
-from isce3.signal.filter_data import (get_raster_block,
-                                      block_param_generator)
+from scipy.ndimage import median_filter, map_coordinates
 
 
 def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
@@ -116,7 +113,7 @@ def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
         # Fill invalid interferogram pixels using user-defined algorithm
         # Distance-based interpolator Chen et al. _[1]
         if filling_method == 'distance_interpolator':
-            pha_filt = distance_interpolator(np.angle(igram), distance,
+            phase_filt = distance_interpolator(np.angle(igram), distance,
                                             invalid_mask)
         else:
             err_str = f"{filling_method} is an invalid selection for filling_method"
@@ -124,9 +121,9 @@ def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
             raise ValueError(err_str)
     else:
         igram[invalid_mask==1] = 0
-        pha_filt = np.angle(igram)
+        phase_filt = np.angle(igram)
     # Go to complex value
-    igram_filt = np.exp(-1j * pha_filt)
+    igram_filt = np.exp(-1j * phase_filt)
 
     return igram_filt
 
@@ -233,6 +230,7 @@ def _get_gdal_raster_shape_type(raster_path):
 def _read_gdal_with_bbox(gdal_raster, bbox):
     '''
     Extract image from the gdal-supported file with bbox
+
     Parameters
     ----------
     gdal_raster: osgeo.gdal.Dataset
@@ -318,66 +316,50 @@ def project_map_to_radar(cfg, input_data_path, freq):
     topo_paths = {xy: f'{rdr2geo_path}/freq{freq}/{xy}.rdr' for xy in 'xy'}
 
     # get input shape and type - input type also output type
-    input_shape, _ = _get_gdal_raster_shape_type(topo_paths['x'])
     _, output_dtype = _get_gdal_raster_shape_type(input_data_path)
+    geo_data_raster = gdal.Open(input_data_path)
 
-    # prepare block generator
-    lines_per_block = az_looks * 10
-    block_params = block_param_generator(
-        lines_per_block, data_shape=input_shape, pad_shape=(0, 0))
+    # for both x and y rasters, decimate and get extents
+    decimated_blocks = {}
+    decimated_extents = {}
+    for xy, input_path in topo_paths.items():
+        # open input raster for reading
+        input_data_raster = gdal.Open(input_path)
+        input_data = input_data_raster.ReadAsArray()
 
-    # open input raster for reading
-    input_data_raster = gdal.Open(input_data_path)
-    input_raster = input_data_raster.GetRasterBand(1)
+        # take center pixels of block to decimate
+        decimated_arr = \
+            input_data[int(az_looks/2):-int(az_looks/2):az_looks,
+                       int(rg_looks/2):-int(rg_looks/2):rg_looks]
 
-    # list of mapped arrays - stack before return
-    output_arrays = []
+        # save decimated extents and array for current axis
+        decimated_extents[xy] = [np.nanmin(decimated_arr),
+                                 np.nanmax(decimated_arr)]
+        decimated_blocks[xy] = decimated_arr
+        del input_data
 
-    # iterate of blocks of input data
-    for block_param in block_params:
-        # for both x and y rasters, decimate and get extents
-        decimated_blocks = {}
-        decimated_extents = {}
-        for xy, input_path in topo_paths.items():
-            # get array of current block
-            input_data = get_raster_block(input_path, block_param)
+    # get bounding for decimated extents
+    bbox = [decimated_extents['x'][0], decimated_extents['y'][0],
+            decimated_extents['x'][1], decimated_extents['y'][1]]
 
-            # take center pixels of block to decimate
-            decimated_arr = \
-                input_data[int(az_looks/2):-int(az_looks/2):az_looks,
-                           int(rg_looks/2):-int(rg_looks/2):rg_looks]
+    # read map bounded by decimated extents of xy block
+    input_arr_block, [block_x0, block_y0, block_dx, block_dy] = \
+        _read_gdal_with_bbox(geo_data_raster, bbox)
 
-            # save decimated extents and array for current axis
-            decimated_extents[xy] = [np.nanmin(decimated_arr),
-                                     np.nanmax(decimated_arr)]
-            decimated_blocks[xy] = decimated_arr
+    # prepare output array
+    output_arrays = np.zeros(decimated_blocks['y'].shape,
+                             dtype=output_dtype)
 
-        # get bounding for decimated extents
-        bbox = [decimated_extents['x'][0], decimated_extents['y'][0],
-                decimated_extents['x'][1], decimated_extents['y'][1]]
-
-        # read map bounded by decimated extents of xy block
-        input_arr_block, [block_x0, block_y0, block_dx, block_dy] = \
-            _read_gdal_with_bbox(input_data_raster, bbox)
-
-        # prepare output array
-        temp_output_arr = np.zeros(decimated_blocks['y'].shape,
-                                   dtype=output_dtype)
-
-        # prepare coordinates to map to
-        coordinates = ((decimated_blocks['y'] - block_y0) / block_dy,
-                       (decimated_blocks['x'] - block_x0) / block_dx)
-
-        # map input raster to decimated coordinates
-        map_coordinates(input_arr_block,
-                        coordinates,
-                        output=temp_output_arr,
-                        mode='nearest',
-                        cval=np.nan,
-                        prefilter=False)
-
-        # save current output
-        output_arrays.append(temp_output_arr)
+    # prepare coordinates to map to
+    coordinates = ((decimated_blocks['y'] - block_y0) / block_dy,
+                   (decimated_blocks['x'] - block_x0) / block_dx)
+    # map input raster to decimated coordinates
+    map_coordinates(input_arr_block,
+                    coordinates,
+                    output=output_arrays,
+                    mode='nearest',
+                    cval=np.nan,
+                    prefilter=False)
 
     # stack to make whole then return
-    return np.vstack(output_arrays)
+    return output_arrays
