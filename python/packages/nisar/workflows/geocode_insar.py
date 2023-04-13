@@ -1080,7 +1080,7 @@ if __name__ == "__main__":
     geocode_insar_runconfig = GeocodeInsarRunConfig(args)
 
     # prepare the HDF5
-    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'ROFF_RIFG_RUNW_GOFF_GUNW'
+    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'GUNW_STANDALONE'
     out_paths = h5_prep.run(geocode_insar_runconfig.cfg)
     runw_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'runw_path']
@@ -1099,6 +1099,10 @@ if __name__ == "__main__":
 
     # Check if need to geocode offset product
     enabled = geocode_insar_runconfig.cfg['processing']['offsets_product']['enabled']
+    # Prepare the GOFF product
+    if enabled:
+        geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'GOFF'
+        out_paths = h5_prep.run(geocode_insar_runconfig.cfg)
     roff_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'roff_path']
     if roff_path is not None:
