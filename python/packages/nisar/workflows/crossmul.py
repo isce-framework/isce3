@@ -15,7 +15,8 @@ gdal.UseExceptions()
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.compute_stats import compute_stats_real_data
-from nisar.workflows.helpers import complex_raster_path_from_h5
+from nisar.workflows.helpers import (complex_raster_path_from_h5,
+                                     get_cfg_freq_pols)
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
@@ -74,7 +75,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
 
     t_all = time.time()
     with h5py.File(output_hdf5, 'a', libver='latest') as dst_h5:
-        for freq, pol_list in freq_pols.items():
+        for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
             # create output product
             crossmul_dir = scratch_path / f'crossmul/freq{freq}'
             crossmul_dir.mkdir(parents=True, exist_ok=True)
@@ -155,6 +156,9 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
 
                 del coh_raster
 
+            # iterate over offset pols since they maybe different from
+            # polarizations in runconfig
+            for pol in offset_pol_list:
                 # Allocate stats for rubbersheet offsets
                 stats_offsets(dst_h5, freq, pol)
 

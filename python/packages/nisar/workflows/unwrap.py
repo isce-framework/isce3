@@ -21,6 +21,7 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
+from nisar.workflows.helpers import get_cfg_freq_pols
 
 
 def run(cfg: dict, input_hdf5: str, output_hdf5: str):
@@ -61,7 +62,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
 
     with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5,\
          h5py.File(crossmul_path, 'r', libver='latest', swmr=True) as src_h5:
-        for freq, pol_list in freq_pols.items():
+        for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
             src_freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
             dst_freq_group_path = src_freq_group_path.replace('RIFG', 'RUNW')
 
@@ -258,9 +259,16 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     error_channel.log(err_str)
 
                 # Copy coherence magnitude and culled offsets from RIFG
-                dataset_names = ['coherenceMagnitude', 'alongTrackOffset',
-                                 'slantRangeOffset']
-                group_names = ['interferogram', 'pixelOffsets', 'pixelOffsets']
+                # default dataset/group from interferogram
+                dataset_names = ['coherenceMagnitude']
+                group_names = ['interferogram']
+                # append datasets/groups for offsets if polarization exists
+                # offset polarizations can differ from interferogram
+                # polarizations if single pol offset mode enabled
+                if pol in offset_pol_list:
+                    dataset_names.extend(['alongTrackOffset',
+                                          'slantRangeOffset'])
+                    group_names.extend(['pixelOffsets', 'pixelOffsets'])
                 for dataset_name, group_name in zip(dataset_names, group_names):
                     dst_path = f'{dst_freq_group_path}/{group_name}/{pol}/{dataset_name}'
                     src_path = f'{src_freq_group_path}/{group_name}/{pol}/{dataset_name}'

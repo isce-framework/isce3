@@ -15,6 +15,7 @@ from scipy import interpolate
 from scipy import signal
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
+from nisar.workflows.helpers import get_cfg_freq_pols
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
 
@@ -38,7 +39,6 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Set info and error channels
     info_channel = journal.info('rubbersheet.run')
-    error_channel = journal.error('rubbersheet.run')
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
@@ -46,7 +46,7 @@ def run(cfg: dict, output_hdf5: str = None):
     # Start offset culling
     t_all = time.time()
     with h5py.File(output_hdf5, 'r+', libver='latest', swmr=True) as dst_h5:
-        for freq, pol_list in freq_pols.items():
+        for freq, _, pol_list in get_cfg_freq_pols(cfg):
             # Rubbersheet directory and frequency group in RIFG product
             rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
             freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
