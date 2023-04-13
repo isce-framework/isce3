@@ -78,3 +78,29 @@ def test_contains():
     assert not orbit.contains(orbit.end_time + 1.0)
     mid = 0.5 * (orbit.start_time + orbit.end_time)
     assert orbit.contains(mid)
+
+def test_crop():
+    orbit = load_h5()
+    # want to nudge a bit past intrinsic spacing, so make sure test
+    # dataset hasn't been updated
+    assert orbit.time.spacing == 60.
+
+    # a point just after the second StateVector
+    start = orbit.start_datetime + TimeDelta(61)
+    # a point just before the next-to-last StateVector
+    stop = orbit.end_datetime - TimeDelta(61)
+    cropped_orbit = orbit.crop(start, stop)
+
+    t0 = (start - cropped_orbit.reference_epoch).total_seconds()
+    t1 = (stop - cropped_orbit.reference_epoch).total_seconds()
+    npt.assert_equal(cropped_orbit.size, orbit.size - 2)
+    npt.assert_(cropped_orbit.contains(t0))
+    npt.assert_(cropped_orbit.contains(t1))
+
+    # Now crop around a single point with padding and make sure we get the
+    # desired amount.
+    start = stop = orbit.mid_datetime
+    npad = 3
+    cropped_orbit = orbit.crop(start, stop, npad)
+    npt.assert_(cropped_orbit.size >= 2 * npad)
+

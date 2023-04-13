@@ -1,8 +1,10 @@
+import h5py
 import iscetest
 import numpy as np
 import numpy.testing as npt
 from pathlib import Path
 import nisar
+from tempfile import NamedTemporaryFile
 
 
 def test_raw():
@@ -63,3 +65,53 @@ def test_raw():
     R = attitude.interpolate(tref).to_rotation_matrix()
     elevation_axis = R[:,1]
     npt.assert_allclose(v.dot(elevation_axis) / np.linalg.norm(v), -1.0)
+
+
+def make_test_decoder_file(filename: str) -> np.ndarray:
+    """
+    Creates an HDF5 file with the given name that contains the datasets
+
+    /complex32/z
+    /complex64/z
+    /bfpq/BFPQLUT
+    /bfpq/z
+
+    Returns the values expected to be decoded from each one.
+    """
+    shape = (20, 10)
+    values = np.arange(np.prod(shape)).reshape(shape)
+
+    with h5py.File(filename, mode="w") as h5:
+        g = h5.create_group("complex32")
+        z = np.zeros(shape, dtype=nisar.types.complex32)
+        z['r'][:] = values
+        g.create_dataset("z", data=z)
+
+        g = h5.create_group("complex64")
+        z = np.zeros(shape, dtype=np.complex64)
+        z.real[:] = values
+        g.create_dataset("z", data=z)
+
+        g = h5.create_group("bfpq")
+        lut = np.arange(2**16, dtype=np.float32)
+        z = np.zeros(shape, dtype=np.dtype([('r', 'u2'), ('i', 'u2')]))
+        z['r'][:] = values
+        g.create_dataset("BFPQLUT", data=lut)
+        g.create_dataset("z", data=z)
+
+    return values.astype(np.complex64)
+
+
+def test_decoder():
+    f = NamedTemporaryFile(suffix=".h5")
+    expected = make_test_decoder_file(f.name)
+    with h5py.File(f.name, mode="r") as h5:
+        decoder = nisar.products.readers.Raw.DataDecoder(h5["bfpq/z"])
+        npt.assert_equal(decoder[:,:], expected)
+        npt.assert_(decoder.dtype_storage == np.dtype([('r', 'u2'), ('i', 'u2')]))
+
+        decoder = nisar.products.readers.Raw.DataDecoder(h5["complex64/z"])
+        npt.assert_equal(decoder[:,:], expected)
+
+        decoder = nisar.products.readers.Raw.DataDecoder(h5["complex32/z"])
+        npt.assert_equal(decoder[:,:], expected)

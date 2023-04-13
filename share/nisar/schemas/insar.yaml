@@ -151,6 +151,10 @@ phase_unwrap_options:
 
     algorithm: enum('icu', 'phass', 'snaphu', required=False)
 
+    range_looks: int(min=1, required=False)
+
+    azimuth_looks: int(min=1, required=False)
+
     icu: include('icu_options', required=False)
 
     phass: include('phass_options', required=False)
@@ -591,6 +595,10 @@ crossmul_options:
     # Number of lines per block to process in batch
     lines_per_block: int(min=1, required=False)
 
+    common_band_range_filter: bool(required=False)
+
+    common_band_azimuth_filter: bool(required=False)
+
 filter_interferogram_options:
     # Path to HDF5 or directory containing complex interferogram
     # Not required as InSAR workflow allows using intermediate outputs
@@ -752,8 +760,10 @@ troposphere_delay_options:
     # Delay direction. 'zenith' is the zenith delay, line_of_sight_mapping is the delay projected
     # from zenith, and line_of_sight_raytracing is the delay by raytracing method by raider package
     delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
-    # Delay products. They should be one of 'wet', 'hydro', and 'comb'
-    delay_product: enum('wet','hydro','comb', required=False)
+    # Boolean flag to enable/disable delay products, where comb product is the summation of wet and dry
+    enable_wet_product: bool(required=False)
+    enable_dry_product: bool(required=False)
+    enable_comb_product: bool(required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm

@@ -2,10 +2,11 @@ import journal
 
 import numpy as np
 
-from .ionosphere_estimation import IonosphereEstimation, decimate_freq_a_array
+from .ionosphere_estimation import IonosphereEstimation
+from isce3.signal.interpolate_by_range import decimate_freq_a_array
 
-class SplitBandIonosphereEstimation(IonosphereEstimation):
-    '''Split band ionosphere estimation
+class MainBandIonosphereEstimation(IonosphereEstimation):
+    '''Virtual class for main band ionosphere estimation methods
     '''
     def __init__(self,
                  main_center_freq=None,
@@ -30,13 +31,9 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
         super().__init__(main_center_freq, side_center_freq, low_center_freq,
                          high_center_freq)
 
-        error_channel = journal.error('ionosphere.SplitBandEstimation')
-
-        # Check if required center frequencies for sub-bands are present
-        if low_center_freq is None or high_center_freq is None:
-            err_str = "Center frequency for frequency A is needed."
-            error_channel.log(err_str)
-            raise ValueError(err_str)
+        self.estimate_iono = None
+        self.estimate_sigma = None
+        self.compute_unwrap_err = None
 
     def compute_disp_nondisp(self,
             phi_sub_low=None,
@@ -86,36 +83,34 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
         non_dispersive : numpy.ndarray
             non-dispersive phase array
         """
-        error_channel = journal.error('SplitBandEstimation.compute_disp_nondisp')
+        error_channel = journal.error('MainBandIonosphereEstimation.compute_disp_nondisp')
 
-        if phi_sub_high is None:
-            err_str = "upper sub-band unwrapped interferogram "\
-                "is required for split_main_band method."
+        # When side-band arrays is used,
+        # arrays should be decimated to have the same size with side-band arrays
+        # Check if phi_main or phi_side is None
+        if phi_main is None or phi_side is None:
+            err_str = "unwrapped interferogram array main and side band"\
+                "is required."
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        if phi_sub_low is None:
-            err_str = "lower sub-band unwrapped interferogram "\
-                "is required for split_main_band method."
-            error_channel.log(err_str)
-            raise ValueError(err_str)
+        phi_main = decimate_freq_a_array(slant_main,
+                                        slant_side,
+                                        phi_main)
 
-        # set up mask for areas where no-data values are located
-        no_data_array = (phi_sub_high==no_data) |\
-            (phi_sub_low==no_data)
+        no_data_array = (phi_main==no_data) |\
+                        (phi_side==no_data)
 
-        # correct unwrapped phase when estimated unwrapping error are given
+        # correct unwrapped phase when correction coefficients are given
         if comm_unwcor_coef is not None and diff_unwcor_coef is not None:
-            phi_sub_low = phi_sub_low - 2 * np.pi * comm_unwcor_coef
-            phi_sub_high = phi_sub_high - 2 * np.pi *\
+            phi_main = phi_main - 2 * np.pi * comm_unwcor_coef
+            phi_side = phi_side - 2 * np.pi *\
                 (comm_unwcor_coef + diff_unwcor_coef)
 
-        dispersive, non_dispersive = estimate_iono_low_high(
-            f0=self.f0,
-            freq_low=self.freq_low,
-            freq_high=self.freq_high,
-            phi0_low=phi_sub_low,
-            phi0_high=phi_sub_high)
+        dispersive, non_dispersive = self.estimate_iono(f0=self.f0,
+                                                        f1=self.f1,
+                                                        phi0=phi_main,
+                                                        phi1=phi_side)
 
         dispersive[no_data_array] = no_data
         non_dispersive[no_data_array] = no_data
@@ -235,26 +230,16 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
         # decimate coherence or connected components
         # when side array is also used.
         if side_array is not None:
-            if slant_main is None:
-                slant_main = self.slant_main
-            if slant_side is None:
-                slant_side = self.slant_side
+            main_array = decimate_freq_a_array(
+                slant_main,
+                slant_side,
+                main_array)
 
-            if low_band_array is not None:
-                low_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    low_band_array)
-            if high_band_array is not None:
-                high_band_array = decimate_freq_a_array(
-                    slant_main,
-                    slant_side,
-                    high_band_array)
-
-        mask_array = (high_band_array > threshold) & \
-                     (low_band_array > threshold)
+        mask_array = (main_array > threshold) & \
+                     (side_array > threshold)
 
         return mask_array
+
 
     def estimate_iono_std(
             self,
@@ -307,52 +292,85 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
                 slant_side,
                 main_coh)
 
-        # estimate sigma from sub-band coherences
-        if (low_band_coh is not None) and (high_band_coh is not None):
-            sig_phi_low = np.sqrt(1 - low_band_coh**2) / \
-                low_band_coh / np.sqrt(2 * number_looks)
-            sig_phi_high = np.sqrt(1 - high_band_coh**2) / \
-                high_band_coh / np.sqrt(2 * number_looks)
+        # estimate sigma from main- and side- band coherences
+        if (main_coh is not None) & (side_coh is not None):
+            sig_phi_main = np.divide(np.sqrt(1 - main_coh**2),
+                main_coh / np.sqrt(2 * number_looks),
+                out=np.zeros_like(main_coh),
+                where=main_coh!=0)
+            sig_phi_side = np.divide(np.sqrt(1 - side_coh**2),
+                side_coh / np.sqrt(2 * number_looks),
+                out=np.zeros_like(side_coh),
+                where=side_coh!=0)
 
         sig_phi_iono, sig_nondisp = \
-            self.estimate_sigma_split_main_band(
-            sig_phi_low,
-            sig_phi_high)
+            self.estimate_sigma(
+            sig_phi_main,
+            sig_phi_side)
 
         return sig_phi_iono, sig_nondisp
 
-    def estimate_sigma_split_main_band(
+    def estimate_sigma_main_diff(
             self,
-            sig_phi_low,
-            sig_phi_high):
-        """Estimate sigma from coherence for split_main_band method
+            sig_phi0,
+            sig_phi1):
+        """Estimate sigma from coherence for main_diff_ms method
 
         Parameters
         ----------
-        sig_phi_low : numpy.ndarray
-            phase standard deviation of low sub-band interferogram
-        sig_phi_high : numpy.ndarray
-            phase standard deviation of high sub-band interferogram
+        sig_phi0 : numpy.ndarray
+            phase standard deviation of main-band interferogram
+        sig_phi1 : numpy.ndarray
+            phase standard deviation of side-band interferogram
 
         Returns
         -------
         sig_iono : numpy.ndarray
-            2D phase standard deviation of ionosphere phase
+            2D array of phase standard deviation of dispersive
         sig_nondisp : numpy.ndarray
             2D array of phase standard deviation of non-dispersive
         """
-        coeff = self.freq_low * self.freq_high / self.f0 /\
-            (self.freq_high**2 - self.freq_low**2)
-        sig_iono = np.sqrt(coeff**2 * (self.freq_high**2 * sig_phi_low**2
-            + self.freq_low**2 * sig_phi_high**2))
 
-        coef_non = self.f0 / (self.freq_high**2 - self.freq_low**2)
+        a = self.f1 / (self.f1 + self.f0)
+        b = (self.f0 * self.f1) / (self.f0**2 - self.f1**2)
+        sig_phi01 = np.sqrt(sig_phi0**2 + sig_phi1**2)
+        sig_iono = np.sqrt(a**2 * sig_phi0**2 + b**2 * sig_phi01**2)
 
-        sig_nondisp = np.sqrt((coef_non**2) * (self.freq_low**2) *\
-                (sig_phi_low**2) + (coef_non**2) *\
-                (self.freq_high**2) * (sig_phi_high**2))
+        c = self.f0**2 /(self.f0**2 - self.f1**2)
+        d = self.f0 * self.f1 / (self.f0**2 - self.f1**2)
+        sig_nondisp = np.sqrt( c**2 * sig_phi0**2 + d**2 * sig_phi01**2)
 
         return sig_iono, sig_nondisp
+
+    def estimate_sigma_main_side(
+            self,
+            sig_phi0,
+            sig_phi1):
+        """Estimate sigma from coherence for main-side method
+
+        Parameters
+        ----------
+        sig_phi0 : numpy.ndarray
+            phase standard deviation of main-band interferogram
+        sig_phi1 : numpy.ndarray
+            phase standard deviation of side-band interferogram
+
+        Returns
+        -------
+        sig_iono : numpy.ndarray
+            phase standard deviation of ionosphere phase
+        sig_nondisp : numpy.ndarray
+            2D array of phase standard deviation of non-dispersive
+        """
+        a = (self.f1**2) / (self.f1**2 - self.f0**2)
+        b = (self.f0 * self.f1) / (self.f1**2 - self.f0**2)
+        c = (self.f0) / (self.f1**2 - self.f0**2)
+
+        sig_iono = np.sqrt(a**2 * sig_phi0**2 + b**2 * sig_phi1**2)
+        sig_non_disp = np.sqrt(c**2 * (self.f0**2 * sig_phi0**2 \
+            + self.f1**2 * sig_phi1**2))
+
+        return sig_iono, sig_non_disp
 
     def compute_unwrapp_error(
             self,
@@ -392,45 +410,109 @@ class SplitBandIonosphereEstimation(IonosphereEstimation):
             super().compute_unwrapp_error(
             disp_array=disp_array,
             nondisp_array=nondisp_array,
-            compute_unwrapp_error_func=compute_unwrapp_error_split_main_band,
+            compute_unwrapp_error_func=self.compute_unwrap_err,
             main_runw=main_runw,
             side_runw=side_runw,
+            slant_main=slant_main,
+            slant_side=slant_side,
             low_sub_runw=low_sub_runw,
             high_sub_runw=high_sub_runw)
 
         return com_unw_coeff, diff_unw_coeff
 
+class MainSideBandIonosphereEstimation(MainBandIonosphereEstimation):
+    '''Main side band ionosphere estimation
+    '''
+    def __init__(self,
+                 main_center_freq=None,
+                 side_center_freq=None,
+                 low_center_freq=None,
+                 high_center_freq=None,
+                 method=None):
+        """Initialized IonosphererEstimation Class
 
-def compute_unwrapp_error_split_main_band(
+        Parameters
+        ----------
+        main_center_freq : float
+            center frequency of main band (freqA) [Hz]
+        side_center_freq : float
+            center frequency of side band (freqB) [Hz]
+        low_center_freq : float
+            center frequency of lower sub-band of the main band [Hz]
+        high_center_freq : float
+            center frequency of upper sub-band of the main band [Hz]
+        method : {'split_main_band', 'main_side_band',
+            'main_diff_ms_band'}
+            ionosphere estimation method
+        """
+        super().__init__(main_center_freq, side_center_freq, low_center_freq,
+                         high_center_freq, method)
+
+        self.estimate_iono = estimate_iono_main_side
+        self.estimate_sigma = self.estimate_sigma_main_side
+        self.compute_unwrap_err = compute_unwrapp_error_main_side_band
+
+class MainDiffMsBandIonosphereEstimation(MainBandIonosphereEstimation):
+    '''Main diff MS band ionosphere estimation
+    '''
+    def __init__(self,
+                 main_center_freq=None,
+                 side_center_freq=None,
+                 low_center_freq=None,
+                 high_center_freq=None,
+                 method=None):
+        """Initialized IonosphererEstimation Class
+
+        Parameters
+        ----------
+        main_center_freq : float
+            center frequency of main band (freqA) [Hz]
+        side_center_freq : float
+            center frequency of side band (freqB) [Hz]
+        low_center_freq : float
+            center frequency of lower sub-band of the main band [Hz]
+        high_center_freq : float
+            center frequency of upper sub-band of the main band [Hz]
+        method : {'split_main_band', 'main_side_band',
+            'main_diff_ms_band'}
+            ionosphere estimation method
+        """
+        super().__init__(main_center_freq, side_center_freq, low_center_freq,
+                         high_center_freq, method)
+
+        self.estimate_iono = estimate_iono_main_diff
+        self.estimate_sigma = self.estimate_sigma_main_diff
+        self.compute_unwrap_err = compute_unwrapp_error_main_diff_ms_band
+
+def compute_unwrapp_error_main_diff_ms_band(
         f0,
-        freq_low,
-        freq_high,
+        f1,
         disp_array,
         nondisp_array,
-        low_sub_runw,
-        high_sub_runw,
-        f1=None,
-        main_runw=None,
-        side_runw=None):
+        main_runw,
+        side_runw,
+        freq_low=None,
+        freq_high=None,
+        low_sub_runw=None,
+        high_sub_runw=None):
 
-    """Compute unwrapping error coefficients.
+    """Compute unwrapping error coefficients for main_diff_ms_band
+    method.
 
     Parameters
     ----------
     f0 : float
         radar center frequency of frequency A band
-    freq_low : float
-        radar center frequency of lower sub-band
-    freq_high : float
-        radar center frequency of upper sub-band
+    f1 : float
+        radar center frequency of frequency B band
     disp_array : numpy.ndarray
         2D dispersive array estimated from given methods
     nondisp_array : numpy.ndarray
         2D non-dispersive array estimated from given methods
-    low_sub_runw : numpy.ndarray
-        2D runw array of low sub-band interferogram
-    high_sub_runw : numpy.ndarray
-        2D runw array of high sub-band interferogram
+    main_runw : numpy.ndarray
+        2D runw array of main-band interferogram
+    side_runw : numpy.ndarray
+        2D runw array of of side-band interferogram
 
     Returns
     -------
@@ -440,41 +522,79 @@ def compute_unwrapp_error_split_main_band(
         2D differential unwrapping error coefficient array
     """
 
-    freq_diff = freq_high - freq_low
-    freq_multi = freq_high * freq_low
-
-    diff_unw_coeff = np.round(((high_sub_runw) - (low_sub_runw)\
-        - (freq_diff / f0) * nondisp_array \
-        + ( f0 * freq_diff / freq_multi) * disp_array) /\
-            2.0 / np.pi)
-    com_unw_coeff = np.round((low_sub_runw + high_sub_runw \
-        - 2.0 * nondisp_array - 2.0 * disp_array ) / 4.0 / np.pi\
-        - diff_unw_coeff / 2)
+    diff_unw_coeff = np.round( ( (1 - f1 / f0) \
+        * nondisp_array + (1 - f0 / f1) * disp_array
+        + side_runw - main_runw) / (2 * np.pi))
+    com_unw_coeff = np.round( (main_runw - nondisp_array \
+        - disp_array) / (2 * np.pi) )
 
     return com_unw_coeff, diff_unw_coeff
 
-def estimate_iono_low_high(
+def compute_unwrapp_error_main_side_band(
         f0,
-        freq_low,
-        freq_high,
-        phi0_low,
-        phi0_high):
+        f1,
+        disp_array,
+        nondisp_array,
+        main_runw,
+        side_runw,
+        freq_low=None,
+        freq_high=None,
+        low_sub_runw=None,
+        high_sub_runw=None):
 
-    """Estimates ionospheric phase from low and high sub-band
-    interferograms i.e. split_main_band method
+    """Compute unwrapping error coefficients.
 
     Parameters
     ----------
     f0 : float
         radar center frequency of frequency A band
-    freq_low : float
-        radar center frequency of lower sub-band
-    freq_high : float
-        radar center frequency of upper sub-band
-    phi0_low : numpy.ndarray
-        numpy array of lower sub-band interferogram
-    phi0_high : numpy.ndarray
-        numpy array of upper sub-band interferogram
+    f1 : float
+        radar center frequency of frequency B band
+    disp_array : numpy.ndarray
+        2D dispersive array estimated from given methods
+    nondisp_array : numpy.ndarray
+        2D non-dispersive array estimated from given methods
+    main_runw : numpy.ndarray
+        2D runw array of main-band interferogram
+    side_runw : numpy.ndarray
+        2D runw array of of side-band interferogram
+
+    Returns
+    -------
+    com_unw_coeff : numpy.ndarray
+        2D common unwrapping error coefficient array
+    diff_unw_coeff : numpy.ndarray
+        2D differential unwrapping error coefficient array
+    """
+
+    diff_unw_coeff = np.round( ( (1 - f1 / f0) \
+        * nondisp_array + (1 - f0 / f1) * disp_array
+        + side_runw - main_runw) / (2 * np.pi))
+    com_unw_coeff = np.round( ( main_runw + side_runw \
+        - (1 + f1 / f0) * nondisp_array \
+        - (1 + f0 / f1) * disp_array \
+        - 2 * np.pi * diff_unw_coeff) / (4 * np.pi) )
+
+    return com_unw_coeff, diff_unw_coeff
+
+def estimate_iono_main_diff(f0,
+                            f1,
+                            phi0,
+                            phi1):
+
+    """Estimates ionospheric phase from main-band
+    and the difference of main and side-band interferograms
+
+    Parameters
+    ----------
+    f0 : float
+        radar center frequency of frequency A band
+    f1 : float
+        radar center frequency of frequency B band
+    phi0 : numpy.ndarray
+        numpy array of frequency A interferogram
+    phi1 : numpy.ndarray
+        numpy array of frequency B interferogram
 
     Returns
     -------
@@ -484,21 +604,64 @@ def estimate_iono_low_high(
         numpy array of estimated non-dispersive
     """
 
-    y_size, x_size = phi0_low.shape
+    phi_diff = phi0 - phi1
+    y_size, x_size = phi0.shape
     d = np.ones((2, y_size * x_size))
-    d[0,:] = phi0_low.flatten()
-    d[1,:] = phi0_high.flatten()
-    coeff_mat = np.ones((2, 2))
+    d[0, :] = phi0.flatten()
+    d[1, :] = phi_diff.flatten()
 
-    #import ipdb; ipdb.set_trace()
-    coeff_mat[0, 0] = freq_low / f0
-    coeff_mat[0, 1] = f0 / freq_low
-    coeff_mat[1, 0] = freq_high / f0
-    coeff_mat[1, 1] = f0 / freq_high
+    coeff_mat = np.ones((2, 2))
+    coeff_mat[1,0] = (f1 - f0) / f1
+    coeff_mat[1,1] = (f0 - f1) / f0
     coeff_mat1 = np.linalg.pinv(coeff_mat)
     output = np.dot(coeff_mat1, d)
 
-    non_dispersive = output[0, :].reshape(y_size, x_size)
+    non_dispersive = output[1].reshape(y_size, x_size)
+    dispersive = output[0].reshape(y_size, x_size)
+
+    return dispersive, non_dispersive
+
+def estimate_iono_main_side(
+        f0,
+        f1,
+        phi0,
+        phi1):
+
+    """Estimates ionospheric phase from frequency A and B
+    interferograms
+
+    Parameters
+    ----------
+    f0 : float
+        radar center frequency of frequency A band
+    f1 : float
+        radar center frequency of frequency B band
+    phi0 : numpy.ndarray
+        numpy array of frequency A interferogram
+    phi1 : numpy.ndarray
+        numpy array of frequency B interferogram
+
+    Returns
+    -------
+    dispersive : numpy.ndarray
+        numpy array of estimated dispersive
+    non_dispersive : numpy.ndarray
+        numpy array of estimated non-dispersive
+    """
+
+    y_size, x_size = phi0.shape
+    d = np.ones((2, y_size * x_size))
+    d[0, :] = phi0.flatten()
+    d[1, :] = phi1.flatten()
+
+    coeff_mat = np.ones((2, 2))
+    coeff_mat[1, 0] = f1 / f0
+    coeff_mat[1, 1] = f0 / f1
+
+    coeff_mat1 = np.linalg.pinv(coeff_mat)
+    output = np.dot(coeff_mat1, d)
+
+    non_dispersive = output[0].reshape(y_size, x_size)
     dispersive = output[1].reshape(y_size, x_size)
 
     return dispersive, non_dispersive

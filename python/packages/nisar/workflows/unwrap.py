@@ -209,7 +209,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         az_spac = src_h5[f'{src_freq_group_path}/' \
                                          f'sceneCenterAlongTrackSpacing'][()]
                         rg_bw = src_h5[f'{src_freq_group_path}/rangeBandwidth'][()]
-                        rg_res = isce3.core.speed_of_light / (2 * rg_bw)
+                        # Note, this is the single-look range resolution
+                        rg_res = isce3.core.speed_of_light / (
+                                    2 * rg_bw)
                         # To compute azimuth resolution, get sensor speed at mid-scene
                         # And use azimuth processed bandwidth (copied from RSLC)
                         ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
@@ -222,8 +224,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         radar_grid = ref_slc.getRadarGrid(freq)
                         _, v_mid = orbit.interpolate(radar_grid.sensing_mid)
                         vs = np.linalg.norm(v_mid)
+                        # Note this is the single-look azimuth resolution
                         az_bw = src_h5[f'{src_freq_group_path}/azimuthBandwidth'][()]
-                        az_res = vs/az_bw
+                        az_res = vs / az_bw
                         nlooks = rg_spac * az_spac / (rg_res * az_res)
 
                     if snaphu_cfg['verbose']:

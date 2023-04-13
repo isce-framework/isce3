@@ -87,7 +87,7 @@ class isce3::product::RadarGridParameters {
 
         /** Get pulse repetition frequency in Hz - inverse of azimuth time interval*/
         inline double prf() const { return _prf; }
-        
+
         /** Set pulse repetition frequency in Hz - inverse of azimuth time interval*/
         inline void prf(const double & t){ _prf = t; }
 
@@ -108,13 +108,13 @@ class isce3::product::RadarGridParameters {
 
         /** Get radar grid length */
         inline size_t length() const { return _rlength; }
-        
+
         /** Set radar grid length */
         inline void length(const size_t & t) { _rlength = t; }
 
         /** Get radar grid width */
         inline size_t width() const { return _rwidth; }
-        
+
         /** Set radar grid width */
         inline void width(const size_t & t) { _rwidth = t; }
 
@@ -153,7 +153,7 @@ class isce3::product::RadarGridParameters {
         inline double slantRange(double sample) const {
             return _startingRange + sample * _rangePixelSpacing;
         }
-        
+
         /** Crop/ Expand while keeping the spacing the same with top left offset and size */
         inline RadarGridParameters offsetAndResize(double yoff, double xoff, size_t ysize, size_t xsize) const
         {
@@ -178,10 +178,10 @@ class isce3::product::RadarGridParameters {
                 std::string errstr = "Number of looks must be positive. " +
                                     std::to_string(azlooks) + "Az x" +
                                     std::to_string(rglooks) + "Rg looks requested.";
-                throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr); 
+                throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
             }
 
-            //Currently implements the multilooking operation used in ISCE2 
+            //Currently implements the multilooking operation used in ISCE2
             return RadarGridParameters( sensingTime(0.5 * (azlooks-1)),
                                         wavelength(),
                                         prf() / (1.0 * azlooks),
@@ -215,6 +215,11 @@ class isce3::product::RadarGridParameters {
                         lookSide(), length() * az_upsampling_factor,
                         width() * rg_upsampling_factor, refEpoch());
         }
+
+        /*
+         * Check if given az and slant range are within radargrid
+         */
+        bool contains(const double az_time, const double srange) const;
 
     // Protected data members can be accessed by derived classes
     protected:

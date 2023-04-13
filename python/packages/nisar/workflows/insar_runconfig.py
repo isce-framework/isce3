@@ -62,7 +62,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
                 # Raise and log warning
                 warning_str = f'{write_flag} incorrectly disabled for rdr2geo; it will be enabled'
                 warning_channel.log(warning_str)
-                warning.warn(warning_str)
+                warnings.warn(warning_str)
 
                 # Set write flag True
                 self.cfg['processing']['rdr2geo'][write_flag] = True
@@ -236,7 +236,7 @@ class InsarRunConfig(Geo2rdrRunConfig):
             # Raise and log warning
             warning_str = 'layover_shadow incorrectly disabled for rdr2geo; it will be enabled'
             warning_channel.log(warning_str)
-            warning.warn(warning_str)
+            warnings.warn(warning_str)
 
             # Set write flag True
             self.cfg['processing']['rdr2geo']['write_layover_shadow'] = True

@@ -63,6 +63,7 @@ struct FixedString {
 /** Layover and shadow values */
 const short SHADOW_VALUE = 1;
 const short LAYOVER_VALUE = 2;
+const short LAYOVER_AND_SHADOW_VALUE = 3;
 
 /** Area projection algorithm radar grid margin **/
 const int AREA_PROJECTION_RADAR_GRID_MARGIN = 100;

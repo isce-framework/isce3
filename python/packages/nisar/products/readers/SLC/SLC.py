@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import os
+
 import h5py
-import pyre
 import journal
+import numpy as np
+import pyre
+from nisar.products.readers.GenericProduct import get_hdf5_file_product_type
+from nisar.types import complex32
+
 from ..Base import Base
 from .Identification import Identification
-from nisar.products.readers.GenericProduct import \
-    get_hdf5_file_product_type
-from nisar.types import complex32
 
 PRODUCT = 'RSLC'
 
@@ -125,13 +127,14 @@ class SLC(Base, family='nisar.productreader.slc'):
                 error_channel.log(err_str)
                 raise LookupError(err_str)
 
-            # h5py raises TypeError when reading complex32 dataset without
-            # astype(complex32). Use try except to determine return.
+            # h5py 3.8.0 returns a compound datatype when accessing a complex32
+            # dataset's dtype (https://github.com/h5py/h5py/pull/2157).
+            # Previous versions of h5py raise TypeError when attempting to
+            # get the dtype. If such exception was raised, we assume the
+            # datatype was complex32
             try:
-                # Try printing invalid datatype to force TypeError if complex32
-                print(h[slc_path].dtype)
-                # No errors if RSLC dataset is complex64
-                return True
+                dtype = h[slc_path].dtype
             except TypeError:
-                # Else if RSLC dataset is complex32
                 return False
+            else:
+                return dtype == np.complex64

@@ -22,7 +22,8 @@ ref_vals = np.array([
     -0.00930208019694885
 ])
 
-def test_constant():
+class TestLUT1d:
+
     # construct coordiates and corresponding values for LUT
     coords = np.arange(10)
     values = np.exp(-coords / 3)
@@ -30,9 +31,11 @@ def test_constant():
     # create LUT with extrapolation enabled
     lut = isce.core.LUT1d(coords, values, True)
 
-    # evaluate
-    for x, ref_val in zip(np.linspace(-2, 12, 50), ref_vals):
-        value = lut.eval(x)
-        npt.assert_almost_equal(value, ref_val)
-    
-# end of file
+    def test_eval_scalar(self):
+        for x, ref_val in zip(np.linspace(-2, 12, 50), ref_vals):
+            value = self.lut.eval(x)
+            npt.assert_almost_equal(value, ref_val)
+
+    def test_eval_vector(self):
+        values = self.lut.eval(np.linspace(-2, 12, 50))
+        npt.assert_allclose(values, ref_vals)

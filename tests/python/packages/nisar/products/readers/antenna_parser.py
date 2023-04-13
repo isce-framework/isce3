@@ -127,13 +127,51 @@ class TestAntennaParser:
                             left=0.0, right=0.0)
         npt.assert_allclose(elcut.copol_pattern[0, :], pattern,
                             atol=self.atol, rtol=self.rtol,
-                            err_msg="Wrong 'cxpol' for first beam")
+                            err_msg="Wrong 'copol' for first beam")
 
         pattern = np.interp(angles, beam_last.angle, beam_last.copol_pattern,
                             left=0.0, right=0.0)
         npt.assert_allclose(elcut.copol_pattern[-1, :], pattern,
                             atol=self.atol, rtol=self.rtol,
-                            err_msg="Wrong 'cxpol' for last beam")
+                            err_msg="Wrong 'copol' for last beam")
+
+    def test_cut_angles_az_cuts(self):
+        num_beam = self.prs.num_beams()
+        cut_angs = self.prs.cut_angles_az_cuts()
+        npt.assert_equal(cut_angs.size, num_beam, err_msg="Wrong size!")
+
+    def test_az_cut_all(self):
+        num_beam = self.prs.num_beams()
+        beam_first = self.prs.az_cut(1)
+        beam_last = self.prs.az_cut(num_beam)
+        ang_first = beam_first.angle[0]
+        ang_last = beam_last.angle[-1]
+        num_ang = int(np.ceil((ang_last - ang_first) /
+                              (beam_first.angle[1] - beam_first.angle[0]))) + 1
+
+        azcut = self.prs.az_cut_all()
+        npt.assert_equal(azcut.copol_pattern.shape, (num_beam, num_ang),
+                         err_msg="Wrong shape for 'copol'")
+
+        angles = np.linspace(ang_first, ang_last, num_ang)
+        npt.assert_allclose(azcut.angle, angles, atol=self.atol,
+                            rtol=self.rtol, err_msg="Wrong 'angle'")
+
+        cut_angs_az = self.prs.cut_angles_az_cuts()
+        npt.assert_allclose(azcut.cut_angle, cut_angs_az.mean(), atol=0.01,
+                            rtol=0.1, err_msg="Wrong mean 'cut_ang'")
+
+        pattern = np.interp(angles, beam_first.angle, beam_first.copol_pattern,
+                            left=0.0, right=0.0)
+        npt.assert_allclose(azcut.copol_pattern[0, :], pattern,
+                            atol=self.atol, rtol=self.rtol,
+                            err_msg="Wrong 'copol' for first beam")
+
+        pattern = np.interp(angles, beam_last.angle, beam_last.copol_pattern,
+                            left=0.0, right=0.0)
+        npt.assert_allclose(azcut.copol_pattern[-1, :], pattern,
+                            atol=self.atol, rtol=self.rtol,
+                            err_msg="Wrong 'copol' for last beam")
 
     def test_locate_beam_peak_overlap(self):
         for pol in ['H', 'V']:

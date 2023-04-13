@@ -8,118 +8,17 @@ import journal
 import numpy as np
 
 import isce3
+from isce3.core.rdr_geo_block_generator import block_generator
+
 import nisar
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
-from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
-from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.gslc_runconfig import GSLCRunConfig
-from nisar.workflows.compute_stats import compute_stats_complex_data
 from nisar.products.readers.orbit import load_orbit_from_xml
-
-
-def _block_generator(geo_grid, radar_grid, orbit, dem_interp,
-                     geo_lines_per_block, geo_cols_per_block,
-                     geogrid_expansion_threshold=1):
-    """
-    Compute radar/geo slices, dimensions and geo grid for each geo block. If no
-    radar data is found for a geo block, nothing is returned for that geo block.
-
-    Parameters:
-    -----------
-    geo_grid: isce3.product.GeoGridParameters
-        Geo grid whose radar grid bounding box indices are to be computed
-    radar_grid: isce3.product.RadarGridParameters
-        Radar grid that computed indices are computed with respect to
-    orbit: Orbit
-        Orbit object
-    dem_interp: isce3.geometry.DEMInterpolator
-        DEM to be interpolated over geo grid
-    geo_lines_per_block: int
-        Line per geo block
-    geo_cols_per_block: int
-        Columns per geo block
-    geogrid_expansion_threshold: int
-        Number of geogrid expansions if geo2rdr fails (default: 100)
-
-    Yields:
-    -------
-    radar_slice: tuple[slice]
-        Slice of current radar block. Defined as:
-        [azimuth_time_start:azimuth_time_stop, slant_range_start:slant_range_stop]
-    geo_slice: tuple[slice]
-        Slice of current geo block. Defined as:
-        [y_start:y_stop, x_start:x_stop]
-    geo_block_shape: tuple[int]
-        Shape of current geo block as (block_length, block_width)
-    blk_geo_grid: isce3.product.GeoGridParameters
-        Geo grid parameters of current geo block
-    """
-    info_channel = journal.info("gslc_array._block_generator")
-
-    # compute number of geo blocks in x and y directions
-    n_geo_block_y = int(np.ceil(geo_grid.length / geo_lines_per_block))
-    n_geo_block_x = int(np.ceil(geo_grid.width / geo_cols_per_block))
-    n_blocks = n_geo_block_x * n_geo_block_y
-
-    # compute length and width of geo block
-    geo_block_length = geo_lines_per_block * geo_grid.spacing_y
-    geo_block_width = geo_cols_per_block * geo_grid.spacing_x
-
-    # iterate over number of y geo blocks
-    # *_end is open
-    for i_blk_y in range(n_geo_block_y):
-
-        # compute start index and end index for current geo y block
-        # use min to account for last block
-        y_start_index = i_blk_y * geo_lines_per_block
-        y_end_index = min(y_start_index + geo_lines_per_block, geo_grid.length)
-        blk_geogrid_length = y_end_index - y_start_index
-
-        # compute start and length along x for current geo block
-        y_start = geo_grid.start_y + i_blk_y * geo_block_length
-
-        # iterate over number of x geo blocks
-        for i_blk_x in range(n_geo_block_x):
-
-            # log current block info
-            i_blk = i_blk_x * n_geo_block_y + i_blk_x + 1
-            info_channel.log(f"running geocode SLC array block {i_blk} of {n_blocks}")
-
-            # compute start index and end index for current geo x block
-            # use min to catch last block
-            x_start_index = i_blk_x * geo_cols_per_block
-            x_end_index = min(x_start_index + geo_cols_per_block, geo_grid.width)
-            blk_geogrid_width = x_end_index - x_start_index
-
-            # compute start and width along y for current geo block
-            x_start = geo_grid.start_x + i_blk_x * geo_block_width
-
-            # create geogrid for current geo block
-            blk_geo_grid = isce3.product.GeoGridParameters(x_start, y_start,
-                                                           geo_grid.spacing_x,
-                                                           geo_grid.spacing_y,
-                                                           blk_geogrid_width,
-                                                           blk_geogrid_length,
-                                                           geo_grid.epsg)
-
-            # compute radar bounding box for current geo block
-            try:
-                bbox = isce3.geometry.get_radar_bbox(blk_geo_grid, radar_grid,
-                                                     orbit, dem_interp,
-                                                     geogrid_expansion_threshold=geogrid_expansion_threshold)
-            except RuntimeError:
-                info_channel.log(f"no radar data found for block {i_blk} of {n_blocks}")
-                # skip this geo block if no radar data is found
-                continue
-
-            # return radar block bounding box/geo block indices pair
-            radar_slice = np.s_[bbox.first_azimuth_line:bbox.last_azimuth_line,
-                                bbox.first_range_sample:bbox.last_range_sample]
-            geo_slice = np.s_[y_start_index:y_end_index,
-                              x_start_index:x_end_index]
-            geo_block_shape = (blk_geogrid_length, blk_geogrid_width)
-            yield (radar_slice, geo_slice, geo_block_shape, blk_geo_grid)
+from nisar.workflows import h5_prep
+from nisar.workflows.compute_stats import compute_stats_complex_data
+from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
+from nisar.workflows.geocode_corrections import get_az_srg_corrections
+from nisar.workflows.gslc_runconfig import GSLCRunConfig
+from nisar.workflows.yaml_argparse import YamlArgparse
 
 
 def run(cfg):
@@ -155,7 +54,6 @@ def run(cfg):
     else:
         orbit = slc.getOrbit()
     dem_raster = isce3.io.Raster(dem_file)
-    dem_interp = isce3.geometry.DEMInterpolator(dem_raster)
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
@@ -177,54 +75,68 @@ def run(cfg):
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
 
-            # loop over polarizations
-            for polarization in pol_list:
-                t_pol = time.time()
+            # get azimuth and slant range geocoding corrections
+            az_correction, srg_correction = \
+                get_az_srg_corrections(cfg, slc, freq, orbit)
 
+            # initialize source/rslc and destination/gslc datasets
+            rslc_datasets = []
+            gslc_datasets = []
+            for polarization in pol_list:
                 # path and dataset to rdr SLC data in HDF5
                 rslc_ds_path = slc.slcPath(freq, polarization)
-                rslc_ds = src_h5[rslc_ds_path]
+                rslc_datasets.append(src_h5[rslc_ds_path])
 
                 # path and dataset to geo SLC data in HDF5
                 dataset_path = f'/science/LSAR/GSLC/grids/{frequency}/{polarization}'
-                gslc_dataset = dst_h5[dataset_path]
+                gslc_datasets.append(dst_h5[dataset_path])
 
-                # loop over blocks
-                for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
-                     _block_generator(geo_grid, radar_grid, orbit,
-                                      dem_interp,  lines_per_block,
-                                      columns_per_block,
-                                      geogrid_expansion_threshold):
+            # loop over blocks
+            blk_t_block = time.perf_counter()
+            for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
+                 block_generator(geo_grid, radar_grid, orbit, dem_raster,
+                                 lines_per_block, columns_per_block,
+                                 geogrid_expansion_threshold):
 
-                    # unpack block parameters
-                    az_first = rdr_blk_slice[0].start
-                    rg_first = rdr_blk_slice[1].start
+                # unpack block parameters
+                az_first = rdr_blk_slice[0].start
+                rg_first = rdr_blk_slice[1].start
+
+                # init input/rslc and output/gslc blocks for each polarization
+                gslc_data_blks = []
+                rslc_data_blks = []
+                for rslc_dataset in rslc_datasets:
+                    # extract RSLC data block/array
+                    rslc_data_blks.append(
+                        nisar.types.read_c4_dataset_as_c8(rslc_dataset,
+                                                          rdr_blk_slice))
 
                     # prepare zero'd GSLC data block/array
-                    gslc_data_blk = np.zeros(geo_blk_shape, dtype=np.complex64)
+                    gslc_data_blks.append(
+                        np.zeros(geo_blk_shape, dtype=np.complex64))
 
-                    # extract RSLC data block/array
-                    rslc_data_blk = nisar.types.read_c4_dataset_as_c8(rslc_ds,
-                                                                      rdr_blk_slice)
+                # run geocodeSlc
+                isce3.geocode.geocode_slc(gslc_data_blks, rslc_data_blks,
+                                          dem_raster, radar_grid, blk_geo_grid,
+                                          orbit, native_doppler,
+                                          image_grid_doppler, ellipsoid,
+                                          threshold_geo2rdr,
+                                          iteration_geo2rdr,
+                                          az_first, rg_first, flatten,
+                                          az_time_correction=az_correction,
+                                          srange_correction=srg_correction)
 
-                    # run geocodeSlc
-                    isce3.geocode.geocode_slc(gslc_data_blk, rslc_data_blk,
-                                              dem_raster, radar_grid, blk_geo_grid,
-                                              orbit, native_doppler,
-                                              image_grid_doppler, ellipsoid,
-                                              threshold_geo2rdr,
-                                              iteration_geo2rdr,
-                                              az_first, rg_first, flatten)
-
+                # write geocoded blocks to respective HDF5 datasets
+                for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
+                                                       gslc_data_blks):
                     # write to GSLC block HDF5
                     gslc_dataset.write_direct(gslc_data_blk,
                                               dest_sel=geo_blk_slice)
 
+            # loop over polarizations and compute statistics
+            for gslc_dataset in gslc_datasets:
                 gslc_raster = isce3.io.Raster(f"IH5:::ID={gslc_dataset.id.id}".encode("utf-8"), update=True)
                 compute_stats_complex_data(gslc_raster, gslc_dataset)
-
-                t_pol_elapsed = time.time() - t_pol
-                info_channel.log(f'polarization {polarization} ran in {t_pol_elapsed:.3f} seconds')
 
         cube_geogrid = isce3.product.GeoGridParameters(
             start_x=radar_grid_cubes_geogrid.start_x,

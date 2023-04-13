@@ -43,6 +43,7 @@ void addbinding(py::class_<Phass> & pyPhass)
                 py::arg("correlation"),
                 py::arg("unw_igram"),
                 py::arg("label"),
+                py::call_guard<py::gil_scoped_release>(),
                 R"(
                 Perform phase unwrapping using the Phass algorithm
 
@@ -63,6 +64,7 @@ void addbinding(py::class_<Phass> & pyPhass)
                 py::arg("correlation"),
                 py::arg("unw_igram"),
                 py::arg("label"),
+                py::call_guard<py::gil_scoped_release>(),
                 R"(
                 Perform phase unwrapping using the Phass algorithm
 

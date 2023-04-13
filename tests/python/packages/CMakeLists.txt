@@ -1,11 +1,15 @@
 set(TESTFILES
+isce3/atmosphere/ionosphere.py
+isce3/cal/corner_reflector.py
+isce3/cal/point_target_info.py
+isce3/cal/radar_cross_section.py
 isce3/core/gpu_check.py
+isce3/core/llh.py
+isce3/core/poly2d.py
 isce3/io/background.py
-isce3/ionosphere/ionosphere.py
 isce3/signal/compute_evd_cpi.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
-isce3/signal/point_target_info.py
 isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
 nisar/mixed_mode/logic.py
@@ -18,6 +22,7 @@ nisar/products/readers/raw.py
 nisar/workflows/crossmul.py
 #nisar/workflows/el_null_range_from_raw_ant.py
 nisar/workflows/doppler_lut_from_raw.py
+nisar/workflows/estimate_abscal_factor.py
 nisar/workflows/focus.py
 nisar/workflows/gen_doppler_range_product.py
 nisar/workflows/stage_dem.py

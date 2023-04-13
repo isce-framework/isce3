@@ -40,9 +40,10 @@ def estimate_frequency(z):
 
 
 def shift_frequency(z, fx, fy):
-    x, y = np.meshgrid(list(range(z.shape[1])), list(range(z.shape[0])))
-    z *= np.exp(1j * fx * x)
-    z *= np.exp(1j * fy * y)
+    x = np.arange(z.shape[1])
+    y = np.arange(z.shape[0])
+    z *= np.exp(1j * fx * x)[None,:]
+    z *= np.exp(1j * fy * y)[:,None]
     return z
 
 

@@ -290,6 +290,15 @@ class AntennaParser:
         Returns
         -------
         AntPatCut
+            angle : np.ndarray (float or complex)
+                Elevation angles in radians.
+            copol_pattern : np.ndarray (float or complex)
+                Co-pol 1-D elevation pattern in V/m.
+            cxpol_pattern : np.ndarray (float or complex)
+                Cross-pol 1-D elevation pattern in V/m.
+                None if there no cx-pol pattern!
+            cut_angle : float
+                Azimuth angle in radians for obtaining elevation cut.
 
         Raises
         ------
@@ -325,7 +334,7 @@ class AntennaParser:
                 Co-pol 1-D azimuth pattern in V/m.
             cxpol_pattern : np.ndarray (float or complex) 
                 Cross-pol 1-D azimuth pattern in V/m. 
-                None if there no x-pol pattern!
+                None if there no cx-pol pattern!
             cut_angle : float 
                 Elevation angle in radians for obtaining azimuth cut.
 
@@ -340,10 +349,10 @@ class AntennaParser:
         return self._get_ang_cut(beam, pol, 'azimuth')
 
     def el_cut_all(self, pol='H'):
-        """Parse all Co-pol EL cuts.
+        """Parse all Co-pol and Cx-pol EL (Elevation) cuts.
 
-        Get all uniformly-spaced EL cuts of co-pol store them in a matrix
-        with shape `num_beams` by `number of angles`. The number of
+        Get all uniformly-spaced EL cuts of co-pol and cx-pol and store them in
+        a matrix with shape `num_beams` by `number of angles`. The number of
         uniformly-spaced angles is determined by min, max angles from first 
         and last beams and the spacing from the first beam.             
 
@@ -357,51 +366,98 @@ class AntennaParser:
         AntPatCut
             angle : np.ndarray (float)
                 Uniformly-spaced elevation angles in radians.
-            copol_pattern : np.ndarray (float or complex) 
-                Interpolated co-pol 1-D elevation pattern in V/m with 
-                shape (number-of-beams, number-of-EL-angles). 
-            cut_angle : float 
-                Mean azimuth angle in radians from which 
+            copol_pattern : np.ndarray (float or complex)
+                Interpolated co-pol 1-D elevation pattern in V/m with
+                shape (number-of-beams, number-of-EL-angles).
+            cxpol_pattern : np.ndarray (float or complex)
+                Interpolated cx-pol 1-D elevation pattern in V/m with
+                shape (number-of-beams, number-of-EL-angles).
+            cut_angle : float
+                Mean azimuth angle in radians from which
                 elevation patterns are obtained.
 
         Raises
         ------
         ValueError
             For bad `pol` value.
+        KeyError
+            For missing mandatory fields in the product.
+
+        Notes
+        -----
+        Cx-pol patterns will be set to zeros with the same shape as co-pol
+        ones if the cx-pol patterns are missing in the product.
+
+        """
+        return self._ang_cut_all(cut_type='elevation', pol=pol)
+
+    def az_cut_all(self, pol='H'):
+        """Parse all Co-pol and Cx-pol AZ (Azimuth) cuts.
+
+        Get all uniformly-spaced AZ cuts of co-pol and cx-pol and store them in
+        a matrix with shape `num_beams` by `number of angles`. The number of
+        uniformly-spaced angles is determined by min, max angles from first
+        and last beams and the spacing from the first beam.
+
+        Parameters
+        ----------
+        pol : str, default='H'
+            Polarization , either 'H' or 'V'. It is case-insensitive!
+
+        Returns
+        -------
+        AntPatCut
+            angle : np.ndarray (float)
+                Uniformly-spaced azimuth angles in radians.
+            copol_pattern : np.ndarray (float or complex)
+                Interpolated co-pol 1-D azimuth pattern in V/m with
+                shape (number-of-beams, number-of-AZ-angles).
+            cxpol_pattern : np.ndarray (float or complex)
+                Interpolated cx-pol 1-D azimuth pattern in V/m with
+                shape (number-of-beams, number-of-AZ-angles).
+            cut_angle : float
+                Elevation angle in radians from which
+                azimuth patterns are obtained. Note that this value
+                simply represents a mean among all EL angles at which
+                individual AZ cuts are obtained.
+
+        Raises
+        ------
+        ValueError
+            For bad `pol` value.
+        KeyError
+            For missing mandatory fields in the product.
+
+        Notes
+        -----
+        Cx-pol patterns will be set to zeros with the same shape as co-pol
+        ones if the cx-pol patterns are missing in the product.
+
+        """
+        return self._ang_cut_all(cut_type='azimuth', pol=pol)
+
+    def cut_angles_az_cuts(self, pol='H'):
+        """
+        Get array of elevation angles at which all individual AZ cuts are
+        obtained per desired pol.
+
+        Parameters
+        ----------
+        pol : str, default='H'
+            Polarization , either 'H' or 'V'. It is case-insensitive!
+
+        Returns
+        -------
+        np.ndarray(float)
+            Elevation angles in radians for all azimuth cuts.
 
         """
         num_beam = self.num_beams(pol)
-        # determine full angular coverage with uniform spcaing over all beams
-        beam_first = self._get_ang_cut(
-            1, pol, 'elevation', out_keys=("angle", "copol_pattern"))
-        if num_beam > 1:
-            beam_last = self._get_ang_cut(
-                num_beam, pol, 'elevation', out_keys=("angle",
-                                                      "copol_pattern"))
-        else:
-            beam_last = beam_first
-        num_ang = int(np.ceil((beam_last.angle[-1] - beam_first.angle[0]) / (
-            beam_first.angle[1] - beam_first.angle[0]))) + 1
-        # linearly interpolate each beam over full angular coverage with out
-        # of range values filled with float or complex zero.
-        out = {}
-        out["angle"] = np.linspace(
-            beam_first.angle[0], beam_last.angle[-1], num_ang)
-        out["copol_pattern"] = np.zeros((num_beam, num_ang),
-                                        beam_first.copol_pattern.dtype)
-        out_of_range_val = 0.0
-        cut_ang_ave = 0.0
-
+        cut_ang_all = np.zeros(num_beam)
         for nn in range(num_beam):
-            beam = self._get_ang_cut(
-                nn + 1, pol, 'elevation', out_keys=("angle", "copol_pattern"))
-            out["copol_pattern"][nn, :] = np.interp(
-                out["angle"], beam.angle, beam.copol_pattern,
-                left=out_of_range_val, right=out_of_range_val)
-            cut_ang_ave += beam.cut_angle
-
-        out["cut_angle"] = cut_ang_ave / num_beam
-        return AntPatCut(**out)
+            grp_cut = self._fid[f'RX{nn+1:02d}{pol}/azimuth']
+            cut_ang_all[nn] = grp_cut["angle"].attrs.get('cut_angle')
+        return cut_ang_all
 
     # Helper functions listed below this line
     def _form_rx_regpat(self, pol: str) -> re.match:
@@ -447,7 +503,15 @@ class AntennaParser:
         grp_cut = self._fid[f'RX{beam:02d}{pol}/{cut_name}']
         out = dict.fromkeys(out_keys)
         for key in out_keys:
-            out[key] = grp_cut.get(key)[()]
+            # other fields except "cxpol_pattern" are mandatory!
+            try:
+                fld = grp_cut[key]
+            except KeyError:
+                if key != "cxpol_pattern":
+                    raise
+                continue
+            else:
+                out[key] = fld[()]
             if ang_attr and key == "angle":
                 out[ang_attr] = grp_cut[key].attrs.get(ang_attr)
         return AntPatCut(**out)
@@ -461,3 +525,46 @@ class AntennaParser:
             return grd.decode().replace('-', '_')
         except AttributeError:
             return grd.replace('-', '_')
+
+    def _ang_cut_all(self, cut_type: str, pol: str) -> AntPatCut:
+        """
+        Get all co-pol and cx-pol cut patterns of a certain cut_type
+        and pol.
+        cut_type is either "elevation" or "azimuth".
+        """
+        num_beam = self.num_beams(pol)
+        # determine full angular coverage with uniform spcaing over all beams
+        beam_first = self._get_ang_cut(
+            1, pol, cut_type, out_keys=("angle", "copol_pattern"))
+        if num_beam > 1:
+            beam_last = self._get_ang_cut(
+                num_beam, pol, cut_type, out_keys=("angle",
+                                                   "copol_pattern"))
+        else:
+            beam_last = beam_first
+        num_ang = int(np.ceil((beam_last.angle[-1] - beam_first.angle[0]) / (
+            beam_first.angle[1] - beam_first.angle[0]))) + 1
+        # linearly interpolate each beam over full angular coverage with out
+        # of range values filled with float or complex zero.
+        out = {}
+        out["angle"] = np.linspace(
+            beam_first.angle[0], beam_last.angle[-1], num_ang)
+        out["copol_pattern"] = np.zeros((num_beam, num_ang),
+                                        beam_first.copol_pattern.dtype)
+        out["cxpol_pattern"] = np.zeros_like(out["copol_pattern"])
+        out_of_range_val = 0.0
+        cut_ang_ave = 0.0
+
+        for nn in range(num_beam):
+            beam = self._get_ang_cut(nn + 1, pol, cut_type)
+            out["copol_pattern"][nn, :] = np.interp(
+                out["angle"], beam.angle, beam.copol_pattern,
+                left=out_of_range_val, right=out_of_range_val)
+            if beam.cxpol_pattern is not None:
+                out["cxpol_pattern"][nn, :] = np.interp(
+                    out["angle"], beam.angle, beam.cxpol_pattern,
+                    left=out_of_range_val, right=out_of_range_val)
+            cut_ang_ave += beam.cut_angle
+
+        out["cut_angle"] = cut_ang_ave / num_beam
+        return AntPatCut(**out)

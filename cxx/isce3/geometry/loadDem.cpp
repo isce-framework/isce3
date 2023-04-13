@@ -26,6 +26,9 @@ DEMInterpolator DEMRasterToInterpolator(
         const int demMarginInPixels,
         const isce3::core::dataInterpMethod demInterpMethod)
 {
+    // Get the debug journal
+    pyre::journal::debug_t debug("isce.geometry.loadDem.DEMRasterToInterpolator");
+
     // DEM interpolator
     DEMInterpolator demInterp(0, demInterpMethod);
 
@@ -111,18 +114,18 @@ DEMInterpolator DEMRasterToInterpolator(
     minY -= demMarginInPixels * std::abs(demRaster.dy());
     maxY += demMarginInPixels * std::abs(demRaster.dy());
 
-    std::cout << minX << " , " << maxX << " , " << minY << ", " << maxY
-              << std::endl;
+    debug << minX << " , " << maxX << " , " << minY << ", " << maxY
+              << pyre::journal::endl;
 
     // load the DEM for this bounding box
     demInterp.loadDEM(demRaster, minX, maxX, minY, maxY);
-    std::cout << "DEM interpolation Done" << std::endl;
+    debug << "DEM interpolation Done" << pyre::journal::endl;
 
-    if (demInterp.width() == 0 || demInterp.length() == 0)
-        std::cout << "warning there are not enough DEM coverage in the "
-                     "bounding box. "
-                  << std::endl;
-
+    if (demInterp.width() == 0 || demInterp.length() == 0) {
+        pyre::journal::warning_t warning("isce.geometry.loadDem.DEMRasterToInterpolator");
+        warning << "there is not enough DEM coverage in the bounding box. "
+                << pyre::journal::endl;
+    }
     // declare the dem interpolator
     demInterp.declare();
 
