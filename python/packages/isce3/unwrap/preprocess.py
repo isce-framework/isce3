@@ -358,6 +358,7 @@ def project_map_to_radar(cfg, input_data_path, freq):
                     coordinates,
                     output=output_arrays,
                     mode='nearest',
+                    order=0,
                     cval=np.nan,
                     prefilter=False)
 
