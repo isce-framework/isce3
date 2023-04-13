@@ -69,23 +69,24 @@ def create(cfg, workflow_name=None, frequency_group=None,
     if frequency is None:
         frequency = frequency_group
 
+    # if geocode the wrapped inteferogram
     geo_wrapped_igram = (workflow_name == 'insar') and is_geo_wrapped_igram
-    output_posting_name = 'output_posting'
-    if geo_wrapped_igram:
-        output_posting_name = 'wrapped_interferogram'
+
+    output_posting_group = geocode_dict['output_posting']\
+            if not geo_wrapped_igram else geocode_dict['wrapped_interferogram']
 
     if frequency_group is None:
-        spacing_x = geocode_dict[output_posting_name]['x_posting']
-        spacing_y = geocode_dict[output_posting_name]['y_posting']
+        spacing_x = output_posting_group['x_posting']
+        spacing_y = output_posting_group['y_posting']
     else:
         if geo_wrapped_igram:
-            spacing_x = geocode_dict[output_posting_name]['output_posting']\
+            spacing_x = output_posting_group['output_posting']\
                     [frequency_group]['x_posting']
-            spacing_y = geocode_dict[output_posting_name]['output_posting']\
+            spacing_y = output_posting_group['output_posting']\
                     [frequency_group]['y_posting']
         else:
-            spacing_x = geocode_dict[output_posting_name][frequency_group]['x_posting']
-            spacing_y = geocode_dict[output_posting_name][frequency_group]['y_posting']
+            spacing_x = output_posting_group[frequency_group]['x_posting']
+            spacing_y = output_posting_group[frequency_group]['y_posting']
 
     end_x = geocode_dict['bottom_right']['x_abs']
     end_y = geocode_dict['bottom_right']['y_abs']
@@ -215,8 +216,8 @@ def create(cfg, workflow_name=None, frequency_group=None,
 
     # Change the snap if it is to geocode the wrapped interferogram
     if geo_wrapped_igram:
-        x_snap = geocode_dict[output_posting_name]['x_snap']
-        y_snap = geocode_dict[output_posting_name]['y_snap']
+        x_snap = output_posting_group['x_snap']
+        y_snap = output_posting_group['y_snap']
 
     if x_snap is not None or y_snap is not None:
         # check snap values before proceeding

@@ -204,6 +204,7 @@ class RunConfig:
         # make geogrids for each frequency
         geogrids = {}
         wrapped_igram_geogrids = {}
+
         # for each frequency check source RF polarization values and make geogrids
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
         for freq in freq_pols.keys():
