@@ -927,7 +927,7 @@ gunw_datasets:
 
 wrapped_datasets:
     coherence_magnitude: bool(required=False)
-    wrapped_phase: bool(required=False)
+    wrapped_interferogram: bool(required=False)
 
 goff_datasets:
     along_track_offset: bool(required=False)

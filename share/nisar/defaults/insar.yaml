@@ -152,6 +152,9 @@ runconfig:
                         A:
                             x_posting: 20
                             y_posting: 20
+                        B:
+                            x_posting:
+                            y_posting:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:

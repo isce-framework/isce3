@@ -788,9 +788,14 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
     rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    geo_datasets = cfg["processing"]["geocode"]["goff_datasets"] \
-            if input_product_type is InputProduct.ROFF else \
-            cfg["processing"]["geocode"]["gunw_datasets"]
+
+    if input_product_type is InputProduct.ROFF:
+        geo_datasets = cfg["processing"]["geocode"]["goff_datasets"]
+    elif input_product_type is InputProduct.RUNW:
+        geo_datasets = cfg["processing"]["geocode"]["gunw_datasets"]
+    else:
+        # RIFG
+        geo_datasets = cfg["processing"]["geocode"]["wrapped_datasets"]
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
