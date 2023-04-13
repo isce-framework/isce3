@@ -326,3 +326,45 @@ def complex_raster_path_from_h5(slc, freq, pol, hdf5_path, lines_per_block,
         file_path = c32_output_path
 
     return raster_path, file_path
+
+
+def get_cfg_freq_pols(cfg):
+    '''
+    Generator of frequencies and polarizations for offset processing. Special
+    attention given if single co-pol required.
+
+    Parameters
+    ----------
+    cfg: dict
+        RunConfig containing frequencies, polarizations, and fine resample
+        settings
+
+    Yields
+    ------
+    freq: ['A', 'B']
+        Frequency for current
+    pol_list: list
+        List of polarizations associated with current frequency as dictated the
+        the runconfig
+    pol: list
+        List of polarizations associated with current frequency. Maybe single
+        co-pol if single co-pol offset processing flag is True.
+    '''
+    # Extract frequencies and polarizations to process
+    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
+
+    # Loop over items in freq_pols dict
+    for freq, pol_list in freq_pols.items():
+        # Yield for single co-pol for offset
+        if cfg['processing']['process_single_co_pol_offset']:
+            # init empty list to be populated only with co-pol channels
+            pol =[]
+            # For quad-pol data, priority to HH.
+            if 'HH' in pol_list:
+                pol = ['HH']
+            elif 'VV' in pol_list:
+                pol = ['VV']
+            yield freq, pol_list, pol
+        # Yield whatever is pol_list
+        else:
+            yield freq, pol_list, pol_list

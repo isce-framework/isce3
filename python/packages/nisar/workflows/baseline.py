@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 
+import copy
 import os
-import h5py
-import numpy as np
 import pathlib
 import time
-import journal
-from osgeo import gdal, osr
-import isce3
-import copy
 
+import h5py
+import isce3
+import journal
+import numpy as np
 from nisar.products.readers import SLC
-from nisar.workflows.baseline_runconfig import BaselineRunConfig
-from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows import h5_prep
+from nisar.workflows.baseline_runconfig import BaselineRunConfig
+from nisar.workflows.compute_stats import compute_stats_real_data
+from nisar.workflows.yaml_argparse import YamlArgparse
+from osgeo import gdal, osr
 
 
 def read_geo2rdr(scratch):

@@ -73,6 +73,9 @@ runconfig:
 
         #adt section - isce3 + pyre workflow
         processing:
+            # Process single co-pol in offset and rubbersheeting
+            # Setting to True to accommodate production environment
+            process_single_co_pol_offset: bool(required=False)
 
             # Mechanism to select frequencies and polarizations
             input_subset:

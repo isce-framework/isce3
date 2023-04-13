@@ -81,6 +81,9 @@ runconfig:
 
         # ADT section - isce3 + pyre workflow
         processing:
+            # Process single co-pol in offset and rubbersheeting
+            process_single_co_pol_offset: True
+
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:
@@ -278,6 +281,7 @@ runconfig:
                 enable_wet_product:  True
                 enable_dry_product: True
                 enable_comb_product: False
+
 
             geo2rdr:
                 # No topo_path provided. Default to scratch_path.
