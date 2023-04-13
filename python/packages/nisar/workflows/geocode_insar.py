@@ -4,19 +4,19 @@
 collection of functions for NISAR geocode workflow
 """
 
-import numpy as np
 import pathlib
-import shutil
 import time
 
 import h5py
 import journal
 import isce3
-from osgeo import gdal
+import numpy as np
+
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
+from nisar.workflows.helpers import get_cfg_freq_pols
 from nisar.workflows.geocode_insar_runconfig import \
     GeocodeInsarRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -528,7 +528,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
     t_all = time.time()
     with h5py.File(output_hdf5, "a") as dst_h5:
-        for freq, pol_list in freq_pols.items():
+        for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
             radar_grid_slc = slc.getRadarGrid(freq)
             if az_looks > 1 or rg_looks > 1:
                 radar_grid_mlook = radar_grid_slc.multilook(az_looks, rg_looks)
@@ -584,7 +584,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                     if not is_iono_method_sideband:
                         radar_grid_iono = radar_grid
                         iono_sideband_bool = False
-                        if pol_list_iono == None:
+                        if pol_list_iono is None:
                             geocode_iono_bool = False
 
                     if geocode_iono_bool:
@@ -615,7 +615,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                              radar_grid_slc)
 
                    cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
-                                       pol_list, input_hdf5, dst_h5,
+                                       offset_pol_list, input_hdf5, dst_h5,
                                        radar_grid_offset, dem_raster,
                                        block_size)
 
@@ -641,8 +641,8 @@ def cpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
 
                 geocode_obj.data_interpolator = interp_method
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
-                                    pol_list, input_hdf5, dst_h5, radar_grid,
-                                    dem_raster, block_size,
+                                    offset_pol_list, input_hdf5, dst_h5,
+                                    radar_grid, dem_raster, block_size,
                                     off_layer_dict=layer_keys,
                                     is_goff=True)
 
@@ -743,8 +743,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
         get_ds_names = lambda ds_dict, desired: [
             x for x, y in ds_dict.items() if y and x in desired]
 
-        # Per frequency, init required geocode objects
-        for freq, pol_list in freq_pols.items():
+        for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
 
             geogrid = geogrids[freq]
 
@@ -868,8 +867,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                                    lines_per_block,
                                                                    interp_method,
                                                                    invalid_value=np.nan)
-                   gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                       input_hdf5, dst_h5, geocode_offset_obj)
+                   gpu_geocode_rasters(geo_datasets, desired, freq,
+                                       offset_pol_list, input_hdf5, dst_h5,
+                                       geocode_offset_obj),
 
                 desired = ["layover_shadow_mask"]
                 # If needed create geocode object for shadow layover dataset

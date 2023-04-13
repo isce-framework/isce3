@@ -10,7 +10,7 @@ import numpy as np
 import isce3
 from osgeo import gdal
 from nisar.products.readers import SLC
-from nisar.workflows.helpers import copy_raster
+from nisar.workflows.helpers import copy_raster, get_cfg_freq_pols
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.dense_offsets_runconfig import \
     DenseOffsetsRunConfig
@@ -27,11 +27,9 @@ def run(cfg: dict):
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offset_params = cfg['processing']['dense_offsets']
-    lines_per_block = offset_params['lines_per_block']
 
     # Initialize parameters shared between frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
-    sec_slc = SLC(hdf5file=sec_hdf5)
 
     # Get coregistered SLC path
     coregistered_slc_path = pathlib.Path(offset_params['coregistered_slc_path'])
@@ -61,7 +59,7 @@ def run(cfg: dict):
     # Looping over frequencies and polarizations
     t_all = time.time()
 
-    for freq, pol_list in freq_pols.items():
+    for freq, _, pol_list in get_cfg_freq_pols(cfg):
         offset_scratch = scratch_path / f'dense_offsets/freq{freq}'
 
         for pol in pol_list:

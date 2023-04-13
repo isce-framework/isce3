@@ -1,7 +1,7 @@
 import os
 
 import journal
-import nisar.workflows.helpers as helpers
+from nisar.workflows.helpers import check_mode_directory_tree, get_cfg_freq_pols
 from nisar.workflows.runconfig import RunConfig
 
 
@@ -42,8 +42,8 @@ class ResampleSlcRunConfig(RunConfig):
         # Check directory structure and existence of offset files depending on
         # the selected resample type
         if resample_type == 'coarse':
-            helpers.check_mode_directory_tree(offsets_dir, 'geo2rdr',
-                                              frequencies)
+            check_mode_directory_tree(offsets_dir, 'geo2rdr',
+                                      frequencies)
             for freq in frequencies:
                 rg_off = os.path.join(offsets_dir, 'geo2rdr', f'freq{freq}',
                                       'range.off')
@@ -55,8 +55,8 @@ class ResampleSlcRunConfig(RunConfig):
         else:
             # use the HH or VV rubbersheeted offsets to fine
             # resample the secondary SLC. Check for the offsets existence
-            for freq in frequencies:
-                for pol in set.intersection(set(['HH', 'VV']), set(freq_pols[freq])):
+            for freq, _, pol_list in get_cfg_freq_pols(self.cfg):
+                for pol in pol_list:
                     rg_off = os.path.join(offsets_dir,
                                           'rubbersheet_offsets',
                                           f'freq{freq}', pol, 'range.off.vrt')

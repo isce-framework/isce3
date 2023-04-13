@@ -8,7 +8,7 @@ import numpy as np
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.dense_offsets import create_empty_dataset
-from nisar.workflows.helpers import copy_raster
+from nisar.workflows.helpers import copy_raster, get_cfg_freq_pols
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
@@ -36,7 +36,6 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Initialize parameters shared between frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
-    sec_slc = SLC(hdf5file=sec_hdf5)
 
     # Info and error channel
     error_channel = journal.error('offsets_product.run')
@@ -57,8 +56,9 @@ def run(cfg: dict, output_hdf5: str = None):
     # Loop over frequencies and polarizations
     t_all = time.time()
     with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
-        for freq, pol_list in freq_pols.items():
+        for freq, _, pol_list in get_cfg_freq_pols(cfg):
             off_scratch = scratch_path / f'offsets_product/freq{freq}'
+
             for pol in pol_list:
                 out_dir = off_scratch / pol
                 out_dir.mkdir(parents=True, exist_ok=True)

@@ -14,6 +14,7 @@ from osgeo import osr
 import isce3
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
+from nisar.workflows.helpers import get_cfg_freq_pols
 
 
 def get_products_and_paths(cfg: dict) -> (dict, dict):
@@ -490,7 +491,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     ref_path = pcfg['input_file_group']['reference_rslc_file']
     ref_slc = SLC(hdf5file=ref_path)
     with h5py.File(ref_path, 'r', libver='latest', swmr=True) as src_h5:
-        for freq, pol_list in freq_pols.items():
+        for freq, pol_list, offset_pol_list in get_cfg_freq_pols(pcfg):
             # Extract some info from reference RSLC
             slc_path = f'{ref_slc.SwathPath}/frequency{freq}'
             slc_dset = src_h5[f'{slc_path}/{pol_list[0]}']
@@ -629,7 +630,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
             else:
                 set_get_geo_info(dst_h5, offs_path, geogrids[freq])
 
-            for pol in pol_list:
+            # prepare offset products
+            for pol in offset_pol_list:
                 pol_path = f'{offs_path}/{pol}'
                 dst_h5[offs_path].create_group(f'{pol}')
                 off_length = get_off_params(cfg, 'offset_length', is_roff)
@@ -738,8 +740,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                             "This is the same as the spacing between consecutive entries in " \
                             "zeroDopplerTime array"
                     _create_datasets(dst_h5[igram_path], [0], np.float32,
-                                     'zeroDopplerTimeSpacing',
-                                     descr=descr, units="seconds",
+                                     'zeroDopplerTimeSpacing', descr=descr, units="seconds",
                                      data=az_looks * az_spac,
                                      long_name="zero doppler time spacing")
                 elif dst in ['GUNW']:

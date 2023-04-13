@@ -1,9 +1,6 @@
 import warnings
 
-import os
-import h5py
 import journal
-import numpy as np
 
 from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
@@ -83,6 +80,18 @@ class InsarRunConfig(Geo2rdrRunConfig):
                                 'switching off offsets product and run dense offsets')
             self.cfg['processing']['offsets_product']['enabled'] = False
 
+        # If either dense_offsets and offsets_product are enabled and process
+        # single co-pol for offsets enabled, check if co-pol values exist
+        co_pol_set = {'HH', 'VV'}
+        if (self.cfg['processing']['offsets_product']['enabled'] or \
+            self.cfg['processing']['dense_offsets']['enabled']) and \
+                self.cfg['processing']['process_single_co_pol_offset']:
+            for freq, pol_list in freq_pols.items():
+                if not set(pol_list).intersection(co_pol_set):
+                    err_str = f"Frequency {freq} has no co-pol when single co-pol offset mode enabled"
+                    error_channel.log(err_str)
+                    raise ValueError(err_str)
+
         if self.cfg['processing']['dense_offsets']['coregistered_slc_path'] is None:
             self.cfg['processing']['dense_offsets'][
                 'coregistered_slc_path'] = scratch_path
@@ -143,13 +152,13 @@ class InsarRunConfig(Geo2rdrRunConfig):
             # Otherwise check that mask for individual freq/pols are correctly assigned
             for freq, pol_list in freq_pols.items():
                 if freq in mask_options:
-                   for pol in pol_list:
-                       if pol in mask_options[freq]:
-                          mask_file = mask_options[freq][pol]
-                          if mask_file is not None and not os.path.isfile(mask_file):
-                             err_str = f"{mask_file} is invalid; needs to be a file"
-                             error_channel.log(err_str)
-                             raise ValueError(err_str)
+                    for pol in pol_list:
+                        if pol in mask_options[freq]:
+                            mask_file = mask_options[freq][pol]
+                            if mask_file is not None and not os.path.isfile(mask_file):
+                                err_str = f"{mask_file} is invalid; needs to be a file"
+                                error_channel.log(err_str)
+                                raise ValueError(err_str)
 
         # Check filter_type and if not allocated, create a default cfg dictionary
         # filter_type will be present at runtime because is allocated in share/nisar/defaults
