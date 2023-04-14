@@ -1,5 +1,4 @@
 import pathlib
-
 import journal
 import numpy as np
 from osgeo import gdal
@@ -87,7 +86,8 @@ def preprocess_wrapped_igram(igram, coherence, mask=None,
 
     # Identify invalid pixels and store them in a mask.
     # Criteria to identify invalid pixels:
-    # 1) based on user-provided mask
+    # 1-1) Based on user-provided mask
+    # 1-2) Based on water mask
     if mask is not None:
         invalid_mask[mask == 1] = True
     # 2) Based on InSAR correlation values
