@@ -8,13 +8,79 @@ import os
 import h5py
 import journal
 import numpy as np
-
 from osgeo import osr
 
 import isce3
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
+from nisar.types import complex32, to_complex32
 from nisar.workflows.helpers import get_cfg_freq_pols
+
+
+def get_dataset_output_options(cfg: dict):
+    '''
+    Process chunking and compression options for GSLC from runconfing and
+    return as kwargs dict that can be passed to h5py.Dataset.create_dataset
+
+    Parameters
+    ----------
+    cfg: dict
+        Runconfig containing output options
+
+    Returns
+    -------
+    gslc_output_options: dict
+        Dict containing chunking and compression options that can be passed
+        to h5py.Dataset.create_dataset as kwargs
+    '''
+    # start with empty dict and populate as needed
+    gslc_output_options = {}
+
+    output_cfg = cfg['output']
+
+    gslc_output_options['chunks'] = tuple(output_cfg['chunk_size'])
+
+    if output_cfg['compression_enabled']:
+        gslc_output_options['compression'] = 'gzip'
+        gslc_output_options['compression_opts'] = \
+            output_cfg['compression_level']
+        gslc_output_options['shuffle'] = output_cfg['shuffle']
+
+    return gslc_output_options
+
+
+def get_complex_output_dtype(cfg: dict, dst_h5: h5py.File):
+    '''
+    Determine type of complex output
+
+    Parameters
+    ----------
+    cfg: dict
+        Runconfig containing output options
+    dst_h5: h5py.File
+        Where datatype is to be committed
+
+    Returns
+    -------
+    ctype: Union[h5py.h5t.TypeCompoundID, numpy.dtype]
+        Datatype to be passed to h5py.Dataset.create_dataset
+    fill_value: complex32 or complex64
+        Value to initialize raster with
+    '''
+    output_type = cfg['output']['data_type']
+    fill_value = np.nan * (1 + 1j)
+    if output_type == 'complex32':
+        # Creates a new object in the HDF5 file that teaches tools like
+        # GDAL/netCDF about this custom datatype.
+        h5_type = h5py.h5t.py_create(complex32)
+        h5_type.commit(dst_h5['/'].id, np.string_('complex32'))
+        ctype = complex32
+        fill_value = to_complex32(np.array([fill_value]))[0]
+    else:
+        ctype = h5py.h5t.py_create(np.complex64)
+        ctype.commit(dst_h5['/'].id, np.string_('complex64'))
+
+    return ctype, fill_value
 
 
 def get_products_and_paths(cfg: dict) -> (dict, dict):
@@ -435,14 +501,19 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
     common_parent_path = 'science/LSAR'
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
 
-    # Data type
-    ctype = h5py.h5t.py_create(np.complex64)
-    ctype.commit(dst_h5['/'].id, np.string_('complex64'))
+    gslc_output_options = {}
+    # if GSLC, populate output dict with h5py.Group.create_dataset kwargs
+    if dst == 'GSLC':
+        # Get compression and chunking options
+        gslc_output_options = get_dataset_output_options(cfg)
+
+        # Get complex data type and set fill value to kwargs
+        ctype, fill_value = get_complex_output_dtype(cfg, dst_h5)
+        gslc_output_options['fillvalue'] = fill_value
 
     # Create datasets in the ouput hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
-    for freq in freq_pols.keys():
-        pol_list = freq_pols[freq]
+    for freq, pol_list in freq_pols.items():
         shape = (geogrids[freq].length, geogrids[freq].width)
         dst_parent_path = os.path.join(common_parent_path,
                                        f'{dst}/grids/frequency{freq}')
@@ -451,13 +522,15 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
 
         # GSLC specfics datasets
         if dst == 'GSLC':
+            # create datasets for polarizations of current frequency
             for polarization in pol_list:
                 dst_grp = dst_h5[dst_parent_path]
                 long_name = f'geocoded single-look complex image {polarization}'
                 descr = f'Geocoded SLC image ({polarization})'
                 _create_datasets(dst_grp, shape, ctype, polarization,
                                  descr=descr, units='', grids="projection",
-                                 long_name=long_name, yds=yds, xds=xds)
+                                 long_name=long_name, yds=yds, xds=xds,
+                                 **gslc_output_options)
 
         # set GCOV polarization values (diagonal values only)
         elif dst == 'GCOV':
@@ -770,7 +843,6 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                       _create_datasets(dst_h5[pol_path], igram_shape,
                                        np.complex64,
                                        "wrappedInterferogram",
-                                       chunks=(128, 128),
                                        descr=descr, units="radians",
                                        long_name='wrapped phase')
                    elif dst in ['RUNW', 'GUNW']:
@@ -1035,26 +1107,36 @@ def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
 
 
 def _create_datasets(dst_grp, shape, ctype, dataset_name,
-                     chunks=(128, 128), descr=None, units=None, grids=None,
-                     data=None, standard_name=None, long_name=None,
-                     yds=None, xds=None):
+                     chunks=(128, 128), descr=None, units=None,
+                     grids=None, data=None, standard_name=None, long_name=None,
+                     yds=None, xds=None, **kwargs):
+    '''
+    wrapper around h5py.Group.create_dataset that adds nisar.workflows specific
+    attributes to avoid boilerplate calls
+    '''
     if len(shape) == 1:
-        if len(shape) == 1:
-            if ctype == np.string_:
-                ds = dst_grp.create_dataset(dataset_name,
-                                            data=np.string_("         "))
-            else:
-                ds = dst_grp.create_dataset(dataset_name, dtype=ctype, data=data)
+        if ctype == np.string_:
+            ds = dst_grp.create_dataset(dataset_name,
+                                        data=np.string_("         "))
+        else:
+            ds = dst_grp.create_dataset(dataset_name, dtype=ctype, data=data)
     else:
-        # temporary fix for CUDA geocode insar's inability to direct write to
-        # HDF5 with chunks (see https://github-fn.jpl.nasa.gov/isce-3/isce/issues/813 for details)
-        create_with_chunks = (chunks[0] < shape[0] and chunks[1] < shape[1]) and \
-            ('GUNW' not in dst_grp.name)
+        # do not create chunked dataset if any chunk dimension is larger than
+        # dataset or is GUNW (temporary fix for CUDA geocode insar's inability
+        # to direct write to HDF5 with chunks)
+        # details https://github-fn.jpl.nasa.gov/isce-3/isce/issues/813
+        create_with_chunks = (chunks[0] < shape[0] and chunks[1] < shape[1]) \
+            and ('GUNW' not in dst_grp.name)
         if create_with_chunks:
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape,
-                                        chunks=chunks)
+                                        chunks=chunks, **kwargs)
         else:
-            ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape)
+            # pop 'chunks' in case it's in kwargs
+            kwargs.pop('chunks', None)
+
+            # create dataset without chunks
+            ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape,
+                                        **kwargs)
 
     ds.attrs['description'] = np.string_(descr)
 

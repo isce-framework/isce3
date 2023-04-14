@@ -19,6 +19,8 @@ from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
+from nisar.types import (truncate_mantissa, read_c4_dataset_as_c8,
+                         to_complex32)
 
 
 def run(cfg):
@@ -92,7 +94,6 @@ def run(cfg):
                 gslc_datasets.append(dst_h5[dataset_path])
 
             # loop over blocks
-            blk_t_block = time.perf_counter()
             for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
                  block_generator(geo_grid, radar_grid, orbit, dem_raster,
                                  lines_per_block, columns_per_block,
@@ -129,6 +130,15 @@ def run(cfg):
                 # write geocoded blocks to respective HDF5 datasets
                 for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
                                                        gslc_data_blks):
+                    # only convert/modify output if type not 'complex64'
+                    # do nothing if type is 'complex64'
+                    output_type = cfg['output']['data_type']
+                    if output_type == 'complex32':
+                        gslc_data_blk = nisar.types.to_complex32(gslc_data_blk)
+                    if output_type == 'complex64_zero_mantissa':
+                        # use default nonzero_mantissa_bits = 10 below
+                        truncate_mantissa(gslc_data_blk)
+
                     # write to GSLC block HDF5
                     gslc_dataset.write_direct(gslc_data_blk,
                                               dest_sel=geo_blk_slice)

@@ -1,4 +1,5 @@
 import h5py
+import journal
 import numpy as np
 
 complex32 = np.dtype([('r', np.float16), ('i', np.float16)])
@@ -43,7 +44,7 @@ def read_c4_dataset_as_c8(ds: h5py.Dataset, key=np.s_[...]):
 def read_complex_dataset(ds: h5py.Dataset, key=np.s_[...]):
     """
     Read a complex dataset including complex float16 (c4) datasets, in which
-    case, the function `read_c4_dataset_as_c8` is called to avoid 
+    case, the function `read_c4_dataset_as_c8` is called to avoid
     h5py/numpy dtype (TypeError) bugs
 
     Parameters
@@ -80,3 +81,62 @@ class ComplexFloat16Decoder:
 
     def __getitem__(self, key):
         return read_c4_dataset_as_c8(self.dataset, key)
+
+
+def truncate_mantissa(z: np.ndarray, significant_bits=10):
+    '''
+    Zero out bits in mantissa of elements of array in place.
+
+    Parameters
+    ----------
+    z: numpy.array
+        Real or complex array whose mantissas are to be zeroed out
+    nonzero_mantissa_bits: int, optional
+        Number of bits to preserve in mantisa. Defaults to 10.
+    '''
+    error_channel = journal.info("truncate_mantissa")
+
+    # check if z is np.ndarray
+    if not isinstance(z, np.ndarray):
+        err_str = 'argument z is not of type np.ndarray'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    # recurse for complex data
+    if np.iscomplexobj(z):
+        truncate_mantissa(z.real)
+        truncate_mantissa(z.imag)
+        return
+
+    if not issubclass(z.dtype.type, np.floating):
+        err_str = 'argument z is not complex float or float type'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    mant_bits = np.finfo(z.dtype).nmant
+    float_bytes = z.dtype.itemsize
+
+    if significant_bits == mant_bits:
+        return
+
+    if not 0 < significant_bits <= mant_bits:
+        err_str = f'Require 0 < {significant_bits=} <= {mant_bits}'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+
+    # create integer value whose binary representation is one for all bits in
+    # the floating point type.
+    allbits = (1 << (float_bytes * 8)) - 1
+
+    # Construct bit mask by left shifting by nzero_bits and then truncate.
+    # This works because IEEE 754 specifies that bit order is sign, then
+    # exponent, then mantissa.  So we zero out the least significant mantissa
+    # bits when we AND with this mask.
+    nzero_bits = mant_bits - significant_bits
+    bitmask = (allbits << nzero_bits) & allbits
+
+    utype = np.dtype(f"u{float_bytes}")
+    # view as uint type (can not mask against float)
+    u = z.view(utype)
+    # bitwise-and in-place to mask
+    u &= bitmask
