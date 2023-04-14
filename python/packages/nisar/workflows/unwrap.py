@@ -17,6 +17,7 @@ import isce3.unwrap.snaphu as snaphu
 from nisar.workflows import h5_prep
 from nisar.products.readers import SLC
 from isce3.unwrap.preprocess import preprocess_wrapped_igram as preprocess
+from isce3.unwrap.preprocess import project_map_to_radar
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -96,11 +97,30 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 if unwrap_args['preprocess_wrapped_phase']['enabled']:
                     # Extract preprocessing dictionary and open arrays
                     preproc_cfg = unwrap_args['preprocess_wrapped_phase']
+                    filling_enabled = preproc_cfg['filling_enabled']
                     filling_method = preproc_cfg['filling_method']
                     igram = open_raster(igram_path)
                     coherence = open_raster(corr_path)
                     mask = open_raster(preproc_cfg['mask']['mask_path']) if \
                         preproc_cfg['mask']['mask_path'] is not None else None
+
+                    if 'water' in preproc_cfg['mask']['mask_type']:
+                        # water_mask_file is expected to have distance from the boundary of the
+                        # water bodies. The values 0-100 represent the distance from the coastline
+                        # and values from 101-200 represent the distance from inland water boundaries.
+                        water_mask_path = cfg['dynamic_ancillary_file_group']['water_mask_file']
+                        ocean_water_buffer = preproc_cfg['mask']['ocean_water_buffer']
+                        inland_water_buffer = preproc_cfg['mask']['inland_water_buffer']
+                        water_distance = project_map_to_radar(cfg, water_mask_path, freq)
+                        # Since distance from inland water is defined from 101 to 200 in water mask file,
+                        # the value 100 needs to be added.
+                        inland_water_mask = water_distance > inland_water_buffer + 100
+                        ocean_water_mask = (water_distance > ocean_water_buffer) & \
+                                           (water_distance <= 100)
+                        if mask is not None:
+                            mask = mask | inland_water_mask | ocean_water_mask
+                        else:
+                            mask = inland_water_mask | ocean_water_mask
 
                     if filling_method == 'distance_interpolator':
                         distance = preproc_cfg['distance_interpolator']['distance']
@@ -110,6 +130,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                             preproc_cfg['mask']['mask_type'],
                                             preproc_cfg['mask']['outlier_threshold'],
                                             preproc_cfg['mask']['median_filter_size'],
+                                            filling_enabled,
                                             filling_method, distance)
                     # Save filtered/filled wrapped interferogram
                     igram_path = f'{unwrap_scratch}/wrapped_igram.filt'

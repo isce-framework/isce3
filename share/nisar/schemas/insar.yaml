@@ -24,7 +24,10 @@ runconfig:
         dynamic_ancillary_file_group:
             # Digital elevation model
             dem_file: str()
-            # water mask (1: water, 0: non-water)
+            # Water distance map used for water mask in unwrapping and 
+            # 'water mask' field in GUNW product. The water water mask is
+            # to have value from 0-100 (distance from coastline) and from 
+            # 101-200 (distance from inlandwater boundary)
             water_mask_file: str(required=False)
             orbit: include('external_orbit_options', required=False)
 
@@ -250,12 +253,15 @@ connected_components_options:
 preprocess_wrapped_phase_options:
     enabled: bool(required=False)
     mask: include('unwrap_mask_options', required=False)
+    filling_enabled: bool(required=False)
     filling_method: enum('distance_interpolator', required=False)
     distance_interpolator: include('distance_interp_options', required=False)
 
 unwrap_mask_options:
-    mask_type: enum('median_filter', 'coherence', required=False)
+    mask_type: enum('median_filter', 'coherence', 'water', required=False)
     mask_path: str(required=False)
+    ocean_water_buffer: int(min=0, max=100, required=False)
+    inland_water_buffer: int(min=0, max=100, required=False)
     outlier_threshold: num(min=0, required=False)
     median_filter_size: int(min=1, required=False)
 

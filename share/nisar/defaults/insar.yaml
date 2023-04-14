@@ -533,13 +533,20 @@ runconfig:
                         # is ignored if mask_path is provided. mask_type can be:
                         # 1) median_filter: compute mask with median absolute deviation thresholding
                         # 2) coherence: compute mask with normalized InSAR coherence thresholding
+                        # 3) water: extract water areas from water mask file in dynamic ancillary data
                         mask_type: coherence
+                        # buffer from the land. Unit is [km]. Buffer should be integer. 
+                        ocean_water_buffer: 1
+                        inland_water_buffer: 1
                         # Threshold for invalid pixels. If mask_type is coherence (median_filter)
                         # values below (above) threshold are classified as outliers
                         outlier_threshold: 0.5
                         # Size of median filter kernel (same shape in range/azimuth). Only used if
                         # "mask_type" is "median_filter"
                         median_filter_size: 25
+                    # Enable/disable filling invalid values. If disabled, invalid values
+                    # are replaced with zero. 
+                    filling_enabled: False
                     # Algorithm to fill invalid wrapped igram pixels
                     filling_method: distance_interpolator
                     # Distance interpolator options based on Chen et al. 2015
