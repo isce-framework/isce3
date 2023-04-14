@@ -1080,7 +1080,7 @@ if __name__ == "__main__":
     geocode_insar_runconfig = GeocodeInsarRunConfig(args)
 
     # prepare the HDF5
-    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'GUNW_STANDALONE'
+    geocode_insar_runconfig.cfg['primary_executable']['product_type'] = 'GUNW'
     out_paths = h5_prep.run(geocode_insar_runconfig.cfg)
     runw_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'runw_path']
