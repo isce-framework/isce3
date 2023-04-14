@@ -1635,8 +1635,10 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
 
     Parameters
      ----------
-     solid_earth_tides: tuple
-        solid earth tides along the los and azimuth direction (radians)
+      los_solid_earth_tides_datacube: np.ndarray
+        solid earth tides along the los direction
+      azimuth_solid_earth_tides_datacube: np.ndarray
+        solid earth tides along the azimuth direction
       gunw_hdf5: str
          GUNW HDF5 file where SET will be written
 
@@ -1645,9 +1647,9 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
        None
     '''
 
-    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
+    with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as hdf:
 
-        radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
+        radar_grid = hdf.get('science/LSAR/GUNW/metadata/radarGrid')
 
         # Dataset description
         descrs = ["InSAR phase datacube due to Solid Earth tides along line of sight direction",
@@ -1656,21 +1658,20 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
         # Product names
         product_names = ['losSolidEarthTidesPhase', 'alongTrackSolidEarthTidesPhase']
 
-        for index, product_name in enumerate(product_names):
+        for  product_name, descr, solid_earth_tides_product in zip(product_names,
+                                                                   descrs,
+                                                                   solid_earth_tides):
 
             # If there is no los solid earth tides phasey product, then createa new one
             if product_name not in radar_grid:
                 _create_datasets(radar_grid, [0], np.float64,
-                                 product_name, descr=descrs[index],
+                                 product_name, descr=descr,
                                  units='radians',
-                                 data=solid_earth_tides[index].astype(np.float64))
+                                 data=solid_earth_tides_product.astype(np.float64))
 
             # If there exists the product, overwrite the old one
             else:
                 solid_earth_tides_set = radar_grid[product_name]
-                solid_earth_tides_set[:] = solid_earth_tides[index].astype(
+                solid_earth_tides_set[:] = solid_earth_tides_product.astype(
                     np.float64)
-
-        f.close()
-
 
