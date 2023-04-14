@@ -7,7 +7,7 @@ from osgeo import gdal
 from scipy.ndimage import median_filter, map_coordinates
 
 
-def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
+def preprocess_wrapped_igram(igram, coherence, mask=None,
                              mask_type='coherence', threshold=0.5,
                              filter_size=9,
                              filling_enabled=True,
@@ -30,8 +30,6 @@ def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
         Wrapped interferogram to pre-process
     coherence: numpy.ndarray
         Normalized InSAR coherence
-    water_mask: numpy.ndarray
-        Binary water mask (water:1, nonwater:0)
     mask: numpy.ndarray or None
         Optional binary mask (1: invalid; 0: valid) to identify invalid pixels.
         If a mask is provided, data-driven masking is not performed (other
@@ -100,9 +98,6 @@ def preprocess_wrapped_igram(igram, coherence, water_mask, mask=None,
         igram_pha = np.angle(igram)
         mad = median_absolute_deviation(igram_pha, filter_size)
         invalid_mask[mad > threshold] = True
-    # 4) Based on water mask
-    elif mask_type == 'water':
-        invalid_mask[water_mask==1] = True
     # Not a valid algorithm to mask pixels
     else:
         err_str = f"{mask_type} is an invalid selection for mask_type"

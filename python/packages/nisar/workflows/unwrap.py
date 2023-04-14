@@ -111,20 +111,20 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         ocean_water_buffer = preproc_cfg['mask']['ocean_water_buffer']
                         inland_water_buffer = preproc_cfg['mask']['inland_water_buffer']
                         water_distance = project_map_to_radar(cfg, water_mask_path, freq)
-                        # Since distance from inland water is defined from 101 to 200 in water mask file, 
+                        # Since distance from inland water is defined from 101 to 200 in water mask file,
                         # the value 100 needs to be added.
                         inland_water_mask = water_distance > inland_water_buffer + 100
                         ocean_water_mask = (water_distance > ocean_water_buffer) & \
                                            (water_distance <= 100)
-                        water_mask = inland_water_mask | ocean_water_mask
-                    else:
-                        water_mask = None
+                        if mask is not None:
+                            mask = mask | inland_water_mask | ocean_water_mask
+                        else:
+                            mask = inland_water_mask | ocean_water_mask
 
                     if filling_method == 'distance_interpolator':
                         distance = preproc_cfg['distance_interpolator']['distance']
 
                     igram_filt = preprocess(igram, coherence,
-                                            water_mask,
                                             mask,
                                             preproc_cfg['mask']['mask_type'],
                                             preproc_cfg['mask']['outlier_threshold'],
