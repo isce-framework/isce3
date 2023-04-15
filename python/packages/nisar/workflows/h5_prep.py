@@ -545,6 +545,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     common_path = 'science/LSAR'
     freq_pols = cfg['input_subset']['list_of_frequencies']
     geogrids =cfg['geocode']['geogrids']
+    wrapped_igram_geogrids = cfg['geocode']['wrapped_igram_geogrids']
     iono_args = cfg['ionosphere_phase_correction']
     iono_method = iono_args['spectral_diversity']
     freq_pols_iono = iono_args['list_of_frequencies']
@@ -779,6 +780,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
             grids_val = 'None'
             if dst in ['GUNW']:
                 igram_shape = (geogrids[freq].length, geogrids[freq].width)
+                wrapped_igram_shape = (wrapped_igram_geogrids[freq].length,
+                                       wrapped_igram_geogrids[freq].width)
                 grids_val = 'projection'
 
             if dst in ['RIFG', 'RUNW', 'GUNW']:
@@ -817,6 +820,11 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                      data=az_looks * az_spac,
                                      long_name="zero doppler time spacing")
                 elif dst in ['GUNW']:
+                    # Create the group for the wrapped interferogram
+                    wrapped_igram_path = f'{freq_path}/wrappedInterferogram'
+                    dst_h5[freq_path].create_group('wrappedInterferogram')
+                    set_get_geo_info(dst_h5, wrapped_igram_path, wrapped_igram_geogrids[freq])
+
                     set_get_geo_info(dst_h5, igram_path, geogrids[freq])
                     # Generate the layover/shadow and water masks
                     descr = f"Layover Shadow mask for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
@@ -838,6 +846,26 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                     'coherenceMagnitude', descr=descr, units=" ",
                                     grids=grids_val,
                                     long_name='coherence magnitude')
+
+                   if dst in ['GUNW']:
+                       wrapped_igram_pol_path = f'{wrapped_igram_path}/{pol}'
+                       dst_h5[wrapped_igram_path].create_group(f'{pol}')
+
+                       # Wrapped Interferogram Coherence
+                       descr = f"Coherence magnitude between {pol} layers"
+                       _create_datasets(dst_h5[wrapped_igram_pol_path], wrapped_igram_shape, np.float32,
+                                        'coherenceMagnitude', descr=descr, units=" ",
+                                        grids=grids_val,
+                                        long_name='coherence magnitude')
+
+                       descr = f"Interferogram between {pol} layers"
+                       _create_datasets(dst_h5[wrapped_igram_pol_path], wrapped_igram_shape,
+                                        np.complex64,
+                                        "wrappedInterferogram",
+                                        chunks=(128, 128),
+                                        descr=descr, units="radians",
+                                        long_name='complex wrapped phase')
+
                    if dst in ['RIFG']:
                       descr = f"Interferogram between {pol} layers"
                       _create_datasets(dst_h5[pol_path], igram_shape,

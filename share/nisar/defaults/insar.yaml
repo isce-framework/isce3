@@ -111,6 +111,9 @@ runconfig:
                 runw_path:
                 # Optional - path to ROFF product to geocode
                 roff_path:
+                # Optional - path to RIFG product to geocode
+                rifg_path:
+
                 # OPTIONAL - To control output grid in same units as output EPSG
                 x_snap:
 
@@ -131,6 +134,27 @@ runconfig:
                     B:
                         x_posting:
                         y_posting:
+
+                # OPTIONAL - Spacing between pixels for wrapped interferogram,
+                # in same units as output EPSG.
+                # If not provided, spacing values will be taken from provided DEM.
+                # All postings/spacings must be > 0.
+                # ISCE3 output rasters always have North-up West-left orientation
+                wrapped_interferogram:
+                    # Default interpolation method is SINC method
+                    interp_method: BILINEAR
+                    # OPTIONAL - To control output grid in same units as output EPSG
+                    x_snap:
+                    # OPTIONAL - To control output grid in same units as output EPSG
+                    y_snap:
+
+                    output_posting:
+                        A:
+                            x_posting: 20
+                            y_posting: 20
+                        B:
+                            x_posting:
+                            y_posting:
 
                 # OPTIONAL - Can control with absolute values or with snap values
                 top_left:

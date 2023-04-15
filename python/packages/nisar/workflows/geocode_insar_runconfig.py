@@ -1,8 +1,65 @@
 import os
+import warnings
 
 import journal
 import nisar.workflows.helpers as helpers
 from nisar.workflows.runconfig import RunConfig
+
+
+def geocode_insar_cfg_check(cfg):
+    '''
+    Check the geocode_insar runconfig configuration options
+
+    Parameters
+     ----------
+     cfg: dict
+        configuration dictionary
+
+     Returns
+     -------
+     None
+    '''
+    if 'interp_method' not in cfg['processing']['geocode']:
+        cfg['processing']['geocode']['interp_method'] = 'BILINEAR'
+
+    # create empty dict if geocode_datasets not in geocode
+    for datasets in ['gunw_datasets', 'goff_datasets', 'wrapped_datasets']:
+        if datasets not in cfg['processing']['geocode']:
+            cfg['processing']['geocode'][datasets] = {}
+
+    # Initialize GUNW and GOFF names
+    gunw_datasets = ['connected_components', 'coherence_magnitude',
+                     'ionosphere_phase_screen',
+                     'ionosphere_phase_screen_uncertainty',
+                     'unwrapped_phase', 'along_track_offset',
+                     'slant_range_offset', 'layover_shadow_mask']
+    goff_datasets = ['along_track_offset', 'snr',
+                     'along_track_offset_variance',
+                     'correlation_surface_peak', 'cross_offset_variance',
+                     'slant_range_offset', 'slant_range_offset_variance']
+    wrapped_datasets = ['coherence_magnitude', 'wrapped_interferogram']
+
+    # insert both geocode datasets in dict keyed on datasets name
+    geocode_datasets = {'gunw_datasets': gunw_datasets,
+                        'goff_datasets': goff_datasets,
+                        'wrapped_datasets': wrapped_datasets}
+    for dataset_group in geocode_datasets:
+        for dataset in geocode_datasets[dataset_group]:
+            if dataset not in cfg['processing']['geocode'][dataset_group]:
+                cfg['processing']['geocode'][dataset_group][dataset] = True
+
+    # check the interpolation method for GPU
+    if cfg['worker']['gpu_enabled']:
+        igram_interp_method =  cfg['processing']['geocode']\
+                ['wrapped_interferogram']['interp_method']
+
+        if igram_interp_method == 'SINC':
+            data_interp_method = cfg['processing']['geocode']['interp_method']
+            warns_msg = 'SINC interplation method is not supported by GPU,' +\
+                    f'the {data_interp_method} will be applied'
+            cfg['processing']['geocode']\
+                     ['wrapped_interferogram']['interp_method'] = data_interp_method
+            warnings.warn(warns_msg)
 
 
 class GeocodeInsarRunConfig(RunConfig):
@@ -37,32 +94,8 @@ class GeocodeInsarRunConfig(RunConfig):
         freq_pols = self.cfg['processing']['input_subset']['list_of_frequencies']
         helpers.check_hdf5_freq_pols(runw_path, freq_pols)
 
-        # create empty dict if geocode_datasets not in geocode
-        for datasets in ['gunw_datasets', 'goff_datasets']:
-            if datasets not in self.cfg['processing']['geocode']:
-                self.cfg['processing']['geocode'][datasets] = {}
-
-        # Initialize GUNW and GOFF names
-        gunw_datasets = ['connected_components', 'coherence_magnitude',
-                         'ionosphere_phase_screen', 
-                         'ionosphere_phase_screen_uncertainty',
-                         'unwrapped_phase', 'along_track_offset',
-                         'slant_range_offset', 'layover_shadow_mask']
-        goff_datasets = ['along_track_offset', 'snr',
-                         'along_track_offset_variance',
-                         'correlation_surface_peak',
-                         'cross_offset_variance',
-                         'slant_range_offset',
-                         'slant_range_offset_variance']
-        # insert both geocode datasets in dict keyed on datasets name
-        geocode_datasets = {'gunw_datasets': gunw_datasets,
-                            'goff_datasets': goff_datasets}
-        for dataset_group in geocode_datasets:
-            for dataset in geocode_datasets[dataset_group]:
-                if dataset not in self.cfg['processing']['geocode'][
-                   dataset_group]:
-                   self.cfg['processing']['geocode'][dataset_group][
-                            dataset] = True
+        # Check geocode_insar runconfig values
+        geocode_insar_cfg_check(self.cfg)
 
         # multilooks valid?
         az_looks = self.cfg['processing']['crossmul']['azimuth_looks']
@@ -76,4 +109,3 @@ class GeocodeInsarRunConfig(RunConfig):
             err_str = f"range looks = {rg_looks} not an odd integer."
             error_channel.log(err_str)
             raise ValueError(err_str)
-

@@ -874,6 +874,9 @@ geocode_options:
     # Required for geocode standalone of ROFF
     roff_path: str(required=False)
 
+    # Required for geocode standalone of RIFG
+    rifg_path: str(required=False)
+
     # DEM interpolation method. BILINEAR is default.
     interp_method: enum('BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
 
@@ -888,13 +891,11 @@ geocode_options:
 
     # Output posting in same units as output EPSG.
     # If not provided, spacing values will be taken from provided DEM.
-    output_posting:
-        A:
-            x_posting: num(min=0, required=False)
-            y_posting: num(min=0, required=False)
-        B:
-            x_posting: num(min=0, required=False)
-            y_posting: num(min=0, required=False)
+    output_posting: include('output_posting_options', required=False)
+
+    # Wrapped Interferogram output posting in same units as output EPSG.
+    # If not provided, spacing values will be taken from provided DEM.
+    wrapped_interferogram: include('wrapped_interferogram_options',required=False)
 
     # To control output grid in same units as output EPSG
     x_snap: num(min=0, required=False)
@@ -935,6 +936,20 @@ goff_datasets:
     slant_range_offset: bool(required=False)
     slant_range_offset_variance: bool(required=False)
     snr: bool(required=False)
+
+wrapped_interferogram_options:
+    interp_method: enum('SINC', 'BILINEAR', 'BICUBIC', 'NEAREST', 'BIQUINTIC', required=False)
+    x_snap: num(min=0, required=False)
+    y_snap: num(min=0, required=False)
+    output_posting: include('output_posting_options', required=False)
+
+output_posting_options:
+    A: include('posting_options', required=False)
+    B: include('posting_options', required=False)
+
+posting_options:
+    x_posting: num(min=0, required=False)
+    y_posting: num(min=0, required=False)
 
 worker_options:
     # Enable/disable internet connection (e.g. for download DEM)

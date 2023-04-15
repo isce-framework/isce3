@@ -8,6 +8,7 @@ from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
                              split_spectrum, unwrap, ionosphere, baseline,
                              troposphere, solid_earth_tides)
 
+from nisar.workflows.geocode_insar import InputProduct
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -76,17 +77,21 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         ionosphere.run(cfg, out_paths['RUNW'])
 
     if run_steps['geocode'] and 'GUNW' in out_paths:
-        geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'])
+        # Geocode RIFG
+        geocode_insar.run(cfg, out_paths['RIFG'], out_paths['GUNW'], InputProduct.RIFG)
+        # Geocode RUNW
+        geocode_insar.run(cfg, out_paths['RUNW'], out_paths['GUNW'], InputProduct.RUNW)
+
+    if run_steps['geocode'] and 'GOFF' in out_paths:
+        # Geocode ROFF
+        geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], InputProduct.ROFF)
 
     if 'GUNW' in out_paths and run_steps['troposphere'] and \
             cfg['processing']['troposphere_delay']['enabled']:
         troposphere.run(cfg, out_paths['GUNW'])
-
+        
     if 'GUNW' in out_paths and run_steps['solid_earth_tides']:
         solid_earth_tides.run(cfg, out_paths['GUNW'])
-
-    if run_steps['geocode'] and 'GOFF' in out_paths:
-        geocode_insar.run(cfg, out_paths['ROFF'], out_paths['GOFF'], is_goff=True)
 
     if run_steps['baseline']:
         baseline.run(cfg, out_paths)
