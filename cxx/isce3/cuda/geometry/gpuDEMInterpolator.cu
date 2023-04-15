@@ -35,6 +35,8 @@ gpuDEMInterpolator(const isce3::geometry::DEMInterpolator & demInterp) :
         // copy DEM data
         checkCudaErrors(
                 cudaMemcpy(_dem, demInterp.data(), bytes, cudaMemcpyHostToDevice));
+
+        initProjInterp();
     }
 }
 
@@ -58,6 +60,7 @@ isce3::cuda::geometry::gpuDEMInterpolator::
     // Only owner of memory clears it
     if (_owner and _haveRaster) {
         checkCudaErrors(cudaFree(_dem));
+        finalizeProjInterp();
     }
 }
 

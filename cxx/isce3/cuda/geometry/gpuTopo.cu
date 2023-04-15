@@ -273,9 +273,6 @@ runGPUTopo(const isce3::core::Ellipsoid & ellipsoid,
     checkCudaErrors(cudaMalloc(&projOutput_d, sizeof(isce3::cuda::core::ProjectionBase **)));
     createProjection<<<1, 1>>>(projOutput_d, epsgOut);
 
-    // DEM interpolator initializes its projection and interpolator
-    gpu_demInterp.initProjInterp();
-
     // Allocate integer for storing convergence results
     unsigned int * totalconv_d;
     checkCudaErrors(cudaMalloc(&totalconv_d, sizeof(unsigned int)));
@@ -305,7 +302,6 @@ runGPUTopo(const isce3::core::Ellipsoid & ellipsoid,
                                cudaMemcpyDeviceToHost));
 
     // Delete projection pointer on device
-    gpu_demInterp.finalizeProjInterp();
     deleteProjection<<<1, 1>>>(projOutput_d);
 
     // Free projection pointer and convergence count

@@ -25,7 +25,6 @@
 #include <isce3/cuda/except/Error.h>
 #include <isce3/cuda/geometry/gpuDEMInterpolator.h>
 #include <isce3/cuda/geometry/gpuGeometry.h>
-#include <isce3/error/ErrorCode.h>
 #include <isce3/focus/BistaticDelay.h>
 
 using namespace isce3::core;
@@ -431,6 +430,13 @@ __global__ void sumCoherentBatch(
     const int kstart = kstart_in[tid];
     const int kstop = kstop_in[tid];
 
+    // set bad data to NaN
+    if (std::isnan(x[0])) {
+        const auto nan = std::nanf("geometry");
+        out[tid] = thrust::complex<float>(nan, nan);
+        return;
+    }
+
     // get range sampling window start, spacing, number of samples
     const double tau0 = sampling_window.first();
     const double dtau = sampling_window.spacing();
@@ -468,14 +474,15 @@ __global__ void sumCoherentBatch(
 } // namespace
 
 template<class Kernel>
-void backproject(std::complex<float>* out,
-                 const DeviceRadarGeometry& out_geometry,
-                 const std::complex<float>* in,
-                 const DeviceRadarGeometry& in_geometry,
-                 DeviceDEMInterpolator& dem, double fc, double ds,
-                 const Kernel& kernel, DryTroposphereModel dry_tropo_model,
-                 const Rdr2GeoParams& rdr2geo_params,
-                 const Geo2RdrParams& geo2rdr_params, int batch)
+ErrorCode backproject(std::complex<float>* out,
+                      const DeviceRadarGeometry& out_geometry,
+                      const std::complex<float>* in,
+                      const DeviceRadarGeometry& in_geometry,
+                      DeviceDEMInterpolator& dem, double fc, double ds,
+                      const Kernel& kernel, DryTroposphereModel dry_tropo_model,
+                      const Rdr2GeoParams& rdr2geo_params,
+                      const Geo2RdrParams& geo2rdr_params, int batch,
+                      float* height)
 {
     // XXX input reference epoch must match output reference epoch
     if (out_geometry.referenceEpoch() != in_geometry.referenceEpoch()) {
@@ -543,6 +550,14 @@ void backproject(std::complex<float>* out,
 
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    if (height != nullptr) {
+        thrust::device_vector<float> d_height(out_grid_size);
+        thrust::transform(llh.begin(), llh.end(), d_height.begin(),
+                [] __device__ (const Vec3& x) { return (float)x[2]; });
+        checkCudaErrors(cudaMemcpy(height, d_height.data().get(),
+                out_grid_size * sizeof(float), cudaMemcpyDeviceToHost));
     }
 
     // run geo2rdr using input geometry to estimate the center of the coherent
@@ -685,61 +700,65 @@ void backproject(std::complex<float>* out,
                                out_grid_size * sizeof(std::complex<float>),
                                cudaMemcpyDeviceToHost));
 
-    // check for errors from device code
-    if (errc[0] != ErrorCode::Success) {
-        std::string errmsg = isce3::error::getErrorString(errc[0]);
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
-    }
+    return errc[0];
 }
 
-void backproject(std::complex<float>* out,
-                 const HostRadarGeometry& out_geometry,
-                 const std::complex<float>* in,
-                 const HostRadarGeometry& in_geometry,
-                 const HostDEMInterpolator& dem, double fc, double ds,
-                 const Kernel<float>& kernel,
-                 DryTroposphereModel dry_tropo_model,
-                 const Rdr2GeoParams& rdr2geo_params,
-                 const Geo2RdrParams& geo2rdr_params, int batch)
+ErrorCode backproject(std::complex<float>* out,
+                      const HostRadarGeometry& out_geometry,
+                      const std::complex<float>* in,
+                      const HostRadarGeometry& in_geometry,
+                      const HostDEMInterpolator& dem, double fc, double ds,
+                      const Kernel<float>& kernel,
+                      DryTroposphereModel dry_tropo_model,
+                      const Rdr2GeoParams& rdr2geo_params,
+                      const Geo2RdrParams& geo2rdr_params, int batch,
+                      float* height)
 {
     // copy inputs to device
     const DeviceRadarGeometry d_out_geometry(out_geometry);
     const DeviceRadarGeometry d_in_geometry(in_geometry);
     DeviceDEMInterpolator d_dem(dem);
+    ErrorCode ec;
 
     if (typeid(kernel) == typeid(HostBartlettKernel<float>)) {
         const DeviceBartlettKernel<float> d_kernel(
                 dynamic_cast<const HostBartlettKernel<float>&>(kernel));
-        backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
-                    d_kernel, dry_tropo_model, rdr2geo_params, geo2rdr_params);
+        ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
+                         d_kernel, dry_tropo_model, rdr2geo_params,
+                         geo2rdr_params, batch, height);
     }
     else if (typeid(kernel) == typeid(HostLinearKernel<float>)) {
         const DeviceLinearKernel<float> d_kernel(
                 dynamic_cast<const HostLinearKernel<float>&>(kernel));
-        backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
-                    d_kernel, dry_tropo_model, rdr2geo_params, geo2rdr_params);
+        ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
+                         d_kernel, dry_tropo_model, rdr2geo_params,
+                         geo2rdr_params, batch, height);
     }
     else if (typeid(kernel) == typeid(HostKnabKernel<float>)) {
         const DeviceKnabKernel<float> d_kernel(
                 dynamic_cast<const HostKnabKernel<float>&>(kernel));
-        backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
-                    d_kernel, dry_tropo_model, rdr2geo_params, geo2rdr_params);
+        ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
+                         d_kernel, dry_tropo_model, rdr2geo_params,
+                         geo2rdr_params, batch, height);
     }
     else if (typeid(kernel) == typeid(HostTabulatedKernel<float>)) {
         const DeviceTabulatedKernel<float> d_kernel(
                 dynamic_cast<const HostTabulatedKernel<float>&>(kernel));
-        backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
-                    d_kernel, dry_tropo_model, rdr2geo_params, geo2rdr_params);
+        ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
+                         d_kernel, dry_tropo_model, rdr2geo_params,
+                         geo2rdr_params, batch, height);
     }
     else if (typeid(kernel) == typeid(HostChebyKernel<float>)) {
         const DeviceChebyKernel<float> d_kernel(
                 dynamic_cast<const HostChebyKernel<float>&>(kernel));
-        backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
-                    d_kernel, dry_tropo_model, rdr2geo_params, geo2rdr_params);
+        ec = backproject(out, d_out_geometry, in, d_in_geometry, d_dem, fc, ds,
+                         d_kernel, dry_tropo_model, rdr2geo_params,
+                         geo2rdr_params, batch, height);
     }
     else {
         throw isce3::except::RuntimeError(ISCE_SRCINFO(), "not implemented");
     }
+    return ec;
 }
 
 }}} // namespace isce3::cuda::focus

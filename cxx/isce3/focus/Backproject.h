@@ -6,6 +6,7 @@
 
 #include <complex>
 
+#include <isce3/error/ErrorCode.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/geometry/detail/Rdr2Geo.h>
 
@@ -28,8 +29,13 @@ namespace focus {
  * \param[in]  dry_tropo_model Dry troposphere path delay model
  * \param[in]  r2g_params      rdr2geo configuration parameters
  * \param[in]  g2r_params      geo2rdr configuration parameters
+ * \param[out] height          Height of each pixel in meters above ellipsoid
+ *
+ * \returns Non-zero error code if geometry fails to converge for any pixel,
+ *          and the values for these pixels are set to NaN.
  */
-void backproject(std::complex<float>* out,
+isce3::error::ErrorCode
+backproject(std::complex<float>* out,
         const isce3::container::RadarGeometry& out_geometry,
         const std::complex<float>* in,
         const isce3::container::RadarGeometry& in_geometry,
@@ -37,7 +43,8 @@ void backproject(std::complex<float>* out,
         const isce3::core::Kernel<float>& kernel,
         DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
         const isce3::geometry::detail::Rdr2GeoParams& r2g_params = {},
-        const isce3::geometry::detail::Geo2RdrParams& g2r_params = {});
+        const isce3::geometry::detail::Geo2RdrParams& g2r_params = {},
+        float* height = nullptr);
 
 } // namespace focus
 } // namespace isce3

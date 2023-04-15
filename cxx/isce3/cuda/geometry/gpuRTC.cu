@@ -337,8 +337,6 @@ void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& de
     const size_t xmax = dem_interp.width() * upsample_factor;
     const size_t ymax = dem_interp.length() * upsample_factor;
 
-    dem_interp.initProjInterp();
-
 #define BLOCK_X 16
 #define BLOCK_Y 16
             static_assert(BLOCK_X * BLOCK_Y <= 256,

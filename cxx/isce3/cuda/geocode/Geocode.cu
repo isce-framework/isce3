@@ -273,7 +273,6 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number)
             _dem_raster, _geogrid, _line_start, _geo_block_length,
             _geogrid.width(), dem_margin_in_pixels, _dem_interp_method);
     isce3::cuda::geometry::gpuDEMInterpolator dev_dem_interp(host_dem_interp);
-    dev_dem_interp.initProjInterp();
 
     // copy RadarGeometry to device
     isce3::cuda::container::RadarGeometry dev_rdr_geom(_rdr_geom);

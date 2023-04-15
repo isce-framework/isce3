@@ -1,6 +1,8 @@
 #include "Backproject.h"
 
+#include <optional>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Kernels.h>
@@ -17,6 +19,7 @@ using namespace isce3::focus;
 
 using isce3::container::RadarGeometry;
 using isce3::core::Kernel;
+using isce3::error::ErrorCode;
 using isce3::except::InvalidArgument;
 using isce3::geometry::DEMInterpolator;
 
@@ -33,7 +36,8 @@ void addbinding_backproject(py::module& m)
                 const Kernel<float>& kernel,
                 const std::string& dry_tropo_model,
                 py::dict rdr2geo_params,
-                py::dict geo2rdr_params) {
+                py::dict geo2rdr_params,
+                std::optional<py::array_t<float, py::array::c_style>> height) {
 
             if (out.ndim() != 2) {
                 throw InvalidArgument(ISCE_SRCINFO(), "output array must be 2-D");
@@ -61,6 +65,19 @@ void addbinding_backproject(py::module& m)
 
             std::complex<float>* out_data = out.mutable_data();
             const std::complex<float>* in_data = in.data();
+            float* height_data = nullptr;
+
+            if (height.has_value()) {
+                auto h = height.value();
+                if (h.shape()[0] != out_geometry.gridLength() or
+                    h.shape()[1] != out_geometry.gridWidth()) {
+
+                    std::string errmsg = "height array shape must match output "
+                        "radar grid shape";
+                    throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+                }
+                height_data = h.mutable_data();
+            }
 
             DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
 
@@ -86,11 +103,15 @@ void addbinding_backproject(py::module& m)
                 g2rparams.delta_range = py::float_(geo2rdr_params["delta_range"]);
             }
 
+            ErrorCode err;
             {
                 py::gil_scoped_release release;
-                backproject(out_data, out_geometry, in_data, in_geometry, dem,
-                    fc, ds, kernel, atm, r2gparams, g2rparams);
+                err = backproject(out_data, out_geometry, in_data, in_geometry,
+                    dem, fc, ds, kernel, atm, r2gparams, g2rparams,
+                    height_data);
             }
+            // TODO bind ErrorCode class.  For now return nonzero on failure.
+            return err != ErrorCode::Success;
             },
             R"(
                 Focus in azimuth via time-domain backprojection.
@@ -105,5 +126,6 @@ void addbinding_backproject(py::module& m)
             py::arg("kernel"),
             py::arg("dry_tropo_model") = "tsx",
             py::arg("rdr2geo_params") = py::dict(),
-            py::arg("geo2rdr_params") = py::dict());
+            py::arg("geo2rdr_params") = py::dict(),
+            py::arg("height") = py::none());
 }

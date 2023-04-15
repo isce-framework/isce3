@@ -222,6 +222,9 @@ runconfig:
       # Whether to delete scratch files.  Default is True.
       delete_tempfiles: bool(required=False)
 
+      # Dump height layer to temp file for debug purposes.  Default=False
+      debug_dump_height: bool(required=False)
+
       # Processing stage switches, mostly for debug.
       # Any missing stages assumed True
       is_enabled:

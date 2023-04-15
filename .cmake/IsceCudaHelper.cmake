@@ -86,6 +86,8 @@ function(set_cuda_arch_flags TARGET_ARCHS)
         # add gencode flag
         set(FLAGS "${FLAGS} -gencode=arch=compute_${ARCH},code=sm_${ARCH}")
     endforeach()
+    # enable lambdas in device code
+    set(FLAGS "${FLAGS} --extended-lambda")
     # strip leading whitespace
     string(STRIP "${FLAGS}" FLAGS)
 

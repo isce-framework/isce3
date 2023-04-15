@@ -18,6 +18,7 @@
 
 using namespace isce3::core;
 using namespace isce3::geometry;
+using isce3::error::ErrorCode;
 
 using isce3::container::RadarGeometry;
 
@@ -59,12 +60,14 @@ inline std::complex<float> sumCoherent(const std::complex<float>* data,
     return std::complex<float>(sum);
 }
 
-void backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
+ErrorCode
+backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
         const std::complex<float>* in, const RadarGeometry& in_geometry,
         const DEMInterpolator& dem, double fc, double ds,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
         const isce3::geometry::detail::Rdr2GeoParams& r2g_params,
-        const isce3::geometry::detail::Geo2RdrParams& g2r_params)
+        const isce3::geometry::detail::Geo2RdrParams& g2r_params,
+        float* height)
 {
     static constexpr double c = isce3::core::speed_of_light;
     static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
@@ -134,9 +137,15 @@ void backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
                         wvl, out_geometry.lookSide(), r2g_params.threshold,
                         r2g_params.maxiter, r2g_params.extraiter);
 
+                if (height != nullptr) {
+                    height[j * out_geometry.gridWidth() + i] = llh[2];
+                }
                 if (not converged) {
                     all_converged = false;
                     out[j * out_geometry.gridWidth() + i] = {nan, nan};
+                    if (height != nullptr) {
+                        height[j * out_geometry.gridWidth() + i] = nan;
+                    }
                     continue;
                 }
             }
@@ -198,10 +207,9 @@ void backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
     }
 
     if (not all_converged) {
-        std::string errmsg = "rdr2geo/geo2rdr failed to converge for one or "
-                             "more targets";
-        throw isce3::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        return ErrorCode::FailedToConverge;
     }
+    return ErrorCode::Success;
 }
 
 } // namespace focus

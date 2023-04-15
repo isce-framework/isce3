@@ -204,9 +204,6 @@ int rdr2geo_h(const isce3::core::Pixel& pixel, const Basis& basis,
     // Copy initial values
     cudaMemcpy(llh_d, llh.data(), 3 * sizeof(double), cudaMemcpyHostToDevice);
 
-    // DEM interpolator initializes its projection and interpolator
-    gpu_demInterp.initProjInterp();
-
     // Run the rdr2geo on the GPU
     dim3 grid(1), block(1);
     rdr2geo_d<<<grid, block>>>(pixel, basis, pos, vel, ellipsoid, gpu_demInterp,
@@ -215,9 +212,6 @@ int rdr2geo_h(const isce3::core::Pixel& pixel, const Basis& basis,
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
-
-    // Delete projection pointer on device
-    gpu_demInterp.finalizeProjInterp();
 
     // Copy the resulting llh back to the CPU
     int resultcode;

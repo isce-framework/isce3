@@ -91,12 +91,6 @@ class isce3::cuda::geometry::gpuDEMInterpolator {
             return _interp;
         }
 
-        /** Initialize projection and interpolation objects on device. */
-        CUDA_HOST void initProjInterp();
-
-        /** Finalize/delete projection and interpolation objects on device. */
-        CUDA_HOST void finalizeProjInterp();
-
         // Make DEM pointer data public for now
         float * _dem;
 
@@ -119,4 +113,10 @@ class isce3::cuda::geometry::gpuDEMInterpolator {
         double _xstart, _ystart, _deltax, _deltay;
         // Boolean for owning memory
         bool _owner;
+
+        /** Initialize projection and interpolation objects on device. */
+        CUDA_HOST void initProjInterp();
+
+        /** Finalize/delete projection and interpolation objects on device. */
+        CUDA_HOST void finalizeProjInterp();
 };

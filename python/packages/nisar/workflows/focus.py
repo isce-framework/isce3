@@ -1070,6 +1070,9 @@ def focus(runconfig):
         return tempfile.NamedTemporaryFile(dir=scratch_dir, suffix=suffix,
             delete=cfg.processing.delete_tempfiles)
 
+    dump_height = (cfg.processing.debug_dump_height and
+                   not cfg.processing.delete_tempfiles)
+
     # main processing loop
     for channel_out in common_mode:
         frequency, pol = channel_out.freq_id, channel_out.pol
@@ -1147,6 +1150,12 @@ def focus(runconfig):
 
             del regridded, regridfd
 
+            if dump_height:
+                fd_hgt = temp(f"_height_{frequency}{pol}.f4")
+                shape = ogrid[frequency].shape
+                hgt_mm = np.memmap(fd_hgt, mode="w+", shape=shape, dtype='f4')
+                log.debug(f"Dumping height to {fd_hgt.name} with shape {shape}")
+
             # Do azimuth compression.
             igeom = isce3.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
@@ -1162,10 +1171,13 @@ def focus(runconfig):
                 bgrid = ogrid[frequency][block]
                 ogeom = isce3.container.RadarGeometry(bgrid, orbit, zerodop)
                 z = np.zeros(bgrid.shape, 'c8')
-                backproject(z, ogeom, rcfile.data, igeom, dem,
+                hgt = hgt_mm[block] if dump_height else None
+                err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
                             kernel, atmos, vars(cfg.processing.azcomp.rdr2geo),
-                            vars(cfg.processing.azcomp.geo2rdr))
+                            vars(cfg.processing.azcomp.geo2rdr), height=hgt)
+                if err:
+                    log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)
 
             # Raster/GDAL creates a .hdr file we have to clean up manually.
@@ -1173,6 +1185,9 @@ def focus(runconfig):
             if cfg.processing.delete_tempfiles:
                 delete_safely(hdr)
             del rcfile
+
+            if dump_height:
+                del fd_hgt, hgt_mm
 
         writer.notify_finished()
         log.info(f"Image statistics {frequency} {pol} = {writer.stats}")
