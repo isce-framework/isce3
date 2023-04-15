@@ -218,7 +218,7 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
 
 
 def _project_water_to_geogrid(input_water_path, geogrid):
-    """ 
+    """
     Project water mask to geogrid of GUNW product.
 
     Parameters
@@ -249,7 +249,7 @@ def _project_water_to_geogrid(input_water_path, geogrid):
 
 
 def add_water_mask(cfg, freq, geogrid, dst_h5):
-    """ 
+    """
     Create water mask to HDF5 from given water mask
 
     Parameters
@@ -917,8 +917,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, is_goff=False):
                                                          interp_method,
                                                          invalid_value=np.nan)
 
-                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                    input_hdf5,
+                gpu_geocode_rasters(geo_datasets, desired, freq,
+                                    offset_pol_list, input_hdf5,
                                     dst_h5, geocode_obj,
                                     off_layer_dict=layer_keys, is_goff=True)
             # add water mask to GUNW product

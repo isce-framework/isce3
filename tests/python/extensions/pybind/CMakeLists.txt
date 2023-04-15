@@ -21,7 +21,6 @@ focus/backproject.py
 focus/chirp.py
 focus/presum.py
 focus/rangecomp.py
-geocode/geocodeSlc.py
 geocode/geocodeCov.py
 geocode/radar_grid_cube.py
 geometry/bbox.py

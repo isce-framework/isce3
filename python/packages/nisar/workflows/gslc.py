@@ -66,7 +66,7 @@ def run(cfg):
     info_channel = journal.info("gslc_array.run")
     info_channel.log("starting geocode SLC")
 
-    t_all = time.time()
+    t_all = time.perf_counter()
     with h5py.File(output_hdf5, 'a') as dst_h5, \
             h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5:
         for freq, pol_list in freq_pols.items():
@@ -93,7 +93,8 @@ def run(cfg):
                 dataset_path = f'/science/LSAR/GSLC/grids/{frequency}/{polarization}'
                 gslc_datasets.append(dst_h5[dataset_path])
 
-            # loop over blocks
+            # loop over geogrid blocks skipping those without radar data
+            # where block_generator skips blocks where no radar data is found
             for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
                  block_generator(geo_grid, radar_grid, orbit, dem_raster,
                                  lines_per_block, columns_per_block,
@@ -123,7 +124,10 @@ def run(cfg):
                                           image_grid_doppler, ellipsoid,
                                           threshold_geo2rdr,
                                           iteration_geo2rdr,
-                                          az_first, rg_first, flatten,
+                                          radar_grid,
+                                          first_azimuth_line=az_first,
+                                          first_range_sample=rg_first,
+                                          flatten=flatten,
                                           az_time_correction=az_correction,
                                           srange_correction=srg_correction)
 
@@ -173,7 +177,7 @@ def run(cfg):
                                      image_grid_doppler, threshold_geo2rdr,
                                      iteration_geo2rdr)
 
-    t_all_elapsed = time.time() - t_all
+    t_all_elapsed = time.perf_counter() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")
 
 

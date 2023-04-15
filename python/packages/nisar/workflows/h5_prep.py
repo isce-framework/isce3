@@ -1131,9 +1131,6 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape,
                                         chunks=chunks, **kwargs)
         else:
-            # pop 'chunks' in case it's in kwargs
-            kwargs.pop('chunks', None)
-
             # create dataset without chunks
             ds = dst_grp.create_dataset(dataset_name, dtype=ctype, shape=shape,
                                         **kwargs)

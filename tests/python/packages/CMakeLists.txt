@@ -6,6 +6,7 @@ isce3/cal/radar_cross_section.py
 isce3/core/gpu_check.py
 isce3/core/llh.py
 isce3/core/poly2d.py
+isce3/geocode/geocode_slc.py
 isce3/io/background.py
 isce3/signal/compute_evd_cpi.py
 isce3/signal/doppler_est_func.py

@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
+'''
+test isce3.geocode.geocode_slc array and raster modes
+'''
 import json
 import os
 from pathlib import Path
 import pytest
 import types
 
+import journal
 import numpy as np
 from osgeo import gdal
 from scipy import interpolate
 
 import iscetest
-import isce3.ext.isce3 as isce
+import isce3
 from isce3.atmosphere.tec_product import tec_lut2d_from_json
+from isce3.ext.isce3.geocode import geocode_slc as geocode_slc_raster
 from isce3.geometry import compute_incidence_angle
 from nisar.products.readers import SLC
 
@@ -54,7 +59,7 @@ def make_tec_file(unit_test_params):
     start = np.floor(radar_grid.sensing_start / snap) * snap - margin
     stop = np.ceil(radar_grid.sensing_stop / snap) * snap + margin
     t_tec = np.arange(start, stop + 1.0, snap)
-    t_tec_iso_fmt = [(radar_grid.ref_epoch + isce.core.TimeDelta(t)).isoformat()[:-3]
+    t_tec_iso_fmt = [(radar_grid.ref_epoch + isce3.core.TimeDelta(t)).isoformat()[:-3]
                      for t in t_tec]
 
     # compute total TEC
@@ -63,10 +68,10 @@ def make_tec_file(unit_test_params):
                            radar_grid.end_range]:
         inc_angs = [compute_incidence_angle(t, rdr_grid_range,
                                             unit_test_params.orbit,
-                                            isce.core.LUT2d(),
+                                            isce3.core.LUT2d(),
                                             radar_grid,
-                                            isce.geometry.DEMInterpolator(),
-                                            isce.core.Ellipsoid())
+                                            isce3.geometry.DEMInterpolator(),
+                                            isce3.core.Ellipsoid())
                     for t in t_rdr_grid]
         total_tec_rdr_grid = common_tec_coeff * np.cos(inc_angs)
 
@@ -102,7 +107,7 @@ def unit_test_params():
     params = types.SimpleNamespace()
 
     # define geogrid
-    geogrid = isce.product.GeoGridParameters(start_x=-115.65,
+    geogrid = isce3.product.GeoGridParameters(start_x=-115.65,
                                              start_y=34.84,
                                              spacing_x=0.0002,
                                              spacing_y=-8.0e-5,
@@ -118,7 +123,7 @@ def unit_test_params():
 
     input_h5_path = os.path.join(iscetest.data, "envisat.h5")
 
-    params.radargrid = isce.product.RadarGridParameters(input_h5_path)
+    params.radargrid = isce3.product.RadarGridParameters(input_h5_path)
 
     # init SLC object and extract necessary test params from it
     rslc = SLC(hdf5file=input_h5_path)
@@ -130,13 +135,13 @@ def unit_test_params():
 
     params.center_freq = rslc.getSwathMetadata().processed_center_frequency
 
-    params.native_doppler = isce.core.LUT2d(img_doppler.x_start,
+    params.native_doppler = isce3.core.LUT2d(img_doppler.x_start,
             img_doppler.y_start, img_doppler.x_spacing,
             img_doppler.y_spacing, np.zeros((geogrid.length,geogrid.width)))
 
     # create DEM raster object
     params.dem_path = os.path.join(iscetest.data, "geocode/zeroHeightDEM.geo")
-    params.dem_raster = isce.io.Raster(params.dem_path)
+    params.dem_raster = isce3.io.Raster(params.dem_path)
 
     # half pixel offset and grid size in radians for validataion
     params.x0 = np.radians(params.geotrans[0] + params.geotrans[1] / 2.0)
@@ -173,7 +178,7 @@ def geocode_slc_test_cases(unit_test_params):
     azimuth_offset = offset_factor * az_time_interval
 
     # despite uniform value LUT2d set to interp mode nearest just in case
-    method = isce.core.DataInterpMethod.NEAREST
+    method = isce3.core.DataInterpMethod.NEAREST
 
     # array of ones to be multiplied by respective offset value
     # shape unchanging; no noeed to be in loop as only starting values change
@@ -202,9 +207,9 @@ def geocode_slc_test_cases(unit_test_params):
 
             # corrections LUT2ds will use the negative offsets
             # should cancel positive offset applied to radar grid
-            srange_correction = isce.core.LUT2d()
+            srange_correction = isce3.core.LUT2d()
             if 'rg' in offset_mode:
-                srange_correction = isce.core.LUT2d(srange_vec, az_time_vec,
+                srange_correction = isce3.core.LUT2d(srange_vec, az_time_vec,
                                                     range_offset * ones,
                                                     method)
             elif 'tec' == offset_mode:
@@ -213,54 +218,17 @@ def geocode_slc_test_cases(unit_test_params):
                                         unit_test_params.center_freq,
                                         unit_test_params.orbit,
                                         offset_radargrid,
-                                        isce.core.LUT2d(),
+                                        isce3.core.LUT2d(),
                                         unit_test_params.dem_path)
 
-            az_time_correction = isce.core.LUT2d()
+            az_time_correction = isce3.core.LUT2d()
             if 'az' in offset_mode:
-                az_time_correction = isce.core.LUT2d(srange_vec, az_time_vec,
+                az_time_correction = isce3.core.LUT2d(srange_vec, az_time_vec,
                                                      azimuth_offset * ones,
                                                      method)
 
             yield (axis, offset_mode, srange_correction, az_time_correction,
                    offset_radargrid)
-
-
-def run_geocode_slc_raster(test_case, unit_test_params):
-    '''
-    wrapper for geocode_slc raster mode
-    '''
-    # extract test specific params
-    (axis, correction_mode, srange_correction, az_time_correction,
-     test_rdrgrid) = test_case
-
-    in_raster = isce.io.Raster(os.path.join(iscetest.data,
-                                            f"geocodeslc/{axis}.slc"))
-
-    Path(f"{axis}{correction_mode}_raster.geo").touch()
-    out_raster = isce.io.Raster(f"{axis}_{correction_mode}_raster.geo",
-                                 unit_test_params.geogrid.width,
-                                 unit_test_params.geogrid.length, 1,
-                                 gdal.GDT_CFloat32, "ENVI")
-
-    isce.geocode.geocode_slc(output_raster=out_raster,
-        input_raster=in_raster,
-        dem_raster=unit_test_params.dem_raster,
-        radargrid=test_rdrgrid,
-        geogrid=unit_test_params.geogrid,
-        orbit=unit_test_params.orbit,
-        native_doppler=unit_test_params.native_doppler,
-        image_grid_doppler=unit_test_params.img_doppler,
-        ellipsoid=isce.core.Ellipsoid(),
-        threshold_geo2rdr=1.0e-9,
-        numiter_geo2rdr=25,
-        lines_per_block=1000,
-        flatten=False,
-        az_time_correction=az_time_correction,
-        srange_correction=srange_correction)
-
-    # set geotransform
-    out_raster.set_geotransform(unit_test_params.geotrans)
 
 
 def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
@@ -300,7 +268,7 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
     else:
         out_list = [out_zeros, out_zeros.copy()]
 
-    isce.geocode.geocode_slc(
+    isce3.geocode.geocode_slc(
         geo_data_blocks=out_list,
         rdr_data_blocks=in_list,
         dem_raster=unit_test_params.dem_raster,
@@ -309,17 +277,17 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
         orbit=unit_test_params.orbit,
         native_doppler= unit_test_params.native_doppler,
         image_grid_doppler=unit_test_params.img_doppler,
-        ellipsoid=isce.core.Ellipsoid(),
+        ellipsoid=isce3.core.Ellipsoid(),
         threshold_geo2rdr=1.0e-9,
-        numiter_geo2rdr=25,
-        azimuth_first_line=0,
-        range_first_pixel=0,
+        num_iter_geo2rdr=25,
+        first_azimuth_line=0,
+        first_range_sample=0,
         flatten=False,
         az_time_correction=az_time_correction,
         srange_correction=srange_correction)
 
     # set geotransform in output raster
-    out_raster = isce.io.Raster(out_path, unit_test_params.geogrid.width,
+    out_raster = isce3.io.Raster(out_path, unit_test_params.geogrid.width,
                                 unit_test_params.geogrid.length, 2,
                                 gdal.GDT_CFloat32,  "ENVI")
     out_raster.set_geotransform(unit_test_params.geotrans)
@@ -347,33 +315,33 @@ def run_geocode_slc_array(test_case, unit_test_params):
     ds = gdal.Open(in_path, gdal.GA_ReadOnly)
     in_data = ds.GetRasterBand(1).ReadAsArray()
 
-    # output file name for geocodeSlc array mode
-    out_path = f"{axis}_{correction_mode}_array.geo"
-    Path(out_path).touch()
-
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
 
-    isce.geocode.geocode_slc(
-        geo_data_block=out_data,
-        rdr_data_block=in_data,
+    isce3.geocode.geocode_slc(
+        geo_data_blocks=out_data,
+        rdr_data_blocks=in_data,
         dem_raster=unit_test_params.dem_raster,
         radargrid=test_rdrgrid,
         geogrid=unit_test_params.geogrid,
         orbit=unit_test_params.orbit,
         native_doppler= unit_test_params.native_doppler,
         image_grid_doppler=unit_test_params.img_doppler,
-        ellipsoid=isce.core.Ellipsoid(),
+        ellipsoid=isce3.core.Ellipsoid(),
         threshold_geo2rdr=1.0e-9,
-        numiter_geo2rdr=25,
-        azimuth_first_line=0,
-        range_first_pixel=0,
+        num_iter_geo2rdr=25,
+        first_azimuth_line=0,
+        first_range_sample=0,
         flatten=False,
         az_time_correction=az_time_correction,
         srange_correction=srange_correction)
 
+    # output file name for geocodeSlc array mode
+    out_path = f"{axis}_{correction_mode}_array.geo"
+    Path(out_path).touch()
+
     # set geotransform in output raster
-    out_raster = isce.io.Raster(out_path, unit_test_params.geogrid.width,
+    out_raster = isce3.io.Raster(out_path, unit_test_params.geogrid.width,
                                 unit_test_params.geogrid.length, 1,
                                 gdal.GDT_CFloat32,  "ENVI")
     out_raster.set_geotransform(unit_test_params.geotrans)
@@ -382,16 +350,6 @@ def run_geocode_slc_array(test_case, unit_test_params):
     # write output to raster
     ds = gdal.Open(out_path, gdal.GA_Update)
     ds.GetRasterBand(1).WriteArray(out_data)
-
-
-def test_run_raster_mode(unit_test_params):
-    '''
-    run geocodeSlc raster bindings with same parameters as C++ test to make
-    sure it does not crash
-    '''
-    # run raster mode for all test cases
-    for test_case in geocode_slc_test_cases(unit_test_params):
-        run_geocode_slc_raster(test_case, unit_test_params)
 
 
 def test_run_array_mode(unit_test_params):
@@ -422,16 +380,63 @@ def test_run_arrays_exceptions(unit_test_params):
     # run array mode for all test cases with forced erroneous inputs to ensure
     # correct exceptions are raised
     for test_case in geocode_slc_test_cases(unit_test_params):
-        with np.testing.assert_raises(ValueError):
+        with np.testing.assert_raises(journal.ext.journal.ApplicationError):
             run_geocode_slc_arrays(test_case, unit_test_params,
                                    extra_input=True)
 
-        with np.testing.assert_raises(ValueError):
+        with np.testing.assert_raises(journal.ext.journal.ApplicationError):
             run_geocode_slc_arrays(test_case, unit_test_params,
                                    non_matching_shape=True)
 
         # break out of loop - no need to repeat assert tests
         break
+
+
+def run_geocode_slc_raster(test_case, unit_test_params):
+    '''
+    wrapper for geocode_slc raster mode
+    '''
+    # extract test specific params
+    (axis, correction_mode, srange_correction, az_time_correction,
+     test_rdrgrid) = test_case
+
+    in_raster = isce3.io.Raster(os.path.join(iscetest.data,
+                                            f"geocodeslc/{axis}.slc"))
+
+    Path(f"{axis}{correction_mode}_raster.geo").touch()
+    out_raster = isce3.io.Raster(f"{axis}_{correction_mode}_raster.geo",
+                                 unit_test_params.geogrid.width,
+                                 unit_test_params.geogrid.length, 1,
+                                 gdal.GDT_CFloat32, "ENVI")
+
+    geocode_slc_raster(output_raster=out_raster,
+        input_raster=in_raster,
+        dem_raster=unit_test_params.dem_raster,
+        radargrid=test_rdrgrid,
+        geogrid=unit_test_params.geogrid,
+        orbit=unit_test_params.orbit,
+        native_doppler=unit_test_params.native_doppler,
+        image_grid_doppler=unit_test_params.img_doppler,
+        ellipsoid=isce3.core.Ellipsoid(),
+        threshold_geo2rdr=1.0e-9,
+        numiter_geo2rdr=25,
+        lines_per_block=1000,
+        flatten=False,
+        az_time_correction=az_time_correction,
+        srange_correction=srange_correction)
+
+    # set geotransform
+    out_raster.set_geotransform(unit_test_params.geotrans)
+
+
+def test_run_raster_mode(unit_test_params):
+    '''
+    run geocodeSlc raster bindings with same parameters as C++ test to make
+    sure it does not crash
+    '''
+    # run raster mode for all test cases
+    for test_case in geocode_slc_test_cases(unit_test_params):
+        run_geocode_slc_raster(test_case, unit_test_params)
 
 
 def validate_raster(unit_test_params, mode, raster_layer=1):
@@ -472,10 +477,6 @@ def validate_raster(unit_test_params, mode, raster_layer=1):
         assert(err < 1.0e-6), f'{test_raster} max error fail'
 
 
-def test_raster_mode(unit_test_params):
-    validate_raster(unit_test_params, 'raster')
-
-
 def test_array_mode(unit_test_params):
     validate_raster(unit_test_params, 'array')
 
@@ -483,3 +484,7 @@ def test_array_mode(unit_test_params):
 def test_arrays_mode(unit_test_params):
     validate_raster(unit_test_params, 'arrays', 1)
     validate_raster(unit_test_params, 'arrays', 2)
+
+
+def test_raster_mode(unit_test_params):
+    validate_raster(unit_test_params, 'raster')
