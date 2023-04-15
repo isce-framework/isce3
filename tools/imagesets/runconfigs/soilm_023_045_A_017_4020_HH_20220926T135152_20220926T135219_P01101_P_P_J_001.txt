@@ -39,6 +39,6 @@ input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J
 --Folder path to Vegetation Water Content dynamic files: file 3
 input_L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001/vwc_M01_288_200m.h5
 --Log file name with path
-output_soilm/stdouterr.log
+output_soilm/soilm.log
 --Output HDF5 file name with path
 output_soilm/soilm.h5
