@@ -19,6 +19,18 @@
 using isce3::io::gdal::Buffer;
 using isce3::io::gdal::Raster;
 
+/**
+ * Check the system endianness.
+ *
+ * Returns true if the byte order is big-endian, false otherwise.
+ */
+constexpr bool isBigEndian() noexcept
+{
+    const std::uint32_t u = 0x01020304;
+    const auto c = reinterpret_cast<const char*>(&u);
+    return *c == 1;
+}
+
 template<typename T>
 static
 py::buffer_info toBuffer(Raster & raster)
@@ -77,18 +89,49 @@ Raster toRaster(py::buffer buf)
 
 Raster toRaster(py::buffer buf)
 {
+    // Get a string code describing the datatype of the buffer. Strip off
+    // endianness prefix, if present.
     py::buffer_info info = buf.request();
-    if (info.format == py::format_descriptor<unsigned char>::format())        { return toRaster<unsigned char>(buf); }
-    if (info.format == py::format_descriptor<std::uint16_t>::format())        { return toRaster<std::uint16_t>(buf); }
-    if (info.format == py::format_descriptor<std::int16_t>::format())         { return toRaster<std::int16_t>(buf); }
-    if (info.format == py::format_descriptor<std::uint32_t>::format())        { return toRaster<std::uint32_t>(buf); }
-    if (info.format == py::format_descriptor<std::int32_t>::format())         { return toRaster<std::int32_t>(buf); }
-    if (info.format == py::format_descriptor<float>::format())                { return toRaster<float>(buf); }
-    if (info.format == py::format_descriptor<double>::format())               { return toRaster<double>(buf); }
-    if (info.format == py::format_descriptor<std::complex<float>>::format())  { return toRaster<std::complex<float>>(buf); }
-    if (info.format == py::format_descriptor<std::complex<double>>::format()) { return toRaster<std::complex<double>>(buf); }
+    std::string format = info.format;
+    if (format[0] == '@'        // native byte order
+            || format[0] == '=' // native byte order
+            || format[0] == '<' // little-endian
+            || format[0] == '>' // big-endian
+            || format[0] == '!' // "network" (big-endian)
+    ) {
+        // Check if a non-native byte order was requested.
+        // The underlying GDAL "MEM" driver doesn't appear to support that case.
+        const char byteorder = format[0];
+        const bool nonnative_byteorder =
+                (isBigEndian() && byteorder == '<') ||
+                (!isBigEndian() && (byteorder == '>' || byteorder == '!'));
+        if (nonnative_byteorder) {
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                    "creating a raster from a memory buffer with non-native "
+                    "byte order is not supported");
+        }
 
-    throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unable to cast buffer format descriptor to GDALDataType");
+        format = format.substr(1);
+    }
+
+#define ISCE3_TYPED_TO_RASTER(T)                                               \
+    if (format == py::format_descriptor<T>::format()) {                        \
+        return toRaster<T>(buf);                                               \
+    }
+    ISCE3_TYPED_TO_RASTER(unsigned char)
+    ISCE3_TYPED_TO_RASTER(std::uint16_t)
+    ISCE3_TYPED_TO_RASTER(std::int16_t)
+    ISCE3_TYPED_TO_RASTER(std::uint32_t)
+    ISCE3_TYPED_TO_RASTER(std::int32_t)
+    ISCE3_TYPED_TO_RASTER(float)
+    ISCE3_TYPED_TO_RASTER(double)
+    ISCE3_TYPED_TO_RASTER(std::complex<float>)
+    ISCE3_TYPED_TO_RASTER(std::complex<double>)
+#undef ISCE3_TYPED_TO_RASTER
+
+    throw isce3::except::RuntimeError(
+            ISCE_SRCINFO(), "unable to cast buffer format descriptor '" +
+                                    format + "' to GDALDataType");
 }
 
 void addbinding(py::class_<Raster> & pyRaster)

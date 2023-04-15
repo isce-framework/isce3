@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
 import gc
+import sys
+from pathlib import Path
+
 import numpy as np
 import numpy.testing as npt
-from pathlib import Path
+import pytest
 
 import isce3.ext.isce3 as isce
 import iscetest
@@ -131,6 +134,26 @@ def test_from_numpy():
     npt.assert_almost_equal( raster.y0, 0. )
     npt.assert_almost_equal( raster.dx, 1. )
     npt.assert_almost_equal( raster.dy, 1. )
+
+@pytest.mark.parametrize("byteorder", ["<", ">", "="])
+def test_from_buffer_dtype_endianness(byteorder):
+    arr = np.arange(20, dtype=(byteorder + "f4")).reshape(4, 5)
+
+    nonnative_byteorder = (
+        (sys.byteorder == "little" and byteorder == ">")
+        or (sys.byteorder == "big" and byteorder == "<")
+    )
+    if nonnative_byteorder:
+        errmsg = (
+            "creating a raster from a memory buffer with non-native byte order is not"
+            " supported"
+        )
+        with pytest.raises(ValueError, match=errmsg):
+            isce.io.gdal.Raster(arr)
+    else:
+        raster = isce.io.gdal.Raster(arr)
+        assert( raster.datatype == isce.io.gdal.GDALDataType.GDT_Float32 )
+        assert( np.all(raster.data[0] == [0, 1, 2, 3, 4]) )
 
 def test_to_numpy():
     path = Path(iscetest.data) / "io" / "gdal" / "ENVIRaster-sequence"
