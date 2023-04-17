@@ -24,8 +24,12 @@ runconfig:
             qa_goff_input_file: GOFF_product.h5
 
         dynamic_ancillary_file_group:
-            # REQUIRED - Use the provided DEM as input
+            # REQUIRED - Digital elevation model
             dem_file:
+
+            # PLACEHOLDER - Digital elevation model file description, optional
+            dem_file_description:
+
             water_mask_file:
             orbit:
                 reference_orbit_file:
@@ -85,12 +89,14 @@ runconfig:
             process_single_co_pol_offset: True
 
             input_subset:
-                # Frequencies and polarisations to be processed
+                # Frequencies and polarizations to be processed
                 list_of_frequencies:
-                    # keys for frequency A and B are required.
-                    # valid options for polarizations
-                    # empty for all polarizations found in RSLC
-                    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
+                    # Keys for frequency A and B followed by a list of polarizations to process:
+                    #     {frequency}: [polarizations]
+                    #
+                    # - Only frequencies listed (i.e, 'A' and/or 'B') will be processed.
+                    # - If the [polarizations] list is empty, all available polarizations 
+                    # for given frequency will be processed
                     A:
                     B:
 

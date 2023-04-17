@@ -17,8 +17,11 @@ runconfig:
             qa_input_file: str(required=False)
 
         dynamic_ancillary_file_group:
-            # Digital elevation model
+            # REQUIRED - Digital elevation model
             dem_file: str()
+
+            # PLACEHOLDER - Digital elevation model file description, optional
+            dem_file_description: str(required=False)
 
             # External orbit file
             orbit_file: str(required=False)

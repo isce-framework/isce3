@@ -99,7 +99,7 @@ runconfig:
                 abs_rad_cal: 1
 
                 save_nlooks: True
-                save_rtc: True
+                save_rtc_anf: True
                  
                 # OPTIONAL - Same as input DEM if not provided.
                 output_epsg: 

@@ -17,8 +17,11 @@ runconfig:
             qa_input_file: gslc.h5
 
         dynamic_ancillary_file_group:
-            # REQUIRED - Use the provided DEM as input
+            # REQUIRED - Digital elevation model
             dem_file:
+
+            # PLACEHOLDER - Digital elevation model file description, optional
+            dem_file_description:
 
             # External orbit file
             orbit_file:
@@ -81,13 +84,14 @@ runconfig:
         # ADT section - isce3 + pyre workflow
         processing:
             input_subset:
-                # Frequencies and polarisations to be processed
+                # Frequencies and polarizations to process
                 list_of_frequencies:
-                    # keys for frequency A and B are required.
-                    # valid options for polarizations
-                    #   'all' for processing all polarizations from RSLC
-                    #   [HH, VV, ...] list of polarizations to be processed
-                    #   empty for no polarizations to be processed
+                    # Keys for frequency A and B followed by a list of polarizations to process:
+                    #     {frequency}: [polarizations]
+                    #
+                    # - Only frequencies listed (i.e, 'A' and/or 'B') will be processed.
+                    # - If the [polarizations] list is empty, all available polarizations 
+                    # for given frequency will be processed
                     A:
                     B:
 

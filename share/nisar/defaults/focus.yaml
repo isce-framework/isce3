@@ -17,6 +17,9 @@ runconfig:
             # Digital elevation model, optional.
             dem_file: null
 
+            # PLACEHOLDER - Digital elevation model file description, optional
+            dem_file_description:
+
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
             orbit: null

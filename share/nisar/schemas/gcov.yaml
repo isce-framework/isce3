@@ -17,8 +17,11 @@ runconfig:
             qa_input_file: str(required=False)
 
         dynamic_ancillary_file_group:
-            # Digital elevation model
+            # REQUIRED - Digital elevation model
             dem_file: str()
+
+            # PLACEHOLDER - Digital elevation model file description, optional
+            dem_file_description: str(required=False)
 
             # External orbit file
             orbit_file: str(required=False)
@@ -35,7 +38,7 @@ runconfig:
             # Directory where SAS can write temporary data
             scratch_path: str()
 
-            # Intermediate file name.  SAS writes output product to the following file.
+            # Intermediate file name. SAS writes output product to the following file.
             # After the SAS completes, the PGE wrapper renames the product file
             # according to proper file naming conventions.
             sas_output_file: str()
@@ -44,6 +47,12 @@ runconfig:
             # Output directory to store all QA output files.
             # Defaults to './qa'
             qa_output_dir: str(required=False)
+
+        # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
+        output_gcov_terms: include('output_options', required=False)
+
+        # Output options for secondary layers
+        output_secondary_layers: include('output_options', required=False)
 
         primary_executable:
             product_type: enum('GCOV')
@@ -80,11 +89,6 @@ runconfig:
 
             # Pre-processing (before geocoding) options
             pre_process: include('pre_process_options', required=False)
-
-            # Output imagery and secondary layers' compression
-            # Option `gzip` uses h5py default compression level (e.g., `4`)
-            # whereas `gzip9` uses the maximum compression level `9`
-            output_data_compression: enum('gzip', 'gzip9', 'lzf', 'szip', 'none', required=False)
 
             # Radiometric Terrain Correction (RTC)
             rtc: include('rtc_options', required=False)
@@ -206,27 +210,49 @@ rtc_options:
     dem_upsampling: int(min=1, required=False)
 
 geocode_options:
+
+    # Geocoding algorithm type, area projection, or interpolation:
+    # sinc, bilinear, bicubic, nearest, and biquintic
     algorithm_type: enum('area_projection', 'sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic', required=False)
 
-    # Apply RTC
+    # Apply radiometric terrain correction
     apply_rtc: bool(required=False)
 
-    # OPTIONAL - Apply RSLC metadata valid-samples sub-swath masking
+    # Apply RSLC metadata valid-samples sub-swath masking
     apply_valid_samples_sub_swath_masking: bool(required=False)
 
+    # Apply shadow masking
+    apply_shadow_masking: bool(required=False)
+
+    # Memory mode
     memory_mode: enum('auto', 'single_block', 'geogrid', 'geogrid_and_radargrid', required=False)
 
     # Processing upsampling factor on top of the input geogrid
     geogrid_upsampling: int(required=False)
 
-    # Save the number of looks used to compute GCOV
+    # PLACEHOLDER - Save the number of looks used to compute GCOV
     save_nlooks: bool(required=False)
 
-    # Save the RTC area factor used to compute GCOV
-    save_rtc: bool(required=False)
+    # PLACEHOLDER - Save the RTC area factor used to compute GCOV
+    save_rtc_anf: bool(required=False)
 
-    # Save interpolated DEM used to compute GCOV
+    # PLACEHOLDER - Save interpolated DEM used to compute GCOV
     save_dem: bool(required=False)
+
+    # PLACEHOLDER - Save layover shadow mask
+    save_layover_shadow_mask: bool(required=False)
+
+    # PLACEHOLDER - Save the incidence angle
+    save_incidence_angle: bool(required=False)
+
+    # PLACEHOLDER - Save the local-incidence angle
+    save_local_inc_angle: bool(required=False)
+
+    # PLACEHOLDER - Save the projection angle
+    save_projection_angle: bool(required=False)
+
+    # PLACEHOLDER - Save the range slope angle
+    save_range_slope: bool(required=False)
 
     # Absolute radiometric correction factor
     abs_rad_cal: num(required=False)
@@ -296,3 +322,18 @@ worker_options:
     # Index of the GPU to use for processing, optional. Defaults to the
     # first available CUDA device. Ignored if *gpu_enabled* is False.
     gpu_id: int(min=0, required=False)
+
+output_options:
+
+    # Output format
+    format: enum('HDF5', 'GTiff', 'COG', 'ENVI', required=False)
+
+    # Output compression type
+    compression_type: str(required=False)
+
+    # Compression level
+    # 1 - least compression, 9 - best compresssion
+    compression_level: int(min=1, max=9, required=False)
+
+    # Number of bits for each real-part sample
+    nbits: int(min=1, required=False)

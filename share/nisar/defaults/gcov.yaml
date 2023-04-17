@@ -17,8 +17,11 @@ runconfig:
             qa_input_file: gcov.h5
 
         dynamic_ancillary_file_group:
-            # REQUIRED - Use the provided DEM as input
+            # REQUIRED - Digital elevation model
             dem_file:
+
+            # PLACEHOLDER - Digital elevation model file description, optional
+            dem_file_description:
 
             # External orbit file
             orbit_file:
@@ -43,6 +46,34 @@ runconfig:
             # Defaults to './qa'
             qa_output_dir: ./qa
 
+        # Output options for GCOV terms (e.g., HHHH, HVHV, VVVV)
+        output_gcov_terms:
+            # PLACEHOLDER - Output format
+            format: HDF5
+
+            # Compression type. 'none' for no compression
+            compression_type: gzip
+
+            # Compression level
+            compression_level: 9
+
+            # PLACEHOLDER - Compression number of bits
+            nbits: 16
+
+        # Output options for secondary layers (e.g., number of looks, RTC ANF)
+        output_secondary_layers:
+            # PLACEHOLDER - Output format
+            format: HDF5
+
+            # Compression type. 'none' for no compression
+            compression_type: gzip
+
+            # Compression level
+            compression_level: 9
+
+            # PLACEHOLDER - Compression number of bits
+            nbits: 16
+
         primary_executable:
             product_type: GCOV
 
@@ -63,17 +94,17 @@ runconfig:
 
         #adt section - isce3 + pyre workflow
         processing:
-            # Frequencies and polarisations to be processed
             input_subset:
-                # List of frequencies to process. Default empty representing all
+                # Frequencies and polarizations to process
                 list_of_frequencies:
-                    # keys for frequency A and B are required.
-                    # valid options for polarizations
-                    # 'all' for all polarizations found in RSLC
-                    # [polarizations] for list of specific frequency(s) e.g. [HH, HV] or [HH]
-                    # empty for no polarizations
-                    A: [HH, HV]
-                    B: [HH, HV]
+                    # Keys for frequency A and B followed by a list of polarizations to process:
+                    #     {frequency}: [polarizations]
+                    #
+                    # - Only frequencies listed (i.e, 'A' and/or 'B') will be processed.
+                    # - If the [polarizations] list is empty, all available polarizations 
+                    # for given frequency will be processed
+                    A:
+                    B:
 
                 # OPTIONAL - If we want full covariance instead of diagonals only. Default False
                 fullcovariance:   False
@@ -101,12 +132,6 @@ runconfig:
                azimuth_looks: 1
                range_looks:   1
 
-            # Output imagery and secondary layers' compression
-            # Options: 'gzip' (gzip with h5py default compression level `4`)
-            # 'gzip9' (gzip with maximum compression level `9`),
-            # 'lzf', 'szip', or 'none' (no compression)
-            output_data_compression: 'gzip9'
-
             # OPTIONAL - to control behavior of RTC module
             # (only applicable if geocode.apply_rtc is True)
             rtc:
@@ -129,21 +154,26 @@ runconfig:
                 rtc_min_value_db:
 
                 # RTC DEM upsampling
-                dem_upsampling: 1
+                dem_upsampling: 2
 
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
 
-                # OPTIONAL -
+                # Geocoding algorithm type. Choices "area_projection"
+                # for adaptive multilooking or an interpolation algorithm:
+                # "sinc", "bilinear", "bicubic", "nearest", and "biquintic"
                 algorithm_type: area_projection
 
-                # OPTIONAL - Apply RTC
+                # Apply radiometric terrain correction
                 apply_rtc: True
 
-                # OPTIONAL - Apply RSLC metadata valid-samples sub-swath masking
+                # Apply RSLC metadata valid-samples sub-swath masking
                 apply_valid_samples_sub_swath_masking: False
 
-                # OPTIONAL - Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
+                # Apply shadow masking
+                apply_shadow_masking: True
+
+                # Memory mode. Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
                 memory_mode:
 
                 # OPTIONAL - Processing upsampling factor applied to input geogrid
@@ -153,10 +183,25 @@ runconfig:
                 save_nlooks: True
 
                 # Save the RTC area factor used to compute GCOV
-                save_rtc: True
+                save_rtc_anf: True
 
                 # Save interpolated DEM used to compute GCOV
                 save_dem: False
+
+                # PLACEHOLDER - Save layover shadow mask
+                save_layover_shadow_mask: False
+
+                # PLACEHOLDER - Save the incidence angle
+                save_incidence_angle: False
+
+                # PLACEHOLDER - Save the local-incidence angle
+                save_local_inc_angle: False
+
+                # PLACEHOLDER - Save the projection angle
+                save_projection_angle: False
+
+                # PLACEHOLDER - Save the range slope angle
+                save_range_slope: False
 
                 # OPTIONAL - Absolute radiometric correction
                 abs_rad_cal: 1

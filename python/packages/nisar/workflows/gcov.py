@@ -171,9 +171,22 @@ def run(cfg):
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
     scratch_path = cfg['product_path_group']['scratch_path']
 
-    output_data_compression = cfg['processing']['output_data_compression']
-    if not output_data_compression or output_data_compression.lower == 'none':
-        output_data_compression = None
+    output_gcov_terms_compression = \
+        cfg['output_gcov_terms']['compression_type']
+    if (not output_gcov_terms_compression or
+            output_gcov_terms_compression.lower == 'none'):
+        output_gcov_terms_compression = None
+    output_gcov_terms_compression_level = \
+        cfg['output_gcov_terms']['compression_level']
+
+    output_secondary_layers_compression = \
+        cfg['output_secondary_layers']['compression_type']
+    if (not output_secondary_layers_compression or
+            output_secondary_layers_compression.lower == 'none'):
+        output_secondary_layers_compression = None
+    output_secondary_layers_compression_level = \
+        cfg['output_secondary_layers']['compression_level']
+
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
 
@@ -198,7 +211,7 @@ def run(cfg):
     geogrids = geocode_dict['geogrids']
     flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     flag_save_nlooks = geocode_dict['save_nlooks']
-    flag_save_rtc = geocode_dict['save_rtc']
+    flag_save_rtc_anf = geocode_dict['save_rtc_anf']
     flag_save_dem = geocode_dict['save_dem']
     min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
     max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
@@ -422,7 +435,7 @@ def run(cfg):
             temp_nlooks = None
             out_geo_nlooks_obj = None
 
-        if flag_save_rtc:
+        if flag_save_rtc_anf:
             temp_rtc = tempfile.NamedTemporaryFile(
                 dir=scratch_path, suffix='.tif')
             out_geo_rtc_obj = isce3.io.Raster(
@@ -486,7 +499,7 @@ def run(cfg):
         if flag_save_nlooks:
             del out_geo_nlooks_obj
 
-        if flag_save_rtc:
+        if flag_save_rtc_anf:
             del out_geo_rtc_obj
 
         if flag_save_dem:
@@ -522,7 +535,10 @@ def run(cfg):
             # save GCOV imagery
             _save_hdf5_dataset(temp_output.name, hdf5_obj, root_ds,
                                yds, xds, cov_elements_list,
-                               output_data_compression=output_data_compression,
+                               output_data_compression =
+                                   output_gcov_terms_compression,
+                               output_data_compression_level =
+                                   output_gcov_terms_compression_level,
                                long_name=output_radiometry_str,
                                units='',
                                valid_min=clip_min,
@@ -537,16 +553,22 @@ def run(cfg):
             if flag_save_nlooks:
                 _save_hdf5_dataset(temp_nlooks.name, hdf5_obj, root_ds,
                                    yds, xds, 'numberOfLooks',
-                                   output_data_compression=output_data_compression,
+                                   output_data_compression =
+                                       output_secondary_layers_compression,
+                                   output_data_compression_level =
+                                       output_secondary_layers_compression_level,
                                    long_name = 'number of looks',
                                    units = '',
                                    valid_min = 0)
 
             # save rtc
-            if flag_save_rtc:
+            if flag_save_rtc_anf:
                 _save_hdf5_dataset(temp_rtc.name, hdf5_obj, root_ds,
                                    yds, xds, 'areaNormalizationFactor',
-                                   output_data_compression=output_data_compression,
+                                   output_data_compression =
+                                       output_secondary_layers_compression,
+                                   output_data_compression_level =
+                                       output_secondary_layers_compression_level,
                                    long_name = 'RTC area factor',
                                    units = '',
                                    valid_min = 0)
@@ -577,7 +599,10 @@ def run(cfg):
                 _save_hdf5_dataset(temp_interpolated_dem.name, hdf5_obj,
                                    root_ds, yds_dem, xds_dem,
                                    'interpolatedDem',
-                                   output_data_compression=output_data_compression,
+                                   output_data_compression =
+                                       output_secondary_layers_compression,
+                                   output_data_compression_level =
+                                       output_secondary_layers_compression_level,
                                    long_name='Interpolated DEM',
                                    units='')
 
@@ -593,7 +618,10 @@ def run(cfg):
                                      freq_group)
                 _save_hdf5_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                                    yds, xds, off_diag_terms_list,
-                                   output_data_compression=output_data_compression,
+                                   output_data_compression =
+                                       output_gcov_terms_compression,
+                                   output_data_compression_level =
+                                       output_gcov_terms_compression_level,
                                    long_name = output_radiometry_str,
                                    units = '',
                                    valid_min = clip_min,
@@ -643,6 +671,7 @@ def _save_list_cov_terms(cov_elements_list, dataset_group):
 def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
                        yds, xds, ds_name,
                        output_data_compression=None,
+                       output_data_compression_level=None,
                        standard_name=None, long_name=None, units=None,
                        fill_value=None, valid_min=None, valid_max=None,
                        compute_stats=True):
@@ -664,7 +693,9 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
     ds_name : string
         name of dataset to be added to root_path
     output_data_compression : str or None, optional
-        Output imagery and secondary layers' compression
+        Output data compression
+    output_data_compression_level : int or None, optional
+        Output data compression level
     standard_name : string, optional
     long_name : string, optional
     units : string, optional
@@ -690,13 +721,13 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
             stats_vector = isce3.math.compute_raster_stats_float32(raster)
 
     compression_kwargs = {}
-    if (output_data_compression == 'gzip9'):
-        # maximum compression
-        compression_kwargs['compression'] = 'gzip'
-        # maximum compression
-        compression_kwargs['compression_opts'] = 9
-    elif output_data_compression is not None:
+
+    if output_data_compression is not None:
         compression_kwargs['compression'] = output_data_compression
+
+    if (output_data_compression_level is not None):
+        # maximum compression
+        compression_kwargs['compression_opts'] = output_data_compression_level
 
     gdal_ds = gdal.Open(ds_filename)
     nbands = gdal_ds.RasterCount

@@ -60,7 +60,7 @@ runconfig:
                 memory_mode: auto                # {optional} Choices: "auto", "single-block" "blocks-geogrid", and "blocks-geogrid-and-radargrid"
                 geogrid_upsampling: 1      # {optional} Processing upsampling factor on top of the input geogrid
                 save_nlooks: True          # {optional} Save the number of looks used to compute GCOV
-                save_rtc: False             # {optional} Save the RTC area factor used to compute GCOV
+                save_rtc_anf: False             # {optional} Save the RTC area factor used to compute GCOV
                 abs_rad_cal: 1             # {optional} Absolute radiometric correction factor
                 output_epsg: 4326 #{optional} Same as input DEM if not provided.
                 x_snap: #{optional} To control output grid in same units as output EPSG
