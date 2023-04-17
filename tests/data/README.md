@@ -350,3 +350,13 @@ The respective REE RDF (config) file is *hrdf_ree_short.rdf* set up on *09/18/20
   1. ERA-5_2012_04_19_T16_37_23_38N_40N_124W_122W.nc
   2. ERA-5_2012_11_05_T22_48_18_38N_40N_124W_122W.nc
   ```
+
+## Ampcor
+
+- **data/ampcor/accuracy-testdata/ovs128-rho0.8/**
+
+  This directory contains synthetic generated reference and secondary images
+  for ampcor testing.
+
+  The `golden/` subdirectory contains the expected ("golden") output against
+  which both the CPU and GPU implementations are verified.

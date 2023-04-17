@@ -1,0 +1,111 @@
+<imageFile>
+    <property name="ISCE_VERSION">
+        <value>Release: 2.3, svn-2531, 20190112. Current: svn-2531.</value>
+    </property>
+    <property name="access_mode">
+        <value>READ</value>
+        <doc>Image access mode.</doc>
+    </property>
+    <property name="byte_order">
+        <value>l</value>
+        <doc>Endianness of the image.</doc>
+    </property>
+    <component name="coordinate1">
+        <factorymodule>isceobj.Image</factorymodule>
+        <factoryname>createCoordinate</factoryname>
+        <doc>First coordinate of a 2D image (width).</doc>
+        <property name="delta">
+            <value>1</value>
+            <doc>Coordinate quantization.</doc>
+        </property>
+        <property name="endingvalue">
+            <value>512</value>
+            <doc>Ending value of the coordinate.</doc>
+        </property>
+        <property name="family">
+            <value>imagecoordinate</value>
+            <doc>Instance family name</doc>
+        </property>
+        <property name="name">
+            <value>imagecoordinate_name</value>
+            <doc>Instance name</doc>
+        </property>
+        <property name="size">
+            <value>512</value>
+            <doc>Coordinate size.</doc>
+        </property>
+        <property name="startingvalue">
+            <value>0</value>
+            <doc>Starting value of the coordinate.</doc>
+        </property>
+    </component>
+    <component name="coordinate2">
+        <factorymodule>isceobj.Image</factorymodule>
+        <factoryname>createCoordinate</factoryname>
+        <doc>Second coordinate of a 2D image (length).</doc>
+        <property name="delta">
+            <value>1</value>
+            <doc>Coordinate quantization.</doc>
+        </property>
+        <property name="endingvalue">
+            <value>512</value>
+            <doc>Ending value of the coordinate.</doc>
+        </property>
+        <property name="family">
+            <value>imagecoordinate</value>
+            <doc>Instance family name</doc>
+        </property>
+        <property name="name">
+            <value>imagecoordinate_name</value>
+            <doc>Instance name</doc>
+        </property>
+        <property name="size">
+            <value>512</value>
+            <doc>Coordinate size.</doc>
+        </property>
+        <property name="startingvalue">
+            <value>0</value>
+            <doc>Starting value of the coordinate.</doc>
+        </property>
+    </component>
+    <property name="data_type">
+        <value>CFLOAT</value>
+        <doc>Image data type.</doc>
+    </property>
+    <property name="family">
+        <value>image</value>
+        <doc>Instance family name</doc>
+    </property>
+    <property name="file_name">
+        <value>outputs/testdata-varied-rho/accuracy/ovs128/rho0.8/img1_WN_512x512_1x1_128</value>
+        <doc>Name of the image file.</doc>
+    </property>
+    <property name="length">
+        <value>512</value>
+        <doc>Image length</doc>
+    </property>
+    <property name="name">
+        <value>image_name</value>
+        <doc>Instance name</doc>
+    </property>
+    <property name="number_bands">
+        <value>1</value>
+        <doc>Number of image bands.</doc>
+    </property>
+    <property name="scheme">
+        <value>BIL</value>
+        <doc>Interleaving scheme of the image.</doc>
+    </property>
+    <property name="width">
+        <value>512</value>
+        <doc>Image width</doc>
+    </property>
+    <property name="xmax">
+        <value>512</value>
+        <doc>Maximum range value</doc>
+    </property>
+    <property name="xmin">
+        <value>0</value>
+        <doc>Minimum range value</doc>
+    </property>
+</imageFile>

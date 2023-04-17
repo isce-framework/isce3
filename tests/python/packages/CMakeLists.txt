@@ -8,6 +8,8 @@ isce3/core/llh.py
 isce3/core/poly2d.py
 isce3/geocode/geocode_slc.py
 isce3/io/background.py
+isce3/matchtemplate/import_ampcor.py
+isce3/matchtemplate/test_ampcor.py
 isce3/signal/compute_evd_cpi.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py

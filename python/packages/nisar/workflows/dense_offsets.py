@@ -48,13 +48,12 @@ def run(cfg: dict):
         isce3.cuda.core.set_device(device)
         ampcor = isce3.cuda.matchtemplate.PyCuAmpcor()
         ampcor.deviceID = cfg['worker']['gpu_id']
-        # Use memory mapping (not exposed to user but reference
-        # and secondary raster are memory-mappable)
-        ampcor.useMmap = 1
     else:
-        err_str = "Currently, ISCE3 supports only GPU dense offsets"
-        error_channel.log(err_str)
-        raise NotImplementedError(err_str)
+        ampcor = isce3.matchtemplate.PyCPUAmpcor()
+
+    # Use memory mapping (not exposed to user but reference
+    # and secondary raster are memory-mappable)
+    ampcor.useMmap = 1
 
     # Looping over frequencies and polarizations
     t_all = time.time()

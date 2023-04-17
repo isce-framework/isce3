@@ -65,6 +65,8 @@ io/decode_bfpq_lut.cpp
 io/Raster.cpp
 io/serialization.cpp
 io/io.cpp
+matchtemplate/matchtemplate.cpp
+matchtemplate/pycuampcor.cpp
 math/math.cpp
 math/Stats.cpp
 polsar/symmetrize.cpp

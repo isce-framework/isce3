@@ -11,6 +11,7 @@
 #include "geogrid/geogrid.h"
 #include "image/image.h"
 #include "io/io.h"
+#include "matchtemplate/matchtemplate.h"
 #include "math/math.h"
 #include "polsar/polsar.h"
 #include "product/product.h"
@@ -32,6 +33,7 @@ PYBIND11_MODULE(isce3, m)
     addsubmodule_geogrid(m);
     addsubmodule_image(m);
     addsubmodule_io(m);
+    addsubmodule_matchtemplate(m);
     addsubmodule_math(m);
     addsubmodule_polsar(m);
     addsubmodule_signal(m);

@@ -16,6 +16,7 @@ from . import geometry
 from . import geogrid
 from . import image
 from . import io
+from . import matchtemplate
 from . import math
 from . import polsar
 from . import product

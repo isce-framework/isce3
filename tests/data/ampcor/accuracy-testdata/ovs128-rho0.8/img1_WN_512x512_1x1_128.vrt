@@ -1,0 +1,9 @@
+<VRTDataset rasterXSize="512" rasterYSize="512">
+    <VRTRasterBand dataType="CFloat32" band="1" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">img1_WN_512x512_1x1_128</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>8</PixelOffset>
+        <LineOffset>4096</LineOffset>
+    </VRTRasterBand>
+</VRTDataset>
