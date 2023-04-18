@@ -24,7 +24,7 @@ using isce3::io::gdal::Raster;
  *
  * Returns true if the byte order is big-endian, false otherwise.
  */
-constexpr bool isBigEndian() noexcept
+inline bool isBigEndian() noexcept
 {
     const std::uint32_t u = 0x01020304;
     const auto c = reinterpret_cast<const char*>(&u);
