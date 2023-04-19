@@ -1089,7 +1089,8 @@ def focus(runconfig):
             # 80 MHz (A) being mixed with 5 MHz sideband (B).
             rawdata = raw.getRawDataset(channel_in.freq_id, pol)
             log.info(f"Raw data shape = {rawdata.shape}")
-            raw_times, raw_grid = raw.getRadarGrid(channel_in.freq_id, tx=pol[0])
+            raw_times, raw_grid = raw.getRadarGrid(channel_in.freq_id,
+                                                   tx=pol[0], epoch=grid_epoch)
 
             pulse_begin = bisect_left(raw_times, proc_begin)
             pulse_end = bisect_right(raw_times, proc_end)

@@ -183,7 +183,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
         return out
 
 
-    def getPulseTimes(self, frequency='A', tx='H'):
+    def getPulseTimes(self, frequency='A', tx='H', epoch=None):
         """
         Read pulse time tags.
 
@@ -195,6 +195,11 @@ class RawBase(Base, family='nisar.productreader.raw'):
         tx : {'H', 'V', 'L', 'R'}
             Transmit polarization.  Abbreviations correspond to horizontal
             (linear), vertical (linear), left circular, right circular
+
+        epoch : isce3.core.DateTime, optional
+            Desired time reference.  If not provided the one from the file
+            metadata will be used.  The absolute time stamps (epoch + t) are
+            identical in either case.
 
         Returns
         -------
@@ -209,7 +214,10 @@ class RawBase(Base, family='nisar.productreader.raw'):
             # FIXME product spec changed UTCTime -> UTCtime
             name = find_case_insensitive(f[txpath], "UTCtime")
             t = np.asarray(f[txpath][name])
-            epoch = isce3.io.get_ref_epoch(f[txpath], name)
+            file_epoch = isce3.io.get_ref_epoch(f[txpath], name)
+        if epoch is None:
+            return file_epoch, t
+        t += (file_epoch - epoch).total_seconds()
         return epoch, t
 
     def getNominalPRF(self, frequency='A', tx='H'):
@@ -564,13 +572,41 @@ class RawBase(Base, family='nisar.productreader.raw'):
             return (fid[path_txrx]["RD"][()], fid[path_txrx]["WD"][()],
                     fid[path_txrx]["WL"][()])
 
-    # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
-    # since PRF isn't necessarily constant.  Return pulse times with grid?
-    def getRadarGrid(self, frequency='A', tx='H', prf=None):
+    def getRadarGrid(self, frequency='A', tx='H', prf=None, epoch=None):
+        """
+        Return the timestamps and radar grid for the raw data.  Since the actual
+        azimuth grid may be irregular due to PRF dithering, the azimuth grid
+        metadata will be filled with nominal values according to the optional
+        `prf` parameter.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}, optional
+            Sub-band.  Typically main science band is 'A'.
+        tx : {'H', 'V'}, optional
+            Transmit polarization.  Abbreviations correspond to horizontal
+            (linear), vertical (linear). Defaults to 'H'.
+        prf : float, optional
+            Pulse repetition frequency in Hz.  If provided, use as grid.prf and
+            set grid.length to match the total time span.  If not provided,
+            then grid.length is equal to number of pulses and grid.prf is the
+            inverse of the mean pulse interval.
+        epoch : isce3.core.DateTime, optional
+            Desired time reference.  If not provided the one from the file
+            metadata will be used.  The absolute time stamps (epoch + t) are
+            identical in either case.
+
+        Returns
+        -------
+        t : np.ndarray[float]
+            Time of each pulse in seconds relative to grid.ref_epoch.
+        grid : isce3.product.RadarGridParameters
+            Grid parameters describing posting of raw data.
+        """
         fc = self.getCenterFrequency(frequency, tx)
         wvl = isce3.core.speed_of_light / fc
         r = self.getRanges(frequency, tx)
-        epoch, t = self.getPulseTimes(frequency, tx)
+        epoch, t = self.getPulseTimes(frequency, tx, epoch=epoch)
         nt = len(t)
         assert nt > 1
         if prf:
