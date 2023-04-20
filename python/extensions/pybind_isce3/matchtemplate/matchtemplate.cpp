@@ -1,8 +1,5 @@
 #include "matchtemplate.h"
 
-#include <isce3/cuda/matchtemplate/pycuampcor/cuAmpcorController.h>
-#include <isce3/cuda/matchtemplate/pycuampcor/cuAmpcorParameter.h>
-
 #include "pycuampcor.h"
 
 namespace py = pybind11;
