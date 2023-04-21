@@ -9,6 +9,7 @@ runconfig:
             # REQUIRED - One NISAR L1B RSLC formatted HDF5 file
             input_file_path:
 
+            # Filename of the input file for QA.
             # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # If Product SAS and QA SAS are run back-to-back,
             # this field should be identical to `sas_output_file`.
@@ -41,7 +42,6 @@ runconfig:
             # NOTE: For R2 will need to handle mixed-mode case with multiple outputs of RSLC workflow.
             sas_output_file: gslc.h5
 
-            # REQUIRED for QA. NOT REQUIRED if only running Product SAS.
             # Output directory to store all QA output files.
             # Defaults to './qa'
             qa_output_dir: ./qa
@@ -197,9 +197,104 @@ runconfig:
             flatten: True
 
         qa:
-            workflows:
-                # True to run the validate workflow. Default: False
-                validate: False
 
-                # True to run the qa_reports workflow. Default: False
-                qa_reports: False
+            workflows:
+
+                # Flag to run `validate` workflow to validate the
+                # input file against its product spec.
+                # Default: False
+                validate: false
+
+                # Flag to run `qa_reports` workflow to generate a
+                # PDF report, geolocated browse image, compute statistics
+                # on the input file, etc..
+                # Default: False
+                qa_reports: false
+
+            qa_reports:
+
+                power_image:
+
+                    # True to compute power in linear units when generating
+                    # the power image for the browse images and graphical
+                    # summary PDF. False for decibel units.
+                    # Default: True
+                    linear_units: true
+
+                    # Number of looks along each axis of the Frequency A
+                    # image arrays for multilooking the power image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, the QA code to compute the nlooks values
+                    # based on `num_mpix`.
+                    # Default: None
+                    nlooks_freqa:
+
+                    # Number of looks along each axis of the Frequency B
+                    # image arrays for multilooking the power image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, the QA code to compute the nlooks values
+                    # based on `num_mpix`.
+                    # Default: None
+                    nlooks_freqb:
+
+                    # Approx. size (in megapixels) for the final
+                    # multilooked browse image(s). When `nlooks_freq*` parameter(s)
+                    # is not None, those nlooks values will take precedence.
+                    # Default: 4.0
+                    num_mpix: 4.0
+
+                    # The middle percentile range of the image array
+                    # that the colormap covers. Must be in the range [0.0, 100.0].
+                    # Default: 90.0
+                    middle_percentile: 90.0
+
+                    # Gamma correction parameter applied to power and browse image(s).
+                    # Gamma will be applied as follows:
+                    # array_out = normalized_array ^ gamma
+                    # where normalized_array is a copy of the image with values
+                    # scaled to the range [0,1].
+                    # The image colorbar will be defined with respect to the input
+                    # image values prior to normalization and gamma correction.
+                    # If None, then no normalization and no gamma correction will be applied.
+                    # Default: 0.5
+                    gamma: 0.5
+
+                    # User-preferred tile shape for processing images by batches.
+                    # Actual tile shape may be modified by QA to be an integer
+                    # multiple of the number of looks for multilooking, of the
+                    # decimation ratio, etc.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Default: (1024, 1024)
+                    tile_shape: [1024, 1024]
+
+                histogram:
+
+                    # Step size to decimate the input array for computing
+                    # the power and phase histograms.
+                    # For example, [2,3] means every 2nd azimuth line and
+                    # every 3rd range sample will be used to compute the histograms.
+                    # Format: [<azimuth>, <range>]
+                    # Default: (10, 10)
+                    decimation_ratio: [10, 10]
+
+                    # Range in dB for the power histogram's bin edges. Endpoint will
+                    # be included. Format: [<starting value>, <endpoint>]
+                    # Default: (-80.0, 20.0)
+                    pow_histogram_bin_edges_range: [-80.0, 20.0]
+
+                    # True to compute phase histogram in radians units,
+                    # False for degrees units.
+                    # Default: True
+                    phs_in_radians: true
+
+                    # User-preferred tile shape for processing images by batches.
+                    # Actual tile shape may be modified by QA to be an integer
+                    # multiple of the number of looks for multilooking, of the
+                    # decimation ratio, etc.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Default: (1024, -1)
+                    tile_shape: [1024, -1]

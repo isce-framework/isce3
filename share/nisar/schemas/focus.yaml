@@ -42,7 +42,7 @@ runconfig:
       # Defaults to sinc^4 pattern using nominal antenna dimensions.
       antenna_pattern: str(required=False)
       # Locations of the corner reflectors in the input product.
-      # Only required if `absolute_calibration_factor` or
+      # Only required if `absolute_radiometric_calibration` or
       # `point_target_analyzer` runconfig params are set to True for QA.
       corner_reflector_file: str(required=False)
 
@@ -278,8 +278,8 @@ qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
   workflows: include('workflows_options', required=False)
   qa_reports: include('qa_reports_options', required=False)
-  absolute_calibration_factor: include('absolute_calibration_factor_options', required=False)
-  nesz: include('nesz_options', required=False)
+  absolute_radiometric_calibration: include('absolute_radiometric_calibration_options', required=False)
+  noise_estimation: include('noise_estimation_options', required=False)
   point_target_analyzer: include('point_target_analyzer_options', required=False)
 
 # `workflows` determines whether or not to run each part of QA.
@@ -287,8 +287,8 @@ qa_options:
 workflows_options:
   validate: bool(required=False)
   qa_reports: bool(required=False)
-  absolute_calibration_factor: bool(required=False)
-  nesz: bool(required=False)
+  absolute_radiometric_calibration: bool(required=False)
+  noise_estimation: bool(required=False)
   point_target_analyzer: bool(required=False)
 
 qa_reports_options:
@@ -299,15 +299,14 @@ qa_reports_options:
     num_mpix: num(min=0.0, required=False)
     middle_percentile: num(min=0.0, max=100.0, required=False)
     gamma: num(min=0.0, required=False)
-    tile_shape: list(int(min=1), min=2, max=2, required=False)
+    tile_shape: list(int(min=-1), min=2, max=2, required=False)
   histogram:
     decimation_ratio: list(int(min=1), min=2, max=2, required=False)
-    pow_histogram_start: num(required=False)
-    pow_histogram_endpoint: num(required=False)
+    pow_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
     phs_in_radians: bool(required=False)
-    tile_shape: list(int(min=1), min=2, max=2, required=False)
+    tile_shape: list(int(min=-1), min=2, max=2, required=False)
 
-absolute_calibration_factor_options:
+absolute_radiometric_calibration_options:
   freq: enum('A', 'B', required=False)
   pol: enum('HH', 'VV', 'HV', 'VH', required=False)
   nchip: int(min=1, required=False)
@@ -317,7 +316,7 @@ absolute_calibration_factor_options:
   power_method: enum('box', 'integrated', required=False)
   pthresh: num(required=False)
 
-nesz_options:
+noise_estimation_options:
   freq_group: enum('A', 'B', required=True)
   pol: enum('HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV', required=True)
   rng_start: list(int(min=0), min=1, required=False)

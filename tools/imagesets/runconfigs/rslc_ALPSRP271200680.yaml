@@ -194,4 +194,4 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
-                nesz: true
+                noise_estimation: true

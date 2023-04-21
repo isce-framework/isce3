@@ -155,12 +155,28 @@ logging_options:
     write_mode: enum('a', 'w', required=False)
 
 qa_options:
-  # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
-  workflows: include('workflows_options', required=False)
+    # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
+    workflows: include('workflows_options', required=False)
+    qa_reports: include('qa_reports_options', required=False)
 
 workflows_options:
-  validate: bool(required=False)
-  qa_reports: bool(required=False)
+    validate: bool(required=False)
+    qa_reports: bool(required=False)
+
+qa_reports_options:
+    power_image:
+        linear_units: bool(required=False)
+        nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
+        nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
+        num_mpix: num(min=0.0, required=False)
+        middle_percentile: num(min=0.0, max=100.0, required=False)
+        gamma: num(min=0.0, required=False)
+        tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    histogram:
+        decimation_ratio: list(int(min=1), min=2, max=2, required=False)
+        pow_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+        phs_in_radians: bool(required=False)
+        tile_shape: list(int(min=-1), min=2, max=2, required=False)
 
 dem_download_options:
     # s3 bucket / curl URL / local file
