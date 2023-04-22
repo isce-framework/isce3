@@ -143,6 +143,15 @@ class Base(pyre.component,
             return isce3.core.Orbit.load_from_h5(fid[orbitPath])
 
     @pyre.export
+    def getAttitude(self):
+        '''
+        extracts attitude
+        '''
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            attitudePath = os.path.join(self.MetadataPath, 'attitude')
+            return isce3.core.Attitude.load_from_h5(fid[attitudePath])
+
+    @pyre.export
     def getDopplerCentroid(self, frequency='A'):
         '''
         Extract the Doppler centroid

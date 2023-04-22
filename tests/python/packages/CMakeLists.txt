@@ -1,4 +1,5 @@
 set(TESTFILES
+isce3/antenna/geometry_antenna.py
 isce3/atmosphere/ionosphere.py
 isce3/cal/corner_reflector.py
 isce3/cal/point_target_info.py
@@ -15,6 +16,8 @@ isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
 isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
+nisar/cal/corner_reflector_slc_func.py
+nisar/cal/pol_channel_imbalance_slc.py
 nisar/mixed_mode/logic.py
 nisar/mixed_mode/processing.py
 nisar/products/readers/antenna_parser.py
@@ -47,6 +50,7 @@ nisar/workflows/resample_slc.py
 nisar/workflows/unwrap.py
 nisar/workflows/point_target_analysis.py
 nisar/workflows/noise_estimator.py
+nisar/workflows/pol_channel_imbalance_from_rslc.py
 )
 
 if(WITH_CUDA)
