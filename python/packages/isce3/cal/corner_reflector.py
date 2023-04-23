@@ -73,7 +73,7 @@ def parse_triangular_trihedral_cr_csv(
     """
     dtype = np.dtype(
         [
-            ("id", np.str_),
+            ("id", np.object_),
             ("lat", np.float64),
             ("lon", np.float64),
             ("height", np.float64),
@@ -83,11 +83,20 @@ def parse_triangular_trihedral_cr_csv(
         ]
     )
 
-    # Parse CSV data. Skip initial (header) row.
+    # Parse CSV data.
+    # Treat the header row ("Corner reflector ID, ...") as a comment so that it will be
+    # ignored if present.
     # Any additional columns beyond those mentioned above will be ignored so that new
     # additions to the file spec don't break compatibility.
     cols = range(len(dtype))
-    crs = np.loadtxt(csvfile, dtype=dtype, delimiter=",", skiprows=1, usecols=cols)
+    crs = np.loadtxt(
+        csvfile,
+        dtype=dtype,
+        delimiter=",",
+        usecols=cols,
+        ndmin=1,
+        comments=["#", "Corner reflector ID,", '"Corner reflector ID",'],
+    )
 
     # Convert lat, lon, az, & el angles to radians.
     for attr in ["lat", "lon", "az", "el"]:

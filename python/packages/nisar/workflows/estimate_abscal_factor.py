@@ -14,6 +14,13 @@ import isce3
 import nisar
 
 
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, isce3.core.DateTime):
+            return obj.isoformat()
+        return super().default(obj)
+
+
 def estimate_abscal_factor(
     corner_reflectors: Iterable[isce3.cal.TriangularTrihedralCornerReflector],
     rslc: nisar.products.readers.SLC,
@@ -436,7 +443,7 @@ def main(
 
     if output_json is None:
         # Print results to console in JSON format.
-        print(json.dumps(results, indent=2))
+        print(json.dumps(results, indent=2, cls=DateTimeEncoder))
     else:
         output_json = Path(output_json)
 
@@ -446,7 +453,7 @@ def main(
 
         # Write results to file in JSON format. Overwrite file if it exists.
         with output_json.open("w") as f:
-            json.dump(results, f, indent=2)
+            json.dump(results, f, indent=2, cls=DateTimeEncoder)
 
 
 if __name__ == "__main__":
