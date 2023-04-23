@@ -294,7 +294,6 @@ def add_water_mask(cfg, freq, geogrid, dst_h5):
     if water_mask_path is not None:
         freq_path = f'/science/LSAR/GUNW/grids/frequency{freq}'
         water_mask_h5_path = f'{freq_path}/interferogram/waterMask'
-        print(water_mask_h5_path)
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
         water_mask_interpret = water_mask.astype('uint8') != 0
         dst_h5[water_mask_h5_path].write_direct(water_mask_interpret)
