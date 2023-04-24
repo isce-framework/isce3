@@ -14,6 +14,7 @@ workflowdata = {
         "L0B_RRSD_REE2":
         [
             "attitude.xml",
+            "dem_trunc.tiff",
             "orbit.xml",
             "NISAR_LCAL_20220101T120000_01.yaml",
             "NISAR_LINS_20220101T120000_01.h5",
