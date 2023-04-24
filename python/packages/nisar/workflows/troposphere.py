@@ -200,11 +200,14 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 # Convert it to radians units
                 tropo_delay_datacube = -tropo_delay * 4.0 * np.pi / wavelength
 
+                # Create a maksed datacube that excludes the NaN values
+                tropo_delay_datacube_masked = np.ma.masked_invalid(tropo_delay_datacube)
+
                 # Interpolate to radar grid to keep its dimension consistent with other datacubes
                 tropo_delay_interpolator = RegularGridInterpolator((tropo_delay_reference.z,
                                                                     tropo_delay_reference.y,
                                                                     tropo_delay_reference.x),
-                                                                   tropo_delay_datacube,
+                                                                   tropo_delay_datacube_masked,
                                                                    method='linear')
 
                 # Interpolate the troposphere delay
