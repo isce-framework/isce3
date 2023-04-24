@@ -63,5 +63,25 @@ void addbinding(pybind11::class_<Attitude>& pyAttitude)
         .def("contains", &Attitude::contains,
             "Check if time falls in the valid interpolation domain.",
             py::arg("time"))
+
+        .def("crop", &Attitude::crop,
+            R"(
+            Create a new Attitude containing data in the requested interval
+
+            Parameters
+            ----------
+            start : isce3.core.DateTime
+                Beginning of time interval
+            end : isce3.core.DateTime
+                End of time interval
+            npad : int, optional
+                Minimal number of state vectors to include past each of
+                the given time bounds (useful to guarantee adequate
+                support for interpolation).
+            Returns
+            -------
+            isce3.core.Attitude
+                Attitude object with data containing start & end times)",
+            py::arg("start"), py::arg("end"), py::arg("npad") = 0)
         ;
 }

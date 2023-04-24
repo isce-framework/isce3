@@ -76,6 +76,17 @@ public:
         return _reference_epoch + TimeDelta(endTime());
     }
 
+    /** Create a new Attitude containing data in the requested interval
+     *
+     * \param[in] start Beginning of time interval
+     * \param[in] end   End of time interval
+     * \param[in] npad  Minimal number of quaternions to include past each of
+     *                  the given time bounds (useful to guarantee adequate
+     *                  support for interpolation).
+     * \returns Attitude object with data containing start & end times
+    */
+    Attitude crop(const DateTime& start, const DateTime& end, int npad = 0) const;
+
 private:
     DateTime _reference_epoch;
     std::vector<double> _time;

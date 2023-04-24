@@ -1,6 +1,7 @@
 import copy
 import h5py
 import numpy as np
+import numpy.testing as npt
 from isce3.ext.isce3 import core
 from tempfile import mkstemp
 
@@ -102,3 +103,26 @@ def test_contains():
     assert not attitude.contains(attitude.end_time + 1.0)
     mid = 0.5 * (attitude.start_time + attitude.end_time)
     assert attitude.contains(mid)
+
+
+def test_crop():
+    t = [0, 1, 2, 3, 4, 5]
+    q = (core.Quaternion(1,0,0,0),) * len(t)
+    epoch = core.DateTime(2020, 1, 1)
+    attitude = core.Attitude(t, q, epoch)
+
+    # Pick a point past 2nd sample and before 5th sample.  Expect to only lose
+    # the samples at the end so that the requested points are contained in the
+    # output domain.
+    t0, t1 = 1.1, 3.9
+    start = epoch + core.TimeDelta(t0)
+    stop = epoch + core.TimeDelta(t1)
+    cropped_attitude = attitude.crop(start, stop)
+
+    npt.assert_equal(cropped_attitude.size, len(t) - 2)
+    npt.assert_(cropped_attitude.contains(t0))
+    npt.assert_(cropped_attitude.contains(t1))
+
+    # Requesting npad=1 should result in getting all the original data.
+    cropped_attitude = attitude.crop(start, stop, npad=1)
+    npt.assert_array_equal(attitude.time, cropped_attitude.time)
