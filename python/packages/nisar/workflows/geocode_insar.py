@@ -14,6 +14,7 @@ import h5py
 import journal
 import isce3
 import numpy as np
+from osgeo import gdal
 
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
@@ -685,6 +686,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     radar_grid_slc, dem_raster, block_size,
                                     scratch_path=scratch_path,
                                     compute_stats=False)
+
+                # add water mask to GUNW product
+                add_water_mask(cfg, freq, geo_grid, dst_h5)
+
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
                 desired = ['along_track_offset', 'slant_range_offset',
@@ -722,9 +727,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     pol_list,input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size * 2,
                                     input_product_type=InputProduct.RIFG)
-
-            # add water mask to GUNW product
-            add_water_mask(cfg, freq, geo_grid, dst_h5)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
@@ -1000,6 +1002,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_shadow_obj,
                                     scratch_path=scratch_path, compute_stats=False)
+
+                # add water mask to GUNW product
+                add_water_mask(cfg, freq, geogrid, dst_h5)
+
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
                 desired=['along_track_offset', 'slant_range_offset',
@@ -1053,9 +1059,6 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     gpu_geocode_rasters(geo_datasets, [desired_ds], freq, pol_list,
                                         input_hdf5, dst_h5, geocode_obj,
                                         input_product_type = InputProduct.RIFG)
-
-            # add water mask to GUNW product
-            add_water_mask(cfg, freq, geogrid, dst_h5)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
