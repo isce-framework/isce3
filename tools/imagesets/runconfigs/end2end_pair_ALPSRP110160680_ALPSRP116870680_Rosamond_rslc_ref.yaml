@@ -14,6 +14,7 @@ runconfig:
             external_calibration:
             internal_calibration:
             antenna_pattern:
+            corner_reflector_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/2008-02-18_0620_Rosamond-corner-reflectors.csv
         product_path_group:
             product_path: output_rslc_ref
             scratch_path: scratch_rslc_ref
@@ -151,4 +152,6 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                absolute_radiometric_calibration: true
                 noise_estimation: true
+                point_target_analyzer: true
