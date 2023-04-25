@@ -5,6 +5,7 @@
 
 #include <isce3/core/DateTime.h>
 #include <isce3/core/LookSide.h>
+#include <isce3/core/Linspace.h>
 #include <isce3/product/RadarGridProduct.h>
 
 namespace py = pybind11;
@@ -76,6 +77,10 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::overload_cast<const double&>(&RadarGridParameters::sensingStart))
         .def_property_readonly("sensing_mid", &RadarGridParameters::sensingMid)
         .def_property_readonly("sensing_stop", &RadarGridParameters::sensingStop)
+        .def_property_readonly("sensing_times", [](const RadarGridParameters& self) {
+                return isce3::core::Linspace(self.sensingStart(),
+                        1.0 / self.prf(), self.length());
+        })
         .def_property("ref_epoch",
                 py::overload_cast<>(&RadarGridParameters::refEpoch, py::const_),
                 py::overload_cast<const DateTime &>(&RadarGridParameters::refEpoch))
@@ -103,6 +108,10 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::arg("azlooks"), py::arg("rglooks"))
         .def("slant_range", &RadarGridParameters::slantRange,
                 py::arg("sample"))
+        .def_property_readonly("slant_ranges", [](const RadarGridParameters& self) {
+                return isce3::core::Linspace(self.startingRange(),
+                        self.rangePixelSpacing(), self.width());
+        })
         // slice to get subset of RGP
         .def("__getitem__", [](const RadarGridParameters& self, py::tuple key) {
                 if (key.size() != 2) {

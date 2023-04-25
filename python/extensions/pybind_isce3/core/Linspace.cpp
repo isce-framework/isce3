@@ -3,6 +3,7 @@
 #include <isce3/except/Error.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -50,24 +51,27 @@ void addbinding(py::class_<Linspace<T>>& pyLinspace)
                         throw py::error_already_set();
                     }
 
-                    if (step != 1) {
+                    if (step <= 0) {
                         throw InvalidArgument(ISCE_SRCINFO(),
-                                "only unit-stride slices are supported");
+                                "only positive-stride slices are supported");
                     }
 
-                    auto istart = static_cast<int>(start);
-                    auto istop = static_cast<int>(stop);
-                    return self.subinterval(istart, istop);
+                    auto first = self[start];
+                    auto spacing = self.spacing() * step;
+
+                    return Linspace<T>(first, spacing, len);
                 })
         .def("__len__", &Linspace<T>::size)
-        .def("__array__", [](const Linspace<T>& self) {
+        .def("__array__", [](const Linspace<T>& self, std::optional<py::object> dtype) {
 
                     py::array_t<T> arr(self.size());
                     auto a = arr.mutable_unchecked();
                     for (int i = 0; i < self.size(); ++i) { a(i) = self[i]; }
 
-                    return arr;
-                })
+                    using namespace pybind11::literals;
+                    return arr.attr("astype")(dtype.value_or(py::dtype::of<T>()), "copy"_a=false);
+                },
+                py::arg("dtype") = py::none())
 
         // operators
         .def(py::self == py::self)
@@ -88,6 +92,14 @@ void addbinding(py::class_<Linspace<T>>& pyLinspace)
                 })
         .def_property_readonly("last", &Linspace<T>::last)
         .def_property_readonly("size", &Linspace<T>::size)
+        .def_property_readonly("dtype", [](const Linspace<T>& /*self*/) {
+
+                    return py::dtype::of<T>();
+                })
+        .def_property_readonly("shape", [](const Linspace<T>& self) {
+
+                    return std::make_tuple(self.size());
+                })
 
         // methods
         .def("resize", [](Linspace<T>& self, int size) {

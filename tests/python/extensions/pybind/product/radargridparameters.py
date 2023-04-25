@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 import numpy.testing as npt
 import pytest
 
@@ -34,6 +35,14 @@ def test_radargridparameters():
     assert grid[1:,:].length == grid.length - 1
     assert grid[:,1:].range_pixel_spacing == grid.range_pixel_spacing
     assert grid[:,1:].width == grid.width - 1
+    assert grid.slant_ranges[0] == grid.starting_range
+    assert grid.slant_ranges.size == grid.width
+    npt.assert_almost_equal(grid.range_pixel_spacing,
+        set(np.diff(grid.slant_ranges)).pop())
+    assert grid.sensing_times[0] == grid.sensing_start
+    assert grid.sensing_times.size == grid.length
+    npt.assert_almost_equal(1.0 / grid.prf,
+        set(np.diff(grid.sensing_times)).pop())
     # Check case of length != width.
     rect = grid[:10, :11]
     assert rect[:,10:11].shape == (10, 1)
