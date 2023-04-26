@@ -105,7 +105,7 @@ def cmd_line_parser():
                      help='Filename of UAVSAR-compatible CSV file for corner '
                      'reflectors.')
     prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
-                     dest='freq-band', help='Frequency band such as "A"')
+                     dest='freq_band', help='Frequency band such as "A"')
     prs.add_argument('-d', '--dem-file', type=str, dest='dem_file',
                      help='DEM raster file in (GDAL-compatible format such as '
                      'GeoTIFF) containing heights w.r.t. WGS-84 ellipsoid. '
@@ -218,7 +218,8 @@ def pol_channel_imbalance_from_rslc(args):
     # estimate pol imbalances for both TX and RX
     with PolChannelImbalanceSlc(
             slc_ext, slc_cr, cr_llh, dir_tmp=args.out_dir, cross_talk=xtalk,
-            ignore_faraday=args.ignore_faraday, logger=logger, dem=dem) as pci:
+            freq_band=args.freq_band, ignore_faraday=args.ignore_faraday,
+            logger=logger, dem=dem) as pci:
 
         imb_prod_ant, imb_prod_slc = pci.estimate(
             azt_blk_size=args.azt_spacing, sr_blk_size=args.sr_spacing,
