@@ -66,18 +66,20 @@ workflowdata = {
             "2008-02-18_0620_Rosamond-corner-reflectors.csv",
             "ALPSRP110160680.L0B.h5",
             "dem.tif",
-            "ERA5_N34_N36_W119_W117_20080218_06.grb",
-            "NISAR_ANCL_TEC_20230124T021043_20080218T062000_20080218T062020_v0.0.json",
+            "HRES_2008_02_18_T06_20_00_34N_37N_120W_117W.nc",
+            "NISAR_ANC_L_TEC_20230421T214743_20080218T061910_20080218T061940_v0.1.json",
             "README.txt",
+            "watermask_rosamond.tif",
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
             "2008-04-04_0619_Rosamond-corner-reflectors.csv",
             "ALPSRP116870680.L0B.h5",
             "dem.tif",
-            "ERA5_N34_N36_W119_W117_20080404_06.grb",
-            "NISAR_ANCL_TEC_20230124T021043_20080404T061910_20080404T061940_v0.0.json",
+            "HRES_2008_04_04_T06_19_17_34N_37N_120W_117W.nc",
+            "NISAR_ANC_L_TEC_20230124T021043_20080404T061910_20080404T061940_v0.2.json",
             "README.txt",
+            "watermask_rosamond.tif",
         ],
         "L0B_RRSD_ALPSRP264757150_Amazon":
         [
@@ -153,7 +155,7 @@ workflowdata = {
         [
             "SanAnd_05518_12018_000_120419_L090_CX_143_03.h5",
             "dem.tif",
-            "ERA5_N38_N40_W124_W121_20120419_16.grb",
+            "HRES_2012_04_19_T16_37_23_38N_41N_125W_122W.nc",
             "README.txt",
         ],
 
@@ -168,7 +170,7 @@ workflowdata = {
         [
             "SanAnd_05518_12128_008_121105_L090_CX_143_02.h5",
             "dem.tif",
-            "ERA5_N38_N40_W124_W121_20121105_22.grb",
+            "HRES_2012_11_05_T22_48_18_38N_41N_125W_122W.nc",
             "README.txt",
         ],
 
@@ -202,28 +204,19 @@ workflowdata = {
             "README.txt",
         ],
 
-        "L2_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001":
+        "L2_GCOV_003_005_A_019_4020_DHNA_A_20200926T135152_20200926T135219_P01101_M_P_J_001":
         [
-            "WldCvr_cbmap221204.txt",
-            "ni_cube_30_50_220828v2.h5",
-            "vwc_M01_288_200m.h5",
-            "vwc_M01_276_200m.h5",
-            "vwc_M01_264_200m.h5",
-            "eps2mvMironov_002.float32",
-            "alphatable.nc",
             "A4S10040600100700001.nc",
-            "sm_static_ancillary.h5",
-            "NISAR_L2_PR_GCOV_023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001.h5",
-            "NISAR_L2_PR_GCOV_022_045_A_017_4020_HH_20220914T135152_20220914T135219_P01101_P_P_J_001.h5",
-            "NISAR_L2_PR_GCOV_021_045_A_017_4020_HH_20220902T135152_20220902T135219_P01101_P_P_J_001.h5",
-            "SMAPC/SMAPC_Alpha0_Uncertainty_HH.bin",
-            "SMAPC/SMAPC_Alpha0_Uncertainty_VV.bin",
-            "SMAPC/SMAP_L3_E_17000_nf_average_09_1.dat",
-            "SMAPC/SMAP_L3_E_17000_nf_average_year.dat",
-            "SMAPC/SMAP_L3_E_17000_nf_max_09_1.dat",
-            "SMAPC/SMAP_L3_E_17000_nf_max_year.dat",
-            "SMAPC/SMAP_L3_E_17000_nf_min_09_1.dat",
-            "SMAPC/SMAP_L3_E_17000_nf_min_year.dat",
+            "NISAR_L2_PR_GCOV_001_005_A_019_4020_DHNA_A_20200902T135152_20200902T135219_P01101_M_P_J_001.h5",
+            "NISAR_L2_PR_GCOV_002_005_A_019_4020_DHNA_A_20200914T135152_20200914T135219_P01101_M_P_J_001.h5",
+            "NISAR_L2_PR_GCOV_003_005_A_019_4020_DHNA_A_20200926T135152_20200926T135219_P01101_M_P_J_001.h5",
+            "NISAR_LOCAL_INCIDENCE_ANGLE_005_019_001.h5",
+            "NISAR_PMI_STATIC_ANCILLARY_DATA_001.h5",
+            "NISAR_SM_STATIC_ANCILLARY_001.h5",
+            "NISAR_TSR_STATIC_ANCILLARY_DATA_001.h5",
+            "NISAR_VWC_M01_264_200m_001.h5",
+            "NISAR_VWC_M01_276_200m_001.h5",
+            "NISAR_VWC_M01_288_200m_001.h5",
             "README.txt",
         ],
     }
@@ -316,6 +309,6 @@ workflowtests = {
     ]},
 
     'soilm': {"soilm_" + name: "L2_GCOV_" + name for name in [
-        "023_045_A_017_4020_HH_20220926T135152_20220926T135219_P01101_P_P_J_001",
+        "003_005_A_019_4020_DHNA_A_20200926T135152_20200926T135219_P01101_M_P_J_001",
     ]},
 }

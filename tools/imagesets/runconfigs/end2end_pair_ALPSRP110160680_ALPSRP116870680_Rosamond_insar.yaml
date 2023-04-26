@@ -19,12 +19,14 @@ runconfig:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/dem.tif
 
+            water_mask_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/watermask_rosamond.tif
+
             troposphere_weather_model:
-               reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/ERA5_N34_N36_W119_W117_20080218_06.grb
-               secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/ERA5_N34_N36_W119_W117_20080404_06.grb
+               reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/HRES_2008_02_18_T06_20_00_34N_37N_120W_117W.nc
+               secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/HRES_2008_04_04_T06_19_17_34N_37N_120W_117W.nc
 
             # PLACEHOLDER - Sample of file name format
-            tec_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/NISAR_ANCL_TEC_20230124T021043_20080218T062000_20080218T062020_v0.0.json
+            tec_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/NISAR_ANC_L_TEC_20230421T214743_20080218T061910_20080218T061940_v0.1.json
 
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
@@ -142,7 +144,7 @@ runconfig:
                     filter_size_azimuth: 7
 
             phase_unwrap:
-                crossmul_path:
+                crossmul_path: output_insar/RIFG_product.h5
                 algorithm: icu
                 icu:
                   buffer_lines: 3700
@@ -166,11 +168,11 @@ runconfig:
 
             troposphere_delay:
                 enabled: True
-                package: pyaps
-                weather_model_type: ERA5
+                package: raider
+                weather_model_type: HRES
                 delay_direction: zenith
-                enable_wet_product: False
-                enable_dry_product: False
+                enable_wet_product: True
+                enable_dry_product: True
                 enable_comb_product: True
 
         # TODO OPTIONAL - To setup type of worker
