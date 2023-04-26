@@ -566,7 +566,7 @@ class ImageSet:
         self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
         self.ptatest(tests=list(workflowtests['pta'].items())[:1])
 
-    def workflowqa(self, wfname, testname, suf="", description=""):
+    def workflowqa(self, wfname, testname, dataname=None, suf="", description=""):
         """
         Run QA for the specified workflow using the NISAR distrib image.
 
@@ -576,6 +576,9 @@ class ImageSet:
             Workflow name (e.g. "rslc")
         testname: str
             Workflow test name (e.g. "RSLC_REE1")
+        dataname : str or iterable of str or None
+            Test input dataset(s) to be mounted (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2"]).
+            If None, no input datasets are used.
         suf: str
             Suffix in runconfig and output directory name to differentiate between
             reference and secondary data in end-to-end tests
@@ -598,28 +601,28 @@ class ImageSet:
         runconfig = f"runconfig_{wfname}{suf}.yaml"
         cmd = [f"time nisarqa {wfname}_qa {runconfig}"]
         try:
-            self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
+            self.distribrun(testdir, cmd, logfile=log, nisarimg=True, dataname=dataname,
                             loghdlrname=f'wfqa.{os.path.basename(testdir)}')
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow QA on test {testname} failed") from e
 
     def rslcqa(self, tests=None):
         if tests is None:
-            tests = workflowtests['rslc'].keys()
-        for testname in tests:
-            self.workflowqa("rslc", testname)
+            tests = workflowtests['rslc'].items()
+        for testname, dataname in tests:
+            self.workflowqa("rslc", testname, dataname=dataname)
 
     def gslcqa(self, tests=None):
         if tests is None:
-            tests = workflowtests['gslc'].keys()
-        for testname in tests:
-            self.workflowqa("gslc", testname)
+            tests = workflowtests['gslc'].items()
+        for testname, dataname in tests:
+            self.workflowqa("gslc", testname, dataname=dataname)
 
     def gcovqa(self, tests=None):
         if tests is None:
-            tests = workflowtests['gcov'].keys()
-        for testname in tests:
-            self.workflowqa("gcov", testname)
+            tests = workflowtests['gcov'].items()
+        for testname, dataname in tests:
+            self.workflowqa("gcov", testname, dataname=dataname)
 
     def insarqa(self, tests=None):
         """
@@ -631,8 +634,8 @@ class ImageSet:
         """
         wfname = "insar"
         if tests is None:
-            tests = workflowtests['insar'].keys()
-        for testname in tests:
+            tests = workflowtests['insar'].items()
+        for testname, dataname in tests:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             # Run QA for each of the InSAR products.
             # QA validation and/or reports may be disabled for each individual product
@@ -648,7 +651,7 @@ class ImageSet:
                 runconfig = f"runconfig_{wfname}.yaml"
                 cmd = [f"time nisarqa {product}_qa {runconfig}"]
                 try:
-                    self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
+                    self.distribrun(testdir, cmd, logfile=log, nisarimg=True, dataname=dataname,
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
                 except subprocess.CalledProcessError as e:
                     raise RuntimeError(f"Workflow QA on test {testname} {product.upper()} product failed\n") from e
@@ -664,19 +667,25 @@ class ImageSet:
         for testname, dataname in tests:
             for wfname in ['rslc', 'gslc', 'gcov']:
                 for suf, descr in [('_ref', 'reference'), ('_sec', 'secondary')]:
-                    self.workflowqa(wfname, testname, suf=suf, description=f' {wfname.upper()} {descr} product')
+                    self.workflowqa(
+                        wfname,
+                        testname,
+                        dataname=dataname,
+                        suf=suf,
+                        description=f' {wfname.upper()} {descr} product',
+                    )
 
-            self.insarqa([testname])
+            self.insarqa([(testname, dataname)])
 
 
     def minqa(self):
         """
         Only run qa for first test in each workflow
         """
-        self.rslcqa(tests=list(workflowtests['rslc'].keys())[:1])
-        self.gslcqa(tests=list(workflowtests['gslc'].keys())[:1])
-        self.gcovqa(tests=list(workflowtests['gcov'].keys())[:1])
-        self.insarqa(tests=list(workflowtests['insar'].keys())[:1])
+        self.rslcqa(tests=list(workflowtests['rslc'].items())[:1])
+        self.gslcqa(tests=list(workflowtests['gslc'].items())[:1])
+        self.gcovqa(tests=list(workflowtests['gcov'].items())[:1])
+        self.insarqa(tests=list(workflowtests['insar'].items())[:1])
 
     def docsbuild(self):
         """
