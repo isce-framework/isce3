@@ -110,9 +110,9 @@ runconfig:
             # the core module processes the data block by block to mange memory for large datasets
             blocksize:
                 # number of lines in northing direction of a block of the geocoded grid 
-                y: 2000
+                y: 200
                 # number of lines in easting direction of a block of the geocoded grid
-                x: 2000
+                x: 200
 
             # flag to flatten output GSLC
             flatten: True
