@@ -392,7 +392,6 @@ void isce3::signal::Looks<T>::multilook(std::valarray<std::complex<T>>& input,
     output /= (_colsLooks * _rowsLooks);
 }
 
-template class isce3::signal::Looks<int>;
 template class isce3::signal::Looks<float>;
 template class isce3::signal::Looks<double>;
 
