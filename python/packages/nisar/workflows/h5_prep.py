@@ -607,6 +607,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                              units="Hz", data=rg_bw,
                              long_name="range bandwidth")
 
+
             if dst in ['RIFG', 'RUNW', 'GUNW']:
                 descr = "Number of swaths of continuous imagery, due to gaps"
                 _create_datasets(dst_h5[freq_path], [0], np.uint8,
@@ -820,12 +821,23 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                      data=az_looks * az_spac,
                                      long_name="zero doppler time spacing")
                 elif dst in ['GUNW']:
-                    # Create the group for the wrapped interferogram
-                    wrapped_igram_path = f'{freq_path}/wrappedInterferogram'
-                    dst_h5[freq_path].create_group('wrappedInterferogram')
-                    set_get_geo_info(dst_h5, wrapped_igram_path, wrapped_igram_geogrids[freq])
 
-                    set_get_geo_info(dst_h5, igram_path, geogrids[freq])
+                    # Create the group for the wrapped and unwrapped interferogram
+                    wrapped_igram_path = f'{igram_path}/wrapped'
+                    unwrapped_igram_path = f'{igram_path}/unwrapped'
+
+                    dst_h5[igram_path].create_group('wrapped')
+                    dst_h5[igram_path].create_group('unwrapped')
+
+                    # Set the geogrids
+                    set_get_geo_info(dst_h5, wrapped_igram_path, wrapped_igram_geogrids[freq])
+                    set_get_geo_info(dst_h5, unwrapped_igram_path, geogrids[freq])
+
+                    # The igram_path will be replaced by the unwrapped_igram_path variable
+                    # to ensure the iono, water mask, and layover layers will be stored under the unwrapped
+                    # interferogram group
+                    igram_path = unwrapped_igram_path
+
                     # Generate the layover/shadow and water masks
                     descr = f"Layover Shadow mask for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
                     _create_datasets(dst_h5[igram_path], igram_shape, np.byte,
@@ -921,6 +933,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                 grid_path = grid_path.replace('geolocation', 'radar')
 
             freq_path = f'{cal_path}/frequency{freq}'
+
             descr = "Bulk along track time offset used to align reference and secondary image"
             _create_datasets(dst_h5[freq_path], [0], np.float32,
                              "bulkAlongTrackTimeOffset",
@@ -962,10 +975,14 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                  long_name='reference flattening elevation')
 
             if dst in ['RIFG', 'RUNW', 'GUNW']:
-                igram_path = f'{freq_path}/interferogram'
-                offs_path = f'{freq_path}/pixelOffsets'
-                dst_h5[freq_path].create_group('interferogram')
-                dst_h5[freq_path].create_group('pixelOffsets')
+                #
+                # It seems to be redundant here to create the interferogram and pixelOffsets again
+                # as they have been created above
+
+                #igram_path = f'{freq_path}/interferogram'
+                #offs_path = f'{freq_path}/pixelOffsets'
+                #dst_h5[freq_path].create_group('interferogram')
+                #dst_h5[freq_path].create_group('pixelOffsets')
                 descr = "Number of looks applied in along track direction"
                 _create_datasets(dst_h5[igram_path], [0], np.uint8,
                                  "numberOfAzimuthLooks",
