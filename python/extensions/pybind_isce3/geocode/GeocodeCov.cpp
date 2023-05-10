@@ -94,8 +94,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("out_geo_nlooks") = nullptr,
                     py::arg("out_geo_rtc") = nullptr,
                     py::arg("phase_screen") = nullptr,
-                    py::arg("offset_az_raster") = nullptr,
-                    py::arg("offset_rg_raster") = nullptr,
+                    py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+                    py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
                     py::arg("input_rtc") = nullptr,
                     py::arg("output_rtc") = nullptr,
                     py::arg("input_layover_shadow_mask_raster") = nullptr,
@@ -177,10 +177,12 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         Output RTC area factor (in geo-coordinates).
                     phase_screen_raster: isce3.io.Raster, optional
                         Phase screen to be removed before geocoding
-                    offset_az_raster: isce3.io.Raster, optional
-                        Azimuth offset raster (reference radar-grid geometry)
-                    offset_rg_raster: isce3.io.Raster, optional
-                        Range offset raster (reference radar-grid geometry)
+                    az_time_correction: LUT2d
+                        geo2rdr azimuth additive correction, in seconds,
+                        as a function of azimuth and range
+                    slant_range_correction: LUT2d
+                        geo2rdr slant range additive correction, in meters,
+                        as a function of azimuth and range
                     in_rtc: isce3.io.Raster, optional
                         Input RTC area factor (in slant-range).
                     out_rtc: isce3.io.Raster, optional

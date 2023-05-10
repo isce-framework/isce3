@@ -68,10 +68,10 @@ public:
      * out_geo_nlooks.
      * @param[out] out_off_diag_terms  Output raster containing the
      * off-diagonal terms of the covariance matrix.
-     * @param[out] out_geo_rdr      Raster to which the radar-grid
+     * @param[out] out_geo_rdr         Raster to which the radar-grid
      * positions (range and azimuth) of the geogrid pixels vertices will be
      * saved.
-     * @param[out] out_geo_dem    Raster to which the interpolated DEM
+     * @param[out] out_geo_dem         Raster to which the interpolated DEM
      * will be saved.
      * @param[out] out_nlooks          Raster to which the number of radar-grid
      * looks associated with the geogrid will be saved.
@@ -79,12 +79,12 @@ public:
      * geo-coordinates).
      * @param[in]  phase_screen_raster Phase screen to be removed before
      * geocoding
-     * @param[in]  offset_az_raster    Azimuth offset raster (reference
-     * radar-grid geometry)
-     * @param[in]  offset_rg_raster    Range offset raster (reference
-     * radar-grid geometry)
-     * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
-     * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
+     * seconds, as a function of azimuth and range
+     * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
+     * in meters, as a function of azimuth and range
+     * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -126,8 +126,8 @@ public:
             isce3::io::Raster* out_geo_nlooks = nullptr,
             isce3::io::Raster* out_geo_rtc = nullptr,
             isce3::io::Raster* phase_screen_raster = nullptr,
-            isce3::io::Raster* offset_az_raster = nullptr,
-            isce3::io::Raster* offset_rg_raster = nullptr,
+            const isce3::core::LUT2d<double>& az_time_correction = {},
+            const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
@@ -170,12 +170,12 @@ public:
      * @param[in]  flatten             Flatten the geocoded SLC
      * @param[in]  phase_screen_raster Phase screen to be removed before
      * geocoding
-     * @param[in]  offset_az_raster    Azimuth offset raster (reference
-     * radar-grid geometry)
-     * @param[in]  offset_rg_raster    Range offset raster (reference radar-grid
-     * geometry)
-     * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
-     * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
+     * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
+     * seconds, as a function of azimuth and range
+     * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
+     * in meters, as a function of azimuth and range
+     * @param[in]  input_rtc           Input RTC area factor (in slant-range geometry).
+     * @param[out] output_rtc          Output RTC area factor (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -210,8 +210,8 @@ public:
             isce3::io::Raster* out_geo_dem = nullptr,
             isce3::io::Raster* out_geo_rtc = nullptr,
             isce3::io::Raster* phase_screen_raster = nullptr,
-            isce3::io::Raster* offset_az_raster = nullptr,
-            isce3::io::Raster* offset_rg_raster = nullptr,
+            const isce3::core::LUT2d<double>& az_time_correction = {},
+            const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
@@ -252,15 +252,19 @@ public:
      * parameters determines the multilooking factor used to compute out_nlooks.
      * @param[out] out_off_diag_terms  Output raster containing the
      * off-diagonal terms of the covariance matrix.
-     * @param[out] out_geo_rdr       Raster to which the radar-grid
+     * @param[out] out_geo_rdr         Raster to which the radar-grid
      * positions (range and azimuth) of the geogrid pixels vertices will be
      * saved.
-     * @param[out] out_geo_dem     Raster to which the interpolated DEM
+     * @param[out] out_geo_dem         Raster to which the interpolated DEM
      * will be saved.
      * @param[out] out_geo_nlooks      Raster to which the number of radar-grid
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
+     * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
+     * seconds, as a function of azimuth and range
+     * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
+     * in meters, as a function of azimuth and range
      * @param[in]  input_rtc              Input RTC area factor (in slant-range geometry).
      * @param[out] output_rtc             Output RTC area factor (in slant-range geometry).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
@@ -302,6 +306,8 @@ public:
             isce3::io::Raster* out_geo_dem = nullptr,
             isce3::io::Raster* out_geo_nlooks = nullptr,
             isce3::io::Raster* out_geo_rtc = nullptr,
+            const isce3::core::LUT2d<double>& az_time_correction = {},
+            const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
             isce3::io::Raster* output_rtc = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
@@ -420,10 +426,12 @@ private:
                     const isce3::geometry::DEMInterpolator&,
                     isce3::core::ProjectionBase*)>& getDemCoords,
             bool flag_direction_line, bool flag_save_vectors,
-            bool flag_compute_min_max, std::vector<double>* a_last = nullptr,
+            bool flag_compute_min_max,
+            const isce3::core::LUT2d<double>& az_time_correction,
+            const isce3::core::LUT2d<double>& slant_range_correction,
+            std::vector<double>* a_last = nullptr,
             std::vector<double>* r_last = nullptr,
             std::vector<Vec3>* dem_last = nullptr);
-
     /*
     Check if a geogrid bounding box (y0, x0, yf, xf) fully
     covers the RSLC (represented by the radar_grid).
@@ -449,7 +457,9 @@ private:
             const std::function<Vec3(double, double,
                     const isce3::geometry::DEMInterpolator&,
                     isce3::core::ProjectionBase*)>& getDemCoords,
-            isce3::geometry::DEMInterpolator& dem_interp);
+            isce3::geometry::DEMInterpolator& dem_interp,
+            const isce3::core::LUT2d<double>& az_time_correction = {},
+            const isce3::core::LUT2d<double>& slant_range_correction = {});
 
     template<class T2, class T_out>
     void _runBlock(const isce3::product::RadarGridParameters& radar_grid,
@@ -465,7 +475,10 @@ private:
             isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_dem,
             isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
             isce3::core::ProjectionBase* proj, bool flag_apply_rtc,
-            isce3::io::Raster* rtc_raster, isce3::io::Raster& input_raster,
+            isce3::io::Raster* rtc_raster,
+            const isce3::core::LUT2d<double>& az_time_correction,
+            const isce3::core::LUT2d<double>& slant_range_correction,
+            isce3::io::Raster& input_raster,
             int raster_offset_y, int raster_offset_x,
             isce3::io::Raster& output_raster,
             isce3::core::Matrix<float>& rtc_area, float rtc_min_value,
