@@ -178,8 +178,10 @@ def pol_channel_imbalance_from_rslc(args):
         f'Mean channel imbalances over all EL angles -> {args.mean_el}'
     )
     # form a cross talk object
-    tx_xtalk = np.asarray(args.tx_xtalk_amp) * np.exp(args.tx_xtalk_phs)
-    rx_xtalk = np.asarray(args.rx_xtalk_amp) * np.exp(args.rx_xtalk_phs)
+    tx_xtalk = np.asarray(args.tx_xtalk_amp) * np.exp(
+        1j * np.asarray(args.tx_xtalk_phs))
+    rx_xtalk = np.asarray(args.rx_xtalk_amp) * np.exp(
+        1j * np.asarray(args.rx_xtalk_phs))
     xtalk = CrossTalk(*tx_xtalk, *rx_xtalk)
 
     # build dem interp object from DEM raster or ref height
