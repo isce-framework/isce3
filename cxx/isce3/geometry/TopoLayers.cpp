@@ -128,29 +128,34 @@ void TopoLayers::setBlockSize(size_t length, size_t width)
 {
     _length = length;
     _width = width;
-    _x.resize(length * width);
-    _y.resize(length * width);
-    _z.resize(length * width);
-    _inc.resize(length * width);
-    _hdg.resize(length * width);
-    _localInc.resize(length * width);
-    _localPsi.resize(length * width);
-    _sim.resize(length * width);
-    _mask.resize(length * width);
-    _crossTrack.resize(length * width);
-}
-
-// Check if only x, y, and z rasters are enabled
-bool TopoLayers::onlyXYZRastersSet() const
-{
-    // Check if x, y, and z rasters are all not nullptr
-    bool has_xyz = _xRaster && _yRaster && _zRaster;
-
-    // Check if any other rasters not nullptr
-    bool nothing_else = !_incRaster && !_hdgRaster && !_localIncRaster
-        && !_localPsiRaster && !_simRaster && !_maskRaster;
-
-    return has_xyz && nothing_else;
+    if (_xRaster) {
+        _x.resize(length * width);
+    }
+    if (_yRaster) {
+        _y.resize(length * width);
+    }
+    if (_zRaster) {
+        _z.resize(length * width);
+    }
+    if (_incRaster) {
+        _inc.resize(length * width);
+    }
+    if (_hdgRaster) {
+        _hdg.resize(length * width);
+    }
+    if (_localIncRaster) {
+        _localInc.resize(length * width);
+    }
+    if (_localPsiRaster) {
+        _localPsi.resize(length * width);
+    }
+    if (_simRaster) {
+        _sim.resize(length * width);
+    }
+    if (_maskRaster) {
+        _mask.resize(length * width);
+        _crossTrack.resize(length * width);
+    }
 }
 
 } // namespace isce3::geometry
