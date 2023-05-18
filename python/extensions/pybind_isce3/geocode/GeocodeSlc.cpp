@@ -32,12 +32,15 @@ void addbinding_geocodeslc(py::module & m)
             const double &, const int &,
             const size_t &,
             const bool,
+            const bool,
             const AzRgFunc &,
             const AzRgFunc &,
             const isce3::core::LUT2d<double> &,
             const isce3::core::LUT2d<double> &,
             const bool,
-            const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
+            const std::complex<float>,
+            isce3::io::Raster*,
+            isce3::io::Raster*>(&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("output_raster"),
         py::arg("input_raster"),
         py::arg("dem_raster"),
@@ -51,14 +54,17 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("numiter_geo2rdr") = 25,
         py::arg("lines_per_block") = 1000,
         py::arg("flatten") = true,
+        py::arg("reramp") = true,
         py::arg("azimuth_carrier") = AzRgFunc(),
         py::arg("range_carrier") = AzRgFunc(),
         py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
         py::arg("srange_correction") = isce3::core::LUT2d<double>(),
-        py::arg("correct_srange_flatten") = false,
+        py::arg("flatten_with_corrected_srange") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
+        py::arg("carrier_phase_raster") = nullptr,
+        py::arg("flatten_phase_raster") = nullptr,
         R"(
         Geocode a SLC raster
 
@@ -90,6 +96,8 @@ void addbinding_geocodeslc(py::module & m)
             Number of lines per block
         flatten: bool
             Flag to flatten the geocoded SLC
+        reramp: bool
+            Flag to reramp the geocoded SLC
         azimuth_carrier: [LUT2d, Poly2d]
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
@@ -98,10 +106,14 @@ void addbinding_geocodeslc(py::module & m)
              geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
         srange_correction: LUT2d
             geo2rdr slant range additive correction, in meters, as a function of azimuth and range
-        correct_srange_flatten: bool
+        flatten_with_corrected_srange: bool
             flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
+        carrier_phase_raster: Raster
+            Optional output raster containing geocoded carrier phase
+        flatten_phase_raster: Raster
+            Optional output raster containing geocoded flattening phase
         )");
     m.def("geocode_slc", py::overload_cast<isce3::io::Raster &,
             isce3::io::Raster &, isce3::io::Raster &,
@@ -115,12 +127,15 @@ void addbinding_geocodeslc(py::module & m)
             const double &, const int &,
             const size_t &,
             const bool,
+            const bool,
             const AzRgFunc &,
             const AzRgFunc &,
             const isce3::core::LUT2d<double> &,
             const isce3::core::LUT2d<double> &,
             const bool,
-            const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
+            const std::complex<float>,
+            isce3::io::Raster*,
+            isce3::io::Raster*>(&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("output_raster"),
         py::arg("input_raster"),
         py::arg("dem_raster"),
@@ -135,14 +150,17 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("numiter_geo2rdr") = 25,
         py::arg("lines_per_block") = 1000,
         py::arg("flatten") = true,
+        py::arg("reramp") = true,
         py::arg("azimuth_carrier") = AzRgFunc(),
         py::arg("range_carrier") = AzRgFunc(),
         py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
         py::arg("srange_correction") = isce3::core::LUT2d<double>(),
-        py::arg("correct_srange_flatten") = false,
+        py::arg("flatten_with_corrected_srange") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
+        py::arg("carrier_phase_raster") = nullptr,
+        py::arg("flatten_phase_raster") = nullptr,
         R"(
         Geocode a subset of a SLC raster based a sliced radar grid
 
@@ -176,6 +194,8 @@ void addbinding_geocodeslc(py::module & m)
             Number of lines per block
         flatten: bool
             Flag to flatten the geocoded SLC
+        reramp: bool
+            Flag to reramp the geocoded SLC
         azimuth_carrier: [LUT2d, Poly2d]
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
@@ -184,13 +204,19 @@ void addbinding_geocodeslc(py::module & m)
              geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
         srange_correction: LUT2d
             geo2rdr slant range additive correction, in meters, as a function of azimuth and range
-        correct_srange_flatten: bool
+        flatten_with_corrected_srange: bool
             flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
+        carrier_phase_raster: Raster
+            Optional output raster containing geocoded carrier phase
+        flatten_phase_raster: Raster
+            Optional output raster containing geocoded flattening phase
         )");
     m.def("_geocode_slc", py::overload_cast<
             std::vector<isce3::geocode::EArray2dc64>&,
+            isce3::geocode::EArray2df64,
+            isce3::geocode::EArray2df64,
             const std::vector<isce3::geocode::EArray2dc64>&,
             isce3::io::Raster&,
             const isce3::product::RadarGridParameters&,
@@ -203,13 +229,17 @@ void addbinding_geocodeslc(py::module & m)
             const double&, const int&,
             const size_t&, const size_t&,
             const bool,
+            const bool,
             const AzRgFunc&,
             const AzRgFunc&,
             const isce3::core::LUT2d<double> &,
             const isce3::core::LUT2d<double> &,
             const bool,
-            const std::complex<float>>(&isce3::geocode::geocodeSlc<AzRgFunc>),
+            const std::complex<float>>
+            (&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_blocks"),
+        py::arg("carrier_phase_block"),
+        py::arg("flatten_phase_block"),
         py::arg("rdr_data_blocks"),
         py::arg("dem_raster"),
         py::arg("radargrid"),
@@ -222,11 +252,12 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("threshold_geo2rdr"), py::arg("numiter_geo2rdr"),
         py::arg("azimuth_first_line") = 0, py::arg("range_first_pixel") = 0,
         py::arg("flatten") = true,
+        py::arg("reramp") = true,
         py::arg("az_carrier") = AzRgFunc(),
         py::arg("rg_carrier") = AzRgFunc(),
         py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
         py::arg("srange_correction") = isce3::core::LUT2d<double>(),
-        py::arg("correct_srange_flatten") = false,
+        py::arg("flatten_with_corrected_srange") = false,
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
@@ -241,6 +272,10 @@ void addbinding_geocodeslc(py::module & m)
         ----------
         geo_data_blocks: list of numpy.ndarray
             List of output arrays containing geocoded SLC
+        carrier_phase_block: numpy.ndarray
+            Output array containing geocoded carrier phase
+        flatten_phase_block: numpy.ndarray
+            Output array containing geocoded flattening phase
         rdr_data_blocks: list of numpy.ndarray
             List of input arrays of the SLC in radar coordinates
         dem_raster: Raster
@@ -269,6 +304,8 @@ void addbinding_geocodeslc(py::module & m)
             FIrst pixel of radar data block with respect to larger radar data raster, else 0
         flatten: bool
             Flag to flatten the geocoded SLC
+        reramp: bool
+            Flag to reramp the geocoded SLC
         azimuth_carrier: [LUT2d, Poly2d]
             Azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range
         range_carrier: [LUT2d, Poly2d]
@@ -277,7 +314,7 @@ void addbinding_geocodeslc(py::module & m)
              geo2rdr azimuth additive correction, in seconds, as a function of azimuth and range
         srange_correction: LUT2d
             geo2rdr slant range additive correction, in meters, as a function of azimuth and range
-        correct_srange_flatten: bool
+        flatten_with_corrected_srange: bool
             flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
