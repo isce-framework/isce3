@@ -616,7 +616,7 @@ void Geocode<T>::geocodeInterp(
         T_out nan_t_out = 0;
         nan_t_out *= std::numeric_limits<T_out_real>::quiet_NaN();
 
-        // define the geo-block matrix based on the rasterbands data type
+        // define the geo-block matrix based on the raster bands data type
         isce3::core::Matrix<T_out> geoDataBlock(
                 geoBlockLength, geogrid.width());
         geoDataBlock.fill(nan_t_out);
@@ -2278,31 +2278,6 @@ void Geocode<T>::_runBlock(
                 out_valid_samples_sub_swath_mask,
                 out_valid_samples_sub_swath_mask_array);
 
-        isce3::core::Matrix<T_out> geoDataBlock(
-                this_block_size_y, this_block_size_x);
-
-        // fill both matrices with NaN
-        geoDataBlock.fill(nan_t_out);
-
-        for (int band = 0; band < nbands; ++band) {
-#pragma omp critical
-            {
-                output_raster.setBlock(geoDataBlock.data(),
-                        block_x * block_size_x, block_y * block_size_y,
-                        this_block_size_x, this_block_size_y, band + 1);
-            }
-        }
-
-        if (nbands_off_diag_terms > 0) {
-            for (int band = 0; band < nbands_off_diag_terms; ++band) {
-#pragma omp critical
-                {
-                    out_off_diag_terms->setBlock(geoDataBlock.data(),
-                            block_x * block_size_x, block_y * block_size_y,
-                            this_block_size_x, this_block_size_y, band + 1);
-                }
-            }
-        }
         return;
     }
 
@@ -2487,32 +2462,6 @@ void Geocode<T>::_runBlock(
                     out_valid_samples_sub_swath_mask,
                     out_valid_samples_sub_swath_mask_array);
 
-            isce3::core::Matrix<T_out> geoDataBlock(
-                    this_block_size_y, this_block_size_x);
-
-            // fill both matrices with NaN
-            geoDataBlock.fill(nan_t_out);
-
-            for (int band = 0; band < nbands; ++band) {
-                _Pragma("omp critical")
-                {
-                    output_raster.setBlock(geoDataBlock.data(),
-                            block_x * block_size_x, block_y * block_size_y,
-                            this_block_size_x, this_block_size_y, band + 1);
-                }
-            }
-
-            if (nbands_off_diag_terms > 0) {
-                for (int band = 0; band < nbands_off_diag_terms; ++band) {
-                    _Pragma("omp critical")
-                    {
-                        out_off_diag_terms->setBlock(geoDataBlock.data(),
-                                block_x * block_size_x, block_y * block_size_y,
-                                this_block_size_x, this_block_size_y, band + 1);
-                    }
-                }
-            }
-
             return;
         }
 
@@ -2549,18 +2498,28 @@ void Geocode<T>::_runBlock(
         geoDataBlock.emplace_back(std::make_unique<isce3::core::Matrix<T_out>>(
                 this_block_size_y, this_block_size_x));
 
+    nan_t_out *= std::numeric_limits<T_out_real>::quiet_NaN();
+ 
     for (int band = 0; band < nbands; ++band)
-        geoDataBlock[band]->fill(0);
+        geoDataBlock[band]->fill(nan_t_out);
 
     std::vector<std::unique_ptr<isce3::core::Matrix<T>>> geoDataBlockOffDiag;
     if (nbands_off_diag_terms > 0) {
         geoDataBlockOffDiag.reserve(nbands_off_diag_terms);
+
+        // set NaN values according to T_out, i.e. real (NaN) or complex (NaN,
+        // NaN)
+        using T_out_real = typename isce3::real<T>::type;
+        T nan_t = 0;
+        nan_t *= std::numeric_limits<T_out_real>::quiet_NaN();
+
         for (int band = 0; band < nbands_off_diag_terms; ++band)
             geoDataBlockOffDiag.emplace_back(
                     std::make_unique<isce3::core::Matrix<T>>(
                             this_block_size_y, this_block_size_x));
+
         for (int band = 0; band < nbands_off_diag_terms; ++band)
-            geoDataBlockOffDiag[band]->fill(0);
+            geoDataBlockOffDiag[band]->fill(nan_t);
     }
     /*
 
@@ -2936,17 +2895,7 @@ void Geocode<T>::_runBlock(
                                          samples_sub_swath_counts.size()); s++) {
                             samples_sub_swath_counts.push_back(0);
                         }
-                        /*
-                        std::cout << "sample_sub_swath: " << std::to_string(sample_sub_swath) << std::endl;
-                        std::cout << "samples_sub_swath_counts.size(): " << std::to_string(samples_sub_swath_counts.size()) << std::endl;
-                        std::cout << "b0: " << std::to_string(samples_sub_swath_counts[0]) << std::endl;
-                        std::cout << "b: " << std::to_string(samples_sub_swath_counts[sample_sub_swath]) << std::endl;
-                        */
                         samples_sub_swath_counts[sample_sub_swath - 1]++;
-                        /*
-                        std::cout << "a0: " << std::to_string(samples_sub_swath_counts[0]) << std::endl;
-                        std::cout << "a: " << std::to_string(samples_sub_swath_counts[sample_sub_swath]) << std::endl;
-                        */
                     }
 
                     int band_index = 0;
@@ -3058,19 +3007,32 @@ void Geocode<T>::_runBlock(
                 out_geo_rtc_array(y, x) += (area_total / (geogrid_upsampling *
                                                           geogrid_upsampling));
 
-            // divide by total and save result in the output array
-            for (int band = 0; band < nbands; ++band)
-                geoDataBlock[band]->operator()(y, x) += ((T_out)(
+            // compute backscatter contribution v and update output arrays
+
+            for (int band = 0; band < nbands; ++band) {
+                T_out v = (static_cast<T_out>(
                         (cumulative_sum[band]) * abs_cal_factor_effective /
                         (nlooks * geogrid_upsampling * geogrid_upsampling)));
-
+                if (std::isnan(std::abs(geoDataBlock[band]->operator()(y, x)))) {
+                    geoDataBlock[band]->operator()(y, x) = v;
+                }
+                else {
+                    geoDataBlock[band]->operator()(y, x) += v;
+                }
+            }
             if (nbands_off_diag_terms > 0) {
                 for (int band = 0; band < nbands_off_diag_terms; ++band) {
-                    geoDataBlockOffDiag[band]->operator()(y, x) +=
-                            ((T)((cumulative_sum_off_diag_terms[band]) *
+                    T v = (static_cast<T>((cumulative_sum_off_diag_terms[band]) *
                                  abs_cal_factor_effective /
                                  (nlooks * geogrid_upsampling *
                                   geogrid_upsampling)));
+                    if (std::isnan(std::abs(
+                            geoDataBlockOffDiag[band]->operator()(y, x)))) {
+                        geoDataBlockOffDiag[band]->operator()(y, x) = v;
+                    }
+                    else {
+                        geoDataBlockOffDiag[band]->operator()(y, x) += v;
+                    }
                 }
             }
         }
@@ -3081,8 +3043,8 @@ void Geocode<T>::_runBlock(
                 T_out geo_value = geoDataBlock[band]->operator()(i, j);
 
                 // no data
-                if (std::abs(geo_value) == 0)
-                    geoDataBlock[band]->operator()(i, j) = nan_t_out;
+                if (std::isnan(std::abs(geo_value)))
+                    continue;
 
                 // clip min (complex)
                 else if (!std::isnan(clip_min) &&
@@ -3124,22 +3086,13 @@ void Geocode<T>::_runBlock(
         for (int band = 0; band < nbands_off_diag_terms; ++band) {
             for (int i = 0; i < this_block_size_y; ++i) {
                 for (int j = 0; j < this_block_size_x; ++j) {
-                    /*
-                    Since std::numeric_limits<T_out>::quiet_NaN() with
-                    complex T_out is (or may be) undefined, we take the "real type"
-                    if T_out (i.e. float or double) to create the NaN value and
-                    multiply it by the current pixel so that the output will be
-                    real or complex depending on T_out and will contain NaNs.
-                    */
-                    using T_real = typename isce3::real<T>::type;
+
                     T geo_value_off_diag =
                             geoDataBlockOffDiag[band]->operator()(i, j);
 
                     // no data (complex)
-                    if (std::abs(geo_value_off_diag) == 0)
-                        geoDataBlockOffDiag[band]->operator()(i, j) =
-                                std::numeric_limits<T_real>::quiet_NaN() *
-                                geo_value_off_diag;
+                    if (std::isnan(std::abs(geo_value_off_diag)))
+                        continue;
 
                     // clip min (complex)
                     else if (!std::isnan(clip_min) &&

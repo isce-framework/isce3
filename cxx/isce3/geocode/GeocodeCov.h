@@ -533,7 +533,7 @@ private:
      * @param[in]  sub_swaths         Sub-swaths metadata
      * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
      * sub-swath mask raster
-     * * @param[out] out_valid_samples_sub_swath_mask_array Output valid-pixels
+     * @param[out] out_valid_samples_sub_swath_mask_array Output valid-pixels
      * sub-swath mask array
      */
     template<class T_out>
