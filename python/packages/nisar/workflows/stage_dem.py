@@ -292,7 +292,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     ds = None
 
 
-def download_dem(polys, epsgs, margin, outfile):
+def download_dem(polys, epsgs, outfile):
     """Download DEM from nisar-dem bucket
 
     Parameters:
@@ -301,8 +301,6 @@ def download_dem(polys, epsgs, margin, outfile):
         List of shapely polygons
     epsg: str, list
         List of EPSG codes corresponding to polys
-    margin: float
-        Buffer margin (in km) applied for DEM download
     outfile:
         Path to the output DEM file to be staged
     """
@@ -312,25 +310,21 @@ def download_dem(polys, epsgs, margin, outfile):
         polys = transform_polygon_coords(polys, epsgs)
         # Need one EPSG as in polar stereo we have one big polygon
         epsgs = [3031]
-        margin = margin * 1000
     elif 3413 in epsgs:
         epsgs = [3413] * len(epsgs)
         polys = transform_polygon_coords(polys, epsgs)
         # Need one EPSG as in polar stereo we have one big polygon
         epsgs = [3413]
-        margin = margin * 1000
     else:
         # set epsg to 4326 for each element in the list
         epsgs = [4326] * len(epsgs)
         # convert margin to degree (approx formula)
-        margin = margin / 40000 * 360
 
     # Download DEM for each polygon/epsg
     file_prefix = os.path.splitext(outfile)[0]
     dem_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
         vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}/EPSG{epsg}.vrt'
-        poly = poly.buffer(margin)
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
@@ -459,6 +453,10 @@ def main(opts):
     # Determine polygon based on RSLC info or bbox
     poly = determine_polygon(opts.product, opts.bbox)
 
+    # Add margin to poly. Convert margin from km to degrees
+    margin = opts.margin / 40000 * 360
+    poly = poly.buffer(margin)
+
     # Check dateline crossing. Returns list of polygons
     polys = check_dateline(poly)
 
@@ -479,9 +477,9 @@ def main(opts):
         # Determine EPSG code
         epsg = determine_projection(polys)
         # Download DEM
-        download_dem(polys, epsg, opts.margin, opts.outfile)
+        download_dem(polys, epsg, opts.outfile)
         print('Done, DEM store locally')
-
+        
 
 if __name__ == '__main__':
     opts = cmdLineParse()
