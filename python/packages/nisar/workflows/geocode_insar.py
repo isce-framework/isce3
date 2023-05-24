@@ -497,9 +497,10 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
             if input_product_type != InputProduct.ROFF:
-                water_mask_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped/waterMask']
+                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
+                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
                 compute_water_mask_stats(water_mask_ds)
-                lay_shadow_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped/layoverShadowMask']
+                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
                 compute_layover_shadow_stats(lay_shadow_ds)
 
 
@@ -760,9 +761,10 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
             if input_product_type != InputProduct.ROFF:
-                water_mask_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped/waterMask']
+                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
+                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
                 compute_water_mask_stats(water_mask_ds)
-                lay_shadow_ds = dst_h5['/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped/layoverShadowMask']
+                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
                 compute_layover_shadow_stats(lay_shadow_ds)
 
 

@@ -607,7 +607,6 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                              units="Hz", data=rg_bw,
                              long_name="range bandwidth")
 
-
             if dst in ['RIFG', 'RUNW', 'GUNW']:
                 descr = "Number of swaths of continuous imagery, due to gaps"
                 _create_datasets(dst_h5[freq_path], [0], np.uint8,
@@ -975,14 +974,6 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                  long_name='reference flattening elevation')
 
             if dst in ['RIFG', 'RUNW', 'GUNW']:
-                #
-                # It seems to be redundant here to create the interferogram and pixelOffsets again
-                # as they have been created above
-
-                #igram_path = f'{freq_path}/interferogram'
-                #offs_path = f'{freq_path}/pixelOffsets'
-                #dst_h5[freq_path].create_group('interferogram')
-                #dst_h5[freq_path].create_group('pixelOffsets')
                 descr = "Number of looks applied in along track direction"
                 _create_datasets(dst_h5[igram_path], [0], np.uint8,
                                  "numberOfAzimuthLooks",
