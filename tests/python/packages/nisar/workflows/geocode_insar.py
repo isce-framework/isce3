@@ -85,7 +85,7 @@ def test_geocode_validate():
             continue
 
         path_gunw = os.path.join(scratch_path, f'{pu}_gunw.h5')
-        product_path = 'science/LSAR/GUNW/grids/frequencyA/interferogram/HH'
+        product_path = 'science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped/HH'
         with h5py.File(path_gunw, 'r', libver='latest', swmr=True) as h:
             # iterate over axis
             rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude'}
