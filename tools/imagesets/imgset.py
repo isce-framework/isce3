@@ -1,4 +1,6 @@
 import os, subprocess, sys, shutil, stat, logging, shlex, getpass
+from textwrap import dedent
+from typing import Optional
 # see no evil
 from .workflowdata import workflowdata, workflowtests
 pjoin = os.path.join
@@ -65,6 +67,45 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
         # ret will be None if exception TimeoutExpired was raised and caught.
     if ret != 0:
         raise subprocess.CalledProcessError(ret, cmdstr)
+
+
+def push_to_registry(
+    image: str,
+    server: str,
+    username: str,
+    password: str,
+    tag: Optional[str] = None,
+) -> None:
+    """
+    Push a docker image to a remote registry.
+
+    Parameters
+    ----------
+    image : str
+        The name[:tag] or ID of the existing image to push.
+    server : str
+        The server URL, typically in '<hostname>:<port>' format.
+    username, password : str
+        Credentials used to access the remote registry.
+    tag : str or None, optional
+        The name[:tag] to give the image in the remote registry. If None (the default),
+        the value of `image` is used as the remote tag.
+    """
+    # Login to the docker registry.
+    args = [docker, "login", f"--username={username}", "--password-stdin", server]
+    subprocess.run(args, input=password, check=True, text=True)
+
+    if tag is None:
+        tag = image
+
+    # Tag the image with the registry hostname, port, and remote tag.
+    args = [docker, "tag", image, f"{server}/{tag}"]
+    subprocess.run(args, check=True)
+
+    # Push to the remote registry.
+    args = [docker, "image", "push", f"{server}/{tag}"]
+    subprocess.run(args, check=True)
+
 
 # A set of docker images suitable for building and running isce3
 class ImageSet:
@@ -747,3 +788,69 @@ class ImageSet:
             for test in workflowtests[workflow]:
                 print(f"\ntarring workflow test {test}\n")
                 subprocess.check_call(f"tar cvz --exclude scratch*/* -f {test}.tar.gz {test}".split(), cwd=self.testdir)
+
+    def push(self):
+        """
+        Push the (non-release) NISAR redistributable image to the 'docker-develop-local'
+        and 'docker-stage-local' registries on artifactory.
+        """
+        # The name:tag of the NISAR distrib image created by `self.makedistrib_nisar()`.
+        nisar_distrib_name = self.imgname(tagmod="nisar")
+
+        # The name:tag to give the image in the remote registry.
+        # Release images are tagged 'gov/nasa/jpl/nisar/adt/nisar-adt/isce3:{release}'
+        # where `release` is e.g. 'r3.2'.
+        # In this case, we're pushing a non-release image, which should go in the same
+        # directory but be tagged 'devel' instead of the release number.
+        remote_tag = "gov/nasa/jpl/nisar/adt/nisar-adt/isce3:devel"
+
+        # The hostname:port of the 'docker-develop-local' registry on artifactory.
+        # Maps to
+        # https://artifactory.jpl.nasa.gov:443/artifactory/docker-develop-local/.
+        # This is the registry that the PGE team pulls from.
+        develop_server = "cae-artifactory.jpl.nasa.gov:16001"
+
+        # The hostname:port of the 'docker-stage-local' registry on artifactory.
+        # Maps to https://artifactory.jpl.nasa.gov:443/artifactory/docker-stage-local/.
+        # Pushing to this registry allows the image to be scanned for vulnerabilities.
+        stage_server = "cae-artifactory.jpl.nasa.gov:16002"
+
+        # Get remote registry credentials.
+        # These are stored as secret credentials by the Jenkins server and exposed as a
+        # string in '<username>:<password>' format via the `ARTIFACTORY_API_KEY` env
+        # variable in the Jenkinsfile.
+        try:
+            username_password = os.environ["ARTIFACTORY_API_KEY"]
+        except KeyError as exc:
+            errmsg = dedent("""
+                artifactory credentials not found
+
+                If running via Jenkins, check the Jenkinsfile to ensure that secret
+                credentials are correctly stored in the env variable
+                `ARTIFACTORY_API_KEY`.
+
+                If running locally, you must define an environment variable
+                `ARTIFACTORY_API_KEY` that contains Artifactory credentials in
+                '<username>:<password>' format.
+            """).strip()
+            raise RuntimeError(errmsg) from exc
+
+        # Split string into username & password components.
+        try:
+            username, password = username_password.split(":")
+        except ValueError as exc:
+            errmsg = (
+                "bad format for artifactory credentials: expected a string in"
+                f" '<username>:<password>' format, got {username_password:!r}"
+            )
+            raise RuntimeError(errmsg) from exc
+
+        # Push to both docker registries.
+        for server in [develop_server, stage_server]:
+            push_to_registry(
+                image=nisar_distrib_name,
+                server=server,
+                username=username,
+                password=password,
+                tag=remote_tag,
+            )

@@ -11,6 +11,11 @@ pipeline {
     // for the CI server. Secret credentials are managed via the Jenkins UI.
     RTBURNS_PAT = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
     GIT_OAUTH_TOKEN = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
+
+    // Artifactory API Key (username + password) with push access to
+    // cae-artifactory.jpl.nasa.gov:1600{1,2}/gov/nasa/jpl/nisar/adt.
+    // A string in '<username>:<password>' format.
+    ARTIFACTORY_API_KEY = credentials('60d9cbc8-d9dc-43d4-b38c-ca85d386eae3')
   }
   stages {
     stage("Set up Docker images with ISCE3 build prereqs") {
@@ -98,6 +103,11 @@ pipeline {
         sh "/usr/local/bin/python3 tools/run.py minqa"
       }
     }
+    stage("Push image to docker registry") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py push"
+      }
+    }
   }
   post {
     always {
@@ -130,7 +140,7 @@ pipeline {
     }
     unstable {
       echo 'I am unstable :/ Emailing PR author and one of the ISCE3 maintainers.'
-      emailStatus()      
+      emailStatus()
     }
     failure {
       echo 'I failed :( Emailing PR author and one of the ISCE3 maintainers.'
@@ -145,11 +155,10 @@ pipeline {
 def emailStatus() {
       mail to: 'geoffrey.m.gunter@jpl.nasa.gov',
           subject: "ISCE3 build ${currentBuild.result}: ${currentBuild.fullDisplayName}",
-          body: "Minimum workflow test ${currentBuild.result}: ${env.BUILD_URL}" 
+          body: "Minimum workflow test ${currentBuild.result}: ${env.BUILD_URL}"
       emailext(
           subject: "ISCE3 build ${currentBuild.result}: ${currentBuild.fullDisplayName}",
           body: "Minimum workflow test ${currentBuild.result}: ${env.BUILD_URL}",
           recipientProviders: [[$class: 'DevelopersRecipientProvider']]
       )
 }
-
