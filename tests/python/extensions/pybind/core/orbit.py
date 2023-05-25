@@ -4,12 +4,12 @@ from isce3.core import TimeDelta
 import numpy.testing as npt
 
 def load_h5():
-    from isce3.ext.isce3.core import Orbit
+    from isce3.core import load_orbit_from_h5_group
     from iscetest import data
     from os import path
     import h5py
     f = h5py.File(path.join(data, "envisat.h5"), 'r')
-    return Orbit.load_from_h5(f["/science/LSAR/SLC/metadata/orbit"])
+    return load_orbit_from_h5_group(f["/science/LSAR/SLC/metadata/orbit"])
 
 o = load_h5();
 

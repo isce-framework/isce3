@@ -118,5 +118,24 @@ void addbinding(py::class_<Orbit> & pyOrbit)
             isce3.core.Orbit
                 Orbit object with data containing start & end times)",
             py::arg("start"), py::arg("end"), py::arg("npad") = 0)
+        .def("set_interp_method", [](Orbit& self, const std::string& method) {
+            if (method == "Hermite") {
+                self.interpMethod(OrbitInterpMethod::Hermite);
+            } else if (method == "Legendre") {
+                self.interpMethod(OrbitInterpMethod::Legendre);
+            } else {
+                throw std::invalid_argument("unexpected orbit interpolation method '" + method + "'");
+            }
+        }, R"(
+        Set interpolation method.
+
+        Parameters
+        ----------
+        method : {'Hermite', 'Legendre'}
+            The method for interpolating orbit state vectors (cubic
+            Hermite spline interpolation or eighth-order Legendre
+            polynomial interpolation).
+        )",
+        py::arg("method"))
         ;
 }

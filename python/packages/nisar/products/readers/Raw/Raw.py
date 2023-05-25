@@ -162,7 +162,7 @@ class RawBase(Base, family='nisar.productreader.raw'):
     def getOrbit(self):
         path = f"{self.TelemetryPath}/orbit"
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
-            orbit = isce3.core.Orbit.load_from_h5(f[path])
+            orbit = isce3.core.load_orbit_from_h5_group(f[path])
         return orbit
 
     def getAttitude(self):

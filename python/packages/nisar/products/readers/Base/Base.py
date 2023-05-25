@@ -140,7 +140,7 @@ class Base(pyre.component,
         '''
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             orbitPath = os.path.join(self.MetadataPath, 'orbit')
-            return isce3.core.Orbit.load_from_h5(fid[orbitPath])
+            return isce3.core.load_orbit_from_h5_group(fid[orbitPath])
 
     @pyre.export
     def getAttitude(self):
