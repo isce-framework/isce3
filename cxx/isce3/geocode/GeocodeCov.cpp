@@ -1788,7 +1788,7 @@ void Geocode<T>::geocodeAreaProj(
         if (is_radar_grid_single_block) {
             rtc_area.resize(
                     radar_grid_cropped.length(), radar_grid_cropped.width());
-            rtc_raster->getBlock(rtc_area.data(), offset_x, offset_y,
+            rtc_raster->getBlock(rtc_area.data(), 0, 0,
                     radar_grid_cropped.width(), radar_grid_cropped.length(), 1);
         }
     }
