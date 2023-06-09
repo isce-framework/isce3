@@ -857,8 +857,19 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
             const float Wac = 1. - Wa;
 
             if (rtc_area_mode == rtcAreaMode::AREA_FACTOR) {
+                // cosine law: c^2 = a^2 + b^2 - 2.a.b.cos(AB)
+                // cos(AB) = (a^2 + b^2 - c^2) / 2.a.b
+                const double slant_range = (xyz_mid - xyz_plat).norm();
+                const double radius_target = xyz_mid.norm();
+                const double radius_platform = xyz_plat.norm();
+                const double cos_alpha = (
+                    (radius_target * radius_target +
+                     radius_platform * radius_platform -
+                     slant_range * slant_range) /
+                    (2 * radius_target * radius_platform));
+
                 const double ground_velocity =
-                        xyz_mid.norm() * vel.norm() / xyz_plat.norm();
+                        cos_alpha * radius_target * vel.norm() / radius_platform;
                 const double area_beta = radar_grid.rangePixelSpacing() *
                                          ground_velocity / radar_grid.prf();
                 area /= area_beta;
@@ -1283,8 +1294,19 @@ void _RunBlock(const int jmax, const int block_size,
             double p00_c = (xyz00 - xyz_c).norm();
             double p10_c, p01_c, p11_c, divisor = 1;
             if (rtc_area_mode == rtcAreaMode::AREA_FACTOR) {
+                // cosine law: c^2 = a^2 + b^2 - 2.a.b.cos(AB)
+                // cos(AB) = (a^2 + b^2 - c^2) / 2.a.b
+                const double slant_range = (xyz_c - xyz_plat).norm();
+                const double radius_target = xyz_c.norm();
+                const double radius_platform = xyz_plat.norm();
+                const double cos_alpha = (
+                    (radius_target * radius_target +
+                     radius_platform * radius_platform -
+                     slant_range * slant_range) /
+                    (2 * radius_target * radius_platform));
+
                 const double ground_velocity =
-                        xyz_c.norm() * vel.norm() / xyz_plat.norm();
+                        cos_alpha * radius_target * vel.norm() / radius_platform;
                 divisor = (radar_grid.rangePixelSpacing() * ground_velocity *
                            radar_grid.azimuthTimeInterval());
             }
