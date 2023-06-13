@@ -6,6 +6,7 @@ import journal
 import numpy as np
 import os
 import pygrib
+import xarray as xr
 
 from nisar.workflows.runconfig import RunConfig
 
@@ -86,10 +87,10 @@ def troposphere_delay_check(cfg):
             else:
                 #  Get the datetime of weather model in NetCDF format for RAiDER
                 try:
-                    with h5py.File(weather_model_file, 'r', libver='latest', swmr=True) as f:
-                        weather_model_date = datetime.strptime(f.attrs['datetime'].astype(str),
-                                                               '%Y_%m_%dT%H_%M_%S')
-                except OSError:
+                    ds = xr.open_dataset(weather_model_file)
+                    # Get the datetime of the weather model file
+                    weather_model_date = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
+                except ValueError:
                     err_str = f'{weather_model_file} is not a netCDF format, and not supported by RAiDER package'
                     error_channel.log(err_str)
                     raise ValueError(err_str)

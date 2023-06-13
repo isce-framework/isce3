@@ -158,19 +158,22 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 ds = xr.open_dataset(weather_model_file)
 
                 # Get the datetime of the weather model file
-                dt = dt.time.values[0]
-                date_time = datetime.strptime(str(dt)[:19], '%Y-%m-%dT%H:%M:%S')
-
+                weather_model_time = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
                 # Convert the HRES ECMWF
                 hres = HRES()
                 # Set up the time
-                hres.setTime(date_time)
+                hres.setTime(weather_model_time)
                 # Set up the input file
                 hres.files = [weather_model_file]
                 # Load the input weather model file
                 hres.load(wmLoc, ll_bounds = ll_bounds)
-                # Write to hard drive
-                return hres.write()
+                # Return the ouput file if it exists
+                output_file = hres.out_file(wmLoc)
+                if os.path.exists(output_file):
+                    return output_file
+                else:
+                    # Write to hard drive
+                    return hres.write()
 
             # ouput location
             wmLoc = os.path.join(scratch_path, 'weather_model_files')
@@ -225,13 +228,6 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                                                           los=delay_direction_obj,
                                                           height_levels=height_levels,
                                                           out_proj=epsg)
-
-            # Remove the internal RAiDER weather model files
-            if os.path.exists(reference_weather_model_file):
-                os.remove(reference_weather_model_file)
-
-            if os.path.exists(secondary_weather_model_file):
-                os.remove(secondary_weather_model_file)
 
             for tropo_delay_product in tropo_delay_products:
 
