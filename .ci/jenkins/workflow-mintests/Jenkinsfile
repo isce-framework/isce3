@@ -106,6 +106,13 @@ pipeline {
     stage("Push image to docker registry") {
       steps {
         sh "/usr/local/bin/python3 tools/run.py push"
+        mail to: "mariyetta.madatyan@jpl.nasa.gov",
+          subject: "[Jenkins] NISAR ADT image upload successful",
+          body: """A new NISAR ADT devel image was uploaded to:
+            |https://artifactory.jpl.nasa.gov/artifactory/docker-develop-local/gov/nasa/jpl/nisar/adt/nisar-adt/isce3/devel
+            |
+            |This is an automated message triggered by ${currentBuild.absoluteUrl}
+            |""".stripMargin()
       }
     }
   }
