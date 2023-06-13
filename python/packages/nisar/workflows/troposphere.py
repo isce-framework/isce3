@@ -40,6 +40,8 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
     tropo_cfg = cfg['processing']['troposphere_delay']
 
+    scratch_path = cfg['product_path_group']['scratch_path']
+
     weather_model_type = tropo_cfg['weather_model_type'].upper()
     reference_weather_model_file = tropo_weather_model_cfg['reference_troposphere_file']
     secondary_weather_model_file = tropo_weather_model_cfg['secondary_troposphere_file']
@@ -138,10 +140,40 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
         # raider package
         else:
+            import xarray as xr
             import RAiDER
             from RAiDER.llreader import BoundingBox
             from RAiDER.losreader import Zenith, Conventional, Raytracing
             from RAiDER.delay import tropo_delay as raider_tropo_delay
+            from RAiDER.models.hres import HRES
+
+            def convert_HRES_to_raider_NetCDF(weather_model_file,
+                                              ll_bounds,
+                                              wmLoc):
+                '''
+                Convert the ECMWF NetCDF to RAiDER NetCDF
+                '''
+
+                os.makedirs(wmLoc, exist_ok=True)
+                ds = xr.open_dataset(weather_model_file)
+
+                # Get the datetime of the weather model file
+                dt = dt.time.values[0]
+                date_time = datetime.strptime(str(dt)[:19], '%Y-%m-%dT%H:%M:%S')
+
+                # Convert the HRES ECMWF
+                hres = HRES()
+                # Set up the time
+                hres.setTime(date_time)
+                # Set up the input file
+                hres.files = [weather_model_file]
+                # Load the input weather model file
+                hres.load(wmLoc, ll_bounds = ll_bounds)
+                # Write to hard drive
+                return hres.write()
+
+            # ouput location
+            wmLoc = os.path.join(scratch_path, 'weather_model_files')
 
             # Acquisition time for reference and secondary images
             acquisition_time_ref = h5_obj['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
@@ -156,10 +188,12 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             min_lon = np.min(lon_datacube)
             max_lon = np.max(lon_datacube)
 
-            aoi = BoundingBox([min_lat - margin,
-                               max_lat + margin,
-                               min_lon - margin,
-                               max_lon + margin])
+            ll_bounds = [min_lat - margin,
+                         max_lat + margin,
+                         min_lon - margin,
+                         max_lon + margin]
+
+            aoi = BoundingBox(ll_bounds)
 
             # Zenith
             delay_direction_obj = Zenith()
@@ -169,6 +203,13 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
             # Height levels
             height_levels = list(height_radar_grid)
+
+            # Convert to RAiDER NetCDF
+            reference_weather_model_file = \
+                   convert_HRES_to_raider_NetCDF(reference_weather_model_file, ll_bounds, wmLoc)
+
+            secondary_weather_model_file = \
+                    convert_HRES_to_raider_NetCDF(secondary_weather_model_file, ll_bounds, wmLoc)
 
             # Troposphere delay computation
             tropo_delay_reference, _ = raider_tropo_delay(dt=acquisition_time_ref,
@@ -184,6 +225,13 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                                                           los=delay_direction_obj,
                                                           height_levels=height_levels,
                                                           out_proj=epsg)
+
+            # Remove the internal RAiDER weather model files
+            if os.path.exists(reference_weather_model_file):
+                os.remove(reference_weather_model_file)
+
+            if os.path.exists(secondary_weather_model_file):
+                os.remove(secondary_weather_model_file)
 
             for tropo_delay_product in tropo_delay_products:
 
