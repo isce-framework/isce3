@@ -1,4 +1,6 @@
 import os, subprocess, sys, shutil, stat, logging, shlex, getpass
+from datetime import datetime, timezone
+from pathlib import Path
 from textwrap import dedent
 from typing import Optional
 # see no evil
@@ -278,9 +280,28 @@ class ImageSet:
         Install package to redistributable isce3 docker image with nisar qa,
         noise estimator caltool, and Soil Moisture applications
         """
+        # Get current UTC date & time in ISO 8601 format.
+        creation_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z")
 
-        build_args = f"--build-arg distrib_img={self.imgname()} \
-                       --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN').strip()}"
+        # Get current ISCE3 version.
+        version_file = Path(projsrcdir) / "VERSION.txt"
+        isce3_version = version_file.read_text().strip()
+
+        # Get git commit hash (if available).
+        args = ["git", "rev-parse", "HEAD"]
+        try:
+            git_commit = subprocess.check_output(args, text=True).strip()
+        except subprocess.CalledProcessError:
+            git_commit = ""
+
+        build_args = {
+            "distrib_img": self.imgname(),
+            "GIT_OAUTH_TOKEN": os.environ.get('GIT_OAUTH_TOKEN').strip(),
+            "CREATION_DATETIME": creation_datetime,
+            "ISCE3_VERSION": isce3_version,
+            "GIT_COMMIT": git_commit,
+        }
+        build_args = " ".join(f"--build-arg {k}={v}" for (k, v) in build_args.items())
 
         cmd = f"{docker} build {build_args} \
                 {thisdir}/{self.name}/distrib_nisar -t {self.imgname(tagmod='nisar')}"

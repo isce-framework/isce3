@@ -27,3 +27,14 @@ COPY --from=0 /opt/SoilMoisture /opt/SoilMoisture
 # install 
 RUN cd /opt/QualityAssurance && python setup.py install
 RUN cd /opt/SoilMoisture/src && conda run -n SoilMoisture make install
+
+# Add image labels following Open Containers Initiative specifications
+# (https://github.com/opencontainers/image-spec/blob/main/annotations.md)
+ARG CREATION_DATETIME
+ARG ISCE3_VERSION
+ARG GIT_COMMIT
+LABEL "org.opencontainers.image.created"="${CREATION_DATETIME}"
+LABEL "org.opencontainers.image.version"="${ISCE3_VERSION}"
+LABEL "org.opencontainers.image.revision"="${GIT_COMMIT}"
+LABEL "org.opencontainers.image.url"="https://github.com/isce-framework/isce3"
+LABEL "org.opencontainers.image.licenses"="Apache-2.0"
