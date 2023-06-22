@@ -96,18 +96,18 @@ def run(cfg, resample_type):
             out_dir.mkdir(parents=True, exist_ok=True)
             out_path = out_dir / 'coregistered_secondary.slc'
 
-            # Perform complex32 to complex64 conversion if necessary
-            c32_output_path = str(out_dir/'secondary.slc')
-            raster_path, _ = complex_raster_path_from_h5(slc, freq, pol,
-                                                         input_hdf5,
-                                                         resamp_args['lines_per_tile'],
-                                                         c32_output_path)
-            raster = isce3.io.Raster(raster_path)
+            # If necessary, perform complex32 to complex64 conversion on input
+            input_as_c32_path = str(out_dir/'secondary.slc')
+            input_raster_path, _ = complex_raster_path_from_h5(
+                slc, freq, pol, input_hdf5, resamp_args['lines_per_tile'],
+                input_as_c32_path)
+            input_raster = isce3.io.Raster(input_raster_path)
 
             # Create output raster
             resamp_slc = isce3.io.Raster(str(out_path), rg_off.width,
-                                         rg_off.length, rg_off.num_bands, gdal.GDT_CFloat32, 'ENVI')
-            resamp_obj.resamp(raster, resamp_slc, rg_off, az_off)
+                                         rg_off.length, rg_off.num_bands,
+                                         gdal.GDT_CFloat32, 'ENVI')
+            resamp_obj.resamp(input_raster, resamp_slc, rg_off, az_off)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"successfully ran resample in {t_all_elapsed:.3f} seconds")
