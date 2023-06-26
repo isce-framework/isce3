@@ -72,133 +72,146 @@ class isce3::geometry::TopoLayers {
         inline bool hasSimRaster() const { return _simRaster != nullptr; }
         inline bool hasMaskRaster() const { return _maskRaster != nullptr; }
 
-        // Set values for a single index
+        /*
+        Set values for a single index.
+        Values are only set if memory has been allocated for that layer.
+        */
         inline void x(size_t row, size_t col, double value) {
-            if (hasXRaster()) {
-                _x[row*_width+col] = value;
+            if (_x.size() == 0) {
+                return;
             }
+            _x[row*_width+col] = value;
         }
 
         inline void y(size_t row, size_t col, double value) {
-            if (hasYRaster()) {
-                _y[row*_width + col] = value;
+            if (_y.size() == 0) {
+                return;
             }
+            _y[row*_width + col] = value;
         }
 
         inline void z(size_t row, size_t col, double value) {
-            if (hasZRaster()) {
-                _z[row*_width + col] = value;
+            if (_z.size() == 0) {
+                return;
             }
+            _z[row*_width + col] = value;
         }
 
         inline void inc(size_t row, size_t col, float value) {
-            if (hasIncRaster()) {
-                _inc[row*_width + col] = value;
+            if (_inc.size() == 0) {
+                return;
             }
+            _inc[row*_width + col] = value;
         }
 
         inline void hdg(size_t row, size_t col, float value) {
-            if (hasHdgRaster()) {
-                _hdg[row*_width + col] = value;
+            if (_hdg.size() == 0) {
+                return;
             }
+            _hdg[row*_width + col] = value;
         }
 
         inline void localInc(size_t row, size_t col, float value) {
-            if (hasLocalIncRaster()) {
-                _localInc[row*_width + col] = value;
+            if (_localInc.size() == 0) {
+                return;
             }
+            _localInc[row*_width + col] = value;
         }
 
         inline void localPsi(size_t row, size_t col, float value) {
-            if (hasLocalPsiRaster()) {
-                _localPsi[row*_width + col] = value;
+            if (_localPsi.size() == 0) {
+                return;
             }
+            _localPsi[row*_width + col] = value;
         }
 
         inline void sim(size_t row, size_t col, float value) {
-            if (hasSimRaster()) {
-             _sim[row*_width + col] = value;
+            if (_sim.size() == 0) {
+                return;
             }
+             _sim[row*_width + col] = value;
         }
 
         inline void mask(size_t row, size_t col, short value) {
-            if (hasMaskRaster()) {
-                _mask[row*_width + col] = value;
+            if (_mask.size() == 0) {
+                return;
             }
+            _mask[row*_width + col] = value;
         }
 
         inline void crossTrack(size_t row, size_t col, double value) {
-            if (hasMaskRaster()) {
-                _crossTrack[row*_width + col] = value;
+            if (_crossTrack.size() == 0) {
+                return;
             }
+            _crossTrack[row*_width + col] = value;
         }
 
         // Get values for a single index
         double x(size_t row, size_t col) const {
-            if (!hasXRaster() || row > _length - 1 || col > _width -1) {
+            if (_x.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<double>::quiet_NaN();
             }
             return _x[row*_width+col];
         }
 
         double y(size_t row, size_t col) const {
-            if (!hasYRaster() || row > _length - 1 || col > _width -1) {
+            if (_y.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<double>::quiet_NaN();
             }
             return _y[row*_width + col];
         }
 
         double z(size_t row, size_t col) const {
-            if (!hasZRaster() || row > _length - 1 || col > _width -1) {
+            if (_z.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<double>::quiet_NaN();
             }
             return _z[row*_width + col];
         }
 
         float inc(size_t row, size_t col) const {
-            if (!hasIncRaster() || row > _length - 1 || col > _width -1) {
+            if (_inc.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<float>::quiet_NaN();
             }
             return _inc[row*_width + col];
         }
 
         float hdg(size_t row, size_t col) const {
-            if (!hasHdgRaster() || row > _length - 1 || col > _width -1) {
+            if (_hdg.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<float>::quiet_NaN();
             }
             return _hdg[row*_width + col];
         }
 
         float localInc(size_t row, size_t col) const {
-            if (!hasLocalIncRaster() || row > _length - 1 || col > _width -1) {
+            if (_localInc.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<float>::quiet_NaN();
             }
             return _localInc[row*_width + col];
         }
 
         float localPsi(size_t row, size_t col) const {
-            if (!hasLocalPsiRaster() || row > _length - 1 || col > _width -1) {
+            if (_localPsi.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<float>::quiet_NaN();
             }
             return _localPsi[row*_width + col];
         }
 
         float sim(size_t row, size_t col) const {
-            if (!hasSimRaster() || row > _length - 1 || col > _width -1) {
+            if (_sim.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<float>::quiet_NaN();
             }
             return _sim[row*_width + col];
         }
 
         short mask(size_t row, size_t col) const {
-            if (!hasMaskRaster() || row > _length - 1 || col > _width -1) {
+            if (_mask.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return 0;
             }
             return _mask[row*_width + col];
         }
 
         double crossTrack(size_t row, size_t col) const {
-            if (!hasMaskRaster() || row > _length - 1 || col > _width -1) {
+            if (_crossTrack.size() == 0 || row > _length - 1 || col > _width - 1) {
                 return std::numeric_limits<double>::quiet_NaN();
             }
             return _crossTrack[row*_width + col];

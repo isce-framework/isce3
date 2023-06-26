@@ -128,33 +128,69 @@ void TopoLayers::setBlockSize(size_t length, size_t width)
 {
     _length = length;
     _width = width;
-    if (_xRaster) {
+
+    if (_xRaster || _maskRaster) {
         _x.resize(length * width);
+    } else {
+        _x.resize(0);
     }
-    if (_yRaster) {
+
+    if (_yRaster || _maskRaster) {
         _y.resize(length * width);
     }
+    else {
+        _y.resize(0);
+    }
+
     if (_zRaster) {
         _z.resize(length * width);
     }
-    if (_incRaster) {
+    else {
+        _z.resize(0);
+    }
+
+    if (_incRaster || _maskRaster) {
         _inc.resize(length * width);
     }
+    else {
+        _inc.resize(0);
+    }
+
     if (_hdgRaster) {
         _hdg.resize(length * width);
     }
+    else {
+        _hdg.resize(0);
+    }
+
     if (_localIncRaster) {
         _localInc.resize(length * width);
     }
+    else {
+        _localInc.resize(0);
+    }
+
     if (_localPsiRaster) {
         _localPsi.resize(length * width);
     }
+    else {
+        _localPsi.resize(0);
+    }
+
     if (_simRaster) {
         _sim.resize(length * width);
     }
+    else {
+        _sim.resize(0);
+    }
+
     if (_maskRaster) {
         _mask.resize(length * width);
         _crossTrack.resize(length * width);
+    }
+    else {
+        _mask.resize(0);
+        _crossTrack.resize(0);
     }
 }
 
