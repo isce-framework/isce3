@@ -324,7 +324,10 @@ def download_dem(polys, epsgs, outfile):
     file_prefix = os.path.splitext(outfile)[0]
     dem_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}/EPSG{epsg}.vrt'
+        if epsg == 4326:
+            vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}_v1.0/EPSG{epsg}.vrt'
+        else:
+            vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}/EPSG{epsg}.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
