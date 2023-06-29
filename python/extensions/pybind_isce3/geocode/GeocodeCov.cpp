@@ -15,6 +15,7 @@ using isce3::geocode::Geocode;
 using isce3::core::GeocodeMemoryMode;
 using isce3::geocode::geocodeOutputMode;
 using isce3::geometry::rtcAlgorithm;
+using isce3::geometry::rtcAreaBetaMode;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
 using isce3::io::Raster;
@@ -80,6 +81,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                             std::numeric_limits<double>::quiet_NaN(),
                     py::arg("rtc_algorithm") =
                             rtcAlgorithm::RTC_AREA_PROJECTION,
+                    py::arg("rtc_area_beta_mode") =
+                            rtcAreaBetaMode::AUTO,
                     py::arg("abs_cal_factor") = 1,
                     py::arg("clip_min") =
                             std::numeric_limits<float>::quiet_NaN(),
@@ -150,6 +153,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         correction RTC.
                     rtc_algorithm: isce3.geometry.RtcAlgorithm, optional
                         RTC algorithm
+                    rtc_factor_area_mode : isce3.geometry.RtcAreaBetaMode, optional
+                        RTC area beta mode
                     abs_cal_factor: float, optional
                         Absolute calibration factor.
                     clip_min: float, optional

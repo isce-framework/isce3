@@ -37,6 +37,8 @@ void addsubmodule_geometry(py::module & m)
         pyRtcAlgorithm(geometry, "RtcAlgorithm");
     py::enum_<isce3::geometry::rtcAreaMode>
         pyRtcAreaMode(geometry, "RtcAreaMode");
+    py::enum_<isce3::geometry::rtcAreaBetaMode>
+        pyRtcAreaBetaMode(geometry, "RtcAreaBetaMode");
 
     // add bindings
     addbinding(pyDEMInterpolator);
@@ -46,6 +48,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyOutputTerrainRadiometry);
     addbinding(pyRtcAlgorithm);
     addbinding(pyRtcAreaMode);
+    addbinding(pyRtcAreaBetaMode);
     addbinding(pyRadarGridBoundingBox);
     addbinding(pyGeo2RdrParams);
 

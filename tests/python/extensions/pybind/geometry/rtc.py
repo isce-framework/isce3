@@ -49,6 +49,7 @@ def test_rtc():
     output_terrain_radiometry = isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
     rtc_area_mode = isce3.geometry.RtcAreaMode.AREA_FACTOR
+    rtc_area_beta_mode = isce3.geometry.RtcAreaBetaMode.AUTO
  
     for radar_grid_str in radar_grid_str_list:
 
@@ -86,8 +87,8 @@ def test_rtc():
                                        out_raster,
                                        input_terrain_radiometry, 
                                        output_terrain_radiometry,
-                                       rtc_area_mode,
-                                       rtc_algorithm, geogrid_upsampling)
+                                       rtc_area_mode, rtc_algorithm,
+                                       rtc_area_beta_mode, geogrid_upsampling)
                                 
             del out_raster
 

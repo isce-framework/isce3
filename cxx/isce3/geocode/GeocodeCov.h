@@ -58,6 +58,8 @@ public:
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute
      * the radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
+     * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+     * PROJECTION_ANGLE)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -115,6 +117,8 @@ public:
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
                     isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+                isce3::geometry::rtcAreaBetaMode::AUTO,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -157,6 +161,8 @@ public:
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
      * radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
+     * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+     * PROJECTION_ANGLE)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -203,6 +209,8 @@ public:
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
                     isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+                isce3::geometry::rtcAreaBetaMode::AUTO,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -243,6 +251,8 @@ public:
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
      * radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
+     * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+     * PROJECTION_ANGLE)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -296,6 +306,8 @@ public:
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
                     isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+                isce3::geometry::rtcAreaBetaMode::AUTO,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),

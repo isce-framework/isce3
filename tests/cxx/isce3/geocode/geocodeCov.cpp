@@ -127,6 +127,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
             std::numeric_limits<double>::quiet_NaN();
     isce3::geometry::rtcAlgorithm rtc_algorithm =
             isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
+    isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+            isce3::geometry::rtcAreaBetaMode::AUTO;
+
     double abs_cal_factor = 1;
     float clip_min = std::numeric_limits<float>::quiet_NaN();
     float clip_max = std::numeric_limits<float>::quiet_NaN();
@@ -239,7 +242,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
                                flatten, geogrid_upsampling, flag_upsample_radar_grid,
                                flag_apply_rtc, input_terrain_radiometry,
                                output_terrain_radiometry, exponent, rtc_min_value_db,
-                               rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor,
+                               rtc_geogrid_upsampling, rtc_algorithm,
+                               rtc_area_beta_mode, abs_cal_factor,
                                clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
                                out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
                                phase_screen_raster, az_time_correction,
@@ -293,7 +297,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
             geogrid_upsampling, flag_upsample_radar_grid, flag_apply_rtc,
             input_terrain_radiometry, output_terrain_radiometry, exponent,
             rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-            abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
+            rtc_area_beta_mode, abs_cal_factor, clip_min,
+            clip_max, min_nlooks, radar_grid_nlooks,
             &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem,
             out_geo_nlooks, out_geo_rtc, phase_screen_raster,
             az_time_correction_full_cov, slant_range_correction_full_cov,

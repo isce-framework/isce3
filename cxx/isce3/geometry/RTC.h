@@ -38,6 +38,24 @@ enum rtcAreaMode { AREA = 0, AREA_FACTOR = 1 };
  * RTC_AREA_PROJECTION) */
 enum rtcAlgorithm { RTC_BILINEAR_DISTRIBUTION = 0, RTC_AREA_PROJECTION = 1 };
 
+/**Enumeration type to indicate RTC area beta mode
+ * (option only available for rtcAlgorithm.RTC_AREA_PROJECTION)
+ */
+enum rtcAreaBetaMode {
+        AUTO = 0,  /**< auto mode. Default value is defined by the
+                        RTC algorithm that is being executed, i.e.,
+                        PIXEL_AREA for rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION
+                        and PROJECTION_ANGLE for
+                        rtcAlgorithm::RTC_AREA_PROJECTION */
+        PIXEL_AREA = 1,  /**< estimate the beta surface reference area `A_beta`
+                              using the pixel area, which is the
+                              product of the range spacing by the
+                              azimuth spacing (computed using the ground velocity) */
+        PROJECTION_ANGLE = 2 /**< estimate the beta surface reference area `A_beta`
+                                  using the projection angle method:
+                                  `A_beta = A_sigma * cos(projection_angle)` */
+};
+
 /** Apply radiometric terrain correction (RTC) over an input raster
  *
  * @param[in]  radarGrid           Radar Grid
@@ -54,6 +72,8 @@ enum rtcAlgorithm { RTC_BILINEAR_DISTRIBUTION = 0, RTC_AREA_PROJECTION = 1 };
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
+ * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+ * PROJECTION_ANGLE)
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
@@ -80,6 +100,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
                 rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
         int exponent = 0, rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+        rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         double abs_cal_factor = 1,
@@ -104,6 +125,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
+ * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+ * PROJECTION_ANGLE)
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
@@ -123,6 +146,7 @@ void computeRtc(isce3::product::RadarGridProduct& product,
                 rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+        rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         size_t nlooks_az = 1, size_t nlooks_rg = 1,
@@ -143,6 +167,8 @@ void computeRtc(isce3::product::RadarGridProduct& product,
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
+ * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+ * PROJECTION_ANGLE)
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
@@ -169,6 +195,7 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
                 rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+        rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
@@ -202,6 +229,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
  * @param[in]  rtc_algorithm       RTC algorithm (RTC_BILINEAR_DISTRIBUTION or
  * RTC_AREA_PROJECTION)
+ * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+ * PROJECTION_ANGLE)
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
@@ -234,6 +263,7 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
                 rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+        rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
@@ -293,6 +323,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * @param[in]  input_terrain_radiometry  Input terrain radiometry
  * @param[in]  output_terrain_radiometry Output terrain radiometry
  * @param[in]  rtc_area_mode       RTC area mode (AREA or AREA_FACTOR)
+ * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+ * PROJECTION_ANGLE)
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
@@ -324,6 +356,7 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
         rtcOutputTerrainRadiometry output_terrain_radiometry =
                 rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
+        rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
@@ -346,21 +379,20 @@ computeUpsamplingFactor(const DEMInterpolator& dem_interp,
                         const isce3::product::RadarGridParameters& radar_grid,
                         const isce3::core::Ellipsoid& ellps);
 
-double computeFacet(isce3::core::Vec3 xyz_center, isce3::core::Vec3 xyz_left,
-        isce3::core::Vec3 xyz_right, isce3::core::Vec3 target_to_sensor_xyz,
-        double p1, double& p3, double divisor, bool clockwise_direction);
-
 std::string get_input_terrain_radiometry_str(
         rtcInputTerrainRadiometry input_terrain_radiometry);
 std::string get_output_terrain_radiometry_str(
         rtcOutputTerrainRadiometry output_terrain_radiometry);
 std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode);
+std::string get_rtc_area_beta_mode_str(rtcAreaBetaMode rtc_area_beta_mode);
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm);
 
 void print_parameters(pyre::journal::info_t& channel,
         const isce3::product::RadarGridParameters& radar_grid,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
-        rtcAreaMode rtc_area_mode, double geogrid_upsampling,
+        rtcAreaMode rtc_area_mode,
+        rtcAreaBetaMode rtc_area_beta_mode,
+        double geogrid_upsampling,
         float rtc_min_value_db);
 }} // namespace isce3::geometry
