@@ -313,7 +313,7 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
         # layover + water : 5
         # shadow + water : 6
         # layover + shadow + water : 7
-        combo_pxl_mask = (mask_layer > 0) & (mask_layer < 4) & water_mask
+        combo_pxl_mask = (mask_layer >= 0) & (mask_layer < 4) & water_mask
         mask_layer[combo_pxl_mask] += 4
         dst_h5[mask_h5_path].write_direct(mask_layer)
 
@@ -512,11 +512,9 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                 compute_stats_real_data(raster, ds)
 
             if input_product_type != InputProduct.ROFF:
-                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
-                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
-                compute_water_mask_stats(water_mask_ds)
-                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
-                compute_layover_shadow_stats(lay_shadow_ds)
+                unwrap_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped'
+                mask_ds = dst_h5[f'{unwrap_path}/mask']
+                compute_layover_shadow_water_stats(mask_ds)
 
 
 def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
@@ -710,7 +708,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 # add water mask to GUNW product
                 add_water_to_mask(cfg, freq, geo_grid, dst_h5)
-                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/mask'
+                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped/mask'
                 mask_ds = dst_h5[mask_path]
                 compute_layover_shadow_water_stats(mask_ds)
 
@@ -780,11 +778,9 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                 compute_stats_real_data(raster, ds)
 
             if input_product_type != InputProduct.ROFF:
-                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
-                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
-                compute_water_mask_stats(water_mask_ds)
-                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
-                compute_layover_shadow_stats(lay_shadow_ds)
+                unwrap_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped'
+                mask_ds = dst_h5[f'{unwrap_path}/mask']
+                compute_layover_shadow_water_stats(mask_ds)
 
 
 def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
@@ -1031,7 +1027,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 # add water mask to GUNW product
                 add_water_to_mask(cfg, freq, geogrid, dst_h5)
-                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/mask'
+                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped/mask'
                 mask_ds = dst_h5[mask_path]
                 compute_layover_shadow_water_stats(mask_ds)
 
