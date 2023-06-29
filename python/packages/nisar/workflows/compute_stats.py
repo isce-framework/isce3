@@ -51,10 +51,10 @@ def compute_stats_real_data(raster, h5_ds):
 def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
     '''
     Compute statistics for masks containing layover/shadow and water
-    1. Percentage of pixels in layover (labelled with 1 and 5)
-    2. Percentage of pixels in shadow (labelled with 2 and 6)
-    3. Percentage of pixels in layover and shadow (labelled with 3 and 7)
-    4. Percentage of pixels in water (labelled with 4, 5, 6, and 7)
+    1. Percentage of pixels in layover (labeled with 1 or 5)
+    2. Percentage of pixels in shadow (labeled with 2 or 6)
+    3. Percentage of pixels in layover and shadow (labeled with 3 or 7)
+    4. Percentage of pixels in water (labeled with 4, 5, 6, or 7)
     Parameters
     ----------
     h5_ds: h5py.File
@@ -87,7 +87,7 @@ def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
         layover_shadow = (data_block == 3) | (data_block == 7)
         water = (data_block == 4) | (data_block == 5)| \
                 (data_block == 6) | (data_block == 7)
-        valid = (data_block>=0) & (data_block<=7)
+        valid = (data_block >= 0) & (data_block <= 7)
 
         valid_pixs += np.count_nonzero(valid)
         layover_pixs += np.count_nonzero(layover)

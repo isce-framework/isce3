@@ -254,6 +254,10 @@ def _project_water_to_geogrid(input_water_path, geogrid):
     geogrid : isce3.product.GeoGridParameters
         geogrid to map the water mask
 
+    Returns
+    -------
+    water_mask_interpret : numpy.ndarray
+        boolean array (1: water)
     """
     inputraster = gdal.Open(input_water_path)
     output_extent = (geogrid.start_x,
@@ -270,8 +274,9 @@ def _project_water_to_geogrid(input_water_path, geogrid):
     dst_ds = gdal.Warp("", inputraster, options=gdalwarp_options)
 
     projected_data = dst_ds.ReadAsArray()
+    water_mask_interpret = projected_data.astype('uint8') != 0
 
-    return projected_data
+    return water_mask_interpret
 
 
 def add_water_to_mask(cfg, freq, geogrid, dst_h5):
@@ -295,19 +300,17 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
         freq_path = f'/science/LSAR/GUNW/grids/frequency{freq}'
         mask_h5_path = f'{freq_path}/interferogram/mask'
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
-        water_mask_interpret = water_mask.astype('uint8') != 0
         mask_layer = dst_h5[mask_h5_path][()]
 
-        # The mask layer has the layover(1), shadow (2), and both(3).
+        # The mask layer has the layover (1), shadow (2), and both(3).
         # Here, the water mask (4) is added to the existing info.
         # If the water is coexist with the above (1-3), they will be assigned to 
         # new values. 
         # layover + water : 5
         # shadow + water : 6
         # layover + shadow + water : 7
-        for ele in range(4):
-            target_area = (mask_layer == ele) & (water_mask_interpret==1)
-            mask_layer[target_area] = ele + 4
+        combo_pxl_mask = (mask_layer > 0) & (mask_layer < 4) & water_mask
+        mask_layer[combo_pxl_mask] += 4
         dst_h5[mask_h5_path].write_direct(mask_layer)
 
 
