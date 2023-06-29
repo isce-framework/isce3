@@ -1,6 +1,7 @@
 import h5py
 import logging
 import numpy as np
+from numpy.linalg import norm
 from numpy.testing import assert_allclose
 import os
 import isce3
@@ -79,6 +80,45 @@ def add_cal_layer(group: h5py.Group, lut: LUT2d, name: str,
     else:
         raise IOError(f"Found only one of {xname} or {yname}."
                       "  Need both or none.")
+
+
+def get_nominal_ground_spacing(grid: RadarGridParameters, orbit: Orbit, **kw):
+    """Calculate along-track and ground-range spacing at middle of swath.
+
+    Parameters
+    ----------
+    grid : isce3.product.RadarGridParameters
+        Radar grid
+    orbit : isce3.core.Orbit
+        Radar orbit
+    threshold : float, optional
+    maxiter : int, optional
+    extraiter : int, optional
+        See rdr2geo
+
+    Returns
+    -------
+    azimuth_spacing : float
+        Along-track spacing in meters at mid-swath
+    ground_range_spacing : float
+        Ground range spacing in meters at mid-swath
+    """
+    if orbit.reference_epoch != grid.ref_epoch:
+        raise ValueError("Need orbit and grid to have same reference epoch")
+    pos, vel = orbit.interpolate(grid.sensing_mid)
+    doppler = 0.0
+    target_llh = isce3.geometry.rdr2geo(grid.sensing_mid, grid.mid_range,
+                                    orbit, grid.lookside, doppler,
+                                    grid.wavelength, **kw)
+    ell = isce3.core.Ellipsoid()
+    target_xyz = ell.lon_lat_to_xyz(target_llh)
+    azimuth_spacing = norm(vel) / grid.prf * norm(target_xyz) / norm(pos)
+    los_enu = isce3.geometry.enu_vector(target_llh[0], target_llh[1],
+        target_xyz - pos)
+    cos_inc = -(los_enu[2] / norm(los_enu))
+    sin_inc = np.sqrt(1 - cos_inc**2)
+    ground_range_spacing = grid.range_pixel_spacing / sin_inc
+    return azimuth_spacing, ground_range_spacing
 
 
 class SLC(h5py.File):
@@ -190,8 +230,15 @@ class SLC(h5py.File):
         dset.attrs["units"] = np.string_("DN")
         return dset
 
-    def update_swath(self, t: np.array, epoch: DateTime, r: np.array,
-                     fc: float, frequency="A"):
+    def update_swath(self, grid: RadarGridParameters, orbit: Orbit,
+                     bandwidth: float, frequency="A"):
+        t = grid.sensing_times
+        r = grid.slant_ranges
+        fc = isce3.core.speed_of_light / grid.wavelength
+        epoch = grid.ref_epoch
+
+        daz, dgr = get_nominal_ground_spacing(grid, orbit)
+
         g = self.swath(frequency)
         # Time scale is in parent of group.  Use require_dataset to assert
         # matching time scale on repeated calls.
@@ -201,7 +248,7 @@ class SLC(h5py.File):
             "CF compliant dimension associated with azimuth time")
 
         d = g.parent.require_dataset("zeroDopplerTimeSpacing", (), float)
-        d[()] = t[1] - t[0]
+        d[()] = t.spacing
         d.attrs["units"] = np.string_("seconds")
         d.attrs["description"] = np.string_("Time interval in the along track"
             " direction for raster layers. This is same as the spacing between"
@@ -213,7 +260,7 @@ class SLC(h5py.File):
                                             " with slant range")
 
         d = g.require_dataset("slantRangeSpacing", (), float)
-        d[()] = r[1] - r[0]
+        d[()] = r.spacing
         d.attrs["units"] = np.string_("meters")
         d.attrs["description"] = np.string_("Slant range spacing of grid. Same"
             " as difference between consecutive samples in slantRange array")
@@ -226,13 +273,13 @@ class SLC(h5py.File):
 
         # TODO other parameters filled with bogus values for now, no units
         g.require_dataset("acquiredCenterFrequency", (), float)[()] = fc
-        g.require_dataset("acquiredRangeBandwidth", (), float)[()] = 20e6
+        g.require_dataset("acquiredRangeBandwidth", (), float)[()] = bandwidth
         g.require_dataset("nominalAcquisitionPRF", (), float)[()] = 1910.
         g.require_dataset("numberOfSubSwaths", (), int)[()] = 1
         g.require_dataset("processedAzimuthBandwidth", (), float)[()] = 1200.
-        g.require_dataset("processedRangeBandwidth", (), float)[()] = 20e6
-        g.require_dataset("sceneCenterAlongTrackSpacing", (), float)[()] = 4.
-        g.require_dataset("sceneCenterGroundRangeSpacing", (), float)[()] = 12.
+        g.require_dataset("processedRangeBandwidth", (), float)[()] = bandwidth
+        g.require_dataset("sceneCenterAlongTrackSpacing", (), float)[()] = daz
+        g.require_dataset("sceneCenterGroundRangeSpacing", (), float)[()] = dgr
         d = g.require_dataset("validSamplesSubSwath1", (len(t), 2), 'int32')
         d[:] = (0, len(r))
 

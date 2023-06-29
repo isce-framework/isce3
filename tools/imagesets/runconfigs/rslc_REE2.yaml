@@ -13,7 +13,7 @@ runconfig:
 
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
-            dem_file:
+            dem_file: input_L0B_RRSD_REE2/dem_trunc.tiff
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.

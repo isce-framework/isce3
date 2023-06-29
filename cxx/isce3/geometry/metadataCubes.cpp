@@ -111,8 +111,18 @@ inline void writeVectorDerivedCubes(const int array_pos_i,
 
     // Ground-track velocity
     if (ground_track_velocity_raster != nullptr) {
+        // cosine law: c^2 = a^2 + b^2 - 2.a.b.cos(AB)
+        // cos(AB) = (a^2 + b^2 - c^2) / 2.a.b
+        const double slant_range = (target_xyz - sat_xyz).norm();
+        const double radius_target = target_xyz.norm();
+        const double radius_platform = sat_xyz.norm();
+        const double cos_alpha = ((radius_target * radius_target +
+                                   radius_platform * radius_platform -
+                                   slant_range * slant_range) /
+                                  (2 * radius_target * radius_platform));
+
         const double ground_velocity =
-            target_xyz.norm() * vel_xyz.norm() / sat_xyz.norm();
+            cos_alpha * radius_target * vel_xyz.norm() / radius_platform;
         ground_track_velocity_array(i, j) = ground_velocity;
     }
 

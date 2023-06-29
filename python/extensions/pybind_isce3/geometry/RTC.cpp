@@ -13,6 +13,8 @@ namespace py = pybind11;
 using isce3::geometry::rtcAlgorithm;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
+using isce3::geometry::rtcAreaMode;
+using isce3::geometry::rtcAreaBetaMode;
 
 void addbinding(py::enum_<rtcInputTerrainRadiometry>& pyInputTerrainRadiometry)
 {
@@ -42,8 +44,27 @@ void addbinding(py::enum_<rtcAreaMode> & pyAreaMode)
 {
     pyAreaMode
         .value("AREA", rtcAreaMode::AREA)
-        .value("AREA_FACTOR", rtcAreaMode::AREA_FACTOR)
-        ;
+        .value("AREA_FACTOR", rtcAreaMode::AREA_FACTOR);
+}
+
+void addbinding(py::enum_<rtcAreaBetaMode> & pyAreaBetaMode)
+{
+    pyAreaBetaMode
+        .value("AUTO", rtcAreaBetaMode::AUTO,
+                R"(auto mode. Default value is defined by the
+                    RTC algorithm that is being executed, i.e.,
+                    PIXEL_AREA for rtcAlgorithm::RTC_BILINEAR_DISTRIBUTION
+                    and PROJECTION_ANGLE for
+                    rtcAlgorithm::RTC_AREA_PROJECTION.)")
+        .value("PIXEL_AREA", rtcAreaBetaMode::PIXEL_AREA,
+                R"(estimate the beta surface reference area `A_beta`
+                   using the pixel area, which is the
+                   product of the range spacing by the
+                   azimuth spacing (computed using the ground velocity).)")
+        .value("PROJECTION_ANGLE", rtcAreaBetaMode::PROJECTION_ANGLE,
+               R"(estimate the beta surface reference area `A_beta`
+                  using the projection angle method:
+                  `A_beta = A_sigma * cos(projection_angle).)");
 }
 
 void addbinding_apply_rtc(pybind11::module& m)
@@ -57,8 +78,10 @@ void addbinding_apply_rtc(pybind11::module& m)
                     rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             py::arg("exponent") = 0,
             py::arg("rtc_area_mode") =
-                    isce3::geometry::rtcAreaMode::AREA_FACTOR,
+                    rtcAreaMode::AREA_FACTOR,
             py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
+            py::arg("rtc_area_beta_mode") =
+                    rtcAreaBetaMode::AUTO,
             py::arg("geogrid_upsampling") =
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
@@ -97,9 +120,11 @@ void addbinding_apply_rtc(pybind11::module& m)
                data type of the input raster (1 for real and 2 for complex
                rasters).
               rtc_area_mode : isce3.geometry.RtcAreaMode, optional
-                  RTC area mode 
+                  RTC area mode
               rtc_algorithm : isce3.geometry.RtcAlgorithm, optional
-                  RTC algorithm 
+                  RTC algorithm
+              rtc_area_beta_mode : isce3.geometry.RtcAreaBetaMode, optional
+                  RTC area beta mode
               geogrid_upsampling : double, optional
                   Geogrid upsampling (in each direction)
               rtc_min_value_db : float, optional
@@ -134,8 +159,9 @@ void addbinding_compute_rtc(pybind11::module& m)
                     const isce3::core::Orbit&,
                     const isce3::core::LUT2d<double>&, isce3::io::Raster&,
                     isce3::io::Raster&, rtcInputTerrainRadiometry,
-                    rtcOutputTerrainRadiometry, isce3::geometry::rtcAreaMode,
-                    rtcAlgorithm, double, float, float, isce3::io::Raster*,
+                    rtcOutputTerrainRadiometry, rtcAreaMode,
+                    rtcAlgorithm, rtcAreaBetaMode,
+                    double, float, float, isce3::io::Raster*,
                     isce3::core::MemoryModeBlocksY,
                     isce3::core::dataInterpMethod, double, int, double,
                     const long long, const long long>(
@@ -147,8 +173,10 @@ void addbinding_compute_rtc(pybind11::module& m)
             py::arg("output_terrain_radiometry") =
                     rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             py::arg("rtc_area_mode") =
-                    isce3::geometry::rtcAreaMode::AREA_FACTOR,
+                    rtcAreaMode::AREA_FACTOR,
             py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
+            py::arg("rtc_area_beta_mode") =
+                    rtcAreaBetaMode::AUTO,
             py::arg("geogrid_upsampling") =
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
@@ -187,7 +215,9 @@ void addbinding_compute_rtc(pybind11::module& m)
              rtc_area_mode : isce3.geometry.RtcAreaMode, optional
                  RTC area mode
              rtc_algorithm : isce3.geometry.RtcAlgorithm, optional
-                 RTC algorithm 
+                 RTC algorithm
+             rtc_factor_area_mode : isce3.geometry.RtcAreaBetaMode, optional
+                 RTC area beta mode
              geogrid_upsampling : double, optional
                 Geogrid upsampling
              rtc_min_value_db : float, optional
@@ -226,8 +256,9 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     const isce3::core::LUT2d<double>&, const double,
                     const double, const double, const double, const int,
                     const int, const int, rtcInputTerrainRadiometry,
-                    rtcOutputTerrainRadiometry, isce3::geometry::rtcAreaMode,
-                    rtcAlgorithm, double, float, float, isce3::io::Raster*,
+                    rtcOutputTerrainRadiometry, rtcAreaMode,
+                    rtcAlgorithm, rtcAreaBetaMode,
+                    double, float, float, isce3::io::Raster*,
                     isce3::io::Raster*, isce3::io::Raster*,
                     isce3::core::MemoryModeBlocksY,
                     isce3::core::dataInterpMethod, double, int, double,
@@ -243,8 +274,10 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
             py::arg("output_terrain_radiometry") =
                     rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
             py::arg("rtc_area_mode") =
-                    isce3::geometry::rtcAreaMode::AREA_FACTOR,
+                    rtcAreaMode::AREA_FACTOR,
             py::arg("rtc_algorithm") = rtcAlgorithm::RTC_AREA_PROJECTION,
+            py::arg("rtc_area_beta_mode") =
+                    rtcAreaBetaMode::AUTO,
             py::arg("geogrid_upsampling") =
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
@@ -299,6 +332,8 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                  RTC area mode
              rtc_algorithm : isce3.geometry.RtcAlgorithm, optional
                  RTC algorithm
+             rtc_area_beta_mode : isce3.geometry.RtcAreaBetaMode, optional
+                 RTC area beta mode
              geogrid_upsampling : double, optional
                  Geogrid upsampling (in each direction)
              rtc_min_value_db : float, optional

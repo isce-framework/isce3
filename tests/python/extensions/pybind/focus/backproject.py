@@ -4,6 +4,7 @@ import h5py
 import numpy as np
 import numpy.testing as npt
 import isce3.ext.isce3 as isce
+from isce3.core import load_orbit_from_h5_group
 from iscetest import data as test_data_dir
 from pathlib import Path
 import json
@@ -20,7 +21,7 @@ def load_h5(filename):
     signal_data = f["data"][()]
 
     # load orbit
-    orbit = isce.core.Orbit.load_from_h5(f["orbit"])
+    orbit = load_orbit_from_h5_group(f["orbit"])
 
     # load Doppler
     doppler = isce.core.LUT2d.load_from_h5(f["doppler"], "doppler")

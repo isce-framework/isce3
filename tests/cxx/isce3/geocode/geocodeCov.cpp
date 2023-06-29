@@ -24,8 +24,11 @@
 #include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/Serialization.h>
 #include <isce3/product/SubSwaths.h>
+#include <pyre/journal.h>
 
 std::set<std::string> geocode_mode_set = {"interp", "area_proj"};
+
+std::set<std::string> offset_modes = {"", "_rg", "_az", "_rg_az"};
 
 using isce3::math::computeRasterStats;
 
@@ -124,6 +127,9 @@ TEST(GeocodeTest, TestGeocodeCov) {
             std::numeric_limits<double>::quiet_NaN();
     isce3::geometry::rtcAlgorithm rtc_algorithm =
             isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION;
+    isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+            isce3::geometry::rtcAreaBetaMode::AUTO;
+
     double abs_cal_factor = 1;
     float clip_min = std::numeric_limits<float>::quiet_NaN();
     float clip_max = std::numeric_limits<float>::quiet_NaN();
@@ -136,8 +142,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::Raster* out_geo_nlooks = nullptr;
     isce3::io::Raster* out_geo_rtc = nullptr;
     isce3::io::Raster* phase_screen_raster = nullptr;
-    isce3::io::Raster* offset_az_raster = nullptr;
-    isce3::io::Raster* offset_rg_raster = nullptr;
+    const isce3::core::LUT2d<double>& az_time_correction_full_cov = {};
+    const isce3::core::LUT2d<double>& slant_range_correction_full_cov = {};
     isce3::io::Raster* input_rtc = nullptr;
     isce3::io::Raster* output_rtc = nullptr;
     isce3::io::Raster* input_layover_shadow_mask_raster = nullptr;
@@ -154,9 +160,34 @@ TEST(GeocodeTest, TestGeocodeCov) {
     const long long min_block_size = 16;
     const long long max_block_size = isce3::core::DEFAULT_MIN_BLOCK_SIZE;
 
+    // common default correction LUT2d
+    const auto default_correction_lut2d = isce3::core::LUT2d<double>();
+
+    // multiplicative factor applied to range pixel spacing and azimuth time
+    // interval to be added to starting range and azimuth time of radar grid
+    const double offset_factor = 10.0;
+
+    // create azimuth correction LUT2d with matrix fill with azimuth time
+    // interval (1/PRF) multiplied by offset factor to amplify effect
+    isce3::core::Matrix<double> m_az_correct(radar_grid.length(),
+                                             radar_grid.width());
+    const auto az_time_interval = 1 / radar_grid.prf();
+    m_az_correct.fill(offset_factor * az_time_interval);
+
+    // create range correction LUT2d with matrix filled with range pixel
+    // spacing multiplied by offset factor to amplify effect
+    isce3::core::Matrix<double> m_srange_correct(radar_grid.length(),
+                                                 radar_grid.width());
+    m_srange_correct.fill(offset_factor * radar_grid.rangePixelSpacing());
+
+    // make a channel for logging progress
+    pyre::journal::info_t channel("geocode.TestGeocodeCov");
+
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
+        channel << pyre::journal::at(__HERE__)
+                << "geocode mode: " << geocode_mode_str
+                << pyre::journal::endl;
 
         if (geocode_mode_str == "interp")
             output_mode = isce3::geocode::geocodeOutputMode::INTERP;
@@ -165,30 +196,66 @@ TEST(GeocodeTest, TestGeocodeCov) {
 
         for (std::string xy_str : {"x", "y"}) {
 
-            // input raster in radar coordinates to be geocoded
-            isce3::io::Raster radarRaster(xy_str + ".rdr");
-            std::cout << "geocoding file: " << xy_str + ".rdr" << std::endl;
+            for (auto offset_mode : offset_modes) {
+                // test radar grid to be altered as needed
+                auto radar_grid_shifted = radar_grid;
 
-            // output raster
-            isce3::io::Raster geocodedRaster(
-                    xy_str + "_" + geocode_mode_str + "_geo.bin", geoGridWidth,
-                    geoGridLength, 1, GDT_Float64, "ENVI");
+                // az time correction LUT2d and radar grid based on offset mode
+                isce3::core::LUT2d<double> az_time_correction = default_correction_lut2d;
+                if (offset_mode.find("az") != std::string::npos) {
+                    radar_grid_shifted.sensingStart(radar_grid.sensingStart()
+                            + offset_factor * az_time_interval);
+                    az_time_correction = isce3::core::LUT2d<double>(
+                            radar_grid_shifted.startingRange(),
+                            radar_grid_shifted.sensingStart(),
+                            radar_grid_shifted.rangePixelSpacing(), az_time_interval,
+                            m_az_correct);
+                }
 
-            // run geocode
-            geoObj.geocode(radar_grid, radarRaster, geocodedRaster, demRaster,
-                    output_mode, flag_az_baseband_doppler, flatten,
-                    geogrid_upsampling, flag_upsample_radar_grid,
-                    flag_apply_rtc, input_terrain_radiometry,
-                    output_terrain_radiometry, exponent, rtc_min_value_db,
-                    rtc_geogrid_upsampling, rtc_algorithm, abs_cal_factor,
-                    clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
-                    out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
-                    phase_screen_raster, offset_az_raster, offset_rg_raster,
-                    input_rtc, output_rtc, input_layover_shadow_mask_raster,
-                    sub_swaths, out_valid_samples_sub_swath_mask,
-                    geocode_memory_mode_1, min_block_size, max_block_size);
+                // range correction LUT2d and radar grid based on offset mode
+                isce3::core::LUT2d<double> slant_range_correction = default_correction_lut2d;
+                if (offset_mode.find("rg") != std::string::npos) {
+                    radar_grid_shifted.startingRange(radar_grid.startingRange()
+                            + offset_factor * radar_grid.rangePixelSpacing());
+                    slant_range_correction = isce3::core::LUT2d<double>(
+                            radar_grid_shifted.startingRange(),
+                            radar_grid_shifted.sensingStart(),
+                            radar_grid_shifted.rangePixelSpacing(), az_time_interval,
+                            m_srange_correct);
+                }
+
+                // input raster in radar coordinates to be geocoded
+                isce3::io::Raster radarRaster(xy_str + ".rdr");
+
+                channel << pyre::journal::at(__HERE__)
+                        << "geocoding file: " << xy_str + ".rdr" 
+                        << pyre::journal::endl;
+
+                // output raster
+                isce3::io::Raster geocodedRaster(
+                        xy_str + "_" + geocode_mode_str + offset_mode + "_geo.bin",
+                        geoGridWidth, geoGridLength, 1, GDT_Float64, "ENVI");
+
+                // run geocode
+                geoObj.geocode(radar_grid_shifted, radarRaster, geocodedRaster,
+                               demRaster, output_mode, flag_az_baseband_doppler,
+                               flatten, geogrid_upsampling, flag_upsample_radar_grid,
+                               flag_apply_rtc, input_terrain_radiometry,
+                               output_terrain_radiometry, exponent, rtc_min_value_db,
+                               rtc_geogrid_upsampling, rtc_algorithm,
+                               rtc_area_beta_mode, abs_cal_factor,
+                               clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
+                               out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
+                               phase_screen_raster, az_time_correction,
+                               slant_range_correction, input_rtc, output_rtc,
+                               input_layover_shadow_mask_raster,
+                               sub_swaths, out_valid_samples_sub_swath_mask,
+                               geocode_memory_mode_1, min_block_size, max_block_size);
+
+            }
         }
     }
+
 
     // Test generation of full-covariance elements and block processing
 
@@ -230,11 +297,12 @@ TEST(GeocodeTest, TestGeocodeCov) {
             geogrid_upsampling, flag_upsample_radar_grid, flag_apply_rtc,
             input_terrain_radiometry, output_terrain_radiometry, exponent,
             rtc_min_value_db, rtc_geogrid_upsampling, rtc_algorithm,
-            abs_cal_factor, clip_min, clip_max, min_nlooks, radar_grid_nlooks,
+            rtc_area_beta_mode, abs_cal_factor, clip_min,
+            clip_max, min_nlooks, radar_grid_nlooks,
             &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem,
             out_geo_nlooks, out_geo_rtc, phase_screen_raster,
-            offset_az_raster, offset_rg_raster, input_rtc, output_rtc,
-            input_layover_shadow_mask_raster,
+            az_time_correction_full_cov, slant_range_correction_full_cov,
+            input_rtc, output_rtc, input_layover_shadow_mask_raster,
             sub_swaths, out_valid_samples_sub_swath_mask,
             geocode_memory_mode_2, min_block_size, max_block_size);
 
@@ -381,345 +449,112 @@ TEST(GeocodeTest, CheckGeocodeCovResults) {
 
     for (auto geocode_mode_str : geocode_mode_set) {
 
-        std::string x_file_str = "x_" + geocode_mode_str + "_geo.bin";
-        std::string y_file_str = "y_" + geocode_mode_str + "_geo.bin";
-        std::cout << "evaluating files:" << std::endl;
-        std::cout << "    " << x_file_str << std::endl;
-        std::cout << "    " << y_file_str << std::endl;
-        isce3::io::Raster xRaster(x_file_str);
-        isce3::io::Raster yRaster(y_file_str);
+        for (auto offset_mode : offset_modes) {
 
-        size_t length = xRaster.length();
-        size_t width = xRaster.width();
+            std::string x_file_str = ("x_" + geocode_mode_str + offset_mode +
+                                      "_geo.bin");
+            std::string y_file_str = ("y_" + geocode_mode_str + offset_mode +
+                                      "_geo.bin");
+            std::cout << "evaluating files:" << std::endl;
+            std::cout << "    " << x_file_str << std::endl;
+            std::cout << "    " << y_file_str << std::endl;
+            isce3::io::Raster xRaster(x_file_str);
+            isce3::io::Raster yRaster(y_file_str);
 
-        double geoTrans[6];
-        xRaster.getGeoTransform(geoTrans);
+            size_t length = xRaster.length();
+            size_t width = xRaster.width();
 
-        double x0 = geoTrans[0] + geoTrans[1] / 2.0;
-        double dx = geoTrans[1];
+            double geoTrans[6];
+            xRaster.getGeoTransform(geoTrans);
 
-        double y0 = geoTrans[3] + geoTrans[5] / 2.0;
-        double dy = geoTrans[5];
+            double x0 = geoTrans[0] + geoTrans[1] / 2.0;
+            double dx = geoTrans[1];
 
-        double errX = 0.0;
-        double errY = 0.0;
-        double maxErrX = 0.0;
-        double maxErrY = 0.0;
-        double gridLat;
-        double gridLon;
+            double y0 = geoTrans[3] + geoTrans[5] / 2.0;
+            double dy = geoTrans[5];
 
-        std::valarray<double> geoX(length * width);
-        std::valarray<double> geoY(length * width);
+            double errX = 0.0;
+            double errY = 0.0;
+            double maxErrX = 0.0;
+            double maxErrY = 0.0;
+            double gridLat;
+            double gridLon;
 
-        isce3::math::Stats<double> stats_x;
-        isce3::math::Stats<double> stats_y;
+            std::valarray<double> geoX(length * width);
+            std::valarray<double> geoY(length * width);
 
-        xRaster.getBlock(geoX, 0, 0, width, length);
-        yRaster.getBlock(geoY, 0, 0, width, length);
+            isce3::math::Stats<double> stats_x;
+            isce3::math::Stats<double> stats_y;
 
-        double square_sum_x = 0; // sum of square differences
-        double square_sum_y = 0; // sum of square differences
+            xRaster.getBlock(geoX, 0, 0, width, length);
+            yRaster.getBlock(geoY, 0, 0, width, length);
 
-        for (size_t line = 0; line < length; ++line) {
-            for (size_t pixel = 0; pixel < width; ++pixel) {
-                size_t index = line * width + pixel;
-                if (!isnan(geoX[index])) {
-                    gridLon = x0 + pixel * dx;
-                    errX = geoX[index] - gridLon;
-                    square_sum_x += pow(errX, 2);
-                    stats_x.update(geoX[index]);
-                    if (std::abs(errX) > maxErrX) {
-                        maxErrX = std::abs(errX);
+            double square_sum_x = 0; // sum of square differences
+            double square_sum_y = 0; // sum of square differences
+
+            for (size_t line = 0; line < length; ++line) {
+                for (size_t pixel = 0; pixel < width; ++pixel) {
+                    size_t index = line * width + pixel;
+                    if (!isnan(geoX[index])) {
+                        gridLon = x0 + pixel * dx;
+                        errX = geoX[index] - gridLon;
+                        square_sum_x += pow(errX, 2);
+                        stats_x.update(geoX[index]);
+                        if (std::abs(errX) > maxErrX) {
+                            maxErrX = std::abs(errX);
+                        }
                     }
-                }
-                if (!isnan(geoY[index])) {
-                    gridLat = y0 + line * dy;
-                    errY = geoY[index] - gridLat;
-                    square_sum_y += pow(errY, 2);
-                    stats_y.update(geoY[index]);
-                    if (std::abs(errY) > maxErrY) {
-                        maxErrY = std::abs(errY);
+                    if (!isnan(geoY[index])) {
+                        gridLat = y0 + line * dy;
+                        errY = geoY[index] - gridLat;
+                        square_sum_y += pow(errY, 2);
+                        stats_y.update(geoY[index]);
+                        if (std::abs(errY) > maxErrY) {
+                            maxErrY = std::abs(errY);
+                        }
                     }
                 }
             }
+
+            double rmse_x = std::sqrt(square_sum_x / stats_x.n_valid);
+            double rmse_y = std::sqrt(square_sum_y / stats_y.n_valid);
+
+            std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
+            std::cout << "  nvalid X: " << stats_x.n_valid << std::endl;
+            std::cout << "  nvalid Y: " << stats_y.n_valid << std::endl;
+            std::cout << "  RMSE X: " << rmse_x << std::endl;
+            std::cout << "  RMSE Y: " << rmse_y << std::endl;
+            std::cout << "  maxErrX: " << maxErrX << std::endl;
+            std::cout << "  maxErrY: " << maxErrY << std::endl;
+            std::cout << "  dx: " << dx << std::endl;
+            std::cout << "  dy: " << dy << std::endl;
+
+            ASSERT_GE(stats_x.n_valid, 800);
+            ASSERT_GE(stats_y.n_valid, 800);
+
+            if (geocode_mode_str == "interp") {
+                // errors with interp algorithm are smaller because topo
+                // interpolates x and y at the center of the pixel
+                ASSERT_LT(maxErrX, 1.0e-8);
+                ASSERT_LT(maxErrY, 1.0e-8);
+            }
+
+            ASSERT_LT(rmse_x, 0.5 * dx);
+            ASSERT_LT(rmse_y, 0.5 * std::abs(dy));
+
+            // Check stats
+            checkStatsReal(stats_x, xRaster);
+            checkStatsReal(stats_y, yRaster);
+
         }
-
-        double rmse_x = std::sqrt(square_sum_x / stats_x.n_valid);
-        double rmse_y = std::sqrt(square_sum_y / stats_y.n_valid);
-
-        std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
-        std::cout << "  nvalid X: " << stats_x.n_valid << std::endl;
-        std::cout << "  nvalid Y: " << stats_y.n_valid << std::endl;
-        std::cout << "  RMSE X: " << rmse_x << std::endl;
-        std::cout << "  RMSE Y: " << rmse_y << std::endl;
-        std::cout << "  maxErrX: " << maxErrX << std::endl;
-        std::cout << "  maxErrY: " << maxErrY << std::endl;
-        std::cout << "  dx: " << dx << std::endl;
-        std::cout << "  dy: " << dy << std::endl;
-
-        ASSERT_GE(stats_x.n_valid, 800);
-        ASSERT_GE(stats_y.n_valid, 800);
-
-        if (geocode_mode_str == "interp") {
-            // errors with interp algorithm are smaller because topo
-            // interpolates x and y at the center of the pixel
-            ASSERT_LT(maxErrX, 1.0e-8);
-            ASSERT_LT(maxErrY, 1.0e-8);
-        }
-
-        ASSERT_LT(rmse_x, 0.5 * dx);
-        ASSERT_LT(rmse_y, 0.5 * std::abs(dy));
-
-        // Check stats
-        checkStatsReal(stats_x, xRaster);
-        checkStatsReal(stats_y, yRaster);
-
     }
+
+
 }
 
 // global geocode SLC modes shared between running and checking
 std::set<std::string> axes = {"x", "y"};
-std::set<std::string> offset_modes = {"", "_rg", "_az", "_rg_az"};
 std::set<std::string> gslc_modes = {"_raster", "_array"};
-
-TEST(GeocodeTest, TestGeocodeSlc)
-{
-    createZeroDem();
-    createTestData();
-
-    std::string h5file(TESTDATA_DIR "envisat.h5");
-    isce3::io::IH5File file(h5file);
-    std::cout << "H5 opened" << std::endl;
-
-    // Load the product
-    std::cout << "create the product" << std::endl;
-    isce3::product::RadarGridProduct product(file);
-
-    // std::cout << "get the swath" << std::endl;
-    // const isce3::product::Swath & swath = product.swath('A');
-    isce3::core::Orbit orbit = product.metadata().orbit();
-
-    std::cout << "construct the ellipsoid" << std::endl;
-    isce3::core::Ellipsoid ellipsoid;
-
-    std::cout << "get Doppler" << std::endl;
-    // This test relies on that SLC test data in the repo to compute
-    // lat, lon, height. In the simulation however I have not added any
-    // Carrier so the simulated SLC phase is zero Doppler but its grid is
-    // native Doppler. accordingly we can setup the Dopplers as follows.
-    // In future we may want to simulate an SLC which has Carrier
-    isce3::core::LUT2d<double> imageGridDoppler =
-            product.metadata().procInfo().dopplerCentroid('A');
-
-    // construct a zero 2D LUT
-    isce3::core::Matrix<double> M(imageGridDoppler.length(),
-                                  imageGridDoppler.width());
-
-    M.zeros();
-    isce3::core::LUT2d<double> nativeDoppler(
-            imageGridDoppler.xStart(), imageGridDoppler.yStart(),
-            imageGridDoppler.xSpacing(), imageGridDoppler.ySpacing(), M);
-
-    double thresholdGeo2rdr = 1.0e-9;
-    int numiterGeo2rdr = 25;
-    size_t linesPerBlock = 1000;
-
-    // input radar grid (baseline - will be copied and altered as neeed)
-    char freq = 'A';
-    std::cout << "construct radar grid" << std::endl;
-    isce3::product::RadarGridParameters radarGrid(product, freq);
-
-    // common geogrid
-    double geoGridStartX = -115.65;
-    double geoGridStartY = 34.84;
-    double geoGridSpacingX = 0.0002;
-    double geoGridSpacingY = -8.0e-5;
-    int geoGridLength = 500;
-    int geoGridWidth = 500;
-    int epsgcode = 4326;
-
-    std::cout << "Geogrid" << std::endl;
-    isce3::product::GeoGridParameters geoGrid(
-            geoGridStartX, geoGridStartY, geoGridSpacingX, geoGridSpacingY,
-            geoGridWidth, geoGridLength, epsgcode);
-
-    // common geotrans to be applied to all rasters
-    double* _geoTrans = new double[6];
-    _geoTrans[0] = geoGridStartX;
-    _geoTrans[1] = geoGridSpacingX;
-    _geoTrans[2] = 0.0;
-    _geoTrans[3] = geoGridStartY;
-    _geoTrans[4] = 0.0;
-    _geoTrans[5] = geoGridSpacingY;
-
-    // common carrier default carrier LUT2d
-    const auto default_carrier_lut2d = isce3::core::LUT2d<double>();
-
-    // common default correction LUT2d
-    const auto default_correction_lut2d = isce3::core::LUT2d<double>();
-
-    // multiplicative factor applied to range pixel spacing and azimuth time
-    // interval to be added to starting range and azimuth time of radar grid
-    const double offset_factor = 10.0;
-
-    // create azimuth correction LUT2d with matrix fill with azimuth time
-    // interval (1/PRF) multiplied by offset factor to amplify effect
-    isce3::core::Matrix<double> m_az_correct(radarGrid.length(),
-                                             radarGrid.width());
-    const auto az_time_interval = 1 / radarGrid.prf();
-    m_az_correct.fill(offset_factor * az_time_interval);
-
-    // create range correction LUT2d with matrix filled with range pixel
-    // spacing multiplied by offset factor to amplify effect
-    isce3::core::Matrix<double> m_srange_correct(radarGrid.length(),
-                                                 radarGrid.width());
-    m_srange_correct.fill(offset_factor * radarGrid.rangePixelSpacing());
-
-    // common DEM raster
-    isce3::io::Raster demRaster("zero_height_dem_geo.bin");
-
-    // init output array (will be reused in all geocodeSlc array mode tests)
-    isce3::core::EArray2D<std::complex<float>>
-        geoDataArr(geoGridLength, geoGridWidth);
-
-    bool flatten = false;
-
-    // iterate over different axes and corrections, and geocode
-    for (auto axis : axes) {
-        // input radar raster
-        isce3::io::Raster inputSlc(axis + "slc_rdr.bin", GA_ReadOnly);
-
-        // input radar raster as array
-        isce3::core::EArray2D<std::complex<float>> rdrDataArr(
-                inputSlc.length(), inputSlc.width());
-        inputSlc.getBlock(rdrDataArr.data(), 0, 0, inputSlc.width(),
-                inputSlc.length(), 1);
-
-        for (auto offset_mode : offset_modes) {
-            // test radar grid to be altered as needed
-            auto testRdrGrid = radarGrid;
-
-            // az time correction LUT2d and radar grid based on offset mode
-            isce3::core::LUT2d<double> az_correction = default_correction_lut2d;
-            if (offset_mode.find("az") != std::string::npos) {
-                testRdrGrid.sensingStart(radarGrid.sensingStart()
-                        + offset_factor * az_time_interval);
-                az_correction = isce3::core::LUT2d<double>(
-                        testRdrGrid.startingRange(),
-                        testRdrGrid.sensingStart(),
-                        testRdrGrid.rangePixelSpacing(), az_time_interval,
-                        m_az_correct);
-            }
-
-            // range correction LUT2d and radar grid based on offset mode
-            isce3::core::LUT2d<double> srange_correction = default_correction_lut2d;
-            if (offset_mode.find("rg") != std::string::npos) {
-                testRdrGrid.startingRange(radarGrid.startingRange()
-                        + offset_factor * radarGrid.rangePixelSpacing());
-                srange_correction = isce3::core::LUT2d<double>(
-                        testRdrGrid.startingRange(),
-                        testRdrGrid.sensingStart(),
-                        testRdrGrid.rangePixelSpacing(), az_time_interval,
-                        m_srange_correct);
-            }
-
-            // output name common to both raster and array geocodeSlc modes
-            const std::string filePrefix = axis + "slc_geo" + offset_mode;
-
-            // geocde SLC in raster mode
-            isce3::io::Raster geocodedSlcRaster(filePrefix +  "_raster.bin",
-                    geoGridWidth, geoGridLength, 1, GDT_CFloat32, "ENVI");
-            isce3::geocode::geocodeSlc(geocodedSlcRaster, inputSlc, demRaster,
-                    testRdrGrid, geoGrid, orbit, nativeDoppler, imageGridDoppler,
-                    ellipsoid, thresholdGeo2rdr, numiterGeo2rdr, linesPerBlock,
-                    flatten, default_carrier_lut2d, default_carrier_lut2d,
-                    az_correction, srange_correction);
-            geocodedSlcRaster.setGeoTransform(_geoTrans);
-
-            // geocodeSlc in array mode and write array to raster
-            std::vector<isce3::geocode::EArray2dc64> geoDataVec = {geoDataArr};
-            std::vector<isce3::geocode::EArray2dc64> rdrDataVec = {rdrDataArr};
-            isce3::geocode::geocodeSlc(geoDataVec, rdrDataVec, demRaster,
-                    radarGrid, radarGrid, geoGrid, orbit, nativeDoppler,
-                    imageGridDoppler, ellipsoid, thresholdGeo2rdr,
-                    numiterGeo2rdr, 0, 0, flatten);
-            isce3::io::Raster geocodedSlcArr(filePrefix + "_array.bin",
-                    geoGridWidth, geoGridLength, 1, GDT_CFloat32, "ENVI");
-            geocodedSlcArr.setBlock(geoDataArr.data(), 0, 0, geoGridWidth,
-                    geoGridLength, 1);
-            geocodedSlcArr.setGeoTransform(_geoTrans);
-        } // loop over offset_modes
-    } // loop over axes
-}
-
-TEST(GeocodeTest, CheckGeocodeSlc)
-{
-    // The geocoded latitude and longitude data should be
-    // consistent with the geocoded pixel location.
-
-    double* geoTrans = new double[6];
-    double err;
-    double gridVal;
-
-    // iterate over different axes and corrections, and track number of times
-    // max error threshold is exceeded
-    size_t nFails = 0;
-    for (auto axis : axes) {
-        for (auto offset_mode : offset_modes) {
-            for (auto gslc_mode : gslc_modes) {
-                // open current test output raster and load output to array
-                std::string fileName = axis + "slc_geo" + offset_mode + gslc_mode + ".bin";
-                isce3::io::Raster geoRaster(fileName);
-                const auto length = geoRaster.length();
-                const auto width = geoRaster.width();
-                std::valarray<std::complex<double>> geoData(length * width);
-                geoRaster.getBlock(geoData, 0, 0, width, length);
-
-                // use geotransfrom in geo raster to init
-                geoRaster.getGeoTransform(geoTrans);
-                double x0 = geoTrans[0] + geoTrans[1] / 2.0;
-                double dx = geoTrans[1];
-
-                double y0 = geoTrans[3] + geoTrans[5] / 2.0;
-                double dy = geoTrans[5];
-
-                double deg2rad = M_PI / 180.0;
-                x0 *= deg2rad;
-                dx *= deg2rad;
-
-                y0 *= deg2rad;
-                dy *= deg2rad;
-
-                // max error of current raster
-                double maxErr = 0.0;
-
-                // loop over lines and pixels of output and check output
-                for (size_t line = 0; line < length; ++line) {
-                    for (size_t pixel = 0; pixel < width; ++pixel) {
-                        // skip invalid pixels
-                        if (isnan(std::real(geoData[line * width + pixel])))
-                            continue;
-
-                        // compute expected grid value based on axis
-                        gridVal = (axis == "x") ? x0 + pixel * dx : y0 + line * dy;
-
-                        // compute error and check if it's max
-                        err = std::arg(geoData[line * width + pixel]) - gridVal;
-                        maxErr = std::max(maxErr, std::abs(err));
-                    } // loop over pixel
-                } // loop over line
-
-                // increment fails if maxErr greather than threshold
-                if (maxErr > 1.0e-6) {
-                    nFails++;
-                }
-                std::cout << fileName << "\t" << maxErr << std::endl;
-            } // loop over gslc modes
-        } // loop over offset modes
-    } // loop over axes
-
-    ASSERT_EQ(nFails, 0);
-}
 
 int main(int argc, char* argv[])
 {

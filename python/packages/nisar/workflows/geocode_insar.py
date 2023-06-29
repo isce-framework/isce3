@@ -88,7 +88,7 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     input_raster = isce3.io.Raster(str(raster_ref))
 
     # access the HDF5 dataset for layover shadow mask
-    dataset_path = f"{dst_freq_path}/interferogram/mask"
+    dataset_path = f"{dst_freq_path}/interferogram/unwrapped/mask"
 
     return input_raster, dataset_path
 
@@ -128,8 +128,11 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         src_group_path = f'{src_freq_path}/interferogram/{pol}'
         dst_group_path = f'{dst_freq_path}/interferogram/{pol}'
 
-        if input_product_type is InputProduct.RIFG:
-            dst_group_path = f'{dst_freq_path}/wrappedInterferogram/{pol}'
+        # RUNW and RIFG product
+        if input_product_type is InputProduct.RUNW:
+            dst_group_path = f'{dst_freq_path}/interferogram/unwrapped/{pol}'
+        elif input_product_type is InputProduct.RIFG:
+            dst_group_path = f'{dst_freq_path}/interferogram/wrapped/{pol}'
 
     if input_product_type is InputProduct.ROFF:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}/{off_layer}'
@@ -298,7 +301,8 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
 
     if water_mask_path is not None:
         freq_path = f'/science/LSAR/GUNW/grids/frequency{freq}'
-        mask_h5_path = f'{freq_path}/interferogram/mask'
+        mask_h5_path = f'{freq_path}/interferogram/unwrapped/mask'
+
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
         mask_layer = dst_h5[mask_h5_path][()]
 
@@ -506,6 +510,14 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
+
+            if input_product_type != InputProduct.ROFF:
+                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
+                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
+                compute_water_mask_stats(water_mask_ds)
+                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
+                compute_layover_shadow_stats(lay_shadow_ds)
+
 
 def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Geocode RUNW products on CPU
@@ -766,6 +778,14 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
+
+            if input_product_type != InputProduct.ROFF:
+                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
+                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
+                compute_water_mask_stats(water_mask_ds)
+                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
+                compute_layover_shadow_stats(lay_shadow_ds)
+
 
 def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Geocode RUNW products on GPU

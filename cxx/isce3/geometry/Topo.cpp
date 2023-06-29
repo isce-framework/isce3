@@ -548,8 +548,14 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.z(line, bin, targetLLH[2]);
 
     // Skip other computations if their rasters aren't set
-    if (layers.onlyXYZRastersSet())
+    if (!layers.hasIncRaster() &&
+            !layers.hasHdgRaster() &&
+            !layers.hasLocalIncRaster() &&
+            !layers.hasLocalPsiRaster() &&
+            !layers.hasSimRaster() &&
+            !layers.hasMaskRaster()) {
         return;
+    }
 
     // Convert llh->xyz for ground point
     const Vec3 targetXYZ = _ellipsoid.lonLatToXyz(targetLLH);
@@ -571,6 +577,14 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
     // Incidence angle
     layers.inc(line, bin, std::acos(cosalpha) * degrees);
+
+    // Skip other computations if their rasters aren't set
+    if (!layers.hasHdgRaster() &&
+            !layers.hasLocalIncRaster() &&
+            !layers.hasLocalPsiRaster() &&
+            !layers.hasSimRaster()) {
+        return;
+    }
 
     // Heading considering zero-Doppler grid and anti-clock. ref. starting from the East
     double heading;

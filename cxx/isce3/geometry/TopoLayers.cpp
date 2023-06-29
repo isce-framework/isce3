@@ -128,29 +128,70 @@ void TopoLayers::setBlockSize(size_t length, size_t width)
 {
     _length = length;
     _width = width;
-    _x.resize(length * width);
-    _y.resize(length * width);
-    _z.resize(length * width);
-    _inc.resize(length * width);
-    _hdg.resize(length * width);
-    _localInc.resize(length * width);
-    _localPsi.resize(length * width);
-    _sim.resize(length * width);
-    _mask.resize(length * width);
-    _crossTrack.resize(length * width);
-}
 
-// Check if only x, y, and z rasters are enabled
-bool TopoLayers::onlyXYZRastersSet() const
-{
-    // Check if x, y, and z rasters are all not nullptr
-    bool has_xyz = _xRaster && _yRaster && _zRaster;
+    if (_xRaster || _maskRaster) {
+        _x.resize(length * width);
+    } else {
+        _x.resize(0);
+    }
 
-    // Check if any other rasters not nullptr
-    bool nothing_else = !_incRaster && !_hdgRaster && !_localIncRaster
-        && !_localPsiRaster && !_simRaster && !_maskRaster;
+    if (_yRaster || _maskRaster) {
+        _y.resize(length * width);
+    }
+    else {
+        _y.resize(0);
+    }
 
-    return has_xyz && nothing_else;
+    if (_zRaster) {
+        _z.resize(length * width);
+    }
+    else {
+        _z.resize(0);
+    }
+
+    if (_incRaster || _maskRaster) {
+        _inc.resize(length * width);
+    }
+    else {
+        _inc.resize(0);
+    }
+
+    if (_hdgRaster) {
+        _hdg.resize(length * width);
+    }
+    else {
+        _hdg.resize(0);
+    }
+
+    if (_localIncRaster) {
+        _localInc.resize(length * width);
+    }
+    else {
+        _localInc.resize(0);
+    }
+
+    if (_localPsiRaster) {
+        _localPsi.resize(length * width);
+    }
+    else {
+        _localPsi.resize(0);
+    }
+
+    if (_simRaster) {
+        _sim.resize(length * width);
+    }
+    else {
+        _sim.resize(0);
+    }
+
+    if (_maskRaster) {
+        _mask.resize(length * width);
+        _crossTrack.resize(length * width);
+    }
+    else {
+        _mask.resize(0);
+        _crossTrack.resize(0);
+    }
 }
 
 } // namespace isce3::geometry

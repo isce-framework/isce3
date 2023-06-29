@@ -39,23 +39,51 @@ namespace isce3 { namespace cuda { namespace geometry {
 
     // Copy results to host TopoLayers
     void gpuTopoLayers::copyToHost(isce3::geometry::TopoLayers & layers) {
-        checkCudaErrors(cudaMemcpy(&layers.x()[0], _x, _nbytes_double,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.y()[0], _y, _nbytes_double,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.z()[0], _z, _nbytes_double,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.inc()[0], _inc, _nbytes_float,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.hdg()[0], _hdg, _nbytes_float,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.localInc()[0], _localInc, _nbytes_float,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.localPsi()[0], _localPsi, _nbytes_float,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.sim()[0], _sim, _nbytes_float,
-                        cudaMemcpyDeviceToHost));
-        checkCudaErrors(cudaMemcpy(&layers.crossTrack()[0], _crossTrack, _nbytes_double,
-                        cudaMemcpyDeviceToHost));
+
+        /*
+        Check whether memory for each layer has been allocated by
+        CPU TopoLayers before copying corresponding data from GPU to the CPU.
+
+        Note that it's not necessary to check whether the GPU memory has
+        also been allocated since gpuTopoLayers allocates memory for all
+        arrays (unlike CPU TopoLayers)
+        */
+
+        if (layers.x().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.x()[0], _x, _nbytes_double,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.y().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.y()[0], _y, _nbytes_double,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.z().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.z()[0], _z, _nbytes_double,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.inc().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.inc()[0], _inc, _nbytes_float,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.hdg().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.hdg()[0], _hdg, _nbytes_float,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.localInc().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.localInc()[0], _localInc, _nbytes_float,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.localPsi().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.localPsi()[0], _localPsi, _nbytes_float,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.sim().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.sim()[0], _sim, _nbytes_float,
+                            cudaMemcpyDeviceToHost));
+        }
+        if (layers.crossTrack().size()) {
+            checkCudaErrors(cudaMemcpy(&layers.crossTrack()[0], _crossTrack, _nbytes_double,
+                            cudaMemcpyDeviceToHost));
+        }
     }
 } } }

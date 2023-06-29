@@ -77,6 +77,13 @@ macro(getpackage_hdf5)
             INTERFACE_LINK_LIBRARIES      "${HDF5_CXX_LIBRARIES}"
             )
         install(TARGETS hdf5 EXPORT isce3-targets)
+    else()
+        # FindHDF5's HDF5::HDF5 does not reflect the transitive MPI dependency,
+        # so we need to explicitly add it to the HDF5 interface here.
+        # Otherwise including hdf5.h may fail with a missing mpi.h error.
+        if(HDF5_IS_PARALLEL)
+            target_link_libraries(HDF5::HDF5 INTERFACE MPI::MPI_CXX)
+        endif()
     endif()
 endmacro()
 

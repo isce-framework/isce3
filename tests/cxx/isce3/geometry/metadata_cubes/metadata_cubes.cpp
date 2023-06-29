@@ -68,7 +68,7 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
     const double vel_unit_error_threshold = 1e-3;
     const double sat_position_error_threshold = 1e-3;
     const double incidence_angle_error_threshold = 1e-5;
-    const double ground_track_velocity_error_threshold = 1e-15;
+    const double ground_track_velocity_error_threshold = 1e-12;
 
     for (int i = 0; i < geogrid.length(); ++i) {
         double pos_y = geogrid.startY() + (0.5 + i) * geogrid.spacingY();
@@ -184,8 +184,11 @@ void _check_vectors(const isce3::product::GeoGridParameters& geogrid,
 
             // 5. Check ground-track velocity vector
             double ground_track_velocity_test = ground_track_velocity_array(i, j);
+            const auto target_xyz_normalized = target_xyz.normalized();
+            const auto sat_xyz_normalized =  sat_xyz.normalized();
+            const double cos_alpha = target_xyz_normalized.dot(sat_xyz_normalized);
             const double ground_track_velocity_ref =
-                target_xyz.norm() * vel_xyz.norm() / sat_xyz.norm();
+                cos_alpha * target_xyz.norm() * vel_xyz.norm() / sat_xyz.norm();
             ASSERT_NEAR(ground_track_velocity_test, ground_track_velocity_ref,
                         ground_track_velocity_error_threshold);
 

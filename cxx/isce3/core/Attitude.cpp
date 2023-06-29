@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <exception>
 
+#include <isce3/except/Error.h>
 #include <pyre/journal.h>
 
 #include "TimeDelta.h"
@@ -79,6 +80,54 @@ void Attitude::referenceEpoch(const DateTime& epoch)
         return (dateTime - epoch).getTotalSeconds();
     });
     _reference_epoch = epoch;
+}
+
+Attitude Attitude::crop(const DateTime& start, const DateTime& end, int npad) const
+{
+    const double tstart = (start - _reference_epoch).getTotalSeconds();
+    const double tend = (end - _reference_epoch).getTotalSeconds();
+
+    if (not this->contains(tstart)) {
+        std::string errmsg = "Requested start time " + start.isoformat() +
+                             " does not fall in attitude time interval [" +
+                             startDateTime().isoformat() + ", " +
+                             endDateTime().isoformat() + "].";
+        throw isce3::except::DomainError(ISCE_SRCINFO(), errmsg);
+    }
+    if (not this->contains(tend)) {
+        std::string errmsg = "Requested end time " + end.isoformat() +
+                             " does not fall in attitude time interval [" +
+                             startDateTime().isoformat() + ", " +
+                             endDateTime().isoformat() + "].";
+        throw isce3::except::DomainError(ISCE_SRCINFO(), errmsg);
+    }
+    if (tend < tstart) {
+        std::string errmsg = "Expected start time <= end time";
+        throw isce3::except::DomainError(ISCE_SRCINFO(), errmsg);
+    }
+    if (npad < 0) {
+        throw isce3::except::DomainError(
+                ISCE_SRCINFO(), "npad must be positive");
+    }
+
+    auto it = std::lower_bound(_time.begin(), _time.end(), tstart);
+    auto istart = std::distance(_time.begin(), it) - npad - 1;
+    it = std::upper_bound(it, _time.end(), tend);
+    auto iend = std::distance(_time.begin(), it) + npad + 1;
+
+    using T = decltype(istart);
+    istart = std::max<T>(0, istart);
+    iend = std::min<T>(_time.size(), iend);
+    const auto n = iend - istart;
+
+    std::vector<double> times(n);
+    std::vector<Quaternion> quaternions(n);
+    for (T i = 0; i < n; ++i) {
+        const auto k = i + istart;
+        times[i] = _time[k];
+        quaternions[i] = _quaternions[k];
+    }
+    return Attitude(times, quaternions, _reference_epoch);
 }
 
 }} // namespace isce3::core

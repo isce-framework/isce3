@@ -38,6 +38,14 @@ def test_subinterval():
     npt.assert_almost_equal(x2.last, first + spacing * (stop - 1))
     npt.assert_almost_equal(x2.size, stop - start)
 
+    step = 3
+    x3 = x1[start:stop:step]
+
+    npt.assert_almost_equal(x3.first, first + spacing * start)
+    npt.assert_almost_equal(x3.spacing, step * x1.spacing)
+    npt.assert_almost_equal(x3.size, 1 + (stop - 1 - start) // step)
+
+
 def test_array():
     x = isce.core.Linspace(0., 1., 10)
     arr = np.array(x)
@@ -46,6 +54,9 @@ def test_array():
 
     for i in range(len(x)):
         npt.assert_almost_equal(arr[i], x[i])
+
+    arr2 = np.asarray(x, dtype="float64")
+    npt.assert_allclose(arr, arr2)
 
 def test_comparison():
     x1 = isce.core.Linspace(0., 1., 10)
@@ -93,3 +104,12 @@ def test_search():
     npt.assert_almost_equal(x.search(1.), 0)
     npt.assert_almost_equal(x.search(-2.5), 3)
     npt.assert_almost_equal(x.search(-11.), 10)
+
+def test_dtype():
+    x = isce.core.Linspace(0., 1., 10)
+    assert x.dtype == np.dtype("float64")
+
+def test_shape():
+    n = 10
+    x = isce.core.Linspace(0., 1., n)
+    assert x.shape == (n,)

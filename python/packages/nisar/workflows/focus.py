@@ -1047,15 +1047,13 @@ def focus(runconfig):
     for frequency, band in get_bands(common_mode).items():
         slc.set_parameters(dop[frequency], orbit.reference_epoch, frequency)
         og = ogrid[frequency]
-        t = og.sensing_start + np.arange(og.length) / og.prf
-        r = og.starting_range + np.arange(og.width) * og.range_pixel_spacing
-        slc.update_swath(t, og.ref_epoch, r, band.center, frequency)
+        slc.update_swath(og, orbit, band.width, frequency)
 
         # add calibration section for each polarization
         pols = [chan.pol for chan in common_mode if chan.freq_id == frequency]
         for pol in pols:
-            slc.add_calibration_section(frequency, pol, t,
-                                        orbit.reference_epoch, r)
+            slc.add_calibration_section(frequency, pol, og.sensing_times,
+                                        orbit.reference_epoch, og.slant_ranges)
 
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],

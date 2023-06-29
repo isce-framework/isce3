@@ -1,4 +1,8 @@
 import os, subprocess, sys, shutil, stat, logging, shlex, getpass
+from datetime import datetime, timezone
+from pathlib import Path
+from textwrap import dedent
+from typing import Optional
 # see no evil
 from .workflowdata import workflowdata, workflowtests
 pjoin = os.path.join
@@ -65,6 +69,45 @@ def run_with_logging(dockercall, cmd, logger, printlog=True):
         # ret will be None if exception TimeoutExpired was raised and caught.
     if ret != 0:
         raise subprocess.CalledProcessError(ret, cmdstr)
+
+
+def push_to_registry(
+    image: str,
+    server: str,
+    username: str,
+    password: str,
+    tag: Optional[str] = None,
+) -> None:
+    """
+    Push a docker image to a remote registry.
+
+    Parameters
+    ----------
+    image : str
+        The name[:tag] or ID of the existing image to push.
+    server : str
+        The server URL, typically in '<hostname>:<port>' format.
+    username, password : str
+        Credentials used to access the remote registry.
+    tag : str or None, optional
+        The name[:tag] to give the image in the remote registry. If None (the default),
+        the value of `image` is used as the remote tag.
+    """
+    # Login to the docker registry.
+    args = [docker, "login", f"--username={username}", "--password-stdin", server]
+    subprocess.run(args, input=password, check=True, text=True)
+
+    if tag is None:
+        tag = image
+
+    # Tag the image with the registry hostname, port, and remote tag.
+    args = [docker, "tag", image, f"{server}/{tag}"]
+    subprocess.run(args, check=True)
+
+    # Push to the remote registry.
+    args = [docker, "image", "push", f"{server}/{tag}"]
+    subprocess.run(args, check=True)
+
 
 # A set of docker images suitable for building and running isce3
 class ImageSet:
@@ -237,9 +280,28 @@ class ImageSet:
         Install package to redistributable isce3 docker image with nisar qa,
         noise estimator caltool, and Soil Moisture applications
         """
+        # Get current UTC date & time in ISO 8601 format.
+        creation_datetime = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z")
 
-        build_args = f"--build-arg distrib_img={self.imgname()} \
-                       --build-arg GIT_OAUTH_TOKEN={os.environ.get('GIT_OAUTH_TOKEN').strip()}"
+        # Get current ISCE3 version.
+        version_file = Path(projsrcdir) / "VERSION.txt"
+        isce3_version = version_file.read_text().strip()
+
+        # Get git commit hash (if available).
+        args = ["git", "rev-parse", "HEAD"]
+        try:
+            git_commit = subprocess.check_output(args, text=True).strip()
+        except subprocess.CalledProcessError:
+            git_commit = ""
+
+        build_args = {
+            "distrib_img": self.imgname(),
+            "GIT_OAUTH_TOKEN": os.environ.get('GIT_OAUTH_TOKEN').strip(),
+            "CREATION_DATETIME": creation_datetime,
+            "ISCE3_VERSION": isce3_version,
+            "GIT_COMMIT": git_commit,
+        }
+        build_args = " ".join(f"--build-arg {k}={v}" for (k, v) in build_args.items())
 
         cmd = f"{docker} build {build_args} \
                 {thisdir}/{self.name}/distrib_nisar -t {self.imgname(tagmod='nisar')}"
@@ -566,7 +628,7 @@ class ImageSet:
         self.noisesttest(tests=list(workflowtests['noisest'].items())[:1])
         self.ptatest(tests=list(workflowtests['pta'].items())[:1])
 
-    def workflowqa(self, wfname, testname, suf="", description=""):
+    def workflowqa(self, wfname, testname, dataname=None, suf="", description=""):
         """
         Run QA for the specified workflow using the NISAR distrib image.
 
@@ -576,6 +638,9 @@ class ImageSet:
             Workflow name (e.g. "rslc")
         testname: str
             Workflow test name (e.g. "RSLC_REE1")
+        dataname : str or iterable of str or None
+            Test input dataset(s) to be mounted (e.g. "L0B_RRSD_REE1", ["L0B_RRSD_REE1", "L0B_RRSD_REE2"]).
+            If None, no input datasets are used.
         suf: str
             Suffix in runconfig and output directory name to differentiate between
             reference and secondary data in end-to-end tests
@@ -598,28 +663,28 @@ class ImageSet:
         runconfig = f"runconfig_{wfname}{suf}.yaml"
         cmd = [f"time nisarqa {wfname}_qa {runconfig}"]
         try:
-            self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
+            self.distribrun(testdir, cmd, logfile=log, nisarimg=True, dataname=dataname,
                             loghdlrname=f'wfqa.{os.path.basename(testdir)}')
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Workflow QA on test {testname} failed") from e
 
     def rslcqa(self, tests=None):
         if tests is None:
-            tests = workflowtests['rslc'].keys()
-        for testname in tests:
-            self.workflowqa("rslc", testname)
+            tests = workflowtests['rslc'].items()
+        for testname, dataname in tests:
+            self.workflowqa("rslc", testname, dataname=dataname)
 
     def gslcqa(self, tests=None):
         if tests is None:
-            tests = workflowtests['gslc'].keys()
-        for testname in tests:
-            self.workflowqa("gslc", testname)
+            tests = workflowtests['gslc'].items()
+        for testname, dataname in tests:
+            self.workflowqa("gslc", testname, dataname=dataname)
 
     def gcovqa(self, tests=None):
         if tests is None:
-            tests = workflowtests['gcov'].keys()
-        for testname in tests:
-            self.workflowqa("gcov", testname)
+            tests = workflowtests['gcov'].items()
+        for testname, dataname in tests:
+            self.workflowqa("gcov", testname, dataname=dataname)
 
     def insarqa(self, tests=None):
         """
@@ -631,8 +696,8 @@ class ImageSet:
         """
         wfname = "insar"
         if tests is None:
-            tests = workflowtests['insar'].keys()
-        for testname in tests:
+            tests = workflowtests['insar'].items()
+        for testname, dataname in tests:
             testdir = os.path.abspath(pjoin(self.testdir, testname))
             # Run QA for each of the InSAR products.
             # QA validation and/or reports may be disabled for each individual product
@@ -648,7 +713,7 @@ class ImageSet:
                 runconfig = f"runconfig_{wfname}.yaml"
                 cmd = [f"time nisarqa {product}_qa {runconfig}"]
                 try:
-                    self.distribrun(testdir, cmd, logfile=log, nisarimg=True,
+                    self.distribrun(testdir, cmd, logfile=log, nisarimg=True, dataname=dataname,
                                     loghdlrname=f'wfqa.{os.path.basename(testdir)}.{product}')
                 except subprocess.CalledProcessError as e:
                     raise RuntimeError(f"Workflow QA on test {testname} {product.upper()} product failed\n") from e
@@ -664,19 +729,25 @@ class ImageSet:
         for testname, dataname in tests:
             for wfname in ['rslc', 'gslc', 'gcov']:
                 for suf, descr in [('_ref', 'reference'), ('_sec', 'secondary')]:
-                    self.workflowqa(wfname, testname, suf=suf, description=f' {wfname.upper()} {descr} product')
+                    self.workflowqa(
+                        wfname,
+                        testname,
+                        dataname=dataname,
+                        suf=suf,
+                        description=f' {wfname.upper()} {descr} product',
+                    )
 
-            self.insarqa([testname])
+            self.insarqa([(testname, dataname)])
 
 
     def minqa(self):
         """
         Only run qa for first test in each workflow
         """
-        self.rslcqa(tests=list(workflowtests['rslc'].keys())[:1])
-        self.gslcqa(tests=list(workflowtests['gslc'].keys())[:1])
-        self.gcovqa(tests=list(workflowtests['gcov'].keys())[:1])
-        self.insarqa(tests=list(workflowtests['insar'].keys())[:1])
+        self.rslcqa(tests=list(workflowtests['rslc'].items())[:1])
+        self.gslcqa(tests=list(workflowtests['gslc'].items())[:1])
+        self.gcovqa(tests=list(workflowtests['gcov'].items())[:1])
+        self.insarqa(tests=list(workflowtests['insar'].items())[:1])
 
     def docsbuild(self):
         """
@@ -738,3 +809,69 @@ class ImageSet:
             for test in workflowtests[workflow]:
                 print(f"\ntarring workflow test {test}\n")
                 subprocess.check_call(f"tar cvz --exclude scratch*/* -f {test}.tar.gz {test}".split(), cwd=self.testdir)
+
+    def push(self):
+        """
+        Push the (non-release) NISAR redistributable image to the 'docker-develop-local'
+        and 'docker-stage-local' registries on artifactory.
+        """
+        # The name:tag of the NISAR distrib image created by `self.makedistrib_nisar()`.
+        nisar_distrib_name = self.imgname(tagmod="nisar")
+
+        # The name:tag to give the image in the remote registry.
+        # Release images are tagged 'gov/nasa/jpl/nisar/adt/nisar-adt/isce3:{release}'
+        # where `release` is e.g. 'r3.2'.
+        # In this case, we're pushing a non-release image, which should go in the same
+        # directory but be tagged 'devel' instead of the release number.
+        remote_tag = "gov/nasa/jpl/nisar/adt/nisar-adt/isce3:devel"
+
+        # The hostname:port of the 'docker-develop-local' registry on artifactory.
+        # Maps to
+        # https://artifactory.jpl.nasa.gov:443/artifactory/docker-develop-local/.
+        # This is the registry that the PGE team pulls from.
+        develop_server = "cae-artifactory.jpl.nasa.gov:16001"
+
+        # The hostname:port of the 'docker-stage-local' registry on artifactory.
+        # Maps to https://artifactory.jpl.nasa.gov:443/artifactory/docker-stage-local/.
+        # Pushing to this registry allows the image to be scanned for vulnerabilities.
+        stage_server = "cae-artifactory.jpl.nasa.gov:16002"
+
+        # Get remote registry credentials.
+        # These are stored as secret credentials by the Jenkins server and exposed as a
+        # string in '<username>:<password>' format via the `ARTIFACTORY_API_KEY` env
+        # variable in the Jenkinsfile.
+        try:
+            username_password = os.environ["ARTIFACTORY_API_KEY"]
+        except KeyError as exc:
+            errmsg = dedent("""
+                artifactory credentials not found
+
+                If running via Jenkins, check the Jenkinsfile to ensure that secret
+                credentials are correctly stored in the env variable
+                `ARTIFACTORY_API_KEY`.
+
+                If running locally, you must define an environment variable
+                `ARTIFACTORY_API_KEY` that contains Artifactory credentials in
+                '<username>:<password>' format.
+            """).strip()
+            raise RuntimeError(errmsg) from exc
+
+        # Split string into username & password components.
+        try:
+            username, password = username_password.split(":")
+        except ValueError as exc:
+            errmsg = (
+                "bad format for artifactory credentials: expected a string in"
+                f" '<username>:<password>' format, got {username_password:!r}"
+            )
+            raise RuntimeError(errmsg) from exc
+
+        # Push to both docker registries.
+        for server in [develop_server, stage_server]:
+            push_to_registry(
+                image=nisar_distrib_name,
+                server=server,
+                username=username,
+                password=password,
+                tag=remote_tag,
+            )

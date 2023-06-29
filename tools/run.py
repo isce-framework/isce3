@@ -50,6 +50,7 @@ def run(*, steps, imgset, **kwargs):
         "mintests",
         "minqa",
         "tartests",
+        "push",
     ]
 
     # map step names to the imgset's methods

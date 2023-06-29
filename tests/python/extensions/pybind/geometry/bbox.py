@@ -1,6 +1,7 @@
 import iscetest
 import pathlib
 import isce3.ext.isce3 as isce
+from isce3.core import load_orbit_from_h5_group
 from nisar.products.readers import SLC
 
 
@@ -11,7 +12,7 @@ def load_orbit():
     import h5py
     with h5py.File(path_slc, "r") as h5:
         g = h5["/science/LSAR/SLC/metadata/orbit"]
-        orbit = isce.core.Orbit.load_from_h5(g)
+        orbit = load_orbit_from_h5_group(g)
     return orbit
 
 

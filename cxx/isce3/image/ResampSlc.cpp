@@ -161,9 +161,17 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
             } else {
                 haveOffsets = true;
             }
-            // Calculate corresponding minimum line index of input image
-            const size_t imageLine = static_cast<size_t>(
-                    i + azOff + azOffTile.rowStart() - chipHalf);
+            // Calculate corresponding minimum line index of input image.
+            // Check for possible negative imageLine by checking if azOff < 0
+            // and abs(azOff) + chipHalf > i + azOffTile.rowStart().
+            // A negative value converted to a size_t incorrectly results in
+            // std::numeric_limit<size_t>::max().
+            // If a negative, then set imageLine to 0
+            const bool isImageLineNegative =
+                static_cast<size_t>(static_cast<int>(std::abs(azOff)) + chipHalf) >
+                    i + azOffTile.rowStart() and azOff < 0;
+            const size_t imageLine = isImageLineNegative ? 0 :
+                static_cast<size_t>(i + azOff + azOffTile.rowStart() - chipHalf);
             // Update minimum row index
             tile.firstImageRow(std::min(tile.firstImageRow(), imageLine));
         }

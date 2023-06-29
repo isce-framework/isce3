@@ -2,15 +2,16 @@
 '''
 test isce3.geocode.geocode_slc array and raster modes
 '''
+import itertools
 import json
 import os
 from pathlib import Path
-import pytest
 import types
 
 import journal
 import numpy as np
 from osgeo import gdal
+import pytest
 from scipy import interpolate
 
 import iscetest
@@ -108,12 +109,12 @@ def unit_test_params():
 
     # define geogrid
     geogrid = isce3.product.GeoGridParameters(start_x=-115.65,
-                                             start_y=34.84,
-                                             spacing_x=0.0002,
-                                             spacing_y=-8.0e-5,
-                                             width=500,
-                                             length=500,
-                                             epsg=4326)
+                                              start_y=34.84,
+                                              spacing_x=0.0002,
+                                              spacing_y=-8.0e-5,
+                                              width=500,
+                                              length=500,
+                                              epsg=4326)
 
     params.geogrid = geogrid
 
@@ -169,6 +170,8 @@ def geocode_slc_test_cases(unit_test_params):
     directions. Returns axis, offset mode name, range and azimuth correction
     LUT2ds and offset corrected radar grid.
     '''
+    test_case = types.SimpleNamespace()
+
     radargrid = unit_test_params.radargrid
     offset_factor = unit_test_params.offset_factor
 
@@ -184,51 +187,77 @@ def geocode_slc_test_cases(unit_test_params):
     # shape unchanging; no noeed to be in loop as only starting values change
     ones = np.ones(radargrid.shape)
 
-    for axis in 'xy':
+    for axis, flatten_enabled in itertools.product('xy', [True, False]):
+        test_case.axis = axis
+        test_case.flatten_enabled = flatten_enabled
         for offset_mode in ['', 'rg', 'az', 'rg_az', 'tec']:
+            test_case.offset_mode = offset_mode
+
             # create radar and apply positive offsets in range and azimuth
-            offset_radargrid = radargrid.copy()
+            test_case.radargrid = radargrid.copy()
 
             # apply offsets as required by mode
             if 'rg' in offset_mode or 'tec' == offset_mode:
-                offset_radargrid.starting_range += range_offset
+                test_case.radargrid.starting_range += range_offset
             if 'az' in offset_mode:
-                offset_radargrid.sensing_start += azimuth_offset
+                test_case.radargrid.sensing_start += azimuth_offset
 
             # slant range vector for LUT2d
-            srange_vec = np.linspace(offset_radargrid.starting_range,
-                                     offset_radargrid.end_range,
+            srange_vec = np.linspace(test_case.radargrid.starting_range,
+                                     test_case.radargrid.end_range,
                                      radargrid.width)
 
             # azimuth vector for LUT2d
-            az_time_vec = np.linspace(offset_radargrid.sensing_start,
-                                      offset_radargrid.sensing_stop,
+            az_time_vec = np.linspace(test_case.radargrid.sensing_start,
+                                      test_case.radargrid.sensing_stop,
                                       radargrid.length)
 
             # corrections LUT2ds will use the negative offsets
             # should cancel positive offset applied to radar grid
             srange_correction = isce3.core.LUT2d()
             if 'rg' in offset_mode:
-                srange_correction = isce3.core.LUT2d(srange_vec, az_time_vec,
-                                                    range_offset * ones,
-                                                    method)
+                srange_correction = isce3.core.LUT2d(srange_vec,
+                                                     az_time_vec,
+                                                     range_offset * ones,
+                                                     method)
             elif 'tec' == offset_mode:
                 srange_correction = \
                     tec_lut2d_from_json(unit_test_params.tec_json_path,
                                         unit_test_params.center_freq,
                                         unit_test_params.orbit,
-                                        offset_radargrid,
+                                        test_case.radargrid,
                                         isce3.core.LUT2d(),
                                         unit_test_params.dem_path)
+            test_case.srange_correction = srange_correction
 
             az_time_correction = isce3.core.LUT2d()
             if 'az' in offset_mode:
-                az_time_correction = isce3.core.LUT2d(srange_vec, az_time_vec,
-                                                     azimuth_offset * ones,
-                                                     method)
+                az_time_correction = isce3.core.LUT2d(srange_vec,
+                                                      az_time_vec,
+                                                      azimuth_offset * ones,
+                                                      method)
+            test_case.az_time_correction = az_time_correction
 
-            yield (axis, offset_mode, srange_correction, az_time_correction,
-                   offset_radargrid)
+            test_case.need_flatten_phase_raster = \
+                axis == 'x' and not flatten_enabled and not offset_mode
+
+            # allow flatten for special case to return flatten true if
+            # x-axis and no offsets
+            if flatten_enabled and ((axis == 'x' and offset_mode != '')
+                                    or axis == 'y'):
+                continue
+
+            # prepare input and output paths
+            test_case.input_path = \
+                os.path.join(iscetest.data, f"geocodeslc/{axis}.slc")
+
+            flat_str = 'flattened' if test_case.flatten_enabled else 'unflattened'
+            common_output_prefix = \
+                f'{axis}_{test_case.offset_mode}_geocode_slc_mode_{flat_str}'
+            test_case.output_path = f'{common_output_prefix}.geo'
+            test_case.flatten_phase_path = f'{common_output_prefix}_phase.bin'
+
+            yield test_case
 
 
 def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
@@ -236,28 +265,22 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
     '''
     wrapper for geocode_slc array mode
     '''
-    # extract test specific params
-    (axis, correction_mode, srange_correction, az_time_correction,
-     test_rdrgrid) = test_case
-
     out_shape = (unit_test_params.geogrid.width,
                  unit_test_params.geogrid.length)
 
     # load input as list of arrays
-    in_path = os.path.join(iscetest.data, f"geocodeslc/{axis}.slc")
-    ds = gdal.Open(in_path, gdal.GA_ReadOnly)
+    ds = gdal.Open(test_case.input_path, gdal.GA_ReadOnly)
     arr = ds.GetRasterBand(1).ReadAsArray()
     in_list = [arr, arr]
     # if extra input enabled, append extra array to input list
     if extra_input:
         in_list.append(arr)
 
-    # output file name for geocodeSlc array mode
-    out_path = f"{axis}_{correction_mode}_arrays.geo"
-    # if forcing error, change output file name to not break outpu validation
+    # if forcing error, change output file name to not break output validation
+    output_path = test_case.output_path.replace('geocode_slc_mode', 'arrays')
     if extra_input or non_matching_shape:
-        out_path += '_broken'
-    Path(out_path).touch()
+        output_path += '_broken'
+    Path(output_path).touch()
 
     # list of empty array to be written to by geocode_slc array mode
     out_zeros = np.zeros(out_shape, dtype=np.complex64)
@@ -272,7 +295,7 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
         geo_data_blocks=out_list,
         rdr_data_blocks=in_list,
         dem_raster=unit_test_params.dem_raster,
-        radargrid=test_rdrgrid,
+        radargrid=test_case.radargrid,
         geogrid=unit_test_params.geogrid,
         orbit=unit_test_params.orbit,
         native_doppler= unit_test_params.native_doppler,
@@ -282,19 +305,19 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
         num_iter_geo2rdr=25,
         first_azimuth_line=0,
         first_range_sample=0,
-        flatten=False,
-        az_time_correction=az_time_correction,
-        srange_correction=srange_correction)
+        flatten=test_case.flatten_enabled,
+        az_time_correction=test_case.az_time_correction,
+        srange_correction=test_case.srange_correction)
 
     # set geotransform in output raster
-    out_raster = isce3.io.Raster(out_path, unit_test_params.geogrid.width,
-                                unit_test_params.geogrid.length, 2,
-                                gdal.GDT_CFloat32,  "ENVI")
+    out_raster = isce3.io.Raster(output_path, unit_test_params.geogrid.width,
+                                 unit_test_params.geogrid.length, 2,
+                                 gdal.GDT_CFloat32,  "ENVI")
     out_raster.set_geotransform(unit_test_params.geotrans)
     out_raster.close_dataset()
 
     # write output to raster
-    ds = gdal.Open(out_path, gdal.GA_Update)
+    ds = gdal.Open(output_path, gdal.GA_Update)
     ds.GetRasterBand(1).WriteArray(out_list[0])
     ds.GetRasterBand(2).WriteArray(out_list[1])
 
@@ -304,25 +327,27 @@ def run_geocode_slc_array(test_case, unit_test_params):
     wrapper for geocode_slc array mode
     '''
     # extract test specific params
-    (axis, correction_mode, srange_correction, az_time_correction,
-     test_rdrgrid) = test_case
-
     out_shape = (unit_test_params.geogrid.width,
                  unit_test_params.geogrid.length)
 
     # load input as list of arrays
-    in_path = os.path.join(iscetest.data, f"geocodeslc/{axis}.slc")
-    ds = gdal.Open(in_path, gdal.GA_ReadOnly)
+    ds = gdal.Open(test_case.input_path, gdal.GA_ReadOnly)
     in_data = ds.GetRasterBand(1).ReadAsArray()
 
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
 
+    #
+    flatten_kwargs = {}
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_data = np.nan * np.zeros(out_shape,dtype=np.float64)
+        flatten_kwargs['flatten_phase_block'] = flatten_phase_data
+
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_data,
         rdr_data_blocks=in_data,
         dem_raster=unit_test_params.dem_raster,
-        radargrid=test_rdrgrid,
+        radargrid=test_case.radargrid,
         geogrid=unit_test_params.geogrid,
         orbit=unit_test_params.orbit,
         native_doppler= unit_test_params.native_doppler,
@@ -332,24 +357,43 @@ def run_geocode_slc_array(test_case, unit_test_params):
         num_iter_geo2rdr=25,
         first_azimuth_line=0,
         first_range_sample=0,
-        flatten=False,
-        az_time_correction=az_time_correction,
-        srange_correction=srange_correction)
+        flatten=test_case.flatten_enabled,
+        az_time_correction=test_case.az_time_correction,
+        srange_correction=test_case.srange_correction,
+        **flatten_kwargs)
 
     # output file name for geocodeSlc array mode
-    out_path = f"{axis}_{correction_mode}_array.geo"
-    Path(out_path).touch()
+    output_path = test_case.output_path.replace('geocode_slc_mode', 'array')
+    Path(output_path).touch()
 
     # set geotransform in output raster
-    out_raster = isce3.io.Raster(out_path, unit_test_params.geogrid.width,
-                                unit_test_params.geogrid.length, 1,
-                                gdal.GDT_CFloat32,  "ENVI")
+    out_raster = isce3.io.Raster(output_path, unit_test_params.geogrid.width,
+                                 unit_test_params.geogrid.length, 1,
+                                 gdal.GDT_CFloat32,  "ENVI")
     out_raster.set_geotransform(unit_test_params.geotrans)
     del out_raster
 
     # write output to raster
-    ds = gdal.Open(out_path, gdal.GA_Update)
+    ds = gdal.Open(output_path, gdal.GA_Update)
     ds.GetRasterBand(1).WriteArray(out_data)
+
+    # create flatten phase raster if not geocoding with flattening enabled
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_path = \
+            test_case.flatten_phase_path.replace('geocode_slc_mode', 'array')
+        # flatten phase output file name for geocodeSlc array mode
+        Path(flatten_phase_path).touch()
+
+        # set geotransform in flatten phase output raster
+        flatten_raster = isce3.io.Raster(flatten_phase_path,
+                                         unit_test_params.geogrid.width,
+                                         unit_test_params.geogrid.length, 1,
+                                         gdal.GDT_Float64,  "ENVI")
+        del flatten_raster
+
+        # write output to raster
+        ds = gdal.Open(flatten_phase_path, gdal.GA_Update)
+        ds.GetRasterBand(1).WriteArray(flatten_phase_data)
 
 
 def test_run_array_mode(unit_test_params):
@@ -369,6 +413,10 @@ def test_run_arrays_mode(unit_test_params):
     '''
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
+        # skip flattening for multiple arrays
+        # single array test with flattening sufficient
+        if test_case.flatten_enabled:
+            continue
         run_geocode_slc_arrays(test_case, unit_test_params)
 
 
@@ -396,23 +444,30 @@ def run_geocode_slc_raster(test_case, unit_test_params):
     '''
     wrapper for geocode_slc raster mode
     '''
-    # extract test specific params
-    (axis, correction_mode, srange_correction, az_time_correction,
-     test_rdrgrid) = test_case
+    # prepare input and output(s)
+    in_raster = isce3.io.Raster(test_case.input_path)
 
-    in_raster = isce3.io.Raster(os.path.join(iscetest.data,
-                                            f"geocodeslc/{axis}.slc"))
-
-    Path(f"{axis}{correction_mode}_raster.geo").touch()
-    out_raster = isce3.io.Raster(f"{axis}_{correction_mode}_raster.geo",
-                                 unit_test_params.geogrid.width,
+    output_path = test_case.output_path.replace('geocode_slc_mode', 'raster')
+    Path(output_path).touch()
+    out_raster = isce3.io.Raster(output_path, unit_test_params.geogrid.width,
                                  unit_test_params.geogrid.length, 1,
                                  gdal.GDT_CFloat32, "ENVI")
+
+    # prepare flattening phase raster if necessary
+    flatten_kwargs = {}
+    if test_case.need_flatten_phase_raster:
+        flatten_phase_path = \
+            test_case.flatten_phase_path.replace('geocode_slc_mode', 'raster')
+        flatten_phase_raster = isce3.io.Raster(flatten_phase_path,
+                                               unit_test_params.geogrid.width,
+                                               unit_test_params.geogrid.length,
+                                               1, gdal.GDT_Float64, "ENVI")
+        flatten_kwargs['flatten_phase_raster'] = flatten_phase_raster
 
     geocode_slc_raster(output_raster=out_raster,
         input_raster=in_raster,
         dem_raster=unit_test_params.dem_raster,
-        radargrid=test_rdrgrid,
+        radargrid=test_case.radargrid,
         geogrid=unit_test_params.geogrid,
         orbit=unit_test_params.orbit,
         native_doppler=unit_test_params.native_doppler,
@@ -421,9 +476,10 @@ def run_geocode_slc_raster(test_case, unit_test_params):
         threshold_geo2rdr=1.0e-9,
         numiter_geo2rdr=25,
         lines_per_block=1000,
-        flatten=False,
-        az_time_correction=az_time_correction,
-        srange_correction=srange_correction)
+        flatten=test_case.flatten_enabled,
+        az_time_correction=test_case.az_time_correction,
+        srange_correction=test_case.srange_correction,
+        **flatten_kwargs)
 
     # set geotransform
     out_raster.set_geotransform(unit_test_params.geotrans)
@@ -439,52 +495,97 @@ def test_run_raster_mode(unit_test_params):
         run_geocode_slc_raster(test_case, unit_test_params)
 
 
-def validate_raster(unit_test_params, mode, raster_layer=1):
+def _get_raster_array_and_mask(raster_path, raster_layer=1, array_op=None):
+    # open raster as dataset and convert to angle as needed
+    ds = gdal.Open(raster_path, gdal.GA_ReadOnly)
+    test_arr = ds.GetRasterBand(raster_layer).ReadAsArray()
+    if array_op is not None:
+        test_arr = array_op(test_arr)
+
+    # mask with NaN since NaN is used to mark invalid pixels
+    test_mask = np.isnan(test_arr)
+    test_arr = np.ma.masked_array(test_arr, mask=test_mask)
+
+    return test_arr, test_mask
+
+
+def check_raster_path(path, params):
+    if not os.path.exists(path):
+        print(path)
+        print(params)
+
+
+def validate_slc_raster(unit_test_params, mode, raster_layer=1):
     '''
     validate test outputs
     '''
     # check values of geocoded outputs
-    for axis, correction_mode, *_, \
-        in geocode_slc_test_cases(unit_test_params):
+    for test_case in geocode_slc_test_cases(unit_test_params):
+
+        # skip flattening cases - flattened geocoded SLC only for comparison
+        # against unflattened geocoded SLC with flattening applied
+        if test_case.flatten_enabled:
+            continue
 
         # get phase of complex test data
-        test_raster = f"{axis}_{correction_mode}_{mode}.geo"
-        ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
-        test_arr = np.angle(ds.GetRasterBand(raster_layer).ReadAsArray())
-        # mask with NaN since NaN is used to mark invalid pixels
-        test_mask = np.isnan(test_arr)
-        test_arr = np.ma.masked_array(test_arr, mask=test_mask)
+        output_path = test_case.output_path.replace('geocode_slc_mode', mode)
+        test_phase_arr, test_mask = \
+            _get_raster_array_and_mask(output_path, raster_layer, np.angle)
+
 
         # use geotransform to make lat/lon mesh
-        ny, nx = test_arr.shape
+        ny, nx = test_phase_arr.shape
         meshx, meshy = np.meshgrid(np.arange(nx), np.arange(ny))
 
         # calculate and check error within bounds
-        if axis == 'x':
+        if test_case.axis == 'x':
             grid_lon = np.ma.masked_array(unit_test_params.x0 +
                                           meshx * unit_test_params.dx,
                                           mask=test_mask)
 
-            err = np.nanmax(np.abs(test_arr - grid_lon))
+            err = np.nanmax(np.abs(test_phase_arr - grid_lon))
         else:
             grid_lat = np.ma.masked_array(unit_test_params.y0 +
                                           meshy * unit_test_params.dy,
                                           mask=test_mask)
 
-            err = np.nanmax(np.abs(test_arr - grid_lat))
+            err = np.nanmax(np.abs(test_phase_arr - grid_lat))
 
         # check max diff of masked arrays
-        assert(err < 1.0e-6), f'{test_raster} max error fail'
+        assert(err < 1.0e-6), f'{test_case.output_path} max error fail'
 
 
 def test_array_mode(unit_test_params):
-    validate_raster(unit_test_params, 'array')
+    validate_slc_raster(unit_test_params, 'array')
 
 
 def test_arrays_mode(unit_test_params):
-    validate_raster(unit_test_params, 'arrays', 1)
-    validate_raster(unit_test_params, 'arrays', 2)
+    validate_slc_raster(unit_test_params, 'arrays', 1)
+    validate_slc_raster(unit_test_params, 'arrays', 2)
 
 
 def test_raster_mode(unit_test_params):
-    validate_raster(unit_test_params, 'raster')
+    validate_slc_raster(unit_test_params, 'raster')
+
+
+def test_flatten_application():
+    for run_mode in ['array', 'raster']:
+        # load SLCs geocoded along x-axis with flattening and without offset
+        # applied as phase
+        x_phase_flattened_cpp, _ = \
+            _get_raster_array_and_mask(f'x__{run_mode}_flattened.geo', 1,
+                                         np.angle)
+
+        # load SLCs geocoded along x-axis with flattening and without offset
+        # applied as complex number
+        x_slc_unflattened, _ = \
+            _get_raster_array_and_mask(f'x__{run_mode}_unflattened.geo')
+
+        # load corresponding geocoded flattening phase and
+        flattening_phase, _ = _get_raster_array_and_mask(
+            f'x__{run_mode}_unflattened_phase.bin', 1,
+            lambda x: np.exp(1j * x))
+        x_phase_flattened_py = np.angle(x_slc_unflattened * flattening_phase)
+
+        # compare 2 SLCs
+        assert(np.nanmax(x_phase_flattened_cpp - x_phase_flattened_py) < 1e-6)

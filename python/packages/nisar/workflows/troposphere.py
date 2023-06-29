@@ -10,11 +10,6 @@ import time
 
 import pyaps3 as pa
 
-import RAiDER
-from RAiDER.llreader import BoundingBox
-from RAiDER.losreader import Zenith, Conventional, Raytracing
-from RAiDER.delay import tropo_delay as raider_tropo_delay
-
 import isce3
 from isce3.core import transform_xy_to_latlon
 from nisar.workflows import h5_prep
@@ -143,6 +138,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
         # raider package
         else:
+            import RAiDER
+            from RAiDER.llreader import BoundingBox
+            from RAiDER.losreader import Zenith, Conventional, Raytracing
+            from RAiDER.delay import tropo_delay as raider_tropo_delay
 
             # Acquisition time for reference and secondary images
             acquisition_time_ref = h5_obj['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
@@ -171,7 +170,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             # Height levels
             height_levels = list(height_radar_grid)
 
-            # Tropodelay computation
+            # Troposphere delay computation
             tropo_delay_reference, _ = raider_tropo_delay(dt=acquisition_time_ref,
                                                           weather_model_file=reference_weather_model_file,
                                                           aoi=aoi,
@@ -200,11 +199,14 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 # Convert it to radians units
                 tropo_delay_datacube = -tropo_delay * 4.0 * np.pi / wavelength
 
+                # Create a maksed datacube that excludes the NaN values
+                tropo_delay_datacube_masked = np.ma.masked_invalid(tropo_delay_datacube)
+
                 # Interpolate to radar grid to keep its dimension consistent with other datacubes
                 tropo_delay_interpolator = RegularGridInterpolator((tropo_delay_reference.z,
                                                                     tropo_delay_reference.y,
                                                                     tropo_delay_reference.x),
-                                                                   tropo_delay_datacube,
+                                                                   tropo_delay_datacube_masked,
                                                                    method='linear')
 
                 # Interpolate the troposphere delay
