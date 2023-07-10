@@ -191,7 +191,8 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
         // Compute layover/shadow masks for the block
         if (this->computeMask()) {
-            _setLayoverShadowWithOrbit(orbit, layers, demInterp, lineStart);
+            _setLayoverShadowWithOrbit(orbit, layers, demInterp, lineStart,
+                                       block, nBlocks);
         }
 
         // Write out block of data for all topo layers
@@ -216,7 +217,9 @@ void isce3::cuda::geometry::Topo::
 _setLayoverShadowWithOrbit(const Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,
-                           size_t lineStart) {
+                           size_t lineStart,
+                           size_t block,
+                           size_t n_blocks) {
 
     // Create vector of satellite positions for each line in block
     std::vector<cartesian_t> satPosition(layers.length());
@@ -232,7 +235,7 @@ _setLayoverShadowWithOrbit(const Orbit & orbit,
     }
 
     // Call standard layover/shadow mask generation function
-    this->setLayoverShadow(layers, demInterp, satPosition);
+    this->setLayoverShadow(layers, demInterp, satPosition, block, n_blocks);
 }
 
 // end of file

@@ -59,5 +59,7 @@ class isce3::cuda::geometry::Topo : public isce3::geometry::Topo {
         void _setLayoverShadowWithOrbit(const isce3::core::Orbit & orbit,
                                         isce3::geometry::TopoLayers & layers,
                                         isce3::geometry::DEMInterpolator & demInterp,
-                                        size_t lineStart);
+                                        size_t lineStart,
+                                        size_t block,
+                                        size_t n_blocks);
 };

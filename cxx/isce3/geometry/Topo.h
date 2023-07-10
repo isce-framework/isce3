@@ -305,10 +305,14 @@ public:
      * @param[in] layers Object containing output layers
      * @param[in] demInterp DEMInterpolator object
      * @param[in] satPosition Vector of satellite position vectors for each line
+     * @param[in] block Current block number
+     * @param[in] n_blocks Total number of blocks
      * in block
      */
     void setLayoverShadow(TopoLayers&, DEMInterpolator&,
-                          std::vector<isce3::core::Vec3>&);
+                          std::vector<isce3::core::Vec3>&,
+                          size_t block,
+                          size_t n_blocks);
 
     // Getters for isce objects
 

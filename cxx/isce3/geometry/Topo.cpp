@@ -143,7 +143,7 @@ topo(Raster & demRaster, TopoLayers & layers)
 
         // Diagnostics
         const double tblock = _radarGrid.sensingTime(lineStart);
-        info << "Processing block: " << block << " " << pyre::journal::newline
+        info << "Processing block: " << block + 1 << " " << pyre::journal::newline
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
@@ -171,6 +171,12 @@ topo(Raster & demRaster, TopoLayers & layers)
         double tline;
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
 
+            if (blockLine % std::max((int) (blockLength / 100), 1) == 0)
+                printf("\rTopo progress (block %d/%d): %d%%",
+                       (int) block + 1, (int) nBlocks,
+                       (int) (blockLine * 1e2 / blockLength)),
+                       fflush(stdout);
+
             // Global line index
             size_t line = lineStart + blockLine;
 
@@ -178,6 +184,7 @@ topo(Raster & demRaster, TopoLayers & layers)
             Basis TCNbasis;
             Vec3 pos, vel;
             _initAzimuthLine(line, tline, pos, vel, TCNbasis);
+
             satPosition[blockLine] = pos;
 
             // Compute velocity magnitude
@@ -211,10 +218,12 @@ topo(Raster & demRaster, TopoLayers & layers)
 
             } // end OMP for loop pixels in block
         } // end for loop lines in block
+        printf("\rTopo progress (block %d/%d): 100%%\n",
+               (int) block + 1, (int) nBlocks), fflush(stdout);
 
         // Compute layover/shadow masks for the block
         if (_computeMask) {
-            setLayoverShadow(layers, demInterp, satPosition);
+            setLayoverShadow(layers, demInterp, satPosition, block, nBlocks);
         }
 
         // Write out block of data for all topo layers
@@ -268,7 +277,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 
         // Diagnostics
         const double tblock = _radarGrid.sensingTime(lineStart);
-        info << "Processing block: " << block << " " << pyre::journal::newline
+        info << "Processing block: " << block + 1 << " " << pyre::journal::newline
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength
              << pyre::journal::newline << "  - dopplers near mid far: "
@@ -293,6 +302,12 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
         double tline;
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
 
+            if (blockLine % std::max((int) (blockLength / 100), 1) == 0)
+                    printf("\rTopo progress (block %d/%d): %d%%",
+                           (int) block + 1, (int) nBlocks,
+                           (int) (blockLine * 1e2 / blockLength)),
+                           fflush(stdout);
+
             // Global line index
             size_t line = lineStart + blockLine;
 
@@ -305,8 +320,8 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
             // Compute velocity magnitude
             const double satVmag = vel.norm();
 
-// For each slant range bin
-#pragma omp parallel for reduction(+ : totalconv)
+            // For each slant range bin
+            #pragma omp parallel for reduction(+ : totalconv)
             for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
 
                 // Get current slant range
@@ -334,11 +349,13 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
                                      TCNbasis, demInterp);
 
             } // end OMP for loop pixels in block
-        }     // end for loop lines in block
+        } // end for loop lines in block
+        printf("\rTopo progress (block %d/%d): 100%%\n",
+               (int) block + 1, (int) nBlocks), fflush(stdout);
 
         // Compute layover/shadow masks for the block
         if (_computeMask) {
-            setLayoverShadow(layers, demInterp, satPosition);
+            setLayoverShadow(layers, demInterp, satPosition, block, nBlocks);
         }
 
         // Write out block of data for all topo layers
@@ -467,7 +484,6 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         Vec3 pos, vel;
         Basis TCNbasis;
         _initAzimuthLine(lineIndex, tline, pos, vel, TCNbasis);
-
         // Compute satellite velocity and height
         const double satVmag = vel.norm();
         const Vec3 satLLH = _ellipsoid.xyzToLonLat(pos);
@@ -661,7 +677,8 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
 void isce3::geometry::Topo::
 setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
-                 std::vector<Vec3>& satPosition)
+                 std::vector<Vec3>& satPosition, size_t block,
+                 size_t n_blocks)
 {
     // Cache the width of the block
     const int width = layers.width();
@@ -670,13 +687,8 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
 
     // Allocate working valarrays
     std::valarray<double> x(width), y(width), ctrack(width), ctrackGrid(gridWidth);
-    std::valarray<double> slantRange(width), slantRangeGrid(gridWidth);
+    std::valarray<double> slantRangeGrid(gridWidth);
     std::valarray<short> maskGrid(gridWidth);
-
-    // Pre-compute slantRange grid used for all lines
-    for (int i = 0; i < width; ++i) {
-        slantRange[i] = _radarGrid.slantRange(i);
-    }
 
     // Initialize mask to zero for this block
     layers.mask() = 0;
@@ -692,9 +704,12 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         getDemCoords = isce3::geometry::getDemCoordsDiffEpsg;
     }
 
+    long long num_lines_done = 0;
+
     // Loop over lines in block
     #pragma omp parallel for firstprivate(x, y, ctrack, ctrackGrid, \
-                                          slantRangeGrid, maskGrid)
+                                          slantRangeGrid, maskGrid) \
+                             shared(num_lines_done)
     for (size_t line = 0; line < layers.length(); ++line) {
 
         // Cache satellite position for this line
@@ -804,15 +819,57 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         // Resample maskGrid to original spacing
         for (int i = 0; i < gridWidth; ++i) {
             if (maskGrid[i] > 0) {
-                // Find index in original grid spacing
-                int k = isce3::core::binarySearch(slantRange, slantRangeGrid[i]);
-                if (k < 0 || k >= width) continue;
-                // Update it
-                const short maskval = layers.mask(line, k);
-                if (maskval < isce3::core::LAYOVER_VALUE) {
-                    layers.mask(line, k, maskval + isce3::core::LAYOVER_VALUE);
+
+                const long slant_range_index = static_cast<long>(
+                    std::floor(
+                        (slantRangeGrid[i] - _radarGrid.startingRange()) /
+                        _radarGrid.rangePixelSpacing()));
+
+                // If out of bounds, escape
+                if (slant_range_index < 0 || slant_range_index >= width) {
+                    continue;
+                }
+
+                // Otherwise, update it
+                const short mask_value = layers.mask(line, slant_range_index);
+
+                /*
+                `mask_grid[i]` can be 0 or 0b0010 (LAYOVER_VALUE: decimal value 2)
+                `mask_value` can be 0 or 0b0001 (SHADOW_VALUE: decimal value 1)
+                             or 0b0010 (LAYOVER_VALUE: decimal value 2)
+
+                The operator "|" represents the bitwise-or of `mask_value` and
+                `mask_grid[i]`:
+
+                `mask_grid[i]`   ,      `mask_value`    ,     `new_mask_value`
+                      0          ,  0                   ,  0
+                      0          ,  1 (SHADOW)          ,  1 (SHADOW)
+                      0          ,  2 (LAYOVER)         ,  2 (LAYOVER)
+                      0          ,  3 (LAYOVER & SHADOW),  3 (LAYOVER & SHADOW)
+                      1 (SHADOW) ,  0                   ,  1 (SHADOW)
+                      1 (SHADOW) ,  1 (SHADOW)          ,  1 (SHADOW)
+                      1 (SHADOW) ,  2 (LAYOVER)         ,  3 (LAYOVER & SHADOW)
+                      1 (SHADOW) ,  3 (LAYOVER & SHADOW),  3 (LAYOVER & SHADOW)
+                */
+                const short new_mask_value = mask_value | maskGrid[i];
+                if (mask_value != new_mask_value) {
+                    layers.mask(line, slant_range_index, new_mask_value);
                 }
             }
         }
+    
+    _Pragma("omp atomic")
+        num_lines_done++;
+    if (line % std::max((int) (layers.length() / 100), 1) == 0)
+        _Pragma("omp critical")
+            printf("\rLayover/shadow mask progress (block %d/%d): %d%%",
+                   (int) block + 1, (int) n_blocks,
+                   (int) (num_lines_done * 1e2 / layers.length())),
+                   fflush(stdout);
+                        
     } // end loop lines
+
+printf("\rLayover/shadow mask progress (block %d/%d): 100%%\n",
+       (int) block + 1, (int) n_blocks), fflush(stdout);
 }
+
