@@ -8,6 +8,7 @@ import time
 import argparse as argp
 import json
 from datetime import datetime
+from scipy.interpolate import interp1d
 try:
     import matplotlib.pyplot as plt
 except ImportError:
@@ -121,18 +122,35 @@ def cmd_line_parser():
     prs.add_argument('--ignore-faraday', action='store_true',
                      dest='ignore_faraday', help='If set, it is assumed that'
                      ' Faraday rotation is zero!')
-    prs.add_argument('--tx-xtalk-amp', nargs=2, type=float, default=[0.0, 0.0],
-                     dest='tx_xtalk_amp', help='Cross-talk amplitudes for TX '
-                     '[H, V] pols in linear scale')
-    prs.add_argument('--tx-xtalk-phs', nargs=2, type=float, default=[0.0, 0.0],
-                     dest='tx_xtalk_phs', help='Cross-talk phases for TX '
-                     '[H, V] pols in radians')
-    prs.add_argument('--rx-xtalk-amp', nargs=2, type=float, default=[0.0, 0.0],
-                     dest='rx_xtalk_amp', help='Cross-talk amplitudes for RX '
-                     '[H, V] pols in linear scale')
-    prs.add_argument('--rx-xtalk-phs', nargs=2, type=float, default=[0.0, 0.0],
-                     dest='rx_xtalk_phs', help='Cross-talk phases for RX '
-                     '[H, V] pols in radians')
+    prs.add_argument('--tx-xtalk-amp-h', nargs='*', type=float, default=[0.0],
+                     dest='tx_xtalk_amp_h', help='Cross-talk amplitudes for TX'
+                     ' H pol in linear scale')
+    prs.add_argument('--tx-xtalk-phs-h', nargs='*', type=float,
+                     dest='tx_xtalk_phs_h', help='Cross-talk phases for TX '
+                     'H pol in radians. Zeros if not specified.')
+    prs.add_argument('--tx-xtalk-amp-v', nargs='*', type=float, default=[0.0],
+                     dest='tx_xtalk_amp_v', help='Cross-talk amplitudes for TX'
+                     ' V pol in linear scale')
+    prs.add_argument('--tx-xtalk-phs-v', nargs='*', type=float,
+                     dest='tx_xtalk_phs_v', help='Cross-talk phases for TX '
+                     'V pol in radians. Zeros if not specified.')
+    prs.add_argument('--rx-xtalk-amp-h', nargs='*', type=float, default=[0.0],
+                     dest='rx_xtalk_amp_h', help='Cross-talk amplitudes for RX'
+                     ' H pol in linear scale')
+    prs.add_argument('--rx-xtalk-phs-h', nargs='*', type=float,
+                     dest='rx_xtalk_phs_h', help='Cross-talk phases for RX '
+                     'H pol in radians. Zeros if not specified.')
+    prs.add_argument('--rx-xtalk-amp-v', nargs='*', type=float, default=[0.0],
+                     dest='rx_xtalk_amp_v', help='Cross-talk amplitudes for RX'
+                     ' V pol in linear scale')
+    prs.add_argument('--rx-xtalk-phs-v', nargs='*', type=float,
+                     dest='rx_xtalk_phs_v', help='Cross-talk phases for RX '
+                     'V pol in radians. Zeros if not specified.')
+    prs.add_argument('--el-xtalk', nargs='*', type=float, default=[0.0],
+                     dest='el_xtalk', help='Xtalk elevation (EL) angles '
+                     'in radians. X-talk ratios are function of EL. The size'
+                     ' of x-talk amplitudes (and phases if specified) shall '
+                     'be the same as that of EL angles!')
     prs.add_argument('--sr-lim', nargs=2, type=float, default=(None, None),
                      dest='sr_lim', help='Slant range limits [first, last] '
                      'of `slc_ext` in (m). Default is over all slant ranges.')
@@ -177,12 +195,59 @@ def pol_channel_imbalance_from_rslc(args):
     logger.info(
         f'Mean channel imbalances over all EL angles -> {args.mean_el}'
     )
-    # form a cross talk object
-    tx_xtalk = np.asarray(args.tx_xtalk_amp) * np.exp(
-        1j * np.asarray(args.tx_xtalk_phs))
-    rx_xtalk = np.asarray(args.rx_xtalk_amp) * np.exp(
-        1j * np.asarray(args.rx_xtalk_phs))
-    xtalk = CrossTalk(*tx_xtalk, *rx_xtalk)
+
+    # check the size of x-talk sequences for amplitude versus EL angles
+    size_xtalk = len(args.el_xtalk)
+    if (len(args.tx_xtalk_amp_h) != size_xtalk or
+        len(args.tx_xtalk_amp_v) != size_xtalk or
+        len(args.rx_xtalk_amp_h) != size_xtalk or
+            len(args.rx_xtalk_amp_v) != size_xtalk):
+        raise ValueError(
+            'Size mismatch between amplitudes of x-talk and its EL angles!'
+            f' Expected size per EL is {size_xtalk}!'
+        )
+    # go over the phase values of x-talk, if None, fill them with zeros.
+    # otherwise, the size of the container shall be the same as that of EL.
+    tx_xtalk_phs_h = _get_xtalk_phase(
+        args.tx_xtalk_phs_h, size_xtalk, 'H', 'TX')
+
+    tx_xtalk_phs_v = _get_xtalk_phase(
+        args.tx_xtalk_phs_v, size_xtalk, 'V', 'TX')
+
+    rx_xtalk_phs_h = _get_xtalk_phase(
+        args.rx_xtalk_phs_h, size_xtalk, 'H', 'RX')
+
+    rx_xtalk_phs_v = _get_xtalk_phase(
+        args.rx_xtalk_phs_v, size_xtalk, 'V', 'RX')
+
+    # form a complex cross talk arrays
+    tx_xtalk_h = np.asarray(args.tx_xtalk_amp_h) * np.exp(1j * tx_xtalk_phs_h)
+    tx_xtalk_v = np.asarray(args.tx_xtalk_amp_v) * np.exp(1j * tx_xtalk_phs_v)
+    rx_xtalk_h = np.asarray(args.rx_xtalk_amp_h) * np.exp(1j * rx_xtalk_phs_h)
+    rx_xtalk_v = np.asarray(args.rx_xtalk_amp_v) * np.exp(1j * rx_xtalk_phs_v)
+    el_xtalk = np.asarray(args.el_xtalk)
+
+    # check if the size of x-talk is less than 2. If so, repeat its value
+    # twice for the sake of interp1d and set interpolation method to "nearest"
+    # to avoid trivial runtime error.
+    if size_xtalk == 1:
+        tx_xtalk_h = tx_xtalk_h.repeat(2)
+        tx_xtalk_v = tx_xtalk_v.repeat(2)
+        rx_xtalk_h = rx_xtalk_h.repeat(2)
+        rx_xtalk_v = rx_xtalk_v.repeat(2)
+        el_xtalk = el_xtalk.repeat(2)
+        int_method = 'nearest'
+    else:  # more than one value, the interpolation is set to linear!
+        int_method = 'linear'
+
+    # form x-talk object with linear interpolation option
+    kwarg_int = dict(kind=int_method, fill_value='extrapolate')
+    xtalk = CrossTalk(
+        interp1d(el_xtalk, tx_xtalk_h, **kwarg_int),
+        interp1d(el_xtalk, tx_xtalk_v, **kwarg_int),
+        interp1d(el_xtalk, rx_xtalk_h, **kwarg_int),
+        interp1d(el_xtalk, rx_xtalk_v, **kwarg_int)
+    )
 
     # build dem interp object from DEM raster or ref height
     if args.dem_file is None:  # set to a fixed height
@@ -298,6 +363,19 @@ def _plot2d(sr_mesh: np.ndarray, azt_mesh: np.ndarray, pol_ratio: np.ndarray,
     plt.ylabel('Azimuth Time (sec)')
     plt.grid(True)
     plt.savefig(plot_name)
+
+
+def _get_xtalk_phase(xtalk_phs: list, size_xtalk: int, pol: str,
+                     side: str) -> np.ndarray:
+    """Get phase values of x-talk"""
+    if xtalk_phs is not None:
+        if len(xtalk_phs) != size_xtalk:
+            raise ValueError(
+                f'Size mismatch! The size of {side} {pol}-pol x-talk phase'
+                f' shall be {size_xtalk}.'
+            )
+        return np.asarray(xtalk_phs)
+    return np.zeros(size_xtalk)
 
 
 if __name__ == "__main__":
