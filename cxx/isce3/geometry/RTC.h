@@ -83,8 +83,8 @@ enum rtcAreaBetaMode {
  * @param[in]  clip_max            Clip maximum output values
  * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
  * parameters determines the multilooking factor used to compute out_nlooks.
- * @param[out] out_nlooks          Raster to which the number of radar-grid
- * looks associated with the geogrid will be saved
+ * @param[out] out_sigma           Output sigma surface area
+ * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in]  input_rtc           Raster containing pre-computed RTC area
  * factor
  * @param[out] output_rtc          Output RTC area normalization factor
@@ -106,7 +106,7 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
         double abs_cal_factor = 1,
         float clip_min = std::numeric_limits<float>::quiet_NaN(),
         float clip_max = std::numeric_limits<float>::quiet_NaN(),
-        float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
+        float radar_grid_nlooks = 1, isce3::io::Raster* out_sigma = nullptr,
         isce3::io::Raster* input_rtc = nullptr,
         isce3::io::Raster* output_rtc = nullptr,
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
@@ -133,8 +133,8 @@ void applyRtc(const isce3::product::RadarGridParameters& radarGrid,
  * be set to NaN..
  * @param[in]  nlooks_az           Number of azimuth looks.
  * @param[in]  nlooks_rg           Number of range looks.
- * @param[out] out_nlooks          Raster to which the number of radar-grid
- * looks associated with the geogrid will be saved
+ * @param[out] out_sigma           Output sigma surface area
+ * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in]  rtc_memory_mode     Select memory mode
  * */
 void computeRtc(isce3::product::RadarGridProduct& product,
@@ -150,7 +150,7 @@ void computeRtc(isce3::product::RadarGridProduct& product,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         size_t nlooks_az = 1, size_t nlooks_rg = 1,
-        isce3::io::Raster* out_nlooks = nullptr,
+        isce3::io::Raster* out_sigma = nullptr,
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY);
 
@@ -175,8 +175,8 @@ void computeRtc(isce3::product::RadarGridProduct& product,
  * be set to NaN..
  * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
  * parameters determines the multilooking factor used to compute out_nlooks.
- * @param[out]  out_nlooks          Raster to which the number of radar-grid
- * looks associated with the geogrid will be saved
+ * @param[out] out_sigma           Output sigma surface area
+ * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
  * @param[in]  threshold           Azimuth time threshold for convergence (s)
@@ -198,7 +198,7 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
         rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::AUTO,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
-        float radar_grid_nlooks = 1, isce3::io::Raster* out_nlooks = nullptr,
+        float radar_grid_nlooks = 1, isce3::io::Raster* out_sigma = nullptr,
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
@@ -241,8 +241,8 @@ void computeRtc(const isce3::product::RadarGridParameters& radarGrid,
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels center will be saved.
- * @param[out] out_nlooks          Raster to which the number of radar-grid
- * looks associated with the geogrid will be saved
+ * @param[out] out_sigma           Output sigma surface area
+ * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in]  rtc_memory_mode     Select memory mode
  * @param[in]  interp_method       Interpolation Method
  * @param[in]  threshold           Azimuth time threshold for convergence (s)
@@ -268,7 +268,7 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
-        isce3::io::Raster* out_nlooks = nullptr,
+        isce3::io::Raster* out_sigma = nullptr,
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =
@@ -293,7 +293,9 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
  * @param[in]  geogrid_upsampling  Geogrid upsampling
  * @param[in]  rtc_min_value_db    Minimum value for the RTC area normalization
  * factor. Radar data with RTC area normalization factor below this limit will
- * be set to NaN..
+ * be set to NaN.
+ * @param[out] out_sigma           Output sigma surface area
+ * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * */
 void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         isce3::io::Raster& output_raster,
@@ -306,7 +308,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
                 rtcOutputTerrainRadiometry::GAMMA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
-        float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN());
+        float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+        isce3::io::Raster* out_sigma = nullptr);
 
 /** Generate radiometric terrain correction (RTC) area or area normalization
  * factor using the area projection algorithms
@@ -335,8 +338,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
  * (range and azimuth) of the geogrid pixels vertices will be saved.
  * @param[out] out_geo_grid        Raster to which the radar-grid positions
  * (range and azimuth) of the geogrid pixels center will be saved.
- * @param[out] out_nlooks          Raster to which the number of radar-grid
- * looks associated with the geogrid will be saved
+ * @param[out] out_sigma           Output sigma surface area
+ * (rtc_area_mode = AREA) or area factor (rtc_area_mode = AREA_FACTOR) raster
  * @param[in] rtc_memory_mode      Select memory mode
  * @param[in] interp_method        Interpolation Method
  * @param[in] threshold            Azimuth time threshold for convergence (s)
@@ -361,7 +364,7 @@ void computeRtcAreaProj(isce3::io::Raster& dem,
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1, isce3::io::Raster* out_geo_rdr = nullptr,
         isce3::io::Raster* out_geo_grid = nullptr,
-        isce3::io::Raster* out_nlooks = nullptr,
+        isce3::io::Raster* out_sigma = nullptr,
         isce3::core::MemoryModeBlocksY rtc_memory_mode = 
                 isce3::core::MemoryModeBlocksY::AutoBlocksY,
         isce3::core::dataInterpMethod interp_method =

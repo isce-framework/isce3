@@ -96,6 +96,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("out_geo_dem") = nullptr,
                     py::arg("out_geo_nlooks") = nullptr,
                     py::arg("out_geo_rtc") = nullptr,
+                    py::arg("out_geo_rtc_gamma0_to_sigma0") = nullptr,
                     py::arg("phase_screen") = nullptr,
                     py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
                     py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
@@ -180,6 +181,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         associated with the geogrid will be saved.
                     out_geo_rtc: isce3.io.Raster, optional
                         Output RTC area factor (in geo-coordinates).
+                    out_geo_rtc_gamma0_to_sigma0: isce3.io.Raster, optional
+                        Output RTC area factor gamma0 to sigma0 array
+                        (in geo-coordinates).
                     phase_screen_raster: isce3.io.Raster, optional
                         Phase screen to be removed before geocoding
                     az_time_correction: LUT2d

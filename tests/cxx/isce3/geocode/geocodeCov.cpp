@@ -141,6 +141,7 @@ TEST(GeocodeTest, TestGeocodeCov) {
     isce3::io::Raster* out_geo_dem = nullptr;
     isce3::io::Raster* out_geo_nlooks = nullptr;
     isce3::io::Raster* out_geo_rtc = nullptr;
+    isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0 = nullptr;
     isce3::io::Raster* phase_screen_raster = nullptr;
     const isce3::core::LUT2d<double>& az_time_correction_full_cov = {};
     const isce3::core::LUT2d<double>& slant_range_correction_full_cov = {};
@@ -244,13 +245,15 @@ TEST(GeocodeTest, TestGeocodeCov) {
                                output_terrain_radiometry, exponent, rtc_min_value_db,
                                rtc_geogrid_upsampling, rtc_algorithm,
                                rtc_area_beta_mode, abs_cal_factor,
-                               clip_min, clip_max, min_nlooks, radar_grid_nlooks, nullptr,
-                               out_geo_rdr, out_geo_dem, out_geo_nlooks, out_geo_rtc,
+                               clip_min, clip_max, min_nlooks, radar_grid_nlooks,
+                               nullptr, out_geo_rdr, out_geo_dem, out_geo_nlooks,
+                               out_geo_rtc, out_geo_rtc_gamma0_to_sigma0,
                                phase_screen_raster, az_time_correction,
                                slant_range_correction, input_rtc, output_rtc,
                                input_layover_shadow_mask_raster,
                                sub_swaths, out_valid_samples_sub_swath_mask,
-                               geocode_memory_mode_1, min_block_size, max_block_size);
+                               geocode_memory_mode_1, min_block_size,
+                               max_block_size);
 
             }
         }
@@ -300,7 +303,8 @@ TEST(GeocodeTest, TestGeocodeCov) {
             rtc_area_beta_mode, abs_cal_factor, clip_min,
             clip_max, min_nlooks, radar_grid_nlooks,
             &geocoded_off_diag_raster, out_geo_rdr, out_geo_dem,
-            out_geo_nlooks, out_geo_rtc, phase_screen_raster,
+            out_geo_nlooks, out_geo_rtc, out_geo_rtc_gamma0_to_sigma0,
+            phase_screen_raster,
             az_time_correction_full_cov, slant_range_correction_full_cov,
             input_rtc, output_rtc, input_layover_shadow_mask_raster,
             sub_swaths, out_valid_samples_sub_swath_mask,

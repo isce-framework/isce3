@@ -15,6 +15,7 @@ rtc_algorithm_list = [
         isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION,
         isce3.geometry.RtcAlgorithm.RTC_AREA_PROJECTION]
 
+
 def test_rtc():
 
     # Open HDF5 file and create radar grid parameter
