@@ -13,7 +13,7 @@ from osgeo import osr
 import isce3
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
-from nisar.types import complex32, to_complex32
+from isce3.core.types import complex32, to_complex32
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 

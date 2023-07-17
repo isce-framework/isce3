@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 
 from isce3.antenna import CrossTalk, PolImbalanceRatioAnt, rdr2ant
 from nisar.cal import CRInfoSlc, est_peak_loc_cr_from_slc
-from nisar.types import ComplexFloat16Decoder
+from isce3.core.types import ComplexFloat16Decoder
 from isce3.core import Ellipsoid, DateTime
 from isce3.geometry import DEMInterpolator, rdr2geo
 from nisar.workflows.doppler_lut_from_raw import set_logger

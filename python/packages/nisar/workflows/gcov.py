@@ -14,7 +14,7 @@ import journal
 import numpy as np
 
 import isce3
-from nisar.types import complex32, read_complex_dataset
+from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5

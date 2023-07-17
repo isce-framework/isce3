@@ -1,6 +1,6 @@
 import logging
 from isce3.io import decode_bfpq_lut
-from nisar.types import complex32, read_c4_dataset_as_c8
+from isce3.core.types import complex32, read_c4_dataset_as_c8
 import numpy as np
 
 # TODO some CSV logger
