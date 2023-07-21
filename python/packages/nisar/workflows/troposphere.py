@@ -147,28 +147,27 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             from RAiDER.delay import tropo_delay as raider_tropo_delay
             from RAiDER.models.hres import HRES
 
-            def convert_HRES_to_raider_NetCDF(weather_model_file,
+            def _convert_HRES_to_raider_NetCDF(weather_model_file,
                                               ll_bounds,
-                                              wmLoc):
+                                              wm_loc):
                 '''
-                Convert the ECMWF NetCDF to RAiDER NetCDF
+                Internal convenience function to convert the ECMWF NetCDF to RAiDER NetCDF
                 '''
 
-                os.makedirs(wmLoc, exist_ok=True)
+                os.makedirs(wm_loc, exist_ok=True)
                 ds = xr.open_dataset(weather_model_file)
 
                 # Get the datetime of the weather model file
                 weather_model_time = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
-                # Convert the HRES ECMWF
                 hres = HRES()
                 # Set up the time
                 hres.setTime(weather_model_time)
                 # Set up the input file
                 hres.files = [weather_model_file]
                 # Load the input weather model file
-                hres.load(wmLoc, ll_bounds = ll_bounds)
+                hres.load(wm_loc, ll_bounds = ll_bounds)
                 # Return the ouput file if it exists
-                output_file = hres.out_file(wmLoc)
+                output_file = hres.out_file(wm_loc)
                 if os.path.exists(output_file):
                     return output_file
                 else:
@@ -176,7 +175,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                     return hres.write()
 
             # ouput location
-            wmLoc = os.path.join(scratch_path, 'weather_model_files')
+            wm_loc = os.path.join(scratch_path, 'weather_model_files')
 
             # Acquisition time for reference and secondary images
             acquisition_time_ref = h5_obj['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
@@ -209,10 +208,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
             # Convert to RAiDER NetCDF
             reference_weather_model_file = \
-                   convert_HRES_to_raider_NetCDF(reference_weather_model_file, ll_bounds, wmLoc)
+                    _convert_HRES_to_raider_NetCDF(reference_weather_model_file, ll_bounds, wm_loc)
 
             secondary_weather_model_file = \
-                    convert_HRES_to_raider_NetCDF(secondary_weather_model_file, ll_bounds, wmLoc)
+                    _convert_HRES_to_raider_NetCDF(secondary_weather_model_file, ll_bounds, wm_loc)
 
             # Troposphere delay computation
             tropo_delay_reference, _ = raider_tropo_delay(dt=acquisition_time_ref,

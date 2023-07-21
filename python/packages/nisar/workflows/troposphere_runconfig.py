@@ -6,7 +6,6 @@ import journal
 import numpy as np
 import os
 import pygrib
-import xarray as xr
 
 from nisar.workflows.runconfig import RunConfig
 
@@ -87,6 +86,8 @@ def troposphere_delay_check(cfg):
             else:
                 #  Get the datetime of weather model in NetCDF format for RAiDER
                 try:
+                    import xarray as xr
+
                     ds = xr.open_dataset(weather_model_file)
                     # Get the datetime of the weather model file
                     weather_model_date = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
@@ -100,7 +101,8 @@ def troposphere_delay_check(cfg):
 
             # Check if it is more than 1 day (i.e. > 24 hours)
             if hours > 24.0:
-                err_str = 'days difference between weather model and RSLC should be within one day'
+                err_str = f"days difference between weather model ({weather_model_date})" + \
+                          f" and RSLC ({rslc_date}) should be within one day"
                 error_channel.log(err_str)
                 raise ValueError(err_str)
 
