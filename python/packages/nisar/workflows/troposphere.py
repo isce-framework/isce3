@@ -160,10 +160,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                  lat_lon_bounds: list
                      bounding box of the RSLC
                  weather_model_output_dir: str
-                     the output directory of the RAiDER internal NetCDF
+                     the output directory of the RAiDER internal NetCDF file
                 Returns
                 -------
-                     the path of the RAiDER internal NetCDF
+                     the path of the RAiDER internal NetCDF file
                  '''
 
                 os.makedirs(weather_model_output_dir, exist_ok=True)
