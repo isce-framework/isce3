@@ -148,13 +148,25 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             from RAiDER.models.hres import HRES
 
             def _convert_HRES_to_raider_NetCDF(weather_model_file,
-                                              ll_bounds,
-                                              wm_loc):
+                                              lat_lon_bounds,
+                                              weather_model_output_dir):
                 '''
                 Internal convenience function to convert the ECMWF NetCDF to RAiDER NetCDF
-                '''
 
-                os.makedirs(wm_loc, exist_ok=True)
+                Parameters
+                ----------
+                 weather_model_file: str
+                    HRES NetCDF weather model file
+                 lat_lon_bounds: list
+                     bounding box of the RSLC
+                 weather_model_output_dir: str
+                     the output directory of the RAiDER internal NetCDF
+                Returns
+                -------
+                     the path of the RAiDER internal NetCDF
+                 '''
+
+                os.makedirs(weather_model_output_dir, exist_ok=True)
                 ds = xr.open_dataset(weather_model_file)
 
                 # Get the datetime of the weather model file
@@ -165,9 +177,9 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 # Set up the input file
                 hres.files = [weather_model_file]
                 # Load the input weather model file
-                hres.load(wm_loc, ll_bounds = ll_bounds)
+                hres.load(weather_model_output_dir, ll_bounds = lat_lon_bounds)
                 # Return the ouput file if it exists
-                output_file = hres.out_file(wm_loc)
+                output_file = hres.out_file(weather_model_output_dir)
                 if os.path.exists(output_file):
                     return output_file
                 else:
@@ -175,7 +187,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                     return hres.write()
 
             # ouput location
-            wm_loc = os.path.join(scratch_path, 'weather_model_files')
+            weather_model_output_dir = os.path.join(scratch_path, 'weather_model_files')
 
             # Acquisition time for reference and secondary images
             acquisition_time_ref = h5_obj['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
@@ -190,12 +202,12 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
             min_lon = np.min(lon_datacube)
             max_lon = np.max(lon_datacube)
 
-            ll_bounds = [min_lat - margin,
-                         max_lat + margin,
-                         min_lon - margin,
-                         max_lon + margin]
+            lat_lon_bounds = [min_lat - margin,
+                              max_lat + margin,
+                              min_lon - margin,
+                              max_lon + margin]
 
-            aoi = BoundingBox(ll_bounds)
+            aoi = BoundingBox(lat_lon_bounds)
 
             # Zenith
             delay_direction_obj = Zenith()
@@ -208,10 +220,12 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
 
             # Convert to RAiDER NetCDF
             reference_weather_model_file = \
-                    _convert_HRES_to_raider_NetCDF(reference_weather_model_file, ll_bounds, wm_loc)
+                    _convert_HRES_to_raider_NetCDF(reference_weather_model_file,
+                                                   lat_lon_bounds, weather_model_output_dir)
 
             secondary_weather_model_file = \
-                    _convert_HRES_to_raider_NetCDF(secondary_weather_model_file, ll_bounds, wm_loc)
+                    _convert_HRES_to_raider_NetCDF(secondary_weather_model_file,
+                                                   lat_lon_bounds, weather_model_output_dir)
 
             # Troposphere delay computation
             tropo_delay_reference, _ = raider_tropo_delay(dt=acquisition_time_ref,
