@@ -47,7 +47,7 @@ def test_point():
     assert np.isclose(llh[2], 1776.9999999993)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def unit_test_params():
     params = types.SimpleNamespace()
 
@@ -81,28 +81,6 @@ def unit_test_params():
     # tolerances for east/north ground to satellite ENU unit vector layers
     # use same tolerance as heading angle since the computations are similar
     params.sat_to_ground_tols = [1.0e-4, 1.0e-4]
-
-    rdr2geo_params = Rdr2GeoParams(0.05, 25, 10)
-
-    # compute reference data for east/north ground to satellite ENU unit vector
-    east_north_ground_to_sat_vectors = [
-        compute_east_north_ground_to_sat_vector(
-            az_time, srange, orbit, doppler, radargrid,
-            isce3.geometry.DEMInterpolator(),
-            isce3.core.Ellipsoid(), rdr2geo_params
-        )
-        for az_time, srange in itertools.product(
-            radargrid.sensing_times, radargrid.slant_ranges
-        )
-    ]
-    params.east_vec_component, params.north_vec_component = [
-        arr.reshape(radargrid.shape)
-        for arr in list(map(np.array, zip(*east_north_ground_to_sat_vectors)))
-    ]
-    with open('east_vec.bin', 'w') as f:
-        params.east_vec_component.tofile(f)
-    with open('north_vec.bin', 'w') as f:
-        params.north_vec_component.tofile(f)
 
     return params
 
@@ -218,22 +196,4 @@ def test_validate(unit_test_params):
             # check if tolerances met
             assert mean_err < tol, f"band {i_band} of {test_path} mean err fail"
 
-        '''
-        # loop thru east/north ground to sat unit vector components
-        for i_band, tol, ref_arr in zip(
-            east_north_vec_bands, unit_test_params.sat_to_ground_tols,
-            [unit_test_params.east_vec_component,
-             unit_test_params.north_vec_component]
-        ):
-            # retrieve test and ref arrays for current band
-            test_arr = test_ds.GetRasterBand(i_band).ReadAsArray()
-
-            # calculate mean of absolute error and mask anything > 5.0
-            err = np.abs(test_arr - ref_arr)
-            err = np.ma.masked_array(err, mask=err > 5.0)
-            mean_err = np.mean(err)
-
-            # check if tolerances met
-            assert mean_err < tol, f"band {i_band} of {test_path} mean err fail"
-        '''
         del test_ds

@@ -224,7 +224,7 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                     py::arg("ground_to_sat_east_raster") = nullptr,
                     py::arg("ground_to_sat_north_raster") = nullptr,
                     R"(
-        Run topo with externally created topo rasters
+        Run topo and write to user created rasters
 
         Parameters
         ----------

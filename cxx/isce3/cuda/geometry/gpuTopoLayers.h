@@ -87,7 +87,6 @@ class isce3::cuda::geometry::gpuTopoLayers {
             _groundToSatNorth[index] = value;
         }
 
-
         // Get sizes on host or device
         CUDA_HOSTDEV inline size_t length() const { return _length; }
         CUDA_HOSTDEV inline size_t width() const { return _width; }

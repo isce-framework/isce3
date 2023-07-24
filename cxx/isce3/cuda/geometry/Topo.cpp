@@ -99,20 +99,20 @@ topo(Raster & demRaster,
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
   * @param[in] simRaster output raster for simulated amplitude image.
   * @param[in] maskRaster output raster for layover/shadow mask.
-  * @param[in] groundToSatEastRaster output for east component of ground to satellite unit vector
-  * @param[in] groundToSatNorthRaster output for north component of ground to satellite unit vector
+  * @param[in] losEastRaster output for east component of ground to satellite LOS unit vector
+  * @param[in] losNorthRaster output for north component of ground to satellite LOS unit vector
  */
 void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster * xRaster, Raster * yRaster, Raster * heightRaster,
      Raster * incRaster, Raster * hdgRaster, Raster * localIncRaster, Raster * localPsiRaster,
-     Raster * simRaster, Raster * maskRaster, Raster * groundToSatEastRaster,
-     Raster * groundToSatNorthRaster) {
+     Raster * simRaster, Raster * maskRaster, Raster * losEastRaster,
+     Raster * losNorthRaster) {
 
     // Initialize a TopoLayers object to handle block data and raster data
     // Create rasters for individual layers (provide output raster sizes)
     TopoLayers layers(linesPerBlock(), xRaster, yRaster, heightRaster, incRaster,
             hdgRaster, localIncRaster, localPsiRaster, simRaster,
-            maskRaster, groundToSatEastRaster, groundToSatNorthRaster);
+            maskRaster, losEastRaster, losNorthRaster);
 
     // Set computeMask flag by pointer value
     this->computeMask(maskRaster != nullptr);

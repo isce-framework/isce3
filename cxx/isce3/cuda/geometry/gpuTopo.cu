@@ -110,7 +110,7 @@ void setOutputTopoLayers(const Vec3& targetLLH,
     }
     layers.hdg(index, heading);
 
-    // unit groundToSatEast and groundToSatNorth
+    // Compute and assign ground to satellite unit vector east and north components
     const Vec3 groundToSat = -satToGround;
     const Vec3 enuGroundToSat = xyz2enu.dot(groundToSat).normalized();
     layers.groundToSatEast(index, enuGroundToSat[0]);

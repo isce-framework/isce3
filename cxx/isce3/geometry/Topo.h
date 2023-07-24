@@ -193,7 +193,7 @@ public:
      * This is the main topo driver. The pixel-by-pixel output file names are fixed for now
      * <ul>
      * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
-     * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+     * <li> y.rdr - Y coordinate in requested projection system (meters or degrees)
      * <li> z.rdr - Height above ellipsoid (meters)
      * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
      * <li> hdg.rdr - Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
@@ -222,7 +222,7 @@ public:
      *
      * @param[in] demRaster input DEM raster
      * @param[in] xRaster output raster for X coordinate in requested projection system (meters or degrees)
-     * @param[in] yRaster output raster for Y cooordinate in requested projection system (meters or degrees)
+     * @param[in] yRaster output raster for Y coordinate in requested projection system (meters or degrees)
      * @param[in] zRaster output raster for height above ellipsoid (meters)
      * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical at target
      * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
@@ -252,7 +252,7 @@ public:
      * This is the main topo driver. The pixel-by-pixel output file names are
      * fixed for now <ul>
      * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
-     * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+     * <li> y.rdr - Y coordinate in requested projection system (meters or degrees)
      * <li> z.rdr - Height above ellipsoid (meters)
      * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
      * <li> localInc.rdr - Local incidence angle (degrees) at target
@@ -282,7 +282,7 @@ public:
      * @param[in] demInterp input DEM interpolator
      * @param[in] xRaster output raster for X coordinate in requested projection
      * system (meters or degrees)
-     * @param[in] yRaster output raster for Y cooordinate in requested
+     * @param[in] yRaster output raster for Y coordinate in requested
      * projection system (meters or degrees)
      * @param[in] zRaster output raster for height above ellipsoid (meters)
      * @param[in] incRaster output raster for incidence angle (degrees) computed
