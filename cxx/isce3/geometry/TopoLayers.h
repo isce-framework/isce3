@@ -24,7 +24,9 @@ class isce3::geometry::TopoLayers {
                    isce3::io::Raster * localIncRaster = nullptr,
                    isce3::io::Raster * localPsiRaster = nullptr,
                    isce3::io::Raster * simRaster = nullptr,
-                   isce3::io::Raster * maskRaster = nullptr);
+                   isce3::io::Raster * maskRaster = nullptr,
+                   isce3::io::Raster * groundToSatEastRaster = nullptr,
+                   isce3::io::Raster * groundToSatNorthRaster = nullptr);
 
         // Destructor
         ~TopoLayers() {
@@ -37,6 +39,8 @@ class isce3::geometry::TopoLayers {
                 delete _localIncRaster;
                 delete _localPsiRaster;
                 delete _simRaster;
+                delete _groundToSatEastRaster;
+                delete _groundToSatNorthRaster;
                 if (_maskRaster) {
                     delete _maskRaster;
                 }
@@ -61,6 +65,8 @@ class isce3::geometry::TopoLayers {
         std::valarray<float> & sim() { return _sim; }
         std::valarray<short> & mask() { return _mask; }
         std::valarray<double> & crossTrack() { return _crossTrack; }
+        std::valarray<float> & groundToSatEast() { return _groundToSatEast; }
+        std::valarray<float> & groundToSatNorth() { return _groundToSatNorth; }
 
         inline bool hasXRaster() const { return _xRaster != nullptr; }
         inline bool hasYRaster() const { return _yRaster != nullptr; }
@@ -71,6 +77,10 @@ class isce3::geometry::TopoLayers {
         inline bool hasLocalPsiRaster() const { return _localPsiRaster != nullptr; }
         inline bool hasSimRaster() const { return _simRaster != nullptr; }
         inline bool hasMaskRaster() const { return _maskRaster != nullptr; }
+        inline bool hasGroundToSatEastRaster() const {
+            return _groundToSatEastRaster != nullptr; }
+        inline bool hasGroundToSatNorthRaster() const {
+            return _groundToSatNorthRaster != nullptr; }
 
         /*
         Set values for a single index.
@@ -146,6 +156,18 @@ class isce3::geometry::TopoLayers {
             _crossTrack[row*_width + col] = value;
         }
 
+        inline void groundToSatEast(size_t row, size_t col, float value) {
+            if (hasGroundToSatEastRaster()) {
+                _groundToSatEast[row*_width + col] = value;
+            }
+        }
+
+        inline void groundToSatNorth(size_t row, size_t col, float value) {
+            if (hasGroundToSatNorthRaster()) {
+                _groundToSatNorth[row*_width + col] = value;
+            }
+        }
+
         // Get values for a single index
         double x(size_t row, size_t col) const {
             if (_x.size() == 0 || row > _length - 1 || col > _width - 1) {
@@ -217,6 +239,20 @@ class isce3::geometry::TopoLayers {
             return _crossTrack[row*_width + col];
         }
 
+        float groundToSatEast(size_t row, size_t col) const {
+            if (!hasGroundToSatEastRaster() || row > _length - 1 || col > _width -1) {
+                return std::numeric_limits<float>::quiet_NaN();
+            }
+            return _groundToSatEast[row*_width + col];
+        }
+
+        float groundToSatNorth(size_t row, size_t col) const {
+            if (!hasGroundToSatNorthRaster() || row > _length - 1 || col > _width -1) {
+                return std::numeric_limits<float>::quiet_NaN();
+            }
+            return _groundToSatNorth[row*_width + col];
+        }
+
         // Write data with rasters
         void writeData(size_t xidx, size_t yidx);
 
@@ -232,6 +268,8 @@ class isce3::geometry::TopoLayers {
         std::valarray<float> _sim;
         std::valarray<short> _mask;
         std::valarray<double> _crossTrack; // internal usage only; not saved to Raster
+        std::valarray<float> _groundToSatEast;
+        std::valarray<float> _groundToSatNorth;
 
         // Raster pointers for each layer
         isce3::io::Raster * _xRaster = nullptr;
@@ -243,6 +281,8 @@ class isce3::geometry::TopoLayers {
         isce3::io::Raster * _localPsiRaster = nullptr;
         isce3::io::Raster * _simRaster = nullptr;
         isce3::io::Raster * _maskRaster = nullptr;
+        isce3::io::Raster * _groundToSatEastRaster = nullptr;
+        isce3::io::Raster * _groundToSatNorthRaster = nullptr;
 
         // Dimensions
         size_t _length, _width;

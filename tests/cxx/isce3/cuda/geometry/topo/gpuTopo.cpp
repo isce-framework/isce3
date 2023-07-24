@@ -57,10 +57,10 @@ TEST(GPUTopoTest, RunTopo) {
 }
 
 TEST(GPUTopoTest, CheckResults) {
-    
+
     // Open generated topo raster
     isce3::io::Raster testRaster("topo.vrt");
-    
+
     // Open reference topo raster
     isce3::io::Raster refRaster(TESTDATA_DIR "topo/topo.vrt");
 
@@ -74,7 +74,9 @@ TEST(GPUTopoTest, CheckResults) {
     // Valarrays to hold line of data
     std::valarray<double> test(testRaster.width()), ref(refRaster.width());
 
-    // Loop over topo bands
+    // Loop over reference topo bands - discounting groundToSatEast,
+    // groundToSatNorth, azimuth as there is no reference test data to compare
+    // against.
     for (size_t k = 0; k < refRaster.numBands(); ++k) {
         // Compute sum of absolute error
         double error = 0.0;

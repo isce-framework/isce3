@@ -200,6 +200,8 @@ public:
      * <li> localInc.rdr - Local incidence angle (degrees) at target
      * <li> locaPsi.rdr - Local projection angle (degrees) at target
      * <li> simamp.rdr - Simulated amplitude image.
+     * <li> los_east.rdr - East component of ground to satellite unit vector
+     * <li> los_north.rdr - North component of ground to satellite unit vector
      * </ul>
      *
      * @param[in] demRaster input DEM raster
@@ -228,6 +230,8 @@ public:
      * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
      * @param[in] simRaster output raster for simulated amplitude image.
      * @param[in] maskRaster output raster for layover/shadow mask.
+     * @param[in] groundToSatEastRaster output for east component of ground to satellite unit vector
+     * @param[in] groundToSatNorthRaster output for north component of ground to satellite unit vector
      */
     void topo(isce3::io::Raster& demRaster,
               isce3::io::Raster* xRaster = nullptr,
@@ -238,20 +242,24 @@ public:
               isce3::io::Raster* localIncRaster = nullptr,
               isce3::io::Raster* localPsiRaster = nullptr,
               isce3::io::Raster* simRaster = nullptr,
-              isce3::io::Raster* maskRaster = nullptr);
+              isce3::io::Raster* maskRaster = nullptr,
+              isce3::io::Raster* groundToSatEastRaster = nullptr,
+              isce3::io::Raster* groundToSatNorthRaster = nullptr);
 
     /**
      * Main entry point for the module; internal creation of topo rasters
      *
      * This is the main topo driver. The pixel-by-pixel output file names are
-     * fixed for now <ul> <li> x.rdr - X coordinate in requested projection
-     * system (meters or degrees) <li> y.rdr - Y cooordinate in requested
-     * projection system (meters or degrees) <li> z.rdr - Height above ellipsoid
-     * (meters) <li> inc.rdr - Incidence angle (degrees) computed from vertical
-     * at target <li> hdg.rdr - Azimuth angle (degrees) computed anti-clockwise
-     * from EAST (Right hand rule) <li> localInc.rdr - Local incidence angle
-     * (degrees) at target <li> locaPsi.rdr - Local projection angle (degrees)
-     * at target <li> simamp.rdr - Simulated amplitude image.
+     * fixed for now <ul>
+     * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
+     * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+     * <li> z.rdr - Height above ellipsoid (meters)
+     * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
+     * <li> localInc.rdr - Local incidence angle (degrees) at target
+     * <li> locaPsi.rdr - Local projection angle (degrees) at target
+     * <li> simamp.rdr - Simulated amplitude image.
+     * <li> los_east.rdr - East component of ground to satellite unit vector
+     * <li> los_north.rdr - North component of ground to satellite unit vector
      * </ul>
      *
      * @param[in] demInterp input DEM interpolator
@@ -287,6 +295,8 @@ public:
      * (degrees) at target
      * @param[in] simRaster output raster for simulated amplitude image.
      * @param[in] maskRaster output raster for layover/shadow mask.
+     * @param[in] groundToSatEastRaster output for east component of ground to satellite unit vector
+     * @param[in] groundToSatNorthRaster output for north component of ground to satellite unit vector
      */
     void topo(isce3::geometry::DEMInterpolator& demInterp,
               isce3::io::Raster* xRaster,
@@ -297,7 +307,9 @@ public:
               isce3::io::Raster* localIncRaster,
               isce3::io::Raster* localPsiRaster,
               isce3::io::Raster* simRaster,
-              isce3::io::Raster* maskRaster);
+              isce3::io::Raster* maskRaster,
+              isce3::io::Raster* groundToSatEastRaster,
+              isce3::io::Raster* groundToSatNorthRaster);
 
     /**
      * Compute layover/shadow masks
@@ -377,7 +389,9 @@ private:
                isce3::io::Raster* localIncRaster = nullptr,
                isce3::io::Raster* localPsiRaster = nullptr,
                isce3::io::Raster* simRaster = nullptr,
-               isce3::io::Raster* maskRaster = nullptr);
+               isce3::io::Raster* maskRaster = nullptr,
+               isce3::io::Raster* groundToSatEastRaster = nullptr,
+               isce3::io::Raster* groundToSatNorthRaster = nullptr);
 
     // isce3::core objects
     isce3::core::Orbit _orbit;

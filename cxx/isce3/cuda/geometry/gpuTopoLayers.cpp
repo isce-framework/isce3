@@ -4,7 +4,7 @@
 #include <isce3/geometry/TopoLayers.h>
 #include <isce3/cuda/except/Error.h>
 
-namespace isce3 { namespace cuda { namespace geometry {
+namespace isce3::cuda::geometry {
     gpuTopoLayers::gpuTopoLayers(const isce3::geometry::TopoLayers & layers) :
         _length(layers.length()), _width(layers.width()), _owner(true) {
 
@@ -20,6 +20,10 @@ namespace isce3 { namespace cuda { namespace geometry {
         checkCudaErrors(cudaMalloc((float **) &_localPsi, _nbytes_float));
         checkCudaErrors(cudaMalloc((float **) &_sim, _nbytes_float));
         checkCudaErrors(cudaMalloc((double **) &_crossTrack, _nbytes_double));
+        checkCudaErrors(cudaMalloc((float **) &_groundToSatEast,
+                    _nbytes_float));
+        checkCudaErrors(cudaMalloc((float **) &_groundToSatNorth,
+                    _nbytes_float));
     }
 
     // Destructor
@@ -34,6 +38,8 @@ namespace isce3 { namespace cuda { namespace geometry {
             checkCudaErrors(cudaFree(_localPsi));
             checkCudaErrors(cudaFree(_sim));
             checkCudaErrors(cudaFree(_crossTrack));
+            checkCudaErrors(cudaFree(_groundToSatEast));
+            checkCudaErrors(cudaFree(_groundToSatNorth));
         }
     }
 
@@ -85,5 +91,15 @@ namespace isce3 { namespace cuda { namespace geometry {
             checkCudaErrors(cudaMemcpy(&layers.crossTrack()[0], _crossTrack, _nbytes_double,
                             cudaMemcpyDeviceToHost));
         }
+        if (layers.hasGroundToSatEastRaster()) {
+            checkCudaErrors(cudaMemcpy(&layers.groundToSatEast()[0],
+                        _groundToSatEast, _nbytes_float,
+                        cudaMemcpyDeviceToHost));
+        }
+        if (layers.hasGroundToSatNorthRaster()) {
+            checkCudaErrors(cudaMemcpy(&layers.groundToSatNorth()[0],
+                        _groundToSatNorth, _nbytes_float,
+                        cudaMemcpyDeviceToHost));
+        }
     }
-} } }
+}

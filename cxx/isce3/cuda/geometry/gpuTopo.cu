@@ -1,8 +1,3 @@
-//-*- coding: utf-8 -*-
-//
-// Author: Bryan V. Riel, Joshua Cohen
-// Copyright: 2017-2018
-
 #include "gpuTopo.h"
 #include <cmath>
 
@@ -114,6 +109,12 @@ void setOutputTopoLayers(const Vec3& targetLLH,
         heading += 360;
     }
     layers.hdg(index, heading);
+
+    // unit groundToSatEast and groundToSatNorth
+    const Vec3 groundToSat = -satToGround;
+    const Vec3 enuGroundToSat = xyz2enu.dot(groundToSat).normalized();
+    layers.groundToSatEast(index, enuGroundToSat[0]);
+    layers.groundToSatNorth(index, enuGroundToSat[1]);
 
     // Project output coordinates to DEM coordinates
     Vec3 input_coords_llh;
@@ -308,5 +309,3 @@ runGPUTopo(const isce3::core::Ellipsoid & ellipsoid,
     checkCudaErrors(cudaFree(totalconv_d));
     checkCudaErrors(cudaFree(projOutput_d));
 }
-
-// end of file

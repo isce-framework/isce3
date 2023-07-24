@@ -67,15 +67,23 @@ void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
 
     // Write out multi-band topo VRT
     std::vector<Raster> rasterTopoVec = {
-            Raster(outdir + "/x.rdr"),        Raster(outdir + "/y.rdr"),
-            Raster(outdir + "/z.rdr"),        Raster(outdir + "/inc.rdr"),
-            Raster(outdir + "/hdg.rdr"),      Raster(outdir + "/localInc.rdr"),
-            Raster(outdir + "/localPsi.rdr"), Raster(outdir + "/simamp.rdr")};
+            Raster(outdir + "/x.rdr"),
+            Raster(outdir + "/y.rdr"),
+            Raster(outdir + "/z.rdr"),
+            Raster(outdir + "/inc.rdr"),
+            Raster(outdir + "/hdg.rdr"),
+            Raster(outdir + "/localInc.rdr"),
+            Raster(outdir + "/localPsi.rdr"),
+            Raster(outdir + "/simamp.rdr"),
+            Raster(outdir + "/los_east.rdr"),
+            Raster(outdir + "/los_north.rdr")
+    };
 
     // Add optional mask raster
     if (_computeMask) {
         rasterTopoVec.push_back(Raster(outdir + "/layoverShadowMask.rdr"));
     };
+
 
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec);
     // Set its EPSG code
@@ -88,12 +96,16 @@ void isce3::geometry::Topo::_topo(T& dem, Raster* xRaster, Raster* yRaster,
                                  Raster* heightRaster, Raster* incRaster,
                                  Raster* hdgRaster, Raster* localIncRaster,
                                  Raster* localPsiRaster, Raster* simRaster,
-                                 Raster* maskRaster) {
+                                 Raster* maskRaster,
+                                 Raster* groundToSatEastRaster,
+                                 Raster* groundToSatNorthRaster) {
+
     // Initialize a TopoLayers object to handle block data and raster data
     // Create rasters for individual layers (provide output raster sizes)
     TopoLayers layers(_linesPerBlock, xRaster, yRaster, heightRaster, incRaster,
                       hdgRaster, localIncRaster, localPsiRaster, simRaster,
-                      maskRaster);
+                      maskRaster, groundToSatEastRaster,
+                      groundToSatNorthRaster);
 
     // Set computeMask flag by pointer value
     computeMask(maskRaster != nullptr);
@@ -214,7 +226,8 @@ topo(Raster & demRaster, TopoLayers & layers)
                 totalconv += geostat;
 
                 // Save data in output arrays
-                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel, TCNbasis, demInterp);
+                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel,
+                        TCNbasis, demInterp);
 
             } // end OMP for loop pixels in block
         } // end for loop lines in block
@@ -378,20 +391,21 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 }
 
 
-void isce3::geometry::Topo::topo(isce3::io::Raster& demRaster,
+void isce3::geometry::Topo::topo(Raster& demRaster,
                                 const std::string& outdir) {
     _topo(demRaster, outdir);
 }
 
 
 void isce3::geometry::Topo::topo(
-        isce3::io::Raster& demRaster, isce3::io::Raster* xRaster,
-        isce3::io::Raster* yRaster, isce3::io::Raster* heightRaster,
-        isce3::io::Raster* incRaster, isce3::io::Raster* hdgRaster,
-        isce3::io::Raster* localIncRaster, isce3::io::Raster* localPsiRaster,
-        isce3::io::Raster* simRaster, isce3::io::Raster* maskRaster) {
+        Raster& demRaster, Raster* xRaster, Raster* yRaster,
+        Raster* heightRaster, Raster* incRaster, Raster* hdgRaster,
+        Raster* localIncRaster, Raster* localPsiRaster, Raster* simRaster,
+        Raster* maskRaster, Raster* groundToSatEastRaster,
+        Raster* groundToSatNorthRaster) {
     _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-          localIncRaster, localPsiRaster, simRaster, maskRaster);
+          localIncRaster, localPsiRaster, simRaster, maskRaster,
+          groundToSatEastRaster, groundToSatNorthRaster);
 }
 
 void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
@@ -400,13 +414,16 @@ void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
 }
 
 void isce3::geometry::Topo::topo(
-        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster* xRaster,
-        isce3::io::Raster* yRaster, isce3::io::Raster* heightRaster,
-        isce3::io::Raster* incRaster, isce3::io::Raster* hdgRaster,
-        isce3::io::Raster* localIncRaster, isce3::io::Raster* localPsiRaster,
-        isce3::io::Raster* simRaster, isce3::io::Raster* maskRaster) {
+        isce3::geometry::DEMInterpolator& demInterp, Raster* xRaster,
+        Raster* yRaster, Raster* heightRaster,
+        Raster* incRaster, Raster* hdgRaster,
+        Raster* localIncRaster, Raster* localPsiRaster,
+        Raster* simRaster, Raster* maskRaster,
+        Raster* groundToSatEastRaster,
+        Raster* groundToSatNorthRaster) {
     _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-          localIncRaster, localPsiRaster, simRaster, maskRaster);
+          localIncRaster, localPsiRaster, simRaster, maskRaster,
+          groundToSatEastRaster, groundToSatNorthRaster);
 }
 
 void isce3::geometry::Topo::
@@ -569,7 +586,9 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
             !layers.hasLocalIncRaster() &&
             !layers.hasLocalPsiRaster() &&
             !layers.hasSimRaster() &&
-            !layers.hasMaskRaster()) {
+            !layers.hasMaskRaster() &&
+            !layers.hasGroundToSatEastRaster() &&
+            !layers.hasGroundToSatNorthRaster()) {
         return;
     }
 
@@ -588,33 +607,48 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
     // Computation in ENU coordinates around target
     const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
-    const Vec3 enu = xyz2enu.dot(satToGround);
-    const double cosalpha = std::abs(enu[2]) / enu.norm();
+    const Vec3 enuSatToGround = xyz2enu.dot(satToGround);
+    const double cosalpha = std::abs(enuSatToGround[2]) / enuSatToGround.norm();
 
     // Incidence angle
     layers.inc(line, bin, std::acos(cosalpha) * degrees);
 
+    // Compute vector from ground point (targetXYZ) to satellite (pos), convert
+    // to unit ENU, and save to corresponding layer
+    if (layers.hasGroundToSatEastRaster() ||
+            layers.hasGroundToSatNorthRaster()) {
+        const Vec3 vecGroundToSat = -satToGround;
+        const Vec3 enuGroundToSat = xyz2enu.dot(vecGroundToSat).normalized();
+        if (layers.hasGroundToSatEastRaster())
+            layers.groundToSatEast(line, bin, enuGroundToSat[0]);
+        if (layers.hasGroundToSatNorthRaster())
+            layers.groundToSatNorth(line, bin, enuGroundToSat[1]);
+    }
+
+    if (layers.hasHdgRaster()) {
+        // Heading considering zero-Doppler grid and anti-clock. ref. starting from the East
+        float heading;
+        if (_radarGrid.lookSide() == isce3::core::LookSide::Left) {
+            heading = (std::atan2(enuSatToGround[1],
+                        enuSatToGround[0]) - (0.5*M_PI)) * degrees;
+        } else {
+            heading = (std::atan2(enuSatToGround[1],
+                        enuSatToGround[0]) + (0.5*M_PI)) * degrees;
+        }
+        if (heading > 180) {
+            heading -= 360;
+        } else if (heading < -180) {
+            heading += 360;
+        }
+        layers.hdg(line, bin, heading);
+    }
+
     // Skip other computations if their rasters aren't set
-    if (!layers.hasHdgRaster() &&
-            !layers.hasLocalIncRaster() &&
+    if (!layers.hasLocalIncRaster() &&
             !layers.hasLocalPsiRaster() &&
             !layers.hasSimRaster()) {
         return;
     }
-
-    // Heading considering zero-Doppler grid and anti-clock. ref. starting from the East
-    double heading;
-    if (_radarGrid.lookSide() == isce3::core::LookSide::Left) {
-        heading = (std::atan2(enu[1], enu[0]) - (0.5*M_PI)) * degrees;
-    } else {
-        heading = (std::atan2(enu[1], enu[0]) + (0.5*M_PI)) * degrees;
-    }
-    if (heading > 180) {
-        heading -= 360;
-    } else if (heading < -180) {
-        heading += 360;
-    }
-    layers.hdg(line, bin, heading);
 
     // Project output coordinates to DEM coordinates
     auto input_coords_llh = _proj->inverse({x, y, targetLLH[2]});
@@ -653,7 +687,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     double beta = std::copysign((bb - aa) / dy, (bb - aa) * demInterp.deltaY());
 
     // Compute local incidence angle
-    const Vec3 enunorm = enu.normalized();
+    const Vec3 enunorm = enuSatToGround.normalized();
     const Vec3 slopevec {alpha, beta, -1.};
     const double costheta = enunorm.dot(slopevec) / slopevec.norm();
     layers.localInc(line, bin, std::acos(costheta)*degrees);
@@ -857,7 +891,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                 }
             }
         }
-    
+
     _Pragma("omp atomic")
         num_lines_done++;
     if (line % std::max((int) (layers.length() / 100), 1) == 0)
@@ -866,7 +900,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                    (int) block + 1, (int) n_blocks,
                    (int) (num_lines_done * 1e2 / layers.length())),
                    fflush(stdout);
-                        
+
     } // end loop lines
 
 printf("\rLayover/shadow mask progress (block %d/%d): 100%%\n",

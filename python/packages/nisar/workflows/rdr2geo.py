@@ -116,11 +116,12 @@ def run(cfg):
             heading_raster, local_incidence_raster, local_psi_raster,\
             simulated_amplitude_raster, shadow_raster = raster_list
 
-        # run topo
+        # run topo - with east and north unit vector components of ground to
+        # satellite layers permanently disabled.
         rdr2geo_obj.topo(dem_raster, x_raster, y_raster, height_raster,
                          incidence_raster, heading_raster, local_incidence_raster,
                          local_psi_raster, simulated_amplitude_raster,
-                         shadow_raster)
+                         shadow_raster, None, None)
 
         # remove undesired/None rasters from raster list
         raster_list = [raster for raster in raster_list if raster is not None]

@@ -40,6 +40,8 @@ using isce3::geometry::TopoLayers;
  * <li> locaPsi.rdr - Local projection angle (degrees) at target
  * <li> simamp.rdr - Simulated amplitude image.
  * <li> layoverShadowMask.rdr - Layover and shadow image.
+ * <li> los_east.rdr - East component of ground to satellite unit vector
+ * <li> los_north.rdr - North component of ground to satellite unit vector
  * </ul>*/
 void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster,
@@ -68,7 +70,9 @@ topo(Raster & demRaster,
         Raster(outdir + "/hdg.rdr" ),
         Raster(outdir + "/localInc.rdr" ),
         Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
+        Raster(outdir + "/simamp.rdr" ),
+        Raster(outdir + "/los_east.rdr" ),
+        Raster(outdir + "/los_north.rdr" )
     };
 
     // Add optional mask raster
@@ -94,17 +98,21 @@ topo(Raster & demRaster,
   * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
   * @param[in] simRaster output raster for simulated amplitude image.
-  * @param[in] maskRaster output raster for layover/shadow mask. */
+  * @param[in] maskRaster output raster for layover/shadow mask.
+  * @param[in] groundToSatEastRaster output for east component of ground to satellite unit vector
+  * @param[in] groundToSatNorthRaster output for north component of ground to satellite unit vector
+ */
 void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster * xRaster, Raster * yRaster, Raster * heightRaster,
      Raster * incRaster, Raster * hdgRaster, Raster * localIncRaster, Raster * localPsiRaster,
-     Raster * simRaster, Raster * maskRaster) {
+     Raster * simRaster, Raster * maskRaster, Raster * groundToSatEastRaster,
+     Raster * groundToSatNorthRaster) {
 
     // Initialize a TopoLayers object to handle block data and raster data
     // Create rasters for individual layers (provide output raster sizes)
     TopoLayers layers(linesPerBlock(), xRaster, yRaster, heightRaster, incRaster,
             hdgRaster, localIncRaster, localPsiRaster, simRaster,
-            maskRaster);
+            maskRaster, groundToSatEastRaster, groundToSatNorthRaster);
 
     // Set computeMask flag by pointer value
     this->computeMask(maskRaster != nullptr);

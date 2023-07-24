@@ -49,7 +49,9 @@ class isce3::cuda::geometry::Topo : public isce3::geometry::Topo {
                   isce3::io::Raster * localIncRaster = nullptr,
 				  isce3::io::Raster * localPsiRaster = nullptr,
                   isce3::io::Raster * simRaster = nullptr,
-				  isce3::io::Raster * maskRaster = nullptr);
+				  isce3::io::Raster * maskRaster = nullptr,
+                  isce3::io::Raster * groundToSatEastRaster = nullptr,
+                  isce3::io::Raster * groundToSatNorthRaster = nullptr);
 
         /** Run topo - main entrypoint; internal creation of topo rasters */
         void topo(isce3::io::Raster &, isce3::geometry::TopoLayers &);

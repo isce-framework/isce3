@@ -77,6 +77,8 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::overload_cast<const double&>(&RadarGridParameters::sensingStart))
         .def_property_readonly("sensing_mid", &RadarGridParameters::sensingMid)
         .def_property_readonly("sensing_stop", &RadarGridParameters::sensingStop)
+        .def("sensing_time", &RadarGridParameters::sensingTime,
+                py::arg("line"))
         .def_property_readonly("sensing_times", [](const RadarGridParameters& self) {
                 return isce3::core::Linspace(self.sensingStart(),
                         1.0 / self.prf(), self.length());

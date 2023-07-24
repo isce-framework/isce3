@@ -27,6 +27,8 @@ void addsubmodule_geometry(py::module & m)
         pyRadarGridBoundingBox(geometry, "RadarGridBoundingBox");
     py::class_<isce3::geometry::detail::Geo2RdrParams>
         pyGeo2RdrParams(geometry, "Geo2RdrParams");
+    py::class_<isce3::geometry::detail::Rdr2GeoParams>
+        pyRdr2GeoParams(geometry, "Rdr2GeoParams");
 
     // forward declare bound enums
     py::enum_<isce3::geometry::rtcInputTerrainRadiometry>
@@ -51,6 +53,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding(pyRtcAreaBetaMode);
     addbinding(pyRadarGridBoundingBox);
     addbinding(pyGeo2RdrParams);
+    addbinding(pyRdr2GeoParams);
 
     addbinding_apply_rtc(geometry);
     addbinding_compute_rtc(geometry);
