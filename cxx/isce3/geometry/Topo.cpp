@@ -327,6 +327,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
             // Initialize orbital data for this azimuth line
             Basis TCNbasis;
             Vec3 pos, vel;
+
             _initAzimuthLine(line, tline, pos, vel, TCNbasis);
             satPosition[blockLine] = pos;
 
@@ -392,7 +393,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 
 
 void isce3::geometry::Topo::topo(Raster& demRaster,
-                                const std::string& outdir) {
+                                 const std::string& outdir) {
     _topo(demRaster, outdir);
 }
 
@@ -709,6 +710,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.localPsi(line, bin, std::acos(cospsi) * degrees);
 }
 
+
 void isce3::geometry::Topo::
 setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                  std::vector<Vec3>& satPosition, size_t block,
@@ -719,10 +721,6 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
     // Compute layover on oversampled grid
     const int gridWidth = 2 * width;
 
-    // Allocate working valarrays
-    std::valarray<double> x(width), y(width), ctrack(width), ctrackGrid(gridWidth);
-    std::valarray<double> slantRangeGrid(gridWidth);
-    std::valarray<short> maskGrid(gridWidth);
 
     // Initialize mask to zero for this block
     layers.mask() = 0;
@@ -741,13 +739,19 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
     long long num_lines_done = 0;
 
     // Loop over lines in block
-    #pragma omp parallel for firstprivate(x, y, ctrack, ctrackGrid, \
-                                          slantRangeGrid, maskGrid) \
-                             shared(num_lines_done)
+#pragma omp parallel for shared(num_lines_done)
     for (size_t line = 0; line < layers.length(); ++line) {
 
+        // Allocate working valarrays
+        std::valarray<double> x(width), y(width), ctrack(width);
+        std::valarray<double> ctrackGrid(gridWidth);
+        std::valarray<double> slantRangeGrid(gridWidth);
+        std::valarray<double> elevationAngleGrid(gridWidth);
+        std::valarray<short> maskGrid(gridWidth);
+        std::valarray<short> mask(width);
+
         // Cache satellite position for this line
-        const Vec3& xyzsat = satPosition[line];
+        const Vec3& xyzSat = satPosition[line];
 
         // Copy cross-track, x, and y values for the line
         for (int i = 0; i < width; ++i) {
@@ -777,7 +781,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                 k = 0;
             }
 
-            // Bilinear interpolation to estimate DEM x/y coordinates
+            // Linear interpolation to estimate DEM x/y coordinates
             const double c1 = ctrack[k];
             const double c2 = ctrack[k+1];
             const double frac1 = (c2 - crossTrack) / (c2 - c1);
@@ -789,50 +793,51 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             Vec3 demXYZ = getDemCoords(x_grid, y_grid, demInterp, _proj);
 
             // Convert DEM XYZ to ECEF XYZ
-            Vec3 llh, xyz, satToGround;
-            demInterp.proj()->inverse(demXYZ, llh);
-            _ellipsoid.lonLatToXyz(llh, xyz);
+            Vec3 llhTarget, xyzTarget;
+            demInterp.proj()->inverse(demXYZ, llhTarget);
+            _ellipsoid.lonLatToXyz(llhTarget, xyzTarget);
 
             // Compute and save slant range
-            satToGround = xyz - xyzsat;
-            slantRangeGrid[i] = satToGround.norm();
+            const Vec3 targetToSat = xyzSat - xyzTarget;
+            slantRangeGrid[i] = targetToSat.norm();
+
+            // Compute geocentric elevation grid (not geodedic!)
+            const double cosElevation = (xyzSat.dot(targetToSat) / 
+                (xyzSat.norm() * targetToSat.norm()));
+            elevationAngleGrid[i] = std::acos(cosElevation);
+        }
+
+        // Traverse from near nadir to far nadir on grid spacing
+        maskGrid = 0;
+        double maxElevationAngle = elevationAngleGrid[0];
+        for (long i = 1; i < gridWidth; ++i) {
+            if (maxElevationAngle >= elevationAngleGrid[i]) {
+                maskGrid[i] = isce3::core::SHADOW_VALUE;                          
+            } else {
+                maxElevationAngle = elevationAngleGrid[i];
+            }
         }
 
         // Now sort cross-track grid in terms of slant range grid
-        isce3::core::insertionSort(slantRangeGrid, ctrackGrid);
+        isce3::core::insertionSort(slantRangeGrid, ctrackGrid, maskGrid);
 
-        // Traverse from near range to far range on original spacing for shadow detection
-        double minIncAngle = layers.inc(line, 0);
-        for (int i = 1; i < width; ++i) {
-            const double inc = layers.inc(line, i);
-            // Test shadow
-            if (inc <= minIncAngle) {
-                layers.mask(line, i, isce3::core::SHADOW_VALUE);
-            } else {
-                minIncAngle = inc;
-            }
-        }
-
-        // Traverse from far range to near range on original spacing for shadow detection
-        double maxIncAngle = layers.inc(line, width - 1);
-        for (int i = width - 2; i >= 0; --i) {
-            const double inc = layers.inc(line, i);
-            // Test shadow
-            if (inc >= maxIncAngle) {
-                layers.mask(line, i, isce3::core::SHADOW_VALUE);
-            } else {
-                maxIncAngle = inc;
-            }
-        }
-
-        // Traverse from near range to far range on grid spacing for layover detection
-        maskGrid = 0;
+       // Traverse from near range to far range on grid spacing for layover detection
         double minCrossTrack = ctrackGrid[0];
         for (int i = 1; i < gridWidth; ++i) {
             const double crossTrack = ctrackGrid[i];
             // Test layover
             if (crossTrack <= minCrossTrack) {
-                maskGrid[i] = isce3::core::LAYOVER_VALUE;
+                /*
+                We use bitwise-or (|) to apply new masking values while
+                preserving any existing masks
+
+                BINARY REPRESENTATION ,   CLASSIFICATION
+                       0b0000         ,    (NOT_MASKED)
+                       0b0001         ,     (SHADOW)
+                       0b0010         ,     (LAYOVER)
+                       0b0011         ,  (LAYOVER & SHADOW)
+                */
+                maskGrid[i] |= isce3::core::LAYOVER_VALUE;
             } else {
                 minCrossTrack = crossTrack;
             }
@@ -844,7 +849,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double crossTrack = ctrackGrid[i];
             // Test layover
             if (crossTrack >= maxCrossTrack) {
-                maskGrid[i] = isce3::core::LAYOVER_VALUE;
+                maskGrid[i] |= isce3::core::LAYOVER_VALUE;
             } else {
                 maxCrossTrack = crossTrack;
             }
@@ -852,12 +857,11 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
 
         // Resample maskGrid to original spacing
         for (int i = 0; i < gridWidth; ++i) {
-            if (maskGrid[i] > 0) {
+            if (maskGrid[i]) {
 
-                const long slant_range_index = static_cast<long>(
-                    std::floor(
-                        (slantRangeGrid[i] - _radarGrid.startingRange()) /
-                        _radarGrid.rangePixelSpacing()));
+                const long slant_range_index = 
+                    lround(std::round(_radarGrid.slantRangeIndex(
+                        slantRangeGrid[i])));
 
                 // If out of bounds, escape
                 if (slant_range_index < 0 || slant_range_index >= width) {
@@ -868,22 +872,14 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                 const short mask_value = layers.mask(line, slant_range_index);
 
                 /*
-                `mask_grid[i]` can be 0 or 0b0010 (LAYOVER_VALUE: decimal value 2)
-                `mask_value` can be 0 or 0b0001 (SHADOW_VALUE: decimal value 1)
-                             or 0b0010 (LAYOVER_VALUE: decimal value 2)
+                We use bitwise-or (|) to apply new masking values while
+                preserving any existing masks
 
-                The operator "|" represents the bitwise-or of `mask_value` and
-                `mask_grid[i]`:
-
-                `mask_grid[i]`   ,      `mask_value`    ,     `new_mask_value`
-                      0          ,  0                   ,  0
-                      0          ,  1 (SHADOW)          ,  1 (SHADOW)
-                      0          ,  2 (LAYOVER)         ,  2 (LAYOVER)
-                      0          ,  3 (LAYOVER & SHADOW),  3 (LAYOVER & SHADOW)
-                      1 (SHADOW) ,  0                   ,  1 (SHADOW)
-                      1 (SHADOW) ,  1 (SHADOW)          ,  1 (SHADOW)
-                      1 (SHADOW) ,  2 (LAYOVER)         ,  3 (LAYOVER & SHADOW)
-                      1 (SHADOW) ,  3 (LAYOVER & SHADOW),  3 (LAYOVER & SHADOW)
+                BINARY REPRESENTATION ,   CLASSIFICATION
+                       0b0000         ,    (NOT_MASKED)
+                       0b0001         ,     (SHADOW)
+                       0b0010         ,     (LAYOVER)
+                       0b0011         ,  (LAYOVER & SHADOW)
                 */
                 const short new_mask_value = mask_value | maskGrid[i];
                 if (mask_value != new_mask_value) {
@@ -892,18 +888,18 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             }
         }
 
-    _Pragma("omp atomic")
-        num_lines_done++;
-    if (line % std::max((int) (layers.length() / 100), 1) == 0)
-        _Pragma("omp critical")
-            printf("\rLayover/shadow mask progress (block %d/%d): %d%%",
-                   (int) block + 1, (int) n_blocks,
-                   (int) (num_lines_done * 1e2 / layers.length())),
-                   fflush(stdout);
+        _Pragma("omp atomic")
+            num_lines_done++;
+        if (line % std::max((int) (layers.length() / 100), 1) == 0)
+            _Pragma("omp critical")
+                printf("\rLayover/shadow mask progress (block %d/%d): %d%%",
+                    (int) block + 1, (int) n_blocks,
+                    (int) (num_lines_done * 1e2 / layers.length())),
+                    fflush(stdout);
 
     } // end loop lines
 
-printf("\rLayover/shadow mask progress (block %d/%d): 100%%\n",
-       (int) block + 1, (int) n_blocks), fflush(stdout);
+    printf("\rLayover/shadow mask progress (block %d/%d): 100%%\n",
+        (int) block + 1, (int) n_blocks), fflush(stdout);
 }
 

@@ -110,10 +110,14 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::arg("azlooks"), py::arg("rglooks"))
         .def("slant_range", &RadarGridParameters::slantRange,
                 py::arg("sample"))
+        .def("slant_range_index", &RadarGridParameters::slantRangeIndex,
+                py::arg("slant_range"))
         .def_property_readonly("slant_ranges", [](const RadarGridParameters& self) {
                 return isce3::core::Linspace(self.startingRange(),
                         self.rangePixelSpacing(), self.width());
         })
+        .def("azimuth_index", &RadarGridParameters::azimuthIndex,
+                py::arg("az_time"))
         // slice to get subset of RGP
         .def("__getitem__", [](const RadarGridParameters& self, py::tuple key) {
                 if (key.size() != 2) {
