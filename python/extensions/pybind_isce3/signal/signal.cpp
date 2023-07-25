@@ -29,10 +29,8 @@ void addsubmodule_signal(py::module & m)
     addbinding_convolve2D<std::complex<float>>(m_signal);
     addbinding_convolve2D<double>(m_signal);
     addbinding_convolve2D<std::complex<double>>(m_signal);
-    addbinding_multilook<EArray2D<float>, EArray2D<float>>(m_signal);
-    addbinding_multilook<EArray2D<std::complex<float>>, EArray2D<float>>(
-            m_signal);
-    addbinding_multilook<EArray2D<double>, EArray2D<double>>(m_signal);
-    addbinding_multilook<EArray2D<std::complex<double>>, EArray2D<double>>(
-            m_signal);
+    addbinding_multilook<EArray2D<float>>(m_signal);
+    addbinding_multilook<EArray2D<std::complex<float>>>(m_signal);
+    addbinding_multilook<EArray2D<double>>(m_signal);
+    addbinding_multilook<EArray2D<std::complex<double>>>(m_signal);
 }
