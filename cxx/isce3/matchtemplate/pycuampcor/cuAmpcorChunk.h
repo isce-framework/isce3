@@ -12,6 +12,7 @@
 #include "cuArrays.h"
 #include "cuAmpcorParameter.h"
 #include "cuOverSampler.h"
+#include "cuSincOverSampler.h"
 #include "cuCorrFrequency.h"
 #include "cuCorrNormalizer.h"
 
@@ -60,6 +61,7 @@ private:
 
     // oversampling processor for correlation surface
     cuOverSamplerR2R *corrOverSampler;
+    cuSincOverSamplerR2R *corrSincOverSampler;
 
     // cross-correlation processor with frequency domain algorithm
     cuFreqCorrelator *cuCorrFreqDomain, *cuCorrFreqDomain_OverSampled;
