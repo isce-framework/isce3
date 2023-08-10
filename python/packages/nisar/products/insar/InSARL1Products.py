@@ -3,11 +3,8 @@ from isce3.core import LUT2d
 from isce3.product import RadarGridParameters
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
-
-from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSARBase import InSARWriter
-from .product_paths import CommonPaths
-
+from .product_paths import L1GroupsPaths
 
 class L1InSARWriter(InSARWriter):
     """
@@ -23,40 +20,23 @@ class L1InSARWriter(InSARWriter):
         """
         super().__init__(**kwds)
 
-    def add_identification_group(self):
-        """
-        Add identification group
-        """
-        super().add_identification_group()
+        # Level 1 product group path
+        self.group_paths = L1GroupsPaths()
         
-        dst_id_group = self.require_group(CommonPaths.IdentificationPath)
-        ds_params = [
-            DatasetParams(
-                "isGeocoded",
-                np.bool_(False),
-                "Flag to indicate radar geometry or geocoded product",
-            ),
-            DatasetParams(
-                "productLevel",
-                "L1",
-                (
-                    "Product level. L0A: Unprocessed instrument data; L0B:"
-                    " Reformatted,unprocessed instrument data; L1: Processed"
-                    " instrument data in radar coordinates system; and L2:"
-                    " Processed instrument data in geocoded coordinates system"
-                ),
-            ),
-        ]
-        for ds_param in ds_params:
-            add_dataset_and_attrs(dst_id_group, ds_param)
-
+    def save_to_hdf5(self):
+        """
+        write to the HDF5
+        """
+        super().save_to_hdf5()
+        
+        self.add_geolocation_grid_cubes()
+        self.add_swaths_to_hdf5()
+        
     def _get_geolocation_grid_cubes_path(self):
         """
-        Get the geolocation grid cube path.
-        To change the path for the children classes, need to overwrite this function
-        
+        Get the geolocation grid cube path.        
         """
-        return ""
+        return self.group_paths.GeolocationGridPath
 
     def add_geolocation_grid_cubes(self):
         """
@@ -104,7 +84,7 @@ class L1InSARWriter(InSARWriter):
             delta_range=10,
         )
 
-        # add geolocation grid cubes to hdf5
+        # Add geolocation grid cubes to hdf5
         add_geolocation_grid_cubes_to_hdf5(
             self,
             geolocationGrid_path,
@@ -117,7 +97,7 @@ class L1InSARWriter(InSARWriter):
             **tol,
         )
 
-        # add the min and max attributes to the dataset
+        # Add the min and max attributes to the dataset
         ds_names = [
             "incidenceAngle",
             "losUnitVectorX",
@@ -132,3 +112,29 @@ class L1InSARWriter(InSARWriter):
             valid_min, valid_max = np.nanmin(ds), np.nanmax(ds)
             geolocation_grid_group[ds_name].attrs["min"] = valid_min
             geolocation_grid_group[ds_name].attrs["max"] = valid_max
+            
+            
+    def add_algorithms_to_procinfo(self):
+        """
+        Add the algorithms group to the processingInformation group
+        """
+
+        algo_group = super().add_algorithms_to_procinfo()
+        self.add_coregistration_to_algo(algo_group)
+        self.add_interferogramformation_to_algo(algo_group)
+
+    def add_parameters_to_procinfo(self):
+        """
+        Add the parameters group to the "processingInformation" group
+        """
+        
+        super().add_parameters_to_procinfo()
+        
+        self.add_interferogram_to_procinfo_params()
+        self.add_pixeloffsets_to_procinfo_params()
+
+    def add_swaths_to_hdf5(self):
+        """
+        Add Swaths to the HDF5
+        """
+        self.require_group(self.group_paths.SwathsPath)

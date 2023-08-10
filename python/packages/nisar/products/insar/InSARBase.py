@@ -1,4 +1,4 @@
-
+import os
 from datetime import datetime
 from typing import Any, Optional
 
@@ -7,9 +7,10 @@ import numpy as np
 from isce3.core import DateTime
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import get_validated_file_path
+from .common import ISCE3_VERSION, InSARProductsInfo, get_validated_file_path
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .product_paths import CommonPaths
 
@@ -52,7 +53,6 @@ class InSARWriter(h5py.File):
         - runconfig_path (str): path of the reference RSLC
         - external_orbit_path (Optional[str]): path of the external orbit file
         - epoch (Optional[Datetime]): the reference datetime for the orbit
-
         """
 
         super().__init__(**kwds)
@@ -73,6 +73,12 @@ class InSARWriter(h5py.File):
             "list_of_frequencies"
         ]
 
+        # group paths
+        self.group_paths = CommonPaths()
+
+        # product information
+        self.product_info = InSARProductsInfo.Base()
+        
         # Epoch time
         self.epoch = epoch
 
@@ -92,13 +98,22 @@ class InSARWriter(h5py.File):
 
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
-
-        self.ref_h5py_file_obj = h5py.File(
-            self.ref_h5_slc_file, "r", libver="latest", swmr=True
-        )
-        self.sec_h5py_file_obj = h5py.File(
-            self.sec_h5_slc_file, "r", libver="latest", swmr=True
-        )
+        
+        # Open the reference file
+        try:
+            self.ref_h5py_file_obj = h5py.File(
+                self.ref_h5_slc_file, "r", libver="latest", swmr=True
+            )
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Cannot Open the {self.ref_h5_slc_file} file")
+        
+        # Open the secondary file
+        try:
+            self.sec_h5py_file_obj = h5py.File(
+                self.sec_h5_slc_file, "r", libver="latest", swmr=True
+            )
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Cannot Open the {self.sec_h5_slc_file} file")
 
     def add_root_attrs(self):
         """
@@ -109,6 +124,660 @@ class InSARWriter(h5py.File):
         self.attrs["institution"] = np.string_("NASA JPL")
         self.attrs["mission_name"] = np.string_("NISAR")
 
+    def save_to_hdf5(self):
+        """
+        Write to the HDF5
+        """
+        self.add_root_attrs()
+        self.add_identification_to_hdf5()
+        self.add_common_metadata_to_hdf5()
+        self.add_procinfo_to_metadata()
+
+    def add_procinfo_to_metadata(self):
+        """
+        Add processing information to metadata
+        
+        Return
+        ------
+        group (h5py.Group): the processing information group object
+        """
+        group = self.require_group(self.group_paths.ProcessingInformationPath)
+        self.add_algorithms_to_procinfo()
+        self.add_inputs_to_procinfo(self.runconfig_path)
+        self.add_parameters_to_procinfo()
+        
+        return group
+    
+    def add_algorithms_to_procinfo(self):
+        """
+        Add the algorithm to the processing information
+        
+        Return
+        ------
+        algo_group (h5py.Group): the algorithm group object
+        """
+
+        algo_group = self.require_group(self.group_paths.AlgorithmsPath)
+
+        software_version =  DatasetParams(
+            "softwareVersion",
+            np.string_(ISCE3_VERSION),
+            np.string_("Software version used for processing"),
+            )
+        
+        add_dataset_and_attrs(algo_group, software_version)
+        
+        return algo_group
+        
+    def add_common_to_procinfo_params(self):
+        """
+        Add the common group to the "processingInformation/parameters" group
+        """
+
+        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+            doppler_centroid_path = f"{self.ref_rslc.ProcessingInformationPath}/parameters/frequency{freq}"
+            doppler_bandwidth_path = (
+                f"{self.ref_rslc.SwathPath}/frequency{freq}"
+            )
+            doppler_centroid_group = self.ref_h5py_file_obj[
+                doppler_centroid_path
+            ]
+            doppler_bandwidth_group = self.ref_h5py_file_obj[
+                doppler_bandwidth_path
+            ]
+            common_group_name = (
+                f"{self.group_paths.ParametersPath}/common/frequency{freq}"
+            )
+            common_group = self.require_group(common_group_name)
+
+            self._copy_dataset_by_name(
+                doppler_centroid_group, "dopplerCentroid", common_group
+            )
+            self._copy_dataset_by_name(
+                doppler_bandwidth_group,
+                "processedAzimuthBandwidth",
+                common_group,
+                "dopplerBandwidth",
+            )
+
+    def add_RSLC_to_procinfo_params(self, name: str):
+        """
+        Add the RSLC to "processingInformation/parameters"
+        
+        Return
+        ------
+        group (h5py.Group): the RSLC group object
+        """
+
+        if name.lower() == "reference":
+            h5py_file_obj = self.ref_h5py_file_obj
+            rslc = self.ref_rslc
+        else:
+            h5py_file_obj = self.sec_h5py_file_obj
+            rslc = self.sec_rslc
+
+        try:
+            rfi_mitigation = h5py_file_obj[
+                f"{rslc.ProcessingInformationPath}/algorithms/rfiMitigation"
+            ][()]
+        except KeyError:
+            # no RFI mitigation is found
+            rfi_mitigation = None
+
+        rfi_mitigation_flag = False
+        if (rfi_mitigation is not None) and (rfi_mitigation != ""):
+            rfi_mitigation_flag = True
+
+        ds_params = [
+            DatasetParams(
+                "rfiCorrectionApplied",
+                np.bool_(rfi_mitigation_flag),
+                np.string_(
+                    "Flag to indicate if RFI correction has been applied"
+                    " to reference RSLC"
+                ),
+            ),
+            self._get_mixed_mode(),
+        ]
+
+        group = self.require_group(f"{self.group_paths.ParametersPath}/{name}")
+        parameters_group = h5py_file_obj[
+            f"{rslc.ProcessingInformationPath}/parameters"
+        ]
+        self._copy_dataset_by_name(
+            parameters_group, "referenceTerrainHeight", group
+        )
+        for ds_param in ds_params:
+            add_dataset_and_attrs(group, ds_param)
+
+        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+            rslc_group_frequecy_name = (
+                f"{self.group_paths.ParametersPath}/{name}/frequency{freq}"
+            )
+            rslc_frequency_group = self.require_group(rslc_group_frequecy_name)
+
+            swath_frequency_path = f"{rslc.SwathPath}/frequency{freq}/"
+            swath_frequency_group = h5py_file_obj[swath_frequency_path]
+
+            self._copy_dataset_by_name(
+                swath_frequency_group,
+                "slantRangeSpacing",
+                rslc_frequency_group,
+            )
+            self._copy_dataset_by_name(
+                swath_frequency_group,
+                "processedRangeBandwidth",
+                rslc_frequency_group,
+                "rangeBandwidth",
+            )
+            self._copy_dataset_by_name(
+                swath_frequency_group,
+                "processedAzimuthBandwidth",
+                rslc_frequency_group,
+                "azimuthBandwidth",
+            )
+
+            swath_group = h5py_file_obj[rslc.SwathPath]
+            self._copy_dataset_by_name(
+                swath_group, "zeroDopplerTimeSpacing", rslc_frequency_group
+            )
+
+            doppler_centroid_group = h5py_file_obj[
+                f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
+            ]
+            self._copy_dataset_by_name(
+                doppler_centroid_group, "dopplerCentroid", rslc_frequency_group
+            )
+            
+        return group
+        
+    def add_coregistration_to_algo(self, algo_group: h5py.Group):
+        """
+        Add the coregistration parameters to the "processingInfromation/algorithms" group
+        
+        Parameters
+        ------
+        - algo_group (h5py.Group): the algorithm group object
+        
+        Return
+        ------
+        - coregistration_group (h5py.Group): the coregistration group object
+        """
+
+        pcfg = self.cfg["processing"]
+        dense_offsets = pcfg["dense_offsets"]["enabled"]
+        offset_product = pcfg["offsets_product"]["enabled"]
+
+        if dense_offsets:
+            name = "dense_offsets"
+        elif offset_product:
+            name = "offsets_product"
+
+        coreg_method = (
+            "Coarse geometry coregistration with DEM and orbit ephemeris"
+        )
+
+        cross_correlation_domain = "None"
+        outlier_filling_method = "None"
+        filter_kernel_algorithm = "None"
+        culling_metric = "None"
+
+        if dense_offsets or offset_product:
+            coreg_method = f"{coreg_method} with cross-correlation refinement"
+            cross_correlation_domain = pcfg[name]["cross_correlation_domain"]
+            if pcfg["rubbersheet"]["enabled"]:
+                outlier_filling_method = pcfg["rubbersheet"][
+                    "outlier_filling_method"
+                ]
+                filter_kernel_algorithm = pcfg["rubbersheet"]["offsets_filter"]
+                culling_metric = pcfg["rubbersheet"]["culling_metric"]
+
+                if outlier_filling_method == "fill_smoothed":
+                    description = (
+                        "iterative filling algorithm using the mean value"
+                        " computed in a neighboorhood centered on the pixel to"
+                        " fill"
+                    )
+                else:
+                    description = "Nearest neighboor interpolation"
+
+        algo_coregistration_ds_params = [
+            DatasetParams(
+                "coregistrationMethod",
+                np.string_(coreg_method),
+                np.string_("RSLC coregistration method"),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+            DatasetParams(
+                "crossCorrelation",
+                np.string_(cross_correlation_domain),
+                np.string_(
+                    "Cross-correlation algorithm for sub-pixel offsets"
+                    f" computation in {cross_correlation_domain} domain"
+                ),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+            DatasetParams(
+                "crossCorrelationFilling",
+                np.string_(outlier_filling_method),
+                np.string_(description),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+            DatasetParams(
+                "crossCorrelationFilterKernel",
+                np.string_(filter_kernel_algorithm),
+                np.string_(
+                    "Filtering algorithm for cross-correlation offsets"
+                ),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+            DatasetParams(
+                "crossCorrelationOutliers",
+                np.string_(culling_metric),
+                np.string_("Outliers identification algorithm"),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+            DatasetParams(
+                "geometryCoregistration",
+                np.string_(
+                    "Range doppler to geogrid then geogrid to range doppler"
+                ),
+                np.string_("Geometry coregistration algorithm"),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+            DatasetParams(
+                "resampling",
+                np.string_("sinc"),
+                np.string_("Secondary RSLC resampling algorithm"),
+                {
+                    "algorithm_type": np.string_("RSLC coregistration"),
+                },
+            ),
+        ]
+        
+        coregistration_group = algo_group.require_group("coregistration")
+        for ds_param in algo_coregistration_ds_params:
+            add_dataset_and_attrs(coregistration_group, ds_param)
+            
+        return coregistration_group
+
+    def add_interferogramformation_to_algo(self, algo_group: h5py.Group):
+        """
+        Add the InterferogramFormation to "processingInformation/algorithms" group
+        
+        Parameters
+        ------
+        - algo_group (h5py.Group): the algorithm group object
+        
+        Return
+        ------
+        - igram_formation_group (h5py.Group): the interfergram formation group object
+        """
+        
+        flatten_method = "None"
+        pcfg = self.cfg["processing"]
+
+        if pcfg["crossmul"]["flatten"]:
+            flatten_method = "With geometry offsets"
+
+        multilooking_method = "Spatial moving average with decimation"
+        wrapped_interferogram_filtering_mdethod = pcfg["filter_interferogram"][
+            "filter_type"
+        ]
+
+        algo_intefergramformation_ds_params = [
+            DatasetParams(
+                "flatteningMethod",
+                np.string_(flatten_method),
+                np.string_(
+                    "Algorithm used to flatten the wrapped interferogram"
+                ),
+                {
+                    #TODO: The description also needs to be changed in the product specs
+                    "algorithm_type": np.string_("Interferogram formation"),
+                },
+            ),
+            DatasetParams(
+                "multilooking",
+                np.string_(multilooking_method),
+                np.string_("Multilooking algorithm"),
+                {
+                    "algorithm_type": np.string_("Interferogram formation"),
+                },
+            ),
+            DatasetParams(
+                "wrappedInterferogramFiltering",
+                np.string_(wrapped_interferogram_filtering_mdethod),
+                np.string_(
+                    "Algorithm to filter wrapped interferogram prior to phase"
+                    " unwrapping"
+                ),
+                {
+                    "algorithm_type": np.string_("Interferogram formation"),
+                },
+            ),
+        ]
+
+        igram_formation_group = algo_group.require_group("interferogramFormation")
+        for ds_param in algo_intefergramformation_ds_params:
+            add_dataset_and_attrs(igram_formation_group, ds_param)
+            
+    def add_interferogram_to_procinfo_params(self):
+        """
+        Add the interferogram to "processingInformation/parameters"
+        """
+
+        pcfg_crossmul = self.cfg["processing"]["crossmul"]
+        range_filter = pcfg_crossmul["common_band_range_filter"]
+        azimuth_filter = pcfg_crossmul["common_band_azimuth_filter"]
+
+        flatten = pcfg_crossmul["flatten"]
+        range_looks = pcfg_crossmul["range_looks"]
+        azimuth_looks = pcfg_crossmul["azimuth_looks"]
+
+        interferogram_ds_params = [
+            DatasetParams(
+                "commonBandRangeFilterApplied",
+                np.bool_(range_filter),
+                np.string_(
+                    "Flag to indicate if common band range filter has been"
+                    " applied"
+                ),
+            ),
+            DatasetParams(
+                "commonBandAzimuthFilterApplied",
+                np.bool_(azimuth_filter),
+                np.string_(
+                    "Flag to indicate if common band azimuth filter has been"
+                    " applied"
+                ),
+            ),
+            DatasetParams(
+                "ellipsoidalFlatteningApplied",
+                np.bool_(flatten),
+                np.string_(
+                    "Flag to indicate if interferometric phase has been"
+                    " flattened with respect to a zero height ellipsoid"
+                ),
+            ),
+            DatasetParams(
+                "topographicFlatteningApplied",
+                np.bool_(flatten),
+                np.string_(
+                    "Flag to indicate if interferometric phase has been"
+                    " flattened with respect to a zero height ellipsoid"
+                ),
+            ),
+            DatasetParams(
+                "numberOfRangeLooks",
+                np.uint32(range_looks),
+                np.string_(
+                    "Number of looks applied in the slant range direction to"
+                    " form the wrapped interferogram"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "numberOfAzimuthLooks",
+                np.uint32(azimuth_looks),
+                np.string_(
+                    "Number of looks applied in the along-track direction to"
+                    " form the wrapped interferogram"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+        ]
+
+        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+            bandwidth_group_path = f"{self.ref_rslc.SwathPath}/frequency{freq}"
+            bandwidth_group = self.ref_h5py_file_obj[bandwidth_group_path]
+
+            igram_group_name = f"{self.group_paths.ParametersPath}/interferogram/frequency{freq}"
+            igram_group = self.require_group(igram_group_name)
+
+            self._copy_dataset_by_name(
+                bandwidth_group,
+                "processedAzimuthBandwidth",
+                igram_group,
+                "azimuthBandwidth",
+            )
+            self._copy_dataset_by_name(
+                bandwidth_group,
+                "processedRangeBandwidth",
+                igram_group,
+                "rangeBandwidth",
+            )
+
+            for ds_param in interferogram_ds_params:
+                add_dataset_and_attrs(igram_group, ds_param)
+
+    def add_pixeloffsets_to_procinfo_params(self):
+        """
+        Add the pixelOffsets group to "processingInformation/parameters" group
+        """
+
+        pcfg = self.cfg["processing"]
+        is_roff = pcfg["offsets_product"]["enabled"]
+        merge_gross_offset = get_off_params(
+            pcfg, "merge_gross_offset", is_roff
+        )
+        skip_range = get_off_params(pcfg, "skip_range", is_roff)
+        skip_azimuth = get_off_params(pcfg, "skip_azimuth", is_roff)
+
+        half_search_range = get_off_params(
+            pcfg, "half_search_range", is_roff, pattern="layer", get_min=True
+        )
+        half_search_azimuth = get_off_params(
+            pcfg, "half_search_azimuth", is_roff, pattern="layer", get_min=True
+        )
+
+        window_azimuth = get_off_params(
+            pcfg, "window_azimuth", is_roff, pattern="layer", get_min=True
+        )
+        window_range = get_off_params(
+            pcfg, "window_range", is_roff, pattern="layer", get_min=True
+        )
+
+        oversampling_factor = get_off_params(
+            pcfg, "correlation_surface_oversampling_factor", is_roff
+        )
+
+        pixeloffsets_ds_params = [
+            DatasetParams(
+                "alongTrackWindowSize",
+                np.uint32(window_azimuth),
+                np.string_(
+                    "Along track cross-correlation window size in pixels"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "slantRangeWindowSize",
+                np.uint32(window_range),
+                np.string_(
+                    "Slant range cross-correlation window size in pixels"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "alongTrackSearchWindowSize",
+                np.uint32(2 * half_search_azimuth),
+                np.string_(
+                    "Along track cross-correlation search window size in"
+                    " pixels"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "slantRangeSearchWindowSize",
+                np.uint32(2 * half_search_range),
+                np.string_(
+                    "Slant range cross-correlation search window size in"
+                    " pixels"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "alongTrackSkipWindowSize",
+                np.uint32(skip_azimuth),
+                np.string_(
+                    "Along track cross-correlation skip window size in pixels"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "slantRangeSkipWindowSize",
+                np.uint32(skip_range),
+                np.string_(
+                    "Slant range cross-correlation skip window size in pixels"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "crossCorrelationSurfaceOversampling",
+                np.uint32(oversampling_factor),
+                np.string_(
+                    "Oversampling factor of the cross-correlation surface"
+                ),
+                {
+                    "units": np.string_("unitless"),
+                },
+            ),
+            DatasetParams(
+                "isOffsetsBlendingApplied",
+                np.bool_(merge_gross_offset),
+                np.string_(
+                    "Flag to indicate if pixel offsets are the results of"
+                    " blending multi-resolution layers of pixel offsets"
+                ),
+            ),
+        ]
+        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+            pixeloffsets_group_name = f"{self.group_paths.ParametersPath}/pixelOffsets/frequency{freq}"
+            pixeloffsets_group = self.require_group(pixeloffsets_group_name)
+
+            for ds_param in pixeloffsets_ds_params:
+                add_dataset_and_attrs(pixeloffsets_group, ds_param)
+                                                
+    def add_parameters_to_procinfo(self):
+        """
+        Add the parameters group to the "processingInformation" group
+        
+        Return
+        ------
+        - params_group (h5py.Group): the parameters group object
+        """
+        params_group = self.require_group(self.group_paths.ParametersPath)
+
+        self.add_common_to_procinfo_params()
+        self.add_RSLC_to_procinfo_params("reference")
+        self.add_RSLC_to_procinfo_params("secondary")
+        
+        runconfig_contents = DatasetParams(
+            "runConfigurationContents",
+            np.string_(str(self.cfg)),
+            np.string_(
+                "Contents of the run configuration file with parameters"
+                " used for processing"
+            ),
+        )
+        add_dataset_and_attrs(params_group, runconfig_contents)
+
+        return params_group
+    
+    def add_inputs_to_procinfo(
+        self,
+        runconfig_path: str,
+    ):
+        """
+        Add the inputs group to the "processingInformation" group
+        
+        Return
+        ------
+        - inputs_group (h5py.Group): the inputs group object
+        """
+        
+        orbit_file = []
+        for idx in ["reference", "secondary"]:
+            _orbit_file = self.cfg["dynamic_ancillary_file_group"][
+                "orbit"
+            ].get(f"{idx}_orbit_file")
+            if _orbit_file is None:
+                _orbit_file = f"used RSLC internal {idx} orbit file"
+            orbit_file.append(_orbit_file)
+
+        # DEM source
+        dem_source = self.cfg["dynamic_ancillary_file_group"].get(
+            "dem_file_description"
+        )
+
+        # if dem source is None, then replace it with None
+        if dem_source is None:
+            dem_source = "None"
+
+        inputs_ds_params = [
+            DatasetParams(
+                "configFiles",
+                np.string_(os.path.basename(runconfig_path)),
+                np.string_("List of input config files used"),
+            ),
+            DatasetParams(
+                "demSource",
+                np.string_(dem_source),
+                np.string_(
+                    "Description of the input digital elevation model (DEM)"
+                ),
+            ),
+            DatasetParams(
+                "l1ReferenceSlcGranules",
+                np.string_([os.path.basename(self.ref_h5_slc_file)]),
+                np.string_("List of input reference L1 RSLC products used"),
+            ),
+            DatasetParams(
+                "l1SecondarySlcGranules",
+                np.string_([os.path.basename(self.sec_h5_slc_file)]),
+                np.string_("List of input secondary L1 RSLC products used"),
+            ),
+            DatasetParams(
+                "orbitFiles",
+                np.string_(orbit_file),
+                np.string_("List of input orbit files used"),
+            ),
+        ]
+        inputs_group = self.require_group(f"{self.group_paths.ProcessingInformationPath}/inputs")
+        for ds_param in inputs_ds_params:
+            add_dataset_and_attrs(inputs_group, ds_param)
+
+        return inputs_group
+    
     def _copy_group_by_name(
         self,
         parent_group: h5py.Group,
@@ -171,13 +840,41 @@ class InSARWriter(h5py.File):
                     dst_dataset_name, data=np.string_("NotFoundFromRSLC")
                 )
 
+    def _is_geocoded_product(self):
+        """
+        is Geocoded product
+        """
+        return self.product_info.isGeocoded
+    
+    def _get_product_level(self):
+        """
+        Get the product level.
+        """
+        return self.product_info.ProductLevel
+    
+    def _get_product_version(self):
+        """
+        Get the product version.
+        """
+        return self.product_info.ProductVersion
+    
+    def _get_product_type(self):
+        """
+        Get the product type.
+        """
+        return self.product_info.ProductType
+    
+    def _get_product_specification(self):
+        """
+        Get the product specification
+        """
+        return self.product_info.ProductSpecificationVersion
+    
     def _get_metadata_path(self):
         """
         Get the InSAR product metadata path.
-        To change the metadata path of the children classes, need to overwrite this function.
         """
-        
-        return ""
+        return self.group_paths.MetadataPath
 
     def add_common_metadata_to_hdf5(self):
         """
@@ -202,9 +899,13 @@ class InSARWriter(h5py.File):
             orbit_group = dst_metadata_group.require_group("orbit")
             orbit.save_to_h5(orbit_group)
 
-    def add_identification_group(self):
+    def add_identification_to_hdf5(self):
         """
         Add the identification group to the product
+        
+        Return 
+        ------
+        dst_id_group (h5py.Group): identification group object
         """
 
         radar_band_name = self._get_band_name()
@@ -235,7 +936,7 @@ class InSARWriter(h5py.File):
         # Extract relevant identification from reference RSLC
         ref_id_group = self.ref_h5py_file_obj[self.ref_rslc.IdentificationPath]
         sec_id_group = self.sec_h5py_file_obj[self.sec_rslc.IdentificationPath]
-        dst_id_group = self.require_group(CommonPaths.IdentificationPath)
+        dst_id_group = self.require_group(self.group_paths.IdentificationPath)
 
         # Datasets that need to be copied from the RSLC
         ds_names_need_to_copy = [
@@ -302,10 +1003,45 @@ class InSARWriter(h5py.File):
             DatasetParams(
                 "radarBand", radar_band_name, "Acquired frequency band"
             ),
+            DatasetParams(
+                "productLevel",
+                self._get_product_level(),
+                (
+                    "Product level. L0A: Unprocessed instrument data; L0B:"
+                    " Reformatted,unprocessed instrument data; L1: Processed"
+                    " instrument data in radar coordinates system; and L2:"
+                    " Processed instrument data in geocoded coordinates system"
+                ),
+            ),
+            DatasetParams(
+                "productVersion",
+                self._get_product_version(),
+                (
+                    "Product version which represents the structure of the"
+                    " product and the science content governed by the"
+                    " algorithm, input data, and processing parameters"
+                ),
+            ),
+            DatasetParams("productType", self._get_product_type(), "Product type"),
+            DatasetParams(
+                "productSpecificationVersion",
+                self._get_product_specification(),
+                (
+                    "Product specification version which represents the schema"
+                    " of this product"
+                ),
+            ),
+            DatasetParams(
+                "isGeocoded",
+                np.bool_(self._is_geocoded_product()),
+                "Flag to indicate radar geometry or geocoded product",
+            ),
         ]
         for ds_param in ds_params:
             add_dataset_and_attrs(dst_id_group, ds_param)
 
+        return dst_id_group
+    
     def _get_band_name(self):
         """
         Get the band name ('L' or 'S')
