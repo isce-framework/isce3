@@ -4,4 +4,5 @@
 
 # Import wrappers
 from . import readers
+from . import insar
 # end of file
