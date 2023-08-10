@@ -3,8 +3,12 @@ from isce3.core import LUT2d
 from isce3.product import RadarGridParameters
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
+from nisar.workflows.helpers import get_cfg_freq_pols
+
+from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSARBase import InSARWriter
 from .product_paths import L1GroupsPaths
+
 
 class L1InSARWriter(InSARWriter):
     """
@@ -117,11 +121,17 @@ class L1InSARWriter(InSARWriter):
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms group to the processingInformation group
-        """
 
+        Return
+        ------
+        algo_group (h5py.Group): the algorithm group object
+        """
+        
         algo_group = super().add_algorithms_to_procinfo()
         self.add_coregistration_to_algo(algo_group)
         self.add_interferogramformation_to_algo(algo_group)
+        
+        return algo_group
 
     def add_parameters_to_procinfo(self):
         """
@@ -133,8 +143,42 @@ class L1InSARWriter(InSARWriter):
         self.add_interferogram_to_procinfo_params()
         self.add_pixeloffsets_to_procinfo_params()
 
+
     def add_swaths_to_hdf5(self):
         """
         Add Swaths to the HDF5
-        """
-        self.require_group(self.group_paths.SwathsPath)
+        """ 
+        
+        # only add the common fields such as listofpolarizations, pixeloffset, and centerfrequency       
+        for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
+            # Create the swath group
+            swaths_freq_group_name = (
+                f"{self.group_paths.SwathsPath}/frequency{freq}"
+            )
+            swaths_freq_group = self.require_group(swaths_freq_group_name)
+
+            # Create the pixeloffsets group
+            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
+            self.require_group(offset_group_name)
+
+            # center frequency and sub swaths groups of the RSLC
+            rslc_freq_group = self.ref_h5py_file_obj[
+                f"{self.ref_rslc.SwathPath}/frequency{freq}"
+            ]
+
+            list_of_pols = DatasetParams(
+                "listOfPolarizations",
+                np.string_(pol_list),
+                np.string_(
+                    "List of processed polarization layers with"
+                    f" frequency{freq}"
+                ),
+            )
+            add_dataset_and_attrs(swaths_freq_group, list_of_pols)
+
+            self._copy_dataset_by_name(
+                rslc_freq_group,
+                "processedCenterFrequency",
+                swaths_freq_group,
+                "centerFrequency",
+            )

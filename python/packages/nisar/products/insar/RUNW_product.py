@@ -1,16 +1,17 @@
-import h5py
 import numpy as np
+import h5py
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
-from .product_paths import RIFGGroupsPaths
+from .product_paths import RUNWGroupsPaths
 from .InSARL1Products import L1InSARWriter
 
-class RIFG(L1InSARWriter):
+
+class RUNW(L1InSARWriter):
     """
-    Writer class for RIFG product inherent from L1InSARWriter
+    Writer class for RUNW product inherent from L1InSARWriter
     """
 
     def __init__(
@@ -18,38 +19,318 @@ class RIFG(L1InSARWriter):
         **kwds,
     ):
         """
-        Constructor for RIFG class
+        Constructor for RUNW class
         """
         super().__init__(**kwds)
-        
-        # group paths are RIFG group paths
-        self.group_paths = RIFGGroupsPaths()
-        
-        # RIFG product information
-        self.product_info = InSARProductsInfo.RIFG()
-        
+
+        # group paths are RUNW group paths
+        self.group_paths = RUNWGroupsPaths()
+
+        # RUNW product information
+        self.product_info = InSARProductsInfo.RUNW()
+
     def add_root_attrs(self):
         """
         add root attributes
         """
-        
+
         super().add_root_attrs()
-        
-        # Add additional attributes
-        self.attrs["title"] = "NISAR L1 RIFG Product"
+
+        self.attrs["title"] = "NISAR L1 RUNW Product"
         self.attrs["reference_document"] = "TBD"
+
+    def add_ionosphere_to_procinfo_params(self):
+        """
+        Add the ionosphere to the processingInformation/parameters group
+        """
+
+        high_bandwidth = 0
+        low_bandwidth = 0
+        # ionosphere phase correction is enabled
+        iono_cfg = self.cfg["processing"]["ionosphere_phase_correction"]
+
+        if iono_cfg["enabled"]:
+            high_bandwidth = iono_cfg["split_range_spectrum"][
+                "high_band_bandwidth"
+            ]
+            low_bandwidth = iono_cfg["split_range_spectrum"][
+                "low_band_bandwidth"
+            ]
+
+        ds_params = [
+            DatasetParams(
+                "highBandBandwidth",
+                np.float32(high_bandwidth),
+                np.string_("Slant range bandwidth of the high sub-band image"),
+                {
+                    "units": np.string_("Hz"),
+                },
+            ),
+            DatasetParams(
+                "lowBandBandwidth",
+                np.float32(low_bandwidth),
+                np.string_("Slant range bandwidth of the low sub-band image"),
+                {
+                    "units": np.string_("Hz"),
+                },
+            ),
+        ]
+
+        iono_group = self.require_group(
+            f"{self.group_paths.ParametersPath}/ionosphere"
+        )
+        for ds_param in ds_params:
+            add_dataset_and_attrs(iono_group, ds_param)
+
+    def add_ionosphere_est_to_algo(self, algo_group: h5py.Group):
+        """
+        Add the ionosphere estimation group to algorithms group
+
+        Parameters
+        ------
+        - algo_group(h5py.Group): algorithms group object
+        """
+
+        iono_algorithm = "None"
+        iono_filling = "None"
+        iono_filtering = "None"
+        iono_outliers = "None"
+        unwrap_correction = False
+        num_of_iters = 0
+        iono_cfg = self.cfg["processing"]["ionosphere_phase_correction"]
+
+        if iono_cfg["enabled"]:
+            iono_algorithm = iono_cfg["spectral_diversity"]
+
+            # ionosphere filling method
+            iono_filling = iono_cfg["dispersive_filter"]["filling_method"]
+            num_of_iters = iono_cfg["dispersive_filter"]["filter_iterations"]
+            # ionosphere filtering method
+            iono_filtering = "gaussian"
+            iono_outliers = iono_cfg["dispersive_filter"]["filter_mask_type"]
+            unwrap_correction = iono_cfg["dispersive_filter"][
+                "unwrap_correction"
+            ]
+
+        if iono_algorithm == "split_main_band":
+            iono_algorithm = (
+                "Range split-spectrum with sub-band sub-images obtained by"
+                " splitting the main range bandwidth of the input RSLCs"
+            )
+        elif iono_algorithm == "main_side_band":
+            iono_algorithm = (
+                "Range split-spectrum with sub-band images being the main band"
+                " and the side band of the input RSLCs"
+            )
+        elif iono_algorithm == "main_diff_ms_band":
+            iono_algorithm = (
+                "Range split-spectrum with sub-band interferograms from the"
+                " main band and the difference of the main and side band of"
+                " the input RSLCs"
+            )
+        else:
+            iono_algorithm = "None"
+
+        ds_params = [
+            DatasetParams(
+                "ionosphereAlgorithm",
+                np.string_(iono_algorithm),
+                np.string_(
+                    "Algorithm used to estimate ionosphere phase screen"
+                ),
+                {
+                    "algorithm_type": np.string_("Ionosphere estimation"),
+                },
+            ),
+            DatasetParams(
+                "ionosphereFilling",
+                np.string_(iono_filling),
+                np.string_(
+                    "Outliers data filling algorithm"
+                    " for ionosphere phase estimation"
+                ),
+                {
+                    "algorithm_type": np.string_("Ionosphere estimation"),
+                },
+            ),
+            DatasetParams(
+                "ionosphereFiltering",
+                np.string_(iono_filtering),
+                np.string_(
+                    f"Iterative gaussian filter with {num_of_iters} filtering"
+                    " algorithm for ionosphere phase screen computation"
+                ),
+                {
+                    "algorithm_type": np.string_("Ionosphere estimation"),
+                },
+            ),
+            DatasetParams(
+                "ionosphereOutliers",
+                np.string_(iono_outliers),
+                np.string_(
+                    "Algorithm identifying outliers in unfiltered ionosphere"
+                    " phase screen"
+                ),
+                {
+                    "algorithm_type": np.string_("Ionosphere estimation"),
+                },
+            ),
+            DatasetParams(
+                "unwrappingErrorCorrection",
+                np.bool_(unwrap_correction),
+                np.string_(
+                    "Flag indicating if unwrapping errors in sub-band"
+                    " unwrapped interferograms are corrected"
+                ),
+                {
+                    "algorithm_type": np.string_("Ionosphere estimation"),
+                },
+            ),
+        ]
+
+        iono_est_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/ionosphereEstimation"
+        )
+        for ds_param in ds_params:
+            add_dataset_and_attrs(iono_est_group, ds_param)
+
+    def add_unwarpping_to_algo(self, algo_group: h5py.Group):
+        """
+        Add the unwrapping to the algorithms group
+
+        Parameters
+        ------
+        - algo_group(h5py.Group): algorithms group object
+        """
+
+        cost_mode = "None"
+        unwrapping_algorithm = "None"
+        unwrapping_initializer = "None"
+        phase_filling = "None"
+        phase_outliers = "None"
+
+        unwrap_cfg = self.cfg["processing"]["phase_unwrap"]
+        unwrapping_algorithm = unwrap_cfg["algorithm"]
+
+        if unwrapping_algorithm.lower() == "snaphu":
+            # cost mode
+            cost_mode = unwrap_cfg["snaphu"]["cost_mode"]
+            # unwrapping initializer
+            unwrapping_initializer = unwrap_cfg["snaphu"][
+                "initialization_method"
+            ]
+
+            # if cost mode and unwrapping initializer are empty
+            if cost_mode is None:
+                cost_mode = "None"
+            if unwrapping_initializer is None:
+                unwrapping_initializer = "None"
+
+        if unwrap_cfg["preprocess_wrapped_phase"]["enabled"]:
+            # wrapped phase filling
+            phase_filling = unwrap_cfg["preprocess_wrapped_phase"][
+                "filling_method"
+            ]
+            # wrapped phase outliers
+            phase_outliers = unwrap_cfg["preprocess_wrapped_phase"]["mask"][
+                "mask_type"
+            ]
+
+            # if phase_filling and  phase_outliers are empty
+            if phase_filling is None:
+                phase_filling = "None"
+            if phase_outliers is None:
+                phase_outliers = "None"
+
+        ds_params = [
+            DatasetParams(
+                "costMode",
+                np.string_(cost_mode),
+                np.string_("Cost mode algorithm for phase unwrapping"),
+                {
+                    "algorithm_type": np.string_("Unwrapping"),
+                },
+            ),
+            DatasetParams(
+                "wrappedPhaseFilling",
+                np.string_(phase_filling),
+                np.string_(
+                    "Outliers data filling algorithm for phase unwrapping"
+                    " preprocessing"
+                ),
+                {
+                    "algorithm_type": np.string_("Unwrapping"),
+                },
+            ),
+            DatasetParams(
+                "wrappedPhaseOutliers",
+                np.string_(phase_outliers),
+                np.string_(
+                    "Algorithm identifying outliers in the wrapped"
+                    " interferogram"
+                ),
+                {
+                    "algorithm_type": np.string_("Unwrapping"),
+                },
+            ),
+            DatasetParams(
+                "unwrappingAlgorithm",
+                np.string_(unwrapping_algorithm),
+                np.string_("Algorithm used for phase unwrapping"),
+                {
+                    "algorithm_type": np.string_("Unwrapping"),
+                },
+            ),
+            DatasetParams(
+                "unwrappingInitializer",
+                np.string_(unwrapping_initializer),
+                np.string_("Algorithm used to initialize phase unwrapping"),
+                {
+                    "algorithm_type": np.string_("Unwrapping"),
+                },
+            ),
+        ]
+
+        unwrap_group = algo_group.require_group("unwrapping")
+        for ds_param in ds_params:
+            add_dataset_and_attrs(unwrap_group, ds_param)
+
+    def add_algorithms_to_procinfo(self):
+        """
+        Add the algorithms to processingInformation group
+
+        Return
+        ------
+        algo_group (h5py.Group): the algorithm group object
+        """
         
-        ctype = h5py.h5t.py_create(np.complex64)
-        ctype.commit(self["/"].id, np.string_("complex64"))
+        algo_group = super().add_algorithms_to_procinfo()
+        self.add_ionosphere_est_to_algo(algo_group)
+        self.add_unwarpping_to_algo(algo_group)
+        
+        return algo_group
+
+    def add_parameters_to_procinfo(self):
+        """
+        Add parameters group to processingInformation/parameters group
+        """
+
+        super().add_parameters_to_procinfo()
+        self.add_ionosphere_to_procinfo_params()
 
     def add_swaths_to_hdf5(self):
         """
         Add Swaths to the HDF5
         """
+        
+        super().add_swaths_to_hdf5()
+        
         pcfg = self.cfg["processing"]
         rg_looks = pcfg["crossmul"]["range_looks"]
         az_looks = pcfg["crossmul"]["azimuth_looks"]
-
+        unwrap_rg_looks = pcfg["phase_unwrap"]["range_looks"]
+        unwrap_az_looks = pcfg["phase_unwrap"]["azimuth_looks"]
+        
         # pull the offset parameters
         is_roff = pcfg["offsets_product"]["enabled"]
         margin = get_off_params(pcfg, "margin", is_roff)
@@ -110,16 +391,6 @@ class RIFG(L1InSARWriter):
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
 
-            list_of_pols = DatasetParams(
-                "listOfPolarizations",
-                np.string_(pol_list),
-                np.string_(
-                    "List of processed polarization layers with"
-                    f" frequency{freq}"
-                ),
-            )
-            add_dataset_and_attrs(swaths_freq_group, list_of_pols)
-
             # get the RSLC lines and columns
             slc_dset = self.ref_h5py_file_obj[
                 f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
@@ -139,14 +410,11 @@ class RIFG(L1InSARWriter):
             off_shape = (off_length, off_width)
 
             # shape of the interferogram product
-            igram_shape = (slc_lines // az_looks, slc_cols // rg_looks)
-
-            self._copy_dataset_by_name(
-                rslc_freq_group,
-                "processedCenterFrequency",
-                swaths_freq_group,
-                "centerFrequency",
+            igram_shape = (
+                (slc_lines // az_looks) // unwrap_az_looks,
+                (slc_cols // rg_looks) // unwrap_rg_looks,
             )
+
             self._copy_dataset_by_name(
                 rslc_freq_group, "numberOfSubSwaths", swaths_freq_group
             )
@@ -184,7 +452,7 @@ class RIFG(L1InSARWriter):
                 if valid_samples_subswath_name in rslc_freq_group.keys():
                     number_of_range_looks = (
                         rslc_freq_group[valid_samples_subswath_name][()]
-                        // rg_looks
+                        // rg_looks // unwrap_rg_looks
                     )
                     swaths_freq_group.require_dataset(
                         name=valid_samples_subswath_name,
@@ -199,7 +467,7 @@ class RIFG(L1InSARWriter):
                     )
                 else:
                     number_of_range_looks = (
-                        rslc_freq_group["validSamples"][()] // rg_looks
+                        rslc_freq_group["validSamples"][()] // rg_looks // unwrap_rg_looks
                     )
                     swaths_freq_group.require_dataset(
                         name="validSamples",
@@ -274,11 +542,11 @@ class RIFG(L1InSARWriter):
             igram_slant_range = rslc_freq_group["slantRange"][()]
             igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
             rg_idx = np.arange(
-                (len(igram_slant_range) // rg_looks) * rg_looks
-            )[::rg_looks] + int(rg_looks / 2)
+                (len(igram_slant_range) // rg_looks // unwrap_rg_looks) * (rg_looks*unwrap_rg_looks)
+            )[::rg_looks * unwrap_rg_looks] + int(rg_looks * unwrap_rg_looks / 2)
             az_idx = np.arange(
-                (len(igram_zero_doppler_time) // az_looks) * az_looks
-            )[::az_looks] + int(az_looks / 2)
+                (len(igram_zero_doppler_time) // az_looks // unwrap_az_looks) * (az_looks * unwrap_az_looks)
+            )[::az_looks * unwrap_az_looks] + int(az_looks * unwrap_az_looks / 2)
 
             igram_slant_range = igram_slant_range[rg_idx]
             igram_zero_doppler_time = igram_zero_doppler_time[az_idx]
@@ -296,7 +564,6 @@ class RIFG(L1InSARWriter):
                 "Slant range vector"
             )
 
-            igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
             igram_group.require_dataset(
                 name="zeroDopplerTime",
                 data=igram_zero_doppler_time,
@@ -311,7 +578,7 @@ class RIFG(L1InSARWriter):
             )
 
             igram_zero_doppler_time_spacing = (
-                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks
+                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks * unwrap_az_looks
             )
             igram_group.require_dataset(
                 name="zeroDopplerTimeSpacing",
@@ -324,7 +591,7 @@ class RIFG(L1InSARWriter):
             )
 
             igram_slant_range_spacing = (
-                rslc_freq_group["slantRangeSpacing"][()] * rg_looks
+                rslc_freq_group["slantRangeSpacing"][()] * rg_looks * unwrap_rg_looks
             )
             igram_group.require_dataset(
                 name="slantRangeSpacing",
@@ -351,6 +618,31 @@ class RIFG(L1InSARWriter):
                 # Create the inteferogram dataset
                 self._create_2d_dataset(
                     igram_pol_group,
+                    "connectedComponents",
+                    igram_shape,
+                    np.uint32,
+                    np.string_(f"Connected components for {pol} layers"),
+                    units=np.string_("DN"),
+                    fill_value=0,
+                )
+                self._create_2d_dataset(
+                    igram_pol_group,
+                    "ionospherePhaseScreen",
+                    igram_shape,
+                    np.float32,
+                    np.string_(f"Ionosphere phase screen"),
+                    units=np.string_("radians"),
+                )
+                self._create_2d_dataset(
+                    igram_pol_group,
+                    "ionospherePhaseScreenUncertainty",
+                    igram_shape,
+                    np.float32,
+                    np.string_(f"Uncertainty of the ionosphere phase screen"),
+                    units=np.string_("radians"),
+                )                                                
+                self._create_2d_dataset(
+                    igram_pol_group,
                     "coherenceMagnitude",
                     igram_shape,
                     np.float32,
@@ -359,11 +651,11 @@ class RIFG(L1InSARWriter):
                 )
                 self._create_2d_dataset(
                     igram_pol_group,
-                    "wrappedInterferogram",
+                    "unwrappedPhase",
                     igram_shape,
-                    np.complex64,
-                    np.string_(f"Interferogram between {pol} layers"),
-                    units=np.string_("DN"),
+                    np.float32,
+                    np.string_(f"Unwrapped Interferogram between {pol} layers"),
+                    units=np.string_("radians"),
                 )
 
                 # Create the pixel offsets dataset
