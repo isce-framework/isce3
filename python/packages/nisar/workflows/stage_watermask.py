@@ -12,8 +12,12 @@ import shapely.wkt
 from osgeo import gdal, osr
 from shapely.geometry import LinearRing, Point, Polygon, box
 
+
 # Enable exceptions
 gdal.UseExceptions()
+
+EARTH_APPROX_CIRCUMFERENCE = 40075017.
+EARTH_RADIUS = EARTH_APPROX_CIRCUMFERENCE / (2 * np.pi)
 
 
 def cmdLineParse():
@@ -45,12 +49,10 @@ def cmdLineParse():
 
 def check_dateline(poly):
     """Split `poly` if it crosses the dateline.
-
     Parameters
     ----------
     poly : shapely.geometry.Polygon
         Input polygon.
-
     Returns
     -------
     polys : list of shapely.geometry.Polygon
@@ -98,10 +100,10 @@ def check_dateline(poly):
 
     return polys
 
+
 def determine_polygon(ref_slc, bbox=None):
     """Determine bounding polygon using RSLC radar grid/orbit
     or user-defined bounding box
-
     Parameters:
     ----------
     ref_slc: str
@@ -109,7 +111,6 @@ def determine_polygon(ref_slc, bbox=None):
     bbox: list, float
         Bounding box with lat/lon coordinates (decimal degrees)
         in the form of [West, South, East, North]
-
     Returns:
     -------
     poly: shapely.Geometry.Polygon
@@ -128,14 +129,12 @@ def determine_polygon(ref_slc, bbox=None):
 
 def point2epsg(lon, lat):
     """Return EPSG code based on point lat/lon
-
     Parameters:
     ----------
     lat: float
         Latitude coordinate of the point
     lon: float
         Longitude coordinate of the point
-
     Returns:
     -------
     epsg code corresponding to the point lat/lon coordinates
@@ -158,7 +157,6 @@ def point2epsg(lon, lat):
 def get_geo_polygon(ref_slc, min_height=-500.,
                     max_height=9000., pts_per_edge=5):
     """Create polygon (EPSG:4326) using RSLC radar grid and orbits
-
     Parameters:
     -----------
     ref_slc: str
@@ -169,14 +167,13 @@ def get_geo_polygon(ref_slc, min_height=-500.,
         Global maximum height (in m) for WATERMASK interpolator
     pts_per_edge: float
         Number of points per edge for min/max bounding box computation
-
     Returns:
     -------
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter on the ground
     """
     from isce3.core import LUT2d
-    from isce3.geometry import watermaskInterpolator, get_geo_perimeter_wkt
+    from isce3.geometry import DEMInterpolator, get_geo_perimeter_wkt
     from nisar.products.readers import SLC
 
     # Prepare SLC dataset input
@@ -188,8 +185,8 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     doppler = LUT2d()
 
     # Get min and max global height WATERMASK interpolators
-    watermask_min = watermaskInterpolator(height=min_height)
-    watermask_max = watermaskInterpolator(height=max_height)
+    watermask_min = DEMInterpolator(height=min_height)
+    watermask_max = DEMInterpolator(height=max_height)
 
     # Get min and max bounding boxes
     box_min = get_geo_perimeter_wkt(radar_grid, orbit, doppler,
@@ -211,7 +208,6 @@ def determine_projection(polys):
     """Determine EPSG code for each polygon in polys.
     EPSG is computed for a regular list of points. EPSG
     is assigned based on a majority criteria.
-
     Parameters:
     -----------
     polys: shapely.Geometry.Polygon
@@ -258,7 +254,6 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
        from network access, authorization and AWS
        throttling (see "Query throttling" section at
        https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html).
-
     Parameters:
     ----------
     vrt_filename: str
@@ -304,6 +299,8 @@ def download_watermask(polys, epsgs, outfile, version):
         List of EPSG codes corresponding to polys
     outfile:
         Path to the output WATERMASK file to be staged
+    version: str
+        Water mask version
     """
 
     if 3031 in epsgs:
@@ -341,7 +338,6 @@ def download_watermask(polys, epsgs, outfile, version):
 def transform_polygon_coords(polys, epsgs):
     """Transform coordinates of polys (list of polygons)
        to target epsgs (list of EPSG codes)
-
     Parameters:
     ----------
     polys: shapely.Geometry.Polygon
@@ -384,14 +380,12 @@ def check_watermask_overlap(watermaskFilepath, polys):
     """Evaluate overlap between user-provided WATERMASK
        and WATERMASK that stage_watermask.py would download
        based on RSLC or bbox provided information
-
     Parameters:
     ----------
     watermaskFilepath: str
         Filepath to the user-provided WATERMASK
     polys: shapely.geometry.Polygon
         List of polygons computed from RSLC or bbox
-
     Returns:
     -------
     perc_area: float
@@ -434,6 +428,72 @@ def check_aws_connection(version):
         raise ValueError(errmsg)
 
 
+def apply_margin(polygon, margin_in_km=5):
+    '''
+    Convert margin from km to degrees and
+    apply to polygon
+    Parameters
+    ----------
+    polygon: shapely.Geometry.Polygon
+        Bounding polygon covering the area on the
+        ground over which download the DEM
+    margin_in_km: np.float
+        Buffer in km to add to polygon
+    Returns
+    ------
+    poly_with_margin: shapely.Geometry.box
+        Bounding box with margin applied
+    '''
+    lon_min, lat_min, lon_max, lat_max = polygon.bounds
+    lat_worst_case = max([lat_min, lat_max])
+
+    # Convert margin from km to degrees
+    lat_margin = margin_km_to_deg(margin_in_km)
+    lon_margin = margin_km_to_longitude_deg(margin_in_km, lat=lat_worst_case)
+
+    poly_with_margin = box(lon_min - lon_margin, max([lat_min - lat_margin, -90]),
+                           lon_max + lon_margin, min([lat_max + lat_margin, 90]))
+    return poly_with_margin
+
+
+def margin_km_to_deg(margin_in_km):
+    '''
+    Converts a margin value from km to degrees
+    Parameters
+    ----------
+    margin_in_km: np.float
+        Margin in km
+    Returns
+    -------
+    margin_in_deg: np.float
+        Margin in degrees
+    '''
+    km_to_deg_at_equator = 1000. / (EARTH_APPROX_CIRCUMFERENCE / 360.)
+    margin_in_deg = margin_in_km * km_to_deg_at_equator
+
+    return margin_in_deg
+
+
+def margin_km_to_longitude_deg(margin_in_km, lat=0):
+    '''
+    Converts margin from km to degrees as a function of
+    latitude
+    Parameters
+    ----------
+    margin_in_km: np.float
+        Margin in km
+    lat: np.float
+        Latitude to use for the conversion
+    Returns
+    ------
+    delta_lon: np.float
+        Longitude margin as a result of the conversion
+    '''
+    delta_lon = (180 * 1000 * margin_in_km /
+                (np.pi * EARTH_RADIUS * np.cos(np.pi * lat / 180)))
+    return delta_lon
+
+
 def main(opts):
     """Main script to execute water mask staging
 
@@ -457,9 +517,8 @@ def main(opts):
     # Determine polygon based on RSLC info or bbox
     poly = determine_polygon(opts.product, opts.bbox)
 
-    # Add margin to poly. Convert margin from km to degrees
-    margin = opts.margin / 40000 * 360
-    poly = poly.buffer(margin)
+    # Apply margin to the identified polygon in lat/lon
+    poly = apply_margin(poly, opts.margin)
 
     # Check dateline crossing. Returns list of polygons
     polys = check_dateline(poly)
