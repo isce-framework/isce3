@@ -1,2 +1,2 @@
-from .GUNW_product import GUNW
+from .GOFF_product import GOFF
 from .InSARBase import InSARWriter
