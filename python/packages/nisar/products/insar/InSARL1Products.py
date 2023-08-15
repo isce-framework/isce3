@@ -35,7 +35,7 @@ class L1InSARWriter(InSARWriter):
         
         self.add_geolocation_grid_cubes()
         self.add_swaths_to_hdf5()
-        
+    
     def _get_geolocation_grid_cubes_path(self):
         """
         Get the geolocation grid cube path.        
