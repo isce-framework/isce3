@@ -32,15 +32,15 @@ def cmdLineParse():
                         help='Input reference RSLC HDF5 product')
     parser.add_argument('-o', '--output', type=str, action='store',
                         default='WATERMASK.vrt', dest='outfile',
-                        help='Output WATERMASK filepath (VRT format).')
+                        help='Output water mask filepath (VRT format).')
     parser.add_argument('-f', '--path', type=str, action='store',
                         dest='filepath', default='file',
-                        help='Filepath to user WATERMASK.')
+                        help='Filepath to user water mask.')
     parser.add_argument('-m', '--margin', type=int, action='store',
-                        default=5, help='Margin for WATERMASK bounding box (km)')
+                        default=5, help='Margin for water mask bounding box (km)')
     parser.add_argument('-v', '--version', type=str, action='store',
                         dest='version', default='0.2',
-                        help='Version for WATERMASK')
+                        help='Version for water mask')
     parser.add_argument('-b', '--bbox', type=float, action='store',
                         dest='bbox', default=None, nargs='+',
                         help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
@@ -49,10 +49,12 @@ def cmdLineParse():
 
 def check_dateline(poly):
     """Split `poly` if it crosses the dateline.
+
     Parameters
     ----------
     poly : shapely.geometry.Polygon
         Input polygon.
+
     Returns
     -------
     polys : list of shapely.geometry.Polygon
@@ -104,6 +106,7 @@ def check_dateline(poly):
 def determine_polygon(ref_slc, bbox=None):
     """Determine bounding polygon using RSLC radar grid/orbit
     or user-defined bounding box
+
     Parameters:
     ----------
     ref_slc: str
@@ -111,6 +114,7 @@ def determine_polygon(ref_slc, bbox=None):
     bbox: list, float
         Bounding box with lat/lon coordinates (decimal degrees)
         in the form of [West, South, East, North]
+
     Returns:
     -------
     poly: shapely.Geometry.Polygon
@@ -129,12 +133,14 @@ def determine_polygon(ref_slc, bbox=None):
 
 def point2epsg(lon, lat):
     """Return EPSG code based on point lat/lon
+
     Parameters:
     ----------
     lat: float
         Latitude coordinate of the point
     lon: float
         Longitude coordinate of the point
+
     Returns:
     -------
     epsg code corresponding to the point lat/lon coordinates
@@ -157,16 +163,18 @@ def point2epsg(lon, lat):
 def get_geo_polygon(ref_slc, min_height=-500.,
                     max_height=9000., pts_per_edge=5):
     """Create polygon (EPSG:4326) using RSLC radar grid and orbits
+
     Parameters:
     -----------
     ref_slc: str
-        Path to RSLC product to stage the WATERMASK for
+        Path to RSLC product to stage the water mask for
     min_height: float
-        Global minimum height (in m) for WATERMASK interpolator
+        Global minimum height (in m) for water mask interpolator
     max_height: float
-        Global maximum height (in m) for WATERMASK interpolator
+        Global maximum height (in m) for water mask interpolator
     pts_per_edge: float
         Number of points per edge for min/max bounding box computation
+
     Returns:
     -------
     poly: shapely.Geometry.Polygon
@@ -208,10 +216,12 @@ def determine_projection(polys):
     """Determine EPSG code for each polygon in polys.
     EPSG is computed for a regular list of points. EPSG
     is assigned based on a majority criteria.
+
     Parameters:
     -----------
     polys: shapely.Geometry.Polygon
         List of shapely Polygons
+
     Returns:
     --------
     epsg:
@@ -247,13 +257,14 @@ def determine_projection(polys):
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
 def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
-    """Translate WATERMASK from nisar-WATERMASK bucket. This
+    """Translate water mask from nisar-WATERMASK bucket. This
        function is decorated to perform retries
        using exponential backoff to make the remote
        call resilient to transient issues stemming
        from network access, authorization and AWS
        throttling (see "Query throttling" section at
        https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html).
+
     Parameters:
     ----------
     vrt_filename: str
@@ -289,7 +300,7 @@ def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
 
 
 def download_watermask(polys, epsgs, outfile, version):
-    """Download WATERMASK from nisar-WATERMASK bucket
+    """Download water mask from nisar-WATERMASK bucket
 
     Parameters:
     ----------
@@ -322,10 +333,7 @@ def download_watermask(polys, epsgs, outfile, version):
     file_prefix = os.path.splitext(outfile)[0]
     watermask_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        if epsg == 4326:
-            vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
-        else:
-            vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
+        vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         watermask_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
@@ -338,6 +346,7 @@ def download_watermask(polys, epsgs, outfile, version):
 def transform_polygon_coords(polys, epsgs):
     """Transform coordinates of polys (list of polygons)
        to target epsgs (list of EPSG codes)
+
     Parameters:
     ----------
     polys: shapely.Geometry.Polygon
@@ -380,12 +389,14 @@ def check_watermask_overlap(watermaskFilepath, polys):
     """Evaluate overlap between user-provided WATERMASK
        and WATERMASK that stage_watermask.py would download
        based on RSLC or bbox provided information
+
     Parameters:
     ----------
     watermaskFilepath: str
         Filepath to the user-provided WATERMASK
     polys: shapely.geometry.Polygon
         List of polygons computed from RSLC or bbox
+
     Returns:
     -------
     perc_area: float
@@ -395,16 +406,16 @@ def check_watermask_overlap(watermaskFilepath, polys):
     from isce3.io import Raster
 
     # Get local WATERMASK edge coordinates
-    WATERMASK = Raster(watermaskFilepath)
-    ulx, xres, xskew, uly, yskew, yres = WATERMASK.get_geotransform()
-    lrx = ulx + (WATERMASK.width * xres)
-    lry = uly + (WATERMASK.length * yres)
+    watermask = Raster(watermaskFilepath)
+    ulx, xres, xskew, uly, yskew, yres = watermask.get_geotransform()
+    lrx = ulx + (watermask.width * xres)
+    lry = uly + (watermask.length * yres)
     poly_watermask = Polygon([(ulx, uly), (ulx, lry), (lrx, lry), (lrx, uly)])
 
     # Initialize epsg
-    epsg = [WATERMASK.get_epsg()] * len(polys)
+    epsg = [watermask.get_epsg()] * len(polys)
 
-    if WATERMASK.get_epsg() != 4326:
+    if watermask.get_epsg() != 4326:
         polys = transform_polygon_coords(polys, epsg)
 
     perc_area = 0
@@ -416,6 +427,11 @@ def check_watermask_overlap(watermaskFilepath, polys):
 def check_aws_connection(version):
     """Check connection to AWS s3://nisar-static-repo/WATER_MASK bucket
        Throw exception if no connection is established
+
+    Parameters
+    ----------
+    version: str
+        Version for water mask
     """
     import boto3
     s3 = boto3.resource('s3')
@@ -428,10 +444,11 @@ def check_aws_connection(version):
         raise ValueError(errmsg)
 
 
-def apply_margin(polygon, margin_in_km=5):
+def apply_margin_polygon(polygon, margin_in_km=5):
     '''
     Convert margin from km to degrees and
     apply to polygon
+
     Parameters
     ----------
     polygon: shapely.Geometry.Polygon
@@ -439,6 +456,7 @@ def apply_margin(polygon, margin_in_km=5):
         ground over which download the DEM
     margin_in_km: np.float
         Buffer in km to add to polygon
+
     Returns
     ------
     poly_with_margin: shapely.Geometry.box
@@ -459,10 +477,12 @@ def apply_margin(polygon, margin_in_km=5):
 def margin_km_to_deg(margin_in_km):
     '''
     Converts a margin value from km to degrees
+
     Parameters
     ----------
     margin_in_km: np.float
         Margin in km
+
     Returns
     -------
     margin_in_deg: np.float
@@ -478,12 +498,14 @@ def margin_km_to_longitude_deg(margin_in_km, lat=0):
     '''
     Converts margin from km to degrees as a function of
     latitude
+
     Parameters
     ----------
     margin_in_km: np.float
         Margin in km
     lat: np.float
         Latitude to use for the conversion
+
     Returns
     ------
     delta_lon: np.float
@@ -506,7 +528,7 @@ def main(opts):
     # Check if RSLC or bbox are provided
     if (opts.product is None) & (opts.bbox is None):
         errmsg = "Need to provide reference RSLC HDF5 or bounding box. " \
-                 "Cannot download WATERMASK"
+                 "Cannot download water mask"
         raise ValueError(errmsg)
 
     # Make sure that output file has VRT extension
@@ -518,31 +540,31 @@ def main(opts):
     poly = determine_polygon(opts.product, opts.bbox)
 
     # Apply margin to the identified polygon in lat/lon
-    poly = apply_margin(poly, opts.margin)
+    poly = apply_margin_polygon(poly, opts.margin)
 
     # Check dateline crossing. Returns list of polygons
     polys = check_dateline(poly)
 
     if os.path.isfile(opts.filepath):
-        print('Check overlap with user-provided WATERMASK')
+        print('Check overlap with user-provided water mask')
         overlap = check_watermask_overlap(opts.filepath, polys)
         if overlap < 75.:
-            print('Insufficient WATERMASK coverage. Errors might occur')
-        print(f'WATERMASK coverage is {overlap} %')
+            print('Insufficient water mask coverage. Errors might occur')
+        print(f'water mask coverage is {overlap} %')
     else:
         # Check connection to AWS s3 nisar-WATERMASK  ucket
         try:
             check_aws_connection(opts.version)
         except ImportError:
             import warnings
-            warnings.warn('boto3 is require to verify AWS connection '
+            warnings.warn('boto3 is required to verify AWS connection '
                           'proceeding without verifying connection')
         # Determine EPSG code
         epsg = determine_projection(polys)
-        # Download WATERMASK
+        # Download water mask
         download_watermask(polys, epsg, opts.outfile, opts.version)
-        print('Done, WATERMASK store locally')
-        
+        print('Done, water mask store locally')
+
 
 if __name__ == '__main__':
     opts = cmdLineParse()
