@@ -1116,8 +1116,8 @@ class InSARWriter(h5py.File):
             "isMixedMode",
             np.bool_(mixed_mode),
             np.string_(
-                    '"True" if this product is generated from reference and secondary'
-                    ' RSLCs with different range bandwidth, "False" otherwise.'
+                '"True" if this product is generated from reference and secondary'
+                ' RSLCs with different range bandwidth, "False" otherwise.'
             ),
         )
 
