@@ -1,6 +1,9 @@
 import pathlib
 from dataclasses import dataclass
+
 import isce3
+import journal
+
 ISCE3_VERSION = isce3.__version__
 
 
@@ -27,27 +30,27 @@ class InSARProductsInfo:
     
     @classmethod
     def Base(cls):
-        return cls("", "", "", "", False)
+        return cls("1.0", "", "", "", False)
     
     @classmethod
     def RIFG(cls):
-        return cls("0.1", "RIFG", "L1", "0.1", False)
+        return cls("1.0", "RIFG", "L1", "0.1", False)
 
     @classmethod
     def ROFF(cls):
-        return cls("0.1", "ROFF", "L1", "0.1", False)
+        return cls("1.0", "ROFF", "L1", "0.1", False)
 
     @classmethod
     def RUNW(cls):
-        return cls("0.1", "RUNW", "L1", "0.1", False)
+        return cls("1.0", "RUNW", "L1", "0.1", False)
 
     @classmethod
     def GOFF(cls):
-        return cls("0.1", "GOFF", "L2", "0.1", True)
+        return cls("1.0", "GOFF", "L2", "0.1", True)
 
     @classmethod
     def GUNW(cls):
-        return cls("0.1", "GUNW", "L2", "0.1", True)
+        return cls("1.0", "GUNW", "L2", "0.1", True)
 
 
 def get_validated_file_path(path_str: str):
@@ -67,12 +70,15 @@ def get_validated_file_path(path_str: str):
 
     path_obj = pathlib.Path(path_str)
 
+    err = journal.error('nisar.product.insar')
     if not path_obj.exists():
         err_str = f"{path_str} does not exist"
+        err.log(err_str)
         raise FileNotFoundError(err_str)
 
     if not path_obj.is_file():
         err_str = f"{path_str} is not a file"
+        err.log(err_str)
         raise FileNotFoundError(err_str)
 
     return str(path_obj)

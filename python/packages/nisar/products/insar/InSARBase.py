@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 import h5py
+import journal
 import numpy as np
 from isce3.core import DateTime
 from nisar.products.readers import SLC
@@ -99,21 +100,27 @@ class InSARWriter(h5py.File):
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
         
-        # Open the reference file
+        self.error_channel = journal.error("nisar.product.insar")
+        
+        # Open the reference HDF5 file
         try:
             self.ref_h5py_file_obj = h5py.File(
                 self.ref_h5_slc_file, "r", libver="latest", swmr=True
             )
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Cannot Open the {self.ref_h5_slc_file} file")
+        except OSError:
+            err_msg =  f"The {self.ref_h5_slc_file} might not be a HDF5 file"
+            self.error_channel.log(err_msg)
+            raise OSError(err_msg)
         
-        # Open the secondary file
+        # Open the secondary HDF5 file
         try:
             self.sec_h5py_file_obj = h5py.File(
                 self.sec_h5_slc_file, "r", libver="latest", swmr=True
             )
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Cannot Open the {self.sec_h5_slc_file} file")
+        except OSError:
+            err_msg = f"The {self.sec_h5_slc_file} might not be a HDF5 file"
+            self.error_channel.log(err_msg)
+            raise OSError(err_msg)
 
     def add_root_attrs(self):
         """
@@ -190,6 +197,9 @@ class InSARWriter(h5py.File):
             )
             common_group = self.require_group(common_group_name)
 
+            # TODO: the dopplerCentroid and dopplerBandwidth are placeholders heres,
+            # and copied from the bandpassed RSLC data. 
+            # Should those also be updated in the crossmul module?            
             self._copy_dataset_by_name(
                 doppler_centroid_group, "dopplerCentroid", common_group
             )
@@ -264,6 +274,10 @@ class InSARWriter(h5py.File):
                 "slantRangeSpacing",
                 rslc_frequency_group,
             )
+            
+            # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
+            # and copied from the bandpassed RSLC data. 
+            # Should we update those fields?    
             self._copy_dataset_by_name(
                 swath_frequency_group,
                 "processedRangeBandwidth",
@@ -551,6 +565,9 @@ class InSARWriter(h5py.File):
             igram_group_name = f"{self.group_paths.ParametersPath}/interferogram/frequency{freq}"
             igram_group = self.require_group(igram_group_name)
 
+            # TODO: the azimuthBandwidth and rangeBandwidth are placeholders heres,
+            # and copied from the bandpassed RSLC data.
+            # those should be updated in the crossmul module.
             self._copy_dataset_by_name(
                 bandwidth_group,
                 "processedAzimuthBandwidth",
@@ -916,11 +933,13 @@ class InSARWriter(h5py.File):
 
         # processing center (JPL or NRSA)
         if processing_center is None:
-            processing_center = "JPL"
+            processing_center = "undefined"
         elif processing_center.upper() == "J":
             processing_center = "JPL"
-        else:
+        elif processing_center == "N":
             processing_center = "NRSA"
+        else:
+            processing_center ="undefined"
 
         # Determine processing type and from it urgent observation
         if processing_type is None:
@@ -1053,12 +1072,21 @@ class InSARWriter(h5py.File):
         freq = "A" if "A" in self.freq_pols else "B"
         swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
         freq_group = self.ref_h5py_file_obj[swath_frequency_path]
+        
+        # Center frequency in GHz
         center_freqency = freq_group["processedCenterFrequency"][()] / 1e9
-        # L band 
+        
+        # L band if the center frequency is between 1GHz and 2 GHz
+        # S band if the center frequency is between 2GHz and 4 GHz
+        # both bands are defined by the IEEE with the reference:
+        # https://en.wikipedia.org/wiki/L_band
+        # https://en.wikipedia.org/wiki/S_band 
         if (center_freqency >= 1.0) and (center_freqency <= 2.0):
             return "L"
-        else:
+        elif (center_freqency > 2.0) and (center_freqency <= 4.0):
             return "S"
+        else:
+            return "Unknown"
 
     def _get_mixed_mode(self):
         """
@@ -1069,49 +1097,38 @@ class InSARWriter(h5py.File):
         isMixedMode (DatasetParams)
         """
 
-        mixed_mode = False
-        for freq, _, _ in get_cfg_freq_pols(self.cfg):
-            swath_frequency_path = (
-                f"{self.ref_rslc.SwathPath}/frequency{freq}/"
-            )
-            ref_swath_frequency_group = self.ref_h5py_file_obj[
-                swath_frequency_path
-            ]
-            sec_swath_frequency_group = self.sec_h5py_file_obj[
-                swath_frequency_path
-            ]
+        pols_dict = {}
+        for freq, pols, _ in get_cfg_freq_pols(self.cfg):
+            pols_dict[freq] = pols
+        
+        # Import the check_range_bandwidth_overlap locally to prevent the circlar import errors:
+        # when import globally, there is the following error.
+        # ImportError: cannot import name 'PolChannel' from partially initialized module 'nisar.mixed_mode' 
+        # (most likely due to a circular import) 
+        # (/isce/install/packages/nisar/mixed_mode/__init__.py)
+        from isce3.splitspectrum.splitspectrum import check_range_bandwidth_overlap
 
-            # range bandwidth of the reference and secondary RSLC
-            ref_range_bandwidth = ref_swath_frequency_group[
-                "processedRangeBandwidth"
-            ][()]
-            sec_range_bandwidth = sec_swath_frequency_group[
-                "processedRangeBandwidth"
-            ][()]
-
-            # if the reference and secondary RSLC have different range bandwidth,
-            # it is in mixed mode (i.e. mixed mode = True)
-            if abs(ref_range_bandwidth - sec_range_bandwidth) >= 1:
-                mixed_mode = True
-                
-            return DatasetParams(
-                "isMixedMode",
-                np.bool_(mixed_mode),
-                np.string_(
-                    '"True" if this product is a composite of data'
-                    ' collected in multiple radar modes, "False"'
-                    " otherwise."
-                ),
-            )
+        # Check if there is bandwidth overlap
+        mode = check_range_bandwidth_overlap(self.ref_rslc, self.sec_rslc, pols_dict)
+        mixed_mode = False if not mode else True
+             
+        return DatasetParams(
+            "isMixedMode",
+            np.bool_(mixed_mode),
+            np.string_(
+                    '"True" if this product is generated from reference and secondary'
+                    ' RSLCs with different range bandwidth, "False" otherwise.'
+            ),
+        )
 
     def _get_default_chunks(self):
         """
-        Get the defualt chunk size.
+        Get the default chunk size.
         To change the chunks of the children classes, need to overwrite this function
         
         Returns:
         ------
-        (128, 128) (tuble) 
+        (128, 128) (tuple) 
         """
         return (128, 128)
 
