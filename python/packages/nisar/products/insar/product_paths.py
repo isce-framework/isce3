@@ -7,15 +7,27 @@ class CommonPaths:
     Properties to paths common to all InSAR products. 
     
     Attributes:
-    ------
-    - ProductName (str): product name
-    - MetadataPath (str):  metadata group path 
-    - AttitudePath (str): attitude group path
-    - OrbitPath (str): orbit group path
-    - ProcessingInformationPath (str): processingInformation group path
-    - AlgorithmsPath (str): algorithms group path
-    - InputsPath (str): inputs group path
-    - ParametersPath (str): parameters group path
+    ----------
+    ProductName : str
+        Product name
+    RootPath : str
+        Root path
+    IdentificationPath : str
+        Identification group path
+    MetadataPath : str
+        Metadata group path 
+    AttitudePath : str
+        Attitude group path
+    OrbitPath : str
+        Orbit group path
+    ProcessingInformationPath : str
+        ProcessingInformation group path
+    AlgorithmsPath : str
+        Algorithms group path
+    InputsPath : str
+        Inputs group path
+    ParametersPath : str
+        Parameters group path
     """
     
     ProductName: str = ""
@@ -56,12 +68,14 @@ class CommonPaths:
 @dataclass
 class L1GroupsPaths(CommonPaths):
     """
-    Properties to paths common to all level1 InSAR products. 
+    Properties to paths common to all level 1 InSAR products. 
     
     Attributes:
-    ------
-    - GeolocationGridPath (str): geolocation group path
-    - SwathsPath (str): swaths group path
+    ----------
+    GeolocationGridPath : str
+        Geolocation group path
+    SwathsPath : str
+        Swaths group path
     """
     
     @property
@@ -75,12 +89,14 @@ class L1GroupsPaths(CommonPaths):
 @dataclass
 class L2GroupsPaths(CommonPaths):
     """
-    Properties to paths common to all level2 InSAR products. 
+    Properties to paths common to all level 2 InSAR products. 
     
     Attributes:
-    ------
-    - RadarGridPath (str): radar grid path
-    - GridsPath (str): grids group path
+    ----------
+    RadarGridPath : str
+        Radar grid path
+    GridsPath : str
+        Grids group path
     """
     
     @property
@@ -97,8 +113,9 @@ class RIFGGroupsPaths(L1GroupsPaths):
     RIFG Product Groups Paths
     
     Attributes:
-    ------
-    - ProductName (str): product name (RIFG)
+    ----------
+    ProductName : str
+        Product name (RIFG)
     """
     
     ProductName: str = "RIFG"
@@ -110,8 +127,9 @@ class RUNWGroupsPaths(L1GroupsPaths):
     RUNW Product Groups Paths
     
     Attributes:
-    ------
-    - ProductName (str): product name (RUNW)
+    ----------
+    ProductName : str
+        Product name (RUNW)
     """
     
     ProductName: str = "RUNW"
@@ -123,8 +141,9 @@ class ROFFGroupsPaths(L1GroupsPaths):
     ROFF Product Groups Paths
     
     Attributes:
-    ------
-    - ProductName (str): product name (ROFF)
+    ----------
+    ProductName : str
+        Product name (ROFF)
     """
     
     ProductName: str = "ROFF"
@@ -136,8 +155,9 @@ class GUNWGroupsPaths(L2GroupsPaths):
     GUNW Product Groups Paths
     
     Attributes:
-    ------
-    - ProductName (str): product name (GUNW)
+    ----------
+    ProductName : str
+        Product name (GUNW)
     """
     
     ProductName: str = "GUNW"
@@ -149,8 +169,9 @@ class GOFFGroupsPaths(L2GroupsPaths):
     GOFF Product Groups Paths
     
     Attributes:
-    ------
-    - ProductName (str): product name (GOFF)
+    ----------
+    ProductName : str
+        Product name (GOFF)
     """
     
     ProductName: str = "GOFF"

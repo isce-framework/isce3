@@ -11,15 +11,21 @@ ISCE3_VERSION = isce3.__version__
 class InSARProductsInfo:
     """
     A data class describing the basic information of InSAR product
-    including the product level, specification version, type, and version
+    including the product level, specification version, type, version,
+    and geocoded or not
 
     Attributes:
-    ------
-    - ProductSpecificationVersion (str):  product specification version
-    - ProductType (str): product type, one of 'RIFG', 'ROFF', 'RUNW', 'GOFF', 'GUNW'
-    - ProductLevel (str): product level, one of 'L1' and 'L2'
-    - ProductVersion (str): product version, default is '1.0'
-    - isGeocoded (bool): geocoded product or not (True or False)
+    ----------
+    ProductSpecificationVersion : str
+        Product specification version, default is 1.0
+    ProductType : str
+        Product type, one of 'RIFG', 'ROFF', 'RUNW', 'GOFF', 'GUNW'
+    ProductLevel : str
+        Product level, one of 'L1' and 'L2'
+    ProductVersion : str
+        Product version, default is '1.0'
+    isGeocoded : bool
+        Geocoded product or not (True or False)
     """
 
     ProductSpecificationVersion: str
@@ -60,10 +66,14 @@ def get_validated_file_path(path_str: str):
     If None, then raise the FileNotFoundError
 
     Parameters:
-    ------
-    - path_str (str): file path
-    Return
-    - validate file path
+    ----------
+    path_str : str
+        File path
+    
+    Returns
+    -------
+    str
+        Validate file path
     """
     if path_str is None:
         return None

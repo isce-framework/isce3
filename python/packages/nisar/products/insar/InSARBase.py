@@ -22,18 +22,29 @@ class InSARWriter(h5py.File):
     h5py.File parameter
 
     Attributes:
-    ------
-    - cfg (dict): runconfig dictionrary
-    - runconfig_path (str):  path of the runconfig file
-    - ref_h5_slc_file (str): path of the reference RSLC
-    - sec_h5_slc_file (str): path of the secondary RSLC
-    - external_orbit_path (str): path of the external orbit file
-    - epoch (Datetime): the reference datetime for the orbit
-    - ref_rslc (object): SLC object of reference RSLC file
-    - sec_rslc (object): SLC object of the secondary RSLC file
-    - ref_h5py_file_obj (h5py.File): h5py object of the reference RSLC
-    - sec_h5py_file_obj (h5py.File): h5py object of the secondary RSLC
-    - kwds: parameters of the h5py.File
+    ----------
+    cfg : dict
+        Runconfig dictionary
+    runconfig_path : str
+        Path of the runconfig file
+    ref_h5_slc_file : str
+        Path of the reference RSLC
+    sec_h5_slc_file : str
+        Path of the secondary RSLC
+    external_orbit_path : str
+        Path of the external orbit file
+    epoch : Datetime
+        The reference datetime for the orbit
+    ref_rslc : nisar.products.readers.SLC
+        nisar.products.readers.SLC object of reference RSLC file
+    sec_rslc : nisar.products.readers.SLC
+        nisar.products.readers.SLC object of the secondary RSLC file
+    ref_h5py_file_obj : h5py.File
+        h5py.File object of the reference RSLC
+    sec_h5py_file_obj : h5py.File
+        h5py.File object of the secondary RSLC
+    - kwds : dict
+        Parameters of the h5py.File
     """
 
     def __init__(
@@ -49,11 +60,15 @@ class InSARWriter(h5py.File):
         to avoid passing h5py.File parameter.
 
         Parameters
-        ------
-        - runconfig_dict (dict): runconfig dictionrary
-        - runconfig_path (str): path of the reference RSLC
-        - external_orbit_path (Optional[str]): path of the external orbit file
-        - epoch (Optional[Datetime]): the reference datetime for the orbit
+        ----------
+        runconfig_dict : dict
+            Runconfig dictionary
+        runconfig_path : str
+            Path of the reference RSLC
+        external_orbit_path : str, optional
+            Path of the external orbit file
+        epoch : Datetime, optional
+            The reference datetime for the orbit
         """
 
         super().__init__(**kwds)
@@ -74,12 +89,12 @@ class InSARWriter(h5py.File):
             "list_of_frequencies"
         ]
 
-        # group paths
+        # Group paths
         self.group_paths = CommonPaths()
 
-        # product information
+        # Product information
         self.product_info = InSARProductsInfo.Base()
-        
+
         # Epoch time
         self.epoch = epoch
 
@@ -99,19 +114,19 @@ class InSARWriter(h5py.File):
 
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
-        
+
         self.error_channel = journal.error("nisar.product.insar")
-        
+
         # Open the reference HDF5 file
         try:
             self.ref_h5py_file_obj = h5py.File(
                 self.ref_h5_slc_file, "r", libver="latest", swmr=True
             )
         except OSError:
-            err_msg =  f"The {self.ref_h5_slc_file} might not be a HDF5 file"
+            err_msg = f"The {self.ref_h5_slc_file} might not be a HDF5 file"
             self.error_channel.log(err_msg)
             raise OSError(err_msg)
-        
+
         # Open the secondary HDF5 file
         try:
             self.sec_h5py_file_obj = h5py.File(
@@ -124,7 +139,7 @@ class InSARWriter(h5py.File):
 
     def add_root_attrs(self):
         """
-        Write attributes to root that are common to all InSAR products
+        Write attributes to the HDF5 root that are common to all InSAR products
         """
         self.attrs["Conventions"] = np.string_("CF-1.7")
         self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
@@ -133,8 +148,9 @@ class InSARWriter(h5py.File):
 
     def save_to_hdf5(self):
         """
-        Write to the HDF5
+        Write the attributes and groups to the HDF5 file
         """
+
         self.add_root_attrs()
         self.add_identification_to_hdf5()
         self.add_common_metadata_to_hdf5()
@@ -142,46 +158,49 @@ class InSARWriter(h5py.File):
 
     def add_procinfo_to_metadata(self):
         """
-        Add processing information to metadata
-        
-        Return
-        ------
-        group (h5py.Group): the processing information group object
+        Add processing information group to HDF5 metadata
+
+        Returns
+        ----------
+        group : h5py.Group
+            The processing information group object
         """
+
         group = self.require_group(self.group_paths.ProcessingInformationPath)
         self.add_algorithms_to_procinfo()
         self.add_inputs_to_procinfo(self.runconfig_path)
         self.add_parameters_to_procinfo()
-        
+
         return group
-    
+
     def add_algorithms_to_procinfo(self):
         """
-        Add the algorithm to the processing information
-        
-        Return
-        ------
-        algo_group (h5py.Group): the algorithm group object
+        Add the algorithm group to the processing information group
+
+        Returns
+        ----------
+        algo_group : h5py.Group
+            The algorithm group object
         """
 
         algo_group = self.require_group(self.group_paths.AlgorithmsPath)
 
-        software_version =  DatasetParams(
+        software_version = DatasetParams(
             "softwareVersion",
-            np.string_(ISCE3_VERSION),
-            np.string_("Software version used for processing"),
-            )
-        
+            ISCE3_VERSION,
+            "Software version used for processing",
+        )
+
         add_dataset_and_attrs(algo_group, software_version)
-        
+
         return algo_group
-        
+
     def add_common_to_procinfo_params(self):
         """
         Add the common group to the "processingInformation/parameters" group
         """
 
-        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
             doppler_centroid_path = f"{self.ref_rslc.ProcessingInformationPath}/parameters/frequency{freq}"
             doppler_bandwidth_path = (
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
@@ -198,40 +217,46 @@ class InSARWriter(h5py.File):
             common_group = self.require_group(common_group_name)
 
             # TODO: the dopplerCentroid and dopplerBandwidth are placeholders heres,
-            # and copied from the bandpassed RSLC data. 
-            # Should those also be updated in the crossmul module?            
-            self._copy_dataset_by_name(
+            # and copied from the bandpassed RSLC data.
+            # Should those also be updated in the crossmul module?
+            self._copy_dataset(
                 doppler_centroid_group, "dopplerCentroid", common_group
             )
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 doppler_bandwidth_group,
                 "processedAzimuthBandwidth",
                 common_group,
                 "dopplerBandwidth",
             )
 
-    def add_RSLC_to_procinfo_params(self, name: str):
+    def add_RSLC_to_procinfo_params(self, rslc_name: str):
         """
-        Add the RSLC to "processingInformation/parameters"
-        
-        Return
-        ------
-        group (h5py.Group): the RSLC group object
+        Add the RSLC group to "processingInformation/parameters" group
+
+        Parameters
+        ----------
+        rslc_name : str
+            RSLC name, either 'reference' or 'secondary'
+
+        Returns
+        ----------
+        group : h5py.Group
+            The RSLC group object
         """
 
-        if name.lower() == "reference":
-            h5py_file_obj = self.ref_h5py_file_obj
+        if rslc_name.lower() == "reference":
+            rslc_h5py_file_obj = self.ref_h5py_file_obj
             rslc = self.ref_rslc
         else:
-            h5py_file_obj = self.sec_h5py_file_obj
+            rslc_h5py_file_obj = self.sec_h5py_file_obj
             rslc = self.sec_rslc
 
-        try:
-            rfi_mitigation = h5py_file_obj[
-                f"{rslc.ProcessingInformationPath}/algorithms/rfiMitigation"
-            ][()]
-        except KeyError:
-            # no RFI mitigation is found
+        rfi_mit_path = (
+            f"{rslc.ProcessingInformationPath}/algorithms/rfiMitigation"
+        )
+        if rfi_mit_path in rslc_h5py_file_obj:
+            rfi_mitigation = rslc_h5py_file_obj[rfi_mit_path][()]
+        else:
             rfi_mitigation = None
 
         rfi_mitigation_flag = False
@@ -242,7 +267,7 @@ class InSARWriter(h5py.File):
             DatasetParams(
                 "rfiCorrectionApplied",
                 np.bool_(rfi_mitigation_flag),
-                np.string_(
+                (
                     "Flag to indicate if RFI correction has been applied"
                     " to reference RSLC"
                 ),
@@ -250,77 +275,77 @@ class InSARWriter(h5py.File):
             self._get_mixed_mode(),
         ]
 
-        group = self.require_group(f"{self.group_paths.ParametersPath}/{name}")
-        parameters_group = h5py_file_obj[
+        group = self.require_group(
+            f"{self.group_paths.ParametersPath}/{rslc_name}"
+        )
+        parameters_group = rslc_h5py_file_obj[
             f"{rslc.ProcessingInformationPath}/parameters"
         ]
-        self._copy_dataset_by_name(
-            parameters_group, "referenceTerrainHeight", group
-        )
+        self._copy_dataset(parameters_group, "referenceTerrainHeight", group)
         for ds_param in ds_params:
             add_dataset_and_attrs(group, ds_param)
 
-        for freq, _, _ in get_cfg_freq_pols(self.cfg):
-            rslc_group_frequecy_name = (
-                f"{self.group_paths.ParametersPath}/{name}/frequency{freq}"
-            )
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            rslc_group_frequecy_name = f"{self.group_paths.ParametersPath}/{rslc_name}/frequency{freq}"
             rslc_frequency_group = self.require_group(rslc_group_frequecy_name)
 
             swath_frequency_path = f"{rslc.SwathPath}/frequency{freq}/"
-            swath_frequency_group = h5py_file_obj[swath_frequency_path]
+            swath_frequency_group = rslc_h5py_file_obj[swath_frequency_path]
 
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 swath_frequency_group,
                 "slantRangeSpacing",
                 rslc_frequency_group,
             )
-            
+
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
-            # and copied from the bandpassed RSLC data. 
-            # Should we update those fields?    
-            self._copy_dataset_by_name(
+            # and copied from the bandpassed RSLC data.
+            # Should we update those fields?
+            self._copy_dataset(
                 swath_frequency_group,
                 "processedRangeBandwidth",
                 rslc_frequency_group,
                 "rangeBandwidth",
             )
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 swath_frequency_group,
                 "processedAzimuthBandwidth",
                 rslc_frequency_group,
                 "azimuthBandwidth",
             )
 
-            swath_group = h5py_file_obj[rslc.SwathPath]
-            self._copy_dataset_by_name(
+            swath_group = rslc_h5py_file_obj[rslc.SwathPath]
+            self._copy_dataset(
                 swath_group, "zeroDopplerTimeSpacing", rslc_frequency_group
             )
 
-            doppler_centroid_group = h5py_file_obj[
+            doppler_centroid_group = rslc_h5py_file_obj[
                 f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
             ]
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 doppler_centroid_group, "dopplerCentroid", rslc_frequency_group
             )
-            
+
         return group
-        
+
     def add_coregistration_to_algo(self, algo_group: h5py.Group):
         """
         Add the coregistration parameters to the "processingInfromation/algorithms" group
-        
+
         Parameters
-        ------
-        - algo_group (h5py.Group): the algorithm group object
-        
-        Return
-        ------
-        - coregistration_group (h5py.Group): the coregistration group object
+        ----------
+        algo_group : h5py.Group
+            The algorithm group object
+
+        Returns
+        ----------
+        coregistration_group : h5py.Group
+            The coregistration group object
         """
 
-        pcfg = self.cfg["processing"]
-        dense_offsets = pcfg["dense_offsets"]["enabled"]
-        offset_product = pcfg["offsets_product"]["enabled"]
+        proc_cfg = self.cfg["processing"]
+        dense_offsets = proc_cfg["dense_offsets"]["enabled"]
+        offset_product = proc_cfg["offsets_product"]["enabled"]
 
         if dense_offsets:
             name = "dense_offsets"
@@ -338,13 +363,17 @@ class InSARWriter(h5py.File):
 
         if dense_offsets or offset_product:
             coreg_method = f"{coreg_method} with cross-correlation refinement"
-            cross_correlation_domain = pcfg[name]["cross_correlation_domain"]
-            if pcfg["rubbersheet"]["enabled"]:
-                outlier_filling_method = pcfg["rubbersheet"][
+            cross_correlation_domain = proc_cfg[name][
+                "cross_correlation_domain"
+            ]
+            if proc_cfg["rubbersheet"]["enabled"]:
+                outlier_filling_method = proc_cfg["rubbersheet"][
                     "outlier_filling_method"
                 ]
-                filter_kernel_algorithm = pcfg["rubbersheet"]["offsets_filter"]
-                culling_metric = pcfg["rubbersheet"]["culling_metric"]
+                filter_kernel_algorithm = proc_cfg["rubbersheet"][
+                    "offsets_filter"
+                ]
+                culling_metric = proc_cfg["rubbersheet"]["culling_metric"]
 
                 if outlier_filling_method == "fill_smoothed":
                     description = (
@@ -358,154 +387,152 @@ class InSARWriter(h5py.File):
         algo_coregistration_ds_params = [
             DatasetParams(
                 "coregistrationMethod",
-                np.string_(coreg_method),
-                np.string_("RSLC coregistration method"),
+                coreg_method,
+                "RSLC coregistration method",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "crossCorrelation",
-                np.string_(cross_correlation_domain),
-                np.string_(
+                cross_correlation_domain,
+                (
                     "Cross-correlation algorithm for sub-pixel offsets"
                     f" computation in {cross_correlation_domain} domain"
                 ),
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "crossCorrelationFilling",
-                np.string_(outlier_filling_method),
-                np.string_(description),
+                outlier_filling_method,
+                description,
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "crossCorrelationFilterKernel",
-                np.string_(filter_kernel_algorithm),
-                np.string_(
-                    "Filtering algorithm for cross-correlation offsets"
-                ),
+                filter_kernel_algorithm,
+                "Filtering algorithm for cross-correlation offsets",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "crossCorrelationOutliers",
-                np.string_(culling_metric),
-                np.string_("Outliers identification algorithm"),
+                culling_metric,
+                "Outliers identification algorithm",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "geometryCoregistration",
-                np.string_(
-                    "Range doppler to geogrid then geogrid to range doppler"
-                ),
-                np.string_("Geometry coregistration algorithm"),
+                "Range doppler to geogrid then geogrid to range doppler",
+                "Geometry coregistration algorithm",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "resampling",
-                np.string_("sinc"),
-                np.string_("Secondary RSLC resampling algorithm"),
+                "sinc",
+                "Secondary RSLC resampling algorithm",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
         ]
-        
+
         coregistration_group = algo_group.require_group("coregistration")
         for ds_param in algo_coregistration_ds_params:
             add_dataset_and_attrs(coregistration_group, ds_param)
-            
+
         return coregistration_group
 
     def add_interferogramformation_to_algo(self, algo_group: h5py.Group):
         """
-        Add the InterferogramFormation to "processingInformation/algorithms" group
-        
-        Parameters
-        ------
-        - algo_group (h5py.Group): the algorithm group object
-        
-        Return
-        ------
-        - igram_formation_group (h5py.Group): the interfergram formation group object
-        """
-        
-        flatten_method = "None"
-        pcfg = self.cfg["processing"]
+        Add the InterferogramFormation group to "processingInformation/algorithms" group
 
-        if pcfg["crossmul"]["flatten"]:
+        Parameters
+        ----------
+        algo_group : h5py.Group
+            The algorithm group object
+
+        Returns
+        ----------
+        igram_formation_group : h5py.Group
+            The interfergram formation group object
+        """
+
+        flatten_method = "None"
+        proc_cfg = self.cfg["processing"]
+
+        if proc_cfg["crossmul"]["flatten"]:
             flatten_method = "With geometry offsets"
 
         multilooking_method = "Spatial moving average with decimation"
-        wrapped_interferogram_filtering_mdethod = pcfg["filter_interferogram"][
-            "filter_type"
-        ]
+        wrapped_interferogram_filtering_mdethod = proc_cfg[
+            "filter_interferogram"
+        ]["filter_type"]
 
         algo_intefergramformation_ds_params = [
             DatasetParams(
                 "flatteningMethod",
-                np.string_(flatten_method),
-                np.string_(
-                    "Algorithm used to flatten the wrapped interferogram"
-                ),
+                flatten_method,
+                "Algorithm used to flatten the wrapped interferogram",
                 {
-                    #TODO: The description also needs to be changed in the product specs
-                    "algorithm_type": np.string_("Interferogram formation"),
+                    # TODO: The description also needs to be changed in the product specs
+                    "algorithm_type": "Interferogram formation",
                 },
             ),
             DatasetParams(
                 "multilooking",
-                np.string_(multilooking_method),
-                np.string_("Multilooking algorithm"),
+                multilooking_method,
+                "Multilooking algorithm",
                 {
-                    "algorithm_type": np.string_("Interferogram formation"),
+                    "algorithm_type": "Interferogram formation",
                 },
             ),
             DatasetParams(
                 "wrappedInterferogramFiltering",
-                np.string_(wrapped_interferogram_filtering_mdethod),
-                np.string_(
+                wrapped_interferogram_filtering_mdethod,
+                (
                     "Algorithm to filter wrapped interferogram prior to phase"
                     " unwrapping"
                 ),
                 {
-                    "algorithm_type": np.string_("Interferogram formation"),
+                    "algorithm_type": "Interferogram formation",
                 },
             ),
         ]
 
-        igram_formation_group = algo_group.require_group("interferogramFormation")
+        igram_formation_group = algo_group.require_group(
+            "interferogramFormation"
+        )
         for ds_param in algo_intefergramformation_ds_params:
             add_dataset_and_attrs(igram_formation_group, ds_param)
-            
+
     def add_interferogram_to_procinfo_params(self):
         """
-        Add the interferogram to "processingInformation/parameters"
+        Add the interferogram group to "processingInformation/parameters"
         """
 
-        pcfg_crossmul = self.cfg["processing"]["crossmul"]
-        range_filter = pcfg_crossmul["common_band_range_filter"]
-        azimuth_filter = pcfg_crossmul["common_band_azimuth_filter"]
+        proc_cfg_crossmul = self.cfg["processing"]["crossmul"]
+        range_filter = proc_cfg_crossmul["common_band_range_filter"]
+        azimuth_filter = proc_cfg_crossmul["common_band_azimuth_filter"]
 
-        flatten = pcfg_crossmul["flatten"]
-        range_looks = pcfg_crossmul["range_looks"]
-        azimuth_looks = pcfg_crossmul["azimuth_looks"]
+        flatten = proc_cfg_crossmul["flatten"]
+        range_looks = proc_cfg_crossmul["range_looks"]
+        azimuth_looks = proc_cfg_crossmul["azimuth_looks"]
 
         interferogram_ds_params = [
             DatasetParams(
                 "commonBandRangeFilterApplied",
                 np.bool_(range_filter),
-                np.string_(
+                (
                     "Flag to indicate if common band range filter has been"
                     " applied"
                 ),
@@ -513,7 +540,7 @@ class InSARWriter(h5py.File):
             DatasetParams(
                 "commonBandAzimuthFilterApplied",
                 np.bool_(azimuth_filter),
-                np.string_(
+                (
                     "Flag to indicate if common band azimuth filter has been"
                     " applied"
                 ),
@@ -521,7 +548,7 @@ class InSARWriter(h5py.File):
             DatasetParams(
                 "ellipsoidalFlatteningApplied",
                 np.bool_(flatten),
-                np.string_(
+                (
                     "Flag to indicate if interferometric phase has been"
                     " flattened with respect to a zero height ellipsoid"
                 ),
@@ -529,7 +556,7 @@ class InSARWriter(h5py.File):
             DatasetParams(
                 "topographicFlatteningApplied",
                 np.bool_(flatten),
-                np.string_(
+                (
                     "Flag to indicate if interferometric phase has been"
                     " flattened with respect to a zero height ellipsoid"
                 ),
@@ -537,28 +564,28 @@ class InSARWriter(h5py.File):
             DatasetParams(
                 "numberOfRangeLooks",
                 np.uint32(range_looks),
-                np.string_(
+                (
                     "Number of looks applied in the slant range direction to"
                     " form the wrapped interferogram"
                 ),
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "numberOfAzimuthLooks",
                 np.uint32(azimuth_looks),
-                np.string_(
+                (
                     "Number of looks applied in the along-track direction to"
                     " form the wrapped interferogram"
                 ),
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
         ]
 
-        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
             bandwidth_group_path = f"{self.ref_rslc.SwathPath}/frequency{freq}"
             bandwidth_group = self.ref_h5py_file_obj[bandwidth_group_path]
 
@@ -568,13 +595,13 @@ class InSARWriter(h5py.File):
             # TODO: the azimuthBandwidth and rangeBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
             # those should be updated in the crossmul module.
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 bandwidth_group,
                 "processedAzimuthBandwidth",
                 igram_group,
                 "azimuthBandwidth",
             )
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 bandwidth_group,
                 "processedRangeBandwidth",
                 igram_group,
@@ -589,139 +616,132 @@ class InSARWriter(h5py.File):
         Add the pixelOffsets group to "processingInformation/parameters" group
         """
 
-        pcfg = self.cfg["processing"]
-        is_roff = pcfg["offsets_product"]["enabled"]
+        proc_cfg = self.cfg["processing"]
+        is_roff = proc_cfg["offsets_product"]["enabled"]
         merge_gross_offset = get_off_params(
-            pcfg, "merge_gross_offset", is_roff
+            proc_cfg, "merge_gross_offset", is_roff
         )
-        skip_range = get_off_params(pcfg, "skip_range", is_roff)
-        skip_azimuth = get_off_params(pcfg, "skip_azimuth", is_roff)
+        skip_range = get_off_params(proc_cfg, "skip_range", is_roff)
+        skip_azimuth = get_off_params(proc_cfg, "skip_azimuth", is_roff)
 
         half_search_range = get_off_params(
-            pcfg, "half_search_range", is_roff, pattern="layer", get_min=True
+            proc_cfg,
+            "half_search_range",
+            is_roff,
+            pattern="layer",
+            get_min=True,
         )
         half_search_azimuth = get_off_params(
-            pcfg, "half_search_azimuth", is_roff, pattern="layer", get_min=True
+            proc_cfg,
+            "half_search_azimuth",
+            is_roff,
+            pattern="layer",
+            get_min=True,
         )
 
         window_azimuth = get_off_params(
-            pcfg, "window_azimuth", is_roff, pattern="layer", get_min=True
+            proc_cfg, "window_azimuth", is_roff, pattern="layer", get_min=True
         )
         window_range = get_off_params(
-            pcfg, "window_range", is_roff, pattern="layer", get_min=True
+            proc_cfg, "window_range", is_roff, pattern="layer", get_min=True
         )
 
         oversampling_factor = get_off_params(
-            pcfg, "correlation_surface_oversampling_factor", is_roff
+            proc_cfg, "correlation_surface_oversampling_factor", is_roff
         )
 
         pixeloffsets_ds_params = [
             DatasetParams(
                 "alongTrackWindowSize",
                 np.uint32(window_azimuth),
-                np.string_(
-                    "Along track cross-correlation window size in pixels"
-                ),
+                "Along track cross-correlation window size in pixels",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "slantRangeWindowSize",
                 np.uint32(window_range),
-                np.string_(
-                    "Slant range cross-correlation window size in pixels"
-                ),
+                "Slant range cross-correlation window size in pixels",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "alongTrackSearchWindowSize",
                 np.uint32(2 * half_search_azimuth),
-                np.string_(
-                    "Along track cross-correlation search window size in"
-                    " pixels"
-                ),
+                "Along track cross-correlation search window size in pixels",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "slantRangeSearchWindowSize",
                 np.uint32(2 * half_search_range),
-                np.string_(
-                    "Slant range cross-correlation search window size in"
-                    " pixels"
-                ),
+                "Slant range cross-correlation search window size in pixels",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "alongTrackSkipWindowSize",
                 np.uint32(skip_azimuth),
-                np.string_(
-                    "Along track cross-correlation skip window size in pixels"
-                ),
+                "Along track cross-correlation skip window size in pixels",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "slantRangeSkipWindowSize",
                 np.uint32(skip_range),
-                np.string_(
-                    "Slant range cross-correlation skip window size in pixels"
-                ),
+                "Slant range cross-correlation skip window size in pixels",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "crossCorrelationSurfaceOversampling",
                 np.uint32(oversampling_factor),
-                np.string_(
-                    "Oversampling factor of the cross-correlation surface"
-                ),
+                "Oversampling factor of the cross-correlation surface",
                 {
-                    "units": np.string_("unitless"),
+                    "units": "unitless",
                 },
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
                 np.bool_(merge_gross_offset),
-                np.string_(
+                (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"
                 ),
             ),
         ]
-        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
             pixeloffsets_group_name = f"{self.group_paths.ParametersPath}/pixelOffsets/frequency{freq}"
             pixeloffsets_group = self.require_group(pixeloffsets_group_name)
 
             for ds_param in pixeloffsets_ds_params:
                 add_dataset_and_attrs(pixeloffsets_group, ds_param)
-                                                
+
     def add_parameters_to_procinfo(self):
         """
         Add the parameters group to the "processingInformation" group
-        
-        Return
-        ------
-        - params_group (h5py.Group): the parameters group object
+
+        Returns
+        ----------
+        params_group : h5py.Group
+            The parameters group object
         """
         params_group = self.require_group(self.group_paths.ParametersPath)
 
         self.add_common_to_procinfo_params()
         self.add_RSLC_to_procinfo_params("reference")
         self.add_RSLC_to_procinfo_params("secondary")
-        
+
         runconfig_contents = DatasetParams(
             "runConfigurationContents",
-            np.string_(str(self.cfg)),
-            np.string_(
+            str(self.cfg),
+            (
                 "Contents of the run configuration file with parameters"
                 " used for processing"
             ),
@@ -729,19 +749,25 @@ class InSARWriter(h5py.File):
         add_dataset_and_attrs(params_group, runconfig_contents)
 
         return params_group
-    
+
     def add_inputs_to_procinfo(
         self,
         runconfig_path: str,
     ):
         """
         Add the inputs group to the "processingInformation" group
-        
-        Return
-        ------
-        - inputs_group (h5py.Group): the inputs group object
+
+        Parameters
+        ----------
+        runconfig_path : str
+            Path of the runconfig file
+
+        Returns
+        ----------
+        inputs_group : h5py.Group
+            The inputs group object
         """
-        
+
         orbit_file = []
         for idx in ["reference", "secondary"]:
             _orbit_file = self.cfg["dynamic_ancillary_file_group"][
@@ -763,39 +789,39 @@ class InSARWriter(h5py.File):
         inputs_ds_params = [
             DatasetParams(
                 "configFiles",
-                np.string_(os.path.basename(runconfig_path)),
-                np.string_("List of input config files used"),
+                os.path.basename(runconfig_path),
+                "List of input config files used",
             ),
             DatasetParams(
                 "demSource",
-                np.string_(dem_source),
-                np.string_(
-                    "Description of the input digital elevation model (DEM)"
-                ),
+                dem_source,
+                "Description of the input digital elevation model (DEM)",
             ),
             DatasetParams(
                 "l1ReferenceSlcGranules",
                 np.string_([os.path.basename(self.ref_h5_slc_file)]),
-                np.string_("List of input reference L1 RSLC products used"),
+                "List of input reference L1 RSLC products used",
             ),
             DatasetParams(
                 "l1SecondarySlcGranules",
                 np.string_([os.path.basename(self.sec_h5_slc_file)]),
-                np.string_("List of input secondary L1 RSLC products used"),
+                "List of input secondary L1 RSLC products used",
             ),
             DatasetParams(
                 "orbitFiles",
-                np.string_(orbit_file),
-                np.string_("List of input orbit files used"),
+                np.string_([orbit_file]),
+                "List of input orbit files used",
             ),
         ]
-        inputs_group = self.require_group(f"{self.group_paths.ProcessingInformationPath}/inputs")
+        inputs_group = self.require_group(
+            f"{self.group_paths.ProcessingInformationPath}/inputs"
+        )
         for ds_param in inputs_ds_params:
             add_dataset_and_attrs(inputs_group, ds_param)
 
         return inputs_group
-    
-    def _copy_group_by_name(
+
+    def _copy_group(
         self,
         parent_group: h5py.Group,
         src_group_name: str,
@@ -808,23 +834,26 @@ class InSARWriter(h5py.File):
         under the parent group, but need to create a new group
 
         Parameters:
-        ------
-        - parent_group (h5py.Group): the parent group of the src_group_name
-        - src_group_name (str): the group name under the  parent group
-        - dst_group (h5py.Group): the destinated group
-        - dst_group_name (Optional[str]): the new group name, if it is None,
-                                          it will use the src group name
+        ----------
+        parent_group : h5py.Group
+            The parent group of the src_group_name
+        src_group_name : str
+            The group name under the  parent group
+        dst_group : h5py.Group
+            The destinated group
+        dst_group_name : str, optional
+            The new group name, if it is None, it will use the src group name
         """
-        try:
+        if src_group_name in parent_group:
             parent_group.copy(src_group_name, dst_group)
-        except KeyError:
-            # create a new group 
+        else:
+            # create a new group
             if dst_group_name is None:
                 dst_group.require_group(src_group_name)
             else:
                 dst_group.require_group(dst_group_name)
 
-    def _copy_dataset_by_name(
+    def _copy_dataset(
         self,
         parent_group: h5py.Group,
         src_dataset_name: str,
@@ -837,16 +866,19 @@ class InSARWriter(h5py.File):
         under the parent group, but need to create a new dataset
 
         Parameters:
-        ------
-        - parent_group (h5py.Group): the parent group of the src_group_name
-        - src_dataset_name (str): the dataset name under the  parent group
-        - dst_group (h5py.Group): the destinated group
-        - dst_dataset_name (Optional[str]): the new dataset name, if it is None,
-                                            it will use the src dataset name
+        ----------
+        parent_group : h5py.Group
+            The parent group of the src_group_name
+        src_dataset_name : str
+            The dataset name under the  parent group
+        dst_group : h5py.Group
+            The destinated group
+        dst_dataset_name : str, optional
+            The new dataset name, if it is None, it will use the src dataset name
         """
-        try:
+        if src_dataset_name in parent_group:
             parent_group.copy(src_dataset_name, dst_group, dst_dataset_name)
-        except KeyError:
+        else:
             # create a new dataset with the value "NotFoundFromRSLC"
             if dst_dataset_name is None:
                 dst_group.create_dataset(
@@ -862,31 +894,31 @@ class InSARWriter(h5py.File):
         is Geocoded product
         """
         return self.product_info.isGeocoded
-    
+
     def _get_product_level(self):
         """
         Get the product level.
         """
         return self.product_info.ProductLevel
-    
+
     def _get_product_version(self):
         """
         Get the product version.
         """
         return self.product_info.ProductVersion
-    
+
     def _get_product_type(self):
         """
         Get the product type.
         """
         return self.product_info.ProductType
-    
+
     def _get_product_specification(self):
         """
         Get the product specification
         """
         return self.product_info.ProductSpecificationVersion
-    
+
     def _get_metadata_path(self):
         """
         Get the InSAR product metadata path.
@@ -901,15 +933,11 @@ class InSARWriter(h5py.File):
         # Can copy entirety of attitude
         ref_metadata_group = self.ref_h5py_file_obj[self.ref_rslc.MetadataPath]
         dst_metadata_group = self.require_group(self._get_metadata_path())
-        self._copy_group_by_name(
-            ref_metadata_group, "attitude", dst_metadata_group
-        )
+        self._copy_group(ref_metadata_group, "attitude", dst_metadata_group)
 
         # Orbit population based in inputs
         if self.external_orbit_path is None:
-            self._copy_group_by_name(
-                ref_metadata_group, "orbit", dst_metadata_group
-            )
+            self._copy_group(ref_metadata_group, "orbit", dst_metadata_group)
         else:
             # populate orbit group with contents of external orbit file
             orbit = load_orbit_from_xml(self.external_orbit_path, self.epoch)
@@ -919,10 +947,11 @@ class InSARWriter(h5py.File):
     def add_identification_to_hdf5(self):
         """
         Add the identification group to the product
-        
-        Return 
-        ------
-        dst_id_group (h5py.Group): identification group object
+
+        Returns
+        ----------
+        dst_id_group : h5py.Group
+            Identification group object
         """
 
         radar_band_name = self._get_band_name()
@@ -939,7 +968,7 @@ class InSARWriter(h5py.File):
         elif processing_center == "N":
             processing_center = "NRSA"
         else:
-            processing_center ="undefined"
+            processing_center = "undefined"
 
         # Determine processing type and from it urgent observation
         if processing_type is None:
@@ -972,14 +1001,14 @@ class InSARWriter(h5py.File):
             "plannedObservationId",
         ]
         for ds_name in ds_names_need_to_copy:
-            self._copy_dataset_by_name(ref_id_group, ds_name, dst_id_group)
+            self._copy_dataset(ref_id_group, ds_name, dst_id_group)
 
         # Copy the zeroDopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 ref_id_group, ds_name, dst_id_group, f"referenceZ{ds_name[1:]}"
             )
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 sec_id_group, ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}"
             )
 
@@ -1041,7 +1070,9 @@ class InSARWriter(h5py.File):
                     " algorithm, input data, and processing parameters"
                 ),
             ),
-            DatasetParams("productType", self._get_product_type(), "Product type"),
+            DatasetParams(
+                "productType", self._get_product_type(), "Product type"
+            ),
             DatasetParams(
                 "productSpecificationVersion",
                 self._get_product_specification(),
@@ -1060,64 +1091,70 @@ class InSARWriter(h5py.File):
             add_dataset_and_attrs(dst_id_group, ds_param)
 
         return dst_id_group
-    
+
     def _get_band_name(self):
         """
-        Get the band name ('L' or 'S')
+        Get the band name ('L', 'S', or 'unknown')
 
         Returns:
-        ------
-        'L' or 'S' (str)
+        ----------
+        str
+            'L', 'S', or 'unknown'
         """
         freq = "A" if "A" in self.freq_pols else "B"
         swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
         freq_group = self.ref_h5py_file_obj[swath_frequency_path]
-        
+
         # Center frequency in GHz
         center_freqency = freq_group["processedCenterFrequency"][()] / 1e9
-        
+
         # L band if the center frequency is between 1GHz and 2 GHz
         # S band if the center frequency is between 2GHz and 4 GHz
         # both bands are defined by the IEEE with the reference:
         # https://en.wikipedia.org/wiki/L_band
-        # https://en.wikipedia.org/wiki/S_band 
+        # https://en.wikipedia.org/wiki/S_band
         if (center_freqency >= 1.0) and (center_freqency <= 2.0):
             return "L"
         elif (center_freqency > 2.0) and (center_freqency <= 4.0):
             return "S"
         else:
-            return "Unknown"
+            return "unknown"
 
     def _get_mixed_mode(self):
         """
         Get the mixed mode
-        
+
         Returns:
-        ------
-        isMixedMode (DatasetParams)
+        ----------
+        isMixedMode : DatasetParams
         """
 
         pols_dict = {}
         for freq, pols, _ in get_cfg_freq_pols(self.cfg):
             pols_dict[freq] = pols
-        
+
         # Import the check_range_bandwidth_overlap locally to prevent the circlar import errors:
         # when import globally, there is the following error.
-        # ImportError: cannot import name 'PolChannel' from partially initialized module 'nisar.mixed_mode' 
-        # (most likely due to a circular import) 
+        # ImportError: cannot import name 'PolChannel' from partially initialized module 'nisar.mixed_mode'
+        # (most likely due to a circular import)
         # (/isce/install/packages/nisar/mixed_mode/__init__.py)
-        from isce3.splitspectrum.splitspectrum import check_range_bandwidth_overlap
+        from isce3.splitspectrum.splitspectrum import (
+            check_range_bandwidth_overlap,
+        )
 
         # Check if there is bandwidth overlap
-        mode = check_range_bandwidth_overlap(self.ref_rslc, self.sec_rslc, pols_dict)
+        mode = check_range_bandwidth_overlap(
+            self.ref_rslc, self.sec_rslc, pols_dict
+        )
         mixed_mode = False if not mode else True
-             
+
         return DatasetParams(
             "isMixedMode",
             np.bool_(mixed_mode),
-            np.string_(
-                '"True" if this product is generated from reference and secondary'
-                ' RSLCs with different range bandwidth, "False" otherwise.'
+            (
+                '"True" if this product is generated from reference and'
+                ' secondary RSLCs with different range bandwidth, "False"'
+                " otherwise."
             ),
         )
 
@@ -1125,10 +1162,11 @@ class InSARWriter(h5py.File):
         """
         Get the default chunk size.
         To change the chunks of the children classes, need to overwrite this function
-        
+
         Returns:
-        ------
-        (128, 128) (tuple) 
+        ----------
+        tuple
+            (128, 128)
         """
         return (128, 128)
 
@@ -1148,22 +1186,34 @@ class InSARWriter(h5py.File):
         fill_value: Optional[Any] = None,
     ):
         """
-        Create an empty 2 dimensional dataset under the h5py.Group
+        Create an empty two dimensional dataset under the h5py.Group
 
         Parameters:
-        ------
-        - h5_group (h5py.Group): the parent HDF5 group where the new dataset will be stored
-        - name (str): dataset name
-        - shape (tuple): shape of the dataset
-        - dtype (object): data type of the dataset
-        - description (str): description of the dataset
-        - units (Optional[str]): units of the dataset
-        - grid_mapping (Optional[str]): grid mapping string, e.g. "projection"
-        - standard_name (Optional[str]): standard name
-        - long_name (Optional[str]): long name
-        - yds (Optional[h5py.Dataset]): y coordinates
-        - xds (Optional[h5py.Dataset]): x coordinates
-        - fill_value (Optional[Any]): novalue of the dataset
+        ----------
+        h5_group : h5py.Group
+            The parent HDF5 group where the new dataset will be stored
+        name : str
+            Dataset name
+        shape : tuple
+            Shape of the dataset
+        dtype : object
+            Data type of the dataset
+        description : str
+            Description of the dataset
+        units : str, optional
+            Units of the dataset
+        grid_mapping : str, optional
+            Grid mapping string, e.g. "projection"
+        standard_name : str, optional
+            Standard name
+        long_name : str, optional
+            Long name
+        yds : h5py.Dataset, optional
+            Y coordinates
+        xds : h5py.Dataset, optional
+            X coordinates
+        fill_value : Any, Optional
+            Novalue of the dataset
         """
 
         # use the default chunk size if the chunk_size is None

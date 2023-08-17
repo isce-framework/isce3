@@ -6,15 +6,13 @@ from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 from .InSARBase import InSARWriter
 from .product_paths import L1GroupsPaths
 
+
 class L1InSARWriter(InSARWriter):
     """
-    InSAR Level 1 prodcut writer (e.g. RIFG, RUNW, ROFF)
+    InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer inherenting from the InSARWriter
     """
 
-    def __init__(
-        self,
-        **kwds,
-    ):
+    def __init__(self, **kwds):
         """
         Constructor for InSAR L1 product (RIFG, RUNW, and ROFF).
         """
@@ -22,27 +20,21 @@ class L1InSARWriter(InSARWriter):
 
         # Level 1 product group path
         self.group_paths = L1GroupsPaths()
-        
+
     def save_to_hdf5(self):
         """
-        write to the HDF5
+        write the attributes and groups to the HDF5
         """
         super().save_to_hdf5()
-        
+
         self.add_geolocation_grid_cubes()
         self.add_swaths_to_hdf5()
-        
-    def _get_geolocation_grid_cubes_path(self):
-        """
-        Get the geolocation grid cube path.        
-        """
-        return self.group_paths.GeolocationGridPath
 
     def add_geolocation_grid_cubes(self):
         """
         Add the geolocation grid cubes
         """
-        
+
         # Pull the orbit object
         if self.external_orbit_path is not None:
             orbit = load_orbit_from_xml(self.external_orbit_path)
@@ -50,14 +42,14 @@ class L1InSARWriter(InSARWriter):
             orbit = self.ref_rslc.getOrbit()
 
         # Retrieve the group
-        geolocationGrid_path = self._get_geolocation_grid_cubes_path()
+        geolocationGrid_path = self.group_paths.GeolocationGridPath
         self.require_group(geolocationGrid_path)
 
         # Pull the radar frequency
         cube_freq = "A" if "A" in self.freq_pols else "B"
         radargrid = RadarGridParameters(self.ref_h5_slc_file)
 
-        # Default is [-500, 9000]
+        # Default is [-500, 9000] meters
         heights = np.linspace(-500, 9000, 20)
 
         # Figure out decimation factors that give < 500 m spacing.
@@ -112,8 +104,7 @@ class L1InSARWriter(InSARWriter):
             valid_min, valid_max = np.nanmin(ds), np.nanmax(ds)
             geolocation_grid_group[ds_name].attrs["min"] = valid_min
             geolocation_grid_group[ds_name].attrs["max"] = valid_max
-            
-            
+
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms group to the processingInformation group
@@ -127,9 +118,9 @@ class L1InSARWriter(InSARWriter):
         """
         Add the parameters group to the "processingInformation" group
         """
-        
+
         super().add_parameters_to_procinfo()
-        
+
         self.add_interferogram_to_procinfo_params()
         self.add_pixeloffsets_to_procinfo_params()
 

@@ -7,18 +7,24 @@ class DatasetParams:
     """
     Convenience dataclass for passing dataset parameters to be written to
     h5py.Dataset
+
+    Attributes:
+    ----------
+    name : str
+        Dataset name
+    value : object
+        Data to be stored in Dataset
+    description : str
+        Description attribute of Dataset. Could be in attr_dict but made
+        independent member to highlight it as a requirement.
+    attr_dict : dict
+        Other attributes to be written to Dataset
     """
-
-    # Dataset name
+    
     name: str
-    # Data to be stored in Dataset
     value: object
-    # Description attribute of Dataset. Could be in attr_dict but made
-    # independent member to highlight it as a requirement.
     description: str
-    # Other attributes to be written to Dataset
     attr_dict: dict = field(default_factory=dict)
-
 
 def add_dataset_and_attrs(group, dataset_param_item):
     """
@@ -26,11 +32,12 @@ def add_dataset_and_attrs(group, dataset_param_item):
     
     Parameters
     ----------
-    group: h5py.Group
-        h5py Group to store poly1d parameters in
-    meta_item: DatasetParams
+    group : h5py.Group
+        h5py Group to store the  dataset_param_item
+    dataset_param_item : DatasetParams
         DatasetParams object to write to group
     """
+    
     # Ensure it is clear to write by deleting pre-existing Dataset
     if dataset_param_item.name in group:
         del group[dataset_param_item.name]

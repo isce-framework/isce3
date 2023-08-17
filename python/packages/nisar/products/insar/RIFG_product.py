@@ -8,37 +8,35 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .product_paths import RIFGGroupsPaths
 from .InSARL1Products import L1InSARWriter
 
+
 class RIFG(L1InSARWriter):
     """
-    Writer class for RIFG product inherent from L1InSARWriter
+    Writer class for RIFG product inherenting from L1InSARWriter
     """
 
-    def __init__(
-        self,
-        **kwds,
-    ):
+    def __init__(self, **kwds):
         """
         Constructor for RIFG class
         """
         super().__init__(**kwds)
-        
-        # group paths are RIFG group paths
+
+        # RIFG group paths
         self.group_paths = RIFGGroupsPaths()
-        
+
         # RIFG product information
         self.product_info = InSARProductsInfo.RIFG()
-        
+
     def add_root_attrs(self):
         """
         add root attributes
         """
-        
+
         super().add_root_attrs()
-        
+
         # Add additional attributes
         self.attrs["title"] = "NISAR L1 RIFG Product"
         self.attrs["reference_document"] = "TBD"
-        
+
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
 
@@ -46,38 +44,38 @@ class RIFG(L1InSARWriter):
         """
         Add Swaths to the HDF5
         """
-        pcfg = self.cfg["processing"]
-        rg_looks = pcfg["crossmul"]["range_looks"]
-        az_looks = pcfg["crossmul"]["azimuth_looks"]
+        proc_cfg = self.cfg["processing"]
+        rg_looks = proc_cfg["crossmul"]["range_looks"]
+        az_looks = proc_cfg["crossmul"]["azimuth_looks"]
 
         # pull the offset parameters
-        is_roff = pcfg["offsets_product"]["enabled"]
-        margin = get_off_params(pcfg, "margin", is_roff)
-        rg_gross = get_off_params(pcfg, "gross_offset_range", is_roff)
-        az_gross = get_off_params(pcfg, "gross_offset_azimuth", is_roff)
-        rg_start = get_off_params(pcfg, "start_pixel_range", is_roff)
-        az_start = get_off_params(pcfg, "start_pixel_azimuth", is_roff)
-        rg_skip = get_off_params(pcfg, "skip_range", is_roff)
-        az_skip = get_off_params(pcfg, "skip_azimuth", is_roff)
+        is_roff = proc_cfg["offsets_product"]["enabled"]
+        margin = get_off_params(proc_cfg, "margin", is_roff)
+        rg_gross = get_off_params(proc_cfg, "gross_offset_range", is_roff)
+        az_gross = get_off_params(proc_cfg, "gross_offset_azimuth", is_roff)
+        rg_start = get_off_params(proc_cfg, "start_pixel_range", is_roff)
+        az_start = get_off_params(proc_cfg, "start_pixel_azimuth", is_roff)
+        rg_skip = get_off_params(proc_cfg, "skip_range", is_roff)
+        az_skip = get_off_params(proc_cfg, "skip_azimuth", is_roff)
         rg_search = get_off_params(
-            pcfg,
+            proc_cfg,
             "half_search_range",
             is_roff,
             pattern="layer",
             get_min=True,
         )
         az_search = get_off_params(
-            pcfg,
+            proc_cfg,
             "half_search_azimuth",
             is_roff,
             pattern="layer",
             get_min=True,
         )
         rg_chip = get_off_params(
-            pcfg, "window_range", is_roff, pattern="layer", get_min=True
+            proc_cfg, "window_range", is_roff, pattern="layer", get_min=True
         )
         az_chip = get_off_params(
-            pcfg, "window_azimuth", is_roff, pattern="layer", get_min=True
+            proc_cfg, "window_azimuth", is_roff, pattern="layer", get_min=True
         )
         # Adjust margin
         margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
@@ -113,21 +111,18 @@ class RIFG(L1InSARWriter):
             list_of_pols = DatasetParams(
                 "listOfPolarizations",
                 np.string_(pol_list),
-                np.string_(
-                    "List of processed polarization layers with"
-                    f" frequency{freq}"
-                ),
+                f"List of processed polarization layers with frequency{freq}",
             )
             add_dataset_and_attrs(swaths_freq_group, list_of_pols)
 
             # get the RSLC lines and columns
             slc_dset = self.ref_h5py_file_obj[
-                f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
+                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol_list[0]}"
             ]
             slc_lines, slc_cols = slc_dset.shape
 
-            off_length = get_off_params(pcfg, "offset_length", is_roff)
-            off_width = get_off_params(pcfg, "offset_width", is_roff)
+            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
+            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
             if off_length is None:
                 margin_az = 2 * margin + 2 * az_search + az_chip
                 off_length = (slc_lines - margin_az) // az_skip
@@ -141,13 +136,13 @@ class RIFG(L1InSARWriter):
             # shape of the interferogram product
             igram_shape = (slc_lines // az_looks, slc_cols // rg_looks)
 
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 rslc_freq_group,
                 "processedCenterFrequency",
                 swaths_freq_group,
                 "centerFrequency",
             )
-            self._copy_dataset_by_name(
+            self._copy_dataset(
                 rslc_freq_group, "numberOfSubSwaths", swaths_freq_group
             )
 
@@ -156,21 +151,21 @@ class RIFG(L1InSARWriter):
                     "sceneCenterAlongTrackSpacing",
                     rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
                     * az_looks,
-                    np.string_(
+                    (
                         "Nominal along track spacing in meters between"
                         " consecutive lines near mid swath of the RIFG image"
                     ),
-                    {"units": np.string_("meters")},
+                    {"units": "meters"},
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
                     rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
                     * rg_looks,
-                    np.string_(
+                    (
                         "Nominal ground range spacing in meters between"
                         " consecutive pixels near mid swath of the RIFG image"
                     ),
-                    {"units": np.string_("meters")},
+                    {"units": "meters"},
                 ),
             ]
             for ds_param in scence_center_params:
@@ -231,6 +226,7 @@ class RIFG(L1InSARWriter):
             offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][
                 ()
             ][az_start::az_skip][:off_length]
+
             offset_group.require_dataset(
                 name="zeroDopplerTime",
                 data=offset_zero_doppler_time,
@@ -247,6 +243,7 @@ class RIFG(L1InSARWriter):
             offset_zero_doppler_time_spacing = (
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
             )
+
             offset_group.require_dataset(
                 name="zeroDopplerTimeSpacing",
                 data=offset_zero_doppler_time_spacing,
@@ -260,6 +257,7 @@ class RIFG(L1InSARWriter):
             offset_slant_range_spacing = (
                 rslc_freq_group["slantRangeSpacing"][()] * rg_skip
             )
+
             offset_group.require_dataset(
                 name="slantRangeSpacing",
                 data=offset_slant_range_spacing,
@@ -348,46 +346,59 @@ class RIFG(L1InSARWriter):
                 igram_pol_group = self.require_group(igram_pol_group_name)
                 offset_pol_group = self.require_group(offset_pol_group_name)
 
-                # Create the inteferogram dataset
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "coherenceMagnitude",
-                    igram_shape,
-                    np.float32,
-                    np.string_(f"Coherence magnitude between {pol} layers"),
-                    units=np.string_("unitless"),
-                )
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "wrappedInterferogram",
-                    igram_shape,
-                    np.complex64,
-                    np.string_(f"Interferogram between {pol} layers"),
-                    units=np.string_("DN"),
-                )
+                # Interferogram datasets
+                igram_ds_params = [
+                    (
+                        "coherenceMagnitude",
+                        np.float32,
+                        f"Coherence magnitude between {pol} layers",
+                        "unitless",
+                    ),
+                    (
+                        "wrappedInterferogram",
+                        np.complex64,
+                        f"Interferogram between {pol} layers",
+                        "DN",
+                    ),
+                ]
 
-                # Create the pixel offsets dataset
-                self._create_2d_dataset(
-                    offset_pol_group,
-                    "alongTrackOffset",
-                    off_shape,
-                    np.float32,
-                    np.string_(f"Along track offset"),
-                    units=np.string_("meters"),
-                )
-                self._create_2d_dataset(
-                    offset_pol_group,
-                    "crossCorrelationPeak",
-                    off_shape,
-                    np.float32,
-                    np.string_(f"Normalized cross-correlation surface peak"),
-                    units=np.string_("unitless"),
-                )
-                self._create_2d_dataset(
-                    offset_pol_group,
-                    "slantRangeOffset",
-                    off_shape,
-                    np.float32,
-                    np.string_(f"Slant range offset"),
-                    units=np.string_("meters"),
-                )
+                for igram_ds_param in igram_ds_params:
+                    ds_name, ds_dtype, ds_description, ds_unit = igram_ds_param
+                    self._create_2d_dataset(
+                        igram_pol_group,
+                        ds_name,
+                        igram_shape,
+                        ds_dtype,
+                        ds_description,
+                        units=ds_unit,
+                    )
+
+                # pixelOffsets datasets
+                pixel_offsets_ds_params = [
+                    (
+                        "alongTrackOffset",
+                        "Along track offset",
+                        "meters",
+                    ),
+                    (
+                        "crossCorrelationPeak",
+                        "Normalized cross-correlation surface peak",
+                        "unitless",
+                    ),
+                    (
+                        "slantRangeOffset",
+                        "Slant range offset",
+                        "meters",
+                    ),
+                ]
+
+                for pixel_offsets_ds_param in pixel_offsets_ds_params:
+                    ds_name, ds_description, ds_unit = pixel_offsets_ds_param
+                    self._create_2d_dataset(
+                        offset_pol_group,
+                        ds_name,
+                        off_shape,
+                        np.float32,
+                        ds_description,
+                        units=ds_unit,
+                    )
