@@ -40,8 +40,8 @@ dataInterpMethod parseDataInterpMethod(const std::string & method);
 /** Semi-major axis for WGS84 */
 const double EarthSemiMajorAxis = 6378137.0;
 
-/** Eccentricity^2 for WGS84 */
-const double EarthEccentricitySquared = 0.0066943799901;
+/** Eccentricity^2 for WGS84 derived from inverse flattening 298.257223563 */
+const double EarthEccentricitySquared = 0.006694379990141317;
 
 /** Spin rate of Earth used for ECI/ECEF conversions, rad/s */
 constexpr static double EarthSpinRate = 7.292115024135738e-5;
