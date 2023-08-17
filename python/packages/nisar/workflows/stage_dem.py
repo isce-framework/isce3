@@ -38,6 +38,9 @@ def cmdLineParse():
     parser.add_argument('-b', '--bbox', type=float, action='store',
                         dest='bbox', default=None, nargs='+',
                         help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
+    parser.add_argument('-v', '--version', type=str, action='store',
+                        default='1.0', dest='version',
+                        help='DEM version in the form of major_number.minor_number')
     return parser.parse_args()
 
 
@@ -292,7 +295,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     ds = None
 
 
-def download_dem(polys, epsgs, outfile):
+def download_dem(polys, epsgs, outfile, version):
     """Download DEM from nisar-dem bucket
 
     Parameters:
@@ -301,8 +304,12 @@ def download_dem(polys, epsgs, outfile):
         List of shapely polygons
     epsg: str, list
         List of EPSG codes corresponding to polys
-    outfile:
+    outfile: str
         Path to the output DEM file to be staged
+    version: str
+        DEM version. This is contained in the filepath to
+        the DEM VRTs (e.g., s3://nisar-dem/v1.0/EPSG4326/<EPSG4326_FILES>).
+        DEM version is in the form of major_version.minor_version
     """
 
     if 3031 in epsgs:
@@ -324,10 +331,7 @@ def download_dem(polys, epsgs, outfile):
     file_prefix = os.path.splitext(outfile)[0]
     dem_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        if epsg == 4326:
-            vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}_v1.0/EPSG{epsg}.vrt'
-        else:
-            vrt_filename = f'/vsis3/nisar-dem/EPSG{epsg}/EPSG{epsg}.vrt'
+        vrt_filename = f'/vsis3/nisar-dem/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
@@ -480,7 +484,7 @@ def main(opts):
         # Determine EPSG code
         epsg = determine_projection(polys)
         # Download DEM
-        download_dem(polys, epsg, opts.outfile)
+        download_dem(polys, epsg, opts.outfile, opts.version)
         print('Done, DEM store locally')
         
 
