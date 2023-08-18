@@ -8,7 +8,7 @@ class DatasetParams:
     Convenience dataclass for passing dataset parameters to be written to
     h5py.Dataset
 
-    Attributes:
+    Attributes
     ----------
     name : str
         Dataset name

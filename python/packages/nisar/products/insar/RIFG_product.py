@@ -5,8 +5,8 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
-from .product_paths import RIFGGroupsPaths
 from .InSARL1Products import L1InSARWriter
+from .product_paths import RIFGGroupsPaths
 
 
 class RIFG(L1InSARWriter):
@@ -42,7 +42,7 @@ class RIFG(L1InSARWriter):
 
     def add_swaths_to_hdf5(self):
         """
-        Add Swaths to the HDF5
+        Add swaths to the HDF5
         """
         proc_cfg = self.cfg["processing"]
         rg_looks = proc_cfg["crossmul"]["range_looks"]
@@ -136,15 +136,12 @@ class RIFG(L1InSARWriter):
             # shape of the interferogram product
             igram_shape = (slc_lines // az_looks, slc_cols // rg_looks)
 
-            self._copy_dataset(
-                rslc_freq_group,
+            rslc_freq_group.copy(
                 "processedCenterFrequency",
                 swaths_freq_group,
                 "centerFrequency",
             )
-            self._copy_dataset(
-                rslc_freq_group, "numberOfSubSwaths", swaths_freq_group
-            )
+            rslc_freq_group.copy("numberOfSubSwaths", swaths_freq_group)
 
             scence_center_params = [
                 DatasetParams(

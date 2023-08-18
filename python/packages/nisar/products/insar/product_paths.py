@@ -4,9 +4,9 @@ from dataclasses import dataclass
 @dataclass
 class CommonPaths:
     """
-    Properties to paths common to all InSAR products. 
+    Properties to paths common to all InSAR products
     
-    Attributes:
+    Attributes
     ----------
     ProductName : str
         Product name
@@ -70,7 +70,7 @@ class L1GroupsPaths(CommonPaths):
     """
     Properties to paths common to all level 1 InSAR products. 
     
-    Attributes:
+    Attributes
     ----------
     GeolocationGridPath : str
         Geolocation group path
@@ -91,7 +91,7 @@ class L2GroupsPaths(CommonPaths):
     """
     Properties to paths common to all level 2 InSAR products. 
     
-    Attributes:
+    Attributes
     ----------
     RadarGridPath : str
         Radar grid path
@@ -112,7 +112,7 @@ class RIFGGroupsPaths(L1GroupsPaths):
     """
     RIFG Product Groups Paths
     
-    Attributes:
+    Attributes
     ----------
     ProductName : str
         Product name (RIFG)
@@ -126,7 +126,7 @@ class RUNWGroupsPaths(L1GroupsPaths):
     """
     RUNW Product Groups Paths
     
-    Attributes:
+    Attributes
     ----------
     ProductName : str
         Product name (RUNW)
@@ -140,7 +140,7 @@ class ROFFGroupsPaths(L1GroupsPaths):
     """
     ROFF Product Groups Paths
     
-    Attributes:
+    Attributes
     ----------
     ProductName : str
         Product name (ROFF)
@@ -154,7 +154,7 @@ class GUNWGroupsPaths(L2GroupsPaths):
     """
     GUNW Product Groups Paths
     
-    Attributes:
+    Attributes
     ----------
     ProductName : str
         Product name (GUNW)
@@ -168,7 +168,7 @@ class GOFFGroupsPaths(L2GroupsPaths):
     """
     GOFF Product Groups Paths
     
-    Attributes:
+    Attributes
     ----------
     ProductName : str
         Product name (GOFF)

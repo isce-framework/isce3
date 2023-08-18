@@ -21,7 +21,7 @@ class InSARWriter(h5py.File):
     The base class of InSAR product inheriting from h5py.File to avoid passing
     h5py.File parameter
 
-    Attributes:
+    Attributes
     ----------
     cfg : dict
         Runconfig dictionary
@@ -141,6 +141,7 @@ class InSARWriter(h5py.File):
         """
         Write attributes to the HDF5 root that are common to all InSAR products
         """
+        
         self.attrs["Conventions"] = np.string_("CF-1.7")
         self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
         self.attrs["institution"] = np.string_("NASA JPL")
@@ -219,11 +220,8 @@ class InSARWriter(h5py.File):
             # TODO: the dopplerCentroid and dopplerBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
             # Should those also be updated in the crossmul module?
-            self._copy_dataset(
-                doppler_centroid_group, "dopplerCentroid", common_group
-            )
-            self._copy_dataset(
-                doppler_bandwidth_group,
+            doppler_centroid_group.copy("dopplerCentroid", common_group)
+            doppler_bandwidth_group.copy(
                 "processedAzimuthBandwidth",
                 common_group,
                 "dopplerBandwidth",
@@ -281,7 +279,9 @@ class InSARWriter(h5py.File):
         parameters_group = rslc_h5py_file_obj[
             f"{rslc.ProcessingInformationPath}/parameters"
         ]
-        self._copy_dataset(parameters_group, "referenceTerrainHeight", group)
+
+        parameters_group.copy("referenceTerrainHeight", group)
+
         for ds_param in ds_params:
             add_dataset_and_attrs(group, ds_param)
 
@@ -292,39 +292,30 @@ class InSARWriter(h5py.File):
             swath_frequency_path = f"{rslc.SwathPath}/frequency{freq}/"
             swath_frequency_group = rslc_h5py_file_obj[swath_frequency_path]
 
-            self._copy_dataset(
-                swath_frequency_group,
-                "slantRangeSpacing",
-                rslc_frequency_group,
-            )
+            swath_frequency_group.copy("slantRangeSpacing", rslc_frequency_group)
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
             # Should we update those fields?
-            self._copy_dataset(
-                swath_frequency_group,
+            swath_frequency_group.copy(
                 "processedRangeBandwidth",
                 rslc_frequency_group,
                 "rangeBandwidth",
             )
-            self._copy_dataset(
-                swath_frequency_group,
+            swath_frequency_group.copy(
                 "processedAzimuthBandwidth",
                 rslc_frequency_group,
                 "azimuthBandwidth",
             )
 
             swath_group = rslc_h5py_file_obj[rslc.SwathPath]
-            self._copy_dataset(
-                swath_group, "zeroDopplerTimeSpacing", rslc_frequency_group
-            )
+            swath_group.copy("zeroDopplerTimeSpacing", rslc_frequency_group)
 
             doppler_centroid_group = rslc_h5py_file_obj[
                 f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
             ]
-            self._copy_dataset(
-                doppler_centroid_group, "dopplerCentroid", rslc_frequency_group
-            )
+            doppler_centroid_group.copy("dopplerCentroid", rslc_frequency_group)
+          
 
         return group
 
@@ -595,14 +586,12 @@ class InSARWriter(h5py.File):
             # TODO: the azimuthBandwidth and rangeBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
             # those should be updated in the crossmul module.
-            self._copy_dataset(
-                bandwidth_group,
+            bandwidth_group.copy(
                 "processedAzimuthBandwidth",
                 igram_group,
                 "azimuthBandwidth",
             )
-            self._copy_dataset(
-                bandwidth_group,
+            bandwidth_group.copy(
                 "processedRangeBandwidth",
                 igram_group,
                 "rangeBandwidth",
@@ -821,74 +810,6 @@ class InSARWriter(h5py.File):
 
         return inputs_group
 
-    def _copy_group(
-        self,
-        parent_group: h5py.Group,
-        src_group_name: str,
-        dst_group: h5py.Group,
-        dst_group_name: Optional[str] = None,
-    ):
-        """
-        Copy the group name under the parent group to destinated group.
-        This function is to handle the case when there is no group name
-        under the parent group, but need to create a new group
-
-        Parameters:
-        ----------
-        parent_group : h5py.Group
-            The parent group of the src_group_name
-        src_group_name : str
-            The group name under the  parent group
-        dst_group : h5py.Group
-            The destinated group
-        dst_group_name : str, optional
-            The new group name, if it is None, it will use the src group name
-        """
-        if src_group_name in parent_group:
-            parent_group.copy(src_group_name, dst_group)
-        else:
-            # create a new group
-            if dst_group_name is None:
-                dst_group.require_group(src_group_name)
-            else:
-                dst_group.require_group(dst_group_name)
-
-    def _copy_dataset(
-        self,
-        parent_group: h5py.Group,
-        src_dataset_name: str,
-        dst_group: h5py.Group,
-        dst_dataset_name: Optional[str] = None,
-    ):
-        """
-        Copy the dataset under the parent group to destinated group.
-        This function is to handle the case when there is no dataset name
-        under the parent group, but need to create a new dataset
-
-        Parameters:
-        ----------
-        parent_group : h5py.Group
-            The parent group of the src_group_name
-        src_dataset_name : str
-            The dataset name under the  parent group
-        dst_group : h5py.Group
-            The destinated group
-        dst_dataset_name : str, optional
-            The new dataset name, if it is None, it will use the src dataset name
-        """
-        if src_dataset_name in parent_group:
-            parent_group.copy(src_dataset_name, dst_group, dst_dataset_name)
-        else:
-            # create a new dataset with the value "NotFoundFromRSLC"
-            if dst_dataset_name is None:
-                dst_group.create_dataset(
-                    src_dataset_name, data=np.string_("NotFoundFromRSLC")
-                )
-            else:
-                dst_group.create_dataset(
-                    dst_dataset_name, data=np.string_("NotFoundFromRSLC")
-                )
-
     def _is_geocoded_product(self):
         """
         is Geocoded product
@@ -933,11 +854,11 @@ class InSARWriter(h5py.File):
         # Can copy entirety of attitude
         ref_metadata_group = self.ref_h5py_file_obj[self.ref_rslc.MetadataPath]
         dst_metadata_group = self.require_group(self._get_metadata_path())
-        self._copy_group(ref_metadata_group, "attitude", dst_metadata_group)
+        ref_metadata_group.copy("attitude", dst_metadata_group)
 
         # Orbit population based in inputs
         if self.external_orbit_path is None:
-            self._copy_group(ref_metadata_group, "orbit", dst_metadata_group)
+            ref_metadata_group.copy("orbit", dst_metadata_group)
         else:
             # populate orbit group with contents of external orbit file
             orbit = load_orbit_from_xml(self.external_orbit_path, self.epoch)
@@ -988,29 +909,98 @@ class InSARWriter(h5py.File):
 
         # Datasets that need to be copied from the RSLC
         ds_names_need_to_copy = [
-            "absoluteOrbitNumber",
-            "boundingPolygon",
-            "diagnosticModeFlag",
-            "frameNumber",
-            "trackNumer",
-            "isDithered",
-            "lookDirection",
-            "missionId",
-            "orbitPassDirection",
-            "plannedDatatakeId",
-            "plannedObservationId",
+            DatasetParams(
+                "absoluteOrbitNumber",
+                "None",
+                "Absolute orbit number",
+                {
+                    "units": "unitless",
+                },
+            ),
+            DatasetParams(
+                "boundingPolygon",
+                "None",
+                (
+                    "OGR compatible WKT representation of bounding polygon of"
+                    " the image"
+                ),
+                {
+                    "ogr_geometry": "polygon",
+                    "epsg": "4326",
+                },
+            ),
+            DatasetParams(
+                "diagnosticModeFlag",
+                "None",
+                (
+                    "Indicates if the radar operation mode is a diagnostic"
+                    " mode (1-2) or DBFed science (0): 0, 1, or 2"
+                ),
+                {
+                    "units": "unitless",
+                },
+            ),
+            DatasetParams(
+                "frameNumber",
+                "None",
+                "Frame number",
+                {
+                    "units": "unitless",
+                },
+            ),
+            DatasetParams(
+                "trackNumer",
+                "None",
+                "Track number",
+                {
+                    "units": "unitless",
+                },
+            ),
+            DatasetParams(
+                "isDithered",
+                "None",
+                (
+                    '"True" if the pulse timing was varied (dithered) during'
+                    ' acquisition, "False" otherwise"'
+                ),
+            ),
+            DatasetParams(
+                "lookDirection",
+                "None",
+                "Look direction can be left or right",
+            ),
+            DatasetParams(
+                "missionId",
+                "None",
+                "Mission identifier",
+            ),
+            DatasetParams(
+                "orbitPassDirection",
+                "None",
+                "Orbit direction can be ascending or descending",
+            ),
+            DatasetParams(
+                "plannedDatatakeId",
+                "None",
+                "List of planned datatakes included in the product",
+            ),
+            DatasetParams(
+                "plannedObservationId",
+                "None",
+                "List of planned observations included in the product",
+            ),
         ]
+
         for ds_name in ds_names_need_to_copy:
-            self._copy_dataset(ref_id_group, ds_name, dst_id_group)
+            if ds_name.name in ref_id_group:
+                ref_id_group.copy(ds_name.name, dst_id_group)
+            else:
+                add_dataset_and_attrs(dst_id_group, ds_name)
 
         # Copy the zeroDopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
-            self._copy_dataset(
-                ref_id_group, ds_name, dst_id_group, f"referenceZ{ds_name[1:]}"
-            )
-            self._copy_dataset(
-                sec_id_group, ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}"
-            )
+            ref_id_group.copy(ds_name, dst_id_group, f"referenceZ{ds_name[1:]}")
+            ref_id_group.copy(ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}")
 
         ds_params = [
             DatasetParams(
@@ -1096,7 +1086,7 @@ class InSARWriter(h5py.File):
         """
         Get the band name ('L', 'S', or 'unknown')
 
-        Returns:
+        Returns
         ----------
         str
             'L', 'S', or 'unknown'
@@ -1124,7 +1114,7 @@ class InSARWriter(h5py.File):
         """
         Get the mixed mode
 
-        Returns:
+        Returns
         ----------
         isMixedMode : DatasetParams
         """
@@ -1163,7 +1153,7 @@ class InSARWriter(h5py.File):
         Get the default chunk size.
         To change the chunks of the children classes, need to overwrite this function
 
-        Returns:
+        Returns
         ----------
         tuple
             (128, 128)
@@ -1188,7 +1178,7 @@ class InSARWriter(h5py.File):
         """
         Create an empty two dimensional dataset under the h5py.Group
 
-        Parameters:
+        Parameters
         ----------
         h5_group : h5py.Group
             The parent HDF5 group where the new dataset will be stored
@@ -1203,7 +1193,7 @@ class InSARWriter(h5py.File):
         units : str, optional
             Units of the dataset
         grid_mapping : str, optional
-            Grid mapping string, e.g. "projection"
+            Grid mapping string, (e.g. "projection")
         standard_name : str, optional
             Standard name
         long_name : str, optional
@@ -1212,7 +1202,7 @@ class InSARWriter(h5py.File):
             Y coordinates
         xds : h5py.Dataset, optional
             X coordinates
-        fill_value : Any, Optional
+        fill_value : Any, optional
             Novalue of the dataset
         """
 

@@ -14,16 +14,16 @@ class InSARProductsInfo:
     including the product level, specification version, type, version,
     and geocoded or not
 
-    Attributes:
+    Attributes
     ----------
     ProductSpecificationVersion : str
-        Product specification version, default is 1.0
+        Product specification version (default is 1.0)
     ProductType : str
         Product type, one of 'RIFG', 'ROFF', 'RUNW', 'GOFF', 'GUNW'
     ProductLevel : str
         Product level, one of 'L1' and 'L2'
     ProductVersion : str
-        Product version, default is '1.0'
+        Product version (default is '0.1')
     isGeocoded : bool
         Geocoded product or not (True or False)
     """
@@ -65,7 +65,7 @@ def get_validated_file_path(path_str: str):
     Function will account for optional path strings that maybe None.
     If None, then raise the FileNotFoundError
 
-    Parameters:
+    Parameters
     ----------
     path_str : str
         File path
