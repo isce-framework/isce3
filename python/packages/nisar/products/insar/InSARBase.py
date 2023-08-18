@@ -43,7 +43,7 @@ class InSARWriter(h5py.File):
         h5py.File object of the reference RSLC
     sec_h5py_file_obj : h5py.File
         h5py.File object of the secondary RSLC
-    - kwds : dict
+    kwds : dict
         Parameters of the h5py.File
     """
 
@@ -866,9 +866,10 @@ class InSARWriter(h5py.File):
             processing_type = "UNDEFINED"
         is_urgent_observation = True if processing_type == "URGENT" else False
 
-        # Extract relevant identification from reference RSLC
+        # Extract relevant identification from reference and secondary RSLC
         ref_id_group = self.ref_h5py_file_obj[self.ref_rslc.IdentificationPath]
         sec_id_group = self.sec_h5py_file_obj[self.sec_rslc.IdentificationPath]
+        
         dst_id_group = self.require_group(self.group_paths.IdentificationPath)
 
         # Datasets that need to be copied from the RSLC
@@ -964,7 +965,7 @@ class InSARWriter(h5py.File):
         # Copy the zeroDopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
             ref_id_group.copy(ds_name, dst_id_group, f"referenceZ{ds_name[1:]}")
-            ref_id_group.copy(ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}")
+            sec_id_group.copy(ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}")
             
         ds_params = [
             DatasetParams(
@@ -1055,6 +1056,7 @@ class InSARWriter(h5py.File):
         str
             'L', 'S', or 'unknown'
         """
+        
         freq = "A" if "A" in self.freq_pols else "B"
         swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
         freq_group = self.ref_h5py_file_obj[swath_frequency_path]
