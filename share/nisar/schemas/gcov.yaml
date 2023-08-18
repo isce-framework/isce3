@@ -158,12 +158,28 @@ geo2rdr_options:
     maxiter: int(min=1, required=False)
 
 qa_options:
-  # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
-  workflows: include('workflows_options', required=False)
+    # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
+    workflows: include('workflows_options', required=False)
+    qa_reports: include('qa_reports_options', required=False)
 
 workflows_options:
-  validate: bool(required=False)
-  qa_reports: bool(required=False)
+    validate: bool(required=False)
+    qa_reports: bool(required=False)
+
+qa_reports_options:
+    backscatter_img:
+        linear_units: bool(required=False)
+        nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
+        nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
+        longest_side_max: int(min=1, required=False)
+        percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
+        gamma: num(min=0.0, required=False)
+        tile_shape: list(int(min=-1), min=2, max=2, required=False)
+    histogram:
+        decimation_ratio: list(int(min=1), min=2, max=2, required=False)
+        backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+        phs_in_radians: bool(required=False)
+        tile_shape: list(int(min=-1), min=2, max=2, required=False)
 
 log_nfo:
     # Path to log file
