@@ -810,42 +810,6 @@ class InSARWriter(h5py.File):
 
         return inputs_group
 
-    def _is_geocoded_product(self):
-        """
-        is Geocoded product
-        """
-        return self.product_info.isGeocoded
-
-    def _get_product_level(self):
-        """
-        Get the product level.
-        """
-        return self.product_info.ProductLevel
-
-    def _get_product_version(self):
-        """
-        Get the product version.
-        """
-        return self.product_info.ProductVersion
-
-    def _get_product_type(self):
-        """
-        Get the product type.
-        """
-        return self.product_info.ProductType
-
-    def _get_product_specification(self):
-        """
-        Get the product specification
-        """
-        return self.product_info.ProductSpecificationVersion
-
-    def _get_metadata_path(self):
-        """
-        Get the InSAR product metadata path.
-        """
-        return self.group_paths.MetadataPath
-
     def add_common_metadata_to_hdf5(self):
         """
         Write metadata datasets and attributes common to all InSAR products to HDF5
@@ -853,7 +817,7 @@ class InSARWriter(h5py.File):
 
         # Can copy entirety of attitude
         ref_metadata_group = self.ref_h5py_file_obj[self.ref_rslc.MetadataPath]
-        dst_metadata_group = self.require_group(self._get_metadata_path())
+        dst_metadata_group = self.require_group(self.group_paths.MetadataPath)
         ref_metadata_group.copy("attitude", dst_metadata_group)
 
         # Orbit population based in inputs
@@ -1001,7 +965,7 @@ class InSARWriter(h5py.File):
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
             ref_id_group.copy(ds_name, dst_id_group, f"referenceZ{ds_name[1:]}")
             ref_id_group.copy(ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}")
-
+            
         ds_params = [
             DatasetParams(
                 "instrumentName",
@@ -1043,7 +1007,7 @@ class InSARWriter(h5py.File):
             ),
             DatasetParams(
                 "productLevel",
-                self._get_product_level(),
+                self.product_info.ProductLevel,
                 (
                     "Product level. L0A: Unprocessed instrument data; L0B:"
                     " Reformatted,unprocessed instrument data; L1: Processed"
@@ -1053,7 +1017,7 @@ class InSARWriter(h5py.File):
             ),
             DatasetParams(
                 "productVersion",
-                self._get_product_version(),
+                self.product_info.ProductVersion,
                 (
                     "Product version which represents the structure of the"
                     " product and the science content governed by the"
@@ -1061,11 +1025,11 @@ class InSARWriter(h5py.File):
                 ),
             ),
             DatasetParams(
-                "productType", self._get_product_type(), "Product type"
+                "productType", self.product_info.ProductType, "Product type"
             ),
             DatasetParams(
                 "productSpecificationVersion",
-                self._get_product_specification(),
+                self.product_info.ProductSpecificationVersion,
                 (
                     "Product specification version which represents the schema"
                     " of this product"
@@ -1073,7 +1037,7 @@ class InSARWriter(h5py.File):
             ),
             DatasetParams(
                 "isGeocoded",
-                np.bool_(self._is_geocoded_product()),
+                np.bool_(self.product_info.isGeocoded),
                 "Flag to indicate radar geometry or geocoded product",
             ),
         ]
@@ -1151,7 +1115,7 @@ class InSARWriter(h5py.File):
     def _get_default_chunks(self):
         """
         Get the default chunk size.
-        To change the chunks of the children classes, need to overwrite this function
+        To change the chunks of the children classes, need to override this function
 
         Returns
         ----------

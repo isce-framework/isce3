@@ -17,7 +17,7 @@ class InSARProductsInfo:
     Attributes
     ----------
     ProductSpecificationVersion : str
-        Product specification version (default is 1.0)
+        Product specification version (default is '1.0')
     ProductType : str
         Product type, one of 'RIFG', 'ROFF', 'RUNW', 'GOFF', 'GUNW'
     ProductLevel : str
