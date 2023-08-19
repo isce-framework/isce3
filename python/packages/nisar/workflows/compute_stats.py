@@ -51,8 +51,8 @@ def compute_stats_real_data(raster, h5_ds):
 def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
     '''
     Compute statistics for masks containing layover/shadow and water
-    1. Percentage of pixels in layover (labeled with 1 or 5)
-    2. Percentage of pixels in shadow (labeled with 2 or 6)
+    1. Percentage of pixels in shadow (labeled with 1 or 5)
+    2. Percentage of pixels in layover (labeled with 2 or 6)
     3. Percentage of pixels in layover and shadow (labeled with 3 or 7)
     4. Percentage of pixels in water (labeled with 4, 5, 6, or 7)
     Parameters
@@ -62,6 +62,13 @@ def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
     lines_per_block: int
         Number of lines to process in batch
     '''
+    shadow_value = 1
+    layover_value = 2
+    layover_shadow_value = 3
+    water_value = 4
+    shadow_water_value = 5
+    layover_water_value = 6
+    layover_shadow_water_value = 7
 
     length, width = h5_ds.shape
     layover_pixs, shadow_pixs, layover_shadow_pixs, water_pixs, valid_pixs = \
@@ -82,11 +89,14 @@ def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
         h5_ds.read_direct(data_block,
                           np.s_[line_start:line_start + block_length])
 
-        layover = (data_block == 1) | (data_block == 5)
-        shadow = (data_block == 2) | (data_block == 6)
-        layover_shadow = (data_block == 3) | (data_block == 7)
-        water = (data_block == 4) | (data_block == 5)| \
-                (data_block == 6) | (data_block == 7)
+        layover = (data_block == layover_value) | (data_block == layover_water_value)
+        shadow = (data_block == shadow_value) | (data_block == shadow_water_value)
+        layover_shadow = (data_block == layover_shadow_value) | \
+                         (data_block == layover_shadow_water_value)
+        water = (data_block == water_value) | \
+                (data_block == shadow_water_value)| \
+                (data_block == layover_water_value) | \
+                (data_block == layover_shadow_water_value)
         valid = (data_block >= 0) & (data_block <= 7)
 
         valid_pixs += np.count_nonzero(valid)
