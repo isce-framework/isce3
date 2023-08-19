@@ -95,10 +95,11 @@ def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
         layover_shadow_pixs += np.count_nonzero(layover_shadow)
         water_pixs += np.count_nonzero(water)
 
-    percent_layover_pixs = (layover_pixs / valid_pixs) * 100
-    percent_shadow_pixs = (shadow_pixs / valid_pixs) * 100
-    percent_layover_shadow_pixs = (layover_shadow_pixs / valid_pixs) * 100
-    percent_water_pixs = (water_pixs / valid_pixs) * 100
+    percent_layover_pixs = round((layover_pixs / valid_pixs) * 100, 2)
+    percent_shadow_pixs = round((shadow_pixs / valid_pixs) * 100, 2)
+    percent_layover_shadow_pixs = \
+        round((layover_shadow_pixs / valid_pixs) * 100, 2)
+    percent_water_pixs = round((water_pixs / valid_pixs) * 100, 2)
 
     h5_ds.attrs.create('percentage_layover_pixels',
                        data=percent_layover_pixs)
