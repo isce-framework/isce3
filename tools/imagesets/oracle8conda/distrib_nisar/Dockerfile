@@ -25,7 +25,7 @@ COPY --from=0 /opt/QualityAssurance /opt/QualityAssurance
 COPY --from=0 /opt/SoilMoisture /opt/SoilMoisture
 
 # install
-RUN cd /opt/QualityAssurance && python setup.py install
+RUN cd /opt/QualityAssurance && pip install --no-deps .
 RUN cd /opt/SoilMoisture/src && conda run -n SoilMoisture make install
 
 # Add image labels following Open Containers Initiative specifications
