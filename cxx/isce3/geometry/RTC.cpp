@@ -657,12 +657,12 @@ double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
         double & beta_naught_area)
 {
     const Vec3 normal_facet = normalPlane(xyz_center, xyz_left, xyz_right);
-    double cos_inc_facet = normal_facet.dot(target_to_sensor_xyz);
+    double cos_local_inc_facet = normal_facet.dot(target_to_sensor_xyz);
 
     p3 = (xyz_center - xyz_right).norm();
 
     // If facet is not illuminated by radar, skip
-    if (cos_inc_facet <= 0)
+    if (cos_local_inc_facet <= 0)
         return 0;
 
     // Side lengths (keep p3 solution for next iteration)
@@ -695,7 +695,7 @@ double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
         return sigma_naught_area;
     }
 
-    double gamma_naught_area = cos_inc_facet * sigma_naught_area;
+    double gamma_naught_area = cos_local_inc_facet * sigma_naught_area;
 
     return gamma_naught_area;
 }
@@ -1406,7 +1406,6 @@ void _RunBlock(const int jmax, const int block_size,
                 continue;
 
             const Vec3 target_to_sensor_xyz = (xyz_plat - xyz_c).normalized();
-            const Vec3 image_normal_xyz = (vel.cross(target_to_sensor_xyz)).normalized();
 
             // Prepare call to computeFacet()
             double p00_c = (xyz00 - xyz_c).norm();
@@ -1474,6 +1473,9 @@ void _RunBlock(const int jmax, const int block_size,
                 plane_orientation = -1;
             else
                 plane_orientation = 1;
+
+            const Vec3 image_normal_xyz = (plane_orientation *
+                (vel.cross(target_to_sensor_xyz)).normalized());
 
             areaProjIntegrateSegment(y_c_cut, y00_cut, x_c_cut, x00_cut, size_y,
                     size_x, w_arr_1, nlooks_1, plane_orientation);
