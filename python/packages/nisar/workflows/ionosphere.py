@@ -377,9 +377,9 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
                 'product_type'] = 'RUNW'
 
     # update processing parameter
-    unwrap_mask_type = iono_insar_cfg['processing'][
-        'phase_unwrap']['preprocess_wrapped_phase'][
-            'mask']['mask_type']
+    # water mask for ionosphere is not supported now.
+    unwrap_mask_type = iono_insar_cfg['processing']['phase_unwrap'][
+        'preprocess_wrapped_phase']['mask']['mask_type']
     if unwrap_mask_type == 'water':
         # Either set to a default value or delete the key entirely.
         iono_insar_cfg['processing']['phase_unwrap'][
