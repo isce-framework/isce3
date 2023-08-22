@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Any, Optional
 
 import h5py
-import journal
 import numpy as np
 from isce3.core import DateTime
 from nisar.products.readers import SLC
@@ -115,33 +114,24 @@ class InSARWriter(h5py.File):
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
 
-        self.error_channel = journal.error("nisar.product.insar")
+        self.ref_h5py_file_obj = h5py.File(
+            self.ref_h5_slc_file, "r", libver="latest", swmr=True
+        )
+        self.sec_h5py_file_obj = h5py.File(
+            self.sec_h5_slc_file, "r", libver="latest", swmr=True
+        )
 
-        # Open the reference HDF5 file
-        try:
-            self.ref_h5py_file_obj = h5py.File(
-                self.ref_h5_slc_file, "r", libver="latest", swmr=True
-            )
-        except OSError:
-            err_msg = f"The {self.ref_h5_slc_file} might not be a HDF5 file"
-            self.error_channel.log(err_msg)
-            raise OSError(err_msg)
-
-        # Open the secondary HDF5 file
-        try:
-            self.sec_h5py_file_obj = h5py.File(
-                self.sec_h5_slc_file, "r", libver="latest", swmr=True
-            )
-        except OSError:
-            err_msg = f"The {self.sec_h5_slc_file} might not be a HDF5 file"
-            self.error_channel.log(err_msg)
-            raise OSError(err_msg)
+        # Pull the orbit object
+        if self.external_orbit_path is not None:
+            self.orbit = load_orbit_from_xml(self.external_orbit_path)
+        else:
+            self.orbit = self.ref_rslc.getOrbit()
 
     def add_root_attrs(self):
         """
         Write attributes to the HDF5 root that are common to all InSAR products
         """
-        
+
         self.attrs["Conventions"] = np.string_("CF-1.7")
         self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
         self.attrs["institution"] = np.string_("NASA JPL")
@@ -169,7 +159,7 @@ class InSARWriter(h5py.File):
 
         group = self.require_group(self.group_paths.ProcessingInformationPath)
         self.add_algorithms_to_procinfo()
-        self.add_inputs_to_procinfo(self.runconfig_path)
+        self.add_inputs_to_procinfo()
         self.add_parameters_to_procinfo()
 
         return group
@@ -292,7 +282,9 @@ class InSARWriter(h5py.File):
             swath_frequency_path = f"{rslc.SwathPath}/frequency{freq}/"
             swath_frequency_group = rslc_h5py_file_obj[swath_frequency_path]
 
-            swath_frequency_group.copy("slantRangeSpacing", rslc_frequency_group)
+            swath_frequency_group.copy(
+                "slantRangeSpacing", rslc_frequency_group
+            )
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
@@ -314,8 +306,9 @@ class InSARWriter(h5py.File):
             doppler_centroid_group = rslc_h5py_file_obj[
                 f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
             ]
-            doppler_centroid_group.copy("dopplerCentroid", rslc_frequency_group)
-          
+            doppler_centroid_group.copy(
+                "dopplerCentroid", rslc_frequency_group
+            )
 
         return group
 
@@ -739,17 +732,10 @@ class InSARWriter(h5py.File):
 
         return params_group
 
-    def add_inputs_to_procinfo(
-        self,
-        runconfig_path: str,
-    ):
+    def add_inputs_to_procinfo(self):
         """
         Add the inputs group to the "processingInformation" group
 
-        Parameters
-        ----------
-        runconfig_path : str
-            Path of the runconfig file
 
         Returns
         ----------
@@ -778,7 +764,7 @@ class InSARWriter(h5py.File):
         inputs_ds_params = [
             DatasetParams(
                 "configFiles",
-                os.path.basename(runconfig_path),
+                os.path.basename(self.runconfig_path),
                 "List of input config files used",
             ),
             DatasetParams(
@@ -869,7 +855,7 @@ class InSARWriter(h5py.File):
         # Extract relevant identification from reference and secondary RSLC
         ref_id_group = self.ref_h5py_file_obj[self.ref_rslc.IdentificationPath]
         sec_id_group = self.sec_h5py_file_obj[self.sec_rslc.IdentificationPath]
-        
+
         dst_id_group = self.require_group(self.group_paths.IdentificationPath)
 
         # Datasets that need to be copied from the RSLC
@@ -964,9 +950,13 @@ class InSARWriter(h5py.File):
 
         # Copy the zeroDopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
-            ref_id_group.copy(ds_name, dst_id_group, f"referenceZ{ds_name[1:]}")
-            sec_id_group.copy(ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}")
-            
+            ref_id_group.copy(
+                ds_name, dst_id_group, f"referenceZ{ds_name[1:]}"
+            )
+            sec_id_group.copy(
+                ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}"
+            )
+
         ds_params = [
             DatasetParams(
                 "instrumentName",
@@ -1056,7 +1046,7 @@ class InSARWriter(h5py.File):
         str
             'L', 'S', or 'unknown'
         """
-        
+
         freq = "A" if "A" in self.freq_pols else "B"
         swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
         freq_group = self.ref_h5py_file_obj[swath_frequency_path]
@@ -1114,10 +1104,11 @@ class InSARWriter(h5py.File):
             ),
         )
 
-    def _get_default_chunks(self):
+    @property
+    def default_chunk_size(self):
         """
         Get the default chunk size.
-        To change the chunks of the children classes, need to override this function
+        To change the chunks of the children classes, need to override this property
 
         Returns
         ----------
@@ -1173,21 +1164,15 @@ class InSARWriter(h5py.File):
         """
 
         # use the default chunk size if the chunk_size is None
-        chunks = self._get_default_chunks()
+        chunks = self.default_chunk_size
+        create_with_chunks = chunks[0] < shape[0] and chunks[1] < shape[1]
 
-        # do not create chunked dataset if any chunk dimension is larger than
-        # dataset or is GUNW (temporary fix for CUDA geocode insar's inability
-        # to direct write to HDF5 with chunks)
-        # details https://github-fn.jpl.nasa.gov/isce-3/isce/issues/813
-        create_with_chunks = (
-            chunks[0] < shape[0] and chunks[1] < shape[1]
-        ) and ("GUNW" not in h5_group.name)
         if create_with_chunks:
             ds = h5_group.require_dataset(
                 name, dtype=dtype, shape=shape, chunks=chunks
             )
         else:
-            # create dataset without chunks
+            # create dataset without chunks when the dataset size is less than default chunks
             ds = h5_group.require_dataset(name, dtype=dtype, shape=shape)
 
         # set attributes

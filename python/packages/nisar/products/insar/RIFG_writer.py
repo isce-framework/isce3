@@ -5,11 +5,11 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
-from .InSARL1Products import L1InSARWriter
+from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import RIFGGroupsPaths
 
 
-class RIFG(L1InSARWriter):
+class RIFGWriter(L1InSARWriter):
     """
     Writer class for RIFG product inherenting from L1InSARWriter
     """
@@ -143,7 +143,7 @@ class RIFG(L1InSARWriter):
             )
             rslc_freq_group.copy("numberOfSubSwaths", swaths_freq_group)
 
-            scence_center_params = [
+            scene_center_params = [
                 DatasetParams(
                     "sceneCenterAlongTrackSpacing",
                     rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
@@ -165,7 +165,7 @@ class RIFG(L1InSARWriter):
                     {"units": "meters"},
                 ),
             ]
-            for ds_param in scence_center_params:
+            for ds_param in scene_center_params:
                 add_dataset_and_attrs(swaths_freq_group, ds_param)
 
             # valid samples subswath
@@ -204,132 +204,105 @@ class RIFG(L1InSARWriter):
                     )
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
-            offset_slant_range = rslc_freq_group["slantRange"][()][
-                rg_start::rg_skip
-            ][:off_width]
-            offset_group.require_dataset(
-                name="slantRange",
-                data=offset_slant_range,
-                shape=offset_slant_range.shape,
-                dtype=offset_slant_range.dtype,
-            )
-            offset_group["slantRange"].attrs.update(
-                rslc_freq_group["slantRange"].attrs
-            )
-            offset_group["slantRange"].attrs["description"] = np.string_(
-                "Slant range vector"
-            )
-
-            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][
-                ()
-            ][az_start::az_skip][:off_length]
-
-            offset_group.require_dataset(
-                name="zeroDopplerTime",
-                data=offset_zero_doppler_time,
-                shape=offset_zero_doppler_time.shape,
-                dtype=offset_zero_doppler_time.dtype,
-            )
-            offset_group["zeroDopplerTime"].attrs.update(
-                rslc_swaths_group["zeroDopplerTime"].attrs
-            )
-            offset_group["zeroDopplerTime"].attrs["description"] = np.string_(
-                "Zero Doppler azimuth time vector"
-            )
-
-            offset_zero_doppler_time_spacing = (
+            offset_slant_range = \
+                rslc_freq_group["slantRange"][()][rg_start::rg_skip][:off_width]
+            offset_zero_doppler_time = \
+                rslc_swaths_group["zeroDopplerTime"][()][az_start::az_skip][:off_length]
+            offset_zero_doppler_time_spacing = \
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
-            )
-
-            offset_group.require_dataset(
-                name="zeroDopplerTimeSpacing",
-                data=offset_zero_doppler_time_spacing,
-                shape=offset_zero_doppler_time_spacing.shape,
-                dtype=offset_zero_doppler_time_spacing.dtype,
-            )
-            offset_group["zeroDopplerTimeSpacing"].attrs.update(
-                rslc_swaths_group["zeroDopplerTimeSpacing"].attrs
-            )
-
-            offset_slant_range_spacing = (
+            offset_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_skip
-            )
-
-            offset_group.require_dataset(
-                name="slantRangeSpacing",
-                data=offset_slant_range_spacing,
-                shape=offset_slant_range_spacing.shape,
-                dtype=offset_slant_range_spacing.dtype,
-            )
-            offset_group["slantRangeSpacing"].attrs.update(
-                rslc_freq_group["slantRangeSpacing"].attrs
-            )
+            
+            ds_offsets_params = [
+                DatasetParams(
+                    "slantRange",
+                    offset_slant_range,
+                    "Slant range vector",
+                    rslc_freq_group["slantRange"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTime",
+                    offset_zero_doppler_time,
+                    "Zero Doppler azimuth time vector",
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTimeSpacing",
+                    offset_zero_doppler_time_spacing,
+                    "Along track spacing of the offset grid",
+                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
+                ),
+                DatasetParams(
+                    "slantRangeSpacing",
+                    offset_slant_range_spacing,
+                    "Slant range spacing of offset grid",
+                    rslc_freq_group["slantRangeSpacing"].attrs,
+                ),
+            ]
+            for ds_param in ds_offsets_params:
+                add_dataset_and_attrs(offset_group, ds_param)
 
             #  add the slantRange, zeroDopplerTime, and their spacings to inteferogram group
             igram_slant_range = rslc_freq_group["slantRange"][()]
             igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
-            rg_idx = np.arange(
-                (len(igram_slant_range) // rg_looks) * rg_looks
-            )[::rg_looks] + int(rg_looks / 2)
-            az_idx = np.arange(
-                (len(igram_zero_doppler_time) // az_looks) * az_looks
-            )[::az_looks] + int(az_looks / 2)
+
+            def max_look_idx(max_val, n_looks):
+                # internal convenience function to get max multilooked index value
+                return (
+                    np.arange((len(max_val) // n_looks) * n_looks)[::n_looks]
+                    + n_looks // 2
+                )
+
+            rg_idx, az_idx = (
+                max_look_idx(max_val, n_looks)
+                for max_val, n_looks in (
+                    (igram_slant_range, rg_looks),
+                    (igram_zero_doppler_time, az_looks),
+                )
+            )
 
             igram_slant_range = igram_slant_range[rg_idx]
             igram_zero_doppler_time = igram_zero_doppler_time[az_idx]
-
-            igram_group.require_dataset(
-                name="slantRange",
-                data=igram_slant_range,
-                shape=igram_slant_range.shape,
-                dtype=igram_slant_range.dtype,
-            )
-            igram_group["slantRange"].attrs.update(
-                rslc_freq_group["slantRange"].attrs
-            )
-            igram_group["slantRange"].attrs["description"] = np.string_(
-                "Slant range vector"
-            )
-
-            igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
-            igram_group.require_dataset(
-                name="zeroDopplerTime",
-                data=igram_zero_doppler_time,
-                shape=igram_zero_doppler_time.shape,
-                dtype=igram_zero_doppler_time.dtype,
-            )
-            igram_group["zeroDopplerTime"].attrs.update(
-                rslc_swaths_group["zeroDopplerTime"].attrs
-            )
-            igram_group["zeroDopplerTime"].attrs["description"] = np.string_(
-                "Zero Doppler azimuth time vector"
-            )
-
-            igram_zero_doppler_time_spacing = (
+            igram_zero_doppler_time_spacing = \
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks
-            )
-            igram_group.require_dataset(
-                name="zeroDopplerTimeSpacing",
-                data=igram_zero_doppler_time_spacing,
-                shape=igram_zero_doppler_time_spacing.shape,
-                dtype=igram_zero_doppler_time_spacing.dtype,
-            )
-            igram_group["zeroDopplerTimeSpacing"].attrs.update(
-                rslc_swaths_group["zeroDopplerTimeSpacing"].attrs
-            )
-
-            igram_slant_range_spacing = (
+            igram_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_looks
-            )
-            igram_group.require_dataset(
-                name="slantRangeSpacing",
-                data=igram_slant_range_spacing,
-                shape=igram_slant_range_spacing.shape,
-                dtype=igram_slant_range_spacing.dtype,
-            )
-            igram_group["slantRangeSpacing"].attrs.update(
-                rslc_freq_group["slantRangeSpacing"].attrs
-            )
+                
+            ds_igram_params = [
+                DatasetParams(
+                    "slantRange",
+                    igram_slant_range,
+                    "Slant range vector",
+                    rslc_freq_group["slantRange"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTime",
+                    igram_zero_doppler_time,
+                    "Zero Doppler azimuth time vector",
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTimeSpacing",
+                    igram_zero_doppler_time_spacing,
+                    (
+                        "Time interval in the along track direction for raster"
+                        " layers. This is same as the spacing between"
+                        " consecutive entries in the zeroDopplerTime array"
+                    ),
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "slantRangeSpacing",
+                    igram_slant_range_spacing,
+                    (
+                        "Slant range spacing of grid. Same as difference"
+                        " between consecutive samples in slantRange array"
+                    ),
+                    rslc_freq_group["slantRangeSpacing"].attrs,
+                ),
+            ]
+            for ds_param in ds_igram_params:
+                add_dataset_and_attrs(igram_group, ds_param)
 
             # add the polarization
             for pol in pol_list:

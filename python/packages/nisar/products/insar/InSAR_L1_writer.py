@@ -1,10 +1,9 @@
 import numpy as np
 from isce3.core import LUT2d
 from isce3.product import RadarGridParameters
-from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 
-from .InSARBase import InSARWriter
+from .InSAR_base_writer import InSARWriter
 from .product_paths import L1GroupsPaths
 
 
@@ -36,12 +35,6 @@ class L1InSARWriter(InSARWriter):
         Add the geolocation grid cubes
         """
 
-        # Pull the orbit object
-        if self.external_orbit_path is not None:
-            orbit = load_orbit_from_xml(self.external_orbit_path)
-        else:
-            orbit = self.ref_rslc.getOrbit()
-
         # Retrieve the group
         geolocationGrid_path = self.group_paths.GeolocationGridPath
         self.require_group(geolocationGrid_path)
@@ -57,9 +50,11 @@ class L1InSARWriter(InSARWriter):
         max_spacing = 500.0
         t = (
             radargrid.sensing_mid
-            + (radargrid.ref_epoch - orbit.reference_epoch).total_seconds()
+            + (
+                radargrid.ref_epoch - self.orbit.reference_epoch
+            ).total_seconds()
         )
-        _, v = orbit.interpolate(t)
+        _, v = self.orbit.interpolate(t)
         dx = np.linalg.norm(v) / radargrid.prf
         tskip = int(np.floor(max_spacing / dx))
         rskip = int(np.floor(max_spacing / radargrid.range_pixel_spacing))
@@ -83,14 +78,14 @@ class L1InSARWriter(InSARWriter):
             geolocationGrid_path,
             radargrid,
             heights,
-            orbit,
+            self.orbit,
             cube_native_doppler,
             grid_doppler,
             4326,
             **tol,
         )
 
-        # Add the min and max attributes to the dataset
+        # Add the min and max attributes to the following dataset
         ds_names = [
             "incidenceAngle",
             "losUnitVectorX",
