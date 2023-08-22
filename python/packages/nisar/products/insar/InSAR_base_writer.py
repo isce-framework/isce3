@@ -1080,9 +1080,8 @@ class InSARWriter(h5py.File):
         # ImportError: cannot import name 'PolChannel' from partially initialized module 'nisar.mixed_mode'
         # (most likely due to a circular import)
         # (/isce/install/packages/nisar/mixed_mode/__init__.py)
-        from isce3.splitspectrum.splitspectrum import (
-            check_range_bandwidth_overlap,
-        )
+        from isce3.splitspectrum.splitspectrum import \
+            check_range_bandwidth_overlap
 
         # Check if there is bandwidth overlap
         mode = check_range_bandwidth_overlap(self.ref_rslc, self.sec_rslc,
