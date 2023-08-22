@@ -216,6 +216,8 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
     cuArraysCopyInsert(r_snrValue, snrImage, idxDown_*param->numberWindowDownInChunk, idxAcross_*param->numberWindowAcrossInChunk);
     // Variance.
     cuArraysCopyInsert(r_covValue, covImage, idxDown_*param->numberWindowDownInChunk, idxAcross_*param->numberWindowAcrossInChunk);
+    // Cross-correlation peak
+    cuArraysCopyInsert(corrMaxValue, corrImage, idxDown_*param->numberWindowDownInChunk, idxAcross_*param->numberWindowAcrossInChunk);
     // all done
 
 }
@@ -351,7 +353,8 @@ void cuAmpcorChunk::loadSecondaryChunk()
 
 /// constructor
 cuAmpcorChunk::cuAmpcorChunk(cuAmpcorParameter *param_, GDALImage *reference_, GDALImage *secondary_,
-    cuArrays<float2> *offsetImage_, cuArrays<float> *snrImage_, cuArrays<float3> *covImage_)
+    cuArrays<float2> *offsetImage_, cuArrays<float> *snrImage_, cuArrays<float3> *covImage_,
+    cuArrays<float> *corrImage_)
 
 {
     param = param_;
@@ -360,6 +363,7 @@ cuAmpcorChunk::cuAmpcorChunk(cuAmpcorParameter *param_, GDALImage *reference_, G
     offsetImage = offsetImage_;
     snrImage = snrImage_;
     covImage = covImage_;
+    corrImage = corrImage_;
 
     ChunkOffsetDown = new cuArrays<int> (param->numberWindowDownInChunk, param->numberWindowAcrossInChunk);
     ChunkOffsetDown->allocate();

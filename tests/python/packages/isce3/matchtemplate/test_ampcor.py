@@ -58,7 +58,7 @@ def test_ampcor():
             ampcor.secondaryImageHeight = length
 
             ampcor.windowSizeWidth = 64
-            ampcor.windowSizeHeight = 64
+            ampcor.windowSizeHeight = 32
             ampcor.halfSearchRangeAcross = 20
             ampcor.halfSearchRangeDown = 20
             ampcor.skipSampleAcross = 32
@@ -77,9 +77,7 @@ def test_ampcor():
             offset_length = (length - margin_az) // ampcor.skipSampleDown
             ampcor.numberWindowDown = offset_length
 
-            ampcor.referenceStartPixelAcrossStatic = (
-                margin + ampcor.halfSearchRangeAcross
-            )
+            ampcor.referenceStartPixelAcrossStatic = margin + ampcor.halfSearchRangeAcross
             ampcor.referenceStartPixelDownStatic = margin + ampcor.halfSearchRangeDown
 
             ampcor.algorithm = 0  # frequency
@@ -93,12 +91,13 @@ def test_ampcor():
             ampcor.grossOffsetImageName = "gross_offset"
             ampcor.snrImageName = "snr"
             ampcor.covImageName = "covariance"
+            ampcor.corrImageName = "correlation_peak"
 
             ampcor.rawDataOversamplingFactor = 2
             ampcor.corrSurfaceOverSamplingFactor = 64
 
             ampcor.numberWindowAcrossInChunk = 2
-            ampcor.numberWindowDownInChunk = 2
+            ampcor.numberWindowDownInChunk = 1
 
             ampcor.setupParams()
             ampcor.setConstantGrossOffset(0, 0)
@@ -132,10 +131,23 @@ def test_ampcor():
                 3,
                 gdal.GDT_Float32,
             )
+            create_empty_dataset(
+                "correlation_peak",
+                ampcor.numberWindowAcross,
+                ampcor.numberWindowDown,
+                1,
+                gdal.GDT_Float32,
+            )
             ampcor.runAmpcor()
 
             # Compare results to golden output
-            for fname in ("covariance", "dense_offsets", "gross_offsets", "snr"):
+            for fname in (
+                "covariance",
+                "dense_offsets",
+                "gross_offsets",
+                "snr",
+                "correlation_peak",
+            ):
                 print("comparing", fname)
                 golden_path = os.path.join(datadir, "golden", fname)
                 expected = numpy.fromfile(golden_path, dtype=numpy.float32)
@@ -146,6 +158,8 @@ def test_ampcor():
                 if fname == "dense_offsets":
                     meantol = 2e-2
                     tol = 1e-1
+                elif fname == "correlation_peak":
+                    meantol = 1e-2
                 else:
                     meantol = 1 / 64 / 5
                     tol = 1 / 64
