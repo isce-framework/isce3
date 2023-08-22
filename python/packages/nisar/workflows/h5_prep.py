@@ -838,16 +838,12 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                     igram_path = unwrapped_igram_path
 
                     # Generate the layover/shadow and water masks
-                    descr = f"Layover Shadow mask for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Both"
+                    descr = f"Masks for frequency{freq} layer, 1 - Radar Shadow. 2 - Radar Layover. 3 - Shadow+Layover "\
+                             "4 - Water. 5 - Water+Shadow. 6 - Water+Layover. 7 - Water+Layover+Shadow"
                     _create_datasets(dst_h5[igram_path], igram_shape, np.byte,
-                                     'layoverShadowMask',
+                                     'mask',
                                      descr=descr, units=" ", grids=grids_val,
-                                     long_name='layover shadow mask')
-                    descr = 'Water mask for frequency {freq} layers'
-                    _create_datasets(dst_h5[igram_path], igram_shape, np.uint8,
-                                     'waterMask', descr=descr, units=" ",
-                                     grids=grids_val,
-                                     long_name='water mask')
+                                     long_name='Byte layer with flags for various channels (e.g. layover/shadow, data quality)')
 
                 # Create datasets inside the interferogram group
                 for pol in pol_list:
@@ -904,7 +900,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                             dst_h5[igram_path].create_group(f'{pol_iono}')
                         pol_iono_path = f'{igram_path}/{pol_iono}'
 
-                        descr = f"{iono_method} Ionosphere phase screen"
+                        descr = f"Ionosphere phase screen"
                         _create_datasets(dst_h5[pol_iono_path],
                                         igram_shape, np.float32,
                                         'ionospherePhaseScreen',
@@ -914,7 +910,7 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                         long_name='ionosphere \
                                         phase screen')
 
-                        descr = f"Uncertainty of {iono_method} ionosphere phase screen"
+                        descr = f"Uncertainty of ionosphere phase screen"
                         _create_datasets(
                                 dst_h5[pol_iono_path],
                                 igram_shape, np.float32,
