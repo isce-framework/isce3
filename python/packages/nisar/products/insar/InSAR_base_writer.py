@@ -76,12 +76,11 @@ class InSARWriter(h5py.File):
         self.runconfig_path = runconfig_path
 
         # Reference and Secondary RSLC files
-        self.ref_h5_slc_file = self.cfg["input_file_group"][
-            "reference_rslc_file"
-        ]
-        self.sec_h5_slc_file = self.cfg["input_file_group"][
-            "secondary_rslc_file"
-        ]
+        self.ref_h5_slc_file = \
+            self.cfg["input_file_group"]["reference_rslc_file"]
+
+        self.sec_h5_slc_file = \
+            self.cfg["input_file_group"]["secondary_rslc_file"]
 
         # Pull the frequency and polarizations
         self.freq_pols = self.cfg["processing"]["input_subset"][
@@ -114,12 +113,11 @@ class InSARWriter(h5py.File):
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
 
-        self.ref_h5py_file_obj = h5py.File(
-            self.ref_h5_slc_file, "r", libver="latest", swmr=True
-        )
-        self.sec_h5py_file_obj = h5py.File(
-            self.sec_h5_slc_file, "r", libver="latest", swmr=True
-        )
+        self.ref_h5py_file_obj = \
+            h5py.File(self.ref_h5_slc_file, "r", libver="latest", swmr=True)
+
+        self.sec_h5py_file_obj = \
+            h5py.File(self.sec_h5_slc_file, "r", libver="latest", swmr=True)
 
         # Pull the orbit object
         if self.external_orbit_path is not None:
@@ -193,18 +191,18 @@ class InSARWriter(h5py.File):
 
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             doppler_centroid_path = f"{self.ref_rslc.ProcessingInformationPath}/parameters/frequency{freq}"
-            doppler_bandwidth_path = (
+            doppler_bandwidth_path = \
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
-            )
-            doppler_centroid_group = self.ref_h5py_file_obj[
-                doppler_centroid_path
-            ]
-            doppler_bandwidth_group = self.ref_h5py_file_obj[
-                doppler_bandwidth_path
-            ]
-            common_group_name = (
+
+            doppler_centroid_group = \
+                self.ref_h5py_file_obj[doppler_centroid_path]
+
+            doppler_bandwidth_group = \
+                self.ref_h5py_file_obj[doppler_bandwidth_path]
+
+            common_group_name = \
                 f"{self.group_paths.ParametersPath}/common/frequency{freq}"
-            )
+
             common_group = self.require_group(common_group_name)
 
             # TODO: the dopplerCentroid and dopplerBandwidth are placeholders heres,
@@ -263,28 +261,27 @@ class InSARWriter(h5py.File):
             self._get_mixed_mode(),
         ]
 
-        group = self.require_group(
-            f"{self.group_paths.ParametersPath}/{rslc_name}"
-        )
-        parameters_group = rslc_h5py_file_obj[
-            f"{rslc.ProcessingInformationPath}/parameters"
-        ]
+        dst_param_group = \
+            self.require_group(f"{self.group_paths.ParametersPath}/{rslc_name}")
 
-        parameters_group.copy("referenceTerrainHeight", group)
+        src_param_group = \
+            rslc_h5py_file_obj[f"{rslc.ProcessingInformationPath}/parameters"]
+
+        src_param_group.copy("referenceTerrainHeight", dst_param_group)
 
         for ds_param in ds_params:
-            add_dataset_and_attrs(group, ds_param)
+            add_dataset_and_attrs(dst_param_group, ds_param)
 
         for freq, *_ in get_cfg_freq_pols(self.cfg):
-            rslc_group_frequecy_name = f"{self.group_paths.ParametersPath}/{rslc_name}/frequency{freq}"
+            rslc_group_frequecy_name = \
+                f"{self.group_paths.ParametersPath}/{rslc_name}/frequency{freq}"
             rslc_frequency_group = self.require_group(rslc_group_frequecy_name)
 
             swath_frequency_path = f"{rslc.SwathPath}/frequency{freq}/"
             swath_frequency_group = rslc_h5py_file_obj[swath_frequency_path]
 
-            swath_frequency_group.copy(
-                "slantRangeSpacing", rslc_frequency_group
-            )
+            swath_frequency_group.copy("slantRangeSpacing",
+                                       rslc_frequency_group)
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
@@ -310,11 +307,12 @@ class InSARWriter(h5py.File):
                 "dopplerCentroid", rslc_frequency_group
             )
 
-        return group
+        return dst_param_group
 
     def add_coregistration_to_algo(self, algo_group: h5py.Group):
         """
-        Add the coregistration parameters to the "processingInfromation/algorithms" group
+        Add the coregistration parameters to the
+        "processingInfromation/algorithms" group
 
         Parameters
         ----------
@@ -351,12 +349,12 @@ class InSARWriter(h5py.File):
                 "cross_correlation_domain"
             ]
             if proc_cfg["rubbersheet"]["enabled"]:
-                outlier_filling_method = proc_cfg["rubbersheet"][
-                    "outlier_filling_method"
-                ]
-                filter_kernel_algorithm = proc_cfg["rubbersheet"][
-                    "offsets_filter"
-                ]
+                outlier_filling_method = \
+                    proc_cfg["rubbersheet"]["outlier_filling_method"]
+
+                filter_kernel_algorithm = \
+                    proc_cfg["rubbersheet"]["offsets_filter"]
+
                 culling_metric = proc_cfg["rubbersheet"]["culling_metric"]
 
                 if outlier_filling_method == "fill_smoothed":
@@ -458,9 +456,8 @@ class InSARWriter(h5py.File):
             flatten_method = "With geometry offsets"
 
         multilooking_method = "Spatial moving average with decimation"
-        wrapped_interferogram_filtering_mdethod = proc_cfg[
-            "filter_interferogram"
-        ]["filter_type"]
+        wrapped_interferogram_filtering_mdethod = \
+            proc_cfg["filter_interferogram"]["filter_type"]
 
         algo_intefergramformation_ds_params = [
             DatasetParams(
@@ -573,7 +570,8 @@ class InSARWriter(h5py.File):
             bandwidth_group_path = f"{self.ref_rslc.SwathPath}/frequency{freq}"
             bandwidth_group = self.ref_h5py_file_obj[bandwidth_group_path]
 
-            igram_group_name = f"{self.group_paths.ParametersPath}/interferogram/frequency{freq}"
+            igram_group_name = \
+                f"{self.group_paths.ParametersPath}/interferogram/frequency{freq}"
             igram_group = self.require_group(igram_group_name)
 
             # TODO: the azimuthBandwidth and rangeBandwidth are placeholders heres,
@@ -699,7 +697,8 @@ class InSARWriter(h5py.File):
             ),
         ]
         for freq, *_ in get_cfg_freq_pols(self.cfg):
-            pixeloffsets_group_name = f"{self.group_paths.ParametersPath}/pixelOffsets/frequency{freq}"
+            pixeloffsets_group_name = \
+                f"{self.group_paths.ParametersPath}/pixelOffsets/frequency{freq}"
             pixeloffsets_group = self.require_group(pixeloffsets_group_name)
 
             for ds_param in pixeloffsets_ds_params:
@@ -730,8 +729,6 @@ class InSARWriter(h5py.File):
         )
         add_dataset_and_attrs(params_group, runconfig_contents)
 
-        return params_group
-
     def add_inputs_to_procinfo(self):
         """
         Add the inputs group to the "processingInformation" group
@@ -744,18 +741,18 @@ class InSARWriter(h5py.File):
         """
 
         orbit_file = []
+        ancillary_group = self.cfg["dynamic_ancillary_file_group"]
         for idx in ["reference", "secondary"]:
-            _orbit_file = self.cfg["dynamic_ancillary_file_group"][
-                "orbit"
-            ].get(f"{idx}_orbit_file")
+            _orbit_file = \
+                ancillary_group["orbit"].get(f"{idx}_orbit_file")
+
             if _orbit_file is None:
                 _orbit_file = f"used RSLC internal {idx} orbit file"
             orbit_file.append(_orbit_file)
 
         # DEM source
-        dem_source = self.cfg["dynamic_ancillary_file_group"].get(
-            "dem_file_description"
-        )
+        dem_source = \
+            ancillary_group["dem_file_description"]
 
         # if dem source is None, then replace it with None
         if dem_source is None:
@@ -950,12 +947,11 @@ class InSARWriter(h5py.File):
 
         # Copy the zeroDopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
-            ref_id_group.copy(
-                ds_name, dst_id_group, f"referenceZ{ds_name[1:]}"
-            )
-            sec_id_group.copy(
-                ds_name, dst_id_group, f"secodnaryZ{ds_name[1:]}"
-            )
+            ref_id_group.copy(ds_name, dst_id_group,
+                              f"referenceZ{ds_name[1:]}")
+
+            sec_id_group.copy(ds_name, dst_id_group,
+                              f"secodnaryZ{ds_name[1:]}")
 
         ds_params = [
             DatasetParams(
@@ -1089,9 +1085,9 @@ class InSARWriter(h5py.File):
         )
 
         # Check if there is bandwidth overlap
-        mode = check_range_bandwidth_overlap(
-            self.ref_rslc, self.sec_rslc, pols_dict
-        )
+        mode = check_range_bandwidth_overlap(self.ref_rslc, self.sec_rslc,
+                                             pols_dict)
+
         mixed_mode = False if not mode else True
 
         return DatasetParams(
@@ -1197,11 +1193,11 @@ class InSARWriter(h5py.File):
             ds.dims[1].attach_scale(xds)
 
         if fill_value is not None:
-            ds.attrs.create("_FillValue", data=fill_value)
+            ds.attrs["_FillValue"] = fill_value
         # create fill value if not speficied
         elif np.issubdtype(dtype, np.floating):
-            ds.attrs.create("_FillValue", data=np.nan)
+            ds.attrs["_FillValue"] = np.nan
         elif np.issubdtype(dtype, np.integer):
-            ds.attrs.create("_FillValue", data=255)
+            ds.attrs["_FillValue"] = 255
         elif np.issubdtype(dtype, np.complexfloating):
-            ds.attrs.create("_FillValue", data=np.nan + 1j * np.nan)
+            ds.attrs["_FillValue"] = np.nan + 1j * np.nan

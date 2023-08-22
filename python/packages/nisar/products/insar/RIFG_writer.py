@@ -71,12 +71,14 @@ class RIFGWriter(L1InSARWriter):
             pattern="layer",
             get_min=True,
         )
-        rg_chip = get_off_params(
-            proc_cfg, "window_range", is_roff, pattern="layer", get_min=True
-        )
-        az_chip = get_off_params(
-            proc_cfg, "window_azimuth", is_roff, pattern="layer", get_min=True
-        )
+        rg_chip = \
+            get_off_params(proc_cfg, "window_range", is_roff, pattern="layer",
+                           get_min=True)
+
+        az_chip = \
+            get_off_params(proc_cfg, "window_azimuth", is_roff,
+                           pattern="layer", get_min=True)
+
         # Adjust margin
         margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
 
@@ -93,17 +95,10 @@ class RIFGWriter(L1InSARWriter):
             )
             swaths_freq_group = self.require_group(swaths_freq_group_name)
 
-            # Create the interferogram and pixeloffsets group
-            igram_group_name = f"{swaths_freq_group_name}/interferogram"
-            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
-
-            igram_group = self.require_group(igram_group_name)
-            offset_group = self.require_group(offset_group_name)
-
             # center frequency and sub swaths groups of the RSLC
-            rslc_swaths_group = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}"
-            ]
+            rslc_swaths_group = \
+                self.ref_h5py_file_obj[f"{self.ref_rslc.SwathPath}"]
+
             rslc_freq_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
@@ -212,7 +207,7 @@ class RIFGWriter(L1InSARWriter):
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
             offset_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_skip
-            
+
             ds_offsets_params = [
                 DatasetParams(
                     "slantRange",
@@ -239,6 +234,8 @@ class RIFGWriter(L1InSARWriter):
                     rslc_freq_group["slantRangeSpacing"].attrs,
                 ),
             ]
+            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
+            offset_group = self.require_group(offset_group_name)
             for ds_param in ds_offsets_params:
                 add_dataset_and_attrs(offset_group, ds_param)
 
@@ -267,7 +264,7 @@ class RIFGWriter(L1InSARWriter):
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks
             igram_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_looks
-                
+
             ds_igram_params = [
                 DatasetParams(
                     "slantRange",
@@ -301,6 +298,8 @@ class RIFGWriter(L1InSARWriter):
                     rslc_freq_group["slantRangeSpacing"].attrs,
                 ),
             ]
+            igram_group_name = f"{swaths_freq_group_name}/interferogram"
+            igram_group = self.require_group(igram_group_name)
             for ds_param in ds_igram_params:
                 add_dataset_and_attrs(igram_group, ds_param)
 

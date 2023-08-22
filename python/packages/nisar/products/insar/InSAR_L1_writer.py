@@ -48,12 +48,9 @@ class L1InSARWriter(InSARWriter):
 
         # Figure out decimation factors that give < 500 m spacing.
         max_spacing = 500.0
-        t = (
-            radargrid.sensing_mid
-            + (
-                radargrid.ref_epoch - self.orbit.reference_epoch
-            ).total_seconds()
-        )
+        t = (radargrid.sensing_mid + radargrid.ref_epoch
+             - self.orbit.reference_epoch).total_seconds()
+
         _, v = self.orbit.interpolate(t)
         dx = np.linalg.norm(v) / radargrid.prf
         tskip = int(np.floor(max_spacing / dx))
