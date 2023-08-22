@@ -34,8 +34,8 @@ class RIFGWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = "NISAR L1 RIFG Product"
-        self.attrs["reference_document"] = "TBD"
+        self.attrs["title"] = np.string_("NISAR L1 RIFG Product")
+        self.attrs["reference_document"] = np.string_("JPL-102270")
 
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
