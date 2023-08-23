@@ -1,23 +1,20 @@
-import numpy as np
 import h5py
+import numpy as np
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
+from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import RUNWGroupsPaths
-from .InSARL1Products import L1InSARWriter
 
 
-class RUNW(L1InSARWriter):
+class RUNWWriter(L1InSARWriter):
     """
     Writer class for RUNW product inherent from L1InSARWriter
     """
 
-    def __init__(
-        self,
-        **kwds,
-    ):
+    def __init__(self,**kwds):
         """
         Constructor for RUNW class
         """
@@ -36,8 +33,8 @@ class RUNW(L1InSARWriter):
 
         super().add_root_attrs()
 
-        self.attrs["title"] = "NISAR L1 RUNW Product"
-        self.attrs["reference_document"] = "TBD"
+        self.attrs["title"] = np.string_("NISAR L1 RUNW Product")
+        self.attrs["reference_document"] = np.string_("JPL-102271")
 
     def add_ionosphere_to_procinfo_params(self):
         """
@@ -46,32 +43,29 @@ class RUNW(L1InSARWriter):
 
         high_bandwidth = 0
         low_bandwidth = 0
-        # ionosphere phase correction is enabled
         iono_cfg = self.cfg["processing"]["ionosphere_phase_correction"]
 
         if iono_cfg["enabled"]:
-            high_bandwidth = iono_cfg["split_range_spectrum"][
-                "high_band_bandwidth"
-            ]
-            low_bandwidth = iono_cfg["split_range_spectrum"][
-                "low_band_bandwidth"
-            ]
+            high_bandwidth = iono_cfg["split_range_spectrum"]\
+                ["high_band_bandwidth"]
+            low_bandwidth = iono_cfg["split_range_spectrum"]\
+                ["low_band_bandwidth"]
 
         ds_params = [
             DatasetParams(
                 "highBandBandwidth",
                 np.float32(high_bandwidth),
-                np.string_("Slant range bandwidth of the high sub-band image"),
+                "Slant range bandwidth of the high sub-band image",
                 {
-                    "units": np.string_("Hz"),
+                    "units": "Hz",
                 },
             ),
             DatasetParams(
                 "lowBandBandwidth",
                 np.float32(low_bandwidth),
-                np.string_("Slant range bandwidth of the low sub-band image"),
+                "Slant range bandwidth of the low sub-band image",
                 {
-                    "units": np.string_("Hz"),
+                    "units": "Hz",
                 },
             ),
         ]
@@ -87,8 +81,9 @@ class RUNW(L1InSARWriter):
         Add the ionosphere estimation group to algorithms group
 
         Parameters
-        ------
-        - algo_group(h5py.Group): algorithms group object
+        ----------
+        algo_group : h5py.Group
+            algorithms group object
         """
 
         iono_algorithm = "None"
@@ -135,55 +130,49 @@ class RUNW(L1InSARWriter):
             DatasetParams(
                 "ionosphereAlgorithm",
                 np.string_(iono_algorithm),
-                np.string_(
-                    "Algorithm used to estimate ionosphere phase screen"
-                ),
+                "Algorithm used to estimate ionosphere phase screen",
                 {
-                    "algorithm_type": np.string_("Ionosphere estimation"),
+                    "algorithm_type": "Ionosphere estimation",
                 },
             ),
             DatasetParams(
                 "ionosphereFilling",
                 np.string_(iono_filling),
-                np.string_(
-                    "Outliers data filling algorithm"
-                    " for ionosphere phase estimation"
-                ),
+                "Outliers data filling algorithm"
+                " for ionosphere phase estimation"
+                ,
                 {
-                    "algorithm_type": np.string_("Ionosphere estimation"),
+                    "algorithm_type": "Ionosphere estimation",
                 },
             ),
             DatasetParams(
                 "ionosphereFiltering",
                 np.string_(iono_filtering),
-                np.string_(
-                    f"Iterative gaussian filter with {num_of_iters} filtering"
-                    " algorithm for ionosphere phase screen computation"
-                ),
+                f"Iterative gaussian filter with {num_of_iters} filtering"
+                " algorithm for ionosphere phase screen computation"
+                ,
                 {
-                    "algorithm_type": np.string_("Ionosphere estimation"),
+                    "algorithm_type": "Ionosphere estimation",
                 },
             ),
             DatasetParams(
                 "ionosphereOutliers",
                 np.string_(iono_outliers),
-                np.string_(
-                    "Algorithm identifying outliers in unfiltered ionosphere"
-                    " phase screen"
-                ),
+                "Algorithm identifying outliers in unfiltered ionosphere"
+                " phase screen"
+                ,
                 {
-                    "algorithm_type": np.string_("Ionosphere estimation"),
+                    "algorithm_type": "Ionosphere estimation",
                 },
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
                 np.bool_(unwrap_correction),
-                np.string_(
-                    "Flag indicating if unwrapping errors in sub-band"
-                    " unwrapped interferograms are corrected"
-                ),
+                "Flag indicating if unwrapping errors in sub-band"
+                " unwrapped interferograms are corrected"
+                ,
                 {
-                    "algorithm_type": np.string_("Ionosphere estimation"),
+                    "algorithm_type": "Ionosphere estimation",
                 },
             ),
         ]
@@ -199,8 +188,9 @@ class RUNW(L1InSARWriter):
         Add the unwrapping to the algorithms group
 
         Parameters
-        ------
-        - algo_group(h5py.Group): algorithms group object
+        ----------
+        algo_group : h5py.Group
+            algorithms group object
         """
 
         cost_mode = "None"
@@ -246,47 +236,45 @@ class RUNW(L1InSARWriter):
             DatasetParams(
                 "costMode",
                 np.string_(cost_mode),
-                np.string_("Cost mode algorithm for phase unwrapping"),
+                "Cost mode algorithm for phase unwrapping",
                 {
-                    "algorithm_type": np.string_("Unwrapping"),
+                    "algorithm_type": "Unwrapping",
                 },
             ),
             DatasetParams(
                 "wrappedPhaseFilling",
                 np.string_(phase_filling),
-                np.string_(
-                    "Outliers data filling algorithm for phase unwrapping"
-                    " preprocessing"
-                ),
+                "Outliers data filling algorithm for phase unwrapping"
+                " preprocessing"
+                ,
                 {
-                    "algorithm_type": np.string_("Unwrapping"),
+                    "algorithm_type": "Unwrapping",
                 },
             ),
             DatasetParams(
                 "wrappedPhaseOutliers",
                 np.string_(phase_outliers),
-                np.string_(
-                    "Algorithm identifying outliers in the wrapped"
-                    " interferogram"
-                ),
+                "Algorithm identifying outliers in the wrapped"
+                " interferogram"
+                ,
                 {
-                    "algorithm_type": np.string_("Unwrapping"),
+                    "algorithm_type": "Unwrapping",
                 },
             ),
             DatasetParams(
                 "unwrappingAlgorithm",
                 np.string_(unwrapping_algorithm),
-                np.string_("Algorithm used for phase unwrapping"),
+                "Algorithm used for phase unwrapping",
                 {
-                    "algorithm_type": np.string_("Unwrapping"),
+                    "algorithm_type": "Unwrapping",
                 },
             ),
             DatasetParams(
                 "unwrappingInitializer",
                 np.string_(unwrapping_initializer),
-                np.string_("Algorithm used to initialize phase unwrapping"),
+                "Algorithm used to initialize phase unwrapping",
                 {
-                    "algorithm_type": np.string_("Unwrapping"),
+                    "algorithm_type": "Unwrapping",
                 },
             ),
         ]
@@ -299,9 +287,10 @@ class RUNW(L1InSARWriter):
         """
         Add the algorithms to processingInformation group
 
-        Return
-        ------
-        algo_group (h5py.Group): the algorithm group object
+        Returns
+        ----------
+        algo_group : h5py.Group)
+            the algorithm group object
         """
         
         algo_group = super().add_algorithms_to_procinfo()
@@ -376,13 +365,6 @@ class RUNW(L1InSARWriter):
             )
             swaths_freq_group = self.require_group(swaths_freq_group_name)
 
-            # Create the interferogram and pixeloffsets group
-            igram_group_name = f"{swaths_freq_group_name}/interferogram"
-            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
-
-            igram_group = self.require_group(igram_group_name)
-            offset_group = self.require_group(offset_group_name)
-
             # center frequency and sub swaths groups of the RSLC
             rslc_swaths_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}"
@@ -415,30 +397,26 @@ class RUNW(L1InSARWriter):
                 (slc_cols // rg_looks) // unwrap_rg_looks,
             )
 
-            self._copy_dataset_by_name(
-                rslc_freq_group, "numberOfSubSwaths", swaths_freq_group
-            )
+            rslc_freq_group.copy("numberOfSubSwaths", swaths_freq_group)
 
             scence_center_params = [
                 DatasetParams(
                     "sceneCenterAlongTrackSpacing",
                     rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
                     * az_looks,
-                    np.string_(
-                        "Nominal along track spacing in meters between"
-                        " consecutive lines near mid swath of the RIFG image"
-                    ),
-                    {"units": np.string_("meters")},
+                    "Nominal along track spacing in meters between"
+                    " consecutive lines near mid swath of the RIFG image"
+                    ,
+                    {"units": "meters"},
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
                     rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
                     * rg_looks,
-                    np.string_(
-                        "Nominal ground range spacing in meters between"
-                        " consecutive pixels near mid swath of the RIFG image"
-                    ),
-                    {"units": np.string_("meters")},
+                    "Nominal ground range spacing in meters between"
+                    " consecutive pixels near mid swath of the RIFG image"
+                    ,
+                    {"units": "meters"},
                 ),
             ]
             for ds_param in scence_center_params:
@@ -480,206 +458,201 @@ class RUNW(L1InSARWriter):
                     )
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
-            offset_slant_range = rslc_freq_group["slantRange"][()][
-                rg_start::rg_skip
-            ][:off_width]
-            offset_group.require_dataset(
-                name="slantRange",
-                data=offset_slant_range,
-                shape=offset_slant_range.shape,
-                dtype=offset_slant_range.dtype,
-            )
-            offset_group["slantRange"].attrs.update(
-                rslc_freq_group["slantRange"].attrs
-            )
-            offset_group["slantRange"].attrs["description"] = np.string_(
-                "Slant range vector"
-            )
-
-            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][
-                ()
-            ][az_start::az_skip][:off_length]
-            offset_group.require_dataset(
-                name="zeroDopplerTime",
-                data=offset_zero_doppler_time,
-                shape=offset_zero_doppler_time.shape,
-                dtype=offset_zero_doppler_time.dtype,
-            )
-            offset_group["zeroDopplerTime"].attrs.update(
-                rslc_swaths_group["zeroDopplerTime"].attrs
-            )
-            offset_group["zeroDopplerTime"].attrs["description"] = np.string_(
-                "Zero Doppler azimuth time vector"
-            )
-
-            offset_zero_doppler_time_spacing = (
+            offset_slant_range = rslc_freq_group["slantRange"][()]\
+                [rg_start::rg_skip][:off_width]
+            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]\
+                [az_start::az_skip][:off_length]
+            offset_zero_doppler_time_spacing = \
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
-            )
-            offset_group.require_dataset(
-                name="zeroDopplerTimeSpacing",
-                data=offset_zero_doppler_time_spacing,
-                shape=offset_zero_doppler_time_spacing.shape,
-                dtype=offset_zero_doppler_time_spacing.dtype,
-            )
-            offset_group["zeroDopplerTimeSpacing"].attrs.update(
-                rslc_swaths_group["zeroDopplerTimeSpacing"].attrs
-            )
-
-            offset_slant_range_spacing = (
+            offset_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_skip
-            )
-            offset_group.require_dataset(
-                name="slantRangeSpacing",
-                data=offset_slant_range_spacing,
-                shape=offset_slant_range_spacing.shape,
-                dtype=offset_slant_range_spacing.dtype,
-            )
-            offset_group["slantRangeSpacing"].attrs.update(
-                rslc_freq_group["slantRangeSpacing"].attrs
-            )
+           
+            ds_offsets_params = [
+                DatasetParams(
+                    "slantRange",
+                    offset_slant_range,
+                    "Slant range vector",
+                    rslc_freq_group["slantRange"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTime",
+                    offset_zero_doppler_time,
+                    "Zero Doppler azimuth time vector",
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTimeSpacing",
+                    offset_zero_doppler_time_spacing,
+                    "Along track spacing of the offset grid",
+                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
+                ),
+                DatasetParams(
+                    "slantRangeSpacing",
+                    offset_slant_range_spacing,
+                    "Slant range spacing of offset grid",
+                    rslc_freq_group["slantRangeSpacing"].attrs,
+                ),
+            ]
+            
+            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
+            offset_group = self.require_group(offset_group_name)
+            for ds_param in ds_offsets_params:
+                add_dataset_and_attrs(offset_group, ds_param)
 
             #  add the slantRange, zeroDopplerTime, and their spacings to inteferogram group
             igram_slant_range = rslc_freq_group["slantRange"][()]
             igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
-            rg_idx = np.arange(
-                (len(igram_slant_range) // rg_looks // unwrap_rg_looks) * (rg_looks*unwrap_rg_looks)
-            )[::rg_looks * unwrap_rg_looks] + int(rg_looks * unwrap_rg_looks / 2)
-            az_idx = np.arange(
-                (len(igram_zero_doppler_time) // az_looks // unwrap_az_looks) * (az_looks * unwrap_az_looks)
-            )[::az_looks * unwrap_az_looks] + int(az_looks * unwrap_az_looks / 2)
+            
+            def max_look_idx(max_val, n_looks, unwrap_looks):
+                # internal convenience function to get max multilooked index value
+                return (
+                    np.arange((len(max_val) // n_looks // unwrap_looks) \
+                        * n_looks * unwrap_looks)[::n_looks*unwrap_looks]
+                    + n_looks*unwrap_looks // 2
+                )
 
+            rg_idx, az_idx = (
+                max_look_idx(max_val, n_looks, unwrap_looks)
+                for max_val, n_looks, unwrap_looks in (
+                    (igram_slant_range, rg_looks, unwrap_rg_looks),
+                    (igram_zero_doppler_time, az_looks, unwrap_az_looks),
+                )
+            )
+            
             igram_slant_range = igram_slant_range[rg_idx]
             igram_zero_doppler_time = igram_zero_doppler_time[az_idx]
-
-            igram_group.require_dataset(
-                name="slantRange",
-                data=igram_slant_range,
-                shape=igram_slant_range.shape,
-                dtype=igram_slant_range.dtype,
-            )
-            igram_group["slantRange"].attrs.update(
-                rslc_freq_group["slantRange"].attrs
-            )
-            igram_group["slantRange"].attrs["description"] = np.string_(
-                "Slant range vector"
-            )
-
-            igram_group.require_dataset(
-                name="zeroDopplerTime",
-                data=igram_zero_doppler_time,
-                shape=igram_zero_doppler_time.shape,
-                dtype=igram_zero_doppler_time.dtype,
-            )
-            igram_group["zeroDopplerTime"].attrs.update(
-                rslc_swaths_group["zeroDopplerTime"].attrs
-            )
-            igram_group["zeroDopplerTime"].attrs["description"] = np.string_(
-                "Zero Doppler azimuth time vector"
-            )
-
-            igram_zero_doppler_time_spacing = (
+            igram_zero_doppler_time_spacing = \
                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks * unwrap_az_looks
-            )
-            igram_group.require_dataset(
-                name="zeroDopplerTimeSpacing",
-                data=igram_zero_doppler_time_spacing,
-                shape=igram_zero_doppler_time_spacing.shape,
-                dtype=igram_zero_doppler_time_spacing.dtype,
-            )
-            igram_group["zeroDopplerTimeSpacing"].attrs.update(
-                rslc_swaths_group["zeroDopplerTimeSpacing"].attrs
-            )
-
-            igram_slant_range_spacing = (
+            igram_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_looks * unwrap_rg_looks
-            )
-            igram_group.require_dataset(
-                name="slantRangeSpacing",
-                data=igram_slant_range_spacing,
-                shape=igram_slant_range_spacing.shape,
-                dtype=igram_slant_range_spacing.dtype,
-            )
-            igram_group["slantRangeSpacing"].attrs.update(
-                rslc_freq_group["slantRangeSpacing"].attrs
-            )
+                
+            ds_igram_params = [
+                DatasetParams(
+                    "slantRange",
+                    igram_slant_range,
+                    "Slant range vector",
+                    rslc_freq_group["slantRange"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTime",
+                    igram_zero_doppler_time,
+                    "Zero Doppler azimuth time vector",
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTimeSpacing",
+                    igram_zero_doppler_time_spacing,
+                    (
+                        "Time interval in the along track direction for raster"
+                        " layers. This is same as the spacing between"
+                        " consecutive entries in the zeroDopplerTime array"
+                    ),
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "slantRangeSpacing",
+                    igram_slant_range_spacing,
+                    (
+                        "Slant range spacing of grid. Same as difference"
+                        " between consecutive samples in slantRange array"
+                    ),
+                    rslc_freq_group["slantRangeSpacing"].attrs,
+                ),
+            ]
+            igram_group_name = f"{swaths_freq_group_name}/interferogram"
+            igram_group = self.require_group(igram_group_name)
+            for ds_param in ds_igram_params:
+                add_dataset_and_attrs(igram_group, ds_param)
 
             # add the polarization
             for pol in pol_list:
-                igram_pol_group_name = (
+                
+                # create the interferogram dataset
+                igram_pol_group_name = \
                     f"{swaths_freq_group_name}/interferogram/{pol}"
-                )
-                offset_pol_group_name = (
-                    f"{swaths_freq_group_name}/pixelOffsets/{pol}"
-                )
-
                 igram_pol_group = self.require_group(igram_pol_group_name)
-                offset_pol_group = self.require_group(offset_pol_group_name)
 
-                # Create the inteferogram dataset
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "connectedComponents",
-                    igram_shape,
-                    np.uint32,
-                    np.string_(f"Connected components for {pol} layers"),
-                    units=np.string_("DN"),
-                    fill_value=0,
-                )
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "ionospherePhaseScreen",
-                    igram_shape,
-                    np.float32,
-                    np.string_(f"Ionosphere phase screen"),
-                    units=np.string_("radians"),
-                )
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "ionospherePhaseScreenUncertainty",
-                    igram_shape,
-                    np.float32,
-                    np.string_(f"Uncertainty of the ionosphere phase screen"),
-                    units=np.string_("radians"),
-                )                                                
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "coherenceMagnitude",
-                    igram_shape,
-                    np.float32,
-                    np.string_(f"Coherence magnitude between {pol} layers"),
-                    units=np.string_("unitless"),
-                )
-                self._create_2d_dataset(
-                    igram_pol_group,
-                    "unwrappedPhase",
-                    igram_shape,
-                    np.float32,
-                    np.string_(f"Unwrapped Interferogram between {pol} layers"),
-                    units=np.string_("radians"),
-                )
-
+                igram_ds_params = [
+                    (
+                        "connectedComponents",
+                        np.uint32,
+                        f"Connected components for {pol} layers",
+                        "DN",
+                        0,
+                    ),
+                    (
+                        "ionospherePhaseScreen",
+                        np.float32,
+                        "Ionosphere phase screen",
+                        "radians",
+                        None,
+                    ),
+                    (
+                        "ionospherePhaseScreenUncertainty",
+                        np.float32,
+                        "Uncertainty of the ionosphere phase screen",
+                        "radians",
+                        None,
+                    ),
+                    (
+                        "coherenceMagnitude",
+                        np.float32,
+                        f"Coherence magnitude between {pol} layers",
+                        "unitless",
+                        None,
+                    ),
+                    (
+                        "unwrappedPhase",
+                        np.float32,
+                        f"Unwrapped Interferogram between {pol} layers",
+                        "radians",
+                        None,
+                    ),
+                ]
+                
+                for igram_ds_param in igram_ds_params:
+                    ds_name, ds_dtype, ds_description, ds_unit, ds_filling_value\
+                        = igram_ds_param
+                    self._create_2d_dataset(
+                        igram_pol_group,
+                        ds_name,
+                        igram_shape,
+                        ds_dtype,
+                        ds_description,
+                        units=ds_unit,
+                        fill_value=ds_filling_value
+                    )               
+                
                 # Create the pixel offsets dataset
-                self._create_2d_dataset(
-                    offset_pol_group,
-                    "alongTrackOffset",
-                    off_shape,
-                    np.float32,
-                    np.string_(f"Along track offset"),
-                    units=np.string_("meters"),
-                )
-                self._create_2d_dataset(
-                    offset_pol_group,
-                    "crossCorrelationPeak",
-                    off_shape,
-                    np.float32,
-                    np.string_(f"Normalized cross-correlation surface peak"),
-                    units=np.string_("unitless"),
-                )
-                self._create_2d_dataset(
-                    offset_pol_group,
-                    "slantRangeOffset",
-                    off_shape,
-                    np.float32,
-                    np.string_(f"Slant range offset"),
-                    units=np.string_("meters"),
-                )
+                offset_pol_group_name = \
+                    f"{swaths_freq_group_name}/pixelOffsets/{pol}"
+                offset_pol_group = self.require_group(offset_pol_group_name)
+                
+                pixel_offsets_ds_params = [
+                    (
+                        "alongTrackOffset",
+                        "Along track offset",
+                        "meters",
+                    ),
+                    (
+                        "crossCorrelationPeak",
+                        "Normalized cross-correlation surface peak",
+                        "unitless",
+                    ),
+                    (
+                        "slantRangeOffset",
+                        "Slant range offset",
+                        "meters",
+                    ),
+                ]
+                
+                for pixel_offsets_ds_param in pixel_offsets_ds_params:
+                    ds_name, ds_description, ds_unit = pixel_offsets_ds_param
+                    self._create_2d_dataset(
+                        offset_pol_group,
+                        ds_name,
+                        off_shape,
+                        np.float32,
+                        ds_description,
+                        units=ds_unit,
+                    ) 
