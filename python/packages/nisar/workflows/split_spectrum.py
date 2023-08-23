@@ -175,7 +175,7 @@ def run(cfg: dict):
 
                         dest_pol_path = f"{dest_freq_path}/{pol}"
 
-                        target_slc_image = nisar.types.read_c4_dataset_as_c8(
+                        target_slc_image = isce3.core.types.read_c4_dataset_as_c8(
                             src_h5[dest_pol_path],
                             np.s_[row_start: row_start + block_rows_data, :])
 

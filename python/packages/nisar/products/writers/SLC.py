@@ -9,7 +9,7 @@ from isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
 from isce3.product import RadarGridParameters
 from isce3.geometry import DEMInterpolator
 from nisar.h5 import set_string
-from nisar.types import complex32
+from isce3.core.types import complex32
 from nisar.products.readers.Raw import Raw
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
 from nisar.workflows.compute_stats import write_stats_complex_data

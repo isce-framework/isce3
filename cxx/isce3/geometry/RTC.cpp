@@ -127,10 +127,8 @@ void _applyRtc(isce3::io::Raster& input_raster, isce3::io::Raster& input_rtc,
              << pyre::journal::endl;
 
         // get a block of data
-        _Pragma("omp parallel for schedule(dynamic)") for (int block = 0;
-                                                           block < nblocks;
-                                                           ++block)
-        {
+        _Pragma("omp parallel for schedule(dynamic)")
+            for (int block = 0; block < nblocks; ++block) {
 
             int effective_block_length = block_length;
             if (block * block_length + effective_block_length > length - 1) {
@@ -227,16 +225,36 @@ void _applyRtcMinValueDb(isce3::core::Matrix<float>& out_array,
         float rtc_min_value = std::pow(10., (rtc_min_value_db / 10.));
         info << "applying min. RTC value: " << rtc_min_value_db
              << " [dB] ~= " << rtc_min_value << pyre::journal::endl;
-        _Pragma("omp parallel for schedule(dynamic) collapse(2)") for (
-                int i = 0; i < out_array.length();
-                ++i) for (int j = 0; j < out_array.width(); ++j)
-        {
-            if (out_array(i, j) >= rtc_min_value)
-                continue;
-            _Pragma("omp atomic write") out_array(i, j) =
-                    std::numeric_limits<float>::quiet_NaN();
-        }
+        _Pragma("omp parallel for schedule(dynamic) collapse(2)")
+            for (int i = 0; i < out_array.length(); ++i)
+                for (int j = 0; j < out_array.width(); ++j) {
+                    if (out_array(i, j) >= rtc_min_value)
+                        continue;
+                    _Pragma("omp atomic write") out_array(i, j) =
+                        std::numeric_limits<float>::quiet_NaN();
+                    }
     }
+}
+
+
+void _normalizeRtcArea(isce3::core::Matrix<float>& numerator_array,
+        const isce3::core::Matrix<float>& denominator_array,
+        pyre::journal::info_t& info)
+{
+    info << "normalizing gamma-naught area..." << pyre::journal::endl;
+    _Pragma("omp parallel for schedule(dynamic) collapse(2)") 
+        for (int i = 0; i < numerator_array.length(); ++i) 
+            for (int j = 0; j < numerator_array.width(); ++j) {
+                const float denominator_value = denominator_array(i, j);
+                if (denominator_value == 0) {
+                    _Pragma("omp atomic write")
+                        numerator_array(i, j) =
+                            std::numeric_limits<float>::quiet_NaN();
+                    continue;
+                }
+                _Pragma("omp atomic update") 
+                    numerator_array(i, j) /= denominator_value;
+            }
 }
 
 void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
@@ -247,9 +265,10 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry, int exponent,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+        rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
         double abs_cal_factor, float clip_min, float clip_max,
-        float radar_grid_nlooks, isce3::io::Raster* out_nlooks,
+        float radar_grid_nlooks, isce3::io::Raster* out_sigma,
         isce3::io::Raster* input_rtc, isce3::io::Raster* output_rtc,
         isce3::core::MemoryModeBlocksY rtc_memory_mode)
 {
@@ -289,8 +308,9 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         info << "calculating RTC..." << pyre::journal::endl;
         computeRtc(radar_grid, orbit, input_dop, dem_raster, *rtc_raster,
                 input_terrain_radiometry, output_terrain_radiometry,
-                rtc_area_mode, rtc_algorithm, geogrid_upsampling,
-                rtc_min_value_db, radar_grid_nlooks, out_nlooks,
+                rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
+                geogrid_upsampling,
+                rtc_min_value_db, radar_grid_nlooks, out_sigma,
                 rtc_memory_mode);
     } else {
         info << "reading pre-computed RTC..." << pyre::journal::endl;
@@ -379,8 +399,9 @@ void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& de
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+        rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db, size_t nlooks_az,
-        size_t nlooks_rg, isce3::io::Raster* out_nlooks,
+        size_t nlooks_rg, isce3::io::Raster* out_sigma,
         isce3::core::MemoryModeBlocksY rtc_memory_mode)
 {
 
@@ -398,8 +419,9 @@ void computeRtc(isce3::product::RadarGridProduct& product, isce3::io::Raster& de
 
     computeRtc(radar_grid_ml, orbit, dop, dem_raster, output_raster,
             input_terrain_radiometry, output_terrain_radiometry, rtc_area_mode,
-            rtc_algorithm, geogrid_upsampling, rtc_min_value_db,
-            radar_grid_nlooks, out_nlooks, rtc_memory_mode);
+            rtc_algorithm, rtc_area_beta_mode,
+            geogrid_upsampling, rtc_min_value_db,
+            radar_grid_nlooks, out_sigma, rtc_memory_mode);
 }
 
 void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
@@ -409,8 +431,9 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+        rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
-        float radar_grid_nlooks, isce3::io::Raster* out_nlooks,
+        float radar_grid_nlooks, isce3::io::Raster* out_sigma,
         isce3::core::MemoryModeBlocksY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range, const long long min_block_size,
@@ -443,8 +466,9 @@ void computeRtc(const isce3::product::RadarGridParameters& radar_grid,
     computeRtc(dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
             x0, dx, geogrid_length, geogrid_width, epsg,
             input_terrain_radiometry, output_terrain_radiometry, rtc_area_mode,
-            rtc_algorithm, geogrid_upsampling, rtc_min_value_db,
-            radar_grid_nlooks, nullptr, nullptr, out_nlooks, rtc_memory_mode,
+            rtc_algorithm, rtc_area_beta_mode,
+            geogrid_upsampling, rtc_min_value_db,
+            radar_grid_nlooks, nullptr, nullptr, out_sigma, rtc_memory_mode,
             interp_method, threshold, num_iter, delta_range, min_block_size,
             max_block_size);
 }
@@ -458,9 +482,10 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
+        rtcAreaBetaMode rtc_area_beta_mode,
         double geogrid_upsampling, float rtc_min_value_db,
         float radar_grid_nlooks, isce3::io::Raster* out_geo_rdr,
-        isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_nlooks,
+        isce3::io::Raster* out_geo_grid, isce3::io::Raster* out_sigma,
         isce3::core::MemoryModeBlocksY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range, const long long min_block_size,
@@ -472,15 +497,22 @@ void computeRtc(isce3::io::Raster& dem_raster, isce3::io::Raster& output_raster,
     if (rtc_algorithm == rtcAlgorithm::RTC_AREA_PROJECTION) {
         computeRtcAreaProj(dem_raster, output_raster, radar_grid, orbit,
                 input_dop, geogrid, input_terrain_radiometry,
-                output_terrain_radiometry, rtc_area_mode, geogrid_upsampling,
+                output_terrain_radiometry, rtc_area_mode,
+                rtc_area_beta_mode, geogrid_upsampling,
                 rtc_min_value_db, radar_grid_nlooks, out_geo_rdr, out_geo_grid,
-                out_nlooks, rtc_memory_mode, interp_method, threshold, num_iter,
+                out_sigma, rtc_memory_mode, interp_method, threshold, num_iter,
                 delta_range, min_block_size, max_block_size);
-    } else {
+    } else if (
+        rtc_area_beta_mode == rtcAreaBetaMode::PROJECTION_ANGLE) {
+            std::string error_msg = "the area beta mode PROJECTION_ANGLE is not";
+            error_msg += "available for RTC with bilinear distribution";
+            throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
+        }
+    else {
         computeRtcBilinearDistribution(dem_raster, output_raster, radar_grid,
                 orbit, input_dop, geogrid, input_terrain_radiometry,
-                output_terrain_radiometry, rtc_area_mode, geogrid_upsampling,
-                rtc_min_value_db);
+                output_terrain_radiometry, rtc_area_mode,
+                geogrid_upsampling, rtc_min_value_db, out_sigma);
     }
 }
 
@@ -568,8 +600,10 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
     }
 }
 
-void _addArea(double area, isce3::core::Matrix<float>& out_array,
-        float radar_grid_nlooks, isce3::core::Matrix<float>& out_nlooks_array,
+void _addArea(double gamma_naught_area, double sigma_naught_area,
+        double beta_naught_area, isce3::core::Matrix<float>& out_gamma_array,
+        isce3::core::Matrix<float>& out_beta_array,
+        float radar_grid_nlooks, isce3::core::Matrix<float>& out_sigma_array,
         int length, int width, int x_min, int y_min, int size_x, int size_y,
         isce3::core::Matrix<double>& w_arr, double nlooks,
         isce3::core::Matrix<double>& w_arr_out, double& nlooks_out,
@@ -596,43 +630,72 @@ void _addArea(double area, isce3::core::Matrix<float>& out_array,
 
             if (x < 0 || y < 0 || y >= length || x >= width)
                 continue;
-            if (out_nlooks_array.data() != nullptr) {
-                const auto out_nlooks =
-                        radar_grid_nlooks * std::abs(w * (nlooks - nlooks_out));
-                _Pragma("omp atomic") out_nlooks_array(y, x) += out_nlooks;
-            }
+
             w /= nlooks - nlooks_out;
-            _Pragma("omp atomic") out_array(y, x) += w * area;
+            _Pragma("omp atomic")
+                out_gamma_array(y, x) += w * gamma_naught_area;
+
+            if (out_beta_array.data() != nullptr) {
+                _Pragma("omp atomic")
+                    out_beta_array(y, x) += w * beta_naught_area;
+            }
+
+            if (out_sigma_array.data() != nullptr) {
+                _Pragma("omp atomic")
+                    out_sigma_array(y, x) += w * sigma_naught_area;
+            }
+
         }
 }
 
 double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
-        Vec3 target_to_sensor_xyz, double p1, double& p3, double divisor,
-        rtcOutputTerrainRadiometry output_terrain_radiometry)
+        Vec3 target_to_sensor_xyz, Vec3 image_normal_xyz,
+        rtcAreaMode rtc_area_mode, rtcAreaBetaMode rtc_area_beta_mode,
+        double p1, double& p3, double divisor,
+        rtcOutputTerrainRadiometry output_terrain_radiometry,
+        double & sigma_naught_area,
+        double & beta_naught_area)
 {
     const Vec3 normal_facet = normalPlane(xyz_center, xyz_left, xyz_right);
-    double cos_inc_facet = normal_facet.dot(target_to_sensor_xyz);
+    double cos_local_inc_facet = normal_facet.dot(target_to_sensor_xyz);
 
     p3 = (xyz_center - xyz_right).norm();
 
     // If facet is not illuminated by radar, skip
-    if (cos_inc_facet <= 0)
+    if (cos_local_inc_facet <= 0)
         return 0;
 
     // Side lengths (keep p3 solution for next iteration)
     const double p2 = (xyz_right - xyz_left).norm();
 
     // Heron's formula to get area of facets in XYZ coordinates
-    const float h = 0.5 * (p1 + p2 + p3);
+    const double h = 0.5 * (p1 + p2 + p3);
 
-    double sigma_naught_area =
+    sigma_naught_area =
             (std::sqrt(h * (h - p1) * (h - p2) * (h - p3)) / divisor);
 
-    if (output_terrain_radiometry == rtcOutputTerrainRadiometry::SIGMA_NAUGHT) {
+    /*
+    In the rtcAreaMode::AREA mode, we'll return a reference area (e.g., A_gamma),
+    whereas, in the rtcAreaMode::AREA_FACTOR mode, we'll return the ratio between
+    reference area by the area beta A_beta (e.g., A_gamma / A_beta), which
+    represents the RTC area normalization factor (ANF).
+
+    We compute the A_beta using the projection angle if the `rtc_area_mode`
+    is rtcAreaBetaMode::AUTO or rtcAreaBetaMode::PROJECTION_ANGLE, i.e.,
+    if `rtc_area_mode` is different than rtcAreaBetaMode::PIXEL_AREA
+    */
+    if (rtc_area_mode == rtcAreaMode::AREA_FACTOR &&
+            rtc_area_beta_mode != rtcAreaBetaMode::PIXEL_AREA) {
+        const double cos_psi_facet = normal_facet.dot(image_normal_xyz);
+        beta_naught_area = sigma_naught_area * cos_psi_facet;
+    }
+
+    if (output_terrain_radiometry ==
+            rtcOutputTerrainRadiometry::SIGMA_NAUGHT) {
         return sigma_naught_area;
     }
 
-    double gamma_naught_area = cos_inc_facet * sigma_naught_area;
+    double gamma_naught_area = cos_local_inc_facet * sigma_naught_area;
 
     return gamma_naught_area;
 }
@@ -645,8 +708,9 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
         const isce3::product::GeoGridParameters& geogrid,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
-        rtcAreaMode rtc_area_mode, double upsample_factor,
-        float rtc_min_value_db)
+        rtcAreaMode rtc_area_mode,
+        double upsample_factor, float rtc_min_value_db,
+        isce3::io::Raster* out_sigma)
 {
 
     pyre::journal::info_t info("isce.geometry.computeRtcBilinearDistribution");
@@ -658,9 +722,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     const isce3::core::Ellipsoid& ellps = proj->ellipsoid();
 
     geogrid.print();
+    rtcAreaBetaMode rtc_area_beta_mode = rtcAreaBetaMode::PIXEL_AREA;
     print_parameters(info, radar_grid, input_terrain_radiometry,
-            output_terrain_radiometry, rtc_area_mode, upsample_factor,
-            rtc_min_value_db);
+            output_terrain_radiometry, rtc_area_mode, rtc_area_beta_mode,
+            upsample_factor, rtc_min_value_db);
 
     const double yf = geogrid.startY() + geogrid.length() * geogrid.spacingY();
     const double margin_x = std::abs(geogrid.spacingX()) * 20;
@@ -685,8 +750,24 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     double ybound = radar_grid.length() - 1.0;
 
     // Output raster
-    isce3::core::Matrix<float> out(radar_grid.length(), radar_grid.width());
-    out.fill(0);
+    isce3::core::Matrix<float> out_array(radar_grid.length(), radar_grid.width());
+    out_array.fill(0);
+
+    // Output raster sigma
+    isce3::core::Matrix<float> out_sigma_array;
+    
+    /*
+    `out_sigma_array` is only updated if
+    `out_sigma` is not `nullptr` AND `output_terrain_radiometry`
+    is different than `rtcOutputTerrainRadiometry::SIGMA_NAUGHT`
+    */
+    bool flag_compute_area_sigma_separately = (out_sigma != nullptr and
+                                               output_terrain_radiometry !=
+                                       rtcOutputTerrainRadiometry::SIGMA_NAUGHT);
+    if (flag_compute_area_sigma_separately) {
+        out_sigma_array.resize(radar_grid.length(), radar_grid.width());
+        out_sigma_array.fill(0);
+    }
 
     // ------------------------------------------------------------------------
     // Main code: decompose DEM into facets, compute RDC coordinates
@@ -717,8 +798,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     }
 
     // Loop over DEM facets
-    _Pragma("omp parallel for schedule(dynamic)") for (size_t ii = 0; ii < imax;
-                                                       ++ii)
+    _Pragma("omp parallel for schedule(dynamic)")
+        for (size_t ii = 0; ii < imax; ++ii)
     {
         double a = radar_grid.sensingMid();
         double r = radar_grid.midRange();
@@ -730,7 +811,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
             _Pragma("omp atomic") numdone++;
 
             if (numdone % progress_block == 0)
-                _Pragma("omp critical") printf("\rRTC progress: %d%%",
+                _Pragma("omp critical")
+                    printf("\rRTC progress: %d%%",
                         (int) ((numdone * 1e2 / imax) / jmax)),
                         fflush(stdout);
             // Central DEM coordinates of facets
@@ -833,14 +915,18 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
                 continue;
 
             // Compute projected area
-            float area = 0;
+            double area = 0, area_sigma = 0;
 
             if (cos_inc_facet_1 > 0 &&
                     output_terrain_radiometry ==
                             rtcOutputTerrainRadiometry::SIGMA_NAUGHT)
                 area += AP1;
-            else if (cos_inc_facet_1 > 0)
+            else if (cos_inc_facet_1 > 0) {
                 area += AP1 * cos_inc_facet_1;
+                if (flag_compute_area_sigma_separately) {
+                    area_sigma += AP1;
+                }
+            }
             if (cos_inc_facet_2 > 0 &&
                     output_terrain_radiometry ==
                             rtcOutputTerrainRadiometry::SIGMA_NAUGHT)
@@ -851,10 +937,10 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
                 continue;
 
             // Compute fractional weights from indices
-            const float Wr = ranpix - x1;
-            const float Wa = azpix - y1;
-            const float Wrc = 1. - Wr;
-            const float Wac = 1. - Wa;
+            const double Wr = ranpix - x1;
+            const double Wa = azpix - y1;
+            const double Wrc = 1. - Wr;
+            const double Wac = 1. - Wa;
 
             if (rtc_area_mode == rtcAreaMode::AREA_FACTOR) {
                 // cosine law: c^2 = a^2 + b^2 - 2.a.b.cos(AB)
@@ -873,21 +959,43 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
                 const double area_beta = radar_grid.rangePixelSpacing() *
                                          ground_velocity / radar_grid.prf();
                 area /= area_beta;
+                if (flag_compute_area_sigma_separately) {
+                    area_sigma /= area_beta;
+                }
             }
 
             // if if (ranpix < -1 or x2 > xbound+1 or azpix < -1 or y2 >
             // ybound+1)
             if (y1 >= 0 && x1 >= 0) {
-                _Pragma("omp atomic") out(y1, x1) += area * Wrc * Wac;
+                _Pragma("omp atomic") out_array(y1, x1) += area * Wrc * Wac;
             }
             if (y1 >= 0 && x2 <= xbound) {
-                _Pragma("omp atomic") out(y1, x2) += area * Wr * Wac;
+                _Pragma("omp atomic") out_array(y1, x2) += area * Wr * Wac;
             }
             if (y2 <= ybound && x1 >= 0) {
-                _Pragma("omp atomic") out(y2, x1) += area * Wrc * Wa;
+                _Pragma("omp atomic") out_array(y2, x1) += area * Wrc * Wa;
             }
             if (y2 <= ybound && x2 <= xbound) {
-                _Pragma("omp atomic") out(y2, x2) += area * Wr * Wa;
+                _Pragma("omp atomic") out_array(y2, x2) += area * Wr * Wa;
+            }
+
+            if (flag_compute_area_sigma_separately) {
+                if (y1 >= 0 && x1 >= 0) {
+                    _Pragma("omp atomic")
+                        out_sigma_array(y1, x1) += area_sigma * Wrc * Wac;
+                }
+                if (y1 >= 0 && x2 <= xbound) {
+                    _Pragma("omp atomic")
+                        out_sigma_array(y1, x2) += area_sigma * Wr * Wac;
+                }
+                if (y2 <= ybound && x1 >= 0) {
+                    _Pragma("omp atomic")
+                        out_sigma_array(y2, x1) += area_sigma * Wrc * Wa;
+                }
+                if (y2 <= ybound && x2 <= xbound) {
+                    _Pragma("omp atomic")
+                        out_sigma_array(y2, x2) += area_sigma * Wr * Wa;
+                }
             }
         }
     }
@@ -903,9 +1011,8 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
     if (input_terrain_radiometry ==
             rtcInputTerrainRadiometry::SIGMA_NAUGHT_ELLIPSOID) {
         // Compute the flat earth incidence angle correction
-        _Pragma("omp parallel for schedule(dynamic) collapse(2)") for (
-                size_t i = 0; i < radar_grid.length(); ++i)
-        {
+        _Pragma("omp parallel for schedule(dynamic) collapse(2)")
+        for (size_t i = 0; i < radar_grid.length(); ++i) {
             for (size_t j = 0; j < radar_grid.width(); ++j) {
 
                 isce3::core::cartesian_t xyz_plat, vel;
@@ -934,15 +1041,23 @@ void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
                 const double costheta = std::abs(enu[2]) / enu.norm();
                 const double sintheta = std::sqrt(1. - costheta * costheta);
 
-                out(i, j) *= sintheta;
+                out_array(i, j) *= sintheta;
             }
         }
     }
 
-    _applyRtcMinValueDb(out, rtc_min_value_db, rtc_area_mode, info);
+    _applyRtcMinValueDb(out_array, rtc_min_value_db, rtc_area_mode, info);
 
     output_raster.setBlock(
-            out.data(), 0, 0, radar_grid.width(), radar_grid.length());
+            out_array.data(), 0, 0, radar_grid.width(), radar_grid.length());
+
+    if (flag_compute_area_sigma_separately) {
+        out_sigma->setBlock(
+            out_sigma_array.data(), 0, 0, radar_grid.width(), radar_grid.length());
+    } else if (out_sigma != nullptr){
+        out_sigma->setBlock(
+            out_array.data(), 0, 0, radar_grid.width(), radar_grid.length());
+    }
 
     auto elapsed_time_milliseconds =
             std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -965,9 +1080,11 @@ void _RunBlock(const int jmax, const int block_size,
         const isce3::core::LUT2d<double>& dop,
         const isce3::core::Ellipsoid& ellipsoid,
         const isce3::core::Orbit& orbit, double threshold, int num_iter,
-        double delta_range, isce3::core::Matrix<float>& out_array,
-        isce3::core::Matrix<float>& out_nlooks_array,
+        double delta_range, isce3::core::Matrix<float>& out_gamma_array,
+        isce3::core::Matrix<float>& out_beta_array,
+        isce3::core::Matrix<float>& out_sigma_array,
         isce3::core::ProjectionBase* proj, rtcAreaMode rtc_area_mode,
+        rtcAreaBetaMode rtc_area_beta_mode,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
         float radar_grid_nlooks)
@@ -1293,7 +1410,9 @@ void _RunBlock(const int jmax, const int block_size,
             // Prepare call to computeFacet()
             double p00_c = (xyz00 - xyz_c).norm();
             double p10_c, p01_c, p11_c, divisor = 1;
-            if (rtc_area_mode == rtcAreaMode::AREA_FACTOR) {
+
+            if (rtc_area_mode == rtcAreaMode::AREA_FACTOR &&
+                    rtc_area_beta_mode == rtcAreaBetaMode::PIXEL_AREA) {
                 // cosine law: c^2 = a^2 + b^2 - 2.a.b.cos(AB)
                 // cos(AB) = (a^2 + b^2 - c^2) / 2.a.b
                 const double slant_range = (xyz_c - xyz_plat).norm();
@@ -1355,48 +1474,73 @@ void _RunBlock(const int jmax, const int block_size,
             else
                 plane_orientation = 1;
 
+            const Vec3 image_normal_xyz = (plane_orientation *
+                (vel.cross(target_to_sensor_xyz)).normalized());
+
             areaProjIntegrateSegment(y_c_cut, y00_cut, x_c_cut, x00_cut, size_y,
                     size_x, w_arr_1, nlooks_1, plane_orientation);
 
             // Compute the area (first facet)
-            double area =
+            double sigma_naught_area, beta_naught_area;
+            double gamma_naught_area =
                     computeFacet(xyz_c, xyz00, xyz01, target_to_sensor_xyz,
-                            p00_c, p01_c, divisor, output_terrain_radiometry);
-            // Add area to output grid
-            _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
+                            image_normal_xyz, rtc_area_mode,
+                            rtc_area_beta_mode, p00_c, p01_c, divisor,
+                            output_terrain_radiometry, sigma_naught_area,
+                            beta_naught_area);
+
+            // Add gamma_naught_area to output grid
+            _addArea(gamma_naught_area, sigma_naught_area, beta_naught_area,
+                    out_gamma_array, out_beta_array,
+                    radar_grid_nlooks, out_sigma_array,
                     radar_grid.length(), radar_grid.width(), x_min, y_min,
                     size_x, size_y, w_arr_1, nlooks_1, w_arr_2, nlooks_2,
                     x_c_cut, x00_cut, x01_cut, y_c_cut, y00_cut, y01_cut,
                     plane_orientation);
 
             // Compute the area (second facet)
-            area = computeFacet(xyz_c, xyz01, xyz11, target_to_sensor_xyz,
-                    p01_c, p11_c, divisor, output_terrain_radiometry);
+            gamma_naught_area = computeFacet(xyz_c, xyz01, xyz11,
+                    target_to_sensor_xyz, image_normal_xyz, rtc_area_mode,
+                    rtc_area_beta_mode,
+                    p01_c, p11_c, divisor, output_terrain_radiometry,
+                    sigma_naught_area, beta_naught_area);
 
             // Add area to output grid
-            _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
+            _addArea(gamma_naught_area, sigma_naught_area, beta_naught_area,
+                    out_gamma_array, out_beta_array,
+                    radar_grid_nlooks, out_sigma_array,
                     radar_grid.length(), radar_grid.width(), x_min, y_min,
                     size_x, size_y, w_arr_2, nlooks_2, w_arr_1, nlooks_1,
                     x_c_cut, x01_cut, x11_cut, y_c_cut, y01_cut, y11_cut,
                     plane_orientation);
 
             // Compute the area (third facet)
-            area = computeFacet(xyz_c, xyz11, xyz10, target_to_sensor_xyz,
-                    p11_c, p10_c, divisor, output_terrain_radiometry);
+            gamma_naught_area = computeFacet(xyz_c, xyz11, xyz10,
+                    target_to_sensor_xyz, image_normal_xyz, rtc_area_mode,
+                    rtc_area_beta_mode,
+                    p11_c, p10_c, divisor, output_terrain_radiometry,
+                    sigma_naught_area, beta_naught_area);
 
             // Add area to output grid
-            _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
+            _addArea(gamma_naught_area, sigma_naught_area, beta_naught_area,
+                    out_gamma_array, out_beta_array,
+                    radar_grid_nlooks, out_sigma_array,
                     radar_grid.length(), radar_grid.width(), x_min, y_min,
                     size_x, size_y, w_arr_1, nlooks_1, w_arr_2, nlooks_2,
                     x_c_cut, x11_cut, x10_cut, y_c_cut, y11_cut, y10_cut,
                     plane_orientation);
 
             // Compute the area (fourth facet)
-            area = computeFacet(xyz_c, xyz10, xyz00, target_to_sensor_xyz,
-                    p10_c, p00_c, divisor, output_terrain_radiometry);
+            gamma_naught_area = computeFacet(xyz_c, xyz10, xyz00,
+                    target_to_sensor_xyz, image_normal_xyz, rtc_area_mode,
+                    rtc_area_beta_mode,
+                    p10_c, p00_c, divisor, output_terrain_radiometry,
+                    sigma_naught_area, beta_naught_area);
 
             // Add area to output grid
-            _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
+            _addArea(gamma_naught_area, sigma_naught_area, beta_naught_area,
+                    out_gamma_array, out_beta_array,
+                    radar_grid_nlooks, out_sigma_array,
                     radar_grid.length(), radar_grid.width(), x_min, y_min,
                     size_x, size_y, w_arr_2, nlooks_2, w_arr_1, nlooks_1,
                     x_c_cut, x10_cut, x00_cut, y_c_cut, y10_cut, y00_cut,
@@ -1435,10 +1579,11 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
         const isce3::product::GeoGridParameters& geogrid,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
-        rtcAreaMode rtc_area_mode, double geogrid_upsampling,
+        rtcAreaMode rtc_area_mode, rtcAreaBetaMode rtc_area_beta_mode,
+        double geogrid_upsampling,
         float rtc_min_value_db, float radar_grid_nlooks,
         isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_grid,
-        isce3::io::Raster* out_nlooks, isce3::core::MemoryModeBlocksY rtc_memory_mode,
+        isce3::io::Raster* out_sigma, isce3::core::MemoryModeBlocksY rtc_memory_mode,
         isce3::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range, const long long min_block_size,
         const long long max_block_size)
@@ -1466,8 +1611,8 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
 
     geogrid.print();
     print_parameters(info, radar_grid, input_terrain_radiometry,
-            output_terrain_radiometry, rtc_area_mode, geogrid_upsampling,
-            rtc_min_value_db);
+            output_terrain_radiometry, rtc_area_mode, rtc_area_beta_mode,
+            geogrid_upsampling, rtc_min_value_db);
 
     int epsgcode = dem_raster.getEPSG();
     info << "DEM EPSG: " << epsgcode << pyre::journal::endl;
@@ -1495,12 +1640,20 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
 
     // Output raster
     using T = float;
-    isce3::core::Matrix<T> out_array(radar_grid.length(), radar_grid.width());
-    out_array.fill(0);
-    isce3::core::Matrix<float> out_nlooks_array;
-    if (out_nlooks != nullptr) {
-        out_nlooks_array.resize(radar_grid.length(), radar_grid.width());
-        out_nlooks_array.fill(0);
+    isce3::core::Matrix<T> out_gamma_array(radar_grid.length(), radar_grid.width());
+    out_gamma_array.fill(0);
+
+    isce3::core::Matrix<T> out_beta_array;
+    if (rtc_area_mode == rtcAreaMode::AREA_FACTOR &&
+            rtc_area_beta_mode != rtcAreaBetaMode::PIXEL_AREA) {
+        out_beta_array.resize(radar_grid.length(), radar_grid.width());
+        out_beta_array.fill(0);
+    }
+
+    isce3::core::Matrix<float> out_sigma_array;
+    if (out_sigma != nullptr) {
+        out_sigma_array.resize(radar_grid.length(), radar_grid.width());
+        out_sigma_array.fill(0);
     }
 
     const long long progress_block = ((long long) imax) * jmax / 100;
@@ -1525,26 +1678,45 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
     info << "block length (with upsampling): " << block_length_with_upsampling
          << pyre::journal::endl;
 
-    _Pragma("omp parallel for schedule(dynamic)") for (int block = 0;
-                                                       block < nblocks; ++block)
-    {
-        _RunBlock(jmax, block_length, block_length_with_upsampling, block,
+    _Pragma("omp parallel for schedule(dynamic)")
+        for (int block = 0; block < nblocks; ++block) {
+            _RunBlock(jmax, block_length, block_length_with_upsampling, block,
                 numdone, progress_block, geogrid_upsampling, interp_method,
                 dem_raster, out_geo_rdr, out_geo_grid, start, pixazm, dr, r0,
                 xbound, ybound, geogrid, radar_grid, input_dop, ellipsoid,
-                orbit, threshold, num_iter, delta_range, out_array,
-                out_nlooks_array, proj.get(), rtc_area_mode,
-                input_terrain_radiometry, output_terrain_radiometry,
-                radar_grid_nlooks);
-    }
+                orbit, threshold, num_iter, delta_range, out_gamma_array,
+                out_beta_array, out_sigma_array, proj.get(), rtc_area_mode,
+                rtc_area_beta_mode, input_terrain_radiometry,
+                output_terrain_radiometry, radar_grid_nlooks);
+        }
 
     printf("\rRTC progress: 100%%\n");
     std::cout << std::endl;
 
-    _applyRtcMinValueDb(out_array, rtc_min_value_db, rtc_area_mode, info);
+    /*
+    if (rtc_area_mode == rtcAreaMode::AREA_FACTOR && 
+            rtc_area_beta_mode == rtcAreaBetaMode::PIXEL_AREA),
+        the division by area beta (A_beta) is done using the "pixel area"
+        computed by ground velocity and added to the variable `divisor`
+        within _RunBlock()
+    The lines below handle the pixel-wise division of A_beta using
+    `out_beta_array`.
+    */
+    if (out_sigma != nullptr &&
+            rtc_area_mode == rtcAreaMode::AREA_FACTOR &&
+            rtc_area_beta_mode != rtcAreaBetaMode::PIXEL_AREA) {
+        _normalizeRtcArea(out_sigma_array, out_beta_array, info); 
+    }
+
+    if (rtc_area_mode == rtcAreaMode::AREA_FACTOR &&
+            rtc_area_beta_mode != rtcAreaBetaMode::PIXEL_AREA) {
+        _normalizeRtcArea(out_gamma_array, out_beta_array, info); 
+    }
+
+    _applyRtcMinValueDb(out_gamma_array, rtc_min_value_db, rtc_area_mode, info);
 
     output_raster.setBlock(
-            out_array.data(), 0, 0, radar_grid.width(), radar_grid.length());
+            out_gamma_array.data(), 0, 0, radar_grid.width(), radar_grid.length());
 
     if (out_geo_rdr != nullptr) {
         double geotransform_edges[] = {
@@ -1564,8 +1736,8 @@ void computeRtcAreaProj(isce3::io::Raster& dem_raster,
         out_geo_grid->setEPSG(geogrid.epsg());
     }
 
-    if (out_nlooks != nullptr)
-        out_nlooks->setBlock(out_nlooks_array.data(), 0, 0, radar_grid.width(),
+    if (out_sigma != nullptr)
+        out_sigma->setBlock(out_sigma_array.data(), 0, 0, radar_grid.width(),
                 radar_grid.length());
 
     auto elapsed_time_milliseconds =
@@ -1616,7 +1788,7 @@ std::string get_output_terrain_radiometry_str(
     return output_terrain_radiometry_str;
 }
 
-/** Convert enum output_mode to string */
+/** Convert enum rtc_area_mode to string */
 std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode)
 {
     std::string rtc_area_mode_str;
@@ -1632,6 +1804,26 @@ std::string get_rtc_area_mode_str(rtcAreaMode rtc_area_mode)
     }
     return rtc_area_mode_str;
 }
+
+/** Convert enum output_mode to string */
+std::string get_rtc_area_beta_mode_str(rtcAreaBetaMode rtc_area_beta_mode)
+{
+    std::string rtc_area_beta_mode_str;
+    switch (rtc_area_beta_mode) {
+    case rtcAreaBetaMode::AUTO: rtc_area_beta_mode_str = "auto"; break;
+    case rtcAreaBetaMode::PIXEL_AREA: rtc_area_beta_mode_str = "pixel area";
+        break;
+    case rtcAreaBetaMode::PROJECTION_ANGLE:
+        rtc_area_beta_mode_str = "projection angle";
+        break;
+    default:
+        std::string error_message = "ERROR invalid RTC area beta mode";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_message);
+        break;
+    }
+    return rtc_area_beta_mode_str;
+}
+
 
 /** Convert enum output_mode to string */
 std::string get_rtc_algorithm_str(rtcAlgorithm rtc_algorithm)
@@ -1656,7 +1848,8 @@ void print_parameters(pyre::journal::info_t& channel,
         const isce3::product::RadarGridParameters& radar_grid,
         rtcInputTerrainRadiometry input_terrain_radiometry,
         rtcOutputTerrainRadiometry output_terrain_radiometry,
-        rtcAreaMode rtc_area_mode, double geogrid_upsampling,
+        rtcAreaMode rtc_area_mode, rtcAreaBetaMode rtc_area_beta_mode,
+        double geogrid_upsampling,
         float rtc_min_value_db)
 {
     std::string input_terrain_radiometry_str =
@@ -1667,12 +1860,17 @@ void print_parameters(pyre::journal::info_t& channel,
 
     std::string rtc_area_mode_str = get_rtc_area_mode_str(rtc_area_mode);
 
+    std::string rtc_area_beta_mode_str = get_rtc_area_beta_mode_str(
+        rtc_area_beta_mode);
+
     channel << "input radiometry: " << input_terrain_radiometry_str
             << pyre::journal::newline
             << "output radiometry: " << output_terrain_radiometry_str
             << pyre::journal::newline
             << "RTC area mode (area/area normalization factor): "
             << rtc_area_mode_str << pyre::journal::newline
+            << "RTC area beta mode: "
+            << rtc_area_beta_mode_str << pyre::journal::newline
             << "RTC geogrid upsampling: " << geogrid_upsampling
             << pyre::journal::newline << "look side: " << radar_grid.lookSide()
             << pyre::journal::newline

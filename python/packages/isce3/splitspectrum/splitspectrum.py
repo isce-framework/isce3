@@ -295,7 +295,7 @@ class SplitSpectrum:
             )
 
         # remove the windowing effect from the spectrum 
-        spectrum_target = fft(slc_raster, n=fft_size)
+        spectrum_target = fft(slc_raster, n=fft_size, workers=-1)
         spectrum_target = np.divide(spectrum_target,
                                     window_target,
                                     out=np.zeros_like(spectrum_target),
@@ -303,7 +303,9 @@ class SplitSpectrum:
         # apply new bandpass window to spectrum 
         slc_bandpassed = ifft(spectrum_target 
                       * window_bandpass
-                      * np.sqrt(resampling_scale_factor), n=fft_size)
+                      * np.sqrt(resampling_scale_factor), 
+                      n=fft_size, 
+                      workers=-1)
 
         return slc_bandpassed
 
@@ -569,7 +571,7 @@ class SplitSpectrum:
             filter_1d[: idx_freq_high + 1] = subwindow[fft_size - idx_freq_low:]
         else:
             filter_1d[idx_freq_low : idx_freq_high+1] = subwindow
-            
+
         return filter_1d
 
     def construct_range_bandpass_tukey(self,

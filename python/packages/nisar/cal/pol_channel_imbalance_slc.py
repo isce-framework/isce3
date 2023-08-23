@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 
 from isce3.antenna import CrossTalk, PolImbalanceRatioAnt, rdr2ant
 from nisar.cal import CRInfoSlc, est_peak_loc_cr_from_slc
-from nisar.types import ComplexFloat16Decoder
+from isce3.core.types import ComplexFloat16Decoder
 from isce3.core import Ellipsoid, DateTime
 from isce3.geometry import DEMInterpolator, rdr2geo
 from nisar.workflows.doppler_lut_from_raw import set_logger
@@ -84,8 +84,8 @@ class PolChannelImbalanceSlc:
         Corner reflectors' approximate geodetic longitude, latitude, and height
         in (rad, rad, m) exist in RSLC product "slc_cr". 2-D shape is (N by 3).
     cross_talk : isce3.antenna.CrossTalk, optional
-        Antenna cross talk values, fixed value or a function of Elevation (EL)
-        angles. If not provided, cross talk will be assumed to be zero!
+        Antenna cross talk values, 1-D LUT as a function of Elevation (EL)
+        angles (rad). If not provided, cross talk will be ignored!
     freq_band : {'A', 'B'}, default='A'
         Frequency band used for both RSLC products.
     dem : isce3.core.DEMInterpolator, optional
@@ -200,39 +200,30 @@ class PolChannelImbalanceSlc:
         self._chip_size = 2 * pixel_slc_margin
 
         # get/set cross talk values
+        self._cross_talk = cross_talk
         if cross_talk is None:
-            self._cross_talk = CrossTalk(*(4*[complex()]))
+            self._skip_xtalk_removal = True
+            self._logger.warning('No cross-talk data is provided! '
+                                 'Cross-talk removal will be skipped!')
         else:
-            # use averaged x-talk values over entire EL angles if any
-            # Note that phase and amp are averaged not the complex one!
-            # TODO, try to use el-dependent x-talk correction
-            # as scipy.interpolation.interp1d or LUT1d
-            xtalk_dict = dict.fromkeys(vars(cross_talk).keys())
-            for key, val in vars(cross_talk).items():
-                if key != 'el_ang':
-                    xtalk_dict[key] = (np.sqrt(np.mean(np.abs(val)**2)) *
-                                       np.exp(1j * np.angle(val).mean()))
-            self._cross_talk = CrossTalk(**xtalk_dict)
-        self._logger.info(
-            f'H-pol TX averaged cross-talk -> {self._cross_talk.tx_xpol_h:.4f}'
+            self._logger.info('H-pol TX cross-talk @ EL=0 -> '
+                              f'{self._cross_talk.tx_xpol_h(0):.4f}')
+            self._logger.info('V-pol TX cross-talk @ EL=0 -> '
+                              f'{self._cross_talk.tx_xpol_v(0):.4f}')
+            self._logger.info('H-pol RX cross-talk @ EL=0 -> '
+                              f'{self._cross_talk.rx_xpol_h(0):.4f}')
+            self._logger.info('V-pol RX cross-talk @ EL=0 -> '
+                              f'{self._cross_talk.rx_xpol_v(0):.4f}')
+            # check the cross talk values to see if they are all zeros.
+            self._skip_xtalk_removal = (
+                np.allclose(np.abs(self._cross_talk.tx_xpol_h.y), 0.0) and
+                np.allclose(np.abs(self._cross_talk.tx_xpol_v.y), 0.0) and
+                np.allclose(np.abs(self._cross_talk.rx_xpol_h.y), 0.0) and
+                np.allclose(np.abs(self._cross_talk.rx_xpol_v.y), 0.0)
             )
-        self._logger.info(
-            f'V-pol TX averaged cross-talk -> {self._cross_talk.tx_xpol_v:.4f}'
-            )
-        self._logger.info(
-            f'H-pol RX averaged cross-talk -> {self._cross_talk.rx_xpol_h:.4f}'
-            )
-        self._logger.info(
-            f'V-pol RX averaged cross-talk -> {self._cross_talk.rx_xpol_v:.4f}'
-            )
-
-        # check the cross talk values to see if it all zeros
-        self._skip_xtalk_removal = (
-            np.allclose(np.abs(self._cross_talk.tx_xpol_h), 0.0) and
-            np.allclose(np.abs(self._cross_talk.tx_xpol_v), 0.0) and
-            np.allclose(np.abs(self._cross_talk.rx_xpol_h), 0.0) and
-            np.allclose(np.abs(self._cross_talk.rx_xpol_v), 0.0)
-            )
+            if self._skip_xtalk_removal:
+                self._logger.info(
+                    'All cross-talk values are zero so skipping application.')
         # get list of CR info from its SLC
         self._cr_info_slc = est_peak_loc_cr_from_slc(
             slc_cr, cr_llh, num_pixels=self._chip_size,
@@ -621,6 +612,7 @@ class PolChannelImbalanceSlc:
         # mid azimuth/range bins (float values) for all blocks
         azb_mid_all = np.zeros(blk_az.num_blks, dtype='f4')
         rgb_mid_all = np.zeros(blk_rg.num_blks, dtype='f4')
+        sr_all = np.zeros(blk_rg.num_blks, dtype='f8')
 
         # loop over all Azimuth (AZ) blocks
         for n_az, azb_slice in enumerate(blk_az.gen_slice):
@@ -636,10 +628,14 @@ class PolChannelImbalanceSlc:
                 # get range block size
                 rg_blksz = blk_rg.fun_size(n_rg)
 
-                # get mid range bin for the block
+                # get mid range bin and slant range for the block
                 if n_az == 0:
                     rgb_mid_all[n_rg] = 0.5 * (rgb_slice.stop +
                                                rgb_slice.start - 1)
+
+                    # store mid slant range vector over all range blocks in (m)
+                    sr_all[n_rg] = self._rdr_grid.slant_range(
+                        rgb_mid_all[n_rg])
 
                 # block processing steps
                 mmap_blk_hv[:az_blksz, :rg_blksz] = dset_hv[
@@ -648,16 +644,39 @@ class PolChannelImbalanceSlc:
                     azb_slice, rgb_slice]
                 # cross talk removal of x-pol products, ignoring squared terms
                 if not self.skip_xtalk_removal:
+
+                    # get an approxmiate mean DEM within a block to be used for
+                    # slant range to EL conversion w/o topography effect
+                    dem_avg_blk = self._build_avg_dem_no_topo(
+                        azb_slice, rgb_slice)
+
+                    # get mid azimuth time in (sec) for the block
+                    if n_rg == 0:
+                        azt_mid_blk = (self._rdr_grid.sensing_start +
+                                       self._rdr_grid.az_time_interval *
+                                       azb_mid_all[n_az])
+
+                    # get EL angle corresponding to mid range/azimuth of
+                    # a block with an approximate-average DEM height
+                    el_blk, _ = rdr2ant(
+                        azt_mid_blk, sr_all[n_rg], self._orbit,
+                        self._attitude, self._rdr_grid.lookside,
+                        self._rdr_grid.wavelength, dem=dem_avg_blk,
+                        threshold=self._sr_threshold, maxiter=self._max_iter
+                    )
+
+                    # remove x-talk for a certain EL angle per mid
+                    # range/azimuth of the block
                     mmap_blk_vh[:az_blksz, :rg_blksz] -= (
-                        self.cross_talk.tx_xpol_v *
+                        self.cross_talk.tx_xpol_v(el_blk) *
                         dset_hh[azb_slice, rgb_slice] +
-                        self.cross_talk.rx_xpol_v *
+                        self.cross_talk.rx_xpol_v(el_blk) *
                         dset_vv[azb_slice, rgb_slice]
                     )
                     mmap_blk_hv[:az_blksz, :rg_blksz] -= (
-                        self.cross_talk.rx_xpol_h *
+                        self.cross_talk.rx_xpol_h(el_blk) *
                         dset_hh[azb_slice, rgb_slice] +
-                        self.cross_talk.tx_xpol_h *
+                        self.cross_talk.tx_xpol_h(el_blk) *
                         dset_vv[azb_slice, rgb_slice]
                     )
                 # check if Faraday rotation is negligible if so
@@ -727,10 +746,6 @@ class PolChannelImbalanceSlc:
         # RX imbalance = sqrt(cr_vv2hh * imb_rx2tx)
         imb_rx = np.sqrt(self._cr_vv2hh * imb_rx2tx)
         imb_tx = imb_rx / imb_rx2tx
-
-        # form slant range vector over all range blocks in (m)
-        sr_all = (self._rdr_grid.starting_range +
-                  rgb_mid_all * self._rdr_grid.range_pixel_spacing)
 
         # form azimuth date time in UTC for all blocks
         az_dt_all = [self._rdr_grid.sensing_datetime(azb)

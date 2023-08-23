@@ -67,15 +67,23 @@ void isce3::geometry::Topo::_topo(T& dem, const std::string& outdir) {
 
     // Write out multi-band topo VRT
     std::vector<Raster> rasterTopoVec = {
-            Raster(outdir + "/x.rdr"),        Raster(outdir + "/y.rdr"),
-            Raster(outdir + "/z.rdr"),        Raster(outdir + "/inc.rdr"),
-            Raster(outdir + "/hdg.rdr"),      Raster(outdir + "/localInc.rdr"),
-            Raster(outdir + "/localPsi.rdr"), Raster(outdir + "/simamp.rdr")};
+            Raster(outdir + "/x.rdr"),
+            Raster(outdir + "/y.rdr"),
+            Raster(outdir + "/z.rdr"),
+            Raster(outdir + "/inc.rdr"),
+            Raster(outdir + "/hdg.rdr"),
+            Raster(outdir + "/localInc.rdr"),
+            Raster(outdir + "/localPsi.rdr"),
+            Raster(outdir + "/simamp.rdr"),
+            Raster(outdir + "/los_east.rdr"),
+            Raster(outdir + "/los_north.rdr")
+    };
 
     // Add optional mask raster
     if (_computeMask) {
         rasterTopoVec.push_back(Raster(outdir + "/layoverShadowMask.rdr"));
     };
+
 
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec);
     // Set its EPSG code
@@ -88,12 +96,16 @@ void isce3::geometry::Topo::_topo(T& dem, Raster* xRaster, Raster* yRaster,
                                  Raster* heightRaster, Raster* incRaster,
                                  Raster* hdgRaster, Raster* localIncRaster,
                                  Raster* localPsiRaster, Raster* simRaster,
-                                 Raster* maskRaster) {
+                                 Raster* maskRaster,
+                                 Raster* groundToSatEastRaster,
+                                 Raster* groundToSatNorthRaster) {
+
     // Initialize a TopoLayers object to handle block data and raster data
     // Create rasters for individual layers (provide output raster sizes)
     TopoLayers layers(_linesPerBlock, xRaster, yRaster, heightRaster, incRaster,
                       hdgRaster, localIncRaster, localPsiRaster, simRaster,
-                      maskRaster);
+                      maskRaster, groundToSatEastRaster,
+                      groundToSatNorthRaster);
 
     // Set computeMask flag by pointer value
     computeMask(maskRaster != nullptr);
@@ -143,7 +155,7 @@ topo(Raster & demRaster, TopoLayers & layers)
 
         // Diagnostics
         const double tblock = _radarGrid.sensingTime(lineStart);
-        info << "Processing block: " << block << " " << pyre::journal::newline
+        info << "Processing block: " << block + 1 << " " << pyre::journal::newline
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
@@ -171,6 +183,12 @@ topo(Raster & demRaster, TopoLayers & layers)
         double tline;
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
 
+            if (blockLine % std::max((int) (blockLength / 100), 1) == 0)
+                printf("\rTopo progress (block %d/%d): %d%%",
+                       (int) block + 1, (int) nBlocks,
+                       (int) (blockLine * 1e2 / blockLength)),
+                       fflush(stdout);
+
             // Global line index
             size_t line = lineStart + blockLine;
 
@@ -178,6 +196,7 @@ topo(Raster & demRaster, TopoLayers & layers)
             Basis TCNbasis;
             Vec3 pos, vel;
             _initAzimuthLine(line, tline, pos, vel, TCNbasis);
+
             satPosition[blockLine] = pos;
 
             // Compute velocity magnitude
@@ -207,14 +226,17 @@ topo(Raster & demRaster, TopoLayers & layers)
                 totalconv += geostat;
 
                 // Save data in output arrays
-                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel, TCNbasis, demInterp);
+                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel,
+                        TCNbasis, demInterp);
 
             } // end OMP for loop pixels in block
         } // end for loop lines in block
+        printf("\rTopo progress (block %d/%d): 100%%\n",
+               (int) block + 1, (int) nBlocks), fflush(stdout);
 
         // Compute layover/shadow masks for the block
         if (_computeMask) {
-            setLayoverShadow(layers, demInterp, satPosition);
+            setLayoverShadow(layers, demInterp, satPosition, block, nBlocks);
         }
 
         // Write out block of data for all topo layers
@@ -268,7 +290,7 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 
         // Diagnostics
         const double tblock = _radarGrid.sensingTime(lineStart);
-        info << "Processing block: " << block << " " << pyre::journal::newline
+        info << "Processing block: " << block + 1 << " " << pyre::journal::newline
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength
              << pyre::journal::newline << "  - dopplers near mid far: "
@@ -293,20 +315,27 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
         double tline;
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
 
+            if (blockLine % std::max((int) (blockLength / 100), 1) == 0)
+                    printf("\rTopo progress (block %d/%d): %d%%",
+                           (int) block + 1, (int) nBlocks,
+                           (int) (blockLine * 1e2 / blockLength)),
+                           fflush(stdout);
+
             // Global line index
             size_t line = lineStart + blockLine;
 
             // Initialize orbital data for this azimuth line
             Basis TCNbasis;
             Vec3 pos, vel;
+
             _initAzimuthLine(line, tline, pos, vel, TCNbasis);
             satPosition[blockLine] = pos;
 
             // Compute velocity magnitude
             const double satVmag = vel.norm();
 
-// For each slant range bin
-#pragma omp parallel for reduction(+ : totalconv)
+            // For each slant range bin
+            #pragma omp parallel for reduction(+ : totalconv)
             for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
 
                 // Get current slant range
@@ -334,11 +363,13 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
                                      TCNbasis, demInterp);
 
             } // end OMP for loop pixels in block
-        }     // end for loop lines in block
+        } // end for loop lines in block
+        printf("\rTopo progress (block %d/%d): 100%%\n",
+               (int) block + 1, (int) nBlocks), fflush(stdout);
 
         // Compute layover/shadow masks for the block
         if (_computeMask) {
-            setLayoverShadow(layers, demInterp, satPosition);
+            setLayoverShadow(layers, demInterp, satPosition, block, nBlocks);
         }
 
         // Write out block of data for all topo layers
@@ -361,20 +392,21 @@ void isce3::geometry::Topo::topo(DEMInterpolator& demInterp,
 }
 
 
-void isce3::geometry::Topo::topo(isce3::io::Raster& demRaster,
-                                const std::string& outdir) {
+void isce3::geometry::Topo::topo(Raster& demRaster,
+                                 const std::string& outdir) {
     _topo(demRaster, outdir);
 }
 
 
 void isce3::geometry::Topo::topo(
-        isce3::io::Raster& demRaster, isce3::io::Raster* xRaster,
-        isce3::io::Raster* yRaster, isce3::io::Raster* heightRaster,
-        isce3::io::Raster* incRaster, isce3::io::Raster* hdgRaster,
-        isce3::io::Raster* localIncRaster, isce3::io::Raster* localPsiRaster,
-        isce3::io::Raster* simRaster, isce3::io::Raster* maskRaster) {
+        Raster& demRaster, Raster* xRaster, Raster* yRaster,
+        Raster* heightRaster, Raster* incRaster, Raster* hdgRaster,
+        Raster* localIncRaster, Raster* localPsiRaster, Raster* simRaster,
+        Raster* maskRaster, Raster* groundToSatEastRaster,
+        Raster* groundToSatNorthRaster) {
     _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-          localIncRaster, localPsiRaster, simRaster, maskRaster);
+          localIncRaster, localPsiRaster, simRaster, maskRaster,
+          groundToSatEastRaster, groundToSatNorthRaster);
 }
 
 void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
@@ -383,13 +415,16 @@ void isce3::geometry::Topo::topo(isce3::geometry::DEMInterpolator& demInterp,
 }
 
 void isce3::geometry::Topo::topo(
-        isce3::geometry::DEMInterpolator& demInterp, isce3::io::Raster* xRaster,
-        isce3::io::Raster* yRaster, isce3::io::Raster* heightRaster,
-        isce3::io::Raster* incRaster, isce3::io::Raster* hdgRaster,
-        isce3::io::Raster* localIncRaster, isce3::io::Raster* localPsiRaster,
-        isce3::io::Raster* simRaster, isce3::io::Raster* maskRaster) {
+        isce3::geometry::DEMInterpolator& demInterp, Raster* xRaster,
+        Raster* yRaster, Raster* heightRaster,
+        Raster* incRaster, Raster* hdgRaster,
+        Raster* localIncRaster, Raster* localPsiRaster,
+        Raster* simRaster, Raster* maskRaster,
+        Raster* groundToSatEastRaster,
+        Raster* groundToSatNorthRaster) {
     _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
-          localIncRaster, localPsiRaster, simRaster, maskRaster);
+          localIncRaster, localPsiRaster, simRaster, maskRaster,
+          groundToSatEastRaster, groundToSatNorthRaster);
 }
 
 void isce3::geometry::Topo::
@@ -467,7 +502,6 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         Vec3 pos, vel;
         Basis TCNbasis;
         _initAzimuthLine(lineIndex, tline, pos, vel, TCNbasis);
-
         // Compute satellite velocity and height
         const double satVmag = vel.norm();
         const Vec3 satLLH = _ellipsoid.xyzToLonLat(pos);
@@ -553,7 +587,9 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
             !layers.hasLocalIncRaster() &&
             !layers.hasLocalPsiRaster() &&
             !layers.hasSimRaster() &&
-            !layers.hasMaskRaster()) {
+            !layers.hasMaskRaster() &&
+            !layers.hasGroundToSatEastRaster() &&
+            !layers.hasGroundToSatNorthRaster()) {
         return;
     }
 
@@ -572,33 +608,48 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
     // Computation in ENU coordinates around target
     const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
-    const Vec3 enu = xyz2enu.dot(satToGround);
-    const double cosalpha = std::abs(enu[2]) / enu.norm();
+    const Vec3 enuSatToGround = xyz2enu.dot(satToGround);
+    const double cosalpha = std::abs(enuSatToGround[2]) / enuSatToGround.norm();
 
     // Incidence angle
     layers.inc(line, bin, std::acos(cosalpha) * degrees);
 
+    // Compute vector from ground point (targetXYZ) to satellite (pos), convert
+    // to unit ENU, and save to corresponding layer
+    if (layers.hasGroundToSatEastRaster() ||
+            layers.hasGroundToSatNorthRaster()) {
+        const Vec3 vecGroundToSat = -satToGround;
+        const Vec3 enuGroundToSat = xyz2enu.dot(vecGroundToSat).normalized();
+        if (layers.hasGroundToSatEastRaster())
+            layers.groundToSatEast(line, bin, enuGroundToSat[0]);
+        if (layers.hasGroundToSatNorthRaster())
+            layers.groundToSatNorth(line, bin, enuGroundToSat[1]);
+    }
+
+    if (layers.hasHdgRaster()) {
+        // Heading considering zero-Doppler grid and anti-clock. ref. starting from the East
+        float heading;
+        if (_radarGrid.lookSide() == isce3::core::LookSide::Left) {
+            heading = (std::atan2(enuSatToGround[1],
+                        enuSatToGround[0]) - (0.5*M_PI)) * degrees;
+        } else {
+            heading = (std::atan2(enuSatToGround[1],
+                        enuSatToGround[0]) + (0.5*M_PI)) * degrees;
+        }
+        if (heading > 180) {
+            heading -= 360;
+        } else if (heading < -180) {
+            heading += 360;
+        }
+        layers.hdg(line, bin, heading);
+    }
+
     // Skip other computations if their rasters aren't set
-    if (!layers.hasHdgRaster() &&
-            !layers.hasLocalIncRaster() &&
+    if (!layers.hasLocalIncRaster() &&
             !layers.hasLocalPsiRaster() &&
             !layers.hasSimRaster()) {
         return;
     }
-
-    // Heading considering zero-Doppler grid and anti-clock. ref. starting from the East
-    double heading;
-    if (_radarGrid.lookSide() == isce3::core::LookSide::Left) {
-        heading = (std::atan2(enu[1], enu[0]) - (0.5*M_PI)) * degrees;
-    } else {
-        heading = (std::atan2(enu[1], enu[0]) + (0.5*M_PI)) * degrees;
-    }
-    if (heading > 180) {
-        heading -= 360;
-    } else if (heading < -180) {
-        heading += 360;
-    }
-    layers.hdg(line, bin, heading);
 
     // Project output coordinates to DEM coordinates
     auto input_coords_llh = _proj->inverse({x, y, targetLLH[2]});
@@ -637,7 +688,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     double beta = std::copysign((bb - aa) / dy, (bb - aa) * demInterp.deltaY());
 
     // Compute local incidence angle
-    const Vec3 enunorm = enu.normalized();
+    const Vec3 enunorm = enuSatToGround.normalized();
     const Vec3 slopevec {alpha, beta, -1.};
     const double costheta = enunorm.dot(slopevec) / slopevec.norm();
     layers.localInc(line, bin, std::acos(costheta)*degrees);
@@ -659,24 +710,17 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.localPsi(line, bin, std::acos(cospsi) * degrees);
 }
 
+
 void isce3::geometry::Topo::
 setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
-                 std::vector<Vec3>& satPosition)
+                 std::vector<Vec3>& satPosition, size_t block,
+                 size_t n_blocks)
 {
     // Cache the width of the block
     const int width = layers.width();
     // Compute layover on oversampled grid
     const int gridWidth = 2 * width;
 
-    // Allocate working valarrays
-    std::valarray<double> x(width), y(width), ctrack(width), ctrackGrid(gridWidth);
-    std::valarray<double> slantRange(width), slantRangeGrid(gridWidth);
-    std::valarray<short> maskGrid(gridWidth);
-
-    // Pre-compute slantRange grid used for all lines
-    for (int i = 0; i < width; ++i) {
-        slantRange[i] = _radarGrid.slantRange(i);
-    }
 
     // Initialize mask to zero for this block
     layers.mask() = 0;
@@ -692,13 +736,22 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
         getDemCoords = isce3::geometry::getDemCoordsDiffEpsg;
     }
 
+    long long num_lines_done = 0;
+
     // Loop over lines in block
-    #pragma omp parallel for firstprivate(x, y, ctrack, ctrackGrid, \
-                                          slantRangeGrid, maskGrid)
+#pragma omp parallel for shared(num_lines_done)
     for (size_t line = 0; line < layers.length(); ++line) {
 
+        // Allocate working valarrays
+        std::valarray<double> x(width), y(width), ctrack(width);
+        std::valarray<double> ctrackGrid(gridWidth);
+        std::valarray<double> slantRangeGrid(gridWidth);
+        std::valarray<double> elevationAngleGrid(gridWidth);
+        std::valarray<short> maskGrid(gridWidth);
+        std::valarray<short> mask(width);
+
         // Cache satellite position for this line
-        const Vec3& xyzsat = satPosition[line];
+        const Vec3& xyzSat = satPosition[line];
 
         // Copy cross-track, x, and y values for the line
         for (int i = 0; i < width; ++i) {
@@ -728,7 +781,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
                 k = 0;
             }
 
-            // Bilinear interpolation to estimate DEM x/y coordinates
+            // Linear interpolation to estimate DEM x/y coordinates
             const double c1 = ctrack[k];
             const double c2 = ctrack[k+1];
             const double frac1 = (c2 - crossTrack) / (c2 - c1);
@@ -740,50 +793,51 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             Vec3 demXYZ = getDemCoords(x_grid, y_grid, demInterp, _proj);
 
             // Convert DEM XYZ to ECEF XYZ
-            Vec3 llh, xyz, satToGround;
-            demInterp.proj()->inverse(demXYZ, llh);
-            _ellipsoid.lonLatToXyz(llh, xyz);
+            Vec3 llhTarget, xyzTarget;
+            demInterp.proj()->inverse(demXYZ, llhTarget);
+            _ellipsoid.lonLatToXyz(llhTarget, xyzTarget);
 
             // Compute and save slant range
-            satToGround = xyz - xyzsat;
-            slantRangeGrid[i] = satToGround.norm();
+            const Vec3 targetToSat = xyzSat - xyzTarget;
+            slantRangeGrid[i] = targetToSat.norm();
+
+            // Compute geocentric elevation grid (not geodedic!)
+            const double cosElevation = (xyzSat.dot(targetToSat) / 
+                (xyzSat.norm() * targetToSat.norm()));
+            elevationAngleGrid[i] = std::acos(cosElevation);
+        }
+
+        // Traverse from near nadir to far nadir on grid spacing
+        maskGrid = 0;
+        double maxElevationAngle = elevationAngleGrid[0];
+        for (long i = 1; i < gridWidth; ++i) {
+            if (maxElevationAngle >= elevationAngleGrid[i]) {
+                maskGrid[i] = isce3::core::SHADOW_VALUE;                          
+            } else {
+                maxElevationAngle = elevationAngleGrid[i];
+            }
         }
 
         // Now sort cross-track grid in terms of slant range grid
-        isce3::core::insertionSort(slantRangeGrid, ctrackGrid);
+        isce3::core::insertionSort(slantRangeGrid, ctrackGrid, maskGrid);
 
-        // Traverse from near range to far range on original spacing for shadow detection
-        double minIncAngle = layers.inc(line, 0);
-        for (int i = 1; i < width; ++i) {
-            const double inc = layers.inc(line, i);
-            // Test shadow
-            if (inc <= minIncAngle) {
-                layers.mask(line, i, isce3::core::SHADOW_VALUE);
-            } else {
-                minIncAngle = inc;
-            }
-        }
-
-        // Traverse from far range to near range on original spacing for shadow detection
-        double maxIncAngle = layers.inc(line, width - 1);
-        for (int i = width - 2; i >= 0; --i) {
-            const double inc = layers.inc(line, i);
-            // Test shadow
-            if (inc >= maxIncAngle) {
-                layers.mask(line, i, isce3::core::SHADOW_VALUE);
-            } else {
-                maxIncAngle = inc;
-            }
-        }
-
-        // Traverse from near range to far range on grid spacing for layover detection
-        maskGrid = 0;
+       // Traverse from near range to far range on grid spacing for layover detection
         double minCrossTrack = ctrackGrid[0];
         for (int i = 1; i < gridWidth; ++i) {
             const double crossTrack = ctrackGrid[i];
             // Test layover
             if (crossTrack <= minCrossTrack) {
-                maskGrid[i] = isce3::core::LAYOVER_VALUE;
+                /*
+                We use bitwise-or (|) to apply new masking values while
+                preserving any existing masks
+
+                BINARY REPRESENTATION ,   CLASSIFICATION
+                       0b0000         ,    (NOT_MASKED)
+                       0b0001         ,     (SHADOW)
+                       0b0010         ,     (LAYOVER)
+                       0b0011         ,  (LAYOVER & SHADOW)
+                */
+                maskGrid[i] |= isce3::core::LAYOVER_VALUE;
             } else {
                 minCrossTrack = crossTrack;
             }
@@ -795,7 +849,7 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double crossTrack = ctrackGrid[i];
             // Test layover
             if (crossTrack >= maxCrossTrack) {
-                maskGrid[i] = isce3::core::LAYOVER_VALUE;
+                maskGrid[i] |= isce3::core::LAYOVER_VALUE;
             } else {
                 maxCrossTrack = crossTrack;
             }
@@ -803,16 +857,49 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
 
         // Resample maskGrid to original spacing
         for (int i = 0; i < gridWidth; ++i) {
-            if (maskGrid[i] > 0) {
-                // Find index in original grid spacing
-                int k = isce3::core::binarySearch(slantRange, slantRangeGrid[i]);
-                if (k < 0 || k >= width) continue;
-                // Update it
-                const short maskval = layers.mask(line, k);
-                if (maskval < isce3::core::LAYOVER_VALUE) {
-                    layers.mask(line, k, maskval + isce3::core::LAYOVER_VALUE);
+            if (maskGrid[i]) {
+
+                const long slant_range_index = 
+                    lround(std::round(_radarGrid.slantRangeIndex(
+                        slantRangeGrid[i])));
+
+                // If out of bounds, escape
+                if (slant_range_index < 0 || slant_range_index >= width) {
+                    continue;
+                }
+
+                // Otherwise, update it
+                const short mask_value = layers.mask(line, slant_range_index);
+
+                /*
+                We use bitwise-or (|) to apply new masking values while
+                preserving any existing masks
+
+                BINARY REPRESENTATION ,   CLASSIFICATION
+                       0b0000         ,    (NOT_MASKED)
+                       0b0001         ,     (SHADOW)
+                       0b0010         ,     (LAYOVER)
+                       0b0011         ,  (LAYOVER & SHADOW)
+                */
+                const short new_mask_value = mask_value | maskGrid[i];
+                if (mask_value != new_mask_value) {
+                    layers.mask(line, slant_range_index, new_mask_value);
                 }
             }
         }
+
+        _Pragma("omp atomic")
+            num_lines_done++;
+        if (line % std::max((int) (layers.length() / 100), 1) == 0)
+            _Pragma("omp critical")
+                printf("\rLayover/shadow mask progress (block %d/%d): %d%%",
+                    (int) block + 1, (int) n_blocks,
+                    (int) (num_lines_done * 1e2 / layers.length())),
+                    fflush(stdout);
+
     } // end loop lines
+
+    printf("\rLayover/shadow mask progress (block %d/%d): 100%%\n",
+        (int) block + 1, (int) n_blocks), fflush(stdout);
 }
+

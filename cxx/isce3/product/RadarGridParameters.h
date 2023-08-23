@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cmath>
 #include "forward.h"
 
 // isce3::core
@@ -133,6 +134,10 @@ class isce3::product::RadarGridParameters {
         inline double sensingTime(double line) const {
             return _sensingStart + line / _prf;
         }
+        /** Get azimuth fractional index (line) at a given sensing time */
+        inline double azimuthIndex(double az_time) const {
+            return (az_time  -  _sensingStart) * _prf;
+        }
 
         /** Get a sensing DateTime for a given line (zero-index row) */
         inline isce3::core::DateTime sensingDateTime(double line) const {
@@ -152,6 +157,11 @@ class isce3::product::RadarGridParameters {
         /** Get slant range for a given sample (zero-index column) */
         inline double slantRange(double sample) const {
             return _startingRange + sample * _rangePixelSpacing;
+        }
+
+        /** Get slant range fractional index at a given slant range distance */
+        inline double slantRangeIndex(double slant_range) const {
+            return (slant_range  -  _startingRange) / _rangePixelSpacing;
         }
 
         /** Crop/ Expand while keeping the spacing the same with top left offset and size */
