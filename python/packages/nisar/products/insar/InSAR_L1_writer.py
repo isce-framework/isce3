@@ -101,11 +101,18 @@ class L1InSARWriter(InSARWriter):
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms group to the processingInformation group
-        """
 
+        Returns
+        ----------
+        algo_group : h5py.Group
+            The algorithm group object
+        """
+        
         algo_group = super().add_algorithms_to_procinfo()
         self.add_coregistration_to_algo(algo_group)
         self.add_interferogramformation_to_algo(algo_group)
+        
+        return algo_group
 
     def add_parameters_to_procinfo(self):
         """

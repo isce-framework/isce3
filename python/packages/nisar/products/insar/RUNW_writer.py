@@ -177,9 +177,7 @@ class RUNWWriter(L1InSARWriter):
             ),
         ]
 
-        iono_est_group = self.require_group(
-            f"{self.group_paths.AlgorithmsPath}/ionosphereEstimation"
-        )
+        iono_est_group = algo_group.require_group("ionosphereEstimation")
         for ds_param in ds_params:
             add_dataset_and_attrs(iono_est_group, ds_param)
 
@@ -566,7 +564,6 @@ class RUNWWriter(L1InSARWriter):
 
             # add the polarization
             for pol in pol_list:
-                
                 # create the interferogram dataset
                 igram_pol_group_name = \
                     f"{swaths_freq_group_name}/interferogram/{pol}"
