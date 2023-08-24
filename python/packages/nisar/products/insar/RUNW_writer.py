@@ -14,7 +14,7 @@ class RUNWWriter(L1InSARWriter):
     Writer class for RUNW product inherent from L1InSARWriter
     """
 
-    def __init__(self,**kwds):
+    def __init__(self, **kwds):
         """
         Constructor for RUNW class
         """
@@ -308,12 +308,12 @@ class RUNWWriter(L1InSARWriter):
         
         super().add_swaths_to_hdf5()
         
-        pcfg = self.cfg["processing"]
-        rg_looks = pcfg["crossmul"]["range_looks"]
-        az_looks = pcfg["crossmul"]["azimuth_looks"]
+        proc_cfg = self.cfg["processing"]
+        rg_looks = proc_cfg["crossmul"]["range_looks"]
+        az_looks = proc_cfg["crossmul"]["azimuth_looks"]
         
-        unwrap_rg_looks = pcfg["phase_unwrap"]["range_looks"]
-        unwrap_az_looks = pcfg["phase_unwrap"]["azimuth_looks"]
+        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
+        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
         
         # replace the looks from the unwrap looks when either rg or az is > 1 
         # NOTE: unwrap looks here are the total looks on the RSCL, not on top of the RIFG
@@ -322,33 +322,33 @@ class RUNWWriter(L1InSARWriter):
             az_looks = unwrap_az_looks
             
         # pull the offset parameters
-        is_roff = pcfg["offsets_product"]["enabled"]
-        margin = get_off_params(pcfg, "margin", is_roff)
-        rg_gross = get_off_params(pcfg, "gross_offset_range", is_roff)
-        az_gross = get_off_params(pcfg, "gross_offset_azimuth", is_roff)
-        rg_start = get_off_params(pcfg, "start_pixel_range", is_roff)
-        az_start = get_off_params(pcfg, "start_pixel_azimuth", is_roff)
-        rg_skip = get_off_params(pcfg, "skip_range", is_roff)
-        az_skip = get_off_params(pcfg, "skip_azimuth", is_roff)
+        is_roff = proc_cfg["offsets_product"]["enabled"]
+        margin = get_off_params(proc_cfg, "margin", is_roff)
+        rg_gross = get_off_params(proc_cfg, "gross_offset_range", is_roff)
+        az_gross = get_off_params(proc_cfg, "gross_offset_azimuth", is_roff)
+        rg_start = get_off_params(proc_cfg, "start_pixel_range", is_roff)
+        az_start = get_off_params(proc_cfg, "start_pixel_azimuth", is_roff)
+        rg_skip = get_off_params(proc_cfg, "skip_range", is_roff)
+        az_skip = get_off_params(proc_cfg, "skip_azimuth", is_roff)
         rg_search = get_off_params(
-            pcfg,
+            proc_cfg,
             "half_search_range",
             is_roff,
             pattern="layer",
             get_min=True,
         )
         az_search = get_off_params(
-            pcfg,
+            proc_cfg,
             "half_search_azimuth",
             is_roff,
             pattern="layer",
             get_min=True,
         )
         rg_chip = get_off_params(
-            pcfg, "window_range", is_roff, pattern="layer", get_min=True
+            proc_cfg, "window_range", is_roff, pattern="layer", get_min=True
         )
         az_chip = get_off_params(
-            pcfg, "window_azimuth", is_roff, pattern="layer", get_min=True
+            proc_cfg, "window_azimuth", is_roff, pattern="layer", get_min=True
         )
         # Adjust margin
         margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
@@ -380,8 +380,8 @@ class RUNWWriter(L1InSARWriter):
             ]
             slc_lines, slc_cols = slc_dset.shape
 
-            off_length = get_off_params(pcfg, "offset_length", is_roff)
-            off_width = get_off_params(pcfg, "offset_width", is_roff)
+            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
+            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
             if off_length is None:
                 margin_az = 2 * margin + 2 * az_search + az_chip
                 off_length = (slc_lines - margin_az) // az_skip
