@@ -304,13 +304,6 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
         mask_h5_path = f'{freq_path}/interferogram/unwrapped/mask'
 
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
-        print("")
-        print("")
-        
-        print(np.max(water_mask),'max water')
-        print("")
-        print("")
-        
         mask_layer = dst_h5[mask_h5_path][()]
 
         # The mask layer has the shadow (1), layover (2), and both(3).
@@ -503,8 +496,7 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
                          dst_h5, off_layer_dict, scratch_path, input_product_type,
                          iono_sideband)
-    print(geocoded_rasters)
-    print(geocoded_datasets)
+
     if input_rasters:
         geocode_tuples = zip(input_rasters, geocoded_rasters)
         for input_raster, geocoded_raster in geocode_tuples:
@@ -715,7 +707,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 add_water_to_mask(cfg, freq, geo_grid, dst_h5)
                 mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped/mask'
                 mask_ds = dst_h5[mask_path]
-                # compute_layover_shadow_water_stats(mask_ds)
+                compute_layover_shadow_water_stats(mask_ds)
 
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
