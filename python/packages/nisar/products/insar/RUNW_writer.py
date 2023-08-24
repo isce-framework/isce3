@@ -195,32 +195,22 @@ class RUNWWriter(L1InSARWriter):
 
         unwrap_cfg = self.cfg["processing"]["phase_unwrap"]
         unwrapping_algorithm = unwrap_cfg["algorithm"]
-
+        prep_unwrap_cfg = unwrap_cfg["preprocess_wrapped_phase"]
+        
         if unwrapping_algorithm.lower() == "snaphu":
-            # cost mode
             cost_mode = unwrap_cfg["snaphu"]["cost_mode"]
-            # unwrapping initializer
             unwrapping_initializer = unwrap_cfg["snaphu"][
                 "initialization_method"
             ]
-
-            # if cost mode and unwrapping initializer are empty
             if cost_mode is None:
                 cost_mode = "None"
             if unwrapping_initializer is None:
                 unwrapping_initializer = "None"
 
-        if unwrap_cfg["preprocess_wrapped_phase"]["enabled"]:
-            # wrapped phase filling
-            phase_filling = unwrap_cfg["preprocess_wrapped_phase"][
-                "filling_method"
-            ]
-            # wrapped phase outliers
-            phase_outliers = unwrap_cfg["preprocess_wrapped_phase"]["mask"][
-                "mask_type"
-            ]
-
-            # if phase_filling and  phase_outliers are empty
+        if prep_unwrap_cfg["enabled"]:
+            phase_filling = prep_unwrap_cfg["filling_method"]
+            phase_outliers = prep_unwrap_cfg["mask"]["mask_type"]
+            
             if phase_filling is None:
                 phase_filling = "None"
             if phase_outliers is None:
