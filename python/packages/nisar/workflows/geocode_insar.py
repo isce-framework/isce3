@@ -315,7 +315,6 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
         # layover + shadow + water : 7
         combo_pxl_mask = (mask_layer >= 0) & (mask_layer < 4) & water_mask
         mask_layer[combo_pxl_mask] += 4
-        mask_layer.astype('uint8').tofile('testmask.bin')
         dst_h5[mask_h5_path].write_direct(mask_layer)
 
 
@@ -491,7 +490,6 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         block_size, off_layer_dict=None, scratch_path='',
                         compute_stats=True, input_product_type = InputProduct.RUNW,
                         iono_sideband=False):
-
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
                          dst_h5, off_layer_dict, scratch_path, input_product_type,
