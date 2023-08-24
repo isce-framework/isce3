@@ -123,8 +123,6 @@ class RUNWWriter(L1InSARWriter):
                 " main band and the difference of the main and side band of"
                 " the input RSLCs"
             )
-        else:
-            iono_algorithm = "None"
 
         ds_params = [
             DatasetParams(
@@ -148,9 +146,7 @@ class RUNWWriter(L1InSARWriter):
             DatasetParams(
                 "ionosphereFiltering",
                 np.string_(iono_filtering),
-                f"Iterative gaussian filter with {num_of_iters} filtering"
-                " algorithm for ionosphere phase screen computation"
-                ,
+                f"Iterative gaussian filter with {num_of_iters} filtering",
                 {
                     "algorithm_type": "Ionosphere estimation",
                 },
@@ -315,9 +311,16 @@ class RUNWWriter(L1InSARWriter):
         pcfg = self.cfg["processing"]
         rg_looks = pcfg["crossmul"]["range_looks"]
         az_looks = pcfg["crossmul"]["azimuth_looks"]
+        
         unwrap_rg_looks = pcfg["phase_unwrap"]["range_looks"]
         unwrap_az_looks = pcfg["phase_unwrap"]["azimuth_looks"]
         
+        # replace the looks from the unwrap looks when either rg or az is > 1 
+        # NOTE: unwrap looks here are the total looks on the RSCL, not on top of the RIFG
+        if (unwrap_az_looks > 1) or (unwrap_rg_looks > 1):
+            rg_looks = unwrap_rg_looks
+            az_looks = unwrap_az_looks
+            
         # pull the offset parameters
         is_roff = pcfg["offsets_product"]["enabled"]
         margin = get_off_params(pcfg, "margin", is_roff)
@@ -390,10 +393,7 @@ class RUNWWriter(L1InSARWriter):
             off_shape = (off_length, off_width)
 
             # shape of the interferogram product
-            igram_shape = (
-                (slc_lines // az_looks) // unwrap_az_looks,
-                (slc_cols // rg_looks) // unwrap_rg_looks,
-            )
+            igram_shape = (slc_lines // az_looks,slc_cols // rg_looks)
 
             rslc_freq_group.copy("numberOfSubSwaths", swaths_freq_group)
 
@@ -427,8 +427,8 @@ class RUNWWriter(L1InSARWriter):
                 valid_samples_subswath_name = f"validSamplesSubSwath{subswath}"
                 if valid_samples_subswath_name in rslc_freq_group.keys():
                     number_of_range_looks = (
-                        rslc_freq_group[valid_samples_subswath_name][()]
-                        // rg_looks // unwrap_rg_looks
+                        rslc_freq_group[valid_samples_subswath_name][()] \
+                            // rg_looks
                     )
                     swaths_freq_group.require_dataset(
                         name=valid_samples_subswath_name,
@@ -443,7 +443,7 @@ class RUNWWriter(L1InSARWriter):
                     )
                 else:
                     number_of_range_looks = (
-                        rslc_freq_group["validSamples"][()] // rg_looks // unwrap_rg_looks
+                        rslc_freq_group["validSamples"][()] // rg_looks
                     )
                     swaths_freq_group.require_dataset(
                         name="validSamples",
@@ -501,28 +501,27 @@ class RUNWWriter(L1InSARWriter):
             igram_slant_range = rslc_freq_group["slantRange"][()]
             igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
             
-            def max_look_idx(max_val, n_looks, unwrap_looks):
+            def max_look_idx(max_val, n_looks):
                 # internal convenience function to get max multilooked index value
                 return (
-                    np.arange((len(max_val) // n_looks // unwrap_looks) \
-                        * n_looks * unwrap_looks)[::n_looks*unwrap_looks]
-                    + n_looks*unwrap_looks // 2
+                    np.arange((len(max_val) // n_looks) * n_looks)[::n_looks] \
+                        + n_looks // 2
                 )
 
             rg_idx, az_idx = (
-                max_look_idx(max_val, n_looks, unwrap_looks)
-                for max_val, n_looks, unwrap_looks in (
-                    (igram_slant_range, rg_looks, unwrap_rg_looks),
-                    (igram_zero_doppler_time, az_looks, unwrap_az_looks),
+                max_look_idx(max_val, n_looks)
+                for max_val, n_looks in (
+                    (igram_slant_range, rg_looks),
+                    (igram_zero_doppler_time, az_looks),
                 )
             )
             
             igram_slant_range = igram_slant_range[rg_idx]
             igram_zero_doppler_time = igram_zero_doppler_time[az_idx]
             igram_zero_doppler_time_spacing = \
-                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks * unwrap_az_looks
+                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks
             igram_slant_range_spacing = \
-                rslc_freq_group["slantRangeSpacing"][()] * rg_looks * unwrap_rg_looks
+                rslc_freq_group["slantRangeSpacing"][()] * rg_looks
                 
             ds_igram_params = [
                 DatasetParams(
@@ -608,7 +607,7 @@ class RUNWWriter(L1InSARWriter):
                 ]
                 
                 for igram_ds_param in igram_ds_params:
-                    ds_name, ds_dtype, ds_description, ds_unit, ds_filling_value\
+                    ds_name, ds_dtype, ds_description, ds_unit, ds_filling_value \
                         = igram_ds_param
                     self._create_2d_dataset(
                         igram_pol_group,
