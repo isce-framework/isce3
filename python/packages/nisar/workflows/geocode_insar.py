@@ -306,12 +306,12 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
         mask_layer = dst_h5[mask_h5_path][()]
 
-        # The mask layer has the layover (1), shadow (2), and both(3).
+        # The mask layer has the shadow (1), layover (2), and both(3).
         # Here, the water mask (4) is added to the existing info.
         # If the water is coexist with the above (1-3), they will be assigned to 
         # new values. 
-        # layover + water : 5
-        # shadow + water : 6
+        # shadow + water : 5
+        # layover + water : 6
         # layover + shadow + water : 7
         combo_pxl_mask = (mask_layer >= 0) & (mask_layer < 4) & water_mask
         mask_layer[combo_pxl_mask] += 4
@@ -490,11 +490,11 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         block_size, off_layer_dict=None, scratch_path='',
                         compute_stats=True, input_product_type = InputProduct.RUNW,
                         iono_sideband=False):
-
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
                          dst_h5, off_layer_dict, scratch_path, input_product_type,
                          iono_sideband)
+
     if input_rasters:
         geocode_tuples = zip(input_rasters, geocoded_rasters)
         for input_raster, geocoded_raster in geocode_tuples:
@@ -510,11 +510,6 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
-
-            if input_product_type != InputProduct.ROFF:
-                unwrap_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped'
-                mask_ds = dst_h5[f'{unwrap_path}/mask']
-                compute_layover_shadow_water_stats(mask_ds)
 
 
 def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
@@ -776,11 +771,6 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
-
-            if input_product_type != InputProduct.ROFF:
-                unwrap_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped'
-                mask_ds = dst_h5[f'{unwrap_path}/mask']
-                compute_layover_shadow_water_stats(mask_ds)
 
 
 def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
