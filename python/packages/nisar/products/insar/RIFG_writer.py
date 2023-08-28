@@ -167,36 +167,27 @@ class RIFGWriter(L1InSARWriter):
             num_of_subswaths = rslc_freq_group["numberOfSubSwaths"][()]
             for sub in range(num_of_subswaths):
                 subswath = sub + 1
+                # Get RSLC subswath dataset, range looks, and destination
+                # dataset name based on keys in RSLC
                 valid_samples_subswath_name = f"validSamplesSubSwath{subswath}"
                 if valid_samples_subswath_name in rslc_freq_group.keys():
-                    number_of_range_looks = (
-                        rslc_freq_group[valid_samples_subswath_name][()]
-                        // rg_looks
-                    )
-                    swaths_freq_group.require_dataset(
-                        name=valid_samples_subswath_name,
-                        data=number_of_range_looks,
-                        shape=number_of_range_looks.shape,
-                        dtype=number_of_range_looks.dtype,
-                    )
-                    swaths_freq_group[
-                        valid_samples_subswath_name
-                    ].attrs.update(
-                        rslc_freq_group[valid_samples_subswath_name].attrs
-                    )
+                    rslc_freq_subswath_ds = \
+                        rslc_freq_group[valid_samples_subswath_name]
+                    number_of_range_looks =rslc_freq_subswath_ds[()] \
+                            // rg_looks
                 else:
-                    number_of_range_looks = (
-                        rslc_freq_group["validSamples"][()] // rg_looks
-                    )
-                    swaths_freq_group.require_dataset(
-                        name="validSamples",
-                        data=number_of_range_looks,
-                        shape=number_of_range_looks.shape,
-                        dtype=number_of_range_looks.dtype,
-                    )
-                    swaths_freq_group["validSamples"].attrs.update(
-                        rslc_freq_group["validSamples"].attrs
-                    )
+                    rslc_freq_subswath_ds = rslc_freq_group["validSamples"]
+                    number_of_range_looks = rslc_freq_subswath_ds[()] // rg_looks
+                    valid_samples_subswath_name = "validSamples"
+
+                # Create subswath dataset and update attributes from RSLC
+                dst_subswath_ds = swaths_freq_group.require_dataset(
+                    name=valid_samples_subswath_name,
+                    data=number_of_range_looks,
+                    shape=number_of_range_looks.shape,
+                    dtype=number_of_range_looks.dtype,
+                )
+                dst_subswath_ds.attrs.update(rslc_freq_subswath_ds.attrs)
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
             offset_slant_range = \

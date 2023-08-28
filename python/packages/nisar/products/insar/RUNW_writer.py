@@ -76,7 +76,7 @@ class RUNWWriter(L1InSARWriter):
         for ds_param in ds_params:
             add_dataset_and_attrs(iono_group, ds_param)
 
-    def add_ionosphere_est_to_algo(self, algo_group: h5py.Group):
+    def add_ionosphere_estimation_to_algo(self, algo_group: h5py.Group):
         """
         Add the ionosphere estimation group to algorithms group
 
@@ -278,7 +278,7 @@ class RUNWWriter(L1InSARWriter):
         """
         
         algo_group = super().add_algorithms_to_procinfo()
-        self.add_ionosphere_est_to_algo(algo_group)
+        self.add_ionosphere_estimation_to_algo(algo_group)
         self.add_unwarpping_to_algo(algo_group)
         
         return algo_group
@@ -306,7 +306,7 @@ class RUNWWriter(L1InSARWriter):
         unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
         
         # replace the looks from the unwrap looks when either rg or az is > 1 
-        # NOTE: unwrap looks here are the total looks on the RSCL, not on top of the RIFG
+        # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
         if (unwrap_az_looks > 1) or (unwrap_rg_looks > 1):
             rg_looks = unwrap_rg_looks
             az_looks = unwrap_az_looks
@@ -414,36 +414,27 @@ class RUNWWriter(L1InSARWriter):
             num_of_subswaths = rslc_freq_group["numberOfSubSwaths"][()]
             for sub in range(num_of_subswaths):
                 subswath = sub + 1
+                # Get RSLC subswath dataset, range looks, and destination
+                # dataset name based on keys in RSLC
                 valid_samples_subswath_name = f"validSamplesSubSwath{subswath}"
                 if valid_samples_subswath_name in rslc_freq_group.keys():
-                    number_of_range_looks = (
-                        rslc_freq_group[valid_samples_subswath_name][()] \
+                    rslc_freq_subswath_ds = \
+                        rslc_freq_group[valid_samples_subswath_name]
+                    number_of_range_looks =rslc_freq_subswath_ds[()] \
                             // rg_looks
-                    )
-                    swaths_freq_group.require_dataset(
-                        name=valid_samples_subswath_name,
-                        data=number_of_range_looks,
-                        shape=number_of_range_looks.shape,
-                        dtype=number_of_range_looks.dtype,
-                    )
-                    swaths_freq_group[
-                        valid_samples_subswath_name
-                    ].attrs.update(
-                        rslc_freq_group[valid_samples_subswath_name].attrs
-                    )
                 else:
-                    number_of_range_looks = (
-                        rslc_freq_group["validSamples"][()] // rg_looks
-                    )
-                    swaths_freq_group.require_dataset(
-                        name="validSamples",
-                        data=number_of_range_looks,
-                        shape=number_of_range_looks.shape,
-                        dtype=number_of_range_looks.dtype,
-                    )
-                    swaths_freq_group["validSamples"].attrs.update(
-                        rslc_freq_group["validSamples"].attrs
-                    )
+                    rslc_freq_subswath_ds = rslc_freq_group["validSamples"]
+                    number_of_range_looks =  rslc_freq_subswath_ds[()] // rg_looks
+                    valid_samples_subswath_name = "validSamples"
+
+                # Create subswath dataset and update attributes from RSLC
+                dst_subswath_ds = swaths_freq_group.require_dataset(
+                    name=valid_samples_subswath_name,
+                    data=number_of_range_looks,
+                    shape=number_of_range_looks.shape,
+                    dtype=number_of_range_looks.dtype,
+                )
+                dst_subswath_ds.attrs.update(rslc_freq_subswath_ds.attrs)
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
             offset_slant_range = rslc_freq_group["slantRange"][()]\
@@ -551,13 +542,16 @@ class RUNWWriter(L1InSARWriter):
             for ds_param in ds_igram_params:
                 add_dataset_and_attrs(igram_group, ds_param)
 
-            # add the polarization
+            # add the inteferogram and pixelOffsers to each polarization group
             for pol in pol_list:
                 # create the interferogram dataset
                 igram_pol_group_name = \
                     f"{swaths_freq_group_name}/interferogram/{pol}"
                 igram_pol_group = self.require_group(igram_pol_group_name)
 
+                # The interferogram dataset parameters including the 
+                # dataset name, dataset data type, description, units, 
+                # and fill value 
                 igram_ds_params = [
                     (
                         "connectedComponents",
@@ -614,6 +608,8 @@ class RUNWWriter(L1InSARWriter):
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
                 offset_pol_group = self.require_group(offset_pol_group_name)
                 
+                # The pixelOffsets dataset parameters including the 
+                # dataset name, description, and units                
                 pixel_offsets_ds_params = [
                     (
                         "alongTrackOffset",
