@@ -110,7 +110,6 @@ class L1InSARWriter(InSARWriter):
         
         algo_group = super().add_algorithms_to_procinfo()
         self.add_coregistration_to_algo(algo_group)
-        self.add_interferogramformation_to_algo(algo_group)
         
         return algo_group
 

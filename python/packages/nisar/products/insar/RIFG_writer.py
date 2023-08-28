@@ -34,12 +34,27 @@ class RIFGWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = np.string_("NISAR L1 RIFG Product")
+        self.attrs["title"] = np.string_("NISAR L1_RIFG Product")
         self.attrs["reference_document"] = np.string_("JPL-102270")
 
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
+        
+    def add_algorithms_to_procinfo(self):
+        """
+        Add the algorithms to processingInformation group
 
+        Returns
+        ----------
+        algo_group : h5py.Group)
+            the algorithm group object
+        """
+        
+        algo_group = super().add_algorithms_to_procinfo()
+        self.add_interferogramformation_to_algo(algo_group)
+        
+        return algo_group
+    
     def add_swaths_to_hdf5(self):
         """
         Add swaths to the HDF5

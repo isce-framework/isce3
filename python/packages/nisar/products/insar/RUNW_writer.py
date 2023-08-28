@@ -33,7 +33,7 @@ class RUNWWriter(L1InSARWriter):
 
         super().add_root_attrs()
 
-        self.attrs["title"] = np.string_("NISAR L1 RUNW Product")
+        self.attrs["title"] = np.string_("NISAR L1_RUNW Product")
         self.attrs["reference_document"] = np.string_("JPL-102271")
 
     def add_ionosphere_to_procinfo_params(self):
@@ -278,6 +278,8 @@ class RUNWWriter(L1InSARWriter):
         """
         
         algo_group = super().add_algorithms_to_procinfo()
+        
+        self.add_interferogramformation_to_algo(algo_group)
         self.add_ionosphere_estimation_to_algo(algo_group)
         self.add_unwarpping_to_algo(algo_group)
         

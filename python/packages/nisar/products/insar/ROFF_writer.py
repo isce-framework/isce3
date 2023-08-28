@@ -15,10 +15,7 @@ class ROFFWriter(L1InSARWriter):
     Writer class for ROFF product inherent from L1InSARWriter
     """
 
-    def __init__(
-        self,
-        **kwds,
-    ):
+    def __init__(self, **kwds):
         """
         Constructor for ROFF class
         """
@@ -37,57 +34,56 @@ class ROFFWriter(L1InSARWriter):
 
         super().add_root_attrs()
 
-        self.attrs["title"] = "NISAR L1 ROFF Product"
-        self.attrs["reference_document"] = "TBD"
+        self.attrs["title"] = np.string_("NISAR L1_ROFF Product")
+        self.attrs["reference_document"] = np.string_("JPL-105009")
 
     def add_coregistration_to_algo(self, algo_group: h5py.Group):
         """
         Add the coregistration parameters to the "processingInfromation/algorithms" group
 
         Parameters
-        ------
-        - algo_group (h5py.Group): the algorithm group object
+        ----------
+        algo_group : h5py.Group
+            the algorithm group object
 
-        Return
-        ------
-        - coregistration_group (h5py.Group): the coregistration group object
+        Returns
+        ----------
+        coregistration_group : h5py.Group
+            the coregistration group object
         """
 
         pcfg = self.cfg["processing"]
         dense_offsets = pcfg["dense_offsets"]["enabled"]
         offset_product = pcfg["offsets_product"]["enabled"]
-
-        coreg_method = (
+        coreg_method = \
             "Coarse geometry coregistration with DEM and orbit ephemeris"
-        )
-        if dense_offsets or offset_product:
+        if dense_offsets:
             coreg_method = f"{coreg_method} with cross-correlation refinement"
-
+            
         algo_coregistration_ds_params = [
             DatasetParams(
                 "coregistrationMethod",
-                np.string_(coreg_method),
-                np.string_("RSLC coregistration method"),
+                coreg_method,
+                "RSLC coregistration method",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "geometryCoregistration",
-                np.string_(
-                    "Range doppler to geogrid then geogrid to range doppler"
-                ),
-                np.string_("Geometry coregistration algorithm"),
+                "Range doppler to geogrid then geogrid to range doppler"
+                ,
+                "Geometry coregistration algorithm",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
             DatasetParams(
                 "resampling",
-                np.string_("sinc"),
-                np.string_("Secondary RSLC resampling algorithm"),
+                "sinc",
+                "Secondary RSLC resampling algorithm",
                 {
-                    "algorithm_type": np.string_("RSLC coregistration"),
+                    "algorithm_type": "RSLC coregistration",
                 },
             ),
         ]
@@ -98,62 +94,44 @@ class ROFFWriter(L1InSARWriter):
 
         return coregistration_group
 
-    def add_interferogramformation_to_algo(self, algo_group: h5py.Group):
-        """
-        Add the interferogram information to algorithm group.
-
-        NOTE: Since there is no interferogram information in the ROFF algorithm group,
-        and the add_algorithms_to_procinfo() function of the L1InSARWriter class has added this group
-        to the algorithm group, to avoid adding this group to ROFF product,
-        we will leave this function doing nothing here.
-        """
-
-        pass
-
     def add_cross_correlation_to_algo(self, algo_group: h5py.Group):
         """
         Add the cross correlation parameters to the "processingInfromation/algorithms" group
 
         Parameters
-        ------
-        - algo_group (h5py.Group): the algorithm group object
+        ----------
+        algo_group : h5py.Group
+            the algorithm group object
         """
 
         pcfg = self.cfg["processing"]
         is_roff = pcfg["offsets_product"]["enabled"]
-
-        cross_correlation_domain = get_off_params(
-            pcfg, "cross_correlation_domain", is_roff
-        )
-
+        cross_correlation_domain = \
+            get_off_params(pcfg, "cross_correlation_domain", is_roff)
+        
         for layer in pcfg["offsets_product"].keys():
             if layer.startswith("layer"):
-                # layer specific cross correlation domain
-                cross_correlation_domain = get_off_params(
-                    pcfg, "cross_correlation_domain", is_roff, pattern=layer
-                )
                 cross_corr = DatasetParams(
                     "crossCorrelationAlgorithm",
-                    np.string_(cross_correlation_domain),
-                    np.string_(
-                        f"Cross-correlation algorithm for layer {layer[-1]}"
-                    ),
+                    cross_correlation_domain,
+                    f"Cross-correlation algorithm for layer {layer[-1]}"
+                    ,
                     {
-                        "algorithm_type": np.string_("RSLC coregistration"),
+                        "algorithm_type": "RSLC coregistration",
                     },
                 )
-                cross_corr_group = algo_group.require_group(
-                    f"crossCorrelation/{layer}"
-                )
+                cross_corr_group = \
+                    algo_group.require_group(f"crossCorrelation/{layer}")
                 add_dataset_and_attrs(cross_corr_group, cross_corr)
 
     def add_algorithms_to_procinfo(self):
         """
-        Add the algorithms to processingInformation group
+        Add the algorithms group to the processingInformation group
 
-        Return
-        ------
-        algo_group (h5py.Group): the algorithm group object
+        Returns
+        ----------
+        algo_group : h5py.Group
+            the algorithm group object
         """
 
         algo_group = super().add_algorithms_to_procinfo()
@@ -204,89 +182,82 @@ class ROFFWriter(L1InSARWriter):
             az_start = margin + az_search
 
         for freq, _, _ in get_cfg_freq_pols(self.cfg):
-            swath_frequency_path = (
+            swath_frequency_path = \
                 f"{self.ref_rslc.SwathPath}/frequency{freq}/"
-            )
             swath_frequency_group = self.ref_h5py_file_obj[
-                swath_frequency_path
-            ]
+                swath_frequency_path]
 
             pixeloffsets_ds_params = [
                 DatasetParams(
                     "alongTrackSkipWindowSize",
                     np.uint32(az_skip),
-                    np.string_(
-                        "Along track cross-correlation skip window size in"
-                        " pixels"
-                    ),
+                    "Along track cross-correlation skip window size in"
+                    " pixels"
+                    ,
                     {
-                        "units": np.string_("unitless"),
+                        "units": "unitless",
                     },
                 ),
                 DatasetParams(
                     "alongTrackStartPixel",
                     np.uint32(az_start),
-                    np.string_("Reference RSLC start pixel in along track"),
+                    "Reference RSLC start pixel in along track",
                     {
-                        "units": np.string_("unitless"),
+                        "units": "unitless",
                     },
                 ),
                 DatasetParams(
                     "slantRangeSkipWindowSize",
                     np.uint32(rg_skip),
-                    np.string_(
-                        "Slant range cross-correlation skip window size in"
-                        " pixels"
-                    ),
+                    "Slant range cross-correlation skip window size in"
+                    " pixels"
+                    ,
                     {
-                        "units": np.string_("unitless"),
+                        "units": "unitless",
                     },
                 ),
                 DatasetParams(
                     "slantRangeStartPixel",
                     np.uint32(rg_start),
-                    np.string_("Reference RSLC start pixel in slant range"),
+                    "Reference RSLC start pixel in slant range",
                     {
-                        "units": np.string_("unitless"),
+                        "units": "unitless",
                     },
                 ),
                 DatasetParams(
                     "crossCorrelationSurfaceOversampling",
                     np.uint32(ovs_factor),
-                    np.string_(
-                        "Oversampling factor of the cross-correlation surface"
-                    ),
+                    "Oversampling factor of the cross-correlation surface"
+                    ,
                     {
-                        "units": np.string_("unitless"),
+                        "units": "unitless",
                     },
                 ),
                 DatasetParams(
                     "margin",
                     np.uint32(margin),
-                    np.string_(
-                        "Margin in pixels around reference RSLC edges"
-                        " excluded during cross-correlation"
-                        " computation"
-                    ),
+                    "Margin in pixels around reference RSLC edges"
+                    " excluded during cross-correlation"
+                    " computation"
+                    ,
                     {
-                        "units": np.string_("unitless"),
+                        "units": "unitless",
                     },
                 ),
             ]
 
-            pixeloffsets_group_name = f"{self.group_paths.ParametersPath}/pixelOffsets/frequency{freq}"
+            pixeloffsets_group_name = \
+                f"{self.group_paths.ParametersPath}/pixelOffsets/frequency{freq}"
             pixeloffsets_group = self.require_group(pixeloffsets_group_name)
             for ds_param in pixeloffsets_ds_params:
                 add_dataset_and_attrs(pixeloffsets_group, ds_param)
 
-            self._copy_dataset_by_name(
-                swath_frequency_group,
-                "processedRangeBandwidth",
+            swath_frequency_group.copy(
+                "processedRangeBandwidth", 
                 pixeloffsets_group,
                 "rangeBandwidth",
             )
-            self._copy_dataset_by_name(
-                swath_frequency_group,
+            swath_frequency_group.copy(
                 "processedAzimuthBandwidth",
                 pixeloffsets_group,
                 "azimuthBandwidth",
@@ -327,45 +298,41 @@ class ROFFWriter(L1InSARWriter):
                         DatasetParams(
                             "alongTrackWindowSize",
                             np.uint32(az_chip),
-                            np.string_(
-                                "Along track cross-correlation window size in"
-                                " pixels"
-                            ),
+                            "Along track cross-correlation window size in"
+                            " pixels"
+                            ,
                             {
-                                "units": np.string_("unitless"),
+                                "units": "unitless",
                             },
                         ),
                         DatasetParams(
                             "slantRangeWindowSize",
                             np.uint32(rg_chip),
-                            np.string_(
-                                "Slant range cross-correlation window size in"
-                                " pixels"
-                            ),
+                            "Slant range cross-correlation window size in"
+                            " pixels"
+                            ,
                             {
-                                "units": np.string_("unitless"),
+                                "units": "unitless",
                             },
                         ),
                         DatasetParams(
                             "alongTrackSearchWindowSize",
                             np.uint32(2 * az_search),
-                            np.string_(
-                                "Along track cross-correlation search window"
-                                " size in pixels"
-                            ),
+                            "Along track cross-correlation search window"
+                            " size in pixels"
+                            ,
                             {
-                                "units": np.string_("unitless"),
+                                "units": "unitless",
                             },
                         ),
                         DatasetParams(
                             "slantRangeSearchWindowSize",
                             np.uint32(2 * rg_search),
-                            np.string_(
-                                "Slant range cross-correlation search window"
-                                " size in pixels"
-                            ),
+                            "Slant range cross-correlation search window"
+                            " size in pixels"
+                            ,
                             {
-                                "units": np.string_("unitless"),
+                                "units": "unitless",
                             },
                         ),
                     ]
@@ -433,7 +400,6 @@ class ROFFWriter(L1InSARWriter):
             offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
 
             offset_group = self.require_group(offset_group_name)
-
             # center frequency and sub swaths groups of the RSLC
             rslc_swaths_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}"
@@ -461,135 +427,103 @@ class ROFFWriter(L1InSARWriter):
             off_shape = (off_length, off_width)
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
-            offset_slant_range = rslc_freq_group["slantRange"][()][
-                rg_start::rg_skip
-            ][:off_width]
-            offset_group.require_dataset(
-                name="slantRange",
-                data=offset_slant_range,
-                shape=offset_slant_range.shape,
-                dtype=offset_slant_range.dtype,
-            )
-            offset_group["slantRange"].attrs.update(
-                rslc_freq_group["slantRange"].attrs
-            )
-            offset_group["slantRange"].attrs["description"] = np.string_(
-                "Slant range vector"
-            )
-
-            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][
-                ()
-            ][az_start::az_skip][:off_length]
-            offset_group.require_dataset(
-                name="zeroDopplerTime",
-                data=offset_zero_doppler_time,
-                shape=offset_zero_doppler_time.shape,
-                dtype=offset_zero_doppler_time.dtype,
-            )
-            offset_group["zeroDopplerTime"].attrs.update(
-                rslc_swaths_group["zeroDopplerTime"].attrs
-            )
-            offset_group["zeroDopplerTime"].attrs["description"] = np.string_(
-                "Zero Doppler azimuth time vector"
-            )
-
-            offset_zero_doppler_time_spacing = (
-                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
-            )
-            offset_group.require_dataset(
-                name="zeroDopplerTimeSpacing",
-                data=offset_zero_doppler_time_spacing,
-                shape=offset_zero_doppler_time_spacing.shape,
-                dtype=offset_zero_doppler_time_spacing.dtype,
-            )
-            offset_group["zeroDopplerTimeSpacing"].attrs.update(
-                rslc_swaths_group["zeroDopplerTimeSpacing"].attrs
-            )
-
-            offset_slant_range_spacing = (
+            offset_slant_range = rslc_freq_group["slantRange"][()]\
+                [rg_start::rg_skip][:off_width]
+            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]\
+                [az_start::az_skip][:off_length]
+            offset_zero_doppler_time_spacing = \
+                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
+            offset_slant_range_spacing = \
                 rslc_freq_group["slantRangeSpacing"][()] * rg_skip
-            )
-            offset_group.require_dataset(
-                name="slantRangeSpacing",
-                data=offset_slant_range_spacing,
-                shape=offset_slant_range_spacing.shape,
-                dtype=offset_slant_range_spacing.dtype,
-            )
-            offset_group["slantRangeSpacing"].attrs.update(
-                rslc_freq_group["slantRangeSpacing"].attrs
-            )
-
-            # add the polarization
+                
+            ds_offsets_params = [
+                DatasetParams(
+                    "slantRange",
+                    offset_slant_range,
+                    "Slant range vector",
+                    rslc_freq_group["slantRange"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTime",
+                    offset_zero_doppler_time,
+                    "Zero Doppler azimuth time vector",
+                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                ),
+                DatasetParams(
+                    "zeroDopplerTimeSpacing",
+                    offset_zero_doppler_time_spacing,
+                    "Along track spacing of the offset grid",
+                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
+                ),
+                DatasetParams(
+                    "slantRangeSpacing",
+                    offset_slant_range_spacing,
+                    "Slant range spacing of offset grid",
+                    rslc_freq_group["slantRangeSpacing"].attrs,
+                ),
+            ]
+            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
+            offset_group = self.require_group(offset_group_name)
+            for ds_param in ds_offsets_params:
+                add_dataset_and_attrs(offset_group, ds_param)
+            
+            # pixel offsets dataset parameters including:
+            # datgaset name, description, and unit
+            pixel_offsets_ds_params = [
+                (
+                    "alongTrackOffset",
+                    "Along track offset",
+                    "meters",
+                ),
+                (
+                    "alongTrackOffsetVariance",
+                    "Along-track pixel offsets variance",
+                    "unitless",
+                ),
+                (
+                    "slantRangeOffsetVariance",
+                    "Slant range pixel offsets variance",
+                    "unitless",
+                ),
+                (
+                    "crossCorrelationPeak",
+                    "Normalized cross-correlation surface peak",
+                    "unitless",
+                ),
+                (
+                    "crossOffsetVariance",
+                    "Off-diagonal term of the pixel offsets covariance matrix",
+                    "unitless",
+                ),
+                (
+                    "slantRangeOffset",
+                    "Slant range offset",
+                    "meters",
+                ),
+                (
+                    "snr",
+                    "Pixel offsets signal-to-noise ratio",
+                    "unitless",
+                ),
+            ]
+                            
+            # add the polarization dataset to pixelOffsets
             for pol in pol_list:
-                offset_pol_group_name = (
+                offset_pol_group_name = \
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
-                )
                 self.require_group(offset_pol_group_name)
-
                 for layer in pcfg["offsets_product"]:
                     if layer.startswith("layer"):
                         layer_group_name = f"{offset_pol_group_name}/{layer}"
                         layer_group = self.require_group(layer_group_name)
-
-                        # Create the pixel offsets dataset
-                        self._create_2d_dataset(
-                            layer_group,
-                            "alongTrackOffset",
-                            off_shape,
-                            np.float32,
-                            np.string_(f"Along track offset"),
-                            units=np.string_("meters"),
-                        )
-                        self._create_2d_dataset(
-                            layer_group,
-                            "alongTrackOffsetVariance",
-                            off_shape,
-                            np.float32,
-                            np.string_(f"Along-track pixel offsets variance"),
-                            np.string_("unitless"),
-                        )
-                        self._create_2d_dataset(
-                            layer_group,
-                            "slantRangeOffsetVariance",
-                            off_shape,
-                            np.float32,
-                            np.string_(f"Slant range pixel offsets variance"),
-                            np.string_("unitless"),
-                        )
-                        self._create_2d_dataset(
-                            layer_group,
-                            "crossCorrelationPeak",
-                            off_shape,
-                            np.float32,
-                            np.string_(
-                                f"Normalized cross-correlation surface peak"
-                            ),
-                            units=np.string_("unitless"),
-                        )
-                        self._create_2d_dataset(
-                            layer_group,
-                            "crossOffsetVariance",
-                            off_shape,
-                            np.float32,
-                            np.string_(
-                                f"Off-diagonal term of the pixel offsets"
-                                f" covariance matrix"
-                            ),
-                            units=np.string_("unitless"),
-                        )
-                        self._create_2d_dataset(
-                            layer_group,
-                            "slantRangeOffset",
-                            off_shape,
-                            np.float32,
-                            np.string_(f"Slant range offset"),
-                            units=np.string_("meters"),
-                        )
-                        self._create_2d_dataset(
-                            layer_group,
-                            "snr",
-                            off_shape,
-                            np.float32,
-                            np.string_(f"Pixel offsets signal-to-noise ratio"),
-                            units=np.string_("unitless"),
-                        )
+                         # Create the pixel offsets dataset
+                        for pixel_offsets_ds_param in pixel_offsets_ds_params:
+                            ds_name, ds_description, ds_unit = pixel_offsets_ds_param
+                            self._create_2d_dataset(
+                                layer_group,
+                                ds_name,
+                                off_shape,
+                                np.float32,
+                                ds_description,
+                                units=ds_unit,
+                            )
