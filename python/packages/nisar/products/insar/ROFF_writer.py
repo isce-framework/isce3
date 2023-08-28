@@ -5,12 +5,12 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
-from .InSARBase import InSARWriter
-from .InSARL1Products import L1InSARWriter
+from .InSAR_base_writer import InSARWriter
+from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import ROFFGroupsPaths
 
 
-class ROFF(L1InSARWriter):
+class ROFFWriter(L1InSARWriter):
     """
     Writer class for ROFF product inherent from L1InSARWriter
     """
