@@ -127,7 +127,7 @@ class RUNWWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "ionosphereAlgorithm",
-                np.string_(iono_algorithm),
+                iono_algorithm,
                 "Algorithm used to estimate ionosphere phase screen",
                 {
                     "algorithm_type": "Ionosphere estimation",
@@ -135,7 +135,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "ionosphereFilling",
-                np.string_(iono_filling),
+                iono_filling,
                 "Outliers data filling algorithm"
                 " for ionosphere phase estimation"
                 ,
@@ -145,7 +145,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "ionosphereFiltering",
-                np.string_(iono_filtering),
+                iono_filtering,
                 f"Iterative gaussian filter with {num_of_iters} filtering",
                 {
                     "algorithm_type": "Ionosphere estimation",
@@ -153,7 +153,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "ionosphereOutliers",
-                np.string_(iono_outliers),
+                iono_outliers,
                 "Algorithm identifying outliers in unfiltered ionosphere"
                 " phase screen"
                 ,
@@ -163,7 +163,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
-                np.bool_(unwrap_correction),
+                unwrap_correction,
                 "Flag indicating if unwrapping errors in sub-band"
                 " unwrapped interferograms are corrected"
                 ,
@@ -219,7 +219,7 @@ class RUNWWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "costMode",
-                np.string_(cost_mode),
+                cost_mode,
                 "Cost mode algorithm for phase unwrapping",
                 {
                     "algorithm_type": "Unwrapping",
@@ -227,7 +227,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "wrappedPhaseFilling",
-                np.string_(phase_filling),
+                phase_filling,
                 "Outliers data filling algorithm for phase unwrapping"
                 " preprocessing"
                 ,
@@ -237,7 +237,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "wrappedPhaseOutliers",
-                np.string_(phase_outliers),
+                phase_outliers,
                 "Algorithm identifying outliers in the wrapped"
                 " interferogram"
                 ,
@@ -247,7 +247,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingAlgorithm",
-                np.string_(unwrapping_algorithm),
+                unwrapping_algorithm,
                 "Algorithm used for phase unwrapping",
                 {
                     "algorithm_type": "Unwrapping",
@@ -255,7 +255,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingInitializer",
-                np.string_(unwrapping_initializer),
+                unwrapping_initializer,
                 "Algorithm used to initialize phase unwrapping",
                 {
                     "algorithm_type": "Unwrapping",
