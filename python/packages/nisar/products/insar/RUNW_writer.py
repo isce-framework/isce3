@@ -584,7 +584,7 @@ class RUNWWriter(L1InSARWriter):
                     (
                         "unwrappedPhase",
                         np.float32,
-                        f"Unwrapped Interferogram between {pol} layers",
+                        f"Unwrapped interferogram between {pol} layers",
                         "radians",
                         None,
                     ),
