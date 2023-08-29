@@ -951,7 +951,7 @@ class InSARWriter(h5py.File):
                               f"referenceZ{ds_name[1:]}")
 
             sec_id_group.copy(ds_name, dst_id_group,
-                              f"secodnaryZ{ds_name[1:]}")
+                              f"secondaryZ{ds_name[1:]}")
 
         ds_params = [
             DatasetParams(
