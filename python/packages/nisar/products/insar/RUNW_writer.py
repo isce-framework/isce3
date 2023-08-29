@@ -8,7 +8,6 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import RUNWGroupsPaths
 
-
 class RUNWWriter(L1InSARWriter):
     """
     Writer class for RUNW product inherent from L1InSARWriter
@@ -295,15 +294,23 @@ class RUNWWriter(L1InSARWriter):
 
     def add_interferogram_to_swaths(self, rg_looks: int, az_looks: int):
         """
-        Add interferogram group to swaths
+        Add interferogram group to swaths group
+        
+        Parameters
+        ----------
+        rg_looks : int
+            range looks
+        az_looks : int
+            azimuth looks
         """
         
         super().add_interferogram_to_swaths(rg_looks, az_looks)
     
         # Add the connectedComponents, ionospherePhaseScreen,
-        # ionospherePhaseScreenUncertainty,
-        # unwrappedPhase
+        # ionospherePhaseScreenUncertainty, and the
+        # unwrappedPhase datasets
         # to the interferogram group under swaths groups
+        
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
@@ -377,11 +384,9 @@ class RUNWWriter(L1InSARWriter):
         """
         Add Swaths to the HDF5
         """
-        
+            
         super().add_swaths_to_hdf5()
-                
-
-        
+    
         # determine the range and azimuth looks for the RUNW product
         proc_cfg = self.cfg["processing"]
         

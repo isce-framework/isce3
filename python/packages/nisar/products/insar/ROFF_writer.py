@@ -150,7 +150,8 @@ class ROFFWriter(L1InSARWriter):
 
     def add_pixeloffsets_to_procinfo_params(self):
         """
-        Add the pixelOffsets to the processingInformation/parameters group
+        Add the pixelOffsets group to
+        the processingInformation/parameters group
         """
 
         proc_cfg = self.cfg["processing"]
@@ -299,9 +300,8 @@ class ROFFWriter(L1InSARWriter):
 
     def _add_datasets_to_pixel_offset(self):
         """
-        Add datasets to pixelOffsets group
+        Add datasets to pixelOffsets group under the swath group
         """
-        super()._add_datasets_to_pixel_offset()
         
         # Add the ROFF specified datasets to the pixelOffset products  
         proc_cfg = self.cfg["processing"]
@@ -310,7 +310,6 @@ class ROFFWriter(L1InSARWriter):
         rg_chip, az_chip, _ = self._pull_pixel_offsets_params()  
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
-            # Create the swath group
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
