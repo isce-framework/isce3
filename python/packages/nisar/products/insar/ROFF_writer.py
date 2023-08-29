@@ -52,9 +52,9 @@ class ROFFWriter(L1InSARWriter):
             the coregistration group object
         """
 
-        pcfg = self.cfg["processing"]
-        dense_offsets = pcfg["dense_offsets"]["enabled"]
-        offset_product = pcfg["offsets_product"]["enabled"]
+        proc_cfg = self.cfg["processing"]
+        dense_offsets = proc_cfg["dense_offsets"]["enabled"]
+        offset_product = proc_cfg["offsets_product"]["enabled"]
         coreg_method = \
             "Coarse geometry coregistration with DEM and orbit ephemeris"
         if dense_offsets:
@@ -104,12 +104,12 @@ class ROFFWriter(L1InSARWriter):
             the algorithm group object
         """
 
-        pcfg = self.cfg["processing"]
-        is_roff = pcfg["offsets_product"]["enabled"]
+        proc_cfg = self.cfg["processing"]
+        is_roff = proc_cfg["offsets_product"]["enabled"]
         cross_correlation_domain = \
-            get_off_params(pcfg, "cross_correlation_domain", is_roff)
+            get_off_params(proc_cfg, "cross_correlation_domain", is_roff)
         
-        for layer in pcfg["offsets_product"].keys():
+        for layer in proc_cfg["offsets_product"].keys():
             if layer.startswith("layer"):
                 cross_corr = DatasetParams(
                     "crossCorrelationAlgorithm",
@@ -153,35 +153,13 @@ class ROFFWriter(L1InSARWriter):
         Add the pixelOffsets to the processingInformation/parameters group
         """
 
+        proc_cfg = self.cfg["processing"]
         # pull the offset parameters
-        pcfg = self.cfg["processing"]
-        is_roff = pcfg["offsets_product"]["enabled"]
-        margin = get_off_params(pcfg, "margin", is_roff)
-        rg_gross = get_off_params(pcfg, "gross_offset_range", is_roff)
-        az_gross = get_off_params(pcfg, "gross_offset_azimuth", is_roff)
-        rg_start = get_off_params(pcfg, "start_pixel_range", is_roff)
-        az_start = get_off_params(pcfg, "start_pixel_azimuth", is_roff)
-        rg_skip = get_off_params(pcfg, "skip_range", is_roff)
-        az_skip = get_off_params(pcfg, "skip_azimuth", is_roff)
-        rg_search = get_off_params(
-            pcfg, "half_search_range", is_roff, pattern="layer", get_min=True
-        )
-        az_search = get_off_params(
-            pcfg, "half_search_azimuth", is_roff, pattern="layer", get_min=True
-        )
-        ovs_factor = get_off_params(
-            pcfg, "correlation_surface_oversampling_factor", is_roff
-        )
-        # Adjust margin
-        margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
+        is_roff,  margin, rg_start, az_start,\
+        rg_skip, az_skip, rg_search, az_search,\
+        rg_chip, az_chip, ovs_factor = self._pull_pixel_offsets_params()  
 
-        # Compute slant range/azimuth vectors of offset grids
-        if rg_start is None:
-            rg_start = margin + rg_search
-        if az_start is None:
-            az_start = margin + az_search
-
-        for freq, _, _ in get_cfg_freq_pols(self.cfg):
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
             swath_frequency_path = \
                 f"{self.ref_rslc.SwathPath}/frequency{freq}/"
             swath_frequency_group = self.ref_h5py_file_obj[
@@ -263,37 +241,14 @@ class ROFFWriter(L1InSARWriter):
                 "azimuthBandwidth",
             )
 
-            for layer in pcfg["offsets_product"]:
+            for layer in proc_cfg["offsets_product"]:
                 if layer.startswith("layer"):
-                    rg_chip = get_off_params(
-                        pcfg,
-                        "window_range",
-                        is_roff,
-                        pattern=layer,
-                        get_min=True,
-                    )
-                    az_chip = get_off_params(
-                        pcfg,
-                        "window_azimuth",
-                        is_roff,
-                        pattern=layer,
-                        get_min=True,
-                    )
-                    rg_search = get_off_params(
-                        pcfg,
-                        "half_search_range",
-                        is_roff,
-                        pattern=layer,
-                        get_min=True,
-                    )
-                    az_search = get_off_params(
-                        pcfg,
-                        "half_search_azimuth",
-                        is_roff,
-                        pattern=layer,
-                        get_min=True,
-                    )
-
+                    rg_chip, az_chip, rg_search, az_search = \
+                    [get_off_params(proc_cfg, off_param, is_roff,
+                                    pattern=layer, get_min=True)
+                     for off_param in ['window_range', 'window_azimuth',
+                                       'half_search_range',
+                                       'half_search_azimuth']]
                     ds_params = [
                         DatasetParams(
                             "alongTrackWindowSize",
@@ -342,52 +297,17 @@ class ROFFWriter(L1InSARWriter):
                     for ds_param in ds_params:
                         add_dataset_and_attrs(layer_group, ds_param)
 
-    def add_swaths_to_hdf5(self):
+    def _add_datasets_to_pixel_offset(self):
         """
-        Add Swaths to the HDF5
+        Add datasets to pixelOffsets group
         """
-
-        super().add_swaths_to_hdf5()
-
-        pcfg = self.cfg["processing"]
-
-        # pull the offset parameters
-        is_roff = pcfg["offsets_product"]["enabled"]
-        margin = get_off_params(pcfg, "margin", is_roff)
-        rg_gross = get_off_params(pcfg, "gross_offset_range", is_roff)
-        az_gross = get_off_params(pcfg, "gross_offset_azimuth", is_roff)
-        rg_start = get_off_params(pcfg, "start_pixel_range", is_roff)
-        az_start = get_off_params(pcfg, "start_pixel_azimuth", is_roff)
-        rg_skip = get_off_params(pcfg, "skip_range", is_roff)
-        az_skip = get_off_params(pcfg, "skip_azimuth", is_roff)
-        rg_search = get_off_params(
-            pcfg,
-            "half_search_range",
-            is_roff,
-            pattern="layer",
-            get_min=True,
-        )
-        az_search = get_off_params(
-            pcfg,
-            "half_search_azimuth",
-            is_roff,
-            pattern="layer",
-            get_min=True,
-        )
-        rg_chip = get_off_params(
-            pcfg, "window_range", is_roff, pattern="layer", get_min=True
-        )
-        az_chip = get_off_params(
-            pcfg, "window_azimuth", is_roff, pattern="layer", get_min=True
-        )
-        # Adjust margin
-        margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
-
-        # Compute slant range/azimuth vectors of offset grids
-        if rg_start is None:
-            rg_start = margin + rg_search
-        if az_start is None:
-            az_start = margin + az_search
+        super()._add_datasets_to_pixel_offset()
+        
+        # Add the ROFF specified datasets to the pixelOffset products  
+        proc_cfg = self.cfg["processing"]
+        is_roff,  margin, rg_start, az_start,\
+        rg_skip, az_skip, rg_search, az_search,\
+        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()  
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
@@ -396,26 +316,14 @@ class ROFFWriter(L1InSARWriter):
             )
             self.require_group(swaths_freq_group_name)
 
-            # Createpixeloffsets group
-            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
-
-            offset_group = self.require_group(offset_group_name)
-            # center frequency and sub swaths groups of the RSLC
-            rslc_swaths_group = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}"
-            ]
-            rslc_freq_group = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}"
-            ]
-
             # get the RSLC lines and columns
             slc_dset = self.ref_h5py_file_obj[
                 f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
             ]
             slc_lines, slc_cols = slc_dset.shape
 
-            off_length = get_off_params(pcfg, "offset_length", is_roff)
-            off_width = get_off_params(pcfg, "offset_width", is_roff)
+            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
+            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
             if off_length is None:
                 margin_az = 2 * margin + 2 * az_search + az_chip
                 off_length = (slc_lines - margin_az) // az_skip
@@ -425,50 +333,9 @@ class ROFFWriter(L1InSARWriter):
 
             # shape of offset product
             off_shape = (off_length, off_width)
-
-            # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
-            offset_slant_range = rslc_freq_group["slantRange"][()]\
-                [rg_start::rg_skip][:off_width]
-            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]\
-                [az_start::az_skip][:off_length]
-            offset_zero_doppler_time_spacing = \
-                 rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
-            offset_slant_range_spacing = \
-                rslc_freq_group["slantRangeSpacing"][()] * rg_skip
-                
-            ds_offsets_params = [
-                DatasetParams(
-                    "slantRange",
-                    offset_slant_range,
-                    "Slant range vector",
-                    rslc_freq_group["slantRange"].attrs,
-                ),
-                DatasetParams(
-                    "zeroDopplerTime",
-                    offset_zero_doppler_time,
-                    "Zero Doppler azimuth time vector",
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
-                ),
-                DatasetParams(
-                    "zeroDopplerTimeSpacing",
-                    offset_zero_doppler_time_spacing,
-                    "Along track spacing of the offset grid",
-                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
-                ),
-                DatasetParams(
-                    "slantRangeSpacing",
-                    offset_slant_range_spacing,
-                    "Slant range spacing of offset grid",
-                    rslc_freq_group["slantRangeSpacing"].attrs,
-                ),
-            ]
-            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
-            offset_group = self.require_group(offset_group_name)
-            for ds_param in ds_offsets_params:
-                add_dataset_and_attrs(offset_group, ds_param)
             
             # pixel offsets dataset parameters including:
-            # datgaset name, description, and unit
+            # dataset name, description, and unit
             pixel_offsets_ds_params = [
                 (
                     "alongTrackOffset",
@@ -512,10 +379,11 @@ class ROFFWriter(L1InSARWriter):
                 offset_pol_group_name = \
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
                 self.require_group(offset_pol_group_name)
-                for layer in pcfg["offsets_product"]:
+                for layer in proc_cfg["offsets_product"]:
                     if layer.startswith("layer"):
                         layer_group_name = f"{offset_pol_group_name}/{layer}"
                         layer_group = self.require_group(layer_group_name)
+                        
                          # Create the pixel offsets dataset
                         for pixel_offsets_ds_param in pixel_offsets_ds_params:
                             ds_name, ds_description, ds_unit = pixel_offsets_ds_param
@@ -527,3 +395,13 @@ class ROFFWriter(L1InSARWriter):
                                 ds_description,
                                 units=ds_unit,
                             )
+                                    
+    def add_swaths_to_hdf5(self):
+        """
+        Add Swaths to the HDF5
+        """
+
+        super().add_swaths_to_hdf5()
+        
+        # add the pixel offsets group to swaths
+        self.add_pixel_offsets_to_swaths()

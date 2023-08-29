@@ -293,258 +293,32 @@ class RUNWWriter(L1InSARWriter):
         super().add_parameters_to_procinfo()
         self.add_ionosphere_to_procinfo_params()
 
-    def add_swaths_to_hdf5(self):
+    def add_interferogram_to_swaths(self, rg_looks: int, az_looks: int):
         """
-        Add Swaths to the HDF5
+        Add interferogram group to swaths
         """
         
-        super().add_swaths_to_hdf5()
-        
-        proc_cfg = self.cfg["processing"]
-        rg_looks = proc_cfg["crossmul"]["range_looks"]
-        az_looks = proc_cfg["crossmul"]["azimuth_looks"]
-        
-        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
-        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
-        
-        # replace the looks from the unwrap looks when either rg or az is > 1 
-        # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
-        if (unwrap_az_looks > 1) or (unwrap_rg_looks > 1):
-            rg_looks = unwrap_rg_looks
-            az_looks = unwrap_az_looks
-            
-        # pull the offset parameters
-        is_roff = proc_cfg["offsets_product"]["enabled"]
-        margin = get_off_params(proc_cfg, "margin", is_roff)
-        rg_gross = get_off_params(proc_cfg, "gross_offset_range", is_roff)
-        az_gross = get_off_params(proc_cfg, "gross_offset_azimuth", is_roff)
-        rg_start = get_off_params(proc_cfg, "start_pixel_range", is_roff)
-        az_start = get_off_params(proc_cfg, "start_pixel_azimuth", is_roff)
-        rg_skip = get_off_params(proc_cfg, "skip_range", is_roff)
-        az_skip = get_off_params(proc_cfg, "skip_azimuth", is_roff)
-        rg_search = get_off_params(
-            proc_cfg,
-            "half_search_range",
-            is_roff,
-            pattern="layer",
-            get_min=True,
-        )
-        az_search = get_off_params(
-            proc_cfg,
-            "half_search_azimuth",
-            is_roff,
-            pattern="layer",
-            get_min=True,
-        )
-        rg_chip = get_off_params(
-            proc_cfg, "window_range", is_roff, pattern="layer", get_min=True
-        )
-        az_chip = get_off_params(
-            proc_cfg, "window_azimuth", is_roff, pattern="layer", get_min=True
-        )
-        # Adjust margin
-        margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
-
-        # Compute slant range/azimuth vectors of offset grids
-        if rg_start is None:
-            rg_start = margin + rg_search
-        if az_start is None:
-            az_start = margin + az_search
-
+        super().add_interferogram_to_swaths(rg_looks, az_looks)
+    
+        # Add the connectedComponents, ionospherePhaseScreen,
+        # ionospherePhaseScreenUncertainty,
+        # unwrappedPhase
+        # to the interferogram group under swaths groups
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
-            swaths_freq_group = self.require_group(swaths_freq_group_name)
-
-            # center frequency and sub swaths groups of the RSLC
-            rslc_swaths_group = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}"
-            ]
-            rslc_freq_group = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}"
-            ]
-
             # get the RSLC lines and columns
             slc_dset = self.ref_h5py_file_obj[
                 f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
             ]
             slc_lines, slc_cols = slc_dset.shape
 
-            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
-            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
-            if off_length is None:
-                margin_az = 2 * margin + 2 * az_search + az_chip
-                off_length = (slc_lines - margin_az) // az_skip
-            if off_width is None:
-                margin_rg = 2 * margin + 2 * rg_search + rg_chip
-                off_width = (slc_cols - margin_rg) // rg_skip
-
-            # shape of offset product
-            off_shape = (off_length, off_width)
-
             # shape of the interferogram product
             igram_shape = (slc_lines // az_looks,slc_cols // rg_looks)
 
-            rslc_freq_group.copy("numberOfSubSwaths", swaths_freq_group)
-
-            scence_center_params = [
-                DatasetParams(
-                    "sceneCenterAlongTrackSpacing",
-                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
-                    * az_looks,
-                    "Nominal along track spacing in meters between"
-                    " consecutive lines near mid swath of the RIFG image"
-                    ,
-                    {"units": "meters"},
-                ),
-                DatasetParams(
-                    "sceneCenterGroundRangeSpacing",
-                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
-                    * rg_looks,
-                    "Nominal ground range spacing in meters between"
-                    " consecutive pixels near mid swath of the RIFG image"
-                    ,
-                    {"units": "meters"},
-                ),
-            ]
-            for ds_param in scence_center_params:
-                add_dataset_and_attrs(swaths_freq_group, ds_param)
-
-            # valid samples subswath
-            num_of_subswaths = rslc_freq_group["numberOfSubSwaths"][()]
-            for sub in range(num_of_subswaths):
-                subswath = sub + 1
-                # Get RSLC subswath dataset, range looks, and destination
-                # dataset name based on keys in RSLC
-                valid_samples_subswath_name = f"validSamplesSubSwath{subswath}"
-                if valid_samples_subswath_name in rslc_freq_group.keys():
-                    rslc_freq_subswath_ds = \
-                        rslc_freq_group[valid_samples_subswath_name]
-                    number_of_range_looks =rslc_freq_subswath_ds[()] \
-                            // rg_looks
-                else:
-                    rslc_freq_subswath_ds = rslc_freq_group["validSamples"]
-                    number_of_range_looks =  rslc_freq_subswath_ds[()] // rg_looks
-                    valid_samples_subswath_name = "validSamples"
-
-                # Create subswath dataset and update attributes from RSLC
-                dst_subswath_ds = swaths_freq_group.require_dataset(
-                    name=valid_samples_subswath_name,
-                    data=number_of_range_looks,
-                    shape=number_of_range_looks.shape,
-                    dtype=number_of_range_looks.dtype,
-                )
-                dst_subswath_ds.attrs.update(rslc_freq_subswath_ds.attrs)
-
-            # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
-            offset_slant_range = rslc_freq_group["slantRange"][()]\
-                [rg_start::rg_skip][:off_width]
-            offset_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]\
-                [az_start::az_skip][:off_length]
-            offset_zero_doppler_time_spacing = \
-                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_skip
-            offset_slant_range_spacing = \
-                rslc_freq_group["slantRangeSpacing"][()] * rg_skip
-           
-            ds_offsets_params = [
-                DatasetParams(
-                    "slantRange",
-                    offset_slant_range,
-                    "Slant range vector",
-                    rslc_freq_group["slantRange"].attrs,
-                ),
-                DatasetParams(
-                    "zeroDopplerTime",
-                    offset_zero_doppler_time,
-                    "Zero Doppler azimuth time vector",
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
-                ),
-                DatasetParams(
-                    "zeroDopplerTimeSpacing",
-                    offset_zero_doppler_time_spacing,
-                    "Along track spacing of the offset grid",
-                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
-                ),
-                DatasetParams(
-                    "slantRangeSpacing",
-                    offset_slant_range_spacing,
-                    "Slant range spacing of offset grid",
-                    rslc_freq_group["slantRangeSpacing"].attrs,
-                ),
-            ]
-            
-            offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
-            offset_group = self.require_group(offset_group_name)
-            for ds_param in ds_offsets_params:
-                add_dataset_and_attrs(offset_group, ds_param)
-
-            #  add the slantRange, zeroDopplerTime, and their spacings to inteferogram group
-            igram_slant_range = rslc_freq_group["slantRange"][()]
-            igram_zero_doppler_time = rslc_swaths_group["zeroDopplerTime"][()]
-            
-            def max_look_idx(max_val, n_looks):
-                # internal convenience function to get max multilooked index value
-                return (
-                    np.arange((len(max_val) // n_looks) * n_looks)[::n_looks] \
-                        + n_looks // 2
-                )
-
-            rg_idx, az_idx = (
-                max_look_idx(max_val, n_looks)
-                for max_val, n_looks in (
-                    (igram_slant_range, rg_looks),
-                    (igram_zero_doppler_time, az_looks),
-                )
-            )
-            
-            igram_slant_range = igram_slant_range[rg_idx]
-            igram_zero_doppler_time = igram_zero_doppler_time[az_idx]
-            igram_zero_doppler_time_spacing = \
-                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks
-            igram_slant_range_spacing = \
-                rslc_freq_group["slantRangeSpacing"][()] * rg_looks
-                
-            ds_igram_params = [
-                DatasetParams(
-                    "slantRange",
-                    igram_slant_range,
-                    "Slant range vector",
-                    rslc_freq_group["slantRange"].attrs,
-                ),
-                DatasetParams(
-                    "zeroDopplerTime",
-                    igram_zero_doppler_time,
-                    "Zero Doppler azimuth time vector",
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
-                ),
-                DatasetParams(
-                    "zeroDopplerTimeSpacing",
-                    igram_zero_doppler_time_spacing,
-                    (
-                        "Time interval in the along track direction for raster"
-                        " layers. This is same as the spacing between"
-                        " consecutive entries in the zeroDopplerTime array"
-                    ),
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
-                ),
-                DatasetParams(
-                    "slantRangeSpacing",
-                    igram_slant_range_spacing,
-                    (
-                        "Slant range spacing of grid. Same as difference"
-                        " between consecutive samples in slantRange array"
-                    ),
-                    rslc_freq_group["slantRangeSpacing"].attrs,
-                ),
-            ]
-            igram_group_name = f"{swaths_freq_group_name}/interferogram"
-            igram_group = self.require_group(igram_group_name)
-            for ds_param in ds_igram_params:
-                add_dataset_and_attrs(igram_group, ds_param)
-
-            # add the inteferogram and pixelOffsers to each polarization group
+            # add additonal datasets to each polarization group
             for pol in pol_list:
                 # create the interferogram dataset
                 igram_pol_group_name = \
@@ -577,13 +351,6 @@ class RUNWWriter(L1InSARWriter):
                         None,
                     ),
                     (
-                        "coherenceMagnitude",
-                        np.float32,
-                        f"Coherence magnitude between {pol} layers",
-                        "unitless",
-                        None,
-                    ),
-                    (
                         "unwrappedPhase",
                         np.float32,
                         f"Unwrapped interferogram between {pol} layers",
@@ -605,38 +372,30 @@ class RUNWWriter(L1InSARWriter):
                         fill_value=ds_filling_value
                     )               
                 
-                # Create the pixel offsets dataset
-                offset_pol_group_name = \
-                    f"{swaths_freq_group_name}/pixelOffsets/{pol}"
-                offset_pol_group = self.require_group(offset_pol_group_name)
+                        
+    def add_swaths_to_hdf5(self):
+        """
+        Add Swaths to the HDF5
+        """
+        
+        super().add_swaths_to_hdf5()
                 
-                # The pixelOffsets dataset parameters including the 
-                # dataset name, description, and units                
-                pixel_offsets_ds_params = [
-                    (
-                        "alongTrackOffset",
-                        "Along track offset",
-                        "meters",
-                    ),
-                    (
-                        "crossCorrelationPeak",
-                        "Normalized cross-correlation surface peak",
-                        "unitless",
-                    ),
-                    (
-                        "slantRangeOffset",
-                        "Slant range offset",
-                        "meters",
-                    ),
-                ]
-                
-                for pixel_offsets_ds_param in pixel_offsets_ds_params:
-                    ds_name, ds_description, ds_unit = pixel_offsets_ds_param
-                    self._create_2d_dataset(
-                        offset_pol_group,
-                        ds_name,
-                        off_shape,
-                        np.float32,
-                        ds_description,
-                        units=ds_unit,
-                    ) 
+
+        
+        # determine the range and azimuth looks for the RUNW product
+        proc_cfg = self.cfg["processing"]
+        
+        rg_looks = proc_cfg["crossmul"]["range_looks"]
+        az_looks = proc_cfg["crossmul"]["azimuth_looks"]
+        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
+        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
+        
+        # replace the looks from the unwrap looks when either rg or az is > 1 
+        # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
+        if (unwrap_az_looks > 1) or (unwrap_rg_looks > 1):
+            rg_looks = unwrap_rg_looks
+            az_looks = unwrap_az_looks
+        
+        # add subswaths to swaths group
+        self.add_subswaths_to_swaths(rg_looks)    
+        self.add_interferogram_to_swaths(rg_looks, az_looks)

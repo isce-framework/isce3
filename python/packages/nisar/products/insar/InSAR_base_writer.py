@@ -1033,6 +1033,71 @@ class InSARWriter(h5py.File):
 
         return dst_id_group
 
+    def _pull_pixel_offsets_params(self):
+        """
+        Pull the pixel offsets parameters from the runconfig dictionary
+        
+        Returns
+        ----------
+        is_roff : boolean
+            Offset product or not
+        margin : int
+            Margin
+        rg_start : int
+            Start range
+        az_start : int
+            Start azimuth
+        rg_skip : int
+            Pixels skiped across range
+        az_skip : int
+            Pixels skiped across the azimth
+        rg_search : int
+            Window size across range
+        az_search : int
+            Window size across azimuth
+        rg_chip : int
+            Fine window size across range 
+        az_chip : int
+            Fine window size across azimuth
+        ovs_factor : int
+            Oversampling factor     
+        """
+        
+        proc_cfg = self.cfg["processing"]
+
+        # pull the offset parameters
+        is_roff = proc_cfg["offsets_product"]["enabled"]
+        (margin, rg_gross, az_gross,
+         rg_start, az_start,
+         rg_skip, az_skip, ovs_factor) = \
+             [get_off_params(proc_cfg, param, is_roff) 
+              for param in ["margin", "gross_offset_range",
+                            "gross_offset_azimuth",
+                            "start_pixel_range","start_pixel_azimuth",
+                            "skip_range", "skip_azimuth",
+                            "correlation_surface_oversampling_factor"]]
+
+        rg_search, az_search, rg_chip, az_chip = \
+            [get_off_params(proc_cfg, param, is_roff,
+                            pattern="layer",
+                            get_min=True,) for param in \
+                                ["half_search_range",
+                                 "half_search_azimuth",
+                                 "window_range",
+                                 "window_azimuth"]]
+        # Adjust margin
+        margin = max(margin, np.abs(rg_gross), np.abs(az_gross))
+
+        # Compute slant range/azimuth vectors of offset grids
+        if rg_start is None:
+            rg_start = margin + rg_search
+        if az_start is None:
+            az_start = margin + az_search
+
+        return (is_roff,  margin, rg_start, az_start,
+                rg_skip, az_skip, rg_search, az_search,
+                rg_chip, az_chip, ovs_factor)
+    
     def _get_band_name(self):
         """
         Get the band name ('L', 'S', or 'unknown')
