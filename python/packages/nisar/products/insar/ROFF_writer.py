@@ -394,13 +394,3 @@ class ROFFWriter(L1InSARWriter):
                                 ds_description,
                                 units=ds_unit,
                             )
-                                    
-    def add_swaths_to_hdf5(self):
-        """
-        Add Swaths to the HDF5
-        """
-
-        super().add_swaths_to_hdf5()
-        
-        # add the pixel offsets group to swaths
-        self.add_pixel_offsets_to_swaths()
