@@ -458,14 +458,10 @@ class L1InSARWriter(InSARWriter):
             )
             swaths_freq_group = self.require_group(swaths_freq_group_name)
 
-            # center frequency and sub swaths groups of the RSLC
-            rslc_swaths_group = \
-                self.ref_h5py_file_obj[f"{self.ref_rslc.SwathPath}"]
-
+            # Sub swaths groups of the RSLC
             rslc_freq_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
-
             rslc_freq_group.copy("numberOfSubSwaths", swaths_freq_group)
 
             # valid samples subswath
