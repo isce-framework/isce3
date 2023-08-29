@@ -1,12 +1,12 @@
 import h5py
 import numpy as np
-from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import RUNWGroupsPaths
+
 
 class RUNWWriter(L1InSARWriter):
     """
@@ -310,7 +310,6 @@ class RUNWWriter(L1InSARWriter):
         # ionospherePhaseScreenUncertainty, and the
         # unwrappedPhase datasets
         # to the interferogram group under swaths groups
-        
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (

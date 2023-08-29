@@ -1,13 +1,12 @@
 import numpy as np
 from isce3.core import LUT2d
 from isce3.product import RadarGridParameters
-from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
-
-from nisar.workflows.h5_prep import get_off_params
+from nisar.workflows.h5_prep import (add_geolocation_grid_cubes_to_hdf5,
+                                     get_off_params)
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .InSAR_base_writer import InSARWriter
 from .dataset_params import DatasetParams, add_dataset_and_attrs
+from .InSAR_base_writer import InSARWriter
 from .product_paths import L1GroupsPaths
 
 
@@ -129,7 +128,7 @@ class L1InSARWriter(InSARWriter):
 
     def _add_datasets_to_pixel_offset(self):
         """
-        Add datasets to pixelOffsets group
+        Add datasets to pixel offsets group
         """
         
         proc_cfg = self.cfg["processing"]
@@ -201,7 +200,7 @@ class L1InSARWriter(InSARWriter):
                             
     def add_pixel_offsets_to_swaths(self):
         """
-        Add pixel offsets product to swaths
+        Add pixel offsets product to swaths group
         """
         
         proc_cfg = self.cfg["processing"]
@@ -289,7 +288,7 @@ class L1InSARWriter(InSARWriter):
         
     def add_interferogram_to_swaths(self, rg_looks: int, az_looks: int):
         """
-        Add the interferogram group to the swaths
+        Add the interferogram group to the swaths group
         
         Parameters
         ----------
