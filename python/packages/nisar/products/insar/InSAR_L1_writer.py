@@ -38,6 +38,12 @@ class L1InSARWriter(InSARWriter):
         Add the geolocation grid cubes
         """
 
+        # Pull the heights and espg from the radar_grid_cubes group
+        # in the runconfig
+        radar_grid_cfg = self.cfg["processing"]["radar_grid_cubes"]
+        heights = np.array(radar_grid_cfg["heights"])
+        epsg = radar_grid_cfg["output_epsg"]
+        
         # Retrieve the group
         geolocationGrid_path = self.group_paths.GeolocationGridPath
         self.require_group(geolocationGrid_path)
@@ -45,10 +51,7 @@ class L1InSARWriter(InSARWriter):
         # Pull the radar frequency
         cube_freq = "A" if "A" in self.freq_pols else "B"
         radargrid = RadarGridParameters(self.ref_h5_slc_file)
-
-        # Default is [-500, 9000] meters
-        heights = np.linspace(-500, 9000, 20)
-
+        
         # Figure out decimation factors that give < 500 m spacing.
         max_spacing = 500.0
         t = radargrid.sensing_mid + \
@@ -81,7 +84,7 @@ class L1InSARWriter(InSARWriter):
             self.orbit,
             cube_native_doppler,
             grid_doppler,
-            4326,
+            epsg,
             **tol,
         )
 
