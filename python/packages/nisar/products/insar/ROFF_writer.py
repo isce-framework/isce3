@@ -1,4 +1,3 @@
-import h5py
 import numpy as np
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
