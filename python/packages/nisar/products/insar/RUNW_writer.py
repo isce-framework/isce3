@@ -334,40 +334,35 @@ class RUNWWriter(L1InSARWriter):
 
                 # The interferogram dataset parameters including the 
                 # dataset name, dataset data type, description, units, 
-                # and fill value 
                 igram_ds_params = [
                     (
                         "connectedComponents",
                         np.uint32,
                         f"Connected components for {pol} layers",
                         "DN",
-                        0,
                     ),
                     (
                         "ionospherePhaseScreen",
                         np.float32,
                         "Ionosphere phase screen",
                         "radians",
-                        None,
                     ),
                     (
                         "ionospherePhaseScreenUncertainty",
                         np.float32,
                         "Uncertainty of the ionosphere phase screen",
                         "radians",
-                        None,
                     ),
                     (
                         "unwrappedPhase",
                         np.float32,
                         f"Unwrapped interferogram between {pol} layers",
                         "radians",
-                        None,
                     ),
                 ]
                 
                 for igram_ds_param in igram_ds_params:
-                    ds_name, ds_dtype, ds_description, ds_unit, ds_filling_value \
+                    ds_name, ds_dtype, ds_description, ds_unit \
                         = igram_ds_param
                     self._create_2d_dataset(
                         igram_pol_group,
@@ -376,7 +371,6 @@ class RUNWWriter(L1InSARWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
-                        fill_value=ds_filling_value
                     )               
                     
     def add_swaths_to_hdf5(self):
