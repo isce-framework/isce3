@@ -388,8 +388,8 @@ class L1InSARWriter(InSARWriter):
             rg_idx, az_idx = (
                 max_look_idx(max_val, n_looks)
                 for max_val, n_looks in (
-                    (igram_slant_range, self.igram_azimuth_looks),
-                    (igram_zero_doppler_time, self.igram_range_looks),
+                    (igram_slant_range, self.igram_range_looks),
+                    (igram_zero_doppler_time, self.igram_azimuth_looks),
                 )
             )
 
