@@ -83,9 +83,9 @@ class InSARWriter(h5py.File):
             self.cfg["input_file_group"]["secondary_rslc_file"]
 
         # Pull the frequency and polarizations
-        self.freq_pols = self.cfg["processing"]["input_subset"][
-            "list_of_frequencies"
-        ]
+        self.freq_pols = \
+            self.cfg["processing"]["input_subset"]\
+                ["list_of_frequencies"]
 
         # Group paths
         self.group_paths = CommonPaths()
@@ -154,11 +154,6 @@ class InSARWriter(h5py.File):
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithm group to the processing information group
-
-        Returns
-        ----------
-        algo_group : h5py.Group
-            The algorithm group object
         """
 
         algo_group = self.require_group(self.group_paths.AlgorithmsPath)
@@ -170,8 +165,6 @@ class InSARWriter(h5py.File):
         )
 
         add_dataset_and_attrs(algo_group, software_version)
-
-        return algo_group
 
     def add_common_to_procinfo_params(self):
         """
@@ -298,20 +291,10 @@ class InSARWriter(h5py.File):
 
         return dst_param_group
 
-    def add_coregistration_to_algo(self, algo_group: h5py.Group):
+    def add_coregistration_to_algo(self):
         """
         Add the coregistration parameters to the
         "processingInfromation/algorithms" group
-
-        Parameters
-        ----------
-        algo_group : h5py.Group
-            The algorithm group object
-
-        Returns
-        ----------
-        coregistration_group : h5py.Group
-            The coregistration group object
         """
 
         proc_cfg = self.cfg["processing"]
@@ -416,26 +399,16 @@ class InSARWriter(h5py.File):
                 },
             ),
         ]
-
-        coregistration_group = algo_group.require_group("coregistration")
+        
+        coregistration_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/coregistration")
         for ds_param in algo_coregistration_ds_params:
             add_dataset_and_attrs(coregistration_group, ds_param)
 
-        return coregistration_group
 
-    def add_interferogramformation_to_algo(self, algo_group: h5py.Group):
+    def add_interferogramformation_to_algo(self):
         """
         Add the InterferogramFormation group to "processingInformation/algorithms" group
-
-        Parameters
-        ----------
-        algo_group : h5py.Group
-            The algorithm group object
-
-        Returns
-        ----------
-        igram_formation_group : h5py.Group
-            The interfergram formation group object
         """
 
         flatten_method = "None"
@@ -479,7 +452,8 @@ class InSARWriter(h5py.File):
             ),
         ]
 
-        igram_formation_group = algo_group.require_group(
+        igram_formation_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/"
             "interferogramFormation"
         )
         for ds_param in algo_intefergramformation_ds_params:

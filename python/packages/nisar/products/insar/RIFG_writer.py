@@ -46,17 +46,10 @@ class RIFGWriter(L1InSARWriter):
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms to processingInformation group
-
-        Returns
-        ----------
-        algo_group : h5py.Group)
-            the algorithm group object
         """
         
-        algo_group = super().add_algorithms_to_procinfo()
-        self.add_interferogramformation_to_algo(algo_group)
-        
-        return algo_group
+        super().add_algorithms_to_procinfo()
+        self.add_interferogramformation_to_algo()
         
     def add_interferogram_to_swaths(self):
         """

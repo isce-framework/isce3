@@ -38,19 +38,9 @@ class ROFFWriter(L1InSARWriter):
         self.attrs["title"] = np.string_("NISAR L1_ROFF Product")
         self.attrs["reference_document"] = np.string_("JPL-105009")
 
-    def add_coregistration_to_algo(self, algo_group: h5py.Group):
+    def add_coregistration_to_algo(self):
         """
         Add the coregistration parameters to the "processingInfromation/algorithms" group
-
-        Parameters
-        ----------
-        algo_group : h5py.Group
-            the algorithm group object
-
-        Returns
-        ----------
-        coregistration_group : h5py.Group
-            the coregistration group object
         """
 
         proc_cfg = self.cfg["processing"]
@@ -89,20 +79,14 @@ class ROFFWriter(L1InSARWriter):
             ),
         ]
 
-        coregistration_group = algo_group.require_group("coregistration")
+        coregistration_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/coregistration")
         for ds_param in algo_coregistration_ds_params:
             add_dataset_and_attrs(coregistration_group, ds_param)
 
-        return coregistration_group
-
-    def add_cross_correlation_to_algo(self, algo_group: h5py.Group):
+    def add_cross_correlation_to_algo(self):
         """
         Add the cross correlation parameters to the "processingInfromation/algorithms" group
-
-        Parameters
-        ----------
-        algo_group : h5py.Group
-            the algorithm group object
         """
 
         proc_cfg = self.cfg["processing"]
@@ -122,23 +106,17 @@ class ROFFWriter(L1InSARWriter):
                     },
                 )
                 cross_corr_group = \
-                    algo_group.require_group(f"crossCorrelation/{layer}")
+                    self.require_group(f"{self.group_paths.AlgorithmsPath}/crossCorrelation/{layer}")
                 add_dataset_and_attrs(cross_corr_group, cross_corr)
 
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms group to the processingInformation group
-
-        Returns
-        ----------
-        algo_group : h5py.Group
-            the algorithm group object
         """
 
-        algo_group = super().add_algorithms_to_procinfo()
-        self.add_cross_correlation_to_algo(algo_group)
+        super().add_algorithms_to_procinfo()
+        self.add_cross_correlation_to_algo()
 
-        return algo_group
 
     def add_parameters_to_procinfo(self):
         """

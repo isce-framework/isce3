@@ -91,14 +91,9 @@ class RUNWWriter(L1InSARWriter):
         for ds_param in ds_params:
             add_dataset_and_attrs(iono_group, ds_param)
 
-    def add_ionosphere_estimation_to_algo(self, algo_group: h5py.Group):
+    def add_ionosphere_estimation_to_algo(self):
         """
         Add the ionosphere estimation group to algorithms group
-
-        Parameters
-        ----------
-        algo_group : h5py.Group
-            algorithms group object
         """
 
         iono_algorithm = "None"
@@ -188,18 +183,14 @@ class RUNWWriter(L1InSARWriter):
             ),
         ]
 
-        iono_est_group = algo_group.require_group("ionosphereEstimation")
+        iono_est_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/ionosphereEstimation")
         for ds_param in ds_params:
             add_dataset_and_attrs(iono_est_group, ds_param)
 
-    def add_unwarpping_to_algo(self, algo_group: h5py.Group):
+    def add_unwarpping_to_algo(self):
         """
         Add the unwrapping to the algorithms group
-
-        Parameters
-        ----------
-        algo_group : h5py.Group
-            algorithms group object
         """
 
         cost_mode = "None"
@@ -278,28 +269,22 @@ class RUNWWriter(L1InSARWriter):
             ),
         ]
 
-        unwrap_group = algo_group.require_group("unwrapping")
+        unwrap_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/unwrapping")
         for ds_param in ds_params:
             add_dataset_and_attrs(unwrap_group, ds_param)
 
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms to processingInformation group
-
-        Returns
-        ----------
-        algo_group : h5py.Group)
-            the algorithm group object
         """
         
-        algo_group = super().add_algorithms_to_procinfo()
+        super().add_algorithms_to_procinfo()
         
-        self.add_interferogramformation_to_algo(algo_group)
-        self.add_ionosphere_estimation_to_algo(algo_group)
-        self.add_unwarpping_to_algo(algo_group)
-        
-        return algo_group
-
+        self.add_interferogramformation_to_algo()
+        self.add_ionosphere_estimation_to_algo()
+        self.add_unwarpping_to_algo()
+    
     def add_parameters_to_procinfo(self):
         """
         Add parameters group to processingInformation/parameters group
@@ -383,6 +368,6 @@ class RUNWWriter(L1InSARWriter):
             
         super().add_swaths_to_hdf5()
 
-        # add subswaths to swaths group
+        # add subswaths and interferogram to swaths group
         self.add_subswaths_to_swaths()    
         self.add_interferogram_to_swaths()
