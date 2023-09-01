@@ -13,6 +13,13 @@ from .product_paths import L1GroupsPaths
 class L1InSARWriter(InSARWriter):
     """
     InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer inherenting from the InSARWriter
+    
+    Attributes
+    ----------
+    igram_range_looks : int
+        range looks for the interferogram
+    igram_azimuth_looks : int
+        azimuth looks for the interferogram
     """
 
     def __init__(self, **kwds):
@@ -140,13 +147,14 @@ class L1InSARWriter(InSARWriter):
         """
         
         # get the RSLC lines and columns
-        slc_dset = self.ref_h5py_file_obj[
-            f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"
-        ]
+        slc_dset = \
+            self.ref_h5py_file_obj[
+                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"]
         slc_lines, slc_cols = slc_dset.shape
 
         # shape of the interferogram product
-        igram_shape = (slc_lines // self.igram_azimuth_looks, slc_cols // self.igram_range_looks) 
+        igram_shape = (slc_lines // self.igram_azimuth_looks,
+                       slc_cols // self.igram_range_looks) 
         
         return igram_shape   
       
@@ -173,9 +181,10 @@ class L1InSARWriter(InSARWriter):
         rg_chip, az_chip, _ = self._pull_pixel_offsets_params()     
 
         # get the RSLC lines and columns
-        slc_dset = self.ref_h5py_file_obj[
-            f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"
-        ]
+        slc_dset = \
+            self.ref_h5py_file_obj[
+                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"]
+            
         slc_lines, slc_cols = slc_dset.shape
 
         off_length = get_off_params(proc_cfg, "offset_length", is_roff)
@@ -203,7 +212,8 @@ class L1InSARWriter(InSARWriter):
             )
             
             # get the shape of offset product
-            off_shape = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
+            off_shape = self._get_pixeloffsets_dataset_shape(freq,
+                                                             pol_list[0])
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
@@ -268,7 +278,8 @@ class L1InSARWriter(InSARWriter):
             ]
 
             # shape of offset product
-            off_length, off_width = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
+            off_length, off_width = self._get_pixeloffsets_dataset_shape(freq,
+                                                                         pol_list[0])
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
             offset_slant_range = \
@@ -361,7 +372,8 @@ class L1InSARWriter(InSARWriter):
                 add_dataset_and_attrs(swaths_freq_group, ds_param)
 
             # shape of the interferogram product
-            igram_shape = self._get_interferogram_dataset_shape(freq, pol_list[0])
+            igram_shape = self._get_interferogram_dataset_shape(freq,
+                                                                pol_list[0])
 
             #  add the slantRange, zeroDopplerTime, and their spacings to inteferogram group
             igram_slant_range = rslc_freq_group["slantRange"][()]

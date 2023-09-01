@@ -769,17 +769,11 @@ class InSARWriter(h5py.File):
     def add_identification_to_hdf5(self):
         """
         Add the identification group to the product
-
-        Returns
-        ----------
-        dst_id_group : h5py.Group
-            Identification group object
         """
 
         radar_band_name = self._get_band_name()
-        processing_center = self.cfg["primary_executable"].get(
-            "processing_center"
-        )
+        processing_center = \
+            self.cfg["primary_executable"].get("processing_center")
         processing_type = self.cfg["primary_executable"].get("processing_type")
 
         # processing center (JPL or NRSA)
@@ -985,8 +979,6 @@ class InSARWriter(h5py.File):
         for ds_param in ds_params:
             add_dataset_and_attrs(dst_id_group, ds_param)
 
-        return dst_id_group
-
     def _pull_pixel_offsets_params(self):
         """
         Pull the pixel offsets parameters from the runconfig dictionary
@@ -1054,12 +1046,12 @@ class InSARWriter(h5py.File):
     
     def _get_band_name(self):
         """
-        Get the band name ('L', 'S', or 'unknown')
+        Get the band name ('L', 'S'), Raises exception if neither is found.
 
         Returns
         ----------
         str
-            'L', 'S', or 'unknown'
+            'L', 'S'
         """
 
         freq = "A" if "A" in self.freq_pols else "B"
@@ -1079,15 +1071,16 @@ class InSARWriter(h5py.File):
         elif (center_freqency > 2.0) and (center_freqency <= 4.0):
             return "S"
         else:
-            return "unknown"
+            raise ValueError("Unknown frequency encountered. Not L or S band")
 
     def _get_mixed_mode(self):
         """
-        Get the mixed mode
+        Determing mixed mode and return result as a DatasetParams
 
         Returns
         ----------
         isMixedMode : DatasetParams
+            DatasetParams object based on bandwidth overlap check
         """
 
         pols_dict = {}
