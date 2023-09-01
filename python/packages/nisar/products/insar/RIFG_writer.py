@@ -24,6 +24,11 @@ class RIFGWriter(L1InSARWriter):
         # RIFG product information
         self.product_info = InSARProductsInfo.RIFG()
 
+        # Azimuth and Range Looks
+        proc_cfg = self.cfg["processing"]
+        self.igram_range_looks = proc_cfg["crossmul"]["range_looks"]
+        self.igram_azimuth_looks = proc_cfg["crossmul"]["azimuth_looks"]
+        
     def add_root_attrs(self):
         """
         add root attributes
@@ -53,12 +58,12 @@ class RIFGWriter(L1InSARWriter):
         
         return algo_group
         
-    def add_interferogram_to_swaths(self, rg_looks: int, az_looks: int):
+    def add_interferogram_to_swaths(self):
         """
         Add interferogram group to swaths
         """
         
-        super().add_interferogram_to_swaths(rg_looks, az_looks)
+        super().add_interferogram_to_swaths()
         
         # Add the wrappedInterferogram to the interferogram group
         # under swaths group
@@ -66,13 +71,9 @@ class RIFGWriter(L1InSARWriter):
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
-            slc_dset = self.ref_h5py_file_obj[
-                f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
-            ]
-            slc_lines, slc_cols = slc_dset.shape
 
             # shape of the interferogram product
-            igram_shape = (slc_lines // az_looks,slc_cols // rg_looks)
+            igram_shape = self._get_interferogram_dataset_shape(freq, pol_list[0])
 
             # add the wrappedInterferogram to each polarization group
             for pol in pol_list:
@@ -112,11 +113,6 @@ class RIFGWriter(L1InSARWriter):
         
         super().add_swaths_to_hdf5()
         
-        # add the inteferogram group
-        proc_cfg = self.cfg["processing"]
-        rg_looks = proc_cfg["crossmul"]["range_looks"]
-        az_looks = proc_cfg["crossmul"]["azimuth_looks"]
-        
         # add subswaths to swaths group
-        self.add_subswaths_to_swaths(rg_looks)
-        self.add_interferogram_to_swaths(rg_looks, az_looks)
+        self.add_subswaths_to_swaths()
+        self.add_interferogram_to_swaths()

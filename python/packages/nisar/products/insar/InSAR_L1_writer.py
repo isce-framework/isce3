@@ -23,6 +23,10 @@ class L1InSARWriter(InSARWriter):
 
         # Level 1 product group path
         self.group_paths = L1GroupsPaths()
+        
+        # the range and azimuth looks will be perform on the interfergoram
+        self.igram_range_looks = 1
+        self.igram_azimuth_looks = 1
 
     def save_to_hdf5(self):
         """
@@ -129,39 +133,88 @@ class L1InSARWriter(InSARWriter):
         self.add_interferogram_to_procinfo_params()
         self.add_pixeloffsets_to_procinfo_params()
 
+    def _get_interferogram_dataset_shape(self, freq : str, pol : str):
+        """
+        Get the interfergraom dataset shape at a given frequency and polarization
+        
+        Parameters
+        ---------
+        freq: str
+            frequency ('A' or 'B')
+        pol : str
+            polarization ('HH', 'HV', 'VH', or 'VV')
+        
+        Returns
+        ----------
+        igram_shape : tuple
+             interfergraom shape
+        """
+        
+        # get the RSLC lines and columns
+        slc_dset = self.ref_h5py_file_obj[
+            f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"
+        ]
+        slc_lines, slc_cols = slc_dset.shape
+
+        # shape of the interferogram product
+        igram_shape = (slc_lines // self.igram_azimuth_looks, slc_cols // self.igram_range_looks) 
+        
+        return igram_shape   
+      
+    def _get_pixeloffsets_dataset_shape(self, freq : str, pol : str):
+        """
+        Get the pixel offsets dataset shape at a given frequency and polarization
+        
+        Parameters
+        ---------
+        freq: str
+            frequency ('A' or 'B')
+        pol : str
+            polarization ('HH', 'HV', 'VH', or 'VV')
+        
+        Returns
+        ----------
+        tuple
+            (off_length, off_width):    
+        """
+        
+        proc_cfg = self.cfg["processing"]
+        is_roff,  margin, _, _,\
+        rg_skip, az_skip, rg_search, az_search,\
+        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()     
+
+        # get the RSLC lines and columns
+        slc_dset = self.ref_h5py_file_obj[
+            f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"
+        ]
+        slc_lines, slc_cols = slc_dset.shape
+
+        off_length = get_off_params(proc_cfg, "offset_length", is_roff)
+        off_width = get_off_params(proc_cfg, "offset_width", is_roff)
+        if off_length is None:
+            margin_az = 2 * margin + 2 * az_search + az_chip
+            off_length = (slc_lines - margin_az) // az_skip
+        if off_width is None:
+            margin_rg = 2 * margin + 2 * rg_search + rg_chip
+            off_width = (slc_cols - margin_rg) // rg_skip
+
+        # shape of offset product
+        return (off_length, off_width)        
+        
+        
     def _add_datasets_to_pixel_offset(self):
         """
         Add datasets to pixel offsets group
         """
         
-        proc_cfg = self.cfg["processing"]
-        is_roff,  margin, rg_start, az_start,\
-        rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()     
-
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
-            # Create the swath group
+            # create the swath group
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
             
-            # get the RSLC lines and columns
-            slc_dset = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol_list[0]}"
-            ]
-            slc_lines, slc_cols = slc_dset.shape
-
-            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
-            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
-            if off_length is None:
-                margin_az = 2 * margin + 2 * az_search + az_chip
-                off_length = (slc_lines - margin_az) // az_skip
-            if off_width is None:
-                margin_rg = 2 * margin + 2 * rg_search + rg_chip
-                off_width = (slc_cols - margin_rg) // rg_skip
-
-            # shape of offset product
-            off_shape = (off_length, off_width)
+            # get the shape of offset product
+            off_shape = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
@@ -206,8 +259,6 @@ class L1InSARWriter(InSARWriter):
         Add pixel offsets product to swaths group
         """
         
-        proc_cfg = self.cfg["processing"]
-
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
         rg_chip, az_chip, _ = self._pull_pixel_offsets_params()     
@@ -227,23 +278,8 @@ class L1InSARWriter(InSARWriter):
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
 
-            # get the RSLC lines and columns
-            slc_dset = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol_list[0]}"
-            ]
-            slc_lines, slc_cols = slc_dset.shape
-
-            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
-            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
-            if off_length is None:
-                margin_az = 2 * margin + 2 * az_search + az_chip
-                off_length = (slc_lines - margin_az) // az_skip
-            if off_width is None:
-                margin_rg = 2 * margin + 2 * rg_search + rg_chip
-                off_width = (slc_cols - margin_rg) // rg_skip
-
             # shape of offset product
-            off_shape = (off_length, off_width)
+            off_length, off_width = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
 
             # add the slantRange, zeroDopplerTime, and their spacings to pixel offset group
             offset_slant_range = \
@@ -289,16 +325,9 @@ class L1InSARWriter(InSARWriter):
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset()
         
-    def add_interferogram_to_swaths(self, rg_looks: int, az_looks: int):
+    def add_interferogram_to_swaths(self):
         """
         Add the interferogram group to the swaths group
-        
-        Parameters
-        ----------
-        rg_looks : int
-            range looks
-        az_looks : int
-            azimuth looks
         """
   
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
@@ -321,7 +350,7 @@ class L1InSARWriter(InSARWriter):
                 DatasetParams(
                     "sceneCenterAlongTrackSpacing",
                     rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
-                    * az_looks,
+                    * self.igram_azimuth_looks,
                     (
                         "Nominal along track spacing in meters between"
                         " consecutive lines near mid swath of the RIFG image"
@@ -331,7 +360,7 @@ class L1InSARWriter(InSARWriter):
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
                     rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
-                    * rg_looks,
+                    * self.igram_range_looks,
                     (
                         "Nominal ground range spacing in meters between"
                         " consecutive pixels near mid swath of the RIFG image"
@@ -341,15 +370,9 @@ class L1InSARWriter(InSARWriter):
             ]
             for ds_param in scene_center_params:
                 add_dataset_and_attrs(swaths_freq_group, ds_param)
-                
-            # get the RSLC lines and columns
-            slc_dset = self.ref_h5py_file_obj[
-                f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol_list[0]}"
-            ]
-            slc_lines, slc_cols = slc_dset.shape
 
             # shape of the interferogram product
-            igram_shape = (slc_lines // az_looks, slc_cols // rg_looks)
+            igram_shape = self._get_interferogram_dataset_shape(freq, pol_list[0])
 
             #  add the slantRange, zeroDopplerTime, and their spacings to inteferogram group
             igram_slant_range = rslc_freq_group["slantRange"][()]
@@ -365,17 +388,19 @@ class L1InSARWriter(InSARWriter):
             rg_idx, az_idx = (
                 max_look_idx(max_val, n_looks)
                 for max_val, n_looks in (
-                    (igram_slant_range, rg_looks),
-                    (igram_zero_doppler_time, az_looks),
+                    (igram_slant_range, self.igram_azimuth_looks),
+                    (igram_zero_doppler_time, self.igram_range_looks),
                 )
             )
 
             igram_slant_range = igram_slant_range[rg_idx]
             igram_zero_doppler_time = igram_zero_doppler_time[az_idx]
             igram_zero_doppler_time_spacing = \
-                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * az_looks
+                rslc_swaths_group["zeroDopplerTimeSpacing"][()] * \
+                    self.igram_azimuth_looks
             igram_slant_range_spacing = \
-                rslc_freq_group["slantRangeSpacing"][()] * rg_looks
+                rslc_freq_group["slantRangeSpacing"][()] * \
+                    self.igram_range_looks
 
             ds_igram_params = [
                 DatasetParams(
@@ -444,14 +469,9 @@ class L1InSARWriter(InSARWriter):
                     )
 
     
-    def add_subswaths_to_swaths(self, rg_looks: int):
+    def add_subswaths_to_swaths(self):
         """
         Add subswaths to the swaths group
-        
-        Parameters
-        ----------
-        rg_looks : int
-            range looks
         """
         
         for freq, *_ in get_cfg_freq_pols(self.cfg):
@@ -478,10 +498,11 @@ class L1InSARWriter(InSARWriter):
                     rslc_freq_subswath_ds = \
                         rslc_freq_group[valid_samples_subswath_name]
                     number_of_range_looks =rslc_freq_subswath_ds[()] \
-                            // rg_looks
+                            // self.igram_range_looks
                 else:
                     rslc_freq_subswath_ds = rslc_freq_group["validSamples"]
-                    number_of_range_looks = rslc_freq_subswath_ds[()] // rg_looks
+                    number_of_range_looks = rslc_freq_subswath_ds[()] // \
+                        self.igram_range_looks
                     valid_samples_subswath_name = "validSamples"
 
                 # Create subswath dataset and update attributes from RSLC

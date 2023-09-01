@@ -24,7 +24,23 @@ class RUNWWriter(L1InSARWriter):
 
         # RUNW product information
         self.product_info = InSARProductsInfo.RUNW()
-
+        
+        proc_cfg = self.cfg["processing"]
+        self.igram_range_looks = proc_cfg["crossmul"]["range_looks"]
+        self.igram_azimuth_looks = proc_cfg["crossmul"]["azimuth_looks"]
+        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
+        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
+        
+        # replace the looks from the unwrap looks when 
+        # unwrap_az_looks !=1 or unwrap_rg_looks != 1, i.e.,
+        # when the both unwrap_az_looks and unwrap_rg_looks are euqals to 1
+        # the rg and az looks from the crossmul will be applied.
+        # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
+        if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
+            self.igram_range_looks = unwrap_rg_looks
+            self.igram_azimuth_looks = unwrap_az_looks
+            
+            
     def add_root_attrs(self):
         """
         add root attributes
@@ -292,19 +308,12 @@ class RUNWWriter(L1InSARWriter):
         super().add_parameters_to_procinfo()
         self.add_ionosphere_to_procinfo_params()
 
-    def add_interferogram_to_swaths(self, rg_looks: int, az_looks: int):
+    def add_interferogram_to_swaths(self):
         """
         Add interferogram group to swaths group
-        
-        Parameters
-        ----------
-        rg_looks : int
-            range looks
-        az_looks : int
-            azimuth looks
         """
         
-        super().add_interferogram_to_swaths(rg_looks, az_looks)
+        super().add_interferogram_to_swaths()
     
         # Add the connectedComponents, ionospherePhaseScreen,
         # ionospherePhaseScreenUncertainty, and the
@@ -316,14 +325,8 @@ class RUNWWriter(L1InSARWriter):
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
 
-            # get the RSLC lines and columns
-            slc_dset = self.ref_h5py_file_obj[
-                f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
-            ]
-            slc_lines, slc_cols = slc_dset.shape
-
             # shape of the interferogram product
-            igram_shape = (slc_lines // az_looks,slc_cols // rg_looks)
+            igram_shape = self._get_interferogram_dataset_shape(freq, pol_list[0])
 
             # add additonal datasets to each polarization group
             for pol in pol_list:
@@ -379,24 +382,7 @@ class RUNWWriter(L1InSARWriter):
         """
             
         super().add_swaths_to_hdf5()
-    
-        # determine the range and azimuth looks for the RUNW product
-        proc_cfg = self.cfg["processing"]
-        
-        rg_looks = proc_cfg["crossmul"]["range_looks"]
-        az_looks = proc_cfg["crossmul"]["azimuth_looks"]
-        unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
-        unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
-        
-        # replace the looks from the unwrap looks when 
-        # unwrap_az_looks !=1 or unwrap_rg_looks != 1, i.e.,
-        # when the both unwrap_az_looks and unwrap_rg_looks are euqals to 1
-        # the rg and az looks from the crossmul will be applied.
-        # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
-        if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
-            rg_looks = unwrap_rg_looks
-            az_looks = unwrap_az_looks
-        
+
         # add subswaths to swaths group
-        self.add_subswaths_to_swaths(rg_looks)    
-        self.add_interferogram_to_swaths(rg_looks, az_looks)
+        self.add_subswaths_to_swaths()    
+        self.add_interferogram_to_swaths()

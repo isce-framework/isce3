@@ -27,6 +27,7 @@ class ROFFWriter(L1InSARWriter):
         # ROFF product information
         self.product_info = InSARProductsInfo.ROFF()
 
+        
     def add_root_attrs(self):
         """
         add root attributes
@@ -308,9 +309,6 @@ class ROFFWriter(L1InSARWriter):
         
         # Add the ROFF specified datasets to the pixelOffset products  
         proc_cfg = self.cfg["processing"]
-        is_roff,  margin, rg_start, az_start,\
-        rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()  
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             swaths_freq_group_name = (
@@ -318,23 +316,8 @@ class ROFFWriter(L1InSARWriter):
             )
             self.require_group(swaths_freq_group_name)
 
-            # get the RSLC lines and columns
-            slc_dset = self.ref_h5py_file_obj[
-                f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
-            ]
-            slc_lines, slc_cols = slc_dset.shape
-
-            off_length = get_off_params(proc_cfg, "offset_length", is_roff)
-            off_width = get_off_params(proc_cfg, "offset_width", is_roff)
-            if off_length is None:
-                margin_az = 2 * margin + 2 * az_search + az_chip
-                off_length = (slc_lines - margin_az) // az_skip
-            if off_width is None:
-                margin_rg = 2 * margin + 2 * rg_search + rg_chip
-                off_width = (slc_cols - margin_rg) // rg_skip
-
             # shape of offset product
-            off_shape = (off_length, off_width)
+            off_shape = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
             
             # pixel offsets dataset parameters including:
             # dataset name, description, and unit
