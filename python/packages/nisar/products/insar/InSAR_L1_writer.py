@@ -13,7 +13,7 @@ from .product_paths import L1GroupsPaths
 class L1InSARWriter(InSARWriter):
     """
     InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer inherenting from the InSARWriter
-    
+
     Attributes
     ----------
     igram_range_looks : int
@@ -30,7 +30,7 @@ class L1InSARWriter(InSARWriter):
 
         # Level 1 product group path
         self.group_paths = L1GroupsPaths()
-        
+
         # Range and azimuth looks that will be performed on the interfergoram
         self.igram_range_looks = 1
         self.igram_azimuth_looks = 1
@@ -62,7 +62,7 @@ class L1InSARWriter(InSARWriter):
         # Pull the radar frequency
         cube_freq = "A" if "A" in self.freq_pols else "B"
         radargrid = RadarGridParameters(self.ref_h5_slc_file)
-        
+
         # Figure out decimation factors that give < 500 m spacing.
         max_spacing = 500.0
         t = radargrid.sensing_mid + \
@@ -115,10 +115,10 @@ class L1InSARWriter(InSARWriter):
         """
         Add the algorithms group to the processingInformation group
         """
-        
+
         super().add_algorithms_to_procinfo_group()
         self.add_coregistration_to_algo_group()
-        
+
     def add_parameters_to_procinfo_group(self):
         """
         Add the parameters group to the "processingInformation" group
@@ -132,20 +132,20 @@ class L1InSARWriter(InSARWriter):
     def _get_interferogram_dataset_shape(self, freq : str, pol : str):
         """
         Get the interfergraom dataset shape at a given frequency and polarization
-        
+
         Parameters
         ---------
         freq: str
             frequency ('A' or 'B')
         pol : str
             polarization ('HH', 'HV', 'VH', or 'VV')
-        
+
         Returns
         ----------
         igram_shape : tuple
              interfergraom shape
         """
-        
+
         # get the RSLC lines and columns
         slc_dset = \
             self.ref_h5py_file_obj[
@@ -154,37 +154,37 @@ class L1InSARWriter(InSARWriter):
 
         # shape of the interferogram product
         igram_shape = (slc_lines // self.igram_azimuth_looks,
-                       slc_cols // self.igram_range_looks) 
-        
-        return igram_shape   
-      
+                       slc_cols // self.igram_range_looks)
+
+        return igram_shape
+
     def _get_pixeloffsets_dataset_shape(self, freq : str, pol : str):
         """
         Get the pixel offsets dataset shape at a given frequency and polarization
-        
+
         Parameters
         ---------
         freq: str
             frequency ('A' or 'B')
         pol : str
             polarization ('HH', 'HV', 'VH', or 'VV')
-        
+
         Returns
         ----------
         tuple
-            (off_length, off_width):    
+            (off_length, off_width):
         """
-        
+
         proc_cfg = self.cfg["processing"]
         is_roff,  margin, _, _,\
         rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()     
+        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()
 
         # get the RSLC lines and columns
         slc_dset = \
             self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}/frequency{freq}/{pol}"]
-            
+
         slc_lines, slc_cols = slc_dset.shape
 
         off_length = get_off_params(proc_cfg, "offset_length", is_roff)
@@ -197,27 +197,27 @@ class L1InSARWriter(InSARWriter):
             off_width = (slc_cols - margin_rg) // rg_skip
 
         # shape of offset product
-        return (off_length, off_width)        
-        
-        
+        return (off_length, off_width)
+
+
     def _add_datasets_to_pixel_offset_group(self):
         """
         Add datasets to pixel offsets group
         """
-        
+
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # create the swath group
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
-            
+
             # get the shape of offset product
             off_shape = self._get_pixeloffsets_dataset_shape(freq,
                                                              pol_list[0])
 
             # add the interferogram and pixelOffsets groups to the polarization group
             for pol in pol_list:
-  
+
                 offset_pol_group_name = (
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
                 )
@@ -252,21 +252,21 @@ class L1InSARWriter(InSARWriter):
                         ds_description,
                         units=ds_unit,
                     )
-                            
+
     def add_pixel_offsets_to_swaths(self):
         """
         Add pixel offsets product to swaths group
         """
-        
+
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()     
+        rg_chip, az_chip, _ = self._pull_pixel_offsets_params()
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = \
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
-            
+
             swaths_freq_group = self.require_group(swaths_freq_group_name)
 
             # center frequency and sub swaths groups of the RSLC
@@ -324,12 +324,12 @@ class L1InSARWriter(InSARWriter):
 
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
-        
+
     def add_interferogram_to_swaths(self):
         """
         Add the interferogram group to the swaths group
         """
-  
+
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
@@ -469,12 +469,12 @@ class L1InSARWriter(InSARWriter):
                         units=ds_unit,
                     )
 
-    
+
     def add_subswaths_to_swaths(self):
         """
         Add subswaths to the swaths group
         """
-        
+
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
@@ -514,7 +514,7 @@ class L1InSARWriter(InSARWriter):
                     dtype=number_of_range_looks.dtype,
                 )
                 dst_subswath_ds.attrs.update(rslc_freq_subswath_ds.attrs)
-    
+
     def add_swaths_to_hdf5(self):
         """
         Add Swaths to the HDF5
@@ -528,14 +528,14 @@ class L1InSARWriter(InSARWriter):
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
             swaths_freq_group = self.require_group(swaths_freq_group_name)
-            
+
             list_of_pols = DatasetParams(
                 "listOfPolarizations",
                 np.string_(pol_list),
                 f"List of processed polarization layers with frequency{freq}",
             )
             add_dataset_and_attrs(swaths_freq_group, list_of_pols)
-            
+
             rslc_freq_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"]
             rslc_freq_group.copy(
@@ -543,5 +543,5 @@ class L1InSARWriter(InSARWriter):
                 swaths_freq_group,
                 "centerFrequency",
             )
-        
+
         self.add_pixel_offsets_to_swaths()

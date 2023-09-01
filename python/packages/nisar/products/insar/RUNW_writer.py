@@ -24,14 +24,14 @@ class RUNWWriter(L1InSARWriter):
 
         # RUNW product information
         self.product_info = InSARProductsInfo.RUNW()
-        
+
         proc_cfg = self.cfg["processing"]
         self.igram_range_looks = proc_cfg["crossmul"]["range_looks"]
         self.igram_azimuth_looks = proc_cfg["crossmul"]["azimuth_looks"]
         unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
         unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
-        
-        # replace the looks from the unwrap looks when 
+
+        # replace the looks from the unwrap looks when
         # unwrap_az_looks !=1 or unwrap_rg_looks != 1, i.e.,
         # when the both unwrap_az_looks and unwrap_rg_looks are euqals to 1
         # the rg and az looks from the crossmul will be applied.
@@ -39,8 +39,8 @@ class RUNWWriter(L1InSARWriter):
         if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
             self.igram_range_looks = unwrap_rg_looks
             self.igram_azimuth_looks = unwrap_az_looks
-            
-            
+
+
     def add_root_attrs(self):
         """
         add root attributes
@@ -202,7 +202,7 @@ class RUNWWriter(L1InSARWriter):
         unwrap_cfg = self.cfg["processing"]["phase_unwrap"]
         unwrapping_algorithm = unwrap_cfg["algorithm"]
         prep_unwrap_cfg = unwrap_cfg["preprocess_wrapped_phase"]
-        
+
         if unwrapping_algorithm.lower() == "snaphu":
             cost_mode = unwrap_cfg["snaphu"]["cost_mode"]
             unwrapping_initializer = unwrap_cfg["snaphu"][
@@ -216,7 +216,7 @@ class RUNWWriter(L1InSARWriter):
         if prep_unwrap_cfg["enabled"]:
             phase_filling = prep_unwrap_cfg["filling_method"]
             phase_outliers = prep_unwrap_cfg["mask"]["mask_type"]
-            
+
             if phase_filling is None:
                 phase_filling = "None"
             if phase_outliers is None:
@@ -278,13 +278,13 @@ class RUNWWriter(L1InSARWriter):
         """
         Add the algorithms to processingInformation group
         """
-        
+
         super().add_algorithms_to_procinfo_group()
-        
+
         self.add_interferogramformation_to_algo_group()
         self.add_ionosphere_estimation_to_algo_group()
         self.add_unwarpping_to_algo_group()
-    
+
     def add_parameters_to_procinfo_group(self):
         """
         Add parameters group to processingInformation/parameters group
@@ -297,9 +297,9 @@ class RUNWWriter(L1InSARWriter):
         """
         Add interferogram group to swaths group
         """
-        
+
         super().add_interferogram_to_swaths()
-    
+
         # Add the connectedComponents, ionospherePhaseScreen,
         # ionospherePhaseScreenUncertainty, and the
         # unwrappedPhase datasets
@@ -320,8 +320,8 @@ class RUNWWriter(L1InSARWriter):
                     f"{swaths_freq_group_name}/interferogram/{pol}"
                 igram_pol_group = self.require_group(igram_pol_group_name)
 
-                # The interferogram dataset parameters including the 
-                # dataset name, dataset data type, description, units, 
+                # The interferogram dataset parameters including the
+                # dataset name, dataset data type, description, units,
                 igram_ds_params = [
                     (
                         "connectedComponents",
@@ -348,7 +348,7 @@ class RUNWWriter(L1InSARWriter):
                         "radians",
                     ),
                 ]
-                
+
                 for igram_ds_param in igram_ds_params:
                     ds_name, ds_dtype, ds_description, ds_unit \
                         = igram_ds_param
@@ -359,15 +359,15 @@ class RUNWWriter(L1InSARWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
-                    )               
-                    
+                    )
+
     def add_swaths_to_hdf5(self):
         """
         Add Swaths to the HDF5
         """
-            
+
         super().add_swaths_to_hdf5()
 
         # add subswaths and interferogram to swaths group
-        self.add_subswaths_to_swaths()    
+        self.add_subswaths_to_swaths()
         self.add_interferogram_to_swaths()

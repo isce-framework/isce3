@@ -27,7 +27,7 @@ class ROFFWriter(L1InSARWriter):
         # ROFF product information
         self.product_info = InSARProductsInfo.ROFF()
 
-        
+
     def add_root_attrs(self):
         """
         add root attributes
@@ -50,7 +50,7 @@ class ROFFWriter(L1InSARWriter):
             "Coarse geometry coregistration with DEM and orbit ephemeris"
         if dense_offsets:
             coreg_method = f"{coreg_method} with cross-correlation refinement"
-            
+
         algo_coregistration_ds_params = [
             DatasetParams(
                 "coregistrationMethod",
@@ -93,7 +93,7 @@ class ROFFWriter(L1InSARWriter):
         is_roff = proc_cfg["offsets_product"]["enabled"]
         cross_correlation_domain = \
             get_off_params(proc_cfg, "cross_correlation_domain", is_roff)
-        
+
         for layer in proc_cfg["offsets_product"].keys():
             if layer.startswith("layer"):
                 cross_corr = DatasetParams(
@@ -137,7 +137,7 @@ class ROFFWriter(L1InSARWriter):
         # pull the offset parameters
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
-        rg_chip, az_chip, ovs_factor = self._pull_pixel_offsets_params()  
+        rg_chip, az_chip, ovs_factor = self._pull_pixel_offsets_params()
 
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             swath_frequency_path = \
@@ -209,12 +209,12 @@ class ROFFWriter(L1InSARWriter):
             pixeloffsets_group = self.require_group(pixeloffsets_group_name)
             for ds_param in pixeloffsets_ds_params:
                 add_dataset_and_attrs(pixeloffsets_group, ds_param)
-                
+
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
             # Should we update those fields?
             swath_frequency_group.copy(
-                "processedRangeBandwidth", 
+                "processedRangeBandwidth",
                 pixeloffsets_group,
                 "rangeBandwidth",
             )
@@ -284,8 +284,8 @@ class ROFFWriter(L1InSARWriter):
         """
         Add datasets to pixelOffsets group under the swath group
         """
-        
-        # Add the ROFF specified datasets to the pixelOffset products  
+
+        # Add the ROFF specified datasets to the pixelOffset products
         proc_cfg = self.cfg["processing"]
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
@@ -296,7 +296,7 @@ class ROFFWriter(L1InSARWriter):
 
             # shape of offset product
             off_shape = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
-            
+
             # pixel offsets dataset parameters including:
             # dataset name, description, and unit
             pixel_offsets_ds_params = [
@@ -336,7 +336,7 @@ class ROFFWriter(L1InSARWriter):
                     "unitless",
                 ),
             ]
-                            
+
             # add the polarization dataset to pixelOffsets
             for pol in pol_list:
                 offset_pol_group_name = \
@@ -346,7 +346,7 @@ class ROFFWriter(L1InSARWriter):
                     if layer.startswith("layer"):
                         layer_group_name = f"{offset_pol_group_name}/{layer}"
                         layer_group = self.require_group(layer_group_name)
-                        
+
                          # Create the pixel offsets dataset
                         for pixel_offsets_ds_param in pixel_offsets_ds_params:
                             ds_name, ds_description, ds_unit = pixel_offsets_ds_param

@@ -28,7 +28,7 @@ class RIFGWriter(L1InSARWriter):
         proc_cfg = self.cfg["processing"]
         self.igram_range_looks = proc_cfg["crossmul"]["range_looks"]
         self.igram_azimuth_looks = proc_cfg["crossmul"]["azimuth_looks"]
-        
+
     def add_root_attrs(self):
         """
         add root attributes
@@ -42,22 +42,22 @@ class RIFGWriter(L1InSARWriter):
 
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
-        
+
     def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms to processingInformation group
         """
-        
+
         super().add_algorithms_to_procinfo_group()
         self.add_interferogramformation_to_algo_group()
-        
+
     def add_interferogram_to_swaths(self):
         """
         Add interferogram group to swaths
         """
-        
+
         super().add_interferogram_to_swaths()
-        
+
         # Add the wrappedInterferogram to the interferogram group
         # under swaths group
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
@@ -75,7 +75,7 @@ class RIFGWriter(L1InSARWriter):
                     f"{swaths_freq_group_name}/interferogram/{pol}"
                 igram_pol_group = self.require_group(igram_pol_group_name)
 
-                # The interferogram dataset parameters including the 
+                # The interferogram dataset parameters including the
                 # dataset name, dataset data type, description, units
                 igram_ds_params = [
                     (
@@ -85,11 +85,11 @@ class RIFGWriter(L1InSARWriter):
                         "DN",
                     ),
                 ]
-                
+
                 for igram_ds_param in igram_ds_params:
                     ds_name, ds_dtype, ds_description, ds_unit \
                         = igram_ds_param
-        
+
                     self._create_2d_dataset(
                         igram_pol_group,
                         ds_name,
@@ -98,14 +98,14 @@ class RIFGWriter(L1InSARWriter):
                         ds_description,
                         units=ds_unit,
                     )
-                  
+
     def add_swaths_to_hdf5(self):
         """
         Add swaths to the HDF5
         """
-        
+
         super().add_swaths_to_hdf5()
-        
+
         # add subswaths to swaths group
         self.add_subswaths_to_swaths()
         self.add_interferogram_to_swaths()

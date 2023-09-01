@@ -31,11 +31,11 @@ class InSARProductsInfo:
     ProductLevel: str
     ProductVersion: str
     isGeocoded: bool
-    
+
     @classmethod
     def Base(cls):
         return cls("1.0", "", "", "", False)
-    
+
     @classmethod
     def RIFG(cls):
         return cls("1.0", "RIFG", "L1", "0.1", False)

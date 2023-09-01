@@ -390,7 +390,7 @@ class InSARWriter(h5py.File):
                 },
             ),
         ]
-        
+
         coregistration_group = self.require_group(
             f"{self.group_paths.AlgorithmsPath}/coregistration")
         for ds_param in algo_coregistration_ds_params:
@@ -982,7 +982,7 @@ class InSARWriter(h5py.File):
     def _pull_pixel_offsets_params(self):
         """
         Pull the pixel offsets parameters from the runconfig dictionary
-        
+
         Returns
         ----------
         is_roff : boolean
@@ -1002,13 +1002,13 @@ class InSARWriter(h5py.File):
         az_search : int
             Window size across azimuth
         rg_chip : int
-            Fine window size across range 
+            Fine window size across range
         az_chip : int
             Fine window size across azimuth
         ovs_factor : int
-            Oversampling factor     
+            Oversampling factor
         """
-        
+
         proc_cfg = self.cfg["processing"]
 
         # pull the offset parameters
@@ -1016,7 +1016,7 @@ class InSARWriter(h5py.File):
         (margin, rg_gross, az_gross,
          rg_start, az_start,
          rg_skip, az_skip, ovs_factor) = \
-             [get_off_params(proc_cfg, param, is_roff) 
+             [get_off_params(proc_cfg, param, is_roff)
               for param in ["margin", "gross_offset_range",
                             "gross_offset_azimuth",
                             "start_pixel_range","start_pixel_azimuth",
@@ -1043,7 +1043,7 @@ class InSARWriter(h5py.File):
         return (is_roff,  margin, rg_start, az_start,
                 rg_skip, az_skip, rg_search, az_search,
                 rg_chip, az_chip, ovs_factor)
-    
+
     def _get_band_name(self):
         """
         Get the band name ('L', 'S'), Raises exception if neither is found.

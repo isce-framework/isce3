@@ -5,7 +5,7 @@ from dataclasses import dataclass
 class CommonPaths:
     """
     Properties to paths common to all InSAR products
-    
+
     Attributes
     ----------
     ProductName : str
@@ -15,7 +15,7 @@ class CommonPaths:
     IdentificationPath : str
         Identification group path
     MetadataPath : str
-        Metadata group path 
+        Metadata group path
     AttitudePath : str
         Attitude group path
     OrbitPath : str
@@ -29,38 +29,38 @@ class CommonPaths:
     ParametersPath : str
         Parameters group path
     """
-    
+
     ProductName: str = ""
     RootPath: str = "/science/LSAR"
-    
+
     @property
     def IdentificationPath(self):
         return f"{self.RootPath}/identification"
-    
+
     @property
     def MetadataPath(self):
         return f"{self.RootPath}/{self.ProductName}/metadata"
-    
+
     @property
     def AttitudePath(self):
         return f"{self.MetadataPath}/attitude"
-    
+
     @property
     def OrbitPath(self):
         return f"{self.MetadataPath}/orbit"
-    
+
     @property
     def ProcessingInformationPath(self):
         return f"{self.MetadataPath}/processingInformation"
-    
+
     @property
     def AlgorithmsPath(self):
         return f"{self.ProcessingInformationPath}/algorithms"
-    
+
     @property
     def InputsPath(self):
         return f"{self.ProcessingInformationPath}/inputs"
-    
+
     @property
     def ParametersPath(self):
         return  f"{self.ProcessingInformationPath}/parameters"
@@ -68,8 +68,8 @@ class CommonPaths:
 @dataclass
 class L1GroupsPaths(CommonPaths):
     """
-    Properties to paths common to all level 1 InSAR products. 
-    
+    Properties to paths common to all level 1 InSAR products.
+
     Attributes
     ----------
     GeolocationGridPath : str
@@ -77,7 +77,7 @@ class L1GroupsPaths(CommonPaths):
     SwathsPath : str
         Swaths group path
     """
-    
+
     @property
     def GeolocationGridPath(self):
         return f"{self.MetadataPath}/geolocationGrid"
@@ -89,8 +89,8 @@ class L1GroupsPaths(CommonPaths):
 @dataclass
 class L2GroupsPaths(CommonPaths):
     """
-    Properties to paths common to all level 2 InSAR products. 
-    
+    Properties to paths common to all level 2 InSAR products.
+
     Attributes
     ----------
     RadarGridPath : str
@@ -98,7 +98,7 @@ class L2GroupsPaths(CommonPaths):
     GridsPath : str
         Grids group path
     """
-    
+
     @property
     def RadarGridPath(self):
         return f"{self.MetadataPath}/radarGrid"
@@ -106,18 +106,18 @@ class L2GroupsPaths(CommonPaths):
     @property
     def GridsPath(self):
         return f"{self.RootPath}/{self.ProductName}/grids"
-        
+
 @dataclass
 class RIFGGroupsPaths(L1GroupsPaths):
     """
     RIFG Product Groups Paths
-    
+
     Attributes
     ----------
     ProductName : str
         Product name (RIFG)
     """
-    
+
     ProductName: str = "RIFG"
 
 
@@ -125,53 +125,53 @@ class RIFGGroupsPaths(L1GroupsPaths):
 class RUNWGroupsPaths(L1GroupsPaths):
     """
     RUNW Product Groups Paths
-    
+
     Attributes
     ----------
     ProductName : str
         Product name (RUNW)
     """
-    
+
     ProductName: str = "RUNW"
-    
-    
+
+
 @dataclass
 class ROFFGroupsPaths(L1GroupsPaths):
     """
     ROFF Product Groups Paths
-    
+
     Attributes
     ----------
     ProductName : str
         Product name (ROFF)
     """
-    
+
     ProductName: str = "ROFF"
-    
-    
+
+
 @dataclass
 class GUNWGroupsPaths(L2GroupsPaths):
     """
     GUNW Product Groups Paths
-    
+
     Attributes
     ----------
     ProductName : str
         Product name (GUNW)
     """
-    
+
     ProductName: str = "GUNW"
-    
-    
+
+
 @dataclass
 class GOFFGroupsPaths(L2GroupsPaths):
     """
     GOFF Product Groups Paths
-    
+
     Attributes
     ----------
     ProductName : str
         Product name (GOFF)
     """
-    
+
     ProductName: str = "GOFF"
