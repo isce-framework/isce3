@@ -315,6 +315,7 @@ class RUNWWriter(L1InSARWriter):
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
+
             # get the RSLC lines and columns
             slc_dset = self.ref_h5py_file_obj[
                 f'{f"{self.ref_rslc.SwathPath}/frequency{freq}"}/{pol_list[0]}'
@@ -377,8 +378,7 @@ class RUNWWriter(L1InSARWriter):
                         units=ds_unit,
                         fill_value=ds_filling_value
                     )               
-                
-                        
+                    
     def add_swaths_to_hdf5(self):
         """
         Add Swaths to the HDF5
@@ -394,9 +394,11 @@ class RUNWWriter(L1InSARWriter):
         unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
         unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
         
-        # replace the looks from the unwrap looks when either rg or az is > 1 
+        # replace the looks from the unwrap looks when either rg or az is > 1
+        # when the both unwrap_az_looks and unwrap_rg_looks are euqals to 1
+        # the looks from the crossmul will be applied.
         # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
-        if (unwrap_az_looks > 1) or (unwrap_rg_looks > 1):
+        if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
             rg_looks = unwrap_rg_looks
             az_looks = unwrap_az_looks
         

@@ -287,7 +287,7 @@ runconfig:
                 point_target_analyzer: false
 
             qa_reports:
-                power_image:
+                backscatter_img:
                     # True to compute power in linear units when generating
                     # the power image for the browse images and graphical
                     # summary PDF. False for decibel units.
@@ -299,7 +299,7 @@ runconfig:
                     # Format: [<num_rows>, <num_cols>]
                     # Example: [6,7]
                     # If not provided, the QA code to compute the nlooks values
-                    # based on `num_mpix`.
+                    # based on `longest_side_max`.
                     # Default: None
                     nlooks_freqa:
 
@@ -308,20 +308,21 @@ runconfig:
                     # Format: [<num_rows>, <num_cols>]
                     # Example: [6,7]
                     # If not provided, the QA code to compute the nlooks values
-                    # based on `num_mpix`.
+                    # based on `longest_side_max`.
                     # Default: None
                     nlooks_freqb:
 
-                    # Approx. size (in megapixels) for the final
-                    # multilooked browse image(s). When `nlooks_freq*` parameter(s)
-                    # is not None, those nlooks values will take precedence.
-                    # Default: 4.0
-                    num_mpix: 4.0
+                    # The maximum number of pixels allowed for the longest side
+                    # of the final 2D multilooked browse image. Defaults to 2048.
+                    # If `nlooks_freq*` parameter(s) is not None, nlooks
+                    # values will take precedence.
+                    # Default: 2048
+                    longest_side_max: 2048
 
-                    # The middle percentile range of the image array
-                    # that the colormap covers. Must be in the range [0.0, 100.0].
-                    # Default: 90.0
-                    middle_percentile: 90.0
+                    # Percentile range that the image array will be clipped to
+                    # and that the colormap covers. Must be in range [0.0, 100.0].
+                    # Default: (5.0, 95.0)
+                    percentile_for_clipping: [5.0, 95.0]
 
                     # Gamma correction parameter applied to power and browse image(s).
                     # Gamma will be applied as follows:
@@ -356,7 +357,7 @@ runconfig:
                     # Range in dB for the power histogram's bin edges. Endpoint will
                     # be included. Format: [<starting value>, <endpoint>]
                     # Default: (-80.0, 20.0)
-                    pow_histogram_bin_edges_range: [-80.0, 20.0]
+                    backscatter_histogram_bin_edges_range: [-80.0, 20.0]
 
                     # True to compute phase histogram in radians units,
                     # False for degrees units.

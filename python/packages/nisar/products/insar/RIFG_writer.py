@@ -95,6 +95,7 @@ class RIFGWriter(L1InSARWriter):
                 for igram_ds_param in igram_ds_params:
                     ds_name, ds_dtype, ds_description, ds_unit \
                         = igram_ds_param
+        
                     self._create_2d_dataset(
                         igram_pol_group,
                         ds_name,

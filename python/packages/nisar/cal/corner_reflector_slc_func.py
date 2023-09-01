@@ -8,7 +8,7 @@ import warnings
 
 from isce3.core import Ellipsoid, LUT2d
 from isce3.geometry import geo2rdr, rdr2geo, DEMInterpolator
-from nisar.types import ComplexFloat16Decoder
+from isce3.core.types import ComplexFloat16Decoder
 from isce3.cal.point_target_info import get_chip, oversample
 from isce3.antenna import geo2ant
 

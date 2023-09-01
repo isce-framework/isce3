@@ -40,6 +40,8 @@ using isce3::geometry::TopoLayers;
  * <li> locaPsi.rdr - Local projection angle (degrees) at target
  * <li> simamp.rdr - Simulated amplitude image.
  * <li> layoverShadowMask.rdr - Layover and shadow image.
+ * <li> los_east.rdr - East component of ground to satellite unit vector
+ * <li> los_north.rdr - North component of ground to satellite unit vector
  * </ul>*/
 void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster,
@@ -68,7 +70,9 @@ topo(Raster & demRaster,
         Raster(outdir + "/hdg.rdr" ),
         Raster(outdir + "/localInc.rdr" ),
         Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
+        Raster(outdir + "/simamp.rdr" ),
+        Raster(outdir + "/los_east.rdr" ),
+        Raster(outdir + "/los_north.rdr" )
     };
 
     // Add optional mask raster
@@ -94,17 +98,21 @@ topo(Raster & demRaster,
   * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
   * @param[in] simRaster output raster for simulated amplitude image.
-  * @param[in] maskRaster output raster for layover/shadow mask. */
+  * @param[in] maskRaster output raster for layover/shadow mask.
+  * @param[in] losEastRaster output for east component of ground to satellite LOS unit vector
+  * @param[in] losNorthRaster output for north component of ground to satellite LOS unit vector
+ */
 void isce3::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster * xRaster, Raster * yRaster, Raster * heightRaster,
      Raster * incRaster, Raster * hdgRaster, Raster * localIncRaster, Raster * localPsiRaster,
-     Raster * simRaster, Raster * maskRaster) {
+     Raster * simRaster, Raster * maskRaster, Raster * losEastRaster,
+     Raster * losNorthRaster) {
 
     // Initialize a TopoLayers object to handle block data and raster data
     // Create rasters for individual layers (provide output raster sizes)
     TopoLayers layers(linesPerBlock(), xRaster, yRaster, heightRaster, incRaster,
             hdgRaster, localIncRaster, localPsiRaster, simRaster,
-            maskRaster);
+            maskRaster, losEastRaster, losNorthRaster);
 
     // Set computeMask flag by pointer value
     this->computeMask(maskRaster != nullptr);
@@ -191,7 +199,8 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
         // Compute layover/shadow masks for the block
         if (this->computeMask()) {
-            _setLayoverShadowWithOrbit(orbit, layers, demInterp, lineStart);
+            _setLayoverShadowWithOrbit(orbit, layers, demInterp, lineStart,
+                                       block, nBlocks);
         }
 
         // Write out block of data for all topo layers
@@ -216,7 +225,9 @@ void isce3::cuda::geometry::Topo::
 _setLayoverShadowWithOrbit(const Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,
-                           size_t lineStart) {
+                           size_t lineStart,
+                           size_t block,
+                           size_t n_blocks) {
 
     // Create vector of satellite positions for each line in block
     std::vector<cartesian_t> satPosition(layers.length());
@@ -232,7 +243,7 @@ _setLayoverShadowWithOrbit(const Orbit & orbit,
     }
 
     // Call standard layover/shadow mask generation function
-    this->setLayoverShadow(layers, demInterp, satPosition);
+    this->setLayoverShadow(layers, demInterp, satPosition, block, n_blocks);
 }
 
 // end of file

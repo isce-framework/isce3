@@ -7,7 +7,7 @@ import journal
 import numpy as np
 import pyre
 from nisar.products.readers.GenericProduct import get_hdf5_file_product_type
-from nisar.types import complex32
+from isce3.core.types import complex32
 
 from ..Base import Base
 from .Identification import Identification

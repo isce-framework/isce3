@@ -130,7 +130,7 @@ inline void writeVectorDerivedCubes(const int array_pos_i,
     const isce3::core::Vec3 look_vector_xyz =
             (sat_xyz - target_xyz).normalized();
 
-    // Compute elevation angle calculated in ECEF (geocentric)
+    // Compute elevation angle calculated in ENU (geodedic)
     if (elevation_angle_raster != nullptr) {
 
         // Get platform position in llh (sat_llh)

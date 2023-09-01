@@ -58,6 +58,8 @@ public:
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute
      * the radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
+     * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+     * PROJECTION_ANGLE)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -77,6 +79,8 @@ public:
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
+     * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
+     * gamma0 to sigma0 (in geo-coordinates).
      * @param[in]  phase_screen_raster Phase screen to be removed before
      * geocoding
      * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
@@ -115,6 +119,8 @@ public:
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
                     isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+                isce3::geometry::rtcAreaBetaMode::AUTO,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -125,6 +131,7 @@ public:
             isce3::io::Raster* out_geo_dem = nullptr,
             isce3::io::Raster* out_geo_nlooks = nullptr,
             isce3::io::Raster* out_geo_rtc = nullptr,
+            isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0 = nullptr,
             isce3::io::Raster* phase_screen_raster = nullptr,
             const isce3::core::LUT2d<double>& az_time_correction = {},
             const isce3::core::LUT2d<double>& slant_range_correction = {},
@@ -157,6 +164,8 @@ public:
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
      * radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
+     * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+     * PROJECTION_ANGLE)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -167,6 +176,8 @@ public:
      * will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
+     * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
+     * gamma0 to sigma0 (in geo-coordinates).
      * @param[in]  flatten             Flatten the geocoded SLC
      * @param[in]  phase_screen_raster Phase screen to be removed before
      * geocoding
@@ -203,12 +214,15 @@ public:
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
                     isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+                isce3::geometry::rtcAreaBetaMode::AUTO,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
             isce3::io::Raster* out_geo_rdr = nullptr,
             isce3::io::Raster* out_geo_dem = nullptr,
             isce3::io::Raster* out_geo_rtc = nullptr,
+            isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0 = nullptr,
             isce3::io::Raster* phase_screen_raster = nullptr,
             const isce3::core::LUT2d<double>& az_time_correction = {},
             const isce3::core::LUT2d<double>& slant_range_correction = {},
@@ -243,6 +257,8 @@ public:
      * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling to compute the
      * radiometric terrain correction RTC.
      * @param[in]  rtc_algorithm       RTC algorithm
+     * @param[in]  rtc_area_beta_mode RTC area beta mode (AUTO, PIXEL_AREA,
+     * PROJECTION_ANGLE)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
      * @param[in]  clip_min            Clip (limit) minimum output values
      * @param[in]  clip_max            Clip (limit) maximum output values
@@ -261,6 +277,8 @@ public:
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
      * geo-coordinates).
+     * @param[out] out_geo_rtc_gamma0_to_sigma0 Output RTC area factor 
+     * gamma0 to sigma0 (in geo-coordinates).
      * \param[in]  az_time_correction     geo2rdr azimuth additive correction, in
      * seconds, as a function of azimuth and range
      * \param[in]  slant_range_correction  geo2rdr slant range additive correction,
@@ -296,6 +314,8 @@ public:
                     std::numeric_limits<double>::quiet_NaN(),
             isce3::geometry::rtcAlgorithm rtc_algorithm =
                     isce3::geometry::rtcAlgorithm::RTC_AREA_PROJECTION,
+            isce3::geometry::rtcAreaBetaMode rtc_area_beta_mode =
+                isce3::geometry::rtcAreaBetaMode::AUTO,
             double abs_cal_factor = 1,
             float clip_min = std::numeric_limits<float>::quiet_NaN(),
             float clip_max = std::numeric_limits<float>::quiet_NaN(),
@@ -306,6 +326,7 @@ public:
             isce3::io::Raster* out_geo_dem = nullptr,
             isce3::io::Raster* out_geo_nlooks = nullptr,
             isce3::io::Raster* out_geo_rtc = nullptr,
+            isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0 = nullptr,
             const isce3::core::LUT2d<double>& az_time_correction = {},
             const isce3::core::LUT2d<double>& slant_range_correction = {},
             isce3::io::Raster* input_rtc = nullptr,
@@ -474,15 +495,19 @@ private:
             isce3::io::Raster* out_off_diag_terms,
             isce3::io::Raster* out_geo_rdr, isce3::io::Raster* out_geo_dem,
             isce3::io::Raster* out_geo_nlooks, isce3::io::Raster* out_geo_rtc,
+            isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0,
             isce3::core::ProjectionBase* proj, bool flag_apply_rtc,
             isce3::io::Raster* rtc_raster,
+            isce3::io::Raster* rtc_gamma0_to_sigma0_raster,
             const isce3::core::LUT2d<double>& az_time_correction,
             const isce3::core::LUT2d<double>& slant_range_correction,
             isce3::io::Raster& input_raster,
             int raster_offset_y, int raster_offset_x,
             isce3::io::Raster& output_raster,
-            isce3::core::Matrix<float>& rtc_area, float rtc_min_value,
-            double abs_cal_factor, float clip_min, float clip_max,
+            isce3::core::Matrix<float>& rtc_area,
+            isce3::core::Matrix<float>& rtc_area_sigma,
+            float rtc_min_value, double abs_cal_factor,
+            float clip_min, float clip_max,
             float min_nlooks, float radar_grid_nlooks,
             bool flag_upsample_radar_grid,
             isce3::io::Raster* input_layover_shadow_mask_raster,
@@ -520,10 +545,16 @@ private:
      * @param[in] clip_max            Clip (limit) maximum output values
      * @param[in] flag_run_rtc        Flag to indicate if RTC is enabled
      * @param[in] rtc_area            RTC area normalization factor array
+     * @param[in] rtc_area_sigma      RTC area normalization factor array
+     * gamma0 to sigma0
      * @param[out] out_geo_rtc        Output RTC area factor raster (in
      * geo-coordinates)
      * @param[out] out_geo_rtc_array  Output RTC area factor array (in
      * geo-coordinates)
+     * @param[out] out_geo_rtc_gamma0_to_sigma0  Output RTC area factor 
+     * gamma0 to sigma0 raster (in geo-coordinates).
+     * @param[out] out_geo_rtc_gamma0_to_sigma0_array Output RTC area factor 
+     * gamma0 to sigma0 array (in geo-coordinates).
      * @param[in]  input_layover_shadow_mask_raster Input layover/shadow mask raster
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
@@ -550,8 +581,11 @@ private:
             isce3::core::Matrix<float>& phase_screen_array,
             double abs_cal_factor, float clip_min, float clip_max,
             bool flag_run_rtc, const isce3::core::Matrix<float>& rtc_area,
+            const isce3::core::Matrix<float>& rtc_area_sigma,
             isce3::io::Raster* out_geo_rtc,
             isce3::core::Matrix<float>& out_geo_rtc_array,
+            isce3::io::Raster* out_geo_rtc_gamma0_to_sigma0,
+            isce3::core::Matrix<float>& out_geo_rtc_gamma0_to_sigma0_array,
             isce3::io::Raster* input_layover_shadow_mask_raster,
             isce3::core::Matrix<uint8_t>& input_layover_shadow_mask,
             isce3::product::SubSwaths * sub_swaths,

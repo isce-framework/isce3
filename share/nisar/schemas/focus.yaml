@@ -292,17 +292,17 @@ workflows_options:
   point_target_analyzer: bool(required=False)
 
 qa_reports_options:
-  power_image:
+  backscatter_img:
     linear_units: bool(required=False)
     nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
     nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
-    num_mpix: num(min=0.0, required=False)
-    middle_percentile: num(min=0.0, max=100.0, required=False)
+    longest_side_max: int(min=1, required=False)
+    percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
     gamma: num(min=0.0, required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
   histogram:
     decimation_ratio: list(int(min=1), min=2, max=2, required=False)
-    pow_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
+    backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
     phs_in_radians: bool(required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
 

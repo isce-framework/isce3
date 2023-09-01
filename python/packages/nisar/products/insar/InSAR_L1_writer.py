@@ -43,7 +43,7 @@ class L1InSARWriter(InSARWriter):
         radar_grid_cfg = self.cfg["processing"]["radar_grid_cubes"]
         heights = np.array(radar_grid_cfg["heights"])
         epsg = radar_grid_cfg["output_epsg"]
-        
+
         # Retrieve the group
         geolocationGrid_path = self.group_paths.GeolocationGridPath
         self.require_group(geolocationGrid_path)
@@ -492,7 +492,6 @@ class L1InSARWriter(InSARWriter):
                     dtype=number_of_range_looks.dtype,
                 )
                 dst_subswath_ds.attrs.update(rslc_freq_subswath_ds.attrs)
-    
     
     def add_swaths_to_hdf5(self):
         """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# DEM staging
+# WATERMASK staging
 
 import argparse
 import os
@@ -16,31 +16,34 @@ from shapely.geometry import LinearRing, Point, Polygon, box
 # Enable exceptions
 gdal.UseExceptions()
 
+EARTH_APPROX_CIRCUMFERENCE = 40075017.
+EARTH_RADIUS = EARTH_APPROX_CIRCUMFERENCE / (2 * np.pi)
+
 
 def cmdLineParse():
     """
      Command line parser
     """
     parser = argparse.ArgumentParser(description="""
-                                     Stage and verify DEM for processing. """,
+                                     Stage and verify WATERMASK for processing. """,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-p', '--product', type=str, action='store',
                         help='Input reference RSLC HDF5 product')
     parser.add_argument('-o', '--output', type=str, action='store',
-                        default='dem.vrt', dest='outfile',
-                        help='Output DEM filepath (VRT format).')
+                        default='WATERMASK.vrt', dest='outfile',
+                        help='Output water mask filepath (VRT format).')
     parser.add_argument('-f', '--path', type=str, action='store',
                         dest='filepath', default='file',
-                        help='Filepath to user DEM.')
+                        help='Filepath to user water mask.')
     parser.add_argument('-m', '--margin', type=int, action='store',
-                        default=5, help='Margin for DEM bounding box (km)')
+                        default=5, help='Margin for water mask bounding box (km)')
+    parser.add_argument('-v', '--version', type=str, action='store',
+                        dest='version', default='0.2',
+                        help='Version for water mask')
     parser.add_argument('-b', '--bbox', type=float, action='store',
                         dest='bbox', default=None, nargs='+',
                         help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
-    parser.add_argument('-v', '--version', type=str, action='store',
-                        default='1.0', dest='version',
-                        help='DEM version in the form of major_number.minor_number')
     return parser.parse_args()
 
 
@@ -164,11 +167,11 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     Parameters:
     -----------
     ref_slc: str
-        Path to RSLC product to stage the DEM for
+        Path to RSLC product to stage the water mask for
     min_height: float
-        Global minimum height (in m) for DEM interpolator
+        Global minimum height (in m) for water mask interpolator
     max_height: float
-        Global maximum height (in m) for DEM interpolator
+        Global maximum height (in m) for water mask interpolator
     pts_per_edge: float
         Number of points per edge for min/max bounding box computation
 
@@ -189,15 +192,15 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     radar_grid = productSlc.getRadarGrid(frequency='A')
     doppler = LUT2d()
 
-    # Get min and max global height DEM interpolators
-    dem_min = DEMInterpolator(height=min_height)
-    dem_max = DEMInterpolator(height=max_height)
+    # Get min and max global height WATERMASK interpolators
+    watermask_min = DEMInterpolator(height=min_height)
+    watermask_max = DEMInterpolator(height=max_height)
 
     # Get min and max bounding boxes
     box_min = get_geo_perimeter_wkt(radar_grid, orbit, doppler,
-                                    dem_min, pts_per_edge)
+                                    watermask_min, pts_per_edge)
     box_max = get_geo_perimeter_wkt(radar_grid, orbit, doppler,
-                                    dem_max, pts_per_edge)
+                                    watermask_max, pts_per_edge)
 
     # Determine minimum and maximum polygons
     poly_min = shapely.wkt.loads(box_min)
@@ -218,6 +221,7 @@ def determine_projection(polys):
     -----------
     polys: shapely.Geometry.Polygon
         List of shapely Polygons
+
     Returns:
     --------
     epsg:
@@ -252,8 +256,8 @@ def determine_projection(polys):
 
 
 @backoff.on_exception(backoff.expo, Exception, max_tries=8, max_value=32)
-def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
-    """Translate DEM from nisar-dem bucket. This
+def translate_watermask(vrt_filename, outpath, x_min, x_max, y_min, y_max):
+    """Translate water mask from nisar-WATERMASK bucket. This
        function is decorated to perform retries
        using exponential backoff to make the remote
        call resilient to transient issues stemming
@@ -295,8 +299,8 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     ds = None
 
 
-def download_dem(polys, epsgs, outfile, version):
-    """Download DEM from nisar-dem bucket
+def download_watermask(polys, epsgs, outfile, version):
+    """Download water mask from nisar-WATERMASK bucket
 
     Parameters:
     ----------
@@ -304,12 +308,10 @@ def download_dem(polys, epsgs, outfile, version):
         List of shapely polygons
     epsg: str, list
         List of EPSG codes corresponding to polys
-    outfile: str
-        Path to the output DEM file to be staged
+    outfile:
+        Path to the output WATERMASK file to be staged
     version: str
-        DEM version. This is contained in the filepath to
-        the DEM VRTs (e.g., s3://nisar-dem/v1.0/EPSG4326/<EPSG4326_FILES>).
-        DEM version is in the form of major_version.minor_version
+        Water mask version
     """
 
     if 3031 in epsgs:
@@ -327,18 +329,18 @@ def download_dem(polys, epsgs, outfile, version):
         epsgs = [4326] * len(epsgs)
         # convert margin to degree (approx formula)
 
-    # Download DEM for each polygon/epsg
+    # Download WATERMASK for each polygon/epsg
     file_prefix = os.path.splitext(outfile)[0]
-    dem_list = []
+    watermask_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        vrt_filename = f'/vsis3/nisar-dem/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
+        vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
-        dem_list.append(outpath)
+        watermask_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
-        translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax)
+        translate_watermask(vrt_filename, outpath, xmin, xmax, ymin, ymax)
 
-    # Build vrt with downloaded DEMs
-    gdal.BuildVRT(outfile, dem_list)
+    # Build vrt with downloaded watermasks
+    gdal.BuildVRT(outfile, watermask_list)
 
 
 def transform_polygon_coords(polys, epsgs):
@@ -383,15 +385,15 @@ def transform_polygon_coords(polys, epsgs):
     return poly
 
 
-def check_dem_overlap(DEMFilepath, polys):
-    """Evaluate overlap between user-provided DEM
-       and DEM that stage_dem.py would download
+def check_watermask_overlap(watermaskFilepath, polys):
+    """Evaluate overlap between user-provided WATERMASK
+       and WATERMASK that stage_watermask.py would download
        based on RSLC or bbox provided information
 
     Parameters:
     ----------
-    DEMFilepath: str
-        Filepath to the user-provided DEM
+    watermaskFilepath: str
+        Filepath to the user-provided WATERMASK
     polys: shapely.geometry.Polygon
         List of polygons computed from RSLC or bbox
 
@@ -399,46 +401,123 @@ def check_dem_overlap(DEMFilepath, polys):
     -------
     perc_area: float
         Area (in percentage) covered by the intersection between the
-        user-provided dem and the one downloadable by stage_dem.py
+        user-provided WATERMASK and the one downloadable by stage_watermask.py
     """
     from isce3.io import Raster
 
-    # Get local DEM edge coordinates
-    DEM = Raster(DEMFilepath)
-    ulx, xres, xskew, uly, yskew, yres = DEM.get_geotransform()
-    lrx = ulx + (DEM.width * xres)
-    lry = uly + (DEM.length * yres)
-    poly_dem = Polygon([(ulx, uly), (ulx, lry), (lrx, lry), (lrx, uly)])
+    # Get local WATERMASK edge coordinates
+    watermask = Raster(watermaskFilepath)
+    ulx, xres, xskew, uly, yskew, yres = watermask.get_geotransform()
+    lrx = ulx + (watermask.width * xres)
+    lry = uly + (watermask.length * yres)
+    poly_watermask = Polygon([(ulx, uly), (ulx, lry), (lrx, lry), (lrx, uly)])
 
     # Initialize epsg
-    epsg = [DEM.get_epsg()] * len(polys)
+    epsg = [watermask.get_epsg()] * len(polys)
 
-    if DEM.get_epsg() != 4326:
+    if watermask.get_epsg() != 4326:
         polys = transform_polygon_coords(polys, epsg)
 
     perc_area = 0
     for poly in polys:
-        perc_area += (poly.intersection(poly_dem).area / poly.area) * 100
+        perc_area += (poly.intersection(poly_watermask).area / poly.area) * 100
     return perc_area
 
 
-def check_aws_connection():
-    """Check connection to AWS s3://nisar-dem bucket
+def check_aws_connection(version):
+    """Check connection to AWS s3://nisar-static-repo/WATER_MASK bucket
        Throw exception if no connection is established
+
+    Parameters
+    ----------
+    version: str
+        Version for water mask
     """
     import boto3
     s3 = boto3.resource('s3')
-    obj = s3.Object('nisar-dem', 'EPSG3031/EPSG3031.vrt')
+    obj = s3.Object('nisar-static-repo', f'WATER_MASK/v{version}/watermask.vrt')
     try:
         obj.get()['Body'].read()
     except Exception:
-        errmsg = 'No access to nisar-dem s3 bucket. Check your AWS credentials' \
+        errmsg = 'No access to nisar-WATERMASK s3 bucket. Check your AWS credentials' \
                  'and re-run the code'
         raise ValueError(errmsg)
 
 
+def apply_margin_polygon(polygon, margin_in_km=5):
+    '''
+    Convert margin from km to degrees and
+    apply to polygon
+
+    Parameters
+    ----------
+    polygon: shapely.Geometry.Polygon
+        Bounding polygon covering the area on the
+        ground over which download the DEM
+    margin_in_km: np.float
+        Buffer in km to add to polygon
+
+    Returns
+    ------
+    poly_with_margin: shapely.Geometry.box
+        Bounding box with margin applied
+    '''
+    lon_min, lat_min, lon_max, lat_max = polygon.bounds
+    lat_worst_case = max([lat_min, lat_max])
+
+    # Convert margin from km to degrees
+    lat_margin = margin_km_to_deg(margin_in_km)
+    lon_margin = margin_km_to_longitude_deg(margin_in_km, lat=lat_worst_case)
+
+    poly_with_margin = box(lon_min - lon_margin, max([lat_min - lat_margin, -90]),
+                           lon_max + lon_margin, min([lat_max + lat_margin, 90]))
+    return poly_with_margin
+
+
+def margin_km_to_deg(margin_in_km):
+    '''
+    Converts a margin value from km to degrees
+
+    Parameters
+    ----------
+    margin_in_km: np.float
+        Margin in km
+
+    Returns
+    -------
+    margin_in_deg: np.float
+        Margin in degrees
+    '''
+    km_to_deg_at_equator = 1000. / (EARTH_APPROX_CIRCUMFERENCE / 360.)
+    margin_in_deg = margin_in_km * km_to_deg_at_equator
+
+    return margin_in_deg
+
+
+def margin_km_to_longitude_deg(margin_in_km, lat=0):
+    '''
+    Converts margin from km to degrees as a function of
+    latitude
+
+    Parameters
+    ----------
+    margin_in_km: np.float
+        Margin in km
+    lat: np.float
+        Latitude to use for the conversion
+
+    Returns
+    ------
+    delta_lon: np.float
+        Longitude margin as a result of the conversion
+    '''
+    delta_lon = (180 * 1000 * margin_in_km /
+                (np.pi * EARTH_RADIUS * np.cos(np.pi * lat / 180)))
+    return delta_lon
+
+
 def main(opts):
-    """Main script to execute dem staging
+    """Main script to execute water mask staging
 
     Parameters:
     ----------
@@ -449,44 +528,43 @@ def main(opts):
     # Check if RSLC or bbox are provided
     if (opts.product is None) & (opts.bbox is None):
         errmsg = "Need to provide reference RSLC HDF5 or bounding box. " \
-                 "Cannot download DEM"
+                 "Cannot download water mask"
         raise ValueError(errmsg)
 
     # Make sure that output file has VRT extension
     if not opts.outfile.lower().endswith('.vrt'):
-        err_msg = "DEM output filename extension is not .vrt"
+        err_msg = "water mask output filename extension is not .vrt"
         raise ValueError(err_msg)
 
     # Determine polygon based on RSLC info or bbox
     poly = determine_polygon(opts.product, opts.bbox)
 
-    # Add margin to poly. Convert margin from km to degrees
-    margin = opts.margin / 40000 * 360
-    poly = poly.buffer(margin)
+    # Apply margin to the identified polygon in lat/lon
+    poly = apply_margin_polygon(poly, opts.margin)
 
     # Check dateline crossing. Returns list of polygons
     polys = check_dateline(poly)
 
     if os.path.isfile(opts.filepath):
-        print('Check overlap with user-provided DEM')
-        overlap = check_dem_overlap(opts.filepath, polys)
+        print('Check overlap with user-provided water mask')
+        overlap = check_watermask_overlap(opts.filepath, polys)
         if overlap < 75.:
-            print('Insufficient DEM coverage. Errors might occur')
-        print(f'DEM coverage is {overlap} %')
+            print('Insufficient water mask coverage. Errors might occur')
+        print(f'water mask coverage is {overlap} %')
     else:
-        # Check connection to AWS s3 nisar-dem bucket
+        # Check connection to AWS s3 nisar-WATERMASK  ucket
         try:
-            check_aws_connection()
+            check_aws_connection(opts.version)
         except ImportError:
             import warnings
-            warnings.warn('boto3 is require to verify AWS connection '
+            warnings.warn('boto3 is required to verify AWS connection '
                           'proceeding without verifying connection')
         # Determine EPSG code
         epsg = determine_projection(polys)
-        # Download DEM
-        download_dem(polys, epsg, opts.outfile, opts.version)
-        print('Done, DEM store locally')
-        
+        # Download water mask
+        download_watermask(polys, epsg, opts.outfile, opts.version)
+        print('Done, water mask store locally')
+
 
 if __name__ == '__main__':
     opts = cmdLineParse()

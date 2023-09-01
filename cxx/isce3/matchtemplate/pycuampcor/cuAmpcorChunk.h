@@ -12,6 +12,7 @@
 #include "cuArrays.h"
 #include "cuAmpcorParameter.h"
 #include "cuOverSampler.h"
+#include "cuSincOverSampler.h"
 #include "cuCorrFrequency.h"
 #include "cuCorrNormalizer.h"
 
@@ -37,6 +38,7 @@ private:
     cuArrays<float2> *offsetImage; ///< output offsets image
     cuArrays<float> *snrImage;     ///< snr image
     cuArrays<float3> *covImage;    ///< cov image
+    cuArrays<float> *corrImage;    ///< corr image
 
     // local variables and workers
     // gpu buffer to load images from file
@@ -60,6 +62,7 @@ private:
 
     // oversampling processor for correlation surface
     cuOverSamplerR2R *corrOverSampler;
+    cuSincOverSamplerR2R *corrSincOverSampler;
 
     // cross-correlation processor with frequency domain algorithm
     cuFreqCorrelator *cuCorrFreqDomain, *cuCorrFreqDomain_OverSampled;
@@ -91,7 +94,7 @@ public:
     cuAmpcorChunk(cuAmpcorParameter *param_,
         GDALImage *reference_, GDALImage *secondary_,
         cuArrays<float2> *offsetImage_, cuArrays<float> *snrImage_,
-        cuArrays<float3> *covImage_);
+        cuArrays<float3> *covImage_, cuArrays<float>* corrImage_);
     // destructor
     ~cuAmpcorChunk();
 
