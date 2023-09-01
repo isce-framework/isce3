@@ -51,7 +51,7 @@ class RUNWWriter(L1InSARWriter):
         self.attrs["title"] = np.string_("NISAR L1_RUNW Product")
         self.attrs["reference_document"] = np.string_("JPL-102271")
 
-    def add_ionosphere_to_procinfo_params(self):
+    def add_ionosphere_to_procinfo_params_group(self):
         """
         Add the ionosphere to the processingInformation/parameters group
         """
@@ -91,7 +91,7 @@ class RUNWWriter(L1InSARWriter):
         for ds_param in ds_params:
             add_dataset_and_attrs(iono_group, ds_param)
 
-    def add_ionosphere_estimation_to_algo(self):
+    def add_ionosphere_estimation_to_algo_group(self):
         """
         Add the ionosphere estimation group to algorithms group
         """
@@ -188,7 +188,7 @@ class RUNWWriter(L1InSARWriter):
         for ds_param in ds_params:
             add_dataset_and_attrs(iono_est_group, ds_param)
 
-    def add_unwarpping_to_algo(self):
+    def add_unwarpping_to_algo_group(self):
         """
         Add the unwrapping to the algorithms group
         """
@@ -274,24 +274,24 @@ class RUNWWriter(L1InSARWriter):
         for ds_param in ds_params:
             add_dataset_and_attrs(unwrap_group, ds_param)
 
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms to processingInformation group
         """
         
-        super().add_algorithms_to_procinfo()
+        super().add_algorithms_to_procinfo_group()
         
-        self.add_interferogramformation_to_algo()
-        self.add_ionosphere_estimation_to_algo()
-        self.add_unwarpping_to_algo()
+        self.add_interferogramformation_to_algo_group()
+        self.add_ionosphere_estimation_to_algo_group()
+        self.add_unwarpping_to_algo_group()
     
-    def add_parameters_to_procinfo(self):
+    def add_parameters_to_procinfo_group(self):
         """
         Add parameters group to processingInformation/parameters group
         """
 
-        super().add_parameters_to_procinfo()
-        self.add_ionosphere_to_procinfo_params()
+        super().add_parameters_to_procinfo_group()
+        self.add_ionosphere_to_procinfo_params_group()
 
     def add_interferogram_to_swaths(self):
         """

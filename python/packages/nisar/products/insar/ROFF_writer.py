@@ -38,7 +38,7 @@ class ROFFWriter(L1InSARWriter):
         self.attrs["title"] = np.string_("NISAR L1_ROFF Product")
         self.attrs["reference_document"] = np.string_("JPL-105009")
 
-    def add_coregistration_to_algo(self):
+    def add_coregistration_to_algo_group(self):
         """
         Add the coregistration parameters to the "processingInfromation/algorithms" group
         """
@@ -84,7 +84,7 @@ class ROFFWriter(L1InSARWriter):
         for ds_param in algo_coregistration_ds_params:
             add_dataset_and_attrs(coregistration_group, ds_param)
 
-    def add_cross_correlation_to_algo(self):
+    def add_cross_correlation_to_algo_group(self):
         """
         Add the cross correlation parameters to the "processingInfromation/algorithms" group
         """
@@ -109,25 +109,25 @@ class ROFFWriter(L1InSARWriter):
                     self.require_group(f"{self.group_paths.AlgorithmsPath}/crossCorrelation/{layer}")
                 add_dataset_and_attrs(cross_corr_group, cross_corr)
 
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms group to the processingInformation group
         """
 
-        super().add_algorithms_to_procinfo()
-        self.add_cross_correlation_to_algo()
+        super().add_algorithms_to_procinfo_group()
+        self.add_cross_correlation_to_algo_group()
 
 
-    def add_parameters_to_procinfo(self):
+    def add_parameters_to_procinfo_group(self):
         """
         Add parameters group to processingInformation/parameters group
         """
 
         # Using the InSARBase parameters group only
-        InSARWriter.add_parameters_to_procinfo(self)
-        self.add_pixeloffsets_to_procinfo_params()
+        InSARWriter.add_parameters_to_procinfo_group(self)
+        self.add_pixeloffsets_to_procinfo_params_group()
 
-    def add_pixeloffsets_to_procinfo_params(self):
+    def add_pixeloffsets_to_procinfo_params_group(self):
         """
         Add the pixelOffsets group to
         the processingInformation/parameters group
@@ -280,7 +280,7 @@ class ROFFWriter(L1InSARWriter):
                     for ds_param in ds_params:
                         add_dataset_and_attrs(layer_group, ds_param)
 
-    def _add_datasets_to_pixel_offset(self):
+    def _add_datasets_to_pixel_offset_group(self):
         """
         Add datasets to pixelOffsets group under the swath group
         """

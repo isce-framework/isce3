@@ -46,14 +46,12 @@ class InSARWriter(h5py.File):
         Parameters of the h5py.File
     """
 
-    def __init__(
-        self,
-        runconfig_dict: dict,
-        runconfig_path: str,
-        _external_orbit_path: Optional[str] = None,
-        epoch: Optional[DateTime] = None,
-        **kwds,
-    ):
+    def __init__(self,
+                 runconfig_dict: dict,
+                 runconfig_path: str,
+                 _external_orbit_path: Optional[str] = None,
+                 epoch: Optional[DateTime] = None,
+                 **kwds):
         """
         Constructor of the InSAR Product Base class. Inheriting from h5py.File
         to avoid passing h5py.File parameter.
@@ -145,13 +143,13 @@ class InSARWriter(h5py.File):
         """
 
         group = self.require_group(self.group_paths.ProcessingInformationPath)
-        self.add_algorithms_to_procinfo()
-        self.add_inputs_to_procinfo()
-        self.add_parameters_to_procinfo()
+        self.add_algorithms_to_procinfo_group()
+        self.add_inputs_to_procinfo_group()
+        self.add_parameters_to_procinfo_group()
 
         return group
 
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithm group to the processing information group
         """
@@ -166,7 +164,7 @@ class InSARWriter(h5py.File):
 
         add_dataset_and_attrs(algo_group, software_version)
 
-    def add_common_to_procinfo_params(self):
+    def add_common_to_procinfo_params_group(self):
         """
         Add the common group to the "processingInformation/parameters" group
         """
@@ -197,19 +195,14 @@ class InSARWriter(h5py.File):
                 "dopplerBandwidth",
             )
 
-    def add_RSLC_to_procinfo_params(self, rslc_name: str):
+    def add_RSLC_to_procinfo_params_group(self, rslc_name: str):
         """
         Add the RSLC group to "processingInformation/parameters" group
 
         Parameters
         ----------
         rslc_name : str
-            RSLC name, either 'reference' or 'secondary'
-
-        Returns
-        ----------
-        group : h5py.Group
-            The RSLC group object
+            RSLC name, ('reference' or 'secondary')
         """
 
         if rslc_name.lower() == "reference":
@@ -289,9 +282,7 @@ class InSARWriter(h5py.File):
                 "dopplerCentroid", rslc_frequency_group
             )
 
-        return dst_param_group
-
-    def add_coregistration_to_algo(self):
+    def add_coregistration_to_algo_group(self):
         """
         Add the coregistration parameters to the
         "processingInfromation/algorithms" group
@@ -406,7 +397,7 @@ class InSARWriter(h5py.File):
             add_dataset_and_attrs(coregistration_group, ds_param)
 
 
-    def add_interferogramformation_to_algo(self):
+    def add_interferogramformation_to_algo_group(self):
         """
         Add the InterferogramFormation group to "processingInformation/algorithms" group
         """
@@ -459,9 +450,9 @@ class InSARWriter(h5py.File):
         for ds_param in algo_intefergramformation_ds_params:
             add_dataset_and_attrs(igram_formation_group, ds_param)
 
-    def add_interferogram_to_procinfo_params(self):
+    def add_interferogram_to_procinfo_params_group(self):
         """
-        Add the interferogram group to "processingInformation/parameters"
+        Add the interferogram group to "processingInformation/parameters group"
         """
 
         proc_cfg_crossmul = self.cfg["processing"]["crossmul"]
@@ -554,7 +545,7 @@ class InSARWriter(h5py.File):
             for ds_param in interferogram_ds_params:
                 add_dataset_and_attrs(igram_group, ds_param)
 
-    def add_pixeloffsets_to_procinfo_params(self):
+    def add_pixeloffsets_to_procinfo_params_group(self):
         """
         Add the pixelOffsets group to "processingInformation/parameters" group
         """
@@ -667,7 +658,7 @@ class InSARWriter(h5py.File):
             for ds_param in pixeloffsets_ds_params:
                 add_dataset_and_attrs(pixeloffsets_group, ds_param)
 
-    def add_parameters_to_procinfo(self):
+    def add_parameters_to_procinfo_group(self):
         """
         Add the parameters group to the "processingInformation" group
 
@@ -678,9 +669,9 @@ class InSARWriter(h5py.File):
         """
         params_group = self.require_group(self.group_paths.ParametersPath)
 
-        self.add_common_to_procinfo_params()
-        self.add_RSLC_to_procinfo_params("reference")
-        self.add_RSLC_to_procinfo_params("secondary")
+        self.add_common_to_procinfo_params_group()
+        self.add_RSLC_to_procinfo_params_group("reference")
+        self.add_RSLC_to_procinfo_params_group("secondary")
 
         runconfig_contents = DatasetParams(
             "runConfigurationContents",
@@ -692,7 +683,7 @@ class InSARWriter(h5py.File):
         )
         add_dataset_and_attrs(params_group, runconfig_contents)
 
-    def add_inputs_to_procinfo(self):
+    def add_inputs_to_procinfo_group(self):
         """
         Add the inputs group to the "processingInformation" group
 

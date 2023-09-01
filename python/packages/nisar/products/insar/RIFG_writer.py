@@ -43,13 +43,13 @@ class RIFGWriter(L1InSARWriter):
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
         
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms to processingInformation group
         """
         
-        super().add_algorithms_to_procinfo()
-        self.add_interferogramformation_to_algo()
+        super().add_algorithms_to_procinfo_group()
+        self.add_interferogramformation_to_algo_group()
         
     def add_interferogram_to_swaths(self):
         """

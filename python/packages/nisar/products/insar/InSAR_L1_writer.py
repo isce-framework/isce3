@@ -73,11 +73,9 @@ class L1InSARWriter(InSARWriter):
         )
         native_doppler.bounds_error = False
 
-        tol = dict(
-            threshold_geo2rdr=1e-8,
-            numiter_geo2rdr=50,
-            delta_range=10,
-        )
+        geo2rdr_params = dict(threshold_geo2rdr=1e-8,
+                              numiter_geo2rdr=50,
+                              delta_range=10)
 
         # Add geolocation grid cubes to hdf5
         add_geolocation_grid_cubes_to_hdf5(
@@ -89,18 +87,16 @@ class L1InSARWriter(InSARWriter):
             native_doppler,
             grid_doppler,
             epsg,
-            **tol,
+            **geo2rdr_params,
         )
 
         # Add the min and max attributes to the following dataset
-        ds_names = [
-            "incidenceAngle",
-            "losUnitVectorX",
-            "losUnitVectorY",
-            "alongTrackUnitVectorX",
-            "alongTrackUnitVectorY",
-            "elevationAngle",
-        ]
+        ds_names = ["incidenceAngle",
+                    "losUnitVectorX",
+                    "losUnitVectorY",
+                    "alongTrackUnitVectorX",
+                    "alongTrackUnitVectorY",
+                    "elevationAngle"]
         geolocation_grid_group = self[geolocationGrid_path]
         for ds_name in ds_names:
             ds = geolocation_grid_group[ds_name][()]
@@ -108,23 +104,23 @@ class L1InSARWriter(InSARWriter):
             geolocation_grid_group[ds_name].attrs["min"] = valid_min
             geolocation_grid_group[ds_name].attrs["max"] = valid_max
 
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms group to the processingInformation group
         """
         
-        super().add_algorithms_to_procinfo()
-        self.add_coregistration_to_algo()
+        super().add_algorithms_to_procinfo_group()
+        self.add_coregistration_to_algo_group()
         
-    def add_parameters_to_procinfo(self):
+    def add_parameters_to_procinfo_group(self):
         """
         Add the parameters group to the "processingInformation" group
         """
 
-        super().add_parameters_to_procinfo()
+        super().add_parameters_to_procinfo_group()
 
-        self.add_interferogram_to_procinfo_params()
-        self.add_pixeloffsets_to_procinfo_params()
+        self.add_interferogram_to_procinfo_params_group()
+        self.add_pixeloffsets_to_procinfo_params_group()
 
     def _get_interferogram_dataset_shape(self, freq : str, pol : str):
         """
@@ -195,7 +191,7 @@ class L1InSARWriter(InSARWriter):
         return (off_length, off_width)        
         
         
-    def _add_datasets_to_pixel_offset(self):
+    def _add_datasets_to_pixel_offset_group(self):
         """
         Add datasets to pixel offsets group
         """
@@ -316,7 +312,7 @@ class L1InSARWriter(InSARWriter):
                 add_dataset_and_attrs(offset_group, ds_param)
 
         # add the datasets to pixel offsets group
-        self._add_datasets_to_pixel_offset()
+        self._add_datasets_to_pixel_offset_group()
         
     def add_interferogram_to_swaths(self):
         """
