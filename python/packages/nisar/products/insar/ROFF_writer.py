@@ -230,7 +230,10 @@ class ROFFWriter(L1InSARWriter):
             pixeloffsets_group = self.require_group(pixeloffsets_group_name)
             for ds_param in pixeloffsets_ds_params:
                 add_dataset_and_attrs(pixeloffsets_group, ds_param)
-
+                
+            # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
+            # and copied from the bandpassed RSLC data.
+            # Should we update those fields?
             swath_frequency_group.copy(
                 "processedRangeBandwidth", 
                 pixeloffsets_group,

@@ -92,6 +92,3 @@ def get_validated_file_path(path_str: str):
         raise FileNotFoundError(err_str)
 
     return str(path_obj)
-
-
-

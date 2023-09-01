@@ -64,10 +64,10 @@ class L1InSARWriter(InSARWriter):
         radargrid = radargrid[::tskip, ::rskip]
 
         grid_doppler = LUT2d()
-        cube_native_doppler = self.ref_rslc.getDopplerCentroid(
+        native_doppler = self.ref_rslc.getDopplerCentroid(
             frequency=cube_freq
         )
-        cube_native_doppler.bounds_error = False
+        native_doppler.bounds_error = False
 
         tol = dict(
             threshold_geo2rdr=1e-8,
@@ -82,7 +82,7 @@ class L1InSARWriter(InSARWriter):
             radargrid,
             heights,
             self.orbit,
-            cube_native_doppler,
+            native_doppler,
             grid_doppler,
             epsg,
             **tol,
