@@ -388,9 +388,10 @@ class RUNWWriter(L1InSARWriter):
         unwrap_rg_looks = proc_cfg["phase_unwrap"]["range_looks"]
         unwrap_az_looks = proc_cfg["phase_unwrap"]["azimuth_looks"]
         
-        # replace the looks from the unwrap looks when either rg or az is > 1
+        # replace the looks from the unwrap looks when 
+        # unwrap_az_looks !=1 or unwrap_rg_looks != 1, i.e.,
         # when the both unwrap_az_looks and unwrap_rg_looks are euqals to 1
-        # the looks from the crossmul will be applied.
+        # the rg and az looks from the crossmul will be applied.
         # NOTE: unwrap looks here are the total looks on the RSLC, not on top of the RIFG
         if (unwrap_az_looks != 1) or (unwrap_rg_looks != 1):
             rg_looks = unwrap_rg_looks
