@@ -1,8 +1,6 @@
-import pathlib
 from dataclasses import dataclass
 
 import isce3
-import journal
 
 ISCE3_VERSION = isce3.__version__
 
@@ -57,38 +55,3 @@ class InSARProductsInfo:
     @classmethod
     def GUNW(cls):
         return cls("1.0", "GUNW", "L2", "0.1", True)
-
-
-def get_validated_file_path(path_str: str):
-    """
-    Function to check validated path
-    Function will account for optional path strings that maybe None.
-    If None, then raise the FileNotFoundError
-
-    Parameters
-    ----------
-    path_str : str
-        File path
-    
-    Returns
-    -------
-    str
-        Validate file path
-    """
-    if path_str is None:
-        return None
-
-    path_obj = pathlib.Path(path_str)
-
-    err = journal.error('nisar.product.insar')
-    if not path_obj.exists():
-        err_str = f"{path_str} does not exist"
-        err.log(err_str)
-        raise FileNotFoundError(err_str)
-
-    if not path_obj.is_file():
-        err_str = f"{path_str} is not a file"
-        err.log(err_str)
-        raise FileNotFoundError(err_str)
-
-    return str(path_obj)

@@ -10,7 +10,7 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import ISCE3_VERSION, InSARProductsInfo, get_validated_file_path
+from .common import ISCE3_VERSION, InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .product_paths import CommonPaths
 
@@ -97,18 +97,7 @@ class InSARWriter(h5py.File):
         self.epoch = epoch
 
         # Check if reference and secondary exists as files
-        [
-            self.path_ref_slc_h5,
-            self.path_sec_slc_h5,
-            self.external_orbit_path,
-        ] = [
-            get_validated_file_path(path_str)
-            for path_str in [
-                self.ref_h5_slc_file,
-                self.sec_h5_slc_file,
-                _external_orbit_path,
-            ]
-        ]
+        self.external_orbit_path = _external_orbit_path
 
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
