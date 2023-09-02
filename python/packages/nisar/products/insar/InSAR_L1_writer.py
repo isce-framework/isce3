@@ -207,9 +207,8 @@ class L1InSARWriter(InSARWriter):
 
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # create the swath group
-            swaths_freq_group_name = (
+            swaths_freq_group_name = \
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
-            )
 
             # get the shape of offset product
             off_shape = self._get_pixeloffsets_dataset_shape(freq,
@@ -250,8 +249,7 @@ class L1InSARWriter(InSARWriter):
                         off_shape,
                         np.float32,
                         ds_description,
-                        units=ds_unit,
-                    )
+                        units=ds_unit)
 
     def add_pixel_offsets_to_swaths(self):
         """
@@ -466,8 +464,7 @@ class L1InSARWriter(InSARWriter):
                         igram_shape,
                         ds_dtype,
                         ds_description,
-                        units=ds_unit,
-                    )
+                        units=ds_unit)
 
 
     def add_subswaths_to_swaths(self):
