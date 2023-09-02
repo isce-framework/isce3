@@ -533,7 +533,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
-    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit_files']['reference_orbit_file']
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
@@ -792,7 +792,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     # Extract parameters from cfg dictionary
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
-    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit_files']['reference_orbit_file']
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     if input_product_type is InputProduct.RIFG:

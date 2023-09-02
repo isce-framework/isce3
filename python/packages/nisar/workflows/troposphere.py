@@ -37,7 +37,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     error_channel = journal.error('troposphere.compute_troposphere_delay')
 
     # Fetch the configurations
-    tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
+    tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']
     tropo_cfg = cfg['processing']['troposphere_delay']
 
     scratch_path = cfg['product_path_group']['scratch_path']

@@ -32,7 +32,7 @@ def troposphere_delay_check(cfg):
     # only if the troposphere is enabled
     if tropo_cfg['enabled']:
 
-        dynamic_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
+        dynamic_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']
 
         for option in ['reference', 'secondary']:
 

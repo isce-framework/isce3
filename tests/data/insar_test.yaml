@@ -13,7 +13,7 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: @ISCETEST@/winnipeg_dem.tif
-            orbit:
+            orbit_files:
                 reference_orbit_file:
                 secondary_orbit_file:
         product_path_group:

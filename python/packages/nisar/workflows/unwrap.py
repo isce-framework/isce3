@@ -236,7 +236,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                     2 * rg_bw)
                         # To compute azimuth resolution, get sensor speed at mid-scene
                         # And use azimuth processed bandwidth (copied from RSLC)
-                        ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
+                        ref_orbit = cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
                         if ref_orbit is not None:
                             orbit = load_orbit_from_xml(ref_orbit)
                         else:

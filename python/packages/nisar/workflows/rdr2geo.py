@@ -36,7 +36,7 @@ def run(cfg):
     # pull parameters from cfg
     input_hdf5 = cfg['input_file_group']['reference_rslc_file']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
-    ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
+    ref_orbit = cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     threshold = cfg['processing']['rdr2geo']['threshold']

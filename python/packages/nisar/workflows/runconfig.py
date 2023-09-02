@@ -123,7 +123,7 @@ class RunConfig:
         elif self.workflow_name == 'insar':
             rslc_keys = ['reference_rslc_file', 'secondary_rslc_file']
 
-            orbit_group = self.cfg['dynamic_ancillary_file_group']['orbit']
+            orbit_group = self.cfg['dynamic_ancillary_file_group']['orbit_files']
             orbit_keys = ['reference_orbit_file', 'secondary_orbit_file']
         else:
             err_str = f'{self.workflow_name} unsupported'

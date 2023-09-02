@@ -744,7 +744,7 @@ class InSARWriter(h5py.File):
         ancillary_group = self.cfg["dynamic_ancillary_file_group"]
         for idx in ["reference", "secondary"]:
             _orbit_file = \
-                ancillary_group["orbit"].get(f"{idx}_orbit_file")
+                ancillary_group["orbit_files"].get(f"{idx}_orbit_file")
 
             if _orbit_file is None:
                 _orbit_file = f"used RSLC internal {idx} orbit file"

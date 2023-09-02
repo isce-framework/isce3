@@ -31,13 +31,13 @@ runconfig:
             dem_file_description:
 
             water_mask_file:
-            orbit:
+            orbit_files:
                 reference_orbit_file:
                 secondary_orbit_file:
             tec_file:
 
             # Troposphere weather model files
-            troposphere_weather_model:
+            troposphere_weather_model_files:
                 reference_troposphere_file:
                 secondary_troposphere_file:
 
