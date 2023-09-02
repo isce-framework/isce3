@@ -104,6 +104,7 @@ class L1InSARWriter(InSARWriter):
                     "alongTrackUnitVectorX",
                     "alongTrackUnitVectorY",
                     "elevationAngle"]
+        
         geolocation_grid_group = self[geolocationGrid_path]
         for ds_name in ds_names:
             ds = geolocation_grid_group[ds_name][()]

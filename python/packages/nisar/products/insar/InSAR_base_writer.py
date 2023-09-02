@@ -804,7 +804,7 @@ class InSARWriter(h5py.File):
         dst_id_group = self.require_group(self.group_paths.IdentificationPath)
 
         # Datasets that need to be copied from the RSLC
-        ds_names_need_to_copy = [
+        id_ds_names_need_to_copy = [
             DatasetParams(
                 "absoluteOrbitNumber",
                 "None",
@@ -887,7 +887,7 @@ class InSARWriter(h5py.File):
             ),
         ]
 
-        for ds_name in ds_names_need_to_copy:
+        for ds_name in id_ds_names_need_to_copy:
             if ds_name.name in ref_id_group:
                 ref_id_group.copy(ds_name.name, dst_id_group)
             else:
