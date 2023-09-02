@@ -288,8 +288,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 # polarizations if single pol offset mode enabled
                 if pol in offset_pol_list:
                     dataset_names.extend(['alongTrackOffset',
-                                          'slantRangeOffset'])
-                    group_names.extend(['pixelOffsets', 'pixelOffsets'])
+                                          'slantRangeOffset',
+                                          'correlationSurfacePeak'])
+                    group_names.extend(['pixelOffsets', 'pixelOffsets', 'pixelOffsets'])
                 for dataset_name, group_name in zip(dataset_names, group_names):
                     dst_path = f'{dst_freq_group_path}/{group_name}/{pol}/{dataset_name}'
                     src_path = f'{src_freq_group_path}/{group_name}/{pol}/{dataset_name}'

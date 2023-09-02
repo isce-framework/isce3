@@ -25,7 +25,6 @@ def run(cfg: dict):
     ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
     sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offset_params = cfg['processing']['dense_offsets']
 
     # Initialize parameters shared between frequency A and B
@@ -102,6 +101,7 @@ def run(cfg: dict):
             ampcor.grossOffsetImageName = str(out_dir / 'gross_offset')
             ampcor.snrImageName = str(out_dir / 'snr')
             ampcor.covImageName = str(out_dir / 'covariance')
+            ampcor.corrImageName = str(out_dir / 'correlation_peak')
 
             # Create empty ENVI datasets. PyCuAmpcor will overwrite the
             # binary files. Note, use gdal to pass interleave option
@@ -117,6 +117,9 @@ def run(cfg: dict):
             create_empty_dataset(str(out_dir / 'covariance'),
                                  ampcor.numberWindowAcross,
                                  ampcor.numberWindowDown, 3, gdal.GDT_Float32)
+            create_empty_dataset(str(out_dir / 'correlation_peak'),
+                                 ampcor.numberWindowAcross,
+                                 ampcor.numberWindowDown, 1, gdal.GDT_Float32)
             # Run dense offsets
             ampcor.runAmpcor()
 

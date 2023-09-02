@@ -120,7 +120,8 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         HDF5 path to geocoded shadow layover dataset
     """
 
-    if dataset_name in ['alongTrackOffset', 'slantRangeOffset'] and \
+    if dataset_name in ['alongTrackOffset', 'slantRangeOffset',
+                        'correlationSurfacePeak'] and \
             input_product_type is InputProduct.RUNW:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}'
@@ -682,16 +683,16 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size)
 
-                if cfg['processing']['dense_offsets']['enabled']:
-                   desired = ['along_track_offset', 'slant_range_offset']
-                   geocode_obj.data_interpolator = interp_method
-                   radar_grid_offset = get_offset_radar_grid(cfg,
-                                                             radar_grid_slc)
+                desired = ['along_track_offset', 'slant_range_offset',
+                           'correlation_surface_peak']
+                geocode_obj.data_interpolator = interp_method
+                radar_grid_offset = get_offset_radar_grid(cfg,
+                                                          radar_grid_slc)
 
-                   cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
-                                       offset_pol_list, input_hdf5, dst_h5,
-                                       radar_grid_offset, dem_raster,
-                                       block_size)
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                                    offset_pol_list, input_hdf5, dst_h5,
+                                    radar_grid_offset, dem_raster,
+                                    block_size)
 
                 desired = ["layover_shadow_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
@@ -834,7 +835,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         wrapped_igram_interp_method = cfg["processing"]["geocode"]\
                 ['wrapped_interferogram']['interp_method']
 
-        if wrapped_igram_interp_method  == 'SINC':
+        if wrapped_igram_interp_method == 'SINC':
             wrapped_igram_interp_method = isce3.core.DataInterpMethod.SINC
         if wrapped_igram_interp_method == 'BILINEAR':
             wrapped_igram_interp_method = isce3.core.DataInterpMethod.BILINEAR
@@ -970,27 +971,28 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_conn_comp_obj)
-                if cfg['processing']['dense_offsets']['enabled']:
-                   desired = ['along_track_offset', 'slant_range_offset']
 
-                   # If needed create geocode object for offset datasets
-                   # Create offset unique radar grid
-                   radar_grid = get_offset_radar_grid(cfg,
-                                                      slc.getRadarGrid(freq))
+                desired = ['along_track_offset', 'slant_range_offset',
+                           'correlation_surface_peak']
 
-                   # Create radar grid geometry required by offset datasets
-                   rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
-                                                                grid_zero_doppler)
+                # If needed create geocode object for offset datasets
+                # Create offset unique radar grid
+                radar_grid = get_offset_radar_grid(cfg,
+                                                   slc.getRadarGrid(freq))
 
-                   geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                                   rdr_geometry,
-                                                                   dem_raster,
-                                                                   lines_per_block,
-                                                                   interp_method,
-                                                                   invalid_value=np.nan)
-                   gpu_geocode_rasters(geo_datasets, desired, freq,
-                                       offset_pol_list, input_hdf5, dst_h5,
-                                       geocode_offset_obj),
+                # Create radar grid geometry required by offset datasets
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
+                                                             grid_zero_doppler)
+
+                geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
+                                                                rdr_geometry,
+                                                                dem_raster,
+                                                                lines_per_block,
+                                                                interp_method,
+                                                                invalid_value=np.nan)
+                gpu_geocode_rasters(geo_datasets, desired, freq,
+                                    offset_pol_list, input_hdf5, dst_h5,
+                                    geocode_offset_obj)
 
                 desired = ["layover_shadow_mask"]
                 # If needed create geocode object for shadow layover dataset

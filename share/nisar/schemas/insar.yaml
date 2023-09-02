@@ -932,6 +932,7 @@ gunw_datasets:
     layover_shadow_mask: bool(required=False)
     along_track_offset: bool(required=False)
     slant_range_offset: bool(required=False)
+    correlation_surface_peak: bool(required=False)
 
 goff_datasets:
     along_track_offset: bool(required=False)

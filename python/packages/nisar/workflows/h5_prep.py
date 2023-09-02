@@ -730,11 +730,11 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                      np.float32,'slantRangeOffset',
                                      descr=descr_rg, units="meters",
                                      long_name='slant range offset')
-                    descr = " Quality metric"
+                    descr = "Normalized cross-correlation surface peak"
                     _create_datasets(dst_h5[pol_path], off_shape,
-                                     np.float32, 'quality',
+                                     np.float32, 'correlationSurfacePeak',
                                      descr=descr, units=" ",
-                                     long_name='quality')
+                                     long_name='correlation surface peak')
                 else:
                     for key in cfg['offsets_product'].keys():
                         if key.startswith('layer'):
