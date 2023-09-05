@@ -64,6 +64,9 @@ class L1InSARWriter(InSARWriter):
         radargrid = RadarGridParameters(self.ref_h5_slc_file)
 
         # Figure out decimation factors that give < 500 m spacing.
+        # NOTE: same with the RSLC, the max spacing = 500m is hardcoded.
+        # In addition, we cannot have the exact 500m spacing for both azimuth
+        # and range directions.
         max_spacing = 500.0
         t = radargrid.sensing_mid + \
             (radargrid.ref_epoch - self.orbit.reference_epoch).total_seconds()
@@ -104,7 +107,7 @@ class L1InSARWriter(InSARWriter):
                     "alongTrackUnitVectorX",
                     "alongTrackUnitVectorY",
                     "elevationAngle"]
-        
+
         geolocation_grid_group = self[geolocationGrid_path]
         for ds_name in ds_names:
             ds = geolocation_grid_group[ds_name][()]
