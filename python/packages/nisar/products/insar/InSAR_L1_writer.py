@@ -12,8 +12,8 @@ from .product_paths import L1GroupsPaths
 
 class L1InSARWriter(InSARBaseWriter):
     """
-    InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer
-    inherenting from the InSARBaseWriter
+    InSAR Level 1 prodcuts writer inherenting from the InSARBaseWriter
+    The Level 1 products include ROFF, RUNW, and RIFG.
 
     Attributes
     ----------
@@ -24,7 +24,7 @@ class L1InSARWriter(InSARBaseWriter):
     """
     def __init__(self, **kwds):
         """
-        Constructor for InSAR L1 product (RIFG, RUNW, and ROFF).
+        Constructor for InSAR L1 products (RIFG, RUNW, and ROFF).
         """
         super().__init__(**kwds)
 
@@ -37,7 +37,7 @@ class L1InSARWriter(InSARBaseWriter):
 
     def save_to_hdf5(self):
         """
-        write the attributes and groups to the HDF5
+        Write the attributes and groups to the HDF5
         """
         super().save_to_hdf5()
 

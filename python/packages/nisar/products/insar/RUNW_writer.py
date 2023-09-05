@@ -13,7 +13,8 @@ class RUNWWriter(L1InSARWriter):
     """
     def __init__(self, **kwds):
         """
-        Constructor for RUNW class
+        Constructor for RUNW class with additional range and azimuth
+        looks variables for the phase unwrapping
         """
         super().__init__(**kwds)
 

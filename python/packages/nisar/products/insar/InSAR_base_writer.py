@@ -18,7 +18,7 @@ from .product_paths import CommonPaths
 class InSARBaseWriter(h5py.File):
     """
     The base class of InSAR product inheriting from h5py.File to avoid passing
-    h5py.File parameter, the
+    h5py.File parameter
 
     Attributes
     ----------
@@ -402,7 +402,6 @@ class InSARBaseWriter(h5py.File):
                 flatten_method,
                 "Algorithm used to flatten the wrapped interferogram",
                 {
-                    # TODO: The description also needs to be changed in the product specs
                     "algorithm_type": "Interferogram formation",
                 },
             ),

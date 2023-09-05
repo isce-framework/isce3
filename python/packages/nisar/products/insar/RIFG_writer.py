@@ -13,7 +13,8 @@ class RIFGWriter(L1InSARWriter):
     """
     def __init__(self, **kwds):
         """
-        Constructor for RIFG class
+        Constructor for RIFG class with additional range and azimuth looks
+        variables for the interferogram multilooking
         """
         super().__init__(**kwds)
 
@@ -30,7 +31,7 @@ class RIFGWriter(L1InSARWriter):
 
     def add_root_attrs(self):
         """
-        add root attributes
+        Add root attributes
         """
         super().add_root_attrs()
 

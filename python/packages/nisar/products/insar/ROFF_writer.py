@@ -28,7 +28,7 @@ class ROFFWriter(L1InSARWriter):
 
     def add_root_attrs(self):
         """
-        add root attributes
+        Add root attributes
         """
         super().add_root_attrs()
 
