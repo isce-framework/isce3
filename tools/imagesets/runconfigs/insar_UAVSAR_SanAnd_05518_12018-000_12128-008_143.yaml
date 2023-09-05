@@ -18,9 +18,9 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/dem.tif
-            troposphere_weather_model:
-               reference_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/HRES_2012_04_19_T16_37_23_38N_41N_125W_122W.nc
-               secondary_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/HRES_2012_11_05_T22_48_18_38N_41N_125W_122W.nc
+            troposphere_weather_model_files:
+               reference_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12018_000_120419_L090_CX_143_03/HRES_2012_04_19_T16_37_23.nc
+               secondary_troposphere_file: input_L1_RSLC_UAVSAR_SanAnd_05518_12128_008_121105_L090_CX_143_02/HRES_2012_11_05_T22_48_18.nc
 
         product_path_group:
             # REQUIRED - Directory where PGE will place results. Irrelevant to SAS.
