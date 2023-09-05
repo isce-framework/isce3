@@ -51,12 +51,12 @@ class RIFGWriter(L1InSARWriter):
         super().add_algorithms_to_procinfo_group()
         self.add_interferogramformation_to_algo_group()
 
-    def add_interferogram_to_swaths(self):
+    def add_interferogram_to_swaths_group(self):
         """
         Add interferogram group to swaths
         """
 
-        super().add_interferogram_to_swaths()
+        super().add_interferogram_to_swaths_group()
 
         # Add the wrappedInterferogram to the interferogram group
         # under swaths group
@@ -107,5 +107,5 @@ class RIFGWriter(L1InSARWriter):
         super().add_swaths_to_hdf5()
 
         # add subswaths to swaths group
-        self.add_subswaths_to_swaths()
-        self.add_interferogram_to_swaths()
+        self.add_subswaths_to_swaths_group()
+        self.add_interferogram_to_swaths_group()

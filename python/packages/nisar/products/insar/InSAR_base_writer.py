@@ -894,7 +894,7 @@ class InSARBaseWriter(h5py.File):
             sec_id_group.copy(ds_name, dst_id_group,
                               f"secondaryZ{ds_name[1:]}")
 
-        ds_params = [
+        id_ds_names_to_be_created = [
             DatasetParams(
                 "instrumentName",
                 f"{radar_band_name}SAR",
@@ -969,7 +969,7 @@ class InSARBaseWriter(h5py.File):
                 "Flag to indicate radar geometry or geocoded product",
             ),
         ]
-        for ds_param in ds_params:
+        for ds_param in id_ds_names_to_be_created:
             add_dataset_and_attrs(dst_id_group, ds_param)
 
     def _pull_pixel_offsets_params(self):
@@ -1068,7 +1068,7 @@ class InSARBaseWriter(h5py.File):
 
     def _get_mixed_mode(self):
         """
-        Determing mixed mode and return result as a DatasetParams
+        Determining mixed mode and return result as a DatasetParams
 
         Returns
         ----------

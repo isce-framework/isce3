@@ -255,7 +255,7 @@ class L1InSARWriter(InSARBaseWriter):
                         ds_description,
                         units=ds_unit)
 
-    def add_pixel_offsets_to_swaths(self):
+    def add_pixel_offsets_to_swaths_group(self):
         """
         Add pixel offsets product to swaths group
         """
@@ -327,7 +327,7 @@ class L1InSARWriter(InSARBaseWriter):
         # add the datasets to pixel offsets group
         self._add_datasets_to_pixel_offset_group()
 
-    def add_interferogram_to_swaths(self):
+    def add_interferogram_to_swaths_group(self):
         """
         Add the interferogram group to the swaths group
         """
@@ -471,7 +471,7 @@ class L1InSARWriter(InSARBaseWriter):
                         units=ds_unit)
 
 
-    def add_subswaths_to_swaths(self):
+    def add_subswaths_to_swaths_group(self):
         """
         Add subswaths to the swaths group
         """
@@ -545,4 +545,4 @@ class L1InSARWriter(InSARBaseWriter):
                 "centerFrequency",
             )
 
-        self.add_pixel_offsets_to_swaths()
+        self.add_pixel_offsets_to_swaths_group()

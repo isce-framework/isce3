@@ -292,12 +292,12 @@ class RUNWWriter(L1InSARWriter):
         super().add_parameters_to_procinfo_group()
         self.add_ionosphere_to_procinfo_params_group()
 
-    def add_interferogram_to_swaths(self):
+    def add_interferogram_to_swaths_group(self):
         """
         Add interferogram group to swaths group
         """
 
-        super().add_interferogram_to_swaths()
+        super().add_interferogram_to_swaths_group()
 
         # Add the connectedComponents, ionospherePhaseScreen,
         # ionospherePhaseScreenUncertainty, and the
@@ -368,5 +368,5 @@ class RUNWWriter(L1InSARWriter):
         super().add_swaths_to_hdf5()
 
         # add subswaths and interferogram to swaths group
-        self.add_subswaths_to_swaths()
-        self.add_interferogram_to_swaths()
+        self.add_subswaths_to_swaths_group()
+        self.add_interferogram_to_swaths_group()
