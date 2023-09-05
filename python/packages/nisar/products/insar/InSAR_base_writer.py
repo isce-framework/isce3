@@ -130,24 +130,17 @@ class InSARBaseWriter(h5py.File):
         self.add_root_attrs()
         self.add_identification_to_hdf5()
         self.add_common_metadata_to_hdf5()
-        self.add_procinfo_to_metadata()
+        self.add_procinfo_to_metadata_group()
 
-    def add_procinfo_to_metadata(self):
+    def add_procinfo_to_metadata_group(self):
         """
-        Add processing information group to HDF5 metadata
-
-        Returns
-        ----------
-        group : h5py.Group
-            The processing information group object
+        Add processing information group to metadata group
         """
 
-        group = self.require_group(self.group_paths.ProcessingInformationPath)
+        self.require_group(self.group_paths.ProcessingInformationPath)
         self.add_algorithms_to_procinfo_group()
         self.add_inputs_to_procinfo_group()
         self.add_parameters_to_procinfo_group()
-
-        return group
 
     def add_algorithms_to_procinfo_group(self):
         """
