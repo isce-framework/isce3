@@ -642,11 +642,6 @@ class InSARBaseWriter(h5py.File):
     def add_parameters_to_procinfo_group(self):
         """
         Add the parameters group to the "processingInformation" group
-
-        Returns
-        ----------
-        params_group : h5py.Group
-            The parameters group object
         """
         params_group = self.require_group(self.group_paths.ParametersPath)
 
