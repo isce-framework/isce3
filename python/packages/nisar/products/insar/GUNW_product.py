@@ -4,23 +4,19 @@ from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
-from .InSARBase import InSARWriter
+from .InSAR_base_writer import InSARBaseWriter
 from .InSARL2Products import L2InSARWriter
 from .product_paths import GUNWGroupsPaths
-from .RUNW_product import RUNW
+from .RUNW_writer import RUNWWriter
 
 
-class GUNW(RUNW, L2InSARWriter):
+class GUNWWriter(RUNWWriter, L2InSARWriter):
     """
-    Writer class for GUNW product inherent from RUNW
+    Writer class for GUNW product inherent from RUNWWriter
     """
-
-    def __init__(
-        self,
-        **kwds,
-    ):
+    def __init__(self, **kwds):
         """
-        Constructor for GUNW class
+        Constructor for GUNW writer class
         """
         super().__init__(**kwds)
 
@@ -34,50 +30,40 @@ class GUNW(RUNW, L2InSARWriter):
         """
         Save to HDF5
         """
-
         L2InSARWriter.save_to_hdf5(self)
 
     def add_root_attrs(self):
         """
         add root attributes
         """
+        InSARBaseWriter.add_root_attrs(self)
 
-        InSARWriter.add_root_attrs(self)
+        self.attrs["title"] = np.string_("NISAR L2 GUNW Product")
+        self.attrs["reference_document"] = np.string_("JPL-102272")
 
-        self.attrs["title"] = "NISAR L2 GUNW Product"
-        self.attrs["reference_document"] = "TBD"
-        
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
-        
+
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms to processingInformation group
-
-        Return
-        ------
-        algo_group (h5py.Group): the algorithm group object
         """
-        algo_group = RUNW.add_algorithms_to_procinfo(self)
-        L2InSARWriter.add_geocoding_to_algo(self, algo_group)
-        
-        return algo_group
+        RUNWWriter.add_algorithms_to_procinfo_group(self)
+        L2InSARWriter.add_geocoding_to_algo_group(self)
 
     def add_parameters_to_procinfo(self):
         """
         Add parameters group to processingInformation/parameters group
         """
-        
-        RUNW.add_parameters_to_procinfo(self)
-        L2InSARWriter.add_geocoding_to_procinfo_params(self)
+        RUNWWriter.add_parameters_to_procinfo_group(self)
+        L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
 
     def add_grids_to_hdf5(self):
         """
         Add grids to HDF5
         """
-
         L2InSARWriter.add_grids_to_hdf5(self)
-        
+
         pcfg = self.cfg["processing"]
         geogrids = pcfg["geocode"]["geogrids"]
         wrapped_igram_geogrids = pcfg["geocode"]["wrapped_igram_geogrids"]
@@ -101,9 +87,8 @@ class GUNW(RUNW, L2InSARWriter):
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
 
-            self._copy_dataset_by_name(
-                rslc_freq_group, "numberOfSubSwaths", grids_freq_group
-            )
+            rslc_freq_group.copy("numberOfSubSwaths",
+                                 grids_freq_group)
 
             unwrapped_geogrids = geogrids[freq]
             wrapped_geogrids = wrapped_igram_geogrids[freq]
@@ -168,7 +153,7 @@ class GUNW(RUNW, L2InSARWriter):
 
                 self._create_2d_dataset(
                     unwrapped_pol_group,
-                    "coherenceMagnitude",
+                    "coherenceMagnigtude",
                     unwrapped_shape,
                     np.float32,
                     np.string_(f"Coherence magnitude between {pol} layers"),
