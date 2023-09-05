@@ -38,7 +38,7 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
         """
         InSARBaseWriter.add_root_attrs(self)
 
-        self.attrs["title"] = np.string_("NISAR L2 GUNW Product")
+        self.attrs["title"] = np.string_("NISAR L2 GUNW_Product")
         self.attrs["reference_document"] = np.string_("JPL-102272")
 
         ctype = h5py.h5t.py_create(np.complex64)
@@ -105,15 +105,14 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                 wrapped_geogrids.width,
             )
 
-            unwrapped_group_name = (
+            unwrapped_group_name = \
                 f"{grids_freq_group_name}/interferogram/unwrapped"
-            )
-            wrapped_group_name = (
+
+            wrapped_group_name = \
                 f"{grids_freq_group_name}/interferogram/wrapped"
-            )
-            pixeloffsets_group_name = (
+
+            pixeloffsets_group_name = \
                 f"{grids_freq_group_name}/pixelOffsets"
-            )
 
             unwrapped_group = self.require_group(unwrapped_group_name)
 
@@ -130,15 +129,13 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                 "mask",
                 unwrapped_shape,
                 np.byte,
-                np.string_(
-                    "Byte layer with flags for various channels"
-                    " (e.g.layover/shadow, data quality)"
-                ),
-                np.string_("DN"),
+                "Byte layer with flags for various channels"
+                " (e.g.layover/shadow, data quality)"
+                ,
+                "DN",
                 grids_val,
                 xds=xds,
-                yds=yds,
-            )
+                yds=yds)
 
             for pol in pol_list:
                 # unwrapped interferogram group
@@ -151,64 +148,39 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                     unwrapped_geogrids,
                 )
 
-                self._create_2d_dataset(
-                    unwrapped_pol_group,
-                    "coherenceMagnigtude",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(f"Coherence magnitude between {pol} layers"),
-                    np.string_("unitless"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
-                self._create_2d_dataset(
-                    unwrapped_pol_group,
-                    "connectedComponents",
-                    unwrapped_shape,
-                    np.uint32,
-                    np.string_(f"Connected components for {pol} layers"),
-                    np.string_("DN"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                    fill_value=0,
-                )
-                self._create_2d_dataset(
-                    unwrapped_pol_group,
-                    "ionospherePhaseScreen",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(f"Ionosphere phase screen"),
-                    np.string_("radians"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
-                self._create_2d_dataset(
-                    unwrapped_pol_group,
-                    "ionospherePhaseScreenUncertainty",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(f"Uncertainty of the ionosphere phase screen"),
-                    np.string_("radians"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
-                self._create_2d_dataset(
-                    unwrapped_pol_group,
-                    "unwrappedPhase",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(
-                        f"Unwrapped interferogram between {pol} layers"
-                    ),
-                    np.string_("radians"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
+                #unwrapped dataset including the dataset name,
+                #data type, description, and units
+                unwrapped_ds_params = [
+                    ("coherenceMagnigtude", np.float32,
+                     f"Coherence magnitude between {pol} layers",
+                     "unitless"),
+                    ("connectedComponents", np.uint32,
+                     f"Connected components for {pol} layers",
+                     "DN"),
+                    ("ionospherePhaseScreen", np.float32,
+                     "Ionosphere phase screen",
+                     "radians"),
+                    ("ionospherePhaseScreenUncertainty", np.float32,
+                     "Uncertainty of the ionosphere phase screen",
+                     "radians"),
+                    ("unwrappedPhase", np.float32,
+                    f"Unwrapped interferogram between {pol} layers",
+                     "radians"),
+                ]
+
+                for ds_param in unwrapped_ds_params:
+                    ds_name, ds_datatype, ds_description, ds_unit\
+                        = ds_param
+                    self._create_2d_dataset(
+                        unwrapped_pol_group,
+                        ds_name,
+                        unwrapped_shape,
+                        ds_datatype,
+                        ds_description,
+                        ds_unit,
+                        grids_val,
+                        xds=xds,
+                        yds=yds)
 
                 # wrapped interferogram group
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
@@ -220,30 +192,31 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                     wrapped_geogrids,
                 )
 
-                self._create_2d_dataset(
-                    wrapped_pol_group,
-                    "wrappedCoherenceMagnitude",
-                    wrapped_shape,
-                    np.float32,
-                    np.string_(f"Coherence magnitude between {pol} layers"),
-                    np.string_("unitless"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
-                self._create_2d_dataset(
-                    wrapped_pol_group,
-                    "wrappedInterferogram",
-                    wrapped_shape,
-                    np.complex64,
-                    np.string_(
-                        f"Complex wrapped interferogram between {pol} layers"
-                    ),
-                    np.string_("DN"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
+                #wrapped dataset including the dataset name,
+                #data type, description, and units
+                wrapped_ds_params = [
+                    ("coherenceMagnigtude", np.float32,
+                     f"Coherence magnitude between {pol} layers",
+                     "unitless"),
+                    ("wrappedInterferogram", np.complex64,
+                     f"Complex wrapped interferogram between {pol} layers",
+                     "DN"),
+                ]
+
+                for ds_param in wrapped_ds_params:
+                    ds_name, ds_datatype, ds_description, ds_unit\
+                        = ds_param
+                    self._create_2d_dataset(
+                        wrapped_pol_group,
+                        ds_name,
+                        wrapped_shape,
+                        ds_datatype,
+                        ds_description,
+                        ds_unit,
+                        grids_val,
+                        xds=xds,
+                        yds=yds,
+                    )
 
                 # pixelOffsets group
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
@@ -257,36 +230,31 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                     unwrapped_geogrids,
                 )
 
-                self._create_2d_dataset(
-                    pixeloffsets_pol_group,
-                    "alongTrackOffset",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(f"Along track offset"),
-                    np.string_("meters"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
-                self._create_2d_dataset(
-                    pixeloffsets_pol_group,
-                    "crossCorrelationPeak",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(f"Normalized cross-correlation surface peak"),
-                    np.string_("unitless"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
-                self._create_2d_dataset(
-                    pixeloffsets_pol_group,
-                    "slantRangeOffset",
-                    unwrapped_shape,
-                    np.float32,
-                    np.string_(f"Slant range offset"),
-                    np.string_("meters"),
-                    grids_val,
-                    xds=xds,
-                    yds=yds,
-                )
+                #pixel offsets dataset including the dataset name,
+                #data type, description, and units
+                pixel_offsets_ds_params = [
+                    ("alongTrackOffset", np.float32,
+                     "Along track offset",
+                     "meters"),
+                    ("crossCorrelationPeak", np.float32,
+                     "Normalized cross-correlation surface peak",
+                     "unitless"),
+                    ("slantRangeOffset", np.float32,
+                     "Slant range offset",
+                     "meters"),
+                ]
+
+                for ds_param in pixel_offsets_ds_params:
+                    ds_name, ds_datatype, ds_description, ds_unit\
+                        = ds_param
+                    self._create_2d_dataset(
+                        pixeloffsets_pol_group,
+                        ds_name,
+                        unwrapped_shape,
+                        ds_datatype,
+                        ds_description,
+                        ds_unit,
+                        grids_val,
+                        xds=xds,
+                        yds=yds,
+                    )
