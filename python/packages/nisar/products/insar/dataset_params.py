@@ -20,7 +20,6 @@ class DatasetParams:
     attr_dict : dict
         Other attributes to be written to Dataset
     """
-    
     name: str
     value: object
     description: str
@@ -29,7 +28,7 @@ class DatasetParams:
 def add_dataset_and_attrs(group, dataset_param_item):
     """
     Write a DatasetParam object to h5py.Group
-    
+
     Parameters
     ----------
     group : h5py.Group
@@ -37,7 +36,6 @@ def add_dataset_and_attrs(group, dataset_param_item):
     dataset_param_item : DatasetParams
         DatasetParams object to write to group
     """
-    
     # Ensure it is clear to write by deleting pre-existing Dataset
     if dataset_param_item.name in group:
         del group[dataset_param_item.name]
