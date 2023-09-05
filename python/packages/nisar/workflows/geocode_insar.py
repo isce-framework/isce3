@@ -538,10 +538,17 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
-    az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
-    rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    rg_looks = cfg['processing']['crossmul']['range_looks']
+    az_looks = cfg['processing']['crossmul']['azimuth_looks']
+    unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
+        rg_looks = unwrap_rg_looks
+        az_looks = unwrap_az_looks
+
     if input_product_type is InputProduct.ROFF:
         geo_datasets = cfg["processing"]["geocode"]["goff_datasets"]
     elif input_product_type is InputProduct.RUNW:
@@ -800,8 +807,15 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
-    az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
-    rg_looks = cfg["processing"]["crossmul"]["range_looks"]
+    rg_looks = cfg['processing']['crossmul']['range_looks']
+    az_looks = cfg['processing']['crossmul']['azimuth_looks']
+    unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
+        rg_looks = unwrap_rg_looks
+        az_looks = unwrap_az_looks
+
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
 
     if input_product_type is InputProduct.ROFF:

@@ -553,6 +553,8 @@ def prep_ds_insar(pcfg, dst, dst_h5):
     is_iono_method_sideband = iono_method in iono_method_sideband
     rg_looks = cfg['crossmul']['range_looks']
     az_looks = cfg['crossmul']['azimuth_looks']
+    unwrap_rg_looks = cfg['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['phase_unwrap']['azimuth_looks']
 
     # Create list of frequencies
     id_group = dst_h5[f'{common_path}/identification']
@@ -616,6 +618,10 @@ def prep_ds_insar(pcfg, dst, dst_h5):
 
             # Add number of sub-swaths and spacing
             if dst in ['RIFG', 'RUNW']:
+                if dst == 'RUNW' and (unwrap_az_looks > 1 or unwrap_rg_looks > 1):
+                    rg_looks = unwrap_rg_looks
+                    az_looks = unwrap_az_looks
+
                 descr = "Nominal along track spacing in meters between consecutive lines" \
                         "near mid-swath of the interferogram image"
                 _create_datasets(dst_h5[freq_path], [0], np.float32,
@@ -849,10 +855,6 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                 for pol in pol_list:
                    pol_path = f'{igram_path}/{pol}'
                    dst_h5[igram_path].create_group(f'{pol}')
-                   _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
-                                    'coherenceMagnitude', descr=descr, units=" ",
-                                    grids=grids_val,
-                                    long_name='coherence magnitude')
 
                    if dst in ['GUNW']:
                        wrapped_igram_pol_path = f'{wrapped_igram_path}/{pol}'
@@ -874,23 +876,56 @@ def prep_ds_insar(pcfg, dst, dst_h5):
                                         long_name='complex wrapped phase')
 
                    if dst in ['RIFG']:
-                      descr = f"Interferogram between {pol} layers"
-                      _create_datasets(dst_h5[pol_path], igram_shape,
-                                       np.complex64,
-                                       "wrappedInterferogram",
-                                       descr=descr, units="radians",
-                                       long_name='wrapped phase')
-                   elif dst in ['RUNW', 'GUNW']:
-                      descr = f"Unwrapped interferogram between {pol} layers"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
-                                       'unwrappedPhase', descr=descr,
+                       descr = f"Interferogram between {pol} layers"
+                       _create_datasets(dst_h5[pol_path], igram_shape,
+                                        np.complex64,
+                                        "wrappedInterferogram",
+                                        descr=descr, units="radians",
+                                        long_name='wrapped phase')
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                        'coherenceMagnitude', descr=descr, units=" ",
+                                        grids=grids_val,
+                                        long_name='coherence magnitude')
+                   elif dst in ['RUNW']:
+                       # Check if we need to further multilook the wrapped interferogram
+                       # in RIFG. If that is the case, igram_shape needs to be updated
+                       if (unwrap_rg_looks > 1) or (unwrap_az_looks > 1):
+                           rg_looks = unwrap_rg_looks
+                           az_looks = unwrap_az_looks
+
+                       igram_shape = (slc_lines // az_looks,
+                                      slc_cols // rg_looks)
+
+                       descr = f"Unwrapped interferogram between {pol} layers"
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                        'unwrappedPhase', descr=descr,
                                         units="radians", grids=grids_val,
                                         long_name='unwrapped phase')
-                      descr = f"Connected components for {pol} layer"
-                      _create_datasets(dst_h5[pol_path], igram_shape, np.uint32,
-                                      'connectedComponents', descr=descr, units=" ",
-                                      grids=grids_val,
-                                      long_name='connected components')
+                       descr = f"Connected components for {pol} layer"
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.uint32,
+                                       'connectedComponents', descr=descr, units=" ",
+                                       grids=grids_val,
+                                       long_name='connected components')
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                        'coherenceMagnitude', descr=descr, units=" ",
+                                        grids=grids_val,
+                                        long_name='coherence magnitude')
+                   elif dst in ['GUNW']:
+                       descr = f"Unwrapped interferogram between {pol} layers"
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                        'unwrappedPhase', descr=descr,
+                                        units="radians", grids=grids_val,
+                                        long_name='unwrapped phase')
+                       descr = f"Connected components for {pol} layer"
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.uint32,
+                                        'connectedComponents', descr=descr, units=" ",
+                                        grids=grids_val,
+                                        long_name='connected components')
+                       _create_datasets(dst_h5[pol_path], igram_shape, np.float32,
+                                        'coherenceMagnitude', descr=descr, units=" ",
+                                        grids=grids_val,
+                                        long_name='coherence magnitude')
+
 
                 if iono_args['enabled'] and dst in ['RUNW', 'GUNW']:
                    pol_list_iono = freq_pols_iono['A']
