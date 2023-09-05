@@ -11,7 +11,6 @@ class RIFGWriter(L1InSARWriter):
     """
     Writer class for RIFG product inherenting from L1InSARWriter
     """
-
     def __init__(self, **kwds):
         """
         Constructor for RIFG class
@@ -33,7 +32,6 @@ class RIFGWriter(L1InSARWriter):
         """
         add root attributes
         """
-
         super().add_root_attrs()
 
         # Add additional attributes
@@ -47,7 +45,6 @@ class RIFGWriter(L1InSARWriter):
         """
         Add the algorithms to processingInformation group
         """
-
         super().add_algorithms_to_procinfo_group()
         self.add_interferogramformation_to_algo_group()
 
@@ -55,7 +52,6 @@ class RIFGWriter(L1InSARWriter):
         """
         Add interferogram group to swaths
         """
-
         super().add_interferogram_to_swaths_group()
 
         # Add the wrappedInterferogram to the interferogram group
@@ -103,7 +99,6 @@ class RIFGWriter(L1InSARWriter):
         """
         Add swaths to the HDF5
         """
-
         super().add_swaths_to_hdf5()
 
         # add subswaths to swaths group

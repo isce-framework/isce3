@@ -29,7 +29,6 @@ class CommonPaths:
     ParametersPath : str
         Parameters group path
     """
-
     ProductName: str = ""
     RootPath: str = "/science/LSAR"
 
@@ -77,7 +76,6 @@ class L1GroupsPaths(CommonPaths):
     SwathsPath : str
         Swaths group path
     """
-
     @property
     def GeolocationGridPath(self):
         return f"{self.MetadataPath}/geolocationGrid"
@@ -98,7 +96,6 @@ class L2GroupsPaths(CommonPaths):
     GridsPath : str
         Grids group path
     """
-
     @property
     def RadarGridPath(self):
         return f"{self.MetadataPath}/radarGrid"
@@ -117,7 +114,6 @@ class RIFGGroupsPaths(L1GroupsPaths):
     ProductName : str
         Product name (RIFG)
     """
-
     ProductName: str = "RIFG"
 
 
@@ -131,7 +127,6 @@ class RUNWGroupsPaths(L1GroupsPaths):
     ProductName : str
         Product name (RUNW)
     """
-
     ProductName: str = "RUNW"
 
 
@@ -145,7 +140,6 @@ class ROFFGroupsPaths(L1GroupsPaths):
     ProductName : str
         Product name (ROFF)
     """
-
     ProductName: str = "ROFF"
 
 
@@ -159,7 +153,6 @@ class GUNWGroupsPaths(L2GroupsPaths):
     ProductName : str
         Product name (GUNW)
     """
-
     ProductName: str = "GUNW"
 
 
@@ -173,5 +166,4 @@ class GOFFGroupsPaths(L2GroupsPaths):
     ProductName : str
         Product name (GOFF)
     """
-
     ProductName: str = "GOFF"

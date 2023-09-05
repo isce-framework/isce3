@@ -11,7 +11,6 @@ class RUNWWriter(L1InSARWriter):
     """
     Writer class for RUNW product inherent from L1InSARWriter
     """
-
     def __init__(self, **kwds):
         """
         Constructor for RUNW class
@@ -44,7 +43,6 @@ class RUNWWriter(L1InSARWriter):
         """
         add root attributes
         """
-
         super().add_root_attrs()
 
         self.attrs["title"] = np.string_("NISAR L1_RUNW Product")
@@ -54,7 +52,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add the ionosphere to the processingInformation/parameters group
         """
-
         high_bandwidth = 0
         low_bandwidth = 0
         iono_cfg = self.cfg["processing"]["ionosphere_phase_correction"]
@@ -94,7 +91,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add the ionosphere estimation group to algorithms group
         """
-
         iono_algorithm = "None"
         iono_filling = "None"
         iono_filtering = "None"
@@ -191,7 +187,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add the unwrapping to the algorithms group
         """
-
         cost_mode = "None"
         unwrapping_algorithm = "None"
         unwrapping_initializer = "None"
@@ -277,7 +272,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add the algorithms to processingInformation group
         """
-
         super().add_algorithms_to_procinfo_group()
 
         self.add_interferogramformation_to_algo_group()
@@ -288,7 +282,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add parameters group to processingInformation/parameters group
         """
-
         super().add_parameters_to_procinfo_group()
         self.add_ionosphere_to_procinfo_params_group()
 
@@ -296,7 +289,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add interferogram group to swaths group
         """
-
         super().add_interferogram_to_swaths_group()
 
         # Add the connectedComponents, ionospherePhaseScreen,
@@ -364,7 +356,6 @@ class RUNWWriter(L1InSARWriter):
         """
         Add Swaths to the HDF5
         """
-
         super().add_swaths_to_hdf5()
 
         # add subswaths and interferogram to swaths group

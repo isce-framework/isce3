@@ -13,7 +13,6 @@ class ROFFWriter(L1InSARWriter):
     """
     Writer class for ROFF product inherent from L1InSARWriter
     """
-
     def __init__(self, **kwds):
         """
         Constructor for ROFF class
@@ -31,7 +30,6 @@ class ROFFWriter(L1InSARWriter):
         """
         add root attributes
         """
-
         super().add_root_attrs()
 
         self.attrs["title"] = np.string_("NISAR L1_ROFF Product")
@@ -41,7 +39,6 @@ class ROFFWriter(L1InSARWriter):
         """
         Add the coregistration parameters to the "processingInfromation/algorithms" group
         """
-
         proc_cfg = self.cfg["processing"]
         dense_offsets = proc_cfg["dense_offsets"]["enabled"]
         offset_product = proc_cfg["offsets_product"]["enabled"]
@@ -87,7 +84,6 @@ class ROFFWriter(L1InSARWriter):
         """
         Add the cross correlation parameters to the "processingInfromation/algorithms" group
         """
-
         proc_cfg = self.cfg["processing"]
         is_roff = proc_cfg["offsets_product"]["enabled"]
         cross_correlation_domain = \
@@ -112,7 +108,6 @@ class ROFFWriter(L1InSARWriter):
         """
         Add the algorithms group to the processingInformation group
         """
-
         super().add_algorithms_to_procinfo_group()
         self.add_cross_correlation_to_algo_group()
 
@@ -121,7 +116,6 @@ class ROFFWriter(L1InSARWriter):
         """
         Add parameters group to processingInformation/parameters group
         """
-
         # Using the InSARBase parameters group only
         InSARBaseWriter.add_parameters_to_procinfo_group(self)
         self.add_pixeloffsets_to_procinfo_params_group()
@@ -131,7 +125,6 @@ class ROFFWriter(L1InSARWriter):
         Add the pixelOffsets group to
         the processingInformation/parameters group
         """
-
         proc_cfg = self.cfg["processing"]
         # pull the offset parameters
         is_roff,  margin, rg_start, az_start,\
@@ -283,7 +276,6 @@ class ROFFWriter(L1InSARWriter):
         """
         Add datasets to pixelOffsets group under the swath group
         """
-
         # Add the ROFF specified datasets to the pixelOffset products
         proc_cfg = self.cfg["processing"]
 

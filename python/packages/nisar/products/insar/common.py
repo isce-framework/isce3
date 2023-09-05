@@ -25,7 +25,6 @@ class InSARProductsInfo:
     isGeocoded : bool
         Geocoded product or not (True or False)
     """
-
     ProductSpecificationVersion: str
     ProductType: str
     ProductLevel: str

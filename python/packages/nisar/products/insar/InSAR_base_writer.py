@@ -45,7 +45,6 @@ class InSARBaseWriter(h5py.File):
     kwds : dict
         Parameters of the h5py.File
     """
-
     def __init__(self,
                  runconfig_dict: dict,
                  runconfig_path: str,
@@ -67,7 +66,6 @@ class InSARBaseWriter(h5py.File):
         epoch : Datetime, optional
             The reference datetime for the orbit
         """
-
         super().__init__(**kwds)
 
         self.cfg = runconfig_dict
@@ -116,7 +114,6 @@ class InSARBaseWriter(h5py.File):
         """
         Write attributes to the HDF5 root that are common to all InSAR products
         """
-
         self.attrs["Conventions"] = np.string_("CF-1.7")
         self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
         self.attrs["institution"] = np.string_("NASA JPL")
@@ -126,7 +123,6 @@ class InSARBaseWriter(h5py.File):
         """
         Write the attributes and groups to the HDF5 file
         """
-
         self.add_root_attrs()
         self.add_identification_to_hdf5()
         self.add_common_metadata_to_hdf5()
@@ -136,7 +132,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add processing information group to metadata group
         """
-
         self.require_group(self.group_paths.ProcessingInformationPath)
         self.add_algorithms_to_procinfo_group()
         self.add_inputs_to_procinfo_group()
@@ -146,7 +141,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the algorithm group to the processing information group
         """
-
         algo_group = self.require_group(self.group_paths.AlgorithmsPath)
 
         software_version = DatasetParams(
@@ -161,7 +155,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the common group to the "processingInformation/parameters" group
         """
-
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             doppler_centroid_path = f"{self.ref_rslc.ProcessingInformationPath}/parameters/frequency{freq}"
             doppler_bandwidth_path = \
@@ -197,7 +190,6 @@ class InSARBaseWriter(h5py.File):
         rslc_name : str
             RSLC name, ('reference' or 'secondary')
         """
-
         if rslc_name.lower() == "reference":
             rslc_h5py_file_obj = self.ref_h5py_file_obj
             rslc = self.ref_rslc
@@ -280,7 +272,6 @@ class InSARBaseWriter(h5py.File):
         Add the coregistration parameters to the
         "processingInfromation/algorithms" group
         """
-
         proc_cfg = self.cfg["processing"]
         dense_offsets = proc_cfg["dense_offsets"]["enabled"]
         offset_product = proc_cfg["offsets_product"]["enabled"]
@@ -394,7 +385,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the InterferogramFormation group to "processingInformation/algorithms" group
         """
-
         flatten_method = "None"
         proc_cfg = self.cfg["processing"]
 
@@ -447,7 +437,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the interferogram group to "processingInformation/parameters group"
         """
-
         proc_cfg_crossmul = self.cfg["processing"]["crossmul"]
         range_filter = proc_cfg_crossmul["common_band_range_filter"]
         azimuth_filter = proc_cfg_crossmul["common_band_azimuth_filter"]
@@ -542,7 +531,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the pixelOffsets group to "processingInformation/parameters" group
         """
-
         proc_cfg = self.cfg["processing"]
         is_roff = proc_cfg["offsets_product"]["enabled"]
         merge_gross_offset = get_off_params(
@@ -686,7 +674,6 @@ class InSARBaseWriter(h5py.File):
         inputs_group : h5py.Group
             The inputs group object
         """
-
         orbit_file = []
         ancillary_group = self.cfg["dynamic_ancillary_file_group"]
         for idx in ["reference", "secondary"]:
@@ -744,7 +731,6 @@ class InSARBaseWriter(h5py.File):
         """
         Write metadata datasets and attributes common to all InSAR products to HDF5
         """
-
         # Can copy entirety of attitude
         ref_metadata_group = self.ref_h5py_file_obj[self.ref_rslc.MetadataPath]
         dst_metadata_group = self.require_group(self.group_paths.MetadataPath)
@@ -763,7 +749,6 @@ class InSARBaseWriter(h5py.File):
         """
         Add the identification group to the product
         """
-
         radar_band_name = self._get_band_name()
         processing_center = \
             self.cfg["primary_executable"].get("processing_center")
@@ -1001,7 +986,6 @@ class InSARBaseWriter(h5py.File):
         ovs_factor : int
             Oversampling factor
         """
-
         proc_cfg = self.cfg["processing"]
 
         # pull the offset parameters
@@ -1046,7 +1030,6 @@ class InSARBaseWriter(h5py.File):
         str
             'L', 'S'
         """
-
         freq = "A" if "A" in self.freq_pols else "B"
         swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
         freq_group = self.ref_h5py_file_obj[swath_frequency_path]
@@ -1075,7 +1058,6 @@ class InSARBaseWriter(h5py.File):
         isMixedMode : DatasetParams
             DatasetParams object based on bandwidth overlap check
         """
-
         pols_dict = {}
         for freq, pols, _ in get_cfg_freq_pols(self.cfg):
             pols_dict[freq] = pols
@@ -1162,7 +1144,6 @@ class InSARBaseWriter(h5py.File):
         fill_value : Any, optional
             Novalue of the dataset
         """
-
         # use the default chunk size if the chunk_size is None
         chunks = self.default_chunk_size
         create_with_chunks = chunks[0] < shape[0] and chunks[1] < shape[1]

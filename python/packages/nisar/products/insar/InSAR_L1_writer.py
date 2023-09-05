@@ -21,7 +21,6 @@ class L1InSARWriter(InSARBaseWriter):
     igram_azimuth_looks : int
         azimuth looks for the interferogram
     """
-
     def __init__(self, **kwds):
         """
         Constructor for InSAR L1 product (RIFG, RUNW, and ROFF).
@@ -48,7 +47,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add the geolocation grid cubes
         """
-
         # Pull the heights and espg from the radar_grid_cubes group
         # in the runconfig
         radar_grid_cfg = self.cfg["processing"]["radar_grid_cubes"]
@@ -119,7 +117,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add the algorithms group to the processingInformation group
         """
-
         super().add_algorithms_to_procinfo_group()
         self.add_coregistration_to_algo_group()
 
@@ -127,7 +124,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add the parameters group to the "processingInformation" group
         """
-
         super().add_parameters_to_procinfo_group()
 
         self.add_interferogram_to_procinfo_params_group()
@@ -149,7 +145,6 @@ class L1InSARWriter(InSARBaseWriter):
         igram_shape : tuple
              interfergraom shape
         """
-
         # get the RSLC lines and columns
         slc_dset = \
             self.ref_h5py_file_obj[
@@ -178,7 +173,6 @@ class L1InSARWriter(InSARBaseWriter):
         tuple
             (off_length, off_width):
         """
-
         proc_cfg = self.cfg["processing"]
         is_roff,  margin, _, _,\
         rg_skip, az_skip, rg_search, az_search,\
@@ -208,7 +202,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add datasets to pixel offsets group
         """
-
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # create the swath group
             swaths_freq_group_name = \
@@ -259,7 +252,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add pixel offsets product to swaths group
         """
-
         is_roff,  margin, rg_start, az_start,\
         rg_skip, az_skip, rg_search, az_search,\
         rg_chip, az_chip, _ = self._pull_pixel_offsets_params()
@@ -331,7 +323,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add the interferogram group to the swaths group
         """
-
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
@@ -475,7 +466,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add subswaths to the swaths group
         """
-
         for freq, *_ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
