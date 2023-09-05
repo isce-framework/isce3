@@ -12,7 +12,8 @@ from .product_paths import L1GroupsPaths
 
 class L1InSARWriter(InSARBaseWriter):
     """
-    InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer inherenting from the InSARWriter
+    InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer
+    inherenting from the InSARBaseWriter
 
     Attributes
     ----------

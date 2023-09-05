@@ -18,7 +18,7 @@ from .product_paths import CommonPaths
 class InSARBaseWriter(h5py.File):
     """
     The base class of InSAR product inheriting from h5py.File to avoid passing
-    h5py.File parameter
+    h5py.File parameter, the
 
     Attributes
     ----------
@@ -156,7 +156,8 @@ class InSARBaseWriter(h5py.File):
         Add the common group to the "processingInformation/parameters" group
         """
         for freq, *_ in get_cfg_freq_pols(self.cfg):
-            doppler_centroid_path = f"{self.ref_rslc.ProcessingInformationPath}/parameters/frequency{freq}"
+            doppler_centroid_path = \
+                f"{self.ref_rslc.ProcessingInformationPath}/parameters/frequency{freq}"
             doppler_bandwidth_path = \
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
 
@@ -667,12 +668,6 @@ class InSARBaseWriter(h5py.File):
     def add_inputs_to_procinfo_group(self):
         """
         Add the inputs group to the "processingInformation" group
-
-
-        Returns
-        ----------
-        inputs_group : h5py.Group
-            The inputs group object
         """
         orbit_file = []
         ancillary_group = self.cfg["dynamic_ancillary_file_group"]
@@ -724,8 +719,6 @@ class InSARBaseWriter(h5py.File):
         )
         for ds_param in inputs_ds_params:
             add_dataset_and_attrs(inputs_group, ds_param)
-
-        return inputs_group
 
     def add_common_metadata_to_hdf5(self):
         """
