@@ -15,7 +15,7 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .product_paths import CommonPaths
 
 
-class InSARWriter(h5py.File):
+class InSARBaseWriter(h5py.File):
     """
     The base class of InSAR product inheriting from h5py.File to avoid passing
     h5py.File parameter

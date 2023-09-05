@@ -4,7 +4,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
-from .InSAR_base_writer import InSARWriter
+from .InSAR_base_writer import InSARBaseWriter
 from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import ROFFGroupsPaths
 
@@ -123,7 +123,7 @@ class ROFFWriter(L1InSARWriter):
         """
 
         # Using the InSARBase parameters group only
-        InSARWriter.add_parameters_to_procinfo_group(self)
+        InSARBaseWriter.add_parameters_to_procinfo_group(self)
         self.add_pixeloffsets_to_procinfo_params_group()
 
     def add_pixeloffsets_to_procinfo_params_group(self):

@@ -6,11 +6,11 @@ from nisar.workflows.h5_prep import (add_geolocation_grid_cubes_to_hdf5,
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .dataset_params import DatasetParams, add_dataset_and_attrs
-from .InSAR_base_writer import InSARWriter
+from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
 
 
-class L1InSARWriter(InSARWriter):
+class L1InSARWriter(InSARBaseWriter):
     """
     InSAR Level 1 prodcuts (e.g. RIFG, RUNW, ROFF) writer inherenting from the InSARWriter
 
