@@ -7,6 +7,7 @@
 #include <isce3/core/DenseMatrix.h>
 #include <isce3/core/Projections.h>
 #include <isce3/core/blockProcessing.h>
+#include <isce3/core/Utilities.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/RTC.h>
 #include <isce3/geometry/geometry.h>
@@ -196,8 +197,10 @@ void GeocodePolygon<T>::getPolygonMean(
         // if RTC (area factor) raster does not needed to be saved,
         // initialize it as a GDAL memory virtual file
         if (output_rtc == nullptr) {
+            std::string vsimem_ref = (
+                "/vsimem/" + getTempString("geocode_polygon_rtc"));
             rtc_raster_unique_ptr = std::make_unique<isce3::io::Raster>(
-                    "/vsimem/dummy", radar_grid_cropped.width(),
+                    vsimem_ref, radar_grid_cropped.width(),
                     radar_grid_cropped.length(), 1, GDT_Float32, "ENVI");
             rtc_raster = rtc_raster_unique_ptr.get();
         }

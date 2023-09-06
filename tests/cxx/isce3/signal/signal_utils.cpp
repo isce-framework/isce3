@@ -1,6 +1,9 @@
 #include <cmath>
 #include <complex>
 #include <gtest/gtest.h>
+
+#include <isce3/core/Utilities.h>
+
 #include <isce3/signal/signalUtils.h>
 
 TEST(SignalUtilsTest, UpsampleRasterBlock)
@@ -22,7 +25,8 @@ TEST(SignalUtilsTest, UpsampleRasterBlock)
     }
 
     // create raster and copy values
-    isce3::io::Raster input_raster("/vsimem/signal_utils_unitest.bin", width,
+    std::string vsimem_ref = "/vsimem/" + getTempString("signal_utils_unitest");
+    isce3::io::Raster input_raster(vsimem_ref, width,
                                    length, 1, GDT_CFloat64, "ENVI");
     input_raster.setBlock(slc.data(), 0, 0, width, length, 1);
 

@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <isce3/core/TypeTraits.h>
+#include <isce3/core/Utilities.h>
 #include <isce3/except/Error.h>
 #include <isce3/io/Raster.h>
 #include <isce3/signal/convolve.h>
@@ -153,7 +154,9 @@ void isce3::signal::filter2D(isce3::io::Raster& output_raster,
     }
 
     bool mask_data = false;
-    isce3::io::Raster mask_raster("/vsimem/dummy", 1, 1, 1, GDT_Float32,
+    std::string vsimem_ref = (
+        "/vsimem/" + getTempString("filter_2d"));
+    isce3::io::Raster mask_raster(vsimem_ref, 1, 1, 1, GDT_Float32,
                                   "ENVI");
 
     filter2D<T>(output_raster, input_raster, mask_raster, kernel_columns,

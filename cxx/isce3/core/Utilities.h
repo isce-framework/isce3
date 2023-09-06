@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -22,6 +23,23 @@
 #define check2dVecLen(v,l,w) isce3::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
 
 namespace isce3 { namespace core {
+
+    /** Returns the time since epoch (Jan 1, 1970) in milliseconds that can be useful as a
+        time stamp */
+    inline uint64_t getTimeStampMillisec() {
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
+
+    /** Returns a temporary reference string that can be used, for example, to
+        name temporary files */
+    inline std::string getTempString(const std::string& suffix) {
+        if (suffix.length() == 0) {
+            return "tmp_" + std::to_string(getTimeStampMillisec());
+        }
+        return "tmp_" + suffix + "_" + std::to_string(getTimeStampMillisec());
+    }
+
 
     /** Inline function for input checking on vector lengths (primarily to check to see 
       * if 3D vector has the correct number of inputs, but is generalized to any length).

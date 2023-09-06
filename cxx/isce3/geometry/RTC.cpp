@@ -23,6 +23,7 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Projections.h>
 #include <isce3/core/TypeTraits.h>
+#include <isce3/core/Utilities.h>
 #include <isce3/error/ErrorCode.h>
 #include <isce3/geocode/GeocodeCov.h>
 #include <isce3/geometry/DEMInterpolator.h>
@@ -295,8 +296,10 @@ void applyRtc(const isce3::product::RadarGridParameters& radar_grid,
         // if the RTC area normalization factor raster does not needed to be
         // saved, initialize it as a GDAL memory virtual file
         if (output_rtc == nullptr) {
+            std::string vsimem_ref = ("/vsimem/" + getTempString("rtc"));
+
             rtc_raster_unique_ptr = std::make_unique<isce3::io::Raster>(
-                    "/vsimem/dummy", radar_grid.width(), radar_grid.length(), 1,
+                    vsimem_ref, radar_grid.width(), radar_grid.length(), 1,
                     GDT_Float32, "ENVI");
             rtc_raster = rtc_raster_unique_ptr.get();
         }

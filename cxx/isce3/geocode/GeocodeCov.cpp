@@ -11,6 +11,7 @@
 #include <isce3/core/Projections.h>
 #include <isce3/core/TypeTraits.h>
 #include <isce3/core/Constants.h>
+#include <isce3/core/Utilities.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/loadDem.h>
 #include <isce3/geometry/RTC.h>
@@ -386,8 +387,10 @@ void Geocode<T>::geocodeInterp(
             // if RTC (area factor) raster does not needed to be saved,
             // initialize it as a GDAL memory virtual file
             if (output_rtc == nullptr) {
+                std::string vsimem_ref = (
+                    "/vsimem/" + getTempString("geocode_cov_interp_rtc"));
                 rtc_raster_unique_ptr = std::make_unique<isce3::io::Raster>(
-                        "/vsimem/dummy", radar_grid.width(),
+                        vsimem_ref, radar_grid.width(),
                         radar_grid.length(), 1, GDT_Float32, "ENVI");
                 rtc_raster = rtc_raster_unique_ptr.get();
             }
@@ -413,9 +416,11 @@ void Geocode<T>::geocodeInterp(
             int radar_grid_nlooks = 1;
 
             if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
+                std::string vsimem_ref = (
+                    "/vsimem/" + getTempString("geocode_cov_areaproj_rtc_sigma0"));
                 rtc_raster_sigma0_unique_ptr = 
                     std::make_unique<isce3::io::Raster>(
-                        "/vsimem/dummy", radar_grid.width(),
+                        vsimem_ref, radar_grid.width(),
                         radar_grid.length(), 1, GDT_Float32, "ENVI");
                 rtc_sigma0_raster = 
                     rtc_raster_sigma0_unique_ptr.get();
@@ -940,7 +945,7 @@ inline void Geocode<T>::_interpolate(
                         break;
                     }
                     if (yy == 0 && xx == 0) {
-                        sample_sub_swath_center = sample_sub_swath_center;
+                        sample_sub_swath_center = sample_sub_swath;
                     }
  
                 }
@@ -1850,8 +1855,10 @@ void Geocode<T>::geocodeAreaProj(
             // if RTC (area factor) raster does not needed to be saved,
             // initialize it as a GDAL memory virtual file
             if (output_rtc == nullptr) {
+                std::string vsimem_ref = (
+                    "/vsimem/" + getTempString("geocode_cov_areaproj_rtc"));
                 rtc_raster_unique_ptr = std::make_unique<isce3::io::Raster>(
-                        "/vsimem/dummy", radar_grid_cropped.width(),
+                        vsimem_ref, radar_grid_cropped.width(),
                         radar_grid_cropped.length(), 1, GDT_Float32, "ENVI");
                 rtc_raster = rtc_raster_unique_ptr.get();
             }
@@ -1877,9 +1884,11 @@ void Geocode<T>::geocodeAreaProj(
                 rtc_memory_mode = isce3::core::MemoryModeBlocksY::MultipleBlocksY;
 
             if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
+                std::string vsimem_ref = (
+                    "/vsimem/" + getTempString("geocode_cov_areaproj_rtc_sigma0"));
                 rtc_raster_sigma0_unique_ptr = 
                     std::make_unique<isce3::io::Raster>(
-                        "/vsimem/dummy", radar_grid.width(),
+                        vsimem_ref, radar_grid.width(),
                         radar_grid.length(), 1, GDT_Float32, "ENVI");
                 rtc_sigma0_raster = 
                     rtc_raster_sigma0_unique_ptr.get();
