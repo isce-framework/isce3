@@ -53,17 +53,6 @@ class L2InSARWriter(L1InSARWriter):
         radarg_grid_path = self.group_paths.RadarGridPath
         self.require_group(radarg_grid_path)
 
-        # cube geogrid
-        cube_geogrid = GeoGridParameters(
-            start_x=radar_grid_cubes_geogrid.start_x,
-            start_y=radar_grid_cubes_geogrid.start_y,
-            spacing_x=radar_grid_cubes_geogrid.spacing_x,
-            spacing_y=radar_grid_cubes_geogrid.spacing_y,
-            width=int(radar_grid_cubes_geogrid.width),
-            length=int(radar_grid_cubes_geogrid.length),
-            epsg=radar_grid_cubes_geogrid.epsg,
-        )
-
         # Pull the orbit object
         if orbit_file is not None:
             orbit = load_orbit_from_xml(orbit_file)
@@ -82,7 +71,7 @@ class L2InSARWriter(L1InSARWriter):
         add_radar_grid_cubes_to_hdf5(
             self,
             radarg_grid_path,
-            cube_geogrid,
+            radar_grid_cubes_geogrid,
             radar_grid_cubes_heights,
             cube_rdr_grid,
             orbit,
@@ -110,8 +99,7 @@ class L2InSARWriter(L1InSARWriter):
                 "complexGeocodingInterpolation",
                 complex_interpolation,
                 "Geocoding interpolation algorithm for complex-valued"
-                " datasets"
-                ,
+                " datasets",
                 {
                     "algorithm_type": "Geocoding",
                 },
@@ -128,8 +116,7 @@ class L2InSARWriter(L1InSARWriter):
                 "floatingGeocodingInterpolation",
                 floating_interpolation,
                 "Geocoding interpolation algorithm for floating point"
-                " datasets"
-                ,
+                " datasets",
                 {
                     "algorithm_type": "Geocoding",
                 },
@@ -137,8 +124,7 @@ class L2InSARWriter(L1InSARWriter):
             DatasetParams(
                 "integerGeocodingInterpolation",
                 integer_interpolation,
-                "Geocoding interpolation algorithm for integer datasets"
-                ,
+                "Geocoding interpolation algorithm for integer datasets",
                 {
                     "algorithm_type": "Geocoding",
                 },

@@ -3,16 +3,17 @@ import numpy as np
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import InSARProductsInfo
+from .InSAR_products_info import InSARProductsInfo
 from .InSAR_base_writer import InSARBaseWriter
-from .InSARL2Products import L2InSARWriter
+from .InSAR_L2_writer import L2InSARWriter
 from .product_paths import GUNWGroupsPaths
 from .RUNW_writer import RUNWWriter
 
 
 class GUNWWriter(RUNWWriter, L2InSARWriter):
     """
-    Writer class for GUNW product inherent from RUNWWriter
+    Writer class for GUNW product inherent from both the RUNWWriter
+    and the L2InSARWriter
     """
     def __init__(self, **kwds):
         """
@@ -70,7 +71,7 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
 
         grids_val = np.string_("projection")
 
-        # only add the common fields such as listofpolarizations, pixeloffset, and centerfrequency
+        # Only add the common fields such as list of polarizations, pixel offsets, and center frequency
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             grids_freq_group_name = (
@@ -82,7 +83,6 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
             offset_group_name = f"{grids_freq_group_name}/pixelOffsets"
             self.require_group(offset_group_name)
 
-            # center frequency and sub swaths groups of the RSLC
             rslc_freq_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
@@ -123,7 +123,7 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                 unwrapped_geogrids,
             )
 
-            # Mask
+            # Prepare 2d mask dataset
             self._create_2d_dataset(
                 unwrapped_group,
                 "mask",
@@ -138,7 +138,6 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                 yds=yds)
 
             for pol in pol_list:
-                # unwrapped interferogram group
                 unwrapped_pol_name = f"{unwrapped_group_name}/{pol}"
                 unwrapped_pol_group = self.require_group(unwrapped_pol_name)
 
@@ -148,8 +147,8 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                     unwrapped_geogrids,
                 )
 
-                #unwrapped dataset including the dataset name,
-                #data type, description, and units
+                #unwrapped dataset parameters as tuples in the following
+                #order: dataset name, data type, description, and units
                 unwrapped_ds_params = [
                     ("coherenceMagnigtude", np.float32,
                      f"Coherence magnitude between {pol} layers",
@@ -182,7 +181,6 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                         xds=xds,
                         yds=yds)
 
-                # wrapped interferogram group
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
                 wrapped_pol_group = self.require_group(wrapped_pol_name)
 
@@ -192,8 +190,8 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                     wrapped_geogrids,
                 )
 
-                #wrapped dataset including the dataset name,
-                #data type, description, and units
+                #wrapped dataset parameters as tuples in the following
+                #order: the dataset name,data type, description, and units
                 wrapped_ds_params = [
                     ("coherenceMagnigtude", np.float32,
                      f"Coherence magnitude between {pol} layers",
@@ -218,7 +216,6 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                         yds=yds,
                     )
 
-                # pixelOffsets group
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
                 pixeloffsets_pol_group = self.require_group(
                     pixeloffsets_pol_name
@@ -230,8 +227,8 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                     unwrapped_geogrids,
                 )
 
-                #pixel offsets dataset including the dataset name,
-                #data type, description, and units
+                # pixel offsets dataset parameters as tuples in the following
+                # order: dataset name,data type, description, and units
                 pixel_offsets_ds_params = [
                     ("alongTrackOffset", np.float32,
                      "Along track offset",

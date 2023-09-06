@@ -1,7 +1,7 @@
 import numpy as np
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import InSARProductsInfo
+from .InSAR_products_info import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import RUNWGroupsPaths

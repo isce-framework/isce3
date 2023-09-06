@@ -10,7 +10,7 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import ISCE3_VERSION, InSARProductsInfo
+from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .product_paths import CommonPaths
 
