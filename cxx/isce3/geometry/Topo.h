@@ -184,7 +184,11 @@ public:
     /** Get read-only reference to RadarGridParameters */
     const isce3::product::RadarGridParameters & radarGridParameters() const { return _radarGrid; }
 
-    // Get DEM bounds using first/last azimuth line and slant range bin
+    /** Get DEM bounds using first/last azimuth line and slant range bin.
+     * 
+     * If the DEM is in geographic coordinates (DEM EPSG is 4326), this function
+     * requires that the radar grid spans less than 180 degrees in longitude.
+    */
     void computeDEMBounds(isce3::io::Raster &, DEMInterpolator &, size_t, size_t);
 
     /**

@@ -455,6 +455,11 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     double minY = 1.0e64;
     double maxY = -1.0e64;
 
+    // Initialize geographic bounds in the longitude range [0, 360]
+    // (required when there is antimeridian crossing)
+    double minX_0_360 = 1.0e64;
+    double maxX_0_360 = -1.0e64;
+
     // Skip factors along azimuth and range
     const int askip = std::max((int) blockLength / 10, 1);
     const int rskip = _radarGrid.width() / 10;
@@ -534,23 +539,57 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
                         _radarGrid.lookSide(), _threshold, 1, 0);
             }
 
-            Vec3 enu = {0., 0., 0.};
-            proj->forward(llh, enu);
+            Vec3 dem_xyz = proj->forward(llh);
 
             // Update bounds
-            minY = std::min(minY, enu[1]);
-            maxY = std::max(maxY, enu[1]);
-            minX = std::min(minX, enu[0]);
-            maxX = std::max(maxX, enu[0]);
+            minY = std::min(minY, dem_xyz[1]);
+            maxY = std::max(maxY, dem_xyz[1]);
+            minX = std::min(minX, dem_xyz[0]);
+            maxX = std::max(maxX, dem_xyz[0]);
+
+            /*
+            If the DEM is in geographic coordinates (EPSG 4326), each point
+            `dem_xyz` will have longitude values ranging from -180 to 180. 
+            The functions min() and max() return the correct longitude
+            boundaries as long as there's no longitude "wrapping"
+            due to the antimeridian. 
+            If there's wrapping, we use min() and max() from the "unwrapped"
+            array using the longitude domain [0, 360] rather than [-180, 180]
+
+            The conversion of longitude values from the [-180, 180] domain to
+            the [0, 360] domain is done by adding 360 to negative longitude values. 
+            */
+            if (epsgcode != 4326)
+                continue;
+
+            if (dem_xyz[0] < 0) {
+                minX_0_360 = std::min(minX_0_360, dem_xyz[0] + 360);
+                maxX_0_360 = std::max(maxX_0_360, dem_xyz[0] + 360);
+            } else {
+                minX_0_360 = std::min(minX_0_360, dem_xyz[0]);
+                maxX_0_360 = std::max(maxX_0_360, dem_xyz[0]);
+            }
         }
     }
 
     //Convert margin to meters it not LonLat
     double margin = (epsgcode == 4326)? _margin : isce3::core::decimaldeg2meters(_margin);
 
-    // Account for margins
+    /* 
+    To detect the antimeridian crossing, we check if the difference between
+    the maximum and minimum longitude values (in the [-180, 180] domain) is greater
+    than 180. This issue will only be applicable if the DEM is in geographic
+    coordinates (EPSG code 4326)
+    */
+    if (epsgcode == 4326 and maxX - minX > 180) {
+        // Fix for the antimeridian case
+        minX = minX_0_360;
+        maxX = maxX_0_360;
+    }
     minX -= margin;
     maxX += margin;
+
+    // Account for margins
     minY -= margin;
     maxY += margin;
 
@@ -786,7 +825,15 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const double c2 = ctrack[k+1];
             const double frac1 = (c2 - crossTrack) / (c2 - c1);
             const double frac2 = (crossTrack - c1) / (c2 - c1);
-            const double x_grid = x[k] * frac1 + x[k+1] * frac2;
+
+            double x_grid;
+            if (demInterp.epsgCode() != 4326 or std::fabs(x[k] -  x[k+1]) < 180) {
+                x_grid = x[k] * frac1 + x[k+1] * frac2;
+            } else {
+                const double x_k_0_360 = x[k] < 0 ? x[k] + 360: x[k];
+                const double x_k_next_0_360 = x[k+1] < 0 ? x[k+1] + 360: x[k+1];
+                x_grid = x_k_0_360 * frac1 + x_k_next_0_360 * frac2;
+            }
             const double y_grid = y[k] * frac1 + y[k+1] * frac2;
 
             // Interpolate DEM at x/y

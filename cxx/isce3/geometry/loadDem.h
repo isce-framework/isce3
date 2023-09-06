@@ -47,8 +47,18 @@ isce3::geometry::DEMInterpolator DEMRasterToInterpolator(
 * in the same or different coordinate system as the DEM raster
 *
 * @param[in]  dem_raster              DEM raster
-* @param[in]  minX                    Minimum X/easting position
-* @param[in]  maxX                    Maximum X/easting position
+* @param[in]  x0                      Easting/longitude of western edge of bounding box,
+* If the DEM is in geographic coordinates and the `x0` coordinate is not
+* from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
+* the minimum X coordinate value. In this case, the maximum
+* longitude span that this function can handle is 180 degrees
+* (when the DEM is in geographic coordinates and `proj` is in polar stereo)
+* @param[in]  xf                      Easting/longitude of eastern edge of bounding box
+* If the DEM is in geographic coordinates and the `xf` coordinate is not
+* from the polar stereo system EPSG 3031 or EPSG 3413, this point represents
+* the maximum X coordinate value. In this case, the maximum
+* longitude span that this function can handle is 180 degrees
+* (when the DEM is in geographic coordinates and `proj` is in polar stereo)
 * @param[in]  minY                    Minimum Y/northing position
 * @param[in]  maxY                    Maximum Y/northing position
 * @param[out] dem_interp_block        DEM interpolation object
