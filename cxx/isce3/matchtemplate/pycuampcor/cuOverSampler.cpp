@@ -74,6 +74,7 @@ cuOverSamplerC2C::cuOverSamplerC2C(
  */
 void cuOverSamplerC2C::execute(cuArrays<float2> *imagesIn, cuArrays<float2> *imagesOut, int method)
 {   
+    cuDeramp(method, imagesIn);
     fftwf_execute(forwardPlan);
     cuArraysPaddingMany(workIn, workOut);
     fftwf_execute(backwardPlan);

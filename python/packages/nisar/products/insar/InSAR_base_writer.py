@@ -10,8 +10,8 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
+from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .product_paths import CommonPaths
 
 
@@ -667,8 +667,7 @@ class InSARBaseWriter(h5py.File):
         ancillary_group = self.cfg["dynamic_ancillary_file_group"]
         for idx in ["reference", "secondary"]:
             _orbit_file = \
-                ancillary_group["orbit"].get(f"{idx}_orbit_file")
-
+            ancillary_group["orbit_files"].get(f"{idx}_orbit_file")
             if _orbit_file is None:
                 _orbit_file = f"used RSLC internal {idx} orbit file"
             orbit_file.append(_orbit_file)

@@ -205,7 +205,7 @@ void interpolate(
     const int outLength = geoDataBlock.rows();
     const int inWidth = rdrDataBlock.cols();
     const int inLength = rdrDataBlock.rows();
-    const int chipHalf = chipSize / 2;
+    const int chipHalf = isce3::core::SINC_HALF;
 
 #pragma omp parallel for
     for (size_t ii = 0; ii < outLength * outWidth; ++ii) {
@@ -255,7 +255,7 @@ void interpolate(
             const int chipRow = intAzIndex + ii - chipHalf;
 
             // Compute doppler frequency at current row
-            const double doppPhase = doppFreq * (ii - chipHalf + fracAzIndex);
+            const double doppPhase = doppFreq * (ii - chipHalf);
             const std::complex<float> doppVal(std::cos(doppPhase),
                                               -std::sin(doppPhase));
 
@@ -270,11 +270,18 @@ void interpolate(
 
         // Interpolate chip
         const std::complex<float> cval =
-                sincInterp->interpolate(isce3::core::SINC_HALF + fracRgIndex,
-                        isce3::core::SINC_HALF + fracAzIndex, chip);
+                sincInterp->interpolate(chipHalf + fracRgIndex,
+                        chipHalf + fracAzIndex, chip);
 
-        // Set geoDataBlock column and row from index
-        geoDataBlock(i, j) = cval;
+        // Compute doppler that was demodulated from chip in interpolation to
+        // be added back
+        const auto azLocation = isce3::core::SINC_HALF + fracAzIndex;
+        const auto doppFreqToAddBack = doppFreq * azLocation;
+        const std::complex<float> doppValAddBack(std::cos(doppFreqToAddBack),
+                std::sin(doppFreqToAddBack));
+
+        // Set geoDataBlock column and row from index with doppler added back
+        geoDataBlock(i, j) = cval * doppValAddBack;
     }
 }
 

@@ -12,6 +12,7 @@ namespace signal {
  * Note that input pixels with total weight zero
  * will be NaN in the output array.
  *
+ * @param[in] input     The input array to multilook
  * @param[in] row_looks The number of looks in the vertical direction
  * @param[in] col_looks The number of looks in the horizontal direction
  * @param[in] weights   The array of weights to apply to the input

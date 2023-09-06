@@ -16,17 +16,10 @@
  *    the source code below if you need to adjust the parameters.
  */
 
-// code guard
-#ifndef __CUSINCOVERSAMPLER_H
-#define __CUSINCOVERSAMPLER_H
+#pragma once
 
 // dependencites
 #include "cuArrays.h"
-#include "cudaUtil.h"
-
-#ifndef PI
-#define PI 3.14159265359f
-#endif
 
 namespace isce3::matchtemplate::pycuampcor {
 
@@ -48,11 +41,9 @@ class cuSincOverSamplerR2R
 
     float * r_filter;   // sinc kernel with size i_filtercoef
 
-    cudaStream_t stream;
-
  public:
     // constructor
-    cuSincOverSamplerR2R(const int i_covs_, cudaStream_t stream_);
+    cuSincOverSamplerR2R(const int i_covs_);
     // set up sinc interpolation coefficients
     void cuSetupSincKernel();
     // execute interface
@@ -62,6 +53,3 @@ class cuSincOverSamplerR2R
 };
 
 } // namespace
-
-#endif // _CUSINCOVERSAMPLER_H
-// end of file

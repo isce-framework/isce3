@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import numpy.testing as npt
+from scipy.interpolate import interp1d
 
 import iscetest
 from nisar.cal import PolChannelImbalanceSlc
@@ -49,13 +50,43 @@ class TestPolChannelImbalanceSlc:
     # CSV file for Corner reflector(s)
     file_csv_cr = 'Corner_Reflector_Rio_Branco_ALPSRP025826990.csv'
 
-    # Averaged cross-talk magnitudes based on figure (4) in [1]
-    # Tx [H, V] cross talk ratios (~ -35 dB)
-    tx_xtalk = (0.018, 0.018)
-    # Rx [H, V] cross talk ratios (~ -35 dB)
-    rx_xtalk = (0.018, 0.018)
+    # Use Averaged cross-talk magnitudes based on figure (4) in [1]
+    # X-talks are simply provided at three Antenna EL angles.
+    # Tx [H, V] cross talk ratios (~ -35 dB) as a function EL angles
+    # Rx [H, V] cross talk ratios (~ -35 dB) as a function EL angles
+    # The half of x-talks has phase around 0 deg while the other half
+    # has phase around 180 deg per figure (2) in [1]. To test both
+    # real and complex type inputs, both formats are exercised.
+    el_xtalk_deg = [-1, 0, 1]
+    tx_xpol_h = [
+        complex(0.018, 0.0),
+        complex(0.018, 0.0),
+        complex(0.018, 0.0)
+        ]
+    tx_xpol_v = [
+        -0.018,
+        -0.018,
+        -0.018
+        ]
+    rx_xpol_h = [
+        0.018,
+        0.018,
+        0.018
+        ]
+    rx_xpol_v = [
+        complex(-0.018, 0.0),
+        complex(-0.018, 0.0),
+        complex(-0.018, 0.0)
+        ]
     # Form Cross talk object
-    xtalk = CrossTalk(*tx_xtalk, *rx_xtalk)
+    el_rad = np.deg2rad(el_xtalk_deg)
+    kw_args = dict(kind='linear', fill_value='extrapolate', assume_sorted=True)
+    xtalk = CrossTalk(
+        interp1d(el_rad, tx_xpol_h, **kw_args),
+        interp1d(el_rad, tx_xpol_v, **kw_args),
+        interp1d(el_rad, rx_xpol_h, **kw_args),
+        interp1d(el_rad, rx_xpol_v, **kw_args)
+    )
 
     # Parse RSLCs
     slc_ext = SLC(hdf5file=os.path.join(iscetest.data, sub_dir, file_slc_ext))

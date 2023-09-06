@@ -59,7 +59,7 @@ def test_troposphere_aps_run():
         cfg = cfg['runconfig']['groups']
 
         # Load the test weather files
-        tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model']
+        tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']
 
         weather_reference_file = \
             os.path.join(
@@ -68,9 +68,9 @@ def test_troposphere_aps_run():
             os.path.join(
                 iscetest.data, tropo_weather_model_cfg['secondary_troposphere_file'])
 
-        cfg['dynamic_ancillary_file_group']['troposphere_weather_model']['reference_troposphere_file'] = \
+        cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']['reference_troposphere_file'] = \
             weather_reference_file
-        cfg['dynamic_ancillary_file_group']['troposphere_weather_model']['secondary_troposphere_file'] = \
+        cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']['secondary_troposphere_file'] = \
             weather_secondary_file
 
         dem_file = os.path.join(

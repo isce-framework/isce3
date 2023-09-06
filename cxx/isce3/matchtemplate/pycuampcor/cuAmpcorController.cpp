@@ -44,6 +44,7 @@ void cuAmpcorController::runAmpcor()
     cuArrays<float2> *offsetImage, *offsetImageRun;
     cuArrays<float> *snrImage, *snrImageRun;
     cuArrays<float3> *covImage, *covImageRun;
+    cuArrays<float> *corrImage, *corrImageRun;
 
     // nWindowsDownRun is defined as numberChunk * numberWindowInChunk
     // It may be bigger than the actual number of windows
@@ -59,6 +60,9 @@ void cuAmpcorController::runAmpcor()
     covImageRun = new cuArrays<float3>(nWindowsDownRun, nWindowsAcrossRun);
     covImageRun->allocate();
 
+    corrImageRun = new cuArrays<float>(nWindowsDownRun, nWindowsAcrossRun);
+    corrImageRun->allocate();
+
     // Offset fields.
     offsetImage = new cuArrays<float2>(param->numberWindowDown, param->numberWindowAcross);
     offsetImage->allocate();
@@ -71,6 +75,10 @@ void cuAmpcorController::runAmpcor()
     covImage = new cuArrays<float3>(param->numberWindowDown, param->numberWindowAcross);
     covImage->allocate();
 
+    // Cross-correlation peak
+    corrImage = new cuArrays<float>(param->numberWindowDown, param->numberWindowAcross);
+    corrImage->allocate();
+
     // set up the cuda streams
     cuAmpcorChunk *chunk[param->nStreams];
     // iterate over cuda streams
@@ -78,7 +86,7 @@ void cuAmpcorController::runAmpcor()
     {
         // create the chunk processor for each stream
         chunk[ist]= new cuAmpcorChunk(param.get(), referenceImage, secondaryImage,
-            offsetImageRun, snrImageRun, covImageRun);
+            offsetImageRun, snrImageRun, covImageRun, corrImageRun);
 
     }
 
@@ -117,6 +125,7 @@ void cuAmpcorController::runAmpcor()
     cuArraysCopyExtract(offsetImageRun, offsetImage, make_int2(0,0));
     cuArraysCopyExtract(snrImageRun, snrImage, make_int2(0,0));
     cuArraysCopyExtract(covImageRun, covImage, make_int2(0,0));
+    cuArraysCopyExtract(corrImageRun, corrImage, make_int2(0,0));
 
     /* save the offsets and gross offsets */
     // copy the offset to host
@@ -144,14 +153,19 @@ void cuAmpcorController::runAmpcor()
     snrImage->outputToFile(param->snrImageName);
     covImage->outputToFile(param->covImageName);
 
+    // save the cross-correlation peak
+    corrImage->outputToFile(param->corrImageName);
+
     // Delete arrays.
     delete offsetImage;
     delete snrImage;
     delete covImage;
+    delete corrImage;
 
     delete offsetImageRun;
     delete snrImageRun;
     delete covImageRun;
+    delete corrImageRun;
 
     for (int ist=0; ist<param->nStreams; ist++)
     {

@@ -51,6 +51,7 @@ void addbinding_pycuampcor(pybind11::module& m)
         .DEF_PARAM(int, mergeGrossOffset)
         .DEF_PARAM(str, snrImageName)
         .DEF_PARAM(str, covImageName)
+        .DEF_PARAM(str, corrImageName)
 
         .DEF_PARAM(int, rawDataOversamplingFactor)
         .DEF_PARAM(int, corrStatWindowSize)

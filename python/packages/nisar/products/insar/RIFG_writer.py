@@ -2,8 +2,8 @@ import h5py
 import numpy as np
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .InSAR_products_info import InSARProductsInfo
 from .InSAR_L1_writer import L1InSARWriter
+from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RIFGGroupsPaths
 
 

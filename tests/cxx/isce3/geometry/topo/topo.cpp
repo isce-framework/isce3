@@ -1,10 +1,3 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
-//
-// Author: Bryan Riel
-// Copyright 2018
-//
-
 #include <iostream>
 #include <complex>
 #include <string>
@@ -56,14 +49,14 @@ TEST(TopoTest, RunTopo) {
 }
 
 TEST(TopoTest, CheckResults) {
-    
+
     // Open generated topo raster
     std::cout << "test file: ./topo.vrt" << std::endl;
     isce3::io::Raster testRaster("topo.vrt");
-    
+
     // Open reference topo raster
     std::string ref_filename = TESTDATA_DIR "topo/topo.vrt";
-    std::cout << "reference file:" << ref_filename << std::endl; 
+    std::cout << "reference file:" << ref_filename << std::endl;
     isce3::io::Raster refRaster(ref_filename);
 
     // The associated tolerances
@@ -76,7 +69,9 @@ TEST(TopoTest, CheckResults) {
     // Valarrays to hold line of data
     std::valarray<double> test(testRaster.width()), ref(refRaster.width());
 
-    // Loop over topo bands
+    // Loop over reference topo bands - discounting groundToSatEast,
+    // groundToSatNorth, azimuth as there is no reference test data to compare
+    // against.
     for (size_t k = 0; k < refRaster.numBands(); ++k) {
 
         std::cout << "comparing band: " << k + 1 << std::endl;
@@ -108,5 +103,3 @@ int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-// end of file

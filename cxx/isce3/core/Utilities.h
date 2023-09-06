@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -22,6 +23,23 @@
 #define check2dVecLen(v,l,w) isce3::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
 
 namespace isce3 { namespace core {
+
+    /** Returns the time since epoch (Jan 1, 1970) in milliseconds that can be useful as a
+        time stamp */
+    inline uint64_t getTimeStampMillisec() {
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
+
+    /** Returns a temporary reference string that can be used, for example, to
+        name temporary files */
+    inline std::string getTempString(const std::string& suffix) {
+        if (suffix.length() == 0) {
+            return "tmp_" + std::to_string(getTimeStampMillisec());
+        }
+        return "tmp_" + suffix + "_" + std::to_string(getTimeStampMillisec());
+    }
+
 
     /** Inline function for input checking on vector lengths (primarily to check to see 
       * if 3D vector has the correct number of inputs, but is generalized to any length).
@@ -268,7 +286,9 @@ namespace isce3 { namespace core {
         return mask;
     }
 
-    /** Sort arrays a, b, c by the values in array a */
+    /** Sort arrays a, b, c by the values in array a 
+     * Insertion sort is faster for nearly sorted arrays
+    */
     inline void insertionSort(std::valarray<double> & a,
                               std::valarray<double> & b,
                               std::valarray<double> & c) {
@@ -289,20 +309,26 @@ namespace isce3 { namespace core {
         }
     }
     
-    /** Sort arrays a and b by the values in array a */
+    /** Sort arrays a and b by the values in array a 
+     * Insertion sort is faster for nearly sorted arrays
+    */
     inline void insertionSort(std::valarray<double> & a,
-                              std::valarray<double> & b) {
+                              std::valarray<double> & b,
+                              std::valarray<short> & c) {
         for (int i = 1; i < a.size(); ++i) {
             int j = i - 1;
             const double tempa = a[i];
             const double tempb = b[i];
+            const short tempc = c[i];
             while (j >= 0 && a[j] > tempa) {
                 a[j+1] = a[j];
                 b[j+1] = b[j];
+                c[j+1] = c[j];
                 j = j - 1;
             }
             a[j+1] = tempa;
             b[j+1] = tempb;
+            c[j+1] = tempc;
         }
     }
     

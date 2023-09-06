@@ -32,7 +32,8 @@ def geocode_insar_cfg_check(cfg):
                      'ionosphere_phase_screen',
                      'ionosphere_phase_screen_uncertainty',
                      'unwrapped_phase', 'along_track_offset',
-                     'slant_range_offset', 'layover_shadow_mask']
+                     'slant_range_offset', 'correlation_surface_peak',
+                     'layover_shadow_mask']
     goff_datasets = ['along_track_offset', 'snr',
                      'along_track_offset_variance',
                      'correlation_surface_peak', 'cross_offset_variance',

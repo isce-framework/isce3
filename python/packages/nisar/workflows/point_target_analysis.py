@@ -5,7 +5,7 @@ import numpy as np
 import argparse
 import isce3
 from nisar.products.readers import SLC
-from nisar.types import ComplexFloat16Decoder
+from isce3.core.types import ComplexFloat16Decoder
 from isce3.cal import point_target_info as pti
 import warnings
 import json

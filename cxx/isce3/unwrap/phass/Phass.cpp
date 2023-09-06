@@ -6,6 +6,8 @@
 
 #include "Phass.h"
 
+#include <isce3/core/Utilities.h>
+
 /**
  * @param[in] phaseRaster wrapped phase
  * @param[in] corrRaster correlation
@@ -19,7 +21,9 @@ unwrap(isce3::io::Raster & phaseRaster,
         isce3::io::Raster & labelRaster)
 {
     _usePower = false;
-    isce3::io::Raster powerRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
+    std::string vsimem_ref = (
+        "/vsimem/" + getTempString("phass"));
+    isce3::io::Raster powerRaster(vsimem_ref, 1, 1, 1, GDT_Float32, "ENVI");
 
     std::cout << "unwrapping without intensity" << std::endl;
     unwrap(phaseRaster,

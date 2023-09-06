@@ -36,7 +36,7 @@ def run(cfg):
     # pull parameters from cfg
     input_hdf5 = cfg['input_file_group']['reference_rslc_file']
     dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
-    ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
+    ref_orbit = cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     threshold = cfg['processing']['rdr2geo']['threshold']
@@ -116,11 +116,12 @@ def run(cfg):
             heading_raster, local_incidence_raster, local_psi_raster,\
             simulated_amplitude_raster, shadow_raster = raster_list
 
-        # run topo
+        # run topo - with east and north unit vector components of ground to
+        # satellite layers permanently disabled.
         rdr2geo_obj.topo(dem_raster, x_raster, y_raster, height_raster,
                          incidence_raster, heading_raster, local_incidence_raster,
                          local_psi_raster, simulated_amplitude_raster,
-                         shadow_raster)
+                         shadow_raster, None, None)
 
         # remove undesired/None rasters from raster list
         raster_list = [raster for raster in raster_list if raster is not None]

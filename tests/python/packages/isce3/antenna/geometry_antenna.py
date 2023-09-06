@@ -5,7 +5,7 @@ import numpy.testing as npt
 from isce3.antenna import geo2ant, rdr2ant
 from isce3.geometry import DEMInterpolator, rdr2geo
 from nisar.products.readers.SLC import SLC
-from nisar.types import ComplexFloat16Decoder
+from isce3.core.types import ComplexFloat16Decoder
 import iscetest
 
 

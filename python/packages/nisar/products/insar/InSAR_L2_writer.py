@@ -1,6 +1,5 @@
 import numpy as np
 from isce3.core import LUT2d
-from isce3.product import GeoGridParameters
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
@@ -38,9 +37,8 @@ class L2InSARWriter(L1InSARWriter):
         """
         Add the radar grid cubes
         """
-        orbit_file = self.cfg["dynamic_ancillary_file_group"]["orbit"].get(
-            "reference_orbit_file"
-        )
+        orbit_file = self.cfg["dynamic_ancillary_file_group"]\
+            ["orbit_files"].get("reference_orbit_file")
 
         proc_cfg = self.cfg["processing"]
         radar_grid_cubes_geogrid = proc_cfg["radar_grid_cubes"]["geogrid"]

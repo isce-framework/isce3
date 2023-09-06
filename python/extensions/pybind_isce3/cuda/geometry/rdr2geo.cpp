@@ -60,18 +60,52 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                                       isce3::io::Raster*,
                                       isce3::io::Raster*,
                                       isce3::io::Raster*,
+                                      isce3::io::Raster*,
+                                      isce3::io::Raster*,
                                       isce3::io::Raster*>
                             (&Topo::topo),
                     py::arg("dem_raster"),
-                    py::arg("x_raster") = nullptr,
-                    py::arg("y_raster") = nullptr,
-                    py::arg("height_raster") = nullptr,
-                    py::arg("incidence_angle_raster") = nullptr,
-                    py::arg("heading_angle_raster") = nullptr,
-                    py::arg("local_incidence_angle_raster") = nullptr,
-                    py::arg("local_Psi_raster") = nullptr,
-                    py::arg("simulated_amplitude_raster") = nullptr,
-                    py::arg("layover_shadow_raster") = nullptr)
+                    py::arg("x_raster"),
+                    py::arg("y_raster"),
+                    py::arg("height_raster"),
+                    py::arg("incidence_angle_raster"),
+                    py::arg("heading_angle_raster"),
+                    py::arg("local_incidence_angle_raster"),
+                    py::arg("local_Psi_raster"),
+                    py::arg("simulated_amplitude_raster"),
+                    py::arg("layover_shadow_raster"),
+                    py::arg("ground_to_sat_east_raster"),
+                    py::arg("ground_to_sat_north_raster"),
+                    R"(
+        Run topo and output to user created topo rasters
+
+        Parameters
+        ----------
+        dem_raster: isce3.io.Raster
+            Input DEM raster
+        x_raster: isce3.io.Raster
+            Output raster for X coordinate in requested projection system (meters or degrees)
+        y_raster: isce3.io.Raster
+            Output raster for Y cooordinate in requested projection system (meters or degrees)
+        height_raster: isce3.io.Raster
+            Output raster for height above ellipsoid (meters)
+        incidence_raster: isce3.io.Raster
+            Output raster for incidence angle (degrees) computed from vertical at target
+        heading_angle_raster: isce3.io.Raster
+            Output raster for azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+        local_incidence_raster: isce3.io.Raster
+            Output raster for local incidence angle (degrees) at target
+        local_psi_raster: isce3.io.Raster
+            Output raster for local projection angle (degrees) at target
+        simulated_amplitude_raster: isce3.io.Raster
+            Output raster for simulated amplitude image.
+        layover_shadow_raster: isce3.io.Raster
+            Output raster for layover/shadow mask.
+        ground_to_sat_east_raster: isce3.io.Raster
+            Output raster for east component of ground to satellite unit vector
+        ground_to_sat_north_raster: isce3.io.Raster
+            Output raster for north component of ground to satellite unit vector
+                    )")
             .def_property_readonly("orbit", &Topo::orbit)
             .def_property_readonly("ellipsoid", &Topo::ellipsoid)
             .def_property_readonly("doppler", &Topo::doppler)

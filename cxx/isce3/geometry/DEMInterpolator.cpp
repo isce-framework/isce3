@@ -87,9 +87,13 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
         /* For DEM in EPSG 4326 (lat/lon) max longitude range is
         360 + 2 DEM pixels */
         if (max_x - min_x > 360 + 2 * delta_x) {
-            warning << "Invalid longitude range from " << min_x
-                    << " to " << max_x << " degrees." << pyre::journal::endl;
-            return isce3::error::ErrorCode::OutOfBoundsDem;
+            double new_max_x = min_x + 360 + delta_x;
+            warning << "Longitude range from " << min_x
+                    << " to " << max_x << " degrees exceed maximum"
+                    << " longitude range of 360 degrees. The"
+                    << " eastern boundary will be updated to "
+                    << new_max_x << pyre::journal::endl;
+            max_x = new_max_x;
         }
 
         /* Wrap equally `min_x` and `max_x` so that `max_x` is within

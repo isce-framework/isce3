@@ -4,6 +4,7 @@ gdal>=3.0
 h5py>=3.0
 hdf5>=1.10.2
 libgcc-ng>=9
+libgomp
 libstdcxx-ng>=9
 matplotlib
 numpy>=1.20

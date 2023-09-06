@@ -5,7 +5,10 @@
 #include <fstream>
 #include <cmath>
 #include <complex>
+
 #include <gtest/gtest.h>
+
+#include <isce3/core/Utilities.h>
 
 #include "isce3/io/Raster.h"
 #include <isce3/io/IH5.h>
@@ -31,7 +34,9 @@ TEST(gpuCrossmul, Crossmul)
     // a raster object for the interferogram
     isce3::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
-    isce3::io::Raster coherence("/vsimem/dummyCoh", width, length, 1, GDT_Float32,
+    std::string vsimem_ref = "/vsimem/" + getTempString("gpu_crossmul_coh");
+
+    isce3::io::Raster coherence(vsimem_ref, width, length, 1, GDT_Float32,
                                 "ENVI");
 
     // HDF5 file with required metadata
@@ -105,7 +110,9 @@ TEST(gpuCrossmul, MultilookCrossmul)
     // a raster object for the interferogram
     isce3::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
-    isce3::io::Raster coherence("/vsimem/dummyCoh", width, length, 1, GDT_Float32,
+    std::string vsimem_ref = "/vsimem/" + getTempString("gpu_crossmul_ml_coh");
+
+    isce3::io::Raster coherence(vsimem_ref, width, length, 1, GDT_Float32,
                                 "ENVI");
 
     // HDF5 file with required metadata

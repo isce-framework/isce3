@@ -3,9 +3,9 @@ import numpy as np
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .InSAR_products_info import InSARProductsInfo
 from .InSAR_base_writer import InSARBaseWriter
 from .InSAR_L2_writer import L2InSARWriter
+from .InSAR_products_info import InSARProductsInfo
 from .product_paths import GUNWGroupsPaths
 from .RUNW_writer import RUNWWriter
 

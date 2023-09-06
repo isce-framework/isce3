@@ -104,7 +104,8 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
             .def_property_readonly("length",
                     py::overload_cast<>(&DEMInterp::length, py::const_))
             .def_property_readonly("epsg_code",
-                    py::overload_cast<>(&DEMInterp::epsgCode, py::const_));
+                    py::overload_cast<>(&DEMInterp::epsgCode, py::const_))
+            .def_property_readonly("mid_lon_lat", &DEMInterp::midLonLat);
 }
 
 void addbinding_DEM_raster2interpolator(py::module& m)

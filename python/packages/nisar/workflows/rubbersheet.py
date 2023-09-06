@@ -6,7 +6,6 @@ import pathlib
 import journal
 import time
 import h5py
-import os
 import numpy as np
 import isce3
 from osgeo import gdal
@@ -27,7 +26,6 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Pull parameters from cfg dictionary
     ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
-    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     rubbersheet_params = cfg['processing']['rubbersheet']
     geo2rdr_offsets_path = pathlib.Path(rubbersheet_params['geo2rdr_offsets_path'])
@@ -58,6 +56,7 @@ def run(cfg: dict, output_hdf5: str = None):
             for pol in pol_list:
                 # Create output directory, identify proper pixelOffsets path in RIFG
                 # and get dense_offsets_dir
+                off_prod_dir = scratch_path / 'offsets_product'/ f'freq{freq}'/ pol
                 out_dir = rubbersheet_dir / pol
                 out_dir.mkdir(parents=True, exist_ok=True)
                 pol_group_path = f'{freq_group_path}/pixelOffsets/{pol}'
@@ -74,7 +73,15 @@ def run(cfg: dict, output_hdf5: str = None):
                                                     rubbersheet_params)
                     offset_rg = fill_outliers_holes(offset_rg_culled,
                                                     rubbersheet_params)
+                    ds = gdal.Open(str(f'{dense_offsets_dir}/correlation_peak'))
+                    corr_peak = ds.GetRasterBand(1).ReadAsArray()
+                    ds = None
                 else:
+                    # Get cross-correlation peak for first layer
+                    ds = gdal.Open(str(f'{off_prod_dir}/layer1/correlation_peak'))
+                    corr_peak = ds.GetRasterBand(1).ReadAsArray()
+                    ds = None
+
                     # Offsets product is enabled, implement pyramidal filling
                     off_product_path = pathlib.Path(
                         rubbersheet_params['offsets_product_path'])
@@ -83,6 +90,7 @@ def run(cfg: dict, output_hdf5: str = None):
                     offset_az, offset_rg = identify_outliers(
                         str(off_product_dir / 'layer1'),
                         rubbersheet_params)
+
 
                     layer_keys = [key for key in
                                   cfg['processing']['offsets_product'].keys() if
@@ -112,11 +120,13 @@ def run(cfg: dict, output_hdf5: str = None):
                     offset_rg[np.isnan(offset_rg)] = temp_off_rg[
                         np.isnan(offset_rg)]
 
-                # Update offset field in HDF5 file
+                # Update offset field in HDF5 file and assign cross-correlation peak
                 offset_az_prod = dst_h5[f'{pol_group_path}/alongTrackOffset']
                 offset_rg_prod = dst_h5[f'{pol_group_path}/slantRangeOffset']
+                offset_peak_prod = dst_h5[f'{pol_group_path}/correlationSurfacePeak']
                 offset_az_prod[...] = offset_az
                 offset_rg_prod[...] = offset_rg
+                offset_peak_prod[...] = corr_peak
 
                 # Save culled offsets to disk for resampling
                 off_path = [out_dir/'culled_az_offsets', out_dir/'culled_rg_offsets']
