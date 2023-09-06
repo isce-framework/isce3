@@ -44,14 +44,14 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
 
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms to processingInformation group
         """
         RUNWWriter.add_algorithms_to_procinfo_group(self)
         L2InSARWriter.add_geocoding_to_algo_group(self)
 
-    def add_parameters_to_procinfo(self):
+    def add_parameters_to_procinfo_group(self):
         """
         Add parameters group to processingInformation/parameters group
         """
