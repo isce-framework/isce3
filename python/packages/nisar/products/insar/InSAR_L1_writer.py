@@ -228,8 +228,8 @@ class L1InSARWriter(InSARBaseWriter):
                         "meters",
                     ),
                     (
-                        "crossCorrelationPeak",
-                        "Normalized cross-correlation surface peak",
+                        "correlationSurfacePeak",
+                        "Normalized correlation surface peak",
                         "unitless",
                     ),
                     (

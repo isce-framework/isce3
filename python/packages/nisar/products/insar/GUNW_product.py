@@ -99,17 +99,17 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
                 unwrapped_geogrids.width,
             )
 
-            # shape of the wrapped interferogram shape
+            # shape of the wrapped interferogram
             wrapped_shape = (
                 wrapped_geogrids.length,
                 wrapped_geogrids.width,
             )
 
             unwrapped_group_name = \
-                f"{grids_freq_group_name}/interferogram/unwrapped"
+                f"{grids_freq_group_name}/unwrappedInterferogram"
 
             wrapped_group_name = \
-                f"{grids_freq_group_name}/interferogram/wrapped"
+                f"{grids_freq_group_name}/wrappedInterferogram"
 
             pixeloffsets_group_name = \
                 f"{grids_freq_group_name}/pixelOffsets"

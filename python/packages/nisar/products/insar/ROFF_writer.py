@@ -307,8 +307,8 @@ class ROFFWriter(L1InSARWriter):
                     "unitless",
                 ),
                 (
-                    "crossCorrelationPeak",
-                    "Normalized cross-correlation surface peak",
+                    "correlationSurfacePeak",
+                    "Normalized correlation surface peak",
                     "unitless",
                 ),
                 (
