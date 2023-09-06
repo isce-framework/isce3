@@ -171,9 +171,9 @@ class L2InSARWriter(L1InSARWriter):
                 ,
             ),
             DatasetParams(
-                "dryTroposphericCorrectionApplied",
+                "hydrostaticTroposphericCorrectionApplied",
                 np.bool_(dry_tropo),
-                "Flag to indicate if the dry tropospheric correction is"
+                "Flag to indicate if the hydrostatic tropospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
