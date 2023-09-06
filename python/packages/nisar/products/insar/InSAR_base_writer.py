@@ -282,9 +282,8 @@ class InSARBaseWriter(h5py.File):
         elif offset_product:
             name = "offsets_product"
 
-        coreg_method = (
+        coreg_method = \
             "Coarse geometry coregistration with DEM and orbit ephemeris"
-        )
 
         cross_correlation_domain = "None"
         outlier_filling_method = "None"
