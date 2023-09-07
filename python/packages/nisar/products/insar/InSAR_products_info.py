@@ -33,24 +33,24 @@ class InSARProductsInfo:
 
     @classmethod
     def Base(cls):
-        return cls("1.0", "", "", "", False)
+        return cls("1.0.0", "", "", "", False)
 
     @classmethod
     def RIFG(cls):
-        return cls("1.0", "RIFG", "L1", "0.1", False)
+        return cls("1.0.0", "RIFG", "L1", "0.1", False)
 
     @classmethod
     def ROFF(cls):
-        return cls("1.0", "ROFF", "L1", "0.1", False)
+        return cls("1.0.0", "ROFF", "L1", "0.1", False)
 
     @classmethod
     def RUNW(cls):
-        return cls("1.0", "RUNW", "L1", "0.1", False)
+        return cls("1.0.0", "RUNW", "L1", "0.1", False)
 
     @classmethod
     def GOFF(cls):
-        return cls("1.0", "GOFF", "L2", "0.1", True)
+        return cls("1.0.0", "GOFF", "L2", "0.1", True)
 
     @classmethod
     def GUNW(cls):
-        return cls("1.0", "GUNW", "L2", "0.1", True)
+        return cls("1.0.0", "GUNW", "L2", "0.1", True)
