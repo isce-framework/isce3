@@ -45,7 +45,7 @@ class RUNWWriter(L1InSARWriter):
         add root attributes
         """
         super().add_root_attrs()
-        
+
         self.attrs["title"] = np.string_("NISAR L1 RUNW Product")
         self.attrs["reference_document"] = \
             np.string_("D-102271 NISAR NASA SDS Product Specification"
