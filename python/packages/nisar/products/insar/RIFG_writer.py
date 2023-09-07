@@ -2,8 +2,9 @@ import h5py
 import numpy as np
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import InSARProductsInfo
+from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
+from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RIFGGroupsPaths
 
 
@@ -36,11 +37,19 @@ class RIFGWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = np.string_("NISAR L1_RIFG Product")
-        self.attrs["reference_document"] = np.string_("JPL-102270")
+        self.attrs["title"] = np.string_("NISAR L1 RIFG Product")
+        self.attrs["reference_document"] = \
+            np.string_("D-102270 NISAR NASA SDS Product Specification"
+                       " L1 Range Doppler Wrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
+
+    def add_parameters_to_procinfo_group(self):
+        """
+        Add the parameters group to the "processingInformation" group
+        """
+        super().add_parameters_to_procinfo_group()
 
     def add_algorithms_to_procinfo_group(self):
         """

@@ -1,9 +1,9 @@
 import numpy as np
 from nisar.workflows.helpers import get_cfg_freq_pols
 
-from .common import InSARProductsInfo
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
+from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RUNWGroupsPaths
 
 
@@ -46,8 +46,10 @@ class RUNWWriter(L1InSARWriter):
         """
         super().add_root_attrs()
 
-        self.attrs["title"] = np.string_("NISAR L1_RUNW Product")
-        self.attrs["reference_document"] = np.string_("JPL-102271")
+        self.attrs["title"] = np.string_("NISAR L1 RUNW Product")
+        self.attrs["reference_document"] = \
+            np.string_("D-102271 NISAR NASA SDS Product Specification"
+                       " L1 Range Doppler UnWrapped Interferogram")
 
     def add_ionosphere_to_procinfo_params_group(self):
         """
