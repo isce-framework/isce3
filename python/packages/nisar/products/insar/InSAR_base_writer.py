@@ -655,17 +655,6 @@ class InSARBaseWriter(h5py.File):
         else:
             processing_center = "undefined"
 
-        # Determine processing type and from it urgent observation
-        if processing_type is None:
-            processing_type = "UNDEFINED"
-        elif processing_type.upper() == "PR":
-            processing_type = "NOMINAL"
-        elif processing_type.upper() == "UR":
-            processing_type = "URGENT"
-        else:
-            processing_type = "UNDEFINED"
-        is_urgent_observation = True if processing_type == "URGENT" else False
-
         # Extract relevant identification from reference and secondary RSLC
         ref_id_group = self.ref_h5py_file_obj[self.ref_rslc.IdentificationPath]
         sec_id_group = self.sec_h5py_file_obj[self.sec_rslc.IdentificationPath]
