@@ -585,6 +585,12 @@ def run(cfg: dict, runw_hdf5: str):
     unwrap_correction_bool = filter_cfg['unwrap_correction']
     rg_looks = cfg['processing']['crossmul']['range_looks']
     az_looks = cfg['processing']['crossmul']['azimuth_looks']
+    unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
+        rg_looks = unwrap_rg_looks
+        az_looks = unwrap_az_looks
 
     # set paths for ionosphere and split spectrum
     iono_path = os.path.join(scratch_path, 'ionosphere')

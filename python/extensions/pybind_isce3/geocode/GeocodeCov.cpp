@@ -15,6 +15,7 @@ using isce3::geocode::Geocode;
 using isce3::core::GeocodeMemoryMode;
 using isce3::geocode::geocodeOutputMode;
 using isce3::geometry::rtcAlgorithm;
+using isce3::geometry::rtcAreaBetaMode;
 using isce3::geometry::rtcInputTerrainRadiometry;
 using isce3::geometry::rtcOutputTerrainRadiometry;
 using isce3::io::Raster;
@@ -80,6 +81,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                             std::numeric_limits<double>::quiet_NaN(),
                     py::arg("rtc_algorithm") =
                             rtcAlgorithm::RTC_AREA_PROJECTION,
+                    py::arg("rtc_area_beta_mode") =
+                            rtcAreaBetaMode::AUTO,
                     py::arg("abs_cal_factor") = 1,
                     py::arg("clip_min") =
                             std::numeric_limits<float>::quiet_NaN(),
@@ -93,6 +96,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("out_geo_dem") = nullptr,
                     py::arg("out_geo_nlooks") = nullptr,
                     py::arg("out_geo_rtc") = nullptr,
+                    py::arg("out_geo_rtc_gamma0_to_sigma0") = nullptr,
                     py::arg("phase_screen") = nullptr,
                     py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
                     py::arg("slant_range_correction") = isce3::core::LUT2d<double>(),
@@ -150,6 +154,8 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         correction RTC.
                     rtc_algorithm: isce3.geometry.RtcAlgorithm, optional
                         RTC algorithm
+                    rtc_factor_area_mode : isce3.geometry.RtcAreaBetaMode, optional
+                        RTC area beta mode
                     abs_cal_factor: float, optional
                         Absolute calibration factor.
                     clip_min: float, optional
@@ -175,6 +181,9 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         associated with the geogrid will be saved.
                     out_geo_rtc: isce3.io.Raster, optional
                         Output RTC area factor (in geo-coordinates).
+                    out_geo_rtc_gamma0_to_sigma0: isce3.io.Raster, optional
+                        Output RTC area factor gamma0 to sigma0 array
+                        (in geo-coordinates).
                     phase_screen_raster: isce3.io.Raster, optional
                         Phase screen to be removed before geocoding
                     az_time_correction: LUT2d

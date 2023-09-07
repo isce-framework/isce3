@@ -655,9 +655,9 @@ def run(cfg: dict, output_paths):
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
     sec_hdf5 = cfg["input_file_group"]["secondary_rslc_file"]
     scratch_path = cfg['product_path_group']['scratch_path']
-    ref_orbit_path = cfg['dynamic_ancillary_file_group']['orbit'][
+    ref_orbit_path = cfg['dynamic_ancillary_file_group']['orbit_files'][
                          'reference_orbit_file']
-    sec_orbit_path = cfg['dynamic_ancillary_file_group']['orbit'][
+    sec_orbit_path = cfg['dynamic_ancillary_file_group']['orbit_files'][
                          'secondary_orbit_file']
     baseline_mode = cfg['processing']['baseline']['mode']
     baseline_dir_path = f'{scratch_path}/baseline'

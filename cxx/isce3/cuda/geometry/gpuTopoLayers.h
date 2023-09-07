@@ -30,6 +30,8 @@ class isce3::cuda::geometry::gpuTopoLayers {
             _localPsi(layers._localPsi),
             _sim(layers._sim),
             _crossTrack(layers._crossTrack),
+            _groundToSatEast(layers._groundToSatEast),
+            _groundToSatNorth(layers._groundToSatNorth),
             _length(layers.length()),
             _width(layers.width()),
             _nbytes_double(layers.nbytes_double()),
@@ -77,6 +79,14 @@ class isce3::cuda::geometry::gpuTopoLayers {
             _crossTrack[index] = value;
         }
 
+        CUDA_DEV inline void groundToSatEast(size_t index, float value) {
+            _groundToSatEast[index] = value;
+        }
+
+        CUDA_DEV inline void groundToSatNorth(size_t index, float value) {
+            _groundToSatNorth[index] = value;
+        }
+
         // Get sizes on host or device
         CUDA_HOSTDEV inline size_t length() const { return _length; }
         CUDA_HOSTDEV inline size_t width() const { return _width; }
@@ -98,6 +108,8 @@ class isce3::cuda::geometry::gpuTopoLayers {
         float * _localPsi;
         float * _sim;
         double * _crossTrack;
+        float * _groundToSatEast;
+        float * _groundToSatNorth;
 
     private:
         size_t _length;

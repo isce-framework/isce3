@@ -40,6 +40,7 @@ signal/convolve2D.py
 signal/crossmul.py
 signal/crossmultiply.py
 signal/filter2D.py
+signal/multilook.py
 product/generic_product.py
 product/radargridparameters.py
 product/sub_swaths.py

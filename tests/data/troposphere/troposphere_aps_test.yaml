@@ -12,7 +12,7 @@ runconfig:
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
             dem_file: troposphere/dem.tif
-            troposphere_weather_model:
+            troposphere_weather_model_files:
                reference_troposphere_file: troposphere/aps_weather_model/ERA5_N38.26050518740136_N39.48557856973074_W123.52887464635715_W121.6221049408457_20120419_16.grb
                secondary_troposphere_file: troposphere/aps_weather_model/ERA5_N38.26050518740136_N39.48557856973074_W123.52887464635715_W121.6221049408457_20121105_22.grb
 

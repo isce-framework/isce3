@@ -1,3 +1,4 @@
+import isce3
 import iscetest
 from nisar.workflows import focus
 from nisar.workflows.point_target_analysis import slc_pt_performance
@@ -22,7 +23,7 @@ def slc_is_baseband(filename: str, tol=2*np.pi/100, frequency="A", polarization=
     rslc = nisar.products.readers.SLC(hdf5file=filename)
     ds = rslc.getSlcDataset(frequency, polarization)
     # work around h5py/numpy awkwardness with Complex{Float16}
-    z = nisar.types.read_c4_dataset_as_c8(ds)
+    z = isce3.core.types.read_c4_dataset_as_c8(ds)
     dz = z[:, 1:] * z[:, :-1].conj()
     return abs(np.angle(dz.sum())) < tol
 

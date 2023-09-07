@@ -26,6 +26,19 @@ using isce3::geometry::detail::Rdr2GeoParams;
 
 namespace py = pybind11;
 
+void addbinding(py::class_<Rdr2GeoParams> &pyRdr2GeoParams)
+{
+    pyRdr2GeoParams
+        .def(py::init<const double, const int, const double>(),
+            py::arg("threshold") = 0.05,
+            py::arg("maxiter") = 25,
+            py::arg("extraiter") = 10)
+        .def_readwrite("threshold", &Rdr2GeoParams::threshold)
+        .def_readwrite("maxiter", &Rdr2GeoParams::maxiter)
+        .def_readwrite("extraiter", &Rdr2GeoParams::extraiter)
+        ;
+}
+
 static Rdr2GeoParams handle_r2g_kwargs(py::kwargs kw)
 {
     Rdr2GeoParams params;
@@ -109,7 +122,9 @@ void addbinding_rdr2geo(py::module& m)
                 // duck type side
                 auto side = duck_look_side(pySide);
                 auto opt = handle_r2g_kwargs(r2g_kw);
-                Vec3 targetLLH;
+                auto midx = dem.midX();
+                // FIXME figure out dem.midLonLat() segfaults
+                Vec3 targetLLH{dem.midX(), dem.midY(), dem.refHeight()};
                 int converged =
                     rdr2geo(aztime, range, doppler, orbit, ellipsoid, dem,
                         targetLLH, wavelength, side, opt.threshold, opt.maxiter,
@@ -192,6 +207,8 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                                       isce3::io::Raster*,
                                       isce3::io::Raster*,
                                       isce3::io::Raster*,
+                                      isce3::io::Raster*,
+                                      isce3::io::Raster*,
                                       isce3::io::Raster*>
                                       (&Topo::topo),
                     py::arg("dem_raster"),
@@ -203,7 +220,43 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                     py::arg("local_incidence_angle_raster") = nullptr,
                     py::arg("local_psi_raster") = nullptr,
                     py::arg("simulated_amplitude_raster") = nullptr,
-                    py::arg("layover_shadow_raster") = nullptr)
+                    py::arg("layover_shadow_raster") = nullptr,
+                    py::arg("ground_to_sat_east_raster") = nullptr,
+                    py::arg("ground_to_sat_north_raster") = nullptr,
+                    R"(
+        Run topo and write to user created rasters
+
+        Parameters
+        ----------
+        dem_raster: isce3.io.Raster
+            Input DEM raster
+        x_raster: isce3.io.Raster
+            Output raster for X coordinate in requested projection system
+            (meters or degrees)
+        y_raster: isce3.io.Raster
+            Output raster for Y cooordinate in requested projection system
+            (meters or degrees)
+        height_raster: isce3.io.Raster
+            Output raster for height above ellipsoid (meters)
+        incidence_raster: isce3.io.Raster
+            Output raster for incidence angle (degrees) computed from vertical
+            at target
+        heading_angle_raster: isce3.io.Raster
+            Output raster for azimuth angle (degrees) computed anti-clockwise
+            from EAST (Right hand rule)
+        local_incidence_raster: isce3.io.Raster
+            Output raster for local incidence angle (degrees) at target
+        local_psi_raster: isce3.io.Raster
+            Output raster for local projection angle (degrees) at target
+        simulated_amplitude_raster: isce3.io.Raster
+            Output raster for simulated amplitude image.
+        layover_shadow_raster: isce3.io.Raster
+            Output raster for layover/shadow mask.
+        ground_to_sat_east_raster: isce3.io.Raster
+            Output raster for east component of ground to satellite unit vector
+        ground_to_sat_north_raster: isce3.io.Raster
+            Output raster for north component of ground to satellite unit vector
+                    )")
             .def_property_readonly("orbit", &Topo::orbit)
             .def_property_readonly("ellipsoid", &Topo::ellipsoid)
             .def_property_readonly("doppler", &Topo::doppler)

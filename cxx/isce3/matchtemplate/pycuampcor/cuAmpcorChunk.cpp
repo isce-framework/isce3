@@ -17,9 +17,6 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
     if(!secondaryImage->isComplex())
         throw std::invalid_argument("real images not supported");
 
-    if(param->oversamplingMethod)
-        throw std::invalid_argument("sinc oversampler not supported");
-
     // set chunk index
     setIndex(idxDown_, idxAcross_);
 
@@ -183,7 +180,11 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
 
     // oversample the correlation surface
     if(param->oversamplingMethod) {
-        throw std::runtime_error("sinc oversampler not supported");
+        // sinc interpolator only computes (-i_sincwindow, i_sincwindow)*oversamplingfactor
+        // we need the max loc as the center if shifted
+        corrSincOverSampler->execute(r_corrBatchZoomInAdjust, r_corrBatchZoomInOverSampled,
+            maxLocShift, param->oversamplingFactor*param->rawDataOversamplingFactor
+            );
     }
     else {
         corrOverSampler->execute(r_corrBatchZoomInAdjust, r_corrBatchZoomInOverSampled);
@@ -215,6 +216,8 @@ void cuAmpcorChunk::run(int idxDown_, int idxAcross_)
     cuArraysCopyInsert(r_snrValue, snrImage, idxDown_*param->numberWindowDownInChunk, idxAcross_*param->numberWindowAcrossInChunk);
     // Variance.
     cuArraysCopyInsert(r_covValue, covImage, idxDown_*param->numberWindowDownInChunk, idxAcross_*param->numberWindowAcrossInChunk);
+    // Cross-correlation peak
+    cuArraysCopyInsert(corrMaxValue, corrImage, idxDown_*param->numberWindowDownInChunk, idxAcross_*param->numberWindowAcrossInChunk);
     // all done
 
 }
@@ -350,7 +353,8 @@ void cuAmpcorChunk::loadSecondaryChunk()
 
 /// constructor
 cuAmpcorChunk::cuAmpcorChunk(cuAmpcorParameter *param_, GDALImage *reference_, GDALImage *secondary_,
-    cuArrays<float2> *offsetImage_, cuArrays<float> *snrImage_, cuArrays<float3> *covImage_)
+    cuArrays<float2> *offsetImage_, cuArrays<float> *snrImage_, cuArrays<float3> *covImage_,
+    cuArrays<float> *corrImage_)
 
 {
     param = param_;
@@ -359,6 +363,7 @@ cuAmpcorChunk::cuAmpcorChunk(cuAmpcorParameter *param_, GDALImage *reference_, G
     offsetImage = offsetImage_;
     snrImage = snrImage_;
     covImage = covImage_;
+    corrImage = corrImage_;
 
     ChunkOffsetDown = new cuArrays<int> (param->numberWindowDownInChunk, param->numberWindowAcrossInChunk);
     ChunkOffsetDown->allocate();
@@ -514,7 +519,7 @@ cuAmpcorChunk::cuAmpcorChunk(cuAmpcorParameter *param_, GDALImage *reference_, G
     // end of new arrays
 
     if(param->oversamplingMethod) {
-        throw std::runtime_error("sinc oversampler not supported");
+        corrSincOverSampler = new cuSincOverSamplerR2R(param->oversamplingFactor);
     }
     else {
         corrOverSampler= new cuOverSamplerR2R(param->zoomWindowSize, param->zoomWindowSize,

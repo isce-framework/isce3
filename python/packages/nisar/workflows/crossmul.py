@@ -21,18 +21,23 @@ from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
-def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
+def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
+        dump_on_disk=False, rg_looks=None, az_looks=None):
     '''
     run crossmul
     '''
     # pull parameters from cfg
     ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
     sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
-    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     crossmul_params = cfg['processing']['crossmul']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     flatten = crossmul_params['flatten']
     lines_per_block = crossmul_params['lines_per_block']
+
+    if rg_looks == None:
+        rg_looks = crossmul_params['range_looks']
+    if az_looks == None:
+        az_looks = crossmul_params['azimuth_looks']
 
     if flatten:
         flatten_path = crossmul_params['flatten_path']
@@ -59,8 +64,8 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
     else:
         crossmul = isce3.signal.Crossmul()
 
-    crossmul.range_looks = crossmul_params['range_looks']
-    crossmul.az_looks = crossmul_params['azimuth_looks']
+    crossmul.range_looks = rg_looks
+    crossmul.az_looks = az_looks
     crossmul.oversample_factor = crossmul_params['oversample']
     crossmul.lines_per_block = lines_per_block
 
@@ -106,23 +111,32 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
                 output_dir.mkdir(parents=True, exist_ok=True)
                 pol_group_path = f'{freq_group_path}/interferogram/{pol}'
 
-                # access the HDF5 dataset for a given frequency and polarization
-                ifg_dataset_path = f'{pol_group_path}/wrappedInterferogram'
-                ifg_dataset = dst_h5[ifg_dataset_path]
+                if dump_on_disk:
+                    igram_path = f'{output_dir}/wrapped_igram_rg{rg_looks}_az{az_looks}'
+                    coh_path = f'{output_dir}/coherence_rg{rg_looks}_az{az_looks}'
+                    ifg_raster = isce3.io.Raster(igram_path, rdr_grid.width // rg_looks,
+                                                 rdr_grid.length // az_looks, 1, gdal.GDT_CFloat32, 'ENVI')
+                    coh_raster = isce3.io.Raster(coh_path, rdr_grid.width // rg_looks,
+                                                 rdr_grid.length // az_looks, 1, gdal.GDT_Float32, 'ENVI')
+                else:
 
-                coh_dataset_path = f'{pol_group_path}/coherenceMagnitude'
-                coh_dataset = dst_h5[coh_dataset_path]
+                    # access the HDF5 dataset for a given frequency and polarization
+                    ifg_dataset_path = f'{pol_group_path}/wrappedInterferogram'
+                    ifg_dataset = dst_h5[ifg_dataset_path]
 
-                # compute multilook interferogram and coherence
-                # Construct the output raster directly from HDF5 dataset
-                ifg_raster = isce3.io.Raster(
-                    f"IH5:::ID={ifg_dataset.id.id}".encode("utf-8"),
-                    update=True)
+                    coh_dataset_path = f'{pol_group_path}/coherenceMagnitude'
+                    coh_dataset = dst_h5[coh_dataset_path]
 
-                # Construct the output raster directly from HDF5 dataset
-                coh_raster = isce3.io.Raster(
-                    f"IH5:::ID={coh_dataset.id.id}".encode("utf-8"),
-                    update=True)
+                    # compute multilook interferogram and coherence
+                    # Construct the output raster directly from HDF5 dataset
+                    ifg_raster = isce3.io.Raster(
+                        f"IH5:::ID={ifg_dataset.id.id}".encode("utf-8"),
+                        update=True)
+
+                    # Construct the output raster directly from HDF5 dataset
+                    coh_raster = isce3.io.Raster(
+                        f"IH5:::ID={coh_dataset.id.id}".encode("utf-8"),
+                        update=True)
 
                 # prepare reference input raster
                 c32_output_path = str(output_dir / 'reference.slc')
@@ -152,15 +166,15 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse'):
                 del ifg_raster
 
                 # Allocate raster statistics for coherence
-                compute_stats_real_data(coh_raster, coh_dataset)
+                if not dump_on_disk:
+                    compute_stats_real_data(coh_raster, coh_dataset)
+                    # iterate over offset pols since they maybe different from
+                    # polarizations in runconfig
+                    for pol in offset_pol_list:
+                        # Allocate stats for rubbersheet offsets
+                        stats_offsets(dst_h5, freq, pol)
 
                 del coh_raster
-
-            # iterate over offset pols since they maybe different from
-            # polarizations in runconfig
-            for pol in offset_pol_list:
-                # Allocate stats for rubbersheet offsets
-                stats_offsets(dst_h5, freq, pol)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(

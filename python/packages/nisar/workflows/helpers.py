@@ -8,6 +8,7 @@ import pathlib
 
 from osgeo import gdal
 import h5py
+import isce3
 import nisar
 import numpy as np
 
@@ -274,7 +275,7 @@ def copy_raster(infile, freq, pol,
 
         # Read a block of data from RSLC and convert real and imag part to float32
         s = np.s_[line_start:line_start + block_length, :]
-        data_block = nisar.types.read_c4_dataset_as_c8(hdf5_ds, s)
+        data_block = isce3.core.types.read_c4_dataset_as_c8(hdf5_ds, s)
 
         # Write to GDAL raster
         out_ds.GetRasterBand(1).WriteArray(data_block[0:block_length],

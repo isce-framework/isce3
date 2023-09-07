@@ -41,6 +41,7 @@ def read_c4_dataset_as_c8(ds: h5py.Dataset, key=np.s_[...]):
     # Cast safely and then view as native complex64 numpy dtype.
     return z.astype(complex64).view(np.complex64)
 
+
 def read_complex_dataset(ds: h5py.Dataset, key=np.s_[...]):
     """
     Read a complex dataset including complex float16 (c4) datasets, in which

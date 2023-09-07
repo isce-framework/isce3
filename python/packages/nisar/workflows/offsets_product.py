@@ -30,7 +30,6 @@ def run(cfg: dict, output_hdf5: str = None):
     ref_hdf5 = cfg['input_file_group']['reference_rslc_file']
     sec_hdf5 = cfg['input_file_group']['secondary_rslc_file']
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
-    freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
     offs_params = cfg['processing']['offsets_product']
     coreg_slc_path = pathlib.Path(offs_params['coregistered_slc_path'])
 
@@ -126,6 +125,8 @@ def run(cfg: dict, output_hdf5: str = None):
                             lay_scratch / 'gross_offset')
                     ampcor.snrImageName = str(lay_scratch / 'snr')
                     ampcor.covImageName = str(lay_scratch / 'covariance')
+                    ampcor.corrImageName = str(lay_scratch/ 'correlation_peak')
+
                     create_empty_dataset(str(lay_scratch / 'dense_offsets'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 2,
@@ -141,6 +142,10 @@ def run(cfg: dict, output_hdf5: str = None):
                     create_empty_dataset(str(lay_scratch / 'covariance'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 3,
+                                         gdal.GDT_Float32)
+                    create_empty_dataset(str(lay_scratch / 'correlation_peak'),
+                                         ampcor.numberWindowAcross,
+                                         ampcor.numberWindowDown, 1,
                                          gdal.GDT_Float32)
 
                     # Run ampcor and delete ampcor object after is done
@@ -170,6 +175,10 @@ def run(cfg: dict, output_hdf5: str = None):
                     write_data(str(lay_scratch / 'snr'),
                                dst_h5[f'{prod_path}/snr'],
                                1, offs_params['lines_per_block'])
+                    write_data(str(lay_scratch / 'correlation_peak'),
+                               dst_h5[f'{prod_path}/correlationSurfacePeak'],
+                               1, offs_params['lines_per_block'])
+
     t_elapsed = time.time() - t_all
     info_channel.log(
         f"successfully ran offsets product in {t_elapsed:.3f} seconds")

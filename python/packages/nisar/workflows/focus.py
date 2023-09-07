@@ -9,7 +9,7 @@ from nisar.mixed_mode import (PolChannel, PolChannelSet, Band,
     find_overlapping_channel)
 from nisar.products.readers.Raw import Raw, open_rrsd
 from nisar.products.writers import SLC
-from nisar.types import to_complex32, read_c4_dataset_as_c8
+from isce3.core.types import to_complex32, read_c4_dataset_as_c8
 import nisar
 import numpy as np
 import isce3

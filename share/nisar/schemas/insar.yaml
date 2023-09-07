@@ -34,10 +34,10 @@ runconfig:
             # 101-200 (distance from inlandwater boundary)
 
             water_mask_file: str(required=False)
-            orbit: include('external_orbit_options', required=False)
+            orbit_files: include('external_orbit_options', required=False)
 
             # Troposphere weather model
-            troposphere_weather_model: include('troposphere_weather_model_options', required=False)
+            troposphere_weather_model_files: include('troposphere_weather_model_options', required=False)
 
             # TEC file used for geolocation correction. If no file present, no
             # TEC correction is applied
@@ -932,6 +932,7 @@ gunw_datasets:
     layover_shadow_mask: bool(required=False)
     along_track_offset: bool(required=False)
     slant_range_offset: bool(required=False)
+    correlation_surface_peak: bool(required=False)
 
 goff_datasets:
     along_track_offset: bool(required=False)

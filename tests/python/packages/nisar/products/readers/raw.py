@@ -1,4 +1,5 @@
 import h5py
+import isce3
 import iscetest
 import numpy as np
 import numpy.testing as npt
@@ -83,7 +84,7 @@ def make_test_decoder_file(filename: str) -> np.ndarray:
 
     with h5py.File(filename, mode="w") as h5:
         g = h5.create_group("complex32")
-        z = np.zeros(shape, dtype=nisar.types.complex32)
+        z = np.zeros(shape, dtype=isce3.core.types.complex32)
         z['r'][:] = values
         g.create_dataset("z", data=z)
 

@@ -172,7 +172,7 @@ def estimate_abscal_factor(
     # wrap it in a decoder layer that handles converting half-precision complex values
     # to single-precision.
     img_dataset = rslc.getSlcDataset(freq, pol)
-    img_data = nisar.types.ComplexFloat16Decoder(img_dataset)
+    img_data = isce3.core.types.ComplexFloat16Decoder(img_dataset)
 
     # Get the radar grid on which the image data is sampled.
     radar_grid = rslc.getRadarGrid(freq)

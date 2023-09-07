@@ -80,6 +80,7 @@ matchtemplate/pycuampcor/cuDeramp.cpp
 matchtemplate/pycuampcor/cuEstimateStats.cpp
 matchtemplate/pycuampcor/cuOffset.cpp
 matchtemplate/pycuampcor/cuOverSampler.cpp
+matchtemplate/pycuampcor/cuSincOverSampler.cpp
 math/Bessel.cpp
 math/Stats.cpp
 math/polyfunc.cpp

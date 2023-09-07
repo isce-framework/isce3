@@ -37,6 +37,7 @@ class ROFFWriter(L1InSARWriter):
             np.string_("D-105009 NISAR NASA SDS"
                        " Product Specification L1 Range Doppler Pixel Offsets")
 
+
     def add_coregistration_to_algo_group(self):
         """
         Add the coregistration parameters to the "processingInfromation/algorithms" group

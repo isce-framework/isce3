@@ -19,6 +19,7 @@ from nisar.products.readers import SLC
 from isce3.unwrap.preprocess import preprocess_wrapped_igram as preprocess
 from isce3.unwrap.preprocess import project_map_to_radar
 from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.workflows import crossmul
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data
@@ -45,6 +46,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
     lines_per_block = cfg['processing']['crossmul']['lines_per_block']
     unwrap_args = cfg['processing']['phase_unwrap']
+    unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
 
     # Create error and info channels
     error_channel = journal.error('unwrap.run')
@@ -89,8 +92,23 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                         f"{conn_comp_dataset.id.id}".encode("utf-8")
 
                 # Create unwrapping scratch directory to store temporary rasters
+                crossmul_scratch = scratch_path / f'crossmul/freq{freq}/{pol}/'
                 unwrap_scratch = scratch_path / f'unwrap/freq{freq}/{pol}'
                 unwrap_scratch.mkdir(parents=True, exist_ok=True)
+
+                # If requested, run crossmul with a different number of looks.
+                # Use the generated wrapped interferogram and coherence for
+                # unwrapping.
+                if (unwrap_rg_looks > 1) or (unwrap_az_looks > 1):
+                    if cfg['processing']['fine_resample']['enabled']:
+                        resample_type = 'fine'
+                    else:
+                        resample_type = 'coarse'
+                    crossmul.run(cfg, output_hdf5=None, resample_type=resample_type,
+                                 dump_on_disk=True, rg_looks=unwrap_rg_looks,
+                                 az_looks=unwrap_az_looks)
+                    igram_path = str(f'{crossmul_scratch}/wrapped_igram_rg{unwrap_rg_looks}_az{unwrap_az_looks}')
+                    corr_path = str(f'{crossmul_scratch}/coherence_rg{unwrap_rg_looks}_az{unwrap_az_looks}')
 
                 # If enabled, preprocess wrapped phase: remove invalid pixels
                 # and fill their location with a filling algorithm
@@ -134,13 +152,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                             filling_method, distance)
                     # Save filtered/filled wrapped interferogram
                     igram_path = f'{unwrap_scratch}/wrapped_igram.filt'
-
-                    driver = gdal.GetDriverByName('ENVI')
-                    length, width = igram_filt.shape
-                    out_ds = driver.Create(igram_path, width, length, 1,
-                                           gdal.GDT_CFloat32)
-                    out_ds.GetRasterBand(1).WriteArray(igram_filt)
-                    out_ds.FlushCache()
+                    write_raster(igram_path, igram_filt)       
 
                 # Run unwrapping based on user-defined algorithm
                 algorithm = unwrap_args['algorithm']
@@ -176,7 +188,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     igram_phase_to_vrt(igram_path, igram_phase_path)
 
                     # Allocate input/output raster
-                    igram_phase_raster = isce3.io.Raster(phase_path)
+                    igram_phase_raster = isce3.io.Raster(igram_phase_path)
                     corr_raster = isce3.io.Raster(corr_path)
 
                     # Check if it is required to unwrap with power raster
@@ -236,7 +248,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                                     2 * rg_bw)
                         # To compute azimuth resolution, get sensor speed at mid-scene
                         # And use azimuth processed bandwidth (copied from RSLC)
-                        ref_orbit = cfg['dynamic_ancillary_file_group']['orbit']['reference_orbit_file']
+                        ref_orbit = cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
                         if ref_orbit is not None:
                             orbit = load_orbit_from_xml(ref_orbit)
                         else:
@@ -278,27 +290,35 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                 else:
                     err_str = f"{algorithm} is an invalid unwrapping algorithm"
                     error_channel.log(err_str)
-
-                # Copy coherence magnitude and culled offsets from RIFG
-                # default dataset/group from interferogram
-                dataset_names = ['coherenceMagnitude']
-                group_names = ['interferogram']
+                # Allocate coherence in RUNW. If no further multilooking, the coherence
+                # is copied from RIFG
+                datasets = ['coherenceMagnitude']
+                groups = ['interferogram']
                 # append datasets/groups for offsets if polarization exists
                 # offset polarizations can differ from interferogram
                 # polarizations if single pol offset mode enabled
                 if pol in offset_pol_list:
-                    dataset_names.extend(['alongTrackOffset',
-                                          'slantRangeOffset'])
-                    group_names.extend(['pixelOffsets', 'pixelOffsets'])
-                for dataset_name, group_name in zip(dataset_names, group_names):
-                    dst_path = f'{dst_freq_group_path}/{group_name}/{pol}/{dataset_name}'
-                    src_path = f'{src_freq_group_path}/{group_name}/{pol}/{dataset_name}'
-                    dst_h5[dst_path][:, :] = src_h5[src_path][()]
+                    datasets.extend(['alongTrackOffset',
+                                     'slantRangeOffset',
+                                     'correlationSurfacePeak'])
+                    groups.extend(['pixelOffsets', 'pixelOffsets', 'pixelOffsets'])
+                for dataset, group in zip(datasets, groups):
+                    dst_path = f'{dst_freq_group_path}/{group}/{pol}/{dataset}'
+                    src_path = f'{src_freq_group_path}/{group}/{pol}/{dataset}'
+                    if (dataset == 'coherenceMagnitude') and ((unwrap_rg_looks > 1)
+                                                         or (unwrap_az_looks > 1)):
+                        corr_path = str(f'{crossmul_scratch}/coherence_rg{unwrap_rg_looks}_az{unwrap_az_looks}')
+                        corr = open_raster(corr_path)
+                        dst_h5[dst_path][:, :] = corr
+                    else:
+                        dst_h5[dst_path][:, :] = src_h5[src_path][()]
+
                     dst_dataset = dst_h5[dst_path]
                     dst_raster = isce3.io.Raster(
                         f"IH5:::ID={dst_dataset.id.id}".encode("utf-8"),
                         update=True)
                     compute_stats_real_data(dst_raster, dst_dataset)
+
                 # Clean up
                 del unw_raster
                 del conn_comp_raster
@@ -692,6 +712,31 @@ def open_raster(filename, band=1):
     ds = gdal.Open(filename, gdal.GA_ReadOnly)
     raster = ds.GetRasterBand(band).ReadAsArray()
     return raster
+
+
+def write_raster(filename, array, data_type=gdal.GDT_CFloat32,
+                 file_format='ENVI'):
+    '''
+    Write numpy array to a GDAL-friendly file
+
+    Parameters
+    ----------
+    filename: str
+        Output file path for array to write to disk
+    array: np.ndarray
+        Numpy array to write to disk
+    data_type: gdal.DataType
+        GDAL data type (default: gdal.GDT_CFloat32)
+    file_format: str
+        GDAL file format (default: ENVI)
+    '''
+
+    driver = gdal.GetDriverByName(file_format)
+    length, width = array.shape
+    out_ds = driver.Create(filename, width, length, 1,
+                           data_type)
+    out_ds.GetRasterBand(1).WriteArray(array)
+    out_ds.FlushCache()
 
 
 if __name__ == "__main__":

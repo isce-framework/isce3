@@ -31,13 +31,13 @@ runconfig:
             dem_file_description:
 
             water_mask_file:
-            orbit:
+            orbit_files:
                 reference_orbit_file:
                 secondary_orbit_file:
             tec_file:
 
             # Troposphere weather model files
-            troposphere_weather_model:
+            troposphere_weather_model_files:
                 reference_troposphere_file:
                 secondary_troposphere_file:
 
@@ -512,7 +512,9 @@ runconfig:
                 lines_per_tile: 100
 
             crossmul:
+                # Number of range looks to generate wrapped interferogram in RIFG
                 range_looks: 11
+                # Number of azimuth looks to generate wrapped interferogram in RIFG
                 azimuth_looks: 11
                 flatten: True
                 oversample: 2
@@ -544,12 +546,12 @@ runconfig:
                 # the previous InSAR module, which is not user-specified.
                 # Required for running stand-alone phase unwrapping
                 crossmul_path:
-                # Number of looks in slant range and azimuth directions. If different than 1
-                # and different from range_looks and azimuth_looks in crossmul, produce a new
-                # multi-looked wrapped interferogram and coherence that will be used
-                # for unwrapping. Otherwise, uses wrapped interferogram and coherence in RIFG
-                range_looks: 10
-                azimuth_looks: 10
+                # Number of looks in slant range and azimuth directions to generate the
+                # wrapped interferogram that will be unwrapped in RUNW.
+                # If range_looks = 1 and azimuth_looks = 1 no further multilooking occurs
+                # In this case the wrapped interferogram in RIFG will be unwrapped.
+                range_looks: 1
+                azimuth_looks: 1
                 # Mask and fill wrapped InSAR phase prior to unwrapping
                 preprocess_wrapped_phase:
                     # Enable/disable preprocessing of wrapped igram

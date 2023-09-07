@@ -25,7 +25,7 @@ from nisar.workflows.geocode_insar_runconfig import \
     GeocodeInsarRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.compute_stats import compute_stats_real_data, \
-    compute_water_mask_stats, compute_layover_shadow_stats
+                                          compute_layover_shadow_water_stats
 
 
 class InputProduct(Enum):
@@ -88,7 +88,7 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
     input_raster = isce3.io.Raster(str(raster_ref))
 
     # access the HDF5 dataset for layover shadow mask
-    dataset_path = f"{dst_freq_path}/interferogram/unwrapped/layoverShadowMask"
+    dataset_path = f"{dst_freq_path}/interferogram/unwrapped/mask"
 
     return input_raster, dataset_path
 
@@ -120,7 +120,8 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         HDF5 path to geocoded shadow layover dataset
     """
 
-    if dataset_name in ['alongTrackOffset', 'slantRangeOffset'] and \
+    if dataset_name in ['alongTrackOffset', 'slantRangeOffset',
+                        'correlationSurfacePeak'] and \
             input_product_type is InputProduct.RUNW:
         src_group_path = f'{src_freq_path}/pixelOffsets/{pol}'
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}'
@@ -257,6 +258,10 @@ def _project_water_to_geogrid(input_water_path, geogrid):
     geogrid : isce3.product.GeoGridParameters
         geogrid to map the water mask
 
+    Returns
+    -------
+    water_mask_interpret : numpy.ndarray
+        boolean array (1: water)
     """
     inputraster = gdal.Open(input_water_path)
     output_extent = (geogrid.start_x,
@@ -273,13 +278,14 @@ def _project_water_to_geogrid(input_water_path, geogrid):
     dst_ds = gdal.Warp("", inputraster, options=gdalwarp_options)
 
     projected_data = dst_ds.ReadAsArray()
+    water_mask_interpret = projected_data.astype('uint8') != 0
 
-    return projected_data
+    return water_mask_interpret
 
 
-def add_water_mask(cfg, freq, geogrid, dst_h5):
+def add_water_to_mask(cfg, freq, geogrid, dst_h5):
     """
-    Create water mask to HDF5 from given water mask
+    Add water mask to mask layer in GUNW product. 
 
     Parameters
     ----------
@@ -296,12 +302,21 @@ def add_water_mask(cfg, freq, geogrid, dst_h5):
 
     if water_mask_path is not None:
         freq_path = f'/science/LSAR/GUNW/grids/frequency{freq}'
+        mask_h5_path = f'{freq_path}/interferogram/unwrapped/mask'
 
-        # Add water mask to unwrapped interferogram
-        water_mask_h5_path = f'{freq_path}/interferogram/unwrapped/waterMask'
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
-        water_mask_interpret = water_mask.astype('uint8') != 0
-        dst_h5[water_mask_h5_path].write_direct(water_mask_interpret)
+        mask_layer = dst_h5[mask_h5_path][()]
+
+        # The mask layer has the shadow (1), layover (2), and both(3).
+        # Here, the water mask (4) is added to the existing info.
+        # If the water is coexist with the above (1-3), they will be assigned to 
+        # new values. 
+        # shadow + water : 5
+        # layover + water : 6
+        # layover + shadow + water : 7
+        combo_pxl_mask = (mask_layer >= 0) & (mask_layer < 4) & water_mask
+        mask_layer[combo_pxl_mask] += 4
+        dst_h5[mask_h5_path].write_direct(mask_layer)
 
 
 def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type):
@@ -476,11 +491,11 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         block_size, off_layer_dict=None, scratch_path='',
                         compute_stats=True, input_product_type = InputProduct.RUNW,
                         iono_sideband=False):
-
     geocoded_rasters, geocoded_datasets, input_rasters = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
                          dst_h5, off_layer_dict, scratch_path, input_product_type,
                          iono_sideband)
+
     if input_rasters:
         geocode_tuples = zip(input_rasters, geocoded_rasters)
         for input_raster, geocoded_raster in geocode_tuples:
@@ -496,12 +511,6 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
-            if input_product_type != InputProduct.ROFF:
-                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
-                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
-                compute_water_mask_stats(water_mask_ds)
-                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
-                compute_layover_shadow_stats(lay_shadow_ds)
 
 
 def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
@@ -525,14 +534,21 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
-    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit_files']['reference_orbit_file']
     threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
     iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
-    az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
-    rg_looks = cfg["processing"]["crossmul"]["range_looks"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
+    rg_looks = cfg['processing']['crossmul']['range_looks']
+    az_looks = cfg['processing']['crossmul']['azimuth_looks']
+    unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
+        rg_looks = unwrap_rg_looks
+        az_looks = unwrap_az_looks
+
     if input_product_type is InputProduct.ROFF:
         geo_datasets = cfg["processing"]["geocode"]["goff_datasets"]
     elif input_product_type is InputProduct.RUNW:
@@ -674,16 +690,16 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     pol_list, input_hdf5, dst_h5, radar_grid,
                                     dem_raster, block_size)
 
-                if cfg['processing']['dense_offsets']['enabled']:
-                   desired = ['along_track_offset', 'slant_range_offset']
-                   geocode_obj.data_interpolator = interp_method
-                   radar_grid_offset = get_offset_radar_grid(cfg,
-                                                             radar_grid_slc)
+                desired = ['along_track_offset', 'slant_range_offset',
+                           'correlation_surface_peak']
+                geocode_obj.data_interpolator = interp_method
+                radar_grid_offset = get_offset_radar_grid(cfg,
+                                                          radar_grid_slc)
 
-                   cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
-                                       offset_pol_list, input_hdf5, dst_h5,
-                                       radar_grid_offset, dem_raster,
-                                       block_size)
+                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                                    offset_pol_list, input_hdf5, dst_h5,
+                                    radar_grid_offset, dem_raster,
+                                    block_size)
 
                 desired = ["layover_shadow_mask"]
                 geocode_obj.data_interpolator = 'NEAREST'
@@ -694,7 +710,10 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     compute_stats=False)
 
                 # add water mask to GUNW product
-                add_water_mask(cfg, freq, geo_grid, dst_h5)
+                add_water_to_mask(cfg, freq, geo_grid, dst_h5)
+                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped/mask'
+                mask_ds = dst_h5[mask_path]
+                compute_layover_shadow_water_stats(mask_ds)
 
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
@@ -760,12 +779,6 @@ def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
                 compute_stats_real_data(raster, ds)
-            if input_product_type != InputProduct.ROFF:
-                unwrap_path = '/science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped'
-                water_mask_ds = dst_h5[f'{unwrap_path}/waterMask']
-                compute_water_mask_stats(water_mask_ds)
-                lay_shadow_ds = dst_h5[f'{unwrap_path}/layoverShadowMask']
-                compute_layover_shadow_stats(lay_shadow_ds)
 
 
 def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
@@ -787,15 +800,22 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     # Extract parameters from cfg dictionary
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
-    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit']['reference_orbit_file']
+    ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit_files']['reference_orbit_file']
     freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
     lines_per_block = cfg["processing"]["geocode"]["lines_per_block"]
     interp_method = cfg["processing"]["geocode"]["interp_method"]
-    az_looks = cfg["processing"]["crossmul"]["azimuth_looks"]
-    rg_looks = cfg["processing"]["crossmul"]["range_looks"]
+    rg_looks = cfg['processing']['crossmul']['range_looks']
+    az_looks = cfg['processing']['crossmul']['azimuth_looks']
+    unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
+    unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
+
+    if unwrap_rg_looks != 1 or unwrap_az_looks != 1:
+        rg_looks = unwrap_rg_looks
+        az_looks = unwrap_az_looks
+
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
 
     if input_product_type is InputProduct.ROFF:
@@ -829,7 +849,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         wrapped_igram_interp_method = cfg["processing"]["geocode"]\
                 ['wrapped_interferogram']['interp_method']
 
-        if wrapped_igram_interp_method  == 'SINC':
+        if wrapped_igram_interp_method == 'SINC':
             wrapped_igram_interp_method = isce3.core.DataInterpMethod.SINC
         if wrapped_igram_interp_method == 'BILINEAR':
             wrapped_igram_interp_method = isce3.core.DataInterpMethod.BILINEAR
@@ -965,27 +985,28 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
                                     input_hdf5, dst_h5, geocode_conn_comp_obj)
-                if cfg['processing']['dense_offsets']['enabled']:
-                   desired = ['along_track_offset', 'slant_range_offset']
 
-                   # If needed create geocode object for offset datasets
-                   # Create offset unique radar grid
-                   radar_grid = get_offset_radar_grid(cfg,
-                                                      slc.getRadarGrid(freq))
+                desired = ['along_track_offset', 'slant_range_offset',
+                           'correlation_surface_peak']
 
-                   # Create radar grid geometry required by offset datasets
-                   rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
-                                                                grid_zero_doppler)
+                # If needed create geocode object for offset datasets
+                # Create offset unique radar grid
+                radar_grid = get_offset_radar_grid(cfg,
+                                                   slc.getRadarGrid(freq))
 
-                   geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                                   rdr_geometry,
-                                                                   dem_raster,
-                                                                   lines_per_block,
-                                                                   interp_method,
-                                                                   invalid_value=np.nan)
-                   gpu_geocode_rasters(geo_datasets, desired, freq,
-                                       offset_pol_list, input_hdf5, dst_h5,
-                                       geocode_offset_obj),
+                # Create radar grid geometry required by offset datasets
+                rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
+                                                             grid_zero_doppler)
+
+                geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
+                                                                rdr_geometry,
+                                                                dem_raster,
+                                                                lines_per_block,
+                                                                interp_method,
+                                                                invalid_value=np.nan)
+                gpu_geocode_rasters(geo_datasets, desired, freq,
+                                    offset_pol_list, input_hdf5, dst_h5,
+                                    geocode_offset_obj)
 
                 desired = ["layover_shadow_mask"]
                 # If needed create geocode object for shadow layover dataset
@@ -1011,7 +1032,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     scratch_path=scratch_path, compute_stats=False)
 
                 # add water mask to GUNW product
-                add_water_mask(cfg, freq, geogrid, dst_h5)
+                add_water_to_mask(cfg, freq, geogrid, dst_h5)
+                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/interferogram/unwrapped/mask'
+                mask_ds = dst_h5[mask_path]
+                compute_layover_shadow_water_stats(mask_ds)
 
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']

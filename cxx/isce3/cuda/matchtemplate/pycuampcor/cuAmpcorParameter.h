@@ -138,6 +138,7 @@ public:
     std::string offsetImageName;       ///< Offset fields output filename
     std::string snrImageName;          ///< Output SNR filename
     std::string covImageName;          ///< Output variance filename
+    std::string corrImageName;         ///< Output cross-correlation peak filename
 
     // Class constructor and default parameters setter
     cuAmpcorParameter();
