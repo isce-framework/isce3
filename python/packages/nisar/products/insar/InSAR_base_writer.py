@@ -777,6 +777,13 @@ class InSARBaseWriter(h5py.File):
 
         id_ds_names_to_be_created = [
             DatasetParams(
+                "granuleId",
+                # NOTE: the graduleId is a placeholder here, waiting for the
+                # runconfig change.
+                "None",
+                "Unique granule identification name",
+            ),
+            DatasetParams(
                 "instrumentName",
                 f"{radar_band_name}SAR",
                 (
