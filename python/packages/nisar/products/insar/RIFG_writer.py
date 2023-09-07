@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 from nisar.workflows.helpers import get_cfg_freq_pols
 
+from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RIFGGroupsPaths
@@ -36,11 +37,112 @@ class RIFGWriter(L1InSARWriter):
         super().add_root_attrs()
 
         # Add additional attributes
-        self.attrs["title"] = np.string_("NISAR L1_RIFG Product")
-        self.attrs["reference_document"] = np.string_("JPL-102270")
+        self.attrs["title"] = np.string_("NISAR L1 RIFG Product")
+        self.attrs["reference_document"] = \
+            np.string_("D-102270 NISAR NASA SDS Product Specification"
+                       " L1 Range Doppler Wrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
+
+    def add_interferogram_to_procinfo_params_group(self):
+        """
+        Add the interferogram group to "processingInformation/parameters group"
+        """
+        proc_cfg_crossmul = self.cfg["processing"]["crossmul"]
+        range_filter = proc_cfg_crossmul["common_band_range_filter"]
+        azimuth_filter = proc_cfg_crossmul["common_band_azimuth_filter"]
+
+        flatten = proc_cfg_crossmul["flatten"]
+
+        interferogram_ds_params = [
+            DatasetParams(
+                "commonBandRangeFilterApplied",
+                np.bool_(range_filter),
+                (
+                    "Flag to indicate if common band range filter has been"
+                    " applied"
+                ),
+            ),
+            DatasetParams(
+                "commonBandAzimuthFilterApplied",
+                np.bool_(azimuth_filter),
+                (
+                    "Flag to indicate if common band azimuth filter has been"
+                    " applied"
+                ),
+            ),
+            DatasetParams(
+                "ellipsoidalFlatteningApplied",
+                np.bool_(flatten),
+                (
+                    "Flag to indicate if interferometric phase has been"
+                    " flattened with respect to a zero height ellipsoid"
+                ),
+            ),
+            DatasetParams(
+                "topographicFlatteningApplied",
+                np.bool_(flatten),
+                (
+                    "Flag to indicate if interferometric phase has been"
+                    " flattened with respect to a zero height ellipsoid"
+                ),
+            ),
+            DatasetParams(
+                "numberOfRangeLooks",
+                np.uint32(self.igram_range_looks),
+                (
+                    "Number of looks applied in the slant range direction to"
+                    " form the wrapped interferogram"
+                ),
+                {
+                    "units": "unitless",
+                },
+            ),
+            DatasetParams(
+                "numberOfAzimuthLooks",
+                np.uint32(self.igram_azimuth_looks),
+                (
+                    "Number of looks applied in the along-track direction to"
+                    " form the wrapped interferogram"
+                ),
+                {
+                    "units": "unitless",
+                },
+            ),
+        ]
+
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            bandwidth_group_path = f"{self.ref_rslc.SwathPath}/frequency{freq}"
+            bandwidth_group = self.ref_h5py_file_obj[bandwidth_group_path]
+
+            igram_group_name = \
+                f"{self.group_paths.ParametersPath}/wrappedInterferogram/frequency{freq}"
+            igram_group = self.require_group(igram_group_name)
+
+            # TODO: the azimuthBandwidth and rangeBandwidth are placeholders heres,
+            # and copied from the bandpassed RSLC data.
+            # those should be updated in the crossmul module.
+            bandwidth_group.copy(
+                "processedAzimuthBandwidth",
+                igram_group,
+                "azimuthBandwidth",
+            )
+            bandwidth_group.copy(
+                "processedRangeBandwidth",
+                igram_group,
+                "rangeBandwidth",
+            )
+
+            for ds_param in interferogram_ds_params:
+                add_dataset_and_attrs(igram_group, ds_param)
+
+    def add_parameters_to_procinfo_group(self):
+        """
+        Add the parameters group to the "processingInformation" group
+        """
+        super().add_parameters_to_procinfo_group()
+        self.add_interferogram_to_procinfo_params_group()
 
     def add_algorithms_to_procinfo_group(self):
         """

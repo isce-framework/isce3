@@ -127,7 +127,6 @@ class L1InSARWriter(InSARBaseWriter):
         """
         super().add_parameters_to_procinfo_group()
 
-        self.add_interferogram_to_procinfo_params_group()
         self.add_pixeloffsets_to_procinfo_params_group()
 
     def _get_interferogram_dataset_shape(self, freq : str, pol : str):

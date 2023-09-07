@@ -33,7 +33,9 @@ class ROFFWriter(L1InSARWriter):
         super().add_root_attrs()
 
         self.attrs["title"] = np.string_("NISAR L1_ROFF Product")
-        self.attrs["reference_document"] = np.string_("JPL-105009")
+        self.attrs["reference_document"] = \
+            np.string_("D-105009 NISAR NASA SDS"
+                       " Product Specification L1 Range Doppler Pixel Offsets")
 
     def add_coregistration_to_algo_group(self):
         """
