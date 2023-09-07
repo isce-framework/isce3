@@ -754,6 +754,11 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 "List of planned observations included in the product",
             ),
+            DatasetParams(
+                "isUrgentObservation",
+                "None",
+                "Boolean indicating if observation is nominal or urgent",
+            ),
         ]
 
         for ds_name in id_ds_names_need_to_copy:
@@ -780,11 +785,6 @@ class InSARBaseWriter(h5py.File):
                 ),
             ),
             self._get_mixed_mode(),
-            DatasetParams(
-                "isUrgentObservation",
-                is_urgent_observation,
-                "Boolean indicating if observation is nominal or urgent",
-            ),
             DatasetParams(
                 "listOfFrequencies",
                 list(self.freq_pols),

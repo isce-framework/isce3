@@ -7,13 +7,14 @@ from .InSAR_base_writer import InSARBaseWriter
 from .InSAR_L2_writer import L2InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import GUNWGroupsPaths
+from .RIFG_writer import RIFGWriter
 from .RUNW_writer import RUNWWriter
 
 
-class GUNWWriter(RUNWWriter, L2InSARWriter):
+class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
     """
-    Writer class for GUNW product inherent from both the RUNWWriter
-    and the L2InSARWriter
+    Writer class for GUNW product inherent from both the RUNWWriter,
+    RIFGWriter, and the L2InSARWriter
     """
     def __init__(self, **kwds):
         """
@@ -39,8 +40,10 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
         """
         InSARBaseWriter.add_root_attrs(self)
 
-        self.attrs["title"] = np.string_("NISAR L2 GUNW_Product")
-        self.attrs["reference_document"] = np.string_("JPL-102272")
+        self.attrs["title"] = np.string_("NISAR L2 GUNW Product")
+        self.attrs["reference_document"] = \
+            np.string_("D-102272 NISAR NASA SDS Product Specification"
+                       " L2 Geocoded Unwrapped Interferogram")
 
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
@@ -57,6 +60,26 @@ class GUNWWriter(RUNWWriter, L2InSARWriter):
         Add parameters group to processingInformation/parameters group
         """
         RUNWWriter.add_parameters_to_procinfo_group(self)
+
+        # the unwrappedInterfergram group under the processingInformation/parameters
+        # group is copied from the RUNW product, but the name in RUNW product is
+        # 'interferogram', while in GUNW its name is 'unwrappedInterferogram'. Here
+        # is to rename the interfegram group name to unwrappedInterferogram group name
+        old_igram_group_name = \
+            f"{self.group_paths.ParametersPath}/interferogram"
+        new_igram_group_name = \
+            f"{self.group_paths.ParametersPath}/unwrappedInterferogram"
+        self.move(old_igram_group_name, new_igram_group_name)
+
+        # the wrappedInterfergram group under the processingInformation/parameters
+        # group is copied from the RIFG product, but the name in RIFG product is
+        # 'interferogram', while in GUNW its name is 'wrappedInterferogram'. Here
+        # is to rename the interfegram group name to wrappedInterferogram group name
+        RIFGWriter.add_interferogram_to_procinfo_params_group(self)
+        new_igram_group_name = \
+            f"{self.group_paths.ParametersPath}/wrappedInterferogram"
+        self.move(old_igram_group_name, new_igram_group_name)
+
         L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
 
     def add_grids_to_hdf5(self):
