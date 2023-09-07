@@ -9,10 +9,9 @@ from .product_paths import GOFFGroupsPaths
 from .ROFF_writer import ROFFWriter
 
 
-class GOFFWriter(ROFFWriter, L2InSARWriter):
+class GOFF(ROFFWriter, L2InSARWriter):
     """
-    Writer class for GOFF product inherent from both
-    ROFFWriter and L2InSARWriter
+    Writer class for GOFF product inherent from ROFF
     """
 
     def __init__(self, **kwds):
@@ -32,6 +31,7 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         """
         Save to HDF5
         """
+
         L2InSARWriter.save_to_hdf5(self)
 
     def add_root_attrs(self):
@@ -42,23 +42,21 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         InSARBaseWriter.add_root_attrs(self)
 
         self.attrs["title"] = "NISAR L2 GOFF Product"
-        self.attrs["reference_document"] = \
-            np.string_("D-105010 NISAR NASA SDS Product Specification"
-                       " L2 Geocoded Pixel Offsets")
+        self.attrs["reference_document"] = "TBD"
 
     def add_algorithms_to_procinfo(self):
         """
         Add the algorithms to processingInformation group
         """
-        ROFFWriter.add_algorithms_to_procinfo_group(self)
-        L2InSARWriter.add_geocoding_to_algo_group(self)
+        algo_group = ROFFWriter.add_algorithms_to_procinfo(self)
+        L2InSARWriter.add_geocoding_to_algo(self, algo_group)
 
     def add_parameters_to_procinfo(self):
         """
         Add parameters group to processingInformation/parameters group
         """
-        ROFFWriter.add_parameters_to_procinfo_group(self)
-        L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
+        ROFFWriter.add_parameters_to_procinfo(self)
+        L2InSARWriter.add_geocoding_to_procinfo_params(self)
 
     def add_grids_to_hdf5(self):
         """
@@ -67,12 +65,12 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
 
         L2InSARWriter.add_grids_to_hdf5(self)
 
-        proc_cfg = self.cfg["processing"]
-        geogrids = proc_cfg["geocode"]["geogrids"]
+        pcfg = self.cfg["processing"]
+        geogrids = pcfg["geocode"]["geogrids"]
         grids_val = np.string_("projection")
         layers = [
             layer
-            for layer in proc_cfg["offsets_product"]
+            for layer in pcfg["offsets_product"]
             if layer.startswith("layer")
         ]
 
