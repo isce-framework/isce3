@@ -40,8 +40,15 @@ class RIFGWriter(L1InSARWriter):
         self.attrs["reference_document"] = \
             np.string_("D-102270 NISAR NASA SDS Product Specification"
                        " L1 Range Doppler Wrapped Interferogram")
+        
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
+
+    def add_parameters_to_procinfo_group(self):
+        """
+        Add the parameters group to the "processingInformation" group
+        """
+        super().add_parameters_to_procinfo_group()
 
     def add_algorithms_to_procinfo_group(self):
         """
