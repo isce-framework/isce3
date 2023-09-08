@@ -284,7 +284,6 @@ class InSARBaseWriter(h5py.File):
 
         coreg_method = \
             "Coarse geometry coregistration with DEM and orbit ephemeris"
-
         cross_correlation_domain = "None"
         outlier_filling_method = "None"
         filter_kernel_algorithm = "None"
