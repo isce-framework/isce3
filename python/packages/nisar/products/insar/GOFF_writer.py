@@ -45,16 +45,17 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
             np.string_("D-105010 NISAR NASA SDS Product Specification"
                        " L2 Geocoded Pixel Offsets")
 
-    def add_algorithms_to_procinfo(self):
+    def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms to processingInformation group
         """
         ROFFWriter.add_algorithms_to_procinfo_group(self)
         L2InSARWriter.add_geocoding_to_algo_group(self)
 
-    def add_parameters_to_procinfo(self):
+    def add_parameters_to_procinfo_group(self):
         """
-        Add parameters group to processingInformation/parameters group
+        Add parameters group to
+        processingInformation/parameters group
         """
         ROFFWriter.add_parameters_to_procinfo_group(self)
         L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
@@ -68,28 +69,27 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         proc_cfg = self.cfg["processing"]
         geogrids = proc_cfg["geocode"]["geogrids"]
         grids_val = np.string_("projection")
+
+        # Extract offset layer names for later processing
         layers = [
             layer
             for layer in proc_cfg["offsets_product"]
-            if layer.startswith("layer")
-        ]
+            if layer.startswith("layer")]
 
-        # only add the common fields such as listofpolarizations, pixeloffset,
-        # and centerfrequency
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
-            grids_freq_group_name = (
+            # add the common fields such as listofpolarizations, pixeloffset,
+            # and centerfrequency
+            grids_freq_group_name = \
                 f"{self.group_paths.GridsPath}/frequency{freq}"
-            )
+
             grids_freq_group = self.require_group(grids_freq_group_name)
 
             offset_group_name = f"{grids_freq_group_name}/pixelOffsets"
             self.require_group(offset_group_name)
 
             goff_geogrids = geogrids[freq]
-            goff_shape = (
-                goff_geogrids.length,
-                goff_geogrids.width,
-            )
+            goff_shape = (goff_geogrids.length,goff_geogrids.width)
+
             pixeloffsets_group_name = \
                 f"{grids_freq_group_name}/pixelOffsets"
 
