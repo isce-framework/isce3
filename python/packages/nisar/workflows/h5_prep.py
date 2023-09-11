@@ -1498,25 +1498,25 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='')
+        units='unitless')
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='')
+        units='unitless')
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='')
+        units='unitless')
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='')
+        units='unitless')
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
@@ -1642,7 +1642,8 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         cube_group, 'incidenceAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='incidence angle',
-        descr='Incidence angle is defined as angle between LOS vector and normal at the target',
+        descr='Incidence angle is defined as the angle between the LOS '
+              'vector and the normal to the ellipsoid at the target height',
         units='degrees')
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
@@ -1672,14 +1673,15 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Elevation angle',
-        descr='Elevation angle is defined as angle between LOS vector and norm at the sensor',
+        descr='Elevation angle is defined as the angle between the LOS vector '
+              'and the normal to the ellipsoid at the sensor',
         units='degrees')
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Ground-track velocity',
-        descr='Ground track velocity needed to convert azimuth offsets in pixels to meters',
-        units='m/s')
+        descr='Absolute value of the platform velocity scaled at the target height',
+        units='meters per second')
 
     isce3.geometry.make_geolocation_cubes(radar_grid,
                                           heights,
@@ -1769,7 +1771,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     height_dataset = hdf5_obj.create_dataset(height_dataset_name, data=z_vect)
     height_dataset.attrs['standard_name'] = np.string_("height_above_reference_ellipsoid")
     height_dataset.attrs["description"] = np.string_(descr)
-    height_dataset.attrs['units'] = np.string_("m")
+    height_dataset.attrs['units'] = np.string_("meters")
     coordinates_list.append(height_dataset)
 
     return coordinates_list
