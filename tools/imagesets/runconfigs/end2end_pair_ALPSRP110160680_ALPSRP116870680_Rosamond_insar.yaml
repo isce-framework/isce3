@@ -21,9 +21,9 @@ runconfig:
 
             water_mask_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/watermask_rosamond.tif
 
-            troposphere_weather_model:
-               reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/HRES_2008_02_18_T06_20_00_34N_37N_120W_117W.nc
-               secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/HRES_2008_04_04_T06_19_17_34N_37N_120W_117W.nc
+            troposphere_weather_model_files:
+               reference_troposphere_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/HRES_2008_02_18_T06_20_00.nc
+               secondary_troposphere_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/HRES_2008_04_04_T06_19_17.nc
 
             # PLACEHOLDER - Sample of file name format
             tec_file: input_L0B_RRSD_ALPSRP110160680_Rosamond/NISAR_ANC_L_TEC_20230421T214743_20080218T061910_20080218T061940_v0.1.json
