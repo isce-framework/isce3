@@ -376,6 +376,16 @@ def insar_ionosphere_pair(original_cfg, runw_hdf5):
     iono_insar_cfg['primary_executable'][
                 'product_type'] = 'RUNW'
 
+    # update processing parameter
+    # water mask for ionosphere is not supported now.
+    prep_wrapped_phase_cfg =  iono_insar_cfg['processing'][
+        'phase_unwrap']['preprocess_wrapped_phase']
+    unwrap_mask_type = prep_wrapped_phase_cfg['mask']['mask_type']
+
+    if unwrap_mask_type == 'water':
+        # Either set to a default value or delete the key entirely.
+        prep_wrapped_phase_cfg['enabled'] = False
+
     if iono_method == 'split_main_band':
         # For split_main_band, two sub-band interferograms need to be
         # created

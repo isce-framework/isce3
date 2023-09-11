@@ -118,7 +118,7 @@ def preprocess_wrapped_igram(igram, coherence, mask=None,
         igram[invalid_mask==1] = 0
         phase_filt = np.angle(igram)
     # Go to complex value
-    igram_filt = np.exp(-1j * phase_filt)
+    igram_filt = np.exp(1j * phase_filt)
 
     return igram_filt
 

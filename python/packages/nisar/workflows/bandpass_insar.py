@@ -103,8 +103,8 @@ def run(cfg: dict):
                                                center_frequency=target_meta_data.center_freq,
                                                slant_range=target_meta_data.slant_range,
                                                freq=freq)
-
-        dest_freq_path = f"/science/LSAR/SLC/swaths/frequency{freq}"
+        swath_path = ref_slc.SwathPath
+        dest_freq_path = f"{swath_path}/frequency{freq}"
         with h5py.File(target_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
                 h5py.File(target_output, 'w') as dst_h5:
             # Copy HDF 5 file to be bandpassed
