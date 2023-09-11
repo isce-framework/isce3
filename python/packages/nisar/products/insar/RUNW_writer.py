@@ -229,26 +229,6 @@ class RUNWWriter(L1InSARWriter):
                 },
             ),
             DatasetParams(
-                "wrappedPhaseFilling",
-                phase_filling,
-                "Outliers data filling algorithm for phase unwrapping"
-                " preprocessing"
-                ,
-                {
-                    "algorithm_type": "Unwrapping",
-                },
-            ),
-            DatasetParams(
-                "wrappedPhaseOutliers",
-                phase_outliers,
-                "Algorithm identifying outliers in the wrapped"
-                " interferogram"
-                ,
-                {
-                    "algorithm_type": "Unwrapping",
-                },
-            ),
-            DatasetParams(
                 "unwrappingAlgorithm",
                 unwrapping_algorithm,
                 "Algorithm used for phase unwrapping",
@@ -270,6 +250,33 @@ class RUNWWriter(L1InSARWriter):
             f"{self.group_paths.AlgorithmsPath}/unwrapping")
         for ds_param in ds_params:
             add_dataset_and_attrs(unwrap_group, ds_param)
+
+        ds_params = [
+            DatasetParams(
+                "wrappedPhaseFilling",
+                phase_filling,
+                "Outliers data filling algorithm for phase unwrapping"
+                " preprocessing"
+                ,
+                {
+                    "algorithm_type": "Unwrapping",
+                },
+            ),
+            DatasetParams(
+                "wrappedPhaseOutliers",
+                phase_outliers,
+                "Algorithm identifying outliers in the wrapped"
+                " interferogram"
+                ,
+                {
+                    "algorithm_type": "Unwrapping",
+                },
+            ),
+        ]
+        unwrap_prep_group = self.require_group(
+            f"{self.group_paths.AlgorithmsPath}/unwrapping/preprocessing")
+        for ds_param in ds_params:
+            add_dataset_and_attrs(unwrap_prep_group, ds_param)
 
     def add_algorithms_to_procinfo_group(self):
         """
