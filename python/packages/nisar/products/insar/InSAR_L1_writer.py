@@ -509,7 +509,7 @@ class L1InSARWriter(InSARBaseWriter):
                         " layers. This is same as the spacing between"
                         " consecutive entries in the zeroDopplerTime array"
                     ),
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
                 ),
                 DatasetParams(
                     "slantRangeSpacing",

@@ -210,6 +210,11 @@ class InSARBaseWriter(h5py.File):
         if (rfi_mitigation is not None) and (rfi_mitigation != ""):
             rfi_mitigation_flag = True
 
+        # get the mixed model and update the description
+        mixed_mode = self._get_mixed_mode()
+        mixed_mode.description = (f'"True" if {rslc_name} RSLC is a'
+                                 ' composite of data collected in multiple'
+                                 ' radar modes, "False" otherwise')
         ds_params = [
             DatasetParams(
                 "rfiCorrectionApplied",
@@ -219,7 +224,7 @@ class InSARBaseWriter(h5py.File):
                     " to reference RSLC"
                 ),
             ),
-            self._get_mixed_mode(),
+            mixed_mode,
         ]
 
         dst_param_group = \
@@ -243,6 +248,8 @@ class InSARBaseWriter(h5py.File):
 
             swath_frequency_group.copy("slantRangeSpacing",
                                        rslc_frequency_group)
+            rslc_frequency_group['slantRangeSpacing'].attrs['description'] = \
+                 f"Slant range spacing of {rslc_name} RSLC"
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
@@ -260,6 +267,8 @@ class InSARBaseWriter(h5py.File):
 
             swath_group = rslc_h5py_file_obj[rslc.SwathPath]
             swath_group.copy("zeroDopplerTimeSpacing", rslc_frequency_group)
+            rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['description'] = \
+               f"Time interval in the along-track direction for {rslc_name} RSLC raster layers"
 
             doppler_centroid_group = rslc_h5py_file_obj[
                 f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
@@ -325,8 +334,8 @@ class InSARBaseWriter(h5py.File):
                 "crossCorrelation",
                 cross_correlation_domain,
                 (
-                    "Cross-correlation algorithm for sub-pixel offsets"
-                    f" computation in {cross_correlation_domain} domain"
+                    "Cross-correlation algorithm for"
+                    " sub-pixel offsets  computation"
                 ),
                 {
                     "algorithm_type": "RSLC coregistration",
@@ -335,7 +344,8 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "crossCorrelationFilling",
                 outlier_filling_method,
-                description,
+                "Outliers data filling algorithm for"
+                " cross-correlation offsets",
                 {
                     "algorithm_type": "RSLC coregistration",
                 },
@@ -763,6 +773,15 @@ class InSARBaseWriter(h5py.File):
             sec_id_group.copy(ds_name, dst_id_group,
                               f"secondaryZ{ds_name[1:]}")
 
+        # Update the the description attributes of the zeroDoppler
+        for rslc_name, time in zip(['reference','secondary'],
+                                   ['Start', 'End']):
+            ds = dst_id_group[f"{rslc_name}ZeroDoppler{time}Time"]
+            # rename the End time to stop
+            time_in_description  = 'stop' if time == 'End' else 'start'
+            ds.attrs['description'] = \
+                f"Azimuth {time_in_description} time of {rslc_name} RSLC product"
+
         id_ds_names_to_be_created = [
             DatasetParams(
                 "granuleId",
@@ -967,7 +986,7 @@ class InSARBaseWriter(h5py.File):
             np.bool_(mixed_mode),
             (
                 '"True" if this product is generated from reference and'
-                ' secondary RSLCs with different range bandwidth, "False"'
+                ' secondary RSLCs with different range bandwidths, "False"'
                 " otherwise."
             ),
         )

@@ -216,7 +216,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 #wrapped dataset parameters as tuples in the following
                 #order: the dataset name,data type, description, and units
                 wrapped_ds_params = [
-                    ("coherenceMagnigtude", np.float32,
+                    ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
                      "unitless"),
                     ("wrappedInterferogram", np.complex64,
