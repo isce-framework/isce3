@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from itertools import product
 from typing import Any, Optional
 
 import h5py
@@ -774,8 +775,9 @@ class InSARBaseWriter(h5py.File):
                               f"secondaryZ{ds_name[1:]}")
 
         # Update the the description attributes of the zeroDoppler
-        for rslc_name, time in zip(['reference','secondary'],
-                                   ['Start', 'End']):
+        for prod in list(product(['reference','secondary'],
+                                 ['Start', 'End'])):
+            rslc_name, time = prod
             ds = dst_id_group[f"{rslc_name}ZeroDoppler{time}Time"]
             # rename the End time to stop
             time_in_description  = 'stop' if time == 'End' else 'start'
