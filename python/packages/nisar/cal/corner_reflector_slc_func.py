@@ -25,13 +25,13 @@ class CRInfoSlc:
     Attributes
     ----------
     amp_pol : dict of {str: complex}
-        Complex amplitude of co-pol products ("HH", "VV") from RSLC.
+        Complex amplitude of all products from RSLC.
         The items of the dict has a format of {TxRx_Pol:Amplitude}.
     llh : sequence or array of three floats
         Geodetic longitude, latitude and height in (rad, rad, m)
     el_ant : float
         Elevation (EL) angle (rad) in antenna frame
-    az_ant : float
+    az_ant : float, default=0
         Azimuth (AZ) angle (rad) in antenna frame
 
     """
@@ -47,14 +47,14 @@ class OutOfSlcBoundWarning(UserWarning):
 
 
 # functions
-def est_peak_loc_cr_from_slc(slc, cr_llh, *, txrx_copol=None, freq_band='A',
+def est_peak_loc_cr_from_slc(slc, cr_llh, *, freq_band='A',
                              ovs_fact=64, num_pixels=16, rel_pow_th_db=0.0,
                              rg_tol=0.1, max_iter=60, doppler=LUT2d(),
                              ellipsoid=Ellipsoid()):
     """
     Estimate exact peak value and location of corner reflector(s) (CR)
     from RSLC product based on approximate LLH for a desired frequency
-    band and over the list of desired Co-pol-only TxRx polarizations.
+    band and over all TxRx polarizations, either linear or circular basis.
 
     Parameters
     ----------
@@ -64,8 +64,6 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, txrx_copol=None, freq_band='A',
         Approximate Geodetic Longitude, latitude, height in (rad, rad, m) of
         CR(s). For more than one CR, the 2-D array shall have shape `Nx3`
         where  `N` is number of CRs.
-    txrx_copol : str or sequence of str, optional
-        If not provided, all co-pol products of `freq_band` will be used.
     freq_band : {'A', 'B'}, default='A'
         Frequency band char of the RSLC product
     ovs_fact : int, default=64
@@ -89,7 +87,8 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, txrx_copol=None, freq_band='A',
     doppler : isce3.core.LUT2d, default=zero Doppler
         Doppler in (Hz) as a function azimuth time and slant range in
         the form 2-D LUT used for RSLC. The default assumes zero-Doppler
-        geometry for RSLC product.
+        geometry for RSLC product radar grid where CRs are located and
+        resampled.
     ellipsoid : isce3.core.Ellipsoid, default=WGS84
         Ellipsoidal model for the spheroid planet.
 
@@ -103,6 +102,7 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, txrx_copol=None, freq_band='A',
         For bad or out of range frequency or polarizations
     RuntimError
         For zero slant range defined from orbit to corner reflector
+        Compact Pol or missing co-pol products.
 
     Warnings
     --------
@@ -122,18 +122,13 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, txrx_copol=None, freq_band='A',
     if freq_band not in list_freq:
         raise ValueError(f'Frequency band is out of range {list_freq}')
 
-    # check and get a list of valid co-pol TxRx polarizations
-    list_copol = [p for p in slc.polarizations[freq_band] if p[0] == p[1]]
-    if txrx_copol is None:
-        co_pols = list_copol
-    elif isinstance(txrx_copol, str):
-        if txrx_copol not in list_copol:
-            raise ValueError(f'TxRx copol is out of range {list_copol}')
-        co_pols = [txrx_copol]
-    else:  # sequence of values
-        co_pols = set(txrx_copol)
-        if not co_pols.issubset(list_copol):
-            raise ValueError(f'TxRx copol is out of range {list_copol}')
+    # check and get a list of valid co-pol TxRx polarizations where Tx==Rx
+    co_pols = [p for p in slc.polarizations[freq_band] if p[0] == p[1]]
+    if len(co_pols) == 0:
+        raise RuntimeError(
+            'Tx and Rx Pols are not the same basis or missing Co-pol data!')
+    # get list of cx-pol products if any
+    cx_pols = [p for p in slc.polarizations[freq_band] if p[0] != p[1]]
 
     # generate 2-D array (Nx3) of LLH in (rad,rad,m) for all CRs
     llh_all = np.asarray(cr_llh)
@@ -187,11 +182,40 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, txrx_copol=None, freq_band='A',
             )
             # interpolated complex peak value and locations of a CR.
             # the coherently-averaged amp around the peak within around 3dB
-            # is used to represent the complex peak value
-            amp_cr[pol] = _amp_avg_around_peak(
+            # is used to represent the complex peak value.
+            # Note that simly co-pol data is used for averaged location of
+            # the CR for all polarizations.
+            amp_cr[pol], az_rg_slices = _amp_avg_around_peak(
                 chp_ovs, (azb_pk_ovs, rgb_pk_ovs), rel_pow_th_db)
             azb_pol.append(azb_chp_first + azb_pk_ovs * inv_ovs_fact)
             rgb_pol.append(rgb_chp_first + rgb_pk_ovs * inv_ovs_fact)
+
+            # get cx-pol data with the same Rx pol as that of co-pol
+            # Note that RX side is the main driver in appeared location
+            # of CR in RSLC for each polarization due to its narrowband
+            # and longer group delay than TX side. That is why the
+            # products with the same RX polarizations are used together.
+            x_pol = [p for p in cx_pols if p[1] == pol[1]]
+            if len(x_pol) == 1:
+                x_pol = x_pol[0]
+                # get decoded RSLC dataset per pol
+                dset_slc_cx = ComplexFloat16Decoder(
+                    slc.getSlcDataset(freq_band, x_pol)
+                )
+                # oversampling around approximate range/azimuth bins
+                # get a chip around the (azb, rgb) of the peak of respective
+                # co-pol and interpolate.
+                _, _, dset_chp_cx = get_chip(
+                    dset_slc_cx, azb, rgb, nchip=num_pixels
+                )
+                chp_ovs_cx = oversample(
+                    dset_chp_cx, ovs_fact, return_slopes=False, baseband=False
+                )
+                # get averaged complex amplitude defined by co-pol
+                # peak loc or 3-dB boundary
+                amp_cr[x_pol] = np.mean(
+                    chp_ovs_cx[az_rg_slices]
+                )
 
         # use the averaged (azb, rgb) over all pols
         azb_cr = np.mean(azb_pol)
@@ -240,6 +264,8 @@ def _amp_avg_around_peak(chp_ovs, azb_rgb_pk_loc, dynamic_range_db=3.0):
     -------
     complex
         Complex averaged amplitude around the peak.
+    tuple[slice, slice]
+        Azimuth and range bin slices
 
     """
     azb, rgb = azb_rgb_pk_loc
@@ -249,7 +275,9 @@ def _amp_avg_around_peak(chp_ovs, azb_rgb_pk_loc, dynamic_range_db=3.0):
     edge_slice_rg = _loc_left_right_val(abs(chp_ovs[azb]), rgb, edge_mag)
     edge_slice_az = _loc_left_right_val(abs(chp_ovs[:, rgb]), azb, edge_mag)
 
-    return chp_ovs[edge_slice_az, edge_slice_rg].mean()
+    amp_avg = chp_ovs[edge_slice_az, edge_slice_rg].mean()
+
+    return amp_avg, (edge_slice_az, edge_slice_rg)
 
 
 def _loc_left_right_val(arr: np.ndarray, index: int, val: float

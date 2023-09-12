@@ -15,7 +15,7 @@ except ImportError:
     plt = None
 
 from nisar.products.readers.SLC import SLC
-from nisar.workflows.doppler_lut_from_raw import set_logger
+from nisar.log import set_logger
 from nisar.workflows.gen_el_null_range_product import dt2str
 from nisar.cal import PolChannelImbalanceSlc
 from isce3.antenna import CrossTalk

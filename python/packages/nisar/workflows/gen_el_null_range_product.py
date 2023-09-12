@@ -12,8 +12,8 @@ from nisar.products.readers.Raw import Raw
 from nisar.products.readers.antenna import AntennaParser
 from isce3.geometry import DEMInterpolator
 from isce3.io import Raster
-from nisar.workflows import el_null_range_from_raw_ant
-from nisar.workflows.doppler_lut_from_raw import set_logger
+from nisar.pointing import el_null_range_from_raw_ant
+from nisar.log import set_logger
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
 

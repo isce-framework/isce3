@@ -8,8 +8,8 @@ import argparse as argp
 import numpy as np
 from datetime import datetime
 
-from nisar.workflows import doppler_lut_from_raw
-from nisar.workflows.doppler_lut_from_raw import set_logger
+from nisar.pointing import doppler_lut_from_raw
+from nisar.log import set_logger
 from nisar.products.readers.Raw import Raw
 from isce3.core import TimeDelta, Linspace
 from nisar.products.readers.antenna import AntennaParser

@@ -14,7 +14,7 @@ from nisar.cal import CRInfoSlc, est_peak_loc_cr_from_slc
 from isce3.core.types import ComplexFloat16Decoder
 from isce3.core import Ellipsoid, DateTime
 from isce3.geometry import DEMInterpolator, rdr2geo
-from nisar.workflows.doppler_lut_from_raw import set_logger
+from nisar.log import set_logger
 
 
 class OutOfSlcBoundError(Exception):
