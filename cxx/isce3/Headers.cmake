@@ -95,6 +95,7 @@ geocode/GeocodeCov.h
 geocode/GeocodeCov.icc
 geocode/GeocodePolygon.h
 geometry/geometry.h
+geometry/getGeolocationGrid.h
 geometry/RTC.h
 geometry/Topo.h
 geometry/Topo.icc

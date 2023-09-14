@@ -44,6 +44,7 @@ geometry/DEMInterpolator.cpp
 geocode/GeocodeCov.cpp
 geocode/GeocodePolygon.cpp
 geometry/geometry.cpp
+geometry/getGeolocationGrid.cpp
 geometry/geo2rdr.cpp
 geometry/rdr2geo.cpp
 geometry/RTC.cpp

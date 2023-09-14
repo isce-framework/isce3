@@ -14,8 +14,8 @@ namespace isce3 { namespace geometry {
  * Each output value is saved onto the first band of its
  * associated raster file.
  * 
- * The line-of-sight (LOS) and along-track unit vectors are referenced to
- * ENU coordinates computed wrt targets.
+ * The target-to-sensor line-of-sight (LOS) and along-track unit vectors are
+ * referenced to ENU coordinates computed wrt targets.
  * 
  * The terrain normal unit vector is required for computing the local-
  * incidence angle, projection angle, and simulated radar brightness. The

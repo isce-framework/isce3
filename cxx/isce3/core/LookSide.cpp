@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <string>
 #include <pyre/journal.h>
 
 using isce3::core::LookSide;
@@ -17,14 +18,14 @@ LookSide isce3::core::parseLookSide(const std::string & inputLook)
     std::transform(look.begin(), look.end(), look.begin(),
         [](unsigned char c) { return std::tolower(c); });
     // Validate look string before setting
-    if (look == "right") {
+    if (look.compare(0, 5, "right") == 0) {
         return LookSide::Right;
-    } else if (look != "left") {
+    } else if (look.compare(0, 4, "left") != 0) {
         pyre::journal::error_t error("isce.core");
         error
             << pyre::journal::at(__HERE__)
-            << "Could not successfully set look direction."
-            << "  Must be \"right\" or \"left\"."
+            << "Could not successfully set look direction with \""
+            << look << "\". Must be \"right\" or \"left\"."
             << pyre::journal::endl;
     }
     return LookSide::Left;

@@ -1,6 +1,7 @@
 #include "geometry.h"
 
 #include "DEMInterpolator.h"
+#include "getGeolocationGrid.h"
 #include "RTC.h"
 #include "boundingbox.h"
 #include "geo2rdr.h"
@@ -58,6 +59,7 @@ void addsubmodule_geometry(py::module & m)
     addbinding_apply_rtc(geometry);
     addbinding_compute_rtc(geometry);
     addbinding_compute_rtc_bbox(geometry);
+    addbinding_get_geolocation_grid(geometry);
     addbinding_geo2rdr(geometry);
     addbinding_rdr2geo(geometry);
     addbinding_boundingbox(geometry);

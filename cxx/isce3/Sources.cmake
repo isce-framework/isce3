@@ -50,6 +50,7 @@ geometry/Geo2rdr.cpp
 geocode/GeocodeCov.cpp
 geocode/GeocodePolygon.cpp
 geometry/geometry.cpp
+geometry/getGeolocationGrid.cpp
 geometry/RTC.cpp
 geometry/Topo.cpp
 geometry/TopoLayers.cpp

@@ -21,6 +21,11 @@ static isce3::core::Matrix<T>
 getNanArray(isce3::io::Raster* raster,
             const isce3::product::GeoGridParameters& geogrid)
 {
+    /*
+    This function allocates memory for an array (`data_array`) if
+    an output raster (`raster`) is provided, i.e, if `raster`
+    is not a null pointer `nullptr`.
+    */
     isce3::core::Matrix<T> data_array;
     if (raster != nullptr) {
         data_array.resize(geogrid.length(), geogrid.width());
@@ -102,10 +107,8 @@ void getRadarGrid(isce3::core::LookSide lookside,
         throw isce3::except::RuntimeError(ISCE_SRCINFO(), error_message); 
     }
 
-    /*
-    Get function GetDemCoords to convert DEM coordinates to the geogrid EPSG 
-    coordinates
-    */
+    /* Get function GetDemCoords to convert DEM coordinates to the geogrid EPSG 
+    coordinates */
 
     std::function<isce3::core::Vec3(double, double,
                        const isce3::geometry::DEMInterpolator&,
