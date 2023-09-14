@@ -1,0 +1,162 @@
+#!groovy
+
+pipeline {
+  agent any
+  triggers {
+    // Triggers each Sunday between midnight and 1am (PT).
+    cron('TZ=America/Los_Angeles\nH 0 * * 0')
+  }
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '2'))
+  }
+  environment {
+    // Personal Access Token (PAT) for authenticating github-fn transactions
+    // for the CI server. Needed for fetching the QualityAssurance and
+    // SoilMoisture repositories. Secret credentials are managed via the
+    // Jenkins UI.
+    GIT_OAUTH_TOKEN = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
+  }
+  stages {
+    stage("Build NISAR ADT image & Fetch workflow test data") {
+      parallel {
+        stage("Build NISAR ADT image") {
+          stages {
+            stage("Set up Docker images with ISCE3 build prereqs") {
+              steps {
+                sh "/usr/local/bin/python3 tools/run.py setup"
+              }
+            }
+            stage("Configure ISCE3") {
+              steps {
+                sh "/usr/local/bin/python3 tools/run.py configure"
+              }
+            }
+            stage("Build ISCE3") {
+              steps {
+                sh "/usr/local/bin/python3 tools/run.py build"
+              }
+            }
+            stage("Run ISCE3 unit tests") {
+              steps {
+                sh "/usr/local/bin/python3 tools/run.py test"
+              }
+            }
+            stage("Build ISCE3 image") {
+              steps {
+                sh "/usr/local/bin/python3 tools/run.py makepkg"
+                sh "/usr/local/bin/python3 tools/run.py makedistrib"
+              }
+            }
+            stage("Build NISAR ADT image") {
+              steps {
+                sh "/usr/local/bin/python3 tools/run.py makedistrib_nisar"
+              }
+            }
+          }
+        }
+        stage("Fetch workflow test data") {
+          steps {
+            sh "/usr/local/bin/python3 tools/run.py fetchdata"
+          }
+        }
+      }
+    }
+    stage("Run RSLC tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py rslctest"
+      }
+    }
+    stage("Run RSLC QA") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py rslcqa"
+      }
+    }
+    stage("Run GSLC tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py gslctest"
+      }
+    }
+    stage("Run GSLC QA") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py gslcqa"
+      }
+    }
+    stage("Run GCOV tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py gcovtest"
+      }
+    }
+    stage("Run GCOV QA") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py gcovqa"
+      }
+    }
+    stage("Run InSAR tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py insartest"
+      }
+    }
+    stage("Run InSAR QA") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py insarqa"
+      }
+    }
+    stage("Run End-to-end tests") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py end2endtest"
+      }
+    }
+    stage("Run End-to-end QA") {
+      steps {
+        sh "/usr/local/bin/python3 tools/run.py end2endqa"
+      }
+    }
+  }
+  post {
+    always {
+      echo "Publishing xUnit test result report"
+      xunit (
+        thresholds: [
+          skipped (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          ),
+          failed (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          )
+        ],
+        tools: [
+          CTest (
+            pattern: 'build-docker/Testing/*/Test.xml',
+            skipNoTestFiles: false,
+            failIfNotNew: true,
+            deleteOutputFiles: true,
+            stopProcessingIfError: true
+          )
+        ]
+      )
+    }
+    success {
+      echo 'I succeeded!'
+    }
+    unstable {
+      echo 'I am unstable :/ Emailing one of the ISCE3 maintainers.'
+      emailStatus()
+    }
+    failure {
+      echo 'I failed :( Emailing one of the ISCE3 maintainers.'
+      emailStatus()
+    }
+    changed {
+      echo 'Things were different before...'
+    }
+  }
+}
+
+def emailStatus() {
+      mail to: 'geoffrey.m.gunter@jpl.nasa.gov',
+          subject: "ISCE3 build ${currentBuild.result}: ${currentBuild.fullDisplayName}",
+          body: "Minimum workflow test ${currentBuild.result}: ${env.BUILD_URL}"
+}
