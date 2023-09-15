@@ -39,7 +39,7 @@ def cmdLineParse():
     parser.add_argument('-m', '--margin', type=int, action='store',
                         default=5, help='Margin for water mask bounding box (km)')
     parser.add_argument('-v', '--version', type=str, action='store',
-                        dest='version', default='0.2',
+                        dest='version', default='0.3',
                         help='Version for water mask')
     parser.add_argument('-b', '--bbox', type=float, action='store',
                         dest='bbox', default=None, nargs='+',
@@ -314,26 +314,30 @@ def download_watermask(polys, epsgs, outfile, version):
         Water mask version
     """
 
-    if 3031 in epsgs:
-        epsgs = [3031] * len(epsgs)
-        polys = transform_polygon_coords(polys, epsgs)
-        # Need one EPSG as in polar stereo we have one big polygon
-        epsgs = [3031]
-    elif 3413 in epsgs:
-        epsgs = [3413] * len(epsgs)
-        polys = transform_polygon_coords(polys, epsgs)
-        # Need one EPSG as in polar stereo we have one big polygon
-        epsgs = [3413]
-    else:
-        # set epsg to 4326 for each element in the list
-        epsgs = [4326] * len(epsgs)
-        # convert margin to degree (approx formula)
+    if version == '0.3':
+        if 3031 in epsgs:
+            epsgs = [3031] * len(epsgs)
+            polys = transform_polygon_coords(polys, epsgs)
+            # Need one EPSG as in polar stereo we have one big polygon
+            epsgs = [3031]
+        elif 3413 in epsgs:
+            epsgs = [3413] * len(epsgs)
+            polys = transform_polygon_coords(polys, epsgs)
+            # Need one EPSG as in polar stereo we have one big polygon
+            epsgs = [3413]
+        else:
+            # set epsg to 4326 for each element in the list
+            epsgs = [4326] * len(epsgs)
+            # convert margin to degree (approx formula)
 
     # Download WATERMASK for each polygon/epsg
     file_prefix = os.path.splitext(outfile)[0]
     watermask_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
+        if version == '0.2':
+            vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
+        elif version == '0.3':
+            vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/EPSG{epsg}.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         watermask_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
@@ -435,7 +439,13 @@ def check_aws_connection(version):
     """
     import boto3
     s3 = boto3.resource('s3')
-    obj = s3.Object('nisar-static-repo', f'WATER_MASK/v{version}/watermask.vrt')
+    if version == '0.2':
+        obj = s3.Object('nisar-static-repo', f'WATER_MASK/v{version}/watermask.vrt')
+    elif version == '0.3':
+        obj = s3.Object('nisar-static-repo', f'WATER_MASK/v{version}/EPSG4326.vrt')
+    else:
+        errmsg = f'nisar-WATERMASK {version} is currently not available'
+        raise ValueError(errmsg)
     try:
         obj.get()['Body'].read()
     except Exception:
