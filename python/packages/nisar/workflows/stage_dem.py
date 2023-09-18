@@ -4,14 +4,16 @@
 
 import argparse
 import os
-import backoff
+import re
 
+import backoff
 import numpy as np
 import shapely.ops
 import shapely.wkt
 from osgeo import gdal, osr
 from shapely.geometry import LinearRing, Point, Polygon, box
 
+bucket_name = 'nisar-dem'
 
 # Enable exceptions
 gdal.UseExceptions()
@@ -19,7 +21,7 @@ gdal.UseExceptions()
 
 def cmdLineParse():
     """
-     Command line parser
+    Command line parser
     """
     parser = argparse.ArgumentParser(description="""
                                      Stage and verify DEM for processing. """,
@@ -39,7 +41,7 @@ def cmdLineParse():
                         dest='bbox', default=None, nargs='+',
                         help='Spatial bounding box in latitude/longitude (WSEN, decimal degrees)')
     parser.add_argument('-v', '--version', type=str, action='store',
-                        default='1.0', dest='version',
+                        default='1.1', dest='version',
                         help='DEM version in the form of major_number.minor_number')
     return parser.parse_args()
 
@@ -104,7 +106,7 @@ def determine_polygon(ref_slc, bbox=None):
     """Determine bounding polygon using RSLC radar grid/orbit
     or user-defined bounding box
 
-    Parameters:
+    Parameters
     ----------
     ref_slc: str
         Filepath to reference RSLC product
@@ -112,7 +114,7 @@ def determine_polygon(ref_slc, bbox=None):
         Bounding box with lat/lon coordinates (decimal degrees)
         in the form of [West, South, East, North]
 
-    Returns:
+    Returns
     -------
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter
@@ -131,14 +133,14 @@ def determine_polygon(ref_slc, bbox=None):
 def point2epsg(lon, lat):
     """Return EPSG code based on point lat/lon
 
-    Parameters:
+    Parameters
     ----------
     lat: float
         Latitude coordinate of the point
     lon: float
         Longitude coordinate of the point
 
-    Returns:
+    Returns
     -------
     epsg code corresponding to the point lat/lon coordinates
     """
@@ -161,8 +163,8 @@ def get_geo_polygon(ref_slc, min_height=-500.,
                     max_height=9000., pts_per_edge=5):
     """Create polygon (EPSG:4326) using RSLC radar grid and orbits
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ref_slc: str
         Path to RSLC product to stage the DEM for
     min_height: float
@@ -172,7 +174,7 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     pts_per_edge: float
         Number of points per edge for min/max bounding box computation
 
-    Returns:
+    Returns
     -------
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter on the ground
@@ -214,12 +216,13 @@ def determine_projection(polys):
     EPSG is computed for a regular list of points. EPSG
     is assigned based on a majority criteria.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     polys: shapely.Geometry.Polygon
         List of shapely Polygons
-    Returns:
-    --------
+
+    Returns
+    -------
     epsg:
         List of EPSG codes corresponding to elements in polys
     """
@@ -261,7 +264,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
        throttling (see "Query throttling" section at
        https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html).
 
-    Parameters:
+    Parameters
     ----------
     vrt_filename: str
         Path to the input VRT file
@@ -298,7 +301,7 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
 def download_dem(polys, epsgs, outfile, version):
     """Download DEM from nisar-dem bucket
 
-    Parameters:
+    Parameters
     ----------
     polys: shapely.geometry.Polygon
         List of shapely polygons
@@ -331,21 +334,63 @@ def download_dem(polys, epsgs, outfile, version):
     file_prefix = os.path.splitext(outfile)[0]
     dem_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        vrt_filename = f'/vsis3/nisar-dem/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
+        vrt_filename = f'/vsis3/{bucket_name}/v{version}/EPSG{epsg}/EPSG{epsg}.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         dem_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
         translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax)
 
-    # Build vrt with downloaded DEMs
-    gdal.BuildVRT(outfile, dem_list)
+    # Get the DEM description from the README.txt file using GDAL
+    in_readme_path = vrt_filename.replace(f'EPSG{epsg}.vrt', 'README.txt')
+    dem_descr = extract_dem_description(in_readme_path)
+
+    # Build vrt with downloaded DEMs and add dem_descr in metadata
+    vrt_dataset = gdal.BuildVRT(outfile, dem_list)
+    vrt_dataset.SetMetadataItem("dem_description", f'{dem_descr}')
+
+
+def extract_dem_description(in_readme_path):
+    """Extract DEM description from README.txt on nisar-dem
+       s3 bucket
+
+    Parameters
+    ----------
+    in_readme_path: str
+        Path to the README.txt on the nisar-dem
+        s3 bucket
+
+    Returns
+    -------
+    dem_descr: str
+        String containing the "dem description"
+        extracted from the README.txt
+    """
+    pattern = r'^\s*- Short description: (.+)$'
+
+    # JPL internal s3 buckets are not accessible via
+    # https addresses due to cybersecurity concerns. This
+    # excludes using "requests". Using boto3 and its AWS s3
+    # API would add another unnecessary dependency to ISCE3.
+    # Therefore, we use GDAL to read a remote text file.
+    fp = gdal.VSIFOpenL(in_readme_path, "rb")
+    text = gdal.VSIFReadL(1, 100000, fp).decode()
+    gdal.VSIFCloseL(fp)
+
+    match = re.search(pattern, text, re.MULTILINE)
+    if match:
+        dem_descr = match.group(1)
+    else:
+        err_str = 'Line with "Short Description" not found in README.txt'
+        raise ValueError(err_str)
+
+    return dem_descr
 
 
 def transform_polygon_coords(polys, epsgs):
     """Transform coordinates of polys (list of polygons)
        to target epsgs (list of EPSG codes)
 
-    Parameters:
+    Parameters
     ----------
     polys: shapely.Geometry.Polygon
         List of shapely polygons
@@ -388,14 +433,14 @@ def check_dem_overlap(DEMFilepath, polys):
        and DEM that stage_dem.py would download
        based on RSLC or bbox provided information
 
-    Parameters:
+    Parameters
     ----------
     DEMFilepath: str
         Filepath to the user-provided DEM
     polys: shapely.geometry.Polygon
         List of polygons computed from RSLC or bbox
 
-    Returns:
+    Returns
     -------
     perc_area: float
         Area (in percentage) covered by the intersection between the
@@ -440,7 +485,7 @@ def check_aws_connection():
 def main(opts):
     """Main script to execute dem staging
 
-    Parameters:
+    Parameters
     ----------
     opts : argparse.ArgumentParser
         Argument parser

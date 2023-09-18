@@ -39,7 +39,7 @@ def test_run_stage_dem():
     opts = argparse.Namespace(
         product=os.path.join(iscetest.data, "Greenland.h5"),
         outfile='dem.vrt', bbox=None, filepath='file',
-        margin=1, version='1.0')
+        margin=1, version='1.1')
 
     try:
         stage_dem.main(opts)
