@@ -8,8 +8,8 @@ import h5py
 import isce3
 import journal
 import numpy as np
-from scipy.interpolate import griddata
 from osgeo import gdal
+from scipy.interpolate import griddata
 
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
@@ -55,6 +55,7 @@ def write_xyz_data(data, output):
         path for output file
     """
     info_channel = journal.info("baseline.run.write_xyz_data")
+    error_channel = journal.error("baseline.run.write_xyz_data")
 
     gdal_type = gdal.GDT_Float32
     image_size = data.shape
@@ -65,11 +66,13 @@ def write_xyz_data(data, output):
         ny, nx = image_size
         nim = 1
     else:
-        raise ValueError("Input data must be 2D or 3D.")
+        err_str = "Input data must be 2D or 3D."
+        error_channel.log(err_str)
+        raise ValueError(err_str)
 
     if np.isnan(data).any():
-        info_channel.log("NaN values found in x/y/z data."
-                         "This will be replaced with nearest neighbors")
+        info_channel.log("NaN values found in x/y/z data. "
+                         "This will be replaced with nearest neighbors.")
 
         y, x = np.indices(data.shape[-2:])
         valid_mask = ~np.isnan(data)
@@ -86,7 +89,9 @@ def write_xyz_data(data, output):
     dst_ds = gdal.GetDriverByName('ENVI').Create(
                     output, nx, ny, nim, gdal_type)
     if dst_ds is None:
-        raise IOError(f"Could not create output file at {output}")
+        err_str = f"Could not create output file at {output}."
+        error_channel.log(err_str)
+        raise IOError(err_str)
     # Write data to file
     if nim == 1:
         dst_ds.GetRasterBand(1).WriteArray(np.squeeze(data))
@@ -159,7 +164,7 @@ def compute_rng_aztime(scratch, radargrid):
 
     rpixel = np.repeat(np.reshape(np.arange(rg_off.shape[1]),
                                   [1, rg_off.shape[1]]),
-                                rg_off.shape[0], axis=0)
+                                  rg_off.shape[0], axis=0)
     apixel = np.repeat(np.reshape(np.arange(az_off.shape[0]),
                                   [rg_off.shape[0], 1]),
                                   az_off.shape[1], axis=1)
