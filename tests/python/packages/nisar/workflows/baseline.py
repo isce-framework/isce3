@@ -81,14 +81,8 @@ def test_compute_baseline(unit_test_params):
         coord_set,
         unit_test_params.ref_orbit,
         unit_test_params.ref_orbit,
-        unit_test_params.ref_doppler,
-        unit_test_params.ref_doppler,
-        unit_test_params.ref_radargrid,
-        unit_test_params.ref_radargrid,
         unit_test_params.ellipsoid,
-        unit_test_params.epsg,
-        unit_test_params.geo2rdr_parameters,
-        use_gpu=False)
+        unit_test_params.epsg)
 
     assert np.nanmean(parb) < 1e-5
     assert np.nanmean(perb) < 1e-5
