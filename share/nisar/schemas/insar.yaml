@@ -28,9 +28,9 @@ runconfig:
             # PLACEHOLDER - Digital elevation model file description, optional
             dem_file_description: str(required=False)
 
-            # Water distance map used for water mask in unwrapping and 
+            # Water distance map used for water mask in unwrapping and
             # 'water mask' field in GUNW product. The water water mask is
-            # to have value from 0-100 (distance from coastline) and from 
+            # to have value from 0-100 (distance from coastline) and from
             # 101-200 (distance from inlandwater boundary)
 
             water_mask_file: str(required=False)
@@ -776,7 +776,7 @@ troposphere_delay_options:
     delay_direction: enum('zenith', 'line_of_sight_mapping', 'line_of_sight_raytracing', required=False)
     # Boolean flag to enable/disable delay products, where comb product is the summation of wet and dry
     enable_wet_product: bool(required=False)
-    enable_dry_product: bool(required=False)
+    enable_hydrostatic_product: bool(required=False)
     enable_comb_product: bool(required=False)
 
 geo2rdr_options:

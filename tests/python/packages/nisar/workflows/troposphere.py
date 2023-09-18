@@ -68,10 +68,10 @@ def test_troposphere_aps_run():
             os.path.join(
                 iscetest.data, tropo_weather_model_cfg['secondary_troposphere_file'])
 
-        cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']['reference_troposphere_file'] = \
-            weather_reference_file
-        cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']['secondary_troposphere_file'] = \
-            weather_secondary_file
+        cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']\
+            ['reference_troposphere_file'] = weather_reference_file
+        cfg['dynamic_ancillary_file_group']['troposphere_weather_model_files']\
+            ['secondary_troposphere_file'] = weather_secondary_file
 
         dem_file = os.path.join(
             iscetest.data, cfg['dynamic_ancillary_file_group']['dem_file'])
@@ -120,9 +120,13 @@ def test_troposphere_aps_run():
         tropo_weather_model_type = cfg['processing']['troposphere_delay']['weather_model_type']
         tropo_delay_direction = cfg['processing']['troposphere_delay']['delay_direction']
 
-        for delay_type in ['wet', 'dry', 'comb']:
+        for delay_type in ['wet', 'hydrostatic', 'comb']:
             if cfg['processing']['troposphere_delay'][f'enable_{delay_type}_product']:
-                tropo_delay_product = delay_type
+                if (tropo_package.lower() == 'pyaps') and \
+                    (delay_type == 'hydrostatic'):
+                    tropo_delay_product = 'dry'
+                else:
+                    tropo_delay_product = delay_type
 
         # Dictionary key
         delay_product = f'tropoDelay_{tropo_package}_{tropo_delay_direction}_{tropo_delay_product}'

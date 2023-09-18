@@ -172,7 +172,7 @@ runconfig:
                 weather_model_type: HRES
                 delay_direction: zenith
                 enable_wet_product: True
-                enable_dry_product: True
+                enable_hydrostatic_product: True
                 enable_comb_product: True
 
         # TODO OPTIONAL - To setup type of worker

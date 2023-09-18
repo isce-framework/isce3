@@ -95,7 +95,7 @@ runconfig:
                     #     {frequency}: [polarizations]
                     #
                     # - Only frequencies listed (i.e, 'A' and/or 'B') will be processed.
-                    # - If the [polarizations] list is empty, all available polarizations 
+                    # - If the [polarizations] list is empty, all available polarizations
                     # for given frequency will be processed
                     A:
                     B:
@@ -286,9 +286,9 @@ runconfig:
                 weather_model_type: ERA5
                 # Conventional line of sight delay
                 delay_direction: line_of_sight_mapping
-                # Delay product, where comb product is the summation of wet and dry
+                # Delay product, where comb product is the summation of wet and hydrostatic
                 enable_wet_product:  True
-                enable_dry_product: True
+                enable_hydrostatic_product: True
                 enable_comb_product: False
 
             geo2rdr:
@@ -566,7 +566,7 @@ runconfig:
                         # 2) coherence: compute mask with normalized InSAR coherence thresholding
                         # 3) water: extract water areas from water mask file in dynamic ancillary data
                         mask_type: coherence
-                        # buffer from the land. Unit is [km]. Buffer should be integer. 
+                        # buffer from the land. Unit is [km]. Buffer should be integer.
                         ocean_water_buffer: 1
                         inland_water_buffer: 1
                         # Threshold for invalid pixels. If mask_type is coherence (median_filter)
@@ -576,7 +576,7 @@ runconfig:
                         # "mask_type" is "median_filter"
                         median_filter_size: 25
                     # Enable/disable filling invalid values. If disabled, invalid values
-                    # are replaced with zero. 
+                    # are replaced with zero.
                     filling_enabled: False
                     # Algorithm to fill invalid wrapped igram pixels
                     filling_method: distance_interpolator
