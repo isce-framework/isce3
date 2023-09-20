@@ -135,6 +135,10 @@ typename ElNullRangeEst::tuple_null ElNullRangeEst::genNullRangeDoppler(
     // get null magnitude in (linear) at estimated null EL location
     auto mag_null_echo =
             std::pow(10.0, poly_echo_null.eval(el_null_echo) / 10.0);
+    // in case of invalid polyfit coeffs, get approximate null power
+    // directly from the echo samples!
+    if (std::isnan(mag_null_echo))
+      mag_null_echo = echo_null_pow_vec.abs().minCoeff();
 
     // get the true slant range (and doppler) at the EL location of echo null
     auto [sr_null_echo, dop_null_echo, conv_flag_geom_echo] =
