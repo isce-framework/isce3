@@ -17,6 +17,7 @@ isce3/signal/fir_filter_func.py
 isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
 nisar/cal/corner_reflector_slc_func.py
+nisar/cal/corner_reflector.py
 nisar/cal/faraday_rotation_angle_slc.py
 nisar/cal/pol_channel_imbalance_slc.py
 nisar/mixed_mode/logic.py

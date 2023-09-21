@@ -82,7 +82,7 @@ Note that these files may be stored in a separate location outside *isce3* repo.
 
   UAVSAR-formatted CSV file for info of a single point target/ corner reflector (CR)
   of REE simulation with config/RDF file *REE_L0B_out17.rdf*.
-  
+
 
 - **REE_ANTPAT_CUTS_BEAM4.h5**
 
@@ -190,6 +190,13 @@ D&C pointing products such as Doppler and Null-range products.
   aligned with the corner reflector boresight (the REE simulation itself uses isometric
   point targets) and the corner reflector side lengths were chosen such that the
   expected max RCS matched the simulated RCS of 10e3 m^2.
+
+- **ree_corner_reflectors_nisar.csv**
+
+  A copy of **REE_CORNER_REFLECTORS_INFO.csv** with additional NISAR-specific metadata
+  appended in order to conform to the NISAR corner reflector CSV specification. In
+  addition, an extra entry was added for one corner reflector with an older survey date
+  and a new corner reflector was included with its validity code set to 0.
 
 ## ALOS1
 
