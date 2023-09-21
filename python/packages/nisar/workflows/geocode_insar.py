@@ -5,8 +5,6 @@ collection of functions for NISAR geocode workflow
 """
 
 from enum import Enum
-import numpy as np
-
 import pathlib
 import time
 
@@ -94,7 +92,8 @@ def get_shadow_input_output(scratch_path, freq, dst_freq_path):
 
 
 def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
-                        dataset_name, off_layer=None, input_product_type=InputProduct.RUNW):
+                        dataset_name, off_layer=None,
+                        input_product_type=InputProduct.RUNW):
     """ Create input raster object and output dataset path for datasets outside
 
     Parameters
@@ -109,6 +108,8 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         Path to input RUNW or ROFF HDF5
     dataset_name : str
         Name of dataset to be geocoded
+    off_layer: str
+        Name of offset layer
     input_product_type: enum
         Input product type, which is one of RUNW, ROFF, RIFG
 
@@ -140,7 +141,7 @@ def get_ds_input_output(src_freq_path, dst_freq_path, pol, input_hdf5,
         dst_group_path = f'{dst_freq_path}/pixelOffsets/{pol}/{off_layer}'
 
     # prepare input raster
-    input_raster_str = (f"HDF5:{input_hdf5}:/{src_group_path}/{dataset_name}")
+    input_raster_str = f"HDF5:{input_hdf5}:/{src_group_path}/{dataset_name}"
     input_raster = isce3.io.Raster(input_raster_str)
 
     # access the HDF5 dataset for a given frequency and pol
@@ -181,13 +182,13 @@ def get_offset_radar_grid(cfg, radar_grid_slc):
         rg_search = np.inf
         az_window = np.inf
         rg_window = np.inf
-        layer_keys = [key for key in offset_cfg if key.startswith('layer')]
-        if not layer_keys:
+        layer_names = [key for key in offset_cfg if key.startswith('layer')]
+        if not layer_names:
             err_str = 'No offset layer found'
             error_channel.log(err_str)
             raise KeyError(err_str)
         # Extract search/chip windows per layer; default to inf if not found
-        for key in layer_keys:
+        for key in layer_names:
             az_search = min(offset_cfg[key].get('half_search_azimuth', np.inf),
                             az_search)
             rg_search = min(offset_cfg[key].get('half_search_range', np.inf),
@@ -285,7 +286,7 @@ def _project_water_to_geogrid(input_water_path, geogrid):
 
 def add_water_to_mask(cfg, freq, geogrid, dst_h5):
     """
-    Add water mask to mask layer in GUNW product. 
+    Add water mask to mask layer in GUNW product.
 
     Parameters
     ----------
@@ -309,8 +310,8 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
 
         # The mask layer has the shadow (1), layover (2), and both(3).
         # Here, the water mask (4) is added to the existing info.
-        # If the water is coexist with the above (1-3), they will be assigned to 
-        # new values. 
+        # If the water is coexist with the above (1-3), they will be assigned to
+        # new values.
         # shadow + water : 5
         # layover + water : 6
         # layover + shadow + water : 7
@@ -359,10 +360,9 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type
     radar_grid = slc.getRadarGrid(freq)
     native_doppler = slc.getDopplerCentroid(frequency=freq)
     grid_zero_doppler = isce3.core.LUT2d()
-    '''
-    The native-Doppler LUT bounds error is turned off to
-    computer cubes values outside radar-grid boundaries
-    '''
+
+    # The native-Doppler LUT bounds error is turned off to
+    # computer cubes values outside radar-grid boundaries
     native_doppler.bounds_error = False
     add_radar_grid_cubes_to_hdf5(dst_h5, cube_group_path,
                                  cube_geogrid_param, radar_grid_cubes_heights,
@@ -375,19 +375,32 @@ def _snake_to_camel_case(snake_case_str):
     return (splitted_snake_case_str[0] +
             ''.join(w.title() for w in splitted_snake_case_str[1:]))
 
-def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
-                     off_layer_dict=None, scratch_path='',
+def get_raster_lists(all_geocoded_dataset_flags,
+                     desired_geo_dataset_names,
+                     freq,
+                     pol_list,
+                     input_hdf5,
+                     dst_h5,
+                     offset_layers=None,
+                     scratch_path='',
                      input_product_type=InputProduct.RUNW,
-                     iono_sideband=False):
+                     iono_sideband=False,
+                     possible_interp_methods=None,
+                     possible_invalid_values=None):
     '''
-    Geocode rasters with a shared geogrid.
+    Get list of isce3.io.rasters to geocode to, corresponding h5py.Datasets,
+    input isce3.io.Rasters, interpolation methods, and invalid values based on
+    flags retrieved from the runconfig
 
     Parameters
     ----------
-    geo_datasets : dict
-        Dict of all dataset names and whether or not to geocode as key/value
-    desired : list
-        List of dataset names to be geocoded for ?
+    all_geocoded_dataset_flags : dict
+        key: dataset name
+        value: whether or not dataset is to be geocoded
+    desired_geo_dataset_names : list[str]
+        List of names of datasets with a common radar grid that could be
+        geocoded. A dataset listed here will be geocoded only if the associated
+        value for it in all_geocoded_dataset_flags is True.
     freq : str
         Frequency of datasets to be geocoded
     pol_list : list
@@ -396,20 +409,34 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
         Path to input RUNW or ROFF HDF5
     dst_h5 : h5py.File
         h5py.File object where geocoded data is to be written
+    offset_layers: list[str]
+        List of offset layer names
     scratch_path : str
         Path to scratch where layover shadow raster is saved
     input_product_type : enum
         Product type of the input_hdf5
     iono_sideband : bool
-        Flag to geocode ionosphere phase screen estimated from
-        side-band
+        Flag to geocode ionosphere phase screen estimated from side-band
+    possible_interp_methods: list[isce3.core.DataInterpMethod]
+        Used for GPU geocode only. List of possible interpolation methods to be
+        applied to possible rasters.
+    possible_invalid_values: list[float]
+        Used for GPU geocode only. List of invalid values to initialize
+        possible rasters with.
 
     Returns
     -------
+    geocoded_rasters = [isce3.io.Raster]
+        List of output of to-be geocoded rasters as isce3.io.Rasters objects
+    geocoded_datasets = [h5py.Dataset]
+        List of h5py.Datasets of to-be geocoded rasters
+    input_rasters: list[isce3.io.Raster]
+        List of input rasters as isce3.io.Raster objects to be geocoded
+    interp_methods = [isce3.core.DataInterpMethod]
+        List of interpolation methods for geocoding each raster
+    invalid_values: list[float]
+        List of invalid values to initialize each raster with
     '''
-    get_ds_names = lambda ds_dict, desired: [
-        x for x, y in ds_dict.items() if y and x in desired]
-
     if input_product_type is InputProduct.ROFF:
         src_product = 'OFF'
         dst_product = 'OFF'
@@ -420,60 +447,95 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
     src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequency{freq}"
     dst_freq_path = f"/science/LSAR/G{dst_product}/grids/frequency{freq}"
 
-    input_rasters = []
-    geocoded_rasters = []
-    geocoded_datasets = []
+    # Ensure possible interpolation methods and invalid values are iterable
+    # Following temp variables ensure default parameter not overwritten
+    n_possible = len(desired_geo_dataset_names) * [[]]
+    _possible_interp_methods = n_possible if possible_interp_methods is None \
+        else possible_interp_methods
+    _possible_invalid_values = n_possible if possible_invalid_values is None \
+        else possible_invalid_values
 
+    # List of input rasters as isce3.io.Raster objects
+    input_rasters = []
+    # List of output geocoded rasters as isce3.io.Rasters objects
+    geocoded_rasters = []
+    # List of h5py.Datasets of geocoded rasters
+    geocoded_datasets = []
+    # List of interpolation methods for geocoding each raster
+    interp_methods = []
+    # List of invalid values to initialize each raster with
+    invalid_values = []
+
+    # Following flag set to True to prevent geocoding layover shadow for
+    # different polarizations. Layover shadow does not change with
+    # polarization
     skip_layover_shadow = False
-    ds_names = [x for x, y in geo_datasets.items() if y and x in desired]
-    for ds_name in ds_names:
+
+    # Iterate through dataset names and their respective interpolation methods
+    # and invalid value. Only geocode one where flags for geocoding set to True
+    # in runconfig
+    for ds_name, interp_method, invalid_value in \
+            zip(desired_geo_dataset_names, _possible_interp_methods,
+                _possible_invalid_values):
+        # Skip geocoding if flag passed all the way from runconfig is False
+        if not all_geocoded_dataset_flags[ds_name]:
+            continue
+
         for pol in pol_list:
             if skip_layover_shadow:
                 continue
-            input_raster = []
-            out_ds_path = []
+
+            # For current polarization append interpolation method and invalid
+            # value
+            interp_methods.append(interp_method)
+            invalid_values.append(invalid_value)
+
+            # Container for destination/output HDF5 paths of geocoded rasters
+            pol_out_ds_paths = []
+
+            # Append input raster object and output HDF5 paths based on product
             if ds_name == "layover_shadow_mask":
                 raster, path = get_shadow_input_output(
                     scratch_path, freq, dst_freq_path)
                 skip_layover_shadow = True
-                input_raster.append(raster)
-                out_ds_path.append(path)
+                input_rasters.append(raster)
+                pol_out_ds_paths.append(path)
             elif input_product_type is InputProduct.ROFF:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
-                for layer in off_layer_dict:
+                for layer in offset_layers:
                     raster, path = get_ds_input_output(src_freq_path,
                                                        dst_freq_path,
-                                                       pol, input_hdf5, ds_name_camel_case,
-                                                       layer, input_product_type)
-                    input_raster.append(raster)
-                    out_ds_path.append(path)
+                                                       pol, input_hdf5,
+                                                       ds_name_camel_case,
+                                                       layer,
+                                                       input_product_type)
+                    input_rasters.append(raster)
+                    pol_out_ds_paths.append(path)
             elif iono_sideband and ds_name in ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']:
-                '''
-                ionosphere_phase_screen from main_side_band or
-                main_diff_ms_band are computed on radargrid of frequencyB.
-                The ionosphere_phase_screen is geocoded on geogrid of
-                frequencyA.
-                '''
+                # ionosphere_phase_screen from main_side_band or
+                # main_diff_ms_band are computed on radargrid of frequencyB.
+                # The ionosphere_phase_screen is geocoded on geogrid of
+                # frequencyA.
                 iono_src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequencyB"
                 iono_dst_freq_path = f"/science/LSAR/G{src_product}/grids/frequencyA"
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
                     iono_src_freq_path, iono_dst_freq_path, pol, input_hdf5,
                         ds_name_camel_case)
-                input_raster.append(raster)
-                out_ds_path.append(path)
+                input_rasters.append(raster)
+                pol_out_ds_paths.append(path)
             else:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
-                    src_freq_path, dst_freq_path, pol, input_hdf5, ds_name_camel_case,
-                    None, input_product_type)
-                input_raster.append(raster)
-                out_ds_path.append(path)
-            for input, path in zip(input_raster, out_ds_path):
-                input_rasters.append(input)
+                    src_freq_path, dst_freq_path, pol, input_hdf5,
+                    ds_name_camel_case, None, input_product_type)
+                input_rasters.append(raster)
+                pol_out_ds_paths.append(path)
 
-                # Prepare output raster access the HDF5 dataset for a given frequency and pol
+            for path in pol_out_ds_paths:
+                # Prepare output raster access the HDF5 dataset for a given
+                # frequency and pol
                 geocoded_dataset = dst_h5[path]
                 geocoded_datasets.append(geocoded_dataset)
 
@@ -484,16 +546,18 @@ def get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5, dst_h5,
 
                 geocoded_rasters.append(geocoded_raster)
 
-    return geocoded_rasters, geocoded_datasets, input_rasters
+    return (geocoded_rasters, geocoded_datasets, input_rasters, interp_methods,
+            invalid_values)
 
 def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         input_hdf5, dst_h5, radar_grid, dem_raster,
-                        block_size, off_layer_dict=None, scratch_path='',
+                        block_size, offset_layers=None, scratch_path='',
                         compute_stats=True, input_product_type = InputProduct.RUNW,
                         iono_sideband=False):
-    geocoded_rasters, geocoded_datasets, input_rasters = \
+
+    geocoded_rasters, geocoded_datasets, input_rasters, *_ = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
-                         dst_h5, off_layer_dict, scratch_path, input_product_type,
+                         dst_h5, offset_layers, scratch_path, input_product_type,
                          iono_sideband)
 
     if input_rasters:
@@ -529,7 +593,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """
     # pull parameters from cfg
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
-    freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
@@ -722,7 +785,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                            'correlation_surface_peak',
                            'cross_offset_variance', 'slant_range_offset',
                            'snr']
-                layer_keys = [key for key in offset_cfg.keys() if
+                layer_names = [key for key in offset_cfg.keys() if
                               key.startswith('layer')]
 
                 radar_grid = get_offset_radar_grid(cfg,
@@ -732,7 +795,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     offset_pol_list, input_hdf5, dst_h5,
                                     radar_grid, dem_raster, block_size,
-                                    off_layer_dict=layer_keys,
+                                    offset_layers=layer_names,
                                     input_product_type=InputProduct.ROFF)
             else:
                 #RIFG
@@ -762,19 +825,99 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
 
-def gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                        input_hdf5, dst_h5, gpu_geocode_obj,
-                        off_layer_dict=None, scratch_path='',
+def gpu_geocode_rasters(geocoded_dataset_flags, desired_geo_dataset_names,
+                        interpolation_methods, invalid_values,
+                        freq, pol_list,
+                        geogrid, rdr_geometry, dem_raster, lines_per_block,
+                        input_hdf5, dst_h5,
+                        offset_layers=None, scratch_path='',
                         compute_stats=True,
                         input_product_type=InputProduct.RUNW,
                         iono_sideband=False):
-    geocoded_rasters, geocoded_datasets, input_rasters = \
-        get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
-                         dst_h5, off_layer_dict, scratch_path, input_product_type,
-                         iono_sideband)
+    '''
+    Geocode datasets with common geogrid and radar geometry.
+
+    Parameters
+    ----------
+    geocoded_dataset_flags: dict
+        Dict describing which datasets are to be geocoded.
+        key: dataset name
+        value: True if dataset is to be geocoded
+    desired_geo_dataset_names: list[str]
+        List of dataset names that could be geocoded
+    interpolation_methods: list[isce3.core.interp_method.DataInterpMethod]
+        List of data interpolation methods to be used per dataset
+    invalid_values: list[float]
+        List of invalid values to be used initialized each dataset raster
+    freq: ['A', 'B']
+        Used to determine path the dataset in HDF5
+    pol_list: list(str)
+        List of polarizations for current frequency to be geocoded. Used to
+        determine path to dataset in HDF5.
+    geogrid: isce3.product.GeoGridParameters
+        Geogrid to geocode rasters to
+    rdr_geometry: isce3.container.RadarGeometry
+        Radar grid, orbit, image doppler describing scene geometry in then
+        radar coordinate system
+    dem_raster: isce3.io.Raster
+        DEM containing radar grid to be geocoded
+    lines_per_block: int
+        Number of lines per block to be processed.
+    input_hdf5: str
+        Path to HDF5 with radar datasets to be geocoded.
+    dst_h5: str
+        Path to HDF5 where geocoded datasets are to be placed.
+    offset_layers: list[str]
+        List of names of offset layers.
+    scratch_path: str
+        Path to scratch directory.
+    compute_stats: bool
+        True if stats are to be computed rasters.
+    input_product_type: isce3.io.gdal.GDALDataType
+        Enum describing type of product to geocoded.
+    iono_sideband: bool
+        True if iono rasters are to be geocoded.
+    '''
+    # Get:
+    # 1. List of output geocoded rasters asisce3.io.Rasters objects
+    # 2. List of h5py.Datasets of geocoded rasters (for stats computation)
+    # 3. List of input rasters as isce3.io.Raster objects
+    # 4. List of interpolation methods for geocoding each raster
+    # 5. List of invalid values to initialize each raster with
+    (geocoded_rasters, geocoded_datasets, input_rasters,
+     interpolation_methods, invalid_values) = \
+        get_raster_lists(geocoded_dataset_flags, desired_geo_dataset_names, freq,
+                         pol_list, input_hdf5, dst_h5, offset_layers,
+                         scratch_path, input_product_type, iono_sideband,
+                         interpolation_methods, invalid_values)
 
     if input_rasters:
-        gpu_geocode_obj.geocode_rasters(geocoded_rasters, input_rasters)
+        # Get raster types and convert to isce3.io.gdal.GDALDataType
+        convert_dtypes = {gdal.GDT_Unknown:  isce3.io.gdal.GDT_Unknown,
+                          gdal.GDT_Byte:     isce3.io.gdal.GDT_Byte,
+                          gdal.GDT_UInt16:   isce3.io.gdal.GDT_UInt16,
+                          gdal.GDT_Int16:    isce3.io.gdal.GDT_Int16,
+                          gdal.GDT_UInt32:   isce3.io.gdal.GDT_UInt32,
+                          gdal.GDT_Int32:    isce3.io.gdal.GDT_Unknown,
+                          gdal.GDT_Float32:  isce3.io.gdal.GDT_Float32,
+                          gdal.GDT_Float64:  isce3.io.gdal.GDT_Float64,
+                          gdal.GDT_CInt16:   isce3.io.gdal.GDT_CInt16,
+                          gdal.GDT_CInt32:   isce3.io.gdal.GDT_CInt32,
+                          gdal.GDT_CFloat32: isce3.io.gdal.GDT_CFloat32,
+                          gdal.GDT_CFloat64: isce3.io.gdal.GDT_CFloat64}
+        raster_types = [convert_dtypes[input_raster.datatype()]
+                        for input_raster in input_rasters]
+
+        # Create geocode object to perform geocoding
+        gpu_geocode_obj = \
+            isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
+                                       lines_per_block)
+
+        gpu_geocode_obj.geocode_rasters(geocoded_rasters, input_rasters,
+                                        interpolation_methods,
+                                        raster_types,
+                                        invalid_values,
+                                        dem_raster)
 
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
@@ -801,7 +944,6 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
     dem_file = cfg["dynamic_ancillary_file_group"]["dem_file"]
     ref_orbit = cfg["dynamic_ancillary_file_group"]['orbit_files']['reference_orbit_file']
-    freq_pols = cfg["processing"]["input_subset"]["list_of_frequencies"]
     geogrids = cfg["processing"]["geocode"]["geogrids"]
     if input_product_type is InputProduct.RIFG:
         geogrids = cfg["processing"]["geocode"]["wrapped_igram_geogrids"]
@@ -818,13 +960,14 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
     scratch_path = pathlib.Path(cfg['product_path_group']['scratch_path'])
 
+    # Retrieve enabled/disabled flags for each geocoded InSAR product
     if input_product_type is InputProduct.ROFF:
-        geo_datasets = cfg["processing"]["geocode"]["goff_datasets"]
+        geocoded_dataset_flags = cfg["processing"]["geocode"]["goff_datasets"]
     elif input_product_type is InputProduct.RUNW:
-        geo_datasets = cfg["processing"]["geocode"]["gunw_datasets"]
+        geocoded_dataset_flags = cfg["processing"]["geocode"]["gunw_datasets"]
     else:
         # RIFG
-        geo_datasets = cfg["processing"]["geocode"]["wrapped_datasets"]
+        geocoded_dataset_flags = cfg["processing"]["geocode"]["wrapped_datasets"]
 
     iono_args = cfg['processing']['ionosphere_phase_correction']
     iono_enabled = iono_args['enabled']
@@ -876,9 +1019,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
     with h5py.File(output_hdf5, "a", libver='latest', swmr=True) as dst_h5:
 
-        get_ds_names = lambda ds_dict, desired: [
-            x for x, y in ds_dict.items() if y and x in desired]
-
+        # Based on runconfig iterate over frequencies and their polarizations
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
 
             geogrid = geogrids[freq]
@@ -890,36 +1031,52 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 radar_grid = radar_grid.multilook(az_looks, rg_looks)
 
             if input_product_type is InputProduct.RUNW:
-                desired = ['coherence_magnitude', 'unwrapped_phase']
+                desired_geo_dataset_names = \
+                    ['coherence_magnitude', 'unwrapped_phase',
+                     'connected_components']
+
+                # Interpolation methods for respective datasets named above
+                interpolation_methods = [interp_method, interp_method,
+                                         isce3.core.DataInterpMethod.NEAREST]
+
+                # Invalid values for respective datasets named above
+                # connected_components raster has type unsigned char and an invalid
+                # value of NaN becomes 0 which conflicts with 0 being used to indicate
+                # an unmasked value/pixel. 255 is chosen as it is the most distant
+                # value from components assigned in ascending order [0, 1, ...)
+                invalid_values = [np.nan, np.nan, 255]
+
                 # Create radar grid geometry used by most datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
-                # Create geocode object other than offset and shadow layover datasets
-                geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                                         dem_raster,
-                                                         lines_per_block,
-                                                         interp_method,
-                                                         invalid_value=np.nan)
-
-                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                    input_hdf5, dst_h5, geocode_obj)
+                gpu_geocode_rasters(geocoded_dataset_flags,
+                                    desired_geo_dataset_names,
+                                    interpolation_methods, invalid_values,
+                                    freq, pol_list,
+                                    geogrid, rdr_geometry, dem_raster,
+                                    lines_per_block, input_hdf5, dst_h5)
 
                 if iono_enabled:
-                    desired = ['ionosphere_phase_screen',
+                    desired_geo_dataset_names = ['ionosphere_phase_screen',
                                'ionosphere_phase_screen_uncertainty']
+
+                    # Interpolation methods for respective datasets named above
+                    interpolation_methods = [interp_method, interp_method]
+
+                    # Invalid values for respective datasets named above
+                    invalid_values = [np.nan, np.nan]
+
                     geocode_iono_bool = True
                     pol_list_iono = freq_pols_iono[freq]
                     input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband:
-                        '''
-                        ionosphere_phase_screen from main_side_band or
-                        main_diff_ms_band are computed on radargrid of frequencyB.
-                        The ionosphere_phase_screen is geocoded on geogrid of
-                        frequencyA. Instead of geocoding ionosphere in the RUNW standard
-                        product (frequencyA), geocode the frequencyB in ionosphere/RUNW.h5
-                        to avoid additional interpolation.
-                        '''
+                        # ionosphere_phase_screen from main_side_band or
+                        # main_diff_ms_band are computed on radargrid of frequencyB.
+                        # The ionosphere_phase_screen is geocoded on geogrid of
+                        # frequencyA. Instead of geocoding ionosphere in the RUNW standard
+                        # product (frequencyA), geocode the frequencyB in ionosphere/RUNW.h5
+                        # to avoid additional interpolation.
                         input_hdf5_iono = \
                             f'{scratch_path}/ionosphere/{iono_method}/RUNW.h5'
                         if freq == 'A':
@@ -935,59 +1092,41 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     slc.getOrbit(),
                                     grid_zero_doppler)
                         else:
-                            '''
-                            The methods using sideband (e.g., main_side_band,
-                            and main_ms_diff_band) produce only one
-                            ionosphere from frequency A and B interferogram.
-                            The ionosphere of radargrid (frequency B) is
-                            geocoded only to geogrid in frequency A.
-                            '''
+                            # The methods using sideband (e.g., main_side_band,
+                            # and main_ms_diff_band) produce only one
+                            # ionosphere from frequency A and B interferogram.
+                            # The ionosphere of radargrid (frequency B) is
+                            # geocoded only to geogrid in frequency A.
                             geocode_iono_bool = False
                     else:
-                        '''
-                        The method using split_main_band produces
-                        can have two ionosphere layers in A and B.
-                        '''
+                        # The method using split_main_band produces
+                        # can have two ionosphere layers in A and B.
                         iono_sideband_bool = False
                         iono_freq = freq
                         rdr_geometry_iono = rdr_geometry
-                        if pol_list_iono == None:
+                        if pol_list_iono is None:
                             geocode_iono_bool = False
 
                     if geocode_iono_bool:
-                        geocode_iono_obj = \
-                            isce3.cuda.geocode.Geocode(geogrid,
-                                                    rdr_geometry_iono,
-                                                    dem_raster,
-                                                    lines_per_block,
-                                                    interp_method,
-                                                    invalid_value=np.nan)
-
-                        gpu_geocode_rasters(geo_datasets, desired,
+                        gpu_geocode_rasters(geocoded_dataset_flags,
+                                            desired_geo_dataset_names,
+                                            interpolation_methods,
+                                            invalid_values,
                                             iono_freq, pol_list_iono,
-                                            input_hdf5_iono, dst_h5,
-                                            geocode_iono_obj,
+                                            geogrid, rdr_geometry, dem_raster,
+                                            lines_per_block, input_hdf5_iono, dst_h5,
                                             iono_sideband=iono_sideband_bool)
 
-                desired = ["connected_components"]
-                '''
-                connected_components raster has type unsigned char and an invalid
-                value of NaN becomes 0 which conflicts with 0 being used to indicate
-                an unmasked value/pixel. 255 is chosen as it is the most distant
-                value from components assigned in ascending order [0, 1, ...)
-                '''
-                geocode_conn_comp_obj = \
-                    isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                               dem_raster,
-                                               lines_per_block,
-                                               isce3.core.DataInterpMethod.NEAREST,
-                                               invalid_value=255)
+                desired_geo_dataset_names = [
+                   'along_track_offset', 'slant_range_offset',
+                    'correlation_surface_peak']
+                n_desired_geo_dataset_names = len(desired_geo_dataset_names)
 
-                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                    input_hdf5, dst_h5, geocode_conn_comp_obj)
+                # Interpolation methods for respective datasets named above
+                interpolation_methods = [interp_method] * n_desired_geo_dataset_names
 
-                desired = ['along_track_offset', 'slant_range_offset',
-                           'correlation_surface_peak']
+                # Invalid values for respective datasets named above
+                invalid_values = [np.nan] * n_desired_geo_dataset_names
 
                 # If needed create geocode object for offset datasets
                 # Create offset unique radar grid
@@ -998,38 +1137,40 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
-                geocode_offset_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                                rdr_geometry,
-                                                                dem_raster,
-                                                                lines_per_block,
-                                                                interp_method,
-                                                                invalid_value=np.nan)
-                gpu_geocode_rasters(geo_datasets, desired, freq,
-                                    offset_pol_list, input_hdf5, dst_h5,
-                                    geocode_offset_obj)
+                gpu_geocode_rasters(geocoded_dataset_flags,
+                                    desired_geo_dataset_names,
+                                    interpolation_methods, invalid_values,
+                                    freq, offset_pol_list,
+                                    geogrid, rdr_geometry, dem_raster,
+                                    lines_per_block, input_hdf5, dst_h5)
 
-                desired = ["layover_shadow_mask"]
+                # Geocode layover shadow mask
+                desired_geo_dataset_names = ["layover_shadow_mask"]
+
+                # Interpolation methods for dataset above
+                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
+
+                # Invalid values for dataset above
+                # layover shadow raster has type char and an invalid
+                # value of NaN becomes 0 which conflicts with 0 being used
+                # to indicate an unmasked value/pixel. 127 is chosen as it is
+                # the most distant value from the allowed set of [0, 1, 2, 3].
+                invalid_values = [127]
+
                 # If needed create geocode object for shadow layover dataset
                 # Create radar grid geometry required by layover shadow
                 rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),
                                                              orbit,
                                                              grid_zero_doppler)
 
-                '''
-                layover shadow raster has type char and an invalid
-                value of NaN becomes 0 which conflicts with 0 being used
-                to indicate an unmasked value/pixel. 127 is chosen as it is
-                the most distant value from the allowed set of [0, 1, 2, 3].
-                '''
-                geocode_shadow_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                                rdr_geometry,
-                                                                dem_raster,
-                                                                lines_per_block,
-                                                                isce3.core.DataInterpMethod.NEAREST,
-                                                                invalid_value=127)
-                gpu_geocode_rasters(geo_datasets, desired, freq, pol_list,
-                                    input_hdf5, dst_h5, geocode_shadow_obj,
-                                    scratch_path=scratch_path, compute_stats=False)
+                gpu_geocode_rasters(geocoded_dataset_flags,
+                                    desired_geo_dataset_names,
+                                    interpolation_methods, invalid_values,
+                                    freq, pol_list,
+                                    geogrid, rdr_geometry, dem_raster,
+                                    lines_per_block, input_hdf5, dst_h5,
+                                    scratch_path=scratch_path,
+                                    compute_stats=False)
 
                 # add water mask to GUNW product
                 add_water_to_mask(cfg, freq, geogrid, dst_h5)
@@ -1039,63 +1180,73 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
-                desired=['along_track_offset', 'slant_range_offset',
-                         'along_track_offset_variance',
-                         'correlation_surface_peak',
-                         'cross_offset_variance',
-                         'slant_range_offset_variance', 'snr']
-                layer_keys = [key for key in offset_cfg.keys() if
+
+                desired_geo_dataset_names = [
+                    'along_track_offset',
+                    'slant_range_offset',
+                    'along_track_offset_variance',
+                    'correlation_surface_peak',
+                    'cross_offset_variance',
+                    'slant_range_offset_variance',
+                    'snr']
+
+                layer_names = [key for key in offset_cfg.keys() if
                               key.startswith('layer')]
 
+                # Interpolation methods for datasets above all the same
+                interpolation_methods = [
+                    interp_method] * len(desired_geo_dataset_names)
+
+
+                # Invalid values for datasets above all the same
+                invalid_values = [np.nan] * len(desired_geo_dataset_names)
+
+                # Create radar grid geometry required by offset datasets
                 radar_grid = get_offset_radar_grid(cfg,
                                                    slc.getRadarGrid(freq))
-                #  Create radar grid geometry required by offset datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid,
                                                              orbit,
                                                              grid_zero_doppler)
 
-                geocode_obj = isce3.cuda.geocode.Geocode(geogrid,
-                                                         rdr_geometry,
-                                                         dem_raster,
-                                                         lines_per_block,
-                                                         interp_method,
-                                                         invalid_value=np.nan)
-
-                gpu_geocode_rasters(geo_datasets, desired, freq,
-                                    offset_pol_list, input_hdf5,
-                                    dst_h5, geocode_obj,
-                                    off_layer_dict=layer_keys,
+                gpu_geocode_rasters(geocoded_dataset_flags,
+                                    desired_geo_dataset_names,
+                                    interpolation_methods, invalid_values,
+                                    freq, offset_pol_list,
+                                    geogrid, rdr_geometry, dem_raster,
+                                    lines_per_block, input_hdf5, dst_h5,
+                                    offset_layers=layer_names,
                                     input_product_type=InputProduct.ROFF)
             else:
-                #RIFG
-                desired = ['coherence_magnitude', 'wrapped_interferogram']
-                interp_methods = [interp_method, wrapped_igram_interp_method]
+                # Datasets from RIFG to be geocoded
+                desired_geo_dataset_names = ['coherence_magnitude',
+                                             'wrapped_interferogram']
+
+                # Interpolation method for respective datasets named above
+                interpolation_methods = [interp_method,
+                                         wrapped_igram_interp_method]
+
+                # Invalid values for respective datasets named above
+                invalid_values = [np.nan, np.nan]
 
                 # Create radar grid geometry required by RIFG product
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,
                                                              grid_zero_doppler)
 
-                # Iterate over desired unwrapped datasets to account for
-                # possible use of different interpolation methods
-                for desired_ds, ds_interp_method in zip(desired,
-                                                        interp_methods):
-                    # Create geocode object
-                    geocode_obj = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                                             dem_raster,
-                                                             lines_per_block,
-                                                             data_interp_method=ds_interp_method,
-                                                             invalid_value=np.nan)
-
-                    # Geocode the coherence and wrapped interferogram
-                    gpu_geocode_rasters(geo_datasets, [desired_ds], freq, pol_list,
-                                        input_hdf5, dst_h5, geocode_obj,
-                                        input_product_type = InputProduct.RIFG)
+                # Geocode the coherence and wrapped interferogram
+                gpu_geocode_rasters(geocoded_dataset_flags,
+                                    desired_geo_dataset_names,
+                                    interpolation_methods, invalid_values,
+                                    freq, pol_list,
+                                    geogrid, rdr_geometry, dem_raster,
+                                    lines_per_block, input_hdf5, dst_h5,
+                                    input_product_type = InputProduct.RIFG)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5, input_product_type)
+            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5,
+                                input_product_type)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")

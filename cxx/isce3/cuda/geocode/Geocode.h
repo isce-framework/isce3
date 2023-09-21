@@ -1,6 +1,8 @@
 #pragma once
 
+#include <any>
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include <isce3/core/forward.h>
@@ -20,7 +22,7 @@
 namespace isce3::cuda::geocode {
 
 /* light weight radar grid container */
-struct RadarGridParams {
+struct RadarGridParamsLite {
     double sensing_start;
     double sensing_mid;
     double prf;
@@ -63,60 +65,41 @@ public:
      *
      * \param[in] geogrid               Geogrid defining output product
      * \param[in] rdr_geom              Radar geometry describing input rasters
-     * \param[in] dem_raster            DEM used to calculate radar grid indices
      * \param[in] lines_per_block       Number of lines to be processed per block
-     * \param[in] data_interp_method    Data interpolation method
-     * \param[in] dem_interp_method     DEMinterpolation method
-     * \param[in] threshold             Convergence threshold for geo2rdr
-     * \param[in] maxiter               Maximum iterations for geo2rdr
-     * \param[in] dr                    Step size for numerical gradient for
-     *                                  geo2rdr
-     * \param[in] invalid_value         Value assigned to invalid geogrid pixels
      */
     Geocode(const isce3::product::GeoGridParameters & geogrid,
             const isce3::container::RadarGeometry & rdr_geom,
-            const isce3::io::Raster & dem_raster,
-            const size_t lines_per_block = 1000,
-            const isce3::core::dataInterpMethod data_interp_method =
-                    isce3::core::BILINEAR_METHOD,
-            const isce3::core::dataInterpMethod dem_interp_method =
-                    isce3::core::BIQUINTIC_METHOD,
-            const double threshold = 1e-8, const int maxiter = 50,
-            const double dr = 10, const float invalid_value = 0.0);
-
-    /** Calculate and set radar grid coordinates of geocode grid for a given
-     *  block number in device memory. The radar grid coordinates can then be
-     *  repeatedly used by geocodeRasterBlock for geocoding rasters of given
-     *  block number.
-     *
-     * \param[in] block_number      Index of block where radar grid coordinates
-     *                              coordinates will be calculated and set
-     */
-    void setBlockRdrCoordGrid(const size_t block_number);
-
-    /** Geocode a block of raster according to grid last set in
-     *  setBlockRdrCoordGrid. Only operates on 1st raster band of input/output
-     *  dataset.
-     *
-     * \param[in] output_raster     Geocoded individual raster
-     * \param[in] input_raster      Individual raster to be geocoded
-     */
-    template<typename T>
-    void geocodeRasterBlock(
-            isce3::io::Raster& output_raster, isce3::io::Raster& input_raster);
+            const size_t lines_per_block = 1000);
 
     /** Geocode rasters with a shared geogrid. Block processing handled
      * internally in function.
      *
      * \param[in] output_rasters    Geocoded rasters
-     * \param[in] input_rasters     Rasters to be geocoded
+     * \param[in] input_rasters     Rasters to be geocoded. Needs to be same
+     *                              size as output_rasters.
+     * \param[in] interp_methods        Data interpolation method per raster
+     * \param[in] raster_datatypes      GDAL type of each raster represented by
+     *                                  equivalent int. Necessary to correctly
+     *                                  initialize templated interpolators.
+     * \param[in] invalid_values        Invalid values for each raster
+     * \param[in] dem_raster            DEM used to calculate radar grid indices
+     * \param[in] dem_interp_method     DEMinterpolation method
+     * \param[in] threshold             Convergence threshold for geo2rdr
+     * \param[in] maxiter               Maximum iterations for geo2rdr
+     * \param[in] dr                    Step size for numerical gradient for
+     *                                  geo2rdr
      */
     void geocodeRasters(
-            std::vector<std::reference_wrapper<isce3::io::Raster>> output_rasters,
-            std::vector<std::reference_wrapper<isce3::io::Raster>> input_rasters);
-
-    size_t numBlocks() const { return _n_blocks; }
-    size_t linesPerBlock() const { return _lines_per_block; }
+            std::vector<std::reference_wrapper<isce3::io::Raster>>& output_rasters,
+            std::vector<std::reference_wrapper<isce3::io::Raster>>& input_rasters,
+            const std::vector<isce3::core::dataInterpMethod>& interp_methods,
+            const std::vector<GDALDataType>& raster_datatypes,
+            const std::vector<double>& invalid_values,
+            Raster& dem_raster,
+            const isce3::core::dataInterpMethod dem_interp_method =
+                    isce3::core::BIQUINTIC_METHOD,
+            const double threshold = 1e-8, const int maxiter = 50,
+            const double dr = 10);
 
 private:
     // number of lines to be processed in a block
@@ -128,17 +111,14 @@ private:
     // geogrid defining output product
     isce3::product::GeoGridParameters _geogrid;
 
-    // radar grid describing input rasters
-    RadarGridParams _radar_grid;
+    // light weight clone of isce3::product::RadarGridParameters _radar_grid
+    RadarGridParamsLite _radar_grid;
 
-    // light weight clone of isce3::product::RadarGridParams _radar_grid
+    // radar geometry describing input rasters
     isce3::container::RadarGeometry _rdr_geom;
 
     // ellipsoid based on EPSG of output grid
     isce3::core::Ellipsoid _ellipsoid;
-
-    // geo2rdr params used in radar index calculation
-    isce3::geometry::detail::Geo2RdrParams _geo2rdr_params;
 
     // Radar grid indices of block number last passed to setBlockRdrCoordGrid
     thrust::device_vector<double> _radar_x;
@@ -148,9 +128,9 @@ private:
     thrust::device_vector<bool> _mask;
 
     // DEM used to calculate radar grid indices
-    isce3::io::Raster _dem_raster;
+    //isce3::io::Raster _dem_raster;
 
-    // radar grid boundaries of block last passed to setBlockRdrCoordGrid,
+    // Radar grid boundaries of block last passed to setBlockRdrCoordGrid,
     // not for entire geogrid
     size_t _az_first_line;
     size_t _az_last_line;
@@ -164,27 +144,63 @@ private:
     // projection based on geogrid EPSG - common to all blocks
     isce3::cuda::core::ProjectionBaseHandle _proj_handle;
 
-    // interpolator used to geocode - common to all blocks
-    isce3::cuda::core::InterpolatorHandle<float> _interp_float_handle;
-    isce3::cuda::core::InterpolatorHandle<thrust::complex<float>>
-            _interp_cfloat_handle;
-    isce3::cuda::core::InterpolatorHandle<double> _interp_double_handle;
-    isce3::cuda::core::InterpolatorHandle<thrust::complex<double>>
-            _interp_cdouble_handle;
-    isce3::cuda::core::InterpolatorHandle<unsigned char>
-            _interp_unsigned_char_handle;
-    isce3::cuda::core::InterpolatorHandle<unsigned int>
-            _interp_unsigned_int_handle;
+    /* Check if input and output raster are consistent in:
+     * 1. size - same number input and output rasters
+     * 2. type - input and output rasters datatypes match expected values set
+     *           in the constructor
+     *
+     * \param[in] output_rasters    Geocoded rasters
+     * \param[in] input_rasters     Rasters to be geocoded. Needs to be same
+     *                              size as output_rasters.
+     * \param[in] interp_methods        Data interpolation method per raster
+     * \param[in] raster_datatypes      GDAL type of each raster represented by
+     *                                  equivalent int. Necessary to correctly
+     *                                  initialize templated interpolators.
+     * \param[in] invalid_values        Invalid values for each raster
+     */
+    void ensureRasterConsistency(
+            const std::vector<std::reference_wrapper<isce3::io::Raster>>& output_rasters,
+            const std::vector<std::reference_wrapper<isce3::io::Raster>>& input_rasters,
+            const std::vector<isce3::core::dataInterpMethod>& interp_methods,
+            const std::vector<GDALDataType>& raster_datatypes,
+            const std::vector<double>& invalid_values_double) const;
 
-    // value applied to invalid geogrid pixels
-    float _invalid_float;
-    double _invalid_double;
-    unsigned char _invalid_unsigned_char;
-    unsigned int _invalid_unsigned_int;
+    /** Calculate and set radar grid coordinates of geocode grid for a given
+     *  block number in device memory. The radar grid coordinates can then be
+     *  repeatedly used by geocodeRasterBlock for geocoding rasters of given
+     *  block number.
+     *
+     * \param[in] block_number      Index of block where radar grid coordinates
+     *                              coordinates will be calculated and set
+     * \param[in] dem_raster        DEM used to calculate radar grid indices
+     * \param[in] _dem_interp_method    DEMinterpolation method
+     * \param[in] _geo2rdr_params       Parameters used by geo2rdr to compute
+     *                                  geogrids radar grid coordinates
+     */
+    void setBlockRdrCoordGrid(const size_t block_number,
+            Raster& dem_raster,
+            const isce3::core::dataInterpMethod _dem_interp_method,
+            const isce3::geometry::detail::Geo2RdrParams _geo2rdr_params);
 
-    isce3::core::dataInterpMethod _dem_interp_method;
-    isce3::core::dataInterpMethod _data_interp_method;
-
-    void rasterDtypeInterpCheck(const int dtype) const;
+    /** Geocode a block of raster according to grid last set in
+     *  setBlockRdrCoordGrid. Only operates on 1st raster band of input/output
+     *  dataset.
+     *
+     * \param[in] output_raster     Geocoded individual raster
+     * \param[in] input_raster      Individual raster to be geocoded
+     * \param[in] interp_handle_ptr Interpolator handle containing device
+     *                              interpolator to be used on current block
+     * \param[in] invalid_value_any Invalid value to initialize block with - to
+     *                              be casted to template type.
+     * \param[in] is_sinc_interp    True if sinc interpolation is to be used.
+     *                              Allows the kernel to call sinc interpolator
+     *                              differently from other interpolators.
+     */
+    template<typename T>
+    void geocodeRasterBlock(
+            isce3::io::Raster& output_raster, isce3::io::Raster& input_raster,
+            const std::shared_ptr<
+                isce3::cuda::core::InterpolatorHandleVirtual>& interp_handle_ptr,
+            const std::any& invalid_value_any, const bool is_sinc_interp);
 };
 } // namespace isce3::cuda::geocode

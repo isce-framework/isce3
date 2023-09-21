@@ -169,7 +169,7 @@ class isce3::core::Sinc2dInterpolator : public isce3::core::Interpolator<U> {
 
 public:
     /** Default constructor. */
-    Sinc2dInterpolator(int sincLen, int sincSub);
+    Sinc2dInterpolator(int kernelLength, int decimationFactor);
 
     // Inherit overloads for other datatypes
     using super_t::interpolate;
@@ -184,9 +184,15 @@ private:
     U _sinc_eval_2d(const Map& z, int intpx, int intpy, double frpx,
                     double frpy) const;
 
-private:
     Matrix<double> _kernel;
-    int _kernelLength, _kernelWidth, _sincHalf;
+    // Sinc decimation factor
+    int _decimationFactor;
+
+    // Length of sinc kernel
+    int _kernelLength;
+
+    // Half length of sinc kernel
+    int _halfKernelLength;
 };
 
 // Extra interpolation and utility functions

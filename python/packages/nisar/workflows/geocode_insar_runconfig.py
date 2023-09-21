@@ -54,14 +54,6 @@ def geocode_insar_cfg_check(cfg):
         igram_interp_method =  cfg['processing']['geocode']\
                 ['wrapped_interferogram']['interp_method']
 
-        if igram_interp_method == 'SINC':
-            data_interp_method = cfg['processing']['geocode']['interp_method']
-            warns_msg = 'SINC interplation method is not supported by GPU,' +\
-                    f'the {data_interp_method} will be applied'
-            cfg['processing']['geocode']\
-                     ['wrapped_interferogram']['interp_method'] = data_interp_method
-            warnings.warn(warns_msg)
-
 
 class GeocodeInsarRunConfig(RunConfig):
     def __init__(self, args):

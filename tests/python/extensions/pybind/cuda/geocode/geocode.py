@@ -29,7 +29,7 @@ def test_cuda_geocode():
     geotrans = [geogrid.start_x, geogrid.spacing_x, 0.0,
                      geogrid.start_y, 0.0, geogrid.spacing_y]
 
-    # init RadarGeometry, orbit, and doppler from RSLC
+    # Init RadarGeometry, orbit, and doppler from RSLC
     radargrid = isce3.product.RadarGridParameters(os.path.join(iscetest.data,
                                                               "envisat.h5"))
     orbit = rslc.getOrbit()
@@ -38,31 +38,34 @@ def test_cuda_geocode():
                                                 orbit,
                                                 doppler)
 
-    # set interp method
-    interp_method = isce3.core.DataInterpMethod.BILINEAR
+    # Set interp method
+    interp_method = [isce3.core.DataInterpMethod.SINC]
+    raster_dtype = [isce3.io.gdal.GDT_CFloat32]
+    invalid_value = [np.nan]
 
-    # init CUDA geocode obj
-    for xy, suffix in itertools.product(['x', 'y'], ['', '_blocked']):
+    # If block mode, i.e. suffix != '', have lines per block smaller than
+    # raster size. Otherwise set lines_per_block large enough to fit entire
+    # raster.
+    for xy, (suffix, lines_per_block) in itertools.product(['x', 'y'],
+                                                          (['_blocked', 126],
+                                                           ['', 1000])):
+        # Init CUDA geocode obj
+        cu_geocode = isce3.cuda.geocode.Geocode(
+            geogrid, rdr_geometry, lines_per_block)
 
-        lines_per_block = 126 if suffix else 1000
+        # Put all input parameters in iterable list. geocode_rasters only
+        # works with lists of the same length.
+        output_raster = [isce3.io.Raster(f"{xy}{suffix}.geo", geogrid.width,
+                                         geogrid.length, 1,
+                                         gdal.GDT_CFloat32, "ENVI")]
 
-        cu_geocode = isce3.cuda.geocode.Geocode(geogrid, rdr_geometry,
-                                               dem_raster, lines_per_block,
-                                               interp_method)
+        input_raster = [isce3.io.Raster(os.path.join(iscetest.data,
+                                                     f"geocodeslc/{xy}.slc"))]
 
-        output_raster = isce3.io.Raster(f"{xy}{suffix}.geo", geogrid.width,
-                                       geogrid.length, 1,
-                                       gdal.GDT_CFloat32, "ENVI")
+        cu_geocode.geocode_rasters(output_raster, input_raster, interp_method,
+                                   raster_dtype, invalid_value, dem_raster)
 
-        input_raster = isce3.io.Raster(os.path.join(iscetest.data,
-                                                   f"geocodeslc/{xy}.slc"))
-
-        for i in range(cu_geocode.n_blocks):
-            cu_geocode.set_block_radar_coord_grid(i)
-
-            cu_geocode.geocode_raster_block(output_raster, input_raster)
-
-        output_raster.set_geotransform(geotrans)
+        output_raster[0].set_geotransform(geotrans)
 
 def test_validate():
     '''
@@ -101,3 +104,4 @@ def test_validate():
 
 if __name__ == '__main__':
     test_cuda_geocode()
+    test_validate()
