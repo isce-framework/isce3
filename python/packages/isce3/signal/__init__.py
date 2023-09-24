@@ -8,4 +8,5 @@ from . import filter_data
 from . import compute_evd_cpi
 from . import rfi_detection_evd
 from . import rfi_mitigation_evd
+from . import rfi_process_evd
 from .multi_channel_analysis import form_single_tap_dbf_echo

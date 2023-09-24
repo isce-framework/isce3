@@ -1,97 +1,111 @@
 """
 Perform RFI mitigation by projecting raw data in the direction of
-signal Eigenvectors
+RFI Eigenvectors, and subsequently remove it from input raw data.
 """
 import numpy as np
-
+from isce3.signal.compute_evd_cpi import slice_gen
 
 def rfi_mitigate_evd(
-    raw_data,
-    eig_vec_sort_array,
-    rfi_cpi_flag_array,
-    cpi_len=32,
+    raw_data: np.ndarray,
+    eig_vec_sort,
+    rfi_flag,
     raw_data_mitigated=None,
 ):
-    """Radio Frequency Interference (RFI) component of the Raw data is derived by
-        projecting the raw data in the directions of Eigenvectors of dominant
-        Eigenvalues (Principal Components).  RFI mitigation is performed by
-        removing RFI component of raw data from raw data.
+    """Radio Frequency Interference (RFI) component of the Raw data in a CPI is derived by
+    projecting the raw data in the directions of Eigenvectors of dominant
+    Eigenvalues (Principal Components).  RFI mitigation is performed by
+    removing RFI component of raw data from raw data. The  number of rows (pulses) 
+    in the 'raw_data' input is equal to a single CPI length.
 
-     Parameters
-     ------------
-     raw_data: array-like complex [num_pulses x num_rng_samples]
-         raw data to be processed
-     eig_vec_sort_array: 4D array of complex with dimension [num_cpi x num_rng_blks x cpi_len x cpi_len]
-         Sorted column vector Eigenvectors of all CPIs based on index of sorted Eigenvalues
-     rfi_cpi_flag_array: 2D array of integer, [num_cpi x num_rng_blks x cpi_len]
-         RFI flag array that marks each Eigenvalue index in a CPI as RFI or desired signal.
-         1 = RFI Eigenvalue index; 0 = Signal Eigenvalue index
-     cpi_len: int
-         Number of pulses within a CPI, default = 32
-     raw_data_mitigated: array-like complex [num_pulses x num_rng_samples]
-         Optional: Eigenvalue Decomposition mitigated raw data
-
-     Returns
-     --------
-     raw_data_mitigated: complex numpy.ndarray, [num_pulses x num_rng_samples]
-         Output array for Eigenvalue Decomposition mitigated raw data
+    Parameters
+    ------------
+    raw_data: array-like complex [cpi_len x num_rng_samples]
+        raw data to be processed, supports all numpy complex formats
+    eig_vec_sort: 2D array of complex, [cpi_len x cpi_len]
+        Sorted column vector Eigenvectors of all CPIs based on indices of sorted Eigenvalues
+    rfi_flag: 1D array of bool, [cpi_len]
+        RFI flag array that marks each Eigenvalue index as either RFI or signal.
+        1 = RFI Eigenvalue index; 0 = Signal Eigenvalue index
+    raw_data_mitigated: array-like complex [num_pulses x num_rng_samples] or None, optional
+        output array in which the mitigated data values is placed. It
+        must be an array-like object supporting `multidimensional array access
+        <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
+        The array should have the same shape and dtype as the input raw data array.
+        If None (the default), an alias will be created internally and 'raw_data' is modified
+        in-place.
     """
 
-    num_pulses, num_rng_samples = raw_data.shape
-    num_rng_blks = eig_vec_sort_array.shape[1]
-
-    num_cpi = num_pulses // cpi_len
-    num_pulses_cpi = cpi_len * num_cpi
-
     if raw_data_mitigated is None:
-        raw_data_mitigated = np.zeros(raw_data.shape, dtype=np.complex64)
+        raw_data_mitigated = raw_data
+    else:
+        if raw_data_mitigated.shape != raw_data.shape:
+            raise ValueError(
+                "Shape mismatch: output mitigated data array must have the same shape"
+                " as the input data"
+            )
 
-    cpi_start = np.arange(0, num_pulses_cpi, cpi_len)
-    cpi_stop = cpi_start + cpi_len
+     # Verify total number of pulses is greater than number of pulses per CPI
+    if raw_data.shape[0] != eig_vec_sort.shape[0]:
+        raise ValueError(
+            "Total number of pulses must be equal to CPI length."
+        )
 
-    # Number of range bins per range block
-    num_samples_blk = num_rng_samples // num_rng_blks
-    num_samples_blks_all = num_samples_blk * num_rng_blks
+    num_rfi = rfi_flag.sum()
 
-    # Range Bin start and end for each of the range blocks
-    rng_start = np.arange(0, num_samples_blks_all, num_samples_blk)
-    rng_stop = rng_start + num_samples_blk
+    if num_rfi > 0:  # RFI is detected in CPI
+        eig_vec_rfi = eig_vec_sort[:, rfi_flag == 1]
 
-    # Ignore the last partial CPI if there is any.
-    for idx_cpi in range(num_cpi):
-        cpi = np.s_[cpi_start[idx_cpi] : cpi_stop[idx_cpi]]
-        data_cpi = raw_data[cpi]
+        weight_adaptive = np.matmul(eig_vec_rfi, np.conj(eig_vec_rfi).transpose())
 
-        for idx_blk in range(num_rng_blks):
-            rng_blk = np.s_[rng_start[idx_blk] : rng_stop[idx_blk]]
-            blk_cpi = data_cpi[:, rng_blk]
+        data_proj_rfi = np.matmul(weight_adaptive, raw_data)
+        raw_data_mitigated[:] = raw_data - data_proj_rfi
+    else:
+        raw_data_mitigated[:] = raw_data
 
-            eig_vec_sort = eig_vec_sort_array[idx_cpi, idx_blk]
 
-            rfi_cpi_flag = rfi_cpi_flag_array[idx_cpi, idx_blk]
-            num_rfi_cpi = rfi_cpi_flag.sum()
+def rfi_mitigate_tb(
+    raw_data_tb,
+    eig_vec_sort_array,
+    rfi_cpi_flag_array,
+    raw_data_mitigated_tb=None,
+):
+    """Wrapper function that performs RFI mitigation of the input raw data of a 
+    Threshold Block (TB) one CPI at a time. Number of pulses or rows of raw_data_tb must
+    be an integer of CPI length
 
-            if num_rfi_cpi > 0:
-                eig_vec_rfi = eig_vec_sort[:, rfi_cpi_flag == 1]
+    Parameters
+    ------------
+    raw_data_tb: array-like complex [num_pulses x num_rng_samples]
+        raw data to be processed
+    eig_vec_sort_array: 3D array of complex, [num_cpi x cpi_len x cpi_len]
+        Sorted column vector Eigenvectors of all CPIs based on indices of sorted Eigenvalues
+    rfi_cpi_flag_array: 2D array of bool, [num_cpi x cpi_len]
+        RFI flag array that marks each Eigenvalue index in a CPI as either RFI or signal.
+        1 = RFI Eigenvalue index; 0 = Signal Eigenvalue index
+    raw_data_mitigated_tb: array-like complex [num_pulses x num_rng_samples] or None, optional
+        output array in which the mitigated data values is placed. It
+        must be an array-like object supporting `multidimensional array access
+        <https://numpy.org/doc/stable/user/basics.indexing.html>`_.
+        The array should have the same shape and dtype as the input raw data array.
+        If None (the default), an alias will be created internally, and 'raw_data' is modified
+        in-place.
+    """
 
-                weight_adaptive = np.matmul(
-                    eig_vec_rfi, np.conj(eig_vec_rfi).transpose()
-                )
-                data_proj_rfi_cpi = np.matmul(weight_adaptive, blk_cpi)
-                data_proj_sig_cpi = blk_cpi - data_proj_rfi_cpi
+    num_pulses = raw_data_tb.shape[0]
+    cpi_len = eig_vec_sort_array.shape[2]
 
-                raw_data_mitigated[cpi, rng_blk] = data_proj_sig_cpi
-            else:
-                raw_data_mitigated[cpi, rng_blk] = blk_cpi
+    if num_pulses % cpi_len != 0:
+        raise ValueError("Total number of pulses must be an integer multiple of cpi_len")
 
-        # Fill the remaining few range bins of the CPI with original raw data samples
-        if num_rng_samples > num_samples_blks_all:
-            raw_data_mitigated[cpi, num_samples_blks_all:] = raw_data[
-                cpi, num_samples_blks_all:
-            ]
+    # Create an alias for raw_data_tb if there is no 'raw_data_mitigated_tb' as input
+    if raw_data_mitigated_tb is None:
+        raw_data_mitigated_tb = raw_data_tb
 
-    # Fill the remaining few pulses with original raw data samples
-    if num_pulses > num_pulses_cpi:
-        raw_data_mitigated[num_pulses_cpi:] = raw_data[num_pulses_cpi:]
+    for idx_cpi, cpi_slow_time in enumerate(slice_gen(num_pulses, cpi_len)):
+        data_cpi = raw_data_tb[cpi_slow_time]
 
-    return raw_data_mitigated
+        eig_vec_sort = eig_vec_sort_array[idx_cpi]
+        rfi_cpi_flag = rfi_cpi_flag_array[idx_cpi]
+
+        rfi_mitigate_evd(
+            data_cpi, eig_vec_sort, rfi_cpi_flag, raw_data_mitigated_tb[cpi_slow_time])
