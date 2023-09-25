@@ -10,14 +10,15 @@ import h5py
 import isce3
 import journal
 from osgeo import gdal
+
 gdal.UseExceptions()
 
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
+from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.compute_stats import compute_stats_real_data
+from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.helpers import (complex_raster_path_from_h5,
                                      get_cfg_freq_pols)
-from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -43,7 +44,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
         flatten_path = crossmul_params['flatten_path']
 
     if output_hdf5 is None:
-        output_hdf5 = cfg['product_path_group']['sas_output_file']
+        output_hdf5 = str(scratch_path.joinpath('crossmul/product.h5'))
 
     # init parameters shared by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
@@ -214,6 +215,6 @@ if __name__ == "__main__":
     # get a runconfig dict from command line args
     crossmul_runconfig = CrossmulRunConfig(args, resample_type)
     # prepare RIFG HDF5
-    out_paths = h5_prep.run(crossmul_runconfig.cfg)
+    out_paths = prepare_insar_hdf5.run(crossmul_runconfig.cfg)
     # run crossmul
     run(crossmul_runconfig.cfg, out_paths['RIFG'], resample_type)

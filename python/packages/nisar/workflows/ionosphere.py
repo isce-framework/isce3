@@ -21,7 +21,8 @@ from isce3.splitspectrum import splitspectrum
 
 from nisar.products.readers import SLC
 from nisar.workflows import (crossmul, dense_offsets, h5_prep,
-                             filter_interferogram, resample_slc,
+                             filter_interferogram, prepare_insar_hdf5,
+                             resample_slc,
                              rubbersheet, unwrap)
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -206,7 +207,7 @@ def copy_iono_datasets(iono_insar_cfg,
                         oversample_flag=False,
                         slant_main=None,
                         slant_side=None):
-    """copy ionosphere layers (frequency B) to frequency A of RUNW product 
+    """copy ionosphere layers (frequency B) to frequency A of RUNW product
     with oversampling
 
     Parameters
@@ -530,7 +531,7 @@ def run_insar_workflow(iono_insar_cfg, original_dict, out_paths):
     '''
 
     # run insar for ionosphere pairs
-    h5_prep.run(iono_insar_cfg)
+    prepare_insar_hdf5.run(iono_insar_cfg)
 
     iono_freq_pol =  iono_insar_cfg['processing']['input_subset'][
                     'list_of_frequencies']

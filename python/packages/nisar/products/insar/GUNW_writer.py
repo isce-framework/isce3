@@ -173,7 +173,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 #unwrapped dataset parameters as tuples in the following
                 #order: dataset name, data type, description, and units
                 unwrapped_ds_params = [
-                    ("coherenceMagnigtude", np.float32,
+                    ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
                      "unitless"),
                     ("connectedComponents", np.uint32,
@@ -256,7 +256,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     ("alongTrackOffset", np.float32,
                      "Along track offset",
                      "meters"),
-                    ("crossCorrelationPeak", np.float32,
+                    ("correlationSurfacePeak", np.float32,
                      "Normalized cross-correlation surface peak",
                      "unitless"),
                     ("slantRangeOffset", np.float32,

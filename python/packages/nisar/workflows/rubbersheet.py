@@ -3,20 +3,19 @@ Wrapper for rubbersheet
 '''
 
 import pathlib
-import journal
 import time
+
 import h5py
-import numpy as np
 import isce3
-from osgeo import gdal
-from scipy import ndimage
-from scipy import interpolate
-from scipy import signal
+import journal
+import numpy as np
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
+from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
-from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
+from nisar.workflows.yaml_argparse import YamlArgparse
+from osgeo import gdal
+from scipy import interpolate, ndimage, signal
 
 
 def run(cfg: dict, output_hdf5: str = None):
@@ -442,5 +441,5 @@ if __name__ == "__main__":
 
     # Prepare RIFG. Culled offsets will be
     # allocated in RIFG product
-    out_paths = h5_prep.run(rubbersheet_runconfig.cfg)
+    out_paths = prepare_insar_hdf5.run(rubbersheet_runconfig.cfg)
     run(rubbersheet_runconfig.cfg, out_paths['RIFG'])

@@ -141,7 +141,7 @@ class L2InSARWriter(L1InSARWriter):
         proc_pcfg = self.cfg["processing"]
         iono = proc_pcfg["ionosphere_phase_correction"]["enabled"]
         wet_tropo = proc_pcfg["troposphere_delay"]["enable_wet_product"]
-        dry_tropo = proc_pcfg["troposphere_delay"]["enable_dry_product"]
+        dry_tropo = proc_pcfg["troposphere_delay"]["enable_hydrostatic_product"]
 
         # if the troposphere delay is not enabled
         if not proc_pcfg["troposphere_delay"]["enabled"]:

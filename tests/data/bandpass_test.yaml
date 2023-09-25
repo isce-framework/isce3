@@ -7,12 +7,12 @@ runconfig:
 
         input_file_group:
             # REQUIRED - Two NISAR L1 RSLC formatted HDF5 files
-            reference_rslc_file: @ISCETEST@/Sdelta_129_02.h5
-            secondary_rslc_file: @ISCETEST@/Sdelta_138_02.h5
+            reference_rslc_file: @ISCETEST@/SanAnd_129.h5
+            secondary_rslc_file: @ISCETEST@/SanAnd_138.h5
 
         dynamic_ancillary_file_group:
             # REQUIRED - Use the provided DEM as input
-            dem_file: @ISCETEST@/Sdelta_dem.tif
+            dem_file: @ISCETEST@/SanAnd_dem.tif
             orbit_files:
                 reference_orbit_file:
                 secondary_orbit_file:

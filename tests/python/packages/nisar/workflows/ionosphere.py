@@ -1,15 +1,15 @@
 import argparse
 import os
-from osgeo import gdal
 
 import h5py
+import isce3
 import iscetest
 import numpy as np
-import isce3
 from isce3.atmosphere import ionosphere_estimation
-from nisar.workflows import h5_prep, insar
+from nisar.workflows import insar, prepare_insar_hdf5
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
+from osgeo import gdal
 
 
 def test_split_main_band_run():
@@ -34,7 +34,7 @@ def test_split_main_band_run():
     insar_runcfg.geocode_common_arg_load()
     insar_runcfg.yaml_check()
 
-    out_paths = h5_prep.run(insar_runcfg.cfg)
+    out_paths = prepare_insar_hdf5.run(insar_runcfg.cfg)
     persist = Persistence(restart=True, logfile_path='ionosphere.log')
 
     # No CPU dense offsets. Turn off dense_offsets,
@@ -70,7 +70,7 @@ def test_main_side_band_run():
     insar_runcfg.geocode_common_arg_load()
     insar_runcfg.yaml_check()
 
-    out_paths = h5_prep.run(insar_runcfg.cfg)
+    out_paths = prepare_insar_hdf5.run(insar_runcfg.cfg)
 
     persist = Persistence(restart=True, logfile_path='ionosphere.log')
     # No CPU dense offsets. Turn off dense_offsets,

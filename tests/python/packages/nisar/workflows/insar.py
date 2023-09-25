@@ -2,7 +2,7 @@ import argparse
 import os
 
 import isce3.ext.isce3 as isce3
-from nisar.workflows import h5_prep, insar
+from nisar.workflows import prepare_insar_hdf5, insar
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 
@@ -36,7 +36,7 @@ def test_insar_run():
         insar_runcfg.geocode_common_arg_load()
         insar_runcfg.yaml_check()
 
-        out_paths = h5_prep.run(insar_runcfg.cfg)
+        out_paths = prepare_insar_hdf5.run(insar_runcfg.cfg)
         persist = Persistence(restart=True, logfile_path='insar.log')
 
         # No CPU dense offsets. Turn off dense_offsets,

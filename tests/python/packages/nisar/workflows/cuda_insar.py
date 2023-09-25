@@ -2,11 +2,10 @@ import argparse
 import os
 
 import isce3.ext.isce3 as isce3
-from nisar.workflows import h5_prep, insar
+import iscetest
+from nisar.workflows import insar, prepare_insar_hdf5
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
-
-import iscetest
 
 
 def test_insar_run():
@@ -37,7 +36,7 @@ def test_insar_run():
         insar_runcfg.geocode_common_arg_load()
         insar_runcfg.yaml_check()
 
-        out_paths = h5_prep.run(insar_runcfg.cfg)
+        out_paths = prepare_insar_hdf5.run(insar_runcfg.cfg)
 
         persist = Persistence('insar.log', restart=True)
         # the baseline step is disabled because the winnipeg test dataset

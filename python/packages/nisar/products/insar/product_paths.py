@@ -116,7 +116,6 @@ class RIFGGroupsPaths(L1GroupsPaths):
     """
     ProductName: str = "RIFG"
 
-
 @dataclass
 class RUNWGroupsPaths(L1GroupsPaths):
     """
@@ -128,7 +127,6 @@ class RUNWGroupsPaths(L1GroupsPaths):
         Product name (RUNW)
     """
     ProductName: str = "RUNW"
-
 
 @dataclass
 class ROFFGroupsPaths(L1GroupsPaths):
@@ -142,7 +140,6 @@ class ROFFGroupsPaths(L1GroupsPaths):
     """
     ProductName: str = "ROFF"
 
-
 @dataclass
 class GUNWGroupsPaths(L2GroupsPaths):
     """
@@ -154,7 +151,6 @@ class GUNWGroupsPaths(L2GroupsPaths):
         Product name (GUNW)
     """
     ProductName: str = "GUNW"
-
 
 @dataclass
 class GOFFGroupsPaths(L2GroupsPaths):

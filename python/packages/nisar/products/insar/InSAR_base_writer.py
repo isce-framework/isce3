@@ -222,7 +222,7 @@ class InSARBaseWriter(h5py.File):
                 np.bool_(rfi_mitigation_flag),
                 (
                     "Flag to indicate if RFI correction has been applied"
-                    " to reference RSLC"
+                    f" to {rslc_name} RSLC"
                 ),
             ),
             mixed_mode,
@@ -234,7 +234,23 @@ class InSARBaseWriter(h5py.File):
         src_param_group = \
             rslc_h5py_file_obj[f"{rslc.ProcessingInformationPath}/parameters"]
 
-        src_param_group.copy("referenceTerrainHeight", dst_param_group)
+        reference_terrain_height = "referenceTerrainHeight"
+        reference_terrain_height_description = \
+            f"Reference Terrain Height as a function of time for {rslc_name} RSLC"
+        if reference_terrain_height in src_param_group:
+            src_param_group.copy(reference_terrain_height, dst_param_group)
+            dst_param_group[reference_terrain_height].attrs['description'] = \
+                reference_terrain_height_description
+        else:
+            ds_param = DatasetParams(
+                "referenceTerrainHeight",
+                "None",
+                reference_terrain_height_description,
+                {
+                    "units":"meters"
+                },
+            )
+            add_dataset_and_attrs(dst_param_group, ds_param)
 
         for ds_param in ds_params:
             add_dataset_and_attrs(dst_param_group, ds_param)

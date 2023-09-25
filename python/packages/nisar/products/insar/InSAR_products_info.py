@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import isce3
 
 ISCE3_VERSION = isce3.__version__
-
+PRODUCT_SPECIFICATION_VERSION = "0.9.0"
 
 @dataclass
 class InSARProductsInfo:
@@ -33,24 +33,30 @@ class InSARProductsInfo:
 
     @classmethod
     def Base(cls):
-        return cls("1.0.0", "", "", "", False)
+        return cls(PRODUCT_SPECIFICATION_VERSION,
+                   "", "", "", False)
 
     @classmethod
     def RIFG(cls):
-        return cls("1.0.0", "RIFG", "L1", "0.1", False)
+        return cls(PRODUCT_SPECIFICATION_VERSION,
+                   "RIFG", "L1", "0.1", False)
 
     @classmethod
     def ROFF(cls):
-        return cls("1.0.0", "ROFF", "L1", "0.1", False)
+        return cls(PRODUCT_SPECIFICATION_VERSION,
+                   "ROFF", "L1", "0.1", False)
 
     @classmethod
     def RUNW(cls):
-        return cls("1.0.0", "RUNW", "L1", "0.1", False)
+        return cls(PRODUCT_SPECIFICATION_VERSION,
+                   "RUNW", "L1", "0.1", False)
 
     @classmethod
     def GOFF(cls):
-        return cls("1.0.0", "GOFF", "L2", "0.1", True)
+        return cls(PRODUCT_SPECIFICATION_VERSION,
+                   "GOFF", "L2", "0.1", True)
 
     @classmethod
     def GUNW(cls):
-        return cls("1.0.0", "GUNW", "L2", "0.1", True)
+        return cls(PRODUCT_SPECIFICATION_VERSION,
+                   "GUNW", "L2", "0.1", True)

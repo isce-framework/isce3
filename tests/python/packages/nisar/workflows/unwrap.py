@@ -2,13 +2,11 @@ import argparse
 import os
 
 import h5py
+import iscetest
 import numpy as np
 import numpy.testing as npt
-
-from nisar.workflows import unwrap, h5_prep
+from nisar.workflows import prepare_insar_hdf5, unwrap
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
-
-import iscetest
 
 
 def test_unwrap_run():
@@ -30,7 +28,7 @@ def test_unwrap_run():
     runconfig = UnwrapRunConfig(args)
     runconfig.geocode_common_arg_load()
 
-    out_paths = h5_prep.run(runconfig.cfg)
+    out_paths = prepare_insar_hdf5.run(runconfig.cfg)
 
     product_path = 'science/LSAR/RIFG/swaths/frequencyA/interferogram/HH'
 

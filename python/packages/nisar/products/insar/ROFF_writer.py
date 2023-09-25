@@ -351,3 +351,51 @@ class ROFFWriter(L1InSARWriter):
                                 ds_description,
                                 units=ds_unit,
                             )
+
+    def add_swaths_to_hdf5(self):
+        """
+        Add swaths to the HDF5
+        """
+        super().add_swaths_to_hdf5()
+
+        # pull the offset parameters
+        is_roff,  margin, rg_start, az_start,\
+        rg_skip, az_skip, rg_search, az_search,\
+        rg_chip, az_chip, ovs_factor = self._pull_pixel_offsets_params()
+
+        for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
+            # Create the swath group
+            swaths_freq_group_name = (
+                f"{self.group_paths.SwathsPath}/frequency{freq}"
+            )
+            swaths_freq_group = self.require_group(swaths_freq_group_name)
+
+            rslc_freq_group = self.ref_h5py_file_obj[
+                f"{self.ref_rslc.SwathPath}/frequency{freq}"
+            ]
+
+            # add scene center parameters
+            scene_center_params = [
+                DatasetParams(
+                    "sceneCenterAlongTrackSpacing",
+                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
+                    * az_skip,
+                    (
+                        "Nominal along track spacing in meters between"
+                        " consecutive lines near mid swath of the ROFF image"
+                    ),
+                    {"units": "meters"},
+                ),
+                DatasetParams(
+                    "sceneCenterGroundRangeSpacing",
+                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
+                    * rg_skip,
+                    (
+                        "Nominal ground range spacing in meters between"
+                        " consecutive pixels near mid swath of the ROFF image"
+                    ),
+                    {"units": "meters"},
+                ),
+            ]
+            for ds_param in scene_center_params:
+                add_dataset_and_attrs(swaths_freq_group, ds_param)

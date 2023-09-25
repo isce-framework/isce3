@@ -4,7 +4,8 @@ import time
 import journal
 from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
                              geocode_insar, h5_prep, filter_interferogram,
-                             offsets_product, rdr2geo, resample_slc, rubbersheet,
+                             offsets_product, prepare_insar_hdf5, rdr2geo,
+                             resample_slc, rubbersheet,
                              split_spectrum, unwrap, ionosphere, baseline,
                              troposphere, solid_earth_tides)
 
@@ -26,8 +27,8 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if run_steps['bandpass_insar']:
         bandpass_insar.run(cfg)
 
-    if run_steps['h5_prep']:
-        h5_prep.run(cfg)
+    if run_steps['prepare_insar_hdf5']:
+        prepare_insar_hdf5.run(cfg)
 
     if run_steps['rdr2geo']:
         rdr2geo.run(cfg)
@@ -89,7 +90,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     if 'GUNW' in out_paths and run_steps['troposphere'] and \
             cfg['processing']['troposphere_delay']['enabled']:
         troposphere.run(cfg, out_paths['GUNW'])
-        
+
     if 'GUNW' in out_paths and run_steps['solid_earth_tides']:
         solid_earth_tides.run(cfg, out_paths['GUNW'])
 

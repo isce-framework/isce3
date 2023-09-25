@@ -6,12 +6,12 @@ import isce3
 import journal
 import numpy as np
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
+from nisar.workflows import prepare_insar_hdf5
+from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows.dense_offsets import create_empty_dataset
 from nisar.workflows.helpers import copy_raster, get_cfg_freq_pols
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.workflows.compute_stats import compute_stats_real_data
 from osgeo import gdal
 
 
@@ -346,7 +346,7 @@ def write_data(infile, outfile, band, lines_per_block):
     lines_per_block: int
         Lines per block to read in batch
     '''
-    # Get shape of input file (same as output created from h5_prep)
+    # Get shape of input file (same as output created from prepare_insar_hdf5)
     ds = gdal.Open(infile, gdal.GA_ReadOnly)
     length = ds.RasterYSize
     width = ds.RasterXSize
@@ -384,7 +384,7 @@ if __name__ == "__main__":
     offsets_runconfig = OffsetsProductRunConfig(args)
 
     # Prepare ROFF HDF5 product
-    out_paths = h5_prep.run(offsets_runconfig.cfg)
+    out_paths = prepare_insar_hdf5.run(offsets_runconfig.cfg)
 
     # Run offsets product generation
     run(offsets_runconfig.cfg, out_paths['ROFF'])

@@ -1,15 +1,14 @@
 import argparse
 import os
 
-from osgeo import gdal
 import h5py
-import numpy as np
-
 import isce3
-from nisar.workflows import geocode_insar, h5_prep
-from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
-
 import iscetest
+import numpy as np
+from nisar.workflows import geocode_insar, prepare_insar_hdf5
+from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
+from osgeo import gdal
+
 
 def test_geocode_run():
     '''
@@ -42,7 +41,7 @@ def test_geocode_run():
         geo_tx.tofile('gunw_geogrid.txt', sep=',')
 
         # prepare HDF5 outputs
-        out_paths = h5_prep.run(runconfig.cfg)
+        out_paths = prepare_insar_hdf5.run(runconfig.cfg)
 
         # insert rdr2geo outputs into RUNW HDF5
         rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude'}
@@ -85,7 +84,7 @@ def test_geocode_validate():
             continue
 
         path_gunw = os.path.join(scratch_path, f'{pu}_gunw.h5')
-        product_path = 'science/LSAR/GUNW/grids/frequencyA/interferogram/unwrapped/HH'
+        product_path = 'science/LSAR/GUNW/grids/frequencyA/unwrappedInterferogram/HH'
         with h5py.File(path_gunw, 'r', libver='latest', swmr=True) as h:
             # iterate over axis
             rdr2geo_dict = {'x': 'unwrappedPhase', 'y': 'coherenceMagnitude'}

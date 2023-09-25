@@ -1,14 +1,14 @@
+import os
 import warnings
 
 import journal
-
+import nisar.workflows.helpers as helpers
 from nisar.products.readers import SLC
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
-import nisar.workflows.helpers as helpers
-
 from nisar.workflows.geocode_insar_runconfig import geocode_insar_cfg_check
 from nisar.workflows.ionosphere_runconfig import ionosphere_cfg_check
 from nisar.workflows.troposphere_runconfig import troposphere_delay_check
+
 
 class InsarRunConfig(Geo2rdrRunConfig):
     def __init__(self, args):

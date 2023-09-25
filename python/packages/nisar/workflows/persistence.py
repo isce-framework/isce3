@@ -10,7 +10,7 @@ class Persistence():
     insar_steps = ['baseline', 'solid_earth_tides', 'troposphere', 'geocode', 'ionosphere', 'unwrap',
                    'filter_interferogram', 'crossmul', 'fine_resample', 'rubbersheet',
                    'offsets_product', 'dense_offsets', 'coarse_resample',  'geo2rdr',
-                   'rdr2geo', 'h5_prep', 'bandpass_insar']
+                   'rdr2geo', 'h5_prep', 'prepare_insar_hdf5', 'bandpass_insar']
 
     def __init__(self, logfile_path, restart=False):
         """

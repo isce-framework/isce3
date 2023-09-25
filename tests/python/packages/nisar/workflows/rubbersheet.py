@@ -2,13 +2,11 @@ import argparse
 import os
 
 import h5py
+import iscetest
 import numpy as np
 import numpy.testing as npt
-
-from nisar.workflows import rubbersheet, h5_prep
+from nisar.workflows import prepare_insar_hdf5, rubbersheet
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
-
-import iscetest
 
 
 def test_run_rubbersheet():
@@ -31,10 +29,12 @@ def test_run_rubbersheet():
     runconfig.geocode_common_arg_load()
 
     # Prepare output HDF5 products
-    h5_prep.run(runconfig.cfg)
+    prepare_insar_hdf5.run(runconfig.cfg)
 
     # Run rubbersheet
-    rubbersheet.run(runconfig.cfg)
+    rubbersheet.run(runconfig.cfg,
+                    output_hdf5=\
+                        runconfig.cfg['product_path_group']['sas_output_file'])
 
 
 def test_validate_rubbersheet():

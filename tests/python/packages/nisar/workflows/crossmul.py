@@ -2,13 +2,11 @@ import argparse
 import os
 
 import h5py
+import iscetest
 import numpy as np
 import numpy.testing as npt
-
-from nisar.workflows import crossmul, h5_prep
+from nisar.workflows import crossmul, prepare_insar_hdf5
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
-
-import iscetest
 
 
 def test_crossmul_run():
@@ -30,9 +28,11 @@ def test_crossmul_run():
     runconfig = CrossmulRunConfig(args)
     runconfig.geocode_common_arg_load()
 
-    h5_prep.run(runconfig.cfg)
+    prepare_insar_hdf5.run(runconfig.cfg)
 
-    crossmul.run(runconfig.cfg)
+    crossmul.run(runconfig.cfg,
+                 output_hdf5 = \
+                     runconfig.cfg['product_path_group']['sas_output_file'])
 
 
 def test_crossmul_validate():
