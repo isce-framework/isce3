@@ -18,6 +18,10 @@ bucket_name = 'nisar-dem'
 # Enable exceptions
 gdal.UseExceptions()
 
+# Earth circumference and radius in meters
+EARTH_APPROX_CIRCUMFERENCE = 40075017.
+EARTH_RADIUS = EARTH_APPROX_CIRCUMFERENCE / (2 * np.pi)
+
 
 def cmdLineParse():
     """
@@ -64,7 +68,7 @@ def check_dateline(poly):
 
     xmin, _, xmax, _ = poly.bounds
     # Check dateline crossing
-    if (xmax - xmin) > 180.0:
+    if ((xmax - xmin > 180.0) or (xmin <= 180.0 <= xmax)):
         dateline = shapely.wkt.loads('LINESTRING( 180.0 -90.0, 180.0 90.0)')
 
         # build new polygon with all longitudes between 0 and 360
@@ -285,8 +289,23 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
     input_x_min, xres, _, input_y_max, _, yres = ds.GetGeoTransform()
     length = ds.GetRasterBand(1).YSize
     width = ds.GetRasterBand(1).XSize
-    input_y_min = input_y_max + (length * yres)
-    input_x_max = input_x_min + (width * xres)
+
+    # Declare lambda function to snap min/max X and Y
+    # coordinates over the DEM grid
+    snap_coord = \
+        lambda val, snap, offset, round_func: round_func(
+            float(val - offset) / snap) * snap + offset
+
+    # Snap edge coordinates using the DEM pixel spacing
+    # and starting coordinates. Max values are rounded
+    # using np.ceil and min values are rounded with np.floor
+    x_min = snap_coord(x_min, xres, input_x_min, np.floor)
+    x_max = snap_coord(x_max, xres, input_x_min, np.ceil)
+    y_min = snap_coord(y_min, yres, input_y_max, np.floor)
+    y_max = snap_coord(y_max, yres, input_y_max, np.ceil)
+
+    input_y_min = input_y_max + length * yres
+    input_x_max = input_x_min + width * xres
 
     x_min = max(x_min, input_x_min)
     x_max = min(x_max, input_x_max)
@@ -482,6 +501,80 @@ def check_aws_connection():
         raise ValueError(errmsg)
 
 
+def apply_margin_polygon(polygon, margin_in_km=5):
+    '''
+    Convert margin from km to degrees and
+    apply to polygon
+
+    Parameters
+    ----------
+    polygon: shapely.Geometry.Polygon
+        Bounding polygon covering the area on the
+        ground over which download the DEM
+    margin_in_km: np.float
+        Buffer in km to add to polygon
+
+    Returns
+    ------
+    poly_with_margin: shapely.Geometry.box
+        Bounding box with margin applied
+    '''
+    lon_min, lat_min, lon_max, lat_max = polygon.bounds
+    lat_worst_case = max([lat_min, lat_max])
+
+    # Convert margin from km to degrees
+    lat_margin = margin_km_to_deg(margin_in_km)
+    lon_margin = margin_km_to_longitude_deg(margin_in_km, lat=lat_worst_case)
+
+    if lon_max - lon_min > 180:
+        lon_min, lon_max = lon_max, lon_min
+
+    poly_with_margin = box(lon_min - lon_margin, max([lat_min - lat_margin, -90]),
+                           lon_max + lon_margin, min([lat_max + lat_margin, 90]))
+    return poly_with_margin
+
+
+def margin_km_to_deg(margin_in_km):
+    '''
+    Converts a margin value from km to degrees
+
+    Parameters
+    ----------
+    margin_in_km: np.float
+        Margin in km
+
+    Returns
+    -------
+    margin_in_deg: np.float
+        Margin in degrees
+    '''
+    km_to_deg_at_equator = 1000. / (EARTH_APPROX_CIRCUMFERENCE / 360.)
+    margin_in_deg = margin_in_km * km_to_deg_at_equator
+
+    return margin_in_deg
+
+
+def margin_km_to_longitude_deg(margin_in_km, lat=0):
+    '''
+    Converts margin from km to degrees as a function of
+    latitude
+
+    Parameters
+    ----------
+    margin_in_km: np.float
+        Margin in km
+    lat: np.float
+        Latitude to use for the conversion
+
+    Returns
+    ------
+    delta_lon: np.float
+        Longitude margin as a result of the conversion
+    '''
+    delta_lon = (180 * 1000 * margin_in_km /
+                (np.pi * EARTH_RADIUS * np.cos(np.pi * lat / 180)))
+    return delta_lon
+
 def main(opts):
     """Main script to execute dem staging
 
@@ -505,9 +598,8 @@ def main(opts):
     # Determine polygon based on RSLC info or bbox
     poly = determine_polygon(opts.product, opts.bbox)
 
-    # Add margin to poly. Convert margin from km to degrees
-    margin = opts.margin / 40000 * 360
-    poly = poly.buffer(margin)
+    # Apply margin to the identified polygon in lat/lon
+    poly = apply_margin_polygon(poly, opts.margin)
 
     # Check dateline crossing. Returns list of polygons
     polys = check_dateline(poly)
