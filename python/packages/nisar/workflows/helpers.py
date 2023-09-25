@@ -22,7 +22,8 @@ def deep_update(original, update):
     https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
     '''
     for key, val in update.items():
-        if isinstance(val, dict):
+        if isinstance(val, dict) and original.get(key) is not None:
+            # Only call deep_update() if `original[key] is not empty
             original[key] = deep_update(original.get(key, {}), val)
         else:
             original[key] = val

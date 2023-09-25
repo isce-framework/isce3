@@ -101,6 +101,9 @@ class RunConfig:
         else:
             self.args.restart = True
 
+        if self.workflow_name in ['gcov', 'gslc']:
+            return
+
         # remove default frequency(s) if not chosen by user
         default_freqs = self.cfg['processing']['input_subset']['list_of_frequencies']
         user_freqs = self.user['processing']['input_subset']['list_of_frequencies'].keys()
@@ -170,6 +173,13 @@ class RunConfig:
 
         slc = SLC(hdf5file=input_path)
 
+        # if freq_pols is empty, process all frequencies and polarizations
+        if freq_pols is None:
+            self.cfg['processing']['input_subset']['list_of_frequencies'] = \
+                slc.polarizations
+            return
+
+        # otherwise, check contents of freq_pols
         for freq in freq_pols.keys():
             if freq not in slc.frequencies:
                 err_str = f"Frequency {freq} invalid; not found in source frequencies."
@@ -203,6 +213,7 @@ class RunConfig:
 
         # make geogrids for each frequency
         geogrids = {}
+
         has_wrapped_igram_geogrids = self.workflow_name not in ['gcov', 'gslc']
         wrapped_igram_geogrids = {}
 

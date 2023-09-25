@@ -85,15 +85,24 @@ runconfig:
         processing:
             input_subset:
                 # Frequencies and polarizations to process
+                # Keys for frequency A and B followed by a list of polarizations to process:
+                #     {frequency}: [polarizations]
+                #
+                # - If the entire field is left empty, all available frequencies will be processed.
+                # - Otherwise, only frequencies listed (i.e, 'A' and/or 'B') will be processed.
+                # - If the [polarizations] list is empty, all available polarizations 
+                # for given frequency will be processed
+                #
+                # Example 1:
+                #     list_of_frequencies:  # (empty) process all polarizations from all
+                #                           # available frequencies
+                # Example 2:
+                #     list_of_frequencies:
+                #         A: [HH, HV]  # process only polarizations HH and HV from frequency A
+                #         B:           # process all polarizations from frequency B
+                #
+                #
                 list_of_frequencies:
-                    # Keys for frequency A and B followed by a list of polarizations to process:
-                    #     {frequency}: [polarizations]
-                    #
-                    # - Only frequencies listed (i.e, 'A' and/or 'B') will be processed.
-                    # - If the [polarizations] list is empty, all available polarizations 
-                    # for given frequency will be processed
-                    A:
-                    B:
 
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:

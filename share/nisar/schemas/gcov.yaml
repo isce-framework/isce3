@@ -69,20 +69,7 @@ runconfig:
         #adt section - isce3 + pyre workflow
         processing:
             # Mechanism to select frequencies and polarizations
-            input_subset:
-                # List of frequencies to process. Default empty representing all
-                list_of_frequencies:
-                    # List of polarization channels to process. Default empty representing all
-                    A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
-                    B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
-
-                # Compute cross-elements (True) or diagonals only (False). Default: False
-                fullcovariance: bool(required=False)
-
-                # Perform polarimetric symmetrization. It's only applicable
-                # for quad-polarimetric datasets (i.e. datasets that include
-                # HV and VH), otherwise, the flag is ignored.
-                symmetrize_cross_pol_channels:  bool(required=False)
+            input_subset: include('input_subset_options', required=False)
 
             # DEM download options: checked only if internet access is available
             dem_download: include('dem_download_options', required=False)
@@ -116,6 +103,23 @@ runconfig:
         logging: include('log_nfo', required=False)
 
 ---
+input_subset_options:
+    # List of frequencies to process. Default empty representing all
+    list_of_frequencies: include('list_of_frequencies_options', required=False)
+
+    # Compute cross-elements (True) or diagonals only (False). Default: False
+    fullcovariance: bool(required=False)
+
+    # Perform polarimetric symmetrization. It's only applicable
+    # for quad-polarimetric datasets (i.e. datasets that include
+    # HV and VH), otherwise, the flag is ignored.
+    symmetrize_cross_pol_channels:  bool(required=False)
+
+list_of_frequencies_options:
+    # List of polarization channels to process. Default empty representing all
+    A: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+    B: any(list(str(min=2, max=2), min=1, max=4), str(min=2, max=2), null(), required=False)
+
 radar_grid_cubes_options:
 
     # List of heights in meters
