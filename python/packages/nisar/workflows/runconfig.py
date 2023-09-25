@@ -203,6 +203,7 @@ class RunConfig:
 
         # make geogrids for each frequency
         geogrids = {}
+        has_wrapped_igram_geogrids = self.workflow_name not in ['gcov', 'gslc']
         wrapped_igram_geogrids = {}
 
         # for each frequency check source RF polarization values and make geogrids
@@ -210,10 +211,15 @@ class RunConfig:
         for freq in freq_pols.keys():
             # build geogrids only if pols not None
             geogrids[freq] = geogrid.create(self.cfg, self.workflow_name, freq)
-            wrapped_igram_geogrids[freq] = geogrid.create(self.cfg, self.workflow_name, freq,
-                                                          is_geo_wrapped_igram=True)
+            if has_wrapped_igram_geogrids:
+                wrapped_igram_geogrids[freq] = geogrid.create(
+                    self.cfg, self.workflow_name, freq,
+                    is_geo_wrapped_igram=True)
+
         # place geogrids in cfg for later processing
         self.cfg['processing']['geocode']['geogrids'] = geogrids
+        if not has_wrapped_igram_geogrids:
+            return
         self.cfg['processing']['geocode']['wrapped_igram_geogrids'] = wrapped_igram_geogrids
 
     def prep_cubes_geocode_cfg(self):
