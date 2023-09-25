@@ -512,9 +512,9 @@ void geocodeSlc(
                     uncorrectedSRange(blockLine, pixel) = srange;
 
                 // apply timing corrections
-                // if default LUT2d used for both azimuth time and slant range
-                // corrections, uncorrected slant range and corrected slant
-                // range will be the same
+                // If default LUT2d is passed in for either azimuth time and
+                // slant range corrections, eval() returns 0 so no corrections
+                // are applied.
                 if (azTimeCorrection.contains(aztime, srange)) {
                     const auto aztimeCor = azTimeCorrection.eval(aztime,
                                                                  srange);

@@ -363,7 +363,7 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type
     grid_zero_doppler = isce3.core.LUT2d()
 
     # The native-Doppler LUT bounds error is turned off to
-    # computer cubes values outside radar-grid boundaries
+    # compute cubes values outside radar-grid boundaries
     native_doppler.bounds_error = False
     add_radar_grid_cubes_to_hdf5(dst_h5, cube_group_path,
                                  cube_geogrid_param, radar_grid_cubes_heights,
@@ -742,15 +742,13 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     geocode_iono_bool = True
                     input_hdf5_iono = input_hdf5
                     if is_iono_method_sideband and freq == 'A':
-                        '''
-                        ionosphere_phase_screen from main_side_band or
-                        main_diff_ms_band are computed on radargrid of frequencyB.
-                        The ionosphere_phase_screen is geocoded on geogrid of
-                        frequencyA. Instead of geocoding ionosphere in the RUNW
-                        standard product (frequencyA), geocode the frequencyB in
-                        scratch/ionosphere/method/RUNW.h5 to avoid additional
-                        interpolation.
-                        '''
+                        # ionosphere_phase_screen from main_side_band or
+                        # main_diff_ms_band are computed on radargrid of frequencyB.
+                        # The ionosphere_phase_screen is geocoded on geogrid of
+                        # frequencyA. Instead of geocoding ionosphere in the RUNW
+                        # standard product (frequencyA), geocode the frequencyB in
+                        # scratch/ionosphere/method/RUNW.h5 to avoid additional
+                        # interpolation.
                         radar_grid_iono = slc.getRadarGrid('B')
                         iono_sideband_bool = True
                         if az_looks > 1 or rg_looks > 1:
@@ -879,12 +877,20 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
 
-def gpu_geocode_rasters(geocoded_dataset_flags, desired_geo_dataset_names,
-                        interpolation_methods, invalid_values,
-                        freq, pol_list,
-                        geogrid, rdr_geometry, dem_raster, lines_per_block,
-                        input_hdf5, dst_h5,
-                        offset_layers=None, scratch_path='',
+def gpu_geocode_rasters(geocoded_dataset_flags,
+                        desired_geo_dataset_names,
+                        interpolation_methods,
+                        invalid_values,
+                        freq,
+                        pol_list,
+                        geogrid,
+                        rdr_geometry,
+                        dem_raster,
+                        lines_per_block,
+                        input_hdf5,
+                        dst_h5,
+                        offset_layers=None,
+                        scratch_path='',
                         compute_stats=True,
                         input_product_type=InputProduct.RUNW,
                         iono_sideband=False):
@@ -1309,9 +1315,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
 
 if __name__ == "__main__":
-    """
-    run geocode from command line
-    """
+    # run geocode from command line
 
     # load command line args
     geocode_insar_parser = YamlArgparse()

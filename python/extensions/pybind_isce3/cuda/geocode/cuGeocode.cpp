@@ -43,6 +43,9 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
             py::arg("raster_datatypes"),
             py::arg("invalid_values"),
             py::arg("dem_raster"),
+            py::arg("native_doppler") = isce3::core::LUT2d<double>(),
+            py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
+            py::arg("srange_correction") = isce3::core::LUT2d<double>(),
             py::arg("dem_interp_method") =
                     isce3::core::BIQUINTIC_METHOD,
             py::arg("threshold") = g2r_defaults.threshold,
@@ -65,6 +68,15 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
                 Invalid values for each geocoded raster
             dem_raster: isce3.io.Raster
                 DEM used to calculate radar grid indices
+            native_doppler: isce3.core.LUT2d
+                Doppler centroid of data associated with radar grid, in Hz, as
+                fuction of azimuth and range
+            az_time_correction: isce3.core.LUT2d
+                geo2rdr azimuth additive correction, in seconds, as a function
+                of azimuth and range
+            srange_correction: isce3.core.LUT2d
+                geo2rdr slant range additive correction, in seconds, as a
+                function of azimuth and range
             dem_interp_method: isce3.core.DataInterpMethod
                 Interpolation method used by DEM interpolator. Default
                 BIQUINTIC_METHOD

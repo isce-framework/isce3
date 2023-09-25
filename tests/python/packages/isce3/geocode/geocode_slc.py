@@ -532,7 +532,6 @@ def validate_slc_raster(unit_test_params, mode, raster_layer=1):
         test_phase_arr, test_mask = \
             _get_raster_array_and_mask(output_path, raster_layer, np.angle)
 
-
         # use geotransform to make lat/lon mesh
         ny, nx = test_phase_arr.shape
         meshx, meshy = np.meshgrid(np.arange(nx), np.arange(ny))

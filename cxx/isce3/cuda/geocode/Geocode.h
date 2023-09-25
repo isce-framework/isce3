@@ -11,15 +11,20 @@
 #include <thrust/device_vector.h>
 
 #include <isce3/container/RadarGeometry.h>
+#include <isce3/cuda/container/forward.h>
 #include <isce3/cuda/core/InterpolatorHandle.h>
 #include <isce3/cuda/core/ProjectionBaseHandle.h>
 #include <isce3/cuda/core/gpuInterpolator.h>
+#include <isce3/cuda/core/gpuLUT2d.h>
 #include <isce3/cuda/core/gpuProjections.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
 
 namespace isce3::cuda::geocode {
+
+template<typename T>
+using DeviceLUT2d = isce3::cuda::core::gpuLUT2d<T>;
 
 /* light weight radar grid container */
 struct RadarGridParamsLite {
@@ -83,6 +88,15 @@ public:
      *                                  initialize templated interpolators.
      * \param[in] invalid_values        Invalid values for each raster
      * \param[in] dem_raster            DEM used to calculate radar grid indices
+     * \param[in] nativeDoppler         Doppler centroid of data in Hz associated
+     *                                  radar grid, as a function azimuth and
+     *                                  range
+     * \param[in] azTimeCorrection      geo2rdr azimuth additive correction, in
+     *                                  seconds, as a function of azimuth and
+     *                                  range
+     * \param[in] sRangeCorrection      geo2rdr slant range additive
+     *                                  correction, in seconds, as a function
+     *                                  of azimuth and range
      * \param[in] dem_interp_method     DEMinterpolation method
      * \param[in] threshold             Convergence threshold for geo2rdr
      * \param[in] maxiter               Maximum iterations for geo2rdr
@@ -96,15 +110,16 @@ public:
             const std::vector<GDALDataType>& raster_datatypes,
             const std::vector<double>& invalid_values,
             Raster& dem_raster,
+            const isce3::core::LUT2d<double>& hostNativeDoppler = {},
+            const isce3::core::LUT2d<double>& hostAzTimeCorrection = {},
+            const isce3::core::LUT2d<double>& hostSRangeCorrection = {},
             const isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::BIQUINTIC_METHOD,
-            const double threshold = 1e-8, const int maxiter = 50,
+            const double threshold = 1e-8,
+            const int maxiter = 50,
             const double dr = 10);
 
 private:
-    // number of lines to be processed in a block
-    size_t _lines_per_block;
-
     // total number of blocks necessary to geocoding a provided geogrid
     size_t _n_blocks;
 
@@ -156,7 +171,8 @@ private:
      * \param[in] raster_datatypes      GDAL type of each raster represented by
      *                                  equivalent int. Necessary to correctly
      *                                  initialize templated interpolators.
-     * \param[in] invalid_values        Invalid values for each raster
+     * \param[in] invalid_values_double Invalid values for each raster as double, to
+                                        be converted later to the correct type
      */
     void ensureRasterConsistency(
             const std::vector<std::reference_wrapper<isce3::io::Raster>>& output_rasters,
@@ -173,14 +189,29 @@ private:
      * \param[in] block_number      Index of block where radar grid coordinates
      *                              coordinates will be calculated and set
      * \param[in] dem_raster        DEM used to calculate radar grid indices
-     * \param[in] _dem_interp_method    DEMinterpolation method
-     * \param[in] _geo2rdr_params       Parameters used by geo2rdr to compute
+     * \param[in] dem_interp_method     DEMinterpolation method
+     * \param[in] dev_rdr_geom          Radar geometry describing input raster
+     *                                  stored on-device
+     * \param[in] geo2rdr_params        Parameters used by geo2rdr to compute
      *                                  geogrids radar grid coordinates
+     * \param[in] nativeDoppler         Doppler centroid of data in Hz associated
+     *                                  radar grid, as a function azimuth and
+     *                                  range
+     * \param[in] azTimeCorrection      geo2rdr azimuth additive correction, in
+     *                                  seconds, as a function of azimuth and
+     *                                  range
+     * \param[in] sRangeCorrection      geo2rdr slant range additive
+     *                                  correction, in seconds, as a function
+     *                                  of azimuth and range
      */
     void setBlockRdrCoordGrid(const size_t block_number,
             Raster& dem_raster,
-            const isce3::core::dataInterpMethod _dem_interp_method,
-            const isce3::geometry::detail::Geo2RdrParams _geo2rdr_params);
+            const isce3::core::dataInterpMethod dem_interp_method,
+            const isce3::cuda::container::RadarGeometry& dev_rdr_geom,
+            const isce3::geometry::detail::Geo2RdrParams geo2rdr_params,
+            const DeviceLUT2d<double>& nativeDoppler,
+            const DeviceLUT2d<double>& azTimeCorrection,
+            const DeviceLUT2d<double>& sRangeCorrection);
 
     /** Geocode a block of raster according to grid last set in
      *  setBlockRdrCoordGrid. Only operates on 1st raster band of input/output
