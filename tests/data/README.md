@@ -437,6 +437,13 @@ The respective REE RDF (config) file is *hrdf_ree_short.rdf* set up on *09/18/20
   2. ERA-5_2012_11_05_T22_48_18_38N_40N_124W_122W.nc
   ```
 
+## Calibration
+
+- **rslc_calibration.yaml**
+
+  An example YAML file input to focus.py that specifies parameters needed to
+  produce calibrated RSLC products.
+
 ## Ampcor
 
 - **data/ampcor/accuracy-testdata/ovs128-rho0.8/**

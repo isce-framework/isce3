@@ -2,10 +2,11 @@
 #include <pybind11/complex.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include <valarray>
 #include <isce3/core/Interp1d.h>
 #include <isce3/core/Kernels.h>
+#include <isce3/core/Linspace.h>
 #include <isce3/except/Error.h>
+#include <isce3/math/complexOperations.h>
 
 namespace py = pybind11;
 
@@ -24,11 +25,15 @@ interp_duckt(const Kernel<TK> & kernel, py::buffer_info & info, py::object t)
     }
     else if (py::isinstance<py::array_t<double>>(t)) {
         auto ta = py::array_t<double>(t).unchecked<1>();
-        std::valarray<TD> out(ta.size());
+        py::array_t<TD> out(ta.size());
+        auto outbuf = out.mutable_data();
+        // OpenMP here seems to break Python (trampoline) kernels, maybe due
+        // to contention acquiring the GIL.  Consider deleting trampoline
+        // feature if high performance interp1d is desired from Python.
         for (size_t i=0; i < ta.size(); ++i) {
-            out[i] = interp1d(kernel, data, n, stride, ta(i));
+            outbuf[i] = interp1d(kernel, data, n, stride, ta(i));
         }
-        return py::cast(out, py::return_value_policy::take_ownership);
+        return out;
     }
     throw RuntimeError(ISCE_SRCINFO(),
         "interp1d expects time is float or numpy.float64 array");

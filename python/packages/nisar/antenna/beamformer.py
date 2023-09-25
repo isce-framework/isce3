@@ -9,6 +9,11 @@ from nisar.antenna import CalPath
 from isce3.geometry import DEMInterpolator
 
 
+# Default for number of pulses to skip in geomtery computation from antenna
+# frame to slant range for the sake of speed-up.
+DEFAULT_NUM_PULSE_SKIP = 12
+
+
 class ElevationBeamformer(ABC):
     """Abstract base class for general (Transmit or Receiver) beamformers in
     Elevation (EL) direction.
@@ -21,15 +26,7 @@ class ElevationBeamformer(ABC):
         Platform attitude data for an interval spanning the datatake.
     dem_interp : isce3.geometry.DEMInterpolator
         Digital elevation model (DEM) of the imaged surface.
-    el_ant_info : collections.namedtuple
-        Info about antenna multi-channel elevation-cut patterns
-        copol_pattern : np.ndarray(complex)
-            2-D array of complex multi-channel co-pol patterns of
-            shape (beams, el angles)
-        angle : np.ndarray(float)
-            Elevation angles in (rad)
-        cut_angle : float
-            AZ angle around which EL-cut patterns are provided in (rad)
+    el_ant_info : nisar.products.readers.antenna.AntPatCut
     trm_info: either nisar.antenna.TxTrmInfo or nisar.antenna.RxTrmInfo
         data class that contains all relevant attributes to
         compute weights needed to form active pattern in EL.
@@ -40,13 +37,18 @@ class ElevationBeamformer(ABC):
         (Input objects will not be modified.)
     norm_weight : bool, default=False
         Whether or not power normalize weights.
-    interp_method : str, default='linear'
-        Interpolation method for final resampling of patterns in slant range.
-        It shall be one the values of `kind` in scipy.interpolate.interp1d.
     num_pulse_skip: int, default=12
         Number of pulses to skip in geomtery computation from antenna frame
         to slant range for the sake of speed-up. The default value is around
         the number of pulses in the air for mid swath of NISAR orbit.
+    rg_spacing_min: float, optional
+        Min slant range spacing in (m) used to compute EL-cut antenna patterns
+        as a function of range via interpolation. Antenna pattern for slant
+        ranges finer than this will have repeated values like a step function.
+        The main purpose of this parameter is to speed up the antenna pattern
+        formation for large and high resolution slant range vectors.
+        This value has no effect if it is larger than spacing of input slant
+        range vector.
 
     Attributes
     ----------
@@ -63,8 +65,9 @@ class ElevationBeamformer(ABC):
     """
 
     def __init__(self, orbit, attitude, dem_interp, el_ant_info, trm_info,
-                 ref_epoch, norm_weight=False, interp_method='linear',
-                 num_pulse_skip=12):
+                 ref_epoch, norm_weight=False,
+                 num_pulse_skip=DEFAULT_NUM_PULSE_SKIP,
+                 rg_spacing_min=None):
         # check ref epoch of orbit/attitude
         if orbit.reference_epoch != ref_epoch:
             orbit = orbit.copy()
@@ -80,8 +83,8 @@ class ElevationBeamformer(ABC):
         self.trm_info = trm_info
         self.ref_epoch = ref_epoch
         self.norm_weight = norm_weight
-        self.interp_method = interp_method
         self.num_pulse_skip = num_pulse_skip
+        self.rg_spacing_min = rg_spacing_min
 
         # pre-computed read-only attributes
         self._weights = self._compute_weights()
@@ -203,15 +206,7 @@ class TxBMF(ElevationBeamformer):
     orbit : isce3.core.Orbit
     attitude : isce3.core.Attitude
     dem_interp : isce3.geometry.DEMInterpolator
-    el_ant_info : collections.namedtuple
-        Info about antenna multi-channel elevation-cut patterns
-        copol_pattern : np.ndarray(complex)
-            2-D array of complex multi-channel co-pol patterns of
-            shape (beams, el angles)
-        angle : np.ndarray(float)
-            Elevation angles in (rad)
-        cut_angle : float
-            AZ angle around which EL-cut patterns are provided in (rad)
+    el_ant_info : nisar.products.readers.antenna.AntPatCut
     trm_info : nisar.antenna.TxTrmInfo
         data class that contains all relevant attributes needed to
         compute Tx weights needed to form active TX pattern
@@ -221,13 +216,18 @@ class TxBMF(ElevationBeamformer):
         they will be adjusted to this reference.
     norm_weight : bool, default=False
         Whether or not power normalize TX weights.
-    interp_method : str, default='linear'
-        Interpolation method for final resampling of patterns in slant range.
-        It shall be one of the values of `kind` in scipy.interpolate.interp1d.
     num_pulse_skip: int, default=12
         Number of pulses to skip in geomtery computation from antenna frame
         to slant range for the sake of speed-up. The default value is around
         the number of pulses in the air for mid swath of NISAR orbit.
+    rg_spacing_min: float, optional
+        Min slant range spacing in (m) used to compute EL-cut antenna patterns
+        as a function of range via interpolation. Antenna pattern for slant
+        ranges finer than this will have repeated values like a step function.
+        The main purpose of this parameter is to speed up the antenna pattern
+        formation for large and high resolution slant range vectors.
+        This value has no effect if it is larger than spacing of input slant
+        range vector.
 
     Attributes
     ----------
@@ -245,7 +245,7 @@ class TxBMF(ElevationBeamformer):
     """
 
     def form_pattern(self, pulse_time, slant_range, channel_adj_factors=None,
-                     is_nearest=False):
+                     nearest=False):
         """
         Form transmit beamformed (BMF) pattern, as a function
         of slant range @ each azimuth pulse time.
@@ -264,8 +264,8 @@ class TxBMF(ElevationBeamformer):
             channel. The size is total number of TX channels. If None,
             no correction will be applied to TX weights.
             Note that these factors will NOT be peak/power normalized.
-        is_nearest: bool, default=False
-            Whether to get neartest TX-TRM pulse index for a desired pulse
+        nearest: bool, default=False
+            Whether to get nearest TX-TRM pulse index for a desired pulse
             time. If False, the index search operation will be "floor".
             Otherwise, it will be "nearest".
 
@@ -314,9 +314,8 @@ class TxBMF(ElevationBeamformer):
             if np.isclose(abs(cor_fact).max(), 0):
                 raise ValueError('"channel_adj_factors" are zeros for all '
                                  'active TX channels!')
-            tx_weights = self.weights * cor_fact
         else:
-            tx_weights = self.weights
+            cor_fact = 1.0
 
         # get the antenna EL patterns for active TX channels
         ant_pat_el = self.el_ant_info.copol_pattern[self.active_channel_idx]
@@ -326,7 +325,11 @@ class TxBMF(ElevationBeamformer):
 
         # get slant range vector from its Linspace to be used in the
         # interpolation
-        sr = np.asarray(slant_range)
+        if self.rg_spacing_min is None:
+            nrgb_skip = 1
+        else:
+            nrgb_skip = max(1, int(self.rg_spacing_min / slant_range.spacing))
+        sr = np.asarray(slant_range[::nrgb_skip])
 
         # loop over pulses
         for pp, tm in enumerate(pulse_time):
@@ -343,26 +346,13 @@ class TxBMF(ElevationBeamformer):
             # phase/amp gradient is ignored.
             # On the other hand, in nearest case, the closest TRM time will be
             # picked for a desired pulse time. That is either "i" or "i+1".
-
-            # Floor operation
-            idx_right = bisect.bisect_right(self.trm_info.time, tm)
-            idx_pulse = idx_right - 1
-            # Nearest opration
-            if is_nearest:
-                if (idx_right < self.trm_info.time.size and
-                    ((self.trm_info.time[idx_right] - tm) <
-                     (tm - self.trm_info.time[idx_pulse]))):
-                    idx_pulse = idx_right
-            else:
-                # Check for nano-second resolution time offset at the right
-                # side for "Floor" case to avoid precision issue assuming
-                # slow-time tags are within one nano-second resolution!
-                # That is, the acceptable max abs error is "0.5 nano second".
-                if (self.trm_info.time[idx_right] - tm) <= atol_time_err:
-                    idx_pulse = idx_right
+            idx_pulse = get_pulse_index(
+                self.trm_info.time, tm, nearest=nearest, eps=atol_time_err
+            )
 
             # form TX pattern in antenna EL angle domain
-            tx_pat_el = tx_weights[idx_pulse] @ ant_pat_el
+            tx_pat_el = np.matmul(
+                self.weights[idx_pulse] * cor_fact, ant_pat_el)
 
             # Compute the respective slant range for beamformed antenna pattern
             # Simply calculate slant range for every few pulses where
@@ -370,11 +360,12 @@ class TxBMF(ElevationBeamformer):
             if (pp % self.num_pulse_skip == 0):
                 sr_ant = self._elaz2slantrange(tm)
 
-            # form TX BMF pattern at desird slant ranges
-            func_interp = interp1d(sr_ant, tx_pat_el, kind=self.interp_method,
-                                   fill_value='extrapolate', copy=False,
-                                   assume_sorted=True)
-            tx_pat[pp] = func_interp(sr)
+            # form TX BMF pattern at desired slant ranges
+            tx_pat[pp, ::nrgb_skip] = np.interp(sr, sr_ant, tx_pat_el)
+
+            if nrgb_skip > 1:
+                tx_pat[pp] = tx_pat[pp, ::nrgb_skip].repeat(
+                    nrgb_skip)[:slant_range.size]
 
         return tx_pat
 
@@ -422,15 +413,7 @@ class RxDBF(ElevationBeamformer):
     orbit : isce3.core.Orbit
     attitude : isce3.core.Attitude
     dem_interp : isce3.geometry.DEMInterpolator
-    el_ant_info : collections.namedtuple
-        Info about antenna multi-channel elevation-cut patterns
-        copol_pattern : np.ndarray(complex)
-            2-D array of complex multi-channel co-pol patterns of
-            shape (beams, el angles)
-        angle : np.ndarray(float)
-            Elevation angles in (rad)
-        cut_angle : float
-            AZ angle around which EL-cut patterns are provided in (rad)
+    el_ant_info : nisar.products.readers.antenna.AntPatCut
     trm_info : nisar.antenna.RxTrmInfo
         data class that contains all relevant attributes needed to
         compute Rx weights needed to form active RX pattern
@@ -440,9 +423,6 @@ class RxDBF(ElevationBeamformer):
         they will be adjusted to this reference.
     norm_weight : bool, default=False
         Whether or not power normalize RX weights.
-    interp_method : str, default='linear'
-        Interpolation method for final resampling of patterns in slant range.
-        It shall be one of vlues of the `kind` in scipy.interpolate.interp1d.
     num_pulse_skip: int, default=12
         Number of pulses to skip in geomtery computation from antenna frame
         to slant range for the sake of speed-up. The default value is around
@@ -450,6 +430,22 @@ class RxDBF(ElevationBeamformer):
     el_ofs_dbf : float, default=0.0
         Elevation angle offset (in radians) used in adjusting angle indexes
         prior to grabing DBF coeffs from AC table in DBF process.
+    rg_spacing_min: float, optional
+        Min slant range spacing in (m) used to compute EL-cut antenna patterns
+        as a function of range via interpolation. Antenna pattern for slant
+        ranges finer than this will have repeated values like a step function.
+        The main purpose of this parameter is to speed up the antenna pattern
+        formation for large and high resolution slant range vectors.
+        This value has no effect if it is larger than spacing of input slant
+        range vector.
+    el_spacing_min: float, default=8.72665e-5
+        Min EL angle spacing in (radians) used to determine min slant range
+        spacing if it is not provided via `rg_spacing_min` over entire swath.
+        The default is around 5 mdeg where antenna pattern magnitude and phase
+        vairations expected to be less than 0.05 dB and 0.25 deg, respectively.
+        If both this parameter and the `rg_spacing_min` are set to None, all
+        input slant range values will be included in the interpolation process
+        of the antenna beam formation.
 
     Attributes
     ----------
@@ -471,11 +467,34 @@ class RxDBF(ElevationBeamformer):
     """
 
     def __init__(self, orbit, attitude, dem_interp, el_ant_info, trm_info,
-                 ref_epoch, norm_weight=False, interp_method='linear',
-                 num_pulse_skip=12, el_ofs_dbf=0.0):
+                 ref_epoch, norm_weight=False,
+                 num_pulse_skip=DEFAULT_NUM_PULSE_SKIP,
+                 el_ofs_dbf=0.0, rg_spacing_min=None,
+                 el_spacing_min=8.72665e-5):
         self.el_ofs_dbf = el_ofs_dbf
+        self.el_spacing_min = el_spacing_min
         super().__init__(orbit, attitude, dem_interp, el_ant_info, trm_info,
-                         ref_epoch, norm_weight, interp_method, num_pulse_skip)
+                         ref_epoch, norm_weight, num_pulse_skip,
+                         rg_spacing_min)
+
+        # determine min range spacing if is None based on min EL spacing
+        # at mid pulsetime per ref DEM
+        if rg_spacing_min is None:
+            if el_spacing_min is not None:
+                azt_mid = np.mean(self.trm_info.time)
+                ela_min = trm_info.el_ang_dbf[0, 0]
+
+                pos_ecef, vel_ecef = self.orbit.interpolate(azt_mid)
+                q_ant2ecef = self.attitude.interpolate(azt_mid)
+                sr, _, _ = ant2rgdop(
+                    [ela_min, ela_min - el_spacing_min],
+                    self.el_ant_info.cut_angle,
+                    pos_ecef,
+                    vel_ecef,
+                    q_ant2ecef,
+                    1.0
+                )
+                self.rg_spacing_min = abs(np.diff(sr))
 
     @property
     def slant_range_dbf(self):
@@ -538,15 +557,19 @@ class RxDBF(ElevationBeamformer):
 
         # get slant range vector from its Linspace to be used in the
         # interpolation
-        sr = np.asarray(slant_range)
+        if self.rg_spacing_min is None:
+            nrgb_skip = 1
+        else:
+            nrgb_skip = max(1, int(self.rg_spacing_min / slant_range.spacing))
+
+        sr = np.asarray(slant_range[::nrgb_skip])
 
         # resample RX weightings to the output slant range
         # use simply nearest neighbor given RX weights are very finely sampled!
-        func_interp_wgt = interp1d(self.slant_range_dbf, self.weights,
-                                   kind='nearest', fill_value='extrapolate',
-                                   copy=False, assume_sorted=True, axis=1)
-        # RX weights with shape active beams by output slant ranges
-        rx_wgt = func_interp_wgt(sr)
+        idx_sr = np.rint((sr - self.slant_range_dbf.first) /
+                         self.slant_range_dbf.spacing)
+        idx_sr = np.clip(idx_sr.astype(int), 0, self.slant_range_dbf.size - 1)
+        rx_wgt = self.weights[:, idx_sr]
 
         # apply correction/fudge factor to Rx weights along active channels
         # if provided
@@ -564,6 +587,7 @@ class RxDBF(ElevationBeamformer):
 
         # initialize the RX DBF pattern
         rx_pat = np.zeros((len(pulse_time), slant_range.size), dtype='complex')
+        num_active_chanl = len(self.active_channel_idx)
 
         # loop over pulses
         for pp, tm in enumerate(pulse_time):
@@ -572,15 +596,18 @@ class RxDBF(ElevationBeamformer):
             # S/C pos/vel and DEM barely changes. This speeds up the process!
             if (pp % self.num_pulse_skip == 0):
                 sr_ant = self._elaz2slantrange(tm)
+                # form the RX DBF pattern for output slant ranges per pulse
+                # Products of weights and antenna patterns, summed over
+                # channels.
+                x = 0
+                for cc in range(num_active_chanl):
+                    x += np.interp(
+                        sr, sr_ant, ant_pat_el[cc, :]) * rx_wgt[cc, :]
 
-            # resample EL-cut antenna patterns to the output slant range
-            func_interp_ant = interp1d(sr_ant, ant_pat_el,
-                                       kind=self.interp_method,
-                                       fill_value='extrapolate', axis=1,
-                                       copy=False, assume_sorted=True)
+                rx_pat[pp] = x.repeat(nrgb_skip)[:slant_range.size]
 
-            # form the RX DBF pattern for output slant ranges per pulse
-            rx_pat[pp] = (func_interp_ant(sr) * rx_wgt).sum(axis=0)
+            else:
+                rx_pat[pp] = rx_pat[pp - 1]
 
         return rx_pat
 
@@ -821,7 +848,7 @@ def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
         idx_ang = np.searchsorted(
             rx_trm_info.ta_dbf_switch[c_idx], np.arange(
                 wd_dbf[c_idx], wd_dbf[c_idx] + wl_dbf[c_idx])
-            )
+        )
         # adjust index to angle-coeffs table per EL angle offset if necessary
         if idx_ofs[cc] != 0:
             idx_ang += idx_ofs[cc]
@@ -850,3 +877,47 @@ def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
     sr_dbf = Linspace(sr_first, sr_spacing, num_rgb_dbf)
 
     return rx_weights, sr_dbf
+
+
+def get_pulse_index(pulse_times, t, nearest=False, eps=5e-10):
+    """
+    Get the index of `pulse_times` corresponding to time `t`.
+
+    Parameters
+    ----------
+    pulse_times : numpy.ndarray
+        Sorted (ascending) vector of pulse time tags.
+    t : float
+        Time tag of interest.
+    nearest : bool
+        For `nearest=False` and `pulse_times[i] <= t < pulse_times[i+1]` then
+        `i` will be returned (e.g., a floor operation).  If `nearest=True` then
+        return the closer of the two (e.g., a round operation).
+    eps : float
+        Tolerance for snapping time tags, e.g., when
+            `abs(pulse_times[i] - t) <= eps`
+        then return `i`.  This accomodates floating point precision issues like
+        `n * pri != n / prf`.
+
+    Returns
+    -------
+    index : int
+        Index into pulse_times vector.  Note that value will be clamped to
+        [0, len(pulse_times)) for values of `t` beyond extrema of pulse_times.
+    """
+    n = len(pulse_times)
+    if n < 2:
+        return 0
+    # Find i such that ether pulse_times[i] <= t < pulse_times[i+1] or if t is
+    # out of bounds then (i, i+1) are the first two or last two indices.
+    idx_right = bisect.bisect_right(pulse_times, t)
+    i = max(1, min(idx_right, n - 1)) - 1
+    # Compute distances from endpoints.
+    dt_left = abs(pulse_times[i] - t)
+    dt_right = abs(pulse_times[i + 1] - t)
+    # Handle rounding and snap options.
+    if ((nearest and (dt_right < dt_left))
+            or (dt_right <= eps)
+            or (t > pulse_times[-1])):
+        return i + 1
+    return i

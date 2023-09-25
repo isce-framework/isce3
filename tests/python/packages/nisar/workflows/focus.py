@@ -14,8 +14,11 @@ def get_test_cfg():
         return str(Path(iscetest.data) / "focus" / fname)
     cfg = focus.load_config(locate("runconfig.yaml"))
     cfg.runconfig.groups.input_file_group.input_file_path = [locate("REE_L0B_out17.h5")]
-    cfg.runconfig.groups.dynamic_ancillary_file_group.orbit = locate("orbit.xml")
-    cfg.runconfig.groups.dynamic_ancillary_file_group.pointing = locate("attitude.xml")
+    aux = cfg.runconfig.groups.dynamic_ancillary_file_group
+    aux.orbit = locate("orbit.xml")
+    aux.pointing = locate("attitude.xml")
+    aux.internal_calibration = locate("REE_INSTRUMENT_TABLE.h5")
+    aux.antenna_pattern = locate("REE_ANTPAT_CUTS_DATA.h5")
     return cfg
 
 

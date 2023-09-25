@@ -44,6 +44,7 @@ void addbinding(py::class_<DateTime> & pyDateTime)
 {
     pyDateTime
         .def(py::init<>())
+        .def(py::init<DateTime>())
         .def(py::init<double>(), py::arg("ord"), "Construct from ordinal")
         .def(py::init<int, int, int>(),
                 py::arg("year"),

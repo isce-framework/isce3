@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 from bisect import bisect_left, bisect_right
 from functools import reduce
 import h5py
 import json
 import logging
 import os
+from nisar.antenna import AntennaPattern
 from nisar.mixed_mode import (PolChannel, PolChannelSet, Band,
     find_overlapping_channel)
+from nisar.products.readers.antenna import AntennaParser
+from nisar.products.readers.instrument import InstrumentParser
 from nisar.products.readers.Raw import Raw, open_rrsd
+from nisar.products.readers.rslc_cal import (RslcCalibration,
+    parse_rslc_calibration, get_scale_and_delay, check_cal_validity_dates)
 from nisar.products.writers import SLC
 from isce3.core.types import to_complex32, read_c4_dataset_as_c8
 import nisar
@@ -343,7 +349,8 @@ def make_doppler(cfg: Struct, epoch: Optional[DateTime] = None):
                                interp_method=opt.interp_method,  epoch=epoch,
                                **vars(opt.rdr2geo))
 
-    log.info(f"Made Doppler LUT for fc={fc} Hz with mean={lut.data.mean()} Hz")
+    log.info(f"Made Doppler LUT for fc={fc} Hz, "
+        f"az={opt.azimuth_boresight_deg} deg with mean={lut.data.mean()} Hz")
     return fc, lut
 
 
@@ -604,17 +611,6 @@ def get_kernel(cfg: Struct):
     return table
 
 
-def verify_uniform_pri(t: np.ndarray, atol=0.0, rtol=0.001):
-    """Return True if pulse interval is uniform (within given absolute and
-    relative tolerances).
-    """
-    assert atol >= 0.0
-    assert rtol >= 0.0
-    dt = np.diff(t)
-    pri = np.mean(dt)
-    return np.allclose(dt, pri, atol=atol, rtol=rtol)
-
-
 # Work around for fact that slices are not hashable and can't be used as
 # dictionary keys or entries in sets
 # https://bugs.python.org/issue1733184
@@ -869,7 +865,7 @@ def get_max_prf(rawlist: Iterable[Raw]) -> float:
     return max(prfs)
 
 
-def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out):
+def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out, cal=None):
     """Setup range compression.
 
     Parameters
@@ -884,6 +880,9 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out):
         Input polarimetric channel info
     channel_out : PolChannel
         Output polarimetric channel info, different in mixed-mode case
+    cal : Optional[RslcCalibration]
+        RSLC calibration data.  Will apply gain and delay calibrations to chirp
+        and grid if provided.
 
     Returns
     -------
@@ -904,9 +903,10 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out):
     log.info(f"Chirp length = {len(chirp)}")
     win_kind, win_shape = check_window_input(cfg.processing.range_window)
 
+    _, fs, K, _ = raw.getChirpParameters(channel_in.freq_id, tx)
+
     if channel_in.band != channel_out.band:
         log.info("Filtering chirp for mixed-mode processing.")
-        fs = raw.getChirpParameters(channel_in.freq_id, tx)[1]
         # NOTE In mixed-mode case window is part of the filter design.
         design = cfg.processing.range_common_band_filter
         cb_filt, shift = nisar.mixed_mode.get_common_band_filter(
@@ -927,6 +927,33 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out):
     log.info("Normalizing chirp to unit white noise gain.")
     chirp *= 1.0 / np.linalg.norm(chirp)
 
+    # Careful to use effective TBP after mixed-mode filtering.
+    time_bw_product = channel_out.band.width**2 / abs(K)
+
+    # Now we collect signal gain terms that could vary across NISAR modes so
+    # that we can hopefully support all of them with a single set of cal
+    # parameters.
+    # The wavelength term here normalizes the azimuth reference length, which
+    # is proportional to range * wavelength / azimuth_resolution.  The range
+    # term is included in the range fading correction later (range_cor=True).
+    # The number of pulses in the aperture is proportional to the input PRF.
+    # Note that we assume the velocity is roughly constant (0.4% variation is
+    # predicted for NISAR).
+    # We don't try to compensate changes in azimuth resolution since we'll
+    # always use the same one for nominal mission processing.
+    # Other wavelength terms in the radar equation are already included in the
+    # antenna pattern (eap=True).
+    wavelength = isce3.core.speed_of_light / channel_out.band.center
+    signal_gain = wavelength * np.sqrt(time_bw_product) * raw_grid.prf
+    log.info("Renormalizing chirp by signal gain terms "
+        f"wavelength * PRF * sqrt(TBP) = {signal_gain}")
+    chirp *= 1.0 / signal_gain
+
+    if cal:
+        scale, delay = get_scale_and_delay(cal, channel_in.pol)
+        log.info(f"Scaling chirp by calibration factor = {scale}")
+        chirp *= scale
+
     rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
     log.info(f"Preparing range compressor with mode={rcmode}")
     nr = raw_grid.shape[1]
@@ -940,13 +967,41 @@ def prep_rangecomp(cfg, raw, raw_grid, channel_in, channel_out):
     rc_grid.starting_range -= rc_grid.range_pixel_spacing * (
         rc.first_valid_sample - (len(cb_filt) - 1) / 2)
     rc_grid.width = rc.output_size
-    rc_grid.wavelength = isce3.core.speed_of_light / channel_out.band.center
+    rc_grid.wavelength = wavelength
+
+    if cal:
+        log.info(f"Adjusting starting range by delay calibration = {delay} m")
+        rc_grid.starting_range += delay
 
     r = rc_grid.starting_range + (
         rc_grid.range_pixel_spacing * np.arange(rc_grid.width))
     deramp = np.exp(1j * shift / rc_grid.range_pixel_spacing * r)
 
     return rc, rc_grid, shift, deramp
+
+
+def get_antpat_inst(cfg: Struct) -> tuple[AntennaParser, InstrumentParser]:
+    antfile = cfg.dynamic_ancillary_file_group.antenna_pattern
+    insfile = cfg.dynamic_ancillary_file_group.internal_calibration
+    if (antfile is None) or (insfile is None):
+        if cfg.processing.is_enabled.eap:
+            raise RuntimeError("Requested elevation antenna pattern "
+                "(processing.is_enabled.eap=True) but did not provide "
+                "both inputs needed to compute the antenna patterns "
+                "(antenna_pattern and internal_calibration)")
+        return (None, None)
+    ant = AntennaParser(antfile)
+    inst = InstrumentParser(insfile)
+    return ant, inst
+
+
+def get_calibration(cfg: Struct, bandwidth: Optional[float] = None) -> RslcCalibration:
+    filename = cfg.dynamic_ancillary_file_group.external_calibration
+    if filename is None:
+        log.info("No calibration file provided.  Using defaults.")
+        return RslcCalibration()
+    log.info(f"Loading calibration file {filename} for bandwidth={bandwidth}")
+    return parse_rslc_calibration(filename, bandwidth)
 
 
 def focus(runconfig):
@@ -963,6 +1018,7 @@ def focus(runconfig):
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
     kernel = get_kernel(cfg)
     scale = cfg.processing.encoding_scale_factor
+    antparser, instparser = get_antpat_inst(cfg)
 
     require_frequency_stability(rawlist)
     common_mode = get_common_mode(rawlist)
@@ -1043,6 +1099,15 @@ def focus(runconfig):
         start_time=og.sensing_datetime(0),
         end_time=og.sensing_datetime(og.length - 1))
 
+    # Get reference range for radiometric correction and warn user if it's not
+    # a good value (especially since the default is catered to NISAR).
+    ref_range = get_calibration(cfg).reference_range
+    ratio = ref_range / og.mid_range
+    if not (0.5 < ratio < 2.0) and cfg.processing.is_enabled.range_cor:
+        log.warning(f"Reference range ({ref_range} m) is not within a factor "
+            f"of two of the mid-swath range ({og.mid_range} m).  Range "
+            "fading correction will impart a large scaling.")
+
     # store metadata for each frequency
     for frequency, band in get_bands(common_mode).items():
         slc.set_parameters(dop[frequency], orbit.reference_epoch, frequency)
@@ -1082,6 +1147,9 @@ def focus(runconfig):
         for raw in rawlist:
             channel_in = find_overlapping_channel(raw, channel_out)
             log.info("Using raw data channel %s", channel_in)
+            cal = get_calibration(cfg, channel_in.band.width)
+            check_cal_validity_dates(cal, raw.identification.zdStartTime,
+                raw.identification.zdEndTime)
 
             # NOTE In some cases frequency != channel_in.freq_id, for example
             # 80 MHz (A) being mixed with 5 MHz sideband (B).
@@ -1118,7 +1186,8 @@ def focus(runconfig):
                 z[np.isnan(z)] = 0.0
                 raw_mm[block_out] = z
 
-            if verify_uniform_pri(raw_times):
+            uniform_pri = not raw.isDithered(channel_in.freq_id)
+            if uniform_pri:
                 log.info("Uniform PRF, using raw data directly.")
                 regridded, regridfd = raw_mm, rawfd
             else:
@@ -1132,12 +1201,17 @@ def focus(runconfig):
 
             # Do range compression.
             rc, rc_grid, shift, deramp_rc = prep_rangecomp(cfg, raw, raw_grid,
-                                        channel_in, channel_out)
+                                        channel_in, channel_out, cal)
 
             fd = temp("_rc.c8")
             log.info(f"Writing range compressed data to {fd.name}")
             rcfile = Raster(fd.name, rc.output_size, rc_grid.shape[0], GDT_CFloat32)
             log.info(f"Range compressed data shape = {rcfile.data.shape}")
+
+            # And do radiometric corrections at the same time.
+            if cfg.processing.is_enabled.eap:
+                antpat = AntennaPattern(raw, dem, antparser,
+                                        instparser, orbit, attitude)
 
             for pulse in range(0, rc_grid.shape[0], na):
                 log.info(f"Range compressing block at pulse {pulse}")
@@ -1146,6 +1220,23 @@ def focus(runconfig):
                 if abs(shift) > 0.0:
                     log.info("Shifting mixed-mode data to baseband")
                     rcfile.data[block] *= deramp_rc[np.newaxis,:]
+                if cfg.processing.is_enabled.eap:
+                    log.info("Compensating dynamic antenna pattern")
+                    for i in range(rc_grid[block].shape[0]):
+                        ti = rc_grid.sensing_start + (pulse + i) / rc_grid.prf
+                        # FIXME move this out of pulse loop to avoid redundant
+                        # pattern calculations.
+                        patterns = antpat.form_pattern(
+                            ti, rc_grid.slant_ranges, nearest=not uniform_pri)
+                        rcfile.data[pulse + i, :] /= patterns[pol]
+                if cfg.processing.is_enabled.range_cor:
+                    log.info("Compensating range loss")
+                    # Two-way power drops with R^4, so amplitude drops with R^2.
+                    # Synthetic aperture length and thus signal gain scales
+                    # with R (not compensated in `backproject`).  So we just
+                    # have to scale by R to compensate the range fading.
+                    rcfile.data[block] *= np.array(rc_grid.slant_ranges) / ref_range
+
 
             del regridded, regridfd
 
@@ -1206,7 +1297,7 @@ def configure_logging():
     sh.setLevel(log_level)
     sh.setFormatter(fmt)
     log.addHandler(sh)
-    for friend in ("Raw", "SLCWriter"):
+    for friend in ("Raw", "SLCWriter", "nisar.antenna.pattern", "rslc_cal"):
         l = logging.getLogger(friend)
         l.setLevel(log_level)
         l.addHandler(sh)

@@ -10,4 +10,5 @@ from . import antenna
 from .attitude import load_attitude_from_xml
 from .orbit import load_orbit_from_xml
 from . import instrument 
+from .rslc_cal import parse_rslc_calibration
 # end of file

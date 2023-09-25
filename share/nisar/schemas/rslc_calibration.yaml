@@ -1,0 +1,58 @@
+# This is a Yamale schema (see https://github.com/23andMe/Yamale) for
+# validating calibration parameter files for the NISAR RSLC PGE.
+
+# Free-form information from the processing facility about how the parameters in
+# this file were generated or other relevant information.
+Notes: str(required=False)
+
+# When this file was generated or updated by the processing facility, in
+# ISO-8601 date format.
+Date Generated: timestamp()
+
+# The parameters in this file are valid for data acquired in the following date
+# range (ISO-8601 date format).
+Valid for Data Acquired After Date: timestamp()
+# Upper bound may be null if not known at time of file generation.
+Valid for Data Acquired Before Date: timestamp(required=False)
+
+# The reference range is used to normalize the range loss correction.  Typically
+# it'd be a range near the middle of the swath so that the (R / Rref)^4 term
+# stays near unity.  Since changing it would also change the absolute scale
+# factor it should be held fixed across scenes and is included here.
+# Defaults to 900e3 m
+Reference Range (m): num(required=False)
+
+Calibration:
+  # Default calibration parameters.  Mode-dependent overrides take precedence.
+  Default: include('cal_params', required=False)
+
+  # Any subset of parameters may be overridden based on the bandwidth in
+  # operation.  For example, different SSP filters may have different delays.
+  Override 5 MHz: include('cal_params', required=False)
+  Override 20 MHz: include('cal_params', required=False)
+  Override 40 MHz: include('cal_params', required=False)
+  Override 77 MHz: include('cal_params', required=False)
+
+
+---
+channel_params:
+  # Delay relative to common delay (default=0).
+  Differential Delay (m): num(required=False)
+  # Phase relative to other channels (typically HH=0, default=0).
+  Differential Phase (degrees): num(required=False)
+  # Backscatter correction (at EL=0), multiplied into image before encoding.
+  # Linear amplitude units, default=1
+  Radiometric Scale Factor: num(required=False, min=0)
+  # Slope of backscatter correction with respect to antenna EL angle.
+  # Linear amplitude units, default=0
+  Radiometric Scale Factor Slope (/degree): num(required=False)
+
+cal_params:
+  # Range delay for all channels is adjusted by this amount (default=0).
+  Common Delay (m): num(required=False)
+
+  # Polarimetric channel-dependent parameters.
+  HH: include('channel_params', required=False)
+  HV: include('channel_params', required=False)
+  VH: include('channel_params', required=False)
+  VV: include('channel_params', required=False)

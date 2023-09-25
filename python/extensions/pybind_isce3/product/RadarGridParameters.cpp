@@ -116,6 +116,10 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 return isce3::core::Linspace(self.startingRange(),
                         self.rangePixelSpacing(), self.width());
         })
+        .def_property_readonly("sensing_times", [](const RadarGridParameters& self) {
+                return isce3::core::Linspace(self.sensingStart(),
+                        1.0 / self.prf(), self.length());
+        })
         .def("azimuth_index", &RadarGridParameters::azimuthIndex,
                 py::arg("az_time"))
         // slice to get subset of RGP
