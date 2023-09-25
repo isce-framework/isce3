@@ -382,7 +382,7 @@ def get_raster_lists(all_geocoded_dataset_flags,
                      pol_list,
                      input_hdf5,
                      dst_h5,
-                     offset_layers=None,
+                     offset_params=None,
                      scratch_path='',
                      input_product_type=InputProduct.RUNW,
                      iono_sideband=False,
@@ -410,8 +410,10 @@ def get_raster_lists(all_geocoded_dataset_flags,
         Path to input RUNW or ROFF HDF5
     dst_h5 : h5py.File
         h5py.File object where geocoded data is to be written
-    offset_layers: list[str]
-        List of offset layer names
+    offset_params: list[tupel[str, isce3.core.DataInterpMethod, float]]
+        List of offset layer geocoding params as tuples. Tuples with each tuple
+        consisting of offset layer name, interpolation method, and invalid
+        value.
     scratch_path : str
         Path to scratch where layover shadow raster is saved
     input_product_type : enum
@@ -483,13 +485,9 @@ def get_raster_lists(all_geocoded_dataset_flags,
             continue
 
         for pol in pol_list:
+            # Only geocode layover shadow once. Skip if already geocoded.
             if skip_layover_shadow:
                 continue
-
-            # For current polarization append interpolation method and invalid
-            # value
-            interp_methods.append(interp_method)
-            invalid_values.append(invalid_value)
 
             # Container for destination/output HDF5 paths of geocoded rasters
             pol_out_ds_paths = []
@@ -498,20 +496,29 @@ def get_raster_lists(all_geocoded_dataset_flags,
             if ds_name == "layover_shadow_mask":
                 raster, path = get_shadow_input_output(
                     scratch_path, freq, dst_freq_path)
+
+                # Set bool to True to ensure layover shadow only geocoded once
                 skip_layover_shadow = True
+
+                # Update geocoding parameters
                 input_rasters.append(raster)
                 pol_out_ds_paths.append(path)
+                interp_methods.append(interp_method)
+                invalid_values.append(invalid_value)
             elif input_product_type is InputProduct.ROFF:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
-                for layer in offset_layers:
+                for lay_name, lay_interp_method, lay_invalid in offset_params:
                     raster, path = get_ds_input_output(src_freq_path,
                                                        dst_freq_path,
                                                        pol, input_hdf5,
                                                        ds_name_camel_case,
-                                                       layer,
+                                                       lay_name,
                                                        input_product_type)
+                    # Update geocoding parameters
                     input_rasters.append(raster)
                     pol_out_ds_paths.append(path)
+                    interp_methods.append(lay_interp_method)
+                    invalid_values.append(lay_invalid)
             elif iono_sideband and ds_name in ['ionosphere_phase_screen',
                            'ionosphere_phase_screen_uncertainty']:
                 # ionosphere_phase_screen from main_side_band or
@@ -521,22 +528,31 @@ def get_raster_lists(all_geocoded_dataset_flags,
                 iono_src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequencyB"
                 iono_dst_freq_path = f"/science/LSAR/G{src_product}/grids/frequencyA"
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
+
                 raster, path = get_ds_input_output(
                     iono_src_freq_path, iono_dst_freq_path, pol, input_hdf5,
                         ds_name_camel_case)
+
+                # Update geocoding parameters
                 input_rasters.append(raster)
                 pol_out_ds_paths.append(path)
+                interp_methods.append(interp_method)
+                invalid_values.append(invalid_value)
             else:
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
                 raster, path = get_ds_input_output(
                     src_freq_path, dst_freq_path, pol, input_hdf5,
                     ds_name_camel_case, None, input_product_type)
+
+                # Update geocoding parameters
                 input_rasters.append(raster)
                 pol_out_ds_paths.append(path)
+                interp_methods.append(interp_method)
+                invalid_values.append(invalid_value)
 
+            # Prepare output raster access the HDF5 dataset for datasets to be
+            # geocoded
             for path in pol_out_ds_paths:
-                # Prepare output raster access the HDF5 dataset for a given
-                # frequency and pol
                 geocoded_dataset = dst_h5[path]
                 geocoded_datasets.append(geocoded_dataset)
 
@@ -547,19 +563,29 @@ def get_raster_lists(all_geocoded_dataset_flags,
 
                 geocoded_rasters.append(geocoded_raster)
 
+    # Check all output lists have the same length
+    output_lens = [len(x) == len(geocoded_rasters)
+                   for x in (geocoded_datasets, input_rasters, interp_methods,
+                             invalid_values)]
+    if (not all(output_lens)):
+        error_channel = journal.error('geocode_insar.get_raster_lists')
+        err_str = 'Not all output lists have the same length'
+        error_channel.log(err_str)
+        raise RunTimeError(err_str)
+
     return (geocoded_rasters, geocoded_datasets, input_rasters, interp_methods,
             invalid_values)
 
 def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
                         input_hdf5, dst_h5, radar_grid, dem_raster,
-                        block_size, offset_layers=None, scratch_path='',
+                        block_size, offset_params=None, scratch_path='',
                         compute_stats=True, input_product_type = InputProduct.RUNW,
                         iono_sideband=False, az_correction=isce3.core.LUT2d(),
                         srg_correction=isce3.core.LUT2d()):
 
     geocoded_rasters, geocoded_datasets, input_rasters, *_ = \
         get_raster_lists(geo_datasets, desired, freq, pol_list, input_hdf5,
-                         dst_h5, offset_layers, scratch_path, input_product_type,
+                         dst_h5, offset_params, scratch_path, input_product_type,
                          iono_sideband)
 
     if input_rasters:
@@ -799,8 +825,16 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                            'correlation_surface_peak',
                            'cross_offset_variance', 'slant_range_offset',
                            'snr']
-                layer_names = [key for key in offset_cfg.keys() if
-                              key.startswith('layer')]
+
+                # Create list to tuples containing offset layer name with
+                # corresponding interpolation method and invalid value
+                # Interpolation method and invalid value are not used for
+                # cpu geocode. These params are added to as None for
+                # consistency with gpu_geocode_rasters, who needs it for
+                # get_raster_lists
+                layer_geocode_params = [(layer_name, None, None)
+                                        for layer_name in offset_cfg.keys() if
+                                        layer_name.startswith('layer')]
 
                 radar_grid = get_offset_radar_grid(cfg,
                                                    slc.getRadarGrid(freq))
@@ -809,7 +843,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
                                     offset_pol_list, input_hdf5, dst_h5,
                                     radar_grid, dem_raster, block_size,
-                                    off_layer_dict=layer_keys,
+                                    offset_params=layer_geocode_params,
                                     input_product_type=InputProduct.ROFF,
                                     az_correction=az_correction,
                                     srg_correction=srg_correction)
@@ -1210,13 +1244,15 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                     'slant_range_offset_variance',
                     'snr']
 
-                layer_names = [key for key in offset_cfg.keys() if
-                              key.startswith('layer')]
+                # Create list to tuples containing offset layer name with
+                # corresponding interpolation method and invalid value
+                layer_geocode_params = [(layer_name, interp_method, np.nan)
+                                        for layer_name in offset_cfg.keys() if
+                                        layer_name.startswith('layer')]
 
                 # Interpolation methods for datasets above all the same
-                interpolation_methods = [
-                    interp_method] * len(desired_geo_dataset_names)
-
+                interpolation_methods = \
+                    [interp_method] * len(desired_geo_dataset_names)
 
                 # Invalid values for datasets above all the same
                 invalid_values = [np.nan] * len(desired_geo_dataset_names)
@@ -1234,7 +1270,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     freq, offset_pol_list,
                                     geogrid, rdr_geometry, dem_raster,
                                     lines_per_block, input_hdf5, dst_h5,
-                                    offset_layers=layer_names,
+                                    offset_layers=layer_geocode_params,
                                     input_product_type=InputProduct.ROFF)
             else:
                 # Datasets from RIFG to be geocoded
@@ -1293,14 +1329,16 @@ if __name__ == "__main__":
         out_paths['RUNW'] = runw_path
 
     # Run geocode RUNW
-    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"], input_product_type=InputProduct.RUNW)
+    run(geocode_insar_runconfig.cfg, out_paths["RUNW"], out_paths["GUNW"],
+        input_product_type=InputProduct.RUNW)
 
     rifg_path = geocode_insar_runconfig.cfg['processing']['geocode'][
         'rifg_path']
     if rifg_path is not None:
         out_paths['RIFG'] = rifg_path
     # Run geocode RIFG
-    run(geocode_insar_runconfig.cfg, out_paths["RIFG"], out_paths["GUNW"], input_product_type=InputProduct.RIFG)
+    run(geocode_insar_runconfig.cfg, out_paths["RIFG"], out_paths["GUNW"],
+        input_product_type=InputProduct.RIFG)
 
     # Check if need to geocode offset product
     enabled = geocode_insar_runconfig.cfg['processing']['offsets_product']['enabled']
