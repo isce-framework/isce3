@@ -56,12 +56,14 @@ runconfig:
 
         primary_executable:
             product_type: enum('GCOV')
+            product_version: str('^\d+\.\d+\.\d+$', required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P', 'M', 'N', 'F', required=False)
             urgent_request_id: list(str(), required=False)
             processing_center: str(required=False)
             data_source: enum('A', 'M', required=False)
+            partial_granule_id: str(required=False)
 
         debug_level_group:
             debug_switch: bool()

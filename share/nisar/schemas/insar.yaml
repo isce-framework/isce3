@@ -70,11 +70,13 @@ runconfig:
         primary_executable:
             # RIFG_RUNW_GUNW will produce all three InSAR products
             product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
+            product_version: str('^\d+\.\d+\.\d+$', required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)
             product_accuracy: enum('P','M','N','F', required=False)
             urgent_request_id: list(str(), required=False)
             processing_center: str(required=False)
+            partial_granule_id: str(required=False)
 
         debug_level_group:
             debug_switch: bool()
