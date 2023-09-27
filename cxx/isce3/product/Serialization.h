@@ -162,6 +162,9 @@ namespace isce3 {
             isce3::io::loadFromH5(fgroup, "sceneCenterGroundRangeSpacing", value);
             swath.sceneCenterGroundRangeSpacing(value);
 
+            isce3::io::loadFromH5(fgroup, "sceneCenterAlongTrackSpacing", value);
+            swath.sceneCenterAlongTrackSpacing(value);
+
             isce3::io::loadFromH5(fgroup, "processedAzimuthBandwidth", value);
             swath.processedAzimuthBandwidth(value);
         }

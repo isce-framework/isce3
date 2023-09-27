@@ -18,5 +18,6 @@ def test_swaths():
     npt.assert_almost_equal(swath.processed_range_bandwidth, 1.6e7, 1)
     npt.assert_equal(swath.nominal_acquisition_prf, 1.0/6.051745968279355e-4)
     npt.assert_equal(swath.scene_center_ground_range_spacing, 23.774273647897644)
+    npt.assert_equal(swath.scene_center_along_track_spacing, 4.303942339561756)
 
 # end of file
