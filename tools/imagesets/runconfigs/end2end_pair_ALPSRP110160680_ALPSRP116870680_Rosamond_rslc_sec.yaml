@@ -84,15 +84,15 @@ runconfig:
             gpu_id: 0
         processing:
             output_grid:
-                start_time: 2008-04-04T06:19:17.452060000
-                end_time: 2008-04-04T06:19:33.851984624
+                start_time: 2008-04-04T06:19:17.452060
+                end_time: 2008-04-04T06:19:33.851984
                 start_range:
                 end_range:
-                output_prf:
+                output_prf: 1520
                 time_snap_interval: 1.0
             range_window:
                 kind: Kaiser
-                shape: 3.0
+                shape: 1.6
             azimuth_window:
                 kind: Kaiser
                 shape: 0.0

@@ -75,15 +75,15 @@ runconfig:
                 # start_range: 751563.8348427379
                 # end_range: 752761.914842738
                 # 512
-                start_time: 2006-10-07T06:10:05.373609235
-                end_time: 2006-10-07T06:10:05.648582382
+                start_time: 2006-10-07T06:10:05.373609
+                end_time: 2006-10-07T06:10:05.648582
                 # Range bounds of output SLC in meters, optional.
                 # Defaults to entire fully focused swath.
                 start_range: 750964.794842738
                 end_range: 753360.9548427379
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: null
+                output_prf: 1520
                 # Interval for azimuth grid alignment in seconds. See docs.
                 # Typically want 1 second and integer PRF (in Hz). Will not
                 # override user-provided start_time.

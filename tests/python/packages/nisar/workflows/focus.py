@@ -1,3 +1,4 @@
+from glob import glob
 import isce3
 import iscetest
 from nisar.workflows import focus
@@ -6,6 +7,7 @@ import nisar
 from pathlib import Path
 import numpy as np
 import numpy.testing as npt
+import os
 
 
 def get_test_cfg():
@@ -57,3 +59,21 @@ def test_focus():
     # can at least check that its time domain overlaps with the orbit.
     carrier = rslc.getDopplerCentroid()
     assert orbit.contains(carrier.y_start)
+
+
+def test_schema():
+    # Check that workflow test config files conform to schema.
+    # Note that schema mostly reflects needs of PCM/PGE, and the SAS is a bit
+    # more flexible.
+    import yamale  # delayed import since other test doesn't need yamale
+    src_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+        *(os.pardir,) * 5)
+    schema = yamale.make_schema(
+        os.path.join(src_dir, "share", "nisar", "schemas", "focus.yaml"),
+        parser="ruamel")
+    workflow_test_dir = os.path.join(src_dir,
+        "tools", "imagesets", "runconfigs")
+    config_files = glob(os.path.join(workflow_test_dir, "*rslc*.yaml"))
+    for filename in config_files:
+        data = yamale.make_data(filename, parser="ruamel")
+        yamale.validate(schema, data)

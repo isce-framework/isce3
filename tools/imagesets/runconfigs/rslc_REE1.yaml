@@ -66,8 +66,8 @@ runconfig:
             output_grid:
                 # Azimuth bounds of output SLC, optional.
                 # Defaults to extent of raw data minus sythetic aperture and
-                start_time: 2021-07-01T03:20:03.457785404
-                end_time: 2021-07-01T03:20:03.542653825
+                start_time: 2021-07-01T03:20:03.457785
+                end_time: 2021-07-01T03:20:03.542654
                 # Range bounds of output SLC in meters, optional.
                 # Defaults to entire fully focused swath.
                 start_range: 967124.5530972595

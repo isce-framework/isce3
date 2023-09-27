@@ -54,8 +54,8 @@ runconfig:
         processing:
             output_grid:
                 # 4096x512
-                start_time: 2021-07-01T03:20:02.255669013
-                end_time: 2021-07-01T03:20:04.738093255
+                start_time: 2021-07-01T03:20:02.255669
+                end_time: 2021-07-01T03:20:04.738093
                 start_range: 960279.2582747354
                 end_range: 963477.0444934021
                 # 128x128
