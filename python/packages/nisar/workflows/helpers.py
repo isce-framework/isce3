@@ -2,19 +2,21 @@
 collection of useful functions used across workflows
 '''
 
-from collections import defaultdict
 import os
 import pathlib
+from collections import defaultdict
+from dataclasses import dataclass
 
-from osgeo import gdal
 import h5py
 import isce3
-import nisar
-import numpy as np
-
 import journal
-
+import numpy as np
+from isce3.product import RadarGridParameters
 from nisar.products.readers import SLC
+from nisar.workflows.get_product_geometry import \
+    get_geolocation_grid as compute_geogrid_geometry
+from osgeo import gdal
+
 
 def deep_update(original, update):
     '''
@@ -370,3 +372,92 @@ def get_cfg_freq_pols(cfg):
         # Yield whatever is pol_list
         else:
             yield freq, pol_list, pol_list
+
+def get_ground_track_velocity_product(ref_rslc : SLC,
+                                      slant_range : np.ndarray,
+                                      zero_doppler_time : np.ndarray,
+                                      dem_file : str,
+                                      output_dir: str):
+    """
+    Generate the ground track velocity product in a radar grid
+    that has the same wavelength, look side, and reference
+    epoch as the frequency A radar grid of the reference RSLC
+    but with different slant range and zero doppler time.
+
+    Parameters
+    ----------
+    ref_rslc : SLC object
+        The SLC object of the reference RSLC
+    slant_range: np.ndarray
+        Slant range of the pixel offsets product
+    zero_doppler_time: np.ndarray
+        Zero doppler time of the pixel offsets product
+    dem_file : str
+        The DEM file
+    output_dir : str
+        The output directory
+
+    Returns
+    ----------
+    ground_track_velocity_file : str
+        ground track velocity output file
+    """
+    # NOTE: the prod_geometry_args dataclass is defined here
+    # to avoid the usage of the parser comand line
+    @dataclass
+    class GroundtrackVelocityGenerationParams:
+        """
+        Parameters to generate the ground track velocity.
+        Defination of each parameter can be found in the
+        get_product_geometry.py
+        """
+        threshold_rdr2geo = None
+        num_iter_rdr2geo = None
+        extra_iter_rdr2geo = None
+        threshold_geo2rdr = None
+        num_iter_geo2rdr = None
+        delta_range_geo2rdr = None
+        threshold_geo2rdr = 1e-8
+        num_iter_geo2rdr = 50
+        delta_range_geo2rdr = 10.0
+        dem_interp_method = None
+        output_dir = None
+        dem_file = None
+        epsg = None
+        # Only the ground track velocity will be generated
+        flag_interpolated_dem = False
+        flag_coordinate_x = False
+        flag_coordinate_y = False
+        flag_incidence_angle = False
+        flag_los = False
+        flag_along_track = False
+        flag_elevation_angle = False
+        flag_ground_track_velocity = True
+
+    args = GroundtrackVelocityGenerationParams()
+    args.dem_file = dem_file
+    args.output_dir = output_dir
+
+    # Create the radar grid of pixel offsets product
+    radar_grid = ref_rslc.getRadarGrid()
+    zero_doppler_starting_time = zero_doppler_time[0]
+    prf = 1.0 / (zero_doppler_time[1] - zero_doppler_time[0])
+    starting_range = slant_range[0]
+    range_spacing = slant_range[1] - slant_range[0]
+
+    pixel_offsets_radar_grid = \
+        RadarGridParameters(zero_doppler_starting_time,
+                            radar_grid.wavelength,
+                            prf,
+                            starting_range,
+                            range_spacing,
+                            radar_grid.lookside,
+                            len(zero_doppler_time),
+                            len(slant_range),
+                            radar_grid.ref_epoch)
+
+    ground_track_velocity_file = f'{args.output_dir}/groundTrackVelocity.tif'
+    compute_geogrid_geometry(ref_rslc, args,
+                             pixel_offsets_radar_grid)
+
+    return ground_track_velocity_file

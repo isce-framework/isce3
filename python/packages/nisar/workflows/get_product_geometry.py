@@ -227,12 +227,12 @@ def get_radar_grid(nisar_product_obj, args):
     output_file_list = []
     output_obj_list = []
 
-    flag_all = (not args.flag_interpolated_dem and 
-                not args.flag_slant_range and 
-                not args.flag_azimuth_time and 
-                not args.flag_incidence_angle and 
-                not args.flag_los and 
-                not args.flag_along_track and 
+    flag_all = (not args.flag_interpolated_dem and
+                not args.flag_slant_range and
+                not args.flag_azimuth_time and
+                not args.flag_incidence_angle and
+                not args.flag_los and
+                not args.flag_along_track and
                 not args.flag_elevation_angle and
                 not args.flag_ground_track_velocity and
                 not args.flag_local_incidence_angle and
@@ -271,7 +271,7 @@ def get_radar_grid(nisar_product_obj, args):
         flag_all)
     ground_track_velocity_raster = _get_raster(
         args.output_dir, 'groundTrackVelocity', gdal.GDT_Float64, shape,
-        output_file_list, output_obj_list, args.flag_ground_track_velocity or 
+        output_file_list, output_obj_list, args.flag_ground_track_velocity or
         flag_all)
     local_incidence_angle_raster = _get_raster(
         args.output_dir, 'localIncidenceAngle', gdal.GDT_Float32, shape,
@@ -325,12 +325,20 @@ def get_radar_grid(nisar_product_obj, args):
         info_channel.log(f'file saved: {f}')
 
 
-def get_geolocation_grid(nisar_product_obj, args):
+def get_geolocation_grid(nisar_product_obj, args,
+                         other_radar_grid = None):
     '''
     get geolocation grid for L0B and L1 products
+
+    NOTE: other_radar_grid parameter is added in this function
+    to accommodate the pixel offsets in the RIFG and ROFF product
     '''
 
-    radar_grid = nisar_product_obj.getRadarGrid()
+    if other_radar_grid is not None:
+        radar_grid = other_radar_grid
+    else:
+        radar_grid = nisar_product_obj.getRadarGrid()
+
     orbit = nisar_product_obj.getOrbit()
     grid_doppler = isce3.core.LUT2d()
     native_doppler = nisar_product_obj.getDopplerCentroid()
@@ -356,7 +364,7 @@ def get_geolocation_grid(nisar_product_obj, args):
 
     if args.threshold_geo2rdr is None:
         args.threshold_geo2rdr = 1e-8
-    if args.num_iter_geo2rdr is None:            
+    if args.num_iter_geo2rdr is None:
         args.num_iter_geo2rdr = 50
     if args.delta_range_geo2rdr is None:
         args.delta_range_geo2rdr = 10.0

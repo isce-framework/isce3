@@ -11,7 +11,8 @@ import journal
 import numpy as np
 from nisar.products.readers import SLC
 from nisar.workflows import prepare_insar_hdf5
-from nisar.workflows.helpers import get_cfg_freq_pols
+from nisar.workflows.helpers import (get_cfg_freq_pols,
+                                     get_ground_track_velocity_product)
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
@@ -39,9 +40,36 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
+    ref_radar_grid = ref_slc.getRadarGrid('A')
+
+    # Get the slant range and zero doppler time spacing
+    ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
+    ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
+
+    # Pull the slant range and zero doppler time of the pixel offsets product
+    # at frequencyA
+    with h5py.File(output_hdf5, 'r', libver='latest', swmr=True) as dst_h5:
+        freq_group_path = '/science/LSAR/RIFG/swaths/frequencyA'
+        pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
+        slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
+        zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
 
     # Start offset culling
     t_all = time.time()
+
+    # Generate the ground track velocity file that has the same
+    # dimension with frequencyA of pixel offset product
+    output_dir = scratch_path / 'rubbersheet_offsets'
+    dem_file = cfg['dynamic_ancillary_file_group']['dem_file']
+    info_channel.log('Produce the ground track velocity product')
+    ground_track_velocity_file = get_ground_track_velocity_product(ref_slc,
+                                                                   slant_range,
+                                                                   zero_doppler_time,
+                                                                   dem_file,
+                                                                   output_dir)
+
+    info_channel.log('Finish producing the ground track velocity product')
+
     with h5py.File(output_hdf5, 'r+', libver='latest', swmr=True) as dst_h5:
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
             # Rubbersheet directory and frequency group in RIFG product
@@ -50,6 +78,11 @@ def run(cfg: dict, output_hdf5: str = None):
 
             # Set the path to geometric offsets dir
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'
+
+            # Pull the
+            pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
+            slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
+            zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
 
             # Loop over polarizations
             for pol in pol_list:
@@ -90,7 +123,6 @@ def run(cfg: dict, output_hdf5: str = None):
                         str(off_product_dir / 'layer1'),
                         rubbersheet_params)
 
-
                     layer_keys = [key for key in
                                   cfg['processing']['offsets_product'].keys() if
                                   key.startswith('layer') and key != 'layer1']
@@ -123,8 +155,25 @@ def run(cfg: dict, output_hdf5: str = None):
                 offset_az_prod = dst_h5[f'{pol_group_path}/alongTrackOffset']
                 offset_rg_prod = dst_h5[f'{pol_group_path}/slantRangeOffset']
                 offset_peak_prod = dst_h5[f'{pol_group_path}/correlationSurfacePeak']
-                offset_az_prod[...] = offset_az
-                offset_rg_prod[...] = offset_rg
+
+                # Get the ground track velocity
+                ground_track_velocity_ds = gdal.Open(ground_track_velocity_file,
+                                                     gdal.GA_ReadOnly)
+                ground_track_velocity = ground_track_velocity_ds.\
+                    GetRasterBand(1).ReadAsArray()
+                ground_track_velocity_ds = None
+
+                # Convert the along track pixel offsets to meters
+                # using the equation:
+                # along_track_offset_in_pixels * ground_track_velocity * zero_doppler_time_spacing_of_RSLC
+                offset_az_prod[...] = \
+                    offset_az * ground_track_velocity\
+                        * ref_zero_doppler_time_spacing
+
+                # Convert the slant range pixel offsets to meters
+                # using the equation:
+                # slant_range_offset_in_pixels * slant_range_spacing_of_RSLC
+                offset_rg_prod[...] = offset_rg * ref_slant_range_spacing
                 offset_peak_prod[...] = corr_peak
 
                 # Save culled offsets to disk for resampling

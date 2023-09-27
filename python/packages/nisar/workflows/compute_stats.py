@@ -28,6 +28,19 @@ def write_stats_complex_data(h5_ds, stats_obj):
     h5_ds.attrs.create('sample_stddev_imag',
                        data=stats_obj.imag.sample_stddev)
 
+def compute_stats_real_hdf5_dataset(h5_ds):
+    """
+    Compute raster statistics for hdf5 real datasets
+
+    Parameters
+    ----------
+    h5_ds: h5py.Dataset
+        hdf5 dataset object
+    """
+    h5_ds.attrs.create('min_value',data=np.nanmin(h5_ds))
+    h5_ds.attrs.create('mean_value',data=np.nanmean(h5_ds))
+    h5_ds.attrs.create('max_value',data=np.nanmax(h5_ds))
+    h5_ds.attrs.create('sample_stddev',data=np.nanstd(h5_ds))
 
 def compute_stats_real_data(raster, h5_ds):
     """
