@@ -18,12 +18,11 @@ from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
+from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.products.readers.orbit import load_orbit_from_xml
-
-
 
 
 def read_rslc_backscatter(ds: h5py.Dataset, key=np.s_[...]):
@@ -195,6 +194,7 @@ def run(cfg):
     dem_interp_method_enum = cfg['processing']['dem_interpolation_method_enum']
 
     orbit_file = cfg["dynamic_ancillary_file_group"]['orbit_file']
+    tec_file = cfg["dynamic_ancillary_file_group"]['tec_file']
 
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
@@ -274,7 +274,11 @@ def run(cfg):
     info_channel.log("starting geocode COV")
 
     t_all = time.time()
-    for frequency in freq_pols.keys():
+    for frequency, input_pol_list in freq_pols.items():
+
+        # do no processing if no polarizations specified for current frequency
+        if not input_pol_list:
+            continue
 
         t_freq = time.time()
 
@@ -289,11 +293,6 @@ def run(cfg):
         if radar_grid_nlooks > 1:
             radar_grid = radar_grid.multilook(az_look, rg_look)
         geogrid = geogrids[frequency]
-        input_pol_list = freq_pols[frequency]
-
-        # do no processing if no polarizations specified for current frequency
-        if not input_pol_list:
-            continue
 
         # set dict of input rasters
         input_raster_dict = {}
@@ -302,7 +301,7 @@ def run(cfg):
         # HV and VH. `pol_list` is the actual list of polarizations to be
         # geocoded. It may include HV but it will not include VH if the
         # polarimetric symmetrization is performed
-        pol_list = input_pol_list
+        pol_list = input_pol_list.copy()
         for pol in pol_list:
             temp_ref = f'HDF5:"{input_hdf5}":/{slc.slcPath(frequency, pol)}'
             input_raster_dict[pol] = temp_ref
@@ -357,7 +356,7 @@ def run(cfg):
 
             input_raster_list.append(input_raster)
 
-        info_channel.log(f'Preparing multi-band raster for geocoding')
+        info_channel.log('Preparing multi-band raster for geocoding')
 
         # set paths temporary files
         input_temp = tempfile.NamedTemporaryFile(
@@ -385,6 +384,13 @@ def run(cfg):
             orbit = load_orbit_from_xml(orbit_file)
         else:
             orbit = slc.getOrbit()
+
+        if tec_file:
+            # get azimuth and slant range geocoding corrections
+            az_correction, rg_correction = \
+                get_az_srg_corrections(cfg, slc, frequency, orbit)
+            optional_geo_kwargs['az_time_correction'] = az_correction
+            optional_geo_kwargs['slant_range_correction'] = rg_correction
 
         # init geocode members
         geo.orbit = orbit
