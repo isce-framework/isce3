@@ -19,6 +19,9 @@ gdal.UseExceptions()
 EARTH_APPROX_CIRCUMFERENCE = 40075017.
 EARTH_RADIUS = EARTH_APPROX_CIRCUMFERENCE / (2 * np.pi)
 
+STATIC_REPO = 'nisar-static-repo'
+WATER_MASK_VSIS3_PATH = f'/vsis3/{STATIC_REPO}/WATER_MASK'
+
 
 def cmdLineParse():
     """
@@ -334,10 +337,8 @@ def download_watermask(polys, epsgs, outfile, version):
     file_prefix = os.path.splitext(outfile)[0]
     watermask_list = []
     for n, (epsg, poly) in enumerate(zip(epsgs, polys)):
-        if version == '0.2':
-            vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/watermask.vrt'
-        elif version == '0.3':
-            vrt_filename = f'/vsis3/nisar-static-repo/WATER_MASK/v{version}/EPSG{epsg}.vrt'
+        if version == '0.3':
+            vrt_filename = f'{WATER_MASK_VSIS3_PATH}/v{version}/EPSG{epsg}.vrt'
         outpath = f'{file_prefix}_{n}.tiff'
         watermask_list.append(outpath)
         xmin, ymin, xmax, ymax = poly.bounds
@@ -439,10 +440,9 @@ def check_aws_connection(version):
     """
     import boto3
     s3 = boto3.resource('s3')
-    if version == '0.2':
-        obj = s3.Object('nisar-static-repo', f'WATER_MASK/v{version}/watermask.vrt')
-    elif version == '0.3':
-        obj = s3.Object('nisar-static-repo', f'WATER_MASK/v{version}/EPSG4326.vrt')
+
+    if version == '0.3':
+        obj = s3.Object(f'{STATIC_REPO}', f'WATER_MASK/v{version}/EPSG4326.vrt')
     else:
         errmsg = f'nisar-WATERMASK {version} is currently not available'
         raise ValueError(errmsg)
