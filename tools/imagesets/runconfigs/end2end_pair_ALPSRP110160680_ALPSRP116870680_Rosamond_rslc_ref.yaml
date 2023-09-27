@@ -145,7 +145,7 @@ runconfig:
             is_enabled:
                 presum_blu: true
                 rangecomp: true
-                eap: true
+                eap: false
                 range_cor: true
                 azcomp: true
         qa:

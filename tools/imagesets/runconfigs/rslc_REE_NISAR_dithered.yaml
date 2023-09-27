@@ -181,7 +181,7 @@ runconfig:
             # Default is 1.0.
             # The largest representable float16 value is 65504.
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.
-            encoding_scale_factor: 1.0e-8
+            encoding_scale_factor: 1.0
 
             # Whether to delete temporary files. default=True
             delete_tempfiles: True
@@ -194,7 +194,7 @@ runconfig:
                 # range compression
                 rangecomp: True
                 # elevation antenna pattern correction
-                eap: True
+                eap: False
                 # R^4 spreading loss correction
                 range_cor: True
                 # azimuth compression

@@ -281,7 +281,7 @@ runconfig:
             # Default is 1.0.
             # The largest representable float16 value is 65504.
             # NOTE This is ad-hoc until the processor is radiometrically calibrated.
-            encoding_scale_factor: 1.0e-8
+            encoding_scale_factor: 1.0
 
             # Whether to delete scratch files.  Default is True.
             delete_tempfiles: true

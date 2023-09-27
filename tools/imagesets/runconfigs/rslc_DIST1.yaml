@@ -180,7 +180,7 @@ runconfig:
                 # range compression
                 rangecomp: True
                 # elevation antenna pattern correction
-                eap: True
+                eap: False
                 # R^4 spreading loss correction
                 range_cor: True
                 # azimuth compression
