@@ -323,5 +323,5 @@ def test_parse_and_filter_corner_reflector_csv(ree_corner_reflectors_nisar_csv: 
 
     # Check validity flags.
     validities = [cr.validity for cr in crs]
-    expected_validity = CRValidity.RAD_POL
-    npt.assert_array_equal(validities, expected_validity)
+    expected_validities = [2, 7, 2]
+    npt.assert_array_equal(validities, expected_validities)

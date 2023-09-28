@@ -258,8 +258,8 @@ def estimate_abscal_factor(
     for cr in corner_reflectors:
         try:
             abscal_error = estimate_abscal_error(cr)
-        except Exception as e:
-            errmsg = "".join(traceback.format_exception(e))
+        except Exception:
+            errmsg = traceback.format_exc()
             warnings.warn(
                 f"an exception occurred while processing corner reflector {cr.id!r}:"
                 f"\n\n{errmsg}",
