@@ -667,9 +667,12 @@ class InSARBaseWriter(h5py.File):
         Add the identification group to the product
         """
         radar_band_name = self._get_band_name()
-        processing_center = \
-            self.cfg["primary_executable"].get("processing_center")
-        processing_type = self.cfg["primary_executable"].get("processing_type")
+        primary_exec_cfg =  self.cfg["primary_executable"]
+
+        processing_center = primary_exec_cfg.get("processing_center")
+        processing_type = primary_exec_cfg.get("processing_type")
+        partial_granule_id = primary_exec_cfg.get("partial_granule_id")
+        product_version = primary_exec_cfg.get("product_version")
 
         # processing center (JPL or NRSA)
         if processing_center is None:
@@ -800,12 +803,17 @@ class InSARBaseWriter(h5py.File):
             ds.attrs['description'] = \
                 f"Azimuth {time_in_description} time of {rslc_name} RSLC product"
 
+        # Granule Id and product version
+        if partial_granule_id is None:
+            partial_granule_id = "None"
+        if product_version is None:
+            product_version = \
+                self.product_info.ProductVersion
+
         id_ds_names_to_be_created = [
             DatasetParams(
                 "granuleId",
-                # NOTE: the graduleId is a placeholder here, waiting for the
-                # runconfig change.
-                "None",
+                partial_granule_id,
                 "Unique granule identification name",
             ),
             DatasetParams(
@@ -853,7 +861,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "productVersion",
-                self.product_info.ProductVersion,
+                product_version,
                 (
                     "Product version which represents the structure of the"
                     " product and the science content governed by the"
