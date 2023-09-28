@@ -761,10 +761,10 @@ def resample(raw: np.ndarray, t: np.ndarray,
         # though, so compute a hash we can use to cache the unique weight
         # vectors.
         twiddle = 1 << np.arange(nw)
-        ids = mask.dot(twiddle)  # NOTE in C++ you'd just OR the bits
+        ids = isce3.focus.compute_ids_from_mask(mask)
         # Compute weights for each unique mask pattern.
         lut = dict()
-        for uid in np.unique(ids):
+        for uid in isce3.focus.get_unique_ids(ids):
             # Invert the hash to get the mask back
             valid = (uid & twiddle).astype(bool)
             # Pull out valid times for this mask config and compute weights.
@@ -780,12 +780,11 @@ def resample(raw: np.ndarray, t: np.ndarray,
         # Read raw data.
         block = np.s_[offset:offset+nw, :]
         x = raw[block]
-        # Compute Doppler deramp.  Zero phase at tout means no need to re-ramp.
+        # Apply weights and Doppler deramp.  Zero phase at tout means no need to
+        # re-ramp afterwards.
         trel = t[offset:offset+nw] - tout
         fd = doppler.eval(tout, r)
-        deramp = np.exp(-2j * np.pi * trel[:, None] * fd[None, :])
-        # compute weighted sum of deramped pulses.
-        regridded[i, :] = (w * deramp * x).sum(axis=0)
+        isce3.focus.apply_presum_weights(regridded[i,:], trel, fd, w, x)
     return regridded
 
 
