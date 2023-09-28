@@ -191,8 +191,13 @@ runconfig:
                 # Save the number of looks used to compute GCOV
                 save_nlooks: True
 
-                # Save the RTC area factor used to compute GCOV
-                save_rtc_anf: True
+                # Save the area normalization factor (ANF) to normalize GCOV
+                # imagery to the original SLC backscatter convention:
+                # beta0 or sigma0 (ellipsoid)
+                save_rtc_anf: False
+
+                # Save the RTC area normalization factor (ANF) gamma0 to sigma0
+                save_rtc_anf_gamma0_to_sigma0: True
 
                 # Save interpolated DEM used to compute GCOV
                 save_dem: False

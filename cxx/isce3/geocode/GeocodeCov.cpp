@@ -451,10 +451,10 @@ void Geocode<T>::geocodeInterp(
 
         if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
             rtc_area_sigma0_array.resize(radar_grid.length(),
-                                            radar_grid.width());
+                                         radar_grid.width());
             rtc_sigma0_raster->getBlock(rtc_area_sigma0_array.data(),
-                                                0, 0, radar_grid.width(),
-                                                radar_grid.length(), 1);
+                                        0, 0, radar_grid.width(),
+                                        radar_grid.length(), 1);
         }
     }
 
