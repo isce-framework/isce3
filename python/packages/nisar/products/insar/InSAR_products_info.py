@@ -15,13 +15,13 @@ class InSARProductsInfo:
     Attributes
     ----------
     ProductSpecificationVersion : str
-        Product specification version (default is '1.0')
+        Product specification version (default is '0.9.0')
     ProductType : str
         Product type, one of 'RIFG', 'ROFF', 'RUNW', 'GOFF', 'GUNW'
     ProductLevel : str
         Product level, one of 'L1' and 'L2'
     ProductVersion : str
-        Product version (default is '0.1')
+        Product version (default is '0.1.0')
     isGeocoded : bool
         Geocoded product or not (True or False)
     """
@@ -39,24 +39,24 @@ class InSARProductsInfo:
     @classmethod
     def RIFG(cls):
         return cls(PRODUCT_SPECIFICATION_VERSION,
-                   "RIFG", "L1", "0.1", False)
+                   "RIFG", "L1", "0.1.0", False)
 
     @classmethod
     def ROFF(cls):
         return cls(PRODUCT_SPECIFICATION_VERSION,
-                   "ROFF", "L1", "0.1", False)
+                   "ROFF", "L1", "0.1.0", False)
 
     @classmethod
     def RUNW(cls):
         return cls(PRODUCT_SPECIFICATION_VERSION,
-                   "RUNW", "L1", "0.1", False)
+                   "RUNW", "L1", "0.1.0", False)
 
     @classmethod
     def GOFF(cls):
         return cls(PRODUCT_SPECIFICATION_VERSION,
-                   "GOFF", "L2", "0.1", True)
+                   "GOFF", "L2", "0.1.0", True)
 
     @classmethod
     def GUNW(cls):
         return cls(PRODUCT_SPECIFICATION_VERSION,
-                   "GUNW", "L2", "0.1", True)
+                   "GUNW", "L2", "0.1.0", True)

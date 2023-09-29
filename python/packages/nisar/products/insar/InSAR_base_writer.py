@@ -674,15 +674,10 @@ class InSARBaseWriter(h5py.File):
         partial_granule_id = primary_exec_cfg.get("partial_granule_id")
         product_version = primary_exec_cfg.get("product_version")
 
-        # processing center (JPL or NRSA)
+        # processing center (JPL, NRSC, or Others)
+        # if it is None, 'JPL' will be applied
         if processing_center is None:
-            processing_center = "undefined"
-        elif processing_center.upper() == "J":
             processing_center = "JPL"
-        elif processing_center == "N":
-            processing_center = "NRSA"
-        else:
-            processing_center = "undefined"
 
         # Extract relevant identification from reference and secondary RSLC
         ref_id_group = self.ref_h5py_file_obj[self.ref_rslc.IdentificationPath]
