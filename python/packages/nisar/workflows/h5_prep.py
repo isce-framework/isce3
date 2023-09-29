@@ -242,6 +242,14 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # Assign productType
         dst_h5[f'{ident_path}/productType'] = np.string_(dst)
 
+        # Assign product version
+        dst_h5[f'{ident_path}/productVersion'] = \
+            np.string_(cfg['primary_executable']['product_version'])
+
+        # Assign product specification version
+        dst_h5[f'{ident_path}/productSpecificationVersion'] = \
+            np.string_('0.9.0')
+
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
                         f'{dst_meta_path}/orbit')

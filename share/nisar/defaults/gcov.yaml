@@ -76,6 +76,7 @@ runconfig:
 
         primary_executable:
             product_type: GCOV
+            product_version: 0.1.0
 
         debug_level_group:
             debug_switch: false
@@ -101,7 +102,7 @@ runconfig:
                 #
                 # - If the entire field is left empty, all available frequencies will be processed.
                 # - Otherwise, only frequencies listed (i.e, 'A' and/or 'B') will be processed.
-                # - If the [polarizations] list is empty, all available polarizations 
+                # - If the [polarizations] list is empty, all available polarizations
                 # for given frequency will be processed
                 #
                 # Example 1:

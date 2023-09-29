@@ -67,6 +67,7 @@ runconfig:
 
         primary_executable:
             product_type: GUNW
+            product_version: 0.1.0
 
         debug_level_group:
             debug_switch: false
