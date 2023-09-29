@@ -73,8 +73,10 @@ class RunConfig:
             with open(self.args.run_config_path) as f_yaml:
                 self.user = parser.load(f_yaml)
 
-        # copy user suppiled config into default config
-        helpers.deep_update(self.cfg, self.user)
+        # copy user supplied config into default config
+        flag_none_is_valid = self.workflow_name not in ['gcov', 'gslc']
+
+        helpers.deep_update(self.cfg, self.user, flag_none_is_valid)
 
     def load_geocode_yaml_to_dict(self):
         '''

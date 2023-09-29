@@ -55,7 +55,7 @@ def load_config(yaml):
     cfg = parser.load(open(f'{dir_path}/defaults/focus.yaml', 'r'))
     with open(yaml) as f:
         user = parser.load(f)
-    helpers.deep_update(cfg, user)
+    helpers.deep_update(cfg, user, flag_none_is_valid=False)
     return Struct(cfg)
 
 

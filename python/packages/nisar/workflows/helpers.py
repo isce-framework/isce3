@@ -18,16 +18,27 @@ from nisar.workflows.get_product_geometry import \
 from osgeo import gdal
 
 
-def deep_update(original, update):
+
+def deep_update(original, update, flag_none_is_valid=True):
     '''
     update default runconfig key with user supplied dict
     https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+
+    If `flag_none_is_valid` is `True`, then an empty field in a user-supplied
+    runconfig will be treated the same as if that field was omitted entirely.
+    Otherwise, if the field is blank (i.e., `None`) it would override the default value
+    with None.
     '''
     for key, val in update.items():
         if isinstance(val, dict) and original.get(key) is not None:
             # Only call deep_update() if `original[key] is not empty
             original[key] = deep_update(original.get(key, {}), val)
-        else:
+        elif (flag_none_is_valid or val is not None):
+            # Update `original[key]` with val if
+            # 1. The flag `flag_none_is_valid` is enabled:
+            #    In this case, `None` is considered a valid value
+            #    and therefore we don't need to check if `val` is None
+            # 2. Update `original` if `val` is not `None``
             original[key] = val
 
     # return updated original
