@@ -209,10 +209,11 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
 
         # Copy of identification group
         ident_path = f'{common_path}/identification'
-        ident_excludes = 'productType'
+        ident_excludes = ['productType', 'productVersion',
+                          'productSpecificationVersion']
         if is_insar:
-            ident_excludes = ['productType', 'listOfFrequencies',
-                              'zeroDopplerStartTime', 'zeroDopplerEndTime']
+            ident_excludes += ['listOfFrequencies', 'zeroDopplerStartTime',
+                               'zeroDopplerEndTime']
         cp_h5_meta_data(src_h5, dst_h5, ident_path,
                         excludes=ident_excludes)
 
