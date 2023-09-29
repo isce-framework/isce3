@@ -27,7 +27,7 @@ import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
 import sys
 import tempfile
-from typing import List, Union, Optional, Callable, Iterable, Dict, Tuple
+from typing import Union, Optional, Callable, Iterable
 from isce3.io import Raster as RasterIO
 
 
@@ -98,7 +98,7 @@ def apply_window(kind: str, shape: float, z: np.ndarray) -> np.ndarray:
     raise NotImplementedError(f"window {kind} not in (Kaiser, Cosine).")
 
 
-def check_window_input(win: Struct, msg='') -> Tuple[str, float]:
+def check_window_input(win: Struct, msg='') -> tuple[str, float]:
     """Check user input window kind and shape, log both, and
     return (kind, shape).
     """
@@ -167,7 +167,7 @@ def get_attitude(cfg: Struct):
     return raw.getAttitude()
 
 
-def get_total_grid_bounds(rawfiles: List[str]):
+def get_total_grid_bounds(rawfiles: list[str]):
     times, ranges = [], []
     for fn in rawfiles:
         raw = open_rrsd(fn)
@@ -185,7 +185,7 @@ def get_total_grid_bounds(rawfiles: List[str]):
     return epoch, tmin, tmax, rmin, rmax
 
 
-def get_total_grid(rawfiles: List[str], dt, dr):
+def get_total_grid(rawfiles: list[str], dt, dr):
     epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles)
     nt = int(np.ceil((tmax - tmin) / dt))
     nr = int(np.ceil((rmax - rmin) / dr))
@@ -224,7 +224,7 @@ def squint_to_doppler(squint, wvl, vmag):
     return 2.0 / wvl * vmag * np.sin(squint)
 
 
-def convert_epoch(t: List[float], epoch_in, epoch_out):
+def convert_epoch(t: list[float], epoch_in, epoch_out):
     TD = isce3.core.TimeDelta
     return [(epoch_in - epoch_out + TD(ti)).total_seconds() for ti in t]
 
@@ -245,7 +245,7 @@ def get_dem(cfg: Struct):
     return dem
 
 
-def make_doppler_lut(rawfiles: List[str],
+def make_doppler_lut(rawfiles: list[str],
         az: float = 0.0,
         orbit: Optional[isce3.core.Orbit] = None,
         attitude: Optional[isce3.core.Attitude] = None,
@@ -525,9 +525,9 @@ def make_output_grid(cfg: Struct,
                                epoch)
 
 
-Selection2d = Tuple[slice, slice]
-TimeBounds = Tuple[float, float]
-BlockPlan = List[Tuple[Selection2d, TimeBounds]]
+Selection2d = tuple[slice, slice]
+TimeBounds = tuple[float, float]
+BlockPlan = list[tuple[Selection2d, TimeBounds]]
 
 def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
                            doppler: LUT2d, dem: isce3.geometry.DEMInterpolator,
@@ -614,7 +614,7 @@ def get_kernel(cfg: Struct):
 # Work around for fact that slices are not hashable and can't be used as
 # dictionary keys or entries in sets
 # https://bugs.python.org/issue1733184
-def unpack_slices(slices: Tuple[slice, slice]):
+def unpack_slices(slices: tuple[slice, slice]):
     rows, cols = slices
     return ((rows.start, rows.stop, rows.step),
             (cols.start, cols.stop, cols.step))
@@ -838,13 +838,13 @@ def require_constant_look_side(rawlist: Iterable[Raw]) -> str:
     return side_set.pop()
 
 
-def get_common_mode(rawlist: List[Raw]) -> PolChannelSet:
+def get_common_mode(rawlist: list[Raw]) -> PolChannelSet:
     assert len(rawlist) > 0
     modes = [PolChannelSet.from_raw(raw) for raw in rawlist]
     return reduce(lambda mode1, mode2: mode1.intersection(mode2), modes)
 
 
-def get_bands(mode: PolChannelSet) -> Dict[str, Band]:
+def get_bands(mode: PolChannelSet) -> dict[str, Band]:
     assert mode == mode.regularized()
     bands = dict()
     for channel in mode:
@@ -1003,6 +1003,44 @@ def get_calibration(cfg: Struct, bandwidth: Optional[float] = None) -> RslcCalib
     return parse_rslc_calibration(filename, bandwidth)
 
 
+def get_identification_data_from_runconfig(cfg: Struct) -> dict:
+    """
+    Populate a dict containing the keys
+        {"product_version", "processing_type", "mission_id",
+        "processing_center", "granule_id", "track", "frame"}
+    using data from an RSLC runconfig.
+    """
+    keys = ["product_version", "processing_type", "mission_id",
+        "processing_center"]
+    exe = vars(cfg.primary_executable)
+    d = {key: exe[key] for key in keys}
+    # TODO populate fields in partial granule ID
+    d["granule_id"] = exe["partial_granule_id"]
+    d["track"] = cfg.geometry.relative_orbit_number
+    d["frame"] = cfg.geometry.frame_number
+    return d
+
+
+def get_identification_data_from_raw(rawlist: list[Raw]) -> dict:
+    """
+    Populate a dict containing the keys
+        {"planned_datatake_id", "planned_observation_id", "is_urgent"}
+    by combining the relevant identification metadata keys from all raw data
+    files in the provided list.
+    """
+    def parse_urgent(raw: Raw) -> bool:
+        return raw.identification.isUrgentObservation.lower() == "true"
+
+    return dict(
+        # L0B always have a single entry
+        planned_datatake_id = [raw.identification.plannedDatatake[0]
+            for raw in rawlist],
+        planned_observation_id = [raw.identification.plannedObservation[0]
+            for raw in rawlist],
+        is_urgent = any(parse_urgent(raw) for raw in rawlist)
+    )
+
+
 def focus(runconfig):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1092,11 +1130,16 @@ def focus(runconfig):
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     slc.set_attitude(attitude)
     og = next(iter(ogrid.values()))
+    id_data = get_identification_data_from_runconfig(cfg)
+    id_data.update(get_identification_data_from_raw(rawlist))
     slc.copy_identification(rawlist[0], polygon=polygon,
-        track=cfg.geometry.relative_orbit_number,
-        frame=cfg.geometry.frame_number,
         start_time=og.sensing_datetime(0),
-        end_time=og.sensing_datetime(og.length - 1))
+        end_time=og.sensing_datetime(og.length - 1),
+        frequencies=common_mode.frequencies,
+        is_dithered=any(raw.isDithered(raw.frequencies[0]) for raw in rawlist),
+        is_mixed_mode=any(PolChannelSet.from_raw(raw) != common_mode
+            for raw in rawlist),
+        **id_data)
 
     # Get reference range for radiometric correction and warn user if it's not
     # a good value (especially since the default is catered to NISAR).

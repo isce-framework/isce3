@@ -6,6 +6,59 @@ from numbers import Integral
 from warnings import warn
 
 
+def get_scalar_or_first(group, key, typeconv = lambda x: x):
+    """
+    Get a scalar from an HDF5 dataset that may be either a scalar or list
+
+    Parameters
+    ----------
+    group : h5py.Group
+        HDF5 group object
+    key : str
+        Name of the dataset
+    typeconv : function, optional
+        Optional type conversion function to apply to result
+
+    Returns
+    -------
+    value : object
+        Scalar value corresponding to contents of a scalar dataset or the first
+        entry in a vector dataset.
+    """
+    dset = group[key]
+    if len(dset.shape) == 0:  # scalar
+        value = group[key][()]
+    else:
+        value = group[key][0]
+    return typeconv(value)
+
+
+def get_list_from_scalar_or_list(group, key, typeconv = lambda x: x):
+    """
+    Get a list from an HDF5 dataset that may be either a scalar or list
+
+    Parameters
+    ----------
+    group : h5py.Group
+        HDF5 group object
+    key : str
+        Name of the dataset
+    typeconv : function, optional
+        Optional type conversion function to apply to results
+
+    Returns
+    -------
+    value : list
+        List of values corresponding to contents of a scalar or vector dataset
+    """
+    dset = group[key]
+    if len(dset.shape) == 0:  # scalar
+        values = [group[key][()]]
+    else:
+        values = group[key][:]
+    return [typeconv(value) for value in values]
+
+
 class Identification(object):
     '''
     Simple object to hold identification information for NISAR products.
@@ -29,7 +82,7 @@ class Identification(object):
 
         ###Information from mission planning
         self.isUrgentObservation = None
-        self.plannedDataTake = None
+        self.plannedDatatake = None
         self.plannedObservation = None
         
         
@@ -141,7 +194,23 @@ class Identification(object):
                                    2: 'Multi-channel/DM2'
                                    }.get(self.diagnosticModeFlag)
 
-        ###Mission planning info to be added
+        ###Mission planning info
+        # REE simulated L0B products have these as scalar when the spec says list
+        self.plannedDatatake = get_list_from_scalar_or_list(h5grp,
+            'plannedDatatakeId', bytestring)
+
+        self.plannedObservation = get_list_from_scalar_or_list(h5grp,
+            'plannedObservationId', bytestring)
+
+        # spec changed from list to scalar, try to support both for now
+        # Some old test data has bool instead of string, too.
+        is_urgent = get_scalar_or_first(h5grp, "isUrgentObservation")
+        if isinstance(is_urgent, np.bool_):
+            warn("isUrgentObservation is boolean but expected string")
+            self.isUrgentObservation = str(is_urgent)
+        else:
+            self.isUrgentObservation = bytestring(is_urgent)
+
         ###Processing type info to be added
 
 # end of file

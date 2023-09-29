@@ -1,9 +1,11 @@
+from datetime import datetime
 import h5py
 import logging
 import numpy as np
 from numpy.linalg import norm
 from numpy.testing import assert_allclose
 import os
+from typing import Optional
 import isce3
 from isce3.core import LUT2d, DateTime, Orbit, Attitude, EulerAngles
 from isce3.product import RadarGridParameters
@@ -129,10 +131,12 @@ class SLC(h5py.File):
         self.root = self.create_group(f"/science/{band}/{product}")
         self.idpath = f"/science/{band}/identification"
         self.attrs["Conventions"] = np.string_("CF-1.7")
-        self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
+        self.attrs["contact"] = np.string_("nisar-sds-ops@jpl.nasa.gov")
         self.attrs["institution"] = np.string_("NASA JPL")
         self.attrs["mission_name"] = np.string_("NISAR")
-        self.attrs["reference_document"] = np.string_("TBD")
+        self.attrs["reference_document"] = np.string_("D-102268 NISAR NASA SDS "
+            "Product Specification Level-1 Range Doppler Single Look Complex "
+            "L1_RSLC")
         self.attrs["title"] = np.string_("NISAR L1 RSLC Product")
 
     def create_dataset(self, *args, **kw):
@@ -346,11 +350,62 @@ class SLC(h5py.File):
         d.attrs["description"] = np.string_("Attitude Euler angles"
                                             " (roll, pitch, yaw)")
 
-    def copy_identification(self, raw: Raw, track: int = 0, frame: int = 0,
-                            polygon: str = None, start_time: DateTime = None,
-                            end_time: DateTime = None):
-        """Copy the identification metadata from a L0B product.  Bounding
-        polygon and start/end time will be updated if not None.
+    def copy_identification(self, raw: Raw, *, track: int = 0, frame: int = 0,
+                            absolute_orbit_number: Optional[int] = None,
+                            polygon: Optional[str] = None,
+                            start_time: Optional[DateTime] = None,
+                            end_time: Optional[DateTime] = None,
+                            mission_id: Optional[str] = None,
+                            instrument_name: Optional[str] = None,
+                            frequencies: Optional[str] = None,
+                            planned_datatake_id: Optional[str] = None,
+                            planned_observation_id: Optional[str] = None,
+                            is_urgent: Optional[bool] = None,
+                            product_spec_version: str = "0.9.0",
+                            processing_center: str = "JPL",
+                            granule_id: str = "None",
+                            product_version: str = "0.1.0",
+                            processing_type: str = "CUSTOM",
+                            is_dithered: bool = False,
+                            is_mixed_mode: bool = False):
+        """
+        Populate identification metadata with a combination of copied values
+        from L0B and user data.
+
+        always copied from L0B:
+            diagnosticModeFlag
+            isGeocoded
+            lookDirection
+            orbitPassDirection
+
+        copied from L0B if associated input argument is None:
+            absoluteOrbitNumber
+            boundingPolygon
+            instrumentName
+            isUrgentObservation
+            listOfFrequencies
+            missionId
+            plannedDatatakeId
+            plannedObservationId
+            zeroDopplerEndTime
+            zeroDopplerStartTime
+
+        always populated based on input values:
+            frameNumber
+            granuleId
+            isDithered
+            isMixedMode
+            processingCenter
+            processingType
+            productSpecificationVersion
+            productVersion
+            trackNumber
+
+        always populated independently:
+            processingDateTime
+            productLevel
+            productType
+            radarBand
         """
         log.info(f"Populating identification based on {raw.filename}")
         # Most parameters are just copies of input ID.
@@ -390,6 +445,95 @@ class SLC(h5py.File):
             d.attrs["description"] = np.string_("Azimuth stop time of product")
         else:
             log.warning("SLC end time not updated.  Using L0B end time.")
+
+        # It should be pretty safe to copy mission_id and instrument_name from
+        # the input L0B, so don't bother warning if we do that.
+        if mission_id is not None:
+            d = set_string(g, "missionId", mission_id)
+            d.attrs["description"] = np.string_("Mission identifier")
+            log.info(f"Updating missionId to {mission_id}")
+
+        # Add "LSAR" instrument name if it wasn't in either L0B or arg list.
+        if "instrumentName" not in g and instrument_name is None:
+            instrument_name = self.band
+
+        if instrument_name is not None:
+            d = set_string(g, "instrumentName", instrument_name)
+            d.attrs["description"] = np.string_("Name of the instrument used "
+                "to collect the remote sensing data provided in this product")
+            log.info(f"Updating instrumentName to {instrument_name}")
+
+        if absolute_orbit_number is not None:
+            d = g.require_dataset("absoluteOrbitNumber", (), np.uint32)
+            d[()] = np.uint32(absolute_orbit_number)
+            d.attrs["description"] = np.string_("Absolute orbit number")
+
+        def set_string_list(group, key, values, desc):
+            if key in group:
+                # delete since we can't guarantee old list has same length
+                del group[key]
+            d = group.create_dataset(key, data=np.string_(values))
+            d.attrs["description"] = np.string_(desc)
+
+        if frequencies is not None:
+            set_string_list(g, "listOfFrequencies", frequencies,
+                "List of frequency layers available in the product")
+
+        if planned_datatake_id is not None:
+            set_string_list(g, "plannedDatatakeId", planned_datatake_id,
+                "List of planned datatakes included in the product")
+        
+        if planned_observation_id is not None:
+            set_string_list(g, "plannedObservationId", planned_observation_id,
+                "List of planned observations included in the product")
+
+        if is_urgent is not None:
+            d = set_string(g, "isUrgentObservation", str(is_urgent))
+            d.attrs["description"] = np.string_(
+                'Flag indicating if observation is nominal ("False") '
+                'or urgent ("True")')
+
+        d = set_string(g, "productSpecificationVersion", product_spec_version)
+        d.attrs["description"] = np.string_("Product specification version "
+            "which represents the schema of this product")
+
+        d = set_string(g, "processingCenter", processing_center)
+        d.attrs["description"] = np.string_("Data processing center")
+
+        d = set_string(g, "granuleId", granule_id)
+        d.attrs["description"] = np.string_(
+            "Unique granule identification name")
+
+        d = set_string(g, "productVersion", product_version)
+        d.attrs["description"]= np.string_("Product version which represents "
+            "the structure of the product and the science content governed by "
+            "the algorithm, input data, and processing parameters")
+
+        d = set_string(g, "productLevel", "L1")
+        d.attrs["description"] = np.string_("Product level. L0A: Unprocessed "
+            "instrument data; L0B: Reformatted, unprocessed instrument data; "
+            "L1: Processed instrument data in radar coordinates system; and "
+            "L2: Processed instrument data in geocoded coordinates system")
+
+        d = set_string(g, "radarBand", self.band[0])
+        d.attrs["description"] = np.string_("Acquired frequency band")
+
+        d = set_string(g, "processingType", processing_type)
+        d.attrs["description"] = np.string_(
+            "NOMINAL (or) URGENT (or) CUSTOM (or) UNDEFINED")
+
+        d = set_string(g, "isDithered", str(is_dithered))
+        d.attrs["description"] = np.string_('"True" if the pulse timing was '
+            'varied (dithered) during acquisition, "False" otherwise.')
+
+        d = set_string(g, "isMixedMode", str(is_mixed_mode))
+        d.attrs["description"] = np.string_('"True" if this product is a '
+            'composite of data collected in multiple radar modes, '
+            '"False" otherwise')
+
+        d = set_string(g, "processingDateTime", datetime.now().isoformat())
+        d.attrs["description"] = np.string_("Processing UTC date and time in "
+            "the format YYYY-MM-DDTHH:MM:SS")
 
 
     def set_geolocation_grid(self, orbit: Orbit, grid: RadarGridParameters,

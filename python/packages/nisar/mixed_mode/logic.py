@@ -142,6 +142,11 @@ class PolChannelSet(set):
                 l.append(PolChannel(freq_id, pol, Band(fc, abs(K * T))))
         return cls(l)
 
+    @property
+    def frequencies(self) -> list[str]:
+        """List of frequency sub bands"""
+        return sorted(list({chan.freq_id for chan in self}))
+
     def intersection(self, others: Set[PolChannel], regularize=True) -> 'PolChannelSet':
         """
         Calculate intersection with another PolChannelSet.  Returns empty

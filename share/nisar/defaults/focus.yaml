@@ -65,6 +65,11 @@ runconfig:
         primary_executable:
             # Handy to set to "SLC" until other ISCE tools updated.
             product_type: RSLC
+            product_version: 0.1.0
+            processing_type: CUSTOM
+            mission_id: null  # null to get from first L0B input
+            processing_center: JPL
+            partial_granule_id: "None"
 
         geometry:
             relative_orbit_number: 1
