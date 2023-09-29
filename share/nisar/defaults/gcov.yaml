@@ -165,6 +165,19 @@ runconfig:
                 # RTC DEM upsampling
                 dem_upsampling: 2
 
+                # RTC area beta mode. Options:
+                # 'auto' - Default value is defined by the RTC algorithm that is being
+                #     executed, i.e., 'pixel_area' for 'algorithm_type' equal to
+                #     'bilinear_distribution' and 'projection_angle' for
+                #     'algorithm_type' equal to 'area_projection'
+                #  'pixel_area' - Estimate the beta surface reference area `A_beta`
+                #     using the pixel area, which is the product of the range spacing
+                #     by the azimuth spacing (computed using the ground velocity)
+                #  'projection_angle' - estimate the beta surface reference area `A_beta`
+                #     using the projection angle method:
+                #     `A_beta = A_sigma * cos(projection_angle)`
+                area_beta_mode: auto
+
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
 

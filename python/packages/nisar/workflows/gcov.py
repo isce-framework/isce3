@@ -69,7 +69,7 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     flag_rslc_to_backscatter is enabled, the 
     RSLC complex values are converted to radar backscatter (square of
     the RSLC magnitude): out = abs(RSLC)**2
-    
+
     Optionally, the output raster can be created from the
     symmetrization of two polarimetric channels
     (`pol` and `pol_2`).
@@ -264,6 +264,22 @@ def run(cfg):
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
     rtc_upsampling = rtc_dict['dem_upsampling']
 
+    rtc_area_beta_mode = rtc_dict['area_beta_mode']
+    if rtc_area_beta_mode == 'pixel_area':
+        rtc_area_beta_mode_enum = \
+            isce3.geometry.RtcAreaBetaMode.PIXEL_AREA
+    elif rtc_area_beta_mode == 'projection_angle':
+        rtc_area_beta_mode_enum = \
+            isce3.geometry.RtcAreaBetaMode.PROJECTION_ANGLE
+    elif (rtc_area_beta_mode == 'auto' or
+            rtc_area_beta_mode is None):
+        rtc_area_beta_mode_enum = \
+            isce3.geometry.RtcAreaBetaMode.AUTO
+    else:
+        err_msg = ('ERROR invalid area beta mode:'
+                   f' {rtc_area_beta_mode}')
+        raise ValueError(err_msg)
+
     # unpack geocode run parameters
     geocode_dict = cfg['processing']['geocode']
     geocode_algorithm = geocode_dict['algorithm_type']
@@ -307,7 +323,8 @@ def run(cfg):
     elif (flag_apply_rtc and output_terrain_radiometry ==
             isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT):
         output_radiometry_str = 'radar backscatter gamma0'
-    elif input_terrain_radiometry == isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
+    elif input_terrain_radiometry == \
+            isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT:
         output_radiometry_str = 'radar backscatter beta0'
     else:
         output_radiometry_str = 'radar backscatter sigma0'
@@ -469,10 +486,11 @@ def run(cfg):
         temp_output = tempfile.NamedTemporaryFile(
             dir=scratch_path, suffix='.tif')
 
-        output_raster_obj = isce3.io.Raster(temp_output.name,
-                geogrid.width, geogrid.length,
-                input_raster_obj.num_bands,
-                gdal.GDT_Float32, 'GTiff')
+        output_raster_obj = isce3.io.Raster(
+            temp_output.name,
+            geogrid.width, geogrid.length,
+            input_raster_obj.num_bands,
+            gdal.GDT_Float32, 'GTiff')
 
         nbands_off_diag_terms = 0
         out_off_diag_terms_obj = None
@@ -561,6 +579,7 @@ def run(cfg):
                     out_off_diag_terms=out_off_diag_terms_obj,
                     out_geo_nlooks=out_geo_nlooks_obj,
                     out_geo_rtc=out_geo_rtc_obj,
+                    rtc_area_beta_mode=rtc_area_beta_mode_enum,
                     out_geo_rtc_gamma0_to_sigma0=out_geo_rtc_gamma0_to_sigma0_obj,
                     out_geo_dem=out_geo_dem_obj,
                     input_rtc=None,
