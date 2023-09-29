@@ -189,4 +189,6 @@ runconfig:
             workflows:
                 validate: true
                 qa_reports: true
+                absolute_radiometric_calibration: true
                 noise_estimation: true
+                point_target_analyzer: true
