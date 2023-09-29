@@ -754,40 +754,120 @@ runconfig:
         qa:
             rifg:
                 workflows:
-                    # True to run the validate workflow. Default: False
-                    validate: False
+                    # Flag to run `validate` workflow to validate the
+                    # input file against its product spec.
+                    # Default: True
+                    validate: true
 
-                    # True to run the qa_reports workflow. Default: False
-                    qa_reports: False
+                    # Flag to run `qa_reports` workflow to generate a
+                    # PDF report, geolocated browse image, compute statistics
+                    # on the input file, etc..
+                    # Default: True
+                    qa_reports: true
+
+                qa_reports:
+                    hsi_img:
+                        # True to perform histogram equalization on the Intensity channel
+                        # (the coherence magnitude layer) in the browse image PNG.
+                        # (Browse image is in HSI color space.) PDF report will not be affected.
+                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
+                        # Default: True
+                        equalize_browse: true
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image. Defaults to 2048.
+                        # Default: 2048
+                        longest_side_max: 2048
 
             runw:
                 workflows:
-                    # True to run the validate workflow. Default: False
-                    validate: False
+                    # Flag to run `validate` workflow to validate the
+                    # input file against its product spec.
+                    # Default: True
+                    validate: true
 
-                    # True to run the qa_reports workflow. Default: False
-                    qa_reports: False
+                    # Flag to run `qa_reports` workflow to generate a
+                    # PDF report, geolocated browse image, compute statistics
+                    # on the input file, etc..
+                    # Default: True
+                    qa_reports: true
+
+                qa_reports:
+                    hsi_img:
+                        # True to perform histogram equalization on the Intensity channel
+                        # (the coherence magnitude layer) in the browse image PNG.
+                        # (Browse image is in HSI color space.) PDF report will not be affected.
+                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
+                        # Default: True
+                        equalize_browse: true
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image. Defaults to 2048.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # The multiple of pi to rewrap the unwrapped phase image
+                        # when generating the HSI image(s). If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 3
+                        rewrap: 3
 
             gunw:
                 workflows:
-                    # True to run the validate workflow. Default: False
-                    validate: False
+                    # Flag to run `validate` workflow to validate the
+                    # input file against its product spec.
+                    # Default: True
+                    validate: true
 
-                    # True to run the qa_reports workflow. Default: False
-                    qa_reports: False
+                    # Flag to run `qa_reports` workflow to generate a
+                    # PDF report, geolocated browse image, compute statistics
+                    # on the input file, etc..
+                    # Default: True
+                    qa_reports: true
+
+                qa_reports:
+                    hsi_img:
+                        # True to perform histogram equalization on the Intensity channel
+                        # (the coherence magnitude layer) in the browse image PNG.
+                        # (Browse image is in HSI color space.) PDF report will not be affected.
+                        # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
+                        # Default: True
+                        equalize_browse: true
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image. Defaults to 2048.
+                        # Default: 2048
+                        longest_side_max: 2048
+
+                        # The multiple of pi to rewrap the unwrapped phase image
+                        # when generating the HSI image(s). If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 3
+                        rewrap: 3
 
             roff:
                 workflows:
-                    # True to run the validate workflow. Default: False
-                    validate: False
+                    # Flag to run `validate` workflow to validate the
+                    # input file against its product spec.
+                    # Default: True
+                    validate: true
 
-                    # True to run the qa_reports workflow. Default: False
-                    qa_reports: False
+                    # Flag to run `qa_reports` workflow to generate a
+                    # PDF report, geolocated browse image, compute statistics
+                    # on the input file, etc..
+                    # Default: True
+                    qa_reports: true
 
             goff:
                 workflows:
-                    # True to run the validate workflow. Default: False
-                    validate: False
+                    # Flag to run `validate` workflow to validate the
+                    # input file against its product spec.
+                    # Default: True
+                    validate: true
 
-                    # True to run the qa_reports workflow. Default: False
-                    qa_reports: False
+                    # Flag to run `qa_reports` workflow to generate a
+                    # PDF report, geolocated browse image, compute statistics
+                    # on the input file, etc..
+                    # Default: True
+                    qa_reports: true
+

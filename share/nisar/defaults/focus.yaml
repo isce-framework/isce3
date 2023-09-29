@@ -265,37 +265,38 @@ runconfig:
 
                 # Flag to run `validate` workflow to validate the
                 # input file against its product spec.
-                # Default: False
-                validate: false
+                # Default: True
+                validate: true
 
                 # Flag to run `qa_reports` workflow to generate a
                 # PDF report, geolocated browse image, compute statistics
                 # on the input file, etc..
-                # Default: False
-                qa_reports: false
+                # Default: True
+                qa_reports: true
 
                 # Flag to run Absolute Radiometric Calibration calibration tool.
-                # Default: False
-                absolute_radiometric_calibration: false
+                # Default: True
+                absolute_radiometric_calibration: true
 
                 # Flag to run Noise Estimator Tool calibration tool.
-                # Default: False
-                noise_estimation: false
+                # Default: True
+                noise_estimation: true
 
                 # Flag to run Point Target Analyzer calibration tool.
-                # Default: False
-                point_target_analyzer: false
+                # Default: True
+                point_target_analyzer: true
 
             qa_reports:
                 backscatter_img:
-                    # True to compute power in linear units when generating
-                    # the power image for the browse images and graphical
+
+                    # True to compute backscatter in linear units when generating
+                    # the backscatter image for the browse images and graphical
                     # summary PDF. False for decibel units.
                     # Default: True
                     linear_units: true
 
                     # Number of looks along each axis of the Frequency A
-                    # image arrays for multilooking the power image.
+                    # image arrays for multilooking the backscatter image.
                     # Format: [<num_rows>, <num_cols>]
                     # Example: [6,7]
                     # If not provided, the QA code to compute the nlooks values
@@ -304,7 +305,7 @@ runconfig:
                     nlooks_freqa:
 
                     # Number of looks along each axis of the Frequency B
-                    # image arrays for multilooking the power image.
+                    # image arrays for multilooking the backscatter image.
                     # Format: [<num_rows>, <num_cols>]
                     # Example: [6,7]
                     # If not provided, the QA code to compute the nlooks values
@@ -324,7 +325,7 @@ runconfig:
                     # Default: (5.0, 95.0)
                     percentile_for_clipping: [5.0, 95.0]
 
-                    # Gamma correction parameter applied to power and browse image(s).
+                    # Gamma correction parameter applied to backscatter and browse image(s).
                     # Gamma will be applied as follows:
                     # array_out = normalized_array ^ gamma
                     # where normalized_array is a copy of the image with values
@@ -347,14 +348,14 @@ runconfig:
                 histogram:
 
                     # Step size to decimate the input array for computing
-                    # the power and phase histograms.
+                    # the backscatter and phase histograms.
                     # For example, [2,3] means every 2nd azimuth line and
                     # every 3rd range sample will be used to compute the histograms.
                     # Format: [<azimuth>, <range>]
                     # Default: (10, 10)
                     decimation_ratio: [10, 10]
 
-                    # Range in dB for the power histogram's bin edges. Endpoint will
+                    # Range in dB for the backscatter histogram's bin edges. Endpoint will
                     # be included. Format: [<starting value>, <endpoint>]
                     # Default: (-80.0, 20.0)
                     backscatter_histogram_bin_edges_range: [-80.0, 20.0]

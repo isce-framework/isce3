@@ -338,14 +338,14 @@ runconfig:
 
                 # Flag to run `validate` workflow to validate the
                 # input file against its product spec.
-                # Default: False
-                validate: false
+                # Default: True
+                validate: true
 
                 # Flag to run `qa_reports` workflow to generate a
                 # PDF report, geolocated browse image, compute statistics
                 # on the input file, etc..
-                # Default: False
-                qa_reports: false
+                # Default: True
+                qa_reports: true
 
             qa_reports:
 

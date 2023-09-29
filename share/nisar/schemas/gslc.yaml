@@ -170,7 +170,7 @@ workflows_options:
     qa_reports: bool(required=False)
 
 qa_reports_options:
-    power_image:
+    backscatter_img:
         linear_units: bool(required=False)
         nlooks_freqa: list(int(min=1), min=2, max=2, required=False)
         nlooks_freqb: list(int(min=1), min=2, max=2, required=False)
