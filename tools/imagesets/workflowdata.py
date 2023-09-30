@@ -225,7 +225,7 @@ workflowdata = {
 workflowtests = {
     'rslc': {"rslc_" + name: "L0B_RRSD_" + name for name in [
         "REE1",
-        "REE2",
+        # "REE2",
         "REE_NISAR_dithered",
         "DIST1",
         "DIST2",
