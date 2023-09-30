@@ -210,7 +210,7 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # Copy of identification group
         ident_path = f'{common_path}/identification'
         ident_excludes = ['productType', 'productVersion',
-                          'productSpecificationVersion']
+                          'productSpecificationVersion', 'granuleId']
         if is_insar:
             ident_excludes += ['listOfFrequencies', 'zeroDopplerStartTime',
                                'zeroDopplerEndTime']
@@ -250,6 +250,10 @@ def cp_geocode_meta(cfg, output_hdf5, dst):
         # Assign product specification version
         dst_h5[f'{ident_path}/productSpecificationVersion'] = \
             np.string_('0.9.0')
+
+        # Assign granule ID
+        dst_h5[f'{ident_path}/granuleId'] = \
+            np.string_(cfg['primary_executable']['partial_granule_id'])
 
         # copy orbit information group
         cp_h5_meta_data(src_h5, dst_h5, f'{src_meta_path}/orbit',
