@@ -536,6 +536,37 @@ class RawBase(Base, family='nisar.productreader.raw'):
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             return fid[path_txrx]["WL"][()]
 
+    def getSampleRateDBF(self, frequency="A", polarization=None):
+        """
+        Get sample rate corresponding to RD, WD, WL timing metadata.  For
+        NISAR this is always 240 MHz, but it may be different for simulated
+        datasets.
+
+        Parameters
+        ----------
+        frequency : {'A', 'B'}
+            Sub-band.  Typically main science band is 'A'.
+        polarization : {'HH', 'HV', 'VH', 'VV', 'RH','RV', 'LH', 'LV'}, optional
+            Transmit-Receive polarization. If not specified, the first
+            polarization in the `frequency` band will be used.
+
+        Returns
+        -------
+        fs : float
+            Sample rate in Hz
+        """
+        if polarization is None:
+            polarization = self.polarizations[frequency][0]
+        path_txrx = self._rawGroup(frequency, polarization)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            group = fid[path_txrx]
+            key = "sampleRateDBF"
+            if key in group:
+                return group[key][()]
+            else:
+                log.info("sampleRateDBF not found in L0B, assuming 240 MHz")
+                return 240e6
+
     def getRdWdWl(self, frequency='A', polarization=None):
         """
         Get all three DBF-related parameters "RD", "WD", and "WL" in one

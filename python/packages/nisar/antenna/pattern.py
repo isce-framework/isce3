@@ -264,9 +264,9 @@ class AntennaPattern:
         self.attitude.update_reference_epoch(self.reference_epoch)
 
         # Sampling rate in (Hz) for range window parameters RD/WD/WL in
-        # NISAR case.
-        # TODO: ADC clock rate (fs_win) to be parsed from the L0B product
-        self.fs_win = 240e6
+        # NISAR case, assumed same on all channels.  This is only different
+        # from 240 MHz for simulated data.
+        self.fs_win = raw.getSampleRateDBF(self.freq_band)
 
         # parse active RX channels and fs_ta which are polarization
         # independent!
