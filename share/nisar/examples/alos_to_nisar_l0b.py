@@ -207,24 +207,70 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
         f"seconds since {orbit.reference_epoch.isoformat()}")
 
 
+ident_descriptions = {
+  'absoluteOrbitNumber': 'Absolute orbit number',
+  'boundingPolygon': 'OGR compatible WKT representation of bounding polygon of '
+                     'the image',
+  'diagnosticModeFlag': 'Indicates if the radar operation mode is a diagnostic '
+                        'mode (1-2) or DBFed science (0): 0, 1, or 2',
+  'granuleId': 'Unique granule identification name',
+  'instrumentName': 'Name of the instrument used to collect the remote sensing '
+                    'data provided in this product',
+  'isDithered': '"True" if the pulse timing was varied (dithered) during '
+                'acquisition, "False" otherwise.',
+  'isGeocoded': 'Flag to indicate if the product data is in the radar geometry '
+                '("False") or in the map geometry ("True")',
+  'isMixedMode': '"True" if this product is a composite of data collected in '
+                 'multiple radar modes, "False" otherwise.',
+  'isUrgentObservation': 'Flag indicating if observation is nominal ("False") '
+                         'or urgent ("True")',
+  'listOfFrequencies': 'List of frequency layers available in the product',
+  'lookDirection': 'Look direction can be left or right',
+  'missionId': 'Mission identifier',
+  'orbitPassDirection': 'Orbit direction can be ascending or descending',
+  'plannedDatatakeId': 'List of planned datatakes included in the product',
+  'plannedObservationId': 'List of planned observations included in the '
+                          'product',
+  'processingCenter': 'Data processing center',
+  'processingDateTime': 'Processing UTC date and time in the format '
+                        'YYYY-MM-DDTHH:MM:SS',
+  'processingType': 'NOMINAL (or) URGENT (or) CUSTOM (or) UNDEFINED',
+  'productLevel': 'Product level. L0A: Unprocessed instrument data; L0B: '
+                  'Reformatted, unprocessed instrument data; L1: Processed '
+                  'instrument data in radar coordinates system; and L2: '
+                  'Processed instrument data in geocoded coordinates system',
+  'productSpecificationVersion': 'Product specification version which '
+                                 'represents the schema of this product',
+  'productType': 'Product type',
+  'productVersion': 'Product version which represents the structure of the '
+                    'product and the science content governed by the '
+                    'algorithm, input data, and processing parameters',
+  'radarBand': 'Acquired frequency band',
+  'zeroDopplerEndTime': 'Azimuth stop time of the product',
+  'zeroDopplerStartTime': 'Azimuth start time of the product'
+}
+
+
 def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
     """Populate L0B identification data.  Fields in
     {"boundingPolygon"," zeroDopplerStartTime", "zeroDopplerEndTime"}
     are populated with dummy values.
     """
+    # scalar
     ident.create_dataset('diagnosticModeFlag', data=numpy.uint8(0))
     ident.create_dataset('isGeocoded', data=numpy.string_("False"))
     ident.create_dataset('listOfFrequencies', data=numpy.string_(["A"]))
-    ident.create_dataset('lookDirection', data = numpy.string_("Right"))
+    ident.create_dataset('lookDirection', data = numpy.string_("right"))
     ident.create_dataset('missionId', data=numpy.string_("ALOS"))
-    ident.create_dataset('orbitPassDirection', data=numpy.string_(ldr.summary.TimeDirectionIndicatorAlongLine))
+    direction = "ascending" if ldr.summary.TimeDirectionIndicatorAlongLine[0] == "A" else "descending"
+    ident.create_dataset('orbitPassDirection', data=numpy.string_(direction))
     ident.create_dataset('processingType', data=numpy.string_("repackaging"))
     ident.create_dataset('productType', data=numpy.string_("RRSD"))
-    ident.create_dataset('productVersion', data=numpy.string_("0.1"))
+    ident.create_dataset('productVersion', data=numpy.string_("0.1.0"))
     ident.create_dataset('absoluteOrbitNumber', data=numpy.array(0, dtype='u4'))
+    ident.create_dataset("isUrgentObservation", data=numpy.string_("False"))
     # shape = numberOfObservations
     ident.create_dataset("plannedObservationId", data=numpy.string_(["0"]))
-    ident.create_dataset("isUrgentObservation", data=numpy.string_(["False"]))
     # shape = numberOfDatatakes
     ident.create_dataset("plannedDatatakeId", data=numpy.string_(["0"]))
     # Will override these three later.
@@ -233,6 +279,21 @@ def populateIdentification(ident: h5py.Group, ldr: LeaderFile.LeaderFile):
         "2007-01-01 00:00:00.0000000"))
     ident.create_dataset("zeroDopplerEndTime", data=numpy.string_(
         "2007-01-01 00:00:01.0000000"))
+    # fields added to spec in 2023
+    ident.create_dataset("granuleId", data=numpy.string_("None"))
+    ident.create_dataset("instrumentName", data=numpy.string_("PALSAR"))
+    ident.create_dataset("isDithered", data=numpy.string_("False"))
+    ident.create_dataset("isMixedMode", data=numpy.string_("False"))
+    ident.create_dataset("processingCenter", data=numpy.string_("JPL"))
+    ident.create_dataset("processingDateTime",
+        data=numpy.string_(datetime.datetime.now().isoformat()))
+    ident.create_dataset("productLevel", data=numpy.string_("L0B"))
+    ident.create_dataset("productSpecificationVersion",
+        data=numpy.string_("0.9.0"))
+    ident.create_dataset("radarBand", data=numpy.string_("L"))
+    
+    for name, desc in ident_descriptions.items():
+        ident[name].attrs["description"] = numpy.string_(desc)
 
 
 def constructNISARHDF5(args, ldr):
