@@ -32,7 +32,8 @@ def deep_update(original, update, flag_none_is_valid=True):
     for key, val in update.items():
         if isinstance(val, dict) and original.get(key) is not None:
             # Only call deep_update() if `original[key] is not empty
-            original[key] = deep_update(original.get(key, {}), val)
+            original[key] = deep_update(original.get(key, {}), val,
+                flag_none_is_valid)
         elif (flag_none_is_valid or val is not None):
             # Update `original[key]` with val if
             # 1. The flag `flag_none_is_valid` is enabled:

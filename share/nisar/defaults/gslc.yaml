@@ -130,10 +130,10 @@ runconfig:
             # OPTIONAL - Mechanism to specify output posting and DEM
             geocode:
                 # OPTIONAL - To control output grid in same units as output EPSG
-                x_snap: 100
+                x_snap:
 
                 # OPTIONAL - To control output grid in same units as output EPSG
-                y_snap: 100
+                y_snap:
 
                 # OPTIONAL - Same as input DEM if not provided.
                 output_epsg:

@@ -142,4 +142,9 @@ class TestDeepUpdate:
         assert output_dict['list_of_frequencies'] == \
             user_dict['list_of_frequencies']
 
-
+    def test_recursion(self):
+        # flag_none_is_valid should propagate to nested dicts
+        default_dict = {"foo": {"x":1, "y":2}}
+        user_dict = {"foo": {"x": None, "y": None}}
+        output_dict = deep_update(default_dict, user_dict, False)
+        assert output_dict == default_dict
