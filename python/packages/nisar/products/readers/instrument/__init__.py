@@ -1,1 +1,2 @@
-from .instrument_parser import InstrumentParser
+from .instrument_parser import (
+    InstrumentParser, MissingInstrumentFieldWarning)

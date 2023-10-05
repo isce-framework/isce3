@@ -1,9 +1,21 @@
 import h5py
 import numpy as np
+import warnings
+from scipy.interpolate import interp1d as lut1d
 
+from isce3.antenna import CrossTalk
 
 # Note that this parser is subject to frequent augmentations as new items being
 # added to the instrument HDF5 product!
+
+# TODO: replace all instances of "scipy.interpolate.interp1d" with
+# isce3.core.LUT1d (here, in CrossTalk, etc) given deprecated
+# "scipy.interpolate.interp1d" might be removed from future scipy version!
+
+
+class MissingInstrumentFieldWarning(UserWarning):
+    """Used for missing field in instrument table """
+    pass
 
 
 class InstrumentParser:
@@ -260,3 +272,220 @@ class InstrumentParser:
                                                                     ].tolist()
 
         return fn_ta, fn_ac
+
+    def channel_adjustment_factors_tx(self, pol):
+        """
+        Get channel adjustment complex factors for all TX channels
+        of a polarization.
+
+        The complex EL pattern of TX beams are multiplied by these fudge
+        factors prior to forming the TX beam-formed antenna pattern.
+
+        Parameters
+        ----------
+        pol : {'H', 'V'}
+            Tx polarization. Must be a valid polarization in the instrument
+            file.
+
+        Returns
+        -------
+        np.ndarray(complex64) or None
+            1-D array of complex values with size equals to the
+            number of channels per pol.
+            None will be returned if MissingInstrumentFieldWarning!
+
+        Warnings
+        --------
+        MissingInstrumentFieldWarning
+            Missing the group "{pol}POL/channelAdjustment"
+
+        Notes
+        -----
+        To support older instrument files (v1.0), the values will be set to
+        None if the field "channelAdjustment" does not exist in the
+        instrument file. That is, no need for the TX channels adjustment
+        in TX antenna pattern formation.
+
+        """
+        return self._channel_adjustment_factors('tx', pol)
+
+    def channel_adjustment_factors_rx(self, pol):
+        """
+        Get channel adjustment complex factors for all RX channels
+        of a polarization.
+
+        The complex elevation (EL) pattern of RX beams are multiplied by these
+        fudge factors prior to forming the RX digitally beam-formed antenna
+        pattern.
+
+        Parameters
+        ----------
+        pol : {'H', 'V'}
+            Rx polarization. Must be a valid polarization in the instrument
+            file.
+
+        Returns
+        -------
+        np.ndarray(complex64) or None
+            1-D array of complex values with size equals to the
+            number of channels per pol.
+            None will be returned if MissingInstrumentFieldWarning!
+
+        Warnings
+        --------
+        MissingInstrumentFieldWarning
+            Missing the group "{pol}POL/channelAdjustment"
+
+        Notes
+        -----
+        To support older instrument files (v1.0), the values will be set to
+        None if the field "channelAdjustment" does not exist in the
+        instrument file. That is, no need for the RX channels adjustment
+        in RX antenna pattern formation.
+
+        """
+        return self._channel_adjustment_factors('rx', pol)
+
+    def _channel_adjustment_factors(self, side, pol):
+        """
+        Helper function for obtaining TX or RX channel adjustment factors.
+
+        Parameters
+        ----------
+        side : {'tx', 'rx'}
+        pol : {'H', 'V'}
+            Tx or Rx polarization depending on `side`. Must be a valid
+            polarization in the instrument file.
+
+        Returns
+        -------
+        np.ndarray(complex64) or None
+            1-D array of complex values with size equals to the
+            number of channels per pol.
+            None will be returned if MissingInstrumentFieldWarning!
+
+        Warnings
+        --------
+        MissingInstrumentFieldWarning
+            Missing the group "{pol}POL/channelAdjustment"
+
+        Notes
+        -----
+        To support older instrument files (v1.0), the values will be set to
+        None if the field "channelAdjustment" does not exist in the
+        instrument file. That is, no need for the TX/RX channels adjustment
+        in TX/RX antenna pattern formation.
+
+        """
+        if pol not in self.pols:
+            raise ValueError(f'Wrong pol! The valid pols are {self.pols}.')
+
+        grp_name = f'{pol}POL/channelAdjustment/'
+
+        try:
+            grp = self.fid[grp_name]
+
+        except KeyError:
+            warnings.warn(
+                f'{grp_name}', category=MissingInstrumentFieldWarning,
+                stacklevel=2)
+            return None
+
+        else:
+            return grp[f'{side}/amplitude'][()]
+
+    def get_crosstalk(self):
+        """
+        Get cross talk ratio for all Pols as a function of elevation (EL)
+        angles.
+
+        Returns
+        -------
+        isce3.antenna.CrossTalk
+
+        Warnings
+        --------
+        MissingInstrumentFieldWarning
+            Missing the group "{pol}POL/crossTalk"
+
+        Notes
+        -----
+        To support older instrument files (v1.0), the values will be set to
+        zeros if the field "crossTalk" does not exist in the instrument file.
+
+        """
+        xtalks = []
+        for side in ('tx', 'rx'):
+            for pol in ('H', 'V'):
+                xtalks.append(self._cross_talk_el(side, pol))
+
+        return CrossTalk(*xtalks)
+
+    def _cross_talk_el(self, side, pol):
+        """
+        Helper function for obtaining cross talk values as a function of
+        elevation (EL) angles on either TX or RX side and per receive
+        polarization either H or V.
+
+        Parameters
+        ----------
+        side : {'tx', 'rx'}
+        pol : {'H', 'V'}
+            Rx polarization. Must be a valid polarization in the instrument
+            file.
+
+        Returns
+        -------
+        lut1d
+            Either scipy.interpolate.interp1d or isce3.core.LUT1d
+            (x, y) represents EL angles (rad) and complex cross talk values.
+            The kind of interpolation is linear.
+            The out of range values are extrapolated.
+
+        Warnings
+        --------
+        MissingInstrumentFieldWarning
+            Missing the group "{pol}POL/crossTalk"
+
+        Notes
+        -----
+        To support older instrument files (v1.0), the values will be set to
+        zeros if the field "crossTalk" does not exist in the instrument file.
+
+        Currently, the code is set up in a way that it will also support
+        partially polarimetric product (non quad-pol) instrument products
+        generated from single-pol or dual-pol modes for the sake of simulation,
+        testing and cross-talk assessment of a particular product TxRx.
+        In flight, the fully polarimetric products shall be provided or the
+        KeyError would be raised!
+
+        """
+        # range and number of points in EL in case of missing x-talk values
+        # Two points are more than enough for linear interpolation!
+        min_max_el_deg = [-1, 1]
+        num_pnt = 3
+
+        if pol not in self.pols:
+            raise ValueError(f'Wrong pol! The valid pols are {self.pols}.')
+
+        # putting the "side" here rather than inside "else" will allow
+        # the support for partially polarimetric instrument products
+        grp_name = f'{pol}POL/crossTalk/{side}/'
+
+        try:
+            grp = self.fid[grp_name]
+
+        except KeyError:
+            warnings.warn(
+                f'{grp_name}', category=MissingInstrumentFieldWarning,
+                stacklevel=2)
+
+            x = np.deg2rad(np.linspace(*min_max_el_deg, num=num_pnt))
+            y = np.zeros(num_pnt, dtype='c16')
+
+        else:
+            x = grp['elevation'][()]
+            y = grp['amplitude'][()]
+
+        finally:
+            return lut1d(x, y, fill_value="extrapolate", assume_sorted=True)

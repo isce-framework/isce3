@@ -33,7 +33,8 @@ def find_changes(x):
         raise NotImplementedError("unsupported ndim for find_changes")
     # The difference between each adjacent pair of rows.
     rowdiff = np.diff(x, axis=0)
-    # True for each pair of rows if any corresponding element was different between them.
+    # True for each pair of rows if any corresponding element was different
+    # between them.
     anydiff = np.any(rowdiff, axis=1)
     # Get indices of True values in the above.
     i = anydiff.nonzero()[0]
@@ -52,8 +53,8 @@ class TimingFinder:
         calculated with respect to transmit pulse.  This value along with `wd`
         determines data window position (DWP) for each channel.  Time units are
         'fs_win' clock sample counts (typically 240 MHz for NISAR).  The object
-        should have shape (m, n) where m == len(pulse_times) and n is the number
-        of RX channels.
+        should have shape (m, n) where m == len(pulse_times) and n is the
+        number of RX channels.
     wd : sequence of sequence of int
         Receive window delay to first valid data sample relative to RD.
         Value is provided as 'fs_win' clock sample counts.
@@ -61,7 +62,7 @@ class TimingFinder:
     wl : sequence of sequence of int
         Length of receive data window provided as 'fs_win' clock sample counts.
         Same units and shape as `rd`.
-        
+
     Attributes
     ------------
     changes : array of int
@@ -301,9 +302,10 @@ class AntennaPattern:
         self.channel_adj_fact_rx = dict()
         for nn, rx_p in enumerate(self.rx_pols):
 
-            # TODO: fetch RX channel adjustment complex factors from
-            # instrument file per pol once ins parser is updated
-            self.channel_adj_fact_rx[rx_p] = None
+            # fetch RX channel adjustment complex factors from
+            # instrument file per RX pol.
+            self.channel_adj_fact_rx[rx_p] = ins.channel_adjustment_factors_rx(
+                rx_p)
 
             # get rx el-cut patterns
             self.el_pat_rx[rx_p] = ant.el_cut_all(rx_p)
@@ -351,9 +353,11 @@ class AntennaPattern:
 
         for tx_p, tx_lp in zip(self.tx_pols, tx_pols_lin):
 
-            # TODO: fetch TX channel adjustment complex factors from
-            # instrument file per pol once ins parser is updated
-            self.channel_adj_fact_tx[tx_lp] = None
+            # fetch TX channel adjustment complex factors from
+            # instrument file per TX linear pol.
+            self.channel_adj_fact_tx[tx_lp] = (
+                ins.channel_adjustment_factors_tx(tx_lp)
+                )
 
             # get tx el-cut patterns
             el_pat_tx = ant.el_cut_all(tx_lp)
@@ -397,8 +401,8 @@ class AntennaPattern:
         for p in self.rx_pols:
             rd, wd, wl = self.finder[p].get_dbf_timing(t)
             # Only update RxDBF if range timing changes, otherwise use cached.
-            # Presumption is that timing changes infrequently and user is likely
-            # to call form_pattern serially in time-sorted order.
+            # Presumption is that timing changes infrequently and user is
+            # likely to call form_pattern serially in time-sorted order.
             if not ((all(rd == self.rx_trm[p].rd) and
                      all(wd == self.rx_trm[p].wd) and
                      all(wl == self.rx_trm[p].wl))):
