@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 from bisect import bisect_left, bisect_right
+from collections import defaultdict
 from functools import reduce
 import h5py
 import json
@@ -788,6 +789,76 @@ def resample(raw: np.ndarray, t: np.ndarray,
     return regridded
 
 
+def process_rfi(cfg: Struct, raw_data: np.ndarray,
+                tmpfile: Callable = lambda name: open(name, "wb")):
+    """
+    Run radio frequency interference (RFI) detection and mitigation as
+    configured by user input.
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig data
+    raw_data : np.ndarray[np.complex64]
+        Raw data layer.  May be modified in-place if mitigation is enabled.
+    tmpfile : Callable
+        Function of a single string argument that returns an open file handle.
+
+    Returns
+    -------
+    raw_data_mitigated : np.ndarray[np.complex64]
+        Buffer containing mitigated data.
+        Usually `raw_data is raw_data_mitigated == True` (in-place processing)
+        unless mitigation is enabled and debug layers are requested in the
+        config file, in which case a separate array is memory mapped for
+        easy comparison.
+    rfi_likelihood : float
+        Ratio of number of CPIs detected with RFI Eigenvalues over that of total
+        number of CPIs.  Returns numpy.nan if detection is not enabled.
+    """
+    opt = cfg.processing.radio_frequency_interference
+    if not opt.detection_enabled:
+        if opt.mitigation_enabled:
+            raise ValueError("Requested RFI mitigation but disabled detection.")
+        log.info("Configured to skip RFI processing")
+        return raw_data, np.nan
+    if opt.mitigation_algorithm != "ST-EVD":
+        raise NotImplementedError("Only ST-EVD RFI algorithm is supported")
+    msg = "Running radio frequency interference (RFI) detection"
+    if opt.mitigation_enabled:
+        msg += " and mitigation"
+    log.info(msg)
+
+    # Mitigate in place unless user wants a debug file to compare raw and
+    # mitigated data.  This means you'd need to run the workflow twice to find
+    # a bug specific to in-place vs out-of-place processing.
+    raw_data_mitigated = raw_data
+    if opt.mitigation_enabled and not cfg.processing.delete_tempfiles:
+        fd = tmpfile("_raw_clean.c8")
+        log.info(f"Writing RFI mitigated raw data to memory map {fd.name}.")
+        raw_data_mitigated = np.memmap(fd, mode="w+", shape=raw_data.shape,
+                           dtype=np.complex64)
+
+    threshold_params = isce3.signal.rfi_detection_evd.ThresholdParams(
+        opt.threshold_hyperparameters.x, opt.threshold_hyperparameters.y)
+
+    rfi_likelihood = isce3.signal.rfi_process_evd.run_slow_time_evd(
+        raw_data,
+        opt.cpi_length,
+        opt.max_emitters,
+        num_max_trim=opt.num_max_trim,
+        num_min_trim=opt.num_min_trim,
+        max_num_rfi_ev=opt.max_num_rfi_ev,
+        num_rng_blks=opt.num_range_blocks,
+        threshold_params=threshold_params,
+        num_cpi_tb=opt.num_cpi_per_threshold_block,
+        mitigate_enable=opt.mitigation_enabled,
+        raw_data_mitigated=raw_data_mitigated)
+
+    log.info(f"RFI likelihood = {rfi_likelihood}")
+    return raw_data_mitigated, rfi_likelihood
+
+
 def delete_safely(filename):
     # Careful to avoid race on file deletion.  Use pathlib in Python 3.8+
     try:
@@ -1178,6 +1249,8 @@ def focus(runconfig):
     dump_height = (cfg.processing.debug_dump_height and
                    not cfg.processing.delete_tempfiles)
 
+    rfi_results = defaultdict(list)
+
     # main processing loop
     for channel_out in common_mode:
         frequency, pol = channel_out.freq_id, channel_out.pol
@@ -1228,18 +1301,23 @@ def focus(runconfig):
                 z[np.isnan(z)] = 0.0
                 raw_mm[block_out] = z
 
+            raw_clean, rfi_likelihood = process_rfi(cfg, raw_mm, temp)
+            rfi_results[(frequency, pol)].append(
+                (rfi_likelihood, raw_clean.shape[0]))
+            del raw_mm, rawfd
+
             uniform_pri = not raw.isDithered(channel_in.freq_id)
             if uniform_pri:
                 log.info("Uniform PRF, using raw data directly.")
-                regridded, regridfd = raw_mm, rawfd
+                regridded, regridfd = raw_clean, None
             else:
                 regridfd = temp("_regrid.c8")
                 log.info(f"Resampling non-uniform raw data to {regridfd.name}.")
-                regridded = resample(raw_mm, raw_times, raw_grid, swaths, orbit,
+                regridded = resample(raw_clean, raw_times, raw_grid, swaths, orbit,
                                     dop[frequency], fn=regridfd,
                                     L=cfg.processing.nominal_antenna_size.azimuth)
 
-            del raw_mm, rawfd
+            del raw_clean
 
             # Do range compression.
             rc, rc_grid, shift, deramp_rc = prep_rangecomp(cfg, raw, raw_grid,
@@ -1324,6 +1402,7 @@ def focus(runconfig):
         writer.notify_finished()
         log.info(f"Image statistics {frequency} {pol} = {writer.stats}")
         slc.write_stats(frequency, pol, writer.stats)
+        slc.set_rfi_results(rfi_results)
 
     log.info("All done!")
 

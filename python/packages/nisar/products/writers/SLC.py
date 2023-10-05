@@ -632,3 +632,30 @@ class SLC(h5py.File):
             dummy_array.shape, np.float32, data=dummy_array)
         d.attrs["description"] = np.string_(
             "Thermal noise equivalent sigma0")
+
+
+    def set_rfi_results(self, rfi_results):
+        """
+        Store the results of radio frequency interference (RFI) analysis
+
+        Parameters
+        ----------
+        rfi_results: dict[tuple[str, str], list[tuple[float, int]]]
+            Results of RFI analysis organized as a dict keyed by
+            (frequency, polarization) pairs where each value is a list of
+            (rfi_likelihood, num_pulses) pairs, one for each observation.
+            For example, {("A", "HH"): [(0.05, 1000)]} would be a valid
+            argument.
+        """
+        g = self.root.require_group("metadata/calibrationInformation")
+        for (frequency, pol), rfi_likelihoods in rfi_results.items():
+            num_pulses = sum(n for (_, n) in rfi_likelihoods)
+            weighted_sum = sum(x * n for (x, n) in rfi_likelihoods)
+            average_rfi_likelihood = weighted_sum / num_pulses
+            d = g.require_dataset(f"frequency{frequency}/{pol}/rfiLikelihood",
+                shape=(), dtype=np.float64, data=average_rfi_likelihood)
+            d.attrs["description"] = np.string_(
+                "Ratio of number of CPIs detected with radio frequency "
+                "interference (RFI) eigenvalues over that of total number of "
+                "CPIs (or NaN if RFI detection was skipped).")
+            d.attrs["units"] = np.string_("unitless")
