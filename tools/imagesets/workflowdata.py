@@ -4,7 +4,7 @@ workflowdata = {
         "L0B_RRSD_REE1":
         # files to grab
         [
-            "REE_CR_INFO_out17.csv",
+            "REE_CR_INFO_out17_NISAR.csv",
             "REE_L0B_out17.h5",
             "README.txt",
             "attitude.xml",
@@ -75,7 +75,7 @@ workflowdata = {
         ],
         "L0B_RRSD_ALPSRP110160680_Rosamond":
         [
-            "2008-02-18_0620_Rosamond-corner-reflectors.csv",
+            "2008-02-18_0620_Rosamond-corner-reflectors_NISAR.csv",
             "ALPSRP110160680.L0B.h5",
             "dem.tif",
             "HRES_2008_02_18_T06_20_00.nc",
@@ -85,7 +85,7 @@ workflowdata = {
         ],
         "L0B_RRSD_ALPSRP116870680_Rosamond":
         [
-            "2008-04-04_0619_Rosamond-corner-reflectors.csv",
+            "2008-04-04_0619_Rosamond-corner-reflectors_NISAR.csv",
             "ALPSRP116870680.L0B.h5",
             "dem.tif",
             "HRES_2008_04_04_T06_19_17.nc",

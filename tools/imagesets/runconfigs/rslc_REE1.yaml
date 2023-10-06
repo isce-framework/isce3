@@ -31,7 +31,7 @@ runconfig:
             # Locations of the corner reflectors in the input product.
             # Only required if `absolute_radiometric_calibration` or
             # `point_target_analyzer` runconfig params are set to True for QA.
-            corner_reflector_file: input_L0B_RRSD_REE1/REE_CR_INFO_out17.csv
+            corner_reflector_file: input_L0B_RRSD_REE1/REE_CR_INFO_out17_NISAR.csv
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_rslc

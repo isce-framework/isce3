@@ -296,7 +296,6 @@ runconfig:
 
         qa:
             workflows:
-
                 # Flag to run `validate` workflow to validate the
                 # input file against its product spec.
                 # Default: True
@@ -322,7 +321,6 @@ runconfig:
 
             qa_reports:
                 backscatter_img:
-
                     # True to compute backscatter in linear units when generating
                     # the backscatter image for the browse images and graphical
                     # summary PDF. False for decibel units.
@@ -380,7 +378,6 @@ runconfig:
                     tile_shape: [1024, 1024]
 
                 histogram:
-
                     # Step size to decimate the input array for computing
                     # the backscatter and phase histograms.
                     # For example, [2,3] means every 2nd azimuth line and
@@ -409,44 +406,64 @@ runconfig:
                     tile_shape: [1024, -1]
 
             absolute_radiometric_calibration:
-                # The frequency sub-band to use. Must be in {'A', 'B'} or null. Defaults
-                # to the science band in the RSLC product ('A' if available, otherwise
-                # 'B').
-                freq: null
-
-                # The transmit and receive polarization to use. Must be in {'HH', 'VV',
-                # 'HV', 'VH'} or null. Defaults to the first co-polarization channel
-                # found in the specified band ('HH' if available, otherwise 'VV').
-                pol: null
-
-                # The width, in pixels, of the square block of image data to extract
-                # centered around the target position for oversampling and peak
-                # finding. Must be >= 1. Defaults to 64.
+                # The width, in samples, of the square block of image data
+                # centered around the target position to extract for oversampling
+                # and peak finding. Must be >= 1.
+                # Default: 64
                 nchip: 64
 
-                # The upsampling ratio. Must be >= 1. Defaults to 32.
-                upsample: 32
+                # The upsampling ratio. Must be >= 1.
+                # Default: 32
+                upsample_factor: 32
 
-                # Option controlling how the target peak position is estimated (time
-                # domain or frequency domain). Must be in {'time', 'freq'}. Defaults to
-                # 'time'.
+                # Option controlling how the target peak position is
+                # estimated. Valid options are 'time' or 'freq'.
+
+                # 'time':
+                # The peak location is found in the time domain by detecting the
+                # maximum value within a square block of image data around the
+                # expected target location. The signal data is upsampled to
+                # improve precision.
+
+                # 'freq':
+                # The peak location is found by estimating the phase ramp in the
+                # frequency domain. This mode is useful when the target is
+                # well-focused, has high SNR, and is the only target in the
+                # neighborhood (often the case in point target simulations).
+                # Default: time
                 peak_find_domain: time
 
-                # The width, in *oversampled* pixels, of the square sub-block of image
-                # data to extract centered around the target position for fitting a
-                # quadratic polynomial to the peak. Note that this is the size in pixels
-                # *after upsampling*. Must be >= 3. Defaults to 5.
+                # The width, in *oversampled* samples, of the square
+                # sub-block of image data centered around the target position to
+                # extract for fitting a quadratic polynomial to the peak. Note
+                # that this is the size in samples *after upsampling*.
+                # Must be >= 3.
+                # Default: 5
                 nfit: 5
 
-                # The method for estimating the target signal power (rectangular box
-                # method or integrated power method). Must be in {'box', 'integrated'}.
-                # Defaults to 'box'.
+                # Method to use for estimating the target signal power.
+                # Valid options are 'box' or 'integrated'.
+
+                # 'box':
+                # Measures power using the rectangular box method, which assumes
+                # that the target response can be approximated by a 2-D
+                # rectangular function. The total power is estimated by
+                # multiplying the peak power by the 3dB response widths in
+                # along-track and cross-track directions.
+
+                # 'integrated':
+                # Measures power using the integrated power method. The total
+                # power is measured by summing the power of bins whose power
+                # exceeds a predefined minimum power threshold.
+                # Default: box
                 power_method: box
 
-                # The minimum power threshold, measured in dB below the peak power, for
-                # estimating the target signal power using the integrated power method.
-                # Only used if power_method='integrated'. Defaults to 3.0.
-                pthresh: 3.0
+                # The minimum power threshold, measured in dB below the
+                # peak power, for estimating the target signal power using the
+                # integrated power method. This parameter is ignored if
+                # `power_method` is not 'integrated'.
+                # Default: 3.0
+                power_threshold: 3.0
 
             noise_estimation:
                 # *REQUIRED* Frequency group in raw L0B H5 file. Must be in {'A', 'B'}.
@@ -475,27 +492,92 @@ runconfig:
                 cpi: 2
 
             point_target_analyzer:
-                # *REQUIRED* Frequency group in the RSLC HDF5 file. Must be in {'A', 'B'}.
-                freq_group:
+                # The width, in samples, of the square block of image data
+                # centered around the target position to extract for oversampling
+                # and peak finding. Must be >= 1.
+                # Default: 64
+                nchip: 64
 
-                # *REQUIRED* Tx and Rx polarizations in RSLC HDF5 file. Must be in
-                # {'HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
-                pol:
+                # The upsampling ratio. Must be >= 1.
+                # Default: 32
+                upsample_factor: 32
 
-                # If true, locate mainlobe nulls based on Fs/BW ratio instead of
-                # searching. Defaults to false.
-                predict_null: False
+                # Option controlling how the target peak position is
+                # estimated. Valid options are 'time' or 'frequency'.
 
-                # Number of sidelobes to be included for ISLR and PSLR computation. Must
-                # be >= 1. Defaults to 10.
+                # 'time':
+                # The peak location is found in the time domain by detecting the
+                # maximum value within a square block of image data around the
+                # expected target location. The signal data is upsampled to
+                # improve precision.
+
+                # 'frequency':
+                # The peak location is found by estimating the phase ramp in the
+                # frequency domain. This mode is useful when the target is
+                # well-focused, has high SNR, and is the only target in the
+                # neighborhood (often the case in point target simulations).
+                # Default: time
+                peak_find_domain: time
+
+                # The number of sidelobes, including the main lobe, to
+                # use for computing the integrated sidelobe ratio (ISLR).
+                # Must be > 1.
+                # Default: 10
                 num_sidelobes: 10
 
-                # Point target samples upsampling factor. Must be >= 1. Defaults to 32.
-                nov: 32
+                # Controls how the main lobe null locations are
+                # determined for ISLR computation. If `predict_null` is true, the
+                # null locations are determined analytically by assuming that the
+                # corner reflector has the impulse response of a point target with
+                # known sampling-rate-to-bandwidth ratio (given by `fs_bw_ratio`)
+                # and range & azimuth spectral windows (given by `window_type` &
+                # `window_parameter`). In this case, the first sidelobe will be
+                # considered to be part of the main lobe. Alternatively, if
+                # `predict_null` is false, the apparent null locations will be
+                # estimated from the RSLC image data by searching for nulls in
+                # range & azimuth cuts centered on the target location. In this
+                # case, the main lobe does *not* include the first sidelobe.
+                # `predict_null` has no effect on peak-to-sidelobe ratio (PSLR)
+                # computation -- for PSLR analysis, the null locations are always
+                # determined by searching for nulls in the RSLC data.
+                # Default: True
+                predict_null: true
 
-                # Point target chip size. Must be >= 1. Defaults to 64.
-                chipsize: 64
+                # The ratio of sampling rate to bandwidth in the RSLC
+                # image data. Must be the same for both range & azimuth. It is
+                # ignored if `predict_null` was false. Must be > 0.
+                # Default: 1.2
+                fs_bw_ratio: 1.2
 
-                # Estimate shift in time domain or frequency domain. Must be in {'time',
-                # 'frequency'}. Defaults to 'time'.
-                shift_domain: time
+                # The window type used in RSLC formation. Used to predict
+                # the locations of main lobe nulls during ISLR processing if
+                # `predict_null` was true. It is ignored if `predict_null` was
+                # false. The same window type is assumed to have been used for
+                # both range & azimuth focusing. Valid options are 'rect',
+                # 'cosine', or 'kaiser'.
+
+                # 'rect':
+                # Assumes that the RSLC image was formed using a
+                # rectangular-shaped window (i.e. no spectral weighting was
+                # applied).
+
+                # 'cosine':
+                # Assumes that the RSLC image was formed using a raised-cosine
+                # window with pedestal height defined by `window_parameter`.
+
+                # 'kaiser':
+                # Assumes that the RSLC image was formed using a Kaiser window
+                # with beta parameter defined by `window_parameter`.
+                # Default: rect
+                window_type: rect
+
+                # The window shape parameter used in RSLC formation. The
+                # meaning of this parameter depends on the `window_type`. For a
+                # raised-cosine window, it is the pedestal height of the window
+                # and must be in the interval [0, 1]. For a Kaiser window, it is
+                # the beta parameter and must be >= 0. It is ignored if
+                # `window_type` was 'rect' or if `predict_null` was false. The
+                # same shape parameter is assumed to have been used for both range
+                # & azimuth focusing.
+                # Default: 0.0
+                window_parameter: 0.0

@@ -148,3 +148,11 @@ runconfig:
                 workflows:
                     validate: True
                     qa_reports: True
+            roff:
+                workflows:
+                    validate: False
+                    qa_reports: False
+            goff:
+                workflows:
+                    validate: False
+                    qa_reports: False

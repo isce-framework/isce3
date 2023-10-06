@@ -858,6 +858,56 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                qa_reports:
+                    quiver_plots:
+                        # The vmin and vmax values to generate the quiver plot.
+                        # The magnitude of the offsets is clipped to this interval,
+                        # which (in turn) is used for the interval of the colorbar.
+                        # If None, the interval is computed using the min and max
+                        # magnitudes of along track and slant range offset.
+                        # Default: None
+                        colorbar_min_max:
+
+                        # Stride along each axis of the Frequency A
+                        # image arrays for decimating the quiver plot image for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides
+                        # based on `longest_side_max` and creating square pixels.
+                        # Default: None
+                        browse_decimation_freqa:
+
+                        # Stride along each axis of the Frequency B
+                        # image arrays for decimating the quiver plot image for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides
+                        # based on `longest_side_max` and creating square pixels.
+                        # Default: None
+                        browse_decimation_freqb:
+
+                        # Number of arrows (vectors) to plot per the
+                        # longest edge of the raster.
+                        # Default: 20
+                        arrow_density: 20
+
+                        # Scales the length of the arrow inversely.
+                        # Number of data units per arrow length unit, e.g., m/s per plot width;
+                        # a smaller scale parameter makes the arrow longer.
+                        # If None, a simple autoscaling algorithm is used, based on the average
+                        # vector length and the number of vectors.
+                        # See: The `scaling` parameter for `matplotlib.axes.Axes.quiver()`.
+                        # Default: None
+                        arrow_scaling:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image. If `decimation_freqX` is not
+                        # None, then `longest_side_max` will be ignored.
+                        # Default: 2048
+                        longest_side_max: 2048
+
             goff:
                 workflows:
                     # Flag to run `validate` workflow to validate the
@@ -871,3 +921,52 @@ runconfig:
                     # Default: True
                     qa_reports: true
 
+                qa_reports:
+                    quiver_plots:
+                        # The vmin and vmax values to generate the quiver plot.
+                        # The magnitude of the offsets is clipped to this interval,
+                        # which (in turn) is used for the interval of the colorbar.
+                        # If None, the interval is computed using the min and max
+                        # magnitudes of along track and slant range offset.
+                        # Default: None
+                        colorbar_min_max:
+
+                        # Stride along each axis of the Frequency A
+                        # image arrays for decimating the quiver plot image for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides
+                        # based on `longest_side_max` and creating square pixels.
+                        # Default: None
+                        browse_decimation_freqa:
+
+                        # Stride along each axis of the Frequency B
+                        # image arrays for decimating the quiver plot image for the browse PNG.
+                        # This takes precedence over `longest_side_max`.
+                        # Format: [<num_rows>, <num_cols>]
+                        # Example: [6,7]
+                        # If None, QA-SAS will compute the decimation strides
+                        # based on `longest_side_max` and creating square pixels.
+                        # Default: None
+                        browse_decimation_freqb:
+
+                        # Number of arrows (vectors) to plot per the
+                        # longest edge of the raster.
+                        # Default: 20
+                        arrow_density: 20
+
+                        # Scales the length of the arrow inversely.
+                        # Number of data units per arrow length unit, e.g., m/s per plot width;
+                        # a smaller scale parameter makes the arrow longer.
+                        # If None, a simple autoscaling algorithm is used, based on the average
+                        # vector length and the number of vectors.
+                        # See: The `scaling` parameter for `matplotlib.axes.Axes.quiver()`.
+                        # Default: None
+                        arrow_scaling:
+
+                        # The maximum number of pixels allowed for the longest
+                        # side of the final 2D browse image. If `decimation_freqX` is not
+                        # None, then `longest_side_max` will be ignored.
+                        # Default: 2048
+                        longest_side_max: 2048

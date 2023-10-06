@@ -14,7 +14,7 @@ runconfig:
             external_calibration:
             internal_calibration:
             antenna_pattern:
-            corner_reflector_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/2008-04-04_0619_Rosamond-corner-reflectors.csv
+            corner_reflector_file: input_L0B_RRSD_ALPSRP116870680_Rosamond/2008-04-04_0619_Rosamond-corner-reflectors_NISAR.csv
         product_path_group:
             product_path: output_rslc_sec
             scratch_path: scratch_rslc_sec
