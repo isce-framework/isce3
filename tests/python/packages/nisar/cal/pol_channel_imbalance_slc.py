@@ -47,8 +47,10 @@ class TestPolChannelImbalanceSlc:
     file_slc_ext = 'calib_RSLC_ALPSRP277307130_AMAZON.h5'
     # RSLC product over corner reflector(s)
     file_slc_cr = 'calib_RSLC_ALPSRP025826990_RIO_BRANCO_CR.h5'
-    # CSV file for Corner reflector(s)
+    # UAVSAR-formatted CSV file for Corner reflector(s)
     file_csv_cr = 'Corner_Reflector_Rio_Branco_ALPSRP025826990.csv'
+    # NISAR-formatted CSV file for Corner reflector(s)
+    file_csv_cr_nisar = 'Corner_Reflector_Rio_Branco_ALPSRP025826990_NISAR.csv'
 
     # Use Averaged cross-talk magnitudes based on figure (4) in [1]
     # X-talks are simply provided at three Antenna EL angles.
@@ -97,8 +99,11 @@ class TestPolChannelImbalanceSlc:
     else:
         slc_cr = slc_ext
 
-    # Parse CRs
+    # Parse the same CRs from two different formats UAVSAR and NISAR
     cr_llh = cr_llh_from_csv(os.path.join(iscetest.data, sub_dir, file_csv_cr))
+    cr_llh_nisar = cr_llh_from_csv(
+        os.path.join(iscetest.data, sub_dir, file_csv_cr_nisar)
+        )
 
     def _validate(self, imb_prod_lut1d, imb_prod_slc):
         # Tx Mean Amp/Phase for 2-D SLC-grid product
@@ -158,6 +163,11 @@ class TestPolChannelImbalanceSlc:
             np.angle(rx2tx_br, deg=True), self.rx2tx_phs,
             atol=self.phs_ratio_atol,
             err_msg='Wrong Phase of imbalance ratio of RX/TX at boresight!')
+
+    def test_cr_llh_uavsar_vs_nisar(self):
+        npt.assert_allclose(self.cr_llh, self.cr_llh_nisar,
+                            err_msg='Different LLH of a CR from UAVSAR and'
+                            ' NISAR formatted files!')
 
     def test_no_xtalk_no_faraday(self):
         with PolChannelImbalanceSlc(

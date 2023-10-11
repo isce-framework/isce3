@@ -15,12 +15,17 @@ class TestFaradayRotAngleFromRSlc:
     # and corner reflector(s)
     file_slc = 'pol_rad_calib_rslc_Remningstorp_ALPSRP030392430.h5'
 
-    # CSV file for corner reflector(s) in the above RSLC product
+    # UAVSAR-formatted CSV file for corner reflector(s) in the above
+    # RSLC product
     file_csv = 'Corner_Reflector_Remningstorp_ALPSRP030392430.csv'
+    # NISAR-formatted CSV file for corner reflector(s) in the above
+    # RSLC product
+    file_csv_nisar = 'Corner_Reflector_Remningstorp_ALPSRP030392430_NISAR.csv'
 
     # form the file-path names
     f_slc = os.path.join(iscetest.data, sub_dir, file_slc)
     f_csv = os.path.join(iscetest.data, sub_dir, file_csv)
+    f_csv_nisar = os.path.join(iscetest.data, sub_dir, file_csv_nisar)
 
     # build common/default input args
     args = argparse.Namespace(
@@ -45,7 +50,12 @@ class TestFaradayRotAngleFromRSlc:
         args.plot = True
         faraday_rot_angle_from_rslc(args)
 
-    def test_with_corner_reflector(self):
+    def test_with_corner_reflector_uavsar(self):
         args = copy.copy(self.args)
         args.csv_cr = self.f_csv
+        faraday_rot_angle_from_rslc(args)
+
+    def test_with_corner_reflector_nisar(self):
+        args = copy.copy(self.args)
+        args.csv_cr = self.f_csv_nisar
         faraday_rot_angle_from_rslc(args)

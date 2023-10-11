@@ -47,8 +47,8 @@ def cmd_line_parser():
     prs.add_argument('slc', type=str,
                      help='Filename of linear quad-pol RSLC HDF5 product')
     prs.add_argument('--csv-cr', type=str, dest='csv_cr',
-                     help='Filename of UAVSAR-compatible CSV file for corner '
-                     'reflectors (CR) within RSLC product.')
+                     help='Filename of UAVSAR/NISAR compatible CSV file for '
+                     'corner reflectors (CR) within RSLC product.')
     prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
                      dest='freq_band', help='Frequency band such as "A"')
     prs.add_argument('-m', '--method', type=str, choices=['BB', 'FS', 'SLOPE'],
@@ -151,7 +151,7 @@ def faraday_rot_angle_from_rslc(args):
     if args.method == 'BB':
         with FaradayRotEstBickelBates(
                 slc, dir_tmp=args.out_dir, plot=args.plot, logger=logger
-                ) as fra:
+        ) as fra:
 
             fra_prod_ext = fra.estimate(
                 azt_blk_size=args.azt_spacing, sr_blk_size=args.sr_spacing,
@@ -161,7 +161,7 @@ def faraday_rot_angle_from_rslc(args):
         with FaradayRotEstBickelBates(
                 slc, use_slope_freq=True, dir_tmp=args.out_dir,
                 ovsf=1.25, num_cpu_fft=-1, plot=args.plot, logger=logger
-                ) as fra:
+        ) as fra:
 
             fra_prod_ext = fra.estimate(
                 azt_blk_size=args.azt_spacing, sr_blk_size=args.sr_spacing,
@@ -170,7 +170,7 @@ def faraday_rot_angle_from_rslc(args):
     elif args.method == 'FS':
         with FaradayRotEstFreemanSecond(
                 slc, dir_tmp=args.out_dir, plot=args.plot, logger=logger
-                ) as fra:
+        ) as fra:
 
             fra_prod_ext = fra.estimate(
                 azt_blk_size=args.azt_spacing, sr_blk_size=args.sr_spacing,
@@ -232,7 +232,10 @@ def faraday_rot_angle_from_rslc(args):
     # parse csv file for CR(s) info if any CSV file is provided
     if args.csv_cr is not None:
         logger.info('FR angles are also estimated from CRs!')
-        cr_llh = cr_llh_from_csv(args.csv_cr)
+        # get start datetime of the RSLC product
+        rdr_grid = slc.getRadarGrid(args.freq_band)
+        epoch_start = rdr_grid.sensing_datetime(0)
+        cr_llh = cr_llh_from_csv(args.csv_cr, epoch=epoch_start)
 
         fra_prod_crs = faraday_rot_angle_from_cr(
             slc, cr_llh, freq_band=args.freq_band
@@ -258,8 +261,7 @@ def faraday_rot_angle_from_rslc(args):
         # get first and last azimuth time of entire SLC given azimuth time
         # of RSLC is not limited for CRs. Convert them into "%Y%m%dT%H%M%S"
         # format
-        rdr_grid = slc.getRadarGrid(args.freq_band)
-        dt_first = dt2str(rdr_grid.sensing_datetime(0))
+        dt_first = dt2str(epoch_start)
         dt_last = dt2str(rdr_grid.sensing_datetime(rdr_grid.length - 1))
         # form the name for JSON product and dump the results
         name_json_cr = (
