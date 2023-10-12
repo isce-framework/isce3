@@ -194,12 +194,15 @@ def parse_corner_reflector_csv(csvfile: str | os.PathLike) -> Iterator[CornerRef
 
     for d in data:
         llh = isce3.core.LLH(longitude=d[2], latitude=d[1], height=d[3])
-        survey_date = isce3.core.DateTime(d[7])
+        # Careful to strip strings in case there are spaces between columns.
+        # No problem with numeric fields since int() and float() already strip.
+        corner_id = d[0].strip()
+        survey_date = isce3.core.DateTime(d[7].strip())
         validity = CRValidity(int(d[8]))
         velocity = np.asarray([d[9], d[10], d[11]], dtype=np.float64)
 
         yield CornerReflector(
-            id=d[0],
+            id=corner_id,
             llh=llh,
             elevation=d[5],
             azimuth=d[4],

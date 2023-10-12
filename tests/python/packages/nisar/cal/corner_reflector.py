@@ -325,3 +325,15 @@ def test_parse_and_filter_corner_reflector_csv(ree_corner_reflectors_nisar_csv: 
     validities = [cr.validity for cr in crs]
     expected_validities = [2, 7, 2]
     npt.assert_array_equal(validities, expected_validities)
+
+
+@pytest.fixture
+def sample_nisar_csv() -> Path:
+    return Path(iscetest.data) / "abscal/NISAR_ANC_CORNER_REFLECTORS_001.csv"
+
+
+def test_parse_sample_nisar_csv(sample_nisar_csv: Path):
+    crs = list(nisar.cal.parse_corner_reflector_csv(sample_nisar_csv))
+    # check that strings are parsed without issues due to spaces.
+    npt.assert_(crs[0].id == "N01K")
+    npt.assert_(crs[0].survey_date == isce3.core.DateTime("2021-06-04"))
