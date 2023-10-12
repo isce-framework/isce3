@@ -777,7 +777,7 @@ class ImageSet:
         """
 
         auth = os.environ["RTBURNS_PAT"].strip()
-        pr_id = os.environ["ghprbPullId"].strip()
+        pr_id = os.environ["CHANGE_ID"].strip()
         build_url = os.environ["BUILD_URL"].strip()
 
         subprocess.check_call("bash -c".split() + [f"""
