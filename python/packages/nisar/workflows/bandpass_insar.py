@@ -3,16 +3,17 @@
 import os
 import pathlib
 import time
+
 import h5py
 import journal
 import numpy as np
 
 import isce3
+from isce3.splitspectrum import splitspectrum
+from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
 from nisar.workflows.bandpass_insar_runconfig import BandpassRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from nisar.h5 import cp_h5_meta_data
-from isce3.splitspectrum import splitspectrum
 
 
 def run(cfg: dict):
@@ -98,21 +99,24 @@ def run(cfg: dict):
 
         # Initialize bandpass instance
         # Specify meta parameters of SLC to be bandpassed
-        bandpass = splitspectrum.SplitSpectrum(rg_sample_freq=target_meta_data.rg_sample_freq,
-                                               rg_bandwidth=target_meta_data.rg_bandwidth,
-                                               center_frequency=target_meta_data.center_freq,
-                                               slant_range=target_meta_data.slant_range,
-                                               freq=freq)
+        bandpass = splitspectrum.SplitSpectrum(
+            rg_sample_freq=target_meta_data.rg_sample_freq,
+            rg_bandwidth=target_meta_data.rg_bandwidth,
+            center_frequency=target_meta_data.center_freq,
+            slant_range=target_meta_data.slant_range,
+            freq=freq)
         swath_path = ref_slc.SwathPath
         dest_freq_path = f"{swath_path}/frequency{freq}"
-        with h5py.File(target_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
-                h5py.File(target_output, 'w') as dst_h5:
+        with h5py.File(target_hdf5, 'r', libver='latest',
+                       swmr=True) as src_h5, \
+            h5py.File(target_output, 'w') as dst_h5:
             # Copy HDF 5 file to be bandpassed
             cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}')
 
             for pol in pol_list:
 
-                target_raster_str = f'HDF5:{target_hdf5}:/{target_slc.slcPath(freq, pol)}'
+                target_raster_str = \
+                    f'HDF5:{target_hdf5}:/{target_slc.slcPath(freq, pol)}'
                 target_slc_raster = isce3.io.Raster(target_raster_str)
                 rows = target_slc_raster.length
                 cols = target_slc_raster.width
@@ -136,16 +140,17 @@ def run(cfg: dict):
 
                     # Specify low and high frequency to be passed (bandpass)
                     # and the center frequency to be basebanded (demodulation)
-                    bandpass_slc, bandpass_meta = bandpass.bandpass_shift_spectrum(
-                        slc_raster=target_slc_image,
-                        low_frequency=low_frequency_base,
-                        high_frequency=high_frequency_base,
-                        new_center_frequency=base_meta_data.center_freq,
-                        fft_size=fft_size,
-                        window_shape=window_shape,
-                        window_function=window_function,
-                        resampling=True
-                        )
+                    bandpass_slc, bandpass_meta = \
+                        bandpass.bandpass_shift_spectrum(
+                            slc_raster=target_slc_image,
+                            low_frequency=low_frequency_base,
+                            high_frequency=high_frequency_base,
+                            new_center_frequency=base_meta_data.center_freq,
+                            fft_size=fft_size,
+                            window_shape=window_shape,
+                            window_function=window_function,
+                            resampling=True
+                            )
 
                     if block == 0:
                         del dst_h5[dest_pol_path]
@@ -157,8 +162,21 @@ def run(cfg: dict):
                     dst_h5[dest_pol_path].write_direct(bandpass_slc,
                         dest_sel=np.s_[row_start : row_start + block_rows_data, :])
 
-                dst_h5[dest_pol_path].attrs['description'] = f"Bandpass SLC image ({pol})"
+                dst_h5[dest_pol_path].attrs['description'] = \
+                    f"Bandpass SLC image ({pol})"
                 dst_h5[dest_pol_path].attrs['units'] = f""
+            bandpass_ratio = target_meta_data.rg_pxl_spacing /\
+                             bandpass_meta['range_spacing']
+            subswath_number = src_h5[f"{dest_freq_path}/numberOfSubSwaths"][()]
+            for swath_count in range(subswath_number):
+                # Update the validateSamplesSubswaths
+                valid_sample_path = \
+                f"{dest_freq_path}/validSamplesSubSwath{swath_count + 1}"
+                valid_samples = src_h5[valid_sample_path][()]
+                valid_samples_bandpass = \
+                    np.array(valid_samples * bandpass_ratio, dtype='int')
+                data = dst_h5[f"{valid_sample_path}"]
+                data[...] = valid_samples_bandpass.astype(int)
 
             # update meta information for bandpass SLC
             data = dst_h5[f"{dest_freq_path}/processedCenterFrequency"]
