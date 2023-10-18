@@ -165,6 +165,7 @@ def run(cfg: dict):
                 dst_h5[dest_pol_path].attrs['description'] = \
                     f"Bandpass SLC image ({pol})"
                 dst_h5[dest_pol_path].attrs['units'] = f""
+
             bandpass_ratio = target_meta_data.rg_pxl_spacing /\
                              bandpass_meta['range_spacing']
             subswath_number = src_h5[f"{dest_freq_path}/numberOfSubSwaths"][()]
