@@ -312,7 +312,7 @@ class SplitSpectrum:
                                     window_target,
                                     out=np.zeros_like(spectrum_target),
                                     where=window_target!=0)
-        # spectrum_target = spectrum_target[:, 0::2]
+
         # apply new bandpass window to spectrum
         slc_bandpassed = ifft(spectrum_target
                       * window_bandpass

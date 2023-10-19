@@ -118,7 +118,11 @@ def compute_layover_shadow_water_stats(h5_ds, lines_per_block=1000):
         layover_shadow_pixs += np.count_nonzero(layover_shadow)
         water_pixs += np.count_nonzero(water)
 
-    if (valid_pixs == 0) and (length * width == 1):
+    # If there are no valid pixels, the percentage could be represented as "inf."
+    # Additionally, when the number of samples is only one,
+    # the percentage becomes meaningless.
+    # Therefore, in such cases, we assign "nan" to the valid_pixs variable.
+    if (valid_pixs == 0) or (length * width == 1):
         valid_pixs = np.nan
 
     percent_layover_pixs = round((layover_pixs / valid_pixs) * 100, 2)
