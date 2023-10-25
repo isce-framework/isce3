@@ -9,7 +9,7 @@ pipeline {
   environment {
     // Personal Access Token (PAT) for authenticating github-fn transactions
     // for the CI server. Secret credentials are managed via the Jenkins UI.
-    RTBURNS_PAT = credentials('d5f10ff5-2bf9-4bf3-ab05-22f0a388084a')
+    RTBURNS_PAT = credentials("${RTBURNS_CRED}")
   }
   stages {
     stage("Set up Docker images with ISCE3 build prereqs") {
