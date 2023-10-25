@@ -1,0 +1,279 @@
+#pragma once
+#include <cmath>
+#include <cstdio>
+#include <limits>
+
+#include <isce3/core/Common.h>
+
+namespace isce3 { namespace math {
+
+// Use the commmented macro to debug root-finding algorithms.
+#ifndef ISCE3_DEBUG_ROOT
+// #define ISCE3_DEBUG_ROOT(x) x
+#define ISCE3_DEBUG_ROOT(x)
+#endif
+
+template<typename T>
+CUDA_HOSTDEV inline bool opposite_sign(T a, T b)
+{
+    return std::signbit(a) ^ std::signbit(b);
+}
+
+template<typename T>
+inline constexpr T epsilon = std::numeric_limits<T>::epsilon();
+
+template<typename T>
+CUDA_HOSTDEV inline int count_bisection_steps(T a, T b, T tol)
+{
+    return static_cast<int>(std::ceil(std::log2(std::abs((a - b) / tol))));
+}
+
+/* Excuse the verbose comments.  I started with the cyrptic Fortran
+ * implementation on netlib.org before finding Brent's book with lots of
+ * description and a clearer ALGOL implementation.
+ *
+ * Brent's algorithm is a little ad-hoc in how it chooses between bisection,
+ * linear, and quadratic steps.  Its close attention to finite precision is nice.
+ * Looking at other bracketing methods,
+ *
+ * Chandrupatla has a more understandible step selection criterion.
+ *     T.R. Chandrupatla, "A new hybrid quadratic/bisection algorithm for
+ *     finding the zero of a nonlinear function without using derivatives,"
+ *     Advances in Engineering Software, Vol. 28, No. 3, 1997, pp 145-149.
+ *     https://doi.org/10.1016/S0965-9978(96)00051-8.
+ *
+ * TOMS748 improves convergence slightly with the option for a cubic step.
+ *     G. E. Alefeld, F. A. Potra, and Yixun Shi. 1995. Algorithm 748: enclosing
+ *     zeros of continuous functions. ACM Trans. Math. Softw. 21, 3 (Sept.
+ *     1995), 327–344. https://doi.org/10.1145/210089.210111
+ *
+ * ITP is an interesting new method worth attention.
+ *     I. F. D. Oliveira and R. H. C. Takahashi. 2020. An Enhancement of the
+ *     Bisection Method Average Performance Preserving Minmax Optimality. ACM
+ *     Trans.  Math. Softw. 47, 1, Article 5 (January 2021), 24 pages.
+ *     https://doi.org/10.1145/3423597
+ */
+template<typename T, typename Func>
+CUDA_HOSTDEV isce3::error::ErrorCode find_zero_brent(
+        T a, T b, Func f, const T tol, T* root)
+{
+    using namespace isce3::error;
+    using std::abs;
+    if (root == nullptr) {
+        return ErrorCode::NullDereference;
+    }
+    // tol == 0 is okay since we handle relative precision explicitly.
+    if (tol < T(0)) {
+        return ErrorCode::InvalidTolerance;
+    }
+    // a, b, and c are locations on the x-axis
+    // b is the current best estimate of the root.
+    // a is the previous estimate.
+    // The current interval is [b,c] or [c,b] (sorted by function value)
+    // We may have the case a == c.
+    // d and e are the previous two steps
+    // p and q are numerator/denominator of interpolation step.
+    T c, d, e, fa, fb, fc, p, q, r, s, tol1;
+    ISCE3_DEBUG_ROOT(const char* step_type;)
+
+    fa = f(a);
+    if (fa == T(0)) {
+        *root = a;
+        return ErrorCode::Success;
+    }
+    fb = f(b);
+    if (fb == T(0)) {
+        *root = b;
+        return ErrorCode::Success;
+    }
+    // Check that f(a) and f(b) have different signs
+    // so any continuous function f has a zero in interval [a,b]
+    if (!opposite_sign(fa, fb)) {
+        return ErrorCode::InvalidInterval;
+    }
+
+    c = a;
+    fc = fa;
+    e = d = b - a;
+
+    ISCE3_DEBUG_ROOT(printf("b,a,step_type,x,f(x)\n");)
+
+    // We could replace this for loop with a while(1) since convergence is
+    // guaranteed in N^2 steps where N is the number of bisection steps.
+    // However maybe we should defend against weird cases like non-deterministic
+    // functions.  If so, we may as well also limit effort to the practical
+    // limit 3*N since further iterations are inefficient.
+    const int maxiter = 3 * count_bisection_steps(a, b, tol);
+    for (int i = 0; i < maxiter; ++i) {
+        // Sort so that b is always the best guess based on the heuristic that
+        // the point closer to the x-axis is the better guess.
+        // That is, if b isn't best then swap b & c using a as a temporary,
+        // which excludes the possibility of a quadratic step.
+        if (abs(fc) < abs(fb)) {
+            a = b;
+            b = c;
+            c = a;
+            fa = fb;
+            fb = fc;
+            fc = fa;
+        }
+        // tol1 is the minimum valid step size, considering both machine
+        // precision and the requested tolerance.
+        tol1 = 2 * epsilon<T> * abs(b) + T(0.5) * tol;
+        // xm is the bisection step from b to the midpoint of the interval.
+        const T xm = T(0.5) * (c - b);
+        // We're done if interval is small enough or f(b) is exactly zero.
+        // Return b (not b + xm) assuming that by this point we've reached
+        // superlinear convergence.
+        if ((abs(xm) <= tol1) || (fb == T(0))) {
+            *root = b;
+            return ErrorCode::Success;
+        }
+        // see if a bisection is forced
+        // That occurs when the 2nd to last step was too small (e.g., a nudge)
+        // or the solution didn't improve on the last iteration.
+        if ((abs(e) < tol1) || (abs(fa) <= abs(fb))) {
+            ISCE3_DEBUG_ROOT(
+                    if (abs(e) < tol1) { step_type = "bisect1"; } else {
+                        step_type = "bisect2";
+                    })
+            e = d = xm;
+        } else {
+            // Since we haven't found the root yet, we know fa > 0 so division
+            // is safe.
+            s = fb / fa;
+            if (a == c) {
+                // linear interpolation
+                // Only valid interp when cache has only two distinct values.
+                ISCE3_DEBUG_ROOT(step_type = "linear";)
+                p = 2 * xm * s;
+                q = T(1) - s;
+            } else {
+                // inverse quadratic interpolation
+                ISCE3_DEBUG_ROOT(step_type = "quadratic";)
+                q = fa / fc;
+                r = fb / fc;
+                p = s * (2 * xm * q * (q - r) - (b - a) * (r - T(1)));
+                q = (q - T(1)) * (r - T(1)) * (s - T(1));
+            }
+            // Ensure positive p to save an abs() call.
+            if (p > T(0)) {
+                q = -q;
+            } else {
+                p = -p;
+            }
+            s = e;
+            e = d;
+            // We want to avoid overflow and division by zero computing the
+            // ratio p/q, and we must require the step won't exceed the
+            // interval.  The 3/2 factor (which bounds the step to 3/4 of the
+            // interval) further ensures that the inverse quadratic is single-
+            // valued on the interval.
+            // The other condition makes sure that the interval is halved in at
+            // worst every other iteration.
+            if (((2 * p) >= (3 * xm * q - abs(tol1 * q))) ||
+                    (p >= abs(T(0.5) * s * q))) {
+                // Fall back to bisection step.
+                ISCE3_DEBUG_ROOT(
+                        if ((2 * p) >= (3 * xm * q - abs(tol1 * q))) {
+                            step_type = "bisect3";
+                        } else { step_type = "bisect4"; })
+                e = d = xm;
+            } else {
+                // Use the interpolation step (either linear or quadratic).
+                d = p / q;
+            }
+        }
+        a = b;
+        fa = fb;
+        // Make sure we step at least as large as the tolerance.
+        if (abs(d) <= tol1) {
+            if (xm <= T(0)) {
+                ISCE3_DEBUG_ROOT(step_type = "nudge_left";)
+                b = b - tol1;
+            } else {
+                ISCE3_DEBUG_ROOT(step_type = "nudge_right";)
+                b = b + tol1;
+            }
+        } else {
+            b = b + d;
+        }
+        fb = f(b);
+        ISCE3_DEBUG_ROOT(
+                printf("%.17g,%.17g,%s,%.17g,%.17g\n", a, c, step_type, b, fb);)
+        // Make sure to set c such that [b,c] encloses the root.  Note that
+        // when new guess has opposite sign from old guess we exclude a
+        // quadratic step on the next iteration.
+        if (!opposite_sign(fb, fc)) {
+            c = a;
+            fc = fa;
+            e = d = b - a;
+        }
+    }
+    *root = b;
+    return ErrorCode::FailedToConverge;
+}
+
+// Good old bisection.  Only one branch likely to diverge, which may be of
+// interest on the GPU.
+
+template<typename T, typename Func>
+CUDA_HOSTDEV isce3::error::ErrorCode find_zero_bisection_iter(
+        T a, T b, Func f, int niter, T* root)
+{
+    using namespace isce3::error;
+    if (root == nullptr) {
+        return ErrorCode::NullDereference;
+    }
+    if (niter < 0) {
+        return ErrorCode::InvalidTolerance;
+    }
+    T midpoint, fa = f(a), fb = f(b);
+    if (fa == T(0)) {
+        *root = a;
+        return ErrorCode::Success;
+    }
+    fb = f(b);
+    if (fb == T(0)) {
+        *root = b;
+        return ErrorCode::Success;
+    }
+    if (!opposite_sign(fa, fb)) {
+        return ErrorCode::InvalidInterval;
+    }
+    ISCE3_DEBUG_ROOT(printf("b,a,step_type,x,f(x)\n");)
+    for (int i = 0; i < niter; ++i) {
+        midpoint = (a + b) / 2;
+        const T fmid = f(midpoint);
+        if (fmid == T(0)) break;
+        ISCE3_DEBUG_ROOT(printf(
+                "%.17g,%.17g,bisect,%.17g,%.17g\n", a, b, midpoint, fmid);)
+        if (opposite_sign(fa, fmid)) {
+            b = midpoint;
+            fb = fmid;
+        } else {
+            a = midpoint;
+            fa = fmid;
+        }
+    }
+    *root = midpoint;
+    return ErrorCode::Success;
+}
+
+
+template<typename T, typename Func>
+CUDA_HOSTDEV isce3::error::ErrorCode find_zero_bisection(
+        T a, T b, Func f, T tol, T* root)
+{
+    // tol == 0 NOT okay since we're using it to compute a fixed number of
+    // bisection iterations and allowing some wasted effort if we refine the
+    // interval to within relative tolerance before ending.
+    if (tol <= T(0)) {
+        return isce3::error::ErrorCode::InvalidTolerance;
+    }
+    const int niter = count_bisection_steps(a, b, tol);
+    ISCE3_DEBUG_ROOT(printf("bisection steps = %d\n", niter);)
+    return find_zero_bisection_iter(a, b, f, niter, root);
+}
+
+}} // namespace isce3::math

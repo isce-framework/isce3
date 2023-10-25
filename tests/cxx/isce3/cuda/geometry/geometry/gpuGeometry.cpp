@@ -133,6 +133,21 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             ASSERT_NEAR(degrees*targetLLH[0], reflon, 1.0e-8);
             ASSERT_NEAR(degrees*targetLLH[1], reflat, 1.0e-8);
             ASSERT_NEAR(targetLLH[2], refhgt, 1.0e-2);
+
+            Vec3 targetXYZ;
+            stat_gpu = isce3::cuda::geometry::rdr2geo_bracket_h(azTime, range,
+                    dopval, orbit, ellipsoid, dem, targetXYZ,
+                    rgparam.wavelength(), lookSide, 1e-4, 0.0, M_PI / 2);
+
+            targetLLH = ellipsoid.xyzToLonLat(targetXYZ);
+            // don't trigger failure if GPU bracket algorithm succeeds on pixels
+            // where old CPU algorithm fails.
+            if (stat_cpu != 0) {
+                ASSERT_EQ(stat_cpu, stat_gpu);
+                ASSERT_NEAR(degrees * targetLLH[0], reflon, 1.0e-8);
+                ASSERT_NEAR(degrees * targetLLH[1], reflat, 1.0e-8);
+                ASSERT_NEAR(targetLLH[2], refhgt, 1.0e-2);
+            }
         }
     }
 }
@@ -172,6 +187,28 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
     ASSERT_EQ(stat, 1);
     ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
     ASSERT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
+
+    // Run geo2rdr_bracket with zero doppler
+    const auto xyz = ellipsoid.lonLatToXyz(llh);
+    const auto zerodop2d = isce3::core::LUT2d<double>();
+    stat = isce3::cuda::geometry::geo2rdr_bracket_h(xyz, orbit, zerodop2d,
+        aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1e-8);
+    azdate = refEpoch + aztime;
+
+    EXPECT_EQ(stat, 1);
+    EXPECT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
+    EXPECT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
+
+    // Run geo2rdr_bracket again using custom bracket
+    double t0 = aztime - 1, t1 = aztime + 1;
+    stat = isce3::cuda::geometry::geo2rdr_bracket_h(xyz, orbit, zerodop2d,
+        aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1e-8,
+        t0, t1);
+    azdate = refEpoch + aztime;
+
+    EXPECT_EQ(stat, 1);
+    EXPECT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
+    EXPECT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
 }
 
 

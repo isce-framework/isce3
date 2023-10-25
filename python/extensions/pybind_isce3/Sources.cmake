@@ -46,7 +46,9 @@ geocode/GeocodePolygon.cpp
 geometry/geometry.cpp
 geometry/getGeolocationGrid.cpp
 geometry/geo2rdr.cpp
+geometry/geo2rdr_roots.cpp
 geometry/rdr2geo.cpp
+geometry/rdr2geo_roots.cpp
 geometry/RTC.cpp
 geometry/metadataCubes.cpp
 geometry/ltpcoordinates.cpp

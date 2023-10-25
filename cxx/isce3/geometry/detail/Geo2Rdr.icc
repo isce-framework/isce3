@@ -4,8 +4,9 @@
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Vector.h>
+#include <isce3/math/RootFind1dBracket.h>
 
-namespace isce3 { namespace geometry { namespace detail {
+namespace isce3::geometry::detail {
 
 NVCC_HD_WARNING_DISABLE
 template<class DopplerModel>
@@ -177,4 +178,50 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
     return ErrorCode::FailedToConverge;
 }
 
-}}} // namespace isce3::geometry::detail
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit, class DopplerModel>
+CUDA_HOSTDEV isce3::error::ErrorCode
+geo2rdr_bracket(double* aztime,
+        double* range, const isce3::core::Vec3& x, const Orbit& orbit,
+        const DopplerModel& doppler, double wavelength,
+        isce3::core::LookSide side, double tolAzTime,
+        std::optional<double> timeStart, std::optional<double> timeEnd)
+{
+    using namespace isce3::core;
+    using isce3::error::ErrorCode;
+    double t0 = timeStart.value_or(orbit.startTime());
+    double t1 = timeEnd.value_or(orbit.endTime());
+    // Platform position & velocity, and slant range vector
+    Vec3 xp, v, r;
+
+    // Calculate Doppler at time t and compute the difference with known
+    // Doppler centroid.
+    auto doppler_error = [&](double t) {
+        orbit.interpolate(&xp, &v, t, OrbitInterpBorderMode::FillNaN);
+        r = x - xp;
+        const double rnorm = r.norm();
+        double fd = doppler.eval(t, rnorm);
+        return 2.0 / wavelength * v.dot(r) / rnorm - fd;
+    };
+
+    const auto err = isce3::math::find_zero_brent(
+            t0, t1, doppler_error, tolAzTime, aztime);
+    if (err != ErrorCode::Success) {
+        return err;
+    }
+
+    // Compute range at aztime solution (may not be final iteration of solver).
+    orbit.interpolate(&xp, &v, *aztime, OrbitInterpBorderMode::FillNaN);
+    r = x - xp;
+    *range = r.norm();
+
+    // Save left/right check for the end in case orbit is curving, e.g. at pole.
+    // (Left && positive) || (Right && negative)
+    if ((side == LookSide::Right) ^ (r.cross(v).dot(xp) > 0)) {
+        return ErrorCode::WrongLookSide;
+    }
+    return ErrorCode::Success;
+}
+
+} // namespace isce3::geometry::detail

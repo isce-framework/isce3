@@ -26,17 +26,8 @@ class isce3::geometry::DEMInterpolator {
     using cartesian_t = isce3::core::Vec3;
 
     public:
-        /** Default constructor with reference height of 0, bilinear interpolation */
-        inline DEMInterpolator() :
-            _haveRaster{false},
-            _refHeight{0.0},
-            _minValue{0.0},
-            _meanValue{0.0},
-            _maxValue{0.0},
-            _interpMethod{isce3::core::BILINEAR_METHOD} {}
-
         /** Constructor with custom reference height and bilinear interpolation */
-        inline DEMInterpolator(float height, int epsg = 4326) :
+        inline DEMInterpolator(float height = 0.0, int epsg = 4326) :
             _haveRaster{false},
             _refHeight{height},
             _minValue{height},

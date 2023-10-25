@@ -3,6 +3,7 @@
 #include <isce3/core/Basis.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/LookSide.h>
+#include <isce3/core/LUT2d.h>
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Pixel.h>
 #include <isce3/cuda/core/Orbit.h>
@@ -51,6 +52,19 @@ __device__ int rdr2geo(double aztime, double slant_range, double doppler,
             detail::rdr2geo(&target_llh, aztime, slant_range, doppler, orbit,
                             dem_interp, ellipsoid, wvl, side, h0, params);
     return (status == ErrorCode::Success);
+}
+
+CUDA_DEV int rdr2geo_bracket(double aztime, double slantRange, double doppler,
+                       const isce3::cuda::core::OrbitView& orbit,
+                       const isce3::core::Ellipsoid& ellipsoid,
+                       const gpuDEMInterpolator& dem, Vec3& targetXYZ,
+                       double wvl, LookSide side, double tolHeight,
+                       double lookMin, double lookMax)
+{
+    auto status = detail::rdr2geo_bracket(&targetXYZ, aztime, slantRange,
+            doppler, orbit, dem, ellipsoid, wvl, side, tolHeight, lookMin,
+            lookMax);
+    return status == ErrorCode::Success;
 }
 
 CUDA_DEV
@@ -146,6 +160,24 @@ CUDA_DEV int geo2rdr(const isce3::core::Vec3& inputLLH,
             detail::geo2rdr(aztime, slantRange, inputLLH, ellipsoid, orbit,
                             doppler, wavelength, side, t0, params);
     return (status == ErrorCode::Success);
+}
+
+
+CUDA_DEV int geo2rdr_bracket(
+                    const Vec3& x,
+                    const isce3::cuda::core::OrbitView& orbit,
+                    const isce3::cuda::core::gpuLUT2d<double>& doppler,
+                    double* aztime,
+                    double* range, const double wavelength,
+                    const isce3::core::LookSide side,
+                    const double dt,
+                    std::optional<double> timeStart,
+                    std::optional<double> timeEnd)
+{
+    ErrorCode err = detail::geo2rdr_bracket(
+            aztime, range, x, orbit, doppler, wavelength, side, dt,
+            timeStart, timeEnd);
+    return err == ErrorCode::Success;
 }
 
 }}} // namespace isce3::cuda::geometry
@@ -290,4 +322,125 @@ int geo2rdr_h(const cartesian_t& llh, const isce3::core::Ellipsoid& ellps,
     return resultcode;
 }
 
+// Helper kernel to call device-side geo2rdr
+__global__ void geo2rdr_bracket_d(const Vec3 x,
+                          isce3::cuda::core::OrbitView orbit,
+                          isce3::cuda::core::gpuLUT2d<double> doppler,
+                          double* aztime, double* slantRange, double wavelength,
+                          const LookSide side, double dt,
+                          std::optional<double> timeStart,
+                          std::optional<double> timeEnd, int* err)
+{
+
+    // Call device function
+    *err = geo2rdr_bracket(x, orbit, doppler, aztime, slantRange,
+                          wavelength, side, dt, timeStart, timeEnd);
+}
+
+// Host geo->radar to test underlying functions in a single-threaded context
+CUDA_HOST
+int geo2rdr_bracket_h(const cartesian_t& x,
+              const isce3::core::Orbit& orbit,
+              const isce3::core::LUT2d<double>& doppler, double& aztime,
+              double& slantRange, double wavelength, LookSide side,
+              double threshold,
+              std::optional<double> timeStart, std::optional<double> timeEnd)
+{
+    // Make GPU objects
+    isce3::cuda::core::Orbit gpu_orbit(orbit);
+    isce3::cuda::core::gpuLUT2d<double> gpu_doppler(doppler);
+
+    // Allocate necessary device memory
+    double *aztime_d, *slantRange_d;
+    int* err_d;
+    checkCudaErrors(cudaMalloc((double**) &aztime_d, sizeof(double)));
+    checkCudaErrors(cudaMalloc((double**) &slantRange_d, sizeof(double)));
+    checkCudaErrors(cudaMalloc((int**) &err_d, sizeof(int)));
+
+    // Run geo2rdr on the GPU
+    dim3 grid(1), block(1);
+    geo2rdr_bracket_d<<<grid, block>>>(x, gpu_orbit, gpu_doppler, aztime_d,
+                               slantRange_d, wavelength, side, threshold,
+                               timeStart, timeEnd, err_d);
+
+    checkCudaErrors(cudaPeekAtLastError());
+    checkCudaErrors(cudaStreamSynchronize(0));
+
+    // Copy results to CPU and return any error code
+    int err;
+    checkCudaErrors(cudaMemcpy(&aztime, aztime_d, sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&slantRange, slantRange_d, sizeof(double),
+               cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&err, err_d, sizeof(int), cudaMemcpyDeviceToHost));
+
+    // Free memory
+    cudaFree(aztime_d);
+    cudaFree(slantRange_d);
+    cudaFree(err_d);
+
+    // Return error code
+    return err;
+}
+
+// Helper kernel to call device-side rdr2geo
+__global__ void rdr2geo_bracket_d(double aztime, double slantRange,
+                        double doppler,
+                        isce3::cuda::core::OrbitView orbit,
+                        isce3::core::Ellipsoid ellipsoid,
+                        isce3::cuda::geometry::gpuDEMInterpolator dem,
+                        Vec3* targetXYZ, double wavelength,
+                        const LookSide side, double tolHeight, double lookMin,
+                        double lookMax, int* err)
+{
+
+    // Call device function
+    *err = rdr2geo_bracket(aztime, slantRange, doppler, orbit, ellipsoid, dem,
+                          *targetXYZ, wavelength, side, tolHeight,
+                          lookMin, lookMax);
+}
+
+// Host geo->radar to test underlying functions in a single-threaded context
+CUDA_HOST
+int rdr2geo_bracket_h(double aztime, double slantRange, double doppler,
+              const isce3::core::Orbit& orbit,
+              const isce3::core::Ellipsoid& ellipsoid,
+              const isce3::geometry::DEMInterpolator& dem,
+              Vec3& targetXYZ, double wavelength, LookSide side,
+              double tolHeight, double lookMin, double lookMax)
+{
+    // Make GPU objects
+    isce3::cuda::core::Orbit orbit_d(orbit);
+    isce3::cuda::geometry::gpuDEMInterpolator dem_d(dem);
+
+    // Allocate necessary device memory
+    int* err_d;
+    Vec3* xyz_d;
+    checkCudaErrors(cudaMalloc((int**) &err_d, sizeof(int)));
+    checkCudaErrors(cudaMalloc((double**) &xyz_d, 3 * sizeof(double)));
+
+    // Run rdr2geo on the GPU
+    dim3 grid(1), block(1);
+    rdr2geo_bracket_d<<<grid, block>>>(aztime, slantRange, doppler, orbit_d,
+                                       ellipsoid, dem_d, xyz_d, wavelength,
+                                       side, tolHeight, lookMin, lookMax,
+                                       err_d);
+
+    // Check for any kernel errors
+    checkCudaErrors(cudaPeekAtLastError());
+    checkCudaErrors(cudaStreamSynchronize(0));
+
+    // Copy results to CPU and return any error code
+    int err;
+    checkCudaErrors(
+            cudaMemcpy(&err, err_d, sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(targetXYZ.data(), xyz_d, 3 * sizeof(double),
+            cudaMemcpyDeviceToHost));
+
+    // Free memory
+    checkCudaErrors(cudaFree(err_d));
+    checkCudaErrors(cudaFree(xyz_d));
+
+    // Return error code
+    return err;
+}
 }}} // namespace isce3::cuda::geometry

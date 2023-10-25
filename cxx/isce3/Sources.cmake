@@ -49,9 +49,11 @@ geometry/loadDem.cpp
 geometry/Geo2rdr.cpp
 geocode/GeocodeCov.cpp
 geocode/GeocodePolygon.cpp
+geometry/geo2rdr_roots.cpp
 geometry/geometry.cpp
 geometry/getGeolocationGrid.cpp
 geometry/RTC.cpp
+geometry/rdr2geo_roots.cpp
 geometry/Topo.cpp
 geometry/TopoLayers.cpp
 geometry/metadataCubes.cpp

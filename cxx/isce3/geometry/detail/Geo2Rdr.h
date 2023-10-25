@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <isce3/core/forward.h>
 
 #include <isce3/core/Common.h>
@@ -47,6 +48,40 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
         const isce3::core::Ellipsoid& ellipsoid, const Orbit& orbit,
         const DopplerModel& doppler, double wvl, isce3::core::LookSide side,
         double t0, const Geo2RdrParams& params = {});
+
+
+/** Default convergence tolerance for azimuth time (seconds) */
+inline constexpr double DEFAULT_TOL_AZ_TIME = 1e-7;
+
+/**
+ * \internal
+ * Unified host/device implementation of isce3::geometry::geo2rdr_bracket and
+ * isce3::cuda::geometry::geo2rdr_bracket
+ *
+ * Transform from ECEF XYZ coordinates to radar
+ * coordinates (azimuth, range).
+ *
+ * The behavior is undefined if either \p t or \p r is \p NULL
+ *
+ * \param[out] aztime    Target azimuth time w.r.t. orbit reference epoch (s)
+ * \param[out] range     Target slant range (m)
+ * \param[in]  x         Target ECEF XYZ position (m)
+ * \param[in]  orbit     Platform orbit.  Time bounds used as search interval.
+ * \param[in]  doppler   Doppler model as a function of azimuth & range (Hz)
+ * \param[in]  wvl       Radar wavelength (m)
+ * \param[in]  side      Radar look side
+ * \param[in]  tolAzTime Allowable error in azimuth time solution (s)
+ * \param[in]  timeStart Start of search interval (s), default=orbit.startTime()
+ * \param[in]  timeEnd   End of search interval (s), default=orbit.endTime()
+ */
+template<class Orbit, class DopplerModel>
+CUDA_HOSTDEV isce3::error::ErrorCode
+geo2rdr_bracket(double* aztime, double* range,
+        const isce3::core::Vec3& x, const Orbit& orbit,
+        const DopplerModel& doppler, double wvl, isce3::core::LookSide side,
+        double tolAzTime = DEFAULT_TOL_AZ_TIME,
+        std::optional<double> timeStart = std::nullopt,
+        std::optional<double> timeEnd = std::nullopt);
 
 }}} // namespace isce3::geometry::detail
 

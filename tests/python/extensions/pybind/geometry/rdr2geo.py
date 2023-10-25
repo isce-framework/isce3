@@ -46,6 +46,19 @@ def test_point():
     assert np.isclose(np.degrees(llh[1]), 35.29610867314526)
     assert np.isclose(llh[2], 1776.9999999993)
 
+    # try with bracketing method
+    xyz = isce3.geometry.rdr2geo_bracket(t, r, orbit, grid.lookside, 0.0, 0.0,
+                                         dem=dem)
+    llh = isce3.core.Ellipsoid().xyz_to_lon_lat(xyz)
+    assert np.isclose(np.degrees(llh[0]), -115.43883834023249)
+    assert np.isclose(np.degrees(llh[1]), 35.29610867314526)
+    assert np.isclose(llh[2], 1776.9999999993)
+
+    # Run again without dem argument.  This is just to catch a former bug where
+    # EPSG code was uninitialized.  Can't check answer since height is different
+    # from default ctor.
+    xyz = isce3.geometry.rdr2geo_bracket(t, r, orbit, grid.lookside, 0.0, 0.0)
+
 
 @pytest.fixture(scope="module")
 def unit_test_params():

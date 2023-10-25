@@ -5,13 +5,17 @@
 
 #include <gtest/gtest.h>
 
+#include <isce3/core/Common.h>
 #include <isce3/core/Poly1d.h>
+#include <isce3/error/ErrorCode.h>
 #include <isce3/except/Error.h>
+#include <isce3/math/RootFind1dBracket.h>
 #include <isce3/math/RootFind1dNewton.h>
 #include <isce3/math/RootFind1dSecant.h>
 #include <isce3/math/detail/RootFind1dBase.h>
 
 using namespace isce3::math;
+using namespace isce3::error;
 
 struct RootFind1dTest : public ::testing::Test {
 
@@ -152,6 +156,99 @@ TEST_F(RootFind1dTest, SecantRootMethod)
     validate_root(rf_obj.root(func, 0.0, -1.0),
             std::string("for Root method with one callback function and two "
                         "initial values"));
+}
+
+// easy, right?
+CUDA_HOSTDEV double f1(double x)
+{
+    return std::cos(x);
+}
+
+// problem #3 from Alefeld 1995
+CUDA_HOSTDEV double f2(double x) {
+    // const double a = -40.0, b = -1.0;
+    const double a = -100.0, b = -2.0;
+    return a * x * std::exp(b * x);
+}
+
+// Eq. 4.1 in Brent 1973
+// also problem #13 in Alefeld 1995
+CUDA_HOSTDEV double f3(double x) {
+    if (std::abs(x) < 3.8e-4) {
+        return 0.0;
+    }
+    // See Alefeld 1995 for note on underflow.
+    // return x * std::exp(-std::pow(x, -2));
+    return x / std::exp(std::pow(x, -2));
+}
+
+// problem from Ch. 4 table 4.1 in Brent 1973
+CUDA_HOSTDEV double f4(double x) {
+    return std::pow(x, 9.0);
+}
+
+// test behavior wrt NaN values
+CUDA_HOSTDEV double func_with_nan(double x) {
+    if (std::abs(x) < 1e-3) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return std::pow(x, 3.0);
+}
+
+TEST(find_zero, brent)
+{
+    double root = 0.0;
+    ErrorCode status;
+    double tol = 1e-12;
+
+    status = find_zero_brent(4.0, 5.0, f1, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    EXPECT_NEAR(3 * M_PI / 2, root, tol);
+
+    status = find_zero_brent(-9.0, 31.0, f2, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    EXPECT_NEAR(0.0, root, tol);
+
+    status = find_zero_brent(-1.0, 4.0, f3, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    // This problem still underflows on my machine.
+    if (std::abs(f3(root)) > 0.0) {
+        EXPECT_NEAR(0.0, root, tol);
+    }
+
+    status = find_zero_brent(-1.0, 1.1, f4, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    EXPECT_NEAR(0.0, root, tol);
+
+    status = find_zero_brent(-5.0, 5.0, func_with_nan, tol, &root);
+    EXPECT_EQ(status, ErrorCode::FailedToConverge);
+}
+
+TEST(find_zero, bisection)
+{
+    double root = 0.0;
+    ErrorCode status;
+    double tol = 1e-12;
+
+    status = find_zero_bisection(4.0, 5.0, f1, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    EXPECT_NEAR(3 * M_PI / 2, root, tol);
+
+    status = find_zero_bisection(-9.0, 31.0, f2, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    EXPECT_NEAR(0.0, root, tol);
+
+    status = find_zero_bisection(-1.0, 4.0, f3, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    // This problem still underflows on my machine.
+    if (std::abs(f3(root)) > 0.0) {
+        printf("f3(x) = %g\n", f3(root));
+        EXPECT_NEAR(0.0, root, tol);
+    }
+
+    status = find_zero_bisection(-1.0, 1.1, f4, tol, &root);
+    EXPECT_EQ(status, ErrorCode::Success);
+    EXPECT_NEAR(0.0, root, tol);
 }
 
 int main(int argc, char** argv)

@@ -94,9 +94,11 @@ geometry/Geo2rdr.icc
 geocode/GeocodeCov.h
 geocode/GeocodeCov.icc
 geocode/GeocodePolygon.h
+geometry/geo2rdr_roots.h
 geometry/geometry.h
 geometry/getGeolocationGrid.h
 geometry/RTC.h
+geometry/rdr2geo_roots.h
 geometry/Topo.h
 geometry/Topo.icc
 geometry/TopoLayers.h
@@ -134,6 +136,8 @@ math/complexOperations.h
 math/Stats.h
 math/detail/RootFind1dBase.h
 math/polyfunc.h
+math/RootFind1dBracket.h
+math/RootFind1dBracket.icc
 math/RootFind1dNewton.h
 math/RootFind1dSecant.h
 math/Sinc.h

@@ -15,6 +15,9 @@ enum class ErrorCode {
     FailedToConverge,
     WrongLookSide,
     OutOfBoundsLookup,
+    NullDereference,
+    InvalidTolerance,
+    InvalidInterval,
 };
 
 /** Return a string describing the error code */

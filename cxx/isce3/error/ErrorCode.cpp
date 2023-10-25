@@ -24,6 +24,12 @@ std::string getErrorString(ErrorCode status)
             return "wrong look side";
         case ErrorCode::OutOfBoundsLookup:
             return "out of bounds LUT lookup";
+        case ErrorCode::NullDereference:
+            return "attempted to dereference null pointer";
+        case ErrorCode::InvalidTolerance:
+            return "specified tolerance or number of iterations is invalid";
+        case ErrorCode::InvalidInterval:
+            return "specified interval does not contain a solution";
     }
 
     throw isce3::except::RuntimeError(ISCE_SRCINFO(), "unknown error code");

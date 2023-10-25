@@ -30,6 +30,7 @@
 // isce3::geometry
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
+#include <isce3/geometry/geo2rdr_roots.h>
 
 // Declaration for utility function to read test data
 void loadTestData(std::vector<std::string>& aztimes,
@@ -153,6 +154,29 @@ TEST_F(GeometryTest, GeoToRdr)
     ASSERT_EQ(stat, 1);
     ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
     ASSERT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
+
+    // Repeat with bracketing algorithm.
+    auto xyz = ellipsoid.lonLatToXyz(llh);
+    stat = isce3::geometry::geo2rdr_bracket(xyz, orbit, zeroDoppler, aztime,
+            slantRange, swath.processedWavelength(), lookSide, 1e-10);
+    azdate = orbit.referenceEpoch() + aztime;
+
+    EXPECT_EQ(stat, 1);
+    EXPECT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
+    EXPECT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
+
+    // Repeat with custom bracket.  The default run above searches the whole
+    // 600 seconds of orbit data, which takes 6 iterations.  The run below
+    // with a 2 second interval converges in 3 iterations.
+    double t0 = aztime - 1, t1 = aztime + 1;
+    stat = isce3::geometry::geo2rdr_bracket(xyz, orbit, zeroDoppler, aztime,
+            slantRange, swath.processedWavelength(), lookSide, 1e-10, t0, t1);
+    azdate = orbit.referenceEpoch() + aztime;
+
+    EXPECT_EQ(stat, 1);
+    EXPECT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
+    EXPECT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
+
 }
 
 TEST(Geometry, SrLkvHeadDemNed)

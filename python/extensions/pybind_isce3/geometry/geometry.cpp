@@ -5,8 +5,10 @@
 #include "RTC.h"
 #include "boundingbox.h"
 #include "geo2rdr.h"
+#include "geo2rdr_roots.h"
 #include "metadataCubes.h"
 #include "rdr2geo.h"
+#include "rdr2geo_roots.h"
 #include "ltpcoordinates.h"
 #include "pntintersect.h"
 #include "lookIncFromSr.h"
@@ -61,7 +63,9 @@ void addsubmodule_geometry(py::module & m)
     addbinding_compute_rtc_bbox(geometry);
     addbinding_get_geolocation_grid(geometry);
     addbinding_geo2rdr(geometry);
+    addbinding_geo2rdr_roots(geometry);
     addbinding_rdr2geo(geometry);
+    addbinding_rdr2geo_roots(geometry);
     addbinding_boundingbox(geometry);
     addbinding_metadata_cubes(geometry);
     addbinding_ltp_coordinates(geometry);

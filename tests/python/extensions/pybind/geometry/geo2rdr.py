@@ -45,6 +45,23 @@ def test_point():
     assert azdate.isoformat() == "2003-02-26T17:55:34.122893704"
     npt.assert_almost_equal(slant_range, 830449.6727720434, decimal=6)
 
+    # try bracketing algorithm
+    xyz = ellipsoid.lon_lat_to_xyz(llh)
+    aztime, slant_range = isce3.geometry.geo2rdr_bracket(xyz, orbit,
+            doppler, radargrid.wavelength, radargrid.lookside, tol_aztime=1e-8)
+
+    azdate = orbit.reference_epoch + isce3.core.TimeDelta(aztime)
+    assert azdate.isoformat() == "2003-02-26T17:55:34.122893704"
+    npt.assert_almost_equal(slant_range, 830449.6727720434, decimal=6)
+
+    # and again with a custom bracket
+    aztime, slant_range = isce3.geometry.geo2rdr_bracket(xyz, orbit,
+            doppler, radargrid.wavelength, radargrid.lookside, tol_aztime=1e-8,
+            time_start=aztime - 1, time_end=aztime + 1)
+
+    azdate = orbit.reference_epoch + isce3.core.TimeDelta(aztime)
+    assert azdate.isoformat() == "2003-02-26T17:55:34.122893704"
+    npt.assert_almost_equal(slant_range, 830449.6727720434, decimal=6)
 
 def test_run():
     '''

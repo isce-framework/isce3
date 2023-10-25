@@ -1,11 +1,14 @@
 #pragma once
 
+#include <optional>
+
 #include <isce3/core/forward.h>
 #include <isce3/cuda/core/forward.h>
 #include <isce3/cuda/geometry/forward.h>
 #include <isce3/geometry/forward.h>
 
 #include <isce3/core/Common.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 
 namespace isce3 { namespace cuda { namespace geometry {
 
@@ -52,6 +55,32 @@ CUDA_DEV int rdr2geo(const isce3::core::Pixel& pixel,
                      const gpuDEMInterpolator& demInterp,
                      isce3::core::Vec3& targetLLH, isce3::core::LookSide side,
                      double threshold, int maxIter, int extraIter);
+
+/**
+ * Radar geometry coordinates to map coordinates transformer using a bracketing
+ * algorithm.
+ *
+ * @param[in] aztime        Azimuth time of target since orbit epoch (s)
+ * @param[in] slantRange    Range to target (m)
+ * @param[in] doppler       Doppler of target (Hz)
+ * @param[in] orbit         Radar trajectory
+ * @param[in] ellipsoid     Surface ellipsoid corresponding to DEM
+ * @param[in] dem           Digital elevation model
+ * @param[out] targetXYZ    Target ECEF XYZ position (m)
+ * @param[in] wvl           Wavelength corresponding to Doppler measurement (m)
+ * @param[in] side          Side that radar is viewing
+ * @param[in] tolHeight     Height convergence tolerance (m)
+ * @param[in] lookMin       Smallest possible pseudo-look angle (rad)
+ * @param[in] lookMax       Largest possible pseudo-look angle (rad)
+ *
+ * @returns nonzero on success, zero otherwise
+ */
+CUDA_DEV int rdr2geo_bracket(double aztime, double slantRange, double doppler,
+        const isce3::cuda::core::OrbitView& orbit,
+        const isce3::core::Ellipsoid& ellipsoid, const gpuDEMInterpolator& dem,
+        isce3::core::Vec3& targetXYZ, double wvl, isce3::core::LookSide side,
+        double tolHeight = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
+        double lookMin = 0.0, double lookMax = M_PI / 2);
 
 /**
  * Map coordinates to radar geometry coordinates transformer
@@ -109,6 +138,32 @@ CUDA_DEV int geo2rdr(const isce3::core::Vec3& inputLLH,
                      isce3::core::LookSide side, double threshold, int maxIter,
                      double deltaRange);
 
+/**
+ * Map coordinates to radar geometry coordinates transformer using a bracketing
+ * algorithm.
+ *
+ * \param[in]  x          Target ECEF XYZ position (m)
+ * \param[in]  orbit      Platform orbit.  Time bounds used as search interval.
+ * \param[in]  doppler    Doppler model as a function of azimuth & range (Hz)
+ * \param[out] aztime     Target azimuth time w.r.t. orbit reference epoch (s)
+ * \param[out] range      Target slant range (m)
+ * \param[in]  wavelength Radar wavelength (m)
+ * \param[in]  side       Radar look side
+ * \param[in]  dt         Allowable error in azimuth time solution (s)
+ * \param[in]  timeStart  Start of search interval, s
+ *                        Defaults to orbit.startTime()
+ * \param[in]  timeEnd    End of search interval, s
+ *                        Defaults to orbit.endTime()
+ */
+CUDA_DEV int geo2rdr_bracket(const isce3::core::Vec3& x,
+        const isce3::cuda::core::OrbitView& orbit,
+        const isce3::cuda::core::gpuLUT2d<double>& doppler, double* aztime,
+        double* range, const double wavelength,
+        const isce3::core::LookSide side, const double dt,
+        std::optional<double> timeStart = std::nullopt,
+        std::optional<double> timeEnd = std::nullopt);
+
+
 /** Radar geometry coordinates to map coordinates transformer (host testing) */
 CUDA_HOST int rdr2geo_h(const isce3::core::Pixel&, const isce3::core::Basis&,
                         const isce3::core::Vec3& pos,
@@ -122,6 +177,21 @@ CUDA_HOST int geo2rdr_h(const cartesian_t&, const isce3::core::Ellipsoid&,
                         const isce3::core::Orbit&,
                         const isce3::core::LUT1d<double>&, double&, double&,
                         double, isce3::core::LookSide, double, int, double);
+
+CUDA_HOST
+int rdr2geo_bracket_h(double aztime, double slantRange, double doppler,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::Ellipsoid& ellipsoid,
+        const isce3::geometry::DEMInterpolator& dem,
+        isce3::core::Vec3& targetXYZ, double wavelength,
+        isce3::core::LookSide side, double tolHeight, double lookMin,
+        double lookMax);
+
+CUDA_HOST int geo2rdr_bracket_h(const isce3::core::Vec3&,
+        const isce3::core::Orbit&, const isce3::core::LUT2d<double>&, double&,
+        double&, double, isce3::core::LookSide, double,
+        std::optional<double> = std::nullopt,
+        std::optional<double> = std::nullopt);
 
 }}} // namespace isce3::cuda::geometry
 

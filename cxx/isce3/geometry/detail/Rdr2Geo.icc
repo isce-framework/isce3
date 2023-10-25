@@ -6,6 +6,7 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Pixel.h>
 #include <isce3/core/Vector.h>
+#include <isce3/math/RootFind1dBracket.h>
 
 namespace isce3 { namespace geometry { namespace detail {
 
@@ -165,6 +166,79 @@ rdr2geo(isce3::core::Vec3* llh, const isce3::core::Pixel& pixel,
     *llh = updateLLH(h);
 
     return converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
+}
+
+
+NVCC_HD_WARNING_DISABLE
+template<class Orbit, class DEMInterpolator>
+CUDA_HOSTDEV isce3::error::ErrorCode
+rdr2geo_bracket(isce3::core::Vec3* xyz,
+        double aztime, double slantRange, double doppler, const Orbit& orbit,
+        const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
+        double wavelength, isce3::core::LookSide side, double tolHeight,
+        double lookMin, double lookMax)
+{
+    using namespace isce3::core;
+    using isce3::error::ErrorCode;
+
+    // Interpolate orbit to get radar position and velocity.
+    Vec3 radarXYZ, velocity;
+    const auto errCode = orbit.interpolate(&radarXYZ, &velocity, aztime);
+    if (errCode != ErrorCode::Success) {
+        return errCode;
+    }
+    const double speed = velocity.norm();
+
+    // Construct some useful basis vectors.
+    // For simplicity we'll use geocentric nadir (not geodetic),
+    // which determines our definition of look angle.
+    const Vec3 alongTrack = velocity / speed;
+    const Vec3 right = alongTrack.cross(radarXYZ).normalized();
+    const Vec3 down = alongTrack.cross(right);
+    const Vec3 horizontal = (side == LookSide::Right) ? right : -right;
+
+    // Convert Doppler into equivalent squint angle.
+    const double sinSquint = doppler * wavelength / (2 * speed);
+    // NOTE squint is in [-90, 90] by definition.
+    const double cosSquint = std::sqrt(1.0 - sinSquint * sinSquint);
+
+    // Doppler cone and range sphere intersect to make a circle with
+    // the following parameters.
+    const Vec3 center = radarXYZ + sinSquint * slantRange * alongTrack;
+    const double radius = cosSquint * slantRange;
+
+    // Parameterize points on this circle with an angle similar to look angle.
+    auto getXYZ = [&](double look) {
+        return center + radius * std::sin(look) * horizontal +
+               radius * std::cos(look) * down;
+    };
+
+    // Get ellipsoid associated with DEM.
+    // const auto epsg = dem.epsgCode();
+    // const Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+    // TODO This API only available on CPU.  For now take separate ellipsoid arg
+
+    // Now we just need to find the angle on this circle where it intersects
+    // the DEM.  Create an error function we'll feed to a root finder.
+    auto dh = [&](double look) {
+        const Vec3 xyz = getXYZ(look);
+        Vec3 lonLatH;
+        ellipsoid.xyzToLonLat(xyz, lonLatH);
+        return lonLatH[2] - dem.interpolateLonLat(lonLatH[0], lonLatH[1]);
+    };
+
+    // Height error is bounded by arc length.
+    const double tolLook = tolHeight / radius;
+
+    // Solve.
+    double lookSolution = 0.0;
+    const auto err = isce3::math::find_zero_brent(
+            lookMin, lookMax, dh, tolLook, &lookSolution);
+    if (err != ErrorCode::Success) {
+        return err;
+    }
+    *xyz = getXYZ(lookSolution);
+    return ErrorCode::Success;
 }
 
 }}} // namespace isce3::geometry::detail
