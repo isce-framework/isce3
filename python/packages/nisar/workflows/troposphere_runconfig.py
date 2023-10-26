@@ -64,6 +64,9 @@ def troposphere_delay_check(cfg):
             # Troposphere package
             tropo_pkg = tropo_cfg['package'].lower()
 
+            # Weather model type
+            weather_model_type = tropo_cfg['weather_model_type'].upper()
+
             # pyAPS only supports the grib format weather model
             if tropo_pkg == 'pyaps':
 
@@ -86,11 +89,17 @@ def troposphere_delay_check(cfg):
             else:
                 #  Get the datetime of weather model in NetCDF format for RAiDER
                 try:
-                    import xarray as xr
-
-                    ds = xr.open_dataset(weather_model_file)
-                    # Get the datetime of the weather model file
-                    weather_model_date = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
+                    # The HRES weather model file with ECMWF NetCDF format
+                    if weather_model_type == 'HRES':
+                        import xarray as xr
+                        ds = xr.open_dataset(weather_model_file)
+                        # Get the datetime of the weather model file
+                        weather_model_date = ds.time.values.astype('datetime64[s]').astype(datetime)[0]
+                    # The other weather model files with RAiDER NetCDF format
+                    else:
+                        with h5py.File(weather_model_file, 'r', libver='latest', swmr=True) as f:
+                                weather_model_date = datetime.strptime(f.attrs['datetime'].astype(str),
+                                                                    '%Y_%m_%dT%H_%M_%S')
                 except ValueError:
                     err_str = f'{weather_model_file} is not a netCDF format, and not supported by RAiDER package'
                     error_channel.log(err_str)
@@ -105,8 +114,6 @@ def troposphere_delay_check(cfg):
                           f" and RSLC ({rslc_date}) should be within one day"
                 error_channel.log(err_str)
                 raise ValueError(err_str)
-
-        weather_model_type = tropo_cfg['weather_model_type'].upper()
 
         # Check the weather model
         weather_model_types = ['ERA5', 'ERAINT', 'HRES', 'NARR', 'MERRA',
