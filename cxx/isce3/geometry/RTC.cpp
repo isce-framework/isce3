@@ -675,7 +675,7 @@ double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
     const double h = 0.5 * (p1 + p2 + p3);
 
     sigma_naught_area =
-            (std::sqrt(h * (h - p1) * (h - p2) * (h - p3)) / divisor);
+            (std::sqrt(h * (h - p1) * (h - p2) * (h - p3)));
 
     /*
     In the rtcAreaMode::AREA mode, we'll return a reference area (e.g., A_gamma),
@@ -695,12 +695,12 @@ double computeFacet(Vec3 xyz_center, Vec3 xyz_left, Vec3 xyz_right,
 
     if (output_terrain_radiometry ==
             rtcOutputTerrainRadiometry::SIGMA_NAUGHT) {
-        return sigma_naught_area;
+        return sigma_naught_area / divisor;
     }
 
     double gamma_naught_area = cos_local_inc_facet * sigma_naught_area;
 
-    return gamma_naught_area;
+    return gamma_naught_area / divisor;
 }
 
 void computeRtcBilinearDistribution(isce3::io::Raster& dem_raster,
