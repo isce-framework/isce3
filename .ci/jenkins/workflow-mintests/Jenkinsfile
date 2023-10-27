@@ -6,6 +6,17 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '10'))
   }
   agent any
+  environment {
+    // Personal Access Token (PAT) for authenticating github-fn transactions
+    // for the CI server. Secret credentials are managed via the Jenkins UI.
+    RTBURNS_PAT = credentials("${params.RTBURNS_PAT}")
+    GIT_OAUTH_TOKEN = credentials("${params.GIT_OAUTH_TOKEN}")
+
+    // Artifactory API Key (username + password) with push access to
+    // cae-artifactory.jpl.nasa.gov:1600{1,2}/gov/nasa/jpl/nisar/adt.
+    // A string in '<username>:<password>' format.
+    ARTIFACTORY_API_KEY = credentials("${params.ARTIFACTORY_API_KEY}")
+  }
   stages {
     stage("Set up Docker images with ISCE3 build prereqs") {
       steps {

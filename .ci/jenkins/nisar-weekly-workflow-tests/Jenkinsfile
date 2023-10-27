@@ -10,6 +10,13 @@ pipeline {
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '2'))
   }
+  environment {
+    // Personal Access Token (PAT) for authenticating github-fn transactions
+    // for the CI server. Needed for fetching the QualityAssurance and
+    // SoilMoisture repositories. Secret credentials are managed via the
+    // Jenkins UI.
+    GIT_OAUTH_TOKEN = credentials("${params.GIT_OAUTH_TOKEN}")
+  }
   stages {
     stage("Build NISAR ADT image & Fetch workflow test data") {
       parallel {
