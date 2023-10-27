@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-
-import journal
-from pathlib import Path
-
 from nisar.workflows.runconfig import RunConfig
 
 class InsarSolidEarthTidesRunConfig(RunConfig):

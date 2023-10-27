@@ -6,6 +6,7 @@ import iscetest
 import numpy as np
 import numpy.testing as npt
 from nisar.workflows import crossmul, prepare_insar_hdf5
+from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 
 
@@ -41,7 +42,8 @@ def test_crossmul_validate():
     '''
     scratch_path = '.'
 
-    group_path = '/science/LSAR/RIFG/swaths/frequencyA/interferogram/HH'
+    # Instantiate RIFG object to avoid hard-code paths to RIFG datasets
+    group_path = f'{RIFGGroupsPaths().SwathsPath}/frequencyA/interferogram/HH'
     with h5py.File(os.path.join(scratch_path, 'rifg.h5'), 'r') as h_rifg:
 
         # check generated interferogram has 0 phase

@@ -20,6 +20,9 @@ from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
+from nisar.products.insar.product_paths import (CommonPaths, GUNWGroupsPaths,
+                                                GOFFGroupsPaths, ROFFGroupsPaths,
+                                                RIFGGroupsPaths, RUNWGroupsPaths)
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 
@@ -300,7 +303,7 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
     water_mask_path = cfg['dynamic_ancillary_file_group']['water_mask_file']
 
     if water_mask_path is not None:
-        freq_path = f'/science/LSAR/GUNW/grids/frequency{freq}'
+        freq_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}'
         mask_h5_path = f'{freq_path}/unwrappedInterferogram/mask'
 
         water_mask = _project_water_to_geogrid(water_mask_path, geogrid)
@@ -352,8 +355,8 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type
         length=int(radar_grid_cubes_geogrid.length),
         epsg=radar_grid_cubes_geogrid.epsg)
 
-    product = 'GOFF' if input_product_type is InputProduct.ROFF else 'GUNW'
-    cube_group_path = f'/science/LSAR/{product}/metadata/radarGrid'
+    product_obj = GOFFGroupsPaths() if input_product_type is \
+                                       InputProduct.ROFF else GUNWGroupsPaths()
 
     radar_grid = slc.getRadarGrid(freq)
     native_doppler = slc.getDopplerCentroid(frequency=freq)
@@ -362,7 +365,7 @@ def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type
     # The native-Doppler LUT bounds error is turned off to
     # compute cubes values outside radar-grid boundaries
     native_doppler.bounds_error = False
-    add_radar_grid_cubes_to_hdf5(dst_h5, cube_group_path,
+    add_radar_grid_cubes_to_hdf5(dst_h5, product_obj.RadarGridPath,
                                  cube_geogrid_param, radar_grid_cubes_heights,
                                  radar_grid, orbit, native_doppler,
                                  grid_zero_doppler, threshold_geo2rdr,
@@ -438,14 +441,14 @@ def get_raster_lists(all_geocoded_dataset_flags,
         List of invalid values to initialize each raster with
     '''
     if input_product_type is InputProduct.ROFF:
-        src_product = 'OFF'
-        dst_product = 'OFF'
+        src_paths_obj = ROFFGroupsPaths()
+        dst_paths_obj = GOFFGroupsPaths()
     else:
-        src_product = 'IFG' if input_product_type is InputProduct.RIFG else 'UNW'
-        dst_product = 'UNW'
+        src_paths_obj = RIFGGroupsPaths() if input_product_type is InputProduct.RIFG else RUNWGroupsPaths()
+        dst_paths_obj = GUNWGroupsPaths()
 
-    src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequency{freq}"
-    dst_freq_path = f"/science/LSAR/G{dst_product}/grids/frequency{freq}"
+    src_freq_path = f"{src_paths_obj.SwathsPath}/frequency{freq}"
+    dst_freq_path = f"{dst_paths_obj.GridsPath}/frequency{freq}"
 
     # Ensure possible interpolation methods and invalid values are iterable
     # Following temp variables ensure default parameter not overwritten
@@ -522,8 +525,8 @@ def get_raster_lists(all_geocoded_dataset_flags,
                 # main_diff_ms_band are computed on radargrid of frequencyB.
                 # The ionosphere_phase_screen is geocoded on geogrid of
                 # frequencyA.
-                iono_src_freq_path = f"/science/LSAR/R{src_product}/swaths/frequencyB"
-                iono_dst_freq_path = f"/science/LSAR/G{src_product}/grids/frequencyA"
+                iono_src_freq_path = f"{src_paths_obj.SwathsPath}/frequencyB"
+                iono_dst_freq_path = f"{dst_paths_obj.GridsPath}/frequencyA"
                 ds_name_camel_case = _snake_to_camel_case(ds_name)
 
                 raster, path = get_ds_input_output(
@@ -809,7 +812,7 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 # add water mask to GUNW product
                 add_water_to_mask(cfg, freq, geo_grid, dst_h5)
-                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/unwrappedInterferogram/mask'
+                mask_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}/unwrappedInterferogram/mask'
                 mask_ds = dst_h5[mask_path]
                 compute_layover_shadow_water_stats(mask_ds)
 
@@ -1232,7 +1235,7 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
                 # add water mask to GUNW product
                 add_water_to_mask(cfg, freq, geogrid, dst_h5)
-                mask_path = f'/science/LSAR/GUNW/grids/frequency{freq}/unwrappedInterferogram/mask'
+                mask_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}/unwrappedInterferogram/mask'
                 mask_ds = dst_h5[mask_path]
                 compute_layover_shadow_water_stats(mask_ds)
 

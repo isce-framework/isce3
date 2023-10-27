@@ -11,6 +11,7 @@ import numpy as np
 from osgeo import gdal
 from scipy.interpolate import griddata
 
+from nisar.products.insar.product_paths import CommonPaths
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import h5_prep
@@ -448,8 +449,6 @@ def add_baseline(output_paths,
     """
     error_channel = journal.error('baseline.run')
 
-    common_parent_path = 'science/LSAR'
-
     # CPU or GPU geo2rdr
     if use_gpu:
         geo2rdr = isce3.cuda.geometry.Geo2Rdr
@@ -466,7 +465,7 @@ def add_baseline(output_paths,
         product_id = 'GUNW'
 
     output_hdf5 = output_paths[product_id]
-    dst_meta_path = f'{common_parent_path}/{product_id}/metadata'
+    dst_meta_path = f'{CommonPaths.RootPath}/{product_id}/metadata'
 
     # read 3d cube size from arbitary metadata
     if radar_or_geo == 'radar':
@@ -696,7 +695,7 @@ def run(cfg: dict, output_paths):
         _get_rgrid_dopp_orbit(sec_slc, sec_orbit_path)
 
     geo2rdr_parameters = cfg["processing"]["geo2rdr"]
-    common_path = 'science/LSAR'
+    common_path = CommonPaths.RootPath
 
     radar_products = {dst: output_paths[dst]
                       for dst in output_paths.keys()

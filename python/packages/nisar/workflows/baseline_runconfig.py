@@ -1,5 +1,3 @@
-import os
-
 import journal
 from nisar.workflows.runconfig import RunConfig
 

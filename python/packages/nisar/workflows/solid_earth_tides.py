@@ -7,7 +7,6 @@ import h5py
 import journal
 import numpy as np
 import pysolid
-from osgeo import gdal, osr
 from scipy.interpolate import RegularGridInterpolator
 
 import isce3
@@ -15,6 +14,7 @@ from isce3.core import transform_xy_to_latlon
 from nisar.workflows.h5_prep import add_solid_earth_to_gunw_hdf5
 from nisar.workflows.h5_prep import get_products_and_paths
 from nisar.workflows.solid_earth_tides_runconfig import InsarSolidEarthTidesRunConfig
+from nisar.products.insar.product_paths import GUNWGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -153,13 +153,13 @@ def calculate_solid_earth_tides(inc_angle_datacube,
 
 def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
 
+    # Instantiate GUNW object to avoid hard-coded paths to GUNW datasets
+    gunw_obj = GUNWGroupsPaths()
     with h5py.File(gunw_hdf5_path, 'r', libver='latest', swmr=True) as h5_obj:
 
         # Fetch the GUWN Incidence Angle Datacube
-        lsar_path = 'science/LSAR'
-        rdr_grid_path = f'{lsar_path}/GUNW/metadata/radarGrid'
-        id_path = f'{lsar_path}/identification'
-
+        rdr_grid_path = gunw_obj.RadarGridPath
+        id_path = gunw_obj.IdentificationPath
         [inc_angle_cube,
          los_unit_vector_x_cube,
          los_unit_vector_y_cube,
@@ -173,7 +173,7 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
 
          # Wavelenth in meters
         wavelength = isce3.core.speed_of_light / \
-                h5_obj[f'{lsar_path}/GUNW/grids/frequencyA/centerFrequency'][()]
+                h5_obj[f'{gunw_obj.GridsPath}/frequencyA/centerFrequency'][()]
 
         # Start time of the reference and secondary image
         ref_start_time, sec_start_time = [h5_obj[f'{id_path}/{x}ZeroDopplerStartTime'][()]\

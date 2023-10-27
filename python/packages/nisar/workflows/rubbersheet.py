@@ -14,6 +14,7 @@ from nisar.workflows import prepare_insar_hdf5
 from nisar.workflows.helpers import (get_cfg_freq_pols,
                                      get_ground_track_velocity_product)
 from nisar.workflows.rubbersheet_runconfig import RubbersheetRunConfig
+from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 from scipy import interpolate, ndimage, signal
@@ -30,6 +31,9 @@ def run(cfg: dict, output_hdf5: str = None):
     rubbersheet_params = cfg['processing']['rubbersheet']
     geo2rdr_offsets_path = pathlib.Path(rubbersheet_params['geo2rdr_offsets_path'])
     off_product_enabled = cfg['processing']['offsets_product']['enabled']
+
+    # Instantiate RIFG object to get easy access to RIFG datasets
+    rifg_obj = RIFGGroupsPaths()
 
     # If not set, set output HDF5 file
     if output_hdf5 is None:
@@ -49,7 +53,7 @@ def run(cfg: dict, output_hdf5: str = None):
     # Pull the slant range and zero doppler time of the pixel offsets product
     # at frequencyA
     with h5py.File(output_hdf5, 'r', libver='latest', swmr=True) as dst_h5:
-        freq_group_path = '/science/LSAR/RIFG/swaths/frequencyA'
+        freq_group_path = f'{rifg_obj.SwathsPath}/frequencyA'
         pixel_offsets_path = f'{freq_group_path}/pixelOffsets'
         slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
         zero_doppler_time = dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
@@ -74,7 +78,7 @@ def run(cfg: dict, output_hdf5: str = None):
         for freq, _, pol_list in get_cfg_freq_pols(cfg):
             # Rubbersheet directory and frequency group in RIFG product
             rubbersheet_dir = scratch_path / 'rubbersheet_offsets' / f'freq{freq}'
-            freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
+            freq_group_path = f'{rifg_obj.SwathsPath}/frequency{freq}'
 
             # Set the path to geometric offsets dir
             geo_offset_dir = geo2rdr_offsets_path / 'geo2rdr' / f'freq{freq}'

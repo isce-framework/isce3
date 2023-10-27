@@ -11,7 +11,6 @@ import journal
 import isce3
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
-from nisar.workflows import runconfig
 from nisar.workflows.geo2rdr_runconfig import Geo2rdrRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 

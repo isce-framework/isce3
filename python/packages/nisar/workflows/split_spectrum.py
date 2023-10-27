@@ -7,13 +7,13 @@ import time
 import h5py
 import isce3
 import journal
-import nisar
 import numpy as np
 from isce3.splitspectrum import splitspectrum
 from nisar.h5 import cp_h5_meta_data
 from nisar.products.readers import SLC
 
 from nisar.workflows.split_spectrum_runconfig import SplitSpectrumRunConfig
+from nisar.products.insar.product_paths import CommonPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -32,7 +32,9 @@ def prep_subband_h5(src_rslc_hdf5: str,
         list of polarizations for frequency A and B for ionosphere processing
     '''
     src_slc = SLC(hdf5file=src_rslc_hdf5)
-    common_parent_path = 'science/LSAR'
+
+    # Instantiate product obj to avoid product hard-coded paths
+    product_obj = CommonPaths()
 
     with h5py.File(src_rslc_hdf5, 'r', libver='latest', swmr=True) as src_h5, \
         h5py.File(sub_band_hdf5, 'w') as dst_h5:
@@ -41,7 +43,7 @@ def prep_subband_h5(src_rslc_hdf5: str,
         metadata_path = src_slc.MetadataPath
         cp_h5_meta_data(src_h5, dst_h5, metadata_path, excludes=[''])
 
-        ident_path = f'{common_parent_path}/identification/'
+        ident_path = product_obj.IdentificationPath
         cp_h5_meta_data(src_h5, dst_h5, ident_path, excludes=[''])
 
         swath_path = src_slc.SwathPath

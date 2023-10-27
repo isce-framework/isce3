@@ -7,6 +7,7 @@ import iscetest
 import numpy as np
 from nisar.workflows import troposphere
 import pyaps3 as pa
+from nisar.products.insar.product_paths import GUNWGroupsPaths
 from scipy.interpolate import RegularGridInterpolator
 import yaml
 
@@ -90,30 +91,33 @@ def test_troposphere_aps_run():
         pnts = np.stack(
             (heights.flatten(), y_2d.flatten(), x_2d.flatten()), axis=-1)
 
+        # Create GUNW object to avoid hard-coded paths to GUNW datasets
+        gunw_obj = GUNWGroupsPaths()
+
         with h5py.File(gunw_hdf5, 'r') as hdf:
 
             # EPSG Code
-            epsg = int(hdf['science/LSAR/GUNW/metadata/radarGrid/epsg'][()])
+            epsg = int(hdf[f'{gunw_obj.RadarGridPath}/epsg'][()])
 
             # Incidence Angle Datacube
             inc_angle_datacube = \
-                    hdf['science/LSAR/GUNW/metadata/radarGrid/incidenceAngle'][()]
+                    hdf[f'{gunw_obj.RadarGridPath}/incidenceAngle'][()]
 
             # Coordinates X
             xcoord_radar_grid = \
-                    hdf['science/LSAR/GUNW/metadata/radarGrid/xCoordinates'][()]
+                    hdf[f'{gunw_obj.RadarGridPath}/xCoordinates'][()]
 
             # Coordinate Y
             ycoord_radar_grid = \
-                    hdf['science/LSAR/GUNW/metadata/radarGrid/yCoordinates'][()]
+                    hdf[f'{gunw_obj.RadarGridPath}/yCoordinates'][()]
 
             # Heights
             height_radar_grid = \
-                    hdf['science/LSAR/GUNW/metadata/radarGrid/heightAboveEllipsoid'][()]
+                    hdf[f'{gunw_obj.RadarGridPath}/heightAboveEllipsoid'][()]
 
             # Wavelength
             wavelength = isce3.core.speed_of_light / \
-                float(hdf['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()])
+                float(hdf[f'{gunw_obj.GridsPath}/frequencyA/centerFrequency'][()])
 
         # Troposphere product parameters
         tropo_package = cfg['processing']['troposphere_delay']['package']

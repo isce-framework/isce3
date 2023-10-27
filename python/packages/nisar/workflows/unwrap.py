@@ -20,6 +20,7 @@ from nisar.workflows import crossmul, prepare_insar_hdf5
 from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows.helpers import get_cfg_freq_pols
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
+from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 
@@ -47,6 +48,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     unwrap_rg_looks = cfg['processing']['phase_unwrap']['range_looks']
     unwrap_az_looks = cfg['processing']['phase_unwrap']['azimuth_looks']
 
+    # Instantiate RIFG obj to avoid hard-coded paths to RIFG datasets
+    rifg_obj = RIFGGroupsPaths()
+
     # Create error and info channels
     error_channel = journal.error("unwrap.run")
     info_channel = journal.info("unwrap.run")
@@ -65,9 +69,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
     with h5py.File(output_hdf5, "a", libver="latest", swmr=True) as dst_h5,\
         h5py.File(crossmul_path, "r", libver="latest", swmr=True) as src_h5:
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
-            src_freq_group_path = f"/science/LSAR/RIFG/swaths/frequency{freq}"
-            src_freq_bandwidth_group_path = ("/science/LSAR/RIFG/metadata/"
-                                             "processingInformation/parameters"
+            src_freq_group_path = f"{rifg_obj.SwathsPath}/frequency{freq}"
+            src_freq_bandwidth_group_path = (f"{rifg_obj.ProcessingInformationPath}/parameters"
                                              f"/reference/frequency{freq}")
             dst_freq_group_path = src_freq_group_path.replace("RIFG", "RUNW")
 

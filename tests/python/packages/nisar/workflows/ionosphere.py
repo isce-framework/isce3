@@ -1,15 +1,10 @@
 import argparse
 import os
 
-import h5py
-import isce3
 import iscetest
-import numpy as np
-from isce3.atmosphere import ionosphere_estimation
 from nisar.workflows import insar, prepare_insar_hdf5
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
-from osgeo import gdal
 
 
 def test_split_main_band_run():

@@ -5,10 +5,10 @@ import h5py
 import iscetest
 import pytest
 import types
-from osgeo import gdal
 import numpy as np
 
 from nisar.workflows.insar_runconfig import InsarRunConfig
+from nisar.products.insar.product_paths import CommonPaths
 from nisar.products.readers import SLC
 from nisar.workflows import baseline
 import isce3
@@ -91,7 +91,9 @@ def test_add_baseline(unit_test_params):
     '''
     test the add_baseline without crushing and wrong values
     '''
-    common_path = 'science/LSAR'
+    # Instantiate common path object to avoid hard-code paths to datasets
+    prod_obj = CommonPaths()
+    common_path = prod_obj.RootPath
 
     output_paths = dict({'RIFG': 'RIFG.h5', 'RUNW': 'RUNW.h5', 'GUNW': 'GUNW.h5'})
     for dst in ['RIFG', 'GUNW']:

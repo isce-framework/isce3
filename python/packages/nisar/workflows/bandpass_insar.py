@@ -5,12 +5,12 @@ import pathlib
 import time
 
 import h5py
+import isce3
 import journal
 import numpy as np
-
-import isce3
 from isce3.splitspectrum import splitspectrum
 from nisar.h5 import cp_h5_meta_data
+from nisar.products.insar.product_paths import CommonPaths
 from nisar.products.readers import SLC
 from nisar.workflows.bandpass_insar_runconfig import BandpassRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -52,8 +52,6 @@ def run(cfg: dict):
         ref_slc_output = f"{bandpass_slc_path}/ref_slc_bandpassed.h5"
         sec_slc_output = f"{bandpass_slc_path}/sec_slc_bandpassed.h5"
         bandpass_slc_path.mkdir(parents=True, exist_ok=True)
-
-    common_parent_path = 'science/LSAR'
 
     # freq: [A, B], target : 'ref' or 'sec'
     for freq, target in bandpass_modes.items():
@@ -111,7 +109,7 @@ def run(cfg: dict):
                        swmr=True) as src_h5, \
             h5py.File(target_output, 'w') as dst_h5:
             # Copy HDF 5 file to be bandpassed
-            cp_h5_meta_data(src_h5, dst_h5, f'{common_parent_path}')
+            cp_h5_meta_data(src_h5, dst_h5, f'{CommonPaths.RootPath}')
 
             for pol in pol_list:
 

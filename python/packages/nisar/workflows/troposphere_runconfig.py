@@ -3,7 +3,6 @@
 from datetime import datetime
 import h5py
 import journal
-import numpy as np
 import os
 import pygrib
 

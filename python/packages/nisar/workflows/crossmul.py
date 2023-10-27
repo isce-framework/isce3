@@ -19,6 +19,7 @@ from nisar.workflows.compute_stats import compute_stats_real_data
 from nisar.workflows.crossmul_runconfig import CrossmulRunConfig
 from nisar.workflows.helpers import (complex_raster_path_from_h5,
                                      get_cfg_freq_pols)
+from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -92,7 +93,7 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
                 sec_slc.getDopplerCentroid(frequency=freq))
             crossmul.set_dopplers(ref_dopp, sec_dopp)
 
-            freq_group_path = f'/science/LSAR/RIFG/swaths/frequency{freq}'
+            freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
 
             # prepare flattening and range filter parameters
             rdr_grid = ref_slc.getRadarGrid(freq)
@@ -192,7 +193,8 @@ def stats_offsets(h5_ds, freq, pol):
     pol: str
        Polarization to process (HH, HV, VH, VV)
     """
-    path = f'science/LSAR/RIFG/swaths/frequency{freq}/pixelOffsets/{pol}/'
+    
+    path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}/pixelOffsets/{pol}/'
     offset_layer = ['slantRangeOffset', 'alongTrackOffset']
 
     for layer in offset_layer:

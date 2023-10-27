@@ -12,6 +12,7 @@ import isce3
 from isce3.core import transform_xy_to_latlon
 from nisar.workflows import h5_prep
 from nisar.workflows.troposphere_runconfig import InsarTroposphereRunConfig
+from nisar.products.insar.product_paths import GUNWGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -33,6 +34,9 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     '''
 
     error_channel = journal.error('troposphere.compute_troposphere_delay')
+
+    # Instantiate GUNW product object to avoid hard-coded paths to GUNW datasets
+    gunw_obj = GUNWGroupsPaths()
 
     # Fetch the configurations
     tropo_weather_model_cfg = cfg['dynamic_ancillary_file_group']\
@@ -69,7 +73,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
     with h5py.File(gunw_hdf5, 'r', libver='latest', swmr=True) as h5_obj:
 
         # Fetch the GUWN Incidence Angle Datacube
-        rdr_grid_path = 'science/LSAR/GUNW/metadata/radarGrid'
+        rdr_grid_path = gunw_obj.RadarGridPath
 
         inc_angle_cube = h5_obj[f'{rdr_grid_path}/incidenceAngle'][()]
         xcoord_radar_grid = h5_obj[f'{rdr_grid_path}/xCoordinates'][()]
@@ -77,11 +81,11 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
         height_radar_grid = h5_obj[f'{rdr_grid_path}/heightAboveEllipsoid'][()]
 
         # EPSG code
-        epsg = int(h5_obj['science/LSAR/GUNW/metadata/radarGrid/epsg'][()])
+        epsg = int(h5_obj[f'{rdr_grid_path}/epsg'][()])
 
         # Wavelenth in meters
         wavelength = isce3.core.speed_of_light / \
-                h5_obj['/science/LSAR/GUNW/grids/frequencyA/centerFrequency'][()]
+                h5_obj[f'{gunw_obj.GridsPath}/frequencyA/centerFrequency'][()]
 
         # X and y for the entire datacube
         y_2d_radar = np.tile(ycoord_radar_grid, (len(xcoord_radar_grid), 1)).T
@@ -218,11 +222,10 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
                 os.path.join(scratch_path, 'weather_model_files')
 
             # Acquisition time for reference and secondary images
-            acquisition_time_ref = \
-                h5_obj['science/LSAR/identification/referenceZeroDopplerStartTime'][()]\
+
+            acquisition_time_ref = h5_obj[f'{gunw_obj.IdentificationPath}/referenceZeroDopplerStartTime'][()]\
                     .astype('datetime64[s]').astype(datetime)
-            acquisition_time_second = \
-                h5_obj['science/LSAR/identification/secondaryZeroDopplerStartTime'][()]\
+            acquisition_time_second = h5_obj[f'{gunw_obj.IdentificationPath}/secondaryZeroDopplerStartTime'][()]\
                     .astype('datetime64[s]').astype(datetime)
 
             # AOI bounding box
@@ -318,12 +321,13 @@ def write_to_GUNW_product(tropo_delay_datacubes: dict, gunw_hdf5: str):
      -------
        None
     '''
-
+    # Instantiate GUNW object to avoid hard-coded path to GUNW datasets
+    gunw_obj = GUNWGroupsPaths()
     with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as f:
 
         for product_name, product_cube in tropo_delay_datacubes.items():
 
-             radar_grid = f.get('science/LSAR/GUNW/metadata/radarGrid')
+             radar_grid = f.get(gunw_obj.RadarGridPath)
 
              # Troposphere delay product information
              products = product_name.split('_')

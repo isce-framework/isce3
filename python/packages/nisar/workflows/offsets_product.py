@@ -13,6 +13,7 @@ from nisar.workflows.dense_offsets import create_empty_dataset
 from nisar.workflows.helpers import (copy_raster, get_cfg_freq_pols,
                                      get_ground_track_velocity_product)
 from nisar.workflows.offsets_product_runconfig import OffsetsProductRunConfig
+from nisar.products.insar.product_paths import ROFFGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 
@@ -37,6 +38,9 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Initialize parameters shared between frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
+
+    # Instantiate ROFF obj to easily access ROFF datasets
+    roff_obj = ROFFGroupsPaths()
 
     # Info and error channel
     error_channel = journal.error('offsets_product.run')
@@ -70,8 +74,7 @@ def run(cfg: dict, output_hdf5: str = None):
     # Pull the slant range and zero doppler time of the ROFF product
     # at frequencyA
     with h5py.File(output_hdf5, 'r', libver='latest', swmr=True) as dst_h5:
-        pixel_offsets_path = 'science/LSAR/ROFF/swaths/'+\
-            'frequencyA/pixelOffsets'
+        pixel_offsets_path = f'{roff_obj.SwathsPath}/frequencyA/pixelOffsets'
         slant_range = dst_h5[f'{pixel_offsets_path}/slantRange'][()]
         zero_doppler_time = \
             dst_h5[f'{pixel_offsets_path}/zeroDopplerTime'][()]
@@ -182,8 +185,7 @@ def run(cfg: dict, output_hdf5: str = None):
                     ampcor.runAmpcor()
                     del ampcor
 
-                    pixel_offsets_path = 'science/LSAR/ROFF/swaths/'+\
-                        f'frequency{freq}/pixelOffsets'
+                    pixel_offsets_path = f'{roff_obj.SwathsPath}/frequency{freq}/pixelOffsets'
                     prod_path = f'{pixel_offsets_path}/{pol}/{key}'
 
                     # Write datasets

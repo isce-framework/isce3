@@ -6,6 +6,7 @@ import iscetest
 import numpy as np
 import numpy.testing as npt
 from nisar.workflows import bandpass_insar, insar, prepare_insar_hdf5
+from nisar.products.insar.product_paths import RIFGGroupsPaths
 from nisar.workflows.insar_runconfig import InsarRunConfig
 from nisar.workflows.persistence import Persistence
 
@@ -45,7 +46,8 @@ def test_bandpass_validate():
     '''
     scratch_path = '.'
 
-    group_path = '/science/LSAR/RIFG/swaths/frequencyA/interferogram/HH'
+    # Instantiate RIFG object to avoid hard-coding pahs to RIFG datasets
+    group_path = f'{RIFGGroupsPaths().SwathsPath}/frequencyA/interferogram/HH'
     with h5py.File(os.path.join(scratch_path, 'rifg_bandpass.h5'), 'r') as h_rifg:
 
         # check if phase of generated interferogram is sufficiently close to 0.

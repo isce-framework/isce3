@@ -1,5 +1,4 @@
 import os
-import warnings
 
 import journal
 import nisar.workflows.helpers as helpers

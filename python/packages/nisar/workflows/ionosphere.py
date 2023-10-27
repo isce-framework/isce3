@@ -25,6 +25,7 @@ from nisar.workflows import (crossmul, dense_offsets, h5_prep,
                              resample_slc,
                              rubbersheet, unwrap)
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
+from nisar.products.insar.product_paths import RUNWGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -98,8 +99,11 @@ def decimate_freq_a_offset(iono_insar_cfg, original_dict):
         resample_type = 'coarse'
     decimated_offset_dir = offsets_dir
 
+    # Instantiate a RUNW object to get path to RUNW datasets
+    runw_obj = RUNWGroupsPaths()
+
     # Set up for decimation
-    swath_path = f"/science/LSAR/RUNW/swaths"
+    swath_path = runw_obj.SwathsPath
     dest_freq_path = f"{swath_path}/frequencyA"
     dest_freq_path_b = f"{swath_path}/frequencyB"
     rslant_path_a = f"{dest_freq_path}/interferogram/slantRange"
@@ -229,9 +233,10 @@ def copy_iono_datasets(iono_insar_cfg,
 
     iono_args = iono_insar_cfg['processing']['ionosphere_phase_correction']
     iono_freq_pols = iono_args['list_of_frequencies']
-    common_path = 'science/LSAR'
 
-    swath_path = f"/{common_path}/RUNW/swaths"
+    # Instantiate RUNW object to easily access RUNW datasets
+    runw_obj = RUNWGroupsPaths()
+    swath_path = runw_obj.SwathsPath
 
     if oversample_flag:
         freq = 'A'
@@ -572,6 +577,9 @@ def run(cfg: dict, runw_hdf5: str):
     info_channel = journal.info("ionosphere_phase_correction.run")
     info_channel.log("starting insar_ionosphere_correction")
 
+    # Instantiate RUNW object to easy access RUNW datasets
+    runw_obj = RUNWGroupsPaths()
+
     # pull parameters from dictionary
     iono_args = cfg['processing']['ionosphere_phase_correction']
     scratch_path = cfg['product_path_group']['scratch_path']
@@ -583,7 +591,7 @@ def run(cfg: dict, runw_hdf5: str):
     filter_cfg = iono_args['dispersive_filter']
 
     # pull parameters for dispersive filter
-    filter_bool =filter_cfg['enabled']
+    filter_bool = filter_cfg['enabled']
     mask_type = filter_cfg['filter_mask_type']
     filter_coh_thresh = filter_cfg['filter_coherence_threshold']
     kernel_range_size = filter_cfg['kernel_range']
@@ -714,7 +722,7 @@ def run(cfg: dict, runw_hdf5: str):
         # connected components and slant range
         iono_output = runw_path_insar
         pol_comb_str = f"{pol_a}_{pol_a}"
-        swath_path = f"/science/LSAR/RUNW/swaths"
+        swath_path = runw_obj.SwathsPath
         dest_freq_path = f"{swath_path}/frequencyA"
         dest_pol_path = f"{dest_freq_path}/interferogram/{pol_a}"
         output_pol_path = dest_pol_path

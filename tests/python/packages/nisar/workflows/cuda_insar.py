@@ -1,7 +1,6 @@
 import argparse
 import os
 
-import isce3.ext.isce3 as isce3
 import iscetest
 from nisar.workflows import insar, prepare_insar_hdf5
 from nisar.workflows.insar_runconfig import InsarRunConfig
