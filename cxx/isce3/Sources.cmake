@@ -59,6 +59,7 @@ geometry/TopoLayers.cpp
 geometry/metadataCubes.cpp
 geogrid/getRadarGrid.cpp
 geogrid/relocateRaster.cpp
+image/Resample.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
 io/gdal/detail/MemoryMap.cpp

@@ -58,6 +58,7 @@ geogrid/relocateRaster.cpp
 geogrid/geogrid.cpp
 geometry/lookIncFromSr.cpp
 image/image.cpp
+image/Resample.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
 io/gdal/GDALAccess.cpp

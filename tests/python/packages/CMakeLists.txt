@@ -8,6 +8,7 @@ isce3/core/gpu_check.py
 isce3/core/llh.py
 isce3/core/poly2d.py
 isce3/geocode/geocode_slc.py
+isce3/image/resample_slc.py
 isce3/io/background.py
 isce3/matchtemplate/import_ampcor.py
 isce3/matchtemplate/test_ampcor.py
