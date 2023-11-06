@@ -99,7 +99,8 @@ std::tuple<VecXd, VecXd, bool> ant::ant2rgdop(
     VecXd doppler(ang_size);
     bool converge {true};
 
-#pragma omp parallel for
+    // FIXME OpenMP work sharing on this loop causes slowdown
+    // for unknown reasons in conda environment
     for (decltype(ang_size) idx = 0; idx < ang_size; ++idx) {
         auto [sr, dop, flag] =
                 _get_sr_dop_conv(el_theta[idx], az_phi, pos_ecef, vel_ecef_cst,
@@ -145,7 +146,8 @@ std::tuple<std::vector<Vec3>, bool> ant::ant2geo(
     std::vector<Vec3> tg_llh_vec(ang_size);
     bool converge {true};
 
-#pragma omp parallel for
+    // FIXME OpenMP work sharing on this loop causes slowdown
+    // for unknown reasons in conda environment
     for (decltype(ang_size) idx = 0; idx < ang_size; ++idx) {
         auto [tg_llh, flag] = ant::ant2geo(el_theta(idx), az_phi, pos_ecef,
                 quat, dem_interp, abs_tol, max_iter, frame, ellips);
