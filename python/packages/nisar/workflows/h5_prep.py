@@ -647,8 +647,6 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
     yf = y0 + (geo_grid.length - 1) * dy
     y_vect = np.linspace(y0, yf, geo_grid.length, dtype=np.float64)
 
-    hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
-
     if epsg_code == 4326:
         x_coord_units = "degree_east"
         y_coord_units = "degree_north"
@@ -1109,8 +1107,6 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     az_f = az_0 + (radar_grid.length - 1) * d_az
     az_vect = np.linspace(az_0, az_f - d_az, radar_grid.length,
                           dtype=np.float64)
-
-    hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
 
     rg_coord_units = "meters"
 
