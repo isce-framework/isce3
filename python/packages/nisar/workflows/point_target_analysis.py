@@ -21,7 +21,10 @@ from isce3.cal import point_target_info as pti
 import warnings
 import json
 from nisar.products.readers.GenericProduct import get_hdf5_file_product_type
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 
 desc = __doc__
 
@@ -927,7 +930,7 @@ if __name__ == "__main__":
             pta_output = pta_output,
         )
 
-        if plots:
+        if plots and plt is not None:
             plt.show()
     else:
         # Should be unreachable.
