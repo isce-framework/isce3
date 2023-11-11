@@ -4,6 +4,7 @@ from bisect import bisect_left, bisect_right
 from collections import defaultdict
 from functools import reduce
 import h5py
+from itertools import chain
 import json
 import logging
 import os
@@ -1183,7 +1184,8 @@ def focus(runconfig):
         blocks_bounds[frequency] = plan_processing_blocks(cfg, ogrid[frequency],
                                         dop[frequency], dem, orbit)
 
-    proc_begin, proc_end = total_bounds(next(iter(blocks_bounds.values())))
+    # NOTE SAR duration depends on frequency, so check all subbands.
+    proc_begin, proc_end = total_bounds(list(chain(*blocks_bounds.values())))
     log.info(f"Need to process raw data time span [{proc_begin}, {proc_end}]"
              f" seconds since {grid_epoch} to produce requested output grid.")
 
