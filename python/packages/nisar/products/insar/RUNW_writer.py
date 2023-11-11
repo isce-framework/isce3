@@ -109,7 +109,7 @@ class RUNWWriter(L1InSARWriter):
             iono_filling = iono_cfg["dispersive_filter"]["filling_method"]
             num_of_iters = iono_cfg["dispersive_filter"]["filter_iterations"]
             # ionosphere filtering method
-            iono_filtering = "gaussian"
+            iono_filtering = f"Iterative gaussian filter with {num_of_iters} filtering"
             iono_outliers = iono_cfg["dispersive_filter"]["filter_mask_type"]
             unwrap_correction = iono_cfg["dispersive_filter"][
                 "unwrap_correction"
@@ -154,7 +154,7 @@ class RUNWWriter(L1InSARWriter):
             DatasetParams(
                 "ionosphereFiltering",
                 iono_filtering,
-                f"Iterative gaussian filter with {num_of_iters} filtering",
+                f"Filtering algorithm for ionosphere phase screen computation",
                 {
                     "algorithm_type": "Ionosphere estimation",
                 },

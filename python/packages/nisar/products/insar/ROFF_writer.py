@@ -143,7 +143,7 @@ class ROFFWriter(L1InSARWriter):
                 DatasetParams(
                     "alongTrackSkipWindowSize",
                     np.uint32(az_skip),
-                    "Along track cross-correlation skip window size in"
+                    "Along-track cross-correlation skip window size in"
                     " pixels"
                     ,
                     {
@@ -153,7 +153,7 @@ class ROFFWriter(L1InSARWriter):
                 DatasetParams(
                     "alongTrackStartPixel",
                     np.uint32(az_start),
-                    "Reference RSLC start pixel in along track",
+                    "Reference RSLC start pixel in along-track",
                     {
                         "units": "unitless",
                     },
@@ -230,7 +230,7 @@ class ROFFWriter(L1InSARWriter):
                         DatasetParams(
                             "alongTrackWindowSize",
                             np.uint32(az_chip),
-                            "Along track cross-correlation window size in"
+                            "Along-track cross-correlation window size in"
                             " pixels"
                             ,
                             {
@@ -250,7 +250,7 @@ class ROFFWriter(L1InSARWriter):
                         DatasetParams(
                             "alongTrackSearchWindowSize",
                             np.uint32(2 * az_search),
-                            "Along track cross-correlation search window"
+                            "Along-track cross-correlation search window"
                             " size in pixels"
                             ,
                             {
@@ -295,7 +295,7 @@ class ROFFWriter(L1InSARWriter):
             pixel_offsets_ds_params = [
                 (
                     "alongTrackOffset",
-                    "Along track offset",
+                    "Raw (unculled, unfiltered) along-track pixel offsets",
                     "meters",
                 ),
                 (
@@ -320,7 +320,7 @@ class ROFFWriter(L1InSARWriter):
                 ),
                 (
                     "slantRangeOffset",
-                    "Slant range offset",
+                    "Raw (unculled, unfiltered) slant range pixel offsets",
                     "meters",
                 ),
                 (
@@ -381,8 +381,8 @@ class ROFFWriter(L1InSARWriter):
                     rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
                     * az_skip,
                     (
-                        "Nominal along track spacing in meters between"
-                        " consecutive lines near mid swath of the ROFF image"
+                        "Nominal along-track spacing in meters between"
+                        " consecutive lines near mid-swath of the product images"
                     ),
                     {"units": "meters"},
                 ),
@@ -392,7 +392,7 @@ class ROFFWriter(L1InSARWriter):
                     * rg_skip,
                     (
                         "Nominal ground range spacing in meters between"
-                        " consecutive pixels near mid swath of the ROFF image"
+                        " consecutive pixels near mid-swath of the product images"
                     ),
                     {"units": "meters"},
                 ),

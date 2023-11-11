@@ -153,7 +153,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 unwrapped_shape,
                 np.byte,
                 "Byte layer with flags for various channels"
-                " (e.g.layover/shadow, data quality)"
+                " (e.g. layover/shadow, data quality)"
                 ,
                 "DN",
                 grids_val,

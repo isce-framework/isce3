@@ -12,7 +12,7 @@ from .product_paths import L1GroupsPaths
 
 class L1InSARWriter(InSARBaseWriter):
     """
-    InSAR Level 1 prodcuts writer inherenting from the InSARBaseWriter
+    InSAR Level 1 products writer inherit from the InSARBaseWriter
     The Level 1 products include ROFF, RUNW, and RIFG.
 
     Attributes
@@ -152,16 +152,16 @@ class L1InSARWriter(InSARBaseWriter):
                 "ellipsoidalFlatteningApplied",
                 np.bool_(flatten),
                 (
-                    "Flag to indicate if interferometric phase has been"
-                    " flattened with respect to a zero height ellipsoid"
+                    "Flag to indicate if the interferometric phase has been "
+                    "flattened with respect to a zero height ellipsoid"
                 ),
             ),
             DatasetParams(
                 "topographicFlatteningApplied",
                 np.bool_(flatten),
                 (
-                    "Flag to indicate if interferometric phase has been"
-                    " flattened with respect to a zero height ellipsoid"
+                    "Flag to indicate if the interferometric phase has been "
+                    "flattened with respect to topographic height using a DEM"
                 ),
             ),
             DatasetParams(
@@ -315,7 +315,7 @@ class L1InSARWriter(InSARBaseWriter):
                 pixel_offsets_ds_params = [
                     (
                         "alongTrackOffset",
-                        "Along track offset",
+                        "Along-track offset",
                         "meters",
                     ),
                     (
@@ -382,25 +382,25 @@ class L1InSARWriter(InSARBaseWriter):
                     "slantRange",
                     offset_slant_range,
                     "Slant range vector",
-                    rslc_freq_group["slantRange"].attrs,
+                    {'units': 'meters'},
                 ),
                 DatasetParams(
                     "zeroDopplerTime",
                     offset_zero_doppler_time,
                     "Zero Doppler azimuth time vector",
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                    {'units': rslc_swaths_group["zeroDopplerTime"].attrs['units']},
                 ),
                 DatasetParams(
                     "zeroDopplerTimeSpacing",
                     offset_zero_doppler_time_spacing,
-                    "Along track spacing of the offset grid",
-                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
+                    "Along-track spacing of the offset grid",
+                    {'units': 'seconds'},
                 ),
                 DatasetParams(
                     "slantRangeSpacing",
                     offset_slant_range_spacing,
-                    "Slant range spacing of offset grid",
-                    rslc_freq_group["slantRangeSpacing"].attrs,
+                    "Slant range spacing of the offset grid",
+                    {'units': 'meters'},
                 ),
             ]
             offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
@@ -437,8 +437,8 @@ class L1InSARWriter(InSARBaseWriter):
                     rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
                     * self.igram_azimuth_looks,
                     (
-                        "Nominal along track spacing in meters between"
-                        " consecutive lines near mid swath of the RIFG image"
+                        "Nominal along-track spacing in meters "
+                        "between consecutive lines near mid-swath of the product images"
                     ),
                     {"units": "meters"},
                 ),
@@ -447,8 +447,8 @@ class L1InSARWriter(InSARBaseWriter):
                     rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
                     * self.igram_range_looks,
                     (
-                        "Nominal ground range spacing in meters between"
-                        " consecutive pixels near mid swath of the RIFG image"
+                        "Nominal ground range spacing in meters between "
+                        "consecutive pixels near mid-swath of the product images"
                     ),
                     {"units": "meters"},
                 ),
@@ -493,23 +493,23 @@ class L1InSARWriter(InSARBaseWriter):
                     "slantRange",
                     igram_slant_range,
                     "Slant range vector",
-                    rslc_freq_group["slantRange"].attrs,
+                    {'units': 'meters'},
                 ),
                 DatasetParams(
                     "zeroDopplerTime",
                     igram_zero_doppler_time,
                     "Zero Doppler azimuth time vector",
-                    rslc_swaths_group["zeroDopplerTime"].attrs,
+                    {'units': rslc_swaths_group["zeroDopplerTime"].attrs['units']},
                 ),
                 DatasetParams(
                     "zeroDopplerTimeSpacing",
                     igram_zero_doppler_time_spacing,
                     (
-                        "Time interval in the along track direction for raster"
+                        "Time interval in the along-track direction for raster"
                         " layers. This is same as the spacing between"
                         " consecutive entries in the zeroDopplerTime array"
                     ),
-                    rslc_swaths_group["zeroDopplerTimeSpacing"].attrs,
+                    {'units': 'seconds'},
                 ),
                 DatasetParams(
                     "slantRangeSpacing",
@@ -518,7 +518,7 @@ class L1InSARWriter(InSARBaseWriter):
                         "Slant range spacing of grid. Same as difference"
                         " between consecutive samples in slantRange array"
                     ),
-                    rslc_freq_group["slantRangeSpacing"].attrs,
+                    {'units': 'meters'},
                 ),
             ]
             igram_group_name = f"{swaths_freq_group_name}/interferogram"

@@ -247,7 +247,7 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 reference_terrain_height_description,
                 {
-                    "units":"meters"
+                    "units": "meters"
                 },
             )
             add_dataset_and_attrs(dst_param_group, ds_param)
@@ -276,11 +276,16 @@ class InSARBaseWriter(h5py.File):
                 rslc_frequency_group,
                 "rangeBandwidth",
             )
+            rslc_frequency_group['rangeBandwidth'].attrs['description'] = \
+                 f"Processed slant range bandwidth for {rslc_name} RSLC"
+
             swath_frequency_group.copy(
                 "processedAzimuthBandwidth",
                 rslc_frequency_group,
                 "azimuthBandwidth",
             )
+            rslc_frequency_group['azimuthBandwidth'].attrs['description'] = \
+                f"Processed azimuth bandwidth for {rslc_name} RSLC"
 
             swath_group = rslc_h5py_file_obj[rslc.SwathPath]
             swath_group.copy("zeroDopplerTimeSpacing", rslc_frequency_group)
@@ -352,7 +357,7 @@ class InSARBaseWriter(h5py.File):
                 cross_correlation_domain,
                 (
                     "Cross-correlation algorithm for"
-                    " sub-pixel offsets  computation"
+                    " sub-pixel offsets computation"
                 ),
                 {
                     "algorithm_type": "RSLC coregistration",
@@ -442,7 +447,7 @@ class InSARBaseWriter(h5py.File):
                 "wrappedInterferogramFiltering",
                 wrapped_interferogram_filtering_mdethod,
                 (
-                    "Algorithm to filter wrapped interferogram prior to phase"
+                    "Algorithm used to filter the wrapped interferogram prior to phase"
                     " unwrapping"
                 ),
                 {
@@ -500,7 +505,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "alongTrackWindowSize",
                 np.uint32(window_azimuth),
-                "Along track cross-correlation window size in pixels",
+                "Along-track cross-correlation window size in pixels",
                 {
                     "units": "unitless",
                 },
@@ -516,7 +521,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "alongTrackSearchWindowSize",
                 np.uint32(2 * half_search_azimuth),
-                "Along track cross-correlation search window size in pixels",
+                "Along-track cross-correlation search window size in pixels",
                 {
                     "units": "unitless",
                 },
@@ -532,7 +537,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "alongTrackSkipWindowSize",
                 np.uint32(skip_azimuth),
-                "Along track cross-correlation skip window size in pixels",
+                "Along-track cross-correlation skip window size in pixels",
                 {
                     "units": "unitless",
                 },
@@ -674,6 +679,14 @@ class InSARBaseWriter(h5py.File):
         partial_granule_id = primary_exec_cfg.get("partial_granule_id")
         product_version = primary_exec_cfg.get("product_version")
 
+        # Determine processingType
+        if processing_type == 'PR':
+            processing_type = np.string_('NOMINAL')
+        elif processing_type == 'UR':
+            processing_type = np.string_('URGENT')
+        else:
+            processing_type = np.string_('UNDEFINED')
+
         # processing center (JPL, NRSC, or Others)
         # if it is None, 'JPL' will be applied
         if processing_center is None:
@@ -727,7 +740,7 @@ class InSARBaseWriter(h5py.File):
                 },
             ),
             DatasetParams(
-                "trackNumer",
+                "trackNumber",
                 "None",
                 "Track number",
                 {
@@ -739,7 +752,7 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 (
                     '"True" if the pulse timing was varied (dithered) during'
-                    ' acquisition, "False" otherwise"'
+                    ' acquisition, "False" otherwise'
                 ),
             ),
             DatasetParams(
@@ -776,9 +789,9 @@ class InSARBaseWriter(h5py.File):
 
         for ds_name in id_ds_names_need_to_copy:
             if ds_name.name in ref_id_group:
-                ref_id_group.copy(ds_name.name, dst_id_group)
-            else:
-                add_dataset_and_attrs(dst_id_group, ds_name)
+                slc_val = ref_id_group[ds_name.name][()]
+                ds_name.value = slc_val
+            add_dataset_and_attrs(dst_id_group, ds_name)
 
         # Copy the zeroDopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
@@ -788,7 +801,7 @@ class InSARBaseWriter(h5py.File):
             sec_id_group.copy(ds_name, dst_id_group,
                               f"secondaryZ{ds_name[1:]}")
 
-        # Update the the description attributes of the zeroDoppler
+        # Update the description attributes of the zeroDoppler
         for prod in list(product(['reference','secondary'],
                                  ['Start', 'End'])):
             rslc_name, time = prod
@@ -849,7 +862,7 @@ class InSARBaseWriter(h5py.File):
                 self.product_info.ProductLevel,
                 (
                     "Product level. L0A: Unprocessed instrument data; L0B:"
-                    " Reformatted,unprocessed instrument data; L1: Processed"
+                    " Reformatted, unprocessed instrument data; L1: Processed"
                     " instrument data in radar coordinates system; and L2:"
                     " Processed instrument data in geocoded coordinates system"
                 ),
@@ -877,7 +890,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "isGeocoded",
                 np.bool_(self.product_info.isGeocoded),
-                "Flag to indicate radar geometry or geocoded product",
+                'Flag to indicate if the product data is in the radar geometry ("False") or in the map geometry ("True")',
             ),
         ]
         for ds_param in id_ds_names_to_be_created:

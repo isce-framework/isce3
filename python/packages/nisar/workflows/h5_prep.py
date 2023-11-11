@@ -653,8 +653,8 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
         x_standard_name = "longitude"
         y_standard_name = "latitude"
     else:
-        x_coord_units = "m"
-        y_coord_units = "m"
+        x_coord_units = "meters"
+        y_coord_units = "meters"
         x_standard_name = "projection_x_coordinate"
         y_standard_name = "projection_y_coordinate"
 
@@ -695,7 +695,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
 
     # xCoordinates
     if not flag_cube:
-        descr = "CF compliant dimension associated with the X coordinate"
+        descr = "CF compliant dimension associated with the X coordinates"
     else:
         descr = ('X coordinate values corresponding'
                  ' to the radar grid')
@@ -710,7 +710,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
 
     # yCoordinates
     if not flag_cube:
-        descr = "CF compliant dimension associated with the Y coordinate"
+        descr = "CF compliant dimension associated with the Y coordinates"
     else:
         descr = ('Y coordinate values corresponding'
                  ' to the radar grid')
@@ -757,6 +757,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
     # Set up osr for wkt
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(epsg_code)
+
+    # Add projection description
+    projds.attrs['description'] = np.string_('Product map grid projection: EPSG code, '
+                                             'with additional projection information as HDF5 Attributes')
 
     # WGS84 ellipsoid
     projds.attrs['semi_major_axis'] = 6378137.0
@@ -1189,15 +1193,15 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
         radar_grid = hdf.get('science/LSAR/GUNW/metadata/radarGrid')
 
         # Dataset description
-        descrs = ["InSAR phase datacube due to Solid Earth tides along line of sight direction",
-                  'InSAR phase datacube due to Solid Earth tides along the azimuth direction']
+        descrs = ['InSAR phase datacube due to Solid Earth tides along line of sight direction',
+                  'Solid Earth tides phase in along-track direction']
 
         # Product names
         product_names = ['losSolidEarthTidesPhase', 'alongTrackSolidEarthTidesPhase']
 
-        for  product_name, descr, solid_earth_tides_product in zip(product_names,
-                                                                   descrs,
-                                                                   solid_earth_tides):
+        for product_name, descr, solid_earth_tides_product in zip(product_names,
+                                                                  descrs,
+                                                                  solid_earth_tides):
 
             # If there is no los solid earth tides phasey product, then createa new one
             if product_name not in radar_grid:
