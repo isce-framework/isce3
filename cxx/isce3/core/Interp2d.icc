@@ -1,0 +1,51 @@
+#include <isce3/math/complexOperations.h>
+
+#include "Interp1d.h"
+#include "detail/Interp1d.h"
+#include "detail/SSOBuffer.h"
+
+namespace isce3 { namespace core {
+
+template<typename KernelType, typename DataType>
+DataType interp2d(const Kernel<KernelType>& kernelx,
+        const Kernel<KernelType>& kernely, const DataType* z, size_t nx,
+        size_t stridex, size_t ny, size_t stridey, double x, double y,
+        bool periodic)
+{
+    using namespace isce3::math::complex_operations;
+
+    // Small-size optimization to avoid heap allocation.
+    const int widthx = static_cast<int>(ceil(kernelx.width()));
+    const int widthy = static_cast<int>(ceil(kernely.width()));
+    detail::SSOBuffer<KernelType> coeffsx(widthx), coeffsy(widthy);
+    detail::SSOBuffer<DataType> datax(widthx), datay(widthy);
+
+    // Pre-compute (widthx + widthy) coefficients rather than calculating them
+    // (widthx * widthy) times inside the loop.
+    // In principle we could delay calculating coeffsy until after the loop, in
+    // which case we'd only need a single coefficient buffer.  But we need lowy
+    // which comes from the same API call, and we're probably okay on stack
+    // space anyhow.
+    long lowx = 0, lowy = 0;
+    detail::interp1d_coeffs(kernelx, x, &lowx, coeffsx.data());
+    detail::interp1d_coeffs(kernely, y, &lowy, coeffsy.data());
+
+    // Do X interp at each Y index.
+    for (int i_kernely = 0; i_kernely < widthy; ++i_kernely) {
+        long i_datay = i_kernely + lowy;
+        if (periodic)
+            i_datay %= ny;
+        if ((i_datay >= 0) and (i_datay < ny)) {
+            const DataType* zi = &z[i_datay * stridey];
+            const DataType* px = detail::get_contiguous_view_or_copy(
+                    datax.data(), widthx, lowx, zi, nx, stridex, periodic);
+            datay[i_kernely] = detail::inner_product(widthx, coeffsx.data(), px);
+        } else {
+            datay[i_kernely] = 0;
+        }
+    }
+    // Do Y interp.
+    return detail::inner_product(widthy, coeffsy.data(), datay.data());
+}
+
+}} // namespace isce3::core

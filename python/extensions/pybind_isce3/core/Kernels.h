@@ -2,6 +2,7 @@
 
 #include <isce3/core/Kernels.h>
 #include <pybind11/pybind11.h>
+#include <typeinfo>
 
 // "Trampoline" class allowing inheritance in Python
 template <typename T>
@@ -14,6 +15,12 @@ public:
         PYBIND11_OVERLOAD_PURE_NAME(T, isce3::core::Kernel<T>, "__call__", operator(), x);
     }
 };
+
+template <typename T>
+inline bool is_cpp_kernel(const isce3::core::Kernel<T>& kernel)
+{
+    return typeid(kernel) != typeid(PyKernel<T>);
+}
 
 template <typename T>
 void addbinding(pybind11::class_<isce3::core::Kernel<T>, PyKernel<T>> &);

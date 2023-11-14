@@ -1,41 +1,29 @@
-#include <isce3/math/complexOperations.h>
+#include "detail/Interp1d.h"
+#include "detail/SSOBuffer.h"
 
 namespace isce3 { namespace core {
 
-template<typename TK, typename TD>
-TD interp1d(const Kernel<TK>& kernel, const TD* x, size_t length, size_t stride,
-            double t, bool periodic)
+template<typename KernelType, typename DataType>
+DataType interp1d(const Kernel<KernelType>& kernel, const DataType* x,
+        size_t length, size_t stride, double t, bool periodic)
 {
-    using namespace isce3::math::complex_operations;
-    int _width = int(ceil(kernel.width()));
-    long i0 = 0;
-    if (_width % 2 == 0) {
-        i0 = (long) ceil(t);
-    } else {
-        i0 = (long) round(t);
-    }
-    long low = i0 - _width / 2; // integer division implicit floor()
-    long high = low + _width;
-    typename std::common_type<TD, TK>::type sum = 0;
-    if (!periodic && ((low < 0) || (high >= length))) {
-        // XXX log/throw error?
-        return sum;
-    }
-    for (long i = low; i < high; i++) {
-        long j = i;
-        if (periodic) {
-            j = i % length;
-        }
-        double ti = i - t;
-        TK w = kernel(ti);
-        sum += w * x[j * stride];
-    }
+    // Small-size optimization to avoid heap allocation.
+    const auto width = static_cast<int>(ceil(kernel.width()));
+    detail::SSOBuffer<KernelType> coeffs(width);
+    detail::SSOBuffer<DataType> data(width);
+
+    long low = 0;
+    detail::interp1d_coeffs(kernel, t, &low, coeffs.data());
+    const DataType* px = detail::get_contiguous_view_or_copy(
+            data.data(), width, low, x, length, stride, periodic);
+    auto sum = detail::inner_product(width, coeffs.data(), px);
+
     return sum;
 }
 
-template<typename TK, typename TD>
-TD interp1d(const Kernel<TK>& kernel, const std::valarray<TD>& x, double t,
-            bool periodic)
+template<typename KernelType, typename DataType>
+DataType interp1d(const Kernel<KernelType>& kernel,
+        const std::valarray<DataType>& x, double t, bool periodic)
 {
     return interp1d(kernel, &x[0], x.size(), 1, t, periodic);
 }

@@ -7,6 +7,7 @@ core/datetime_.py
 core/ellipsoid.py
 core/euler.py
 core/interp1d.py
+core/interp2d.py
 core/kernels.py
 core/linspace.py
 core/LUT1d.py

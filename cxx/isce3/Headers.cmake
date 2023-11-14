@@ -28,12 +28,16 @@ core/DenseMatrix.h
 core/detail/BuildOrbit.h
 core/detail/InterpolateOrbit.h
 core/detail/InterpolateOrbit.icc
+core/detail/Interp1d.h
+core/detail/SSOBuffer.h
 core/Ellipsoid.h
 core/EMatrix.h
 core/EulerAngles.h
 core/forward.h
 core/Interp1d.h
 core/Interp1d.icc
+core/Interp2d.h
+core/Interp2d.icc
 core/Interpolator.h
 core/Kernels.h
 core/Kernels.icc

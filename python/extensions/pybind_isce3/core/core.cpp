@@ -8,6 +8,7 @@
 #include "Ellipsoid.h"
 #include "EulerAngles.h"
 #include "Interp1d.h"
+#include "Interp2d.h"
 #include "Kernels.h"
 #include "Linspace.h"
 #include "LookSide.h"
@@ -122,6 +123,7 @@ void addsubmodule_core(py::module & m)
     addbinding(pyCEA);
 
     addbinding_interp1d(m_core);
+    addbinding_interp2d(m_core);
     addbinding_avgLUT2dToLUT1d(m_core);
     addbinding_makeprojection(m_core);
     addbinding_xyzToEnu(m_core);

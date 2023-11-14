@@ -17,6 +17,7 @@ core/DateTime.cpp
 core/Ellipsoid.cpp
 core/EulerAngles.cpp
 core/Interp1d.cpp
+core/Interp2d.cpp
 core/Kernels.cpp
 core/Linspace.cpp
 core/LookSide.cpp

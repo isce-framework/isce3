@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import numpy as np
 import numpy.testing as npt
+import pytest
 import isce3.ext.isce3.core as m
+try:
+    import pytest_benchmark
+except:
+    pytest_benchmark = None
 
 def test_bindings():
     # define a custom kernel in Python
@@ -47,3 +52,29 @@ def test_bindings():
             # Vectorized
             xt = m.interp1d(kernel, x, t)
             assert np.sum(np.abs(xt)**2) > 0
+
+
+def test_big_kernel():
+    # Check code path for Kernel.width() > 32 where interp1d uses heap memory.
+    width = 40
+    kernel = m.KnabKernel(width, 0.83)
+    n = 1024
+    z = np.random.randn(n) + 1j * np.random.randn(n)
+    t = np.random.rand(n) * n
+    zt = m.interp1d(kernel, z, t)
+
+
+# This test is useful for benchmarking
+@pytest.fixture
+def speed_test_args():
+    kernel = m.TabulatedKernelF32(m.KnabKernel(9, 0.83), 2048)
+    n = 32768
+    ni = 2**20  # 1M
+    ti = np.random.rand(ni) * n
+    z = np.empty(n, dtype="c8")
+    return kernel, z, ti
+
+
+@pytest.mark.skipif(pytest_benchmark is None, reason="needs benchmark plugin")
+def test_speed(speed_test_args, benchmark):
+    benchmark(m.interp1d, *speed_test_args)
