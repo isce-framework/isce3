@@ -19,7 +19,7 @@ from nisar.log import set_logger
 from isce3.core import Ellipsoid, speed_of_light, Poly1d, TimeDelta
 
 
-def el_rising_edge_from_raw_ant(raw, ant, dem_interp=None,
+def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                                 freq_band='A', txrx_pol=None,
                                 orbit=None, attitude=None,
                                 az_block_dur=3.0, beam_num=None,
@@ -158,6 +158,8 @@ def el_rising_edge_from_raw_ant(raw, ant, dem_interp=None,
     """
     # List of Const
 
+    # prefix for EL rising edge PNG plot
+    prefix = 'EL_Rising_Edge_Plot'
     # polyfit degree for echo, antenna, weights used in cost function
     pf_deg = 3
     # Number of taps in DBF process
@@ -197,10 +199,9 @@ def el_rising_edge_from_raw_ant(raw, ant, dem_interp=None,
         if txrx_pol not in list_txrx_pols:
             raise ValueError('Wrong TxRx polarization! The available ones -> '
                              f'{list_txrx_pols}')
-        if txrx_pol not in ('HH', 'VV', 'HV', 'VH'):
-            raise NotImplementedError(
-                'The TxRx polarization is not supported.'
-            )
+    # TODO: add Left/Right TX pattern formation to support compact Pol!
+    if txrx_pol not in ('HH', 'VV', 'HV', 'VH'):
+        raise NotImplementedError('The compact polarization is not supported.')
     logger.info(f'TxRx Pol -> "{txrx_pol}"')
 
     # check beam number value
@@ -472,8 +473,9 @@ def el_rising_edge_from_raw_ant(raw, ant, dem_interp=None,
 
     # loop over all azimuth blocks
     for nn, s_rgl in enumerate(rgl_slices):
+        n_azblk = nn + 1
         logger.info(
-            f'(start, stop) range lines for azimuth block # {nn+1} -> '
+            f'(start, stop) range lines for azimuth block # {n_azblk} -> '
             f'({s_rgl.start}, {s_rgl.stop})'
         )
         # mid azimuth time of the block
@@ -620,8 +622,13 @@ def el_rising_edge_from_raw_ant(raw, ant, dem_interp=None,
         # angle correction per azimuth block.
         az_dtm = ref_epoch_echo + TimeDelta(azt_mid)
         if plot:
-            _plot_echo_vs_ant_pat(pf_echo, pf_ant, (lka_echo[0], lka_echo[-1]),
-                                  roll_ofs, az_dtm.isoformat(), nn+1, out_path)
+            plt_name = (f'{prefix}_Freq{freq_band}_Pol{txrx_pol}_'
+                        f'AzBlock{n_azblk}.png')
+            plt_filename = os.path.join(out_path, plt_name)
+            _plot_echo_vs_ant_pat(
+                pf_echo, pf_ant, (lka_echo[0], lka_echo[-1]),
+                roll_ofs, azt_mid, ref_epoch_echo.isoformat(), plt_filename
+                )
 
         # If PRF is constant then find out if rising edge region is valid. That
         # is, whether or not it overlaps with TX gap!
@@ -901,7 +908,7 @@ def _is_rising_edge_valid(rgb_fl, rgb_valid_sbsw):
 
 
 def _plot_echo_vs_ant_pat(pf_echo, pf_ant, lka_fl, roll_ofs,
-                          az_utc, az_block, out_path):
+                          az_time, epoch, filename):
     """Plot poly-fitted echo v.s. antenna w/ and w/o roll angle correction.
 
     Parameters
@@ -912,12 +919,13 @@ def _plot_echo_vs_ant_pat(pf_echo, pf_ant, lka_fl, roll_ofs,
         [Fist, Last] look angles in (rad)
     roll_ofs : float
         Roll angle ofset in (rad)
-    az_utc : str
-        Azimuth block UTC time in ISO8601 format
-    az_block : int
-        Azimuth block number.
-    out_path : str
-        Output directory to dump the .png file.
+    az_time : float
+        Seconds since "epoch" related to mid AZ time of the
+        block whose EL rising-edge to be plotted.
+    epoch : str
+        Reference epoch UTC time.
+    filename : str
+        Filename of the plot with ext "png".
 
     """
     el_res_deg = 0.01
@@ -928,17 +936,19 @@ def _plot_echo_vs_ant_pat(pf_echo, pf_ant, lka_fl, roll_ofs,
     ant_pow_cor = pf_ant.eval(lka_vec + roll_ofs)
     lka_vec_deg = np.rad2deg(lka_vec)
 
-    plt.figure(figsize=(6, 6))
+    plt.figure(figsize=(8, 7))
     plt.plot(lka_vec_deg, echo_pow, 'b',
              lka_vec_deg, ant_pow, 'r-.',
              lka_vec_deg, ant_pow_cor, 'g--', linewidth=2)
     plt.grid(True)
     plt.xlabel('Look Angles (deg)')
     plt.ylabel('Relative Power (dB)')
-    plt.legend(['ECHO', 'ANT', f'ANT_ROLL@{rad2mdeg(roll_ofs):.0f}(mdeg)'],
+    plt.legend(['ECHO', 'ANT',
+                f'EL-Adj={rad2mdeg(roll_ofs):.0f}(mdeg)'],
                loc='best')
     plt.title(
-        f'Echo v.s. Antenna Rising Edge w/ & w/o Roll Offset\n{az_utc}')
-    plt.savefig(os.path.join(out_path,
-                             f'plot_echo_ant_rising_edge_azblk{az_block}.png'))
+        f'Echo v.s. Antenna Rising Edge w/ & w/o EL Adjustment\n'
+        f'@ AZ-Time={az_time:.3f} sec\nsince {epoch}'
+        )
+    plt.savefig(filename)
     plt.close()

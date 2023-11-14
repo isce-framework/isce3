@@ -263,7 +263,7 @@ Null location')
             az_ang = self.beam.cut_angle
 
             # estimate null locations in both Echo and Antenna domain
-            tm_null, echo_null, ant_null, flag_null =\
+            tm_null, echo_null, ant_null, flag_null, pow_pat_null =\
                 el_null_obj.genNullRangeDoppler(
                     self.echo[nn], self.echo[nn+1],
                     self.beam.copol_pattern[nn],
@@ -278,6 +278,15 @@ Null location')
                 az_ang, el_ang_start, el_ang_step,
                 ant_null, echo_null, tm_null, flag_null,
                 err_msg=f' for null # {nn} and {nn+1}')
+
+            # check the size of null power patterns
+            el_size = pow_pat_null.el.size
+            npt.assert_equal(pow_pat_null.ant.size, el_size,
+                             err_msg='Wrong antenna null pattern size for '
+                             f'for null # {nn} and {nn+1}')
+            npt.assert_equal(pow_pat_null.echo.size, el_size,
+                             err_msg='Wrong echo null pattern size for '
+                             f'for null # {nn} and {nn+1}')
 
             # Print results on screen per pair of beams/channels
             r2md = 180e3 / np.pi

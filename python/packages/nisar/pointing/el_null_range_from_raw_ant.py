@@ -5,6 +5,11 @@ multi-channel Raw echoes and in EL angles from multi-beam antenna patterns.
 import numpy as np
 from dataclasses import dataclass
 from typing import Sequence
+from pathlib import Path
+try:
+    from matplotlib import pyplot as plt
+except ImportError:
+    plt = None
 
 from isce3.antenna import ElNullRangeEst, ant2rgdop
 from isce3.geometry import DEMInterpolator
@@ -40,11 +45,13 @@ class AntElPair:
     az_ang_cut: float
 
 
-def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
+def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
                                freq_band='A', txrx_pol=None,
                                orbit=None, attitude=None,
                                az_block_dur=3.0,
-                               apply_caltone=False, logger=None):
+                               apply_caltone=False, logger=None,
+                               plot=False, out_path='.',
+                               polyfit_deg=6):
     """
     Get estimated null locations in elevation (EL) direction as a function
     of slant range and azimuth time from multi-channel raw echo
@@ -85,6 +92,16 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
         Apply caltone coefficients to RX channels prior to Null formation.
     logger : logging.Logger, optional
         If not provided a logger with StreamHandler will be set.
+    plot : bool, default=False
+        If True, it will generate one PNG plot per null and per azimuith block
+        to compare null echo data (measured) versus that of antenna one
+        (reference) in EL.
+    out_path : str, default='.'
+        Ouput directory for dumping PNG files, if `plot` is True.
+    polyfit_deg : int, default=6
+        Polyfit degree used in poly fitting echo null power pattern in
+        elevation for the sake of smoothing and null location estimation.
+        The degree must be an even number equal or larger than 2.
 
     Returns
     -------
@@ -97,7 +114,9 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
     np.ndarray(float32)
         Expected Nulls locations in antenna EL angles (deg) from antenna.
     np.ndarray(float32)
-        Power of echo null in linear scale.
+        Normalized power of echo null in linear scale.
+        The normalized power is the ratio of null (min) power to the max power
+        within null pattern.
         This value can be used as a simple quality metric of the echo null.
         The smaller the value the better/deeper the null formed by echo pairs.
         Theoretically, this value is within [0, 1].
@@ -121,6 +140,8 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
         For bad input parameters or non-existent polarization and/or
         frequency band.
         Azimuth block duration is smaller than the mean PRI.
+        Degree of polyfit is not an even-number integer equal or larger
+        than 2.
     RuntimeError
         If raw echo dataset is not 3-D (multi-channel) or antenna beam numbers
         don't match that of active RX channel numbers of Raw.
@@ -140,8 +161,9 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
         Estimation over Heterogeneous Scene," JPL Report, RevB, October 2020.
 
     """
-    def pow2db(x):
-        return 10 * np.log10(x)
+    # Const
+    # prefix name used in PNG Null plot if requested
+    null_prefix = 'EL_Null_PowPattern_Plot'
 
     # set logger
     if logger is None:
@@ -283,8 +305,10 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
             attitude.update_reference_epoch(ref_epoch_echo)
 
     # form EL-Null object
+    logger.info(
+        f'Polyfit degree used for echo null power pattern -> {polyfit_deg}')
     el_null_obj = ElNullRangeEst(wavelength, sr_spacing, chirp_rate, chirp_dur,
-                                 orbit, attitude)
+                                 orbit, attitude, polyfit_deg=polyfit_deg)
 
     # build all pairs related to active RX channels with common EL angles
     # within peak-to-peak overlapped regions. Number of pairs = number of nulls
@@ -303,6 +327,11 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
     pairnum_rglslice = _pair_num_rgl_slice_gen(
         num_rgls, num_nulls, num_azimuth_block, num_rgl_block)
 
+    # check if there is matplotlib package needed for plotting if requested
+    if plot and plt is None:
+        logger.warning('No plots due to missing package "matplotlib"!')
+        plot = False
+
     # containers for return values
     null_num = []  # (-)
     sr_echo = []  # (m)
@@ -313,8 +342,9 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
     null_flag = []  # (-)
 
     # loop over all sets of range lines, one set per pair of RXs/beams
-    for nn, s_rgl in pairnum_rglslice:
-        logger.info(f'(start, stop) range lines for null # {nn+1} -> '
+    for nn, s_rgl, n_azblk in pairnum_rglslice:
+        pair_num = nn + 1
+        logger.info(f'(start, stop) range lines for null # {pair_num} -> '
                     f'({s_rgl.start}, {s_rgl.stop})')
         # retrieve a pair of beams object for a specific null
         beams = list_ant_pairs[nn]
@@ -365,7 +395,7 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
             mask_valid.append(_is_null_valid(rgb_p2p, rgb_valid_sbsw))
 
         # estimate null locations in both Echo and Antenna domain
-        tm_null, echo_null, ant_null, flag_null = \
+        tm_null, echo_null, ant_null, flag_null, pow_pat_null = \
             el_null_obj.genNullRangeDoppler(echo_left,
                                             echo_right,
                                             beams.pat_left,
@@ -379,21 +409,29 @@ def el_null_range_from_raw_ant(raw, ant, dem_interp=None,
         # report echo null power as quality check
         # the smaller the value the better/deeper the null!
         # In other words, the closer two nulls the better the performance!
-        null_power = echo_null.magnitude ** 2
         logger.info(
-            f'Echo null power for # {nn + 1} '
+            f'Echo null power for # {pair_num} '
             f' @ {tm_null.isoformat()} -> '
-            f'{pow2db(null_power):.1f} (dB)'
+            f'{_pow2db(echo_null.magnitude):.1f} (dB)'
         )
         # collect outputs
-        null_num.append(nn + 1)
+        null_num.append(pair_num)
         sr_echo.append(echo_null.slant_range)
         el_ant.append(np.rad2deg(ant_null.el_angle))
-        mag_ratio.append(null_power)
+        mag_ratio.append(echo_null.magnitude)
         az_datetime.append(tm_null)
         null_flag.append(flag_null.geometry_antenna &
                          flag_null.geometry_echo &
                          flag_null.newton_solver)
+
+        # plot null echo v.s. null ant profile if requested
+        if plot:
+            null_plt_name = (f'{null_prefix}_Pair{pair_num}_Freq{freq_band}'
+                             f'_Pol{txrx_pol}_AzBlock{n_azblk}.png')
+            null_filename = Path(out_path).joinpath(null_plt_name)
+            _plot_null_pow_patterns(
+                pow_pat_null, pair_num, null_filename, az_time_mid,
+                ref_epoch_echo)
 
     # return tuple of np.ndarray
     return (np.asarray(null_num, dtype='uint8'),
@@ -482,6 +520,8 @@ def _pair_num_rgl_slice_gen(num_rgls, num_nulls, num_azimuth_block,
         Pair number starting from 0
     slice
         Range line slices
+    int
+        AZ block number starting from 1
 
     """
     i_start = 0
@@ -492,7 +532,7 @@ def _pair_num_rgl_slice_gen(num_rgls, num_nulls, num_azimuth_block,
         else:
             i_stop += num_rgl_block
         for nn in range(num_nulls):
-            yield nn, slice(i_start, i_stop)
+            yield nn, slice(i_start, i_stop), cc
         i_start += num_rgl_block
 
 
@@ -524,3 +564,54 @@ def _is_null_valid(rgb_p2p, rgb_valid_sbsw):
     for start_stop in rgb_valid_sbsw:
         flag |= rgb_null_region.issubset(range(*start_stop))
     return flag
+
+
+def _pow2db(p):
+    """Linear power to dB"""
+    return 10 * np.log10(p)
+
+
+def _plot_null_pow_patterns(pow_pat_null, null_num, null_file, az_time,
+                            epoch):
+    """Plot null power patterns for echo and antenna.
+
+    Parameters
+    ----------
+    pow_pat_null : isce3.antenna.NullPowPatterns
+    null_num : int
+        Null number.
+    null_file : str
+        Filename of null patterns with ext "png".
+    az_time : float
+        Seconds since "epoch" related to mid AZ time of the
+        block whose null to be plotted.
+    epoch : str
+        Reference epoch UTC time.
+
+    """
+    el_deg = np.rad2deg(pow_pat_null.el)
+    # set (min, max) and el spacing for x-axis ticks
+    min_el = round(el_deg.min(), ndigits=1)
+    max_el = round(el_deg.max(), ndigits=1)
+    d_el = 0.1
+
+    # get the min loc from antenna to be used as a reference Null location!
+    idx_min = np.nanargmin(pow_pat_null.ant)
+    pow_ant = _pow2db(pow_pat_null.ant)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(el_deg, pow_ant, 'b--',
+             el_deg, _pow2db(pow_pat_null.echo), 'r',
+             linewidth=2)
+    plt.axvline(x=el_deg[idx_min], color='g', linestyle='-.', linewidth=2)
+    plt.legend(['ANT', 'ECHO', 'Ref Null Loc'], loc='best')
+    plt.xticks(ticks=np.arange(min_el, max_el + d_el, d_el))
+    plt.xlim([min_el, max_el])
+    plt.xlabel('Elevation (deg)')
+    plt.ylabel('Norm. Magnitude (dB)')
+    plt.title(f'EL Null Power Pattern, Echo v.s. Ant \n'
+              f'for Null # {null_num} @ AZ-Time={az_time:.3f} sec\n'
+              f'since {epoch}')
+    plt.grid(True)
+    plt.savefig(null_file)
+    plt.close()

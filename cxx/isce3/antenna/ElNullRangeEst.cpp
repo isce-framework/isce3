@@ -17,11 +17,11 @@ ElNullRangeEst::ElNullRangeEst(double wavelength, double sr_spacing,
         const isce3::core::Attitude& attitude,
         const isce3::geometry::DEMInterpolator& dem_interp,
         const Frame& ant_frame, const isce3::core::Ellipsoid& ellips,
-        double el_res, double abs_tol_dem, int max_iter_dem)
+        double el_res, double abs_tol_dem, int max_iter_dem, int polyfit_deg)
     : _wavelength(wavelength), _sr_spacing(sr_spacing), _orbit(orbit),
       _attitude(attitude), _dem_interp(dem_interp), _ant_frame(ant_frame),
       _ellips(ellips), _el_res_max(el_res), _abs_tol_dem(abs_tol_dem),
-      _max_iter_dem(max_iter_dem)
+      _max_iter_dem(max_iter_dem), _polyfit_deg(polyfit_deg)
 {
     // check input arguments
     if (!(sr_spacing > 0.0))
@@ -30,6 +30,9 @@ ElNullRangeEst::ElNullRangeEst(double wavelength, double sr_spacing,
     if (!(wavelength > 0.0))
         throw isce3::except::InvalidArgument(
                 ISCE_SRCINFO(), "Wavelength must be a positive value!");
+    if ((polyfit_deg < 2) || (polyfit_deg % 2 != 0))
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                "Polyfit degree must be an even number larger than 2!");
     // Range sample freq in (Hz)
     auto sample_freq = isce3::core::speed_of_light / (2.0 * sr_spacing);
     // Build the Hann windowed Ref Chirp used in all rangecomp
@@ -78,7 +81,7 @@ typename ElNullRangeEst::tuple_null ElNullRangeEst::genNullRangeDoppler(
     // form NUll pattern in antenna EL domain and locate its min location in EL,
     // This is the expected/ideal/knowldege of null location obtained purely
     // from antenna patterns. Get its magnitude in (linear)
-    auto [el_null_ant, idx_null_ant, mag_null_ant] =
+    auto [el_null_ant, idx_null_ant, mag_null_ant, pow_pat_null_ant] =
             locateAntennaNull(coef_left, coef_right, el_ang_vec);
 
     // get position, velocity in ECEF at echo azimuth time
@@ -112,11 +115,15 @@ typename ElNullRangeEst::tuple_null ElNullRangeEst::genNullRangeDoppler(
                 "The minval of normalized echo null is not "
                 "larger than that of antenna!");
 
-    // form array of EL angles (rad) for echo null power pattern matching slant
-    // range "sr_null_echo_vec"
+    // form array of antenna null power pattern as well as EL angles (rad) for
+    // echo null power pattern matching slant range "sr_null_echo_vec"
     Eigen::ArrayXd el_null_echo_vec(idx_null_echo_vec.size());
-    for (std::size_t idx = 0; idx < idx_null_echo_vec.size(); ++idx)
-        el_null_echo_vec(idx) = el_ang_vec(idx_null_echo_vec(idx));
+    Eigen::ArrayXd ant_null_pow_vec(idx_null_echo_vec.size());
+    for (std::size_t idx = 0; idx < idx_null_echo_vec.size(); ++idx) {
+        auto idx_el_valid = idx_null_echo_vec(idx);
+        el_null_echo_vec(idx) = el_ang_vec(idx_el_valid);
+        ant_null_pow_vec(idx) = pow_pat_null_ant(idx_el_valid);
+    }
     // Perform polyfit of null power pattern in (dB) as a function of EL angle
     // in (rad)
     auto poly_echo_null = isce3::math::polyfitObj(
@@ -138,7 +145,7 @@ typename ElNullRangeEst::tuple_null ElNullRangeEst::genNullRangeDoppler(
     // in case of invalid polyfit coeffs, get approximate null power
     // directly from the echo samples!
     if (std::isnan(mag_null_echo))
-      mag_null_echo = echo_null_pow_vec.abs().minCoeff();
+        mag_null_echo = echo_null_pow_vec.abs().minCoeff();
 
     // get the true slant range (and doppler) at the EL location of echo null
     auto [sr_null_echo, dop_null_echo, conv_flag_geom_echo] =
@@ -151,7 +158,8 @@ typename ElNullRangeEst::tuple_null ElNullRangeEst::genNullRangeDoppler(
     return {date_time_az,
             {sr_null_echo, el_null_echo, dop_null_echo, mag_null_echo},
             {sr_null_ant, el_null_ant, dop_null_ant, mag_null_ant},
-            {conv_flag_null, conv_flag_geom_echo, conv_flag_geom_ant}};
+            {conv_flag_null, conv_flag_geom_echo, conv_flag_geom_ant},
+            {ant_null_pow_vec, echo_null_pow_vec, el_null_echo_vec}};
 }
 
 }} // namespace isce3::antenna

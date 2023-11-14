@@ -24,9 +24,9 @@ class TestGenElNullRangeProduct:
     args = argparse.Namespace(
         l0b_file=os.path.join(iscetest.data, l0b_filename),
         antenna_file=os.path.join(iscetest.data, ant_filename),
-        freq_band='A', txrx_pol=None, dem_file=None, apply_caltone=False,
+        freq_band=None, txrx_pol=None, dem_file=None, apply_caltone=False,
         az_block_dur=2.0, out_path='.', ref_height=-100.0,
-        orbit_file=None, attitude_file=None
+        orbit_file=None, attitude_file=None, plot=False, polyfit_deg=6
     )
 
     def test_correct_args(self):
@@ -38,8 +38,9 @@ class TestGenElNullRangeProduct:
         with npt.assert_raises(ValueError):
             gen_el_null_range_product(self.args)
 
-    def test_orbit_attitude_caltone(self):
+    def test_orbit_attitude_caltone_plot(self):
         self.args.freq_band = 'A'
+        self.args.plot = True
         self.args.l0b_file = os.path.join(
             iscetest.data, self.l0b_filename_nocal)
         self.args.apply_caltone = True

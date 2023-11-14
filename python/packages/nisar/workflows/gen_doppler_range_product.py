@@ -17,6 +17,8 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
 from isce3.io import Raster
 from isce3.geometry import DEMInterpolator
+from nisar.workflows.gen_el_null_range_product import (
+    copol_or_desired_product_from_raw)
 
 
 def cmd_line_parser():
@@ -54,12 +56,21 @@ def cmd_line_parser():
     prs.add_argument('--ref_height', type=float, dest='ref_height', default=0,
                      help='Reference height in (m) w.r.t WGS84 ellipsoid.'
                      ' It will be simply used if "dem" file is not provided')
-    prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
-                     dest='freq_band', help='Frequency band such as "A".')
+    prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'],
+                     dest='freq_band',
+                     help='Frequency band such as "A". If set, the products '
+                     'over desired `txrx_pol` or over all co-pols will be '
+                     'processed. Otherwise, either all frequency bands with '
+                     'desired `txrx_pol` or with all co-pols will be '
+                     'processed (default)!')
     prs.add_argument('-p', '--pol', type=str, dest='txrx_pol',
-                     choices=["HH", "VV", "HV", "VH"],
-                     help='TxRx Polarization such as "HH". Default is the '
-                     'first pol in the specified frequency band')
+                     choices=['HH', 'VV', 'HV', 'VH', 'RH', 'RV', 'LH', 'LV'],
+                     help=('TxRx Polarization such as "HH". If set, the '
+                           'products either over specified `freq_band` or over'
+                           ' all available bands will be processed. Otherwise,'
+                           ' all co-pols in each requested frequency band will'
+                           ' be processed (default)!')
+                     )
     prs.add_argument('-r', '--rgb', type=int, dest='num_rgb_avg', default=8,
                      help='Number of range bins to be averaged in Doppler '
                      'Estimator block. Shall be equal or larger than 1.')
@@ -134,6 +145,12 @@ def gen_doppler_range_product(args):
     sar_band_char = raw_obj.sarBand
     logger.info(f'SAR band char -> {sar_band_char}')
 
+    # logic for frequency band and TxRx polarization choices.
+    # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
+    frq_pol = copol_or_desired_product_from_raw(
+        raw_obj, args.freq_band, args.txrx_pol)
+    logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
+
     # operation mode, whether DBF (single or a composite channel) or
     # 'DM2' (multi-channel)
     # TODO: the updated "diagnosticModeFlag" under "identification" in
@@ -142,15 +159,9 @@ def gen_doppler_range_product(args):
     # ALOS1 PALSAR its value is 0.  To avoid failure for older L0B
     # products, we use number of dimension of raw dataset to decide
     # about "OP_MODE" for now!
-    # This requires checking frequency band.
-    if args.freq_band not in raw_obj.polarizations:
-        raise ValueError('Wrong frequency band! The available bands -> '
-                         f'{list(raw_obj.polarizations)}')
-    if args.txrx_pol is None:
-        txrx_pol = raw_obj.polarizations[args.freq_band][0]
-    else:
-        txrx_pol = args.txrx_pol
-    raw_dset = raw_obj.getRawDataset(args.freq_band, txrx_pol)
+    freq_band = list(frq_pol)[0]
+    txrx_pol = frq_pol[freq_band][0]
+    raw_dset = raw_obj.getRawDataset(freq_band, txrx_pol)
     if raw_dset.ndim == 3:
         op_mode = 'DM2'
     else:  # single channel SAR
@@ -186,80 +197,101 @@ def gen_doppler_range_product(args):
 
     # get keyword args for function "doppler_lut_from_raw"
     kwargs = {key: val for key, val in vars(args).items() if
-              'file' not in key and key != 'ref_height'}
+              'file' not in key and key not in [
+                  'ref_height', 'freq_band', 'txrx_pol']}
 
-    # generate Doppler LUT2d from Raw L0B
-    dop_lut, ref_utc, mask_rgb, corr_coef, txrx_pol, centerfreq, _ = \
-        doppler_lut_from_raw(raw_obj, orbit=orbit, attitude=attitude,
-                             ant=ant, dem=dem, logger=logger, **kwargs)
+    # loop over all desired frequency bands and their respective desired
+    # polarizations
+    for freq_band in frq_pol:
+        for txrx_pol in frq_pol[freq_band]:
+            # generate Doppler LUT2d from Raw L0B
+            dop_lut, ref_utc, mask_rgb, corr_coef, txrx_pol, centerfreq, _ = \
+                doppler_lut_from_raw(raw_obj, orbit=orbit, attitude=attitude,
+                                     ant=ant, dem=dem, logger=logger,
+                                     freq_band=freq_band, txrx_pol=txrx_pol,
+                                     **kwargs)
 
-    # check out antenna object to extract azimuth angle for EL cuts used for
-    # Doppler CSV product
-    if ant is None:
-        az_ang_deg = 0.0
-        logger.warning(
-            'No antenna file! Azimuth angle for Doppler product is '
-            'assumed to be zero!'
-        )
-    else:
-        logger.info(
-            'Extracting the azimuth angle of EL cuts from antenna file.')
-
-        ant_rx = ant.el_cut(pol=txrx_pol[1])
-        az_ang = ant_rx.cut_angle
-        # if TX pol is different from RX pol then take average of both
-        if txrx_pol[0] != txrx_pol[1]:
-            # To cover TX L/R circular pol, the following condition is needed
-            if txrx_pol[1] == 'H':
-                tx_pol = 'V'
-            else:
-                tx_pol = 'H'
-            ant_tx = ant.el_cut(pol=tx_pol)
-            az_ang += ant_tx.cut_angle
-            az_ang *= 0.5
-        az_ang_deg = np.rad2deg(az_ang)
-        logger.info(
-            'Azimuth angle extracted from antenna file -> '
-            f'{az_ang_deg:.3f} (deg)'
-        )
-
-    # form Linspace object for uniformly-spaced azimuth time and slant range
-    azt_lsp = Linspace(dop_lut.y_start, dop_lut.y_spacing, dop_lut.length)
-    sr_lsp = Linspace(dop_lut.x_start, dop_lut.x_spacing, dop_lut.width)
-
-    # get the first and last utc azimuth time w/o fractional seconds
-    # in "%Y%m%dT%H%M%S" format to be used as part of CSV product filename.
-    dt_utc_start = sec2str(ref_utc, azt_lsp.first)
-    dt_utc_stop = sec2str(ref_utc, azt_lsp.last)
-    # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
-    # used as part of CSV product filename
-    dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
-
-    # naming convention of CSV file and product spec is defined in Doc:
-    # See reference [1]
-    name_csv = (
-        f'{PREFIX_NAME_CSV}_{sar_band_char}{args.freq_band}_{op_mode}_'
-        f'DOPP_{txrx_pol}_{dt_utc_cur}_{dt_utc_start}_{dt_utc_stop}.csv'
-        )
-    file_csv = os.path.join(args.out_path, name_csv)
-    logger.info(f'Dump Doppler product in "CSV" format to file -> {file_csv}')
-
-    with open(file_csv, 'wt') as fid_csv:
-        fid_csv.write(
-            'UTC Time,Frequency (Hz),Doppler (Hz),Range (m),Azimuth (deg),'
-            'Correlation\n'
-        )
-        # loop over azimuth time and slant ranges
-        for i_row, azt in enumerate(azt_lsp):
-            tm_utc_str = sec2isofmt(ref_utc, azt)
-
-            for i_col, sr in enumerate(sr_lsp):
-                fid_csv.write(
-                    '{:s},{:.1f},{:.3f},{:.3f},{:.3f},{:.3f}\n'.format(
-                        tm_utc_str, centerfreq, dop_lut.data[i_row, i_col],
-                        sr, az_ang_deg,
-                        mask_rgb[i_row, i_col] * corr_coef[i_row, i_col])
+            # check out antenna object to extract azimuth angle for EL cuts
+            # used for Doppler CSV product
+            if ant is None:
+                az_ang_deg = 0.0
+                logger.warning(
+                    'No antenna file! Azimuth angle for Doppler product is '
+                    'assumed to be zero!'
                 )
+            else:
+                logger.info(
+                    'Extracting the azimuth angle of EL cuts from antenna '
+                    'file.'
+                )
+                ant_rx = ant.el_cut(pol=txrx_pol[1])
+                az_ang = ant_rx.cut_angle
+                # if TX pol is different from RX pol then take average of both
+                if txrx_pol[0] != txrx_pol[1]:
+                    # To cover TX L/R circular pol, the following condition
+                    # is needed
+                    if txrx_pol[1] == 'H':
+                        tx_pol = 'V'
+                    else:
+                        tx_pol = 'H'
+                    ant_tx = ant.el_cut(pol=tx_pol)
+                    az_ang += ant_tx.cut_angle
+                    az_ang *= 0.5
+                az_ang_deg = np.rad2deg(az_ang)
+                logger.info(
+                    'Azimuth angle extracted from antenna file -> '
+                    f'{az_ang_deg:.3f} (deg)'
+                )
+
+            # form Linspace object for uniformly-spaced azimuth time and
+            # slant range
+            azt_lsp = Linspace(
+                dop_lut.y_start, dop_lut.y_spacing, dop_lut.length
+            )
+            sr_lsp = Linspace(
+                dop_lut.x_start, dop_lut.x_spacing, dop_lut.width
+            )
+
+            # get the first and last utc azimuth time w/o fractional seconds
+            # in "%Y%m%dT%H%M%S" format to be used as part of CSV product
+            # filename.
+            dt_utc_start = sec2str(ref_utc, azt_lsp.first)
+            dt_utc_stop = sec2str(ref_utc, azt_lsp.last)
+            # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
+            # used as part of CSV product filename
+            dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+
+            # naming convention of CSV file and product spec is defined in Doc:
+            # See reference [1]
+            name_csv = (
+                f'{PREFIX_NAME_CSV}_{sar_band_char}{freq_band}_{op_mode}_'
+                f'DOPP_{txrx_pol}_{dt_utc_cur}_{dt_utc_start}_{dt_utc_stop}'
+                '.csv'
+            )
+            file_csv = os.path.join(args.out_path, name_csv)
+            logger.info(
+                f'Dump Doppler product in "CSV" format to file -> {file_csv}'
+            )
+
+            with open(file_csv, 'wt') as fid_csv:
+                fid_csv.write(
+                    'UTC Time,Frequency (Hz),Doppler (Hz),Range (m),Azimuth'
+                    ' (deg),Correlation\n'
+                )
+                # loop over azimuth time and slant ranges
+                for i_row, azt in enumerate(azt_lsp):
+                    tm_utc_str = sec2isofmt(ref_utc, azt)
+
+                    for i_col, sr in enumerate(sr_lsp):
+                        fid_csv.write(
+                            '{:s},{:.1f},{:.3f},{:.3f},{:.3f},{:.3f}\n'.format(
+                                tm_utc_str, centerfreq,
+                                dop_lut.data[i_row, i_col],
+                                sr, az_ang_deg,
+                                (mask_rgb[i_row, i_col] *
+                                 corr_coef[i_row, i_col])
+                            )
+                        )
 
     # total elapsed time
     logger.info(f'Elapsed time -> {time.time() - tic:.1f} (sec)')

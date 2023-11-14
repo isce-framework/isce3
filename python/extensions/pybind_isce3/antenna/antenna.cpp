@@ -22,6 +22,9 @@ void addsubmodule_antenna(py::module& m)
     py::class_<isce3::antenna::NullConvergenceFlags> pyNullConvergenceFlags(
             m_antenna, "NullConvergenceFlags");
 
+    py::class_<isce3::antenna::NullPowPatterns> pyNullPowPatterns(
+            m_antenna, "NullPowPatterns");
+
     // declare classes
     py::class_<isce3::antenna::Frame> pyFrame(m_antenna, "Frame");
 
@@ -38,6 +41,7 @@ void addsubmodule_antenna(py::module& m)
     // call addbinding for adding above pybind class/enums/struct
     addbinding(pyNullProduct);
     addbinding(pyNullConvergenceFlags);
+    addbinding(pyNullPowPatterns);
     addbinding(pyFrame);
     addbinding(pyElPatternEst);
     addbinding(pyElNullRangeEst);

@@ -67,6 +67,28 @@ geometry_antenna : bool
 )";
 }
 
+void addbinding(py::class_<NullPowPatterns>& pyNullPowPatterns)
+{
+    pyNullPowPatterns.def_readonly("ant", &NullPowPatterns::ant)
+            .def_readonly("echo", &NullPowPatterns::echo)
+            .def_readonly("el", &NullPowPatterns::el);
+    pyNullPowPatterns.doc() = R"(
+Elevation (EL) null power patterns for both antenna and echo as a function of EL
+angles. The null is formed from two adjacent beams/channels in EL direction.
+
+Attributes
+----------
+ant : array of float
+    1-D array of peak-normalized null power pattern (linear) formed from antenna
+    EL-cuts. The same size as `el`.
+echo : array of float
+    1-D array of peak-normalized null power pattern (linear) formed from echo
+    channels in EL direction. The same size as `el`.
+el : array of float
+    Array of EL angles (radians) in antenna EL-AZ frame.
+)";
+}
+
 // class
 void addbinding(py::class_<ElNullRangeEst>& pyElNullRangeEst)
 {
@@ -80,10 +102,10 @@ void addbinding(py::class_<ElNullRangeEst>& pyElNullRangeEst)
                                   const Ellipsoid& ellips = {},
                                   double el_res = 8.726646259971648e-06,
                                   double abs_tol_dem = 1.0,
-                                  int max_iter_dem = 20) {
+                                  int max_iter_dem = 20, int polyfit_deg = 6) {
                 return ElNullRangeEst(wavelength, sr_spacing, chirp_rate,
                         chirp_dur, orbit, attitude, dem_interp, ant_frame,
-                        ellips, el_res, abs_tol_dem, max_iter_dem);
+                        ellips, el_res, abs_tol_dem, max_iter_dem, polyfit_deg);
             }),
                     py::arg("wavelength"), py::arg("sr_spacing"),
                     py::arg("chirp_rate"), py::arg("chirp_dur"),
@@ -92,7 +114,8 @@ void addbinding(py::class_<ElNullRangeEst>& pyElNullRangeEst)
                     py::arg_v("ant_frame", Frame(), "EL_AND_AZ"),
                     py::arg_v("ellips", Ellipsoid(), "WGS84"),
                     py::arg("el_res") = 8.726646259971648e-06,
-                    py::arg("abs_tol_dem") = 1.0, py::arg("max_iter_dem") = 20)
+                    py::arg("abs_tol_dem") = 1.0, py::arg("max_iter_dem") = 20,
+                    py::arg("polyfit_deg") = 6)
 
             // methods
             .def("genNullRangeDoppler", &ElNullRangeEst::genNullRangeDoppler,
@@ -147,6 +170,9 @@ isce3::antenna:NullProduct
 isce3::antenna::NullConvergenceFlags
     all flags indicating convergence of iterative operations used 
     in forming both echo and antenna EL null products.
+isce3::antenna::NullPowPatterns
+    null power patterns (linear) for both antenna and echo as
+    a function of EL angles (radians).
 
 Raises
 ------

@@ -84,9 +84,11 @@ tuple_ant genAntennaPairCoefs(
  * @return el angle of the null location in (rad)
  * @return index of null location
  * @return peak-normalized null magnitude in (linear)
+ * @return 1-D peak-normalized antenna null power pattern (linear) with the
+ * same size as `el_ang_vec`.
  * @exception RuntimeError
  */
-std::tuple<double, Eigen::Index, double> locateAntennaNull(
+std::tuple<double, Eigen::Index, double, Eigen::ArrayXd> locateAntennaNull(
         const Eigen::Ref<const Eigen::ArrayXcd>& coef_left,
         const Eigen::Ref<const Eigen::ArrayXcd>& coef_right,
         const Eigen::Ref<const Eigen::ArrayXd>& el_ang_vec);

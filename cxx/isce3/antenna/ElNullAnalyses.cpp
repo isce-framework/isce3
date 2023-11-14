@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <utility>
 
 #include <isce3/core/Interp1d.h>
 #include <isce3/core/Kernels.h>
@@ -114,7 +115,7 @@ tuple_ant genAntennaPairCoefs(
             Eigen::conj(el_cut_right.segment(idx_peak_left, num_idx)), el_vec);
 }
 
-std::tuple<double, Eigen::Index, double> locateAntennaNull(
+std::tuple<double, Eigen::Index, double, Eigen::ArrayXd> locateAntennaNull(
         const Eigen::Ref<const Eigen::ArrayXcd>& coef_left,
         const Eigen::Ref<const Eigen::ArrayXcd>& coef_right,
         const Eigen::Ref<const Eigen::ArrayXd>& el_ang_vec)
@@ -136,7 +137,9 @@ std::tuple<double, Eigen::Index, double> locateAntennaNull(
     double val_null {min_val / max_val};
     // get EL angle of the null in (rad)
     double el_null_ant = el_ang_vec(idx_null_ant);
-    return {el_null_ant, idx_null_ant, val_null};
+    // peak normalized antenna null power pattern
+    pow_null_ant /= max_val;
+    return {el_null_ant, idx_null_ant, val_null, std::move(pow_null_ant)};
 }
 
 tuple_echo formEchoNull(const std::vector<std::complex<float>>& chirp_ref,

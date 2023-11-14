@@ -3,6 +3,7 @@
 Generate El Null Range product from L0B (DM2) + Antenna HDF5 + [DEM raster]
 data which will be used for pointing analyses by D&C team
 """
+from __future__ import annotations
 import os
 import time
 import argparse as argp
@@ -45,12 +46,21 @@ def cmd_line_parser():
                      help='DEM raster file in (GDAL-compatible format such as '
                      'GeoTIFF) containing heights w.r.t. WGS-84 ellipsoid. '
                      'Default is no DEM!')
-    prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
-                     dest='freq_band', help='Frequency band such as "A"')
+    prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'],
+                     dest='freq_band',
+                     help='Frequency band such as "A". If set, the products '
+                     'over desired `txrx_pol` or over all co-pols will be '
+                     'processed. Otherwise, either all frequency bands with '
+                     'desired `txrx_pol` or with all co-pols will be '
+                     'processed (default)!')
     prs.add_argument('-p', '--pol', type=str, dest='txrx_pol',
-                     choices=['HH', 'VV', 'HV', 'VH'],
-                     help=('TxRx Polarization such as "HH".Default is the '
-                           'first pol in the band "A"')
+                     choices=['HH', 'VV', 'HV', 'VH', 'RH', 'RV', 'LH', 'LV'],
+                     help=('TxRx Polarization such as "HH". If set, the '
+                           'products either over specified `freq_band` or over'
+                           ' all available bands will be processed. Otherwise,'
+                           ' the first co-pol of the specified `freq_band` or '
+                           'all co-pols over all frequency bands will be '
+                           'processed (default)!')
                      )
     prs.add_argument('--orbit', type=str, dest='orbit_file',
                      help='Filename of an external orbit XML file. The orbit '
@@ -77,6 +87,13 @@ def cmd_line_parser():
                      help=('Reference height in (m) w.r.t WGS84 ellipsoid. It '
                            'will be simply used if "dem_file" is not provided')
                      )
+    prs.add_argument('--plot', action='store_true', dest='plot',
+                     help='Plot null power patterns (antenna v.s. echo) and '
+                     'save them in *.png files at the specified output path')
+    prs.add_argument('--deg', type=int, dest='polyfit_deg',
+                     default=6, help='Degree of the polyfit used for'
+                     ' smoothing and location estimation of echo null.')
+
     return prs.parse_args()
 
 
@@ -140,50 +157,73 @@ def gen_el_null_range_product(args):
         logger.info('Parsing external attitude XML file')
         attitude = load_attitude_from_xml(args.attitude_file)
 
-    # get keyword args for function "el_null_range_from_raw_ant"
+    # get common keyword args for function "el_null_range_from_raw_ant"
     kwargs = {key: val for key, val in vars(args).items() if
-              key in ['az_block_dur', 'freq_band', 'txrx_pol',
-                      'apply_caltone']}
-    (null_num, sr_echo, el_ant, pow_ratio, az_datetime, null_flag, mask_valid,
-     txrx_pol, wavelength) = el_null_range_from_raw_ant(
-         raw_obj, ant_obj, dem_interp_obj, logger=logger, orbit=orbit,
-         attitude=attitude, **kwargs)
+              key in ['az_block_dur', 'apply_caltone', 'plot',
+                      'out_path', 'polyfit_deg']}
 
-    # get the first and last utc azimuth time w/o fractional seconds
-    # in "%Y%m%dT%H%M%S" format to be used as part of CSV product filename.
-    dt_utc_first = dt2str(az_datetime[0])
-    dt_utc_last = dt2str(az_datetime[-1])
-    # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
-    # used as part of CSV product filename
-    dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+    # logic for frequency band and TxRx polarization choices.
+    # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
+    frq_pol = copol_or_desired_product_from_raw(
+        raw_obj, args.freq_band, args.txrx_pol)
+    logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
-    # naming convention of CSV file and product spec is defined in Doc:
-    # See reference [1]
-    name_csv = (
-        f'{prefix_name_csv}_{sar_band_char}{args.freq_band}_{op_mode}_NULL_'
-        f'{txrx_pol}_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv'
-        )
-    file_csv = os.path.join(args.out_path, name_csv)
-    logger.info(
-        f'Dump EL Null-Range product in "CSV" format to file ->\n {file_csv}')
-    # dump product into CSV file
-    with open(file_csv, 'wt') as fid_csv:
-        fid_csv.write('UTC Time,Band,Null Number,Range (m),Elevation (deg),'
-                      'Quality Factor\n')
-        # report null-only product (null # > 0) w/ quality checking afterwards
-        for nn in range(null_num.size):
-            fid_csv.write('{:s},{:1s},{:d},{:.3f},{:.3f},{:.6f}\n'.format(
-                az_datetime[nn].isoformat(), sar_band_char, null_num[nn],
-                sr_echo[nn], el_ant[nn], 1 - pow_ratio[nn]))
-            # report possible invalid items/Rows
-            # add three for header line + null_zero + 0-based index to "nn"
-            if not mask_valid[nn]:
-                logger.warning(f'Row # {nn + 2} may have invalid slant range '
-                               'due to TX gap overlap!')
-            if not null_flag[nn]:
-                logger.warning(
-                    f'Row # {nn + 3} may have invalid slant range due to '
-                    'failed convergence in null location estimation!')
+    # loop over all desired frequency bands and their respective desired
+    # polarizations
+    for freq_band in frq_pol:
+        for txrx_pol in frq_pol[freq_band]:
+
+            (null_num, sr_echo, el_ant, pow_ratio, az_datetime, null_flag,
+             mask_valid, _, wavelength) = el_null_range_from_raw_ant(
+                 raw_obj, ant_obj, dem_interp=dem_interp_obj, logger=logger,
+                 orbit=orbit, attitude=attitude, freq_band=freq_band,
+                 txrx_pol=txrx_pol, **kwargs
+            )
+            # get the first and last utc azimuth time w/o fractional seconds
+            # in "%Y%m%dT%H%M%S" format to be used as part of CSV product
+            # filename.
+            dt_utc_first = dt2str(az_datetime[0])
+            dt_utc_last = dt2str(az_datetime[-1])
+            # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
+            # used as part of CSV product filename
+            dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+
+            # naming convention of CSV file and product spec is defined in Doc:
+            # See reference [1]
+            name_csv = (
+                f'{prefix_name_csv}_{sar_band_char}{freq_band}_{op_mode}_NULL_'
+                f'{txrx_pol}_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv'
+            )
+            file_csv = os.path.join(args.out_path, name_csv)
+            logger.info(
+                'Dump EL Null-Range product in "CSV" format to file ->\n '
+                f'{file_csv}')
+            # dump product into CSV file
+            with open(file_csv, 'wt') as fid_csv:
+                fid_csv.write('UTC Time,Band,Null Number,Range (m),Elevation'
+                              ' (deg),Quality Factor\n')
+                # report null-only product (null # > 0) w/ quality checking
+                # afterwards
+                for nn in range(null_num.size):
+                    fid_csv.write(
+                        '{:s},{:1s},{:d},{:.3f},{:.3f},{:.3f}\n'.format(
+                            az_datetime[nn].isoformat(), sar_band_char,
+                            null_num[nn], sr_echo[nn], el_ant[nn],
+                            1 - pow_ratio[nn])
+                    )
+                    # report possible invalid items/Rows
+                    # add three for header line + null_zero + 0-based index to
+                    # "nn"
+                    if not mask_valid[nn]:
+                        logger.warning(
+                            f'Row # {nn + 2} may have invalid slant range '
+                            'due to TX gap overlap!')
+                    if not null_flag[nn]:
+                        logger.warning(
+                            f'Row # {nn + 3} may have invalid slant range due'
+                            ' to failed convergence in null location '
+                            'estimation!'
+                        )
 
     # total elapsed time
     logger.info(f'Elapsed time -> {time.time() - tic:.1f} (sec)')
@@ -192,6 +232,45 @@ def gen_el_null_range_product(args):
 def dt2str(dt: 'isce3.core.DateTime', fmt: str = '%Y%m%dT%H%M%S') -> str:
     """isce3 DateTime to a desired string format."""
     return datetime.fromisoformat(dt.isoformat().split('.')[0]).strftime(fmt)
+
+
+def copol_or_desired_product_from_raw(
+        raw: Raw, freq_band: str | None = None, txrx_pol: str | None = None
+        ) -> dict:
+    """
+    Fetch either all co-pol products from Raw (default) or desired ones which
+    fulfill either parameter (`freq_band` and/or `txrx_pol`) if provided. The
+    output is in the form of a dict with key=freq_band and value=[TxRx_pol].
+    """
+    # get list of frequency bands
+    if freq_band is None:
+        freqs = list(raw.polarizations)
+    else:
+        # go with desired frequency band
+        if freq_band not in raw.polarizations:
+            raise ValueError('Wrong frequency band! The available bands -> '
+                             f'{list(raw.polarizations)}')
+        freqs = [freq_band]
+
+    frq_pol = dict()
+    for frq in freqs:
+        pols = raw.polarizations[frq]
+        if txrx_pol is None:
+            # get all co-pols if pol is not provided
+            co_pols = [pol for pol in pols if (pol[0] == pol[1] or
+                                               pol[0] in ['L', 'R'])]
+            if co_pols:
+                frq_pol[frq] = co_pols
+        else:
+            # get all pols over all bands that match the desired one
+            if txrx_pol in pols:
+                frq_pol[frq] = [txrx_pol]
+
+    # check if the dict empty (it simply occurs if txrx_pol is provided!)
+    if not frq_pol:
+        raise ValueError(f'Wrong TxRx Pol over frequency bands {freqs}!')
+
+    return frq_pol
 
 
 if __name__ == "__main__":

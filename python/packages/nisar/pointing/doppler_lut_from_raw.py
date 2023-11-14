@@ -18,7 +18,7 @@ from isce3.signal import form_single_tap_dbf_echo
 from nisar.log import set_logger
 
 
-def doppler_lut_from_raw(raw, freq_band='A', txrx_pol=None,
+def doppler_lut_from_raw(raw, *, freq_band='A', txrx_pol=None,
                          orbit=None, attitude=None, ant=None,
                          dem=None, num_rgb_avg=8, az_block_dur=4.0,
                          time_interval=2.0, dop_method='CDE', subband=False,
@@ -757,7 +757,7 @@ def _plot_save_dop(n_azblk: int, slrg_per_blk: np.ndarray, dop_cnt: np.ndarray,
                    freq_band: str, txrx_pol: str, polyfit_deg: int,
                    mask_valid_rgb: np.ndarray):
     """Plot Doppler as a function Slant range and save it as PNG file"""
-    fig = plt.figure(n_azblk)
+    fig = plt.figure(n_azblk, figsize=(8, 7))
     ax = fig.add_subplot(111)
     # only polyfit over the valid range blocks!
     pf_coeff_dop_rg = np.polyfit(slrg_per_blk[mask_valid_rgb],
@@ -788,6 +788,7 @@ def _plot_save_dop(n_azblk: int, slrg_per_blk: np.ndarray, dop_cnt: np.ndarray,
         out_path, 'Doppler_SlantRange_Plot_Freq'
         f'{freq_band}_Pol{txrx_pol}_AzBlock{n_azblk + 1}.png'
     ))
+    plt.close()
 
 
 def _get_az_block_interval_len(num_pls: int, az_block_dur: float, prf: float,

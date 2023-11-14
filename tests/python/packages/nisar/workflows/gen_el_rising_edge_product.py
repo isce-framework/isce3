@@ -23,7 +23,7 @@ class TestGenElRisingEdgeProductNisar:
     args = argparse.Namespace(
         l0b_file=os.path.join(iscetest.data, subdir, l0b_filename),
         antenna_file=os.path.join(iscetest.data, subdir, ant_filename),
-        freq_band='A', txrx_pol=None, dem_file=None, no_dbf_norm=False,
+        freq_band=None, txrx_pol=None, dem_file=None, no_dbf_norm=False,
         az_block_dur=2.0, out_path='.', ref_height=0.0, plot=False,
         orbit_file=None, attitude_file=None, no_weight=False,
     )

@@ -48,7 +48,7 @@ class TestGenDopplerRangeProduct:
     # set input arguments for DBF NISAR case
     args_nisar = argparse.Namespace(
         filename_l0b=os.path.join(iscetest.data, sub_dir, l0b_nisar),
-        freq_band='A', txrx_pol='VV', num_rgb_avg=16, ref_height=0.0,
+        freq_band=None, txrx_pol='VV', num_rgb_avg=16, ref_height=0.0,
         dop_method='CDE', az_block_dur=1.0, time_interval=0.5, dem_file=None,
         subband=False, polyfit=True, polyfit_deg=3, plot=False, out_path='.',
         orbit_file=os.path.join(iscetest.data, sub_dir, orb_nisar),
@@ -58,7 +58,7 @@ class TestGenDopplerRangeProduct:
     # set input arguments for DM2 NISAR case
     args_dm2 = argparse.Namespace(
         filename_l0b=os.path.join(iscetest.data, subdir_dm2, l0b_dm2),
-        freq_band='A', txrx_pol='HH', num_rgb_avg=8, ref_height=0.0,
+        freq_band=None, txrx_pol=None, num_rgb_avg=8, ref_height=0.0,
         dop_method='CDE', az_block_dur=2.5, time_interval=0.11,
         subband=False, polyfit=True, polyfit_deg=3,
         plot=False, out_path='.', orbit_file=None, attitude_file=None,

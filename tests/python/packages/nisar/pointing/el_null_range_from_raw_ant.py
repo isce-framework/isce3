@@ -59,7 +59,7 @@ def test_el_null_range_from_raw_ant():
     # call the function and validate its output shape, range of values, etc:
     (null_num, sr_echo, el_ant, mag_ratio, az_dt, null_flag, mask_valid,
      pol, wvl) = el_null_range_from_raw_ant(
-         raw_obj, ant_obj, dem_interp_obj, freq_band='A',
+         raw_obj, ant_obj, dem_interp=dem_interp_obj, freq_band='A',
          txrx_pol=txrx_pol, az_block_dur=az_block_dur
     )
 

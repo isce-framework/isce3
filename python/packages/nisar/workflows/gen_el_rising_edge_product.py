@@ -19,6 +19,8 @@ from nisar.pointing import el_rising_edge_from_raw_ant
 from nisar.log import set_logger
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.products.readers.attitude import load_attitude_from_xml
+from nisar.workflows.gen_el_null_range_product import (
+    copol_or_desired_product_from_raw)
 
 
 def cmd_line_parser():
@@ -52,12 +54,21 @@ def cmd_line_parser():
                      help='DEM raster file in (GDAL-compatible format such as '
                      'GeoTIFF) containing heights w.r.t. WGS-84 ellipsoid. '
                      'Default is no DEM!')
-    prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'], default='A',
-                     dest='freq_band', help='Frequency band such as "A"')
+    prs.add_argument('-f', '--freq', type=str, choices=['A', 'B'],
+                     dest='freq_band',
+                     help='Frequency band such as "A". If set, the products '
+                     'over desired `txrx_pol` or over all co-pols will be '
+                     'processed. Otherwise, either all frequency bands with '
+                     'desired `txrx_pol` or with all co-pols will be '
+                     'processed (default)!')
     prs.add_argument('-p', '--pol', type=str, dest='txrx_pol',
-                     choices=['HH', 'VV', 'HV', 'VH'],
-                     help=('TxRx Polarization such as "HH".Default is the '
-                           'first pol in the band "A"')
+                     choices=['HH', 'VV', 'HV', 'VH', 'RH', 'RV', 'LH', 'LV'],
+                     help=('TxRx Polarization such as "HH". If set, the '
+                           'products either over specified `freq_band` or over'
+                           ' all available bands will be processed. Otherwise,'
+                           ' the first co-pol of the specified `freq_band` or '
+                           'all co-pols over all frequency bands will be '
+                           'processed (default)!')
                      )
     prs.add_argument('--orbit', type=str, dest='orbit_file',
                      help='Filename of an external orbit XML file. The orbit '
@@ -152,71 +163,86 @@ def gen_el_rising_edge_product(args):
         logger.info('Parsing external attitude XML file')
         attitude = load_attitude_from_xml(args.attitude_file)
 
-    # Get txrx_pol for the name of the pointing product if not provided.
-    # This requires checking frequency band.
-    if args.freq_band not in raw.polarizations:
-        raise ValueError('Wrong frequency band! The available bands -> '
-                         f'{list(raw.polarizations)}')
-    if args.txrx_pol is None:
-        txrx_pol = raw.polarizations[args.freq_band][0]
-    else:
-        txrx_pol = args.txrx_pol
+    # logic for frequency band and TxRx polarization choices.
+    # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
+    frq_pol = copol_or_desired_product_from_raw(
+        raw, freq_band=args.freq_band)
+    logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
     # get keyword args for function "el_rising_edge_from_raw_ant"
     kwargs = {key: val for key, val in vars(args).items() if
-              key in ['az_block_dur', 'freq_band', 'beam_num', 'out_path',
+              key in ['az_block_dur', 'beam_num', 'out_path',
                       'plot']}
-    el_ofs, az_dtm, el_fl, sr_fl, lka_fl, msk, cvg, pf_echo, pf_ant, pf_wgt = \
-        el_rising_edge_from_raw_ant(
-            raw, ant, dem_interp=dem_interp, orbit=orbit, attitude=attitude,
-            logger=logger, dbf_pow_norm=not args.no_dbf_norm,
-            apply_weight=not args.no_weight, txrx_pol=txrx_pol, **kwargs)
 
-    # get the first and last utc azimuth time w/o fractional seconds
-    # in "%Y%m%dT%H%M%S" format to be used as part of CSV product filename.
-    dt_utc_first = dt2str(az_dtm[0])
-    dt_utc_last = dt2str(az_dtm[-1])
-    # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
-    # used as part of CSV product filename
-    dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
+    # loop over all desired frequency bands and their respective desired
+    # polarizations
+    for freq_band in frq_pol:
+        for txrx_pol in frq_pol[freq_band]:
+            # EL rising edge process
+            (el_ofs, az_dtm, el_fl, sr_fl, lka_fl, msk, cvg, pf_echo,
+             pf_ant, pf_wgt) = el_rising_edge_from_raw_ant(
+                 raw, ant, dem_interp=dem_interp, orbit=orbit,
+                 attitude=attitude, logger=logger,
+                 dbf_pow_norm=not args.no_dbf_norm,
+                 apply_weight=not args.no_weight, freq_band=freq_band,
+                 txrx_pol=txrx_pol, **kwargs
+                 )
+            # get the first and last utc azimuth time w/o fractional seconds
+            # in "%Y%m%dT%H%M%S" format to be used as part of CSV product
+            # filename.
+            dt_utc_first = dt2str(az_dtm[0])
+            dt_utc_last = dt2str(az_dtm[-1])
+            # get current time w/o fractional seconds in "%Y%m%dT%H%M%S" format
+            # used as part of CSV product filename
+            dt_utc_cur = datetime.now().strftime('%Y%m%dT%H%M%S')
 
-    # naming convention of CSV file and product spec is defined in Doc:
-    # See reference [1]
-    name_csv = (
-        f'{prefix_name_csv}_{sar_band_char}{args.freq_band}_{op_mode}_NULL_'
-        f'{txrx_pol}_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv'
-        )
-    file_csv = os.path.join(args.out_path, name_csv)
-    logger.info(
-        f'Dump EL Rising-edge product in "CSV" format to file ->\n {file_csv}')
-    # dump product into CSV file
-    with open(file_csv, 'wt') as fid_csv:
-        fid_csv.write('UTC Time,Band,Null Number,Range (m),Elevation (deg),'
-                      'Quality Factor\n')
-        # report edge-only product (null=0) w/ quality checking afterwards
-        for nn, roll in enumerate(el_ofs):
-            # Simply report the first (rising edge) EL angles and slant ranges.
-            el_true_deg = np.rad2deg(el_fl[nn, 0])
+            # naming convention of CSV file and product spec is defined in Doc:
+            # See reference [1]
+            name_csv = (
+                f'{prefix_name_csv}_{sar_band_char}{freq_band}_{op_mode}_NULL_'
+                f'{txrx_pol}_{dt_utc_cur}_{dt_utc_first}_{dt_utc_last}.csv'
+                )
+            file_csv = os.path.join(args.out_path, name_csv)
+            logger.info(
+                'Dump EL Rising-edge product in "CSV" format to file ->\n'
+                f' {file_csv}'
+                )
+            # dump product into CSV file
+            with open(file_csv, 'wt') as fid_csv:
+                fid_csv.write('UTC Time,Band,Null Number,Range (m),Elevation'
+                              ' (deg),Quality Factor\n')
+                # report edge-only product (null=0) w/ quality checking
+                # afterwards
+                for nn, roll in enumerate(el_ofs):
+                    # Simply report the first (rising edge) EL angles and
+                    # slant ranges.
+                    el_true_deg = np.rad2deg(el_fl[nn, 0])
 
-            # Quality factor is defined by boolean product of valid range bin
-            # mask and the convergence in rising edge cost function. Thus
-            # the value will be limited to either 0 (bad) or 1 (good).
-            quality_factor = int(msk[nn] & cvg[nn])
+                    # Quality factor is defined by boolean product of valid
+                    # range bin mask and the convergence in rising edge cost
+                    # function. Thus the value will be limited to either
+                    # 0 (bad) or 1 (good).
+                    quality_factor = int(msk[nn] & cvg[nn])
 
-            # Null number for edge product is zero!
-            fid_csv.write('{:s},{:1s},{:d},{:.3f},{:.3f},{:.6f}\n'.format(
-                az_dtm[nn].isoformat(), sar_band_char, 0,
-                sr_fl[nn, 0], el_true_deg, quality_factor))
-
-            # report possible invalid items/Rows
-            # add two for header line + 0-based index to "nn"
-            if not msk[nn]:
-                logger.warning(f'Row # {nn + 2} may have invalid slant range '
-                               'due to TX gap overlap!')
-            if not cvg[nn]:
-                logger.warning(
-                    f'Row # {nn + 2} may have invalid roll/EL offset due to '
-                    'failed convergence in rising edge cost function!')
+                    # Null number for edge product is zero!
+                    fid_csv.write(
+                        '{:s},{:1s},{:d},{:.3f},{:.3f},{:.6f}\n'.format(
+                            az_dtm[nn].isoformat(), sar_band_char, 0,
+                            sr_fl[nn, 0], el_true_deg, quality_factor
+                            )
+                        )
+                    # report possible invalid items/Rows
+                    # add two for header line + 0-based index to "nn"
+                    if not msk[nn]:
+                        logger.warning(
+                            f'Row # {nn + 2} may have invalid slant range '
+                            'due to TX gap overlap!')
+                    if not cvg[nn]:
+                        logger.warning(
+                            f'Row # {nn + 2} may have invalid roll/EL offset'
+                            ' due to failed convergence in rising edge cost '
+                            'function!'
+                            )
 
     # total elapsed time
     logger.info(f'Elapsed time -> {time.time() - tic:.1f} (sec)')

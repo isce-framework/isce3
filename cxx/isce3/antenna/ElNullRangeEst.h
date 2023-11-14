@@ -47,6 +47,19 @@ struct NullConvergenceFlags {
     bool geometry_antenna;
 };
 
+/** EL Null Power Patterns for both echo and antenna as a function of EL angles
+ */
+struct NullPowPatterns {
+    /** 1-D antenna null power pattern (linear) in EL formed from a pair of
+     * adjacent beams */
+    Eigen::ArrayXd ant;
+    /** 1-D echo null power pattern (linear) in EL formed from a pair of
+     * adjacent channels */
+    Eigen::ArrayXd echo;
+    /** Elevation (EL) angles (radians) */
+    Eigen::ArrayXd el;
+};
+
 /**
  * A class for forming Null power patterns in EL direction from both
  * a pair of adjacent El-cut antenna patterns as well as the respective
@@ -66,7 +79,7 @@ public:
 protected:
     using Linspace_t = isce3::core::Linspace<double>;
     using tuple_null = std::tuple<isce3::core::DateTime, NullProduct,
-            NullProduct, NullConvergenceFlags>;
+            NullProduct, NullConvergenceFlags, NullPowPatterns>;
 
 public:
     // constructors
@@ -94,6 +107,9 @@ public:
      * from antenna angle to slant range in the presence of topography/DEM data.
      * @param[in] max_iter_dem (optional) max number of iteration in meeting
      * above DEM height tolerance. Default is 20.
+     * @param[in] polyfit_deg (optional) degree of polyfit used for smoothing
+     * of echo null power pattern and locating its null/min location. Default
+     * is 6. The even orders equal or larger than 2 is required.
      * @exception InvalidArgument
      */
     ElNullRangeEst(double wavelength, double sr_spacing, double chirp_rate,
@@ -103,7 +119,7 @@ public:
             const Frame& ant_frame = {},
             const isce3::core::Ellipsoid& ellips = {},
             double el_res = 8.726646259971648e-06, double abs_tol_dem = 1.0,
-            int max_iter_dem = 20);
+            int max_iter_dem = 20, int polyfit_deg = 6);
 
     // methods
     /**
@@ -145,10 +161,13 @@ public:
      * null product from a pair of EL antenna patterns.
      * @return isce3::antenna::NullConvergenceFlags with members: newton-solver,
      * geometry_echo and geometry_antenna related to ant2rgdop convergence flag.
+     * @return isce3::antenna::NullPowPatterns with members: ant, echo, and el
+     * representing null power patterns (linear) for both antenna and echo as
+     * a function of EL angles (radians).
      * @exception InvalidArgument, RuntimeError
      */
     std::tuple<isce3::core::DateTime, NullProduct, NullProduct,
-            NullConvergenceFlags>
+            NullConvergenceFlags, NullPowPatterns>
     genNullRangeDoppler(const Eigen::Ref<const RowMatrixXcf>& echo_left,
             const Eigen::Ref<const RowMatrixXcf>& echo_right,
             const Eigen::Ref<const Eigen::ArrayXcd>& el_cut_left,
@@ -241,6 +260,7 @@ protected:
     double _el_res_max; // (rad)
     double _abs_tol_dem;
     int _max_iter_dem;
+    int _polyfit_deg;
 
     // weighted complex chirp reference
     std::vector<std::complex<float>> _chirp_ref;
@@ -248,8 +268,6 @@ protected:
     double _az_time_mid;
     isce3::core::DateTime _ref_epoch;
 
-    // degree of polyfit used for echo null power pattern
-    const int _polyfit_deg {6};
     // func tolerance and max iteration for Newton solver
     const double _ftol_newton {1e-5};
     const int _max_iter_newton {25};
