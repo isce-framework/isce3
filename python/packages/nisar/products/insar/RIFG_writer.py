@@ -5,6 +5,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 from .InSAR_L1_writer import L1InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RIFGGroupsPaths
+from .units import Units
 
 
 class RIFGWriter(L1InSARWriter):
@@ -87,7 +88,7 @@ class RIFGWriter(L1InSARWriter):
                         "wrappedInterferogram",
                         np.complex64,
                         f"Interferogram between {pol} layers",
-                        "DN",
+                        Units().dn,
                     ),
                 ]
 

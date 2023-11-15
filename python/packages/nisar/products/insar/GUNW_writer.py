@@ -9,6 +9,7 @@ from .InSAR_products_info import InSARProductsInfo
 from .product_paths import GUNWGroupsPaths
 from .RIFG_writer import RIFGWriter
 from .RUNW_writer import RUNWWriter
+from .units import Units
 
 
 class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
@@ -155,7 +156,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 "Byte layer with flags for various channels"
                 " (e.g. layover/shadow, data quality)"
                 ,
-                "DN",
+                Units().dn,
                 grids_val,
                 xds=xds,
                 yds=yds)
@@ -175,19 +176,19 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 unwrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     "unitless"),
+                     Units().unitless),
                     ("connectedComponents", np.uint32,
                      f"Connected components for {pol} layers",
-                     "DN"),
+                     Units().dn),
                     ("ionospherePhaseScreen", np.float32,
                      "Ionosphere phase screen",
-                     "radians"),
+                     Units().radian),
                     ("ionospherePhaseScreenUncertainty", np.float32,
                      "Uncertainty of the ionosphere phase screen",
                      "radians"),
                     ("unwrappedPhase", np.float32,
                     f"Unwrapped interferogram between {pol} layers",
-                     "radians"),
+                     Units().radian),
                 ]
 
                 for ds_param in unwrapped_ds_params:
@@ -218,10 +219,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 wrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     "unitless"),
+                     Units().unitless),
                     ("wrappedInterferogram", np.complex64,
                      f"Complex wrapped interferogram between {pol} layers",
-                     "DN"),
+                     Units().dn),
                 ]
 
                 for ds_param in wrapped_ds_params:
@@ -255,13 +256,13 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 pixel_offsets_ds_params = [
                     ("alongTrackOffset", np.float32,
                      "Along track offset",
-                     "meters"),
+                     Units().meter),
                     ("correlationSurfacePeak", np.float32,
                      "Normalized cross-correlation surface peak",
-                     "unitless"),
+                     Units().unitless),
                     ("slantRangeOffset", np.float32,
                      "Slant range offset",
-                     "meters"),
+                     Units().meter),
                 ]
 
                 for ds_param in pixel_offsets_ds_params:

@@ -14,6 +14,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .product_paths import CommonPaths
+from .units import Units
 
 
 class InSARBaseWriter(h5py.File):
@@ -247,7 +248,7 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 reference_terrain_height_description,
                 {
-                    "units": "meters"
+                    "units": Units().meter
                 },
             )
             add_dataset_and_attrs(dst_param_group, ds_param)
@@ -507,7 +508,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(window_azimuth),
                 "Along-track cross-correlation window size in pixels",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -515,7 +516,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(window_range),
                 "Slant range cross-correlation window size in pixels",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -523,7 +524,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(2 * half_search_azimuth),
                 "Along-track cross-correlation search window size in pixels",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -531,7 +532,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(2 * half_search_range),
                 "Slant range cross-correlation search window size in pixels",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -539,7 +540,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(skip_azimuth),
                 "Along-track cross-correlation skip window size in pixels",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -547,7 +548,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(skip_range),
                 "Slant range cross-correlation skip window size in pixels",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -555,7 +556,7 @@ class InSARBaseWriter(h5py.File):
                 np.uint32(oversampling_factor),
                 "Oversampling factor of the cross-correlation surface",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -672,7 +673,7 @@ class InSARBaseWriter(h5py.File):
         Add the identification group to the product
         """
         radar_band_name = self._get_band_name()
-        primary_exec_cfg =  self.cfg["primary_executable"]
+        primary_exec_cfg = self.cfg["primary_executable"]
 
         processing_center = primary_exec_cfg.get("processing_center")
         processing_type = primary_exec_cfg.get("processing_type")
@@ -705,7 +706,7 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 "Absolute orbit number",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -728,7 +729,7 @@ class InSARBaseWriter(h5py.File):
                     " mode (1-2) or DBFed science (0): 0, 1, or 2"
                 ),
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -736,7 +737,7 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 "Frame number",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -744,7 +745,7 @@ class InSARBaseWriter(h5py.File):
                 "None",
                 "Track number",
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(

@@ -7,6 +7,7 @@ from .InSAR_base_writer import InSARBaseWriter
 from .InSAR_L2_writer import L2InSARWriter
 from .product_paths import GOFFGroupsPaths
 from .ROFF_writer import ROFFWriter
+from .units import Units
 
 
 class GOFFWriter(ROFFWriter, L2InSARWriter):
@@ -111,25 +112,25 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                     pixeloffsets_ds_params = [
                         ("alongTrackOffset",
                          "Raw (unculled, unfiltered) along-track pixel offsets",
-                         "meters"),
+                         Units().meter),
                         ("slantRangeOffset",
                          "Raw (unculled, unfiltered) slant range pixel offsets",
-                         "meters"),
+                         Units().meter),
                         ("alongTrackOffsetVariance",
                          "Along-track pixel offsets variance",
-                         "unitless"),
+                         Units().unitless),
                         ("slantRangeOffsetVariance",
                          "Slant range pixel offsets variance",
-                         "unitless"),
+                         Units().unitless),
                         ("crossOffsetVariance",
                          "Off-diagonal term of the pixel offsets covariance matrix",
-                         "unitless"),
+                         Units().unitless),
                         ("correlationSurfacePeak",
                          "Normalized surface correlation peak",
-                         "unitless"),
+                         Units().unitless),
                         ("snr",
                          "Pixel offsets signal-to-noise ratio",
-                         "unitless"),
+                         Units().unitless),
                     ]
 
                     for ds_params in pixeloffsets_ds_params:

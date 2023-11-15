@@ -7,6 +7,7 @@ from .InSAR_base_writer import InSARBaseWriter
 from .InSAR_L1_writer import L1InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import ROFFGroupsPaths
+from .units import Units
 
 
 class ROFFWriter(L1InSARWriter):
@@ -147,7 +148,7 @@ class ROFFWriter(L1InSARWriter):
                     " pixels"
                     ,
                     {
-                        "units": "unitless",
+                        "units": Units().unitless,
                     },
                 ),
                 DatasetParams(
@@ -155,7 +156,7 @@ class ROFFWriter(L1InSARWriter):
                     np.uint32(az_start),
                     "Reference RSLC start pixel in along-track",
                     {
-                        "units": "unitless",
+                        "units": Units().unitless,
                     },
                 ),
                 DatasetParams(
@@ -165,7 +166,7 @@ class ROFFWriter(L1InSARWriter):
                     " pixels"
                     ,
                     {
-                        "units": "unitless",
+                        "units": Units().unitless,
                     },
                 ),
                 DatasetParams(
@@ -173,7 +174,7 @@ class ROFFWriter(L1InSARWriter):
                     np.uint32(rg_start),
                     "Reference RSLC start pixel in slant range",
                     {
-                        "units": "unitless",
+                        "units": Units().unitless,
                     },
                 ),
                 DatasetParams(
@@ -182,7 +183,7 @@ class ROFFWriter(L1InSARWriter):
                     "Oversampling factor of the cross-correlation surface"
                     ,
                     {
-                        "units": "unitless",
+                        "units": Units().unitless,
                     },
                 ),
                 DatasetParams(
@@ -193,7 +194,7 @@ class ROFFWriter(L1InSARWriter):
                     " computation"
                     ,
                     {
-                        "units": "unitless",
+                        "units": Units().unitless,
                     },
                 ),
             ]
@@ -234,7 +235,7 @@ class ROFFWriter(L1InSARWriter):
                             " pixels"
                             ,
                             {
-                                "units": "unitless",
+                                "units": Units().unitless,
                             },
                         ),
                         DatasetParams(
@@ -244,7 +245,7 @@ class ROFFWriter(L1InSARWriter):
                             " pixels"
                             ,
                             {
-                                "units": "unitless",
+                                "units": Units().unitless,
                             },
                         ),
                         DatasetParams(
@@ -254,7 +255,7 @@ class ROFFWriter(L1InSARWriter):
                             " size in pixels"
                             ,
                             {
-                                "units": "unitless",
+                                "units": Units().unitless,
                             },
                         ),
                         DatasetParams(
@@ -264,7 +265,7 @@ class ROFFWriter(L1InSARWriter):
                             " size in pixels"
                             ,
                             {
-                                "units": "unitless",
+                                "units": Units().unitless,
                             },
                         ),
                     ]
@@ -296,37 +297,37 @@ class ROFFWriter(L1InSARWriter):
                 (
                     "alongTrackOffset",
                     "Raw (unculled, unfiltered) along-track pixel offsets",
-                    "meters",
+                    Units().meter,
                 ),
                 (
                     "alongTrackOffsetVariance",
                     "Along-track pixel offsets variance",
-                    "unitless",
+                    Units().unitless,
                 ),
                 (
                     "slantRangeOffsetVariance",
                     "Slant range pixel offsets variance",
-                    "unitless",
+                    Units().unitless,
                 ),
                 (
                     "correlationSurfacePeak",
                     "Normalized correlation surface peak",
-                    "unitless",
+                    Units().unitless,
                 ),
                 (
                     "crossOffsetVariance",
                     "Off-diagonal term of the pixel offsets covariance matrix",
-                    "unitless",
+                    Units().unitless,
                 ),
                 (
                     "slantRangeOffset",
                     "Raw (unculled, unfiltered) slant range pixel offsets",
-                    "meters",
+                    Units().meter,
                 ),
                 (
                     "snr",
                     "Pixel offsets signal-to-noise ratio",
-                    "unitless",
+                    Units().unitless,
                 ),
             ]
 
@@ -384,7 +385,7 @@ class ROFFWriter(L1InSARWriter):
                         "Nominal along-track spacing in meters between"
                         " consecutive lines near mid-swath of the product images"
                     ),
-                    {"units": "meters"},
+                    {"units": Units().meter},
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
@@ -394,7 +395,7 @@ class ROFFWriter(L1InSARWriter):
                         "Nominal ground range spacing in meters between"
                         " consecutive pixels near mid-swath of the product images"
                     ),
-                    {"units": "meters"},
+                    {"units": Units().meter},
                 ),
             ]
             for ds_param in scene_center_params:

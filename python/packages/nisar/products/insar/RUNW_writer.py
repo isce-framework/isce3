@@ -5,6 +5,7 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_L1_writer import L1InSARWriter
 from .InSAR_products_info import InSARProductsInfo
 from .product_paths import RUNWGroupsPaths
+from .units import Units
 
 
 class RUNWWriter(L1InSARWriter):
@@ -71,7 +72,7 @@ class RUNWWriter(L1InSARWriter):
                 np.float32(high_bandwidth),
                 "Slant range bandwidth of the high sub-band image",
                 {
-                    "units": "Hz",
+                    "units": Units().hertz,
                 },
             ),
             DatasetParams(
@@ -79,7 +80,7 @@ class RUNWWriter(L1InSARWriter):
                 np.float32(low_bandwidth),
                 "Slant range bandwidth of the low sub-band image",
                 {
-                    "units": "Hz",
+                    "units": Units().hertz,
                 },
             ),
         ]
@@ -328,25 +329,25 @@ class RUNWWriter(L1InSARWriter):
                         "connectedComponents",
                         np.uint32,
                         f"Connected components for {pol} layers",
-                        "DN",
+                        Units().dn,
                     ),
                     (
                         "ionospherePhaseScreen",
                         np.float32,
                         "Ionosphere phase screen",
-                        "radians",
+                        Units().radian,
                     ),
                     (
                         "ionospherePhaseScreenUncertainty",
                         np.float32,
                         "Uncertainty of the ionosphere phase screen",
-                        "radians",
+                        Units().radian,
                     ),
                     (
                         "unwrappedPhase",
                         np.float32,
                         f"Unwrapped interferogram between {pol} layers",
-                        "radians",
+                        Units().radian,
                     ),
                 ]
 

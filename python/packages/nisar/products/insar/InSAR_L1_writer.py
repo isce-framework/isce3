@@ -8,6 +8,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .product_paths import L1GroupsPaths
+from .units import Units
 
 
 class L1InSARWriter(InSARBaseWriter):
@@ -172,7 +173,7 @@ class L1InSARWriter(InSARBaseWriter):
                     " form the wrapped interferogram"
                 ),
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
             DatasetParams(
@@ -183,7 +184,7 @@ class L1InSARWriter(InSARBaseWriter):
                     " form the wrapped interferogram"
                 ),
                 {
-                    "units": "unitless",
+                    "units": Units().unitless,
                 },
             ),
         ]
@@ -316,17 +317,17 @@ class L1InSARWriter(InSARBaseWriter):
                     (
                         "alongTrackOffset",
                         "Along-track offset",
-                        "meters",
+                        Units().meter,
                     ),
                     (
                         "correlationSurfacePeak",
                         "Normalized correlation surface peak",
-                        "unitless",
+                        Units().unitless,
                     ),
                     (
                         "slantRangeOffset",
                         "Slant range offset",
-                        "meters",
+                        Units().meter,
                     ),
                 ]
 
@@ -382,7 +383,7 @@ class L1InSARWriter(InSARBaseWriter):
                     "slantRange",
                     offset_slant_range,
                     "Slant range vector",
-                    {'units': 'meters'},
+                    {'units': Units().meter},
                 ),
                 DatasetParams(
                     "zeroDopplerTime",
@@ -394,13 +395,13 @@ class L1InSARWriter(InSARBaseWriter):
                     "zeroDopplerTimeSpacing",
                     offset_zero_doppler_time_spacing,
                     "Along-track spacing of the offset grid",
-                    {'units': 'seconds'},
+                    {'units': Units().second},
                 ),
                 DatasetParams(
                     "slantRangeSpacing",
                     offset_slant_range_spacing,
                     "Slant range spacing of the offset grid",
-                    {'units': 'meters'},
+                    {'units': Units().meter},
                 ),
             ]
             offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
@@ -440,7 +441,7 @@ class L1InSARWriter(InSARBaseWriter):
                         "Nominal along-track spacing in meters "
                         "between consecutive lines near mid-swath of the product images"
                     ),
-                    {"units": "meters"},
+                    {"units": Units().meter},
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
@@ -450,7 +451,7 @@ class L1InSARWriter(InSARBaseWriter):
                         "Nominal ground range spacing in meters between "
                         "consecutive pixels near mid-swath of the product images"
                     ),
-                    {"units": "meters"},
+                    {"units": Units().meter},
                 ),
             ]
             for ds_param in scene_center_params:
@@ -493,7 +494,7 @@ class L1InSARWriter(InSARBaseWriter):
                     "slantRange",
                     igram_slant_range,
                     "Slant range vector",
-                    {'units': 'meters'},
+                    {'units': Units().meter},
                 ),
                 DatasetParams(
                     "zeroDopplerTime",
@@ -509,7 +510,7 @@ class L1InSARWriter(InSARBaseWriter):
                         " layers. This is same as the spacing between"
                         " consecutive entries in the zeroDopplerTime array"
                     ),
-                    {'units': 'seconds'},
+                    {'units': Units().second},
                 ),
                 DatasetParams(
                     "slantRangeSpacing",
@@ -518,7 +519,7 @@ class L1InSARWriter(InSARBaseWriter):
                         "Slant range spacing of grid. Same as difference"
                         " between consecutive samples in slantRange array"
                     ),
-                    {'units': 'meters'},
+                    {'units': Units().meter},
                 ),
             ]
             igram_group_name = f"{swaths_freq_group_name}/interferogram"
@@ -539,7 +540,7 @@ class L1InSARWriter(InSARBaseWriter):
                         "coherenceMagnitude",
                         np.float32,
                         f"Coherence magnitude between {pol} layers",
-                        "unitless",
+                        Units().unitless,
                     ),
                 ]
 
