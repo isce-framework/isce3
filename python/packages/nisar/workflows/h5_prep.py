@@ -1017,8 +1017,8 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         x_coord_units = "degree_east"
         y_coord_units = "degree_north"
     else:
-        x_coord_units = "meter"
-        y_coord_units = "meter"
+        x_coord_units = "meters"
+        y_coord_units = "meters"
 
     coordinate_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'coordinateX', np.float64, cube_shape,
@@ -1134,18 +1134,18 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
 
     # Slant range
-    descr = "Slant range dimension corresponding to calibration records"
+    descr = "Slant range values corresponding to the geolocation grid"
     rg_dataset_name = os.path.join(root_ds, 'slantRange')
     if rg_dataset_name in hdf5_obj:
         del hdf5_obj[rg_dataset_name]
     rg_dataset = hdf5_obj.create_dataset(rg_dataset_name, data=rg_vect)
     rg_dataset.attrs["description"] = np.string_(descr)
     rg_dataset.attrs["units"] = np.string_(rg_coord_units)
-    rg_dataset.attrs["long_name"] = np.string_("slant-range")
+    rg_dataset.attrs["long_name"] = np.string_("slant range")
     coordinates_list.append(rg_dataset)
 
     # Zero-doppler time
-    descr = "Zero doppler time dimension corresponding to calibration records"
+    descr = "Zero Doppler time values corresponding to the geolocation grid"
     az_dataset_name = os.path.join(root_ds, 'zeroDopplerTime')
     if az_dataset_name in hdf5_obj:
         del hdf5_obj[az_dataset_name]

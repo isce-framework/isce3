@@ -151,7 +151,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 unwrapped_group,
                 "mask",
                 unwrapped_shape,
-                np.byte,
+                np.uint8,
                 "Byte layer with flags for various channels"
                 " (e.g. layover/shadow, data quality)"
                 ,

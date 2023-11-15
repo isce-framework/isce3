@@ -151,28 +151,28 @@ class L2InSARWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "azimuthIonosphericCorrectionApplied",
-                np.bool_(iono),
+                np.string_(str(iono)),
                 "Flag to indicate if the azimuth ionospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
             DatasetParams(
                 "rangeIonosphericCorrectionApplied",
-                np.bool_(iono),
+                np.string_(str(iono)),
                 "Flag to indicate if the range ionospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
             DatasetParams(
                 "wetTroposphericCorrectionApplied",
-                np.bool_(wet_tropo),
+                np.string_(str(wet_tropo)),
                 "Flag to indicate if the wet tropospheric correction is"
                 " applied to improve geolocation"
                 ,
             ),
             DatasetParams(
                 "hydrostaticTroposphericCorrectionApplied",
-                np.bool_(dry_tropo),
+                np.string_(str(dry_tropo)),
                 "Flag to indicate if the hydrostatic tropospheric correction is"
                 " applied to improve geolocation"
                 ,
@@ -222,7 +222,7 @@ class L2InSARWriter(L1InSARWriter):
 
             list_of_pols = DatasetParams(
                 "listOfPolarizations",
-                pol_list,
+                np.string_(pol_list),
                 "List of processed polarization layers with"
                 f" frequency{freq}"
                 ,

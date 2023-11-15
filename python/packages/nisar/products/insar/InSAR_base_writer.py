@@ -207,9 +207,9 @@ class InSARBaseWriter(h5py.File):
         else:
             rfi_mitigation = None
 
-        rfi_mitigation_flag = False
+        rfi_mitigation_flag = np.string_(str(False))
         if (rfi_mitigation is not None) and (rfi_mitigation != ""):
-            rfi_mitigation_flag = True
+            rfi_mitigation_flag = np.string_(str(True))
 
         # get the mixed model and update the description
         mixed_mode = self._get_mixed_mode()
@@ -219,7 +219,7 @@ class InSARBaseWriter(h5py.File):
         ds_params = [
             DatasetParams(
                 "rfiCorrectionApplied",
-                np.bool_(rfi_mitigation_flag),
+                np.string_(str(rfi_mitigation_flag)),
                 (
                     "Flag to indicate if RFI correction has been applied"
                     f" to {rslc_name} RSLC"
@@ -560,7 +560,7 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isOffsetsBlendingApplied",
-                np.bool_(merge_gross_offset),
+                np.string_(str(merge_gross_offset)),
                 (
                     "Flag to indicate if pixel offsets are the results of"
                     " blending multi-resolution layers of pixel offsets"
@@ -587,7 +587,7 @@ class InSARBaseWriter(h5py.File):
 
         runconfig_contents = DatasetParams(
             "runConfigurationContents",
-            str(self.cfg),
+            np.string_(self.cfg),
             (
                 "Contents of the run configuration file with parameters"
                 " used for processing"
@@ -889,8 +889,9 @@ class InSARBaseWriter(h5py.File):
             ),
             DatasetParams(
                 "isGeocoded",
-                np.bool_(self.product_info.isGeocoded),
-                'Flag to indicate if the product data is in the radar geometry ("False") or in the map geometry ("True")',
+                np.string_(str(self.product_info.isGeocoded)),
+                'Flag to indicate if the product data is in the radar geometry ("False") '
+                'or in the map geometry ("True")',
             ),
         ]
         for ds_param in id_ds_names_to_be_created:
@@ -1017,7 +1018,7 @@ class InSARBaseWriter(h5py.File):
 
         return DatasetParams(
             "isMixedMode",
-            np.bool_(mixed_mode),
+            np.string_(str(mixed_mode)),
             (
                 '"True" if this product is generated from reference and'
                 ' secondary RSLCs with different range bandwidths, "False"'
@@ -1118,7 +1119,7 @@ class InSARBaseWriter(h5py.File):
 
         if fill_value is not None:
             ds.attrs["_FillValue"] = fill_value
-        # create fill value if not speficied
+        # create fill value if not specified
         elif np.issubdtype(dtype, np.floating):
             ds.attrs["_FillValue"] = np.nan
         elif np.issubdtype(dtype, np.integer):
