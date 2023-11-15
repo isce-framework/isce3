@@ -893,7 +893,9 @@ def gpu_geocode_rasters(geocoded_dataset_flags,
                         scratch_path='',
                         compute_stats=True,
                         input_product_type=InputProduct.RUNW,
-                        iono_sideband=False):
+                        iono_sideband=False,
+                        az_correction=isce3.core.LUT2d(),
+                        srg_correction=isce3.core.LUT2d()):
     '''
     Geocode datasets with common geogrid and radar geometry.
 
@@ -937,6 +939,10 @@ def gpu_geocode_rasters(geocoded_dataset_flags,
         Enum describing type of product to geocoded.
     iono_sideband: bool
         True if iono rasters are to be geocoded.
+    az_correction: isce3.core.LUT2d()
+        Low-res LUT containing azimuth timing correction for geocoding
+    srg_correction: isce3.core.LUT2d()
+        Low-res LUT containing slant range timing correction for geocoding
     '''
     # Get:
     # 1. List of output geocoded rasters asisce3.io.Rasters objects
@@ -977,7 +983,9 @@ def gpu_geocode_rasters(geocoded_dataset_flags,
                                         interpolation_methods,
                                         raster_types,
                                         invalid_values,
-                                        dem_raster)
+                                        dem_raster,
+                                        az_time_correction=az_correction,
+                                        srange_correction=srg_correction)
 
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
@@ -1083,6 +1091,10 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
         # Based on runconfig iterate over frequencies and their polarizations
         for freq, pol_list, offset_pol_list in get_cfg_freq_pols(cfg):
 
+            # Get azimuth and slant range LUT corrections
+            az_correction, srg_correction = \
+                get_az_srg_corrections(cfg, slc, freq, orbit
+                                       )
             geogrid = geogrids[freq]
 
             # Create frequency based radar grid
@@ -1116,7 +1128,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     interpolation_methods, invalid_values,
                                     freq, pol_list,
                                     geogrid, rdr_geometry, dem_raster,
-                                    lines_per_block, input_hdf5, dst_h5)
+                                    lines_per_block, input_hdf5, dst_h5,
+                                    az_correction=az_correction,
+                                    srg_correction=srg_correction)
 
                 if iono_enabled:
                     desired_geo_dataset_names = ['ionosphere_phase_screen',
@@ -1176,7 +1190,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                             iono_freq, pol_list_iono,
                                             geogrid, rdr_geometry, dem_raster,
                                             lines_per_block, input_hdf5_iono, dst_h5,
-                                            iono_sideband=iono_sideband_bool)
+                                            iono_sideband=iono_sideband_bool,
+                                            az_correction=az_correction,
+                                            srg_correction=srg_correction)
 
                 desired_geo_dataset_names = [
                    'along_track_offset', 'slant_range_offset',
@@ -1203,7 +1219,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     interpolation_methods, invalid_values,
                                     freq, offset_pol_list,
                                     geogrid, rdr_geometry, dem_raster,
-                                    lines_per_block, input_hdf5, dst_h5)
+                                    lines_per_block, input_hdf5, dst_h5,
+                                    az_correction=az_correction,
+                                    srg_correction=srg_correction)
 
                 # Geocode layover shadow mask
                 desired_geo_dataset_names = ["mask"]
@@ -1231,7 +1249,8 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     geogrid, rdr_geometry, dem_raster,
                                     lines_per_block, input_hdf5, dst_h5,
                                     scratch_path=scratch_path,
-                                    compute_stats=False)
+                                    compute_stats=False, az_correction=az_correction,
+                                    srg_correction=srg_correction)
 
                 # add water mask to GUNW product
                 add_water_to_mask(cfg, freq, geogrid, dst_h5)
@@ -1278,7 +1297,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     geogrid, rdr_geometry, dem_raster,
                                     lines_per_block, input_hdf5, dst_h5,
                                     offset_layers=layer_geocode_params,
-                                    input_product_type=InputProduct.ROFF)
+                                    input_product_type=InputProduct.ROFF,
+                                    az_correction=az_correction,
+                                    srg_correction=srg_correction)
             else:
                 # Datasets from RIFG to be geocoded
                 desired_geo_dataset_names = ['coherence_magnitude',
@@ -1302,7 +1323,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     freq, pol_list,
                                     geogrid, rdr_geometry, dem_raster,
                                     lines_per_block, input_hdf5, dst_h5,
-                                    input_product_type = InputProduct.RIFG)
+                                    input_product_type=InputProduct.RIFG,
+                                    az_correction=az_correction,
+                                    srg_correction=srg_correction)
 
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
