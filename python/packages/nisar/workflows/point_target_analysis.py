@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Analyze point targets in an RSLC HDF5 file
 """
