@@ -49,6 +49,35 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
 
+    def add_radar_grid_cubes(self):
+        """
+        Add the radar grid cubes
+        """
+        L2InSARWriter.add_radar_grid_cubes(self)
+
+        ## Add the radar grid cubes of solid eath tide phase for along-track and along-slant range.
+        proc_cfg = self.cfg["processing"]
+        radar_grid_cubes_geogrid = proc_cfg["radar_grid_cubes"]["geogrid"]
+        radar_grid_cubes_heights = proc_cfg["radar_grid_cubes"]["heights"]
+
+        radar_grid = self[self.group_paths.RadarGridPath]
+        descrs = ["Solid Earth tides phase along slant range direction",
+                  'Solid Earth tides phase in along-track direction']
+        product_names = ['slantRangeSolidEarthTidesPhase',
+                         'alongTrackSolidEarthTidesPhase']
+
+        cube_shape = [len(radar_grid_cubes_heights),
+                      radar_grid_cubes_geogrid.length,
+                      radar_grid_cubes_geogrid.width]
+
+        for product_name, descr in zip(product_names,descrs):
+            if product_name not in radar_grid:
+                ds = radar_grid.require_dataset(name=product_name,
+                                                shape=cube_shape,
+                                                dtype=np.float64)
+                ds.attrs['description'] = np.string_(descr)
+                ds.attrs['units'] = np.string_("radians")
+
     def add_algorithms_to_procinfo_group(self):
         """
         Add the algorithms to processingInformation group
