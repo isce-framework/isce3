@@ -32,7 +32,7 @@ isce3.lib.autogen := \
 
 # use c++17 for both host and device code
 isce3.lib.c++.flags += $($(compiler.c++).std.c++17)
-isce3.lib.cuda.flags += $($(compiler.cuda).std.c++17) --expt-relaxed-constexpr
+isce3.lib.cuda.flags += $($(compiler.cuda).std.c++17) --expt-relaxed-constexpr --extended-lambda
 
 
 # end of file

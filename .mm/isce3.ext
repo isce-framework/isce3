@@ -11,6 +11,8 @@ isce3.ext.extern := gdal hdf5 mpi eigen fftw pyre pybind11 python
 
 # if there is cuda
 ifdef cuda.dir
+  # mark
+  isce3.ext.lib.defines += ISCE3_CUDA
   # add the package to the external dependencies
   isce3.ext.extern += cuda
 else
