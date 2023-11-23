@@ -26,17 +26,15 @@ using isce3::geometry::detail::Rdr2GeoParams;
 
 namespace py = pybind11;
 
-void addbinding(py::class_<Rdr2GeoParams> &pyRdr2GeoParams)
+void addbinding(py::class_<Rdr2GeoParams>& pyRdr2GeoParams)
 {
     pyRdr2GeoParams
-        .def(py::init<const double, const int, const double>(),
-            py::arg("threshold") = 0.05,
-            py::arg("maxiter") = 25,
-            py::arg("extraiter") = 10)
-        .def_readwrite("threshold", &Rdr2GeoParams::threshold)
-        .def_readwrite("maxiter", &Rdr2GeoParams::maxiter)
-        .def_readwrite("extraiter", &Rdr2GeoParams::extraiter)
-        ;
+            .def(py::init<const double, const int, const int>(),
+                    py::arg("threshold") = 0.05, py::arg("maxiter") = 25,
+                    py::arg("extraiter") = 10)
+            .def_readwrite("threshold", &Rdr2GeoParams::threshold)
+            .def_readwrite("maxiter", &Rdr2GeoParams::maxiter)
+            .def_readwrite("extraiter", &Rdr2GeoParams::extraiter);
 }
 
 static Rdr2GeoParams handle_r2g_kwargs(py::kwargs kw)
@@ -60,24 +58,24 @@ void addbinding_rdr2geo(py::module& m)
     // exceptions on error.
     Rdr2GeoParams defaults;
     m.def(
-            "rdr2geo_cone", // name matches old Cython version
-            [](const Vec3& radarXYZ, const Vec3& axis, double angle,
-               double range, const DEMInterpolator& dem, py::object pySide,
-               py::kwargs r2g_kw) {
-                // duck type side
-                auto side = duck_look_side(pySide);
-                auto opt = handle_r2g_kwargs(r2g_kw);
-                Vec3 targetXYZ;
-                int converged =
-                        rdr2geo(radarXYZ, axis, angle, range, dem, targetXYZ,
-                                side, opt.threshold, opt.maxiter, opt.extraiter);
-                if (!converged)
-                    throw std::runtime_error("rdr2geo failed to converge");
-                return targetXYZ;
-            },
-            py::arg("radar_xyz"), py::arg("axis"), py::arg("angle"),
-            py::arg("range"), py::arg("dem"), py::arg("side"),
-            R"(
+             "rdr2geo_cone", // name matches old Cython version
+             [](const Vec3& radarXYZ, const Vec3& axis, double angle,
+                     double range, const DEMInterpolator& dem,
+                     py::object pySide, py::kwargs r2g_kw) {
+                 // duck type side
+                 auto side = duck_look_side(pySide);
+                 auto opt = handle_r2g_kwargs(r2g_kw);
+                 Vec3 targetXYZ;
+                 int converged = rdr2geo(radarXYZ, axis, angle, range, dem,
+                         targetXYZ, side, opt.threshold, opt.maxiter,
+                         opt.extraiter);
+                 if (!converged)
+                     throw std::runtime_error("rdr2geo failed to converge");
+                 return targetXYZ;
+             },
+             py::arg("radar_xyz"), py::arg("axis"), py::arg("angle"),
+             py::arg("range"), py::arg("dem"), py::arg("side"),
+             R"(
     Solve for target position given radar position, range, and cone angle.
     The cone is described by a generating axis and the complement of the angle
     to that axis (e.g., angle=0 means a plane perpendicular to the axis).  The
@@ -105,40 +103,40 @@ void addbinding_rdr2geo(py::module& m)
     Returns ECEF XYZ of target in meters.
     )")
 
-    // interface close to old isce3.geometry.rdr2geo_point
-    .def(
-            "rdr2geo",
-            [](double aztime, double range,
-               const Orbit& orbit, py::object pySide,
-               double doppler, double wavelength,
-               const DEMInterpolator& dem, const Ellipsoid& ellipsoid,
-               py::kwargs r2g_kw)
-            {
-                if ((std::abs(doppler) > 0.0) && (wavelength <= 0.0)) {
-                    throw std::invalid_argument(
-                        "need valid wavelength when doppler is nonzero, "
-                        "got wavelength=" + std::to_string(doppler));
-                }
-                // duck type side
-                auto side = duck_look_side(pySide);
-                auto opt = handle_r2g_kwargs(r2g_kw);
-                auto midx = dem.midX();
-                // FIXME figure out dem.midLonLat() segfaults
-                Vec3 targetLLH{dem.midX(), dem.midY(), dem.refHeight()};
-                int converged =
-                    rdr2geo(aztime, range, doppler, orbit, ellipsoid, dem,
-                        targetLLH, wavelength, side, opt.threshold, opt.maxiter,
-                        opt.extraiter);
-                if (!converged)
-                    throw std::runtime_error("rdr2geo failed to converge");
-                return targetLLH;
-            },
-            py::arg("aztime"), py::arg("range"),
-            py::arg("orbit"), py::arg("side"),
-            py::arg("doppler") = 0.0,
-            py::arg("wavelength") = 0.0,
-            py::arg("dem") = DEMInterpolator(),
-            py::arg("ellipsoid") = Ellipsoid(), R"(
+            // interface close to old isce3.geometry.rdr2geo_point
+            .def(
+                    "rdr2geo",
+                    [](double aztime, double range, const Orbit& orbit,
+                            py::object pySide, double doppler,
+                            double wavelength, const DEMInterpolator& dem,
+                            const Ellipsoid& ellipsoid, py::kwargs r2g_kw) {
+                        if ((std::abs(doppler) > 0.0) && (wavelength <= 0.0)) {
+                            throw std::invalid_argument(
+                                    "need valid wavelength when doppler is "
+                                    "nonzero, "
+                                    "got wavelength=" +
+                                    std::to_string(doppler));
+                        }
+                        // duck type side
+                        auto side = duck_look_side(pySide);
+                        auto opt = handle_r2g_kwargs(r2g_kw);
+                        auto midx = dem.midX();
+                        // FIXME figure out dem.midLonLat() segfaults
+                        Vec3 targetLLH {
+                                dem.midX(), dem.midY(), dem.refHeight()};
+                        int converged = rdr2geo(aztime, range, doppler, orbit,
+                                ellipsoid, dem, targetLLH, wavelength, side,
+                                opt.threshold, opt.maxiter, opt.extraiter);
+                        if (!converged)
+                            throw std::runtime_error(
+                                    "rdr2geo failed to converge");
+                        return targetLLH;
+                    },
+                    py::arg("aztime"), py::arg("range"), py::arg("orbit"),
+                    py::arg("side"), py::arg("doppler") = 0.0,
+                    py::arg("wavelength") = 0.0,
+                    py::arg("dem") = DEMInterpolator(),
+                    py::arg("ellipsoid") = Ellipsoid(), R"(
     Radar geometry coordinates to map coordinates transformer
 
     Arguments:
@@ -161,7 +159,7 @@ void addbinding_rdr2geo(py::module& m)
         )");
 }
 
-void addbinding(py::class_<Topo> & pyRdr2Geo)
+void addbinding(py::class_<Topo>& pyRdr2Geo)
 {
     pyRdr2Geo
             .def(py::init([](const isce3::product::RadarGridParameters&
@@ -198,21 +196,14 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                             &Topo::topo),
                     py::arg("dem_raster"), py::arg("outdir"))
             .def("topo",
-                    py::overload_cast<isce3::io::Raster&,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*,
-                                      isce3::io::Raster*>
-                                      (&Topo::topo),
-                    py::arg("dem_raster"),
-                    py::arg("x_raster") = nullptr,
+                    py::overload_cast<isce3::io::Raster&, isce3::io::Raster*,
+                            isce3::io::Raster*, isce3::io::Raster*,
+                            isce3::io::Raster*, isce3::io::Raster*,
+                            isce3::io::Raster*, isce3::io::Raster*,
+                            isce3::io::Raster*, isce3::io::Raster*,
+                            isce3::io::Raster*, isce3::io::Raster*>(
+                            &Topo::topo),
+                    py::arg("dem_raster"), py::arg("x_raster") = nullptr,
                     py::arg("y_raster") = nullptr,
                     py::arg("height_raster") = nullptr,
                     py::arg("incidence_angle_raster") = nullptr,
@@ -281,6 +272,5 @@ void addbinding(py::class_<Topo> & pyRdr2Geo)
                     py::overload_cast<bool>(&Topo::computeMask))
             .def_property("lines_per_block",
                     py::overload_cast<>(&Topo::linesPerBlock, py::const_),
-                    py::overload_cast<size_t>(&Topo::linesPerBlock))
-            ;
+                    py::overload_cast<size_t>(&Topo::linesPerBlock));
 }
