@@ -36,7 +36,10 @@ def _get_accumulated_azimuth_corrections(cfg, slc, frequency, orbit):
     '''
     # Compute TEC slant range correction if TEC file is provided
     tec_file = cfg["dynamic_ancillary_file_group"]['tec_file']
-    if tec_file is not None:
+    if tec_file is None:
+        return isce3.core.LUT2d()
+
+    else:
         # Get SLC object for parameters inside necessary for TEC computations
         input_hdf5 = cfg['input_file_group']['input_file_path']
         slc = SLC(hdf5file=input_hdf5)
@@ -84,7 +87,10 @@ def _get_accumulated_srange_corrections(cfg, slc, frequency, orbit):
 
     # Compute TEC slant range correction if TEC file is provided
     tec_file = cfg["dynamic_ancillary_file_group"]['tec_file']
-    if tec_file is not None:
+    if tec_file is None:
+        return isce3.core.LUT2d()
+
+    else:
         center_freq = slc.getSwathMetadata(frequency).processed_center_frequency
         doppler = isce3.core.LUT2d()
         radar_grid = slc.getRadarGrid(frequency)
