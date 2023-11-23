@@ -75,16 +75,14 @@ def _get_suborbital_tec(tec_json: dict,
                         nr_fr: str,
                         tec_time_mask: list):
     '''
-    Get the suborbital TEC
+    Get the suborbital TEC from IMAGEN TEC product parsed as a dictionary
 
     Parameters
     ----------
     tec_json: dict
-        TEC JSON as a dict. Keys are TEC parameters and values are the values
-        of said parameter.
+        IMAGEN TEC product as a dictionary.
     nr_fr: ['Nr', 'Fr']
-        String values used to access Near or Far TEC parameters in TEC JSON
-        dict
+        Near-range or Far-range
     tec_time_mask: list
         List of bools to extract valid total and top TEC values
 
@@ -97,10 +95,8 @@ def _get_suborbital_tec(tec_json: dict,
     tot_tec = np.array(tec_json[f'totTec{nr_fr}'])
     top_tec = np.array(tec_json[f'topTec{nr_fr}'])
     sub_orbital_tec = tot_tec - top_tec
-    sub_orbital_tec = np.array([tec
-                                for tec, m in zip(sub_orbital_tec,
-                                                  tec_time_mask)
-                                if m])
+    sub_orbital_tec = np.array([tec for tec, m in
+                                zip(sub_orbital_tec, tec_time_mask) if m])
 
     return sub_orbital_tec
 
