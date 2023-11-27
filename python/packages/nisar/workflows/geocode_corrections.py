@@ -44,11 +44,10 @@ def _get_accumulated_azimuth_corrections(cfg, slc, frequency, orbit):
         input_hdf5 = cfg['input_file_group']['input_file_path']
         slc = SLC(hdf5file=input_hdf5)
         center_freq = slc.getSwathMetadata(frequency).processed_center_frequency
-        doppler = isce3.core.LUT2d()
         radar_grid = slc.getRadarGrid(frequency)
 
         tec_correction = tec_lut2d_from_json_az(tec_file, center_freq, orbit,
-                                                radar_grid, doppler)
+                                                radar_grid)
 
     return tec_correction
 

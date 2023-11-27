@@ -184,7 +184,6 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
 def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                         orbit: isce3.core.Orbit,
                         radar_grid: isce3.product.RadarGridParameters,
-                        doppler_lut: isce3.core.LUT2d,
                         margin: float=40.0) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for azimuth time correction from a JSON source
@@ -199,8 +198,6 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
         Orbit for associated SLC
     radar_grid: isce3.product.RadarGridParameters
         Radar grid for associated SLC
-    doppler_lut: isce3.core.LUT2d
-        Doppler centroid of SLC
     dem_path: str
         Digital elevation model, m above ellipsoid. Defaults to h=0.
     margin: float
@@ -262,9 +259,11 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     utc_vec_shifted = utc_vec_lut - spacing_utc_lut / 2
     utc_vec_staggered = np.append(utc_vec_shifted, utc_vec_shifted[-1] + spacing_utc_lut)
 
-    f_tec = RectBivariateSpline(utc_time, rg_vec, tec_suborbital, kx=1, ky=1)
+    f_tec = RectBivariateSpline(utc_time, rg_vec, tec_suborbital, kx=3, ky=1)
     tec_i = f_tec(utc_vec_staggered, rg_vec_lut)
     d_tec_over_d_t = np.diff(tec_i, axis=0) / spacing_utc_lut
+
+    # ionospheric phase delay constant
     alpha = 40.31
 
     t_az_delay = -2 * alpha / (isce3.core.speed_of_light * az_fm_rate * center_freq) * d_tec_over_d_t * TECU
