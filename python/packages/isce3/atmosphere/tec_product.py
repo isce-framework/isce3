@@ -245,27 +245,14 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                                 for nr_fr in ['Nr', 'Fr']]).T
 
     # set up up the LUT grids for az. iono. delay
-    shape_lut = (int((radar_grid.shape[0] + 0.5) // 30), int((radar_grid.shape[1] + 0.5) // 30))
-    utc_vec_lut = np.linspace(radar_grid.sensing_start, radar_grid.sensing_stop, shape_lut[0])
-    rg_vec_lut = np.linspace(radar_grid.starting_range, radar_grid.end_range, shape_lut[1])
+    tec_gradient_az_spacing = (utc_time[-1] - utc_time[0]) / (len(utc_time) -1)
+    tec_gradient_utc_time = utc_time[1:] - tec_gradient_az_spacing / 2  # staggered grid to compute TEC gradient
+    tec_gradient = np.diff(tec_suborbital, axis=0) / tec_gradient_az_spacing
 
-    speed_vec_lut = np.array([np.linalg.norm(orbit.interpolate(t)[1]) for t in utc_vec_lut])
-
+    speed_vec_lut = np.array([np.linalg.norm(orbit.interpolate(t)[1]) for t in tec_gradient_utc_time])
     az_fm_rate = np.outer(-2 * speed_vec_lut**2 * (center_freq / isce3.core.speed_of_light),
-                          1/rg_vec_lut)
+                          1 / np.array(rg_vec))
 
-    # Calculate tec gradient
-    spacing_utc_lut = (utc_vec_lut[-1] - utc_vec_lut[0]) / (utc_vec_lut.size - 1)
-    utc_vec_shifted = utc_vec_lut - spacing_utc_lut / 2
-    utc_vec_staggered = np.append(utc_vec_shifted, utc_vec_shifted[-1] + spacing_utc_lut)
-
-    f_tec = RectBivariateSpline(utc_time, rg_vec, tec_suborbital, kx=3, ky=1)
-    tec_i = f_tec(utc_vec_staggered, rg_vec_lut)
-    d_tec_over_d_t = np.diff(tec_i, axis=0) / spacing_utc_lut
-
-    # ionospheric phase delay constant
     alpha = 40.31
-
-    t_az_delay = -2 * alpha / (isce3.core.speed_of_light * az_fm_rate * center_freq) * d_tec_over_d_t * TECU
-
-    return isce3.core.LUT2d(rg_vec_lut, utc_vec_lut, t_az_delay)
+    t_az_delay = -2 * alpha / (isce3.core.speed_of_light * az_fm_rate * center_freq) * tec_gradient * TECU
+    return isce3.core.LUT2d(rg_vec, tec_gradient_utc_time, t_az_delay)
