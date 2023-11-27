@@ -8,6 +8,7 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/core/Projections.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/boundingbox.h>
 #include <isce3/product/RadarGridParameters.h>
@@ -46,11 +47,11 @@ void addbinding_boundingbox(py::module& m)
             "get_geo_perimeter_wkt",
             [](const RadarGridParameters& grid, const Orbit& orbit,
                const LUT2d<double>& doppler, const DEMInterpolator& dem,
-               int pointsPerEdge, double threshold, int numiter) {
+               int pointsPerEdge, double threshold) {
                 auto proj = LonLat();
                 auto perimeter =
                         getGeoPerimeter(grid, orbit, &proj, doppler, dem,
-                                        pointsPerEdge, threshold, numiter);
+                                        pointsPerEdge, threshold);
                 // convert ring to polygon
                 auto poly = OGRPolygon();
                 poly.addRing(&perimeter);
@@ -64,8 +65,9 @@ void addbinding_boundingbox(py::module& m)
             py::arg("grid"), py::arg("orbit"),
             py::arg("doppler") = LUT2d<double>(),
             py::arg("dem") = DEMInterpolator(0.),
-            py::arg("points_per_edge") = 11, py::arg("threshold") = 1e-8,
-            py::arg("numiter") = 15, R"(
+            py::arg("points_per_edge") = 11,
+            py::arg("threshold") = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
+    R"(
     Compute the perimeter of a radar grid in map coordinates.
 
     The output of this method is the WKT representation of an OGRLinearRing.

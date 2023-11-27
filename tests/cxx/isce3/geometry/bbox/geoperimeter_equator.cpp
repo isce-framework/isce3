@@ -145,9 +145,15 @@ TEST_P(PerimeterTest, Normal) {
     //Number of points per edge - default value
     int nPtsPerEdge = 11;
 
+    const auto dem = isce3::geometry::DEMInterpolator(0.);
+    const auto zerodop = isce3::core::LUT2d<double>();
+    // Use stricter tolerance than default for compatibility with precision
+    // of old test.
+    const double htol = 1e-8;
+
     //Compute perimeter
-    isce3::geometry::Perimeter perimeter = isce3::geometry::getGeoPerimeter(grid, orbit,
-                                                proj);
+    auto perimeter = isce3::geometry::getGeoPerimeter(
+            grid, orbit, proj, zerodop, dem, nPtsPerEdge, htol);
 
     //Check length of perimeter for default edge length 
     ASSERT_EQ( perimeter.getNumPoints(), 4 * nPtsPerEdge - 4 + 1);   
@@ -227,7 +233,7 @@ TEST_P(PerimeterTest, Normal) {
         } else {
             ASSERT_NEAR(pt.getY(), -expLLH[1] * degrees, 1.0e-8);
         }
-        ASSERT_NEAR(pt.getZ(), 0.0, 1.0e-8);
+        ASSERT_NEAR(pt.getZ(), 0.0, htol);
         ii++;
 
     }
