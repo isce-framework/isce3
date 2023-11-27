@@ -151,7 +151,7 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     # Pad with length of one burst should suffice.
     t_lower_bound = radar_grid.sensing_start - margin
     t_upper_bound = radar_grid.sensing_stop + margin
-    time_mask = [t >= t_lower_bound and t <= t_upper_bound for t in utc_time]
+    time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
     utc_time = [t for t, m in zip(utc_time, time_mask) if m]
 
     # Load DEM into interpolator and get ellipsoid object from DEM EPSG
@@ -229,7 +229,7 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Pad with length of one burst should suffice.
     t_lower_bound = radar_grid.sensing_start - margin
     t_upper_bound = radar_grid.sensing_stop + margin
-    time_mask = [t >= t_lower_bound and t <= t_upper_bound for t in utc_time]
+    time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
     utc_time = np.array([t for t, m in zip(utc_time, time_mask) if m])
 
 
@@ -246,13 +246,17 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
 
     # set up up the LUT grids for az. iono. delay
     tec_gradient_az_spacing = (utc_time[-1] - utc_time[0]) / (len(utc_time) -1)
-    tec_gradient_utc_time = utc_time[1:] - tec_gradient_az_spacing / 2  # staggered grid to compute TEC gradient
+
+    # staggered grid to compute TEC gradient
+    tec_gradient_utc_time = utc_time[1:] - tec_gradient_az_spacing / 2
+
     tec_gradient = np.diff(tec_suborbital, axis=0) / tec_gradient_az_spacing
 
     speed_vec_lut = np.array([np.linalg.norm(orbit.interpolate(t)[1]) for t in tec_gradient_utc_time])
     az_fm_rate = np.outer(-2 * speed_vec_lut**2 * (center_freq / isce3.core.speed_of_light),
                           1 / np.array(rg_vec))
 
+    # ionospheric phase delay constant
     alpha = 40.31
     t_az_delay = -2 * alpha / (isce3.core.speed_of_light * az_fm_rate * center_freq) * tec_gradient * TECU
     return isce3.core.LUT2d(rg_vec, tec_gradient_utc_time, t_az_delay)
