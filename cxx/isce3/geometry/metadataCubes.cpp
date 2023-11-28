@@ -71,7 +71,7 @@ static void writeArray(isce3::io::Raster* raster,
     }
 }
 
-inline void writeVectorDerivedCubes(const int array_pos_i,
+void writeVectorDerivedCubes(const int array_pos_i,
         const int array_pos_j, const double native_azimuth_time,
         const isce3::core::Vec3& target_llh,
         const isce3::core::Orbit& orbit,

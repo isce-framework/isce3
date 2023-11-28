@@ -16,6 +16,7 @@
 
 // isce3::geometry
 #include <isce3/geometry/geometry.h>
+#include <isce3/geometry/rdr2geo_roots.h>
 
 // isce3::except
 #include <isce3/except/Error.h>
@@ -36,8 +37,7 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
                 const isce3::core::LUT2d<double> &doppler,
                 const isce3::geometry::DEMInterpolator &demInterp,
                 const int pointsPerEdge,
-                const double threshold,
-                const int numiter)
+                const double threshold)
 {
 
     //Check for number of points on edge
@@ -89,7 +89,8 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
     }
 
     //Left Edge
-    for (int ii = pointsPerEdge-2; ii >= 0; ii--)
+    // Exclude final point.  Will force first and last point to be the same.
+    for (int ii = pointsPerEdge-2; ii > 0; ii--)
     {
         azInd.push_back( ii * azSpacing );
         rgInd.push_back(0);
@@ -108,17 +109,18 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
         double dopp = doppler.eval(tline, rng);
 
         //Target location
-        Vec3 llh, mapxyz;
+        // Careful to initialize height since it's the initial guess.
+        Vec3 xyz, llh, mapxyz;
 
         //Run rdr2geo
-        rdr2geo(tline, rng, dopp,
-                orbit, ellipsoid, demInterp, llh,
-                radarGrid.wavelength(), radarGrid.lookSide(),
-                threshold, numiter, 0);
+        auto converged = rdr2geo_bracket(tline, rng, dopp, orbit, demInterp,
+            xyz, radarGrid.wavelength(), radarGrid.lookSide(), threshold);
+        
+        ellipsoid.xyzToLonLat(xyz, llh);
 
         //Transform point to projection
         int status = proj->forward(llh, mapxyz);
-        if (status)
+        if (status or not converged)
         {
             std::string errstr = "Error in transforming point (" + std::to_string(llh[0]) +
                                  "," + std::to_string(llh[1]) + "," + std::to_string(llh[2]) +
@@ -131,7 +133,8 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
 
     }
 
-    //Ensure polygon is closed
+    // Ensure polygon is closed.  Since we skipped the last point, this will
+    // always add one final point that is exactly equal to the first.
     perimeter.closeRings();
 
     //Return points
@@ -174,7 +177,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBox(
         const isce3::core::Orbit& orbit, const isce3::core::ProjectionBase* proj,
         const isce3::core::LUT2d<double>& doppler,
         const std::vector<double>& hgts, const double margin,
-        const int pointsPerEdge, const double threshold, const int numiter,
+        const int pointsPerEdge, const double threshold,
         bool ignore_out_of_range_exception) {
 
     // Check for number of points on edge
@@ -196,15 +199,15 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBox(
         if (ignore_out_of_range_exception) {
             try {
                 perimeter = getGeoPerimeter(radarGrid, orbit, proj, doppler,
-                                            constDEM, pointsPerEdge, threshold,
-                                            numiter);
+                                            constDEM, pointsPerEdge, threshold);
+                                            
             } catch (const isce3::except::OutOfRange&) {
                 continue;
             }
         } else {
             perimeter =
                     getGeoPerimeter(radarGrid, orbit, proj, doppler, constDEM,
-                                    pointsPerEdge, threshold, numiter);
+                                    pointsPerEdge, threshold);
         }
 
         // Get bounding box for given height
@@ -250,7 +253,7 @@ static isce3::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(
         const isce3::core::ProjectionBase* proj,
         const isce3::core::LUT2d<double>& doppler, double min_height,
         double max_height, const double margin, const int pointsPerEdge,
-        const double threshold, const int numiter,
+        const double threshold,
         bool find_lowest_valid_height,
         isce3::geometry::BoundingBox bbox_best_solution_from_other_end,
         const double height_threshold)
@@ -273,7 +276,7 @@ static isce3::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(
 
     isce3::geometry::BoundingBox bbox_mid = isce3::geometry::getGeoBoundingBox(
             radarGrid, orbit, proj, doppler, {mid_height}, margin,
-            pointsPerEdge, threshold, numiter, true);
+            pointsPerEdge, threshold, true);
 
     if (mid_height - min_height < height_threshold && _isValid(bbox_mid)) {
         return bbox_mid;
@@ -300,7 +303,7 @@ static isce3::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(
 
     isce3::geometry::BoundingBox bbox_result = _getGeoBoundingBoxBinarySearch(
             radarGrid, orbit, proj, doppler, new_min_height, new_max_height,
-            margin, pointsPerEdge, threshold, numiter, find_lowest_valid_height,
+            margin, pointsPerEdge, threshold, find_lowest_valid_height,
             bbox_best_solution_from_other_end, height_threshold);
 
     return bbox_result;
@@ -311,7 +314,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
         const isce3::core::Orbit& orbit, const isce3::core::ProjectionBase* proj,
         const isce3::core::LUT2d<double>& doppler, double min_height,
         double max_height, const double margin, const int pointsPerEdge,
-        const double threshold, const int numiter,
+        const double threshold,
         const double height_threshold) {
 
     // Check input arguments
@@ -333,7 +336,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
     // Get BBox for min_height
     BoundingBox bbox_min = getGeoBoundingBox(
             radarGrid, orbit, proj, doppler, {min_height}, margin_zero,
-            pointsPerEdge, threshold, numiter, true);
+            pointsPerEdge, threshold, true);
 
     if (max_height == min_height && !_isValid(bbox_min)) {
         std::string errstr = "Bounding box not found for given parameters.";
@@ -346,7 +349,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
     // Get BBox for max_height
     BoundingBox bbox_max = getGeoBoundingBox(
             radarGrid, orbit, proj, doppler, {max_height}, margin_zero,
-            pointsPerEdge, threshold, numiter, true);
+            pointsPerEdge, threshold, true);
 
     if (!_isValid(bbox_min) && !_isValid(bbox_max)) {
         // both are invalid
@@ -359,7 +362,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
         bool find_lowest_valid_height = false;
         bbox_max = _getGeoBoundingBoxBinarySearch(
                 radarGrid, orbit, proj, doppler, min_height, max_height,
-                margin_zero, pointsPerEdge, threshold, numiter,
+                margin_zero, pointsPerEdge, threshold,
                 find_lowest_valid_height, bbox_min, height_threshold);
     } else if (!_isValid(bbox_min) && _isValid(bbox_max)) {
         // only upper height is valid
@@ -377,7 +380,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
         if (new_height > min_height) {
             bbox_min = getGeoBoundingBox(
                     radarGrid, orbit, proj, doppler, {new_height}, margin_zero,
-                    pointsPerEdge, threshold, numiter, true);
+                    pointsPerEdge, threshold, true);
             min_height = new_height;
         }
 
@@ -385,7 +388,7 @@ isce3::geometry::BoundingBox isce3::geometry::getGeoBoundingBoxHeightSearch(
             bool find_lowest_valid_height = true;
             bbox_min = _getGeoBoundingBoxBinarySearch(
                     radarGrid, orbit, proj, doppler, min_height, max_height,
-                    margin_zero, pointsPerEdge, threshold, numiter,
+                    margin_zero, pointsPerEdge, threshold,
                     find_lowest_valid_height, bbox_max, height_threshold);
         }
     }

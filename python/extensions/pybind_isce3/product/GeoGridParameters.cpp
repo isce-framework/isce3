@@ -68,8 +68,7 @@ void addbinding_bbox_to_geogrid(py::module & m)
             py::arg("max_height") = isce3::core::GLOBAL_MAX_HEIGHT,
             py::arg("margin") = 0.0,
             py::arg("pts_per_edge") = 11,
-            py::arg("threshold") = 1.0e-8,
-            py::arg("numiter") = 15,
+            py::arg("threshold") = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
             py::arg("height_threshold") = 100, R"(
     Create a GeoGridParameters object by using spacing and ESPG from a DEM, and
     by estimating a bounding box with a radar grid. Spacing adjustable via scalar.
@@ -84,8 +83,7 @@ void addbinding_bbox_to_geogrid(py::module & m)
         max_height          Height upper bound
         margin              Amount to pad estimated bounding box. In decimal degrees.
         point_per_edge      Number of points to use on each side of radar grid.
-        threshold           Slant range threshold for convergence.
-        numiter             Max number of iterations for converence.
+        threshold           Height threshold (m) for rdr2geo convergence.
         height_threshold    Height threshold for convergence.
             )")
     .def("bbox_to_geogrid",
@@ -100,8 +98,7 @@ void addbinding_bbox_to_geogrid(py::module & m)
             py::arg("max_height") = isce3::core::GLOBAL_MAX_HEIGHT,
             py::arg("margin") = 0.0,
             py::arg("pts_per_edge") = 11,
-            py::arg("threshold") = 1.0e-8,
-            py::arg("numiter") = 15,
+            py::arg("threshold") = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
             py::arg("height_threshold") = 100, R"(
     Create a GeoGridParameters object by using spacing and ESPG from a DEM, and
     by estimating a bounding box with a radar grid. Spacing adjustable via scalar.
@@ -117,8 +114,7 @@ void addbinding_bbox_to_geogrid(py::module & m)
         max_height          Height upper bound
         margin              Amount to pad estimated bounding box. In decimal degrees.
         point_per_edge      Number of points to use on each side of radar grid.
-        threshold           Slant range threshold for convergence.
-        numiter             Max number of iterations for converence.
+        threshold           Height threshold (m) for rdr2geo convergence.
         height_threshold    Height threshold for convergence.
         )");
 }

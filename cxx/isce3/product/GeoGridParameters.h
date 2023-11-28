@@ -8,6 +8,7 @@
 
 #include <isce3/core/Common.h>
 #include <isce3/core/Constants.h>
+#include <isce3/geometry/detail/Rdr2Geo.h>
 
 #include "RadarGridParameters.h"
 
@@ -132,8 +133,7 @@ protected:
  * @param[in] max_height Height upper bound
  * @param[in] margin Amount to pad estimated bounding box. In decimal degrees.
  * @param[in] point_per_edge Number of points to use on each side of radar grid.
- * @param[in] threshold Slant range threshold for convergence.
- * @param[in] numiter Max number of iterations for converence.
+ * @param[in] threshold Height threshold (m) for rdr2geo convergence.
  * @param[in] height_threshold Height threshold for convergence.
  */
 GeoGridParameters
@@ -144,7 +144,7 @@ bbox2GeoGrid(const isce3::product::RadarGridParameters& radar_grid,
              double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
              double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
              const double margin = 0.0, const int points_per_edge = 11,
-             const double threshold = 1.0e-8, const int numiter = 15,
+             const double threshold = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
              const double height_threshold = 100);
 
 /**
@@ -160,8 +160,7 @@ bbox2GeoGrid(const isce3::product::RadarGridParameters& radar_grid,
  * @param[in] max_height Height upper bound
  * @param[in] margin Amount to pad estimated bounding box. In decimal degrees.
  * @param[in] point_per_edge Number of points to use on each side of radar grid.
- * @param[in] threshold Slant range threshold for convergence.
- * @param[in] numiter Max number of iterations for converence.
+ * @param[in] threshold Height threshold (m) for rdr2geo convergence.
  * @param[in] height_threshold Height threshold for convergence.
  */
 GeoGridParameters
@@ -173,7 +172,7 @@ bbox2GeoGridScaled(const isce3::product::RadarGridParameters& radar_grid,
                    double min_height = isce3::core::GLOBAL_MIN_HEIGHT,
                    double max_height = isce3::core::GLOBAL_MAX_HEIGHT,
                    const double margin = 0.0, const int points_per_edge = 11,
-                   const double threshold = 1.0e-8, const int numiter = 15,
+                   const double threshold = isce3::geometry::detail::DEFAULT_TOL_HEIGHT,
                    const double height_threshold = 100);
 
 

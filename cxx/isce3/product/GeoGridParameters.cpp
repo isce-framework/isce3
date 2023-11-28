@@ -87,7 +87,7 @@ GeoGridParameters bbox2GeoGrid(const RadarGridParameters& radar_grid,
                                double spacing_x, double spacing_y, int epsg,
                                double min_height, double max_height,
                                const double margin, const int pointsPerEdge,
-                               const double threshold, const int numiter,
+                               const double threshold,
                                const double height_threshold)
 {
     if (spacing_x <= 0) {
@@ -108,7 +108,7 @@ GeoGridParameters bbox2GeoGrid(const RadarGridParameters& radar_grid,
             proj.get(), doppler,
             min_height, max_height,
             margin, pointsPerEdge,
-            threshold, numiter,
+            threshold,
             height_threshold);
 
     // retrieve geogrid values based on bounding box values
@@ -125,7 +125,7 @@ GeoGridParameters bbox2GeoGridScaled(
         const isce3::core::LUT2d<double>& doppler,
         const isce3::io::Raster& dem_raster, double spacing_scale, 
         double min_height, double max_height, const double margin,
-        const int pointsPerEdge, const double threshold, const int numiter,
+        const int pointsPerEdge, const double threshold,
         const double height_threshold)
 {
     if (spacing_scale <= 0.0) {
@@ -141,6 +141,6 @@ GeoGridParameters bbox2GeoGridScaled(
 
     return bbox2GeoGrid(radar_grid, orbit, doppler, spacing_x,
                         spacing_y, epsg, min_height, max_height, margin,
-                        pointsPerEdge, threshold, numiter, height_threshold);
+                        pointsPerEdge, threshold, height_threshold);
 }
 }}
