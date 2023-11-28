@@ -12,9 +12,6 @@ def _get_accumulated_azimuth_corrections(cfg, slc, frequency, orbit):
     to default LUT2d if provided parameters do not require corrections to be
     computed.
 
-    Currently on TEC corrections available. Others will be added as they
-    become available.
-
     Parameters
     ----------
     cfg: dict
