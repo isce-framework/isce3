@@ -10,7 +10,6 @@ import journal
 
 import isce3
 from isce3.geometry import compute_incidence_angle
-from scipy.interpolate import RectBivariateSpline
 
 # constants used compute ionospheric range delay
 K = 40.31 # its a constant in m3/s2
@@ -252,11 +251,12 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
 
     tec_gradient = np.diff(tec_suborbital, axis=0) / tec_gradient_az_spacing
 
-    speed_vec_lut = np.array([np.linalg.norm(orbit.interpolate(t)[1]) for t in tec_gradient_utc_time])
+    speed_vec_lut = np.array([np.linalg.norm(orbit.interpolate(t)[1]) for t in
+                              tec_gradient_utc_time])
     az_fm_rate = np.outer(-2 * speed_vec_lut**2 * (center_freq / isce3.core.speed_of_light),
                           1 / np.array(rg_vec))
 
-    # ionospheric phase delay constant
-    alpha = 40.31
-    t_az_delay = -2 * alpha / (isce3.core.speed_of_light * az_fm_rate * center_freq) * tec_gradient * TECU
+    t_az_delay = (-2 * K
+                  / (isce3.core.speed_of_light * az_fm_rate * center_freq)
+                  * tec_gradient * TECU)
     return isce3.core.LUT2d(rg_vec, tec_gradient_utc_time, t_az_delay)
