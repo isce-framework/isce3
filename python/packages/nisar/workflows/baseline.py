@@ -100,6 +100,7 @@ def write_xyz_data(data, output):
         for im_ind in range(nim):
             dst_ds.GetRasterBand(im_ind + 1).WriteArray(data[im_ind])
 
+
 def write_xyz(scratch_path,
               x_array,
               y_array,
@@ -268,6 +269,37 @@ def _prepare_baseline_datasets(dst_h5,
             descr=descr,
             units="meters",
             long_name=f'{bmode} baseline')
+
+
+def _get_invalid_regions(slant_range,
+                         min_slant_range,
+                         max_slant_range):
+    """
+    Finds invalid regions using slant range,
+    considering the specified minimum and maximum range, 
+    and also checks for NaN values.
+
+    Parameters
+    ----------
+    slant_range : numpy.ndarray
+        numpy array representing the slant range distances
+        for reference acquisition.
+    min_slant_range : float
+        Minimum valid value for the slant range.
+    max_slant_range : float
+        Maximum valid value for the slant range.
+
+    Returns
+    -------
+    invalid_region : numpy.ndarray
+        A boolean array where True indicates
+        invalid regions in the slant range array.
+    """
+    invalid_region = \
+        (slant_range > max_slant_range) | \
+        (slant_range < min_slant_range) | \
+        (np.isnan(slant_range))
+    return invalid_region
 
 
 def compute_baseline(ref_rngs,
@@ -488,10 +520,12 @@ def add_baseline(output_paths,
         coord_x = dst_h5[metadata_path_dict["coordX"]][:]
         coord_y = dst_h5[metadata_path_dict["coordY"]][:]
         epsg_code = dst_h5[metadata_path_dict["epsg"]][()]
-
+        slant_range = dst_h5[metadata_path_dict["slantRange"]][:]
         proj = isce3.core.make_projection(epsg_code)
         ellipsoid = proj.ellipsoid
 
+        slant_range_min = metadata_path_dict["range_start"]
+        slant_range_max = metadata_path_dict["range_end"]
         # Read row and column size from metadata.
         cube_row = dst_h5[cube_ref_dataset].shape[1]
         cube_col = dst_h5[cube_ref_dataset].shape[2]
@@ -575,6 +609,19 @@ def add_baseline(output_paths,
             sec_rngs, sec_azts = \
                 compute_rng_aztime(base_dir_set[1], sec_radargrid)
 
+            # get invalid regions where the slant distance
+            # is out of observable range.
+            if radar_or_geo == 'geo':
+                invalid = _get_invalid_regions(
+                    np.squeeze(slant_range[height_ind, :, :]),
+                    min_slant_range=slant_range_min,
+                    max_slant_range=slant_range_max)
+            else:
+                invalid_range = _get_invalid_regions(
+                    np.squeeze(slant_range),
+                    min_slant_range=slant_range_min,
+                    max_slant_range=slant_range_max)
+                invalid = np.tile(invalid_range, (cube_row, 1))
             par_baseline, perp_baseline = compute_baseline(
                 ref_rngs,
                 ref_azts,
@@ -585,7 +632,8 @@ def add_baseline(output_paths,
                 sec_orbit,
                 ellipsoid,
                 epsg_code)
-
+            par_baseline[invalid] = np.nan
+            perp_baseline[invalid] = np.nan
             ds_bpar[height_ind, :, :] = par_baseline
             ds_bperp[height_ind, :, :] = perp_baseline
 
@@ -693,7 +741,9 @@ def run(cfg: dict, output_paths):
         _get_rgrid_dopp_orbit(ref_slc, ref_orbit_path)
     sec_radargrid, sec_doppler, sec_orbit = \
         _get_rgrid_dopp_orbit(sec_slc, sec_orbit_path)
-
+    range_start = ref_radargrid.starting_range
+    range_end = range_start + \
+        ref_radargrid.width * ref_radargrid.range_pixel_spacing
     geo2rdr_parameters = cfg["processing"]["geo2rdr"]
     common_path = CommonPaths.RootPath
 
@@ -718,6 +768,8 @@ def run(cfg: dict, output_paths):
             "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
             "parallelBaseline": f"{grid_path}/parallelBaseline",
             "epsg": f"{grid_path}/epsg",
+            "range_start": range_start,
+            "range_end": range_end,
             }
 
         add_baseline(
@@ -748,6 +800,8 @@ def run(cfg: dict, output_paths):
             "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
             "parallelBaseline": f"{grid_path}/parallelBaseline",
             "epsg": f"{grid_path}/epsg",
+            "range_start": range_start,
+            "range_end": range_end,
             }
 
         add_baseline(
@@ -765,7 +819,8 @@ def run(cfg: dict, output_paths):
             baseline_mode)
 
     t_all_elapsed = time.time() - t_all
-    info_channel.log(f"successfully ran baseline in {t_all_elapsed:.3f} seconds")
+    info_channel.log("successfully ran baseline "
+                     f"in {t_all_elapsed:.3f} seconds")
 
 
 if __name__ == "__main__":
