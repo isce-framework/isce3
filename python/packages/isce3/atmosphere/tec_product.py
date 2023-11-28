@@ -181,9 +181,9 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
 
 
 def tec_lut2d_from_json_az(json_path: str, center_freq: float,
-                        orbit: isce3.core.Orbit,
-                        radar_grid: isce3.product.RadarGridParameters,
-                        margin: float=40.0) -> isce3.core.LUT2d:
+                           orbit: isce3.core.Orbit,
+                           radar_grid: isce3.product.RadarGridParameters,
+                           margin: float=40.0) -> isce3.core.LUT2d:
     '''
     Create a TEC LUT2d for azimuth time correction from a JSON source
 
@@ -197,8 +197,6 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
         Orbit for associated SLC
     radar_grid: isce3.product.RadarGridParameters
         Radar grid for associated SLC
-    dem_path: str
-        Digital elevation model, m above ellipsoid. Defaults to h=0.
     margin: float
         Margin (seconds) to pad to sensing start and stop times when extracting
         TEC data. Default 40 seconds.
