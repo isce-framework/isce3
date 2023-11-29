@@ -253,6 +253,12 @@ geocode_options:
     # Apply radiometric terrain correction
     apply_rtc: bool(required=False)
 
+    # Apply dry tropospheric delay correction
+    apply_dry_tropospheric_delay_correction: bool(required=False)
+
+    # Apply wet tropospheric delay correction
+    apply_wet_tropospheric_delay_correction: bool(required=False)
+
     # Apply RSLC metadata valid-samples sub-swath masking
     apply_valid_samples_sub_swath_masking: bool(required=False)
 

@@ -16,13 +16,13 @@ import numpy as np
 import isce3
 from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
-from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.products.readers.orbit import load_orbit_from_xml
+from nisar.products.writers import GcovWriter
 
 
 def read_rslc_backscatter(ds: h5py.Dataset, key=np.s_[...]):
@@ -258,9 +258,9 @@ def run(cfg):
 
     # unpack RTC run parameters
     rtc_dict = cfg['processing']['rtc']
-    output_terrain_radiometry = rtc_dict['output_type']
-    rtc_algorithm = rtc_dict['algorithm_type']
-    input_terrain_radiometry = rtc_dict['input_terrain_radiometry']
+    output_terrain_radiometry = rtc_dict['output_type_enum']
+    rtc_algorithm = rtc_dict['algorithm_type_enum']
+    input_terrain_radiometry = rtc_dict['input_terrain_radiometry_enum']
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
     rtc_upsampling = rtc_dict['dem_upsampling']
 
@@ -287,7 +287,7 @@ def run(cfg):
     flag_apply_rtc = geocode_dict['apply_rtc']
     flag_apply_valid_samples_sub_swath_masking = \
         geocode_dict['apply_valid_samples_sub_swath_masking']
-    memory_mode = geocode_dict['memory_mode']
+    memory_mode = geocode_dict['memory_mode_enum']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
     abs_cal_factor = geocode_dict['abs_rad_cal']
     clip_max = geocode_dict['clip_max']
@@ -607,7 +607,7 @@ def run(cfg):
             # out_off_diag_terms_obj.close_dataset()
             del out_off_diag_terms_obj
 
-        with h5py.File(output_hdf5, 'a') as hdf5_obj:
+        with h5py.File(output_hdf5, 'w') as hdf5_obj:
             hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
             root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
 
@@ -620,14 +620,8 @@ def run(cfg):
                 'List of processed polarization layers with frequency ' +
                 frequency)
 
-            h5_ds = os.path.join(root_ds, 'radiometricTerrainCorrectionFlag')
-            if h5_ds in hdf5_obj:
-                del hdf5_obj[h5_ds]
-            dset = hdf5_obj.create_dataset(h5_ds, data=bool(flag_apply_rtc))
-
             # save GCOV diagonal elements
-            xds = hdf5_obj[os.path.join(root_ds, 'xCoordinates')]
-            yds = hdf5_obj[os.path.join(root_ds, 'yCoordinates')]
+            yds, xds = set_get_geo_info(hdf5_obj, root_ds, geogrid)
             cov_elements_list = [p.upper()+p.upper() for p in pol_list]
 
             # save GCOV imagery
@@ -677,7 +671,7 @@ def run(cfg):
                 _save_hdf5_dataset(temp_rtc_anf_gamma0_to_sigma0.name,
                                    hdf5_obj, root_ds,
                                    yds, xds,
-                                   'rtcAreaNormalizationFactorGamma0ToSigma0',
+                                   'rtcGammaToSigmaFactor',
                                    output_data_compression =
                                        output_secondary_layers_compression,
                                    output_data_compression_level =
@@ -915,6 +909,15 @@ def _save_hdf5_dataset(ds_filename, h5py_obj, root_path,
 if __name__ == "__main__":
     yaml_parser = YamlArgparse()
     args = yaml_parser.parse()
-    gcov_runcfg = GCOVRunConfig(args)
-    h5_prep.run(gcov_runcfg.cfg)
-    run(gcov_runcfg.cfg)
+    gcov_runconfig = GCOVRunConfig(args)
+
+    sas_output_file = gcov_runconfig.cfg[
+        'product_path_group']['sas_output_file']
+
+    if os.path.isfile(sas_output_file):
+        os.remove(sas_output_file)
+
+    run(gcov_runconfig.cfg)
+
+    with GcovWriter(runconfig=gcov_runconfig) as gcov_obj:
+        gcov_obj.populate_metadata()

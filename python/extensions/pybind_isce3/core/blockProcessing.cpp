@@ -35,4 +35,9 @@ void addbinding_block_processing(py::module & core)
                     R"(use a single block (disable block mode))")
             .value("MultipleBlocksY", MemoryModeBlocksY::MultipleBlocksY,
                     R"(use multiple blocks (enable block mode))");
+
+    core.attr("default_min_block_size") =
+        isce3::core::DEFAULT_MIN_BLOCK_SIZE;
+    core.attr("default_max_block_size") =
+        isce3::core::DEFAULT_MAX_BLOCK_SIZE;
 }
