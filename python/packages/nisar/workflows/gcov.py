@@ -607,7 +607,7 @@ def run(cfg):
             # out_off_diag_terms_obj.close_dataset()
             del out_off_diag_terms_obj
 
-        with h5py.File(output_hdf5, 'w') as hdf5_obj:
+        with h5py.File(output_hdf5, 'a') as hdf5_obj:
             hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
             root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
 
