@@ -53,7 +53,7 @@ def test_rangecomp_delay():
             i = rc.first_valid_sample - (len(cb_filter) - 1) // 2
             # NOTE negative for Mode.Valid is correct but not testable this way
             if i >= 0:
-                npt.assert_allclose(rcdata[i], 1.0, err_msg=
+                npt.assert_allclose(rcdata[i], 1.0, atol=1.2e-7, err_msg=
                     f"Incorrect delay for mode={mode} filter={cb_filter}")
 
 

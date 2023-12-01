@@ -207,7 +207,7 @@ def gen_el_null_range_product(args):
                 for nn in range(null_num.size):
                     fid_csv.write(
                         '{:s},{:1s},{:d},{:.3f},{:.3f},{:.3f}\n'.format(
-                            az_datetime[nn].isoformat(), sar_band_char,
+                            az_datetime[nn].isoformat_usec(), sar_band_char,
                             null_num[nn], sr_echo[nn], el_ant[nn],
                             1 - pow_ratio[nn])
                     )

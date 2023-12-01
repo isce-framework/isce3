@@ -299,7 +299,7 @@ def gen_doppler_range_product(args):
 
 def sec2isofmt(ref_utc: 'isce3.core.DateTime', seconds: float) -> str:
     """seconds to isoformat string"""
-    return (ref_utc + TimeDelta(seconds)).isoformat()
+    return (ref_utc + TimeDelta(seconds)).isoformat_usec()
 
 
 def sec2str(ref_utc: 'isce3.core.DateTime', seconds: float) -> str:

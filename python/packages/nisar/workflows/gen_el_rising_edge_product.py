@@ -227,7 +227,7 @@ def gen_el_rising_edge_product(args):
                     # Null number for edge product is zero!
                     fid_csv.write(
                         '{:s},{:1s},{:d},{:.3f},{:.3f},{:.6f}\n'.format(
-                            az_dtm[nn].isoformat(), sar_band_char, 0,
+                            az_dtm[nn].isoformat_usec(), sar_band_char, 0,
                             sr_fl[nn, 0], el_true_deg, quality_factor
                             )
                         )
