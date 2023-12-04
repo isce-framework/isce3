@@ -1,0 +1,8 @@
+# Default settings for 'Herbie'
+# (see https://herbie.readthedocs.io/en/stable/user_guide/configure.html#configure)
+[default]
+model = "hrrr"
+fxx = 0
+save_dir = "~/data"
+overwrite = false
+verbose = true
