@@ -276,7 +276,7 @@ def _get_invalid_regions(slant_range,
                          max_slant_range):
     """
     Finds invalid regions using slant range,
-    considering the specified minimum and maximum range, 
+    considering the specified minimum and maximum range,
     and also checks for NaN values.
 
     Parameters
@@ -462,7 +462,9 @@ def add_baseline(output_paths,
                  "perpendicularBaseline":
                             {metadata_path}/perpendicularBaseline,
                  "parallelBaseline": {metadata_path}/parallelBaseline,
-                 "epsg": {metadata_path}/epsg}
+                 "epsg": {metadata_path}/epsg},
+                 "range_start",
+                 "range_end",
         where metadata_path = /science/LSAR/RIFG/metadata/geolocationGrid
 
     geo2rdr_parameters: dict
