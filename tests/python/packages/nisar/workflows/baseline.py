@@ -39,9 +39,10 @@ def unit_test_params():
     params.baseline_dir_path = f'{scratch_path}/baseline'
     os.makedirs(params.baseline_dir_path, exist_ok=True)
     params.ref_slc = SLC(hdf5file=refslc_path)
+    radar_grid = params.ref_slc.getRadarGrid()
     params.ellipsoid = isce3.core.Ellipsoid()
     params.ref_orbit = params.ref_slc.getOrbit()
-    params.ref_radargrid = params.ref_slc.getRadarGrid()
+    params.ref_radargrid = radar_grid
     # native-doppler
     params.ref_doppler = params.ref_slc.getDopplerCentroid(frequency='A')
     params.ref_doppler.bounds_error = False
@@ -52,7 +53,10 @@ def unit_test_params():
     params.coord_y = 49.4759022631287
     params.coord_z = 240
     params.epsg = 4326
-    
+    params.range_start = radar_grid.starting_range
+    params.range_end = params.range_start + \
+        radar_grid.width * radar_grid.range_pixel_spacing
+
     return params
 
 
@@ -64,7 +68,7 @@ def test_compute_baseline(unit_test_params):
     grid_x = np.ones([2, 2]) * unit_test_params.coord_x
     grid_y = np.ones([2, 2]) * unit_test_params.coord_y
     grid_z = np.ones([2, 2]) * unit_test_params.coord_z
-    
+
     coord_set = np.zeros([3, 2, 2])
     coord_set[0, :, :] = grid_x
     coord_set[1, :, :] = grid_y
@@ -98,7 +102,7 @@ def test_add_baseline(unit_test_params):
     output_paths = dict({'RIFG': 'RIFG.h5', 'RUNW': 'RUNW.h5', 'GUNW': 'GUNW.h5'})
     for dst in ['RIFG', 'GUNW']:
         with h5py.File(output_paths[dst], 'a') as h5_src:
-            
+
             product_path = f'{common_path}/{dst}'
             if dst in ['RIFG']:
                 grid_path = f'{product_path}/metadata/geolocationGrid'
@@ -111,6 +115,8 @@ def test_add_baseline(unit_test_params):
                     "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
                     "parallelBaseline": f"{grid_path}/parallelBaseline",
                     "epsg": f"{grid_path}/epsg",
+                    "range_start": unit_test_params.range_start,
+                    "range_end": unit_test_params.range_end,
                     }
 
                 # winnipeg data does not have coordinate X and Y in metadata cube
@@ -135,17 +141,21 @@ def test_add_baseline(unit_test_params):
                     del h5_src[metadata_path_dict['heights']]
                 h5_src.create_dataset(metadata_path_dict['heights'],
                                         dtype=np.float32,
-                                        shape=[1], 
+                                        shape=[1],
                                         data=unit_test_params.coord_z)
 
                 if metadata_path_dict['epsg'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['epsg'],
                                         dtype=np.int64,
                                         data=4326)
-                if metadata_path_dict['slantRange'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['slantRange'],
+                # replace the metadata to have only two elements.
+                if metadata_path_dict['slantRange'] in h5_src:
+                    del h5_src[metadata_path_dict['slantRange']]
+                h5_src.create_dataset(metadata_path_dict['slantRange'],
                                         dtype=np.float64,
-                                        shape=[2])
+                                        shape=[2],
+                                        data=[13150.0574, 13649.71149664])
+
                 if metadata_path_dict['azimuthTime'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['azimuthTime'],
                                         dtype=np.float64,
@@ -161,7 +171,7 @@ def test_add_baseline(unit_test_params):
                                         dtype=np.float64,
                                         shape=[2])
 
-                output_paths_rifg = {"RIFG": output_paths["RIFG"], 
+                output_paths_rifg = {"RIFG": output_paths["RIFG"],
                                      "RUNW": output_paths["RUNW"]}
 
                 baseline.add_baseline(output_paths_rifg,
@@ -199,6 +209,8 @@ def test_add_baseline(unit_test_params):
                     "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
                     "parallelBaseline": f"{grid_path}/parallelBaseline",
                     "epsg": f"{grid_path}/epsg",
+                    "range_start": unit_test_params.range_start,
+                    "range_end": unit_test_params.range_end,
                     }
 
                 x_array = np.ones(2) * unit_test_params.coord_x
@@ -206,12 +218,12 @@ def test_add_baseline(unit_test_params):
                 if metadata_path_dict['coordX'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['coordX'],
                                         dtype=np.float32,
-                                        shape=[2], 
+                                        shape=[2],
                                         data=x_array)
                 if metadata_path_dict['coordY'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['coordY'],
                                         dtype=np.float32,
-                                        shape=[2], 
+                                        shape=[2],
                                         data=y_array)
                 if metadata_path_dict['heights'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['heights'],

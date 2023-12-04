@@ -188,6 +188,11 @@ def test_isoformat():
     t = isce.core.DateTime(s)
     assert( t.isoformat() == s )
 
+def test_isoformat_usec():
+    s = "2017-05-12T01:12:30.141592123"
+    t = isce.core.DateTime(s)
+    assert( t.isoformat_usec() == s[:26] )
+
 def test_isoformat_roundtrip():
     # DateTime.isoformat() only writes 9 digits, so choose eps < 1e-9
     eps = 5e-10

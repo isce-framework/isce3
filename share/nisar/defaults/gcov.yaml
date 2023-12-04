@@ -77,6 +77,7 @@ runconfig:
         primary_executable:
             product_type: GCOV
             product_version: 0.1.0
+            processing_type: PR
             partial_granule_id:
 
         debug_level_group:
@@ -191,6 +192,18 @@ runconfig:
                 # Apply radiometric terrain correction
                 apply_rtc: True
 
+                # Apply dry tropospheric delay correction
+                apply_dry_tropospheric_delay_correction: False
+
+                # Apply wet tropospheric delay correction
+                apply_wet_tropospheric_delay_correction: False
+
+                # Apply range ionospheric delay correction
+                apply_range_ionospheric_delay_correction: False
+
+                # Apply azimuth ionospheric delay correction
+                apply_azimuth_ionospheric_delay_correction: False
+
                 # Apply RSLC metadata valid-samples sub-swath masking
                 apply_valid_samples_sub_swath_masking: False
 
@@ -198,7 +211,7 @@ runconfig:
                 apply_shadow_masking: True
 
                 # Memory mode. Choices: "single_block", "geogrid", "geogrid_and_radargrid", and "auto" (default)
-                memory_mode:
+                memory_mode: auto
 
                 # OPTIONAL - Processing upsampling factor applied to input geogrid
                 geogrid_upsampling: 1

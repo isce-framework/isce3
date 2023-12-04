@@ -34,22 +34,28 @@ class GCOVRunConfig(RunConfig):
             geocode_dict['geogrid_upsampling'] = 1.0
 
         if geocode_dict['memory_mode'] == 'single_block':
-            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.SingleBlock
+            geocode_dict['memory_mode_enum'] = \
+                isce3.core.GeocodeMemoryMode.SingleBlock
         elif geocode_dict['memory_mode'] == 'geogrid':
-            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.BlocksGeogrid
+            geocode_dict['memory_mode_enum'] = \
+                isce3.core.GeocodeMemoryMode.BlocksGeogrid
         elif geocode_dict['memory_mode'] == 'geogrid_and_radargrid':
-            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.BlocksGeogridAndRadarGrid
+            geocode_dict['memory_mode_enum'] = \
+                isce3.core.GeocodeMemoryMode.BlocksGeogridAndRadarGrid
         elif geocode_dict['memory_mode'] == 'auto' or (geocode_dict['memory_mode'] is None):
-            geocode_dict['memory_mode'] = isce3.core.GeocodeMemoryMode.Auto
+            geocode_dict['memory_mode_enum'] = \
+                isce3.core.GeocodeMemoryMode.Auto
         else:
             err_msg = f"ERROR memory_mode: {geocode_dict['memory_mode']}"
             raise ValueError(err_msg)
 
         rtc_output_type = rtc_dict['output_type']
         if rtc_output_type == 'sigma0':
-            rtc_dict['output_type'] = isce3.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT
+            rtc_dict['output_type_enum'] = \
+                isce3.geometry.RtcOutputTerrainRadiometry.SIGMA_NAUGHT
         else:
-            rtc_dict['output_type'] = isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
+            rtc_dict['output_type_enum'] = \
+                isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT
 
 
         geocode_algorithm = self.cfg['processing']['geocode']['algorithm_type']
@@ -61,14 +67,18 @@ class GCOVRunConfig(RunConfig):
 
         # only 2 RTC algorithms supported: area_projection (default) & bilinear_distribution
         if rtc_dict['algorithm_type'] == "bilinear_distribution":
-            rtc_dict['algorithm_type'] = isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION
+            rtc_dict['algorithm_type_enum'] = \
+                isce3.geometry.RtcAlgorithm.RTC_BILINEAR_DISTRIBUTION
         else:
-            rtc_dict['algorithm_type'] = isce3.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
+            rtc_dict['algorithm_type_enum'] = \
+                isce3.geometry.RtcAlgorithm.RTC_AREA_PROJECTION
 
         if rtc_dict['input_terrain_radiometry'] == "sigma0":
-            rtc_dict['input_terrain_radiometry'] = isce3.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
+            rtc_dict['input_terrain_radiometry_enum'] = \
+                isce3.geometry.RtcInputTerrainRadiometry.SIGMA_NAUGHT_ELLIPSOID
         else:
-            rtc_dict['input_terrain_radiometry'] = isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
+            rtc_dict['input_terrain_radiometry_enum'] = \
+                isce3.geometry.RtcInputTerrainRadiometry.BETA_NAUGHT
 
         if rtc_dict['rtc_min_value_db'] is None:
             rtc_dict['rtc_min_value_db'] = np.nan

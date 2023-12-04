@@ -3,8 +3,9 @@ import argparse
 import os
 
 import isce3.ext.isce3 as isce3
-from nisar.workflows import gcov, h5_prep
+from nisar.workflows import gcov
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
+from nisar.products.writers import GcovWriter
 
 import iscetest
 
@@ -36,11 +37,11 @@ def test_run():
         for key, value in geocode_modes.items():
             runconfig.cfg['product_path_group']['sas_output_file'] = f'{axis}_{key}.h5'
 
-            # prepare output hdf5
-            h5_prep.run(runconfig.cfg)
-
             # geocode test raster
             gcov.run(runconfig.cfg)
+
+            with GcovWriter(runconfig=runconfig) as gcov_obj:
+                gcov_obj.populate_metadata()
 
 
 if __name__ == '__main__':

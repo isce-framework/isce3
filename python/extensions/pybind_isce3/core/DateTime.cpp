@@ -106,6 +106,7 @@ void addbinding(py::class_<DateTime> & pyDateTime)
 //        .def("day_of_week", &DateTime::dayOfWeek)  // XXX not implemented
 //        .def("toordinal", &DateTime::ordinal)  // XXX not implemented
         .def("isoformat", &DateTime::isoformat)
+        .def("isoformat_usec", [](const DateTime& self) {return self.isoformat().substr(0, 26);})
         .def("__str__", [](const DateTime & self)  { return std::string(self); })
         .def("__repr__", [](const DateTime & self) { return std::string(self); })
         ;
