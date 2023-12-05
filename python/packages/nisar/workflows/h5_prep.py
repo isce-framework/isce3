@@ -1024,13 +1024,13 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         cube_group, 'coordinateX', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Coordinate X',
-        descr='X coordinate in specified EPSG code',
+        descr='X coordinates in specified EPSG code',
         units=x_coord_units)
     coordinate_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'coordinateY', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Coordinate Y',
-        descr='Y coordinate in specified EPSG code',
+        descr='Y coordinates in specified EPSG code',
         units=y_coord_units)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
@@ -1075,7 +1075,7 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         zds=zds, yds=yds, xds=xds,
         long_name='Ground-track velocity',
         descr='Absolute value of the platform velocity scaled at the target height',
-        units='meters per second')
+        units='meters / second')
 
     isce3.geometry.make_geolocation_cubes(radar_grid,
                                           heights,

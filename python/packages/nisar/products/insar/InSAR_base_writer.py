@@ -682,11 +682,11 @@ class InSARBaseWriter(h5py.File):
 
         # Determine processingType
         if processing_type == 'PR':
-            processing_type = np.string_('NOMINAL')
+            processing_type = np.string_('Nominal')
         elif processing_type == 'UR':
-            processing_type = np.string_('URGENT')
+            processing_type = np.string_('Urgent')
         else:
-            processing_type = np.string_('UNDEFINED')
+            processing_type = np.string_('Undefined')
 
         # processing center (JPL, NRSC, or Others)
         # if it is None, 'JPL' will be applied
@@ -846,14 +846,13 @@ class InSARBaseWriter(h5py.File):
                 "processingDateTime",
                 datetime.utcnow().replace(microsecond=0).isoformat(),
                 (
-                    "Processing UTC date and time in the format"
-                    " YYYY-MM-DDTHH:MM:SS"
+                    "Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS"
                 ),
             ),
             DatasetParams(
                 "processingType",
                 processing_type,
-                "NOMINAL (or) URGENT (or) CUSTOM (or) UNDEFINED",
+                "Nominal (or) Urgent (or) Custom (or) Undefined",
             ),
             DatasetParams(
                 "radarBand", radar_band_name, "Acquired frequency band"

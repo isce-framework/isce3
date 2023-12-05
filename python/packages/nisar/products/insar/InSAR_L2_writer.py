@@ -224,7 +224,7 @@ class L2InSARWriter(L1InSARWriter):
                 "listOfPolarizations",
                 np.string_(pol_list),
                 "List of processed polarization layers with"
-                f" frequency{freq}"
+                f" frequency {freq}"
                 ,
             )
             add_dataset_and_attrs(grids_freq_group, list_of_pols)
