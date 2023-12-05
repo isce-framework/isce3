@@ -74,7 +74,8 @@ def _get_suborbital_tec(tec_json_dict: dict,
                         nr_fr: str,
                         tec_time_mask: list):
     '''
-    Get the suborbital TEC from IMAGEN TEC product parsed as a dictionary
+    Get the suborbital TEC from IMAGEN TEC product parsed as a dictionary by
+    subtracting the total TEC by top (i.e. above the satellite) TEC
 
     Parameters
     ----------
