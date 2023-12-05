@@ -225,7 +225,8 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
 
     # Filter utc_time to only save times near radar_grid.
     # Pad data before and after to ensure enough TEC data is collected.
-    # Pad with length of one burst should suffice.
+    # Current default padding is equivalent to 4 state vectors (40 seconds) at
+    # each side of sensing start / stop time
     t_lower_bound = radar_grid.sensing_start - margin
     t_upper_bound = radar_grid.sensing_stop + margin
     time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
