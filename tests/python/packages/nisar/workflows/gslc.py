@@ -2,8 +2,9 @@
 import argparse
 import os
 
-from nisar.workflows import defaults, gslc, h5_prep
+from nisar.workflows import defaults, gslc
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
+from nisar.products.writers import GslcWriter
 
 import iscetest
 
@@ -30,13 +31,18 @@ def test_run():
     # geocode same 2 rasters as C++/pybind geocodeSlc
     for xy in ['x', 'y']:
         # adjust runconfig to match just created raster
-        runconfig.cfg['product_path_group']['sas_output_file'] = f'{xy}_out.h5'
+        sas_output_file = f'{xy}_out.h5'
+        runconfig.cfg['product_path_group']['sas_output_file'] = \
+            sas_output_file
 
-        # prepare output hdf5
-        h5_prep.run(runconfig.cfg)
+        if os.path.isfile(sas_output_file):
+            os.remove(sas_output_file)
 
         # geocode test raster
         gslc.run(runconfig.cfg)
+
+        with GslcWriter(runconfig=runconfig) as gslc_obj:
+            gslc_obj.populate_metadata()
 
 
 if __name__ == '__main__':
