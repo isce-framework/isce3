@@ -15,7 +15,7 @@ from isce3.geometry import compute_incidence_angle
 K = 40.31 # its a constant in m3/s2
 TECU = 1e16 # its a constant to convert the TEC product to electrons / m2
 
-def _compute_ionospheric_range_delay(utc_time: list, tec_json: dict, nr_fr: str,
+def _compute_ionospheric_range_delay(utc_time: list, tec_json_dict: dict, nr_fr: str,
                                      nr_fr_rg: float, center_freq: float,
                                      orbit: isce3.core.Orbit,
                                      doppler_lut: isce3.core.LUT2d,
@@ -30,7 +30,7 @@ def _compute_ionospheric_range_delay(utc_time: list, tec_json: dict, nr_fr: str,
     ----------
     utc_time: list
         UTC times as seconds after SLC epoch to compute TEC delta range over
-    tec_json: dict
+    tec_json_dict: dict
         TEC JSON as a dict. Keys are TEC parameters and values are the values
         of said parameter.
     nr_fr: ['Nr', 'Fr']
@@ -59,7 +59,7 @@ def _compute_ionospheric_range_delay(utc_time: list, tec_json: dict, nr_fr: str,
         TEC delta range
     '''
     # compute sub orbital TEC from total and top TEC in JSON
-    sub_orbital_tec = _get_suborbital_tec(tec_json, nr_fr, tec_time_mask)
+    sub_orbital_tec = _get_suborbital_tec(tec_json_dict, nr_fr, tec_time_mask)
 
     incidence = [compute_incidence_angle(t, nr_fr_rg, orbit, doppler_lut,
                                          radar_grid, dem_interp, ellipsoid)
@@ -70,7 +70,7 @@ def _compute_ionospheric_range_delay(utc_time: list, tec_json: dict, nr_fr: str,
     return delta_r
 
 
-def _get_suborbital_tec(tec_json: dict,
+def _get_suborbital_tec(tec_json_dict: dict,
                         nr_fr: str,
                         tec_time_mask: list):
     '''
@@ -78,7 +78,7 @@ def _get_suborbital_tec(tec_json: dict,
 
     Parameters
     ----------
-    tec_json: dict
+    tec_json_dict: dict
         IMAGEN TEC product as a dictionary.
     nr_fr: ['Nr', 'Fr']
         Near-range or Far-range
@@ -91,8 +91,8 @@ def _get_suborbital_tec(tec_json: dict,
         Suborbital TEC
     '''
     # compute sub orbital TEC from total and top TEC in JSON
-    tot_tec = np.array(tec_json[f'totTec{nr_fr}'])
-    top_tec = np.array(tec_json[f'topTec{nr_fr}'])
+    tot_tec = np.array(tec_json_dict[f'totTec{nr_fr}'])
+    top_tec = np.array(tec_json_dict[f'topTec{nr_fr}'])
     sub_orbital_tec = tot_tec - top_tec
     sub_orbital_tec = np.array([tec for tec, m in
                                 zip(sub_orbital_tec, tec_time_mask) if m])
@@ -138,12 +138,12 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
         error_channel.log(err_str)
 
     with open(json_path, 'r') as fid:
-        tec_json = json.load(fid)
+        tec_json_dict = json.load(fid)
 
     # Save UTC time as total seconds since reference epoch of radar grid
     ref_epoch = datetime.fromisoformat(radar_grid.ref_epoch.isoformat()[:-3])
     utc_time = [(datetime.fromisoformat(t) - ref_epoch).total_seconds()
-                for t in tec_json['utc']]
+                for t in tec_json_dict['utc']]
 
     # Filter utc_time to only save times near radar_grid.
     # Pad data before and after to ensure enough TEC data is collected.
@@ -167,7 +167,7 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
     rg_vec = [radar_grid.starting_range, radar_grid.end_range]
-    delta_r = np.vstack([_compute_ionospheric_range_delay(utc_time, tec_json,
+    delta_r = np.vstack([_compute_ionospheric_range_delay(utc_time, tec_json_dict,
                                                           nr_fr, rg,
                                                           center_freq, orbit,
                                                           doppler_lut,
@@ -214,12 +214,12 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
 
     # Load TEC from NISAR TEC JSON file
     with open(json_path, 'r') as fid:
-        tec_json = json.load(fid)
+        tec_json_dict = json.load(fid)
 
     # Save UTC time as total seconds since reference epoch of radar grid
     ref_epoch = datetime.fromisoformat(radar_grid.ref_epoch.isoformat()[:-3])
     utc_time = [(datetime.fromisoformat(t) - ref_epoch).total_seconds()
-                for t in tec_json['utc']]
+                for t in tec_json_dict['utc']]
 
     # Filter utc_time to only save times near radar_grid.
     # Pad data before and after to ensure enough TEC data is collected.
@@ -237,7 +237,7 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
     rg_vec = [radar_grid.starting_range, radar_grid.end_range]
-    tec_suborbital = np.vstack([_get_suborbital_tec(tec_json,
+    tec_suborbital = np.vstack([_get_suborbital_tec(tec_json_dict,
                                                     nr_fr, time_mask)
                                 for nr_fr in ['Nr', 'Fr']]).T
 
