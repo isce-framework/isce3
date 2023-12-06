@@ -241,7 +241,7 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                                 for nr_fr in ['Nr', 'Fr']]).T
 
     # set up up the LUT grids for az. iono. delay
-    tec_gradient_az_spacing = (utc_time[-1] - utc_time[0]) / (len(utc_time) -1)
+    tec_gradient_az_spacing = (utc_time[-1] - utc_time[0]) / (len(utc_time) - 1)
 
     # staggered grid to compute TEC gradient
     tec_gradient_utc_time = utc_time[1:] - tec_gradient_az_spacing / 2
