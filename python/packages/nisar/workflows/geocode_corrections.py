@@ -60,8 +60,8 @@ def _get_accumulated_srange_corrections(cfg, slc, frequency, orbit):
     Currently on TEC corrections available. Others will be added as they
     become available.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     cfg: dict
         Dict containing the runconfiguration parameters
     slc: nisar.products.readers.SLC
@@ -72,14 +72,13 @@ def _get_accumulated_srange_corrections(cfg, slc, frequency, orbit):
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
 
-    Yields:
-    -------
+    Yields
+    ------
     tec_correction: isce3.core.LUT2d
         Slant range correction for geocoding. Currently only TEC corrections
         are considered. If no TEC JSON file is provided in the cfg parameter,
         a default isce3.core.LUT2d will be passed back.
     '''
-
     # Compute TEC slant range correction if TEC file is provided
     tec_file = cfg["dynamic_ancillary_file_group"]['tec_file']
 
@@ -107,8 +106,8 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
     Default to default LUT2d for either if provided parameters do not require
     corrections to be computed.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     cfg: dict
         Dict containing the runconfiguration parameters
     slc: nisar.products.readers.SLC
@@ -119,8 +118,8 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
 
-    Yields:
-    -------
+    Yields
+    ------
     az_corrections: isce3.core.LUT2d
         Azimuth correction for geocoding. Currently only no corrections are
         computed and a default isce3.core.LUT2d is be passed back.
