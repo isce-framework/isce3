@@ -235,7 +235,7 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Using zero DEM in current implementation to account for TEC file bounds
     # being larger than that of the scene DEM
 
-    # Compute near and far delta range for near and far TEC
+    # Load the TEC information from IMAGEN parsed as dictionary
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
     rg_vec = [radar_grid.starting_range, radar_grid.end_range]
