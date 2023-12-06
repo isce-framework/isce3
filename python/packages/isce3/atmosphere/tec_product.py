@@ -130,7 +130,7 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     Returns
     -------
     isce3.core.LUT2d
-        TEC in a LUT2d as function of az time and slant range
+        LUT2d object for geolocation correction in slant range delay in meters
     '''
     error_channel = journal.error('tec_product.tec_lut2d_from_json')
 
@@ -206,7 +206,7 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     Returns
     -------
     isce3.core.LUT2d
-        TEC in a LUT2d as function of az time and slant range
+        LUT2d object for geolocation correction in azimuth time delay in seconds
     '''
     error_channel = journal.error('tec_product.tec_lut2d_from_json')
 
