@@ -232,9 +232,8 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
     utc_time = np.array([t for t, m in zip(utc_time, time_mask) if m])
 
-
     # Using zero DEM in current implementation to account for TEC file bounds
-    # being larget than that of the scene DEM
+    # being larger than that of the scene DEM
 
     # Compute near and far delta range for near and far TEC
     # Use radar grid start/end range for near/far range
