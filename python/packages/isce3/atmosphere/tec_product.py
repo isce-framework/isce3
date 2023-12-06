@@ -232,9 +232,6 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
     utc_time = np.array([t for t, m in zip(utc_time, time_mask) if m])
 
-    # Using zero DEM in current implementation to account for TEC file bounds
-    # being larger than that of the scene DEM
-
     # Load the TEC information from IMAGEN parsed as dictionary
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
