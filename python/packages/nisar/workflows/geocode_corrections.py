@@ -27,9 +27,9 @@ def _get_accumulated_azimuth_corrections(cfg, slc, frequency, orbit):
     Returns
     -------
     tec_correction: isce3.core.LUT2d
-        Azimith correction for geocoding. Currently only TEC corrections
+        Azimuth correction for geocoding. Currently only TEC corrections
         are considered. If no TEC JSON file is provided in the cfg parameter,
-        a default isce3.core.LUT2d will be passed back.
+        an empty isce3.core.LUT2d will be returned.
     '''
     # Compute TEC slant range correction if TEC file is provided
     tec_file = cfg["dynamic_ancillary_file_group"]['tec_file']
