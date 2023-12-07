@@ -16,7 +16,7 @@ from scipy import interpolate
 
 import iscetest
 import isce3
-from isce3.atmosphere.tec_product import tec_lut2d_from_json
+from isce3.atmosphere.tec_product import tec_lut2d_from_json_srg
 from isce3.ext.isce3.geocode import geocode_slc as geocode_slc_raster
 from isce3.geometry import compute_incidence_angle
 from nisar.products.readers import SLC
@@ -222,7 +222,7 @@ def geocode_slc_test_cases(unit_test_params):
                                                      method)
             elif 'tec' == offset_mode:
                 srange_correction = \
-                    tec_lut2d_from_json(unit_test_params.tec_json_path,
+                    tec_lut2d_from_json_srg(unit_test_params.tec_json_path,
                                         unit_test_params.center_freq,
                                         unit_test_params.orbit,
                                         test_case.radargrid,

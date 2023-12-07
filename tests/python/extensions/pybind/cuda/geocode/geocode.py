@@ -9,7 +9,7 @@ import numpy as np
 from osgeo import gdal
 
 import isce3
-from isce3.atmosphere.tec_product import tec_lut2d_from_json
+from isce3.atmosphere.tec_product import tec_lut2d_from_json_srg
 from isce3.geometry import compute_incidence_angle
 import iscetest
 from nisar.products.readers import SLC
