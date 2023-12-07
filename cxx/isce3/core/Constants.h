@@ -55,11 +55,6 @@ const double GLOBAL_MIN_HEIGHT = -500.0;
 /** Global maximum height */
 const double GLOBAL_MAX_HEIGHT = 9000.0;
 
-/** Struct with fixed-length string for serialization */
-struct FixedString {
-    char str[50];
-};
-
 /** Layover and shadow values */
 const short SHADOW_VALUE = 1;
 const short LAYOVER_VALUE = 2;

@@ -707,28 +707,6 @@ TEST_F(IH5Test, createSimpleDatasetFromVectorBuffer) {
     ASSERT_EQ(v1r[0], 1);
     ASSERT_EQ(v1r[99], 100);
     dset.close();
-
-
-
-
-
-    // Create simple string dataset in groupVector, stored as 1D array from a std::vector buffer
-    std::vector<std::string> v3(10*10);
-    for(int i=0; i<100; i++) v3[i] = std::to_string(i+1);
-
-    dset = grp.createDataSet(std::string("v3"), v3);
-
-    // Check that Dataset has been created
-    list.clear();
-    list = fic.find("v3","/","DATASET");
-    ASSERT_EQ(list.size(), 1);
-
-    // Read back the values and check that they are correct
-    std::vector<std::string> v3r;
-    dset.read(v3r);
-    ASSERT_EQ(v3r.size(), 100);
-    ASSERT_EQ(v3r[0], std::string("1"));
-    ASSERT_EQ(v3r[99], std::string("100"));
 }
 
 
@@ -790,25 +768,6 @@ TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
     ASSERT_EQ(v1r[0], 1);
     ASSERT_EQ(v1r[99], 100);
     dset.close();
-
-
-    // Create simple string dataset in groupValarray, stored as 1D array from a std::valarray buffer
-    std::valarray<std::string> v3(10*10);
-    for(int i=0; i<100; i++) v3[i] = std::to_string(i+1);
-
-    dset = grp.createDataSet(std::string("v3"), v3);
-
-    // Check that Dataset has been created
-    list.clear();
-    list = fic.find("v3","/groupValarray","DATASET");
-    ASSERT_EQ(list.size(), 1);
-
-    // Read back the values and check that they are correct
-    std::valarray<std::string> v3r;
-    dset.read(v3r);
-    ASSERT_EQ(v3r.size(), 100);
-    ASSERT_EQ(v3r[0], std::string("1"));
-    ASSERT_EQ(v3r[99], std::string("100"));
 }
 
 
@@ -869,28 +828,6 @@ TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
 
     delete [] v1;
     delete [] v1r;
-
-
-
-    // Create simple string dataset, stored as 1D array from a raw pointer buffer
-    std::string * v3 = new std::string[100];
-    for(int i=0; i<100; i++) v3[i] = std::to_string(i+1);
-
-    dset = grp.createDataSet(std::string("v3"), v3, 100);
-
-    // Check that Dataset has been created
-    list.clear();
-    list = fic.find("v3","/groupRawPointer","DATASET");
-    ASSERT_EQ(list.size(), 1);
-
-    // Read back the values and check that they are correct
-    std::string * v3r = new std::string[100];
-    dset.read(v3r);
-    ASSERT_EQ(v3r[0], std::string("1"));
-    ASSERT_EQ(v3r[99], std::string("100"));
-
-    delete [] v3;
-    delete [] v3r;
 }
 
 
@@ -980,14 +917,9 @@ TEST_F(IH5Test, createGroupAttributes) {
     for(int i=0; i<10; i++) attv1.push_back(i);
     grp.createAttribute("att1", attv1);
 
-    // Create a 1D array attribute (string) in the groupVector group
-    std::vector<std::string> attv2;
-    for(int i=0; i<10; i++) attv2.push_back(std::to_string(i));
-    grp.createAttribute("att2", attv2);
-
     // Check that the attributes have been written
     list = grp.getAttrs();
-    ASSERT_EQ(list.size(), 2);
+    ASSERT_EQ(list.size(), 1);
 
     
     // Check the values of the attributes
@@ -995,11 +927,6 @@ TEST_F(IH5Test, createGroupAttributes) {
     grp.read(attv1r, list[0]);
     for(int i=0; i<attv1.size(); i++)
         ASSERT_EQ(attv1[i], attv1r[i]);
-
-    std::vector<std::string> attv2r;
-    grp.read(attv2r, list[1]);
-    for(int i=0; i<attv2.size(); i++) 
-       ASSERT_EQ(attv2[i].compare(attv2r[i]),0);
 }
 
 
@@ -1051,14 +978,9 @@ TEST_F(IH5Test, createDataSetAttributes) {
     for(int i=0; i<10; i++) attv1.push_back(i);
     dset.createAttribute("att1", attv1);
 
-    // Create a 1D array attribute (string) in the groupVector group
-    std::vector<std::string> attv2;
-    for(int i=0; i<10; i++) attv2.push_back(std::to_string(i));
-    dset.createAttribute("att2", attv2);
-
     // Check that the attributes have been written
     list = grp.getAttrs();
-    ASSERT_EQ(list.size(), 2);
+    ASSERT_EQ(list.size(), 1);
 
     
     // Check the values of the attributes
@@ -1066,11 +988,6 @@ TEST_F(IH5Test, createDataSetAttributes) {
     dset.read(attv1r, list[0]);
     for(int i=0; i<attv1.size(); i++)
         ASSERT_EQ(attv1[i], attv1r[i]);
-
-    std::vector<std::string> attv2r;
-    dset.read(attv2r, list[1]);
-    for(int i=0; i<attv2.size(); i++) 
-       ASSERT_EQ(attv2[i].compare(attv2r[i]),0);
 }
 
 
