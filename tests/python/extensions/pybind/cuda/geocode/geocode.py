@@ -248,12 +248,12 @@ def geocode_test_cases(unit_test_params):
                                                  method)
         elif 'tec' == test_mode:
             srange_correction = \
-                tec_lut2d_from_json(unit_test_params.tec_json_path,
-                                    unit_test_params.center_freq,
-                                    unit_test_params.orbit,
-                                    test_case.radargrid,
-                                    isce3.core.LUT2d(),
-                                    unit_test_params.dem_path)
+                tec_lut2d_from_json_srg(unit_test_params.tec_json_path,
+                                        unit_test_params.center_freq,
+                                        unit_test_params.orbit,
+                                        test_case.radargrid,
+                                        isce3.core.LUT2d(),
+                                        unit_test_params.dem_path)
         test_case.srange_correction = srange_correction
 
         az_time_correction = isce3.core.LUT2d()
