@@ -141,19 +141,9 @@ def tec_lut2d_from_json_srg(json_path: str, center_freq: float,
     with open(json_path, 'r') as fid:
         tec_json_dict = json.load(fid)
 
-    # Save UTC time as total seconds since reference epoch of radar grid
-    ref_epoch = datetime.fromisoformat(radar_grid.ref_epoch.isoformat()[:-3])
-    utc_time = [(datetime.fromisoformat(t) - ref_epoch).total_seconds()
-                for t in tec_json_dict['utc']]
-
-    # Filter utc_time to only save times near radar_grid.
-    # Pad data before and after to ensure enough TEC data is collected.
-    # Current default padding is equivalent to 4 state vectors (40 seconds) at
-    # each side of sensing start / stop time
-    t_lower_bound = radar_grid.sensing_start - margin
-    t_upper_bound = radar_grid.sensing_stop + margin
-    time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
-    utc_time = [t for t, m in zip(utc_time, time_mask) if m]
+    # get the UTC time and mask for tec_data that covers
+    # sensing start / stop with margin applied
+    utc_time, time_mask = get_tec_time(tec_json_dict, radar_grid, margin)
 
     # Load DEM into interpolator and get ellipsoid object from DEM EPSG
     dem_raster = isce3.io.Raster(dem_path)
@@ -217,20 +207,10 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     # Load TEC from NISAR TEC JSON file
     with open(json_path, 'r') as fid:
         tec_json_dict = json.load(fid)
-
-    # Save UTC time as total seconds since reference epoch of radar grid
-    ref_epoch = datetime.fromisoformat(radar_grid.ref_epoch.isoformat()[:-3])
-    utc_time = [(datetime.fromisoformat(t) - ref_epoch).total_seconds()
-                for t in tec_json_dict['utc']]
-
-    # Filter utc_time to only save times near radar_grid.
-    # Pad data before and after to ensure enough TEC data is collected.
-    # Current default padding is equivalent to 4 state vectors (40 seconds) at
-    # each side of sensing start / stop time
-    t_lower_bound = radar_grid.sensing_start - margin
-    t_upper_bound = radar_grid.sensing_stop + margin
-    time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
-    utc_time = np.array([t for t, m in zip(utc_time, time_mask) if m])
+    
+    # get the UTC time and mask for tec_data that covers
+    # sensing start / stop with margin applied
+    utc_time, time_mask = get_tec_time(tec_json_dict, radar_grid, margin)
 
     # Load the TEC information from IMAGEN parsed as dictionary
     # Use radar grid start/end range for near/far range
@@ -257,3 +237,43 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
                   / (isce3.core.speed_of_light * az_fm_rate * center_freq)
                   * tec_gradient * TECU)
     return isce3.core.LUT2d(rg_vec, tec_gradient_utc_time, t_az_delay)
+
+
+def get_tec_time(tec_json_dict: dict,
+                 radar_grid: isce3.product.RadarGridParameters,
+                 margin: float):
+    '''
+    Extract the UTC time and TEC time mask that covers
+    the radar grid's start / stop time with margin
+
+    Parameters
+    ----------
+    tec_json_dict: dict
+        IMAGEN TEC JSON file parsed as dictionary
+    radar_grid: isce3.product.RadarGridParameters
+        Radar grid of the data
+    margin: float
+        Temporal margin in seconds
+
+    Returns
+    -------
+    utc_time: np.array
+        1D array of UTC time that covers the sensing start / stop time with margin
+    
+    time_mask: list
+        A mask to identify the TEC data that corresponds to `utc_time`
+    '''
+    # Save UTC time as total seconds since reference epoch of radar grid
+    ref_epoch = datetime.fromisoformat(radar_grid.ref_epoch.isoformat()[:-3])
+    utc_time = [(datetime.fromisoformat(t) - ref_epoch).total_seconds()
+                for t in tec_json_dict['utc']]
+
+    # Filter utc_time to only save times near radar_grid.
+    # Pad data before and after to ensure enough TEC data is collected
+    # to cover sensing start / stop with margin.
+    t_lower_bound = radar_grid.sensing_start - margin
+    t_upper_bound = radar_grid.sensing_stop + margin
+    time_mask = [t_lower_bound <= t <= t_upper_bound for t in utc_time]
+    utc_time = np.array([t for t, m in zip(utc_time, time_mask) if m])
+
+    return utc_time, time_mask
