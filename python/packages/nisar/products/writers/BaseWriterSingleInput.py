@@ -1,5 +1,5 @@
 import h5py
-import re
+import warnings
 import numpy as np
 from datetime import datetime
 
@@ -227,7 +227,8 @@ class BaseWriterSingleInput():
                         *args, **kwargs)
 
     def copy_from_input(self, output_h5_field, input_h5_field=None,
-                        default=None, **kwargs):
+                        default=None, skip_if_not_present=False,
+                        **kwargs):
         """
         Copy HDF5 dataset value from the input product to the output
         product.
@@ -240,9 +241,12 @@ class BaseWriterSingleInput():
             Path to the input HDF5 dataset. If not provided, the
             same path of the output dataset `output_h5_field` will
             be used
-        default: scalar
+        default: scalar, optional
             Default value to be used when the input file does not
             have the dataset provided as `output_h5_field`
+        skip_if_not_present: bool, optional
+            Flag to prevent the execution to stop if the dataset
+            is not present from input
         """
         if input_h5_field is None:
             input_h5_field = output_h5_field
@@ -255,8 +259,15 @@ class BaseWriterSingleInput():
         try:
             data = self.input_hdf5_obj[input_h5_field_path][...]
         except KeyError:
-            # if a default value was not provided, raise an error
-            if default is None:
+            # if a default value was not provided and flag
+            # `skip_if_not_present`, skip
+            if default is None and skip_if_not_present:
+                warnings.warn('Invalid key for the input product: ' +
+                              input_h5_field_path)
+                return
+
+            # otherwise, if a default value was not provided, raise an error
+            elif default is None:
                 raise KeyError('Invalid key for the input product: ' +
                                input_h5_field_path)
 

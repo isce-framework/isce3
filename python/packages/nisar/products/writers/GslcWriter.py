@@ -66,9 +66,11 @@ class GslcWriter(BaseL2WriterSingleInput):
             '{PRODUCT}/metadata/processingInformation/parameters'
 
         self.copy_from_input(
-            f'{parameters_group}/azimuthChirpWeighting')
+            f'{parameters_group}/azimuthChirpWeighting',
+            skip_if_not_present=True)
         self.copy_from_input(
-            f'{parameters_group}/rangeChirpWeighting')
+            f'{parameters_group}/rangeChirpWeighting',
+            skip_if_not_present=True)
 
         # TODO: verify values below
         self.set_value(
@@ -80,7 +82,7 @@ class GslcWriter(BaseL2WriterSingleInput):
             False)
 
         tec_file = self.cfg["dynamic_ancillary_file_group"]['tec_file']
-        flag_ionopheric_correction_enabled = tec_file != None
+        flag_ionopheric_correction_enabled = tec_file is not None
         self.set_value(
             f'{parameters_group}/rangeIonosphericGeolocationCorrectionApplied',
             flag_ionopheric_correction_enabled)
