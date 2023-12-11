@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: "v1.4.0"
+    hooks:
+      - id: detect-secrets
+        args:
+          - "--baseline=tools/lint/secrets.baseline"
+          - "--exclude-files=tools/lint/secrets.baseline"
+          # IPython notebooks tend to contain high-entropy strings that cause
+          # lots of false positives.
+          - "--exclude-files=\\.ipynb$"
+          # Increase the detection threshold for high-entropy strings to avoid
+          # some false alarms on larger strings (the default is 4.5)
+          - "--base64-limit=5.0"

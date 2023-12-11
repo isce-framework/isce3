@@ -1,0 +1,16 @@
+#!groovy
+
+pipeline {
+  agent {
+    dockerfile {
+      filename '.ci/jenkins/pre-commit/Dockerfile'
+    }
+  }
+  stages {
+    stage('Run pre-commit') {
+      steps {
+        sh '/opt/conda/bin/pre-commit run --all-files --show-diff-on-failure'
+      }
+    }
+  }
+}
