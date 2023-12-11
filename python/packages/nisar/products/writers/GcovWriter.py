@@ -1,10 +1,8 @@
-import numpy as np
-
 import isce3
-from nisar.products.writers import BaseWriter
+from nisar.products.writers import BaseL2WriterSingleInput
 
 
-class GcovWriter(BaseWriter):
+class GcovWriter(BaseL2WriterSingleInput):
     """
     Base writer class for NISAR GCOV products
     """
@@ -38,7 +36,7 @@ class GcovWriter(BaseWriter):
         to populate the product's metadata.
         """
         self.populate_identification_common()
-        self.populate_identification_specific()
+        self.populate_identification_l2_specific()
         self.populate_data_parameters()
         self.populate_calibration_information()
         self.populate_source_data()
@@ -46,88 +44,14 @@ class GcovWriter(BaseWriter):
         self.populate_orbit()
         self.populate_attitude()
 
-    def populate_identification_specific(self):
-        """
-        Populate GCOV-specific parameters in the
-        identification group
-        """
-
-        self.copy_from_input(
-            'identification/zeroDopplerStartTime')
-
-        self.copy_from_input(
-            'identification/zeroDopplerEndTime')
-
-        self.set_value(
-            'identification/productLevel',
-            'L2')
-
-        is_geocoded = True
-        self.set_value(
-            'identification/isGeocoded',
-            is_geocoded)
-
-        # TODO populate attribute `epsg`
-        self.copy_from_input(
-            'identification/boundingPolygon')
-
-        self.set_value(
-            'identification/listOfFrequencies',
-            list(self.freq_pols_dict.keys()))
-
     def populate_data_parameters(self):
         for frequency, _ in self.freq_pols_dict.items():
-            try:
-                self.copy_from_input(
-                    '{PRODUCT}/grids/'
-                    f'frequency{frequency}/numberOfSubSwaths',
-                    '{PRODUCT}/swaths/'
-                    f'frequency{frequency}/numberOfSubSwaths')
-            except KeyError:
-                self.set_value(
-                    '{PRODUCT}/grids/'
-                    f'frequency{frequency}/numberOfSubSwaths',
-                    '(NOT SPECIFIED)')
-
-    def populate_calibration_information(self):
-
-        # calibration parameters to be copied from the RSLC
-        # common to all polarizations
-        calibration_freq_parameter_list = ['commonDelay',
-                                           'faradayRotation']
-
-        # calibration parameters to be copied from the RSLC
-        # specific to each polarization
-        calibration_freq_pol_parameter_list = \
-            ['differentialDelay',
-             'differentialPhase',
-             'scaleFactor',
-             'scaleFactorSlope']
-
-        for frequency, pol_list in self.freq_pols_dict.items():
-
-            for parameter in calibration_freq_parameter_list:
-                cal_freq_path = (
-                    '{PRODUCT}/metadata/calibrationInformation/'
-                    f'frequency{frequency}')
-
-                try:
-                    self.copy_from_input(
-                        f'{cal_freq_path}/{parameter}')
-                except KeyError:
-                    self.set_value(
-                        f'{cal_freq_path}/{parameter}',
-                        np.nan)
-
-            for pol in pol_list:
-                for parameter in calibration_freq_pol_parameter_list:
-                    try:
-                        self.copy_from_input(
-                            f'{cal_freq_path}/{pol}/{parameter}')
-                    except KeyError:
-                        self.set_value(
-                            f'{cal_freq_path}/{pol}/{parameter}',
-                            np.nan)
+            self.copy_from_input(
+                '{PRODUCT}/grids/'
+                f'frequency{frequency}/numberOfSubSwaths',
+                '{PRODUCT}/swaths/'
+                f'frequency{frequency}/numberOfSubSwaths',
+                default='(NOT SPECIFIED)')
 
     def populate_source_data(self):
 
@@ -143,7 +67,7 @@ class GcovWriter(BaseWriter):
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/lookDirection',
             'identification/lookDirection',
-            string_format_function=str.title)
+            format_function=str.title)
 
         # TODO: remove this `try/except` once `productLevel`
         # is implemented for all input products (e.g., RSLC)
@@ -625,13 +549,3 @@ class GcovWriter(BaseWriter):
         self.set_value(
             f'{inputs_group}/demSource',
             dem_file_description)
-
-    def populate_orbit(self):
-        # copy orbit information group
-        self._copy_group_from_input(
-            '{PRODUCT}/metadata/orbit')
-
-    def populate_attitude(self):
-        # copy attitude information group
-        self._copy_group_from_input(
-            '{PRODUCT}/metadata/attitude')

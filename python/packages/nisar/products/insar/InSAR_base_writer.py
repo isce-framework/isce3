@@ -14,6 +14,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .product_paths import CommonPaths
+from .granule_id import get_insar_granule_id
 from .units import Units
 
 
@@ -215,8 +216,8 @@ class InSARBaseWriter(h5py.File):
         # get the mixed model and update the description
         mixed_mode = self._get_mixed_mode()
         mixed_mode.description = (f'"True" if {rslc_name} RSLC is a'
-                                 ' composite of data collected in multiple'
-                                 ' radar modes, "False" otherwise')
+                                  ' composite of data collected in multiple'
+                                  ' radar modes, "False" otherwise')
         ds_params = [
             DatasetParams(
                 "rfiCorrectionApplied",
@@ -257,9 +258,9 @@ class InSARBaseWriter(h5py.File):
             add_dataset_and_attrs(dst_param_group, ds_param)
 
         for freq, *_ in get_cfg_freq_pols(self.cfg):
-            rslc_group_frequecy_name = \
+            rslc_group_frequency_name = \
                 f"{self.group_paths.ParametersPath}/{rslc_name}/frequency{freq}"
-            rslc_frequency_group = self.require_group(rslc_group_frequecy_name)
+            rslc_frequency_group = self.require_group(rslc_group_frequency_name)
 
             swath_frequency_path = f"{rslc.SwathPath}/frequency{freq}/"
             swath_frequency_group = rslc_h5py_file_obj[swath_frequency_path]
@@ -682,11 +683,11 @@ class InSARBaseWriter(h5py.File):
 
         # Determine processingType
         if processing_type == 'PR':
-            processing_type = np.string_('NOMINAL')
+            processing_type = np.string_('Nominal')
         elif processing_type == 'UR':
-            processing_type = np.string_('URGENT')
+            processing_type = np.string_('Urgent')
         else:
-            processing_type = np.string_('UNDEFINED')
+            processing_type = np.string_('Undefined')
 
         # processing center (JPL, NRSC, or Others)
         # if it is None, 'JPL' will be applied
@@ -794,7 +795,7 @@ class InSARBaseWriter(h5py.File):
                 ds_name.value = slc_val
             add_dataset_and_attrs(dst_id_group, ds_name)
 
-        # Copy the zeroDopper information from both reference and secondary RSLC
+        # Copy the zero-Dopper information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
             ref_id_group.copy(ds_name, dst_id_group,
                               f"referenceZ{ds_name[1:]}")
@@ -805,16 +806,27 @@ class InSARBaseWriter(h5py.File):
         # Update the description attributes of the zeroDoppler
         for prod in list(product(['reference','secondary'],
                                  ['Start', 'End'])):
-            rslc_name, time = prod
-            ds = dst_id_group[f"{rslc_name}ZeroDoppler{time}Time"]
+            rslc_name, start_or_stop = prod
+            ds = dst_id_group[f"{rslc_name}ZeroDoppler{start_or_stop}Time"]
             # rename the End time to stop
-            time_in_description  = 'stop' if time == 'End' else 'start'
+            time_in_description = 'stop' if start_or_stop == 'End' else 'start'
             ds.attrs['description'] = \
                 f"Azimuth {time_in_description} time of {rslc_name} RSLC product"
 
-        # Granule Id and product version
+        # Granule ID follows the NISAR filename convention. The partial granule ID
+        # has placeholders (curly brackets) which will be filled by the InSAR SAS
+        # (Partial Granule ID Example:
+        # NISAR_{Level}_PR_{ProductType}_001_001_A_001_003_{MODE}_{PO}_A_{StartDateTime}_{EndDateTime}_D00341_P_C_J_001_.h5)
+
         if partial_granule_id is None:
-            partial_granule_id = "None"
+            granule_id = "None"
+        else:
+            # Get the first frequency to process and corresponding polarizations
+            frequency = list(self.freq_pols.keys())[0]
+            granule_id = get_insar_granule_id(self.ref_h5_slc_file, self.sec_h5_slc_file,
+                                              partial_granule_id, freq=frequency,
+                                              pol_process=self.freq_pols.get(frequency),
+                                              product_type=self.product_info.ProductType)
         if product_version is None:
             product_version = \
                 self.product_info.ProductVersion
@@ -822,7 +834,7 @@ class InSARBaseWriter(h5py.File):
         id_ds_names_to_be_created = [
             DatasetParams(
                 "granuleId",
-                partial_granule_id,
+                granule_id,
                 "Unique granule identification name",
             ),
             DatasetParams(
@@ -846,14 +858,13 @@ class InSARBaseWriter(h5py.File):
                 "processingDateTime",
                 datetime.utcnow().replace(microsecond=0).isoformat(),
                 (
-                    "Processing UTC date and time in the format"
-                    " YYYY-MM-DDTHH:MM:SS"
+                    "Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS"
                 ),
             ),
             DatasetParams(
                 "processingType",
                 processing_type,
-                "NOMINAL (or) URGENT (or) CUSTOM (or) UNDEFINED",
+                "Nominal (or) Urgent (or) Custom (or) Undefined",
             ),
             DatasetParams(
                 "radarBand", radar_band_name, "Acquired frequency band"
@@ -1003,7 +1014,7 @@ class InSARBaseWriter(h5py.File):
         for freq, pols, _ in get_cfg_freq_pols(self.cfg):
             pols_dict[freq] = pols
 
-        # Import the check_range_bandwidth_overlap locally to prevent the circlar import errors:
+        # Import the check_range_bandwidth_overlap locally to prevent the circular import errors:
         # when import globally, there is the following error.
         # ImportError: cannot import name 'PolChannel' from partially initialized module 'nisar.mixed_mode'
         # (most likely due to a circular import)
@@ -1056,7 +1067,7 @@ class InSARBaseWriter(h5py.File):
         fill_value: Optional[Any] = None,
     ):
         """
-        Create an empty two dimensional dataset under the h5py.Group
+        Create an empty 2D dataset under the h5py.Group
 
         Parameters
         ----------
@@ -1083,7 +1094,7 @@ class InSARBaseWriter(h5py.File):
         xds : h5py.Dataset, optional
             X coordinates
         fill_value : Any, optional
-            Novalue of the dataset
+            No data value of the dataset
         """
         # use the default chunk size if the chunk_size is None
         chunks = self.default_chunk_size

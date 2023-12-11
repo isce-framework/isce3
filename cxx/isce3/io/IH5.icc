@@ -11,6 +11,17 @@ using PT = PredType;
 using namespace isce3::core;
 using namespace isce3::io;
 
+inline DT getH5StrType(size_t strlen) {
+    // HDF5 doesn't seem to support zero-length strings.
+    if (strlen == 0) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+                                            "string length must be > 0");
+    }
+    return StrType(PT::C_S1, strlen);
+}
+
+inline DT getH5Type(const std::string& str) { return getH5StrType(str.size()); }
+
 template<typename T> DT getH5Type();
 
 template<> inline DT getH5Type<char>() { return PT::NATIVE_CHAR; }
@@ -27,15 +38,18 @@ template<> inline DT getH5Type<float>() { return PT::NATIVE_FLOAT; }
 template<> inline DT getH5Type<double>() { return PT::NATIVE_DOUBLE; }
 template<> inline DT getH5Type<long double>() { return PT::NATIVE_LDOUBLE; }
 
-template<> inline DT getH5Type<std::string>() {
-    return StrType(PT::C_S1, STRLENGTH);
-}
-template<> inline DT getH5Type<FixedString>() {
-    return StrType(PT::C_S1, STRLENGTH);
-}
-template<> inline DT getH5Type<char*>() { return StrType(PT::C_S1, STRLENGTH); }
-
 template<typename T> inline DT getH5Type() {
+
+    // Disallow usage for string or char[] objects. We need to know the length of the
+    // string in order to construct an appropriate H5::DataType.
+    using U = std::decay_t<T>;
+    static_assert(!std::is_same<U, std::string>(),
+            "getH5Type<std::string>() is not supported -- use"
+            " getH5Type(const std::string&) instead");
+    static_assert(!std::is_same<U, char*>(),
+            "getH5Type<char*>() is not supported -- use"
+            " getH5Type(const std::string&) instead");
+
     if (std::is_same<T, isce3::io::n1bit>()) {
         H5::IntType datatype(H5::PredType::NATIVE_UINT8);
         datatype.setOffset(0);
@@ -837,7 +851,7 @@ template<>
 inline void IDataSet::createAttribute(const std::string& name,
                                       const std::string& data) {
 
-    createAttribute(name, getH5Type<std::string>(), H5::DataSpace(),
+    createAttribute(name, getH5Type(data), H5::DataSpace(),
                     data.c_str());
 }
 
@@ -1249,7 +1263,7 @@ namespace isce3 { namespace io {
 template<>
 inline void IGroup::createAttribute(const std::string& name,
                                     const std::string& data) {
-    createAttribute(name, getH5Type<std::string>(), H5::DataSpace(),
+    createAttribute(name, getH5Type(data), H5::DataSpace(),
                     data.c_str());
 }
 

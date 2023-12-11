@@ -13,14 +13,14 @@ from isce3.core.rdr_geo_block_generator import block_generator
 import nisar
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
-from nisar.workflows import h5_prep
 from nisar.workflows.compute_stats import compute_stats_complex_data
-from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
+from nisar.workflows.h5_prep import (add_radar_grid_cubes_to_hdf5,
+                                     prep_ds_gslc_gcov)
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
-                         to_complex32)
+from isce3.core.types import truncate_mantissa
+from nisar.products.writers import GslcWriter
 
 
 def run(cfg):
@@ -67,10 +67,12 @@ def run(cfg):
     info_channel.log("starting geocode SLC")
 
     t_all = time.perf_counter()
-    with h5py.File(output_hdf5, 'a') as dst_h5, \
+    with h5py.File(output_hdf5, 'w') as dst_h5, \
             h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5:
+
+        prep_ds_gslc_gcov(cfg, 'GSLC', dst_h5)
         for freq, pol_list in freq_pols.items():
-            frequency = f"frequency{freq}"
+            root_ds = f'/science/LSAR/GSLC/grids/frequency{freq}'
             radar_grid = slc.getRadarGrid(freq)
             geo_grid = geogrids[freq]
 
@@ -90,7 +92,7 @@ def run(cfg):
                 rslc_datasets.append(src_h5[rslc_ds_path])
 
                 # path and dataset to geo SLC data in HDF5
-                dataset_path = f'/science/LSAR/GSLC/grids/{frequency}/{polarization}'
+                dataset_path = f'/{root_ds}/{polarization}'
                 gslc_datasets.append(dst_h5[dataset_path])
 
             # loop over geogrid blocks skipping those without radar data
@@ -184,6 +186,15 @@ def run(cfg):
 if __name__ == "__main__":
     yaml_parser = YamlArgparse()
     args = yaml_parser.parse()
-    gslc_runcfg = GSLCRunConfig(args)
-    h5_prep.run(gslc_runcfg.cfg)
-    run(gslc_runcfg.cfg)
+    gslc_runconfig = GSLCRunConfig(args)
+
+    sas_output_file = gslc_runconfig.cfg[
+        'product_path_group']['sas_output_file']
+
+    if os.path.isfile(sas_output_file):
+        os.remove(sas_output_file)
+
+    run(gslc_runconfig.cfg)
+
+    with GslcWriter(runconfig=gslc_runconfig) as gslc_obj:
+        gslc_obj.populate_metadata()

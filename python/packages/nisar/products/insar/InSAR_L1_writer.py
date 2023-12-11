@@ -616,7 +616,7 @@ class L1InSARWriter(InSARBaseWriter):
             list_of_pols = DatasetParams(
                 "listOfPolarizations",
                 np.string_(pol_list),
-                f"List of processed polarization layers with frequency{freq}",
+                f"List of processed polarization layers with frequency {freq}",
             )
             add_dataset_and_attrs(swaths_freq_group, list_of_pols)
 

@@ -1,5 +1,5 @@
 import h5py
-import re
+import warnings
 import numpy as np
 from datetime import datetime
 
@@ -10,7 +10,7 @@ from nisar.h5 import cp_h5_meta_data
 DATE_TIME_METADATA_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 
-class BaseWriter():
+class BaseWriterSingleInput():
     """
     Base writer class that can be use for all NISAR products
     """
@@ -24,10 +24,12 @@ class BaseWriter():
         self.runconfig = runconfig
         self.cfg = runconfig.cfg
         self.input_file = self.cfg['input_file_group']['input_file_path']
+
         self.output_file = \
             runconfig.cfg['product_path_group']['sas_output_file']
         partial_granule_id = \
             self.cfg['primary_executable']['partial_granule_id']
+
         if partial_granule_id:
             self.granule_id = partial_granule_id
         else:
@@ -95,11 +97,11 @@ class BaseWriter():
 
         self.copy_from_input(
             'identification/lookDirection',
-            string_format_function=str.title)
+            format_function=str.title)
 
         self.copy_from_input(
             'identification/orbitPassDirection',
-            string_format_function=str.title)
+            format_function=str.title)
 
         self.copy_from_input(
             'identification/plannedDatatakeId')
@@ -120,28 +122,15 @@ class BaseWriter():
             self.processing_datetime.strftime(
                 DATE_TIME_METADATA_FORMAT))
 
-        # TODO: remove this `try/except` once `radarBand`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                'identification/radarBand')
-        except KeyError:
-            self.set_value(
-                'identification/radarBand',
-                'L')
+        self.copy_from_input('identification/radarBand',
+                             default=self.input_product_obj.sarBand)
 
-        # TODO: remove this `try/except` once `instrumentName`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                'identification/instrumentName')
-        except KeyError:
-            self.set_value(
-                'identification/instrumentName',
-                f'{self.input_product_obj.sarBand}SAR')
+        self.copy_from_input('identification/instrumentName',
+                             default='(NOT SPECIFIED)')
 
-        processing_type_runconfig = self.cfg['primary_executable'][
-            'processing_type']
+        processing_type_runconfig = \
+            self.cfg['primary_executable']['processing_type']
+
         if processing_type_runconfig == 'PR':
             processing_type = np.string_('NOMINAL')
         elif processing_type_runconfig == 'UR':
@@ -151,30 +140,12 @@ class BaseWriter():
         self.set_value(
             'identification/processingType',
             processing_type,
-            string_format_function=str.title)
+            format_function=str.title)
 
-        # TODO: remove this `try/except` once `isDithered`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                'identification/isDithered')
-        except KeyError:
-            self.set_value(
-                'identification/isDithered',
-                False)
+        self.copy_from_input('identification/isDithered', default=False)
+        self.copy_from_input('identification/isMixedMode', default=False)
 
-        # TODO: remove this `try/except` once `isMixedMode`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                'identification/isMixedMode')
-        except KeyError:
-            self.set_value(
-                'identification/isMixedMode',
-                False)
-
-    def set_value(self, h5_field, data,
-                  string_format_function=None):
+    def set_value(self, h5_field, data, default=None, format_function=None):
         """
         Create an HDF5 dataset with a value set by the user
 
@@ -184,7 +155,9 @@ class BaseWriter():
             Path to the HDF5 dataset to create
         data: scalar
             Value to be assigned to the HDF5 dataset to be created
-        string_format_function: function, optional
+        default: scalar
+            Default value to be used when input data is None
+        format_function: function, optional
             Function to format string values
         """
 
@@ -192,18 +165,31 @@ class BaseWriter():
         path_dataset_in_h5 = \
             path_dataset_in_h5.replace('{PRODUCT}', self.product_type)
 
-        # if `data` is a numpy fixed-length string, convert it to string
+        if data is None:
+            data = default
+
+        # if `data` is a numpy fixed-length string, remove trailing null
+        # characters
         if ((isinstance(data, np.bytes_) or isinstance(data, np.ndarray))
-                and data.dtype.char == 'S'):
-            data = np.string_(data).decode()
+                and (data.dtype.char == 'S')):
+            data = np.string_(data)
+            try:
+                data = data.decode()
+            except UnicodeDecodeError:
+                pass
 
             # remove null characters at the right side
             data = data.rstrip('\x00')
 
-        if isinstance(data, str):
+        # if `data` is a numpy array and its data type character is
+        # "O" (object), convert it to string
+        elif (isinstance(data, np.ndarray) and data.dtype.char == 'O'):
+            data = str(data)
 
-            if string_format_function is not None:
-                data = string_format_function(data)
+        if format_function is not None:
+            data = format_function(data)
+
+        if isinstance(data, str):
 
             self.output_hdf5_obj.create_dataset(
                 path_dataset_in_h5, data=np.string_(data))
@@ -241,7 +227,8 @@ class BaseWriter():
                         *args, **kwargs)
 
     def copy_from_input(self, output_h5_field, input_h5_field=None,
-                        *args, **kwargs):
+                        default=None, skip_if_not_present=False,
+                        **kwargs):
         """
         Copy HDF5 dataset value from the input product to the output
         product.
@@ -254,6 +241,12 @@ class BaseWriter():
             Path to the input HDF5 dataset. If not provided, the
             same path of the output dataset `output_h5_field` will
             be used
+        default: scalar, optional
+            Default value to be used when the input file does not
+            have the dataset provided as `output_h5_field`
+        skip_if_not_present: bool, optional
+            Flag to prevent the execution to stop if the dataset
+            is not present from input
         """
         if input_h5_field is None:
             input_h5_field = output_h5_field
@@ -266,10 +259,22 @@ class BaseWriter():
         try:
             data = self.input_hdf5_obj[input_h5_field_path][...]
         except KeyError:
-            # Original error message doesn't print the key
-            raise KeyError('Invalid key for the input product: ' +
-                           input_h5_field_path)
-        self.set_value(output_h5_field, data=data, *args, **kwargs)
+            # if a default value was not provided and flag
+            # `skip_if_not_present`, skip
+            if default is None and skip_if_not_present:
+                warnings.warn('Invalid key for the input product: ' +
+                              input_h5_field_path)
+                return
+
+            # otherwise, if a default value was not provided, raise an error
+            elif default is None:
+                raise KeyError('Invalid key for the input product: ' +
+                               input_h5_field_path)
+
+            # otherwise, assign the default value to data
+            data = default
+
+        self.set_value(output_h5_field, data=data, **kwargs)
 
     def copy_from_runconfig(self, h5_field,
                             runconfig_path,

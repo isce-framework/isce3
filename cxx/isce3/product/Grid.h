@@ -118,11 +118,11 @@ class Grid {
 
         // Other metadata
         isce3::product::GeoGridParameters _geogrid;
-        double _rangeBandwidth;
-        double _azimuthBandwidth;
-        double _slantRangeSpacing;
-        double _zeroDopplerTimeSpacing;
-        double _centerFrequency;
+        double _rangeBandwidth = std::numeric_limits<double>::quiet_NaN();
+        double _azimuthBandwidth = std::numeric_limits<double>::quiet_NaN();
+        double _slantRangeSpacing = std::numeric_limits<double>::quiet_NaN();
+        double _zeroDopplerTimeSpacing = std::numeric_limits<double>::quiet_NaN();
+        double _centerFrequency = std::numeric_limits<double>::quiet_NaN();
 
 };
 
