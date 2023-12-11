@@ -49,8 +49,6 @@ void setImageMetadataGroupStr(
         std::string &metadata_group_str)
 {
 
-    bool flag_has_swaths = false;
-
     for (const auto& key : key_vector) {
 
         // Look for HDF5 groups that match key (i.e., "grids" or "swaths")
@@ -77,13 +75,6 @@ void setImageMetadataGroupStr(
             metadata_group_str = image_group_str;
             std::size_t key_position = metadata_group_str.rfind(key);
             metadata_group_str.replace(key_position, key.length(), "metadata");
-            if (key == "swaths") {
-                /*
-                flag_has_swaths indicates if image_group_str reffers to swaths
-                or grids
-                */
-                flag_has_swaths = true;
-            }
             break;
         }
     }

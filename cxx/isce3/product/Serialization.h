@@ -39,14 +39,28 @@ namespace isce3 {
           * @param[in] proc         ProcessingInformation object to be configured. */
         inline void loadFromH5(isce3::io::IGroup & group, ProcessingInformation & proc) {
 
+            /**
+             * TODO: fix this!!!
+             * The processing information is not currently populated. 
+             * Once populated, the processing information LUTs will be
+             * provided over map coordinates to follow the products'
+             * specification, which differs from the implementation below
+             * that uses range-Doppler axis "slantRange" and
+             * "zeroDopplerTime"
+            */
+
             // Load slant range
             std::valarray<double> values;
-            isce3::io::loadFromH5(group, "slantRange", values);
-            proc.slantRange(values);
+            if (isce3::io::exists(group, "slantRange")) {
+                isce3::io::loadFromH5(group, "slantRange", values);
+                proc.slantRange(values);
+            }
 
             // Load zero Doppler time
-            isce3::io::loadFromH5(group, "zeroDopplerTime", values);
-            proc.zeroDopplerTime(values);
+            if (isce3::io::exists(group, "zeroDopplerTime")) {
+                isce3::io::loadFromH5(group, "zeroDopplerTime", values);
+                proc.zeroDopplerTime(values);
+            }
 
             // Load effective velocity LUT
             isce3::core::LUT2d<double> lut;
@@ -55,23 +69,30 @@ namespace isce3 {
                 proc.effectiveVelocity(lut); 
             }
 
-            if (isce3::io::exists(group, "frequencyA/azimuthFMRate")) {
-                // Load azimuth FM rate and Doppler centroid for primary frequency (A)
-                isce3::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
-                proc.azimuthFMRate(lut, 'A');
+            // Check for existence of frequency A
+            if (isce3::io::exists(group, "frequencyA")) {
+                if (isce3::io::exists(group, "frequencyA/azimuthFMRate")) {
+                    // Load azimuth FM rate and Doppler centroid for primary frequency (A)
+                    isce3::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
+                    proc.azimuthFMRate(lut, 'A');
+                }
+                if (isce3::io::exists(group, "frequencyA/dopplerCentroid")) {
+                    isce3::core::loadCalGrid(group, "frequencyA/dopplerCentroid", lut);
+                    proc.dopplerCentroid(lut, 'A');
+                }
             }
-            isce3::core::loadCalGrid(group, "frequencyA/dopplerCentroid", lut);
-            proc.dopplerCentroid(lut, 'A');
 
-            // Check for existence of secondary frequencies
+            // Check for existence of frequency B
             if (isce3::io::exists(group, "frequencyB")) {
 
                 if (isce3::io::exists(group, "frequencyB/azimuthFMRate")) {
                     isce3::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
                     proc.azimuthFMRate(lut, 'B');
                 }
-                isce3::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
-                proc.dopplerCentroid(lut, 'B');
+                if (isce3::io::exists(group, "frequencyA/dopplerCentroid")) {
+                    isce3::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
+                    proc.dopplerCentroid(lut, 'B');
+                }
             }
         }
 
@@ -182,12 +203,76 @@ namespace isce3 {
             }
         }
 
+        /** Populate swath-related parameters of the Grid object from HDF5
+          *
+          * @param[in] group        HDF5 group object.
+          * @param[in] grid         Grid object to be configured. 
+          * @param[in] freq         Frequency designation (e.g., A or B) */
+        inline void populateGridSwathParameterFromH5(isce3::io::IGroup & group, Grid & grid, const char freq) {
+
+            // Open appropriate frequency group
+            std::string freqString("frequency");
+            freqString.push_back(freq);
+
+            isce3::io::IGroup fgroup = group.openGroup(freqString);
+
+            // Read other parameters
+            double value;
+
+            if (isce3::io::exists(fgroup, "rangeBandwidth")) {
+                isce3::io::loadFromH5(fgroup, "rangeBandwidth", value);
+                grid.rangeBandwidth(value);
+            }
+
+            if (isce3::io::exists(fgroup, "azimuthBandwidth")) {
+                isce3::io::loadFromH5(fgroup, "azimuthBandwidth", value);
+                grid.azimuthBandwidth(value);
+            }
+
+            if (isce3::io::exists(fgroup, "centerFrequency")) {
+                isce3::io::loadFromH5(fgroup, "centerFrequency", value);
+                grid.centerFrequency(value);
+            }
+
+            if (isce3::io::exists(fgroup, "slantRangeSpacing")) {
+                isce3::io::loadFromH5(fgroup, "slantRangeSpacing", value);
+                grid.slantRangeSpacing(value);
+            }
+
+            // Search for a dataset called "zeroDopplerTimeSpacing" in the "frequency{A,B}"
+            // group.
+            auto zero_dop_freq_vect = fgroup.find("zeroDopplerTimeSpacing",
+                                                  ".", "DATASET");
+
+            /* 
+            GSLC products are expected to have 'zeroDopplerTimeSpacing' in the frequency group
+            */
+            if (zero_dop_freq_vect.size() > 0) {
+                isce3::io::loadFromH5(fgroup, "zeroDopplerTimeSpacing", value);
+                grid.zeroDopplerTimeSpacing(value);
+            } else {
+
+                /* 
+                Look for zeroDopplerTimeSpacing within parent group
+                (GCOV products)
+                */
+                auto zero_dop_vect = group.find("zeroDopplerTimeSpacing",
+                                                ".", "DATASET");
+                if (zero_dop_vect.size() > 0) {
+                    isce3::io::loadFromH5(group, "zeroDopplerTimeSpacing", value);
+                    grid.zeroDopplerTimeSpacing(value);
+                }
+                // If we don't find zeroDopplerTimeSpacing, we intentionally don't
+                // set a value to not overwrite any existing value.
+            }
+        }
+
         /** Load Grid from HDF5
           *
           * @param[in] group        HDF5 group object.
           * @param[in] grid         Grid object to be configured. 
           * @param[in] freq         Frequency designation (e.g., A or B) */
-        inline void loadFromH5(isce3::io::IGroup & group, Grid & grid, char freq) {
+        inline void loadFromH5(isce3::io::IGroup & group, Grid & grid, const char freq) {
 
             // Open appropriate frequency group
             std::string freqString("frequency");
@@ -213,47 +298,6 @@ namespace isce3 {
             isce3::io::loadFromH5(fgroup, "yCoordinates", y_array);
             grid.startY(y_array[0] - 0.5 * dy);
             grid.length(y_array.size());
-
-            // Read other parameters
-            double value;
-            isce3::io::loadFromH5(fgroup, "rangeBandwidth", value);
-            grid.rangeBandwidth(value);
-
-            isce3::io::loadFromH5(fgroup, "azimuthBandwidth", value);
-            grid.azimuthBandwidth(value);
-
-            isce3::io::loadFromH5(fgroup, "centerFrequency", value);
-            grid.centerFrequency(value);
-
-            isce3::io::loadFromH5(fgroup, "slantRangeSpacing", value);
-            grid.slantRangeSpacing(value);
-
-            auto zero_dop_freq_vect = fgroup.find("zeroDopplerTimeSpacing", 
-                                            ".", "DATASET");
-
-            /* 
-            Look for zeroDopplerTimeSpacing in frequency group
-            (GCOV and GSLC products)
-            */
-            if (zero_dop_freq_vect.size() > 0) {
-                isce3::io::loadFromH5(fgroup, "zeroDopplerTimeSpacing", value);
-                grid.zeroDopplerTimeSpacing(value);
-            } else {
-
-                /* 
-                Look for zeroDopplerTimeSpacing within grid group
-                (GUNW products)
-                */
-                auto zero_dop_vect = group.find("zeroDopplerTimeSpacing", 
-                                                ".", "DATASET");
-                if (zero_dop_vect.size() > 0) {
-                    isce3::io::loadFromH5(group, "zeroDopplerTimeSpacing", value);
-                    grid.zeroDopplerTimeSpacing(value);
-                } else {
-                    grid.zeroDopplerTimeSpacing(
-                        std::numeric_limits<double>::quiet_NaN());
-                }
-            }
 
             auto epsg_freq_vect = fgroup.find("epsg", ".", "DATASET");
 
@@ -283,6 +327,8 @@ namespace isce3 {
                 throw isce3::except::RuntimeError(ISCE_SRCINFO(),
                         "ERROR could not infer EPSG code from input HDF5 file");
             }
+
+            populateGridSwathParameterFromH5(group, grid, freq);
 
         }
 
