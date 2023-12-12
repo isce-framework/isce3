@@ -799,22 +799,22 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     radar_grid_offset, dem_raster,
                                     block_size, az_correction=az_correction,
                                     srg_correction=srg_correction)
+                if cfg['processing']['rdr2geo']['write_layover_shadow']:
+                    desired = ["mask"]
+                    geocode_obj.data_interpolator = 'NEAREST'
+                    cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
+                                        pol_list, input_hdf5, dst_h5,
+                                        radar_grid_slc, dem_raster, block_size,
+                                        scratch_path=scratch_path,
+                                        compute_stats=False,
+                                        az_correction=az_correction,
+                                        srg_correction=srg_correction)
 
-                desired = ["mask"]
-                geocode_obj.data_interpolator = 'NEAREST'
-                cpu_geocode_rasters(geocode_obj, geo_datasets, desired, freq,
-                                    pol_list, input_hdf5, dst_h5,
-                                    radar_grid_slc, dem_raster, block_size,
-                                    scratch_path=scratch_path,
-                                    compute_stats=False,
-                                    az_correction=az_correction,
-                                    srg_correction=srg_correction)
-
-                # add water mask to GUNW product
-                add_water_to_mask(cfg, freq, geo_grid, dst_h5)
-                mask_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}/unwrappedInterferogram/mask'
-                mask_ds = dst_h5[mask_path]
-                compute_layover_shadow_water_stats(mask_ds)
+                    # add water mask to GUNW product
+                    add_water_to_mask(cfg, freq, geo_grid, dst_h5)
+                    mask_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}/unwrappedInterferogram/mask'
+                    mask_ds = dst_h5[mask_path]
+                    compute_layover_shadow_water_stats(mask_ds)
 
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']
@@ -1224,39 +1224,40 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                                     srg_correction=srg_correction)
 
                 # Geocode layover shadow mask
-                desired_geo_dataset_names = ["mask"]
+                if cfg['processing']['rdr2geo']['write_layover_shadow']:
+                    desired_geo_dataset_names = ["mask"]
 
-                # Interpolation methods for dataset above
-                interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
+                    # Interpolation methods for dataset above
+                    interpolation_methods = [isce3.core.DataInterpMethod.NEAREST]
 
-                # Invalid values for dataset above
-                # layover shadow raster has type char and an invalid
-                # value of NaN becomes 0 which conflicts with 0 being used
-                # to indicate an unmasked value/pixel. 127 is chosen as it is
-                # the most distant value from the allowed set of [0, 1, 2, 3].
-                invalid_values = [127]
+                    # Invalid values for dataset above
+                    # layover shadow raster has type char and an invalid
+                    # value of NaN becomes 0 which conflicts with 0 being used
+                    # to indicate an unmasked value/pixel. 127 is chosen as it is
+                    # the most distant value from the allowed set of [0, 1, 2, 3].
+                    invalid_values = [127]
 
-                # If needed create geocode object for shadow layover dataset
-                # Create radar grid geometry required by layover shadow
-                rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),
-                                                             orbit,
-                                                             grid_zero_doppler)
+                    # If needed create geocode object for shadow layover dataset
+                    # Create radar grid geometry required by layover shadow
+                    rdr_geometry = isce3.container.RadarGeometry(slc.getRadarGrid(freq),
+                                                                orbit,
+                                                                grid_zero_doppler)
 
-                gpu_geocode_rasters(geocoded_dataset_flags,
-                                    desired_geo_dataset_names,
-                                    interpolation_methods, invalid_values,
-                                    freq, pol_list,
-                                    geogrid, rdr_geometry, dem_raster,
-                                    lines_per_block, input_hdf5, dst_h5,
-                                    scratch_path=scratch_path,
-                                    compute_stats=False, az_correction=az_correction,
-                                    srg_correction=srg_correction)
+                    gpu_geocode_rasters(geocoded_dataset_flags,
+                                        desired_geo_dataset_names,
+                                        interpolation_methods, invalid_values,
+                                        freq, pol_list,
+                                        geogrid, rdr_geometry, dem_raster,
+                                        lines_per_block, input_hdf5, dst_h5,
+                                        scratch_path=scratch_path,
+                                        compute_stats=False, az_correction=az_correction,
+                                        srg_correction=srg_correction)
 
-                # add water mask to GUNW product
-                add_water_to_mask(cfg, freq, geogrid, dst_h5)
-                mask_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}/unwrappedInterferogram/mask'
-                mask_ds = dst_h5[mask_path]
-                compute_layover_shadow_water_stats(mask_ds)
+                    # add water mask to GUNW product
+                    add_water_to_mask(cfg, freq, geogrid, dst_h5)
+                    mask_path = f'{GUNWGroupsPaths().GridsPath}/frequency{freq}/unwrappedInterferogram/mask'
+                    mask_ds = dst_h5[mask_path]
+                    compute_layover_shadow_water_stats(mask_ds)
 
             elif input_product_type is InputProduct.ROFF:
                 offset_cfg = cfg['processing']['offsets_product']

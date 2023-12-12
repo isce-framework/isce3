@@ -213,15 +213,5 @@ class InsarRunConfig(Geo2rdrRunConfig):
         # Check geocode_insar config options
         geocode_insar_cfg_check(self.cfg)
 
-        # Check if layover shadow output enabled
-        if not self.cfg['processing']['rdr2geo']['write_layover_shadow']:
-            # Raise and log warning
-            warning_str = 'layover_shadow incorrectly disabled for rdr2geo; it will be enabled'
-            warning_channel.log(warning_str)
-            warnings.warn(warning_str)
-
-            # Set write flag True
-            self.cfg['processing']['rdr2geo']['write_layover_shadow'] = True
-
         # Check the troposphere delay
         troposphere_delay_check(self.cfg)

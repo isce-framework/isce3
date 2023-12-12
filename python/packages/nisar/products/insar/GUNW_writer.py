@@ -176,19 +176,22 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 unwrapped_geogrids,
             )
 
-            # Prepare 2d mask dataset
-            self._create_2d_dataset(
-                unwrapped_group,
-                "mask",
-                unwrapped_shape,
-                np.uint8,
-                "Byte layer with flags for various channels"
-                " (e.g. layover/shadow, data quality)"
-                ,
-                Units().dn,
-                grids_val,
-                xds=xds,
-                yds=yds)
+            # Create mask only if layover shadow mask is created
+            # or if we have a water mask assigned from runconfig
+            if pcfg['rdr2geo']['write_layover_shadow'] or \
+                    self.cfg['dynamic_ancillary_file_group']['water_mask_file'] is not None:
+                self._create_2d_dataset(
+                    unwrapped_group,
+                    "mask",
+                    unwrapped_shape,
+                    np.uint8,
+                    "Byte layer with flags for various channels"
+                    " (e.g. layover/shadow, data quality)"
+                    ,
+                    Units().dn,
+                    grids_val,
+                    xds=xds,
+                    yds=yds)
 
             for pol in pol_list:
                 unwrapped_pol_name = f"{unwrapped_group_name}/{pol}"

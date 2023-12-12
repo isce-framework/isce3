@@ -316,7 +316,7 @@ runconfig:
                 write_local_incidence: False
                 write_local_psi: False
                 write_simulated_amplitude: False
-                write_layover_shadow: True
+                write_layover_shadow: False
 
             coarse_resample:
                 # Path to coarse offsets directory (geo2rdr offsets)
