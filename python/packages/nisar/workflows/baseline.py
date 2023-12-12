@@ -496,7 +496,7 @@ def add_baseline(output_paths,
         product_id = next(iter(output_paths))
     elif first_product_id.startswith('G'):
         radar_or_geo = 'geo'
-        product_id = 'GUNW'
+        product_id = next(iter(output_paths))
 
     output_hdf5 = output_paths[product_id]
     dst_meta_path = f'{CommonPaths.RootPath}/{product_id}/metadata'
@@ -758,7 +758,7 @@ def run(cfg: dict, output_paths):
 
     if geo_products:
         # only GUNW product have information requred to compute baesline.
-        product_id = 'GUNW'
+        product_id = next(iter(geo_products))
         dst_meta_path = f'{common_path}/{product_id}/metadata'
         grid_path = f"{dst_meta_path}/radarGrid"
         metadata_path_dict = {

@@ -48,17 +48,19 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
         offsets_product.run(cfg, out_paths['ROFF'])
 
     if run_steps['rubbersheet'] and \
-            cfg['processing']['rubbersheet']['enabled']:
+            cfg['processing']['rubbersheet']['enabled'] and \
+            'RIFG' in out_paths:
         rubbersheet.run(cfg, out_paths['RIFG'])
 
     # If enabled, run fine_resampling
     if run_steps['fine_resample'] and \
-            cfg['processing']['fine_resample']['enabled']:
+            cfg['processing']['fine_resample']['enabled'] and \
+            'RIFG' in out_paths:
         resample_slc.run(cfg, 'fine')
 
     # If fine_resampling is enabled, use fine-coregistered SLC
     # to run crossmul
-    if run_steps['crossmul']:
+    if run_steps['crossmul'] and 'RIFG' in out_paths:
         if cfg['processing']['fine_resample']['enabled']:
             crossmul.run(cfg, out_paths['RIFG'], 'fine')
         else:
@@ -66,14 +68,16 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
 
     # Run insar_filter only
     if run_steps['filter_interferogram'] and \
-        cfg['processing']['filter_interferogram']['filter_type'] != 'no_filter':
+        cfg['processing']['filter_interferogram']['filter_type'] != 'no_filter' and \
+            'RIFG' in out_paths:
         filter_interferogram.run(cfg, out_paths['RIFG'])
 
     if run_steps['unwrap'] and 'RUNW' in out_paths:
         unwrap.run(cfg, out_paths['RIFG'], out_paths['RUNW'])
 
     if run_steps['ionosphere'] and \
-            cfg['processing']['ionosphere_phase_correction']['enabled']:
+            cfg['processing']['ionosphere_phase_correction']['enabled'] and \
+            'RUNW' in out_paths:
         split_spectrum.run(cfg)
         ionosphere.run(cfg, out_paths['RUNW'])
 
