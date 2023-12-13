@@ -1,7 +1,8 @@
 import os
 import numpy.testing as npt
+import numpy as np
 
-from nisar.cal import est_peak_loc_cr_from_slc
+from nisar.cal import est_peak_loc_cr_from_slc, est_cr_az_mid_swath_from_slc
 from nisar.products.readers.SLC import SLC
 from nisar.workflows.pol_channel_imbalance_from_rslc import cr_llh_from_csv
 import iscetest
@@ -53,3 +54,13 @@ class TestCornerReflectorSlcFunc:
         for pol, amp in cr.amp_pol.items():
             npt.assert_equal(pol, 'HH', err_msg='Wrong polarization!')
             npt.assert_(abs(amp) > 0, msg='Zero amplitude!')
+
+    def test_est_cr_az_mid_swath_from_slc(self):
+        az_cr = est_cr_az_mid_swath_from_slc(self.slc)
+        cr_llh = cr_llh_from_csv(
+            os.path.join(iscetest.data, self.file_csv), az_heading=az_cr
+            )
+        npt.assert_equal(len(cr_llh), len(self.cr_llh),
+                         err_msg=('Some CRs have AZ angle way off from'
+                                  f' {np.rad2deg(az_cr)} (deg)!')
+                         )

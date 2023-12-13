@@ -1,2 +1,2 @@
 "Corner reflector ID","Latitude (deg)","Longitude (deg)","Height above ellipsoid (m)","Azimuth (deg)","Tilt / Elevation angle (deg)","Side length (m)"
-CR1,-9.713117414575924,-68.17282169049953,-2.068531525808053e-05,0,0,2.5
+CR1,-9.713117414575924,-68.17282169049953,-2.068531525808053e-05,180.0,0,2.5

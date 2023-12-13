@@ -1,2 +1,2 @@
-"Corner reflector ID","Latitude (deg)","Longitude (deg)","Height above ellipsoid (m)","Azimuth (deg)","Tilt / Elevation angle (deg)","Side length (m)"
-CR1,3.1770887849358656,-54.57958625773048,-9.313225746154785e-10,348.3353493915876,12.427476658916959,34.09596029094228
+Corner reflector ID,Latitude (deg),Longitude (deg),Height above ellipsoid (m),Azimuth (deg),Tilt / Elevation (deg),Side length (m),Survey Date,Validity,Velocity East (m/s),Velocity North (m/s),Velocity Up (m/s)
+CR1,3.1770887849358656,-54.57958625773048,-9.313225746154785e-10,168.33534939158764,12.427476658916959,34.09596029094228,1970-01-01T00:00:00.000000,7,0.0,0.0,0.0

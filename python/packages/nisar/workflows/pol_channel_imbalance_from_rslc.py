@@ -18,12 +18,14 @@ from nisar.products.readers.SLC import SLC
 from nisar.log import set_logger
 from nisar.workflows.gen_el_null_range_product import dt2str
 from nisar.cal import (
-    PolChannelImbalanceSlc, parse_and_filter_corner_reflector_csv, CRValidity
+    PolChannelImbalanceSlc, parse_and_filter_corner_reflector_csv, CRValidity,
+    est_cr_az_mid_swath_from_slc, filter_crs_per_az_heading
 )
 from isce3.antenna import CrossTalk
 from isce3.geometry import DEMInterpolator
 from isce3.io import Raster
 from isce3.core import DateTime
+from isce3.cal import parse_triangular_trihedral_cr_csv
 
 
 class JsonNumpyEncoder(json.JSONEncoder):
@@ -51,7 +53,8 @@ class JsonNumpyEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def cr_llh_from_csv(filename, epoch=None):
+def cr_llh_from_csv(filename, epoch=None, az_heading=None,
+                    az_atol=np.deg2rad(20.0)):
     """Parse LLH of all corner reflectors (CRs) from a CSV file.
 
     It supports UAVSAR-formatted CSV (see sample files in [1]_), or its
@@ -69,7 +72,13 @@ def cr_llh_from_csv(filename, epoch=None):
         reflector surveys after this epoch are ignored.
         The default is current DataTime if not specified.
         This feaure will be simply used for NISAR-formatted CSV file.
-
+    az_heading : float
+        Desired AZ/heading angle in radians w.r.t. geographic North.
+    az_atol : float, default=20.0 degrees
+        Absolute tolerance in radians when comapring AZ of CRs with
+        `az_heading`. The default is around 0.5 * HPBW of an ideal
+        triangular trihedral CR (HPBW ~ 40 deg).
+        HPBW stands for half power beam width.
 
     Returns
     -------
@@ -95,18 +104,33 @@ def cr_llh_from_csv(filename, epoch=None):
     # parse only header to see if it is in NISAR format or not
     hdr = np.loadtxt(filename, max_rows=1, delimiter=',',
                      dtype=str)
-    if hdr.size > 7:  # assume NISAR format
-        if epoch is None:
-            epoch = DateTime(datetime.now())
+    if hdr.size >= 7:  # assume NISAR or UAVSAR format
+        if hdr.size == 7:  # UAVSAR format
+            crs = parse_triangular_trihedral_cr_csv(filename)
 
-        cr_all = list(parse_and_filter_corner_reflector_csv(
-            filename, epoch, CRValidity.RAD_POL))
+        else:  # NISAR format
+            if epoch is None:
+                epoch = DateTime(datetime.now())
+            crs = parse_and_filter_corner_reflector_csv(
+                filename, epoch, CRValidity.RAD_POL)
 
+        # get list of CR facing roughly in the right direction if AZ provided.
+        # get rid CRs whose facing/AZ are not aligned with az_heading within
+        # +/- az_atol.
+        if az_heading is None:
+            cr_all = list(crs)
+        else:
+            cr_all = list(filter_crs_per_az_heading(
+                crs, az_heading=az_heading, az_atol=az_atol))
+
+        # get LLH of selected CRs.
         cr_llh = np.zeros((len(cr_all), 3), dtype='f8')
         for nn, cr in enumerate(cr_all):
             cr_llh[nn] = cr.llh.to_vec3()
 
-    else:  # assume UAVSAR or simplified version of UAVSAR
+    else:  # assume simplified format or a truncated version of UAVSAR format
+        # note that no filtering of CRs is performed for a simplified CSV
+        # format which simply carries geodetic locations of CRs!
         cr_llh = np.loadtxt(
             filename, delimiter=',', comments=comment_line,
             usecols=range(1, 4), ndmin=2
@@ -306,8 +330,14 @@ def pol_channel_imbalance_from_rslc(args):
     # get start datetime of the CR RSLC product
     rdr_grid = slc_cr.getRadarGrid(args.freq_band)
     epoch_start = rdr_grid.sensing_datetime(0)
-    # parse csv file for CR(s) info
-    cr_llh = cr_llh_from_csv(args.csv_cr, epoch=epoch_start)
+
+    # Get CRs that are facing in the right direction based on AZ angles CRs
+    # and optimum AZ/heading estimated at roughly mid swath/footprint.
+    cr_az_ang = est_cr_az_mid_swath_from_slc(slc_cr)
+
+    # parse csv file for CR(s) info that met desired epoch and AZ angle
+    cr_llh = cr_llh_from_csv(
+        args.csv_cr, epoch=epoch_start, az_heading=cr_az_ang)
 
     # get azimuth time limits in right format, either float(sec) or
     # isce3.core.Datetime(utc)
