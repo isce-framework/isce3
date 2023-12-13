@@ -200,6 +200,12 @@ class BaseWriterSingleInput():
                 path_dataset_in_h5, data=np.string_(str(data)))
             return
 
+        if isinstance(data, list) and \
+            all(isinstance(item, str) for item in data):
+            self.output_hdf5_obj.create_dataset(
+                path_dataset_in_h5, data=np.bytes_(data))
+            return
+
         self.output_hdf5_obj.create_dataset(path_dataset_in_h5, data=data)
 
     def _copy_group_from_input(self, h5_group, *args, **kwargs):
