@@ -895,25 +895,25 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='unitless')
+        units='1')
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='unitless')
+        units='1')
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='unitless')
+        units='1')
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='unitless')
+        units='1')
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
@@ -1047,25 +1047,25 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='')
+        units='1')
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='')
+        units='1')
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='')
+        units='1')
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='')
+        units='1')
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
@@ -1133,7 +1133,6 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     epsg_dataset = hdf5_obj.create_dataset(epsg_dataset_name,
                                            data=np.array(epsg, "i4"))
     epsg_dataset.attrs["description"] = np.string_(descr)
-    epsg_dataset.attrs["units"] = ""
     epsg_dataset.attrs["long_name"] = np.string_("EPSG code")
 
     # Slant range

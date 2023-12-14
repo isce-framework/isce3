@@ -31,6 +31,7 @@ import sys
 import tempfile
 from typing import Union, Optional, Callable, Iterable
 from isce3.io import Raster as RasterIO
+from io import StringIO
 
 
 # TODO some CSV logger
@@ -61,7 +62,7 @@ def load_config(yaml):
     return Struct(cfg)
 
 
-def dump_config(cfg: Struct, filename):
+def dump_config(cfg: Struct, stream):
     def struct2dict(s: Struct):
         d = s.__dict__.copy()
         for k in d:
@@ -70,9 +71,15 @@ def dump_config(cfg: Struct, filename):
         return d
     parser = YAML()
     parser.indent = 4
-    with open(filename, 'w') as f:
-        d = struct2dict(cfg)
-        parser.dump(d, f)
+    d = struct2dict(cfg)
+    parser.dump(d, stream)
+
+
+def dump_config_str(cfg: Struct) -> str:
+    with StringIO() as f:
+        dump_config(cfg, f)
+        f.seek(0)
+        return f.read()
 
 
 def validate_config(x):
@@ -1113,7 +1120,60 @@ def get_identification_data_from_raw(rawlist: list[Raw]) -> dict:
     )
 
 
-def focus(runconfig):
+def set_algorithm_metadata(cfg: Struct, slc: SLC, is_dithered: bool = False):
+    rfi = cfg.processing.radio_frequency_interference
+    slc.set_algorithms(
+        demInterpolation=cfg.processing.dem.interp_method,
+        rfiDetection="ST-EVD" if rfi.detection_enabled else "disabled",
+        rfiMitigation="ST-EVD" if rfi.mitigation_enabled else "disabled",
+        elevationAntennaPatternCorrection=cfg.processing.is_enabled.eap,
+        rangeSpreadingLossCorrection=cfg.processing.is_enabled.range_cor,
+        azimuthPresumming="BLU" if is_dithered else "disabled")
+
+
+def set_input_file_metadata(cfg: Struct, slc: SLC, runconfig_path: str = ""):
+    anc = cfg.dynamic_ancillary_file_group
+    value_or_blank = lambda x: x if x is not None else ""
+    slc.set_inputs(
+        l0bGranules=cfg.input_file_group.input_file_path,
+        orbitFiles=[value_or_blank(anc.orbit)],
+        attitudeFiles=[value_or_blank(anc.pointing)],
+        auxcalFiles=[value_or_blank(x) for x in (anc.external_calibration,
+            anc.internal_calibration, anc.antenna_pattern)],
+        configFiles=[runconfig_path],
+        demSource=value_or_blank(anc.dem_file_description))
+
+
+def reduce_swath_parameters(rawlist: list[Raw],
+        channel_out: PolChannel) -> tuple[float, float, float]:
+    """Determine mixed-mode swath metadata.
+
+    Parameters
+    ----------
+    rawlist : list[nisar.products.readers.Raw.Raw]
+        List of L0B (raw) file reader objects.
+    channel_out : nisar.mixed_mode.PolChannel
+        Desired output polarimetric channel.
+
+    Returns
+    -------
+    prf : float
+        Minimum PRF (in Hz) among all intersecting input modes
+    bandwidth : float
+        Maximum bandwidth (in Hz) among all intersecting input modes
+    center_frequency : float
+        Maximum center frequency (in Hz) among all intersecting input modes
+    """
+    prfs, bandwidths, center_freqs = [], [], []
+    for raw in rawlist:
+        chan = find_overlapping_channel(raw, channel_out)
+        prfs.append(raw.getNominalPRF(chan.freq_id, chan.txpol))
+        bandwidths.append(raw.getRangeBandwidth(chan.freq_id, chan.txpol))
+        center_freqs.append(raw.getCenterFrequency(chan.freq_id, chan.txpol))
+    return min(prfs), max(bandwidths), max(center_freqs)
+
+
+def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
     rawnames = cfg.input_file_group.input_file_path
@@ -1201,18 +1261,21 @@ def focus(runconfig):
     log.info(f"Creating output {product} product {output_slc_path}")
     slc = SLC(output_slc_path, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
-    slc.set_attitude(attitude)
+    slc.set_attitude(attitude, orbit)
     og = next(iter(ogrid.values()))
     id_data = get_identification_data_from_runconfig(cfg)
     id_data.update(get_identification_data_from_raw(rawlist))
+    is_dithered=any(raw.isDithered(raw.frequencies[0]) for raw in rawlist)
     slc.copy_identification(rawlist[0], polygon=polygon,
         start_time=og.sensing_datetime(0),
         end_time=og.sensing_datetime(og.length - 1),
         frequencies=common_mode.frequencies,
-        is_dithered=any(raw.isDithered(raw.frequencies[0]) for raw in rawlist),
+        is_dithered=is_dithered,
         is_mixed_mode=any(PolChannelSet.from_raw(raw) != common_mode
             for raw in rawlist),
         **id_data)
+    set_algorithm_metadata(cfg, slc, is_dithered)
+    set_input_file_metadata(cfg, slc, runconfig_path)
 
     # Get reference range for radiometric correction and warn user if it's not
     # a good value (especially since the default is catered to NISAR).
@@ -1223,14 +1286,31 @@ def focus(runconfig):
             f"of two of the mid-swath range ({og.mid_range} m).  Range "
             "fading correction will impart a large scaling.")
 
+    vs, _ = isce3.focus.get_radar_velocities(orbit)
+    azenv = isce3.focus.predict_azimuth_envelope(azres, og.prf, vs,
+        L=cfg.processing.nominal_antenna_size.azimuth)
+    azimuth_bandwidth = vs / azres
+
     # store metadata for each frequency
     for frequency, band in get_bands(common_mode).items():
-        slc.set_parameters(dop[frequency], orbit.reference_epoch, frequency)
+        rgres = isce3.core.speed_of_light / (2 * band.width)
+        oversample = rgres / og.range_pixel_spacing
+        slc.set_parameters(dop[frequency], orbit.reference_epoch, frequency,
+            cfg.processing.range_window.kind, cfg.processing.range_window.shape,
+            oversample, azenv, dump_config_str(cfg))
         og = ogrid[frequency]
-        slc.update_swath(og, orbit, band.width, frequency)
+
+        # Support nominal != processed parameters for mixed-mode case.
+        pols = [chan.pol for chan in common_mode if chan.freq_id == frequency]
+        acquired_prf, acquired_bw, acquired_fc = reduce_swath_parameters(
+            rawlist, PolChannel(frequency, pols[0], band))
+
+        slc.update_swath(og, orbit, band.width, frequency,  azimuth_bandwidth,
+            acquired_prf, acquired_bw, acquired_fc),
+        cal = get_calibration(cfg, band.width)
+        slc.set_calibration(cal, frequency)
 
         # add calibration section for each polarization
-        pols = [chan.pol for chan in common_mode if chan.freq_id == frequency]
         for pol in pols:
             slc.add_calibration_section(frequency, pol, og.sensing_times,
                                         orbit.reference_epoch, og.slant_ranges)
@@ -1434,8 +1514,9 @@ def main(argv):
     echofile = cfg.runconfig.groups.product_path_group.sas_config_file
     if echofile:
         log.info(f"Logging configuration to file {echofile}.")
-        dump_config(cfg, echofile)
-    focus(cfg)
+        with open(echofile, "w") as f:
+            dump_config(cfg, f)
+    focus(cfg, args.run_config_path)
 
 
 if __name__ == '__main__':

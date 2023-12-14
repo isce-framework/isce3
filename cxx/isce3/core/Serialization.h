@@ -163,7 +163,7 @@ inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit)
     isce3::io::saveToH5(group, "time", time);
     isce3::io::setRefEpoch(group, "time", orbit.referenceEpoch());
     isce3::io::saveToH5(group, "position", pos, dims, "meters");
-    isce3::io::saveToH5(group, "velocity", vel, dims, "meters per second");
+    isce3::io::saveToH5(group, "velocity", vel, dims, "meters / second");
     isce3::io::saveToH5(group, "interpMethod", interp_method);
 }
 
