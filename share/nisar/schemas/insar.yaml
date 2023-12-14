@@ -851,6 +851,7 @@ runw_options:
     qa_reports: include('runw_qa_reports_options', required=False)
 
 runw_qa_reports_options:
+    phase_img: include('qa_phase_img_options', required=False)
     hsi_img: include('qa_hsi_img_unwrapped_options', required=False)
 
 gunw_options:
@@ -858,6 +859,7 @@ gunw_options:
     qa_reports: include('gunw_qa_reports_options', required=False)
 
 gunw_qa_reports_options:
+    phase_img: include('qa_phase_img_options', required=False)
     hsi_img: include('qa_hsi_img_unwrapped_options', required=False)
 
 roff_options:
@@ -874,6 +876,9 @@ offsets_qa_reports_options:
 workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
+
+qa_phase_img_options:
+    rewrap: num(min=0.0, required=False)
 
 qa_hsi_img_wrapped_options:
     equalize_browse: bool(required=False)

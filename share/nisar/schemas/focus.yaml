@@ -309,7 +309,6 @@ qa_options:
   workflows: include('workflows_options', required=False)
   qa_reports: include('qa_reports_options', required=False)
   absolute_radiometric_calibration: include('absolute_radiometric_calibration_options', required=False)
-  noise_estimation: include('noise_estimation_options', required=False)
   point_target_analyzer: include('point_target_analyzer_options', required=False)
 
 # `workflows` determines whether or not to run each part of QA.
@@ -335,6 +334,10 @@ qa_reports_options:
     backscatter_histogram_bin_edges_range: list(num(), min=2, max=2, required=False)
     phs_in_radians: bool(required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
+  range_spectra:
+    az_decimation: int(min=1, required=False)
+    hz_to_mhz: bool(required=False)
+    tile_height: int(min=-1, required=False)
 
 absolute_radiometric_calibration_options:
   nchip: int(min=1, required=False)
@@ -343,14 +346,6 @@ absolute_radiometric_calibration_options:
   nfit: int(min=3, required=False)
   power_method: enum('box', 'integrated', required=False)
   power_threshold: num(required=False)
-
-noise_estimation_options:
-  freq_group: enum('A', 'B', required=True)
-  pol: enum('HH', 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV', required=True)
-  rng_start: list(int(min=0), min=1, required=False)
-  rng_stop: list(int(min=0), min=1, required=False)
-  algorithm: enum('avg', 'evd', required=False)
-  cpi: int(min=1, required=False)
 
 point_target_analyzer_options:
   nchip: int(min=1, required=False)

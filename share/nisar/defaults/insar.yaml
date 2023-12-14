@@ -793,6 +793,13 @@ runconfig:
                     qa_reports: true
 
                 qa_reports:
+                    phase_img:
+                        # The multiple of pi to rewrap the unwrapped phase image.
+                        # If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 7
+                        rewrap: 7
+
                     hsi_img:
                         # True to perform histogram equalization on the Intensity channel
                         # (the coherence magnitude layer) in the browse image PNG.
@@ -809,8 +816,8 @@ runconfig:
                         # The multiple of pi to rewrap the unwrapped phase image
                         # when generating the HSI image(s). If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-                        # Default: 3
-                        rewrap: 3
+                        # Default: 7
+                        rewrap: 7
 
             gunw:
                 workflows:
@@ -842,8 +849,8 @@ runconfig:
                         # The multiple of pi to rewrap the unwrapped phase image
                         # when generating the HSI image(s). If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
-                        # Default: 3
-                        rewrap: 3
+                        # Default: 7
+                        rewrap: 7
 
             roff:
                 workflows:

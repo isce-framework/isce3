@@ -405,6 +405,28 @@ runconfig:
                     # Default: (1024, -1)
                     tile_shape: [1024, -1]
 
+                range_spectra:
+
+                    # The stride to decimate the input array along the azimuth axis.
+                    # For example, `4` means every 4th range line will
+                    # be used to compute the range spectra. Must be greater than zero.
+                    # If `1`, no decimation will occur (but is slower to compute).
+                    # Default: 8
+                    az_decimation: 8
+
+                    # True if the input frequencies are in Hz,
+                    # but output should be converted to MHz.
+                    # Default: True
+                    hz_to_mhz: true
+
+                    # User-preferred tile height (number of range lines) for processing
+                    # images by batches. Actual tile shape may be modified by QA to be
+                    # an integer multiple of `az_decimation`. -1 to use all rows.
+                    # Note: full rows must be read in, so the number of columns for each tile
+                    # will be fixed to the number of columns in the input raster.
+                    # Default: 512
+                    tile_height: 512
+
             absolute_radiometric_calibration:
                 # The width, in samples, of the square block of image data
                 # centered around the target position to extract for oversampling
@@ -464,32 +486,6 @@ runconfig:
                 # `power_method` is not 'integrated'.
                 # Default: 3.0
                 power_threshold: 3.0
-
-            noise_estimation:
-                # *REQUIRED* Frequency group in raw L0B H5 file. Must be in {'A', 'B'}.
-                freq_group:
-
-                # *REQUIRED* Tx and Rx polarizations in raw L0B file. Must be in {'HH',
-                # 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
-                pol:
-
-                # Start range bins for beams. A list of range sample indices or null.
-                # If rng_start and rng_stop are both null, noise power is estimated over
-                # the full rangeline. Defaults to null.
-                rng_start: null
-
-                # Stop range bins for beams. A list of range sample indices or null.
-                # If rng_start and rng_stop are both null, noise power is estimated over
-                # the full rangeline. Defaults to null.
-                rng_stop: null
-
-                # Noise estimation algorithm: 'avg' - mean of sum of squares, or 'evd' -
-                # Eigenvalue Decomposition. Defaults to 'avg'.
-                algorithm: avg
-
-                # Coherent processing interval in number of range lines. Only used when
-                # algorithm='evd'. Must be >= 1. Defaults to 2.
-                cpi: 2
 
             point_target_analyzer:
                 # The width, in samples, of the square block of image data
