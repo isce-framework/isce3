@@ -69,7 +69,7 @@ runconfig:
 
         primary_executable:
             # RIFG_RUNW_GUNW will produce all three InSAR products
-            product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'RUNW_STANDALONE', 'GUNW_STANDALONE')
+            product_type: enum('GUNW', 'RIFG', 'RUNW', 'RIFG_RUNW_GUNW', 'ROFF_RIFG_RUNW_GOFF_GUNW', 'ROFF', 'GOFF', 'ROFF_GOFF')
             product_version: str('^\d+\.\d+\.\d+$', required=False)
             composite_release_id: regex(r'\w\d\d\d\d\d', name='CRID', required=False)
             processing_type: enum('PR', 'UR', required=False)

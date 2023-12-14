@@ -15,7 +15,8 @@ from nisar.log import set_logger
 from nisar.workflows.gen_el_null_range_product import dt2str
 from nisar.cal import (FaradayRotEstBickelBates,
                        FaradayRotEstFreemanSecond,
-                       faraday_rot_angle_from_cr)
+                       faraday_rot_angle_from_cr,
+                       est_cr_az_mid_swath_from_slc)
 from nisar.workflows.pol_channel_imbalance_from_rslc import (
     cr_llh_from_csv, JsonNumpyEncoder
 )
@@ -235,7 +236,12 @@ def faraday_rot_angle_from_rslc(args):
         # get start datetime of the RSLC product
         rdr_grid = slc.getRadarGrid(args.freq_band)
         epoch_start = rdr_grid.sensing_datetime(0)
-        cr_llh = cr_llh_from_csv(args.csv_cr, epoch=epoch_start)
+        # Get CRs that are facing in the right direction based on AZ angle
+        # of a CR and optimum heading at roughly mid swath/footprint.
+        cr_az_ang = est_cr_az_mid_swath_from_slc(slc)
+
+        cr_llh = cr_llh_from_csv(
+            args.csv_cr, epoch=epoch_start, az_heading=cr_az_ang)
 
         fra_prod_crs = faraday_rot_angle_from_cr(
             slc, cr_llh, freq_band=args.freq_band

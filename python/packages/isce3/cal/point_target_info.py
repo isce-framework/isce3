@@ -531,6 +531,19 @@ def analyze_point_target(
         'outside of RSLC image. This could be due to residual azimuth/range delays or '
         'incorrect geometry info or incorrect user provided target location info.')
 
+    # Raise an exception if the target position was too near the border of the image,
+    # with insufficient margin to extract a "chip" around it.
+    near_border = (
+        (i < chipsize // 2)
+        or (i > slc.shape[0] - chipsize // 2)
+        or (j < chipsize // 2)
+        or (j > slc.shape[1] - chipsize // 2)
+    )
+    if near_border:
+        raise RuntimeError(
+            "target is too close to image border -- consider reducing chipsize (nchip)"
+        )
+
     chip_i0, chip_j0, chip0 = get_chip(slc, i, j, nchip=chipsize)
 
     chip, fx, fy = oversample(chip0, nov=nov, return_slopes=True)

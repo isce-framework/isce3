@@ -60,6 +60,8 @@ class CornerReflector(TriangularTrihedralCornerReflector):
         The azimuth angle, in radians. This is the heading angle of the corner
         reflector, or the angle that the corner reflector boresight makes w.r.t
         geographic East, measured clockwise positive in the E-N plane.
+        Equivalently, this is the heading of the base of the CR w.r.t North in
+        the clockwise direction.
     side_length : float
         The length of each leg of the trihedral, in meters.
     survey_date : isce3.core.DateTime
@@ -385,3 +387,54 @@ def parse_and_filter_corner_reflector_csv(
     valid_crs = get_valid_crs(latest_crs, flags=validity_flags)
 
     return valid_crs
+
+
+def filter_crs_per_az_heading(crs, az_heading, az_atol=np.deg2rad(20.0)):
+    """
+    Filter corner reflectors per desired azimuth (AZ) orientation within
+    a desired absolute tolerance.
+
+    Parameters
+    ----------
+    crs : iterable of type CornerReflector or
+        TriangularTrihedralCornerReflector.
+    az_heading : float
+        Desired AZ/heading angle in radians w.r.t. geographic North.
+    az_atol : float, default=20.0 degrees
+        Absolute tolerance in radians when comapring AZ of CRs with
+        `az_heading`. The default is around 0.5 * HBPW of an ideal
+        triangular trihedral CR (HPBW ~ 40 deg).
+
+    Yields
+    ------
+    cr : CornerReflector or TriangularTrihedralCornerReflector
+        The datatype of cr depends on type of items in `crs`.
+
+    """
+    for cr in crs:
+        if abs(_wrap_phase(cr.azimuth - az_heading)) <= az_atol:
+            yield cr
+
+
+def _wrap_phase(phs, deg=False):
+    """
+    Wrap phase(s) within [-pi, pi] (default) or [-180, 180] (deg=True).
+    Input and output phases have the same unit determined by `deg`.
+
+    Parameters
+    ----------
+    phs : array_like float
+        phase(s) whose unit set by `deg`.
+    deg : bool, default=False
+        This will determine the units for input/output phases.
+
+    Returns
+    -------
+    float or numpy.ndarray of float
+        Phase(s) whose value(s) are wrapped within [-pi, pi] or [-180, 180]
+        depending on value of `deg`.
+
+    """
+    if deg:
+        phs = np.deg2rad(phs)
+    return np.angle(np.exp(np.multiply(1j, phs)), deg=deg)

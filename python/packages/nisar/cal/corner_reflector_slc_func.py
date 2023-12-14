@@ -6,11 +6,11 @@ import typing
 import numpy as np
 import warnings
 
-from isce3.core import Ellipsoid, LUT2d
-from isce3.geometry import geo2rdr, rdr2geo, DEMInterpolator
+from isce3.core import Ellipsoid, LUT2d, LookSide
+from isce3.geometry import geo2rdr, rdr2geo, DEMInterpolator, heading
 from isce3.core.types import ComplexFloat16Decoder
 from isce3.cal.point_target_info import get_chip, oversample
-from isce3.antenna import geo2ant
+from isce3.antenna import geo2ant, ant2geo
 
 # datatype aliases
 VectorFloat = typing.Union[typing.Sequence[float], np.ndarray]
@@ -243,6 +243,61 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, freq_band='A',
             CRInfoSlc(amp_cr, llh_cr, el_ant_cr, az_ant_cr)
         )
     return cr_info
+
+
+def est_cr_az_mid_swath_from_slc(slc):
+    """
+    Estimate approximately optimum azimuth (AZ) angle for a CR at mid swath
+    from RSLC product.
+
+    Parameters
+    ----------
+    slc : nisar.products.readers.SLC
+        The input RSLC product.
+
+    Returns
+    -------
+    float
+        Azimuth angle (radians) for a CR at mid swath within [0, 2*pi].
+        This is the heading angle of the corner reflector, or the angle that
+        the corner reflector boresight makes w.r.t geographic East, measured
+        clockwise positive in the E-N plane.
+        Equivalently, this is the heading of the base of the CR w.r.t
+        North in the clockwise direction.
+
+    Notes
+    -----
+    Mid swath is approximately defined at mechanical boresight angle by
+    ignoring electrical squint and DEM!
+
+    """
+    # get mid azimuth time of slc
+    rdr_grid = slc.getRadarGrid()
+    az_time = rdr_grid.sensing_mid
+
+    # get pos/vel at mid slc time
+    orbit = slc.getOrbit()
+    pos, vel = orbit.interpolate(az_time)
+
+    # get quaternions at mid slc time
+    attitude = slc.getAttitude()
+    quat = attitude.interpolate(az_time)
+
+    # Mechanical boresight is defined by (EL, AZ) = (0, 0) in antenna frame!
+    llh_mid, _ = ant2geo(0, 0, pos, quat)
+    head_mid = heading(*llh_mid[:2], vel)
+
+    # adjust the heading per antenna look side
+    # if right looking (-1) add a pi
+    if rdr_grid.lookside == LookSide.Right:
+        head_mid += np.pi
+    # make sure value is within [0, 2*pi] to be consistent with CR AZ
+    # definition.
+    # This step is not really necessary!
+    if head_mid < 0:
+        head_mid += (2 * np.pi)
+
+    return head_mid
 
 
 def _amp_avg_around_peak(chp_ovs, azb_rgb_pk_loc, dynamic_range_db=3.0):

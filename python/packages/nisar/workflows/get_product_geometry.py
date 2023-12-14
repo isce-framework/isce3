@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import warnings
 import argparse
 from osgeo import gdal
 import isce3
@@ -214,8 +215,23 @@ def get_radar_grid(nisar_product_obj, args):
 
     # Get grid Doppler (zero-Doppler) and native Doppler LUTs
     grid_doppler = isce3.core.LUT2d()
-    native_doppler = nisar_product_obj.getDopplerCentroid()
-    native_doppler.bounds_error = False
+
+    # TODO: Fix/remove try/except statements below
+    # Causes for error:
+    # (1) L2 products currently don't have a Doppler centroid LUT
+    # (2) Once implemented, the Doppler centroid LUT will be
+    # provided over map coordinates to follow the products'
+    # specification. This will break the method
+    # getDopplerCentroid() below
+    #
+    # The code below catches the case error caused by (1)
+    # but it does not handle (2)
+    try:
+        native_doppler = nisar_product_obj.getDopplerCentroid()
+        native_doppler.bounds_error = False
+    except KeyError as e:
+        warnings.warn(str(e))
+        native_doppler = isce3.core.LUT2d()
 
     nbands = 1
     shape = [nbands, geogrid_obj.length, geogrid_obj.width]
@@ -326,7 +342,7 @@ def get_radar_grid(nisar_product_obj, args):
 
 
 def get_geolocation_grid(nisar_product_obj, args,
-                         other_radar_grid = None):
+                         other_radar_grid=None):
     '''
     get geolocation grid for L0B and L1 products
 
