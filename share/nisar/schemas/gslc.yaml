@@ -68,9 +68,6 @@ runconfig:
             # Mechanism to select frequencies and polarizations
             input_subset: include('input_subset_options', required=False)
 
-            # Flags to turn on / off the timing corrections
-            timing_corrections: include('timing_corrections_options', required=False)
-
             # DEM download options: checked only if internet access is available
             dem_download: include('dem_download_options', required=False)
 
@@ -108,11 +105,6 @@ runconfig:
 input_subset_options:
     # List of frequencies to process. Default empty representing all
     list_of_frequencies: include('list_of_frequencies_options', required=False)
-
-timing_corrections_options:
-    # List of corrections to individually turn them on / off
-    ionosphere_slant_range: bool()
-    ionosphere_azimuth: bool()
 
 list_of_frequencies_options:
     # List of polarization channels to process. Default empty representing all
