@@ -107,6 +107,11 @@ runconfig:
                 #
                 list_of_frequencies:
 
+            # To turn on or off the timing corrections
+            timing_corrections:
+                ionosphere_slant_range: True
+                ionosphere_azimuth: False
+
             # TODO OPTIONAL - Only checked when internet access is available
             dem_download:
                 # OPTIONAL - s3 bucket / curl URL / local file
