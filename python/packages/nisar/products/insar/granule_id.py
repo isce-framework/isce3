@@ -217,8 +217,7 @@ def get_insar_granule_id(ref_slc_path, sec_slc_path, partial_granule_id,
         err_str = f'Reference and secondary slant range bandwidths ' \
                   f'combination does not generate a supported NISAR InSAR mode: ' \
                   f'Reference bandwidth (MHz): {ref_rg_bw}, Secondary bandwidth (MHz): {sec_rg_bw}'
-        error_channel.log(err_str)
-        raise ValueError(err_str)
+        warning_channel.log(err_str)
 
     ref_pols = get_slc_polarizations(ref_slc_path, freq=freq)
     sec_pols = get_slc_polarizations(sec_slc_path, freq=freq)
@@ -237,8 +236,8 @@ def get_insar_granule_id(ref_slc_path, sec_slc_path, partial_granule_id,
 
     info_values = [product_level, product_type, insar_bw_mode, insar_pol_mode,
                    ref_start_time, ref_end_time, sec_start_time, sec_end_time]
-    placeholders = ['Level', 'ProductType', 'MODE', 'PO', 'RefStartDateTime',
-                    'RefEndDateTime', 'SecStartDateTime', 'SecEndDateTime']
+    placeholders = ['{Level}', '{ProductType}', '{MODE}', '{PO}', '{RefStartDateTime}',
+                    '{RefEndDateTime}', '{SecStartDateTime}', '{SecEndDateTime}']
 
     for value, placeholder in zip(info_values, placeholders):
         partial_granule_id = partial_granule_id.replace(placeholder, str(value))
