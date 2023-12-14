@@ -812,14 +812,21 @@ def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
     # get the index of active RX channels
     active_rx_idx = np.asarray(rx_trm_info.channels) - 1
 
-    # Compute rd, wd, and wl based on data sampling rate of DBF process
-    # which is sampling rate of entires of TA table.
-    rd_dbf = np.round(rx_trm_info.rd * rx_trm_info.fs_ta /
-                      rx_trm_info.fs_win).astype(int)
-    wd_dbf = np.round(rx_trm_info.wd * rx_trm_info.fs_ta /
-                      rx_trm_info.fs_win).astype(int)
-    wl_dbf = np.round(rx_trm_info.wl * rx_trm_info.fs_ta /
-                      rx_trm_info.fs_win).astype(int)
+    # Compute rd, wd, and wl based on data sampling rate of DBF process which is
+    # sampling rate of entries of TA table.  Since rounding doesn't commute with
+    # addition, recognize that RD is a position whereas WD and WL are distances.
+    # We want to round positions RD, (RD + WD), and (RD + WD + WL) to their
+    # nearest sample at fs_ta, assuming the two clocks have a common trigger.
+    def round_win2ta(index_win):
+        fs_ratio = rx_trm_info.fs_ta / rx_trm_info.fs_win
+        return np.round(index_win * fs_ratio).astype(int)
+    rd_dbf = round_win2ta(rx_trm_info.rd)
+    starts = round_win2ta(rx_trm_info.rd + rx_trm_info.wd)
+    ends = round_win2ta(rx_trm_info.rd + rx_trm_info.wd + rx_trm_info.wl)
+    # Now compute the corresponding distances in fs_ta that are consistent with
+    # the rounded positions.
+    wd_dbf = starts - rd_dbf
+    wl_dbf = ends - starts
 
     max_idx_ta = np.size(rx_trm_info.ta_dbf_switch, axis=1) - 1
 
@@ -834,9 +841,9 @@ def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
         idx_ofs = np.zeros(len(active_rx_idx), dtype='int')
 
     # total number of range bins of a DBFed composite range line
-    dwp_first = rd_dbf[active_rx_idx[0]] + wd_dbf[active_rx_idx[0]]
-    dwp_last = rd_dbf[active_rx_idx[-1]] + wd_dbf[active_rx_idx[-1]]
-    num_rgb_dbf = dwp_last - dwp_first + wl_dbf[active_rx_idx[-1]]
+    # Don't assume any particular ordering of channels.
+    dwp_first = min(starts[active_rx_idx])
+    num_rgb_dbf = max(ends[active_rx_idx] - dwp_first)
 
     # initialize the complex RX weights
     rx_weights = np.zeros((active_rx_idx.size, num_rgb_dbf), dtype='complex')
