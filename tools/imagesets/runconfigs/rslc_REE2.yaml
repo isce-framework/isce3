@@ -25,11 +25,11 @@ runconfig:
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            external_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_EXT_20220101T120000_02.yaml
+            external_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_EXT_CAL_20220101T120000_02.yaml
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            internal_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_INT_20220101T120000_01.h5
+            internal_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_INT_CAL_20220101T120000_01.h5
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
@@ -47,7 +47,7 @@ runconfig:
             sas_output_file: output_rslc/rslc.h5
 
             # Echo processor config (including defaults) to file.
-            sas_config_file: output_rslc/rslc_config.yaml
+            sas_config_file: output_rslc/runconfig_rslc.yaml
 
             qa_output_dir: qa_rslc
 
@@ -95,7 +95,7 @@ runconfig:
 
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: 1520.0
+                output_prf: 1520
 
                 # Interval for azimuth grid alignment in seconds. See docs.
                 # Typically want 1 second and integer PRF (in Hz). Will not
@@ -114,13 +114,6 @@ runconfig:
                 kind: Kaiser
                 shape: 0.0
 
-            # Range filter parameters for mixed-mode cases.
-            range_common_band_filter:
-                # Stop-band attenuation in dB
-                attenuation: 40.0
-                # Transition width as a fraction of output bandwidth.
-                width: 0.15
-
             radio_frequency_interference:
                 # Whether to attempt RFI detection and record related metadata.
                 # Defaults to True
@@ -133,11 +126,11 @@ runconfig:
                 # Coherent processing interval length (pulses).  Defaults to 32.
                 cpi_length: 32
                 # Number of subdivisions in range.  Defaults to 1.
-                num_range_blocks: 1
-                # Maximum allowable number of emitters suppressed per CPI.
-                # Whenever the limit is exceeded it's assumed that the detection
-                # was unreliable and mitigation is disabled for the block.
-                max_emitters: 16
+                num_range_blocks: 40
+                # Maximum allowable number of emitters can be detected and
+                # suppressed per CPI. ST-EVD would ignore emitters exceeding
+                # this limit. This number should be less than cpi_length.
+                max_emitters: 12
                 # Number of large value outliers to be trimmed in slow-time
                 # minimum Eigenvalues.
                 num_max_trim: 0
@@ -147,14 +140,14 @@ runconfig:
                 # A detection error (miss) happens when a maximum power RFI
                 # emitter contaminates multiple consecutive CPIs, resulting in a
                 # flat maximum Eigenvalue slope in slow time. Hence the standard
-                # (STD) deviation of multiple dominant EVs across slow time
+                # deviation (STD) of multiple dominant EVs across slow time
                 # defined by this parameter are compared. The one with the
                 # maximum STD is used for RFI Eigenvalue first difference
                 # computation.
                 max_num_rfi_ev: 2
                 # Number of slow-time CPIs grouped together for determining and
                 # applying a common EV slope threshold.
-                num_cpi_per_threshold_block: 20
+                num_cpi_per_threshold_block: 30
                 # Parameters used to adaptively determine RFI eigenvalue
                 # difference thresholds
                 threshold_hyperparameters:
@@ -169,7 +162,14 @@ runconfig:
                     # larger value of y, therefore relaxing the final threshold.
                     # The values of x outside of the defined range of y are
                     # extrapolated.
-                    y: [5.0, 20.0]
+                    y: [5.0, 2.0]
+
+            # Range filter parameters for mixed-mode cases.
+            range_common_band_filter:
+                # Stop-band attenuation in dB
+                attenuation: 40.0
+                # Transition width as a fraction of output bandwidth.
+                width: 0.15
 
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
@@ -242,7 +242,7 @@ runconfig:
                     maxiter: 50
                     # Step size for computing numerical gradient of Doppler (m): float
                     # (default: 10.)
-                    delta_range: 10.
+                    delta_range: 10.0
 
             # nodelay or tsx
             dry_troposphere_model: nodelay
@@ -280,7 +280,7 @@ runconfig:
                 # range compression
                 rangecomp: True
                 # elevation antenna pattern correction
-                eap: False
+                eap: True
                 # R^4 spreading loss correction
                 range_cor: True
                 # azimuth compression
@@ -290,8 +290,288 @@ runconfig:
         # program and which qa option(s) to enable. By default the qa SAS is not run.
         qa:
             workflows:
-                validate: true
-                qa_reports: true
-                absolute_radiometric_calibration: true
-                noise_estimation: true
-                point_target_analyzer: true
+                # Flag to run `validate` workflow to validate the
+                # input file against its product spec.
+                # Default: True
+                validate: True
+
+                # Flag to run `qa_reports` workflow to generate a
+                # PDF report, geolocated browse image, compute statistics
+                # on the input file, etc..
+                # Default: True
+                qa_reports: True
+
+                # Flag to run Absolute Radiometric Calibration calibration tool.
+                # Default: True
+                absolute_radiometric_calibration: True
+
+                # Flag to run Noise Estimator Tool calibration tool.
+                # Default: True
+                noise_estimation: True
+
+                # Flag to run Point Target Analyzer calibration tool.
+                # Default: True
+                point_target_analyzer: True
+
+            qa_reports:
+                backscatter_img:
+                    # True to compute backscatter in linear units when generating
+                    # the backscatter image for the browse images and graphical
+                    # summary PDF. False for decibel units.
+                    # Default: True
+                    linear_units: True
+
+                    # Number of looks along each axis of the Frequency A
+                    # image arrays for multilooking the backscatter image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, the QA code to compute the nlooks values
+                    # based on `longest_side_max`.
+                    # Default: None
+                    nlooks_freqa:
+
+                    # Number of looks along each axis of the Frequency B
+                    # image arrays for multilooking the backscatter image.
+                    # Format: [<num_rows>, <num_cols>]
+                    # Example: [6,7]
+                    # If not provided, the QA code to compute the nlooks values
+                    # based on `longest_side_max`.
+                    # Default: None
+                    nlooks_freqb:
+
+                    # The maximum number of pixels allowed for the longest side
+                    # of the final 2D multilooked browse image. Defaults to 2048.
+                    # If `nlooks_freq*` parameter(s) is not None, nlooks
+                    # values will take precedence.
+                    # Default: 2048
+                    longest_side_max: 2048
+
+                    # Percentile range that the image array will be clipped to
+                    # and that the colormap covers. Must be in range [0.0, 100.0].
+                    # Default: (5.0, 95.0)
+                    percentile_for_clipping: [5.0, 95.0]
+
+                    # Gamma correction parameter applied to backscatter and browse image(s).
+                    # Gamma will be applied as follows:
+                    # array_out = normalized_array ^ gamma
+                    # where normalized_array is a copy of the image with values
+                    # scaled to the range [0,1].
+                    # The image colorbar will be defined with respect to the input
+                    # image values prior to normalization and gamma correction.
+                    # If None, then no normalization and no gamma correction will be applied.
+                    # Default: 0.5
+                    gamma: 0.5
+
+                    # User-preferred tile shape for processing images by batches.
+                    # Actual tile shape may be modified by QA to be an integer
+                    # multiple of the number of looks for multilooking, of the
+                    # decimation ratio, etc.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Default: (1024, 1024)
+                    tile_shape: [1024, 1024]
+
+                histogram:
+                    # Step size to decimate the input array for computing
+                    # the backscatter and phase histograms.
+                    # For example, [2,3] means every 2nd azimuth line and
+                    # every 3rd range sample will be used to compute the histograms.
+                    # Format: [<azimuth>, <range>]
+                    # Default: (10, 10)
+                    decimation_ratio: [10, 10]
+
+                    # Range in dB for the backscatter histogram's bin edges. Endpoint will
+                    # be included. Format: [<starting value>, <endpoint>]
+                    # Default: (-80.0, 20.0)
+                    backscatter_histogram_bin_edges_range: [-80.0, 20.0]
+
+                    # True to compute phase histogram in radians units,
+                    # False for degrees units.
+                    # Default: True
+                    phs_in_radians: True
+
+                    # User-preferred tile shape for processing images by batches.
+                    # Actual tile shape may be modified by QA to be an integer
+                    # multiple of the number of looks for multilooking, of the
+                    # decimation ratio, etc.
+                    # Format: [<num_rows>, <num_cols>]
+                    # -1 to indicate all rows / all columns (respectively).
+                    # Default: (1024, -1)
+                    tile_shape: [1024, -1]
+
+            absolute_radiometric_calibration:
+                # The width, in samples, of the square block of image data
+                # centered around the target position to extract for oversampling
+                # and peak finding. Must be >= 1.
+                # Default: 64
+                nchip: 64
+
+                # The upsampling ratio. Must be >= 1.
+                # Default: 32
+                upsample_factor: 32
+
+                # Option controlling how the target peak position is
+                # estimated. Valid options are 'time' or 'freq'.
+
+                # 'time':
+                # The peak location is found in the time domain by detecting the
+                # maximum value within a square block of image data around the
+                # expected target location. The signal data is upsampled to
+                # improve precision.
+
+                # 'freq':
+                # The peak location is found by estimating the phase ramp in the
+                # frequency domain. This mode is useful when the target is
+                # well-focused, has high SNR, and is the only target in the
+                # neighborhood (often the case in point target simulations).
+                # Default: time
+                peak_find_domain: time
+
+                # The width, in *oversampled* samples, of the square
+                # sub-block of image data centered around the target position to
+                # extract for fitting a quadratic polynomial to the peak. Note
+                # that this is the size in samples *after upsampling*.
+                # Must be >= 3.
+                # Default: 5
+                nfit: 5
+
+                # Method to use for estimating the target signal power.
+                # Valid options are 'box' or 'integrated'.
+
+                # 'box':
+                # Measures power using the rectangular box method, which assumes
+                # that the target response can be approximated by a 2-D
+                # rectangular function. The total power is estimated by
+                # multiplying the peak power by the 3dB response widths in
+                # along-track and cross-track directions.
+
+                # 'integrated':
+                # Measures power using the integrated power method. The total
+                # power is measured by summing the power of bins whose power
+                # exceeds a predefined minimum power threshold.
+                # Default: box
+                power_method: box
+
+                # The minimum power threshold, measured in dB below the
+                # peak power, for estimating the target signal power using the
+                # integrated power method. This parameter is ignored if
+                # `power_method` is not 'integrated'.
+                # Default: 3.0
+                power_threshold: 3.0
+
+            noise_estimation:
+                # *REQUIRED* Frequency group in raw L0B H5 file. Must be in {'A', 'B'}.
+                freq_group:
+
+                # *REQUIRED* Tx and Rx polarizations in raw L0B file. Must be in {'HH',
+                # 'HV', 'VH', 'VV', 'LH', 'LV', 'RH', 'RV'}.
+                pol:
+
+                # Start range bins for beams. A list of range sample indices or null.
+                # If rng_start and rng_stop are both null, noise power is estimated over
+                # the full rangeline. Defaults to null.
+                rng_start: null
+
+                # Stop range bins for beams. A list of range sample indices or null.
+                # If rng_start and rng_stop are both null, noise power is estimated over
+                # the full rangeline. Defaults to null.
+                rng_stop: null
+
+                # Noise estimation algorithm: 'avg' - mean of sum of squares, or 'evd' -
+                # Eigenvalue Decomposition. Defaults to 'avg'.
+                algorithm: avg
+
+                # Coherent processing interval in number of range lines. Only used when
+                # algorithm='evd'. Must be >= 1. Defaults to 2.
+                cpi: 2
+
+            point_target_analyzer:
+                # The width, in samples, of the square block of image data
+                # centered around the target position to extract for oversampling
+                # and peak finding. Must be >= 1.
+                # Default: 64
+                nchip: 64
+
+                # The upsampling ratio. Must be >= 1.
+                # Default: 32
+                upsample_factor: 32
+
+                # Option controlling how the target peak position is
+                # estimated. Valid options are 'time' or 'frequency'.
+
+                # 'time':
+                # The peak location is found in the time domain by detecting the
+                # maximum value within a square block of image data around the
+                # expected target location. The signal data is upsampled to
+                # improve precision.
+
+                # 'frequency':
+                # The peak location is found by estimating the phase ramp in the
+                # frequency domain. This mode is useful when the target is
+                # well-focused, has high SNR, and is the only target in the
+                # neighborhood (often the case in point target simulations).
+                # Default: time
+                peak_find_domain: time
+
+                # The number of sidelobes, including the main lobe, to
+                # use for computing the integrated sidelobe ratio (ISLR).
+                # Must be > 1.
+                # Default: 10
+                num_sidelobes: 10
+
+                # Controls how the main lobe null locations are
+                # determined for ISLR computation. If `predict_null` is true, the
+                # null locations are determined analytically by assuming that the
+                # corner reflector has the impulse response of a point target with
+                # known sampling-rate-to-bandwidth ratio (given by `fs_bw_ratio`)
+                # and range & azimuth spectral windows (given by `window_type` &
+                # `window_parameter`). In this case, the first sidelobe will be
+                # considered to be part of the main lobe. Alternatively, if
+                # `predict_null` is false, the apparent null locations will be
+                # estimated from the RSLC image data by searching for nulls in
+                # range & azimuth cuts centered on the target location. In this
+                # case, the main lobe does *not* include the first sidelobe.
+                # `predict_null` has no effect on peak-to-sidelobe ratio (PSLR)
+                # computation -- for PSLR analysis, the null locations are always
+                # determined by searching for nulls in the RSLC data.
+                # Default: True
+                predict_null: True
+
+                # The ratio of sampling rate to bandwidth in the RSLC
+                # image data. Must be the same for both range & azimuth. It is
+                # ignored if `predict_null` was false. Must be > 0.
+                # Default: 1.2
+                fs_bw_ratio: 1.2
+
+                # The window type used in RSLC formation. Used to predict
+                # the locations of main lobe nulls during ISLR processing if
+                # `predict_null` was true. It is ignored if `predict_null` was
+                # false. The same window type is assumed to have been used for
+                # both range & azimuth focusing. Valid options are 'rect',
+                # 'cosine', or 'kaiser'.
+
+                # 'rect':
+                # Assumes that the RSLC image was formed using a
+                # rectangular-shaped window (i.e. no spectral weighting was
+                # applied).
+
+                # 'cosine':
+                # Assumes that the RSLC image was formed using a raised-cosine
+                # window with pedestal height defined by `window_parameter`.
+
+                # 'kaiser':
+                # Assumes that the RSLC image was formed using a Kaiser window
+                # with beta parameter defined by `window_parameter`.
+                # Default: rect
+                window_type: rect
+
+                # The window shape parameter used in RSLC formation. The
+                # meaning of this parameter depends on the `window_type`. For a
+                # raised-cosine window, it is the pedestal height of the window
+                # and must be in the interval [0, 1]. For a Kaiser window, it is
+                # the beta parameter and must be >= 0. It is ignored if
+                # `window_type` was 'rect' or if `predict_null` was false. The
+                # same shape parameter is assumed to have been used for both range
+                # & azimuth focusing.
+                # Default: 0.0
+                window_parameter: 0.0
