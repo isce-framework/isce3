@@ -14,21 +14,19 @@ workflowdata = {
         # and so forth
         "L0B_RRSD_REE2":
         [
-            "dem_REE2_right_zero_height.tif",
+            "dem_REE2_right.tif",
             "NISAR_ANC_L_PR_FOE_20230929T121335_20230701T000150_20230701T000230.xml",
             "NISAR_ANC_L_PR_FRP_20230929T121335_20230701T000150_20230701T000230.xml",
             "NISAR_ANTPAT_20230218T144138.h5",
             "NISAR_LSAR_EXT_CAL_20220101T120000_02.yaml",
             "NISAR_LSAR_INT_CAL_20220101T120000_01.h5",
             "README.txt",
-            "REE_L0B_ECHO_array144sq_04.h5",
+            "NISAR_L0_PR_RRSD_035_079_A_192S_20230701T000150_20230701T000229_A00301_F_J_001.h5",
         ],
 
         "L0B_RRSD_REE3":
         [
-            "dem_90_09_945_16_zero_height.tiff",
             "dem_90_09_945_16.tiff",
-            "dem_90_09_945_16.vrt",
             "NISAR_ANC_L_PR_FOE_20231207T182337_20251011T121909_20251011T122039.xml",
             "NISAR_ANC_L_PR_FRP_20231207T182337_20251011T121909_20251011T122039.xml",
             "NISAR_ANTPAT_20230707T142741.h5",
