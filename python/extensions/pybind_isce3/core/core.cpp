@@ -81,6 +81,7 @@ void addsubmodule_core(py::module & m)
 
     // forward declare bound enums
     py::enum_<isce3::core::LookSide> pyLookSide(m_core, "LookSide");
+    py::enum_<isce3::core::OrbitInterpMethod> pyOrbitInterpMethod(m_core, "OrbitInterpMethod");
 
     // add bindings
     add_constants(m_core);
@@ -96,6 +97,7 @@ void addsubmodule_core(py::module & m)
     addbinding(pyLUT1d);
     addbinding(pyLUT2d);
     addbinding(pyOrbit);
+    addbinding(pyOrbitInterpMethod);
     addbinding(pyQuaternion);
     addbinding(pyStateVector);
     addbinding(pyTimeDelta);

@@ -194,7 +194,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         as a function of azimuth and range
                     in_rtc: isce3.io.Raster, optional
                         Input RTC area factor (in slant-range).
-                    out_rtc: isce3.io.Raster, optional
+                    output_rtc: isce3.io.Raster, optional
                         Output RTC area factor (in slant-range).
                     input_layover_shadow_mask_raster: isce3.io.Raster, optional
                         Input layover/shadow mask raster (in radar geometry).

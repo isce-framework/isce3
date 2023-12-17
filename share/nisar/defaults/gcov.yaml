@@ -77,7 +77,7 @@ runconfig:
         primary_executable:
             product_type: GCOV
             product_version: 0.1.0
-            processing_type: PR
+            processing_type:
             partial_granule_id:
 
         debug_level_group:

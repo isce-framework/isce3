@@ -156,8 +156,7 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     return isce3.io.Raster(out_file)
 
 
-def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
-                                    output_terrain_radiometry):
+def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc):
     '''
     Read and validate radiometric terrain correction (RTC) area
     normalization factor (ANF) flags
@@ -296,8 +295,7 @@ def run(cfg):
     flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     save_nlooks = geocode_dict['save_nlooks']
     save_rtc_anf, save_rtc_anf_gamma0_to_sigma0 = \
-        read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
-                                        output_terrain_radiometry)
+        read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc)
     save_dem = geocode_dict['save_dem']
     min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
     max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
@@ -608,7 +606,6 @@ def run(cfg):
             del out_off_diag_terms_obj
 
         with h5py.File(output_hdf5, 'a') as hdf5_obj:
-            hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
             root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
 
             h5_ds = os.path.join(root_ds, 'listOfPolarizations')

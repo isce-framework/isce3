@@ -2,12 +2,283 @@ import h5py
 import warnings
 import numpy as np
 from datetime import datetime
+import xml.etree.ElementTree as ET
+import journal
 
 from nisar.products.readers import open_product
-
 from nisar.h5 import cp_h5_meta_data
 
 DATE_TIME_METADATA_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+
+# The units below have been tested through UDUNITS-2.
+# If a unit exists in the product but is not yet included in
+# the dictionary below, the writer will issue a WARNING.
+# This is done to make sure that all units are "valid"
+# according to UDUNITS-2. To remove the WARNING, please
+# update the dictionary below
+cf_units_dict = {
+    '1': '1',
+    'DN': '1',
+    'unitless': '1',
+    'seconds': 'seconds',
+    'meters': 'meters',
+    'degrees': 'degrees',
+    'hertz': 'hertz',
+    'radians': 'radians',
+    'radians^-1': 'radians^-1',
+    'meters / second': 'meters / second',
+    'meters per second': 'meters / second',
+    'meters / second ^ 2': 'meters / second ^ 2',
+    'meters per second squared': 'meters / second ^ 2',
+    'radians per second': 'radians / second'
+}
+
+
+def check_h5_dtype_vs_xml_spec(xml_metadata_entry, h5_dataset_obj,
+                               verbose=False):
+    """
+    Check the data type of an HDF5 Dataset against the product specification
+    XML
+
+    Parameters
+    ----------
+    xml_metadata_entry: xml.etree.ElementTree
+        ElementTree object parsed from the product specifications XML file
+    h5_dataset_obj: h5py.Dataset
+        Product h5py dataset
+    verbose: bool
+        Flag indicating if the check should be applied in verbose
+        mode
+    """
+    warning_channel = journal.warning('check_h5_dtype_vs_xml_spec')
+
+    full_h5_ds_path = xml_metadata_entry.attrib['name']
+
+    xml_dtype = xml_metadata_entry.tag
+
+    # Get length and width attributes if they exist. Otherwise, set them to
+    # None.
+    xml_length, xml_width = [xml_metadata_entry.attrib[attr]
+                             if attr in xml_metadata_entry.attrib else None
+                             for attr in ["length", "width"]]
+
+    hdf5_dtype = h5_dataset_obj.dtype
+    hdf5_dtype_is_int = 'int' in str(hdf5_dtype)
+    hdf5_dtype_is_float = 'float' in str(hdf5_dtype)
+    hdf5_dtype_is_complex = 'complex' in str(hdf5_dtype)
+    hdf5_dtype_is_numeric = (hdf5_dtype_is_int or
+                             hdf5_dtype_is_float or
+                             hdf5_dtype_is_complex)
+
+    # Invalid or unsupported data types
+    if xml_dtype not in ['string', 'integer', 'real']:
+        warning_channel.log(f'Unsupported data type "{xml_dtype}"'
+                            ' found in the metadata field'
+                            f' "{full_h5_ds_path}"')
+        return
+
+    # verify string data types (`S`: fixed-length strings)
+    if (xml_dtype == 'string' and hdf5_dtype.kind != 'S'):
+        warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                            ' is expected to be a string, but it has'
+                            f' data type "{hdf5_dtype}"')
+
+    # verify integer data types
+    elif xml_dtype == 'integer' and not hdf5_dtype_is_int:
+        warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                            ' is expected to be an integer, but it has'
+                            f' data type "{hdf5_dtype}"')
+
+    # verify real or complex data types
+    elif (xml_dtype == 'real' and not hdf5_dtype_is_float and
+            not hdf5_dtype_is_complex):
+        warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                            ' is expected to be a real number, but it has'
+                            f' data type "{hdf5_dtype}"')
+
+    # verify if numeric data types contains the attribute "width"
+    if hdf5_dtype_is_numeric and xml_width is None:
+        warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                            f' has data type "{hdf5_dtype}" but the attribute'
+                            ' "width" of the associated XML entry is not set')
+
+    # verify the width of real (non-complex) values
+    elif (hdf5_dtype_is_numeric and not hdf5_dtype_is_complex and
+            hdf5_dtype.itemsize != int(xml_width)/8):
+        warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                            f' has data type "{hdf5_dtype}" but the width of'
+                            ' the corresponding XML entry is set to'
+                            f' "{xml_width}"')
+
+    # verify the width of complex values
+    elif (hdf5_dtype_is_numeric and hdf5_dtype_is_complex and
+            hdf5_dtype.itemsize != 2 * int(xml_width)/8):
+        warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                            f' has data type "{hdf5_dtype}" but the width of'
+                            ' the corresponding XML entry is set to'
+                            f' "{xml_width}"')
+
+    if verbose:
+        if (xml_dtype == 'string' and xml_length != 0 and
+                hdf5_dtype.kind == 'S' and
+                xml_length != hdf5_dtype.itemsize):
+            warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                                f' has data type "{hdf5_dtype}" (i.e.,'
+                                'fixed-length string with'
+                                f' {hdf5_dtype.itemsize}'
+                                ' characters) but XML-entry length set to'
+                                f' {xml_length}')
+
+
+def write_xml_spec_unit_to_h5_dataset(xml_metadata_entry, h5_dataset_obj):
+    """
+    Write a physical unit to an HDF5 Dataset based on the
+    product specification XML
+
+    Parameters
+    ----------
+    xml_metadata_entry: xml.etree.ElementTree
+        ElementTree object parsed from the product specifications XML file
+    h5_dataset_obj: h5py.Dataset
+        Product h5py dataset
+    """
+    warning_channel = journal.warning('write_xml_spec_unit_to_h5_dataset')
+    error_channel = journal.error('write_xml_spec_unit_to_h5_dataset')
+
+    full_h5_ds_path = xml_metadata_entry.attrib['name']
+
+    flag_found_units = False
+
+    # iterate over the annotation elements
+    for annotation_et in xml_metadata_entry:
+
+        # units are provided in annotation entries with attribute
+        # "app" set to "conformace"
+        if ('app' not in annotation_et.attrib or
+                annotation_et.attrib['app'] != 'conformance'):
+            continue
+
+        # iterate over annotation attributes and locate `units`
+        # (if existing)
+        for annotation_key, annotation_value in \
+                annotation_et.items():
+
+            # if found multiple `units` annotation, raise an error
+            if flag_found_units and annotation_key == 'units':
+                error_message = ('ERROR multiple units found for'
+                                 f' metadata field {full_h5_ds_path}')
+                error_channel.log(error_message)
+                raise ValueError(error_message)
+
+            if annotation_key == 'units':
+
+                # If annotation element is `units`, verify if
+                # corresponding unit has a mapping to CF
+                # conventions units using the dictionary
+                # `cf_units_dict`. If so, write the `units`
+                # into the HDF5 dataset as an attribute.
+                # Units found in the dictionary `cf_units_dict`
+                # have precedence over existing units
+                for unit_key, unit_name in cf_units_dict.items():
+                    if annotation_value != unit_key:
+                        continue
+
+                    h5_dataset_obj.attrs['units'] = \
+                        np.string_(unit_name)
+
+                    flag_found_units = True
+                    break
+
+                # Units that require a reference epoch (starting
+                # with "seconds since") should be
+                # filled dynamically. For those fields, verify
+                # if the metadata entry has an HDF5 attribute
+                # named `units` and if so and it's valid, mark
+                # `flag_found_units` as `True`
+                if (not flag_found_units and
+                        annotation_value.startswith(
+                            'seconds since') and
+                        'units' in h5_dataset_obj.attrs.keys() and
+                        h5_dataset_obj.attrs['units']):
+                    flag_found_units = True
+
+                # If the unit is not found within the
+                # dictionary `cf_units_dict`, raise a warning
+                if not flag_found_units:
+                    warning_channel.log(f'The metadata field {full_h5_ds_path}'
+                                        ' has an invalid unit:'
+                                        f' "{annotation_value}"')
+
+
+def write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj):
+    """
+    Write a description to an HDF5 Dataset based on the
+    product specification XML
+
+    Parameters
+    ----------
+    xml_metadata_entry: xml.etree.ElementTree
+        ElementTree object parsed from the product specifications XML file
+    h5_dataset_obj: h5py.Dataset
+        Product h5py dataset
+    """
+    warning_channel = journal.warning('write_xml_description_to_hdf5')
+    error_channel = journal.error('write_xml_description_to_hdf5')
+
+    full_h5_ds_path = xml_metadata_entry.attrib['name']
+
+    flag_found_description = False
+    existing_h5_description = None
+
+    # iterate over the annotation elements
+    for annotation_et in xml_metadata_entry:
+
+        # descriptions are provided in annotation entries with attribute
+        # "app" set to "conformace"
+        if ('app' not in annotation_et.attrib or
+                annotation_et.attrib['app'] != 'conformance'):
+            continue
+
+        if (not existing_h5_description and
+                'description' in h5_dataset_obj.attrs.keys()):
+            existing_h5_description = h5_dataset_obj.attrs[
+                'description'].tostring().decode()
+
+        # update the metadata field description from XML description
+        xml_description = annotation_et.text
+
+        # if found multiple descriptions, raise an error
+        if flag_found_description and xml_description:
+            error_message = ('ERROR multiple description entries'
+                             ' found for metadata field'
+                             f' {full_h5_ds_path}')
+            error_channel.log(error_message)
+            raise ValueError(error_message)
+
+        # If the product specs description is valid but the
+        # product has an existing destription that does not
+        # match the product specs description, raise a
+        # warning
+        if (xml_description and existing_h5_description and
+                xml_description != existing_h5_description):
+            warning_channel.log('WARNING existing metadata entry description'
+                                f' for metadata entry {full_h5_ds_path}'
+                                f' "{existing_h5_description}" does not match'
+                                ' product specification description'
+                                f' "{xml_description}"')
+            flag_found_description = True
+
+        # if the XML description is valid, update metadata field
+        elif xml_description and not flag_found_description:
+            flag_found_description = True
+            h5_dataset_obj.attrs['description'] = \
+                np.string_(xml_description)
+
+        # if the XML description is empty, raise a warning
+        if not flag_found_description:
+            warning_channel.log(f'The metadata field {full_h5_ds_path} has no'
+                                ' description')
 
 
 class BaseWriterSingleInput():
@@ -43,7 +314,6 @@ class BaseWriterSingleInput():
         self.input_product_hdf5_group_type = \
             self.input_product_obj.ProductPath.split('/')[-1]
         self.root_path = self.input_product_obj.RootPath
-        # self.input_slc_product_path = slc.ProductPath
         self.output_product_path = (
             f'//science/{self.input_product_obj.sarBand}SAR/'
             f'{self.product_type}')
@@ -112,10 +382,9 @@ class BaseWriterSingleInput():
         self.copy_from_input(
             'identification/isUrgentObservation')
 
-        # TODO: fix this
-        self.set_value(
+        self.copy_from_input(
              'identification/diagnosticModeFlag',
-             '(NOT SPECIFIED)')
+             skip_if_not_present=True)
 
         self.set_value(
             'identification/processingDateTime',
@@ -126,7 +395,7 @@ class BaseWriterSingleInput():
                              default=self.input_product_obj.sarBand)
 
         self.copy_from_input('identification/instrumentName',
-                             default='(NOT SPECIFIED)')
+                             skip_if_not_present=True)
 
         processing_type_runconfig = \
             self.cfg['primary_executable']['processing_type']
@@ -200,8 +469,8 @@ class BaseWriterSingleInput():
                 path_dataset_in_h5, data=np.string_(str(data)))
             return
 
-        if isinstance(data, list) and \
-            all(isinstance(item, str) for item in data):
+        if (isinstance(data, list) and
+                all(isinstance(item, str) for item in data)):
             self.output_hdf5_obj.create_dataset(
                 path_dataset_in_h5, data=np.bytes_(data))
             return
@@ -268,14 +537,14 @@ class BaseWriterSingleInput():
             # if a default value was not provided and flag
             # `skip_if_not_present`, skip
             if default is None and skip_if_not_present:
-                warnings.warn('Invalid key for the input product: ' +
-                              input_h5_field_path)
+                warnings.warn('Metadata entry not found in the input'
+                              ' product: ' + input_h5_field_path)
                 return
 
             # otherwise, if a default value was not provided, raise an error
             elif default is None:
-                raise KeyError('Invalid key for the input product: ' +
-                               input_h5_field_path)
+                raise KeyError('Metadata entry not found in the input'
+                               ' product: ' + input_h5_field_path)
 
             # otherwise, assign the default value to data
             data = default
@@ -311,6 +580,42 @@ class BaseWriterSingleInput():
             data = default
 
         self.set_value(h5_field, data=data, *args, **kwargs)
+
+    def check_and_decorate_product_using_specs_xml(self, specs_xml_file):
+        """
+        Check data type and decorate units and description based on a
+        product specifications XML file.
+
+        Parameters
+        ----------
+        specs_xml_file: str
+            Product specfications XML file
+        """
+
+        specs = ET.ElementTree(file=specs_xml_file)
+
+        # update product root attributes
+        annotation_et = specs.find('./product/science/annotation')
+        for key, value in annotation_et.items():
+            self.output_hdf5_obj.attrs[key] = np.string_(value)
+
+        # iterate over all XML specs parameters
+        nodes_et = specs.find('./product/science/nodes')
+        for xml_metadata_entry in nodes_et:
+            # NISAR specs parameters are identified by the XML attribute
+            # `name`
+            full_h5_ds_path = xml_metadata_entry.attrib['name']
+            # skip if XML attribute does not exist in the product
+            if full_h5_ds_path not in self.output_hdf5_obj:
+                continue
+
+            # otherwise, locate the XML attribute within the product
+            h5_dataset_obj = self.output_hdf5_obj[full_h5_ds_path]
+
+            check_h5_dtype_vs_xml_spec(xml_metadata_entry, h5_dataset_obj)
+            write_xml_spec_unit_to_h5_dataset(xml_metadata_entry,
+                                              h5_dataset_obj)
+            write_xml_description_to_hdf5(xml_metadata_entry, h5_dataset_obj)
 
     def __enter__(self):
         return self

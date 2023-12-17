@@ -1,4 +1,3 @@
-import isce3
 from nisar.products.writers import BaseL2WriterSingleInput
 
 
@@ -23,6 +22,7 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.populate_identification_l2_specific()
         self.populate_data_parameters()
         self.populate_calibration_information()
+        self.populate_processing_information_l2_common()
         self.populate_processing_information()
         self.populate_orbit()
         self.populate_attitude()
@@ -37,7 +37,7 @@ class GslcWriter(BaseL2WriterSingleInput):
             self.copy_from_input(
                 f'{output_swaths_freq_path}/numberOfSubSwaths',
                 f'{input_swaths_freq_path}/numberOfSubSwaths',
-                default='(NOT SPECIFIED)')
+                skip_if_not_present=True)
 
             self.copy_from_input(
                 f'{output_swaths_freq_path}/rangeBandwidth',
@@ -142,44 +142,3 @@ class GslcWriter(BaseL2WriterSingleInput):
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'geocoding',
             'Sinc interpolation')
-
-        self.set_value(
-            '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'softwareVersion',
-            isce3.__version__)
-
-        # populate processing information inputs parameters
-        inputs_group = \
-            '{PRODUCT}/metadata/processingInformation/inputs'
-
-        self.set_value(
-            f'{inputs_group}/l1SlcGranules',
-            [self.input_file])
-
-        orbit_file = self.cfg[
-            'dynamic_ancillary_file_group']['orbit_file']
-        if orbit_file is None:
-            orbit_file = '(NOT SPECIFIED)'
-        self.set_value(
-            f'{inputs_group}/orbitFiles',
-            [orbit_file])
-
-        # `run_config_path` can be either a file name or a string
-        # representing the contents of the runconfig file (identified
-        # by the presence of a "/n" in the `run_config_path`)
-        if '\n' in self.runconfig.args.run_config_path:
-            self.set_value(
-                f'{inputs_group}/configFiles',
-                '(NOT SPECIFIED)')
-        else:
-            self.set_value(
-                f'{inputs_group}/configFiles',
-                [self.runconfig.args.run_config_path])
-
-        dem_file_description = \
-            self.cfg['dynamic_ancillary_file_group']['dem_file_description']
-        if dem_file_description is None:
-            dem_file_description = '(NOT SPECIFIED)'
-        self.set_value(
-            f'{inputs_group}/demSource',
-            dem_file_description)

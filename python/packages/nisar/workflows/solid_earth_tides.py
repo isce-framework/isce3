@@ -184,11 +184,13 @@ def _extract_params_from_gunw_hdf5(gunw_hdf5_path: str):
          los_unit_vector_y_cube,
          xcoord_radar_grid,
          ycoord_radar_grid,
-         height_radar_grid,epsg] =[h5_obj[f'{rdr_grid_path}/{item}'][()]
+         height_radar_grid] =[h5_obj[f'{rdr_grid_path}/{item}'][()]
                                    for item in ['incidenceAngle',
                                                 'losUnitVectorX', 'losUnitVectorY',
                                                 'xCoordinates', 'yCoordinates',
-                                                'heightAboveEllipsoid', 'epsg']]
+                                                'heightAboveEllipsoid']]
+        projection_dataset = h5_obj[f'{rdr_grid_path}/projection']
+        epsg = projection_dataset.attrs['epsg_code']
 
          # Wavelenth in meters
         wavelength = isce3.core.speed_of_light / \

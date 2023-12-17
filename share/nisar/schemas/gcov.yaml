@@ -259,6 +259,12 @@ geocode_options:
     # Apply wet tropospheric delay correction
     apply_wet_tropospheric_delay_correction: bool(required=False)
 
+    # Apply range ionospheric delay correction
+    apply_range_ionospheric_delay_correction: bool(required=False)
+
+    # Apply azimuth ionospheric delay correction
+    apply_azimuth_ionospheric_delay_correction: bool(required=False)
+
     # Apply RSLC metadata valid-samples sub-swath masking
     apply_valid_samples_sub_swath_masking: bool(required=False)
 

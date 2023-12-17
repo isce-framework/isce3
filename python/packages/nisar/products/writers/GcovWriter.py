@@ -1,4 +1,7 @@
+import journal
 import isce3
+
+import nisar.workflows.helpers as helpers
 from nisar.products.writers import BaseL2WriterSingleInput
 
 
@@ -13,8 +16,6 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.input_freq_pols_dict = self.cfg['processing']['input_subset'][
             'list_of_frequencies']
-
-        self.output_format = runconfig.cfg['output_gcov_terms']['format']
 
         # For GCOV, the input list of polarizations may be different
         # from the output list of polarizations due to the
@@ -40,98 +41,73 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.populate_data_parameters()
         self.populate_calibration_information()
         self.populate_source_data()
+        self.populate_processing_information_l2_common()
         self.populate_processing_information()
         self.populate_orbit()
+        self.populate_orbit_gcov_specific()
         self.populate_attitude()
 
+        # parse XML specs file
+        specs_xml_file = (f'{helpers.WORKFLOW_SCRIPTS_DIR}/'
+                          '../products/XML/L2/nisar_L2_GCOV.xml')
+
+        self.check_and_decorate_product_using_specs_xml(specs_xml_file)
+
     def populate_data_parameters(self):
+        """
+        Populate the data group `grids` of the GCOV product
+        """
         for frequency, _ in self.freq_pols_dict.items():
             self.copy_from_input(
                 '{PRODUCT}/grids/'
                 f'frequency{frequency}/numberOfSubSwaths',
                 '{PRODUCT}/swaths/'
                 f'frequency{frequency}/numberOfSubSwaths',
-                default='(NOT SPECIFIED)')
+                skip_if_not_present=True)
 
     def populate_source_data(self):
+        """
+        Populate the `sourceData` group of the GCOV product
+        """
 
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/productVersion',
-                'identification/productVersion')
-        except KeyError:
-            self.set_value(
-                    '{PRODUCT}/metadata/sourceData/productVersion',
-                    '(NOT SPECIFIED)')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/productVersion',
+            'identification/productVersion',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/lookDirection',
             'identification/lookDirection',
             format_function=str.title)
 
-        # TODO: remove this `try/except` once `productLevel`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/productLevel',
-                'identification/productLevel')
-        except KeyError:
-            self.set_value(
-                '{PRODUCT}/metadata/sourceData/productLevel',
-                'L1')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/productLevel',
+            'identification/productLevel',
+            default='L1')
 
-        # TODO: remove this `try/except` once `processingDateTime`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/processingDateTime',
-                'identification/processingDateTime')
-        except KeyError:
-            self.set_value(
-                '{PRODUCT}/metadata/sourceData/processingDateTime',
-                '(NOT SPECIFIED)')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingDateTime',
+            'identification/processingDateTime',
+            skip_if_not_present=True)
 
-        # TODO: remove this `try/except` once `processingDateTime`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'parameters/runConfigurationContents',
-                '{PRODUCT}/metadata/processingInformation/parameters/'
-                'runConfigurationContents')
-        except KeyError:
-            self.set_value(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'parameters/runConfigurationContents',
-                '(NOT SPECIFIED)')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'parameters/runConfigurationContents',
+            skip_if_not_present=True)
 
-        # TODO: remove this `try/except` once `rfiDetection`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'algorithms/rfiDetection',
-                '{PRODUCT}/metadata/processingInformation/algorithms/'
-                'rfiDetection')
-        except KeyError:
-            self.set_value(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'algorithms/rfiDetection',
-                '(NOT SPECIFIED)')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'algorithms/rfiDetection',
+            '{PRODUCT}/metadata/processingInformation/algorithms/'
+            'rfiDetection',
+            skip_if_not_present=True)
 
-        # TODO: remove this `try/except` once `rfiMitigation`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'algorithms/rfiMitigation',
-                '{PRODUCT}/metadata/processingInformation/algorithms/'
-                'rfiMitigation')
-        except KeyError:
-            self.set_value(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'algorithms/rfiMitigation',
-                '(NOT SPECIFIED)')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'algorithms/rfiMitigation',
+            '{PRODUCT}/metadata/processingInformation/algorithms/'
+            'rfiMitigation',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
@@ -169,19 +145,12 @@ class GcovWriter(BaseL2WriterSingleInput):
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'azimuthCompression')
 
-        # TODO: remove this `try/except` once `softwareVersion`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'algorithms/softwareVersion',
-                '{PRODUCT}/metadata/processingInformation/algorithms/'
-                'softwareVersion')
-        except KeyError:
-            self.set_value(
-                '{PRODUCT}/metadata/sourceData/processingInformation/'
-                'algorithms/softwareVersion',
-                '(NOT SPECIFIED)')
+        self.copy_from_input(
+            '{PRODUCT}/metadata/sourceData/processingInformation/'
+            'algorithms/softwareVersion',
+            '{PRODUCT}/metadata/processingInformation/algorithms/'
+            'softwareVersion',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/swaths/zeroDopplerStartTime',
@@ -230,6 +199,9 @@ class GcovWriter(BaseL2WriterSingleInput):
                 radar_grid_obj.width)
 
     def populate_processing_information(self):
+        """
+        Populate the `processingInformation` group of the GCOV product
+        """
 
         # populate processing information parameters
         parameters_group = \
@@ -273,17 +245,11 @@ class GcovWriter(BaseL2WriterSingleInput):
             'azimuthIonosphericGeolocationCorrectionApplied',
             'processing/geocode/apply_azimuth_ionospheric_delay_correction')
 
-        # TODO: remove this `try/except` once `rfiMitigation`
-        # is implemented for all input products (e.g., RSLC)
-        try:
-            self.copy_from_input(
-                f'{parameters_group}/rfiCorrectionApplied',
-                '{PRODUCT}/metadata/processingInformation/algorithms/'
-                'rfiMitigation')
-        except KeyError:
-            self.set_value(
-                f'{parameters_group}/rfiCorrectionApplied',
-                False)
+        self.copy_from_input(
+            f'{parameters_group}/rfiCorrectionApplied',
+            '{PRODUCT}/metadata/processingInformation/algorithms/'
+            'rfiMitigation',
+            default=False)
 
         self.set_value(
             f'{parameters_group}/postProcessingFilteringApplied',
@@ -466,11 +432,13 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/minRtcAreaNormalizationFactorInDB',
-            'processing/rtc/rtc_min_value_db')
+            'processing/rtc/rtc_min_value_db',
+            format_function=float)
 
         self.copy_from_runconfig(
             f'{parameters_group}/rtc/geogridUpsampling',
-            'processing/rtc/dem_upsampling')
+            'processing/rtc/dem_upsampling',
+            format_function=float)
 
         # populate geocoding parameters
         self.copy_from_runconfig(
@@ -479,7 +447,8 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.copy_from_runconfig(
             f'{parameters_group}/geocoding/geogridUpsampling',
-            'processing/geocode/geogrid_upsampling')
+            'processing/geocode/geogrid_upsampling',
+            format_function=float)
 
         self.copy_from_runconfig(
             f'{parameters_group}/geocoding/minBlockSize',
@@ -509,43 +478,41 @@ class GcovWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/geo2rdr/deltaRange',
             1.0e-8)
 
-        self.set_value(
-            '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'softwareVersion',
-            isce3.__version__)
+    def populate_orbit_gcov_specific(self):
+        """
+        Populate GCOV-specific `orbit` datasets `interpMethod` and
+        `referenceEpoch`
+        """
+        error_channel = journal.error(
+            'GcovWriter.populate_orbit_gcov_specific')
+        rslc_orbit_path = f'{self.output_product_path}/metadata/orbit'
+        orbit = isce3.core.load_orbit_from_h5_group(
+            self.output_hdf5_obj[rslc_orbit_path])
 
-        # populate processing information inputs parameters
-        inputs_group = \
-            '{PRODUCT}/metadata/processingInformation/inputs'
+        # The orbit `interpMethod`` was removed from the RSLC product
+        # specification in ISCE3 Release 4. However, RSLC products
+        # with previous version may include the dataset. If the field
+        # is not present in the GCOV orbit group, i.e., if it was not
+        # copied from the RSLC orbit
+        # group, add it.
+        input_orbit_group_path = \
+            (f'{self.root_path}/{self.input_product_hdf5_group_type}'
+             '/metadata/orbit/interpMethod')
 
-        self.set_value(
-            f'{inputs_group}/l1SlcGranules',
-            [self.input_file])
-
-        orbit_file = self.cfg[
-            'dynamic_ancillary_file_group']['orbit_file']
-        if orbit_file is None:
-            orbit_file = '(NOT SPECIFIED)'
-        self.set_value(
-            f'{inputs_group}/orbitFiles',
-            [orbit_file])
-
-        # `run_config_path` can be either a file name or a string
-        # representing the contents of the runconfig file (identified
-        # by the presence of a "/n" in the `run_config_path`)
-        if '\n' in self.runconfig.args.run_config_path:
+        if input_orbit_group_path not in self.input_hdf5_obj:
+            orbit_interp_method = orbit.get_interp_method()
+            if orbit_interp_method == isce3.core.OrbitInterpMethod.HERMITE:
+                orbit_interp_method_str = 'Hermite'
+            elif orbit_interp_method == isce3.core.OrbitInterpMethod.LEGENDRE:
+                orbit_interp_method_str = 'Legendre'
+            else:
+                error_msg = "unexpected orbit interpolation method"
+                error_channel.log(error_msg)
+                raise ValueError(error_msg)
             self.set_value(
-                f'{inputs_group}/configFiles',
-                '(NOT SPECIFIED)')
-        else:
-            self.set_value(
-                f'{inputs_group}/configFiles',
-                [self.runconfig.args.run_config_path])
+                '{PRODUCT}/metadata/orbit/interpMethod',
+                orbit_interp_method_str)
 
-        dem_file_description = \
-            self.cfg['dynamic_ancillary_file_group']['dem_file_description']
-        if dem_file_description is None:
-            dem_file_description = '(NOT SPECIFIED)'
         self.set_value(
-            f'{inputs_group}/demSource',
-            dem_file_description)
+            '{PRODUCT}/metadata/orbit/referenceEpoch',
+            orbit.reference_epoch.isoformat_usec())
