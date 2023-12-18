@@ -1,3 +1,4 @@
+import nisar.workflows.helpers as helpers
 from nisar.products.writers import BaseL2WriterSingleInput
 
 
@@ -26,6 +27,12 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.populate_processing_information()
         self.populate_orbit()
         self.populate_attitude()
+
+        # parse XML specs file
+        specs_xml_file = (f'{helpers.WORKFLOW_SCRIPTS_DIR}/'
+                          '../products/XML/L2/nisar_L2_GSLC.xml')
+
+        self.check_and_decorate_product_using_specs_xml(specs_xml_file)
 
     def populate_data_parameters(self):
 
@@ -131,7 +138,7 @@ class GslcWriter(BaseL2WriterSingleInput):
                     'runConfigurationContents',
                     f.read())
 
-        # TODO: verify (really hard-coded to bilinear???)
+        # TODO: fix GSLC workflow. Should not be hard-coded to bilinear
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'demInterpolation',

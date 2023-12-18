@@ -540,7 +540,7 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
             for polarization in pol_list:
                 dst_grp = dst_h5[dst_parent_path]
                 long_name = f'geocoded single-look complex image {polarization}'
-                descr = f'Geocoded SLC image ({polarization})'
+                descr = f'Focused SLC image ({polarization})'
                 _create_datasets(dst_grp, shape, ctype, polarization,
                                  descr=descr, units='', grids="projection",
                                  long_name=long_name, yds=yds, xds=xds,
@@ -633,7 +633,7 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     name = "listOfPolarizations"
     pols_array = np.array(pols, dtype="S2")
     dset = grp.create_dataset(name, data=pols_array)
-    desc = f"List of polarization layers with frequency{frequency}"
+    desc = f"List of processed polarization layers with frequency {frequency}"
     dset.attrs["description"] = np.string_(desc)
 
 
@@ -869,7 +869,7 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         cube_group, 'zeroDopplerAzimuthTime', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='zero-Doppler azimuth time',
-        descr='Zero doppler azimuth time in seconds',
+        descr='Zero Doppler azimuth time in seconds',
         units=az_coord_units)
     incidence_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'incidenceAngle', np.float32, cube_shape,
