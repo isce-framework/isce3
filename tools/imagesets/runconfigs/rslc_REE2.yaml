@@ -126,11 +126,11 @@ runconfig:
                 # Coherent processing interval length (pulses).  Defaults to 32.
                 cpi_length: 32
                 # Number of subdivisions in range.  Defaults to 1.
-                num_range_blocks: 40
+                num_range_blocks: 1
                 # Maximum allowable number of emitters can be detected and
                 # suppressed per CPI. ST-EVD would ignore emitters exceeding
                 # this limit. This number should be less than cpi_length.
-                max_emitters: 12
+                max_emitters: 16
                 # Number of large value outliers to be trimmed in slow-time
                 # minimum Eigenvalues.
                 num_max_trim: 0
@@ -147,7 +147,7 @@ runconfig:
                 max_num_rfi_ev: 2
                 # Number of slow-time CPIs grouped together for determining and
                 # applying a common EV slope threshold.
-                num_cpi_per_threshold_block: 30
+                num_cpi_per_threshold_block: 20
                 # Parameters used to adaptively determine RFI eigenvalue
                 # difference thresholds
                 threshold_hyperparameters:
