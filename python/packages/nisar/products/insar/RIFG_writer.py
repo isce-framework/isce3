@@ -41,7 +41,7 @@ class RIFGWriter(L1InSARWriter):
         self.attrs["reference_document"] = \
             np.string_("D-102270 NISAR NASA SDS Product Specification"
                        " L1 Range Doppler Wrapped Interferogram")
-        
+
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(self["/"].id, np.string_("complex64"))
 
@@ -88,7 +88,7 @@ class RIFGWriter(L1InSARWriter):
                         "wrappedInterferogram",
                         np.complex64,
                         f"Interferogram between {pol} layers",
-                        Units().dn,
+                        Units.dn,
                     ),
                 ]
 

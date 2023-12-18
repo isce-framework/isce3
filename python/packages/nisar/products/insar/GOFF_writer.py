@@ -61,6 +61,16 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
         ROFFWriter.add_parameters_to_procinfo_group(self)
         L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
 
+        # Update the descriptions of the reference and secondary
+        for rslc_name in ['reference', 'secondary']:
+            rslc = self[self.group_paths.ParametersPath][rslc_name]
+            rslc['referenceTerrainHeight'].attrs['description'] = \
+                np.string_("Reference Terrain Height as a function of"
+                           f" map coordinates for {rslc_name} RSLC")
+            rslc['referenceTerrainHeight'].attrs['units'] = \
+                Units.meter
+
+
     def add_grids_to_hdf5(self):
         """
         Add grids to HDF5
@@ -107,30 +117,41 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                         goff_geogrids,
                     )
 
+                    pixeloffsets_pol_layer_group['projection'][...] = \
+                        pixeloffsets_pol_layer_group['projection'][()].astype(np.uint32)
+                    pixeloffsets_pol_layer_group['yCoordinateSpacing'].attrs['long_name'] = \
+                        np.string_("Y coordinates spacing")
+                    pixeloffsets_pol_layer_group['xCoordinateSpacing'].attrs['long_name'] = \
+                        np.string_("X coordinates spacing")
+                    pixeloffsets_pol_layer_group['xCoordinates'].attrs['long_name'] = \
+                        np.string_("X coordinates of projection")
+                    pixeloffsets_pol_layer_group['yCoordinates'].attrs['long_name'] = \
+                        np.string_("Y coordinates of projection")
+
                     #pixeloffsets dataset parameters as tuples in the following
                     #order: dataset name, description, and units
                     pixeloffsets_ds_params = [
                         ("alongTrackOffset",
                          "Raw (unculled, unfiltered) along-track pixel offsets",
-                         Units().meter),
+                         Units.meter),
                         ("slantRangeOffset",
                          "Raw (unculled, unfiltered) slant range pixel offsets",
-                         Units().meter),
+                         Units.meter),
                         ("alongTrackOffsetVariance",
                          "Along-track pixel offsets variance",
-                         Units().unitless),
+                         Units.unitless),
                         ("slantRangeOffsetVariance",
                          "Slant range pixel offsets variance",
-                         Units().unitless),
+                         Units.unitless),
                         ("crossOffsetVariance",
                          "Off-diagonal term of the pixel offsets covariance matrix",
-                         Units().unitless),
+                         Units.unitless),
                         ("correlationSurfacePeak",
-                         "Normalized surface correlation peak",
-                         Units().unitless),
+                         "Normalized correlation surface peak",
+                         Units.unitless),
                         ("snr",
                          "Pixel offsets signal-to-noise ratio",
-                         Units().unitless),
+                         Units.unitless),
                     ]
 
                     for ds_params in pixeloffsets_ds_params:

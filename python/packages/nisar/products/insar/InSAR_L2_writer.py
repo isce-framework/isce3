@@ -11,7 +11,8 @@ from .dataset_params import DatasetParams, add_dataset_and_attrs
 from .InSAR_base_writer import InSARBaseWriter
 from .InSAR_L1_writer import L1InSARWriter
 from .product_paths import L2GroupsPaths
-
+from .units import Units
+from .utils import extract_datetime_from_string
 
 class L2InSARWriter(L1InSARWriter):
     """
@@ -77,14 +78,14 @@ class L2InSARWriter(L1InSARWriter):
 
         # seconds since ref epoch
         ref_epoch = radar_grid.ref_epoch
-        ref_epoch_str = ref_epoch.isoformat().replace('T', ' ')
+        ref_epoch_str = ref_epoch.isoformat()
         az_coord_units = f'seconds since {ref_epoch_str}'
 
         slant_range_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondarySlantRange', np.float64, cube_shape,
             zds=zds, yds=yds, xds=xds,
             long_name='slant-range',
-            descr='Slant range of corresponding pixel in secondary image',
+            descr='Slant range of the secondary RSLC in meters',
             units='meters')
         azimuth_time_raster = _get_raster_from_hdf5_ds(
             cube_group, 'secondaryZeroDopplerAzimuthTime', np.float64, cube_shape,
@@ -123,7 +124,7 @@ class L2InSARWriter(L1InSARWriter):
 
         # Retrieve the group
         radar_grid_path = self.group_paths.RadarGridPath
-        self.require_group(radar_grid_path)
+        radar_grid = self.require_group(radar_grid_path)
 
         # Pull the orbit object
         if orbit_file is not None:
@@ -152,6 +153,75 @@ class L2InSARWriter(L1InSARWriter):
             threshold_geo2rdr,
             iteration_geo2rdr,
         )
+
+        # Update the radar grids attributes
+        radar_grid['slantRange'].attrs['description'] = \
+            np.string_("Slant range in meters")
+        radar_grid['slantRange'].attrs['units'] = Units.meter
+
+        zero_dopp_azimuth_time_units = \
+            radar_grid['zeroDopplerAzimuthTime'].attrs['units']
+        time_str = extract_datetime_from_string(
+            str(zero_dopp_azimuth_time_units),
+            'seconds since ')
+        if time_str is not None:
+            zero_dopp_azimuth_time_units = time_str
+        radar_grid['zeroDopplerAzimuthTime'].attrs['units'] = \
+            np.string_(zero_dopp_azimuth_time_units)
+
+        radar_grid['projection'][...] = \
+            radar_grid['projection'][()].astype(np.uint32)
+
+        radar_grid['heightAboveEllipsoid'][...] = \
+            radar_grid['heightAboveEllipsoid'][()].astype(np.float64)
+        radar_grid['heightAboveEllipsoid'].attrs['description'] = \
+            np.string_("Height values above WGS84 Ellipsoid"
+                       " corresponding to the radar grid")
+        radar_grid['heightAboveEllipsoid'].attrs['units'] = \
+            Units.meter
+            
+        radar_grid['xCoordinates'].attrs['description'] = \
+            np.string_("X coordinates corresponding to the radar grid")
+        radar_grid['xCoordinates'].attrs['long_name'] = \
+            np.string_("X coordinates of projection")
+        radar_grid['yCoordinates'].attrs['description'] = \
+            np.string_("Y coordinates corresponding to the radar grid")
+        radar_grid['yCoordinates'].attrs['long_name'] = \
+            np.string_("Y coordinates of projection")
+
+        radar_grid['incidenceAngle'].attrs['description'] = \
+            np.string_("Incidence angle is defined as the angle"
+                       " between the LOS vector and the normal to"
+                       " the ellipsoid at the target height")
+        radar_grid['incidenceAngle'].attrs['long_name'] = \
+            np.string_("Incidence angle")
+
+        # Add the min and max attributes to the following dataset
+        ds_names = ["incidenceAngle",
+                    "losUnitVectorX",
+                    "losUnitVectorY",
+                    "alongTrackUnitVectorX",
+                    "alongTrackUnitVectorY",
+                    "elevationAngle"]
+
+        for ds_name in ds_names:
+            ds = radar_grid[ds_name][()]
+            valid_min, valid_max = np.nanmin(ds), np.nanmax(ds)
+            radar_grid[ds_name].attrs["min"] = valid_min
+            radar_grid[ds_name].attrs["max"] = valid_max
+
+            if ds_name not in ["incidenceAngle", "elevationAngle"]:
+                radar_grid[ds_name].attrs["units"] = \
+                    Units.unitless
+        radar_grid["elevationAngle"].attrs["description"] = \
+            np.string_("Elevation angle is defined as the angle between"
+                       " the LOS vector and the normal to"
+                       " the ellipsoid at thesensor")
+        radar_grid["groundTrackVelocity"].attrs["description"] = \
+            np.string_("Absolute value of the platform velocity"
+                       " scaled at the target height")
+        radar_grid["groundTrackVelocity"].attrs["units"] = \
+            np.string_("meters / second")
 
         # Add the secondary slant range and azimuth time cubes to the radarGrid cubes
         sec_cube_rdr_grid = self.sec_rslc.getRadarGrid(cube_freq)
@@ -329,3 +399,9 @@ class L2InSARWriter(L1InSARWriter):
                 grids_freq_group,
                 "centerFrequency",
             )
+
+            # Add the description and units
+            cfreq = grids_freq_group["centerFrequency"]
+            cfreq.attrs['description'] = np.string_(" Center frequency of"
+                                                    " the processed image in hertz")
+            cfreq.attrs['units'] = Units.hertz
