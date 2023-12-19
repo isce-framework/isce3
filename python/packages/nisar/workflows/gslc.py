@@ -9,17 +9,17 @@ import numpy as np
 
 import isce3
 from isce3.core.rdr_geo_block_generator import block_generator
+from isce3.core.types import truncate_mantissa, read_c4_dataset_as_c8
 
 import nisar
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.compute_stats import compute_stats_complex_data
 from nisar.workflows.h5_prep import (add_radar_grid_cubes_to_hdf5,
-                                     prep_ds_gslc_gcov)
+                                     prep_gslc_dataset)
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from isce3.core.types import truncate_mantissa, read_c4_dataset_as_c8
 from nisar.products.writers import GslcWriter
 
 
@@ -70,7 +70,7 @@ def run(cfg):
     with h5py.File(output_hdf5, 'w') as dst_h5, \
             h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5:
 
-        prep_ds_gslc_gcov(cfg, 'GSLC', dst_h5)
+        prep_gslc_dataset(cfg, 'GSLC', dst_h5)
         for freq, pol_list in freq_pols.items():
             root_ds = f'/science/LSAR/GSLC/grids/frequency{freq}'
             radar_grid = slc.getRadarGrid(freq)

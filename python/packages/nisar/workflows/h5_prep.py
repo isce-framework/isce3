@@ -51,7 +51,11 @@ def get_dataset_output_options(cfg: dict):
 
 def get_complex_output_dtype(cfg: dict, dst_h5: h5py.File):
     '''
-    Determine type of complex output
+    Get the dtype for the complex output and the corresponding NaN fill value.
+    
+    The dtype is specified in `cfg`. `fill_value` will have a dtype of `ctype`.
+    This custom ctype will be added as a new object in the root of `dst_h5` file,
+    to teach tools like GDAL/netCDF how to read datasets with these custom dtypes.
 
     Parameters
     ----------
@@ -77,8 +81,11 @@ def get_complex_output_dtype(cfg: dict, dst_h5: h5py.File):
         ctype = complex32
         fill_value = to_complex32(np.array([fill_value]))[0]
     else:
+        # output_type is 'complex64' or 'complex64_zero_mantissa'.
         ctype = h5py.h5t.py_create(np.complex64)
         ctype.commit(dst_h5['/'].id, np.string_('complex64'))
+        # Cast fill value as np.complex64.
+        fill_value = np.complex64(fill_value)
 
     return ctype, fill_value
 
@@ -503,11 +510,11 @@ def prep_ds(cfg, output_hdf5, dst):
     with h5py.File(output_hdf5, 'a', libver='latest', swmr=True) as dst_h5:
         # Fork the dataset preparation for GSLC/GCOV and GUNW
         if dst in ['GSLC', 'GCOV']:
-            prep_ds_gslc_gcov(cfg, dst, dst_h5)
+            prep_gslc_dataset(cfg, dst, dst_h5)
         else:
             prep_ds_insar(cfg, dst, dst_h5)
 
-def prep_ds_gslc_gcov(cfg, dst, dst_h5):
+def prep_gslc_dataset(cfg, dst, dst_h5):
     '''
     Prepare datasets for GSLC and GCOV
     '''
@@ -517,13 +524,13 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
 
     gslc_output_options = {}
     # if GSLC, populate output dict with h5py.Group.create_dataset kwargs
-    if dst == 'GSLC':
-        # Get compression and chunking options
-        gslc_output_options = get_dataset_output_options(cfg)
 
-        # Get complex data type and set fill value to kwargs
-        ctype, fill_value = get_complex_output_dtype(cfg, dst_h5)
-        gslc_output_options['fillvalue'] = fill_value
+    # Get compression and chunking options
+    gslc_output_options = get_dataset_output_options(cfg)
+
+    # Get complex data type and set fill value to kwargs
+    ctype, fill_value = get_complex_output_dtype(cfg, dst_h5)
+    gslc_output_options['fillvalue'] = fill_value
 
     # Create datasets in the ouput hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
@@ -534,21 +541,15 @@ def prep_ds_gslc_gcov(cfg, dst, dst_h5):
 
         yds, xds = set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
 
-        # GSLC specfics datasets
-        if dst == 'GSLC':
-            # create datasets for polarizations of current frequency
-            for polarization in pol_list:
-                dst_grp = dst_h5[dst_parent_path]
-                long_name = f'geocoded single-look complex image {polarization}'
-                descr = f'Focused SLC image ({polarization})'
-                _create_datasets(dst_grp, shape, ctype, polarization,
-                                 descr=descr, units='', grids="projection",
-                                 long_name=long_name, yds=yds, xds=xds,
-                                 **gslc_output_options)
-
-        # set GCOV polarization values (diagonal values only)
-        elif dst == 'GCOV':
-            pol_list = [(p + p).upper() for p in pol_list]
+        # create datasets for polarizations of current frequency
+        for polarization in pol_list:
+            dst_grp = dst_h5[dst_parent_path]
+            long_name = f'geocoded single-look complex image {polarization}'
+            descr = f'Geocoded SLC image ({polarization})'
+            _create_datasets(dst_grp, shape, ctype, polarization,
+                             descr=descr, units='', grids="projection",
+                             long_name=long_name, yds=yds, xds=xds,
+                             fill_value=fill_value, **gslc_output_options)
 
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
 
@@ -571,7 +572,7 @@ def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
 def _create_datasets(dst_grp, shape, ctype, dataset_name,
                      chunks=(128, 128), descr=None, units=None,
                      grids=None, data=None, standard_name=None, long_name=None,
-                     yds=None, xds=None, **kwargs):
+                     yds=None, xds=None, fill_value=None, **kwargs):
     '''
     wrapper around h5py.Group.create_dataset that adds nisar.workflows specific
     attributes to avoid boilerplate calls
@@ -616,6 +617,9 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
 
     if xds is not None:
         ds.dims[1].attach_scale(xds)
+
+    if fill_value is not None:
+        ds.attrs["_FillValue"] = fill_value
 
 
 def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
