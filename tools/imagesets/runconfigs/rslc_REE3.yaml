@@ -11,7 +11,7 @@ runconfig:
             dem_file: input_L0B_RRSD_REE3/dem_90_09_945_16.tiff
             orbit: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FOE_20231207T182337_20251011T121909_20251011T122039.xml
             pointing: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FRP_20231207T182337_20251011T121909_20251011T122039.xml
-            external_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_EXT_CAL_20220101T120000_02.yaml
+            external_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_EXT_CAL_20220101T120000_03.yaml
             internal_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_INT_CAL_20220101T120000_01.h5
             antenna_pattern: input_L0B_RRSD_REE3/NISAR_ANTPAT_20230707T142741.h5
             corner_reflector_file: input_L0B_RRSD_REE3/NISAR_ANC_CORNER_REFLECTORS_005.csv

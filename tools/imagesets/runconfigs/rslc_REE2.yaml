@@ -25,7 +25,7 @@ runconfig:
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            external_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_EXT_CAL_20220101T120000_02.yaml
+            external_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_EXT_CAL_20220101T120000_03.yaml
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
