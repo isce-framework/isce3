@@ -105,6 +105,10 @@ runconfig:
                 # override user-provided start_time.
                 time_snap_interval: 1.0
 
+            # Min amount of padding (in seconds) beyond raw data start and stop
+            # times to retain when cropping the orbit and attitude data.
+            ephemeris_crop_pad: 10.0
+
             # Range spectral window, optional.  Defaults to no weighting.
             range_window:
                 # Kaiser or Cosine

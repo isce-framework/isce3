@@ -112,6 +112,10 @@ runconfig:
         # override user-provided start_time.
         time_snap_interval: num(required=False)
 
+      # Min amount of padding (in seconds) beyond raw data start and stop times
+      # to retain when cropping the orbit and attitude data.
+      ephemeris_crop_pad: num(min=0.0, required=False)
+
       # Range spectral window, optional.  Defaults to no weighting.
       # NISAR PGE should set to {"kind": "Knab", "shape": 1.6} for RSLC product
       # spec conformance.

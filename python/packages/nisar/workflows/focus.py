@@ -21,7 +21,7 @@ from isce3.core.types import to_complex32, read_c4_dataset_as_c8
 import nisar
 import numpy as np
 import isce3
-from isce3.core import DateTime, LUT2d, Attitude, Orbit
+from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -29,7 +29,7 @@ import nisar.workflows.helpers as helpers
 from ruamel.yaml import YAML
 import sys
 import tempfile
-from typing import Union, Optional, Callable, Iterable
+from typing import Union, Optional, Callable, Iterable, overload
 from isce3.io import Raster as RasterIO
 from io import StringIO
 
@@ -150,30 +150,116 @@ def parse_rangecomp_mode(mode: str):
     return lut[mode]
 
 
-def get_orbit(cfg: Struct):
+@overload
+def prep_ephemeris(ephemeris: Attitude, rawnames: list[str], time_pad: float,
+                   num_pad: int) -> Attitude:
+    pass
+
+@overload
+def prep_ephemeris(ephemeris: Orbit, rawnames: list[str], time_pad: float,
+                   num_pad: int) -> Orbit:
+    pass
+
+def prep_ephemeris(ephemeris, rawnames, time_pad, num_pad):
+    """
+    Try to crop orbit/attitude to raw data bounds (with padding) and always set
+    reference epoch to match the one used for the raw data.  Failure to crop
+    triggers a warning message.
+
+    Parameters
+    ----------
+    ephemeris : isce3.core.Attitude or isce3.core.Orbit
+        The input ephemeris to be cropped.
+    rawnames : list of str
+        List of input L0B filenames used to obtain the raw data start and
+        stop times.
+    time_pad : float
+        Min amount of padding (in seconds) beyond raw data start and stop
+        times to retain when cropping the orbit and attitude data.
+        Must be >= 0.
+    num_pad : int
+        Min number of samples beyond raw data start and stop times to
+        retain when cropping the orbit and attitude data. Must be >= 0.
+
+    Returns
+    -------
+    isce3.core.Attitude or isce3.core.Orbit
+        The cropped attitude or orbit data. The reference epoch will be
+        the same as the first input L0B file.
+    """
+    epoch, t0, t1, _, _ = get_total_grid_bounds(rawnames)
+    start = epoch + TimeDelta(t0 - time_pad)
+    end = epoch + TimeDelta(t1 + time_pad)
+
+    if isinstance(ephemeris, Attitude):
+        name = "attitude"
+    elif isinstance(ephemeris, Orbit):
+        name = "orbit"
+    else:
+        raise TypeError("bad type for ephemeris, expected Attitude or Orbit "
+                        f"instance, got {type(ephemeris)}")
+
+    log.info(f"Original {name} data file spans time interval "
+             f"[{ephemeris.start_datetime}, {ephemeris.end_datetime}]")
+    log.info(f"Cropping {name} to {num_pad} points beyond [{start}, {end}]")
+    try:
+        eph = ephemeris.crop(start, end, num_pad)
+    except ValueError:
+        eph = ephemeris.copy()  # be sure not to modify user input
+        log.warning(f"Failed to crop {name}.  Trying to proceed anyway.")
+    else:
+        log.info(f"Cropped {name} to interval "
+            f"[{eph.start_datetime}, {eph.end_datetime}]")
+
+    eph.update_reference_epoch(epoch)
+    return eph
+
+
+def get_orbit(cfg: Struct) -> Orbit:
+    """Read orbit from XML if available or else from first L0B, try to crop it,
+    and set epoch to match first L0B.
+    """
+    # num_pad=3 to guarantee enough points for Hermite interp
+    num_pad = 3
+    time_pad = cfg.processing.ephemeris_crop_pad
+    rawfiles = cfg.input_file_group.input_file_path
+
     xml = cfg.dynamic_ancillary_file_group.orbit
     if xml is not None:
         log.info("Loading orbit from external XML file.")
-        return nisar.products.readers.orbit.load_orbit_from_xml(xml)
-    log.info("Loading orbit from L0B file.")
+        orbit = nisar.products.readers.orbit.load_orbit_from_xml(xml)
+    else:
+        log.info("Loading orbit from L0B file.")
+        if len(rawfiles) > 1:
+            raise NotImplementedError("Can't concatenate orbit data.")
+        raw = open_rrsd(rawfiles[0])
+        orbit = raw.getOrbit()
+
+    return prep_ephemeris(orbit, rawfiles, time_pad, num_pad)
+
+
+def get_attitude(cfg: Struct) -> Attitude:
+    """Read attitude from XML if available or else from first L0B, try to crop
+    it, and set epoch to match first L0B.
+    """
+    # num_pad = 1 to guarantee enough points for slerp
+    num_pad = 1
+    time_pad = cfg.processing.ephemeris_crop_pad
     rawfiles = cfg.input_file_group.input_file_path
-    if len(rawfiles) > 1:
-        raise NotImplementedError("Can't concatenate orbit data.")
-    raw = open_rrsd(rawfiles[0])
-    return raw.getOrbit()
 
-
-def get_attitude(cfg: Struct):
     xml = cfg.dynamic_ancillary_file_group.pointing
     if xml is not None:
         log.info("Loading attitude from external XML file")
-        return nisar.products.readers.attitude.load_attitude_from_xml(xml)
-    log.info("Loading attitude from L0B file.")
-    rawfiles = cfg.input_file_group.input_file_path
-    if len(rawfiles) > 1:
-        raise NotImplementedError("Can't concatenate attitude data.")
-    raw = open_rrsd(rawfiles[0])
-    return raw.getAttitude()
+        attitude = nisar.products.readers.attitude.load_attitude_from_xml(xml)
+    else:
+        log.info("Loading attitude from L0B file.")
+        rawfiles = cfg.input_file_group.input_file_path
+        if len(rawfiles) > 1:
+            raise NotImplementedError("Can't concatenate attitude data.")
+        raw = open_rrsd(rawfiles[0])
+        attitude = raw.getAttitude()
+
+    return prep_ephemeris(attitude, rawfiles, time_pad, num_pad)
 
 
 def get_total_grid_bounds(rawfiles: list[str]):
@@ -883,7 +969,7 @@ def get_range_deramp(grid: RadarGridParameters) -> np.ndarray:
     return np.exp(-1j * 4 * np.pi / grid.wavelength * r)
 
 
-def require_ephemeris_overlap(ephemeris: Union[Attitude, Orbit],
+def require_ephemeris_overlap(ephemeris: Ephemeris,
                               t0: float, t1: float, name: str = "Ephemeris"):
     """Raise exception if ephemeris doesn't fully overlap time interval [t0, t1]
     """
@@ -1211,10 +1297,6 @@ def focus(runconfig, runconfig_path=""):
     log.info(f"Raw data range swath spans [{r0}, {r1}] meters.")
     orbit = get_orbit(cfg)
     attitude = get_attitude(cfg)
-    # Use same epoch for all objects for consistency and correctness.
-    # Especially important since Doppler LUT does not carry its own epoch.
-    orbit.update_reference_epoch(grid_epoch)
-    attitude.update_reference_epoch(grid_epoch)
     # Need orbit and attitude over whole raw domain in order to generate
     # Doppler LUT.  Check explicitly in order to provide a sensible error.
     log.info("Verifying ephemeris covers time span of raw data.")
