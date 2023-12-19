@@ -17,6 +17,7 @@
 #include <isce3/cuda/core/gpuInterpolator.h>
 #include <isce3/cuda/core/gpuLUT2d.h>
 #include <isce3/cuda/core/gpuProjections.h>
+#include <isce3/cuda/product/SubSwaths.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
 #include <isce3/io/Raster.h>
 #include <isce3/product/GeoGridParameters.h>
@@ -88,15 +89,17 @@ public:
      *                                  initialize templated interpolators.
      * \param[in] invalid_values        Invalid values for each raster
      * \param[in] dem_raster            DEM used to calculate radar grid indices
-     * \param[in] nativeDoppler         Doppler centroid of data in Hz associated
+     * \param[in] hostNativeDoppler     Doppler centroid of data in Hz associated
      *                                  radar grid, as a function azimuth and
      *                                  range
-     * \param[in] azTimeCorrection      geo2rdr azimuth additive correction, in
+     * \param[in] hostAzTimeCorrection  geo2rdr azimuth additive correction, in
      *                                  seconds, as a function of azimuth and
      *                                  range
-     * \param[in] sRangeCorrection      geo2rdr slant range additive
+     * \param[in] hostSRangeCorrection  geo2rdr slant range additive
      *                                  correction, in seconds, as a function
      *                                  of azimuth and range
+     * \param[in]  subswaths            subswath mask representing valid
+     *                                  portions of a swath
      * \param[in] dem_interp_method     DEMinterpolation method
      * \param[in] threshold             Convergence threshold for geo2rdr
      * \param[in] maxiter               Maximum iterations for geo2rdr
@@ -113,6 +116,7 @@ public:
             const isce3::core::LUT2d<double>& hostNativeDoppler = {},
             const isce3::core::LUT2d<double>& hostAzTimeCorrection = {},
             const isce3::core::LUT2d<double>& hostSRangeCorrection = {},
+            const isce3::product::SubSwaths* subswaths = nullptr,
             const isce3::core::dataInterpMethod dem_interp_method =
                     isce3::core::BIQUINTIC_METHOD,
             const double threshold = 1e-8,
@@ -203,6 +207,8 @@ private:
      * \param[in] sRangeCorrection      geo2rdr slant range additive
      *                                  correction, in seconds, as a function
      *                                  of azimuth and range
+     * \param[in]  subswaths            subswath mask representing valid
+     *                                  portions of a swath
      */
     void setBlockRdrCoordGrid(const size_t block_number,
             Raster& dem_raster,
@@ -211,7 +217,8 @@ private:
             const isce3::geometry::detail::Geo2RdrParams geo2rdr_params,
             const DeviceLUT2d<double>& nativeDoppler,
             const DeviceLUT2d<double>& azTimeCorrection,
-            const DeviceLUT2d<double>& sRangeCorrection);
+            const DeviceLUT2d<double>& sRangeCorrection,
+            const isce3::cuda::product::ViewSubSwaths& subswaths);
 
     /** Geocode a block of raster according to grid last set in
      *  setBlockRdrCoordGrid. Only operates on 1st raster band of input/output

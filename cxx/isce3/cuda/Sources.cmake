@@ -45,6 +45,7 @@ matchtemplate/pycuampcor/cuOffset.cu
 matchtemplate/pycuampcor/cuOverSampler.cu
 matchtemplate/pycuampcor/cuSincOverSampler.cu
 matchtemplate/pycuampcor/GDALImage.cu
+product/SubSwaths.cu
 signal/gpuAzimuthFilter.cu
 signal/gpuCrossMul.cu
 signal/gpuFilter.cu

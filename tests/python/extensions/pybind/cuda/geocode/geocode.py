@@ -17,6 +17,54 @@ import pytest
 from scipy import interpolate
 
 
+def make_subswaths():
+    # helper funtion to create subswath object based on axis where subswath
+    # start and stop indices per range line defined by the 30th and 70th
+    # percentile of the angle of the SLC array values
+
+    # dict for subswath per axis, x or y
+    subswaths = {}
+    # dicts for lo and hi angle of complex SLC after masking of by 30th and
+    # 70th percentiles
+    val_lo = {}
+    val_hi = {}
+
+    # iterate over axis
+    for i, xy in enumerate("xy"):
+        # load SLC as angle
+        axis_input_path = f"{iscetest.data}/geocodeslc/{xy}.slc"
+        ds = gdal.Open(axis_input_path, gdal.GA_ReadOnly)
+        arr = np.angle(ds.GetRasterBand(1).ReadAsArray())
+
+        # get 30th/lo to 70th/hi percentile of angle of current input
+        val_lo[xy], val_hi[xy] = np.percentile(arr, [30, 70])
+
+        # mask for anything below 30th percentile or above 70th percentile
+        mask = np.logical_or(arr < val_lo[xy], arr > val_hi[xy])
+
+        # populate array of start and stop at each range line
+        length, width = mask.shape
+        subswath_array = np.zeros((length, 2), np.int32)
+        for j in range(length):
+            # get unmasked indices
+            inds_unmasked = np.nonzero(mask[j, :] == False)[0]
+
+            # from front of row find first unmasked element
+            subswath_array[j, 0] = inds_unmasked[0]
+
+            # from back of row find last unmasked element
+            subswath_array[j, 1] = inds_unmasked[-1] + 1
+
+        # create subswath object for current axis
+        n_subswaths = 1
+        subswaths[xy] = isce3.product.SubSwaths(length,
+                                                width,
+                                                n_subswaths)
+        subswaths[xy].set_valid_samples_array(1, subswath_array)
+
+    return subswaths, val_lo, val_hi
+
+
 @pytest.fixture(scope='module')
 def unit_test_params(tmp_path_factory):
     '''
@@ -27,6 +75,10 @@ def unit_test_params(tmp_path_factory):
 
     # create temporary output directory for test output
     params.out_dir = tmp_path_factory.mktemp('test_output')
+    # for debugging outputs in case of crash comment above and uncomment below
+    # import pathlib
+    # params.out_dir = pathlib.Path('test_output').mkdir(parents=True, exist_ok=True)
+    # params.out_dir = pathlib.Path('test_output')
 
     # define geogrid
     geogrid = isce3.product.GeoGridParameters(start_x=-115.65,
@@ -92,6 +144,10 @@ def unit_test_params(tmp_path_factory):
     meshx, meshy = np.meshgrid(np.arange(nx), np.arange(ny))
     params.grid_lon = params.x0 + meshx * params.dx
     params.grid_lat = params.y0 + meshy * params.dy
+
+    # prepare subswath that masks radar grid so nothing is geocoded
+    params.subswaths, params.subswaths_lo_val, params.subswaths_hi_val = \
+        make_subswaths()
 
     return params
 
@@ -200,7 +256,7 @@ def geocode_test_cases(unit_test_params):
     ones = np.ones(radargrid.shape)
 
     axes = 'xy'
-    test_modes = ['', 'rg', 'az', 'rg_az', 'tec', 'blocked']
+    test_modes = ['', 'rg', 'az', 'rg_az', 'tec', 'blocked', 'subswath']
     for axis, test_mode in itertools.product(axes, test_modes):
         is_block_mode = test_mode == 'blocked'
 
@@ -272,6 +328,8 @@ def geocode_test_cases(unit_test_params):
         test_case.output_path = \
             unit_test_params.out_dir / f'{common_output_prefix}.geo'
 
+        test_case.subswath_enabled = test_mode == 'subswath'
+
         # assign validation array based on axis
         if axis == 'x':
             test_case.validation_arr = unit_test_params.grid_lon
@@ -300,6 +358,11 @@ def run_cuda_geocode(test_case, unit_test_params):
                                      gdal.GDT_CFloat32, "ENVI")]
     input_raster = [isce3.io.Raster(test_case.input_path)]
 
+    # Populate geocode_slc kwargs as needed
+    kwargs = {}
+    if test_case.subswath_enabled:
+        kwargs['subswaths'] = unit_test_params.subswaths[test_case.axis]
+
     # geocode raster for given test case
     cu_geocode.geocode_rasters(output_raster,
                                input_raster,
@@ -309,7 +372,8 @@ def run_cuda_geocode(test_case, unit_test_params):
                                unit_test_params.dem_raster,
                                native_doppler=unit_test_params.native_doppler,
                                az_time_correction=test_case.az_time_correction,
-                               srange_correction=test_case.srange_correction)
+                               srange_correction=test_case.srange_correction,
+                               **kwargs)
 
     output_raster[0].set_geotransform(unit_test_params.geotrans)
 
@@ -359,5 +423,31 @@ def test_validate(unit_test_params):
             np.count_nonzero(np.ma.getmask(test_phase_arr)) \
             / test_phase_arr.size
 
-        assert(percent_invalid < 0.6), \
-            f'{str(test_case.output_path)} percent invalid fail'
+        # skip percent invalid check for subswath enabled
+        # percent valid pixels only computed for subswath less rasters
+        if not test_case.subswath_enabled:
+            assert(percent_invalid < 0.6), \
+                f'{str(test_case.output_path)} percent invalid fail'
+
+
+def test_subswath_masking(unit_test_params):
+    for test_case in geocode_test_cases(unit_test_params):
+        # only test if subswath mode is enabled
+        if not test_case.subswath_enabled:
+            continue
+
+        # load angle of subswath masked output
+        subswath_masked_arr = \
+            _get_raster_array_masked(str(test_case.output_path),
+                                     array_op=np.angle)
+
+        # create mask of output where values between 30th and 70th percentile
+        # are True and everything else is False
+        in_subswath_mask_bounds = \
+            np.logical_and(subswath_masked_arr >= unit_test_params.subswaths_lo_val[test_case.axis],
+                           subswath_masked_arr <= unit_test_params.subswaths_hi_val[test_case.axis])
+
+        # check that angles of all geocoded values are between 30th and 70th
+        # percentile
+        assert(np.all(in_subswath_mask_bounds),
+               f"{test_case.output_path} with not all NaN")

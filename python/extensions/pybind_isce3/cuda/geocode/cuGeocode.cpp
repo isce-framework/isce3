@@ -46,6 +46,7 @@ void addbinding(pybind11::class_<Geocode>& pyGeocode)
             py::arg("native_doppler") = isce3::core::LUT2d<double>(),
             py::arg("az_time_correction") = isce3::core::LUT2d<double>(),
             py::arg("srange_correction") = isce3::core::LUT2d<double>(),
+            py::arg("subswaths") = nullptr,
             py::arg("dem_interp_method") =
                     isce3::core::BIQUINTIC_METHOD,
             py::arg("threshold") = g2r_defaults.threshold,

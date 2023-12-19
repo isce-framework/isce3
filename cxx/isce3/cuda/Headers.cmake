@@ -41,6 +41,7 @@ image/forward.h
 image/gpuResampSlc.h
 image/ResampSlc.h
 math/complexOperations.h
+product/SubSwaths.h
 signal/forward.h
 signal/gpuCrossMul.h
 signal/gpuFilter.h

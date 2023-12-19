@@ -9,6 +9,7 @@
 #include <pyre/journal.h>
 
 #include <isce3/core/Ellipsoid.h>
+#include <isce3/core/EMatrix.h>
 #include <isce3/core/Projections.h>
 #include <isce3/cuda/container/RadarGeometry.h>
 #include <isce3/cuda/core/OrbitView.h>
@@ -23,6 +24,7 @@
 
 #include "Geocode.h"
 #include "MaskedMinMax.h"
+
 using isce3::core::Vec3;
 using isce3::io::Raster;
 
@@ -39,7 +41,11 @@ using DeviceInterp = isce3::cuda::core::gpuInterpolator<T>;
 template<typename T>
 using DeviceLUT2d = isce3::cuda::core::gpuLUT2d<T>;
 
+using GpuOwnerSubSwaths = isce3::cuda::product::OwnerSubSwaths;
+using GpuViewSubSwaths = isce3::cuda::product::ViewSubSwaths;
+
 namespace isce3::cuda::geocode {
+
 
 /**  Coverts a batch of rows from input geogrid into radar coordinates. Outputs
  *  the pixel-space coordinates (x,y) of each resulting (range, azimuth) pair
@@ -75,6 +81,8 @@ namespace isce3::cuda::geocode {
  *                              seconds, as a function of azimuth and range
  * \param[in] sRangeCorrection  geo2rdr slant range additive correction, in
  *                              seconds, as a function of azimuth and range
+ * \param[in]  subswaths        view of subswath mask representing valid
+ *                              portions of a swath
  */
 __global__ void geoToRdrIndices(double* rdr_x, double* rdr_y, bool* mask,
         const isce3::core::Ellipsoid ellipsoid, const DeviceOrbitView orbit,
@@ -87,7 +95,8 @@ __global__ void geoToRdrIndices(double* rdr_x, double* rdr_y, bool* mask,
         const RadarGridParamsLite radargrid, const size_t line_start,
         const size_t block_size, isce3::cuda::core::ProjectionBase** proj,
         const DeviceLUT2d<double> azTimeCorrection,
-        const DeviceLUT2d<double> sRangeCorrection)
+        const DeviceLUT2d<double> sRangeCorrection,
+        const GpuViewSubSwaths subswaths)
 {
     // thread index (1d grid of 1d blocks)
     const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -121,33 +130,42 @@ __global__ void geoToRdrIndices(double* rdr_x, double* rdr_y, bool* mask,
     // Bool to track if aztime and slant range is not contained in any of the
     // following LUT2d's: azTimeCorrection, sRangeCorrection, and nativeDoppler.
     // When set to true, this geogrid point will be marked as invalid
-    bool not_in_lut = false;
+    bool mask_this_pixel = false;
 
     // Apply timing corrections
     if (azTimeCorrection.contains(aztime, srange)) {
         const auto aztimeCor = azTimeCorrection.eval(aztime, srange);
         aztime += aztimeCor;
     } else
-        not_in_lut = true;
+        mask_this_pixel = true;
 
     if (sRangeCorrection.contains(aztime, srange)) {
         const auto srangeCor = sRangeCorrection.eval(aztime, srange);
         srange += srangeCor;
     } else
-        not_in_lut = true;
+        mask_this_pixel = true;
 
     if (!nativeDoppler.contains(aztime, srange))
-        not_in_lut = true;
+        mask_this_pixel = true;
 
-    // convert aztime and range to indices
-    double y = (aztime - radargrid.sensing_start) * radargrid.prf;
-    double x = (srange - radargrid.starting_range) / radargrid.range_pixel_spacing;
+    // convert aztime and range to indices as double, int, and size_t
+    // ensure size_t values do convert negative value
+    const double y = (aztime - radargrid.sensing_start) * radargrid.prf;
+    const auto y_int = static_cast<int>(std::floor(y));
+    const auto y_size_t = y_int < 0 ? 0 : static_cast<size_t>(y_int);
+    const double x = (srange - radargrid.starting_range) / radargrid.range_pixel_spacing;
+    const auto x_int = static_cast<int>(std::floor(x));
+    const auto x_size_t = x_int < 0 ? 0 : static_cast<size_t>(x_int);
 
-    // check if indinces in bounds of radar grid
+    if (!subswaths.contains(y_int, x_int))
+        mask_this_pixel = true;
+
+    // check if indices in bounds of radar grid
     const bool not_in_rdr_grid =
-            y < 0 || y >= radargrid.length || x < 0 || x >= radargrid.width;
+            y_int < 0 || y_size_t >= radargrid.length ||
+            x_int < 0 || x_size_t >= radargrid.width;
 
-    const bool invalid_index = not_in_rdr_grid || converged == 0 || not_in_lut;
+    const bool invalid_index = not_in_rdr_grid || converged == 0 || mask_this_pixel;
     rdr_y[tid] = invalid_index ? 0.0 : y;
     rdr_x[tid] = invalid_index ? 0.0 : x;
     mask[tid] = invalid_index;
@@ -360,7 +378,8 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number,
         const isce3::geometry::detail::Geo2RdrParams geo2rdr_params,
         const DeviceLUT2d<double>& nativeDoppler,
         const DeviceLUT2d<double>& azTimeCorrection,
-        const DeviceLUT2d<double>& sRangeCorrection)
+        const DeviceLUT2d<double>& sRangeCorrection,
+        const GpuViewSubSwaths& view_subswaths)
 {
     // make sure block index does not exceed actual number of blocks
     if (block_number >= _n_blocks) {
@@ -405,7 +424,8 @@ void Geocode::setBlockRdrCoordGrid(const size_t block_number,
                 nativeDoppler, dev_rdr_geom.doppler(),
                 dev_rdr_geom.wavelength(), dev_rdr_geom.lookSide(),
                 geo2rdr_params, _geogrid, _radar_grid, _line_start, block_size,
-                _proj_handle.get_proj(), azTimeCorrection, sRangeCorrection);
+                _proj_handle.get_proj(), azTimeCorrection, sRangeCorrection,
+                view_subswaths);
 
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaDeviceSynchronize());
@@ -624,6 +644,7 @@ void Geocode::geocodeRasters(
         const isce3::core::LUT2d<double>& hostNativeDoppler,
         const isce3::core::LUT2d<double>& hostAzTimeCorrection,
         const isce3::core::LUT2d<double>& hostSRangeCorrection,
+        const isce3::product::SubSwaths* subswaths,
         const isce3::core::dataInterpMethod dem_interp_method,
         const double threshold, const int maxiter, const double dr)
 {
@@ -732,6 +753,14 @@ void Geocode::geocodeRasters(
     // copy RadarGeometry to device
     const auto dev_rdr_geom = isce3::cuda::container::RadarGeometry(_rdr_geom);
 
+    // copy Subswaths to device as GpuOwnerSubSwaths object or init default
+    auto dev_owner_subswaths = subswaths ?
+        GpuOwnerSubSwaths(*subswaths) : GpuOwnerSubSwaths();
+
+    // create GpuViewSubSwaths object with pointers that access
+    // GpuOwnerSubSwaths object
+    const auto dev_view_subswaths = GpuViewSubSwaths(dev_owner_subswaths);
+
     // iterate over blocks
     for (size_t i_block = 0; i_block < _n_blocks; ++i_block) {
 
@@ -743,7 +772,8 @@ void Geocode::geocodeRasters(
                              geo2rdr_params,
                              nativeDoppler,
                              azTimeCorrection,
-                             sRangeCorrection);
+                             sRangeCorrection,
+                             dev_view_subswaths);
 
         // iterate over rasters and geocode with associated datatype and
         // interpolation method

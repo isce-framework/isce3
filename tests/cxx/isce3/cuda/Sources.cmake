@@ -22,6 +22,7 @@ geometry/geo2rdr/gpuGeo2rdr.cpp
 geometry/geometry/gpuGeometry.cpp
 geometry/topo/gpuTopo.cpp
 image/resampslc/gpuResampSlc.cpp
+product/SubSwaths.cu
 signal/gpuCrossMul.cpp
 signal/gpuFilter.cpp
 signal/gpuLooks.cpp
