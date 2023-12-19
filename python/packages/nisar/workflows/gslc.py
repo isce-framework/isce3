@@ -19,7 +19,7 @@ from nisar.workflows.h5_prep import (add_radar_grid_cubes_to_hdf5,
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
-from isce3.core.types import truncate_mantissa
+from isce3.core.types import truncate_mantissa, read_c4_dataset_as_c8
 from nisar.products.writers import GslcWriter
 
 
