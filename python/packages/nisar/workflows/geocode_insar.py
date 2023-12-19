@@ -3,6 +3,7 @@
 """
 collection of functions for NISAR geocode workflow
 """
+import os
 import pathlib
 import time
 from enum import Enum
@@ -11,6 +12,11 @@ import h5py
 import isce3
 import journal
 import numpy as np
+from nisar.products.insar.product_paths import (CommonPaths, GOFFGroupsPaths,
+                                                GUNWGroupsPaths,
+                                                RIFGGroupsPaths,
+                                                ROFFGroupsPaths,
+                                                RUNWGroupsPaths)
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import prepare_insar_hdf5
@@ -20,9 +26,6 @@ from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
-from nisar.products.insar.product_paths import (CommonPaths, GUNWGroupsPaths,
-                                                GOFFGroupsPaths, ROFFGroupsPaths,
-                                                RIFGGroupsPaths, RUNWGroupsPaths)
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
 
@@ -604,7 +607,9 @@ def cpu_geocode_rasters(cpu_geo_obj, geo_datasets, desired, freq, pol_list,
 
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
-                compute_stats_real_data(raster, ds)
+                if os.path.basename(ds.name) not in ['wrappedInterferogram',
+                                                     'connectedComponents']:
+                    compute_stats_real_data(raster, ds)
 
 def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Geocode RUNW products on CPU
@@ -989,7 +994,9 @@ def gpu_geocode_rasters(geocoded_dataset_flags,
 
         if compute_stats:
             for raster, ds in zip(geocoded_rasters, geocoded_datasets):
-                compute_stats_real_data(raster, ds)
+                if os.path.basename(ds.name) not in ['connectedComponents',
+                                                     'wrappedInterferogram']:
+                    compute_stats_real_data(raster, ds)
 
 def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     """ Geocode RUNW products on GPU

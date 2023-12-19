@@ -17,7 +17,7 @@ from isce3.unwrap.preprocess import project_map_to_radar
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows import crossmul, prepare_insar_hdf5
-from nisar.workflows.compute_stats import compute_stats_real_data
+from nisar.workflows.compute_stats import compute_stats_real_data, compute_stats_real_hdf5_dataset
 from nisar.workflows.helpers import get_cfg_freq_pols
 from nisar.workflows.unwrap_runconfig import UnwrapRunConfig
 from nisar.products.insar.product_paths import RIFGGroupsPaths
@@ -357,7 +357,8 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                     dst_raster = isce3.io.Raster(
                         f"IH5:::ID={dst_dataset.id.id}".encode("utf-8"),
                         update=True)
-                    compute_stats_real_data(dst_raster, dst_dataset)
+                    if dataset not in ['correlationSurfacePeak']:
+                       compute_stats_real_data(dst_raster, dst_dataset)
 
                 # Clean up
                 del unw_raster

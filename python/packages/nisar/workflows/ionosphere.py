@@ -24,8 +24,9 @@ from nisar.workflows import (crossmul, dense_offsets, h5_prep,
                              filter_interferogram, prepare_insar_hdf5,
                              resample_slc,
                              rubbersheet, unwrap)
+from nisar.workflows.compute_stats import compute_stats_real_hdf5_dataset
 from nisar.workflows.ionosphere_runconfig import InsarIonosphereRunConfig
-from nisar.products.insar.product_paths import RUNWGroupsPaths
+from nisar.products.insar.product_paths import CommonPaths, RUNWGroupsPaths
 from nisar.workflows.yaml_argparse import YamlArgparse
 
 
@@ -269,7 +270,7 @@ def copy_iono_datasets(iono_insar_cfg,
 
                 if 'listOfPolarizations' not in dst_h5[freq_path]:
                     h5_prep._add_polarization_list(dst_h5, 'RUNW',
-                        common_path, freq, pol)
+                        CommonPaths().RootPath, freq, pol)
                 if 'interferogram' not in dst_h5[freq_path]:
                     dst_h5[freq_path].create_group('interferogram')
 
@@ -318,6 +319,10 @@ def copy_iono_datasets(iono_insar_cfg,
                         dst_h5[dst_iono_path].write_direct(iono,
                             dest_sel=np.s_[
                                     row_start:row_start+block_rows_data, :])
+
+                # Add statistics to ionosphere datasets in RUNW
+                for dst_iono_path in dst_iono_paths:
+                    compute_stats_real_hdf5_dataset(dst_h5[dst_iono_path])
 
 def insar_ionosphere_pair(original_cfg, runw_hdf5):
     """Run insar workflow for additional interferogram to be used for ionosphere
