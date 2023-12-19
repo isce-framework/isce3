@@ -379,7 +379,7 @@ runconfig:
                 # Oversampling factor of the correlation surface for sub-pixel offset refinement
                 correlation_surface_oversampling_factor: 64
                 # Correlation surface oversampling algorithm
-                correlation_surface_oversampling_method: 'sinc'
+                correlation_surface_oversampling_method: 'fft'
                 # Number of cuda streams
                 cuda_streams:
                 # Number of offset estimates to process in batch along slant range
