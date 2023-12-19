@@ -463,6 +463,7 @@ def add_baseline(output_paths,
                             {metadata_path}/perpendicularBaseline,
                  "parallelBaseline": {metadata_path}/parallelBaseline,
                  "epsg": {metadata_path}/epsg},
+                 "projection": {metadata_path}/projection},
                  "range_start",
                  "range_end",
         where metadata_path = /science/LSAR/RIFG/metadata/geolocationGrid
@@ -521,7 +522,14 @@ def add_baseline(output_paths,
         height_levels = dst_h5[metadata_path_dict["heights"]][:]
         coord_x = dst_h5[metadata_path_dict["coordX"]][:]
         coord_y = dst_h5[metadata_path_dict["coordY"]][:]
-        epsg_code = dst_h5[metadata_path_dict["epsg"]][()]
+        if 'projection' not in metadata_path_dict:
+            # L1 products have the 'epsg' dataset
+            epsg_code = dst_h5[metadata_path_dict["epsg"]][()]
+        else:
+            # L2 products have the 'projection' dataset that includes
+            # the `epsg_code` attribute
+            epsg_code = \
+                dst_h5[metadata_path_dict["projection"]].attrs['epsg_code']
         slant_range = dst_h5[metadata_path_dict["slantRange"]][:]
         proj = isce3.core.make_projection(epsg_code)
         ellipsoid = proj.ellipsoid
@@ -769,7 +777,7 @@ def run(cfg: dict, output_paths):
             "coordY": f"{grid_path}/yCoordinates",
             "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
             "parallelBaseline": f"{grid_path}/parallelBaseline",
-            "epsg": f"{grid_path}/epsg",
+            "projection": f"{grid_path}/projection",
             "range_start": range_start,
             "range_end": range_end,
             }

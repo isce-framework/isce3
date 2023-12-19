@@ -208,7 +208,7 @@ def test_add_baseline(unit_test_params):
                     "coordY": f"{grid_path}/yCoordinates",
                     "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
                     "parallelBaseline": f"{grid_path}/parallelBaseline",
-                    "epsg": f"{grid_path}/epsg",
+                    "projection": f"{grid_path}/projection",
                     "range_start": unit_test_params.range_start,
                     "range_end": unit_test_params.range_end,
                     }
@@ -230,10 +230,6 @@ def test_add_baseline(unit_test_params):
                                         dtype=np.float32,
                                         shape=[1],
                                         data=unit_test_params.coord_z)
-                if metadata_path_dict['epsg'] not in h5_src:
-                    h5_src.create_dataset(metadata_path_dict['epsg'],
-                                        dtype=np.int64,
-                                        data=4326)
                 if metadata_path_dict['slantRange'] not in h5_src:
                     h5_src.create_dataset(metadata_path_dict['slantRange'],
                                         dtype=np.float32,

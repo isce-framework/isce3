@@ -112,6 +112,15 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
 
         L2InSARWriter.add_geocoding_to_procinfo_params_group(self)
 
+        # Update the descriptions of the reference and secondary
+        for rslc_name in ['reference', 'secondary']:
+            rslc = self[self.group_paths.ParametersPath][rslc_name]
+            rslc['referenceTerrainHeight'].attrs['description'] = \
+                np.string_("Reference Terrain Height as a function of"
+                           f" map coordinates for {rslc_name} RSLC")
+            rslc['referenceTerrainHeight'].attrs['units'] = \
+                Units.meter
+
     def add_grids_to_hdf5(self):
         """
         Add grids to HDF5
@@ -188,7 +197,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     "Byte layer with flags for various channels"
                     " (e.g. layover/shadow, data quality)"
                     ,
-                    Units().dn,
+                    Units.dn,
                     grids_val,
                     xds=xds,
                     yds=yds)
@@ -208,19 +217,19 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 unwrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     Units().unitless),
+                     Units.unitless),
                     ("connectedComponents", np.uint32,
                      f"Connected components for {pol} layers",
-                     Units().dn),
+                     Units.dn),
                     ("ionospherePhaseScreen", np.float32,
                      "Ionosphere phase screen",
-                     Units().radian),
+                     Units.radian),
                     ("ionospherePhaseScreenUncertainty", np.float32,
                      "Uncertainty of the ionosphere phase screen",
                      "radians"),
                     ("unwrappedPhase", np.float32,
                     f"Unwrapped interferogram between {pol} layers",
-                     Units().radian),
+                     Units.radian),
                 ]
 
                 for ds_param in unwrapped_ds_params:
@@ -251,10 +260,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 wrapped_ds_params = [
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
-                     Units().unitless),
+                     Units.unitless),
                     ("wrappedInterferogram", np.complex64,
                      f"Complex wrapped interferogram between {pol} layers",
-                     Units().dn),
+                     Units.dn),
                 ]
 
                 for ds_param in wrapped_ds_params:
@@ -288,13 +297,13 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 pixel_offsets_ds_params = [
                     ("alongTrackOffset", np.float32,
                      "Along track offset",
-                     Units().meter),
+                     Units.meter),
                     ("correlationSurfacePeak", np.float32,
                      "Normalized cross-correlation surface peak",
-                     Units().unitless),
+                     Units.unitless),
                     ("slantRangeOffset", np.float32,
                      "Slant range offset",
-                     Units().meter),
+                     Units.meter),
                 ]
 
                 for ds_param in pixel_offsets_ds_params:

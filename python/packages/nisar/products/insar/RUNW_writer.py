@@ -69,18 +69,18 @@ class RUNWWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "highBandBandwidth",
-                np.float32(high_bandwidth),
+                np.float64(high_bandwidth),
                 "Slant range bandwidth of the high sub-band image",
                 {
-                    "units": Units().hertz,
+                    "units": Units.hertz,
                 },
             ),
             DatasetParams(
                 "lowBandBandwidth",
-                np.float32(low_bandwidth),
+                np.float64(low_bandwidth),
                 "Slant range bandwidth of the low sub-band image",
                 {
-                    "units": Units().hertz,
+                    "units": Units.hertz,
                 },
             ),
         ]
@@ -172,9 +172,9 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
-                unwrap_correction,
-                "Flag indicating if unwrapping errors in sub-band"
-                " unwrapped interferograms are corrected"
+                np.bool_(unwrap_correction),
+                "Algorithm correcting unwrapping errors in sub-band"
+                " unwrapped interferograms"
                 ,
                 {
                     "algorithm_type": "Ionosphere estimation",
@@ -328,26 +328,26 @@ class RUNWWriter(L1InSARWriter):
                     (
                         "connectedComponents",
                         np.uint32,
-                        f"Connected components for {pol} layers",
-                        Units().dn,
+                        f"Connected components for {pol} layer",
+                        Units.dn,
                     ),
                     (
                         "ionospherePhaseScreen",
                         np.float32,
                         "Ionosphere phase screen",
-                        Units().radian,
+                        Units.radian,
                     ),
                     (
                         "ionospherePhaseScreenUncertainty",
                         np.float32,
                         "Uncertainty of the ionosphere phase screen",
-                        Units().radian,
+                        Units.radian,
                     ),
                     (
                         "unwrappedPhase",
                         np.float32,
                         f"Unwrapped interferogram between {pol} layers",
-                        Units().radian,
+                        Units.radian,
                     ),
                 ]
 

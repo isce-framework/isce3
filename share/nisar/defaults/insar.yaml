@@ -444,8 +444,6 @@ runconfig:
                     window_azimuth: 64
                     half_search_range: 16
                     half_search_azimuth: 16
-                    skip_range: 15
-                    skip_azimuth: 15
 
             rubbersheet:
                 # Path to dense offsets outputs (offsets, snr, covariance).

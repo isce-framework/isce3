@@ -311,10 +311,10 @@ dense_offsets_options:
     window_azimuth: int(min=16, max=512, required=False)
 
     # Number of columns for search chip/template in secondary image
-    half_search_range: int(min=4, max=32, required=False)
+    half_search_range: int(min=4, max=128, required=False)
 
     # Number of lines for search chip/template in secondary image
-    half_search_azimuth: int(min=4, max=32, required=False)
+    half_search_azimuth: int(min=4, max=128, required=False)
 
     # Number of columns to skip in reference image for next offset estimate
     skip_range: int(min=1, required=False)

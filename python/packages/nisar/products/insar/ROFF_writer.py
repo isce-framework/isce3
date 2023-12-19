@@ -148,7 +148,7 @@ class ROFFWriter(L1InSARWriter):
                     " pixels"
                     ,
                     {
-                        "units": Units().unitless,
+                        "units": Units.unitless,
                     },
                 ),
                 DatasetParams(
@@ -156,7 +156,7 @@ class ROFFWriter(L1InSARWriter):
                     np.uint32(az_start),
                     "Reference RSLC start pixel in along-track",
                     {
-                        "units": Units().unitless,
+                        "units": Units.unitless,
                     },
                 ),
                 DatasetParams(
@@ -166,7 +166,7 @@ class ROFFWriter(L1InSARWriter):
                     " pixels"
                     ,
                     {
-                        "units": Units().unitless,
+                        "units": Units.unitless,
                     },
                 ),
                 DatasetParams(
@@ -174,16 +174,16 @@ class ROFFWriter(L1InSARWriter):
                     np.uint32(rg_start),
                     "Reference RSLC start pixel in slant range",
                     {
-                        "units": Units().unitless,
+                        "units": Units.unitless,
                     },
                 ),
                 DatasetParams(
-                    "crossCorrelationSurfaceOversampling",
+                    "correlationSurfaceOversampling",
                     np.uint32(ovs_factor),
                     "Oversampling factor of the cross-correlation surface"
                     ,
                     {
-                        "units": Units().unitless,
+                        "units": Units.unitless,
                     },
                 ),
                 DatasetParams(
@@ -194,7 +194,7 @@ class ROFFWriter(L1InSARWriter):
                     " computation"
                     ,
                     {
-                        "units": Units().unitless,
+                        "units": Units.unitless,
                     },
                 ),
             ]
@@ -235,7 +235,7 @@ class ROFFWriter(L1InSARWriter):
                             " pixels"
                             ,
                             {
-                                "units": Units().unitless,
+                                "units": Units.unitless,
                             },
                         ),
                         DatasetParams(
@@ -245,7 +245,7 @@ class ROFFWriter(L1InSARWriter):
                             " pixels"
                             ,
                             {
-                                "units": Units().unitless,
+                                "units": Units.unitless,
                             },
                         ),
                         DatasetParams(
@@ -255,7 +255,7 @@ class ROFFWriter(L1InSARWriter):
                             " size in pixels"
                             ,
                             {
-                                "units": Units().unitless,
+                                "units": Units.unitless,
                             },
                         ),
                         DatasetParams(
@@ -265,7 +265,7 @@ class ROFFWriter(L1InSARWriter):
                             " size in pixels"
                             ,
                             {
-                                "units": Units().unitless,
+                                "units": Units.unitless,
                             },
                         ),
                     ]
@@ -297,37 +297,37 @@ class ROFFWriter(L1InSARWriter):
                 (
                     "alongTrackOffset",
                     "Raw (unculled, unfiltered) along-track pixel offsets",
-                    Units().meter,
+                    Units.meter,
                 ),
                 (
                     "alongTrackOffsetVariance",
                     "Along-track pixel offsets variance",
-                    Units().unitless,
+                    Units.unitless,
                 ),
                 (
                     "slantRangeOffsetVariance",
                     "Slant range pixel offsets variance",
-                    Units().unitless,
+                    Units.unitless,
                 ),
                 (
                     "correlationSurfacePeak",
                     "Normalized correlation surface peak",
-                    Units().unitless,
+                    Units.unitless,
                 ),
                 (
                     "crossOffsetVariance",
                     "Off-diagonal term of the pixel offsets covariance matrix",
-                    Units().unitless,
+                    Units.unitless,
                 ),
                 (
                     "slantRangeOffset",
                     "Raw (unculled, unfiltered) slant range pixel offsets",
-                    Units().meter,
+                    Units.meter,
                 ),
                 (
                     "snr",
                     "Pixel offsets signal-to-noise ratio",
-                    Units().unitless,
+                    Units.unitless,
                 ),
             ]
 
@@ -385,7 +385,7 @@ class ROFFWriter(L1InSARWriter):
                         "Nominal along-track spacing in meters between"
                         " consecutive lines near mid-swath of the product images"
                     ),
-                    {"units": Units().meter},
+                    {"units": Units.meter},
                 ),
                 DatasetParams(
                     "sceneCenterGroundRangeSpacing",
@@ -395,7 +395,7 @@ class ROFFWriter(L1InSARWriter):
                         "Nominal ground range spacing in meters between"
                         " consecutive pixels near mid-swath of the product images"
                     ),
-                    {"units": Units().meter},
+                    {"units": Units.meter},
                 ),
             ]
             for ds_param in scene_center_params:
