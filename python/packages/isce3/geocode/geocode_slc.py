@@ -109,7 +109,7 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                 dem_raster, radargrid,
                 geogrid, orbit, native_doppler, image_grid_doppler,
                 ellipsoid, threshold_geo2rdr, num_iter_geo2rdr,
-                sliced_radargrid=None,
+                sliced_radargrid=None, subswaths=None,
                 first_azimuth_line=0,  first_range_sample=0, flatten=True,
                 reramp=True,
                 az_carrier=isce3.core.LUT2d(),
@@ -154,6 +154,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         Maximum number of iterations for geo2rdr convergence
     sliced_radargrid: RadarGridParameters
         Radar grid representing subset of radargrid
+    subswaths: SubSwaths or None, default=None
+        Subswath mask representing valid portions of a swath
     azimuth_first_line: int
         FIrst line of radar data block with respect to larger radar data raster, else 0
     range_first_pixel: int
@@ -189,10 +191,16 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     if sliced_radargrid is None:
         sliced_radargrid = radargrid
 
-    # ensure geo_data_blocks and rdr_data_blocks are lists
-    if geo_io_checks.is_array:
+    # if subswaths not passed in, pass in emtpy kwarg.
+    # else pass in subswaths in kwarg
+    kwargs = {}
+    if subswaths is not None:
+        kwargs['subswaths'] = subswaths
+
+    # if both geo and radar blocks are np.ndarray, put them into a list
+    # to match expected input type of list[np.ndaarray]
+    if geo_io_checks.is_array and rdr_io_checks.is_array:
         geo_data_blocks = [geo_data_blocks]
-    if rdr_io_checks.is_array:
         rdr_data_blocks = [rdr_data_blocks]
 
     # if not default carrier/flattening phase array, check if shape matches
@@ -208,4 +216,4 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                  num_iter_geo2rdr, first_azimuth_line, first_range_sample,
                  flatten, reramp, az_carrier, rg_carrier, az_time_correction,
                  srange_correction, flatten_with_corrected_srange,
-                 invalid_value)
+                 invalid_value, **kwargs)

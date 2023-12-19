@@ -134,7 +134,9 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  rdrDataBlocks    vector of input arrays in radar coordinates
  * \param[in]  demRaster        raster of the DEM
  * \param[in]  radarGrid        full sized radar grid parameters
- * \param[in]  slicedRadarGrid  sliced radar grid parameters
+ * \param[in]  slicedRadarGrid  radar grid parameters sliced from full sized
+ *                              radar grid parameters that represent a valid
+ *                              area inside the full size radar grid
  * \param[in]  geoGrid          geo grid parameters
  * \param[in]  orbit            orbit
  * \param[in]  nativeDoppler    2D LUT Doppler of the SLC image
@@ -154,6 +156,8 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
  * \param[in]  sRangeCorrection geo2rdr slant range additive correction, in meters, as a function of azimuth and range
  * \param[in]  flattenWithCorrectedSRng  flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
  * \param[in]  invalidValue     invalid pixel fill value
+ * \param[in]  subswaths        subswath mask representing valid portions of a
+ *                              swath
  */
 template<typename AzRgFunc = isce3::core::Poly2d>
 void geocodeSlc(
@@ -181,6 +185,7 @@ void geocodeSlc(
         const bool flattenWithCorrectedSRng = false,
         const std::complex<float> invalidValue =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
-                                std::numeric_limits<float>::quiet_NaN()));
+                                std::numeric_limits<float>::quiet_NaN()),
+        const isce3::product::SubSwaths* subswaths = nullptr);
 
 }} // namespace isce3::geocode

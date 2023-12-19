@@ -99,6 +99,61 @@ def make_tec_file(unit_test_params):
         json.dump(tec_dict, fp)
 
 
+def make_subswaths():
+    """
+    A helper funtion that creates a SubSwaths object based on axis, where
+    subswath start and stop indices per range line defined by the 30th
+    and 70th percentile of the angle of the SLC array values.
+
+    Returns
+    ----------
+    isce3.product.SubSwaths
+        The generated SubSwaths object.
+    """
+
+    # dict for subswath per axis, x or y
+    subswaths = {}
+    # dicts for lo and hi angle of complex SLC after masking of by 30th and
+    # 70th percentiles
+    val_lo = {}
+    val_hi = {}
+
+    # iterate over axis
+    for xy in "xy":
+        # load SLC as angle
+        axis_input_path = f"{iscetest.data}/geocodeslc/{xy}.slc"
+        ds = gdal.Open(axis_input_path, gdal.GA_ReadOnly)
+        arr = np.angle(ds.GetRasterBand(1).ReadAsArray())
+
+        # get 30th/lo to 70th/hi percentile of angle of current input
+        val_lo[xy], val_hi[xy] = np.percentile(arr, [30, 70])
+
+        # mask for anything below 30th percentile or above 70th percentile
+        mask = np.logical_or(arr < val_lo[xy], arr > val_hi[xy])
+
+        # populate array of start and stop at each range line
+        length, width = mask.shape
+        subswath_array = np.zeros((length, 2), np.int32)
+        for j in range(length):
+            # get unmasked indices
+            inds_unmasked = np.nonzero(mask[j, :] == False)[0]
+
+            # from front of row find first unmasked element
+            subswath_array[j, 0] = inds_unmasked[0]
+
+            # from back of row find last unmasked element
+            subswath_array[j, 1] = inds_unmasked[-1] + 1
+
+        # create subswath object for current axis
+        n_subswaths = 1
+        subswaths[xy] = isce3.product.SubSwaths(length,
+                                                width,
+                                                n_subswaths)
+        subswaths[xy].set_valid_samples_array(1, subswath_array)
+
+    return subswaths, val_lo, val_hi
+
+
 @pytest.fixture(scope='session')
 def unit_test_params():
     '''
@@ -159,6 +214,10 @@ def unit_test_params():
     params.tec_json_path = 'test_tec.json'
     make_tec_file(params)
 
+    # prepare subswath that masks radar grid so nothing is geocoded
+    params.subswaths, params.subswaths_lo_val, params.subswaths_hi_val = \
+        make_subswaths()
+
     return params
 
 
@@ -190,16 +249,16 @@ def geocode_slc_test_cases(unit_test_params):
     for axis, flatten_enabled in itertools.product('xy', [True, False]):
         test_case.axis = axis
         test_case.flatten_enabled = flatten_enabled
-        for offset_mode in ['', 'rg', 'az', 'rg_az', 'tec']:
-            test_case.offset_mode = offset_mode
+        for test_mode in ['', 'rg', 'az', 'rg_az', 'tec', 'subswath']:
+            test_case.test_mode = test_mode
 
             # create radar and apply positive offsets in range and azimuth
             test_case.radargrid = radargrid.copy()
 
             # apply offsets as required by mode
-            if 'rg' in offset_mode or 'tec' == offset_mode:
+            if 'rg' in test_mode or 'tec' == test_mode:
                 test_case.radargrid.starting_range += range_offset
-            if 'az' in offset_mode:
+            if 'az' in test_mode:
                 test_case.radargrid.sensing_start += azimuth_offset
 
             # slant range vector for LUT2d
@@ -215,12 +274,12 @@ def geocode_slc_test_cases(unit_test_params):
             # corrections LUT2ds will use the negative offsets
             # should cancel positive offset applied to radar grid
             srange_correction = isce3.core.LUT2d()
-            if 'rg' in offset_mode:
+            if 'rg' in test_mode:
                 srange_correction = isce3.core.LUT2d(srange_vec,
                                                      az_time_vec,
                                                      range_offset * ones,
                                                      method)
-            elif 'tec' == offset_mode:
+            elif 'tec' == test_mode:
                 srange_correction = \
                     tec_lut2d_from_json_srg(unit_test_params.tec_json_path,
                                         unit_test_params.center_freq,
@@ -231,7 +290,7 @@ def geocode_slc_test_cases(unit_test_params):
             test_case.srange_correction = srange_correction
 
             az_time_correction = isce3.core.LUT2d()
-            if 'az' in offset_mode:
+            if 'az' in test_mode:
                 az_time_correction = isce3.core.LUT2d(srange_vec,
                                                       az_time_vec,
                                                       azimuth_offset * ones,
@@ -239,13 +298,17 @@ def geocode_slc_test_cases(unit_test_params):
             test_case.az_time_correction = az_time_correction
 
             test_case.need_flatten_phase_raster = \
-                axis == 'x' and not flatten_enabled and not offset_mode
+                axis == 'x' and not flatten_enabled and not test_mode
 
             # allow flatten for special case to return flatten true if
             # x-axis and no offsets
-            if flatten_enabled and ((axis == 'x' and offset_mode != '')
+            if flatten_enabled and ((axis == 'x' and test_mode != '')
                                     or axis == 'y'):
                 continue
+
+            # redunant to test subswath with flattening disabled and enabled
+            test_case.subswath_enabled = \
+                test_mode == 'subswath' and not flatten_enabled
 
             # prepare input and output paths
             test_case.input_path = \
@@ -253,7 +316,7 @@ def geocode_slc_test_cases(unit_test_params):
 
             flat_str = 'flattened' if test_case.flatten_enabled else 'unflattened'
             common_output_prefix = \
-                f'{axis}_{test_case.offset_mode}_geocode_slc_mode_{flat_str}'
+                f'{axis}_{test_case.test_mode}_geocode_slc_mode_{flat_str}'
             test_case.output_path = f'{common_output_prefix}.geo'
             test_case.flatten_phase_path = f'{common_output_prefix}_phase.bin'
 
@@ -337,11 +400,14 @@ def run_geocode_slc_array(test_case, unit_test_params):
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
 
-    #
-    flatten_kwargs = {}
+    # Populate geocode_slc kwargs as needed
+    kwargs = {}
     if test_case.need_flatten_phase_raster:
         flatten_phase_data = np.nan * np.zeros(out_shape,dtype=np.float64)
-        flatten_kwargs['flatten_phase_block'] = flatten_phase_data
+        kwargs['flatten_phase_block'] = flatten_phase_data
+
+    if test_case.subswath_enabled:
+        kwargs['subswaths'] = unit_test_params.subswaths[test_case.axis]
 
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_data,
@@ -360,7 +426,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
         flatten=test_case.flatten_enabled,
         az_time_correction=test_case.az_time_correction,
         srange_correction=test_case.srange_correction,
-        **flatten_kwargs)
+        **kwargs)
 
     # output file name for geocodeSlc array mode
     output_path = test_case.output_path.replace('geocode_slc_mode', 'array')
@@ -414,7 +480,6 @@ def test_run_arrays_mode(unit_test_params):
     # run array mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
         # skip flattening for multiple arrays
-        # single array test with flattening sufficient
         if test_case.flatten_enabled:
             continue
         run_geocode_slc_arrays(test_case, unit_test_params)
@@ -492,10 +557,13 @@ def test_run_raster_mode(unit_test_params):
     '''
     # run raster mode for all test cases
     for test_case in geocode_slc_test_cases(unit_test_params):
+        # skip subswath masking for deprecated raster mode - not supported
+        if test_case.subswath_enabled:
+            continue
         run_geocode_slc_raster(test_case, unit_test_params)
 
 
-def _get_raster_array_and_mask(raster_path, raster_layer=1, array_op=None):
+def _get_masked_raster_array(raster_path, raster_layer=1, array_op=None):
     # open raster as dataset and convert to angle as needed
     ds = gdal.Open(raster_path, gdal.GA_ReadOnly)
     test_arr = ds.GetRasterBand(raster_layer).ReadAsArray()
@@ -506,7 +574,7 @@ def _get_raster_array_and_mask(raster_path, raster_layer=1, array_op=None):
     test_mask = np.isnan(test_arr)
     test_arr = np.ma.masked_array(test_arr, mask=test_mask)
 
-    return test_arr, test_mask
+    return test_arr
 
 
 def check_raster_path(path, params):
@@ -524,13 +592,17 @@ def validate_slc_raster(unit_test_params, mode, raster_layer=1):
 
         # skip flattening cases - flattened geocoded SLC only for comparison
         # against unflattened geocoded SLC with flattening applied
-        if test_case.flatten_enabled:
+        # skip raster mode when subswath enabled - raster mode does not support
+        # subswath masking
+        raster_susbswath = mode == 'raster' and test_case.subswath_enabled
+        if test_case.flatten_enabled or raster_susbswath:
             continue
 
         # get phase of complex test data
         output_path = test_case.output_path.replace('geocode_slc_mode', mode)
-        test_phase_arr, test_mask = \
-            _get_raster_array_and_mask(output_path, raster_layer, np.angle)
+        test_phase_arr = \
+            _get_masked_raster_array(output_path, raster_layer, np.angle)
+        test_mask = test_phase_arr.mask
 
         # use geotransform to make lat/lon mesh
         ny, nx = test_phase_arr.shape
@@ -554,16 +626,16 @@ def validate_slc_raster(unit_test_params, mode, raster_layer=1):
         assert(err < 1.0e-6), f'{test_case.output_path} max error fail'
 
 
-def test_array_mode(unit_test_params):
+def test_validate_array_mode(unit_test_params):
     validate_slc_raster(unit_test_params, 'array')
 
 
-def test_arrays_mode(unit_test_params):
+def test_validate_arrays_mode(unit_test_params):
     validate_slc_raster(unit_test_params, 'arrays', 1)
     validate_slc_raster(unit_test_params, 'arrays', 2)
 
 
-def test_raster_mode(unit_test_params):
+def test_validate_raster_mode(unit_test_params):
     validate_slc_raster(unit_test_params, 'raster')
 
 
@@ -571,20 +643,48 @@ def test_flatten_application():
     for run_mode in ['array', 'raster']:
         # load SLCs geocoded along x-axis with flattening and without offset
         # applied as phase
-        x_phase_flattened_cpp, _ = \
-            _get_raster_array_and_mask(f'x__{run_mode}_flattened.geo', 1,
-                                         np.angle)
+        x_phase_flattened_cpp = \
+            _get_masked_raster_array(f'x__{run_mode}_flattened.geo', 1,
+                                     np.angle)
 
         # load SLCs geocoded along x-axis with flattening and without offset
         # applied as complex number
-        x_slc_unflattened, _ = \
-            _get_raster_array_and_mask(f'x__{run_mode}_unflattened.geo')
+        x_slc_unflattened = \
+            _get_masked_raster_array(f'x__{run_mode}_unflattened.geo')
 
         # load corresponding geocoded flattening phase and
-        flattening_phase, _ = _get_raster_array_and_mask(
+        flattening_phase = _get_masked_raster_array(
             f'x__{run_mode}_unflattened_phase.bin', 1,
             lambda x: np.exp(1j * x))
         x_phase_flattened_py = np.angle(x_slc_unflattened * flattening_phase)
 
         # compare 2 SLCs
         assert(np.nanmax(x_phase_flattened_cpp - x_phase_flattened_py) < 1e-6)
+
+
+def test_subswath_masking(unit_test_params):
+    for test_case in geocode_slc_test_cases(unit_test_params):
+        # only test if subswath mode is enabled
+        if not test_case.subswath_enabled:
+            continue
+
+        # array modes and corresponding raster band indices
+        modes_bands = [('array', 1), ('arrays', 1), ('arrays', 2)]
+        for arr_mode, i_layer in modes_bands:
+            # load subswath masked GSLC (only for array mode)
+            output_path = test_case.output_path.replace('geocode_slc_mode',
+                                                        arr_mode)
+            subswath_masked_arr = _get_masked_raster_array(output_path,
+                                                           i_layer,
+                                                           array_op=np.angle)
+
+            # create mask of output where values between 30th and 70th percentile
+            # are True and everything else is False
+            in_subswath_mask_bounds = \
+                np.logical_and(subswath_masked_arr >= unit_test_params.subswaths_lo_val[test_case.axis],
+                               subswath_masked_arr <= unit_test_params.subswaths_hi_val[test_case.axis])
+
+            # check that angles of all geocoded values are between 30th and 70th
+            # percentile
+            assert(np.all(in_subswath_mask_bounds),
+                   f"{test_case.output_path} with not all NaN")

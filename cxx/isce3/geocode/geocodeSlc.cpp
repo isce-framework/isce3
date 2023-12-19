@@ -1,6 +1,7 @@
 #include "geocodeSlc.h"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <tuple>
 
@@ -18,6 +19,7 @@
 #include <isce3/product/GeoGridParameters.h>
 #include <isce3/product/RadarGridProduct.h>
 #include <isce3/product/RadarGridParameters.h>
+#include <isce3/product/SubSwaths.h>
 
 namespace isce3::geocode {
 
@@ -100,8 +102,9 @@ void carrierPhaseRerampAndFlatten(
         isce3::core::Matrix<double>& rangeIndices,
         isce3::core::Matrix<double>& azimuthIndices,
         const isce3::product::RadarGridParameters& radarGrid,
-        const bool flatten, const bool reramp, const size_t azimuthFirstLine,
-        const size_t rangeFirstPixel, const bool flattenWithCorrectedSRng,
+        const bool flatten, const bool reramp,
+        const size_t azimuthFirstLine, const size_t rangeFirstPixel,
+        const bool flattenWithCorrectedSRng,
         isce3::core::Matrix<double>& uncorrectedSRngs)
 {
     const size_t outWidth = geoDataBlock.cols();
@@ -115,9 +118,18 @@ void carrierPhaseRerampAndFlatten(
         auto i = ii / outWidth;
         auto j = ii % outWidth;
 
+        // Cache range and azimuth index for later use
+        const auto unadjustedRgIndex = rangeIndices(i, j);
+        const auto unadjustedAzIndex = azimuthIndices(i, j);
+
+        // Skip further processing if range and azimuth indices are Nan i.e.
+        // invalid
+        if (std::isnan(unadjustedRgIndex) or std::isnan(unadjustedAzIndex))
+            continue;
+
         // Get double and int rg/az coordinates (accounting for block offsets)
-        const double RgIndex = rangeIndices(i,j) - rangeFirstPixel;
-        const double AzIndex = azimuthIndices(i,j) - azimuthFirstLine;
+        const double RgIndex = unadjustedRgIndex - rangeFirstPixel;
+        const double AzIndex = unadjustedAzIndex - azimuthFirstLine;
 
         // Truncate rg/az indices to int
         const int intRgIndex = static_cast<int>(RgIndex);
@@ -133,11 +145,11 @@ void carrierPhaseRerampAndFlatten(
 
         // Slant Range at the current output pixel
         const double rng = radarGrid.startingRange() +
-                rangeIndices(i,j) * radarGrid.rangePixelSpacing();
+                unadjustedRgIndex * radarGrid.rangePixelSpacing();
 
         // Azimuth time at the current output pixel
         const double az = radarGrid.sensingStart() +
-                          azimuthIndices(i,j) / radarGrid.prf();
+                          unadjustedAzIndex / radarGrid.prf();
 
         // Skip pixel if doppler could not be evaluated
         if (not nativeDopplerLUT.contains(az, rng))
@@ -212,10 +224,19 @@ void interpolate(
         auto i = ii / outWidth;
         auto j = ii % outWidth;
 
+        // Cache range and azimuth index for later use
+        const auto unadjustedRgIndex = rangeIndices(i, j);
+        const auto unadjustedAzIndex = azimuthIndices(i, j);
+
+        // Skip further processing if range and azimuth indices are Nan i.e.
+        // invalid
+        if (isnan(unadjustedRgIndex) or isnan(unadjustedAzIndex))
+            continue;
+
         // adjust the row and column indicies for the current block,
         // i.e., moving the origin to the top-left of this radar block.
-        double RgIndex = rangeIndices(i,j) - rangeFirstPixel;
-        double AzIndex = azimuthIndices(i,j) - azimuthFirstLine;
+        double RgIndex = unadjustedRgIndex - rangeFirstPixel;
+        double AzIndex = unadjustedAzIndex - azimuthFirstLine;
 
         // Truncate rg/az coordinates to int
         const int intRgIndex = static_cast<int>(RgIndex);
@@ -235,11 +256,11 @@ void interpolate(
         // Slant Range at the current output pixel
         const double rng =
                 radarGrid.startingRange() +
-                rangeIndices(i,j) * radarGrid.rangePixelSpacing();
+                unadjustedRgIndex * radarGrid.rangePixelSpacing();
 
         // Azimuth time at the current output pixel
         const double az = radarGrid.sensingStart() +
-                          azimuthIndices(i,j) / radarGrid.prf();
+                          unadjustedAzIndex / radarGrid.prf();
 
         if (not nativeDopplerLUT.contains(az, rng))
             continue;
@@ -439,10 +460,10 @@ void geocodeSlc(
         // X and Y indices (in the radar coordinates) for the geocoded pixels
         // (after geo2rdr computation) - initialized to invalid values
         isce3::core::Matrix<double> rangeIndices(geoBlockLength, geoGrid.width());
-        rangeIndices.fill(std::real(invalidValue));
+        rangeIndices.fill(std::numeric_limits<double>::quiet_NaN());
 
         isce3::core::Matrix<double> azimuthIndices(geoBlockLength, geoGrid.width());
-        azimuthIndices.fill(std::real(invalidValue));
+        azimuthIndices.fill(std::numeric_limits<double>::quiet_NaN());
 
         // selectively use uncorrected slant range - initialized to invalid
         // values
@@ -688,7 +709,8 @@ void geocodeSlc(
         const isce3::core::LUT2d<double>& azTimeCorrection,
         const isce3::core::LUT2d<double>& sRangeCorrection,
         const bool flattenWithCorrectedSRng,
-        const std::complex<float> invalidValue)
+        const std::complex<float> invalidValue,
+        const isce3::product::SubSwaths* subswaths)
 {
     if (geoDataBlocks.size() != rdrDataBlocks.size()) {
         std::string error_msg("number of geoDataBlocks != number of rdrDataBlocks");
@@ -730,9 +752,11 @@ void geocodeSlc(
     isce3::core::Matrix<double> rangeIndices(geoGrid.length(), geoGrid.width());
     isce3::core::Matrix<double> azimuthIndices(geoGrid.length(), geoGrid.width());
 
-    // fill with invalid value
-    rangeIndices.fill(std::real(invalidValue));
-    azimuthIndices.fill(std::real(invalidValue));
+    // fill indices with NaNs. These do not need to be
+    // invalidValue because they are not going to be
+    // written to any output raster.
+    rangeIndices.fill(std::numeric_limits<double>::quiet_NaN());
+    azimuthIndices.fill(std::numeric_limits<double>::quiet_NaN());
 
     // Resize and fill uncorrected slant range if flag set
     isce3::core::Matrix<double> uncorrectedSRange;
@@ -807,8 +831,21 @@ void geocodeSlc(
             double rangeCoord = (srange - radarGrid.startingRange()) /
                           radarGrid.rangePixelSpacing();
 
+            // first do less computational masking checks against LUTs
             if (!slicedRadarGrid.contains(aztime, srange)
-                    || !nativeDoppler.contains(aztime, srange))
+                    or !nativeDoppler.contains(aztime, srange))
+                continue;
+
+            // if subswaths provided (not nullptr), check for masking otherwise
+            // not masked. Masking can be checked by determining if
+            // subswaths.getSampleSubSwath returns 0 (i.e. the coordinate
+            // is not inside of a subswath) or something else (i.e. the number of
+            // the subswath that the coordinate is in.)
+            const bool subswath_masked = subswaths ?
+                subswaths->getSampleSubSwath(static_cast<int>(std::floor(azimuthCoord)),
+                                             static_cast<int>(std::floor(rangeCoord))) == 0 :
+                false;
+            if (subswath_masked)
                 continue;
 
             // store the adjusted X and Y indices
@@ -903,8 +940,8 @@ template void geocodeSlc<AzRgFunc>(                                     \
         const isce3::core::LUT2d<double>& azTimeCorrection,             \
         const isce3::core::LUT2d<double>& sRangeCorrection,             \
         const bool flattenWithCorrectedSRng,                            \
-        const std::complex<float> invalidValue                         \
-        )
+        const std::complex<float> invalidValue,                         \
+        const isce3::product::SubSwaths*)
 
 EXPLICIT_INSTANTIATION(isce3::core::LUT2d<double>);
 EXPLICIT_INSTANTIATION(isce3::core::Poly2d);

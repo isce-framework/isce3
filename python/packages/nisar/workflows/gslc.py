@@ -83,6 +83,9 @@ def run(cfg):
             az_correction, srg_correction = \
                 get_az_srg_corrections(cfg, slc, freq, orbit)
 
+            # get subswaths for current freq SLC from its Swath
+            sub_swaths = isce3.product.Swath(input_hdf5, freq).sub_swaths()
+
             # initialize source/rslc and destination/gslc datasets
             rslc_datasets = []
             gslc_datasets = []
@@ -112,8 +115,7 @@ def run(cfg):
                 for rslc_dataset in rslc_datasets:
                     # extract RSLC data block/array
                     rslc_data_blks.append(
-                        isce3.core.types.read_c4_dataset_as_c8(rslc_dataset,
-                                                          rdr_blk_slice))
+                        read_c4_dataset_as_c8(rslc_dataset, rdr_blk_slice))
 
                     # prepare zero'd GSLC data block/array
                     gslc_data_blks.append(
@@ -131,7 +133,8 @@ def run(cfg):
                                           first_range_sample=rg_first,
                                           flatten=flatten,
                                           az_time_correction=az_correction,
-                                          srange_correction=srg_correction)
+                                          srange_correction=srg_correction,
+                                          subswaths=sub_swaths)
 
                 # write geocoded blocks to respective HDF5 datasets
                 for gslc_dataset, gslc_data_blk in zip(gslc_datasets,
@@ -140,7 +143,7 @@ def run(cfg):
                     # do nothing if type is 'complex64'
                     output_type = cfg['output']['data_type']
                     if output_type == 'complex32':
-                        gslc_data_blk = isce3.core.types.to_complex32(gslc_data_blk)
+                        gslc_data_blk = to_complex32(gslc_data_blk)
                     if output_type == 'complex64_zero_mantissa':
                         # use default nonzero_mantissa_bits = 10 below
                         truncate_mantissa(gslc_data_blk)

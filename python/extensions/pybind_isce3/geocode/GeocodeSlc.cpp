@@ -7,8 +7,9 @@
 #include <isce3/core/Poly2d.h>
 #include <isce3/geocode/geocodeSlc.h>
 #include <isce3/io/Raster.h>
-#include <isce3/product/RadarGridParameters.h>
 #include <isce3/product/GeoGridParameters.h>
+#include <isce3/product/RadarGridParameters.h>
+#include <isce3/product/SubSwaths.h>
 
 #include <pybind11/complex.h>
 #include <pybind11/eigen.h>
@@ -235,7 +236,8 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::core::LUT2d<double> &,
             const isce3::core::LUT2d<double> &,
             const bool,
-            const std::complex<float>>
+            const std::complex<float>,
+            const isce3::product::SubSwaths*>
             (&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_blocks"),
         py::arg("carrier_phase_block"),
@@ -261,6 +263,7 @@ void addbinding_geocodeslc(py::module & m)
         py::arg("invalid_value") =
             std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
                                 std::numeric_limits<float>::quiet_NaN()),
+        py::arg("subswaths") = nullptr,
         R"(
         Geocode a subset of pixels for multiple radar SLC arrays to a given
         geogrid. All radar SLC arrays share a common radar grid. All output
@@ -318,6 +321,9 @@ void addbinding_geocodeslc(py::module & m)
             flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
         invalid_value: complex
             invalid pixel fill value
+        subswaths: isce3.product.SubSwaths, optional
+            SubSwaths from RSLC to be used for masking geocoded output. If None,
+            no subswath masking is performed. Defaults to None.
         )");
 }
 
