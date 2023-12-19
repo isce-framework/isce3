@@ -39,9 +39,6 @@ def _get_accumulated_azimuth_corrections(cfg, slc, frequency, orbit):
 
     # Ionosphere
     if tec_file is not None:
-        # Get SLC object for parameters inside necessary for TEC computations
-        input_hdf5 = cfg['input_file_group']['input_file_path']
-        slc = SLC(hdf5file=input_hdf5)
         center_freq = slc.getSwathMetadata(frequency).processed_center_frequency
         radar_grid = slc.getRadarGrid(frequency)
 
