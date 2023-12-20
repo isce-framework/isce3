@@ -641,7 +641,8 @@ def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
     dset.attrs["description"] = np.string_(desc)
 
 
-def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
+def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
+                     flag_cube=False, flag_save_coordinate_spacing=True):
     epsg_code = geo_grid.epsg
 
     dx = geo_grid.spacing_x
@@ -665,7 +666,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
         x_standard_name = "projection_x_coordinate"
         y_standard_name = "projection_y_coordinate"
 
-    if not flag_cube:
+    if not flag_cube and flag_save_coordinate_spacing:
         # xCoordinateSpacing
         descr = (f'Nominal spacing in {x_coord_units}'
                  ' between consecutive pixels')
@@ -689,10 +690,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
         yds_spacing.attrs["long_name"] = np.string_("y coordinates spacing")
 
     # xCoordinates
-    if not flag_cube:
-        descr = "CF compliant dimension associated with the X coordinates"
-    else:
-        descr = 'X coordinates in specified projection'
+    descr = 'X coordinates in specified projection'
     xds_name = os.path.join(root_ds, 'xCoordinates')
     if xds_name in hdf5_obj:
         del hdf5_obj[xds_name]
@@ -703,10 +701,7 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None, flag_cube=False):
     xds.attrs["long_name"] = np.string_("x coordinate")
 
     # yCoordinates
-    if not flag_cube:
-        descr = "CF compliant dimension associated with the Y coordinates"
-    else:
-        descr = 'Y coordinates in specified projection'
+    descr = 'Y coordinates in specified projection'
 
     yds_name = os.path.join(root_ds, 'yCoordinates')
     if yds_name in hdf5_obj:

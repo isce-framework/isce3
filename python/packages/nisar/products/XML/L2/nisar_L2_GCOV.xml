@@ -128,8 +128,7 @@
                  signed="false"
                  width="8">
 	    <annotation app="conformance"
-		      lang="en"
-		      units="1">Indicates if the radar operation mode is a diagnostic mode (1-2) or DBFed science (0): 0, 1, or 2</annotation>
+		      lang="en">Indicates if the radar operation mode is a diagnostic mode (1-2) or DBFed science (0): 0, 1, or 2</annotation>
 	  </integer>
         <string length="0"
                 name="/science/LSAR/identification/productLevel"
@@ -223,6 +222,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Number of averaged radar-grid pixels for covariance estimation</annotation>
           <annotation app="io" />
         </real>
@@ -252,14 +254,14 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the X coordinates</annotation>
+                          units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/yCoordinates"
               shape="frequencyALength"
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the Y coordinates</annotation>
+                          units="meters">Y coordinates in specified projection</annotation>
         </real>
 
         <!-- 2D CF compliant rasters -->
@@ -269,6 +271,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Radiometric terrain correction factor to normalize GCOV terms from gamma0 to sigma0</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/grids/frequencyA/mask"
@@ -277,6 +282,9 @@
               width="8">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="255"
+                      grid_mapping="projection"
                       units="1">GCOV terms mask</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HHHH"
@@ -284,6 +292,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between HH and HH</annotation>
           <annotation app="io" />
         </real>
@@ -292,6 +303,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between HH and HV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -300,6 +313,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance betweeen HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -308,6 +323,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -316,6 +333,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between HV and HV</annotation>
           <annotation app="io" />
         </real>
@@ -324,6 +344,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between HV and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -332,6 +354,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance betweeen HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -340,6 +364,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between VH and VH</annotation>
           <annotation app="io" />
         </real>
@@ -348,6 +375,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance betweeen VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -356,6 +385,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between VV and VV</annotation>
           <annotation app="io" />
         </real>
@@ -364,6 +396,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between RH and RH</annotation>
           <annotation app="io" />
         </real>
@@ -372,6 +407,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -380,6 +417,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between RV and RH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -388,6 +427,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between RV and RV</annotation>
           <annotation app="io" />
         </real>
@@ -456,14 +498,14 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the X coordinates</annotation>
+                          units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/yCoordinates"
               shape="frequencyBLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the Y coordinates</annotation>
+                          units="meters">Y coordinates in specified projection</annotation>
         </real>
 
         <!-- 2D CF compliant rasters -->
@@ -473,6 +515,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Number of averaged radar-grid pixels for covariance estimation</annotation>
           <annotation app="io" />
         </real>
@@ -481,6 +526,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Radiometric terrain correction factor to normalize GCOV terms from gamma0 to sigma0</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/grids/frequencyB/mask"
@@ -489,6 +537,9 @@
               width="8">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="255"
+                      grid_mapping="projection"
                       units="1">GCOV terms mask</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HHHH"
@@ -496,6 +547,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between HH and HH</annotation>
           <annotation app="io" />
         </real>
@@ -504,6 +558,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between HH and HV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -512,6 +568,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance betweeen HH and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -520,6 +578,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -528,6 +588,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between HV and HV</annotation>
           <annotation app="io" />
         </real>
@@ -536,6 +599,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between HV and VH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -544,6 +609,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance betweeen HH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -552,6 +619,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between VH and VH</annotation>
           <annotation app="io" />
         </real>
@@ -560,6 +630,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance betweeen VH and VV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -568,6 +640,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between VV and VV</annotation>
           <annotation app="io" />
         </real>
@@ -576,6 +651,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between RH and RH</annotation>
           <annotation app="io" />
         </real>
@@ -584,6 +662,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -592,6 +672,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Covariance between RV and RH</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -600,6 +682,9 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Covariance between RV and RV</annotation>
           <annotation app="io" />
         </real>
@@ -627,15 +712,18 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
-                      units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler azimuth time in seconds</annotation>
+                      units="seconds since YYYY-mm-ddTHH:MM:SS">Zero Doppler azimuth time in seconds</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/incidenceAngle"
               shape="radarCubeShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="90.0"
-                      min="0.0"
+                      valid_max="90.0"
+                      valid_min="0.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Incidence angle"
                       units="degrees">Incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/losUnitVectorX"
@@ -643,8 +731,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="LOS unit vector X"
                       units="1">East component of unit vector of LOS from target to sensor</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/losUnitVectorY"
@@ -652,8 +743,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="LOS unit vector Y"
                       units="1">North component of unit vector of LOS from target to sensor</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/alongTrackUnitVectorX"
@@ -661,8 +755,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Along-track unit vector X"
                       units="1">East component of unit vector along ground track</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/alongTrackUnitVectorY"
@@ -670,8 +767,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Along-track unit vector Y"
                       units="1">North component of unit vector along ground track</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/elevationAngle"
@@ -679,16 +779,22 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="90.0"
-                      min="0.0"
+                      valid_max="90.0"
+                      valid_min="0.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Elevation angle"
                       units="degrees">Elevation angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the sensor</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/radarGrid/groundTrackVelocity"
               shape="radarGridShape"
               width="64">
-              <annotation app="conformance"
-                          lang="en"
-                          units="meters / second">Absolute value of the platform velocity scaled at the target height</annotation>
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Ground-track velocity"
+                      units="meters / second">Absolute value of the platform velocity scaled at the target height</annotation>
         </real>
 
         <integer name="/science/LSAR/GCOV/metadata/radarGrid/projection"
@@ -772,6 +878,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -780,6 +888,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -788,6 +898,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -796,6 +908,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -804,6 +918,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -812,6 +928,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -852,6 +970,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -860,6 +980,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -868,6 +990,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -876,6 +1000,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -884,6 +1010,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -892,6 +1020,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -935,6 +1065,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/HV"
@@ -942,6 +1074,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/VH"
@@ -949,6 +1083,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/VV"
@@ -956,6 +1092,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/RH"
@@ -963,6 +1101,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyA/nes0/RV"
@@ -970,6 +1110,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/HH"
@@ -977,6 +1119,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/projection"
@@ -1016,6 +1160,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/VH"
@@ -1023,6 +1169,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/VV"
@@ -1030,6 +1178,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/RH"
@@ -1037,6 +1187,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/frequencyB/nes0/RV"
@@ -1044,6 +1196,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <!-- End of noise patterns -->
@@ -1088,6 +1242,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1096,6 +1252,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1104,6 +1262,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1112,6 +1272,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="(nan+nan*j)"
+                          grid_mapping="projection"
                           units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1766,6 +1928,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"
                           units="meters">Reference Terrain Height as a function of map coordinates</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/metadata/processingInformation/parameters/frequencyA/projection"
@@ -1805,6 +1969,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="hertz">2D LUT of Doppler centroid for frequency A</annotation>
         </real>
 
@@ -1845,6 +2011,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="hertz">2D LUT of Doppler centroid for frequency B</annotation>
         </real>
 
@@ -2107,7 +2275,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds">Time interval in the along track direction of the source data in seconds</annotation>
+                          units="seconds">Time interval in the along-track direction of the source data in seconds</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/metadata/sourceData/swaths/numberOfAzimuthLines"
               shape="scalar"

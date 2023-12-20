@@ -235,54 +235,92 @@ class RunConfig:
             return
         self.cfg['processing']['geocode']['wrapped_igram_geogrids'] = wrapped_igram_geogrids
 
-    def prep_cubes_geocode_cfg(self):
+    def prep_geocode_metadata(self, group_name, workflow_name,
+                              flag_cube=False):
         '''
-        check cubes geocode config and initialize as needed
+        check metadata groups config (radar_grid_cubes, 
+        calibration_information, or processing_information) and 
+        initialize as needed.
 
-        radar_grid_cubes is an optional group. If not provided,
-        the geocode group should be used, but with different X and Y
+        Metadata groups are optional. If not provided, the geocode 
+        group should be used instead, but with coarser X and Y
         spacing defaults
         '''
-        geocode_dict = self.cfg['processing']['geocode']
+        metadata_dict = self.cfg['processing']['geocode'].copy()
 
-        # check for user provided EPSG and grab geocode group EPSG if not provided
+        del metadata_dict['output_posting']
+        metadata_user_dict = self.cfg['processing'][group_name]
 
-        if self.cfg['processing']['radar_grid_cubes']['output_epsg'] is None:
-            cubes_epsg = geocode_dict['output_epsg']
+        # copy user suppiled config into default config
+        helpers.deep_update(metadata_dict, metadata_user_dict)
+
+        # check for user provided EPSG and grab geocode group EPSG if not
+        # provided
+        if ('output_epsg' not in self.cfg['processing'][group_name].keys() or
+                self.cfg['processing'][group_name]['output_epsg'] is None):
+            metadata_epsg = self.cfg['processing']['geocode']['output_epsg']
         else:
-            cubes_epsg = self.cfg['processing']['radar_grid_cubes']['output_epsg']
+            metadata_epsg = self.cfg['processing'][group_name]['output_epsg']
 
-        self.cfg['processing']['radar_grid_cubes']['output_epsg'] = cubes_epsg
+        assert metadata_epsg is not None
 
-        if not self.cfg['processing']['radar_grid_cubes']['heights']:
-            self.cfg['processing']['radar_grid_cubes']['heights'] = \
+        self.cfg['processing'][group_name]['output_epsg'] = metadata_epsg
+        metadata_dict['output_epsg'] = metadata_epsg
+
+        # Set default values for heights
+        if flag_cube and (
+            'heights' not in self.cfg['processing'][group_name].keys() or
+                not self.cfg['processing'][group_name]['heights']):
+            self.cfg['processing'][group_name]['heights'] = \
                 list(np.arange(-1000, 9001, 500))
 
-        if cubes_epsg == 4326:
+        # Set default values for metadata geogrid posting
+        if metadata_epsg == 4326 and flag_cube:
             # lat/lon
-            default_cube_geogrid_spacing_x = 0.005
-            default_cube_geogrid_spacing_y = -0.005
+            default_metadata_geogrid_spacing_x = 0.005
+            default_metadata_geogrid_spacing_y = -0.005
+        if metadata_epsg == 4326:
+            # lat/lon
+            default_metadata_geogrid_spacing_x = 0.01
+            default_metadata_geogrid_spacing_y = -0.01
+        elif flag_cube:
+            # meters
+            default_metadata_geogrid_spacing_x = 500
+            default_metadata_geogrid_spacing_y = -500
         else:
             # meters
-            default_cube_geogrid_spacing_x = 500
-            default_cube_geogrid_spacing_y = -500
+            default_metadata_geogrid_spacing_x = 1000
+            default_metadata_geogrid_spacing_y = -1000
 
-        radar_grid_cubes_dict = self.cfg['processing']['radar_grid_cubes']
-        self.cfg['processing']['radar_grid_cubes']['output_epsg'] = cubes_epsg
+        # Set actual values for metadata geogrid posting
+        if 'output_posting' not in metadata_dict.keys():
+            metadata_dict['output_posting'] = {'x_posting': None,
+                                               'y_posting': None}
 
-        # build geogrid
+        if metadata_dict['output_posting']['x_posting'] is None:
+            metadata_dict['output_posting']['x_posting'] = \
+                default_metadata_geogrid_spacing_x
+        if metadata_dict['output_posting']['y_posting'] is None:
+            metadata_dict['output_posting']['y_posting'] = \
+                abs(default_metadata_geogrid_spacing_y)
+
+        # Set snap values equal to the metdata geogrid posting
+        metadata_dict['x_snap'] = metadata_dict['output_posting']['x_posting']
+        metadata_dict['y_snap'] = metadata_dict['output_posting']['y_posting']
+
+        # construct geogrid
         frequency_ref = 'A'
-        frequency_group = None
-        cubes_geogrid = geogrid.create(
-            self.cfg, self.workflow_name,
-            frequency_group=frequency_group,
+        metadata_geogrid = geogrid.create(
+            self.cfg, 
+            workflow_name=workflow_name,
+            frequency_group=None, 
             frequency=frequency_ref,
-            geocode_dict=radar_grid_cubes_dict,
-            default_spacing_x=default_cube_geogrid_spacing_x,
-            default_spacing_y=default_cube_geogrid_spacing_y)
+            geocode_dict=metadata_dict,
+            default_spacing_x=default_metadata_geogrid_spacing_x,
+            default_spacing_y=default_metadata_geogrid_spacing_y)
 
         # place geogrid in cfg for later processing
-        self.cfg['processing']['radar_grid_cubes']['geogrid'] = cubes_geogrid
+        self.cfg['processing'][group_name]['geogrid'] = metadata_geogrid
 
     def geocode_common_arg_load(self):
         '''
@@ -291,4 +329,13 @@ class RunConfig:
         self.prep_paths()
         self.prep_frequency_and_polarizations()
         self.prep_geocode_cfg()
-        self.prep_cubes_geocode_cfg()
+        self.prep_geocode_metadata('radar_grid_cubes',
+                                   workflow_name=self.workflow_name,
+                                   flag_cube=True)
+        if self.workflow_name != 'gcov' and self.workflow_name != 'gslc':
+            return
+
+        self.prep_geocode_metadata('calibration_information',
+                                   workflow_name=self.workflow_name)
+        self.prep_geocode_metadata('processing_information',
+                                   workflow_name=self.workflow_name)

@@ -85,7 +85,14 @@ runconfig:
             # Geocode options: (e.g. output posting)
             geocode: include('geocode_options', required=False)
 
+            # Radar grids cube options
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
+
+            # Calibration information options
+            calibration_information: include('calibration_information_options', required=False)
+
+            # Processing information options
+            processing_information: include('processing_information_options', required=False)
 
             geo2rdr: include('geo2rdr_options', required=False)
 
@@ -155,6 +162,20 @@ radar_grid_cubes_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+calibration_information_options:
+
+    # Output posting in same units as output EPSG.
+    output_posting:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
+
+processing_information_options:
+
+    # Output posting in same units as output EPSG.
+    output_posting:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
 
 geo2rdr_options:
     # Convergence threshold for geo2rdr algorithm
@@ -380,6 +401,9 @@ output_options:
     # Output format
     format: enum('HDF5', 'GTiff', 'COG', 'ENVI', required=False)
 
+    # Enable/disable compression of output raster
+    compression_enabled: bool(required=False)
+
     # Output compression type
     compression_type: str(required=False)
 
@@ -388,4 +412,4 @@ output_options:
     compression_level: int(min=1, max=9, required=False)
 
     # Number of bits for each real-part sample
-    nbits: int(min=1, required=False)
+    mantissa_nbits: int(min=1, required=False)

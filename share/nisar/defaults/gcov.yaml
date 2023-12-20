@@ -51,6 +51,9 @@ runconfig:
             # PLACEHOLDER - Output format
             format: HDF5
 
+            # Enable/disable compression of output raster
+            compression_enabled: True
+
             # Compression type. 'none' for no compression
             compression_type: gzip
 
@@ -58,13 +61,16 @@ runconfig:
             compression_level: 9
 
             # PLACEHOLDER - Compression number of bits
-            nbits: 16
+            mantissa_nbits: 16
 
         # Output options for secondary layers (e.g., number of looks, RTC ANF)
         output_secondary_layers:
             # PLACEHOLDER - Output format
             format: HDF5
 
+            # Enable/disable compression of output raster
+            compression_enabled: True
+
             # Compression type. 'none' for no compression
             compression_type: gzip
 
@@ -72,7 +78,7 @@ runconfig:
             compression_level: 9
 
             # PLACEHOLDER - Compression number of bits
-            nbits: 16
+            mantissa_nbits: 16
 
         primary_executable:
             product_type: GCOV
@@ -331,6 +337,22 @@ runconfig:
                 bottom_right:
                     y_abs:
                     x_abs:
+
+            calibration_information: 
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # All postings/spacings must be > 0.
+                output_posting:
+                    x_posting: 
+                    y_posting:                 
+
+            processing_information: 
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # All postings/spacings must be > 0.
+                output_posting:
+                    x_posting: 
+                    y_posting: 
 
             geo2rdr:
                 threshold: 1.0e-8

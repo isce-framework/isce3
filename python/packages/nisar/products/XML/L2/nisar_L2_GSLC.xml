@@ -129,8 +129,7 @@
                  signed="false"
                  width="8">
 	    <annotation app="conformance"
-		      lang="en"
-		      units="1">Indicates if the radar operation mode is a diagnostic mode (1-2) or DBFed science (0): 0, 1, or 2</annotation>
+		      lang="en">Indicates if the radar operation mode is a diagnostic mode (1-2) or DBFed science (0): 0, 1, or 2</annotation>
 	  </integer>
         <string length="0"
                 name="/science/LSAR/identification/productLevel"
@@ -245,7 +244,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds">Time interval in the along track direction for raster layers. This is same as the spacing between consecutive entries in the zeroDopplerTime array</annotation>
+                          units="seconds">Time interval in the along-track direction for raster layers. This is same as the spacing between consecutive entries in the zeroDopplerTime array</annotation>
         </real>
 
         <integer name="/science/LSAR/GSLC/grids/frequencyA/projection"
@@ -273,24 +272,26 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the X coordinates</annotation>
+                          units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyA/yCoordinates"
               shape="frequencyALength"
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the Y coordinates</annotation>
+                          units="meters">Y coordinates in specified projection</annotation>
         </real>
 
         <!-- 2D CF compliant rasters -->
         <!-- Number of layers in actual product will depend on list of available polarizations above -->
         <integer name="/science/LSAR/GSLC/grids/frequencyA/mask"
-              signed="false"
               shape="complexDataFrequencyAShape"
+              signed="false"
               width="8">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="255"
                       units="1">GSLC mask</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyA/HH"
@@ -298,6 +299,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -306,6 +308,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -314,6 +317,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -322,6 +326,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -330,6 +335,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -338,6 +344,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -408,7 +415,7 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="seconds">Time interval in the along track direction for raster layers. This is same as the spacing between consecutive entries in the zeroDopplerTime array</annotation>
+                          units="seconds">Time interval in the along-track direction for raster layers. This is same as the spacing between consecutive entries in the zeroDopplerTime array</annotation>
         </real>
 
         <integer name="/science/LSAR/GSLC/grids/frequencyB/projection"
@@ -436,14 +443,14 @@
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the X coordinates</annotation>
+                          units="meters">X coordinates in specified projection</annotation>
         </real>
         <real name="/science/LSAR/GSLC/grids/frequencyB/yCoordinates"
               shape="frequencyBLength"
               width="64">
               <annotation app="conformance"
                           lang="en"
-                          units="meters">CF compliant dimension associated with the Y coordinates</annotation>
+                          units="meters">Y coordinates in specified projection</annotation>
         </real>
 
         <!-- 2D CF compliant rasters -->
@@ -454,6 +461,8 @@
               width="8">
           <annotation app="conformance"
                       lang="en"
+                      valid_min="0"
+                      _FillValue="255"
                       units="1">GSLC mask</annotation>
         </integer>
         <real name="/science/LSAR/GSLC/grids/frequencyB/HH"
@@ -461,6 +470,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -469,6 +479,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (HV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -477,6 +488,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -485,6 +497,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (VV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -493,6 +506,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RH)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -501,6 +515,7 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
                       units="1">Focused SLC image (RV)</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -536,8 +551,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="90.0"
-                      min="0.0"
+                      valid_max="90.0"
+                      valid_min="0.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Incidence angle"
                       units="degrees">Incidence angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the target height</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/losUnitVectorX"
@@ -545,8 +563,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="LOS unit vector X"
                       units="1">East component of unit vector of LOS from target to sensor</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/losUnitVectorY"
@@ -554,8 +575,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="LOS unit vector Y"
                       units="1">North component of unit vector of LOS from target to sensor</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/alongTrackUnitVectorX"
@@ -563,8 +587,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Along-track unit vector X"
                       units="1">East component of unit vector along ground track</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/alongTrackUnitVectorY"
@@ -572,8 +599,11 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="-1.0"
-                      min="1.0"
+                      valid_max="1.0"
+                      valid_min="-1.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Along-track unit vector Y"
                       units="1">North component of unit vector along ground track</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/radarGrid/elevationAngle"
@@ -581,9 +611,22 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
-                      max="90.0"
-                      min="0.0"
+                      valid_max="90.0"
+                      valid_min="0.0"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Elevation angle"
                       units="degrees">Elevation angle is defined as the angle between the LOS vector and the normal to the ellipsoid at the sensor</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/radarGrid/groundTrackVelocity"
+              shape="radarGridShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
+                      long_name="Ground-track velocity"
+                      units="meters / second">Absolute value of the platform velocity scaled at the target height</annotation>
         </real>
 
         <integer name="/science/LSAR/GSLC/metadata/radarGrid/projection"
@@ -674,6 +717,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">2D LUT to convert DN to beta 0 assuming as a function of geographical location</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/geometry/sigma0"
@@ -681,6 +726,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">2D LUT to convert DN to sigma 0 assuming as a function of geographical location</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/geometry/gamma0"
@@ -688,6 +735,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="1">2D LUT to convert DN to gamma 0 as a function of geographical location</annotation>
         </real>
         <!-- End of LUTS -->
@@ -731,6 +780,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -739,6 +790,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -747,6 +800,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -755,6 +810,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -763,6 +820,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -771,6 +830,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -811,6 +872,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -819,6 +882,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -827,6 +892,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -835,6 +902,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -843,6 +912,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -851,6 +922,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="(nan+nan*j)"
+                      grid_mapping="projection"
                       units="1">Complex two-way elevation antenna pattern</annotation>
           <annotation app="io" kwd="complex" />
         </real>
@@ -880,14 +953,18 @@
               shape="calibrationLength"	
               width="64">	
               <annotation app="conformance"	
-                          lang="en"	
+                          lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"	
                           units="meters">Y coordinates in specified projection</annotation>	
         </real>	
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/xCoordinates"	
               shape="calibrationWidth"	
               width="64">	
               <annotation app="conformance"	
-                          lang="en"	
+                          lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"		
                           units="meters">X coordinates in specified projection</annotation>	
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/HH"
@@ -895,6 +972,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/HV"
@@ -902,6 +981,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/VH"
@@ -909,6 +990,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/VV"
@@ -916,6 +999,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/RH"
@@ -923,6 +1008,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/nes0/RV"
@@ -930,6 +1017,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <integer name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/projection"
@@ -969,6 +1058,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/HV"
@@ -976,6 +1067,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/VH"
@@ -983,6 +1076,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/VV"
@@ -990,6 +1085,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/RH"
@@ -997,6 +1094,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/nes0/RV"
@@ -1004,6 +1103,8 @@
               width="32">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"	
                       units="1">Noise equivalent sigma zero</annotation>
         </real>
         <!-- End of noise patterns -->
@@ -1048,6 +1149,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"	
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1056,6 +1159,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"	
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1064,6 +1169,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"	
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1072,6 +1179,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"	
                           units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1535,6 +1644,8 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
+                          _FillValue="nan"
+                          grid_mapping="projection"
                           units="meters">Reference Terrain Height as a function of geographical location</annotation>
         </real>
         <integer name="/science/LSAR/GSLC/metadata/processingInformation/parameters/projection"
@@ -1607,6 +1718,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="hertz">2D LUT of Doppler centroid for frequency A</annotation>
         </real>
 
@@ -1647,6 +1760,8 @@
               width="64">
           <annotation app="conformance"
                       lang="en"
+                      _FillValue="nan"
+                      grid_mapping="projection"
                       units="hertz">2D LUT of Doppler centroid for frequency B</annotation>
         </real>
 

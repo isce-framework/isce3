@@ -581,7 +581,8 @@ class BaseWriterSingleInput():
 
         self.set_value(h5_field, data=data, *args, **kwargs)
 
-    def check_and_decorate_product_using_specs_xml(self, specs_xml_file):
+    def check_and_decorate_product_using_specs_xml(self, specs_xml_file,
+                                                   verbose=False):
         """
         Check data type and decorate units and description based on a
         product specifications XML file.
@@ -607,6 +608,11 @@ class BaseWriterSingleInput():
             full_h5_ds_path = xml_metadata_entry.attrib['name']
             # skip if XML attribute does not exist in the product
             if full_h5_ds_path not in self.output_hdf5_obj:
+                if verbose:
+                    warning_channel = journal.warning(
+                        'check_and_decorate_product_using_specs_xml')
+                    warning_channel.log('Dataset not found in the output'
+                                        f' product: {full_h5_ds_path}')
                 continue
 
             # otherwise, locate the XML attribute within the product
@@ -626,3 +632,5 @@ class BaseWriterSingleInput():
         """
         self.input_hdf5_obj.close()
         self.output_hdf5_obj.close()
+        info_channel = journal.info('BaseWriterSingleInput')
+        info_channel.log(f'File saved: {self.output_file}')

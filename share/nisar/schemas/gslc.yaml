@@ -80,6 +80,12 @@ runconfig:
             # Radar grids cube options
             radar_grid_cubes:  include('radar_grid_cubes_options', required=False)
 
+            # Calibration information options
+            calibration_information: include('calibration_information_options', required=False)
+
+            # Processing information options
+            processing_information: include('processing_information_options', required=False)
+
             # Geo2rdr options
             geo2rdr: include('geo2rdr_options', required=False)
 
@@ -144,6 +150,20 @@ radar_grid_cubes_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+calibration_information_options:
+
+    # Output posting in same units as output EPSG.
+    output_posting:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
+
+processing_information_options:
+
+    # Output posting in same units as output EPSG.
+    output_posting:
+        x_posting: num(min=0, required=False)
+        y_posting: num(min=0, required=False)
 
 
 geo2rdr_options:

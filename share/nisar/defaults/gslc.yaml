@@ -198,6 +198,22 @@ runconfig:
                     y_abs:
                     x_abs:
 
+            calibration_information: 
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # All postings/spacings must be > 0.
+                output_posting:
+                    x_posting: 
+                    y_posting:                 
+
+            processing_information: 
+
+                # OPTIONAL - Spacing between pixels, in same units as output EPSG.
+                # All postings/spacings must be > 0.
+                output_posting:
+                    x_posting: 
+                    y_posting: 
+
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 25

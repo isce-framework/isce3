@@ -57,7 +57,7 @@ class GcovWriter(BaseL2WriterSingleInput):
         """
         Populate the data group `grids` of the GCOV product
         """
-        for frequency, _ in self.freq_pols_dict.items():
+        for frequency in self.freq_pols_dict.keys():
             self.copy_from_input(
                 '{PRODUCT}/grids/'
                 f'frequency{frequency}/numberOfSubSwaths',
@@ -113,37 +113,43 @@ class GcovWriter(BaseL2WriterSingleInput):
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/rangeCompression',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'rangeCompression')
+            'rangeCompression',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/elevationAntennaPatternCorrection',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'elevationAntennaPatternCorrection')
+            'elevationAntennaPatternCorrection',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/rangeSpreadingLossCorrection',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'rangeSpreadingLossCorrection')
+            'rangeSpreadingLossCorrection',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/dopplerCentroidEstimation',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'dopplerCentroidEstimation')
+            'dopplerCentroidEstimation',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/azimuthPresumming',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'azimuthPresumming')
+            'azimuthPresumming',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'algorithms/azimuthCompression',
             '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'azimuthCompression')
+            'azimuthCompression',
+            skip_if_not_present=True)
 
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
@@ -483,6 +489,9 @@ class GcovWriter(BaseL2WriterSingleInput):
         Populate GCOV-specific `orbit` datasets `interpMethod` and
         `referenceEpoch`
         """
+        # TODO: update the code below once the capability of storing an
+        # external orbit file is implemented
+
         error_channel = journal.error(
             'GcovWriter.populate_orbit_gcov_specific')
         rslc_orbit_path = f'{self.output_product_path}/metadata/orbit'

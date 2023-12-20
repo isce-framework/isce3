@@ -6,9 +6,9 @@ runconfig:
             pge_name: GCOV_L_PGE
 
         input_file_group:
-            input_file_path: @ISCETEST@/envisat.h5
+            input_file_path: @ISCETEST@/winnipeg.h5
         dynamic_ancillary_file_group:
-            dem_file: @ISCETEST@/geocode/zeroHeightDEM.geo
+            dem_file: @ISCETEST@/winnipeg_dem.tif
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: '.'
@@ -61,24 +61,24 @@ runconfig:
                 geogrid_upsampling: 1      # {optional} Processing upsampling factor on top of the input geogrid
                 save_nlooks: True          # {optional} Save the number of looks used to compute GCOV
                 abs_rad_cal: 1             # {optional} Absolute radiometric correction factor
-                output_epsg: 4326 #{optional} Same as input DEM if not provided.
-                x_snap: #{optional} To control output grid in same units as output EPSG
-                y_snap: #{optional} To control output grid in same units as output EPSG
+                output_epsg:               # {optional} Same as input DEM if not provided.
+                x_snap:                    # {optional} To control output grid in same units as output EPSG
+                y_snap:                    # {optional} To control output grid in same units as output EPSG
                 output_posting:
                     A:
-                        x_posting:  0.002   #{required} In same units as output EPSG
-                        y_posting:  8.0e-4   #{required} In same units as output EPSG
+                        x_posting:  0.002  # {required} In same units as output EPSG
+                        y_posting:  8.0e-4 # {required} In same units as output EPSG
                     B:
                         x_posting:
                         y_posting:
                 top_left:     #{optional} Can control with absolute values or with snap values
-                    y_abs: 34.85   #{optional} Set top-left y in same units as output EPSG
-                    x_abs: -115.65   #{optional} Set top-left x in same units as output EPSG
+                    y_abs:    #{optional} Set top-left y in same units as output EPSG
+                    x_abs:     #{optional} Set top-left x in same units as output EPSG
                 bottom_right: #{optional} Can control with absolute values or with snap values
-                    y_abs: 34.8
-                    x_abs: -115.5
+                    y_abs:
+                    x_abs:
             geo2rdr:
-                threshold: 1.0e-9
+                threshold: 1.0e-8
                 maxiter: 25
 
             noise_correction:

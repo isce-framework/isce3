@@ -23,6 +23,7 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.populate_identification_l2_specific()
         self.populate_data_parameters()
         self.populate_calibration_information()
+        self.populate_calibration_information_gslc_specific()
         self.populate_processing_information_l2_common()
         self.populate_processing_information()
         self.populate_orbit()
@@ -65,6 +66,15 @@ class GslcWriter(BaseL2WriterSingleInput):
             self.copy_from_input(
                 f'{output_swaths_freq_path}/zeroDopplerTimeSpacing',
                 '{PRODUCT}/swaths/zeroDopplerTimeSpacing')
+
+    def populate_calibration_information_gslc_specific(self):
+        # geocode radiometric terrain correction (RTC) LUTs
+        rtc_parameters = ['beta0', 'sigma0', 'gamma0']
+        self.geocode_lut(
+            '{PRODUCT}/metadata/calibrationInformation/geometry',
+            frequency=list(self.freq_pols_dict.keys())[0],
+            output_ds_name_list=rtc_parameters,
+            skip_if_not_present=True)
 
     def populate_processing_information(self):
 
