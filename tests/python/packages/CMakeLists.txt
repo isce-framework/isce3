@@ -12,9 +12,10 @@ isce3/image/resample_slc.py
 isce3/io/background.py
 isce3/matchtemplate/import_ampcor.py
 isce3/matchtemplate/test_ampcor.py
-isce3/signal/rfi_process_evd.py
 isce3/signal/doppler_est_func.py
 isce3/signal/fir_filter_func.py
+isce3/signal/rfi_freq_null.py
+isce3/signal/rfi_process_evd.py
 isce3/unwrap/snaphu.py
 nisar/antenna/beamformer.py
 nisar/antenna/pattern.py
