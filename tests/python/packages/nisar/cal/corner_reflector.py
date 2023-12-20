@@ -314,7 +314,7 @@ def test_parse_and_filter_corner_reflector_csv(ree_corner_reflectors_nisar_csv: 
 
     # Check corner reflector IDs.
     ids = [cr.id for cr in crs]
-    assert ids == ["CR1", "CR2", "CR3"]
+    assert ids == ["CR1", "CR2", "CR3", "CR5", "CR6", "CR7"]
 
     # Check survey dates.
     survey_dates = [cr.survey_date for cr in crs]
@@ -323,7 +323,7 @@ def test_parse_and_filter_corner_reflector_csv(ree_corner_reflectors_nisar_csv: 
 
     # Check validity flags.
     validities = [cr.validity for cr in crs]
-    expected_validities = [2, 7, 2]
+    expected_validities = [2, 7, 2, 7, 7, 7]
     npt.assert_array_equal(validities, expected_validities)
 
 

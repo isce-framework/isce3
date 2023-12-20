@@ -852,6 +852,12 @@ def process_corner_reflector_csv(
     else:
         raise ValueError(f"unexpected csv format: {csv_format!r}")
 
+    # Filter CRs by heading.
+    approx_cr_heading = nisar.cal.est_cr_az_mid_swath_from_slc(rslc)
+    corner_reflectors = nisar.cal.filter_crs_per_az_heading(
+        corner_reflectors, az_heading=approx_cr_heading
+    )
+
     # Analyze point targets.
     results = analyze_corner_reflectors(
         corner_reflectors=corner_reflectors,

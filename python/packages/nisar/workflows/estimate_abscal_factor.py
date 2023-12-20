@@ -485,6 +485,12 @@ def main(
     else:
         raise ValueError(f"unexpected csv format: {csv_format!r}")
 
+    # Filter CRs by heading.
+    approx_cr_heading = nisar.cal.est_cr_az_mid_swath_from_slc(rslc)
+    corner_reflectors = nisar.cal.filter_crs_per_az_heading(
+        corner_reflectors, az_heading=approx_cr_heading
+    )
+
     # Parse external orbit XML file, if applicable.
     if external_orbit_xml is None:
         external_orbit = None
