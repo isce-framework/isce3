@@ -7,13 +7,13 @@ runconfig:
         input_file_group:
             # REQUIRED List of NISAR raw data products in L0B format.
             input_file_path:
-            - input_L0B_RRSD_REE2/REE_L0B_ECHO_array144sq_04.h5
+            - input_L0B_RRSD_REE2/NISAR_L0_PR_RRSD_035_079_A_192S_20230701T000150_20230701T000229_A00301_F_J_001.h5
 
             qa_input_file: output_rslc/rslc.h5
 
         dynamic_ancillary_file_group:
             # Digital elevation model, optional.
-            dem_file: input_L0B_RRSD_REE2/dem_REE2_right_zero_height.tif
+            dem_file: input_L0B_RRSD_REE2/dem_REE2_right.tif
 
             # Refined orbit, optional.
             # Defaults to orbit within L0B product.
@@ -25,11 +25,11 @@ runconfig:
 
             # External calibration data, optional.
             # Defaults to no extra calibration gain, phase, delay, etc.
-            external_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_EXT_20220101T120000_02.yaml
+            external_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_EXT_CAL_20220101T120000_03.yaml
 
             # Internal calibration tables, optional.
             # If not provided, no secondary elevation antenna pattern correction.
-            internal_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_INT_20220101T120000_01.h5
+            internal_calibration: input_L0B_RRSD_REE2/NISAR_LSAR_INT_CAL_20220101T120000_01.h5
 
             # Antenna pattern data, optional.
             # Defaults to sinc^4 pattern using nominal antenna dimensions.
@@ -47,7 +47,7 @@ runconfig:
             sas_output_file: output_rslc/rslc.h5
 
             # Echo processor config (including defaults) to file.
-            sas_config_file: output_rslc/rslc_config.yaml
+            sas_config_file: output_rslc/runconfig_rslc.yaml
 
             qa_output_dir: qa_rslc
 
@@ -64,9 +64,9 @@ runconfig:
             debug_switch: false
 
         geometry:
-            cycle_number: 1
-            relative_orbit_number: 1
-            frame_number: 1
+            cycle_number: 35
+            relative_orbit_number: 79
+            frame_number: 176
             orbit_direction: Ascending
             track_frame_polygon: '{"type": "Polygon", "coordinates" : [[ ]] }'
             full_coverage_threshold_percent: 75.0
@@ -95,7 +95,7 @@ runconfig:
 
                 # Output grid azimuth sample rate in Hz, optional.
                 # Defaults to input PRF.
-                output_prf: 1520.0
+                output_prf: 1520
 
                 # Interval for azimuth grid alignment in seconds. See docs.
                 # Typically want 1 second and integer PRF (in Hz). Will not
@@ -114,13 +114,6 @@ runconfig:
                 kind: Kaiser
                 shape: 0.0
 
-            # Range filter parameters for mixed-mode cases.
-            range_common_band_filter:
-                # Stop-band attenuation in dB
-                attenuation: 40.0
-                # Transition width as a fraction of output bandwidth.
-                width: 0.15
-
             radio_frequency_interference:
                 # Whether to attempt RFI detection and record related metadata.
                 # Defaults to True
@@ -134,9 +127,9 @@ runconfig:
                 cpi_length: 32
                 # Number of subdivisions in range.  Defaults to 1.
                 num_range_blocks: 1
-                # Maximum allowable number of emitters suppressed per CPI.
-                # Whenever the limit is exceeded it's assumed that the detection
-                # was unreliable and mitigation is disabled for the block.
+                # Maximum allowable number of emitters can be detected and
+                # suppressed per CPI. ST-EVD would ignore emitters exceeding
+                # this limit. This number should be less than cpi_length.
                 max_emitters: 16
                 # Number of large value outliers to be trimmed in slow-time
                 # minimum Eigenvalues.
@@ -147,7 +140,7 @@ runconfig:
                 # A detection error (miss) happens when a maximum power RFI
                 # emitter contaminates multiple consecutive CPIs, resulting in a
                 # flat maximum Eigenvalue slope in slow time. Hence the standard
-                # (STD) deviation of multiple dominant EVs across slow time
+                # deviation (STD) of multiple dominant EVs across slow time
                 # defined by this parameter are compared. The one with the
                 # maximum STD is used for RFI Eigenvalue first difference
                 # computation.
@@ -169,7 +162,14 @@ runconfig:
                     # larger value of y, therefore relaxing the final threshold.
                     # The values of x outside of the defined range of y are
                     # extrapolated.
-                    y: [5.0, 20.0]
+                    y: [5.0, 2.0]
+
+            # Range filter parameters for mixed-mode cases.
+            range_common_band_filter:
+                # Stop-band attenuation in dB
+                attenuation: 40.0
+                # Transition width as a fraction of output bandwidth.
+                width: 0.15
 
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
@@ -242,7 +242,7 @@ runconfig:
                     maxiter: 50
                     # Step size for computing numerical gradient of Doppler (m): float
                     # (default: 10.)
-                    delta_range: 10.
+                    delta_range: 10.0
 
             # nodelay or tsx
             dry_troposphere_model: nodelay
@@ -280,7 +280,7 @@ runconfig:
                 # range compression
                 rangecomp: True
                 # elevation antenna pattern correction
-                eap: False
+                eap: True
                 # R^4 spreading loss correction
                 range_cor: True
                 # azimuth compression
@@ -290,8 +290,26 @@ runconfig:
         # program and which qa option(s) to enable. By default the qa SAS is not run.
         qa:
             workflows:
-                validate: true
-                qa_reports: true
-                absolute_radiometric_calibration: true
-                noise_estimation: true
-                point_target_analyzer: true
+                # Flag to run `validate` workflow to validate the
+                # input file against its product spec.
+                # Default: True
+                validate: True
+
+                # Flag to run `qa_reports` workflow to generate a
+                # PDF report, geolocated browse image, compute statistics
+                # on the input file, etc..
+                # Default: True
+                qa_reports: True
+
+                # Flag to run Absolute Radiometric Calibration calibration tool.
+                # Default: True
+                absolute_radiometric_calibration: True
+
+                # Flag to run Noise Estimator Tool calibration tool.
+                # Default: True
+                noise_estimation: True
+
+                # Flag to run Point Target Analyzer calibration tool.
+                # Default: True
+                point_target_analyzer: True
+

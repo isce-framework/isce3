@@ -3,245 +3,183 @@ runconfig:
     groups:
         pge_name_group:
             pge_name: RSLC_L_PGE
-
         input_file_group:
-            # REQUIRED List of NISAR raw data products in L0B format.
             input_file_path:
-            - input_L0B_RRSD_REE3/NISAR_L0_PR_RRSD_104_080_D_238S_20251011T121856_20251011T121939_A00001_F_J_001.h5
-
+            - input_L0B_RRSD_REE3/NISAR_L0_PR_RRSD_104_159_D_238S_20251011T121909_20251011T122039_A00301_F_J_001.h5
             qa_input_file: output_rslc/rslc.h5
-
         dynamic_ancillary_file_group:
-            # Digital elevation model, optional.
-            dem_file: input_L0B_RRSD_REE3/dem_91_17_95_13_zero_height.tif
-
-            # Refined orbit, optional.
-            # Defaults to orbit within L0B product.
-            orbit: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FOE_20230927T183451_20251011T121856_20251011T121941.xml
-
-            # Refined pointing, optional.
-            # Defaults to attitude within L0B product.
-            pointing: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FRP_20230927T183454_20251011T121856_20251011T121941.xml
-
-            # External calibration data, optional.
-            # Defaults to no extra calibration gain, phase, delay, etc.
-            external_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_EXT_20220101T120000_02.yaml
-
-            # Internal calibration tables, optional.
-            # If not provided, no secondary elevation antenna pattern correction.
-            internal_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_INT_20220101T120000_01.h5
-
-            # Antenna pattern data, optional.
-            # Defaults to sinc^4 pattern using nominal antenna dimensions.
+            dem_file: input_L0B_RRSD_REE3/dem_90_09_945_16.tiff
+            orbit: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FOE_20231207T182337_20251011T121909_20251011T122039.xml
+            pointing: input_L0B_RRSD_REE3/NISAR_ANC_L_PR_FRP_20231207T182337_20251011T121909_20251011T122039.xml
+            external_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_EXT_CAL_20220101T120000_03.yaml
+            internal_calibration: input_L0B_RRSD_REE3/NISAR_LSAR_INT_CAL_20220101T120000_01.h5
             antenna_pattern: input_L0B_RRSD_REE3/NISAR_ANTPAT_20230707T142741.h5
-
+            corner_reflector_file: input_L0B_RRSD_REE3/NISAR_ANC_CORNER_REFLECTORS_005.csv
         product_path_group:
-            # Directory where PGE will place results. Irrelevant to SAS.
             product_path: output_rslc
-
-            # Directory where SAS can write temporary data
             scratch_path: scratch_rslc
-
-            # SAS writes output product to the following file. PGE may rename.
-            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             sas_output_file: output_rslc/rslc.h5
-
-            # Echo processor config (including defaults) to file.
-            sas_config_file: output_rslc/rslc_config.yaml
-
+            sas_config_file: output_rslc/runconfig_rslc.yaml
             qa_output_dir: qa_rslc
-
             product_counter: 1
-
         primary_executable:
             product_type: RSLC
-            composite_release_id: D00200
+            composite_release_id: A00301
             mission_id: NISAR
             processing_type: PR
-            product_accuracy: P
-
+            product_accuracy: F
         debug_level_group:
             debug_switch: false
-
         geometry:
-            cycle_number: 1
-            relative_orbit_number: 1
-            frame_number: 1
+            cycle_number: 104
+            relative_orbit_number: 159
+            frame_number: 82
             orbit_direction: Descending
             track_frame_polygon: '{"type": "Polygon", "coordinates" : [[ ]] }'
             full_coverage_threshold_percent: 75.0
-
         worker:
-            # Whether or not to use GPU, optional. Defaults to True if available.
             gpu_enabled: True
-
-            # Index of the GPU to use for processing, optional. Defaults to the
-            # first available CUDA device. Ignored if *gpu_enabled* is False.
             gpu_id: 0
-
         processing:
-
             output_grid:
-                # Azimuth bounds of output SLC, optional.
-                # Defaults to extent of raw data minus sythetic aperture and shifted
-                # by squint.
-                start_time: 2025-10-11T12:19:05.0
-                end_time: 2025-10-11T12:19:40.0
-
-                # Range bounds of output SLC in meters, optional.
-                # Defaults to entire fully focused swath.
+                start_time: 2025-10-11T12:19:13
+                end_time: 2025-10-11T12:19:48
                 start_range:
                 end_range:
-
-                # Output grid azimuth sample rate in Hz, optional.
-                # Defaults to input PRF.
-                output_prf: 1520.0
-
-                # Interval for azimuth grid alignment in seconds. See docs.
-                # Typically want 1 second and integer PRF (in Hz). Will not
-                # override user-provided start_time.
+                output_prf: 1520
                 time_snap_interval: 1.0
-
-            # Range spectral window, optional.  Defaults to no weighting.
             range_window:
-                # Kaiser or Cosine
                 kind: Kaiser
-                # Shape parameter. For Kaiser, 0 <= shape < Inf.  For Cosine, 0 <= shape <= 1
                 shape: 1.6
-
-            # Azimuth spectral window, optional.  Defaults to no weighting.
             azimuth_window:
                 kind: Kaiser
                 shape: 0.0
-
-            # Range filter parameters for mixed-mode cases.
+            radio_frequency_interference:
+                # Whether to attempt RFI detection and record related metadata.
+                # Defaults to True
+                detection_enabled: True
+                # Whether to attemt RFI removal. Default to False.
+                # Requires that RFI detection is also enabled.
+                mitigation_enabled: False
+                # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
+                # eigenvalue decomposition. Currently, only 'ST-EVD' is supported.
+                mitigation_algorithm: ST-EVD
+                # Coherent processing interval length (pulses).  Defaults to 32.
+                cpi_length: 32
+                # Number of subdivisions in range.  Defaults to 1.
+                num_range_blocks: 1
+                # Maximum allowable number of emitters can be detected and
+                # suppressed per CPI. ST-EVD would ignore emitters exceeding
+                # this limit. This number should be less than cpi_length.
+                # Defaults to 16.
+                max_emitters: 16
+                # Number of large value outliers to be trimmed in slow-time
+                # minimum Eigenvalues.
+                num_max_trim: 0
+                # Number of small value outliers to be trimmed in slow-time
+                # minimum Eigenvalues.
+                num_min_trim: 0
+                # A detection error (miss) happens when a maximum power RFI
+                # emitter contaminates multiple consecutive CPIs, resulting in a
+                # flat maximum Eigenvalue slope in slow time. Hence the standard
+                # deviation (STD) of multiple dominant EVs across slow time
+                # defined by this parameter are compared. The one with the
+                # maximum STD is used for RFI Eigenvalue first difference
+                # computation.
+                max_num_rfi_ev: 2
+                # Number of slow-time CPIs grouped together for determining and
+                # applying a common EV slope threshold.
+                num_cpi_per_threshold_block: 20
+                # Parameters used to adaptively determine RFI eigenvalue
+                # difference thresholds
+                threshold_hyperparameters:
+                    # The computed sigma ratio of maximum and minimum Eigenvalue
+                    # first differences. It is a dimensionless figure of merit.
+                    # Larger value of x indicates higher likelihood of RFI
+                    # presence.
+                    x: [2.0, 20.0]
+                    # Estimated range of number of sigmas of the first
+                    # difference of minimum Eigenvalues across threshold block
+                    # as a function of input x, e.g., smaller x results in
+                    # larger value of y, therefore relaxing the final threshold.
+                    # The values of x outside of the defined range of y are
+                    # extrapolated.
+                    y: [5.0, 2.0]
             range_common_band_filter:
-                # Stop-band attenuation in dB
                 attenuation: 40.0
-                # Transition width as a fraction of output bandwidth.
                 width: 0.15
-
             doppler:
-                # Offset between quaternion frame and antenna boresight in degrees.
-                # TBD This will likely be parameter in a separate cal file.
                 azimuth_boresight_deg: 0.9
-
-                # How to interpolate between samples in the LUT.
                 interp_method: bilinear
-
-                # Postings for generated Doppler lookup table.
                 spacing:
-                    # Lookup table range spacing in m
                     range: 2000.0
-                    # Lookup table Azimuth spacing in s
-                    azimuth: 0.1
-
+                    azimuth: 1.0
                 rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1.0e-8)
-                    threshold: 1.0e-8
-                    # Max number of primary iterations: int (default: 25)
-                    maxiter: 50
-                    # Max number of secondary iterations: int (default: 15)
+                    threshold: 1e-8
+                    maxiter: 25
                     extraiter: 15
-
-            # Settings for range compression algorithm.
             rangecomp:
-                # Convolution output mode: {"valid", "full", "same"} (default: "full")
                 mode: full
-
-                # Range compression will always process the full pulse, so the range
-                # dimension will be ignored.
                 block_size:
                     range: 0
                     azimuth: 1024
-
-            # Settings for azimuth compression algorithm.
             azcomp:
-                # Azimuth compression can be tiled arbitrarily, though dimensions will
-                # affect runtime.
                 block_size:
                     range: 32768
                     azimuth: 1024
-
-                # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0
-
                 kernel:
-                    # Knab or NFFT
                     type: Knab
-                    # Length = 1+2*halfWidth
                     halfwidth: 4
-                    # Transform padding ratio for NFFT method.
                     approx_oversample: 1.7
-
-                    fit: Table # null or Cheby or Table
+                    fit: Table
                     fit_order: 2048
-
                 rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1.0e-8)
                     threshold: 1.0e-8
-                    # Max number of primary iterations: int (default: 25)
                     maxiter: 25
-                    # Max number of secondary iterations: int (default: 15)
                     extraiter: 15
-
                 geo2rdr:
-                    # Slant range convergence threshold (m): float (default: 1.0e-8)
-                    threshold: 1.0e-6
-                    # Max number of iterations: int (default: 50)
+                    threshold: 1.0e-8
                     maxiter: 50
-                    # Step size for computing numerical gradient of Doppler (m): float
-                    # (default: 10.)
-                    delta_range: 10.
-
-            # nodelay or tsx
+                    delta_range: 10.0
             dry_troposphere_model: nodelay
-
-            # Digital Elevation Model
             dem:
-                # Height (in meters) to use if DEM unavailable.
                 reference_height: 0.0
-
-                # How to interpolate the digital elevation model.  One of
-                # nearest, bilinear, bicubic, biquintic, or sinc
                 interp_method: biquintic
-
-            # Nominal antenna dimensions to use for BLU, EAP, etc. when no antenna
-            # pattern input file is provided or its contents are unsuitable.
-            # Each dimension has units of meters and is assumed 12.0 m if unspecified.
             nominal_antenna_size:
                 range: 12.0
                 azimuth: 12.0
-
-            # Scale factor to apply to data before float16 encoding, optional.
-            # Default is 1.0.
-            # The largest representable float16 value is 65504.
-            # NOTE This is ad-hoc until the processor is radiometrically calibrated.
             encoding_scale_factor: 1.0
-
-            # Whether to delete scratch files.  Default is True.
-            delete_tempfiles: true
-
-            # Processing stage switches, mostly for debug.
-            # Any missing stages assumed True
+            delete_tempfiles: True
             is_enabled:
-                # azimuth resampling and gap-filling
                 presum_blu: True
-                # range compression
                 rangecomp: True
-                # elevation antenna pattern correction
-                eap: False
-                # R^4 spreading loss correction
+                eap: True
                 range_cor: True
-                # azimuth compression
                 azcomp: True
 
-        # The PGE wrapper uses the qa group to control whether or not to run the qa SAS
-        # program and which qa option(s) to enable. By default the qa SAS is not run.
         qa:
             workflows:
-                validate: true
-                qa_reports: true
-                absolute_radiometric_calibration: true
-                noise_estimation: true
-                point_target_analyzer: true
+                # Flag to run `validate` workflow to validate the
+                # input file against its product spec.
+                # Default: True
+                validate: True
+
+                # Flag to run `qa_reports` workflow to generate a
+                # PDF report, geolocated browse image, compute statistics
+                # on the input file, etc..
+                # Default: True
+                qa_reports: True
+
+                # Flag to run Absolute Radiometric Calibration calibration tool.
+                # Default: True
+                absolute_radiometric_calibration: True
+
+                # Flag to run Noise Estimator Tool calibration tool.
+                # Default: True
+                noise_estimation: True
+
+                # Flag to run Point Target Analyzer calibration tool.
+                # Default: True
+                point_target_analyzer: True
+
