@@ -263,7 +263,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                      Units.unitless),
                     ("wrappedInterferogram", np.complex64,
                      f"Complex wrapped interferogram between {pol} layers",
-                     Units.dn),
+                     Units.unitless),
                 ]
 
                 for ds_param in wrapped_ds_params:

@@ -104,6 +104,9 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
             pixeloffsets_group_name = \
                 f"{grids_freq_group_name}/pixelOffsets"
 
+            # add the list of layers
+            self.add_list_of_layers(grids_freq_group)
+
             for pol in pol_list:
                 for layer in layers:
                     pixeloffsets_pol_layer_name = \

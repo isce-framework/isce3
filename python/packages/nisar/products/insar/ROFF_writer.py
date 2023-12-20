@@ -286,7 +286,7 @@ class ROFFWriter(L1InSARWriter):
             swaths_freq_group_name = (
                 f"{self.group_paths.SwathsPath}/frequency{freq}"
             )
-            self.require_group(swaths_freq_group_name)
+            swaths_freq_group = self.require_group(swaths_freq_group_name)
 
             # shape of offset product
             off_shape = self._get_pixeloffsets_dataset_shape(freq, pol_list[0])
@@ -331,11 +331,15 @@ class ROFFWriter(L1InSARWriter):
                 ),
             ]
 
+            # add the list of layers
+            self.add_list_of_layers(swaths_freq_group)
+
             # add the polarization dataset to pixelOffsets
             for pol in pol_list:
                 offset_pol_group_name = \
                     f"{swaths_freq_group_name}/pixelOffsets/{pol}"
-                self.require_group(offset_pol_group_name)
+                pixeloffsets_pol_group = \
+                    self.require_group(offset_pol_group_name)
                 for layer in proc_cfg["offsets_product"]:
                     if layer.startswith("layer"):
                         layer_group_name = f"{offset_pol_group_name}/{layer}"
@@ -352,6 +356,38 @@ class ROFFWriter(L1InSARWriter):
                                 ds_description,
                                 units=ds_unit,
                             )
+
+
+    def add_list_of_layers(self, freq_group):
+        """
+        Get the requested layer groups from the runconfig,
+        and add the `listOfLayers` Dataset to `freq_group`.
+
+        Parameters
+        ----------
+        freq_group : h5py.Group
+            The Group to add the `listOfLayers` Dataset to.
+        """
+
+        proc_cfg = self.cfg["processing"]
+
+        # Extract offset layer group names, e.g. "layer1", "layer3".
+        # If the layer group name appears in the runconfig,
+        # that layer group will be generated, so add it to the list.
+        layers = [
+            layer
+            for layer in proc_cfg["offsets_product"]
+            if layer.startswith("layer")]
+
+        list_of_layers = np.string_(layers)
+        freq_group.require_dataset('listOfLayers',
+                                    shape=list_of_layers.shape,
+                                    dtype=list_of_layers.dtype,
+                                    data=list_of_layers)
+
+        freq_group['listOfLayers'].attrs['units'] = Units.unitless
+        freq_group['listOfLayers'].attrs['description'] =\
+            np.string_('List of pixel offsets layers')
 
     def add_swaths_to_hdf5(self):
         """

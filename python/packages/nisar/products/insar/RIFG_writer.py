@@ -88,7 +88,7 @@ class RIFGWriter(L1InSARWriter):
                         "wrappedInterferogram",
                         np.complex64,
                         f"Interferogram between {pol} layers",
-                        Units.dn,
+                        Units.unitless,
                     ),
                 ]
 

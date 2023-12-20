@@ -6,17 +6,19 @@ from typing import Any, Optional
 import h5py
 import numpy as np
 from isce3.core import DateTime
+from isce3.core.types import complex32, to_complex32
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
 from nisar.workflows.helpers import get_cfg_freq_pols
 
 from .dataset_params import DatasetParams, add_dataset_and_attrs
+from .granule_id import get_insar_granule_id
 from .InSAR_products_info import ISCE3_VERSION, InSARProductsInfo
 from .product_paths import CommonPaths
-from .granule_id import get_insar_granule_id
 from .units import Units
 from .utils import extract_datetime_from_string
+
 
 class InSARBaseWriter(h5py.File):
     """
@@ -780,9 +782,6 @@ class InSARBaseWriter(h5py.File):
                     "Indicates if the radar operation mode is a diagnostic"
                     " mode (1-2) or DBFed science (0): 0, 1, or 2"
                 ),
-                {
-                    "units": Units.unitless,
-                },
             ),
             DatasetParams(
                 "frameNumber",
@@ -1188,4 +1187,8 @@ class InSARBaseWriter(h5py.File):
         elif np.issubdtype(dtype, np.integer):
             ds.attrs["_FillValue"] = 255
         elif np.issubdtype(dtype, np.complexfloating):
-            ds.attrs["_FillValue"] = np.nan + 1j * np.nan
+            ds.attrs["_FillValue"] = np.complex64(np.nan + 1j * np.nan)
+        elif dtype == complex32:
+            ds.attrs["_FillValue"] = \
+                to_complex32(np.array([np.nan + 1j * np.nan]))[0]
+
