@@ -166,7 +166,7 @@ def gen_el_rising_edge_product(args):
     # logic for frequency band and TxRx polarization choices.
     # form a new dict "frq_pol" with key=freq_band and value=[txrx_pol]
     frq_pol = copol_or_desired_product_from_raw(
-        raw, freq_band=args.freq_band)
+        raw, freq_band=args.freq_band, txrx_pol=args.txrx_pol)
     logger.info(f'List of selected frequency bands and TxRx Pols -> {frq_pol}')
 
     # get keyword args for function "el_rising_edge_from_raw_ant"
