@@ -167,7 +167,7 @@ def comp_kaiserwin_peak_to_nth_null_dist(beta, num_nulls_main=2):
 
 
 def comp_coswin_peak_to_2nd_null_dist(eta):
-    """
+    r"""
     Compute distance between peak to 2nd null for a Raised Cosine window
 
     The cosine-on-pedestal weighting function :math:`c_p(f,\eta)` is given by
