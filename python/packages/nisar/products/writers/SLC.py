@@ -665,6 +665,12 @@ class SLC(h5py.File):
         with h5py.File(raw.filename, 'r', libver='latest', swmr=True) as fd:
             self.root.copy(fd[raw.IdentificationPath], self.idpath)
         g = self.root[self.idpath]
+        # Delete units from diagnosticModeFlag if present (spec changed).
+        name = "diagnosticModeFlag"
+        if name in g and "units" in g[name].attrs:
+            log.warning("Input L0B has undesired 'units' attribute on "
+                "diagnosticModeFlag dataset.  Will omit from output RSLC.")
+            del g[name].attrs["units"]
         # Of course product type is different.
         d = set_string(g, "productType", self.product)
         d.attrs["description"] = np.bytes_("Product type")
