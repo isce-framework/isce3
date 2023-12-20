@@ -291,3 +291,14 @@ def test_nisar_corner_reflector_csv():
         # Check velocity.
         expected_velocity = [-1e-9, 1e-9, 0.0]
         assert all(cr_info["velocity"] == expected_velocity for cr_info in results)
+
+        # We can assume that the elevation angles of these CRs should be within +/- 1
+        # degree with some back-of-the-envelope math:
+        #  - The tilt angles of these CRs varies between ~12-13 deg
+        #  - Assume a theoretical boresight of 35.3 deg for a triangular trihedral
+        #    CR incidence angle = 90 - (tilt + 35.3)
+        #  - CR look angle = incidence angle - 5 deg (due to curvature of the earth)
+        #  - Antenna EL angle = look angle - 37 deg (nominal mechanical boresight for
+        #    NISAR)
+        el_angles = np.asarray([cr_info["elevation_angle"] for cr_info in results])
+        np.testing.assert_allclose(el_angles, 0.0, rtol=0.0, atol=np.deg2rad(1.0))

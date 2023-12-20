@@ -349,3 +349,96 @@ def predict_triangular_trihedral_cr_rcs(
         b = 4.0 * p1 * p2 / a
 
     return 4.0 * np.pi * cr.side_length ** 4 * b ** 2 / wavelength ** 2
+
+
+def get_target_observation_time_and_elevation(
+    target_llh: isce3.core.LLH,
+    orbit: isce3.core.Orbit,
+    attitude: isce3.core.Attitude,
+    wavelength: float,
+    look_side: str,
+    frame: isce3.antenna.Frame = isce3.antenna.Frame("EL_AND_AZ"),
+    ellipsoid: isce3.core.Ellipsoid = isce3.core.WGS84_ELLIPSOID,
+    *,
+    geo2rdr_params: Optional[Mapping[str, float]] = None,
+) -> tuple[isce3.core.DateTime, float]:
+    """
+    Get zero-Doppler observation time and antenna elevation angle of a geodetic target.
+
+    Parameters
+    ----------
+    target_llh : isce3.core.LLH
+        The target position expressed as geodetic longitude, latitude, and height above
+        the reference ellipsoid in radians, radians, and meters respectively.
+    orbit : isce3.core.Orbit
+        The trajectory of the radar antenna phase center.
+    wavelength : float
+        The radar wavelength, in meters.
+    look_side : {"Left", "Right"}
+        The radar look direction.
+    frame : isce3.antenna.Frame, optional
+        Antenna frame which defines the type of spherical coordinate. Defaults to an
+        'EL_AND_AZ' frame.
+    ellipsoid : isce3.core.Ellipsoid, optional
+        The geodetic reference ellipsoid, with dimensions in meters. Defaults to the
+        WGS 84 ellipsoid.
+    geo2rdr_params : dict or None, optional
+        An optional dict of parameters configuring the behavior of the root-finding
+        routine used in geo2rdr. The following keys are supported:
+
+        'threshold':
+          The absolute azimuth time convergence tolerance, in seconds.
+
+        'maxiter':
+          The maximum number of Newton-Raphson iterations.
+
+        'delta_range':
+          The step size for computing numerical gradient of Doppler, in meters.
+
+    Returns
+    -------
+    az_datetime : isce3.core.DateTime
+        The target's zero-Doppler observation time (the time of the platform's closest
+        approach to the target) as a UTC datetime.
+    el_angle : float
+        The elevation angle of the target, in radians. Elevation is measured in the
+        cross-track direction w.r.t antenna boresight, increasing toward far-range.
+    """
+    # Convert LLH object to an array containing [lon, lat, height].
+    target_llh = target_llh.to_vec3()
+
+    if geo2rdr_params is None:
+        geo2rdr_params = {}
+
+    zero_doppler = isce3.core.LUT2d()
+
+    # Run geo2rdr to get the target azimuth time coordinate, in seconds since the orbit
+    # epoch.
+    aztime, _ = isce3.geometry.geo2rdr(
+        target_llh,
+        ellipsoid,
+        orbit,
+        zero_doppler,
+        wavelength,
+        look_side,
+        **geo2rdr_params,
+    )
+
+    # Convert `aztime` to a UTC timepoint.
+    az_datetime = orbit.reference_epoch + isce3.core.TimeDelta(aztime)
+
+    # Interpolate orbit & attitude to get platform position in ECEF coordinates and
+    # reflector coordinate system (RCS) to ECEF quaternion.
+    platform_ecef, _ = orbit.interpolate(aztime)
+    q_rcs2ecef = attitude.interpolate(aztime)
+
+    # Get antenna elevation angle.
+    el_angle, _ = isce3.antenna.geo2ant(
+        tg_llh=target_llh,
+        pos_sc_ecef=platform_ecef,
+        quat_ant2ecef=q_rcs2ecef,
+        ant_frame=frame,
+        ellips=ellipsoid,
+    )
+
+    return az_datetime, el_angle

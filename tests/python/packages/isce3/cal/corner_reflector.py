@@ -1,3 +1,4 @@
+import os
 import tempfile
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from isce3.cal.corner_reflector import (
     enu_to_cr_rotation,
     normalize_vector,
 )
+import nisar
 
 
 def wrap(phi: ArrayLike) -> np.ndarray:
@@ -199,3 +201,35 @@ class TestCRToENURotation:
             q_cr2enu = cr_to_enu_rotation(az=az, el=el)
             q_enu2cr = enu_to_cr_rotation(az=az, el=el)
             assert (q_enu2cr * q_cr2enu).is_approx(identity)
+
+
+def test_get_target_observation_time_and_elevation():
+    datadir = Path(iscetest.data)
+
+    # Get simulated RSLC data containing a single point target.
+    rslc_hdf5 = datadir / "REE_RSLC_out17.h5"
+    rslc = nisar.products.readers.SLC(hdf5file=os.fspath(rslc_hdf5))
+
+    orbit = rslc.getOrbit()
+    attitude = rslc.getAttitude()
+    radar_grid = rslc.getRadarGrid(frequency="A")
+
+    # The CSV contains a single corner reflector.
+    cr_csv = datadir / "REE_CR_INFO_out17.csv"
+    cr = list(isce3.cal.parse_triangular_trihedral_cr_csv(cr_csv))[0]
+
+    # Estimate target zero-Doppler UTC datetime and elevation angle.
+    az_datetime, el_angle = isce3.cal.get_target_observation_time_and_elevation(
+        target_llh=cr.llh,
+        orbit=orbit,
+        attitude=attitude,
+        wavelength=radar_grid.wavelength,
+        look_side=radar_grid.lookside,
+    )
+
+    # The target is located approximately in the center of the radar grid.
+    expected_az = radar_grid.ref_epoch + isce3.core.TimeDelta(radar_grid.sensing_mid)
+    expected_el = 0.0
+
+    assert az_datetime.is_close(expected_az, tol=isce3.core.TimeDelta(seconds=1e-3))
+    assert np.isclose(el_angle, expected_el, atol=1e-6)

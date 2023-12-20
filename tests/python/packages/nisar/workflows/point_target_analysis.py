@@ -137,6 +137,17 @@ def test_nisar_csv():
         assert cr_info["azimuth"]["ISLR"] < -10.0
         assert cr_info["azimuth"]["PSLR"] < -10.0
 
+        # We can assume that the elevation angle of this CR should be within +/- 1
+        # degree with some back-of-the-envelope math:
+        #  - The tilt angle of the CR is ~12.4 deg
+        #  - Assume a theoretical boresight of 35.3 deg for a triangular trihedral
+        #    CR incidence angle = 90 - (tilt + 35.3)
+        #  - CR look angle = incidence angle - 5 deg (due to curvature of the earth)
+        #  - Antenna EL angle = look angle - 37 deg (nominal mechanical boresight for
+        #    NISAR)
+        theta = np.deg2rad(1.0)
+        assert -theta <= cr_info["elevation_angle"] <= theta
+
 
 def test_uavsar_csv():
     datadir = Path(iscetest.data) / "abscal"
@@ -220,3 +231,7 @@ def test_uavsar_csv():
         assert cr_info["azimuth"]["resolution"] < 2.0
         assert cr_info["azimuth"]["ISLR"] < -10.0
         assert cr_info["azimuth"]["PSLR"] < -10.0
+
+        # Check that the elevation angle is within +/- 1 degree of antenna boresight.
+        theta = np.deg2rad(1.0)
+        assert -theta <= cr_info["elevation_angle"] <= theta

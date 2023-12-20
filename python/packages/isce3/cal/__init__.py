@@ -1,6 +1,7 @@
 from . import point_target_info
 from .corner_reflector import (
     TriangularTrihedralCornerReflector,
+    get_target_observation_time_and_elevation,
     parse_triangular_trihedral_cr_csv,
     predict_triangular_trihedral_cr_rcs,
 )

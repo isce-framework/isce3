@@ -676,6 +676,10 @@ def analyze_corner_reflectors(
             shift_domain=peak_find_domain,
         )
 
+    orbit = rslc.getOrbit()
+    attitude = rslc.getAttitude()
+    radar_grid = rslc.getRadarGrid(freq)
+
     results = []
     for cr in corner_reflectors:
         try:
@@ -698,8 +702,14 @@ def analyze_corner_reflectors(
         assert "validity" not in cr_info
         assert "velocity" not in cr_info
 
-        # TODO: Placeholder for now. To be implemented in R4.
-        elevation_angle = np.nan
+        # Get the target's zero-Doppler elevation angle.
+        _, elevation_angle = isce3.cal.get_target_observation_time_and_elevation(
+            target_llh=cr.llh,
+            orbit=orbit,
+            attitude=attitude,
+            wavelength=radar_grid.wavelength,
+            look_side=radar_grid.lookside,
+        )
 
         # Add some additional metadata.
         cr_info.update(
