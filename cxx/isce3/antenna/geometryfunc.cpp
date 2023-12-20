@@ -1,10 +1,12 @@
 // Definition of the antenna-related geometry functions
 #include "geometryfunc.h"
 
+#include <isce3/core/Projections.h>
 #include <isce3/core/Quaternion.h>
 #include <isce3/core/Vector.h>
 #include <isce3/except/Error.h>
 #include <isce3/geometry/geometry.h>
+#include <isce3/math/RootFind1dBracket.h>
 
 // Aliases
 using namespace isce3::core;
@@ -157,4 +159,44 @@ std::tuple<std::vector<Vec3>, bool> ant::ant2geo(
         tg_llh_vec[idx] = tg_llh;
     }
     return {tg_llh_vec, converge};
+}
+
+Vec3 ant::rangeAzToXyz(double slant_range, double az, const Vec3& pos_ecef,
+        const Quaternion& quat, const geom::DEMInterpolator& dem_interp,
+        double el_min, double el_max, double el_tol, const ant::Frame& frame)
+{
+    // Get ellipsoid associated with DEM.
+    const auto ellipsoid = makeProjection(dem_interp.epsgCode())->ellipsoid();
+
+    // EL defines a 3D position.
+    const auto el2xyz =
+            [&](double el) {
+                const auto line_of_sight_rcs = frame.sphToCart(el, az);
+                const auto line_of_sight_ecef = quat.rotate(line_of_sight_rcs);
+                // As of writing, newer compilers (GCC 12.2 and clang 15.0)
+                // seem to mess this up if Vec3 ctor is omitted (the return
+                // value is always equal to pos_ecef).
+                return Vec3(pos_ecef + slant_range * line_of_sight_ecef);
+            };
+
+    // Given a 3D position we can convert to LLH and compare to DEM.
+    const auto height_error =
+            [&](double el) {
+                const auto target = el2xyz(el);
+                const auto llh = ellipsoid.xyzToLonLat(target);
+                return llh[2] - dem_interp.interpolateLonLat(llh[0], llh[1]);
+            };
+
+    double el_solution = 0.0;
+    auto errcode = isce3::math::find_zero_brent(
+            el_min, el_max, height_error, el_tol, &el_solution);
+
+    if (errcode != isce3::error::ErrorCode::Success) {
+        throw isce3::except::RuntimeError(ISCE_SRCINFO(),
+                std::string("rangeAzToXyz failed with error (") +
+                        isce3::error::getErrorString(errcode) +
+                        std::string(").  Current solution = ") +
+                        std::to_string(el_solution));
+    }
+    return el2xyz(el_solution);
 }

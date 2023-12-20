@@ -321,4 +321,40 @@ References
 .. [1] https://github.jpl.nasa.gov/SALSA-REE/REE_DOC/blob/master/REE_TECHNICAL_DESCRIPTION.pdf
 
 )");
+
+    m.def("range_az_to_xyz", &ant::rangeAzToXyz, py::arg("slant_range"),
+            py::arg("az"), py::arg("pos_ecef"), py::arg("quat"),
+            py::arg_v("dem_interp", DEMInterpolator(), "DEMInterpolator(0)"),
+            py::arg("el_min") = -M_PI / 4, py::arg("el_max") = M_PI / 4,
+            py::arg("el_tol") = 0.0,
+            py::arg_v("frame", ant::Frame(), "EL_AND_AZ"), R"(
+Compute target position given range and AZ angle by varying EL until height
+matches DEM.
+
+Parameters
+----------
+slant_range : float
+    Range to target in m
+az : float
+    AZ angle in radians
+pos_ecef : array_like
+    ECEF XYZ position of radar in m
+quat : isce3.core.Quaternion
+    Orientation of the antenna (RCS to ECEF quaternion)
+dem_interp : isce3.geometry.DEMInterpolator, optional
+    Digital elevation model in m above ellipsoid
+el_min : float, optional
+    Lower bound for EL solution in rad (default=-45 deg)
+el_max : float, optional
+    Upper bound for EL solution in rad (default=+45 deg)
+el_tol : float, optional
+    Allowable absolute error in EL solution in rad
+frame : isce3.antenna.Frame, optional
+    Coordinate convention for (EL, AZ) to cartesian transformation
+
+Returns
+-------
+xyz : array_like
+    Target position in ECEF in m
+)");
 }

@@ -17,8 +17,8 @@
 namespace isce3 { namespace cuda { namespace focus {
 
 using isce3::focus::DryTroposphereModel;
-using isce3::geometry::detail::Geo2RdrParams;
-using isce3::geometry::detail::Rdr2GeoParams;
+using isce3::geometry::detail::Geo2RdrBracketParams;
+using isce3::geometry::detail::Rdr2GeoBracketParams;
 
 /**
  * Focus in azimuth via time-domain backprojection
@@ -51,8 +51,8 @@ backproject(std::complex<float>* out,
             isce3::cuda::geometry::gpuDEMInterpolator& dem, double fc,
             double ds, const Kernel& kernel,
             DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
-            const Rdr2GeoParams& rdr2geo_params = {},
-            const Geo2RdrParams& geo2rdr_params = {},
+            const Rdr2GeoBracketParams& rdr2geo_params = {},
+            const Geo2RdrBracketParams& geo2rdr_params = {},
             int batch = 1024, float* height = nullptr);
 
 /**
@@ -83,8 +83,8 @@ backproject(std::complex<float>* out,
             const isce3::geometry::DEMInterpolator& dem, double fc,
             double ds, const isce3::core::Kernel<float>& kernel,
             DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
-            const Rdr2GeoParams& rdr2geo_params = {},
-            const Geo2RdrParams& geo2rdr_params = {},
+            const Rdr2GeoBracketParams& rdr2geo_params = {},
+            const Geo2RdrBracketParams& geo2rdr_params = {},
             int batch = 1024, float* height = nullptr);
 
 }}} // namespace isce3::cuda::focus

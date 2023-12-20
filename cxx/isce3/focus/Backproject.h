@@ -42,8 +42,8 @@ backproject(std::complex<float>* out,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
         const isce3::core::Kernel<float>& kernel,
         DryTroposphereModel dry_tropo_model = DryTroposphereModel::TSX,
-        const isce3::geometry::detail::Rdr2GeoParams& r2g_params = {},
-        const isce3::geometry::detail::Geo2RdrParams& g2r_params = {},
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params = {},
         float* height = nullptr);
 
 } // namespace focus

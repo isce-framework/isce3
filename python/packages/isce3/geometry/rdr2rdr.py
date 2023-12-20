@@ -1,5 +1,5 @@
 from isce3.core import Ellipsoid, LookSide, LUT2d, Orbit
-from isce3.geometry import DEMInterpolator, rdr2geo, geo2rdr
+from isce3.geometry import DEMInterpolator, rdr2geo_bracket, geo2rdr_bracket
 from typing import Union, Optional
 
 
@@ -44,12 +44,12 @@ def rdr2rdr(t: float,
         Orbit defining radar motion on output path.  Defaults to input `orbit`.
     rdr2geo_params : dict, optional
         Dictionary specifying convergence paramters for rdr2geo solver.
-        Keys among {"threshold", "maxiter", "extraiter"}
-        See isce3.geometry.rdr2geo
+        Keys among {"tol_aztime", "look_min", "look_max"}
+        See isce3.geometry.rdr2geo_bracket
     geo2rdr_params: dict, optional
         Dictionary specifying convergence paramters for geo2rdr solver.
-        Keys among {"threshold", "maxiter", "delta_range"}
-        See isce3.geometry.geo2rdr
+        Keys among {"tol_height", "time_start", "time_start"}
+        See isce3.geometry.geo2rdr_bracket
 
     Returns
     -------
@@ -65,8 +65,8 @@ def rdr2rdr(t: float,
     if doppler_out is None:
         doppler_out = doppler
     doppler_in = doppler.eval(t, r)
-    llh = rdr2geo(t, r, orbit, side, doppler_in, wavelength, dem, ellipsoid,
-                  **rdr2geo_params)
-    tout, rout = geo2rdr(llh, ellipsoid, orbit_out, doppler_out, wavelength,
-                         side, **geo2rdr_params)
+    xyz = rdr2geo_bracket(t, r, orbit, side, doppler_in, wavelength, dem,
+                          **rdr2geo_params)
+    tout, rout = geo2rdr_bracket(xyz, orbit_out, doppler_out, wavelength, side,
+                                 **geo2rdr_params)
     return tout, rout

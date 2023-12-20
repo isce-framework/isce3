@@ -19,9 +19,10 @@ int rdr2geo_bracket(double aztime, double slantRange, double doppler,
     // Get ellipsoid associated with DEM.
     const auto epsg = dem.epsgCode();
     const Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+    const detail::Rdr2GeoBracketParams params{tolHeight, lookMin, lookMax};
     const ErrorCode err = detail::rdr2geo_bracket(&targetXYZ, aztime,
             slantRange, doppler, orbit, dem, ellipsoid, wavelength, side,
-            tolHeight, lookMin, lookMax);
+            params);
     return err == ErrorCode::Success;
 }
 

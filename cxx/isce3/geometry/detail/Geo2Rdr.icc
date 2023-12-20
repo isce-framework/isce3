@@ -185,13 +185,26 @@ CUDA_HOSTDEV isce3::error::ErrorCode
 geo2rdr_bracket(double* aztime,
         double* range, const isce3::core::Vec3& x, const Orbit& orbit,
         const DopplerModel& doppler, double wavelength,
-        isce3::core::LookSide side, double tolAzTime,
-        std::optional<double> timeStart, std::optional<double> timeEnd)
+        isce3::core::LookSide side, const Geo2RdrBracketParams& params)
 {
     using namespace isce3::core;
     using isce3::error::ErrorCode;
-    double t0 = timeStart.value_or(orbit.startTime());
-    double t1 = timeEnd.value_or(orbit.endTime());
+
+    const double t0 = params.time_start.value_or([&]() {
+        if (doppler.haveData()) {
+            return std::max(orbit.startTime(), doppler.yStart());
+        }
+        return orbit.startTime();
+    }());
+    const double t1 = params.time_end.value_or([&]() {
+        if (doppler.haveData()) {
+            const double dop_end_time = doppler.yStart() + doppler.ySpacing() *
+                (doppler.length() - 1);
+            return std::min(orbit.endTime(), dop_end_time);
+        }
+        return orbit.endTime();
+    }());
+
     // Platform position & velocity, and slant range vector
     Vec3 xp, v, r;
 
@@ -206,7 +219,7 @@ geo2rdr_bracket(double* aztime,
     };
 
     const auto err = isce3::math::find_zero_brent(
-            t0, t1, doppler_error, tolAzTime, aztime);
+            t0, t1, doppler_error, params.tol_aztime, aztime);
     if (err != ErrorCode::Success) {
         return err;
     }

@@ -84,6 +84,17 @@ rdr2geo(isce3::core::Vec3* llh, const isce3::core::Pixel& pixel,
 /** Default convergence tolerance for height (meters) */
 inline constexpr double DEFAULT_TOL_HEIGHT = 1e-5;
 
+/** \internal Root-finding configuration parameters for rdr2geo_bracket */
+struct Rdr2GeoBracketParams {
+    /** \internal Allowable height error of solution (m) */
+    double tol_height = DEFAULT_TOL_HEIGHT;
+
+    /** \internal Smallest possible pseudo-look angle (rad) */
+    double look_min = 0.0;
+
+    /** \internal Largest possible pseudo-look angle (rad) */
+    double look_max = M_PI / 2;
+};
 
 /**
  * \internal
@@ -103,9 +114,7 @@ inline constexpr double DEFAULT_TOL_HEIGHT = 1e-5;
  * \param[in]  ellipsoid  DEM reference ellipsoid
  * \param[in]  wavelength Radar wavelength (wrt requested Doppler) (m)
  * \param[in]  side       Radar look side
- * \param[in]  tolHeight  Allowable height error of solution (m)
- * \param[in]  lookMin    Smallest possible pseudo-look angle (rad)
- * \param[in]  lookMax    Largest possible pseudo-look angle (rad)
+ * \param[in]  params     Root finding algorithm parameters
  *
  * Note: Usually the look angle is defined as the angle between the line of
  * sight vector and the nadir vector.  Here the pseudo-look angle is defined in
@@ -119,8 +128,7 @@ rdr2geo_bracket(isce3::core::Vec3* xyz,
         double aztime, double slantRange, double doppler, const Orbit& orbit,
         const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
         double wavelength, isce3::core::LookSide side,
-        double tolHeight = DEFAULT_TOL_HEIGHT,
-        double lookMin = 0.0, double lookMax = M_PI / 2);
+        const Rdr2GeoBracketParams& params = {});
 
 }}} // namespace isce3::geometry::detail
 

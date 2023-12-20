@@ -114,10 +114,6 @@ runconfig:
                 spacing:
                     range: 2000.0
                     azimuth: 1.0
-                rdr2geo:
-                    threshold: 1e-8
-                    maxiter: 25
-                    extraiter: 15
             rangecomp:
                 mode: full
                 block_size:
@@ -134,14 +130,6 @@ runconfig:
                     approx_oversample: 1.7
                     fit: Table
                     fit_order: 2048
-                rdr2geo:
-                    threshold: 1.0e-8
-                    maxiter: 25
-                    extraiter: 15
-                geo2rdr:
-                    threshold: 1.0e-8
-                    maxiter: 50
-                    delta_range: 10.0
             dry_troposphere_model: nodelay
             dem:
                 reference_height: 0.0

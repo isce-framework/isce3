@@ -167,4 +167,27 @@ std::tuple<std::vector<isce3::core::Vec3>, bool> ant2geo(
         const isce3::antenna::Frame& frame = {},
         const isce3::core::Ellipsoid& ellips = {});
 
+/** Compute target position given range and AZ angle by varying EL until height
+ *  matches DEM.
+ *
+ * @param[in] slant_range   Range to target in m
+ * @param[in] az            AZ angle in rad
+ * @param[in] pos_ecef      ECEF XYZ position of radar in m
+ * @param[in] quat          Orientation of the antenna (RCS to ECEF quaternion)
+ * @param[in] dem_interp    Digital elevation model in m above ellipsoid
+ * @param[in] el_min        Lower bound for EL solution in rad (default=-45 deg)
+ * @param[in] el_max        Upper bound for EL solution in rad (default=+45 deg)
+ * @param[in] el_tol        Allowable absolute error in EL solution in rad
+ *                          Zero for maximum possible precision.  (default=0)
+ * @param[in] frame         Coordinate convention for (EL, AZ) to cartesian
+ *                          transformation.  (default=EL_AND_AZ)
+ *
+ * @returns Target position in ECEF in m
+ */
+isce3::core::Vec3 rangeAzToXyz(double slant_range, double az,
+        const isce3::core::Vec3& pos_ecef, const isce3::core::Quaternion& quat,
+        const isce3::geometry::DEMInterpolator& dem_interp = {},
+        double el_min = -M_PI / 4, double el_max = M_PI / 4,
+        double el_tol = 0.0, const isce3::antenna::Frame& frame = {});
+
 }} // namespace isce3::antenna

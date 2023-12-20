@@ -10,6 +10,8 @@
 #include <isce3/except/Error.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
+#include <isce3/geometry/rdr2geo_roots.h>
+#include <isce3/geometry/geo2rdr_roots.h>
 #include <limits>
 #include <string>
 #include <vector>
@@ -65,8 +67,8 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
         const std::complex<float>* in, const RadarGeometry& in_geometry,
         const DEMInterpolator& dem, double fc, double ds,
         const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
-        const isce3::geometry::detail::Rdr2GeoParams& r2g_params,
-        const isce3::geometry::detail::Geo2RdrParams& g2r_params,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
         float* height)
 {
     static constexpr double c = isce3::core::speed_of_light;
@@ -122,20 +124,21 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
     for (int j = 0; j < out_azimuth_time.size(); ++j) {
         for (int i = 0; i < out_slant_range.size(); ++i) {
 
-            // run rdr2geo using orbit and Doppler associated with output grid
-            // to get target position - must specify initial guess for target
-            // height
-            Vec3 llh;
-            llh[2] = 0.;
+            // Run rdr2geo using orbit and Doppler associated with output grid
+            // to get target position.  Only need LLH if dumping height or
+            // using TSX atmosphere model, but just compute it unconditionally.
+            Vec3 x, llh;
             {
                 double t = out_azimuth_time[j];
                 double r = out_slant_range[i];
                 double fD = out_geometry.doppler().eval(t, r);
 
-                auto converged = rdr2geo(
-                        t, r, fD, out_geometry.orbit(), ellipsoid, dem, llh,
-                        wvl, out_geometry.lookSide(), r2g_params.threshold,
-                        r2g_params.maxiter, r2g_params.extraiter);
+                const int converged = rdr2geo_bracket(t, r, fD,
+                        out_geometry.orbit(), dem, x, wvl,
+                        out_geometry.lookSide(), r2g_params.tol_height,
+                        r2g_params.look_min, r2g_params.look_max);
+
+                llh = ellipsoid.xyzToLonLat(x);
 
                 if (height != nullptr) {
                     height[j * out_geometry.gridWidth() + i] = llh[2];
@@ -152,15 +155,14 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
 
             // run geo2rdr using input data's orbit and azimuth carrier to
             // estimate the center of the coherent processing window for the
-            // target - must specify an initial guess for target azimuth time
+            // target
             double t, r;
-            t = in_geometry.radarGrid().sensingMid();
             {
                 auto converged =
-                        geo2rdr(llh, ellipsoid, in_geometry.orbit(),
+                        geo2rdr_bracket(x, in_geometry.orbit(),
                                 in_geometry.doppler(), t, r, wvl,
-                                in_geometry.lookSide(), g2r_params.threshold,
-                                g2r_params.maxiter, g2r_params.delta_range);
+                                in_geometry.lookSide(), g2r_params.tol_aztime,
+                                g2r_params.time_start, g2r_params.time_end);
 
                 if (not converged) {
                     all_converged = false;
@@ -168,9 +170,6 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
                     continue;
                 }
             }
-
-            // convert target LLH to ECEF coordinates
-            Vec3 x = ellipsoid.lonLatToXyz(llh);
 
             // get platform position and velocity at center of CPI
             Vec3 p, v;

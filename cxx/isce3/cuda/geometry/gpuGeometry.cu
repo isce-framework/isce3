@@ -62,8 +62,8 @@ CUDA_DEV int rdr2geo_bracket(double aztime, double slantRange, double doppler,
                        double lookMin, double lookMax)
 {
     auto status = detail::rdr2geo_bracket(&targetXYZ, aztime, slantRange,
-            doppler, orbit, dem, ellipsoid, wvl, side, tolHeight, lookMin,
-            lookMax);
+            doppler, orbit, dem, ellipsoid, wvl, side,
+            {tolHeight, lookMin, lookMax});
     return status == ErrorCode::Success;
 }
 
@@ -175,8 +175,8 @@ CUDA_DEV int geo2rdr_bracket(
                     std::optional<double> timeEnd)
 {
     ErrorCode err = detail::geo2rdr_bracket(
-            aztime, range, x, orbit, doppler, wavelength, side, dt,
-            timeStart, timeEnd);
+            aztime, range, x, orbit, doppler, wavelength, side,
+            {dt, timeStart, timeEnd});
     return err == ErrorCode::Success;
 }
 

@@ -798,7 +798,7 @@ class SLC(h5py.File):
 
     def set_geolocation_grid(self, orbit: Orbit, grid: RadarGridParameters,
                              doppler: LUT2d, epsg=4326, dem=DEMInterpolator(),
-                             threshold=1e-8, maxiter=50, delta_range=10.0):
+                             **kw):
         log.info(f"Creating geolocationGrid.")
         # TODO Get DEM stats.  Until then just span all Earthly values.
         heights = np.linspace(-500, 9000, 20)
@@ -814,14 +814,9 @@ class SLC(h5py.File):
 
         group_name = f"{self.root.name}/metadata/geolocationGrid"
         rslc_doppler = LUT2d()  # RSLCs are zero-Doppler by definition
-        # Change spelling of geo2rdr params
-        tol = dict(
-            threshold_geo2rdr = threshold,
-            numiter_geo2rdr = maxiter,
-            delta_range = delta_range,
-        )
+        # TODO Fix keyword args
         add_geolocation_grid_cubes_to_hdf5(self, group_name, grid, heights,
-            orbit, doppler, rslc_doppler, epsg, **tol)
+            orbit, doppler, rslc_doppler, epsg)
 
 
     def write_stats(self, frequency, pol, stats):

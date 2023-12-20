@@ -9,6 +9,7 @@
 #include <tuple>
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
+#include <pybind_isce3/core/LookSide.h>
 
 namespace py = pybind11;
 
@@ -18,10 +19,11 @@ using namespace isce3::error;
 void addbinding_geo2rdr_roots(py::module & m)
 {
     m.def("geo2rdr_bracket", [](const Vec3 & x, const Orbit & orbit,
-            const LUT2d<double> & doppler, double wvl, LookSide side,
+            const LUT2d<double> & doppler, double wvl, py::object pySide,
             double tol_aztime, std::optional<double> time_start,
             std::optional<double> time_end) {
         double aztime, range;
+        const auto side = duck_look_side(pySide);
         int success = isce3::geometry::geo2rdr_bracket(
                 x, orbit, doppler, aztime, range, wvl, side, tol_aztime,
                 time_start, time_end);
@@ -52,8 +54,9 @@ void addbinding_geo2rdr_roots(py::module & m)
         Wavelength in meters corresponding to the provided Doppler.  If
         doppler(t,r)=0 then wavelength has no effect on the solution as long as
         it is finite and nonzero.
-    side : isce3.core.LookSide
-        Radar look direction, Left or Right
+    side : Union[isce3.core.LookSide, str]
+        Radar look direction, LookSide.Left or LookSide.Right
+        or "left" or "right"
     tol_aztime : float, optional
         Azimuth time convergence tolerance in seconds.
     time_start : float, optional

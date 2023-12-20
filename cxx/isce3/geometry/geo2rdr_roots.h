@@ -18,9 +18,9 @@ namespace isce3 { namespace geometry {
  * @param[in]    side       Radar look direction, Left or Right
  * @param[in]    tolAzTime  Azimuth convergence tolerance, s
  * @param[in]    timeStart  Start of search interval, s
- *                          Defaults to orbit.startTime()
+ *                          Defaults to max of orbit and Doppler LUT start time
  * @param[in]    timeEnd    End of search interval, s
- *                          Defaults to orbit.endTime()
+ *                          Defaults to min of orbit and Doppler LUT end time
  *
  * @returns Nonzero when successfully converged, zero if iterations exceeded.
  * aztime and range are always updated to the best available estimate.

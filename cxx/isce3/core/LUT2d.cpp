@@ -127,8 +127,9 @@ eval(const double y, const double x) const {
         errorChannel
             << "Out of bounds LUT2d evaluation at " << y << " " << x
             << pyre::journal::newline
-            << " - bounds are " << _ystart << " " << _ystart + _dy*_data.length() << " "
-            << _xstart << " " << _xstart + _dx*_data.width()
+            << " - bounds are " << _ystart << " "
+            << _ystart + _dy * (_data.length() - 1.0) << " "
+            << _xstart << " " << _xstart + _dx * (_data.width() - 1.0)
             << pyre::journal::endl;
     }
     x_idx = isce3::core::clamp(x_idx, 0.0, _data.width() - 1.0);

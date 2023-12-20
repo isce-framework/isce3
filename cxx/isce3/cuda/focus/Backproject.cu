@@ -140,7 +140,7 @@ __global__ void interpolateOrbit(Vec3* pos, Vec3* vel,
  *
  * The global error code is set if any thread encounters an error.
  *
- * \param[out] llh_out      Lon/lat/hae of each target (deg/deg/m)
+ * \param[out] xyz_out      ECEF XYZ of each target (m)
  * \param[in]  azimuth_time Azimuth time coordinates w.r.t. reference epoch (s)
  * \param[in]  slant_range  Slant range coordinates (m)
  * \param[in]  doppler      Doppler model
@@ -149,17 +149,16 @@ __global__ void interpolateOrbit(Vec3* pos, Vec3* vel,
  * \param[in]  ellipsoid    Reference ellipsoid
  * \param[in]  wvl          Radar wavelength (m)
  * \param[in]  side         Radar look side
- * \param[in]  h0           Initial height estimate for all targets (m)
  * \param[in]  params       Root-finding algorithm parameters
  * \param[out] errc         Error flag
  */
-__global__ void runRdr2Geo(Vec3* llh_out, const Linspace<double> azimuth_time,
+__global__ void runRdr2Geo(Vec3* xyz_out, const Linspace<double> azimuth_time,
                            const Linspace<double> slant_range,
                            const DeviceLUT2d<double> doppler,
                            const DeviceOrbitView orbit,
                            DeviceDEMInterpolator dem, const Ellipsoid ellipsoid,
                            const double wvl, const LookSide side,
-                           const double h0, const Rdr2GeoParams params,
+                           const Rdr2GeoBracketParams params,
                            ErrorCode* errc)
 {
     // thread index (1d grid of 1d blocks)
@@ -182,22 +181,19 @@ __global__ void runRdr2Geo(Vec3* llh_out, const Linspace<double> azimuth_time,
     const double fd = doppler.eval(t, r);
 
     // make thread-local variable to store rdr2geo output
-    // set height to initial height guess
-    Vec3 llh;
-    llh[2] = h0;
+    Vec3 xyz;
 
-    // run rdr2geo
     const int converged =
-            rdr2geo(t, r, fd, orbit, ellipsoid, dem, llh, wvl, side,
-                    params.threshold, params.maxiter, params.extraiter);
+            rdr2geo_bracket(t, r, fd, orbit, ellipsoid, dem, xyz, wvl, side,
+                    params.tol_height, params.look_min, params.look_max);
 
     // check convergence
     if (converged) {
-        llh_out[tid] = llh;
+        xyz_out[tid] = xyz;
     } else {
         // set output to NaN (?)
         constexpr static auto nan = std::numeric_limits<double>::quiet_NaN();
-        llh_out[tid] = {nan, nan, nan};
+        xyz_out[tid] = {nan, nan, nan};
 
         // set global error flag
         *errc = ErrorCode::FailedToConverge;
@@ -213,23 +209,21 @@ __global__ void runRdr2Geo(Vec3* llh_out, const Linspace<double> azimuth_time,
  *
  * \param[out] t_out        Azim. time of each target w.r.t. reference epoch (s)
  * \param[out] r_out        Slant range of each target (m)
- * \param[in]  llh_in       Lon/lat/hae of each target (deg/deg/m)
+ * \param[in]  xyz_in       ECEF XYZ of each target (m)
  * \param[in]  n            Number of targets
- * \param[in]  ellipsoid    Reference ellipsoid
  * \param[in]  orbit        Platform orbit
  * \param[in]  doppler      Doppler model
  * \param[in]  wvl          Radar wavelength (m)
  * \param[in]  side         Radar look side
- * \param[in]  t0           Initial azimuth time estimate for all targets (s)
  * \param[in]  params       Root-finding algorithm parameters
  * \param[out] errc         Error flag
  */
-__global__ void runGeo2Rdr(double* t_out, double* r_out, const Vec3* llh_in,
-                           const size_t n, const Ellipsoid ellipsoid,
+__global__ void runGeo2Rdr(double* t_out, double* r_out, const Vec3* xyz_in,
+                           const size_t n,
                            const DeviceOrbitView orbit,
                            const DeviceLUT2d<double> doppler, const double wvl,
-                           const LookSide side, const double t0,
-                           const Geo2RdrParams params, ErrorCode* errc)
+                           const LookSide side,
+                           const Geo2RdrBracketParams params, ErrorCode* errc)
 {
     // thread index (1d grid of 1d blocks)
     const auto tid = static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -240,15 +234,13 @@ __global__ void runGeo2Rdr(double* t_out, double* r_out, const Vec3* llh_in,
     }
 
     // make thread-local variables to store geo2rdr output range, azimuth time
-    // & set azimuth time to initial guess
-    double t = t0;
-    double r;
+    double t, r;
 
     // run geo2rdr
-    auto llh = llh_in[tid];
+    auto xyz = xyz_in[tid];
     int converged =
-            geo2rdr(llh, ellipsoid, orbit, doppler, &t, &r, wvl, side,
-                    params.threshold, params.maxiter, params.delta_range);
+            geo2rdr_bracket(xyz, orbit, doppler, &t, &r, wvl, side,
+                    params.tol_aztime, params.time_start, params.time_end);
 
     // check convergence
     if (converged) {
@@ -267,14 +259,14 @@ __global__ void runGeo2Rdr(double* t_out, double* r_out, const Vec3* llh_in,
 
 /**
  * \internal
- * Transform target coordinates from LLH to ECEF, given some reference ellipsoid
+ * Transform target coordinates from ECEF to LLH, given some reference ellipsoid
  *
- * \param[out] xyz       ECEF coordinates of each target (m)
- * \param[in]  llh       Lon/lat/hae coordinates of each target (deg/deg/m)
+ * \param[out] llh       Lon/lat/hae coordinates of each target (deg/deg/m)
+ * \param[in]  xyz       ECEF coordinates of each target (m)
  * \param[in]  n         Number of targets
  * \param[in]  ellipsoid Reference ellipsoid
  */
-__global__ void llh2ecef(Vec3* xyz, const Vec3* llh, const size_t n,
+__global__ void ecef2llh(Vec3* llh, const Vec3* xyz, const size_t n,
                          const Ellipsoid ellipsoid)
 {
     // thread index (1d grid of 1d blocks)
@@ -285,8 +277,8 @@ __global__ void llh2ecef(Vec3* xyz, const Vec3* llh, const size_t n,
         return;
     }
 
-    // transform coordinates from LLH to ECEF
-    xyz[tid] = ellipsoid.lonLatToXyz(llh[tid]);
+    // transform coordinates from ECEF to LLH
+    llh[tid] = ellipsoid.xyzToLonLat(xyz[tid]);
 }
 
 /**
@@ -480,8 +472,8 @@ ErrorCode backproject(std::complex<float>* out,
                       const DeviceRadarGeometry& in_geometry,
                       DeviceDEMInterpolator& dem, double fc, double ds,
                       const Kernel& kernel, DryTroposphereModel dry_tropo_model,
-                      const Rdr2GeoParams& rdr2geo_params,
-                      const Geo2RdrParams& geo2rdr_params, int batch,
+                      const Rdr2GeoBracketParams& rdr2geo_params,
+                      const Geo2RdrBracketParams& geo2rdr_params, int batch,
                       float* height)
 {
     // XXX input reference epoch must match output reference epoch
@@ -531,22 +523,37 @@ ErrorCode backproject(std::complex<float>* out,
     // carrier wavelength
     const double wvl = c / fc;
 
-    // run rdr2geo using output geometry to get LLH position of each target in
+    // run rdr2geo using output geometry to get XYZ position of each target in
     // output grid
     const size_t out_grid_size =
             out_geometry.gridLength() * out_geometry.gridWidth();
+    thrust::device_vector<Vec3> x(out_grid_size);
+
+    {
+        const unsigned block = 256;
+        const unsigned grid = (out_grid_size + block - 1) / block;
+
+        runRdr2Geo<<<grid, block>>>(x.data().get(), out_azimuth_time,
+                                    out_slant_range, out_geometry.doppler(),
+                                    out_geometry.orbit(), dem, ellipsoid, wvl,
+                                    out_geometry.lookSide(), rdr2geo_params,
+                                    errc.data().get());
+
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
+    }
+
+    // transform each target position from ECEF to LLH coordinates
+    // NOTE only really needed if dumping height layer or doing TSX atmosphere
+    // correction, but just compute it unconditionally.
     thrust::device_vector<Vec3> llh(out_grid_size);
 
     {
         const unsigned block = 256;
         const unsigned grid = (out_grid_size + block - 1) / block;
 
-        const double h0 = 0.;
-        runRdr2Geo<<<grid, block>>>(llh.data().get(), out_azimuth_time,
-                                    out_slant_range, out_geometry.doppler(),
-                                    out_geometry.orbit(), dem, ellipsoid, wvl,
-                                    out_geometry.lookSide(), h0, rdr2geo_params,
-                                    errc.data().get());
+        ecef2llh<<<grid, block>>>(llh.data().get(), x.data().get(),
+                                  out_grid_size, ellipsoid);
 
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
@@ -569,25 +576,10 @@ ErrorCode backproject(std::complex<float>* out,
         const unsigned block = 256;
         const unsigned grid = (out_grid_size + block - 1) / block;
 
-        const double t0 = in_geometry.radarGrid().sensingMid();
         runGeo2Rdr<<<grid, block>>>(
-                t.data().get(), r.data().get(), llh.data().get(), out_grid_size,
-                ellipsoid, in_geometry.orbit(), in_geometry.doppler(), wvl,
-                in_geometry.lookSide(), t0, geo2rdr_params, errc.data().get());
-
-        checkCudaErrors(cudaPeekAtLastError());
-        checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
-    }
-
-    // transform each target position from LLH to ECEF coordinates
-    thrust::device_vector<Vec3> x(out_grid_size);
-
-    {
-        const unsigned block = 256;
-        const unsigned grid = (out_grid_size + block - 1) / block;
-
-        llh2ecef<<<grid, block>>>(x.data().get(), llh.data().get(),
-                                  out_grid_size, ellipsoid);
+                t.data().get(), r.data().get(), x.data().get(), out_grid_size,
+                in_geometry.orbit(), in_geometry.doppler(), wvl,
+                in_geometry.lookSide(), geo2rdr_params, errc.data().get());
 
         checkCudaErrors(cudaPeekAtLastError());
         checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
@@ -710,8 +702,8 @@ ErrorCode backproject(std::complex<float>* out,
                       const HostDEMInterpolator& dem, double fc, double ds,
                       const Kernel<float>& kernel,
                       DryTroposphereModel dry_tropo_model,
-                      const Rdr2GeoParams& rdr2geo_params,
-                      const Geo2RdrParams& geo2rdr_params, int batch,
+                      const Rdr2GeoBracketParams& rdr2geo_params,
+                      const Geo2RdrBracketParams& geo2rdr_params, int batch,
                       float* height)
 {
     // copy inputs to device

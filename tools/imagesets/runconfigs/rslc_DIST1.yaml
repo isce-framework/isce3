@@ -104,13 +104,6 @@ runconfig:
                     range: 2000.0
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
-                rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1.0e-8)
-                    threshold: 1.0e-8
-                    # Max number of primary iterations: int (default: 25)
-                    maxiter: 25
-                    # Max number of secondary iterations: int (default: 15)
-                    extraiter: 15
             # Settings for range compression algorithm.
             rangecomp:
                 # Convolution output mode: {"valid", "full", "same"} (default: "full")
@@ -138,21 +131,6 @@ runconfig:
                     approx_oversample: 1.7
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
-                rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1.0e-8)
-                    threshold: 1.0e-8
-                    # Max number of primary iterations: int (default: 25)
-                    maxiter: 100
-                    # Max number of secondary iterations: int (default: 15)
-                    extraiter: 15
-                geo2rdr:
-                    # Slant range convergence threshold (m): float (default: 1.0e-8)
-                    threshold: 1.0e-6
-                    # Max number of iterations: int (default: 50)
-                    maxiter: 100
-                    # Step size for computing numerical gradient of Doppler (m): float
-                    # (default: 10.)
-                    delta_range: 10.
             dry_troposphere_model: nodelay
             dem:
                 # Height (in meters) to use if DEM unavailable.

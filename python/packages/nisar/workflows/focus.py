@@ -22,6 +22,7 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
+from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
 from nisar.workflows.yaml_argparse import YamlArgparse
@@ -289,37 +290,7 @@ def get_total_grid(rawfiles: list[str], dt, dr):
     return epoch, t, r
 
 
-def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
-    """Find squint angle given imaging time and range to target.
-    """
-    assert orbit.reference_epoch == attitude.reference_epoch
-    p, v = orbit.interpolate(t)
-    R = attitude.interpolate(t).to_rotation_matrix()
-    axis = R[:,1]
-    # In NISAR coordinate frames (see D-80882 and REE User Guide) left/right is
-    # implemented as a 180 yaw flip, so the left/right flag can just be
-    # inferred by the sign of axis.dot(v). Verify this convention.
-    inferred_side = "left" if axis.dot(v) > 0 else "right"
-    if side.lower() != inferred_side:
-        raise ValueError(f"Requested side={side.lower()} but "
-                         f"inferred side={inferred_side} based on orientation "
-                         f"(Y_RCS.dot(V) = {axis.dot(v)})")
-    if dem is None:
-        dem = isce3.geometry.DEMInterpolator()
-    # NOTE Here "left" means an acute, positive look angle by right-handed
-    # rotation about `axis`.  Since axis will flip sign, always use "left" to
-    # get the requested side in the sense of velocity vector.
-    xyz = isce3.geometry.rdr2geo_cone(p, axis, angle, r, dem, "left", **kw)
-    look = (xyz - p) / np.linalg.norm(xyz - p)
-    vhat = v / np.linalg.norm(v)
-    return np.arcsin(look.dot(vhat))
-
-
-def squint_to_doppler(squint, wvl, vmag):
-    return 2.0 / wvl * vmag * np.sin(squint)
-
-
-def convert_epoch(t: list[float], epoch_in, epoch_out):
+def convert_epoch(t: list[float], epoch_in: DateTime, epoch_out: DateTime) -> list[float]:
     TD = isce3.core.TimeDelta
     return [(epoch_in - epoch_out + TD(ti)).total_seconds() for ti in t]
 
@@ -348,8 +319,7 @@ def make_doppler_lut(rawfiles: list[str],
         azimuth_spacing: float = 1.0,
         range_spacing: float = 1e3,
         interp_method: str = "bilinear",
-        epoch: Optional[DateTime] = None,
-        **rdr2geo):
+        epoch: Optional[DateTime] = None):
     """Generate Doppler look up table (LUT).
 
     Parameters
@@ -374,10 +344,6 @@ def make_doppler_lut(rawfiles: list[str],
         LUT interpolation method. Default="bilinear".
     epoch : isce3.core.DateTime, optional
         Time reference for output table.  Defaults to orbit.reference_epoch
-    threshold : optional
-    maxiter : optional
-    extraiter : optional
-        See rdr2geo
 
     Returns
     -------
@@ -388,8 +354,12 @@ def make_doppler_lut(rawfiles: list[str],
         Look up table of Doppler = f(r,t)
     """
     # Input wrangling.
-    assert len(rawfiles) > 0, "Need at least one L0B file."
-    assert (azimuth_spacing > 0.0) and (range_spacing > 0.0)
+    if len(rawfiles) < 1:
+        raise ValueError("Need at least one L0B file.")
+    if azimuth_spacing <= 0.0:
+        raise ValueError(f"Require azimuth spacing > 0, got {azimuth_spacing}")
+    if range_spacing <= 0.0:
+        raise ValueError(f"Require range spacing > 0, got {range_spacing}")
     raw = open_rrsd(rawfiles[0])
     if orbit is None:
         orbit = raw.getOrbit()
@@ -418,12 +388,11 @@ def make_doppler_lut(rawfiles: list[str],
     t = convert_epoch(t, epoch_in, epoch)
     dop = np.zeros((len(t), len(r)))
     for i, ti in enumerate(t):
-        _, v = orbit.interpolate(ti)
-        vi = np.linalg.norm(v)
+        rdr_xyz, v = orbit.interpolate(ti)
+        qi = attitude.interpolate(ti)
         for j, rj in enumerate(r):
-            sq = squint(ti, rj, orbit, attitude, side, angle=az, dem=dem,
-                        **rdr2geo)
-            dop[i,j] = squint_to_doppler(sq, wvl, vi)
+            tgt_xyz = isce3.antenna.range_az_to_xyz(rj, az, rdr_xyz, qi, dem)
+            dop[i,j] = los2doppler(tgt_xyz - rdr_xyz, v, wvl)
     lut = LUT2d(np.asarray(r), t, dop, interp_method, False)
     return fc, lut
 
@@ -441,8 +410,7 @@ def make_doppler(cfg: Struct, epoch: Optional[DateTime] = None):
                                az=az, orbit=orbit, attitude=attitude,
                                dem=dem, azimuth_spacing=opt.spacing.azimuth,
                                range_spacing=opt.spacing.range,
-                               interp_method=opt.interp_method,  epoch=epoch,
-                               **vars(opt.rdr2geo))
+                               interp_method=opt.interp_method,  epoch=epoch)
 
     log.info(f"Made Doppler LUT for fc={fc} Hz, "
         f"az={opt.azimuth_boresight_deg} deg with mean={lut.data.mean()} Hz")
@@ -549,7 +517,8 @@ def make_output_grid(cfg: Struct,
     def reskew_to_zerodop(t, r):
         return isce3.geometry.rdr2rdr(t, r, orbit, side, doppler, wavelength,
             dem, doppler_out=zerodop,
-            rdr2geo_params=vars(ac.rdr2geo), geo2rdr_params=vars(ac.geo2rdr))
+            rdr2geo_params=get_rdr2geo_params(cfg),
+            geo2rdr_params=vars(cfg.processing.geo2rdr))
 
     # One annoying case is where the orbit data covers the raw pulse times
     # and nothing else.  The code can crash when trying to compute positions on
@@ -620,6 +589,29 @@ def make_output_grid(cfg: Struct,
                                epoch)
 
 
+def get_rdr2geo_params(cfg: Struct) -> dict:
+    """
+    Geo rdr2geo parameters from RSLC config structure.
+    This converts config keys look_{min,max}_deg to radians.
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig structure, stripped of leading `runconfig.groups`.
+
+    Returns
+    -------
+    rdr2geo_params : dict
+        A dict with the three keys {"look_min", "look_max", "tol_height"}
+    """
+    # will always contain necessary fields since filled with defaults
+    g = cfg.processing.rdr2geo
+    return dict(
+        tol_height = g.tol_height,
+        look_min = np.deg2rad(g.look_min_deg),
+        look_max = np.deg2rad(g.look_max_deg))
+
+
 Selection2d = tuple[slice, slice]
 TimeBounds = tuple[float, float]
 BlockPlan = list[tuple[Selection2d, TimeBounds]]
@@ -665,8 +657,8 @@ def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
             try:
                 traw, _ = isce3.geometry.rdr2rdr(t, r, orbit, grid.lookside,
                     zerodop, grid.wavelength, dem, doppler_out=doppler,
-                    rdr2geo_params=vars(ac.rdr2geo),
-                    geo2rdr_params=vars(ac.geo2rdr))
+                    rdr2geo_params=get_rdr2geo_params(cfg),
+                    geo2rdr_params=vars(cfg.processing.geo2rdr))
             except RuntimeError as e:
                 dt = epoch + isce3.core.TimeDelta(t)
                 log.error(f"Reskew zero-to-native failed at t={dt} r={r}")
@@ -1400,7 +1392,7 @@ def focus(runconfig, runconfig_path=""):
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
                              epsg=4326, dem=dem,
-                             **vars(cfg.processing.azcomp.geo2rdr))
+                             **vars(cfg.processing.geo2rdr))
 
     # Scratch directory for intermediate outputs
     scratch_dir = os.path.abspath(cfg.product_path_group.scratch_path)
@@ -1548,8 +1540,8 @@ def focus(runconfig, runconfig_path=""):
                 hgt = hgt_mm[block] if dump_height else None
                 err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
-                            kernel, atmos, vars(cfg.processing.azcomp.rdr2geo),
-                            vars(cfg.processing.azcomp.geo2rdr), height=hgt)
+                            kernel, atmos, get_rdr2geo_params(cfg),
+                            vars(cfg.processing.geo2rdr), height=hgt)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)

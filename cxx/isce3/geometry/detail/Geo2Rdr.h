@@ -53,6 +53,20 @@ geo2rdr(double* t, double* r, const isce3::core::Vec3& llh,
 /** Default convergence tolerance for azimuth time (seconds) */
 inline constexpr double DEFAULT_TOL_AZ_TIME = 1e-7;
 
+/** \internal Root-finding configuration parameters for geo2rdr_bracket */
+struct Geo2RdrBracketParams {
+    /** \internal Allowable error in azimuth time solution (s)  */
+    double tol_aztime = DEFAULT_TOL_AZ_TIME;
+
+    /** \internal Start of search interval (s), defaults to
+     * max of orbit and Doppler LUT start times */
+    std::optional<double> time_start = std::nullopt;
+
+    /** \internal End of search interval (s), defaults to
+     * min of orbit and Doppler LUT end times */
+    std::optional<double> time_end = std::nullopt;
+};
+
 /**
  * \internal
  * Unified host/device implementation of isce3::geometry::geo2rdr_bracket and
@@ -70,18 +84,14 @@ inline constexpr double DEFAULT_TOL_AZ_TIME = 1e-7;
  * \param[in]  doppler   Doppler model as a function of azimuth & range (Hz)
  * \param[in]  wvl       Radar wavelength (m)
  * \param[in]  side      Radar look side
- * \param[in]  tolAzTime Allowable error in azimuth time solution (s)
- * \param[in]  timeStart Start of search interval (s), default=orbit.startTime()
- * \param[in]  timeEnd   End of search interval (s), default=orbit.endTime()
+ * \param[in]  params    Root-finding algorithm parameters
  */
 template<class Orbit, class DopplerModel>
 CUDA_HOSTDEV isce3::error::ErrorCode
 geo2rdr_bracket(double* aztime, double* range,
         const isce3::core::Vec3& x, const Orbit& orbit,
         const DopplerModel& doppler, double wvl, isce3::core::LookSide side,
-        double tolAzTime = DEFAULT_TOL_AZ_TIME,
-        std::optional<double> timeStart = std::nullopt,
-        std::optional<double> timeEnd = std::nullopt);
+        const Geo2RdrBracketParams& params = {});
 
 }}} // namespace isce3::geometry::detail
 

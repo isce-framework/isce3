@@ -22,6 +22,61 @@ using isce3::core::Kernel;
 using isce3::error::ErrorCode;
 using isce3::except::InvalidArgument;
 using isce3::geometry::DEMInterpolator;
+using isce3::geometry::detail::Rdr2GeoBracketParams;
+using isce3::geometry::detail::Geo2RdrBracketParams;
+
+
+Rdr2GeoBracketParams parse_rdr2geo_params(const py::dict& params)
+{
+    Rdr2GeoBracketParams out;
+    for (auto item : params) {
+        auto key = item.first.cast<std::string>();
+        if (key == "tol_height") {
+            out.tol_height = item.second.cast<double>();
+        }
+        else if (key == "look_min") {
+            out.look_min = item.second.cast<double>();
+        }
+        else if (key == "look_max") {
+            out.look_max = item.second.cast<double>();
+        }
+        else {
+            throw InvalidArgument(ISCE_SRCINFO(),
+                "unexpected rdr2geo_bracket keyword: " + key);
+        }
+    }
+    return out;
+}
+
+
+Geo2RdrBracketParams parse_geo2rdr_params(const py::dict& params)
+{
+    Geo2RdrBracketParams out;
+    for (auto item : params) {
+        auto key = item.first.cast<std::string>();
+        if (key == "tol_aztime") {
+            out.tol_aztime = item.second.cast<double>();
+        }
+        else if (key == "time_start") {
+            // don't combine with above to avoid throw on time_start=None
+            if (not item.second.is_none()) {
+                out.time_start = item.second.cast<double>();
+            }
+        }
+        else if (key == "time_end") {
+            // don't combine with above to avoid throw on time_end=None
+            if (not item.second.is_none()) {
+                out.time_end = item.second.cast<double>();
+            }
+        }
+        else {
+            throw InvalidArgument(ISCE_SRCINFO(),
+                "unexpected geo2rdr_bracket keyword: " + key);
+        }
+    }
+    return out;
+}
+
 
 void addbinding_backproject(py::module& m)
 {
@@ -81,27 +136,8 @@ void addbinding_backproject(py::module& m)
 
             DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
 
-            isce3::geometry::detail::Rdr2GeoParams r2gparams;
-            if (rdr2geo_params.contains("threshold")) {
-                r2gparams.threshold = py::float_(rdr2geo_params["threshold"]);
-            }
-            if (rdr2geo_params.contains("maxiter")) {
-                r2gparams.maxiter = py::int_(rdr2geo_params["maxiter"]);
-            }
-            if (rdr2geo_params.contains("extraiter")) {
-                r2gparams.extraiter = py::int_(rdr2geo_params["extraiter"]);
-            }
-
-            isce3::geometry::detail::Geo2RdrParams g2rparams;
-            if (geo2rdr_params.contains("threshold")) {
-                g2rparams.threshold = py::float_(geo2rdr_params["threshold"]);
-            }
-            if (geo2rdr_params.contains("maxiter")) {
-                g2rparams.maxiter = py::int_(geo2rdr_params["maxiter"]);
-            }
-            if (geo2rdr_params.contains("delta_range")) {
-                g2rparams.delta_range = py::float_(geo2rdr_params["delta_range"]);
-            }
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+            const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
             ErrorCode err;
             {

@@ -133,9 +133,14 @@ runconfig:
         # Transition width as a fraction of output bandwidth.
         width: num(min=0.0, max=1.0, required=False)
 
+      # Radar-to-geographic coordinate transforms
+      rdr2geo: include('rdr2geo_options', required=False)
+
+      # Geographic-to-radar coordinate transforms
+      geo2rdr: include('geo2rdr_options', required=False)
+
       doppler:
         # Offset between quaternion frame and antenna boresight in degrees.
-        # TBD This will likely be parameter in a separate cal file.
         azimuth_boresight_deg: num(required=False)
 
         # How to interpolate between samples in the LUT.
@@ -147,14 +152,6 @@ runconfig:
           range: num(min=0.0, required=False)
           # Lookup table Azimuth spacing in s
           azimuth: num(min=0.0, required=False)
-
-        rdr2geo:
-          # Slant range convergence threshold (m): float (default: 1e-8)
-          threshold: num(min=0.0, required=False)
-          # Max number of primary iterations: int (default: 25)
-          maxiter: int(min=1, required=False)
-          # Max number of secondary iterations: int (default: 15)
-          extraiter: int(min=1, required=False)
 
       # Settings for range compression algorithm.
       rangecomp:
@@ -189,22 +186,6 @@ runconfig:
           fit: enum('Cheby', 'Table', required=False)
           fit_order: int(min=1, required=False)
 
-        rdr2geo:
-          # Slant range convergence threshold (m): float (default: 1e-8)
-          threshold: num(min=0.0, required=False)
-          # Max number of primary iterations: int (default: 25)
-          maxiter: int(min=1, required=False)
-          # Max number of secondary iterations: int (default: 15)
-          extraiter: int(min=1, required=False)
-
-        geo2rdr:
-          # Slant range convergence threshold (m): float (default: 1e-8)
-          threshold: num(min=0.0, required=False)
-          # Max number of iterations: int (default: 50)
-          maxiter: int(min=1, required=False)
-          # Step size for computing numerical gradient of Doppler (m): float
-          # (default: 10.)
-          delta_range: num(min=0.0, required=False)
 
       dry_troposphere_model: enum('nodelay', 'tsx', required=False)
 
@@ -260,6 +241,24 @@ spectral_window:
   # Shape parameter. For Kaiser, 0 <= shape < Inf.
   # For Cosine, 0 <= shape <= 1
   shape: num(min=0.0, required=False)
+
+rdr2geo_options:
+  # Allowable height error in m
+  tol_height: num(min=0.0, required=False)
+  # Smallest possible look angle in degrees
+  look_min_deg: num(required=False)
+  # Largest possible look angle in degrees
+  look_max_deg: num(required=False)
+
+geo2rdr_options:
+  # Allowable azimuth time error in s
+  tol_aztime: num(required=False)
+  # Earliest time in search interval, in s past orbit reference epoch
+  # null for automatic selection
+  time_start: num(required=False)
+  # Latest time in search interval, in s past orbit reference epoch
+  # null for automatic selection
+  time_end: num(required=False)
 
 rfi_options:
   # Whether to attempt RFI detection and record related metadata.

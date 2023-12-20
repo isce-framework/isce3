@@ -8,6 +8,7 @@
 #include <isce3/core/Orbit.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/rdr2geo_roots.h>
+#include <pybind_isce3/core/LookSide.h>
 
 namespace py = pybind11;
 
@@ -19,10 +20,11 @@ void addbinding_rdr2geo_roots(py::module& m)
     m.def(
             "rdr2geo_bracket",
             [](double aztime, double slantRange, const Orbit& orbit,
-                    LookSide side, double doppler, double wavelength,
+                    py::object pySide, double doppler, double wavelength,
                     const DEMInterpolator& dem, double tolHeight,
                     double lookMin, double lookMax) {
                 Vec3 targetXYZ;
+                const auto side = duck_look_side(pySide);
                 int success = rdr2geo_bracket(aztime, slantRange, doppler,
                         orbit, dem, targetXYZ, wavelength, side, tolHeight,
                         lookMin, lookMax);
@@ -47,8 +49,9 @@ void addbinding_rdr2geo_roots(py::module& m)
                 Slant range to target in meters
             orbit : isce3.core.Orbit
                 Reference orbit that defines the radar coordinate system.
-            side : isce3.core.LookSide
-                Radar look direction (LookSide.Left or LookSide.Right)
+            side : Union[isce3.core.LookSide, str]
+                Radar look direction (LookSide.Left or LookSide.Right) or
+                "left" or "right".
             doppler : float
                 Reference Doppler frequency in Hz that defines the radar
                 coordinate system.  Note that this isn't necessarily the

@@ -151,9 +151,9 @@ CUDA_DEV int geo2rdr(const isce3::core::Vec3& inputLLH,
  * \param[in]  side       Radar look side
  * \param[in]  dt         Allowable error in azimuth time solution (s)
  * \param[in]  timeStart  Start of search interval, s
- *                        Defaults to orbit.startTime()
+ *                        Defaults to max of orbit and Doppler LUT start time
  * \param[in]  timeEnd    End of search interval, s
- *                        Defaults to orbit.endTime()
+ *                        Defaults to min of orbit and Doppler LUT end time
  */
 CUDA_DEV int geo2rdr_bracket(const isce3::core::Vec3& x,
         const isce3::cuda::core::OrbitView& orbit,

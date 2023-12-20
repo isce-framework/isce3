@@ -19,8 +19,8 @@ int geo2rdr_bracket(const Vec3& x, const Orbit& orbit,
         std::optional<double> timeStart, std::optional<double> timeEnd)
 {
     const ErrorCode err = isce3::geometry::detail::geo2rdr_bracket(
-            &aztime, &range, x, orbit, doppler, wavelength, side, tolAzTime,
-            timeStart, timeEnd);
+            &aztime, &range, x, orbit, doppler, wavelength, side,
+            {tolAzTime, timeStart, timeEnd});
     return err == ErrorCode::Success;
 }
 

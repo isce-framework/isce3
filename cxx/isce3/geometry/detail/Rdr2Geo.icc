@@ -175,8 +175,8 @@ CUDA_HOSTDEV isce3::error::ErrorCode
 rdr2geo_bracket(isce3::core::Vec3* xyz,
         double aztime, double slantRange, double doppler, const Orbit& orbit,
         const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
-        double wavelength, isce3::core::LookSide side, double tolHeight,
-        double lookMin, double lookMax)
+        double wavelength, isce3::core::LookSide side,
+        const Rdr2GeoBracketParams& params)
 {
     using namespace isce3::core;
     using isce3::error::ErrorCode;
@@ -228,12 +228,12 @@ rdr2geo_bracket(isce3::core::Vec3* xyz,
     };
 
     // Height error is bounded by arc length.
-    const double tolLook = tolHeight / radius;
+    const double tolLook = params.tol_height / radius;
 
     // Solve.
     double lookSolution = 0.0;
     const auto err = isce3::math::find_zero_brent(
-            lookMin, lookMax, dh, tolLook, &lookSolution);
+            params.look_min, params.look_max, dh, tolLook, &lookSolution);
     if (err != ErrorCode::Success) {
         return err;
     }

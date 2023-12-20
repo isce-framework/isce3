@@ -181,6 +181,26 @@ runconfig:
                 # Transition width as a fraction of output bandwidth.
                 width: 0.15
 
+            # Radar-to-geographic coordinate transforms
+            rdr2geo:
+                # Allowable height error in m
+                tol_height: 1e-5
+                # Smallest possible look angle in degrees
+                look_min_deg: 0.0
+                # Largest possible look angle in degrees
+                look_max_deg: 90.0
+
+            # Geographic-to-radar coordinate transforms
+            geo2rdr:
+                # Allowable azimuth time error in s
+                tol_aztime: 1e-7
+                # Earliest time in search interval, in s past orbit reference
+                # epoch.  null for automatic selection
+                time_start: null
+                # Latest time in search interval, in s past orbit reference
+                # epoch.  null for automatic selection
+                time_end: null
+
             doppler:
                 # Offset between quaternion frame and antenna boresight in degrees.
                 # TBD This will likely be parameter in a separate cal file.
@@ -195,14 +215,6 @@ runconfig:
                     range: 2000.0
                     # Lookup table Azimuth spacing in s
                     azimuth: 1.0
-
-                rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1e-8)
-                    threshold: 1e-8
-                    # Max number of primary iterations: int (default: 25)
-                    maxiter: 25
-                    # Max number of secondary iterations: int (default: 15)
-                    extraiter: 15
 
             # Settings for range compression algorithm.
             rangecomp:
@@ -236,23 +248,6 @@ runconfig:
 
                     fit: Table # null or Cheby or Table
                     fit_order: 2048
-
-                rdr2geo:
-                    # Slant range convergence threshold (m): float (default: 1e-8)
-                    threshold: 1e-8
-                    # Max number of primary iterations: int (default: 25)
-                    maxiter: 25
-                    # Max number of secondary iterations: int (default: 15)
-                    extraiter: 15
-
-                geo2rdr:
-                    # Slant range convergence threshold (m): float (default: 1e-8)
-                    threshold: 1e-8
-                    # Max number of iterations: int (default: 50)
-                    maxiter: 50
-                    # Step size for computing numerical gradient of Doppler (m): float
-                    # (default: 10.)
-                    delta_range: 10.
 
             dry_troposphere_model: tsx
 

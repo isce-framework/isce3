@@ -131,3 +131,47 @@ class TestGeometryFunc:
 
         npt.assert_equal(convergence, True,
                          err_msg="Wrong convergence flag!")
+
+
+def test_range_az_to_xyz():
+    # Configuration for flying north at (lat, lon) = (0, 0):
+    # Y-axis points north,  Z-axis (boresight) points down.
+    # X=cross(Y,Z) must point west.
+    q_ant2ecef = Quaternion(np.array([
+        [0, 0, -1],
+        [-1, 0, 0],
+        [0, 1, 0]
+    ]))
+    # Looking along the equator (AZ=0), the Earth's radius of curvature is just
+    # the semimajor axis.
+    az = 0.0
+    ellipsoid = Ellipsoid()
+    a = ellipsoid.a
+    # Height of platform and terrain.
+    hp = 700e3
+    ht = 0.0
+    radar_xyz = np.array([a + hp, 0, 0])
+    dem = DEMInterp(ht)
+    # Pick some range > (hp - ht)
+    r = 900e3
+    # Expected solution from law of cosines (negative for left-looking)
+    lon = np.arccos(((a + ht)**2 + (a + hp)**2 - r**2) /
+                    (2 * (a + ht) * (a + hp)))
+    expected_xyz = ellipsoid.lon_lat_to_xyz([-lon, 0, ht])
+    # Since we're looking straight down let's search 0 <= EL <= 90 deg
+    # for left-looking
+    el_min, el_max = 0, np.pi/2
+
+    xyz = ant.range_az_to_xyz(r, az, radar_xyz, q_ant2ecef, dem, el_min, el_max)
+
+    npt.assert_allclose(xyz, expected_xyz)
+
+    # Try another case with AZ != 0.  Don't have a simple closed-form expression
+    # for the answer, but can check a few invariants.
+    az = 0.1
+    xyz = ant.range_az_to_xyz(r, az, radar_xyz, q_ant2ecef, dem, el_min, el_max)
+
+    # Range is correct
+    npt.assert_allclose(r, np.linalg.norm(xyz - radar_xyz))
+    # +AZ points forward when left-looking
+    npt.assert_(xyz[2] > 0)

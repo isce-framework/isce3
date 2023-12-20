@@ -1,4 +1,5 @@
 #include "Backproject.h"
+#include "pybind_isce3/focus/Backproject.h"  // parse parameter dicts
 
 #include <isce3/container/RadarGeometry.h>
 #include <isce3/core/Kernels.h>
@@ -80,27 +81,8 @@ void addbinding_cuda_backproject(py::module& m)
 
             DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
 
-            Rdr2GeoParams r2gparams;
-            if (rdr2geo_params.contains("threshold")) {
-                r2gparams.threshold = py::float_(rdr2geo_params["threshold"]);
-            }
-            if (rdr2geo_params.contains("maxiter")) {
-                r2gparams.maxiter = py::int_(rdr2geo_params["maxiter"]);
-            }
-            if (rdr2geo_params.contains("extraiter")) {
-                r2gparams.extraiter = py::int_(rdr2geo_params["extraiter"]);
-            }
-
-            Geo2RdrParams g2rparams;
-            if (geo2rdr_params.contains("threshold")) {
-                g2rparams.threshold = py::float_(geo2rdr_params["threshold"]);
-            }
-            if (geo2rdr_params.contains("maxiter")) {
-                g2rparams.maxiter = py::int_(geo2rdr_params["maxiter"]);
-            }
-            if (geo2rdr_params.contains("dr")) {
-                g2rparams.delta_range = py::float_(geo2rdr_params["dr"]);
-            }
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+            const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
 
             if (batch < 1) {
                 throw DomainError(ISCE_SRCINFO(), "batch size must be > 0");

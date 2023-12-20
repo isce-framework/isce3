@@ -103,7 +103,8 @@ CUDA_HOSTDEV isce3::error::ErrorCode find_zero_brent(
     // However maybe we should defend against weird cases like non-deterministic
     // functions.  If so, we may as well also limit effort to the practical
     // limit 3*N since further iterations are inefficient.
-    const int maxiter = 3 * count_bisection_steps(a, b, tol);
+    tol1 = tol > T(0) ? tol : epsilon<T>;
+    const int maxiter = 3 * count_bisection_steps(a, b, tol1);
     for (int i = 0; i < maxiter; ++i) {
         // Sort so that b is always the best guess based on the heuristic that
         // the point closer to the x-axis is the better guess.
