@@ -706,8 +706,8 @@ class InSARBaseWriter(h5py.File):
         orbit_time = dst_metadata_group["orbit"]["time"]
         orbit_time.attrs['description'] = \
             np.string_("Time vector record. This record contains"
-                       " the time corresponding to position,"
-                       " velocity, acceleration records"
+                       " the time corresponding to position and"
+                       " velocity records"
                        )
 
         orbit_time_units = orbit_time.attrs['units']
@@ -718,9 +718,6 @@ class InSARBaseWriter(h5py.File):
         # Orbit velocity
         dst_metadata_group["orbit"]["velocity"].attrs["units"] = \
             np.string_("meters / second")
-        # Orbit acceleration
-        dst_metadata_group["orbit"]["acceleration"].attrs["units"] = \
-            np.string_("meters / second ^ 2")
 
     def add_identification_to_hdf5(self):
         """
