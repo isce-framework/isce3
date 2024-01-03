@@ -81,7 +81,7 @@ def compute_troposphere_delay(cfg: dict, gunw_hdf5: str):
         height_radar_grid = h5_obj[f'{rdr_grid_path}/heightAboveEllipsoid'][()]
 
         # EPSG code
-        epsg = int(h5_obj[f'{rdr_grid_path}/epsg'][()])
+        epsg = int(h5_obj[f'{rdr_grid_path}/projection'].attrs['epsg_code'])
 
         # Wavelenth in meters
         wavelength = isce3.core.speed_of_light / \
@@ -429,4 +429,3 @@ if __name__ == "__main__":
     tropo_runcfg = InsarTroposphereRunConfig(args)
     _, out_paths = h5_prep.get_products_and_paths(tropo_runcfg.cfg)
     run(tropo_runcfg.cfg, gunw_hdf5 = out_paths['GUNW'])
-

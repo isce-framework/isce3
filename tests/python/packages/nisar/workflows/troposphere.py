@@ -97,7 +97,8 @@ def test_troposphere_aps_run():
         with h5py.File(gunw_hdf5, 'r') as hdf:
 
             # EPSG Code
-            epsg = int(hdf[f'{gunw_obj.RadarGridPath}/epsg'][()])
+            epsg = \
+                int(hdf[f'{gunw_obj.RadarGridPath}/projection'].attrs['epsg_code'])
 
             # Incidence Angle Datacube
             inc_angle_datacube = \
