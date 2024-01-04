@@ -363,7 +363,7 @@ class BaseWriterSingleInput():
 
         self.set_value(
             'identification/productSpecificationVersion',
-            '0.9.0')
+            '1.1.0')
 
         self.copy_from_input(
             'identification/lookDirection',

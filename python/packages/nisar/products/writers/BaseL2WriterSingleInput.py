@@ -273,7 +273,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             for frequency, pol_list in self.freq_pols_dict.items():
 
                 # The path below is only valid for RSLC products
-                # v0.9.0 or above
+                # with product specification version 1.1.0 or above
                 success = self.geocode_lut(
                     '{PRODUCT}/metadata/calibrationInformation/'
                     f'frequency{frequency}/{lut}',
@@ -287,7 +287,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             if success:
                 continue
 
-            # The code below handles RSLC products before v0.9.0
+            # The code below handles RSLC products with
+            # product specification version prior to 1.1.0
             for frequency, pol_list in self.freq_pols_dict.items():
                 for pol in pol_list:
 
@@ -315,8 +316,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 ' the orbit data from the RSLC will be copied from the'
                 ' input RSLC.')
 
-        # RSLC products before v0.9.0 may include "acceleration",
-        # that should not be copied to L2 products
+        # RSLC products with product specification version prior to v1.1.0 may
+        # include the H5 group "acceleration", that should not be copied to L2
+        # products
         excludes_list = ['acceleration']
 
         # copy orbit information group
@@ -324,8 +326,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                     excludes=excludes_list)
 
     def populate_attitude(self):
-        # RSLC products before v0.9.0 may include "angularVelocity".
-        # that should not be copied to L2 products
+        # RSLC products with product specification version prior to v1.1.0 may
+        # include the H5 group "angularVelocity", that should not be copied to
+        # L2 products
         excludes_list = ['angularVelocity']
 
         # copy attitude information group
