@@ -228,14 +228,14 @@ def target2platform_unit_vector(
         An optional dict of parameters configuring the behavior of the root-finding
         routine used in geo2rdr. The following keys are supported:
 
-        'threshold':
-          The absolute azimuth time convergence tolerance, in seconds.
+        'tol_aztime':
+          Azimuth time convergence tolerance in seconds.
 
-        'maxiter':
-          The maximum number of Newton-Raphson iterations.
+        'time_start':
+          Start of search interval, in seconds. Defaults to ``orbit.start_time``.
 
-        'delta_range':
-          The step size for computing numerical gradient of Doppler, in meters.
+        'time_end':
+          End of search interval, in seconds. Defaults to ``orbit.end_time``.
 
     Returns
     -------
@@ -246,20 +246,25 @@ def target2platform_unit_vector(
     # Convert LLH object to an array containing [lon, lat, height].
     target_llh = target_llh.to_vec3()
 
+    # Get target (x,y,z) position in ECEF coordinates.
+    target_xyz = ellipsoid.lon_lat_to_xyz(target_llh)
+
     if geo2rdr_params is None:
         geo2rdr_params = {}
 
     # Run geo2rdr to get the target azimuth time coordinate in seconds since the orbit
     # epoch.
-    aztime, _ = isce3.geometry.geo2rdr(
-        target_llh, ellipsoid, orbit, doppler, wavelength, look_side, **geo2rdr_params,
+    aztime, _ = isce3.geometry.geo2rdr_bracket(
+        xyz=target_xyz,
+        orbit=orbit,
+        doppler=doppler,
+        wavelength=wavelength,
+        side=look_side,
+        **geo2rdr_params,
     )
 
     # Get platform (x,y,z) position in ECEF coordinates.
     platform_xyz, _ = orbit.interpolate(aztime)
-
-    # Get target (x,y,z) position in ECEF coordinates.
-    target_xyz = ellipsoid.lon_lat_to_xyz(target_llh)
 
     return normalize_vector(platform_xyz - target_xyz)
 
@@ -296,14 +301,14 @@ def predict_triangular_trihedral_cr_rcs(
         An optional dict of parameters configuring the behavior of the root-finding
         routine used in geo2rdr. The following keys are supported:
 
-        'threshold':
-          The absolute azimuth time convergence tolerance, in seconds.
+        'tol_aztime':
+          Azimuth time convergence tolerance in seconds.
 
-        'maxiter':
-          The maximum number of Newton-Raphson iterations.
+        'time_start':
+          Start of search interval, in seconds. Defaults to ``orbit.start_time``.
 
-        'delta_range':
-          The step size for computing numerical gradient of Doppler, in meters.
+        'time_end':
+          End of search interval, in seconds. Defaults to ``orbit.end_time``.
 
     Returns
     -------
@@ -386,14 +391,14 @@ def get_target_observation_time_and_elevation(
         An optional dict of parameters configuring the behavior of the root-finding
         routine used in geo2rdr. The following keys are supported:
 
-        'threshold':
-          The absolute azimuth time convergence tolerance, in seconds.
+        'tol_aztime':
+          Azimuth time convergence tolerance in seconds.
 
-        'maxiter':
-          The maximum number of Newton-Raphson iterations.
+        'time_start':
+          Start of search interval, in seconds. Defaults to ``orbit.start_time``.
 
-        'delta_range':
-          The step size for computing numerical gradient of Doppler, in meters.
+        'time_end':
+          End of search interval, in seconds. Defaults to ``orbit.end_time``.
 
     Returns
     -------
@@ -407,6 +412,9 @@ def get_target_observation_time_and_elevation(
     # Convert LLH object to an array containing [lon, lat, height].
     target_llh = target_llh.to_vec3()
 
+    # Get target (x,y,z) position in ECEF coordinates.
+    target_xyz = ellipsoid.lon_lat_to_xyz(target_llh)
+
     if geo2rdr_params is None:
         geo2rdr_params = {}
 
@@ -414,13 +422,12 @@ def get_target_observation_time_and_elevation(
 
     # Run geo2rdr to get the target azimuth time coordinate, in seconds since the orbit
     # epoch.
-    aztime, _ = isce3.geometry.geo2rdr(
-        target_llh,
-        ellipsoid,
-        orbit,
-        zero_doppler,
-        wavelength,
-        look_side,
+    aztime, _ = isce3.geometry.geo2rdr_bracket(
+        xyz=target_xyz,
+        orbit=orbit,
+        doppler=zero_doppler,
+        wavelength=wavelength,
+        side=look_side,
         **geo2rdr_params,
     )
 
