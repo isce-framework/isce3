@@ -208,14 +208,15 @@ def get_radar_grid_coords(llh_deg, slc, freq_group):
 
     if radargrid.ref_epoch != orbit.reference_epoch:
         raise ValueError('Reference epoch of radar grid and orbit are different!')
+
+    xyz = ellipsoid.lon_lat_to_xyz(llh)
         
-    aztime, slant_range = isce3.geometry.geo2rdr(
-        llh,
-        ellipsoid,
-        orbit,
-        doppler,
-        radargrid.wavelength,
-        radargrid.lookside,
+    aztime, slant_range = isce3.geometry.geo2rdr_bracket(
+        xyz=xyz,
+        orbit=orbit,
+        doppler=doppler,
+        wavelength=radargrid.wavelength,
+        side=radargrid.lookside,
     )
 
     line = (aztime - radargrid.sensing_start) * radargrid.prf
