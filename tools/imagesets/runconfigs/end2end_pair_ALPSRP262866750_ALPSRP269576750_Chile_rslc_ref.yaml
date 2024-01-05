@@ -83,8 +83,8 @@ runconfig:
             gpu_id: 0
         processing:
             output_grid:
-                start_time: 2010-12-31T03:31:26.173960
-                end_time: 2010-12-31T03:31:42.573617
+                start_time: 2010-12-31T03:31:27.525
+                end_time: 2010-12-31T03:31:40.999
                 start_range:
                 end_range:
                 output_prf: 1520
