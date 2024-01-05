@@ -45,6 +45,9 @@ def test_point_target_analysis(kwargs):
         f'Azimuth bin offset {azimuth_offset} is larger than expected.')
 
 
+# Treat warnings as test failures (internally, the PTA tool catches errors during
+# processing of each corner reflector and converts them into warnings).
+@pytest.mark.filterwarnings("error")
 def test_nisar_csv():
     datadir = Path(iscetest.data) / "abscal"
     cr_csv = datadir / "ree_corner_reflectors_nisar.csv"

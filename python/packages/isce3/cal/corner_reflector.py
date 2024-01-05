@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
+import shapely
 from numpy.typing import ArrayLike
 
 import isce3
@@ -449,3 +450,70 @@ def get_target_observation_time_and_elevation(
     )
 
     return az_datetime, el_angle
+
+
+def get_crs_in_polygon(
+    crs: Iterable[TriangularTrihedralCornerReflector],
+    polygon: shapely.Polygon,
+    buffer: float | None = None,
+) -> Iterator[TriangularTrihedralCornerReflector]:
+    """
+    Filter out corner reflectors located outside of a Lon/Lat polygon.
+
+    For each input corner reflector, check whether it is contained within `polygon`. An
+    optional buffer may be added to the polygon in order accept corner reflectors
+    slightly outside its extents.
+
+    Returns an iterator over corner reflectors found within the polygon. The relative
+    order of the corner reflectors is preserved.
+
+    Parameters
+    ----------
+    crs : iterable of TriangularTrihedralCornerReflector
+        Input iterable of corner reflector data.
+    polygon : shapely.Polygon
+        A convex polygon, in geodetic Lon/Lat coordinates w.r.t the WGS 84 ellipsoid,
+        enclosing the area of interest. Longitude (x) coordinates should be specified in
+        degrees in the range [-180, 180]. Latitude (y) coordinates should be specified
+        in degrees in the range [-90, 90].
+    buffer : float or None, optional
+        An optional additional margin that extends the region of interest. Corner
+        reflectors located within the buffer region are considered to be contained
+        within the polygon. The units of `buffer` should be the same as `polygon`. Must
+        be >= 0. If None, no buffer is applied. Defaults to None.
+
+    Yields
+    ------
+    cr : TriangularTrihedralCornerReflector
+        A corner reflector from the input iterable that was contained within the
+        polygon.
+
+    Notes
+    -----
+    This function uses a point-in-polygon algorithm that assumes a Euclidean geometry.
+    The results may therefore be inaccurate due to the curvature of the reference
+    surface if the polygon points are spaced far apart, or if the points lie around a
+    discontinuity in the coordinate space (such as the antimeridian or poles).
+    """
+    # If additional buffer was requested, dilate the polygon by the specified margin,
+    # which must be nonnegative.
+    if buffer is not None:
+        if buffer < 0:
+            raise ValueError(f"buffer must be >= 0 (or None), got {buffer}")
+        polygon = polygon.buffer(buffer)
+
+    # Wraps the input angle (in radians) to the interval [-pi, pi).
+    def wrap(phase: float) -> float:
+        return (phase + np.pi) % (2.0 * np.pi) - np.pi
+
+    # Filter out corner reflectors not contained within the specified polygon.
+    for cr in crs:
+        # Get corner reflector lon/lat coordinates in radians, wrap the longitude
+        # coordinate to the expected interval, and convert to degrees.
+        lon, lat, _ = cr.llh.to_vec3()
+        lon_lat_deg = np.rad2deg([wrap(lon), lat])
+
+        # Check whether the corner reflector is in the polygon.
+        point = shapely.Point(lon_lat_deg)
+        if polygon.contains(point):
+            yield cr
