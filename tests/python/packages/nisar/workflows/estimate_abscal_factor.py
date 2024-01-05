@@ -233,6 +233,9 @@ def test_estimate_abscal_factor(bandwidth):
     assert all(d["polarization"] == pol for d in abscal_info)
 
 
+# Treat warnings as test failures (internally, the AbsCal tool catches errors during
+# processing of each corner reflector and converts them into warnings).
+@pytest.mark.filterwarnings("error")
 def test_nisar_corner_reflector_csv():
     datadir = Path(iscetest.data) / "abscal"
     cr_csv = datadir / "ree_corner_reflectors_nisar.csv"

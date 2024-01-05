@@ -10,6 +10,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, Union
 
+import shapely
+
 import nisar
 from nisar.cal import CRValidity
 
@@ -868,6 +870,10 @@ def process_corner_reflector_csv(
     corner_reflectors = nisar.cal.filter_crs_per_az_heading(
         corner_reflectors, az_heading=approx_cr_heading
     )
+
+    # Filter out CRs outside the RSLC bounding polygon.
+    polygon = shapely.from_wkt(rslc.identification.boundingPolygon)
+    corner_reflectors = isce3.cal.get_crs_in_polygon(corner_reflectors, polygon)
 
     # Analyze point targets.
     results = analyze_corner_reflectors(

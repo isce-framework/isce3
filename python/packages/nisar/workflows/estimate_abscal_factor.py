@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
-import numpy as np
+import shapely
 
 import isce3
 import nisar
@@ -502,6 +502,10 @@ def main(
     corner_reflectors = nisar.cal.filter_crs_per_az_heading(
         corner_reflectors, az_heading=approx_cr_heading
     )
+
+    # Filter out CRs outside the RSLC bounding polygon.
+    polygon = shapely.from_wkt(rslc.identification.boundingPolygon)
+    corner_reflectors = isce3.cal.get_crs_in_polygon(corner_reflectors, polygon)
 
     # Parse external orbit XML file, if applicable.
     if external_orbit_xml is None:
