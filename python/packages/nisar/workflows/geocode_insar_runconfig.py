@@ -48,12 +48,6 @@ def geocode_insar_cfg_check(cfg):
             if dataset not in cfg['processing']['geocode'][dataset_group]:
                 cfg['processing']['geocode'][dataset_group][dataset] = True
 
-    # check the interpolation method for GPU
-    if cfg['worker']['gpu_enabled']:
-        igram_interp_method =  cfg['processing']['geocode']\
-                ['wrapped_interferogram']['interp_method']
-
-
 class GeocodeInsarRunConfig(RunConfig):
     def __init__(self, args):
         # all insar submodules share a commmon `insar` schema
