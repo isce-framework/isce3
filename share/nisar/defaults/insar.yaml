@@ -149,7 +149,7 @@ runconfig:
                 # ISCE3 output rasters always have North-up West-left orientation
                 wrapped_interferogram:
                     # Default interpolation method is SINC method
-                    interp_method: BILINEAR
+                    interp_method: SINC
                     # OPTIONAL - To control output grid in same units as output EPSG
                     x_snap:
                     # OPTIONAL - To control output grid in same units as output EPSG
