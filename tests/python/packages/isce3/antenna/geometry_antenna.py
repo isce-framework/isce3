@@ -2,7 +2,9 @@ import os
 import numpy as np
 import numpy.testing as npt
 
-from isce3.antenna import geo2ant, rdr2ant
+from isce3.antenna import (geo2ant, rdr2ant, sphere_range_az_to_xyz,
+    get_approx_el_bounds, range_az_to_xyz)
+from isce3.core import Ellipsoid, Quaternion
 from isce3.geometry import DEMInterpolator, rdr2geo
 from nisar.products.readers.SLC import SLC
 from isce3.core.types import ComplexFloat16Decoder
@@ -70,3 +72,71 @@ class TestGeometryAntenna:
         quat = self.attitude.interpolate(self.tg_azt)
         el_az = geo2ant(tg_llh, pos, quat)
         self._validate(el_az)
+
+
+# Copied from unit test for rangeAzToXYZ
+def test_sphere_range_az_to_xyz():
+    # Configuration for flying north at (lat, lon) = (0, 0):
+    # Y-axis points north,  Z-axis (boresight) points down.
+    # X=cross(Y,Z) must point west.
+    # Also rotate boresight 20 deg off nadir to imply a look side.
+    q_ant2ecef = Quaternion(np.array([
+        [0, 0, -1],
+        [-1, 0, 0],
+        [0, 1, 0]
+    ])) * Quaternion(np.deg2rad(20), [0, 1, 0])
+    # Looking along the equator (AZ=0), the Earth's radius of curvature is just
+    # the semimajor axis.
+    az = 0.0
+    ellipsoid = Ellipsoid()
+    a = ellipsoid.a
+    # Height of platform and terrain.
+    hp = 700e3
+    ht = 0.0
+    radar_xyz = np.array([a + hp, 0, 0])
+    dem = DEMInterpolator(ht)
+    # Pick some range > (hp - ht)
+    r = 900e3
+    # Expected solution from law of cosines (negative for left-looking)
+    lon = np.arccos(((a + ht)**2 + (a + hp)**2 - r**2) /
+                    (2 * (a + ht) * (a + hp)))
+    expected_xyz = ellipsoid.lon_lat_to_xyz([-lon, 0, ht])
+
+    xyz = sphere_range_az_to_xyz(r, az, radar_xyz, q_ant2ecef, a)
+
+    npt.assert_allclose(xyz, expected_xyz)
+
+    # Try another case with AZ != 0.  Don't have a simple closed-form expression
+    # for the answer, but can check a few invariants.
+    az = 0.1
+    xyz = sphere_range_az_to_xyz(r, az, radar_xyz, q_ant2ecef, a)
+
+    # Range is correct
+    npt.assert_allclose(r, np.linalg.norm(xyz - radar_xyz))
+    # +AZ points forward when left-looking
+    npt.assert_(xyz[2] > 0)
+
+
+def test_el_bounds():
+    # These values come from an ALOS test case (ALPSRP144730690-L1.0) where
+    # the boresight is 21.5 deg off nadir and the default EL search bounds of
+    # [-45, 45] degrees are invalid because both ends of that arc are above the
+    # surface of the Earth.
+    r = 743588.0
+    az = 0.0
+    radar_xyz = np.array([-3015237.24427643, -5058067.5932234, 3913125.89004813])
+    rcs2xyz = np.array([
+        [ 0.68178977, -0.08206779,  0.72693025],
+        [-0.6264125 , -0.57873936,  0.52217634],
+        [ 0.37784929, -0.81137268, -0.44598687]])
+    q = Quaternion(rcs2xyz)
+    dem = DEMInterpolator()
+
+    el_min, el_max = get_approx_el_bounds(r, az, radar_xyz, q, dem)
+
+    # verify we have a smaller interval that doesn't cross nadir
+    npt.assert_(np.rad2deg(el_min) > -21.5)
+    npt.assert_(np.rad2deg(el_max) < 45.0)
+
+    # make sure these EL bonds are valid for range_az_to_xyz (it doesn't crash)
+    range_az_to_xyz(r, az, radar_xyz, q, dem, el_min=el_min, el_max=el_max)
