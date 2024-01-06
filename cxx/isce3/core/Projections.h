@@ -36,7 +36,7 @@ public:
      * initialized to standard WGS84 ellipse.
      */
     ProjectionBase(int code)
-        : _ellipse(6378137., .0066943799901), _epsgcode(code)
+        : _ellipse(), _epsgcode(code)
     {}
 
     /** Return EPSG code */
