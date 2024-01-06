@@ -40,6 +40,7 @@ runconfig:
 
         # ADT section - isce3 + pyre workflow
         processing:
+            process_single_co_pol_offset: False
             input_subset:
                 # Frequencies and polarisations to be processed
                 list_of_frequencies:
