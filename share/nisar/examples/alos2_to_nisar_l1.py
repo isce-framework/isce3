@@ -59,7 +59,7 @@ def parse_args():
     parser.add_argument('-o', '--outh5', dest='outh5', type=str,
                         help="Name of output file. If not provided, will be determined from ALOS-2 granule")
 
-    parser_template = parser.add_mutually_exclusive_group() 
+    parser_template = parser.add_mutually_exclusive_group()
     parser_template.add_argument('-t'
                                  '--template',
                                  dest='template_file',
@@ -127,7 +127,7 @@ def process(args=None):
         copyfile(args.template_file, args.outh5)
     elif args.flag_use_template is not False:
         script_dir = os.path.dirname(__file__)
-        template_file = os.path.join(script_dir, '..', 'templates', 
+        template_file = os.path.join(script_dir, '..', 'templates',
                                      'L1_SingleLookComplex.h5')
         copyfile(template_file, args.outh5)
 
@@ -142,7 +142,7 @@ def process(args=None):
         pol_upper = pol.upper()
         if pol_upper not in filenames:
             continue
-        add_imagery(args, leader, filenames[pol_upper], pol_upper, orbit, metadata, 
+        add_imagery(args, leader, filenames[pol_upper], pol_upper, orbit, metadata,
                     flag_first_image=count==0)
         pol_list.append(pol_upper)
 
@@ -254,7 +254,7 @@ def construct_nisar_hdf5(outh5, ldr):
 
     return orbit
 
-def add_imagery(args, ldr, imgfile, pol, orbit, metadata, 
+def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
                 flag_first_image):
     '''
     Populate swaths segment of HDF5 file.
@@ -274,7 +274,7 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
     # set range-grid parameters
     fsamp = ldr.summary.SamplingRateInMHz * 1.0e6
     r0 = firstrec.SlantRangeToFirstSampleInm
-    dr = SPEED_OF_LIGHT / (2 * fsamp)    
+    dr = SPEED_OF_LIGHT / (2 * fsamp)
     da = ldr.summary.LineSpacingInm
     bytesperpixel = (image.description.NumberOfBytesPerDataGroup //
                      image.description.NumberOfSamplesPerDataGroup)
@@ -288,8 +288,8 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
 
     if verbose:
         print('absolute radiometric correction (DN to sigma-naught)')
-        print('    calibration factor [dB]:', calibration_factor_db) 
-        print('    calibration factor [linear]:', calibration_factor) 
+        print('    calibration factor [dB]:', calibration_factor_db)
+        print('    calibration factor [linear]:', calibration_factor)
 
     # If this is first pol being written, add common information as well
     if flag_first_image:
@@ -306,18 +306,18 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
         prf = firstrec.PRFInmHz * 1.0e-3
         freq_group.create_dataset('nominalAcquisitionPRF', data=prf)
 
-        assert(ldr.summary.SensorIDAndMode[7] == 'R' or 
+        assert(ldr.summary.SensorIDAndMode[7] == 'R' or
                ldr.summary.SensorIDAndMode[7] == 'L')
- 
+
         metadata['Center Wavelength'] = wavelength
-        metadata['Bandwidth'] = bandwidth 
+        metadata['Bandwidth'] = bandwidth
         metadata['Average Pulse Repetition Interval'] = 1.0 / prf
         metadata['Azimuth Spacing per Bin'] = da
         metadata['Effective Velocity'] = da * prf
         if ldr.summary.SensorIDAndMode[7] == 'L' and False:
             lookside = 'left'
         else:
-            lookside = 'right' 
+            lookside = 'right'
         metadata['Look Direction'] = lookside.upper()
 
         if verbose:
@@ -352,17 +352,18 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
         azfmrate_coeff = [ldr.summary.CrossTrackDopplerRateConstantTermInHzPerSec,
                           ldr.summary.CrossTrackDopplerRateLinearTermInHzPerSecPerPixel,
                           ldr.summary.CrossTrackDopplerRateQuadraticTermInHzPerSecPerPixel2]
-        
+
         metadata['Azimuth FM rate'] = azfmrate_coeff
         if verbose:
             print('    azimuth FM rate coeffs:', azfmrate_coeff)
- 
+
         sensing_start = (datetime.datetime(firstrec.SensorAcquisitionYear, 1, 1) +
                   datetime.timedelta(days=int(firstrec.SensorAcquisitionDayOfYear-1),
                                      seconds=firstrec.SensorAcquisitionusecsOfDay*1e-6))
 
         freq_group.create_dataset('numberOfSubSwaths', data=1)
-        freq_group.create_dataset('validSamplesSubSwath1', dtype='i8', shape=(length, 2))
+        freq_group.create_dataset('validSamplesSubSwath1', dtype='i8',
+                                  data=np.tile([0, width], (length, 1)))
 
         metadata['Mission'] = 'ALOS'
         metadata['Image Starting Range'] = r0
@@ -437,7 +438,7 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
             ldr.summary.SceneCenterIncidenceAngle
 
         ref_epoch = DateTime(ref_epoch)
-        timedelta_start = (DateTime(sensing_start) - 
+        timedelta_start = (DateTime(sensing_start) -
                            ref_epoch).total_seconds()
         radar_grid = RadarGridParameters(timedelta_start,
                                          wavelength,
@@ -448,10 +449,10 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
                                          length,
                                          width,
                                          ref_epoch)
-        metadata['Radar Grid'] = radar_grid 
+        metadata['Radar Grid'] = radar_grid
 
 
-def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A', 
+def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A',
                   az_pad=10.0):
     """
     Generate a Level-1 NISAR format HDF5 product.
@@ -517,7 +518,7 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
     inc = np.radians(metadata['Scene Center Incidence Angle'])
 
     group['sceneCenterGroundRangeSpacing'] = metadata['Range Spacing per Bin'] / np.sin(inc)
-    
+
     # Bandwidth data
     group['acquiredRangeBandwidth'] = metadata['Bandwidth']
     group['processedRangeBandwidth'] = metadata['Bandwidth']
@@ -536,7 +537,7 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
     if 'Azimuth Spacing per Bin' in metadata.keys():
         azres = metadata['Azimuth Spacing per Bin']
         group['processedAzimuthBandwidth'] = metadata['Effective Velocity'] / (2.0 * azres)
-       
+
     elif 'Antenna Length' in metadata.keys():
         azres = 0.6 * metadata['Antenna Length']
         group['processedAzimuthBandwidth'] = metadata['Effective Velocity'] / (2.0 * azres)
@@ -548,7 +549,7 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
         ref_epoch = metadata['ref_epoch']
         t0 = (metadata['Start Time of Acquisition'] - ref_epoch).total_seconds()
         t = t0 + pri * np.arange(metadata['SLC length'])
-        if 'zeroDopplerTime' in group: 
+        if 'zeroDopplerTime' in group:
             desc = group['zeroDopplerTime'].attrs['description']
             del group['zeroDopplerTime']
         else:
@@ -567,12 +568,13 @@ def construct_calibration_grid(metadata, sensor_name, orbit, az_pad=10.0):
     altitudes.
     """
     # Set calibration grid spacing
-    rspacing = 25.0
+    rspacing = metadata['Range Spacing per Bin']
     aspacing = 0.25
 
-    # Set slant-range bounds
-    R0 = 845000.0
-    R1 = 895000.0
+    # Set slant-range bounds. Extend range stop beyond SLC width to ensure
+    # SLC fully contained within calibration grid.
+    r_start = metadata['Image Starting Range']
+    r_stop = r_start + (metadata['SLC width'] + 1) * rspacing
 
     # Get azimuth time bounds of the scene
     a0 = metadata['Start Time of Acquisition']
@@ -591,7 +593,7 @@ def construct_calibration_grid(metadata, sensor_name, orbit, az_pad=10.0):
     a1 = round((a1 - ref_epoch).total_seconds() + az_pad)
 
     # Construct grids and update metadata dictionary
-    rgrid = np.arange(R0, R1, rspacing)
+    rgrid = np.arange(r_start, r_stop, rspacing)
     agrid = np.arange(a0, a1, aspacing)
     metadata['calibration_range_grid'] = rgrid
     metadata['calibration_azimuth_grid'] = agrid
@@ -603,13 +605,13 @@ def update_identification(fid, orbit, metadata, min_height=-500.,
     Updates the science/LSAR/identification group.
     """
     group = fid['science/LSAR/identification']
- 
+
     # Zero doppler times
     start = metadata['Start Time of Acquisition']
     stop = metadata['Stop Time of Acquisition']
     group['zeroDopplerStartTime'] = np.string_(start.isoformat())
-    group['zeroDopplerEndTime'] = np.string_(stop.isoformat()) 
-  
+    group['zeroDopplerEndTime'] = np.string_(stop.isoformat())
+
     # Look direction
     group['lookDirection'] = np.string_(metadata['Look Direction'].lower())
 
@@ -640,7 +642,7 @@ def update_identification(fid, orbit, metadata, min_height=-500.,
         'OGR compatible WKT representation of bounding polygon of the image')
 
 
-def update_doppler(fid, metadata, frequency):  # time, position, velocity, 
+def update_doppler(fid, metadata, frequency):  # time, position, velocity,
     """
     Update HDF5 file for Doppler, FM rate, and effective velocity.
     """
@@ -658,9 +660,9 @@ def update_doppler(fid, metadata, frequency):  # time, position, velocity,
         dgroup = pgroup[frequency_str]
 
     # Delete prior datasets
-    if 'dopplerCentroid' in dgroup: 
+    if 'dopplerCentroid' in dgroup:
         del dgroup['dopplerCentroid']
-    if 'azimuthFMRate' in dgroup: 
+    if 'azimuthFMRate' in dgroup:
         del dgroup['azimuthFMRate']
 
     # If frequency A, clear old slant range and azimuth time datasets
@@ -702,7 +704,7 @@ def update_doppler(fid, metadata, frequency):  # time, position, velocity,
         '2D LUT of Doppler Centroid for Frequency ' + frequency)
     dgroup['dopplerCentroid'].attrs['units'] = np.string_('Hz')
 
-  
+
 if __name__ == "__main__":
     '''
     Main driver.
