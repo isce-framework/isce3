@@ -91,7 +91,7 @@ def check_dateline(poly):
         # DEM longitude range
         for polygon_count in range(2):
             x, y = polys[polygon_count].exterior.coords.xy
-            if not any([k > 180 for k in x]):
+            if not any(k > 180 for k in x):
                 continue
 
             # Otherwise, wrap longitude values down to 360 deg
@@ -183,9 +183,9 @@ def get_geo_polygon(ref_slc, min_height=-500.,
     poly: shapely.Geometry.Polygon
         Bounding polygon corresponding to RSLC perimeter on the ground
     """
-    from isce3.core import LUT2d
-    from isce3.geometry import DEMInterpolator, get_geo_perimeter_wkt
-    from nisar.products.readers import SLC
+    from isce3.core import LUT2d  # pylint: disable=import-error
+    from isce3.geometry import DEMInterpolator, get_geo_perimeter_wkt  # pylint: disable=import-error
+    from nisar.products.readers import SLC  # pylint: disable=import-error
 
     # Prepare SLC dataset input
     productSlc = SLC(hdf5file=ref_slc)
@@ -292,9 +292,8 @@ def translate_dem(vrt_filename, outpath, x_min, x_max, y_min, y_max):
 
     # Declare lambda function to snap min/max X and Y
     # coordinates over the DEM grid
-    snap_coord = \
-        lambda val, snap, offset, round_func: round_func(
-            float(val - offset) / snap) * snap + offset
+    snap_coord = lambda val, snap, offset, round_func: round_func(  # noqa: E731
+        float(val - offset) / snap) * snap + offset
 
     # Snap edge coordinates using the DEM pixel spacing
     # and starting coordinates. Max values are rounded
@@ -360,7 +359,7 @@ def download_dem(polys, epsgs, outfile, version):
         translate_dem(vrt_filename, outpath, xmin, xmax, ymin, ymax)
 
     # Get the DEM description from the README.txt file using GDAL
-    in_readme_path = vrt_filename.replace(f'EPSG{epsg}.vrt', 'README.txt')
+    in_readme_path = vrt_filename.replace(f'EPSG{epsg}.vrt', 'README.txt')  # pylint: disable=undefined-loop-variable
     dem_descr = extract_dem_description(in_readme_path)
 
     # Build vrt with downloaded DEMs and add dem_descr in metadata
@@ -419,7 +418,7 @@ def transform_polygon_coords(polys, epsgs):
     """
 
     # Assert validity of inputs
-    assert(len(polys) == len(epsgs))
+    assert len(polys) == len(epsgs)
 
     # Transform each point of the perimeter in target EPSG coordinates
     llh = osr.SpatialReference()
@@ -465,7 +464,7 @@ def check_dem_overlap(DEMFilepath, polys):
         Area (in percentage) covered by the intersection between the
         user-provided dem and the one downloadable by stage_dem.py
     """
-    from isce3.io import Raster
+    from isce3.io import Raster  # pylint: disable=import-error
 
     # Get local DEM edge coordinates
     DEM = Raster(DEMFilepath)
@@ -571,9 +570,11 @@ def margin_km_to_longitude_deg(margin_in_km, lat=0):
     delta_lon: np.float
         Longitude margin as a result of the conversion
     '''
-    delta_lon = (180 * 1000 * margin_in_km /
-                (np.pi * EARTH_RADIUS * np.cos(np.pi * lat / 180)))
+    delta_lon = (
+        180 * 1000 * margin_in_km / (np.pi * EARTH_RADIUS * np.cos(np.pi * lat / 180))
+    )
     return delta_lon
+
 
 def main(opts):
     """Main script to execute dem staging
@@ -623,7 +624,7 @@ def main(opts):
         # Download DEM
         download_dem(polys, epsg, opts.outfile, opts.version)
         print('Done, DEM store locally')
-        
+
 
 if __name__ == '__main__':
     opts = cmdLineParse()
