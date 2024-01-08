@@ -101,7 +101,7 @@ runconfig:
                 lines_per_tile: 1000
 
             dense_offsets:
-                enabled: True
+                enabled: False
 
             offsets_product:
                 enabled: True
