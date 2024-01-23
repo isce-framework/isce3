@@ -1,9 +1,7 @@
-'''Utils for resample_slc tests'''
+"""Utils for resample_slc tests"""
 from __future__ import annotations
 
 import numpy as np
-from pytest import fixture
-from typing import Tuple
 
 from isce3.core import LUT2d
 from isce3.product import RadarGridParameters
@@ -14,8 +12,10 @@ def correlation(
     b: np.ndarray,
 ) -> float:
     """Compute the similarity of two (possibly complex) signals."""
+
     def cdot(x, y):
         return np.nansum(x * y.conj())
+
     return np.abs(cdot(a, b) / np.sqrt(cdot(a, a) * cdot(b, b)))
 
 
@@ -30,7 +30,7 @@ def phase_std_dev(
 
 def nan_complex() -> np.complex64:
     """Return a complex value NaN + Nan*j."""
-    return np.nan + 1.j * np.nan
+    return np.nan + 1.0j * np.nan
 
 
 def validate_test_results(
@@ -42,7 +42,7 @@ def validate_test_results(
     buffer_size_az: int = 5,
     buffer_size_rg: int = 5,
     az_offset: int = 0,
-    rg_offset: int = 0
+    rg_offset: int = 0,
 ):
     """
     Perform a set of tests to determine if a test result satisfies tolerances.
@@ -83,18 +83,14 @@ def validate_test_results(
     # values due to the small field of NaNs at the edges of images that appear due to
     # processing.
     az_buffer = buffer_size_az + int(max(az_offset, 0))
-    az_slice = np.s_[az_buffer:az_length-az_buffer]
     rg_buffer = buffer_size_rg + int(max(rg_offset, 0))
-    rg_slice = np.s_[rg_buffer:rg_width-rg_buffer]
-    #buffered_test = test_arr[az_slice, rg_slice]
-    #buffered_true = true_arr[az_slice, rg_slice]
+    # buffered_test = test_arr[az_slice, rg_slice]
+    # buffered_true = true_arr[az_slice, rg_slice]
     buffered_test = test_arr[
-        az_buffer:az_length-az_buffer,
-        rg_buffer:rg_width-rg_buffer
+        az_buffer : az_length - az_buffer, rg_buffer : rg_width - rg_buffer
     ]
     buffered_true = true_arr[
-        az_buffer:az_length-az_buffer,
-        rg_buffer:rg_width-rg_buffer
+        az_buffer : az_length - az_buffer, rg_buffer : rg_width - rg_buffer
     ]
 
     # Determine the correlation between the buffered testing and ground truth
@@ -116,15 +112,34 @@ def validate_test_results(
     nans = np.count_nonzero(np.isnan(test_arr))
     nan_percent = nans / test_arr.size * 100
 
-    assert corr > correlation_min
-    assert phase_stdev_degrees < phase_stdev_max
-    assert nan_percent < nan_percent_max
+    fail = False
+    fail_strings = []
+    if not corr > correlation_min:
+        fail = True
+        fail_strings.append(
+            f"Correlation {corr} of resample output is less than minimum acceptable "
+            f"value {correlation_min}"
+        )
+    if not phase_stdev_degrees < phase_stdev_max:
+        fail = True
+        fail_strings.append(
+            f"Phase standard deviation between ground-truth and resample output "
+            f"{phase_stdev_degrees} is greater than maximum acceptable value "
+            f"{phase_stdev_max}"
+        )
+    if not nan_percent < nan_percent_max:
+        fail = True
+        fail_strings.append(
+            f"percentage of NaNs in resample output: {nan_percent}% is greater than "
+            f"maximum acceptable value: {nan_percent_max}%"
+        )
+
+    if fail:
+        raise AssertionError("; ".join(fail_strings))
 
 
 def generate_signal_sinusoidal(
-    rows: np.ndarray,
-    cols: np.ndarray,
-    scaling_factor: float
+    rows: np.ndarray, cols: np.ndarray, scaling_factor: float
 ) -> np.ndarray:
     """Calculate a sinusoidal complex signal at each given position, scaled.
 
@@ -136,7 +151,7 @@ def generate_signal_sinusoidal(
         The column indices at each point to calculate the signal from.
     scaling_factor : float
         The degree of scaling, directly proportional to the signal frequency.
-    
+
     Returns
     -------
     np.ndarray of complex values
@@ -147,16 +162,17 @@ def generate_signal_sinusoidal(
     scaled_cols = cols * scaling_factor
     # The contribution of the row indices to the signal is
     # sin(row) + i * cos(row)
-    row_cpx = np.sin(scaled_rows) + np.cos(scaled_rows)*1.j
+    row_cpx = np.sin(scaled_rows) + np.cos(scaled_rows) * 1.0j
     # The contribution of the column indices to the signal is
     # cos(column) + i * sin(column)
-    col_cpx = np.cos(scaled_cols) + np.sin(scaled_cols)*1.j
+    col_cpx = np.cos(scaled_cols) + np.sin(scaled_cols) * 1.0j
 
     return np.array(row_cpx + col_cpx, dtype=np.complex64)
 
 
 class SignalGenerator:
     """A band-limited signal generator for testing interpolators."""
+
     def __init__(
         self,
         az_length: int = 1024,
@@ -166,7 +182,7 @@ class SignalGenerator:
         targets_per_bin: int = 4,
         pad_size: float = 0.0,
         seed: int | None = None,
-        is_complex: bool = False
+        is_complex: bool = False,
     ):
         """
         A band-limited signal generator for testing interpolators.
@@ -203,15 +219,14 @@ class SignalGenerator:
         self.rg_bandwidth = rg_bandwidth
         self.is_complex = is_complex
         self.pad_size = pad_size
-    
+
         # Number of targets to simulate.  Default to four per bin.
-        self.num_targets = \
-            int(targets_per_bin * \
-                (az_length + 2 * pad_size) * (rg_width + 2 * pad_size))
-        
+        self.num_targets = int(
+            targets_per_bin * (az_length + 2 * pad_size) * (rg_width + 2 * pad_size)
+        )
+
         self.generate_targets()
-        
-    
+
     def generate_targets(self):
         """Generate targets that will appear as sinc functions within the signal."""
         az_length = self.az_length
@@ -233,7 +248,7 @@ class SignalGenerator:
         if self.is_complex:
             self.target_values += 1j * np.random.normal(size=self.num_targets)
         self.target_values *= 1.0 * az_length / num_targets
- 
+
     def generate_signal(
         self,
         az_offset: float | np.ndarray = 0.0,
@@ -248,7 +263,7 @@ class SignalGenerator:
             The azimuth offset(s) for each index on the grid.
         rg_offset : float or np.ndarray
             The range offset(s) for each index on the grid.
-        
+
         Returns
         -------
         signal: np.ndarray
@@ -258,9 +273,9 @@ class SignalGenerator:
             assert az_offset.shape == (self.az_length, self.rg_width)
         if isinstance(rg_offset, np.ndarray):
             assert rg_offset.shape == (self.az_length, self.rg_width)
-        
+
         num_targets = self.num_targets
-        
+
         # Create arrays with the range and azimuth positions at each pixel.
         az_range = np.arange(self.az_length, dtype=float)
         rg_range = np.arange(self.rg_width, dtype=float)
@@ -290,7 +305,7 @@ class SignalGenerator:
 
             target_sinc = az_sinc * rg_sinc * weight
             signal += target_sinc
-   
+
         return signal
 
 
@@ -323,7 +338,7 @@ def generate_doppler_ramp_complex(
     # Get the absolute azimuth time at each index.
     az_times = grid_params.sensing_start + az_indices / grid_params.prf
     # Evaluate and return the ramp.
-    doppler_ramp = np.exp(1.j * 2 * np.pi * doppler_frequency * az_times)
+    doppler_ramp = np.exp(1.0j * 2 * np.pi * doppler_frequency * az_times)
 
     return doppler_ramp
 
@@ -349,7 +364,7 @@ def generate_doppler_lut(
     # Trivially, for zero doppler just return an LUT2d that always evaluates to 0.
     if doppler_frequency == 0:
         return LUT2d()
-    
+
     array_length = grid_params.length
     array_width = grid_params.width
     az_indices = np.arange(array_length)
