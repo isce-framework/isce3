@@ -291,7 +291,7 @@ def slc_pt_performance(
     cr_llh,
     fs_bw_ratio=1.2,
     num_sidelobes=10,
-    predict_null=True,
+    predict_null=False,
     nov=32,
     chipsize=64,
     plots=False,
@@ -417,7 +417,7 @@ def analyze_corner_reflectors(
     upsample_factor: int = 32,
     peak_find_domain: str = "time",
     num_sidelobes: int = 10,
-    predict_null: bool = True,
+    predict_null: bool = False,
     fs_bw_ratio: float = 1.2,
     window_type: str = "rect",
     window_parameter: float = 0.0,
@@ -482,7 +482,7 @@ def analyze_corner_reflectors(
         cuts centered on the target location. In this case, the main lobe does *not*
         include the first sidelobe. `predict_null` has no effect on peak-to-sidelobe
         ratio (PSLR) computation -- for PSLR analysis, the null locations are always
-        determined by searching for nulls in the RSLC data. Defaults to True.
+        determined by searching for nulls in the RSLC data. Defaults to False.
     fs_bw_ratio : float, optional
         The ratio of sampling rate to bandwidth in the RSLC image data. Must be the same
         for both range & azimuth. It is ignored if `predict_null` was false. Defaults to

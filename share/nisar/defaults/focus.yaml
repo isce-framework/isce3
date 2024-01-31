@@ -535,8 +535,8 @@ runconfig:
                 # `predict_null` has no effect on peak-to-sidelobe ratio (PSLR)
                 # computation -- for PSLR analysis, the null locations are always
                 # determined by searching for nulls in the RSLC data.
-                # Default: True
-                predict_null: true
+                # Default: False
+                predict_null: false
 
                 # The ratio of sampling rate to bandwidth in the RSLC
                 # image data. Must be the same for both range & azimuth. It is
