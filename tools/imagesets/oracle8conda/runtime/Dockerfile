@@ -14,11 +14,14 @@ RUN yum update -y \
 
 # install latest miniconda
 ARG conda_prefix
-RUN curl -sSL https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh \
+RUN curl -sSL https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh \
         -o miniconda.sh \
  && bash miniconda.sh -b -p $conda_prefix \
  && rm miniconda.sh
 ENV PATH="$conda_prefix/bin:$PATH"
+
+# use the libmamba solver, which is faster and has better diagnostics
+RUN conda config --set solver libmamba
 
 COPY spec-file.txt /tmp/spec-file.txt
 RUN conda install --yes --file /tmp/spec-file.txt \
