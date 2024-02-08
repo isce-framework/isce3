@@ -1395,6 +1395,59 @@ static int _geo2rdrWrapper(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
     return flag_converged;
 }
 
+
+/**
+* This function fills up a GCOV raster block with NaNs if the block is
+# invalid (e.g., outside of the DEM coverage).
+*
+* @param[in]  block_x            Number of the current block in the X-direction
+* @param[in]  block_size_x       Processing block size in the X direction
+* @param[in]  block_y            Number of the current block in the Y-direction
+* @param[in]  block_size_y       Processing block size in the Y direction
+* @param[in]  this_block_size_x  Size of the current block in the X direction
+* @param[in]  this_block_size_y  Size of the current block in the Y direction
+* @param[out] output_raster      Output raster
+*
+*/
+template<class T>
+inline void _fillGcovBlocksWithNans(
+    int block_x, int block_size_x, int block_y,
+    int block_size_y, int this_block_size_x, int this_block_size_y,
+    isce3::io::Raster* output_raster)
+{
+
+    // The output raster may be optional (e.g., off-diagonal raster). If
+    // it is `nullptr`, return.
+    if (output_raster == nullptr) {
+        return;
+    }
+
+    // declare matrix that will hold the NaNs
+    isce3::core::Matrix<T> data_block(this_block_size_y, this_block_size_x);
+
+    // declare variable to hold NaN values according to the templateT,
+    // i.e. real (NaN) or complex (NaN, NaN)
+    using T_real = typename isce3::real<T>::type;
+    T nan_t = 0;
+    nan_t *= std::numeric_limits<T_real>::quiet_NaN();
+
+    // fill matrix with NaN
+    data_block.fill(nan_t);
+
+    const int nbands = output_raster->numBands();
+    for (int band = 0; band < nbands; ++band) {
+        _Pragma("omp critical")
+        {
+            // set block with the matrix `data_block` that
+            // is filled with NaNs
+            output_raster->setBlock(
+                data_block.data(), block_x * block_size_x,
+                block_y * block_size_y, this_block_size_x,
+                this_block_size_y, band + 1);
+        }
+    }
+}
+
 inline void _saveOptionalFiles(int block_x, int block_size_x, int block_y,
         int block_size_y, int this_block_size_x, int this_block_size_y,
         int block_size_with_upsampling_x, int block_size_with_upsampling_y,
@@ -2429,6 +2482,15 @@ void Geocode<T>::_runBlock(
             &dem_interp_block, proj);
 
     if (error_code != isce3::error::ErrorCode::Success) {
+
+        _fillGcovBlocksWithNans<T_out>(block_x, block_size_x, block_y,
+            block_size_y, this_block_size_x, this_block_size_y,
+            &output_raster);
+
+        _fillGcovBlocksWithNans<T>(block_x, block_size_x, block_y,
+            block_size_y, this_block_size_x, this_block_size_y,
+            out_off_diag_terms);
+
         _saveOptionalFiles(block_x, block_size_x, block_y, block_size_y,
                 this_block_size_x, this_block_size_y,
                 block_size_with_upsampling_x, block_size_with_upsampling_y,
@@ -2613,6 +2675,15 @@ void Geocode<T>::_runBlock(
         int grid_size_x = xbound - offset_x + 1;
 
         if (grid_size_y <= 0 || grid_size_x <= 0) {
+
+            _fillGcovBlocksWithNans<T_out>(block_x, block_size_x, block_y,
+                block_size_y, this_block_size_x, this_block_size_y,
+                &output_raster);
+
+            _fillGcovBlocksWithNans<T>(block_x, block_size_x, block_y,
+                block_size_y, this_block_size_x, this_block_size_y,
+                out_off_diag_terms);
+
             _saveOptionalFiles(block_x, block_size_x, block_y, block_size_y,
                     this_block_size_x, this_block_size_y,
                     block_size_with_upsampling_x, block_size_with_upsampling_y,
