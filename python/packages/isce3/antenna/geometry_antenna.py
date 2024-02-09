@@ -213,8 +213,7 @@ def get_approx_el_bounds(slant_range, az, pos_ecef, quat, dem=DEMInterpolator(),
         Orientation of the antenna (RCS to ECEF quaternion)
     dem : isce3.geometry.DEMInterpolator, optional
         Digital elevation model, heights in m above ellipsoid.
-        Defaults to WGS84.  Note that this function always computes height
-        stats.
+        Defaults to WGS84.  Raises exception if dem.have_stats is False.
     f : float
         Dilation factor to use to expand the estimated EL interval.
 
@@ -236,9 +235,8 @@ def get_approx_el_bounds(slant_range, az, pos_ecef, quat, dem=DEMInterpolator(),
     # bounds.
 
     # Incorporate terrain extrema.
-    # XXX I don't think there's a way to check if stats have already been
-    # computed :-(
-    dem.compute_min_max_mean_height()
+    if not dem.have_stats:
+        raise ValueError("Provided DEMInterpolator does not have stats")
     amin += dem.min_height
     amax += dem.max_height
 

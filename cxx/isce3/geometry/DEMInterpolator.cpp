@@ -441,6 +441,10 @@ isce3::error::ErrorCode isce3::geometry::DEMInterpolator::loadDEM(
     // Indicate we have loaded a valid raster
     _haveRaster = true;
 
+    // Since we just loaded the data we don't know the stats anymore.
+    // NOTE No need for this flag if we change the design to always calc stats.
+    _haveStats = false;
+
     return isce3::error::ErrorCode::Success;
 }
 
@@ -488,6 +492,10 @@ loadDEM(isce3::io::Raster & demRaster, const int dem_raster_band) {
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;
+
+    // Since we just loaded the data we don't know the stats anymore.
+    // NOTE No need for this flag if we change the design to always calc stats.
+    _haveStats = false;
 }
 
 
@@ -513,7 +521,7 @@ computeMinMaxMeanHeight(float &minValue, float &maxValue, float &meanValue) {
     meanValue = _refHeight;
 
     // If a DEM raster exists, proceeed to computations
-    if (_haveRaster) {
+    if (_haveRaster and not _haveStats) {
         info << "Computing DEM statistics" << pyre::journal::newline;
 
         minValue = std::numeric_limits<float>::max();
@@ -543,10 +551,16 @@ computeMinMaxMeanHeight(float &minValue, float &maxValue, float &meanValue) {
         meanValue = sum / n_valid;
 
         // Store updated statistics
+        _haveStats = true;
         _minValue = minValue;
         _meanValue = meanValue;
         _maxValue = maxValue;
 
+    } else if (_haveRaster) {
+        info << "Using existing DEM statistics" << pyre::journal::newline;
+        minValue = _minValue;
+        meanValue = _meanValue;
+        maxValue = _maxValue;
     } else {
         info << "No DEM raster. Stats not updated." << pyre::journal::newline;
     }
@@ -641,4 +655,14 @@ interpolateXY(double x, double y) const {
     return _interp->interpolate(col, row, _dem);
 }
 
-// end of file
+void isce3::geometry::DEMInterpolator::
+validateStatsAccess(const std::string& method) const {
+    if (not _haveStats) {
+        // Just issue a warning in order to avoid breaking existing code?
+        pyre::journal::warning_t warning("isce.core.Geometry");
+        warning << "Invalid height stats in use!  Detected call to "
+            << "DEMInterpolator::" << method << "() before call to "
+            << "DEMInterpolator::computeMinMaxMeanHeight()."
+            << pyre::journal::endl;
+    }
+}
