@@ -550,7 +550,7 @@ def make_output_grid(cfg: Struct,
         return isce3.geometry.rdr2rdr(t, r, orbit, side, doppler, wavelength,
             dem, doppler_out=zerodop,
             rdr2geo_params=get_rdr2geo_params(cfg),
-            geo2rdr_params=vars(cfg.processing.geo2rdr))
+            geo2rdr_params=get_geo2rdr_params(cfg, orbit))
 
     # One annoying case is where the orbit data covers the raw pulse times
     # and nothing else.  The code can crash when trying to compute positions on
@@ -569,6 +569,7 @@ def make_output_grid(cfg: Struct,
                 tb, rb = reskew_to_zerodop(t + offset, r1)
                 return offset, ta, ra, tb, rb
             except RuntimeError:
+                log.info(f"nudging by step={step}")
                 offset += step
         raise RuntimeError("No valid geometry.  Invalid orbit data?")
 
@@ -644,6 +645,40 @@ def get_rdr2geo_params(cfg: Struct) -> dict:
         look_max = np.deg2rad(g.look_max_deg))
 
 
+def get_geo2rdr_params(cfg: Struct, orbit: Optional[Orbit] = None) -> dict:
+    """
+    Geo geo2rdr parameters from RSLC config structure.
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig structure, stripped of leading `runconfig.groups`.
+    orbit : isce3.core.Orbit, optional
+        If orbit is provided and time_{start,end} are null in the runconfig,
+        sets time_{start,end} to the orbit time bounds.  This effectively
+        overrides the default geo2rdr_bracket behavior which sets the default
+        search interval to the intersection of the orbit interval and the
+        Doppler LUT interval.  As a consequence, providing the orbit may cause
+        out-of-bounds Doppler lookups, which may throw an exception or result in
+        extrapolation depending on the `have_data` and `bounds_error` properties
+        of the Doppler LUT2d object.
+
+    Returns
+    -------
+    geo2rdr_params : dict
+        A dict with the three keys {"time_start", "time_end", "tol_aztime"}
+    """
+    geo2rdr_params = vars(cfg.processing.geo2rdr)
+    t0 = geo2rdr_params.get("time_start", None)
+    t1 = geo2rdr_params.get("time_end", None)
+    if orbit is not None:
+        if t0 is None:
+            geo2rdr_params["time_start"] = orbit.start_time
+        if t1 is None:
+            geo2rdr_params["time_end"] = orbit.end_time
+    return geo2rdr_params
+
+
 Selection2d = tuple[slice, slice]
 TimeBounds = tuple[float, float]
 BlockPlan = list[tuple[Selection2d, TimeBounds]]
@@ -690,9 +725,9 @@ def plan_processing_blocks(cfg: Struct, grid: RadarGridParameters,
                 traw, _ = isce3.geometry.rdr2rdr(t, r, orbit, grid.lookside,
                     zerodop, grid.wavelength, dem, doppler_out=doppler,
                     rdr2geo_params=get_rdr2geo_params(cfg),
-                    geo2rdr_params=vars(cfg.processing.geo2rdr))
+                    geo2rdr_params=get_geo2rdr_params(cfg, orbit))
             except RuntimeError as e:
-                dt = epoch + isce3.core.TimeDelta(t)
+                dt = grid.ref_epoch + isce3.core.TimeDelta(t)
                 log.error(f"Reskew zero-to-native failed at t={dt} r={r}")
                 raise RuntimeError("Could not compute imaging geometry") from e
             raw_times.append(traw)
@@ -1424,7 +1459,7 @@ def focus(runconfig, runconfig_path=""):
     freq = next(iter(get_bands(common_mode)))
     slc.set_geolocation_grid(orbit, ogrid[freq], dop[freq],
                              epsg=4326, dem=dem,
-                             **vars(cfg.processing.geo2rdr))
+                             **get_geo2rdr_params(cfg, orbit))
 
     # Scratch directory for intermediate outputs
     scratch_dir = os.path.abspath(cfg.product_path_group.scratch_path)
@@ -1573,7 +1608,7 @@ def focus(runconfig, runconfig_path=""):
                 err = backproject(z, ogeom, rcfile.data, igeom, dem,
                             channel_out.band.center, azres,
                             kernel, atmos, get_rdr2geo_params(cfg),
-                            vars(cfg.processing.geo2rdr), height=hgt)
+                            get_geo2rdr_params(cfg, orbit), height=hgt)
                 if err:
                     log.warning("azcomp block contains some invalid pixels")
                 writer.queue_write(z, block)

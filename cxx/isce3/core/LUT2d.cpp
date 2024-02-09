@@ -62,6 +62,24 @@ setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & 
             << pyre::journal::endl;
     }
 
+    if ((xcoord.size() == 0) && (ycoord.size() == 0)) {
+        _haveData = false;
+        return;
+    }
+
+    if ((xcoord.size() == 1) && (ycoord.size() == 1)) {
+        _haveData = false;
+        _refValue = data(0, 0);
+        return;
+    }
+
+    if ((xcoord.size() < 2) || (ycoord.size() < 2)) {
+        pyre::journal::error_t errorChannel("isce.core.LUT2d");
+        errorChannel << pyre::journal::at(__HERE__)
+            << "Attempted LUT2d::setFromData with invalid data shape = ("
+            << ycoord.size() << ", " << ")." << pyre::journal::endl;
+    }
+
     // Check Y-coordinates are on a regular grid
     const double dy = ycoord[1] - ycoord[0];
     for (size_t i = 1; i < (ycoord.size() - 1); ++i) {

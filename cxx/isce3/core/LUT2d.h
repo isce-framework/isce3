@@ -38,7 +38,8 @@ class isce3::core::LUT2d {
         // Deep assignment operator
         inline LUT2d & operator=(const LUT2d<T> & lut);
 
-        // Set data from external data
+        // Set data from external data.
+        // No-op if shape is 0x0, sets refValue if shape is 1x1.
         void setFromData(const std::valarray<double> & xcoord,
                          const std::valarray<double> & ycoord,
                          const isce3::core::Matrix<T> & data);
