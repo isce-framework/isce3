@@ -232,6 +232,9 @@ runconfig:
         # azimuth compression
         azcomp: bool(required=False)
 
+    # Encoding options for raster (e.g. compression, chunking, shuffle filter)
+    output: include('output_options', required=False)
+
     # The PGE wrapper uses the qa group to control whether or not to run the qa SAS
     # program and which qa option(s) to enable. By default the qa SAS is not run.
     qa: include('qa_options', required=False)
@@ -359,3 +362,36 @@ point_target_analyzer_options:
   fs_bw_ratio: num(min=0.0, required=False)
   window_type: enum('rect', 'cosine', 'kaiser', required=False)
   window_parameter: num(min=0.0, required=False)
+
+output_options:
+    # Data type for image layers.  The pixel values are stored as pairs of
+    # floating point numbers corresponding to the real and imaginary parts of a
+    # complex number.  Valid choices are
+    # - complex32: pairs of 16-bit floats (half precision)
+    # - complex64: pairs of 32-bit floats (single precision)
+    # - complex64_zero_mantissa: pairs of 32-bit floats where the least
+    #       significant bits are zeroed out.  Useful when combined with
+    #       compression.
+    data_type: enum('complex32', 'complex64', 'complex64_zero_mantissa', required=False)
+
+    # Enable/disable gzip compression of raster (default True)
+    compression_enabled: bool(required=False)
+
+    # HDF5 compression filter.  Typically gzip, lzf, or szip.
+    compression_type: str(required=False)
+
+    # Level of compression applied to raster (default 4)
+    # 1 - least compression, 9 - best compresssion
+    compression_level: int(min=1, max=9, required=False)
+
+    # Chunk size of raster (default [128, 128])
+    # Enter [-1, -1] to disable chunks.
+    chunk_size: list(int(min=-1), min=2, max=2, required=False)
+
+    # Enable/disable shuffle filtering of raster (default True)
+    shuffle: bool(required=False)
+
+    # Number of stored bits retained in the mantissa of the floating point
+    # representation of each component (real/imaginary) of each complex
+    # sample.  Only relevant when data_type=complex64_zero_mantissa.
+    mantissa_nbits: int(min=1, max=23, required=False)

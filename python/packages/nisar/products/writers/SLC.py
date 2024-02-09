@@ -457,7 +457,8 @@ class SLC(h5py.File):
         dset.attrs["description"] = np.bytes_(desc)
 
     def create_image(self, frequency="A", pol="HH", **kw) -> h5py.Dataset:
-        log.info(f"Creating SLC image for frequency={frequency} pol={pol}")
+        log.info(f"Creating SLC image for frequency={frequency} pol={pol}"
+            f" with HDF5 options={kw}")
         assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
         self.add_polarization(frequency, pol)
         kw.setdefault("dtype", complex32)

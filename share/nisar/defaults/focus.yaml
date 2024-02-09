@@ -293,6 +293,38 @@ runconfig:
                 # azimuth compression
                 azcomp: True
 
+        output:
+            # Data type for image layers.  The pixel values are stored as pairs
+            # of floating point numbers corresponding to the real and imaginary
+            # parts of a complex number.  Valid choices are
+            # - complex32: pairs of 16-bit floats (half precision)
+            # - complex64: pairs of 32-bit floats (single precision)
+            # - complex64_zero_mantissa: pairs of 32-bit floats where the least
+            #       significant bits are zeroed out.  Useful when combined with
+            #       compression.
+            data_type: complex64_zero_mantissa
+
+            # Enable gzip compression of raster
+            compression_enabled: True
+
+            # HDF5 compression filter.  Typically gzip, lzf, or szip.
+            compression_type: gzip
+
+            # Level of compression applied to raster
+            compression_level: 4
+
+            # Chunk size of raster.  Enter [-1, -1] to disable chunks.
+            chunk_size: [128, 128]
+
+            # Enable shuffle filtering of raster
+            shuffle: True
+
+            # Number of stored bits retained in the mantissa of the floating
+            # point representation of each component (real/imaginary) of each
+            # complex sample.  Only relevant when
+            # data_type=complex64_zero_mantissa.
+            mantissa_nbits: 10
+
         qa:
             workflows:
                 # Flag to run `validate` workflow to validate the
