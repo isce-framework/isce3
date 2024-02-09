@@ -43,7 +43,7 @@ class AntennaParser:
 
     Parameters
     ----------
-    filename : str 
+    filename : str
         filename of HDF5 antenna file.
 
     Attributes
@@ -54,8 +54,8 @@ class AntennaParser:
         File object of HDF5.
     frequency : float
         RF frequency in Hz.
-    frame : isce3.antenna.frame 
-        Isce3 Frame object.
+    frame : isce3.antenna.frame
+        isce3 Frame object.
     rx_beams : list of str
         List of names of all receive beams.
     tag : str
@@ -63,7 +63,7 @@ class AntennaParser:
     timestamp : str
         Time stamp in UTC.
     tx_beams : list of str
-        List of names of all transmit beams. 
+        List of names of all transmit beams.
     version : str
         Version of the file.
 
@@ -166,7 +166,7 @@ class AntennaParser:
 
         Returns
         -------
-        int 
+        int
             Number of beams for the `pol`.
 
         Raises
@@ -247,10 +247,13 @@ class AntennaParser:
 
         Notes
         -----
-        No fitting is performed and thus the accuracy of the boundaries is
-        limited to within around half of EL angle resolution.
+        A linear interpolation of envelope of EL pattern is performed if
+        EL spacing is greater than 20 mdg. The expected accuracy at the
+        beam transition in EL shall be within around +/- 10 mdeg.
 
         """
+        # required EL spacing to be at least 20 mdeg
+        el_spacing_min = np.deg2rad(20e-3)
         ant_el = self.el_cut_all(pol)
         # check wether it is single beam or multiple beam
         num_beams = ant_el.copol_pattern.shape[0]
@@ -258,18 +261,38 @@ class AntennaParser:
             return None
         # multi beam
         # find dominant beams per max absolute amplitude or power
-        idx_max = abs(ant_el.copol_pattern).argmax(axis=0)
+        amp_pats_el = abs(ant_el.copol_pattern)
+        idx_pk_first = amp_pats_el[0].argmax()
+        idx_pk_last = amp_pats_el[-1].argmax()
+        # EL slice within peak of the first beam and peak of the last beam
+        slice_el = slice(idx_pk_first, idx_pk_last + 1)
+        amp_pats_el = amp_pats_el[:, slice_el]
+        # perform linear interpolation if el spacing is larger than
+        # required "el_spacing_min"
+        d_el = np.diff(ant_el.angle).mean()
+        if d_el > el_spacing_min:
+            el = ant_el.angle[slice_el]
+            num_el_int = round((el[-1] - el[0]) / el_spacing_min) + 1
+            el_int = np.linspace(el[0], el[-1], num=num_el_int)
+            amp_pats_int = np.zeros((num_beams, num_el_int), dtype='f8')
+            for nn in range(num_beams):
+                amp_pats_int[nn] = np.interp(el_int, el, amp_pats_el[nn])
+        else:
+            amp_pats_int = amp_pats_el
+            el_int = ant_el.angle[slice_el]
+        idx_max = amp_pats_int.argmax(axis=0)
         idx_trans = np.where(np.diff(idx_max) == 1)[0]
         if idx_trans.size != num_beams - 1:
             raise RuntimeError(f'Expected {num_beams - 1} transition '
-                               'points but got {idx_trans.size}!')
+                               f'points but got {idx_trans.size} with '
+                               f'EL index values {idx_trans}!')
         if not np.all(sorted(set(idx_trans)) == idx_trans):
-            raise RuntimeError('Transition points are not monotonically '
-                               'increasing!')
+            raise RuntimeError(
+                f'Transition points {idx_trans} are not monotonically '
+                'increasing!')
         # EL angle at transition point where two adjacent beams are
         # equally dominant
-        ela_trans = 0.5 * (ant_el.angle[idx_trans] +
-                           ant_el.angle[idx_trans + 1])
+        ela_trans = 0.5 * (el_int[idx_trans] + el_int[idx_trans + 1])
         return ela_trans, ant_el.cut_angle
 
     def el_cut(self, beam=1, pol='H'):
@@ -283,7 +306,7 @@ class AntennaParser:
         beam : int, default=1
             Beam number starting from one.
 
-        pol : str, default='H' 
+        pol : str, default='H'
             Polarization of the beam , either
             `H` or `V'. It is case insensitive.
 
@@ -302,9 +325,9 @@ class AntennaParser:
 
         Raises
         ------
-        ValueError 
+        ValueError
             For bad input arguments
-        RuntimeError 
+        RuntimeError
             For missing fields/attributes in HDF5
 
         """
@@ -321,29 +344,29 @@ class AntennaParser:
         beam : int, default=1
             Beam number starting from one.
 
-        pol : str, default='H' 
+        pol : str, default='H'
             Polarization of the beam , either
             `H` or `V'. It is case insensitive.
 
         Returns
         -------
         AntPatCut
-            angle : np.ndarray (float or complex) 
+            angle : np.ndarray (float or complex)
                 Azimuth angles in radians.
-            copol_pattern : np.ndarray (float or complex) 
+            copol_pattern : np.ndarray (float or complex)
                 Co-pol 1-D azimuth pattern in V/m.
-            cxpol_pattern : np.ndarray (float or complex) 
-                Cross-pol 1-D azimuth pattern in V/m. 
+            cxpol_pattern : np.ndarray (float or complex)
+                Cross-pol 1-D azimuth pattern in V/m.
                 None if there no cx-pol pattern!
-            cut_angle : float 
+            cut_angle : float
                 Elevation angle in radians for obtaining azimuth cut.
 
         Raises
         ------
-        ValueError 
+        ValueError
             For bad input arguments
-        RuntimeError 
-            For missing fields/attributes in HDF5        
+        RuntimeError
+            For missing fields/attributes in HDF5
 
         """
         return self._get_ang_cut(beam, pol, 'azimuth')
@@ -353,12 +376,12 @@ class AntennaParser:
 
         Get all uniformly-spaced EL cuts of co-pol and cx-pol and store them in
         a matrix with shape `num_beams` by `number of angles`. The number of
-        uniformly-spaced angles is determined by min, max angles from first 
-        and last beams and the spacing from the first beam.             
+        uniformly-spaced angles is determined by min, max angles from first
+        and last beams and the spacing from the first beam.
 
         Parameters
         ----------
-        pol : str, default='H' 
+        pol : str, default='H'
             Polarization , either 'H' or 'V'. It is case-insensitive!
 
         Returns
