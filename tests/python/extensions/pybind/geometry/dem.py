@@ -63,9 +63,25 @@ def test_compute_min_max_mean_height():
     # filename of the DEM ratster
     filename_dem = 'dem_himalayas_E81p5_N28p3_short.tiff'
     file_raster = os.path.join(iscetest.data, filename_dem)
-    dem = DEMInterpolator(Raster(file_raster))
+
+    # Default ctor has stats because it's zero everywhere
+    dem = DEMInterpolator()
+    npt.assert_(dem.have_stats)
+    npt.assert_(dem.min_height == dem.max_height == dem.mean_height == 0.0)
+
+    # Updating reference height of constant DEM should update stats accordingly
+    href = 100.
+    dem.ref_height = href
+    npt.assert_(dem.min_height == dem.max_height == dem.mean_height == href)
+
+    # Loading data from file invalidates the stats.
+    dem.load_dem(Raster(file_raster))
+    npt.assert_(not dem.have_stats)
+
     # compute min/max/mean heights
     dem.compute_min_max_mean_height()
+    npt.assert_(dem.have_stats)
+
     # validate computed values
     npt.assert_allclose(np.nanmin(dem.data), dem.min_height,
                         err_msg='Wrong computed min DEM height')

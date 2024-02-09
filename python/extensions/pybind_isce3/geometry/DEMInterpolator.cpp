@@ -58,6 +58,7 @@ void addbinding(pybind11::class_<DEMInterp>& pyDEMInterpolator)
                     py::overload_cast<>(&DEMInterp::refHeight, py::const_),
                     py::overload_cast<double>(&DEMInterp::refHeight))
             .def_property_readonly("have_raster", &DEMInterp::haveRaster)
+            .def_property_readonly("have_stats", &DEMInterp::haveStats)
             .def_property("interp_method",
                     py::overload_cast<>(&DEMInterp::interpMethod, py::const_),
                     py::overload_cast<isce3::core::dataInterpMethod>(
