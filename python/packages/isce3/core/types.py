@@ -105,8 +105,8 @@ def truncate_mantissa(z: np.ndarray, significant_bits=10):
 
     # recurse for complex data
     if np.iscomplexobj(z):
-        truncate_mantissa(z.real)
-        truncate_mantissa(z.imag)
+        truncate_mantissa(z.real, significant_bits)
+        truncate_mantissa(z.imag, significant_bits)
         return
 
     if not issubclass(z.dtype.type, np.floating):

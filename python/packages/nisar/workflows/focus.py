@@ -17,7 +17,8 @@ from nisar.products.readers.Raw import Raw, open_rrsd
 from nisar.products.readers.rslc_cal import (RslcCalibration,
     parse_rslc_calibration, get_scale_and_delay, check_cal_validity_dates)
 from nisar.products.writers import SLC
-from isce3.core.types import to_complex32, read_c4_dataset_as_c8
+from isce3.core.types import (complex32, to_complex32, read_c4_dataset_as_c8,
+    truncate_mantissa)
 import nisar
 import numpy as np
 import isce3
@@ -786,19 +787,54 @@ class BackgroundWriter(isce3.io.BackgroundWriter):
         (range bins) in `dset`.
     dset : h5py.Dataset
         HDF5 dataset to write blocks to.  Shape should be 2D (azimuth, range).
-        Data type is complex32 (pairs of float16).
+    data_type : str in {"complex32", "complex64", "complex64_zero_mantissa"}
+        Output data type is complex32 (pairs of float16), complex64 (pairs of
+        float32), or complex64_zero_mantissa (pairs of float32 with least
+        significant mantissa bits set to zero).
+    mantissa_nbits : int, optional
+        Precision parameter for data_type=complex64_zero_mantissa.  Sets the
+        number of nonzero bits in the floating point mantissa.  Must be between
+        0 and 23, inclusive.  Defaults to 10 bits (half precision).
 
     Attributes
     ----------
     stats : isce3.math.StatsRealImagFloat32
         Statistics of all data that have been written.
     """
-    def __init__(self, range_cor, dset, **kw):
+    def __init__(self, range_cor, dset, data_type, mantissa_nbits=10, **kw):
+        log.debug(f"Preparing BackgroundWriter with data_type={data_type}"
+            f" and mantissa_nbits={mantissa_nbits}")
         self.range_cor = range_cor
         self.dset = dset
         # Keep track of which blocks have been written and the image stats
         # for each one.
         self._visited_blocks = dict()
+
+        if data_type == "complex64":
+            self.encode = lambda x: x  # no-op
+            self.readback = lambda key: self.dset[key]
+        elif data_type == "complex32":
+            self.encode = to_complex32
+            self.readback = lambda key: read_c4_dataset_as_c8(self.dset, key)
+        elif data_type == "complex64_zero_mantissa":
+            # in-place tuncation returns None, so use "or x" to return data
+            self.encode = lambda x: truncate_mantissa(x, mantissa_nbits) or x
+            self.readback = lambda key: self.dset[key]
+        else:
+            raise ValueError(f"Requested invalid data_type {data_type}")
+
+        # Make sure output HDF5 type is compatible with requested type string.
+        # XXX Old versions of h5py crash when accessing dtype when complex32.
+        try:
+            h5type = dset.dtype
+        except TypeError:
+            h5type = "unknown"  # hopefully complex32
+        c8match = data_type.startswith("complex64") and h5type == np.complex64
+        c4match = data_type == "complex32" and h5type in ("unknown", complex32)
+        if (not c8match) and (not c4match):
+            raise TypeError(f"Requested {data_type} encoding but type of HDF5 "
+                f"dataset is {h5type}")
+
         super().__init__(**kw)
 
     @property
@@ -810,9 +846,10 @@ class BackgroundWriter(isce3.io.BackgroundWriter):
 
     def write(self, z, block):
         """
-        Scale `z` by `range_cor` (in-place) then write to file and accumulate
-        statistics.  If the block has been written already, then the current
-        data will be added to the existing results (dset[block] += ...).
+        Scale `z` by `range_cor` (in-place), apply encoding (possibly in-place)
+        then write to file and accumulate statistics.  If the block has been
+        written already, then the current data will be added to the existing
+        results (dset[block] += ...).
 
         Parameters
         ----------
@@ -839,16 +876,57 @@ class BackgroundWriter(isce3.io.BackgroundWriter):
         key = unpack_slices(block)
         if key in self._visited_blocks:
             log.debug("reading back SLC data at block %s", block)
-            z += read_c4_dataset_as_c8(self.dset, block)
+            z += self.readback(block)
         # Calculate block stats.  Don't accumulate since image is mutable in
         # mixed-mode case.
         s = isce3.math.StatsRealImagFloat32(z)
         amax = np.max(np.abs([s.real.max, s.real.min, s.imag.max, s.imag.min]))
         log.debug(f"scaled max component = {amax}")
         self._visited_blocks[key] = s
-        # convert to float16 and write to HDF5
-        zf = to_complex32(z)
-        self.dset.write_direct(zf, dest_sel=block)
+        # Encode and write to HDF5
+        self.dset.write_direct(self.encode(z), dest_sel=block)
+
+
+def get_dataset_creation_options(cfg: Struct) -> dict:
+    """
+    Get h5py keyword arguments needed for image dataset creation.
+
+    Parameters
+    ----------
+    cfg : Struct
+        RSLC runconfig data. Only reads `cfg.output` group.
+
+    Returns
+    -------
+    opts : dict
+        Dictionary containing the keys {"chunks", "compression",
+        "compression_opts", "shuffle", "dtype"} suitable for forwarding to
+        `h5py.Group.create_dataset`.
+    """
+    opts = dict(chunks=None, compression=None, compression_opts=None,
+        shuffle=None)
+    g = cfg.output
+    # XXX GSLC always chunks, while it's optional for RSLC since we may want to
+    # disable chunks in order to make a dataset mmap-able.  However, since
+    # default value is not null, we need another non-null sentinel value to
+    # indicate this.  Choose [-1, -1], which implies one full-sized chunk.
+    if g.chunk_size != [-1, -1]:
+        opts["chunks"] = tuple(g.chunk_size)
+    if g.compression_enabled:
+        if opts["chunks"] is None:
+            raise ValueError("Chunk size cannot be None when "
+                "compression is enabled")
+        opts['compression'] = g.compression_type
+        if g.compression_type == "gzip":
+            opts['compression_opts'] = g.compression_level
+        opts['shuffle'] = g.shuffle
+    if g.data_type in ("complex64", "complex64_zero_mantissa"):
+        opts["dtype"] = np.complex64
+    elif g.data_type == "complex32":
+        opts["dtype"] = complex32
+    else:
+        raise ValueError(f"invalid runconfig output.data_type")
+    return opts
 
 
 def resample(raw: np.ndarray, t: np.ndarray,
@@ -1478,9 +1556,11 @@ def focus(runconfig, runconfig_path=""):
     for channel_out in common_mode:
         frequency, pol = channel_out.freq_id, channel_out.pol
         log.info(f"Processing frequency{channel_out.freq_id} {channel_out.pol}")
-        acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape)
+        acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape,
+            **get_dataset_creation_options(cfg))
         deramp_ac = get_range_deramp(ogrid[frequency])
-        writer = BackgroundWriter(scale * deramp_ac, acdata)
+        writer = BackgroundWriter(scale * deramp_ac, acdata,
+            cfg.output.data_type, mantissa_nbits=cfg.output.mantissa_nbits)
 
         for raw in rawlist:
             channel_in = find_overlapping_channel(raw, channel_out)

@@ -65,6 +65,7 @@ class BackgroundWorker(abc.ABC):
             if self.store_results:
                 log.debug("saving result in queue")
                 self._results_queue.put(result)
+            self._work_queue.task_done()
 
     @abc.abstractmethod
     def process(self, *args, **kw):
@@ -98,6 +99,7 @@ class BackgroundWorker(abc.ABC):
         all work has been processed.  If `store_results=True` also block until
         all results have been retrieved.
         """
+        self._work_queue.join()
         self._finished_event.set()
         self._results_queue.join()
         self._thread.join()
