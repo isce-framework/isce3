@@ -1101,8 +1101,7 @@ def set_create_geolocation_grid_coordinates(hdf5_obj, root_ds, radar_grid,
     d_az = 1.0 / radar_grid.prf
 
     az_f = az_0 + (radar_grid.length - 1) * d_az
-    az_vect = np.linspace(az_0, az_f - d_az, radar_grid.length,
-                          dtype=np.float64)
+    az_vect = np.linspace(az_0, az_f, radar_grid.length, dtype=np.float64)
 
     rg_coord_units = "meters"
 
