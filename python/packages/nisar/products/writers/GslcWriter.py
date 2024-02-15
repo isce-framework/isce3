@@ -120,10 +120,9 @@ class GslcWriter(BaseL2WriterSingleInput):
             f'{parameters_group}/ellipsoidalFlatteningApplied',
             'processing/flatten')
 
-        # TODO: verify
-        self.set_value(
+        self.copy_from_runconfig(
             f'{parameters_group}/topographicFlatteningApplied',
-            True)
+            'processing/flatten')
 
         # Populate algorithms parameters
 
