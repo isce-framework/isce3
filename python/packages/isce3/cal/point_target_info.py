@@ -115,7 +115,7 @@ def oversample(x, nov, baseband=False, return_slopes=False):
 def estimate_resolution(x, dt=1.0):
     # Find the peak.
     y = abs(x) ** 2
-    i = np.argmax(y)
+    i = np.nanargmax(y)
     # Construct a function with zeros at the -3dB points.
     u = y - 0.5 * y[i]
     # Make sure the interval contains a peak.  If not, return interval width.
@@ -128,9 +128,9 @@ def estimate_resolution(x, dt=1.0):
     z = abs(u)
     # Find the points on each side of the peak.
     left = z[:i]
-    ileft = np.argmin(left)
+    ileft = np.nanargmin(left)
     right = z[i:]
-    iright = i + np.argmin(right)
+    iright = i + np.nanargmin(right)
     # Return the distance between -3dB crossings, scaled by the sample spacing.
     return dt * (iright - ileft)
 
@@ -339,7 +339,7 @@ def compute_islr_pslr(
 
     data_in_pwr_linear = np.abs(data_in_linear) ** 2
     data_in_pwr_db = 10 * np.log10(data_in_pwr_linear)
-    peak_idx = np.argmax(data_in_pwr_linear)
+    peak_idx = np.nanargmax(data_in_pwr_linear)
 
     # Theoretical nulls are based on Fs/BW ratio and window_type/window_parameter
     if predict_null:
@@ -401,9 +401,9 @@ def compute_islr_pslr(
     ]
     islr_sidelobe = data_in_pwr_linear[islr_sidelobe_range]
 
-    pwr_total = np.sum(data_in_pwr_linear)
-    islr_main_pwr = np.sum(islr_mainlobe)
-    islr_side_pwr = np.sum(islr_sidelobe)
+    pwr_total = np.nansum(data_in_pwr_linear)
+    islr_main_pwr = np.nansum(islr_mainlobe)
+    islr_side_pwr = np.nansum(islr_sidelobe)
 
     islr_db = 10 * np.log10(islr_side_pwr / islr_main_pwr)
 
@@ -415,8 +415,8 @@ def compute_islr_pslr(
     pslr_mainlobe = data_in_pwr_linear[null_first_left_idx:null_first_right_idx + 1]
     pslr_sidelobe = data_in_pwr_linear[pslr_sidelobe_range]
 
-    pwr_mainlobe_max = np.amax(pslr_mainlobe)
-    pwr_sidelobe_max = np.amax(pslr_sidelobe)
+    pwr_mainlobe_max = np.nanmax(pslr_mainlobe)
+    pwr_sidelobe_max = np.nanmax(pslr_sidelobe)
 
     pslr_db = 10 * np.log10(pwr_sidelobe_max / pwr_mainlobe_max)
 
