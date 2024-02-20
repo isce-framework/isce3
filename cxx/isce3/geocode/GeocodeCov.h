@@ -93,7 +93,7 @@ public:
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
      * @param[in]  sub_swaths          Sub-swaths metadata
-     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * @param[out] out_mask            Output valid-pixels
      * sub-swath mask raster
      * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
@@ -139,7 +139,7 @@ public:
             isce3::io::Raster* output_rtc = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
-            isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
+            isce3::io::Raster* out_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
                     isce3::core::GeocodeMemoryMode::Auto,
             const long long min_block_size =
@@ -191,7 +191,7 @@ public:
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
      * @param[in]  sub_swaths          Sub-swaths metadata
-     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * @param[out] out_mask            Output valid-pixels
      * sub-swath mask raster
      * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
@@ -230,7 +230,7 @@ public:
             isce3::io::Raster* output_rtc = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
-            isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
+            isce3::io::Raster* out_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
                 isce3::core::GeocodeMemoryMode::Auto,
             const long long min_block_size =
@@ -289,7 +289,7 @@ public:
      * (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
      * @param[in]  sub_swaths          Sub-swaths metadata
-     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * @param[out] out_mask            Output valid-pixels
      * sub-swath mask raster
      * @param[in]  geocode_memory_mode Select memory mode
      * @param[in]  min_block_size      Minimum block size (per thread)
@@ -333,7 +333,7 @@ public:
             isce3::io::Raster* output_rtc = nullptr,
             isce3::io::Raster* input_layover_shadow_mask_raster = nullptr,
             isce3::product::SubSwaths* sub_swaths = nullptr,
-            isce3::io::Raster* out_valid_samples_sub_swath_mask = nullptr,
+            isce3::io::Raster* out_mask = nullptr,
             isce3::core::GeocodeMemoryMode geocode_memory_mode =
                     isce3::core::GeocodeMemoryMode::Auto,
             const long long min_block_size =
@@ -513,7 +513,7 @@ private:
             isce3::io::Raster* input_layover_shadow_mask_raster,
             isce3::core::Matrix<uint8_t>& input_layover_shadow_mask,
             isce3::product::SubSwaths * sub_swaths,
-            isce3::io::Raster* out_valid_samples_sub_swath_mask,
+            isce3::io::Raster* out_mask,
             isce3::core::GeocodeMemoryMode geocode_memory_mode,
             const long long min_block_size, const long long max_block_size,
             pyre::journal::info_t& info);
@@ -562,9 +562,9 @@ private:
      * array (in radar geometry). Samples identified as SHADOW or LAYOVER_AND_SHADOW are
      * considered invalid.
      * @param[in]  sub_swaths         Sub-swaths metadata
-     * @param[out] out_valid_samples_sub_swath_mask Output valid-pixels
+     * @param[out] out_mask           Output valid-pixels
      * sub-swath mask raster
-     * @param[out] out_valid_samples_sub_swath_mask_array Output valid-pixels
+     * @param[out] out_mask_array     Output valid-pixels
      * sub-swath mask array
      */
     template<class T_out>
@@ -589,8 +589,8 @@ private:
             isce3::io::Raster* input_layover_shadow_mask_raster,
             isce3::core::Matrix<uint8_t>& input_layover_shadow_mask,
             isce3::product::SubSwaths * sub_swaths,
-            isce3::io::Raster* out_valid_samples_sub_swath_mask,
-            isce3::core::Matrix<short>& out_valid_samples_sub_swath_mask_array);
+            isce3::io::Raster* out_mask,
+            isce3::core::Matrix<short>& out_mask_array);
 
     /**
      * param[in,out] data a matrix of data that needs to be base-banded in

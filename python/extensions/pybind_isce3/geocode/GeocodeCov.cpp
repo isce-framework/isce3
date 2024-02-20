@@ -104,7 +104,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("output_rtc") = nullptr,
                     py::arg("input_layover_shadow_mask_raster") = nullptr,
                     py::arg("sub_swaths") = nullptr,
-                    py::arg("out_valid_samples_sub_swath_mask") = nullptr,
+                    py::arg("out_mask") = nullptr,
                     py::arg("memory_mode") = GeocodeMemoryMode::Auto,
                     py::arg("min_block_size") =
                             isce3::core::DEFAULT_MIN_BLOCK_SIZE,
@@ -202,7 +202,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         considered invalid.
                     sub_swaths: isce3.product.SubSwaths, optional
                         Sub-swaths metadata
-                    out_valid_samples_sub_swath_mask: isce3.io.Raster, optional
+                    out_mask: isce3.io.Raster, optional
                         Output valid-pixels sub-swath mask
                     geocode_memory_mode: isce3.core.GeocodeMemoryMode
                         Select memory mode

@@ -279,7 +279,7 @@ def run(cfg):
     geocode_algorithm = geocode_dict['algorithm_type']
     output_mode = geocode_dict['output_mode']
     flag_apply_rtc = geocode_dict['apply_rtc']
-    flag_apply_valid_samples_sub_swath_masking = \
+    apply_valid_samples_sub_swath_masking = \
         geocode_dict['apply_valid_samples_sub_swath_masking']
     memory_mode = geocode_dict['memory_mode_enum']
     geogrid_upsampling = geocode_dict['geogrid_upsampling']
@@ -351,7 +351,7 @@ def run(cfg):
         t_freq = time.time()
 
         # get sub_swaths metadata
-        if flag_apply_valid_samples_sub_swath_masking:
+        if apply_valid_samples_sub_swath_masking:
             sub_swaths = slc.getSwathMetadata(frequency).sub_swaths()
         else:
             sub_swaths = None
