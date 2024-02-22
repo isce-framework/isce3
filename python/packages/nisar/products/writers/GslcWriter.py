@@ -154,7 +154,7 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'demInterpolation',
-            'bilinear')
+            'biquintic')
 
         # Geocoding algorithm
         self.set_value(
