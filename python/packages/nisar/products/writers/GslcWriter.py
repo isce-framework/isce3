@@ -14,6 +14,9 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.freq_pols_dict = self.cfg['processing']['input_subset'][
             'list_of_frequencies']
 
+        # populate the granule ID
+        self.get_granule_id(self.freq_pols_dict)
+
     def populate_metadata(self):
         """
         Main method. It calls all other methods

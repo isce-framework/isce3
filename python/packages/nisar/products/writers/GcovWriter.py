@@ -17,6 +17,9 @@ class GcovWriter(BaseL2WriterSingleInput):
         self.input_freq_pols_dict = self.cfg['processing']['input_subset'][
             'list_of_frequencies']
 
+        # populate the granule ID
+        self.get_granule_id(self.input_freq_pols_dict)
+
         # For GCOV, the input list of polarizations may be different
         # from the output list of polarizations due to the
         # polarimetric symmetrization

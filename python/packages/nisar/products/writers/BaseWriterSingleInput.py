@@ -10,6 +10,152 @@ from nisar.h5 import cp_h5_meta_data
 
 DATE_TIME_METADATA_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
+pol_mode_dict = {
+    'SH': ['HH'],
+    'SV': ['VV'],
+    'DH': ['HH', 'HV'],
+    'DV': ['VV', 'VH'],
+    'CL': ['LH', 'LV'],
+    'CR': ['RH', 'RV'],
+    'FP': ['HH', 'HV', 'VV'],  # Note: FP (full-pol) is updated to QP
+    'QP': ['HH', 'HV', 'VV', 'VH']
+}
+
+
+def get_granule_id_single_input(input_obj, partial_granule_id, freq_pols_dict):
+    '''
+    Get a NISAR granule ID for a NISAR product with a single input,
+    e.g., RSLC, GSLC, GCOV, from a partial granule ID, substituting
+    the following mnemonics represented within the curly braces:
+
+    NISAR_IL_PT_PROD_CYL_REL_P_FRM_{MODE}_{POLE}_S_{StartDateTime}_{EndDateTime}_CRID_A_C_LOC_CTR.EXT
+
+    Available mnemonics:
+
+    MODE - 4 chars for Bandwidth Mode Code of Primary and Secondary Bands:
+        40, 20, 77, 05, or 00 (only if the secondary band is missing)
+    POLE - 4 chars for Polarization of the data for the primary and secondary
+        bands.
+       Each band uses a two character code among the following:
+        SH = HH - Single Polarity (H transmit and receive)
+        SV = VV - Single Polarity (V transmit and receive)
+        DH = HH/HV - Dual Polarity (H transmit)
+        DV = VV/VH - Dual Polarity (V transmit)
+        CL= LH/LV - Compact Polarity (Left transmit)
+        CR = RH/RV - Compact Polarity (Right transmit)
+        QP = HH/HV/VV/VH - Quad Polarity
+        NA if band does not exist
+    StartDateTime - 15 chars for Radar Start Time of the data processed as
+        zero Doppler contained in the file as YYYYMMDDTHHMMSS, UTC
+    EndDateTime - 15 chars for Radar End Time of the data processed as
+        zero Doppler contained in the file as YYYYMMDDTHHMMSS, UTC
+
+    Parameters
+    ----------
+    input_obj: nisar.products.readers.Base
+        Input product object (e.g., SLC object)
+    partial_granule_id: str
+        Partial granule ID
+    freq_pols_dict:
+        Dictionary with frequencies "A", "B" or both as keys and
+        polarizations as values
+
+    Returns
+    -------
+    granule_id: str
+        Granule ID
+    '''
+    warning_channel = journal.warning('get_granule_id_single_input')
+    error_channel = journal.error('get_granule_id_single_input')
+
+    if not partial_granule_id:
+        granule_id = '(NOT SPECIFIED)'
+        return granule_id
+
+    # set mode (MODE) string
+    mode_str = ''
+
+    # set pol_mode_str (POLE) string
+    pol_mode_str = ''
+    for freq in ['A', 'B']:
+
+        if freq not in freq_pols_dict.keys():
+            mode_str += '00'
+            pol_mode_str += 'NA'
+            continue
+
+        # set bandwidth modes: 40, 20, 77, or 05
+        swath_obj = input_obj.getSwathMetadata(freq)
+        bandwidth_hz = swath_obj.processed_range_bandwidth
+        mode = str(int(round(bandwidth_hz * 1e-6))).zfill(2)
+
+        if mode not in ["40", "20", "77", "05"]:
+            warning_msg = f'Unexpected range bandwidth: {mode}'
+            warning_channel.log(warning_msg)
+        mode_str += mode
+
+        for freq_pol_mode, pol_list in pol_mode_dict.items():
+            if set(freq_pols_dict[freq]) == set(pol_list):
+
+                # Store polarization mode for given frequency.
+                # "FP" (full-pol) does not exist in NISAR modes
+                # and therefore it is substituted by "QP"
+                pol_mode_str += freq_pol_mode.replace('FP', 'QP')
+                break
+        else:
+            error_msg = ('Could not find polarization mode for input'
+                         f' set of polarizations: {freq_pols_dict[freq]}')
+            error_channel.log(error_msg)
+            raise NotImplementedError(error_msg)
+
+    # mode_str should have 4 characters
+    if len(mode_str) != 4:
+        error_msg = ("Expected exactly 4 characters for the product's"
+                     f' bandwidth mode, but {len(mode_str)} characters'
+                     f' were found: "{mode_str}"')
+        error_channel.log(error_msg)
+        raise RuntimeError(error_msg)
+
+    # pol mode should have 4 characters
+    if len(pol_mode_str) != 4:
+        error_msg = ("Expected exactly 4 characters for the polarimetric"
+                     f' mode, but {len(pol_mode_str)} characters'
+                     f' were found: "{pol_mode_str}"')
+        error_channel.log(error_msg)
+        raise RuntimeError(error_msg)
+
+    # start and end time
+    start_datetime = str(input_obj.identification.zdStartTime).split('.')[0]
+    start_datetime = start_datetime.replace('-', '').replace(':', '')
+    end_datetime = str(input_obj.identification.zdEndTime).split('.')[0]
+    end_datetime = end_datetime.replace('-', '').replace(':', '')
+    if len(start_datetime) != 15:
+        error_msg = ("Expected exactly 15 characters for the starting datetime"
+                     f", but {len(start_datetime)} characters were found: "
+                     f' "{start_datetime}"')
+        error_channel.log(error_msg)
+        raise RuntimeError(error_msg)
+
+    if len(end_datetime) != 15:
+        error_msg = ("Expected exactly 15 characters for the ending datetime"
+                     f", but {len(end_datetime)} characters were found: "
+                     f' "{end_datetime}"')
+        error_channel.log(error_msg)
+        raise RuntimeError(error_msg)
+
+    mnemonics_dict = {
+        'MODE': mode_str,
+        'POLE': pol_mode_str,
+        'StartDateTime': start_datetime,
+        'EndDateTime': end_datetime
+    }
+
+    granule_id = partial_granule_id
+    for key, value in mnemonics_dict.items():
+        granule_id = granule_id.replace('_{'+key+'}_', '_'+value+'_')
+
+    return granule_id
+
 
 # The units below have been tested through UDUNITS-2.
 # If a unit exists in the product but is not yet included in
@@ -295,16 +441,15 @@ class BaseWriterSingleInput():
         self.runconfig = runconfig
         self.cfg = runconfig.cfg
         self.input_file = self.cfg['input_file_group']['input_file_path']
-
         self.output_file = \
             runconfig.cfg['product_path_group']['sas_output_file']
-        partial_granule_id = \
+
+        # the granule ID should be populated by the function
+        # self.get_granule_id()
+        self.granule_id = None
+        self.partial_granule_id = \
             self.cfg['primary_executable']['partial_granule_id']
 
-        if partial_granule_id:
-            self.granule_id = partial_granule_id
-        else:
-            self.granule_id = '(NOT SPECIFIED)'
         self.product_type = self.cfg['primary_executable']['product_type']
         self.input_product_obj = open_product(self.input_file)
 
@@ -326,6 +471,53 @@ class BaseWriterSingleInput():
         to populate the product's metadata.
         """
         self.populate_identification_common()
+
+    def get_granule_id(self, freq_pols_dict):
+        '''
+        Populate the granule ID from a partial granule ID, substituting
+        the following mnemonics represented within the curly braces:
+
+        NISAR_IL_PT_PROD_CYL_REL_P_FRM_{MODE}_{POLE}_S_{StartDateTime}_{EndDateTime}_CRID_A_C_LOC_CTR.EXT
+
+        The updated granule ID is stored into the class attribute
+        `granule_id` and returned by the function.
+
+        Available mnemonics:
+
+        MODE - 4 chars for Bandwidth Mode Code of Primary and Secondary Bands:
+            40, 20, 77, 05, or 00 (only if the secondary band is missing)
+        POLE - 4 chars for Polarization of the data for the primary and
+            secondary bands.
+        Each band uses a two character code among the following:
+            SH = HH - Single Polarity (H transmit and receive)
+            SV = VV - Single Polarity (V transmit and receive)
+            DH = HH/HV - Dual Polarity (H transmit)
+            DV = VV/VH - Dual Polarity (V transmit)
+            CL= LH/LV - Compact Polarity (Left transmit)
+            CR = RH/RV - Compact Polarity (Right transmit)
+            QP = HH/HV/VV/VH - Quad Polarity
+            NA if band does not exist
+        StartDateTime - 15 chars for Radar Start Time of the data processed as
+            zero Doppler contained in the file as YYYYMMDDTHHMMSS, UTC
+        EndDateTime - 15 chars for Radar End Time of the data processed as
+            zero Doppler contained in the file as YYYYMMDDTHHMMSS, UTC
+
+        Parameters
+        ----------
+        freq_pols_dict:
+            Dictionary with frequencies "A", "B" or both as keys and
+            polarizations as values
+
+        Returns
+        -------
+        granule_id: str
+            Granule ID
+        '''
+        self.granule_id = get_granule_id_single_input(
+            self.input_product_obj,
+            self.partial_granule_id,
+            freq_pols_dict)
+        return self.granule_id
 
     def populate_identification_common(self):
         """
@@ -355,7 +547,8 @@ class BaseWriterSingleInput():
 
         self.set_value(
             'identification/granuleId',
-            self.granule_id)
+            self.granule_id,
+            default='(NOT SPECIFIED)')
 
         self.copy_from_runconfig(
             'identification/productVersion',
@@ -553,7 +746,6 @@ class BaseWriterSingleInput():
 
     def copy_from_runconfig(self, h5_field,
                             runconfig_path,
-                            default=None,
                             *args,
                             **kwargs):
         """
@@ -570,14 +762,15 @@ class BaseWriterSingleInput():
         """
 
         if not runconfig_path:
-            raise ValueError('Please provide a valid runconfig path')
+            error_channel = journal.error(
+                'BaseWriterSingleInput.copy_from_runconfig')
+            error_msg = 'Please provide a valid runconfig path'
+            error_channel.log(error_msg)
+            raise ValueError(error_msg)
 
         data = self.cfg
         for key in runconfig_path.split('/'):
             data = data[key]
-
-        if data is None:
-            data = default
 
         self.set_value(h5_field, data=data, *args, **kwargs)
 

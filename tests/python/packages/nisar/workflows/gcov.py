@@ -41,6 +41,14 @@ def test_run():
             sas_output_file = f'{axis}_{key}.h5'
             runconfig.cfg['product_path_group']['sas_output_file'] = \
                 sas_output_file
+            partial_granule_id = \
+                ('NISAR_L2_PR_GCOV_105_091_D_006_{MODE}_{POLE}_A'
+                 '_{StartDateTime}_{EndDateTime}_D00344_P_P_J_001.h5')
+            expected_granule_id = \
+                ('NISAR_L2_PR_GCOV_105_091_D_006_2000_SHNA_A'
+                 '_20120717T143647_20120717T144244_D00344_P_P_J_001.h5')
+            runconfig.cfg['primary_executable']['partial_granule_id'] = \
+                partial_granule_id
 
             if os.path.isfile(sas_output_file):
                 os.remove(sas_output_file)
@@ -50,6 +58,7 @@ def test_run():
 
             with GcovWriter(runconfig=runconfig) as gcov_obj:
                 gcov_obj.populate_metadata()
+                assert gcov_obj.granule_id == expected_granule_id
 
 
 if __name__ == '__main__':
