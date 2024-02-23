@@ -1,5 +1,6 @@
 import bisect
 from abc import ABC, abstractmethod
+import warnings
 import numpy as np
 from scipy.interpolate import interp1d
 
@@ -12,6 +13,11 @@ from isce3.geometry import DEMInterpolator
 # Default for number of pulses to skip in geomtery computation from antenna
 # frame to slant range for the sake of speed-up.
 DEFAULT_NUM_PULSE_SKIP = 12
+
+
+class BadHPACalWarning(Warning):
+    """Warning for Bad HPA CAL values"""
+    pass
 
 
 class ElevationBeamformer(ABC):
@@ -78,6 +84,9 @@ class ElevationBeamformer(ABC):
 
         self.orbit = orbit
         self.attitude = attitude
+        # precompute mean DEM needed for antenna geometry
+        if dem_interp.have_raster and not dem_interp.have_stats:
+            dem_interp.compute_min_max_mean_height()
         self.dem_interp = dem_interp
         self.el_ant_info = el_ant_info
         self.trm_info = trm_info
@@ -722,6 +731,28 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
     # initialize tx weights with 2nd tap of correlator
     tx_weights = tx_trm_info.correlator_tap2[:, active_tx_idx]
 
+    # check hcal values if partially zero replace them with nearest
+    # non-zero neighbors. Issue a warning for null values!
+    hcal_abs = abs(tx_weights[hcal_lines_idx])
+    if np.isclose(hcal_abs.max(), 0):
+        raise RuntimeError('HPA Cal values are all zeros!')
+    if np.isclose(hcal_abs.min(), 0):
+        warnings.warn(
+            'HPA Cal contains some zero values. These will be replaced with'
+            ' the nearest non-zero values.', category=BadHPACalWarning
+            )
+        # replace zero values with nearest non-zero ones
+        for n in range(active_tx_idx.size):
+            mask_zr = np.isclose(hcal_abs[:, n], 0)
+            if np.any(mask_zr):
+                i_hpa_nz = hcal_lines_idx[~mask_zr]
+                i_hpa_z = hcal_lines_idx[mask_zr]
+                f_nearest = interp1d(
+                    i_hpa_nz, tx_weights[i_hpa_nz, n], kind='nearest',
+                    fill_value='extrapolate', assume_sorted=True
+                    )
+                tx_weights[i_hpa_z, n] = f_nearest(i_hpa_z)
+
     # If BCAL exists compute ratio HCAL/(BCAL/BCAL[0])
     if bcal_lines_idx.size:
         # check BCAL to make sure it's non-zero value for active channels only!
@@ -765,7 +796,8 @@ def compute_transmit_pattern_weights(tx_trm_info, norm=False):
     if tx_trm_info.tx_phase.shape != (num_rgl, num_chanl):
         raise ValueError(
             'Shape mismtach between "tx_phase" and "correlator_tap2"')
-    return abs(tx_weights) * np.exp(1j * tx_trm_info.tx_phase)
+    return abs(tx_weights) * np.exp(
+        1j * tx_trm_info.tx_phase[:, active_tx_idx])
 
 
 def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
@@ -812,9 +844,10 @@ def compute_receive_pattern_weights(rx_trm_info, el_ofs=0.0, norm=False):
     # get the index of active RX channels
     active_rx_idx = np.asarray(rx_trm_info.channels) - 1
 
-    # Compute rd, wd, and wl based on data sampling rate of DBF process which is
-    # sampling rate of entries of TA table.  Since rounding doesn't commute with
-    # addition, recognize that RD is a position whereas WD and WL are distances.
+    # Compute rd, wd, and wl based on data sampling rate of DBF process which
+    # is sampling rate of entries of TA table.  Since rounding doesn't commute
+    # with addition, recognize that RD is a position whereas WD and WL are
+    # distances.
     # We want to round positions RD, (RD + WD), and (RD + WD + WL) to their
     # nearest sample at fs_ta, assuming the two clocks have a common trigger.
     def round_win2ta(index_win):

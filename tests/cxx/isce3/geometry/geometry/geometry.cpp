@@ -29,8 +29,8 @@
 
 // isce3::geometry
 #include <isce3/geometry/DEMInterpolator.h>
-#include <isce3/geometry/geometry.h>
 #include <isce3/geometry/geo2rdr_roots.h>
+#include <isce3/geometry/geometry.h>
 
 // Declaration for utility function to read test data
 void loadTestData(std::vector<std::string>& aztimes,
@@ -176,7 +176,6 @@ TEST_F(GeometryTest, GeoToRdr)
     EXPECT_EQ(stat, 1);
     EXPECT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");
     EXPECT_NEAR(slantRange, 830449.6727720434, 1.0e-6);
-
 }
 
 TEST(Geometry, SrLkvHeadDemNed)
@@ -250,7 +249,7 @@ TEST(Geometry, SrLkvHeadDemNed)
     auto hgt_info = srPosFromLookVecDem(sr_dem, loc_ecf, loc_llh, sc_pos_ecf,
             pnt_ecf, DEMInterpolator(dem_hgt), hgt_err, num_iter, wgs84);
     EXPECT_LE(hgt_info.first, num_iter)
-            << "Wrong number of itration for DEM height";
+            << "Wrong number of iterations for DEM height";
     EXPECT_LE(hgt_info.second, hgt_err) << "Wrong height error for DEM height";
     EXPECT_NEAR(sr_dem, 979117.2, hgt_err) << "Wrong slant range at DEM height";
     EXPECT_NEAR((loc_ecf - est_loc_ecf).cwiseAbs().maxCoeff(), 0.0, hgt_err)
@@ -261,6 +260,25 @@ TEST(Geometry, SrLkvHeadDemNed)
             << "Wrong (Lon,lat) location at DEM height";
     EXPECT_NEAR(std::abs(loc_llh(2) - est_loc_llh(2)), 0.0, hgt_err)
             << "Wrong (Lon,lat) location at DEM height";
+
+    // use mean DEM in place of optional arg in "srPosFromLookVecDem"
+    auto hgt_mean_info = srPosFromLookVecDem(sr_dem, loc_ecf, loc_llh,
+            sc_pos_ecf, pnt_ecf, DEMInterpolator(dem_hgt), hgt_err, num_iter,
+            wgs84, dem_hgt);
+    EXPECT_LE(hgt_mean_info.first, num_iter)
+            << "Wrong number of iterations for mean DEM height";
+    EXPECT_LE(hgt_mean_info.second, hgt_err)
+            << "Wrong height error for mean DEM height";
+    EXPECT_NEAR(sr_dem, 979117.2, hgt_err)
+            << "Wrong slant range at mean DEM height";
+    EXPECT_NEAR((loc_ecf - est_loc_ecf).cwiseAbs().maxCoeff(), 0.0, hgt_err)
+            << "Wrong ECEF location at mean DEM height";
+    EXPECT_NEAR(
+            (r2d * loc_llh.head(2) - est_loc_llh.head(2)).cwiseAbs().maxCoeff(),
+            0.0, abs_err)
+            << "Wrong (Lon,lat) location at mean DEM height";
+    EXPECT_NEAR(std::abs(loc_llh(2) - est_loc_llh(2)), 0.0, hgt_err)
+            << "Wrong (Lon,lat) location at mean DEM height";
 
     // "necVector" , "nuwVector" , "enuVector"  methods
     auto sc_vel_ned {nedVector(sc_pos_llh(0), sc_pos_llh(1), sc_vel_ecf)};

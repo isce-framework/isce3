@@ -171,7 +171,7 @@ int _update_aztime(const Orbit& orbit, Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
         aztime = aztime_closest;
     return !error;
 }
-}} // namespace isce3::geometry::
+}} // namespace isce3::geometry
 
 int isce3::geometry::geo2rdr(const Vec3& inputLLH, const Ellipsoid& ellipsoid,
         const Orbit& orbit, const Poly2d& doppler, double& aztime,
@@ -456,15 +456,21 @@ double isce3::geometry::slantRangeFromLookVec(
 std::pair<int, double> isce3::geometry::srPosFromLookVecDem(double& sr,
         Vec3& tg_pos, Vec3& llh, const Vec3& sc_pos, const Vec3& lkvec,
         const DEMInterpolator& dem_interp, double hgt_err, int num_iter,
-        const Ellipsoid& ellips)
+        const Ellipsoid& ellips, std::optional<double> initial_height)
 {
     if (hgt_err <= 0.0 || num_iter <= 0)
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
                 "Height Error and number of iteration "
                 "must be non-zero positive values!");
 
+    // either use provided initial height or compute the mean DEM
+    // from DEM stats if not already computed!
+    double mean_hgt {0};
+    if (initial_height)
+        mean_hgt = *initial_height;
+    else
+        mean_hgt = compute_mean_dem(dem_interp);
     // form a new ellipsoid whose radii adjusted by mean height
-    const auto mean_hgt = dem_interp.meanHeight();
     const auto a_new = ellips.a() + mean_hgt;
     const auto b_new = ellips.b() + mean_hgt;
     const auto e2_new = 1.0 - (b_new * b_new) / (a_new * a_new);
@@ -524,7 +530,7 @@ static std::tuple<double, double> _get_rgcurv_plus_hgt(
     // get ellipsoid range curvature along flight track / heading
     auto rg_curv = ellips.rDir(sc_hdg, sc_llh(1));
     // get mean dem height
-    auto dem_hgt = dem_interp.meanHeight();
+    auto dem_hgt = compute_mean_dem(dem_interp);
     return {sc_llh(2) + rg_curv, dem_hgt + rg_curv};
 }
 
@@ -610,4 +616,30 @@ isce3::geometry::lookIncAngFromSlantRange(
     return {lka_all, inca_all};
 }
 
+double isce3::geometry::compute_mean_dem(const DEMInterpolator& dem)
+{
+    if (dem.haveRaster()) {
+        if (dem.haveStats())
+            return dem.meanHeight();
+        else {
+            double mean = 0.0;
+            auto n_valid = dem.length() * dem.width();
+            const auto d = dem.data();
+// loop over all values in DEM raster
+#pragma omp parallel for reduction(+ : mean) reduction(- : n_valid)
+            for (size_t idx = 0; idx < dem.length() * dem.width(); ++idx) {
+                auto val = d[idx];
+                if (std::isnan(val)) {
+                    n_valid--;
+                    continue;
+                }
+                mean += val;
+            }
+            if (n_valid != 0)
+                mean /= n_valid;
+            return mean;
+        }
+    }
+    return dem.refHeight();
+}
 // end of file

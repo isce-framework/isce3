@@ -304,6 +304,9 @@ double slantRangeFromLookVec(const isce3::core::Vec3& pos,
  * estimation
  * @param[in] ellips (optional) : Ellipsoid object. Default is
  * WGS84 reference ellipsoid.
+ * @param[in] initial_height (optional): initial height wrt ellipsoid
+ * used in the iterative process. If not specified or set to {} or
+ * std::nullopt, stats of DEM raster is computed if not already.
  * @return a pair of <int,double> scalars for number of iterations and
  * absolute height error, respectively.
  * @exception InvalidArgument, RuntimeError
@@ -314,7 +317,8 @@ std::pair<int, double> srPosFromLookVecDem(double& sr,
         isce3::core::Vec3& tg_pos, isce3::core::Vec3& llh,
         const isce3::core::Vec3& sc_pos, const isce3::core::Vec3& lkvec,
         const DEMInterpolator& dem_interp = {}, double hgt_err = 0.5,
-        int num_iter = 10, const isce3::core::Ellipsoid& ellips = {});
+        int num_iter = 10, const isce3::core::Ellipsoid& ellips = {},
+        std::optional<double> initial_height = {});
 
 /**
  * Estimate look angle (off-nadir angle) and ellipsoidal incidence angle at a
@@ -394,6 +398,12 @@ std::tuple<Eigen::ArrayXd, Eigen::ArrayXd> lookIncAngFromSlantRange(
         const isce3::core::Orbit& orbit, std::optional<double> az_time = {},
         const DEMInterpolator& dem_interp = {},
         const isce3::core::Ellipsoid& ellips = {});
+
+/**
+ * @param[in] dem: DEMInterpolator object.
+ * @return mean height in (m).
+ */
+double compute_mean_dem(const DEMInterpolator& dem);
 
 } // namespace geometry
 } // namespace isce3

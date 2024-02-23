@@ -17,6 +17,7 @@ from isce3.antenna import (roll_angle_offset_from_edge, ElPatternEst,
 from isce3.geometry import DEMInterpolator, look_inc_ang_from_slant_range
 from nisar.log import set_logger
 from isce3.core import Ellipsoid, speed_of_light, Poly1d, TimeDelta
+from nisar.antenna import TxTrmInfo, compute_transmit_pattern_weights
 
 
 def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
@@ -407,6 +408,10 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
     # build DEM object if not provided
     if dem_interp is None:
         dem_interp = DEMInterpolator()
+    else:
+        # precompute mean DEM needed for antenna geometry
+        if dem_interp.have_raster and not dem_interp.have_stats:
+            dem_interp.compute_min_max_mean_height()
     logger.info(
         f'Ref height of DEM object -> {dem_interp.ref_height:.3f} (m)')
 
@@ -441,8 +446,17 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                     f'({beam_num_stop_tx}, {beam_num_stop_rx})')
 
         # Get HPA/BYP Cal ratio for desired TX beams over all range lines
-        tx_cal_ratio = raw.computeTxCalRatio(
-            freq_band, txrx_pol[0])[:, :beam_num_stop_tx]
+        # form TX TRM to be used for TX weights
+        # One can use TX phase by adding it to the "tx_trm_info"
+        tx_trm_info = TxTrmInfo(
+            raw.getPulseTimes(freq_band, txrx_pol[0])[1],
+            np.arange(1, beam_num_stop_tx + 1),
+            raw.getChirpCorrelator(freq_band, txrx_pol[0])[..., 1],
+            raw.getCalType(freq_band, txrx_pol[0])
+            )
+        # get TX weights to be used to form Tx pattern in EL.
+        tx_cal_ratio = compute_transmit_pattern_weights(
+            tx_trm_info, norm=True)
 
     # generate rangeline slices
     rgl_slices = _rgl_slice_gen(num_rgls, num_azimuth_block, num_rgl_block)
@@ -470,6 +484,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
     pf_ant_all = []
     pf_echo_all = []
     pf_wgt_all = []
+    mask_valid_rgb = True
 
     # loop over all azimuth blocks
     for nn, s_rgl in enumerate(rgl_slices):
@@ -529,7 +544,7 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
                                                    el_ant_slice]
 
             # Get block-averaged TX complex weighting to build TX BMF pattern
-            tx_wgt = tx_cal_ratio[s_rgl].mean(axis=0)
+            tx_wgt = np.nanmean(tx_cal_ratio[s_rgl], axis=0)
 
             # form 2-way power pattern (dB) of rising edge only
             antpat2w = _form_ant2way_sweepsar(

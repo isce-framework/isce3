@@ -245,6 +245,10 @@ def el_null_range_from_raw_ant(raw, ant, *, dem_interp=None,
     # build DEM object if not provided
     if dem_interp is None:
         dem_interp = DEMInterpolator()
+    else:
+        # precompute mean DEM needed for antenna geometry
+        if dem_interp.have_raster and not dem_interp.have_stats:
+            dem_interp.compute_min_max_mean_height()
     logger.info(
         f'Ref height of DEM object -> {dem_interp.ref_height:.3f} (m)')
 
