@@ -9,7 +9,8 @@ import numpy as np
 
 import isce3
 from isce3.core.rdr_geo_block_generator import block_generator
-from isce3.core.types import truncate_mantissa, read_c4_dataset_as_c8
+from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
+                              to_complex32)
 
 import nisar
 from nisar.products.readers import SLC
