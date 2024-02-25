@@ -525,7 +525,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         zero_doppler_path = f'{input_h5_group_path}/zeroDopplerTime'
         try:
-            zero_doppler_time_array = self.input_hdf5_obj[zero_doppler_path]
+            zero_doppler_h5_dataset = self.input_hdf5_obj[zero_doppler_path]
         except KeyError:
             not_found_msg = ('Metadata entry not found in the input'
                              ' product: ' + zero_doppler_path)
@@ -538,7 +538,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
         slant_range_path = f'{input_h5_group_path}/slantRange'
         try:
-            slant_range_array = self.input_hdf5_obj[slant_range_path]
+            slant_range_h5_dataset = self.input_hdf5_obj[slant_range_path]
         except KeyError:
             not_found_msg = ('Metadata entry not found in the input'
                              ' product: ' + slant_range_path)
@@ -549,35 +549,40 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 error_channel.log(not_found_msg)
                 raise KeyError(not_found_msg)
 
-        lines = zero_doppler_time_array.size
-        samples = slant_range_array.size
+        lines = zero_doppler_h5_dataset.size
+        samples = slant_range_h5_dataset.size
 
         time_spacing = np.average(
-            zero_doppler_time_array[1:-1] - zero_doppler_time_array[0:-2])
+            zero_doppler_h5_dataset[1:-1] - zero_doppler_h5_dataset[0:-2])
         range_spacing = np.average(
-            slant_range_array[1:-1] - slant_range_array[0:-2])
+            slant_range_h5_dataset[1:-1] - slant_range_h5_dataset[0:-2])
 
         if time_spacing <= 0:
             error_msg = ('Invalid zero-Doppler time array under'
                          f' {zero_doppler_path}:'
-                         f' {zero_doppler_time_array[()]}')
+                         f' {zero_doppler_h5_dataset[()]}')
             error_channel.log(error_msg)
             raise RuntimeError(error_msg)
 
         if range_spacing <= 0:
             error_msg = ('Invalid range spacing array under'
-                         f' {slant_range_path}: {slant_range_array[()]}')
+                         f' {slant_range_path}: {slant_range_h5_dataset[()]}')
             error_channel.log(error_msg)
             raise RuntimeError(error_msg)
 
+        ref_epoch = isce3.io.get_ref_epoch(zero_doppler_h5_dataset.parent,
+                                           zero_doppler_h5_dataset.name)
+
+        prf = 1.0 / time_spacing
+
         radar_grid = isce3.product.RadarGridParameters(
-                zero_doppler_time_array[0],
+                zero_doppler_h5_dataset[0],
                 radar_grid_slc.wavelength,
-                time_spacing,
-                slant_range_array[0],
+                prf,
+                slant_range_h5_dataset[0],
                 range_spacing,
                 radar_grid_slc.lookside,
-                lines, samples, self.orbit.reference_epoch)
+                lines, samples, ref_epoch)
 
         # construct input rasters
         input_raster_list = []
@@ -624,12 +629,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         geo.threshold_geo2rdr = threshold
         geo.numiter_geo2rdr = maxiter
 
-        geo.geogrid(metadata_geogrid.start_x, 
+        geo.geogrid(metadata_geogrid.start_x,
                     metadata_geogrid.start_y,
-                    metadata_geogrid.spacing_x, 
+                    metadata_geogrid.spacing_x,
                     metadata_geogrid.spacing_y,
-                    metadata_geogrid.width, 
-                    metadata_geogrid.length, 
+                    metadata_geogrid.width,
+                    metadata_geogrid.length,
                     metadata_geogrid.epsg)
 
         # set paths temporary files
