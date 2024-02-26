@@ -3,8 +3,110 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/Interpolator.h>
 #include <isce3/core/LUT2d.h>
+#include <isce3/core/Poly2d.h>
 
 namespace isce3::image::v2 {
+
+
+template<typename AzRgFunc = isce3::core::Poly2d>
+std::complex<float> getPixelCarrierPhase(
+    const float azimuth,
+    const float range,
+    const AzRgFunc& carrier_phase
+) {
+      // Evaluate the pixel's carrier phase
+      // unit: phase (radians)
+      const float phase = carrier_phase.eval(azimuth, range);
+
+      // Convert the carrier phase into a unit phasor (i.e. an angle on the unit
+      // circle in the complex plane).
+      // unit: phase (complex)
+      const std::complex<float> phase_complex(std::cos(phase), std::sin(phase));
+      
+      // return carrier at the radar grid coordinates
+      return phase_complex;
+}
+
+
+template<typename AzRgFunc>
+void getModulationPhase(
+    ArrayRef2D<std::complex<float>> phase_data_block,
+    const AzRgFunc& carrier_phase,
+    const isce3::product::RadarGridParameters& radar_grid,
+    const size_t input_azimuth_first_line,
+    const size_t input_range_first_pixel
+)
+{
+    // unit: azimuth row indices (int)
+    const size_t phase_block_length = phase_data_block.rows();
+    // unit: range column indices (int)
+    const size_t phase_block_width = phase_data_block.cols();
+
+    // remove carrier from radar data
+#pragma omp parallel for collapse(2)
+    for ( size_t az_index = 0; az_index < phase_block_length; ++az_index) {
+        for (size_t rg_index = 0; rg_index < phase_block_width; ++rg_index) {
+            // Offset for block starting line
+            // unit: azimuth row indices (int)
+            const auto az_carrier_index = az_index + input_azimuth_first_line;
+            // unit: time (seconds)
+            const double azimuth =
+                radar_grid.sensingStart() + az_carrier_index / radar_grid.prf();
+
+            // Offset for block starting pixel
+            // unit: range column indices (int)
+            const auto rg_carrier_index = rg_index + input_range_first_pixel;
+            // unit: distance (meters)
+            const double range = radar_grid.startingRange() +
+                    rg_carrier_index * radar_grid.rangePixelSpacing();
+            
+            // Get the carrier phase for this pixel
+            const auto phase = getPixelCarrierPhase(azimuth, range, carrier_phase);
+            
+            // Write the phase into the output data block
+            phase_data_block(az_index, rg_index) = phase;
+        }
+    } // end multithreaded block
+}
+
+
+template<typename AzRgFunc>
+void getModulationPhaseAtCoords(
+    ArrayRef2D<std::complex<float>> phase_data_block,
+    const AzRgFunc& carrier_phase,
+    const isce3::product::RadarGridParameters& radar_grid,
+    const ConstArrayRef2D<double> azimuth_indices,
+    const ConstArrayRef2D<double> range_indices
+)
+{
+    const size_t outWidth = phase_data_block.cols();
+    const size_t outLength = phase_data_block.rows();
+
+#pragma omp parallel for collapse(2)
+    for (size_t az_index = 0; az_index < outLength; ++az_index){
+        for (size_t rg_index = 0; rg_index < outWidth; ++rg_index){
+
+            // Get the indices on the output grid corresponding to these indices
+            // on the input grid overall.
+            const double az_carrier_index = azimuth_indices(az_index, rg_index);
+            const double rg_carrier_index = range_indices(az_index, rg_index);
+
+            // Azimuth time at the current output pixel
+            const double azimuth = radar_grid.sensingStart() + az_carrier_index / 
+                radar_grid.prf();
+
+            // Slant Range at the current output pixel
+            const double range = radar_grid.startingRange() + rg_carrier_index *
+                radar_grid.rangePixelSpacing();
+            
+            // Get the carrier phase for this pixel
+            const auto phase = getPixelCarrierPhase(azimuth, range, carrier_phase);
+            
+            // Write the phase into the output data block
+            phase_data_block(az_index, rg_index) = phase;
+        }
+    } // end multithreaded block
+}
 
 
 void resampleToCoords(
@@ -173,5 +275,24 @@ void resampleToCoords(
         } // end omp for collapse(2)
     } // end omp parallel
 } // end resampleToCoords
+
+
+#define EXPLICIT_INSTANTIATION(AzRgFunc)                                      \
+template void getModulationPhase(                                             \
+    ArrayRef2D<std::complex<float>> phase_data_block,                         \
+    const AzRgFunc& carrier_phase,                                            \
+    const isce3::product::RadarGridParameters& radar_grid,                    \
+    const size_t input_azimuth_first_line,                                    \
+    const size_t input_range_first_pixel                                      \
+);                                                                            \
+template void getModulationPhaseAtCoords(                                     \
+    ArrayRef2D<std::complex<float>> phase_data_block,                         \
+    const AzRgFunc& carrier_phase,                                            \
+    const isce3::product::RadarGridParameters& radar_grid,                    \
+    const ConstArrayRef2D<double> azimuth_indices,                            \
+    const ConstArrayRef2D<double> range_indices                               \
+)
+EXPLICIT_INSTANTIATION(isce3::core::LUT2d<double>);
+EXPLICIT_INSTANTIATION(isce3::core::Poly2d);
 
 } // end namespace isce3::image::v2
