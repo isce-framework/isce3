@@ -324,8 +324,8 @@ def project_map_to_radar(cfg, input_data_path, freq):
 
         # take center pixels of block to decimate
         decimated_arr = \
-            input_data[int(az_looks/2):-int(az_looks/2):az_looks,
-                       int(rg_looks/2):-int(rg_looks/2):rg_looks]
+            input_data[int(az_looks/2):-int(az_looks/2)+1:az_looks,
+                       int(rg_looks/2):-int(rg_looks/2)+1:rg_looks]
 
         # save decimated extents and array for current axis
         decimated_extents[xy] = [np.nanmin(decimated_arr),
