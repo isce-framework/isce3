@@ -126,3 +126,6 @@ void addbindings_resamp(py::module & m)
         )"
     );
 }
+
+template void addbindings_resamp<isce3::core::LUT2d<double>>(py::module & m);
+template void addbindings_resamp<isce3::core::Poly2d>(py::module & m);
