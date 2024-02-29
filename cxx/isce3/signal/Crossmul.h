@@ -49,6 +49,12 @@ class isce3::signal::Crossmul {
         /** Get doppler LUT for secondary SLC */
         inline const isce3::core::LUT1d<double> & secDoppler() const { return _secDoppler; }
 
+        /** Set reference and seconary starting range shift */
+        inline void startingRangeShift(double rng_shift) { _offsetStartingRangeShift = rng_shift; }
+
+        /** Get reference and secondary starting range shift */
+        inline double startingRangeShift() const { return _offsetStartingRangeShift; }
+
         /** Set range pixel spacing */
         inline void rangePixelSpacing(double rgPxlSpacing) { _rangePixelSpacing = rgPxlSpacing; }
 
@@ -106,6 +112,9 @@ class isce3::signal::Crossmul {
 
         //Doppler LUT for the secondary SLC
         isce3::core::LUT1d<double> _secDoppler;
+
+        // starting range shifts between the secondary and reference RSLC in meters
+        double _offsetStartingRangeShift = 0.0;
 
         // range pixel spacing
         double _rangePixelSpacing;

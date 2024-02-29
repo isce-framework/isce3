@@ -312,7 +312,7 @@ crossmul(isce3::io::Raster& refSlcRaster,
             std::valarray<double> offsetLine(ncols);
             for (size_t line = 0; line < blockRowsData; ++line) {
                 rngOffsetRaster->getLine(offsetLine, rowStart + line);
-                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
+                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine + _offsetStartingRangeShift / _rangePixelSpacing;
             }
 
             #pragma omp parallel for

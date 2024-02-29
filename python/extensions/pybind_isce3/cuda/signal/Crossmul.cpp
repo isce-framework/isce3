@@ -55,6 +55,9 @@ void addbinding(py::class_<gpuCrossmul> & pyCrossmul)
         .def_property("sec_doppler",
                 py::overload_cast<>(&gpuCrossmul::secDoppler, py::const_),
                 py::overload_cast<isce3::core::LUT1d<double>>(&gpuCrossmul::secDoppler))
+        .def_property("ref_sec_offset_starting_range_shift",
+                py::overload_cast<>(&gpuCrossmul::startingRangeShift, py::const_),
+                py::overload_cast<double>(&gpuCrossmul::startingRangeShift))
         .def_property("range_pixel_spacing",
                 py::overload_cast<>(&gpuCrossmul::rangePixelSpacing, py::const_),
                 py::overload_cast<double>(&gpuCrossmul::rangePixelSpacing))
