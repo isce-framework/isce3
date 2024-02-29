@@ -398,8 +398,8 @@ worker_options:
 
 output_options:
 
-    # Output format
-    format: enum('HDF5', 'GTiff', 'COG', 'ENVI', required=False)
+    # Output file format
+    format: enum('HDF5', 'GTiff', 'ENVI', required=False)
 
     # Enable/disable compression of output raster
     compression_enabled: bool(required=False)
@@ -411,5 +411,19 @@ output_options:
     # 1 - least compression, 9 - best compresssion
     compression_level: int(min=1, max=9, required=False)
 
-    # Number of bits for each real-part sample
-    mantissa_nbits: int(min=1, required=False)
+    # Enable/disable chunking of output raster
+    chunking_enabled: bool(required=False)
+
+    # Chunk size of output raster as a list: [y, x]
+    # If no value is specified, the chunk_size defaults to [512, 512]
+    # or a smaller size, constrained by the dimensions of the image
+    chunk_size: list(int(min=1), min=2, max=2, required=False)
+
+    # Enable/disable shuffle filtering of output raster
+    shuffle_filtering_enabled: bool(required=False)
+
+    # Number bits retained in the mantissa of the floating point
+    # representation of each component real and imaginary (if applicable)
+    # of each output sample.
+    # If no value is provided, the mantissa bits truncation is not applied
+    mantissa_nbits: int(min=1, max=52, required=False)

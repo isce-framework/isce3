@@ -12,12 +12,149 @@ from isce3.core.types import truncate_mantissa
 from nisar.products.readers.orbit import load_orbit_from_xml
 
 
+def _get_attribute_dict(band,
+                        standard_name=None,
+                        long_name=None,
+                        units=None,
+                        fill_value=None,
+                        valid_min=None,
+                        valid_max=None,
+                        stats_obj_list=None,
+                        stats_real_imag_obj_list=None,
+                        to_string_function=str):
+    '''
+    Get attribute dictionary for a raster layer
+
+    Parameters
+    ----------
+    band : int
+        Raster band
+    standard_name : string, optional
+        HDF5 dataset standard name
+    long_name : string, optional
+        HDF5 dataset long name
+    units : str, optional
+        Value to populate the HDF5 dataset attribute "units"
+    fill_value : scalar, optional
+        Value to populate the HDF5 dataset attribute "_FillValue"
+    valid_min : scalar, optional
+        Value to populate the HDF5 dataset attribute "valid_min"
+    valid_max : scalar, optional
+        Value to populate the HDF5 dataset attribute "valid_max"
+    stats_obj_list : isce3.math.StatsFloat32 or isce3.math.StatsFloat64
+        List of real-valued stats object
+    stats_real_imag_obj_list : list(isce3.math.StatsRealImagFloat32) or
+                               list(isce3.math.StatsRealImagFloat64), optional
+        List of complex stats object
+    to_string_function: function, optional
+        Function to convert input data type to string
+
+    Returns
+    -------
+    attr_dict: dict
+        Dataset attributes represented as a dictionary
+    '''
+
+    attr_dict = {}
+    if standard_name is not None:
+        attr_dict['standard_name'] = to_string_function(standard_name)
+
+    if long_name is not None:
+        attr_dict['long_name'] = to_string_function(long_name)
+
+    if units is not None:
+        attr_dict['units'] = to_string_function(units)
+
+    if fill_value is not None:
+        attr_dict['_FillValue'] = fill_value
+
+    if stats_obj_list is not None:
+        stats_obj = stats_obj_list[band]
+        attr_dict['min_value'] = stats_obj.min
+        attr_dict['mean_value'] = stats_obj.mean
+        attr_dict['max_value'] = stats_obj.max
+        attr_dict['sample_standard_deviation'] = \
+            stats_obj.sample_stddev
+
+    elif stats_real_imag_obj_list is not None:
+
+        stats_obj = stats_real_imag_obj_list[band]
+        attr_dict['min_real_value'] = stats_obj.real.min
+        attr_dict['mean_real_value'] = stats_obj.real.mean
+        attr_dict['max_real_value'] = stats_obj.real.max
+        attr_dict['sample_standard_deviation_real'] = \
+            stats_obj.real.sample_stddev
+
+        attr_dict['min_imag_value'] = stats_obj.imag.min
+        attr_dict['mean_imag_value'] = stats_obj.imag.mean
+        attr_dict['max_imag_value'] = stats_obj.imag.max
+        attr_dict['sample_standard_deviation_imag'] = \
+            stats_obj.imag.sample_stddev
+
+    if valid_min is not None:
+        attr_dict['valid_min'] = valid_min
+
+    if valid_max is not None:
+        attr_dict['valid_max'] = valid_max
+
+    return attr_dict
+
+
+def _get_stats_obj_list(raster, compute_stats):
+    '''
+    Get vector of statistic objects from a raster (isce3.io.Raster object)
+
+    Parameters
+    ----------
+    raster: isce3.io.Raster
+        Input raster
+    compute_stats: bool
+        Flag that indicates if statistics should be computed for the
+        raster layer
+
+    Returns
+    -------
+    stats_obj_list : list(isce3.math.StatsFloat32) or
+                     list(isce3.math.StatsFloat64) or None
+        List of real-valued stats object or None if compute_stats is False
+    stats_real_imag_obj_list : list(isce3.math.StatsRealImagFloat32) or
+                             list(isce3.math.StatsRealImagFloat64) or None
+        List of complex-valued stats object or None if compute_stats is False
+    '''
+    stats_real_imag_obj_list = None
+    stats_obj_list = None
+
+    if not compute_stats:
+        return stats_obj_list, stats_real_imag_obj_list
+
+    if (raster.datatype() == gdal.GDT_CFloat32 or
+            raster.datatype() == gdal.GDT_CFloat64):
+        stats_real_imag_obj_list = \
+            isce3.math.compute_raster_stats_real_imag(raster)
+    elif (raster.datatype() == gdal.GDT_Float32 or
+            raster.datatype() == gdal.GDT_Byte or
+            raster.datatype() == gdal.GDT_Int16 or
+            raster.datatype() == gdal.GDT_UInt16):
+        stats_obj_list = isce3.math.compute_raster_stats_float32(raster)
+    else:
+        # Handle integer datatypes as float64.
+        stats_obj_list = isce3.math.compute_raster_stats_float64(raster)
+    return stats_obj_list, stats_real_imag_obj_list
+
+
 def save_dataset(ds_filename, h5py_obj, root_path,
-                 yds, xds, ds_name,
+                 yds, xds, output_ds_name,
+                 format='HDF5',
+                 output_dir='',
+                 output_file_prefix='',
                  compression_enabled=True,
                  compression_type='gzip',
                  compression_level=9,
+                 chunking_enabled=True,
+                 chunk_size=[512, 512],
+                 shuffle_filtering_enabled=False,
                  mantissa_nbits=None,
+                 output_files_list=None,
                  standard_name=None,
                  long_name=None,
                  units=None,
@@ -26,7 +163,8 @@ def save_dataset(ds_filename, h5py_obj, root_path,
                  valid_max=None,
                  compute_stats=True):
     '''
-    Write a raster files as a set of HDF5 datasets
+    Write a temporary multi-band raster file as an output HDF5 file
+    or a set of single-band files.
 
     Parameters
     ----------
@@ -35,25 +173,60 @@ def save_dataset(ds_filename, h5py_obj, root_path,
     h5py_obj : h5py.File
         h5py object of destination HDF5
     root_path : str
-        Path of output raster data
+        Path of the group within the HDF5 file to store the output raster
+        data in (only applicable for "format" equal to "HDF5")
     yds : h5py.Dataset
         Y-axis dataset
     xds : h5py.Dataset
         X-axis dataset
-    ds_name : str
-        name of dataset to be added to root_path
+    output_ds_name : str or list of str
+        Dataset name or list of names to be used in the output,
+        for each band of the source raster file. The number of
+        dataset names must match the number of bands in the source raster
+        file
+    format : str
+        File format. Options: "HDF5", "GTIFF", and "ENVI"
+    output_dir : str
+        Output directory (only applicable for "format"
+        different than "HDF5)
+        The output file name will be:
+        {output_dir}/{output_file_prefix}{output_ds_name_band}{file_extension}'
+    output_file_prefix : str
+        Output file prefix (only applicable for "format"
+        different than "HDF5).
+        The output file name will be:
+        {output_dir}/{output_file_prefix}{output_ds_name_band}{file_extension}'
     compression_enabled : bool, optional
         Enable/disable compression of output raster
-        (only applicable for "file_format" equal to "HDF5")
+        (only applicable for "format" equal to "HDF5")
     compression_type : str or None, optional
         Output data compression
-        (only applicable for "file_format" equal to "HDF5")
+        (only applicable for "format" equal to "HDF5")
     compression_level : int or None, optional
         Output data compression level
-        (only applicable for "file_format" equal to "HDF5")
+        (only applicable for "format" equal to "HDF5")
+    chunking_enabled: bool, optional
+        Enabled/disable chunk storage. Defaults to True
+        (only applicable for "format" equal to "HDF5")
+    chunk_size: list or None, optional
+        Chunk size as a list (Y, X). If `chunk_size` is not provided or
+        it is set to `None`, and `chunking_enabled` is set to `True`,
+        `chunk_size` defaults to `[512, 512]`
+        or a smaller size, constrained by the dimensions of the image
+        (only applicable for "format" equal to "HDF5")
+    shuffle_filtering_enabled: bool or None, optional
+        Apply shuffle filter for block-oriented compressors
+        (e.g., GZIP or LZF) to improve compression ratio.
+        If None, the default option is used.
+        (only applicable for "format" equal to "HDF5")
     mantissa_nbits: int or None, optional
-        Number of mantissa bits for each real-part sample
-        (only applicable for "file_format" equal to "HDF5")
+        Number bits retained in the mantissa of the floating point
+        representation of each component real and imaginary (if applicable)
+        of each output sample.
+        If None or "0", the mantissa bits truncation is not applied
+    output_files_list : list or None, optional
+        List of output files
+        (only applicable for "format" different than "HDF5")
     standard_name : string, optional
         HDF5 dataset standard name
     long_name : string, optional
@@ -64,54 +237,208 @@ def save_dataset(ds_filename, h5py_obj, root_path,
         Value to populate the HDF5 dataset attribute "_FillValue".
         Defaults to "nan" or "(nan+nanj)" if the raster layer
         is real- or complex-valued, respectively. If the layer data
-        type is integer, the attribute "_FillValue"
+        type is integer and `fill_value` is None, the attribute "_FillValue"
         will not be populated as an attribute of the HDF5 dataset.
     valid_min : float, optional
         Value to populate the HDF5 dataset attribute "valid_min"
     valid_max : float, optional
         Value to populate the HDF5 dataset attribute "valid_max"
+    compute_stats: bool, optional
+        Flag that indicates if statistics should be compute for the
+        raster layer. Defaults to True.
     '''
-    if not os.path.isfile(ds_filename):
-        return
 
-    stats_real_imag_vector = None
-    stats_vector = None
-    if compute_stats:
-        raster = isce3.io.Raster(ds_filename)
+    raster = isce3.io.Raster(ds_filename)
 
-        if (raster.datatype() == gdal.GDT_CFloat32 or
-                raster.datatype() == gdal.GDT_CFloat64):
-            stats_real_imag_vector = \
-                isce3.math.compute_raster_stats_real_imag(raster)
-        elif raster.datatype() == gdal.GDT_Float64:
-            stats_vector = isce3.math.compute_raster_stats_float64(raster)
-        else:
-            stats_vector = isce3.math.compute_raster_stats_float32(raster)
+    if (fill_value is None and raster.datatype() == gdal.GDT_CFloat32):
+        fill_value = np.complex64(np.nan + 1j * np.nan)
+    elif (fill_value is None and raster.datatype() == gdal.GDT_CFloat64):
+        fill_value = np.complex128(np.nan + 1j * np.nan)
+    elif (fill_value is None and raster.datatype() == gdal.GDT_Float32):
+        fill_value = np.float32(np.nan)
+    elif (fill_value is None and raster.datatype() == gdal.GDT_Float64):
+        fill_value = np.float64(np.nan)
 
-    create_dataset_kwargs = {}
+    if format == 'HDF5':
+        save_hdf5_dataset(ds_filename, h5py_obj, root_path,
+                          yds, xds, output_ds_name,
+                          compression_enabled=compression_enabled,
+                          compression_type=compression_type,
+                          compression_level=compression_level,
+                          chunking_enabled=chunking_enabled,
+                          chunk_size=chunk_size,
+                          shuffle_filtering_enabled=shuffle_filtering_enabled,
+                          mantissa_nbits=mantissa_nbits,
+                          standard_name=standard_name,
+                          long_name=long_name,
+                          units=units,
+                          fill_value=fill_value,
+                          valid_min=valid_min,
+                          valid_max=valid_max,
+                          compute_stats=compute_stats)
 
-    if compression_enabled and compression_type is not None:
-        create_dataset_kwargs['compression'] = compression_type
+    else:
+        save_raster(ds_filename, output_ds_name,
+                    format=format,
+                    output_dir=output_dir,
+                    output_file_prefix=output_file_prefix,
+                    mantissa_nbits=mantissa_nbits,
+                    output_files_list=output_files_list,
+                    standard_name=standard_name,
+                    long_name=long_name,
+                    units=units,
+                    fill_value=fill_value,
+                    valid_min=valid_min,
+                    valid_max=valid_max,
+                    compute_stats=compute_stats)
 
-    if compression_enabled and compression_level is not None:
-        create_dataset_kwargs['compression_opts'] = \
-            compression_level
+
+def save_hdf5_dataset(ds_filename, h5py_obj, root_path,
+                      yds, xds, output_ds_name,
+                      compression_enabled=True,
+                      compression_type='gzip',
+                      compression_level=9,
+                      chunking_enabled=True,
+                      chunk_size=[512, 512],
+                      shuffle_filtering_enabled=False,
+                      mantissa_nbits=None,
+                      standard_name=None,
+                      long_name=None,
+                      units=None,
+                      fill_value=None,
+                      valid_min=None,
+                      valid_max=None,
+                      compute_stats=True):
+    '''
+    Write a raster files as a set of HDF5 datasets
+
+    Parameters
+    ----------
+    ds_filename : str
+        Source raster file
+    h5py_obj : h5py.File
+        h5py object of destination HDF5
+    root_path : str
+        Path of the group within the HDF5 file to store the output raster
+    yds : h5py.Dataset
+        Y-axis dataset
+    xds : h5py.Dataset
+        X-axis dataset
+    output_ds_name : str or list of str
+        Dataset name or list of names to be added to `root_path`
+        for each band of the source raster file. The number of
+        dataset names must match the number of bands in the source raster
+        file
+    compression_enabled : bool, optional
+        Enable/disable compression of output raster
+    compression_type : str or None, optional
+        Output data compression
+    compression_level : int or None, optional
+        Output data compression level
+    chunking_enabled: bool, optional
+        Enabled/disable chunk storage. Defaults to True
+    chunk_size: list or None, optional
+        Chunk size as a list (Y, X). If `chunk_size` is not provided or
+        it is set to `None`, and `chunking_enabled` is set to `True`,
+        `chunk_size` defaults to `[512, 512]`
+        or a smaller size, constrained by the dimensions of the image
+    shuffle_filtering_enabled: bool or None, optional
+        Apply shuffle filter for block-oriented compressors
+        (e.g., GZIP or LZF) to improve compression ratio.
+        If None, the default option is used
+    mantissa_nbits: int or None, optional
+        Number bits retained in the mantissa of the floating point
+        representation of each component real and imaginary (if applicable)
+        of each output sample.
+        If None or "0", the mantissa bits truncation is not applied
+    standard_name : string, optional
+        HDF5 dataset standard name
+    long_name : string, optional
+        HDF5 dataset long name
+    units : str, optional
+        Value to populate the HDF5 dataset attribute "units"
+    fill_value : float, optional
+        Value to populate the HDF5 dataset attribute "_FillValue".
+        Defaults to "nan" or "(nan+nanj)" if the raster layer
+        is real- or complex-valued, respectively. If the layer data
+        type is integer and `fill_value` is None, the attribute "_FillValue"
+        will not be populated as an attribute of the HDF5 dataset.
+    valid_min : float, optional
+        Value to populate the HDF5 dataset attribute "valid_min"
+    valid_max : float, optional
+        Value to populate the HDF5 dataset attribute "valid_max"
+    compute_stats: bool, optional
+        Flag that indicates if statistics should be compute for the
+        raster layer. Defaults to True.
+    '''
 
     gdal_ds = gdal.Open(ds_filename, gdal.GA_ReadOnly)
     nbands = gdal_ds.RasterCount
+    length = gdal_ds.RasterYSize
+    width = gdal_ds.RasterXSize
+
+    if isinstance(output_ds_name, str):
+        num_names = 1
+    else:
+        num_names = len(output_ds_name)
+
+    if nbands != num_names:
+        raise ValueError('The number of output dataset names must match number'
+                         ' of input raster bands.'
+                         f' Number of output file names: {num_names}'
+                         f' ({output_ds_name}). Number of bands in raster'
+                         f' "{ds_filename}": {nbands}')
+
+    raster = isce3.io.Raster(ds_filename)
+
+    create_dataset_kwargs = {}
+
+    stats_obj_list, stats_real_imag_obj_list = \
+        _get_stats_obj_list(raster, compute_stats)
+
+    if chunking_enabled and chunk_size is None:
+        chunk_size = [512, 512]
+
+    if chunking_enabled:
+        create_dataset_kwargs['chunks'] = \
+            (min(chunk_size[0], length), min(chunk_size[1], width))
+
+    if compression_enabled:
+        if compression_type is not None:
+            create_dataset_kwargs['compression'] = compression_type
+
+        if compression_level is not None:
+            create_dataset_kwargs['compression_opts'] = \
+                compression_level
+
+        if shuffle_filtering_enabled is not None:
+            create_dataset_kwargs['shuffle'] = shuffle_filtering_enabled
+
     for band in range(nbands):
-        data = gdal_ds.GetRasterBand(band+1).ReadAsArray()
+        gdal_band = gdal_ds.GetRasterBand(band+1)
+        data = gdal_band.ReadAsArray()
 
         if mantissa_nbits is not None:
             truncate_mantissa(data, mantissa_nbits)
 
-        # If we are saving multiple layers, `ds_name` is a list
-        # Otherwise, it may be a list of a single element or
-        # a string
-        if isinstance(ds_name, str):
-            h5_ds = os.path.join(root_path, ds_name)
+        attr_dict = _get_attribute_dict(
+            band,
+            standard_name=standard_name,
+            long_name=long_name,
+            units=units,
+            fill_value=fill_value,
+            valid_min=valid_min,
+            valid_max=valid_max,
+            stats_obj_list=stats_obj_list,
+            stats_real_imag_obj_list=stats_real_imag_obj_list,
+            to_string_function=np.bytes_)
+
+        if isinstance(output_ds_name, str):
+            output_ds_name_band = output_ds_name
         else:
-            h5_ds = os.path.join(root_path, ds_name[band])
+            output_ds_name_band = output_ds_name[band]
+
+        h5_ds = f'{root_path}/{output_ds_name_band}'
 
         dset = h5py_obj.require_dataset(h5_ds, data=data,
                                         shape=data.shape,
@@ -120,52 +447,178 @@ def save_dataset(ds_filename, h5py_obj, root_path,
 
         dset.dims[0].attach_scale(yds)
         dset.dims[1].attach_scale(xds)
-        dset.attrs['grid_mapping'] = np.string_("projection")
+        dset.attrs['grid_mapping'] = np.bytes_("projection")
 
-        if standard_name is not None:
-            dset.attrs['standard_name'] = np.string_(standard_name)
+        for attr_name, attr_value in attr_dict.items():
+            dset.attrs.create(attr_name, data=attr_value)
 
-        if long_name is not None:
-            dset.attrs['long_name'] = np.string_(long_name)
 
-        if units is not None:
-            dset.attrs['units'] = np.string_(units)
+def get_file_extension(format):
+    '''
+    Get file extension for a supported file formats "GTiff" and
+    "ENVI"
 
+    Parameters
+    ----------
+    format: str 
+        File format: "GTiff" or "ENVI"
+
+    Returns
+    -------
+    file_extension: str
+        File extension
+    '''
+    if format == 'GTiff':
+        file_extension = '.tif'
+    elif format == 'ENVI':
+        file_extension = '.bin'
+    else:
+        error_message = f"Unsupported file format: {format}"
+        error_channel = journal.error('get_file_extension')
+        error_channel.log(error_message)
+        raise NotImplementedError(error_message)
+    return file_extension
+
+
+def save_raster(ds_filename, output_ds_name,
+                format='GTiff',
+                output_dir='',
+                output_file_prefix='',
+                mantissa_nbits=None,
+                output_files_list=None,
+                standard_name=None,
+                long_name=None,
+                units=None,
+                fill_value=None,
+                valid_min=None,
+                valid_max=None,
+                compute_stats=True):
+    '''
+    Write a raster layer from a multi-band file into individual
+    single-band raster files
+
+    Parameters
+    ----------
+    ds_filename : str
+        Source raster file
+    output_ds_name : str
+        Dataset name or list of names to be used as file suffixes
+        for each band of the source raster file. The number of
+        dataset names must match the number of bands in the source raster
+        file.
+        The output file name(s) will be:
+        {output_dir}/{output_file_prefix}{output_ds_name_band}{file_extension}'
+    format : str
+        File format. Options: "GTIFF", and "ENVI"
+    output_dir : str
+        Output directory (only applicable for "format"
+        different than "HDF5)
+        The output file name will be:
+        {output_dir}/{output_file_prefix}{output_ds_name_band}{file_extension}'
+    output_file_prefix : str
+        Output file prefix (only applicable for "format"
+        different than "HDF5).
+        The output file name will be:
+        {output_dir}/{output_file_prefix}{output_ds_name_band}{file_extension}'
+    mantissa_nbits: int or None, optional
+        Number bits retained in the mantissa of the floating point
+        representation of each component real and imaginary (if applicable)
+        of each output sample.
+        If None or "0", the mantissa bits truncation is not applied
+    output_files_list : list or None, optional
+        List of output files
+    standard_name : string, optional
+        Dataset standard name
+    long_name : string, optional
+        Dataset long name
+    units : str, optional
+        Value to populate the HDF5 dataset attribute "units"
+    fill_value : float, optional
+        Value to populate the HDF5 dataset attribute "_FillValue".
+        If None, the "nodata" attribute of the dataset will not be populated.
+    valid_min : float, optional
+        Value to populate the HDF5 dataset attribute "valid_min"
+    valid_max : float, optional
+        Value to populate the HDF5 dataset attribute "valid_max"
+    '''
+    raster = isce3.io.Raster(ds_filename)
+
+    gdal_ds = gdal.Open(ds_filename, gdal.GA_ReadOnly)
+    nbands = gdal_ds.RasterCount
+    if isinstance(output_ds_name, str):
+        num_names = 1
+    else:
+        num_names = len(output_ds_name)
+
+    if nbands != num_names:
+        raise ValueError('The number of output dataset names must match number'
+                         ' of input raster bands.'
+                         f' Number of output file names: {num_names}'
+                         f' ({output_ds_name}).'
+                         f' Number of bands in raster "{ds_filename}":'
+                         f' {nbands}')
+    stats_obj_list, stats_real_imag_obj_list = \
+        _get_stats_obj_list(raster, compute_stats)
+
+    for band in range(nbands):
+        gdal_band = gdal_ds.GetRasterBand(band+1)
+        data = gdal_band.ReadAsArray()
+
+        if mantissa_nbits is not None:
+            truncate_mantissa(data, mantissa_nbits)
+
+        attr_dict = _get_attribute_dict(
+            band,
+            standard_name=standard_name,
+            long_name=long_name,
+            units=units,
+            fill_value=fill_value,
+            valid_min=valid_min,
+            valid_max=valid_max,
+            stats_obj_list=stats_obj_list,
+            stats_real_imag_obj_list=stats_real_imag_obj_list)
+
+        if isinstance(output_ds_name, str):
+            output_ds_name_band = output_ds_name
+        else:
+            output_ds_name_band = output_ds_name[band]
+
+        # Save non-HDF5 output file
+        gdal_dtype = gdal_band.DataType
+        projection = gdal_ds.GetProjectionRef()
+        geotransform = gdal_ds.GetGeoTransform()
+
+        # get file extension
+        file_extension = get_file_extension(format)
+
+        # get output filename
+        output_file = \
+            f'{output_file_prefix}{output_ds_name_band}{file_extension}'
+        if output_dir:
+            output_file = os.path.join(output_dir, output_file)
+
+        if output_files_list is not None:
+            output_files_list.append(output_file)
+
+        driver_out = gdal.GetDriverByName(format)
+        raster_out = driver_out.Create(
+            output_file, data.shape[1],
+            data.shape[0], 1, gdal_dtype)
+        raster_out.SetProjection(projection)
+        raster_out.SetGeoTransform(geotransform)
+        raster_out.SetMetadata(attr_dict)
+        raster_out.SetDescription(long_name)
+
+        band_out = raster_out.GetRasterBand(1)
         if fill_value is not None:
-            dset.attrs.create('_FillValue', data=fill_value)
-        elif 'cfloat' in gdal.GetDataTypeName(raster.datatype()).lower():
-            dset.attrs.create('_FillValue', data=np.nan + 1j * np.nan)
-        elif 'float' in gdal.GetDataTypeName(raster.datatype()).lower():
-            dset.attrs.create('_FillValue', data=np.nan)
+            band_out.SetNoDataValue(fill_value)
+        band_out.WriteArray(data)
+        band_out.FlushCache()
 
-        if stats_vector is not None:
-            stats_obj = stats_vector[band]
-            dset.attrs.create('min_value', data=stats_obj.min)
-            dset.attrs.create('mean_value', data=stats_obj.mean)
-            dset.attrs.create('max_value', data=stats_obj.max)
-            dset.attrs.create('sample_standard_deviation',
-                              data=stats_obj.sample_stddev)
-
-        elif stats_real_imag_vector is not None:
-
-            stats_obj = stats_real_imag_vector[band]
-            dset.attrs.create('min_real_value', data=stats_obj.real.min)
-            dset.attrs.create('mean_real_value', data=stats_obj.real.mean)
-            dset.attrs.create('max_real_value', data=stats_obj.real.max)
-            dset.attrs.create('sample_standard_deviation_real',
-                              data=stats_obj.real.sample_stddev)
-
-            dset.attrs.create('min_imag_value', data=stats_obj.imag.min)
-            dset.attrs.create('mean_imag_value', data=stats_obj.imag.mean)
-            dset.attrs.create('max_imag_value', data=stats_obj.imag.max)
-            dset.attrs.create('sample_standard_deviation_imag',
-                              data=stats_obj.imag.sample_stddev)
-
-        if valid_min is not None:
-            dset.attrs.create('valid_min', data=valid_min)
-
-        if valid_max is not None:
-            dset.attrs.create('valid_max', data=valid_max)
+        # As a precaution, delete the raster objects in order to
+        # free memory inside this loop.
+        del band_out
+        del raster_out
 
 
 class BaseL2WriterSingleInput(BaseWriterSingleInput):
@@ -631,12 +1084,6 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     metadata_geogrid.width, 
                     metadata_geogrid.length, 
                     metadata_geogrid.epsg)
-
-        # set paths temporary files
-        input_temp = tempfile.NamedTemporaryFile(
-            dir=scratch_path, suffix='.vrt')
-        input_raster_obj = isce3.io.Raster(
-            input_temp.name, raster_list=input_raster_list)
 
         # create output raster
         temp_output = tempfile.NamedTemporaryFile(
