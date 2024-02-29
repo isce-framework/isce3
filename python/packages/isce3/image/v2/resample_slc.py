@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from time import perf_counter
 
 import journal
 import numpy as np
 from isce3.core import SINC_HALF, LUT2d
 from isce3.core.resample_block_generators import get_blocks, get_blocks_by_offsets
-from isce3.ext.isce3.image.v2 import _resample_to_coords
+from isce3.ext.isce3.image.v2 import _resample_to_coords, modulate, modulate_at_coords
 from isce3.io.dataset import DatasetReader, DatasetWriter
 from isce3.product import RadarGridParameters
 
@@ -24,6 +24,9 @@ def resample_slc_blocks(
     quiet: bool = False,
     fill_value: np.complex64 = np.nan + 1.0j * np.nan,
     with_gpu: bool = False,
+    *,
+    modulation_carriers: Iterable[LUT2d] | None = None,
+    demodulation_carriers: Iterable[LUT2d] | None = None,
 ) -> None:
     """
     Resamples one or more SLCs onto a geometry described by given offsets datasets.
@@ -212,6 +215,27 @@ def resample_slc_blocks(
         # Run the resampling algorithm on the given blocks.
         for i in range(len(input_blocks)):
             input_block = input_blocks[i]
+
+            if demodulation_carriers is not None:
+                if not quiet:
+                    info_channel.log(
+                        f"demodulating input SLC for block {out_block_slice}..."
+                    )
+                
+                in_az_slice, in_rg_slice = in_slices
+                az_first_line = in_az_slice.start
+                rg_first_pixel = in_rg_slice.start
+
+                for carrier in demodulation_carriers:
+                    modulate(
+                        slc_data_block=input_block,
+                        carrier_phase=carrier,
+                        radar_grid=in_grid,
+                        input_azimuth_first_line=az_first_line,
+                        input_range_first_pixel=rg_first_pixel,
+                        conjugate=True,
+                    )
+
             if not quiet:
                 info_channel.log(
                     f"interpolating to output SLC for block {out_block_slice}..."
@@ -227,6 +251,25 @@ def resample_slc_blocks(
                 doppler,
                 fill_value,
             )
+
+
+            if modulation_carriers is not None:
+                if not quiet:
+                    info_channel.log(
+                        f"remodulating output SLC for block {out_block_slice}..."
+                    )
+
+                for carrier in modulation_carriers:
+                    modulate_at_coords(
+                        slc_data_block=output_block,
+                        carrier_phase=carrier,
+                        radar_grid=in_grid,
+                        azimuth_indices=azimuth_index_grid,
+                        range_indices=range_index_grid,
+                        conjugate=False,
+                    )
+            
+            output_blocks[i] = output_block
 
         block_processing_timer += perf_counter()
 
