@@ -4,10 +4,10 @@
 collection of functions for NISAR GCOV workflow
 '''
 
+import datetime
 import os
 import tempfile
 import time
-
 from osgeo import gdal
 import h5py
 import journal
@@ -22,7 +22,8 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.workflows.h5_prep import set_get_geo_info
 from nisar.products.readers.orbit import load_orbit_from_xml
-from nisar.products.writers.BaseL2WriterSingleInput import save_dataset
+from nisar.products.writers.BaseL2WriterSingleInput import (save_dataset,
+                                                            get_file_extension)
 from nisar.products.writers import GcovWriter
 
 
@@ -75,6 +76,8 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     symmetrization of two polarimetric channels
     (`pol` and `pol_2`).
 
+    Parameters
+    ----------
     in_file: str
         Path to RSLC HDF5
     freq: str
@@ -215,8 +218,42 @@ def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc):
 def run(cfg):
     '''
     run GCOV
-    '''
 
+    Parameters
+    ----------
+    cfg : dict
+        Dictionary containing processing parameters
+
+    Returns
+    -------
+    output_files_list: list(str)
+        List of output files
+
+    '''
+    scratch_path = cfg['product_path_group']['scratch_path']
+    with tempfile.TemporaryDirectory(dir=scratch_path) \
+            as raster_scratch_dir:
+        output_files_list = _run(cfg, raster_scratch_dir)
+        return output_files_list
+
+
+def _run(cfg, raster_scratch_dir):
+    '''
+    run GCOV with a scratch directory
+
+    Parameters
+    ----------
+    cfg : dict
+        Dictionary containing processing parameters
+    raster_scratch_dir: str
+        Scratch directory
+
+    Returns
+    -------
+    output_files_list: list(str)
+        List of output files
+
+    '''
     info_channel = journal.info("gcov.run")
     error_channel = journal.error("gcov.run")
     info_channel.log("Starting GCOV workflow")
@@ -228,17 +265,27 @@ def run(cfg):
     flag_fullcovariance = cfg['processing']['input_subset']['fullcovariance']
     flag_symmetrize_cross_pol_channels = \
         cfg['processing']['input_subset']['symmetrize_cross_pol_channels']
-    scratch_path = cfg['product_path_group']['scratch_path']
 
     output_gcov_terms_kwargs = cfg['output_gcov_terms']
     output_secondary_layers_kwargs = cfg['output_secondary_layers']
 
-    # remove placeholder "format"
-    # (currently, the only supported format is HDF5)
-    if 'format' in output_gcov_terms_kwargs:
-        del output_gcov_terms_kwargs['format']
-    if 'format' in output_secondary_layers_kwargs:
-        del output_secondary_layers_kwargs['format']
+    # Raster files format (output of GeocodeCov).
+    # Cannot use HDF5 because we cannot save multiband HDF5 datasets
+    # simultaneously, therefore we use "ENVI" instead
+    output_gcov_terms_raster_files_format = \
+        output_gcov_terms_kwargs['format']
+    if output_gcov_terms_raster_files_format == 'HDF5':
+        output_gcov_terms_raster_files_format = 'ENVI'
+    secondary_layer_files_raster_files_format = \
+        output_secondary_layers_kwargs['format']
+    if secondary_layer_files_raster_files_format == 'HDF5':
+        secondary_layer_files_raster_files_format = 'ENVI'
+
+    # Set raster file extensions for GCOV terms and secondary layers
+    gcov_terms_file_extension = get_file_extension(
+        output_gcov_terms_raster_files_format)
+    secondary_layers_file_extension = get_file_extension(
+        secondary_layer_files_raster_files_format)
 
     radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
     radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
@@ -299,6 +346,15 @@ def run(cfg):
     # included in the call to geocode()
     optional_geo_kwargs = {}
 
+    # declare list of output and temporary files
+    output_files_list = [output_hdf5]
+
+    output_dir = os.path.dirname(output_hdf5)
+    output_gcov_terms_kwargs['output_dir'] = output_dir
+    output_secondary_layers_kwargs['output_dir'] = output_dir
+    output_gcov_terms_kwargs['output_files_list'] = output_files_list
+    output_secondary_layers_kwargs['output_files_list'] = output_files_list
+
     # read min/max block size converting MB to B
     if min_block_size_mb is not None:
         optional_geo_kwargs['min_block_size'] = min_block_size_mb * (2**20)
@@ -341,7 +397,6 @@ def run(cfg):
     else:
         flag_rslc_to_backscatter = True
 
-    t_all = time.time()
     for frequency, input_pol_list in freq_pols.items():
 
         # do no processing if no polarizations specified for current frequency
@@ -381,7 +436,7 @@ def run(cfg):
 
             # temporary file for the symmetrized HV polarization
             symmetrized_hv_temp = tempfile.NamedTemporaryFile(
-                dir=scratch_path, suffix='.tif')
+                dir=raster_scratch_dir, suffix=gcov_terms_file_extension)
 
             # call symmetrization function
             info_channel.log('Symmetrizing polarization channels HV and VH')
@@ -389,7 +444,7 @@ def run(cfg):
                 input_hdf5, frequency, 'HV',
                 symmetrized_hv_temp.name, 2**11,  # 2**11 = 2048 lines
                 flag_rslc_to_backscatter=flag_rslc_to_backscatter,
-                pol_2='VH', format="ENVI")
+                pol_2='VH', format=output_gcov_terms_raster_files_format)
 
             # Since HV and VH were symmetrized into HV, remove VH from
             # `pol_list` and `from input_raster_dict`.
@@ -415,12 +470,13 @@ def run(cfg):
                 info_channel.log(
                     f'Computing radar samples backscatter ({pol})')
                 temp_pol_file = tempfile.NamedTemporaryFile(
-                    dir=scratch_path, suffix='.tif')
+                    dir=raster_scratch_dir,
+                    suffix=gcov_terms_file_extension)
                 input_raster = prepare_rslc(
                     input_hdf5, frequency, pol,
                     temp_pol_file.name, 2**12,  # 2**12 = 4096 lines
                     flag_rslc_to_backscatter=flag_rslc_to_backscatter,
-                    format="ENVI")
+                    format=output_gcov_terms_raster_files_format)
 
             input_raster_list.append(input_raster)
 
@@ -428,7 +484,7 @@ def run(cfg):
 
         # set paths temporary files
         input_temp = tempfile.NamedTemporaryFile(
-            dir=scratch_path, suffix='.vrt')
+            dir=raster_scratch_dir, suffix='.vrt')
         input_raster_obj = isce3.io.Raster(
             input_temp.name, raster_list=input_raster_list)
 
@@ -477,13 +533,13 @@ def run(cfg):
 
         # create output raster
         temp_output = tempfile.NamedTemporaryFile(
-            dir=scratch_path, suffix='.tif')
+            dir=raster_scratch_dir, suffix=gcov_terms_file_extension)
 
         output_raster_obj = isce3.io.Raster(
             temp_output.name,
             geogrid.width, geogrid.length,
             input_raster_obj.num_bands,
-            gdal.GDT_Float32, 'GTiff')
+            gdal.GDT_Float32, output_gcov_terms_raster_files_format)
 
         nbands_off_diag_terms = 0
         out_off_diag_terms_obj = None
@@ -492,49 +548,54 @@ def run(cfg):
             nbands_off_diag_terms = (nbands**2 - nbands) // 2
             if nbands_off_diag_terms > 0:
                 temp_off_diag = tempfile.NamedTemporaryFile(
-                    dir=scratch_path, suffix='.tif')
+                    dir=raster_scratch_dir,
+                    suffix=gcov_terms_file_extension)
                 out_off_diag_terms_obj = isce3.io.Raster(
                     temp_off_diag.name,
                     geogrid.width, geogrid.length,
                     nbands_off_diag_terms,
-                    gdal.GDT_CFloat32, 'GTiff')
+                    gdal.GDT_CFloat32, output_gcov_terms_raster_files_format)
 
         if save_nlooks:
             temp_nlooks = tempfile.NamedTemporaryFile(
-                dir=scratch_path, suffix='.tif')
+                dir=raster_scratch_dir,
+                suffix=secondary_layers_file_extension)
             out_geo_nlooks_obj = isce3.io.Raster(
                 temp_nlooks.name,
                 geogrid.width, geogrid.length, 1,
-                gdal.GDT_Float32, "GTiff")
+                gdal.GDT_Float32, secondary_layer_files_raster_files_format)
         else:
             temp_nlooks = None
             out_geo_nlooks_obj = None
 
         if save_rtc_anf:
             temp_rtc_anf = tempfile.NamedTemporaryFile(
-                dir=scratch_path, suffix='.tif')
+                dir=raster_scratch_dir,
+                suffix=secondary_layers_file_extension)
             out_geo_rtc_obj = isce3.io.Raster(
                 temp_rtc_anf.name,
                 geogrid.width, geogrid.length, 1,
-                gdal.GDT_Float32, "GTiff")
+                gdal.GDT_Float32, secondary_layer_files_raster_files_format)
         else:
             temp_rtc_anf = None
             out_geo_rtc_obj = None
 
         if save_rtc_anf_gamma0_to_sigma0:
             temp_rtc_anf_gamma0_to_sigma0 = tempfile.NamedTemporaryFile(
-                dir=scratch_path, suffix='.tif')
+                dir=raster_scratch_dir,
+                suffix=secondary_layers_file_extension)
             out_geo_rtc_gamma0_to_sigma0_obj = isce3.io.Raster(
                 temp_rtc_anf_gamma0_to_sigma0.name,
                 geogrid.width, geogrid.length, 1,
-                gdal.GDT_Float32, "GTiff")
+                gdal.GDT_Float32, secondary_layer_files_raster_files_format)
         else:
             temp_rtc_anf_gamma0_to_sigma0 = None
             out_geo_rtc_gamma0_to_sigma0_obj = None
 
         if save_dem:
             temp_interpolated_dem = tempfile.NamedTemporaryFile(
-                dir=scratch_path, suffix='.tif')
+                dir=raster_scratch_dir,
+                suffix=secondary_layers_file_extension)
             if (output_mode ==
                     isce3.geocode.GeocodeOutputMode.AREA_PROJECTION):
                 interpolated_dem_width = geogrid.width + 1
@@ -546,7 +607,7 @@ def run(cfg):
                 temp_interpolated_dem.name,
                 interpolated_dem_width,
                 interpolated_dem_length, 1,
-                gdal.GDT_Float32, "GTiff")
+                gdal.GDT_Float32, secondary_layer_files_raster_files_format)
         else:
             temp_interpolated_dem = None
             out_geo_dem_obj = None
@@ -582,6 +643,7 @@ def run(cfg):
                     memory_mode=memory_mode,
                     **optional_geo_kwargs)
 
+        del input_raster_obj
         del output_raster_obj
 
         if save_nlooks:
@@ -615,6 +677,11 @@ def run(cfg):
             # save GCOV diagonal elements
             yds, xds = set_get_geo_info(hdf5_obj, root_ds, geogrid)
             cov_elements_list = [p.upper()+p.upper() for p in pol_list]
+
+            output_gcov_terms_kwargs['output_file_prefix'] = \
+                f'frequency{frequency}_'
+            output_secondary_layers_kwargs['output_file_prefix'] = \
+                f'frequency{frequency}_'
 
             # save GCOV imagery
             save_dataset(temp_output.name, hdf5_obj, root_ds,
@@ -701,6 +768,7 @@ def run(cfg):
                         off_diag_terms_list.append(p1.upper()+p2.upper())
                 _save_list_cov_terms(cov_elements_list + off_diag_terms_list,
                                      freq_group)
+
                 save_dataset(temp_off_diag.name, hdf5_obj, root_ds,
                              yds, xds, off_diag_terms_list,
                              long_name=output_radiometry_str,
@@ -737,9 +805,7 @@ def run(cfg):
                                          radar_grid, orbit, native_doppler,
                                          zero_doppler, threshold, maxiter)
 
-    t_all_elapsed = time.time() - t_all
-    info_channel.log(f"successfully ran geocode COV in {t_all_elapsed:.3f}"
-                     " seconds")
+    return output_files_list
 
 
 def _save_list_cov_terms(cov_elements_list, dataset_group):
@@ -753,6 +819,10 @@ def _save_list_cov_terms(cov_elements_list, dataset_group):
 
 
 if __name__ == "__main__":
+
+    t_all = time.time()
+    info_channel = journal.info("gcov.run")
+
     yaml_parser = YamlArgparse()
     args = yaml_parser.parse()
     gcov_runconfig = GCOVRunConfig(args)
@@ -763,7 +833,17 @@ if __name__ == "__main__":
     if os.path.isfile(sas_output_file):
         os.remove(sas_output_file)
 
-    run(gcov_runconfig.cfg)
+    output_files_list = run(gcov_runconfig.cfg)
 
     with GcovWriter(runconfig=gcov_runconfig) as gcov_obj:
         gcov_obj.populate_metadata()
+
+    info_channel.log('output file(s):')
+    for filename in output_files_list:
+        info_channel.log(f'    {filename}')
+
+    t_all_elapsed = time.time() - t_all
+    hms_str = str(datetime.timedelta(seconds=int(t_all_elapsed)))
+    t_all_elapsed_str = f'elapsed time: {hms_str}s ({t_all_elapsed:.3f}s)'
+
+    info_channel.log(t_all_elapsed_str)

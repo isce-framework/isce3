@@ -60,8 +60,22 @@ runconfig:
             # Compression level
             compression_level: 9
 
-            # PLACEHOLDER - Compression number of bits
-            mantissa_nbits: 16
+            # Enable/disable chunking of output raster
+            chunking_enabled: True
+
+            # Chunk size of output raster as a list: [y, x]
+            # If no value is specified, the chunk_size defaults to [512, 512]
+            # or a smaller size, constrained by the dimensions of the image
+            chunk_size: [512, 512]
+
+            # Enable/disable shuffle filtering of output raster
+            shuffle_filtering_enabled: True
+
+            # Number bits retained in the mantissa of the floating point
+            # representation of each component real and imaginary (if applicable)
+            # of each output sample.
+            # If no value is provided, the mantissa bits truncation is not applied
+            mantissa_nbits:
 
         # Output options for secondary layers (e.g., number of looks, RTC ANF)
         output_secondary_layers:
@@ -77,8 +91,22 @@ runconfig:
             # Compression level
             compression_level: 9
 
-            # PLACEHOLDER - Compression number of bits
-            mantissa_nbits: 16
+            # Enable/disable chunking of output raster
+            chunking_enabled: True
+
+            # Chunk size of output raster as a list: [y, x]
+            # If no value is specified, the chunk_size defaults to [512, 512]
+            # or a smaller size, constrained by the dimensions of the image
+            chunk_size: [512, 512]
+
+            # Enable/disable shuffle filtering of output raster
+            shuffle_filtering_enabled: True
+
+            # Number bits retained in the mantissa of the floating point
+            # representation of each component real and imaginary (if applicable)
+            # of each output sample.
+            # If no value is provided, the mantissa bits truncation is not applied
+            mantissa_nbits:
 
         primary_executable:
             product_type: GCOV
