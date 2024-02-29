@@ -60,13 +60,15 @@ void addbindings_resamp(py::module & m)
             const AzRgFunc&,
             const isce3::product::RadarGridParameters&,
             const size_t,
-            const size_t
+            const size_t,
+            const bool
         >(&isce3::image::v2::getModulationPhase<AzRgFunc>),
         py::arg("phase_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("input_azimuth_first_line"),
         py::arg("input_range_first_pixel"),
+        py::arg("conjugate"),
         R"(
         Acquire the phase of the given carrier at each given index of a radar scene.
 
@@ -97,13 +99,15 @@ void addbindings_resamp(py::module & m)
             const AzRgFunc&,
             const isce3::product::RadarGridParameters&,
             const isce3::image::v2::ArrayRef2D<double>,
-            const isce3::image::v2::ArrayRef2D<double>
+            const isce3::image::v2::ArrayRef2D<double>,
+            const bool
         >(&isce3::image::v2::getModulationPhaseAtCoords<AzRgFunc>),
         py::arg("phase_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("azimuth_indices"),
         py::arg("range_indices"),
+        py::arg("conjugate"),
         R"(
         Acquire the phase of the given carrier at each given index of a radar scene.
 
@@ -123,6 +127,88 @@ void addbindings_resamp(py::module & m)
         range_indices: numpy.ndarray (float64)
             range index of each output coordinate pixel in the given radar coordinate
             system. Must be the same shape as phase_data_block.
+        )"
+    );
+
+
+    m.def(
+        "modulate",
+        py::overload_cast<
+            isce3::image::v2::ArrayRef2D<std::complex<float>>,
+            const AzRgFunc&,
+            const isce3::product::RadarGridParameters&,
+            const size_t,
+            const size_t,
+            const bool
+        >(&isce3::image::v2::modulate<AzRgFunc>),
+        py::arg("phase_data_block"),
+        py::arg("carrier_phase"),
+        py::arg("radar_grid"),
+        py::arg("input_azimuth_first_line"),
+        py::arg("input_range_first_pixel"),
+        py::arg("conjugate"),
+        R"(
+        Acquire the phase of the given carrier at each given index of a radar scene.
+
+        Parameters
+        ----------
+        phase_data_block: numpy.ndarray (complex64)
+            The output phase array to modify. Anything in this array will be
+            overwritten.
+        carrier_phase: isce3.core.LUT2d
+            An LUT2d describing the carrier frequency of the radar data over azimuth
+            and range.
+        radar_grid: isce3.product.RadarGridParameters
+            Radar grid parameters of the radar swath.
+        azimuth_indices: numpy.ndarray (float64)
+            azimuth index of each output coordinate pixel in the given radar coordinate
+            system. Must be the same shape as phase_data_block.
+        range_indices: numpy.ndarray (float64)
+            range index of each output coordinate pixel in the given radar coordinate
+            system. Must be the same shape as phase_data_block.
+        conjugate: bool, optional
+            If True, modulate the conjugate of the phase.
+        )"
+    );
+
+
+    m.def(
+        "modulate_at_coords",
+        py::overload_cast<
+            isce3::image::v2::ArrayRef2D<std::complex<float>>,
+            const AzRgFunc&,
+            const isce3::product::RadarGridParameters&,
+            const isce3::image::v2::ArrayRef2D<double>,
+            const isce3::image::v2::ArrayRef2D<double>,
+            const bool
+        >(&isce3::image::v2::modulateAtCoords<AzRgFunc>),
+        py::arg("phase_data_block"),
+        py::arg("carrier_phase"),
+        py::arg("radar_grid"),
+        py::arg("azimuth_indices"),
+        py::arg("range_indices"),
+        py::arg("conjugate"),
+        R"(
+        Acquire the phase of the given carrier at each given index of a radar scene.
+
+        Parameters
+        ----------
+        phase_data_block: numpy.ndarray (complex64)
+            The output phase array to modify. Anything in this array will be
+            overwritten.
+        carrier_phase: isce3.core.LUT2d
+            An LUT2d describing the carrier frequency of the radar data over azimuth
+            and range.
+        radar_grid: isce3.product.RadarGridParameters
+            Radar grid parameters of the radar swath.
+        azimuth_indices: numpy.ndarray (float64)
+            azimuth index of each output coordinate pixel in the given radar coordinate
+            system. Must be the same shape as phase_data_block.
+        range_indices: numpy.ndarray (float64)
+            range index of each output coordinate pixel in the given radar coordinate
+            system. Must be the same shape as phase_data_block.
+        conjugate: bool, optional
+            If True, modulate the conjugate of the phase.
         )"
     );
 }
