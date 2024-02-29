@@ -141,7 +141,7 @@ void addbindings_resamp(py::module & m)
             const size_t,
             const bool
         >(&isce3::image::v2::modulate<AzRgFunc>),
-        py::arg("phase_data_block"),
+        py::arg("slc_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("input_azimuth_first_line"),
@@ -152,9 +152,8 @@ void addbindings_resamp(py::module & m)
 
         Parameters
         ----------
-        phase_data_block: numpy.ndarray (complex64)
-            The output phase array to modify. Anything in this array will be
-            overwritten.
+        slc_data_block: numpy.ndarray (complex64)
+            The output phase array to modulate.
         carrier_phase: isce3.core.LUT2d
             An LUT2d describing the carrier frequency of the radar data over azimuth
             and range.
@@ -182,7 +181,7 @@ void addbindings_resamp(py::module & m)
             const isce3::image::v2::ArrayRef2D<double>,
             const bool
         >(&isce3::image::v2::modulateAtCoords<AzRgFunc>),
-        py::arg("phase_data_block"),
+        py::arg("slc_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("azimuth_indices"),
@@ -193,9 +192,8 @@ void addbindings_resamp(py::module & m)
 
         Parameters
         ----------
-        phase_data_block: numpy.ndarray (complex64)
-            The output phase array to modify. Anything in this array will be
-            overwritten.
+        slc_data_block: numpy.ndarray (complex64)
+            The output phase array to modulate.
         carrier_phase: isce3.core.LUT2d
             An LUT2d describing the carrier frequency of the radar data over azimuth
             and range.
