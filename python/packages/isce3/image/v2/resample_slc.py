@@ -223,16 +223,16 @@ def resample_slc_blocks(
                     )
                 
                 in_az_slice, in_rg_slice = in_slices
-                az_first_line = in_az_slice.start
-                rg_first_pixel = in_rg_slice.start
+                in_az_first_line = in_az_slice.start
+                in_rg_first_pixel = in_rg_slice.start
 
                 for carrier in demodulation_carriers:
                     modulate(
                         slc_data_block=input_block,
                         carrier_phase=carrier,
                         radar_grid=in_grid,
-                        input_azimuth_first_line=az_first_line,
-                        input_range_first_pixel=rg_first_pixel,
+                        input_azimuth_first_line=in_az_first_line,
+                        input_range_first_pixel=in_rg_first_pixel,
                         conjugate=True,
                     )
 
