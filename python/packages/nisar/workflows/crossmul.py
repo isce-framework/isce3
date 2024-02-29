@@ -96,15 +96,23 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
             freq_group_path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}'
 
             # prepare flattening and range filter parameters
-            rdr_grid = ref_slc.getRadarGrid(freq)
-            crossmul.range_pixel_spacing = rdr_grid.range_pixel_spacing
-            crossmul.wavelength = rdr_grid.wavelength
+            ref_radar_grid = ref_slc.getRadarGrid(freq)
+            crossmul.range_pixel_spacing = ref_radar_grid.range_pixel_spacing
+            crossmul.wavelength = ref_radar_grid.wavelength
 
             # enable/disable flatten accordingly
             if flatten:
                 # set frequency dependent range offset raster
                 flatten_raster = isce3.io.Raster(
                     f'{flatten_path}/geo2rdr/freq{freq}/range.off')
+
+                # Calculate the starting range shift between reference and secondary in meters
+                sec_radar_grid = sec_slc.getRadarGrid(freq)
+                rng_shift = (sec_radar_grid.starting_range -
+                             ref_radar_grid.starting_range)
+
+                crossmul.ref_sec_offset_starting_range_shift\
+                    = rng_shift
             else:
                 flatten_raster = None
 
@@ -116,10 +124,10 @@ def run(cfg: dict, output_hdf5: str = None, resample_type='coarse',
                 if dump_on_disk:
                     igram_path = f'{output_dir}/wrapped_igram_rg{rg_looks}_az{az_looks}'
                     coh_path = f'{output_dir}/coherence_rg{rg_looks}_az{az_looks}'
-                    ifg_raster = isce3.io.Raster(igram_path, rdr_grid.width // rg_looks,
-                                                 rdr_grid.length // az_looks, 1, gdal.GDT_CFloat32, 'ENVI')
-                    coh_raster = isce3.io.Raster(coh_path, rdr_grid.width // rg_looks,
-                                                 rdr_grid.length // az_looks, 1, gdal.GDT_Float32, 'ENVI')
+                    ifg_raster = isce3.io.Raster(igram_path, ref_radar_grid.width // rg_looks,
+                                                 ref_radar_grid.length // az_looks, 1, gdal.GDT_CFloat32, 'ENVI')
+                    coh_raster = isce3.io.Raster(coh_path, ref_radar_grid.width // rg_looks,
+                                                 ref_radar_grid.length // az_looks, 1, gdal.GDT_Float32, 'ENVI')
                 else:
 
                     # access the HDF5 dataset for a given frequency and polarization
@@ -193,7 +201,7 @@ def stats_offsets(h5_ds, freq, pol):
     pol: str
        Polarization to process (HH, HV, VH, VV)
     """
-    
+
     path = f'{RIFGGroupsPaths().SwathsPath}/frequency{freq}/pixelOffsets/{pol}/'
     offset_layer = ['slantRangeOffset', 'alongTrackOffset']
 

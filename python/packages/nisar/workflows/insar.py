@@ -2,8 +2,9 @@
 import time
 
 import journal
-from nisar.workflows import (bandpass_insar, crossmul, dense_offsets, geo2rdr,
-                             geocode_insar, h5_prep, filter_interferogram,
+from nisar.workflows import (bandpass_insar, crossmul,
+                             dense_offsets, geo2rdr,geocode_insar,
+                             h5_prep, filter_interferogram,
                              offsets_product, prepare_insar_hdf5, rdr2geo,
                              resample_slc, rubbersheet,
                              split_spectrum, unwrap, ionosphere, baseline,
@@ -57,6 +58,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
             cfg['processing']['fine_resample']['enabled'] and \
             'RIFG' in out_paths:
         resample_slc.run(cfg, 'fine')
+
 
     # If fine_resampling is enabled, use fine-coregistered SLC
     # to run crossmul

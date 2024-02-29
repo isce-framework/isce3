@@ -449,7 +449,7 @@ crossmul(isce3::io::Raster& refSlcRaster,
             std::valarray<double> offsetLine(ncols);
             for (size_t line = 0; line < linesThisBlock; ++line){
                 rngOffsetRaster->getLine(offsetLine, rowStart + line);
-                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
+                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine + _offsetStartingRangeShift / _rangePixelSpacing;
             }
             checkCudaErrors(cudaMemcpy(d_rngOffset.data().get(), &rngOffset[0],
                         n_full_res*sizeof(double), cudaMemcpyHostToDevice));
