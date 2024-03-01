@@ -17,7 +17,8 @@ import isce3
 from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
-from nisar.workflows.geocode_corrections import get_az_srg_corrections
+from isce3.atmosphere.tec_product import (tec_lut2d_from_json_srg,
+                                          tec_lut2d_from_json_az)
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.workflows.h5_prep import set_get_geo_info
@@ -326,6 +327,13 @@ def _run(cfg, raster_scratch_dir):
     geocode_algorithm = geocode_dict['algorithm_type']
     output_mode = geocode_dict['output_mode']
     flag_apply_rtc = geocode_dict['apply_rtc']
+
+    apply_range_ionospheric_delay_correction = \
+        geocode_dict['apply_range_ionospheric_delay_correction']
+
+    apply_azimuth_ionospheric_delay_correction = \
+        geocode_dict['apply_azimuth_ionospheric_delay_correction']
+
     apply_valid_samples_sub_swath_masking = \
         geocode_dict['apply_valid_samples_sub_swath_masking']
     memory_mode = geocode_dict['memory_mode_enum']
@@ -509,11 +517,20 @@ def _run(cfg, raster_scratch_dir):
         else:
             orbit = slc.getOrbit()
 
-        if tec_file:
-            # get azimuth and slant range geocoding corrections
-            az_correction, rg_correction = \
-                get_az_srg_corrections(cfg, slc, frequency, orbit)
+        # get azimuth ionospheric delay LUTs (if applicable)
+        center_freq = \
+            slc.getSwathMetadata(frequency).processed_center_frequency
+
+        if apply_azimuth_ionospheric_delay_correction:
+            az_correction = tec_lut2d_from_json_az(tec_file, center_freq,
+                                                   orbit, radar_grid)
             optional_geo_kwargs['az_time_correction'] = az_correction
+
+        # get slant-range ionospheric delay LUTs (if applicable)
+        if apply_range_ionospheric_delay_correction:
+            rg_correction = tec_lut2d_from_json_srg(tec_file, center_freq,
+                                                    orbit, radar_grid,
+                                                    zero_doppler, dem_file)
             optional_geo_kwargs['slant_range_correction'] = rg_correction
 
         # init geocode members

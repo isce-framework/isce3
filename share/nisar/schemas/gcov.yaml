@@ -274,16 +274,26 @@ geocode_options:
     # Apply radiometric terrain correction
     apply_rtc: bool(required=False)
 
+    # PLACEHOLDER (it is expected that the RSLC product already
+    # incorporates static tropospheric delay corrections --
+    # no additional correction is currently applied)
     # Apply dry tropospheric delay correction
     apply_dry_tropospheric_delay_correction: bool(required=False)
 
+    # PLACEHOLDER (it is expected that the RSLC product already
+    # incorporates static tropospheric delay corrections --
+    # no additional correction is currently applied)
     # Apply wet tropospheric delay correction
     apply_wet_tropospheric_delay_correction: bool(required=False)
 
     # Apply range ionospheric delay correction
+    # If True, a TEC file must be supplied.
+    # Defaults to True if a TEC file is supplied; otherwise False.
     apply_range_ionospheric_delay_correction: bool(required=False)
 
     # Apply azimuth ionospheric delay correction
+    # If True, a TEC file must be supplied.
+    # Defaults to True if a TEC file is supplied; otherwise False.
     apply_azimuth_ionospheric_delay_correction: bool(required=False)
 
     # Apply RSLC metadata valid-samples sub-swath masking
