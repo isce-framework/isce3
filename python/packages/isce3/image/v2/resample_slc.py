@@ -66,6 +66,12 @@ def resample_slc_blocks(
     with_gpu : bool, optional
         If True, run the GPU resample workflow. If False, run the CPU resample workflow.
         Defaults to False.
+    modulation_carriers: Iterable[LUT2d] or None, optional
+        Carrier phase LUT's to modulate into the output product. If none,
+        no output modulation will occur. Defaults to None.
+    demodulation_carriers: Iterable[LUT2d] or None, optional
+        Carrier phase LUT's to demodulate from the input prior to resampling. If none,
+        no output demodulation will occur. Defaults to None.
     """
     info_channel = journal.info("resample_slc.resample_slc_blocks")
     warning_channel = journal.warning("resample_slc.resample_slc_blocks")
