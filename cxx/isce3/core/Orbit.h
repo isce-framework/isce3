@@ -74,8 +74,9 @@ public:
      * \param[in] npad  Minimal number of state vectors to include past each of
      *                  the given time bounds (useful to guarantee adequate
      *                  support for interpolation).
-     * \returns Orbit object with data containing start & end times
-    */
+     * \returns Orbit object with data containing start & end times.  The
+     *          reference epoch and interpolation method are preserved.
+     */
     Orbit crop(const DateTime& start, const DateTime& end, int npad = 0) const;
 
     /** Export list of state vectors */
