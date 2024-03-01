@@ -226,17 +226,27 @@ runconfig:
                 # Apply radiometric terrain correction
                 apply_rtc: True
 
+                # PLACEHOLDER (it is expected that the RSLC product already
+                # incorporates static tropospheric delay corrections --
+                # no additional correction is currently applied)
                 # Apply dry tropospheric delay correction
                 apply_dry_tropospheric_delay_correction: False
 
+                # PLACEHOLDER (it is expected that the RSLC product already
+                # incorporates static tropospheric delay corrections --
+                # no additional correction is currently applied)
                 # Apply wet tropospheric delay correction
                 apply_wet_tropospheric_delay_correction: False
 
                 # Apply range ionospheric delay correction
-                apply_range_ionospheric_delay_correction: False
+                # If True, a TEC file must be supplied.
+                # Defaults to True if a TEC file is supplied; otherwise False.
+                apply_range_ionospheric_delay_correction:
 
                 # Apply azimuth ionospheric delay correction
-                apply_azimuth_ionospheric_delay_correction: False
+                # If True, a TEC file must be supplied.
+                # Defaults to True if a TEC file is supplied; otherwise False.
+                apply_azimuth_ionospheric_delay_correction:
 
                 # Apply RSLC metadata valid-samples sub-swath masking
                 apply_valid_samples_sub_swath_masking: False
