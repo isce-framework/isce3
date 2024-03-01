@@ -219,9 +219,10 @@ class InSARBaseWriter(h5py.File):
         else:
             rfi_mitigation = None
 
-        rfi_mitigation_flag = np.string_(str(False))
-        if (rfi_mitigation is not None) and (rfi_mitigation != ""):
-            rfi_mitigation_flag = np.string_(str(True))
+        rfi_mitigation_flag = str(False)
+        if ((rfi_mitigation is not None) and
+            (rfi_mitigation.lower() not in ['', 'none', 'disabled'])):
+            rfi_mitigation_flag = str(True)
 
         # get the mixed model and update the description
         mixed_mode = self._get_mixed_mode()
@@ -231,7 +232,7 @@ class InSARBaseWriter(h5py.File):
         ds_params = [
             DatasetParams(
                 "rfiCorrectionApplied",
-                np.string_(str(rfi_mitigation_flag)),
+                rfi_mitigation_flag,
                 (
                     "Flag to indicate if RFI correction has been applied"
                     f" to {rslc_name} RSLC"
