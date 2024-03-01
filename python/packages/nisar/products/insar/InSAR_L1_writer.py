@@ -74,25 +74,41 @@ class L1InSARWriter(InSARBaseWriter):
 
         _, v = self.orbit.interpolate(t)
         dx = np.linalg.norm(v) / radargrid.prf
-        tskip = int(np.floor(max_spacing / dx))
-        rskip = int(np.floor(max_spacing / radargrid.range_pixel_spacing))
-        radargrid = radargrid[::tskip, ::rskip]
 
         grid_doppler = LUT2d()
         native_doppler = self.ref_rslc.getDopplerCentroid(
             frequency=cube_freq
         )
+
         native_doppler.bounds_error = False
 
         geo2rdr_params = dict(threshold_geo2rdr=1e-8,
                               numiter_geo2rdr=50,
                               delta_range=10)
 
+        # Create a new geolocation radar grid with 5 extra points
+        # before and after the starting and ending
+        # zeroDopplerTime and slantRange
+        extra_points = 5
+
+        # Total number of samples along the azimuth and slant range
+        # using around 500m sampling interval
+        ysize = int(np.ceil(radargrid.length / (max_spacing / dx)))
+        xsize = int(np.ceil(radargrid.width / \
+            (max_spacing / radargrid.range_pixel_spacing)))
+
+        # New geolocation grid
+        geolocation_radargrid = \
+            radargrid.resize_and_keep_startstop(ysize, xsize)
+        geolocation_radargrid = \
+            geolocation_radargrid.add_margin(extra_points,
+                                             extra_points)
+
         # Add geolocation grid cubes to hdf5
         add_geolocation_grid_cubes_to_hdf5(
             self,
             geolocationGrid_path,
-            radargrid,
+            geolocation_radargrid,
             heights,
             self.orbit,
             native_doppler,

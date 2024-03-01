@@ -178,6 +178,74 @@ class isce3::product::RadarGridParameters {
                                         refEpoch());
         }
 
+        /** Return a new resized radar grid with the same start and stop points.
+         * @param[in] ysize  new number of samples along the azimuth direction
+         * @param[in] xsize  new number of samples along the slant range direction
+         */
+        inline RadarGridParameters resizeKeepStartStop(size_t ysize,
+                                                       size_t xsize) const
+        {
+            //Check for number of samples requested along the azimuth and slant range
+            if ((ysize <= 1) || (xsize <= 1))
+            {
+                std::string errstr = "Number of samples must be greater than 1. " +
+                                    std::to_string(ysize) + " azimuth and " +
+                                    std::to_string(xsize) + " range samples requested.";
+                throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
+            }
+
+            // Compute the new PRF and range pixel spacing to ensure that
+            // both start and stop points are kept
+            double prf = this->prf();
+            double dr = rangePixelSpacing();
+
+            if (length() > 1) prf = (ysize - 1.0) / (length() - 1.0) * prf;
+            dr = (width() - 1.0) / (xsize - 1.0) * dr;
+
+            return RadarGridParameters(sensingStart(), wavelength(), prf,
+                                       startingRange(), dr, lookSide(),
+                                       ysize, xsize, refEpoch());
+        }
+
+        /** Add margins to start, stop or both sides to the radar grid
+         * @param[in] ymargin  the number of margin samples along the azimuth
+         * @param[in] xmargin  the number of margin samples along the slant range
+         * @param[in] side  the side where the margin samples will be added ('start', 'stop', 'both')
+         * NOTE: When only add the margin to the azimuth, please pass 'xmargin' as 0.
+         *       Similarly, when only add the margin to the slant range, please pass 'ymargin' as 0.
+         */
+        inline RadarGridParameters addMargin(size_t ymargin,
+                                             size_t xmargin,
+                                             std::string side = "both") const
+        {
+            double t0, r0;
+            size_t ysize, xsize;
+
+            if (side == "start") {
+                ysize = length() + ymargin;
+                xsize = width() + xmargin;
+                t0 = sensingStart() - ymargin / prf();
+                r0 = startingRange() - xmargin * rangePixelSpacing();
+            } else if (side == "stop") {
+                ysize = length() + ymargin;
+                xsize = width() + xmargin;
+                t0 = sensingStart();
+                r0 = startingRange();
+            } else if (side == "both") {
+                t0 = sensingStart() - ymargin / prf();
+                r0 = startingRange() - xmargin * rangePixelSpacing();
+                ysize = length() + 2 * ymargin;
+                xsize = width() + 2 * xmargin;
+            } else {
+                std::string errstr = "No recognized side '" + side +
+                                     "', please choose the side from 'start', 'stop', and 'both'";
+                throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errstr);
+            }
+
+            return RadarGridParameters(t0, wavelength(), prf(),
+                                       r0, rangePixelSpacing(), lookSide(),
+                                       ysize, xsize, refEpoch());
+        }
 
         /** Multilook */
         inline RadarGridParameters multilook(size_t azlooks, size_t rglooks) const

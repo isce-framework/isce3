@@ -52,7 +52,7 @@ def get_dataset_output_options(cfg: dict):
 def get_complex_output_dtype(cfg: dict, dst_h5: h5py.File):
     '''
     Get the dtype for the complex output and the corresponding NaN fill value.
-    
+
     The dtype is specified in `cfg`. `fill_value` will have a dtype of `ctype`.
     This custom ctype will be added as a new object in the root of `dst_h5` file,
     to teach tools like GDAL/netCDF how to read datasets with these custom dtypes.

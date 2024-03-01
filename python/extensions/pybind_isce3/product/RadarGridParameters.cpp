@@ -153,6 +153,47 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
         .def("copy", [](const RadarGridParameters& self) {
                 return RadarGridParameters(self);
         })
+        // resize the radar grid with with the start and stop points kept
+        .def("resize_and_keep_startstop", &RadarGridParameters::resizeKeepStartStop,
+                py::arg("ysize"),
+                py::arg("xsize"), R"(
+        Resize the RadarGridParameters object by using the ysize and xsize, and
+        the start and stop points are kept.
+
+        Parameters
+        ----------
+        ysize : int
+          The number of samples along the azimuth direction. Must be >1.
+        xsize : int
+          The number of samples along the slant range direction. Must be >1.
+
+        Returns
+        -------
+        RadarGridParameters
+          The resized radar grid.
+            )")
+        // add margins to the radar grid
+        .def("add_margin", &RadarGridParameters::addMargin,
+                py::arg("ymargin"),
+                py::arg("xmargin"),
+                py::arg("side") = "both",  R"(
+        Add margins to the RadarGridParameters object
+
+        Parameters
+        ----------
+        ymargin : int
+          The number of samples along the azimuth. Must be >0.
+        xmargin : int
+          The number of samples along the slant range. Must be >0.
+        side : str
+          The side where the margin will be added, and
+          options are 'start', 'stop', and 'both'. Defaults to 'both'.
+
+        Returns
+        -------
+        RadarGridParameters
+          The radar grid with the margins added.
+            )")
         .def_property_readonly("shape", [](const RadarGridParameters& self) {
                 auto shape = py::tuple(2);
                 shape[0] = self.length();
