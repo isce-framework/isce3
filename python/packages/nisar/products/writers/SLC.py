@@ -743,7 +743,7 @@ class SLC(h5py.File):
         if planned_datatake_id is not None:
             set_string_list(g, "plannedDatatakeId", planned_datatake_id,
                 "List of planned datatakes included in the product")
-        
+
         if planned_observation_id is not None:
             set_string_list(g, "plannedObservationId", planned_observation_id,
                 "List of planned observations included in the product")
@@ -809,25 +809,42 @@ class SLC(h5py.File):
              (grid.ref_epoch - orbit.reference_epoch).total_seconds())
         _, v = orbit.interpolate(t)
         dx = np.linalg.norm(v) / grid.prf
-        tskip = int(np.floor(max_spacing / dx))
-        rskip = int(np.floor(max_spacing / grid.range_pixel_spacing))
-        grid = grid[::tskip, ::rskip]
 
         group_name = f"{self.root.name}/metadata/geolocationGrid"
         rslc_doppler = LUT2d()  # RSLCs are zero-Doppler by definition
-        # TODO Fix keyword args
-        add_geolocation_grid_cubes_to_hdf5(self, group_name, grid, heights,
-            orbit, doppler, rslc_doppler, epsg)
 
+        # Create a new geolocation radar grid with 5 extra points
+        # before and after the starting and ending
+        # zeroDopplerTime and slantRange
+        extra_points = 5
+
+        # Total number of samples along the azimuth and slant range
+        # using around 500m sampling interval
+        ysize = int(np.ceil(grid.length / (max_spacing / dx)))
+        xsize = int(np.ceil(grid.width / \
+            (max_spacing / grid.range_pixel_spacing)))
+
+        # New geolocation grid
+        geolocation_radargrid = \
+            grid.resize_and_keep_startstop(ysize, xsize)
+        geolocation_radargrid = \
+            geolocation_radargrid.add_margin(extra_points,
+                                             extra_points)
+
+        # TODO Fix keyword args
+        add_geolocation_grid_cubes_to_hdf5(self, group_name,
+                                           geolocation_radargrid,
+                                           heights,orbit, doppler,
+                                           rslc_doppler, epsg)
 
     def write_stats(self, frequency, pol, stats):
         h5_ds = self.swath(frequency)[pol]
         write_stats_complex_data(h5_ds, stats)
 
 
-    def add_calibration_section(self, frequency, pol, 
-                                az_time_orig_vect: np.array, 
-                                epoch: DateTime, 
+    def add_calibration_section(self, frequency, pol,
+                                az_time_orig_vect: np.array,
+                                epoch: DateTime,
                                 slant_range_orig_vect: np.array):
         assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
 
