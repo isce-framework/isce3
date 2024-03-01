@@ -104,3 +104,7 @@ def test_crop():
     cropped_orbit = orbit.crop(start, stop, npad)
     npt.assert_(cropped_orbit.size >= 2 * npad)
 
+    # Make sure reference epoch doesn't change interp and epoch properties.
+    npt.assert_(cropped_orbit.get_interp_method() == orbit.get_interp_method())
+    npt.assert_(cropped_orbit.reference_epoch == orbit.reference_epoch)
+

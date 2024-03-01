@@ -126,3 +126,6 @@ def test_crop():
     # Requesting npad=1 should result in getting all the original data.
     cropped_attitude = attitude.crop(start, stop, npad=1)
     npt.assert_array_equal(attitude.time, cropped_attitude.time)
+
+    # Check that cropping doesn't modify epoch.
+    npt.assert_(cropped_attitude.reference_epoch == attitude.reference_epoch)

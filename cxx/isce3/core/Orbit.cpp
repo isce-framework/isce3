@@ -123,7 +123,7 @@ Orbit Orbit::crop(const DateTime& start, const DateTime& end, int npad) const
         const DateTime t = _reference_epoch + TimeDelta(_time[k]);
         statevecs[i] = {t, _position[k], _velocity[k]};
     }
-    return Orbit(statevecs, _interp_method);
+    return Orbit(statevecs, _reference_epoch, _interp_method);
 }
 
 }}
