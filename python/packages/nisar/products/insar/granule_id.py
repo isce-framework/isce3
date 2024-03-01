@@ -110,7 +110,7 @@ def get_slc_range_bandwidth(slc_path, freq='A'):
     '''
     slc = SLC(hdf5file=slc_path)
     with h5py.File(slc_path, 'r', libver='latest', swmr=True) as h:
-        return h[f'{slc.SwathPath}/frequency{freq}/acquiredRangeBandwidth'][()].astype('float') // 1e6
+        return h[f'{slc.SwathPath}/frequency{freq}/processedRangeBandwidth'][()].astype('float') // 1e6
 
 
 def get_slc_start_end_time(slc_path, time_type='start'):
