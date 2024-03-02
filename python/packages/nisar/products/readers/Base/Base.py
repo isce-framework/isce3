@@ -112,25 +112,43 @@ class Base(pyre.component,
 
         self.parsePolarizations()
 
+    def _getFirstFrequency(self):
+        '''
+        Returns first available frequency
+        '''
+        if len(self.frequencies) == 0:
+            error_channel = journal.error(
+                'nisar.products.readers.Base._getFirstFrequency')
+            error_msg = 'The product does not contain any frequency'
+            error_channel.log(error_msg)
+            raise RuntimeError(error_msg)
+        return self.frequencies[0]
+
     @pyre.export
-    def getSwathMetadata(self, frequency='A'):
+    def getSwathMetadata(self, frequency=None):
         '''
         Returns metadata corresponding to given frequency.
         '''
+        if frequency is None:
+            frequency = self._getFirstFrequency()
         return isce3.product.Swath(self.filename, frequency)
 
     @pyre.export
-    def getRadarGrid(self, frequency='A'):
+    def getRadarGrid(self, frequency=None):
         '''
         Return radarGridParameters object
         '''
+        if frequency is None:
+            frequency = self._getFirstFrequency()
         return isce3.product.RadarGridParameters(self.filename, frequency)
 
     @pyre.export
-    def getGridMetadata(self, frequency='A'):
+    def getGridMetadata(self, frequency=None):
         '''
         Returns metadata corresponding to given frequency.
         '''
+        if frequency is None:
+            frequency = self._getFirstFrequency()
         return isce3.product.Grid(self.filename, frequency)
 
     @pyre.export
@@ -152,10 +170,12 @@ class Base(pyre.component,
             return isce3.core.Attitude.load_from_h5(fid[attitudePath])
 
     @pyre.export
-    def getDopplerCentroid(self, frequency='A'):
+    def getDopplerCentroid(self, frequency=None):
         '''
         Extract the Doppler centroid
         '''
+        if frequency is None:
+            frequency = self._getFirstFrequency()
         dopplerPath = os.path.join(self.ProcessingInformationPath,
                                 'parameters', 'frequency' + frequency,
                                 'dopplerCentroid')
@@ -190,13 +210,14 @@ class Base(pyre.component,
         return zeroDopplerTime
 
     @pyre.export
-    def getSlantRange(self, frequency='A'):
+    def getSlantRange(self, frequency=None):
         '''
         Extract the slant range of the zero Doppler grid
         '''
-
+        if frequency is None:
+            frequency = self._getFirstFrequency()
         slantRangePath = os.path.join(self.SwathPath,
-                                    'frequency' + frequency, 'slantRange')
+                                      'frequency' + frequency, 'slantRange')
 
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             slantRange = fid[slantRangePath][:]
