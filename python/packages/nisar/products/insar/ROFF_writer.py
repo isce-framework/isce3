@@ -345,7 +345,7 @@ class ROFFWriter(L1InSARWriter):
                         layer_group_name = f"{offset_pol_group_name}/{layer}"
                         layer_group = self.require_group(layer_group_name)
 
-                         # Create the pixel offsets dataset
+                        # Create the pixel offsets dataset
                         for pixel_offsets_ds_param in pixel_offsets_ds_params:
                             ds_name, ds_description, ds_unit = pixel_offsets_ds_param
                             self._create_2d_dataset(
@@ -355,6 +355,10 @@ class ROFFWriter(L1InSARWriter):
                                 np.float32,
                                 ds_description,
                                 units=ds_unit,
+                                compression_enabled=self.cfg['output']['compression_enabled'],
+                                compression_level=self.cfg['output']['compression_level'],
+                                chunk_size=self.cfg['output']['chunk_size'],
+                                shuffle_filter=self.cfg['output']['shuffle']
                             )
 
 

@@ -346,6 +346,7 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add datasets to pixel offsets group
         """
+        pcfg = self.cfg['processing']
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # create the swath group
             swaths_freq_group_name = \
@@ -390,7 +391,12 @@ class L1InSARWriter(InSARBaseWriter):
                         off_shape,
                         np.float32,
                         ds_description,
-                        units=ds_unit)
+                        units=ds_unit,
+                        compression_enabled=self.cfg['output']['compression_enabled'],
+                        compression_level=self.cfg['output']['compression_level'],
+                        chunk_size=self.cfg['output']['chunk_size'],
+                        shuffle_filter=self.cfg['output']['shuffle']
+                    )
 
     def add_pixel_offsets_to_swaths_group(self):
         """
@@ -474,6 +480,7 @@ class L1InSARWriter(InSARBaseWriter):
         """
         Add the interferogram group to the swaths group
         """
+        pcfg = self.cfg['processing']
         for freq, pol_list, _ in get_cfg_freq_pols(self.cfg):
             # Create the swath group
             swaths_freq_group_name = (
@@ -617,7 +624,12 @@ class L1InSARWriter(InSARBaseWriter):
                         igram_shape,
                         ds_dtype,
                         ds_description,
-                        units=ds_unit)
+                        units=ds_unit,
+                        compression_enabled=self.cfg['output']['compression_enabled'],
+                        compression_level=self.cfg['output']['compression_level'],
+                        chunk_size=self.cfg['output']['chunk_size'],
+                        shuffle_filter=self.cfg['output']['shuffle']
+                    )
 
 
     def add_subswaths_to_swaths_group(self):

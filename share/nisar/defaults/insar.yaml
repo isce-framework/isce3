@@ -749,6 +749,17 @@ runconfig:
                         # Max number of connected components per tile
                         max_ncomps: 32
 
+            # Set of options to enable compression, choose compression level,
+            # chunk size and shuffle filter
+        output:
+            # Enable/Disable gzip compression
+            compression_enabled: True
+            # Compression level: 1: least compression; 9: best compression
+            compression_level: 5
+            # Chunk size of InSAR raster
+            chunk_size: [128, 128]
+            # Enable/disable shuffle filter
+            shuffle: True
         qa:
             rifg:
                 workflows:

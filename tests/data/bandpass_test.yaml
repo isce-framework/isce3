@@ -142,3 +142,7 @@ runconfig:
             phase_unwrap:
                 crossmul_path:
                 algorithm: icu
+
+        output:
+            compression_enabled: False
+            chunk_size: [16, 16]

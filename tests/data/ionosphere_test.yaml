@@ -169,3 +169,7 @@ runconfig:
                     sigma_azimuth: 100
                     filter_iterations: 1
 
+        output:
+            compression_enabled: False
+            chunk_size: [ 16, 16 ]
+

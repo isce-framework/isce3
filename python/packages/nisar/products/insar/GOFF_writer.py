@@ -168,4 +168,9 @@ class GOFFWriter(ROFFWriter, L2InSARWriter):
                             ds_units,
                             grids_val,
                             xds=xds,
-                            yds=yds)
+                            yds=yds,
+                            compression_enabled=self.cfg['output']['compression_enabled'],
+                            compression_level=self.cfg['output']['compression_level'],
+                            chunk_size=self.cfg['output']['chunk_size'],
+                            shuffle_filter=self.cfg['output']['shuffle']
+                        )

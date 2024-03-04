@@ -144,6 +144,8 @@ runconfig:
         # To setup type of worker
         worker: include('worker_options', required=False)
 
+        output: include('output_options', required=False)
+
         qa: include('qa_options', required=False)
 
         # Place holder for user set path to log file.
@@ -1009,3 +1011,9 @@ worker_options:
     # Index of the GPU to use for processing, optional. Defaults to the
     # first available CUDA device. Ignored if *gpu_enabled* is False.
     gpu_id: int(min=0, required=False)
+
+output_options:
+    compression_enabled: bool(required=False)
+    compression_level: int(min=1, max=9, required=False)
+    chunk_size: list(int(min=4), min=2, max=2, required=False)
+    shuffle: bool(required=False)
