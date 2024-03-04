@@ -111,12 +111,6 @@ class GslcWriter(BaseL2WriterSingleInput):
             'azimuthIonosphericGeolocationCorrectionApplied',
             flag_ionopheric_correction_enabled)
 
-        self.copy_from_input(
-            f'{parameters_group}/rfiCorrectionApplied',
-            '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'rfiMitigation',
-            default=False)
-
         self.copy_from_runconfig(
             f'{parameters_group}/ellipsoidalFlatteningApplied',
             'processing/flatten')

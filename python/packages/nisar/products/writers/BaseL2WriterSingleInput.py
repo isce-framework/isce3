@@ -789,6 +789,26 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                     excludes=excludes_list)
 
     def populate_processing_information_l2_common(self):
+
+        # Since the flag "rfiCorrectionApplied" is not present in the RSLC
+        # metadata, we populate it by reading the name of the
+        # RFI mitigation algorithm from the RSLC metadata. The flag
+        # is only True if the name of the algorithm is present in the metadata,
+        # if it's not empy, and if the substring "disabled" is not part of the
+        # algorithm name
+        rfi_mitigation_path = (
+            f'{self.output_product_path}/metadata/processingInformation/'
+            'algorithms/rfiMitigation')
+        flag_rfi_mitigation_applied = (
+            rfi_mitigation_path in self.output_hdf5_obj and
+            rfi_mitigation_path != '' and
+            'disabled' not in rfi_mitigation_path.lower())
+
+        self.set_value(
+            '{PRODUCT}/metadata/processingInformation/parameters/'
+            'rfiCorrectionApplied',
+            flag_rfi_mitigation_applied)
+
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'softwareVersion',

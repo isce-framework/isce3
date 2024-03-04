@@ -253,12 +253,6 @@ class GcovWriter(BaseL2WriterSingleInput):
             'azimuthIonosphericGeolocationCorrectionApplied',
             'processing/geocode/apply_azimuth_ionospheric_delay_correction')
 
-        self.copy_from_input(
-            f'{parameters_group}/rfiCorrectionApplied',
-            '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'rfiMitigation',
-            default=False)
-
         self.set_value(
             f'{parameters_group}/postProcessingFilteringApplied',
             False)
