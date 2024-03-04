@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from itertools import product
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 import h5py
 import numpy as np
@@ -1113,6 +1113,11 @@ class InSARBaseWriter(h5py.File):
         yds: Optional[h5py.Dataset] = None,
         xds: Optional[h5py.Dataset] = None,
         fill_value: Optional[Any] = None,
+        compression_enabled: Optional[bool] = True,
+        compression_type: Optional[str] = 'gzip',
+        compression_level: Optional[int] = 5,
+        chunk_size: Optional[Tuple[int, int]] = (128, 128),
+        shuffle_filter: Optional[bool] = True
     ):
         """
         Create an empty 2D dataset under the h5py.Group
@@ -1143,18 +1148,42 @@ class InSARBaseWriter(h5py.File):
             X coordinates
         fill_value : Any, optional
             No data value of the dataset
+        compression_enabled: bool
+            Flag to enable/disable data compression
+        compression_type: str
+            Data compression algorithm
+        compression_level: int
+            Level of data compression (1: low compression, 9: high compression)
+        chunk_size: [int, int]
+            Chunk size along rows and columns
+        shuffle_filter: bool
+            Flag to enable/disable shuffle filter
         """
         # use the default chunk size if the chunk_size is None
-        chunks = self.default_chunk_size
-        create_with_chunks = chunks[0] < shape[0] and chunks[1] < shape[1]
+        create_with_chunks = chunk_size[0] < shape[0] and chunk_size[1] < shape[1]
+
+        # Include options for compression
+        create_dataset_kwargs = {}
+        if compression_enabled:
+            if not create_with_chunks:
+                err_str = "Dataset must be created with chunks if compression is enabled"
+                raise ValueError(err_str)
+            if compression_type is not None:
+                create_dataset_kwargs['compression'] = compression_type
+            if compression_level is not None:
+                create_dataset_kwargs['compression_opts'] = compression_level
+
+            # Add shuffle filter options
+            create_dataset_kwargs['shuffle'] = shuffle_filter
 
         if create_with_chunks:
             ds = h5_group.require_dataset(
-                name, dtype=dtype, shape=shape, chunks=chunks
+                name, dtype=dtype, shape=shape, chunks=tuple(chunk_size), **create_dataset_kwargs
             )
         else:
             # create dataset without chunks when the dataset size is less than default chunks
-            ds = h5_group.require_dataset(name, dtype=dtype, shape=shape)
+            ds = h5_group.require_dataset(name, dtype=dtype, shape=shape,
+                                          **create_dataset_kwargs)
 
         # set attributes
         ds.attrs["description"] = np.string_(description)

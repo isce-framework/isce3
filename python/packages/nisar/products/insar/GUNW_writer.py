@@ -200,7 +200,12 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     Units.dn,
                     grids_val,
                     xds=xds,
-                    yds=yds)
+                    yds=yds,
+                    compression_enabled=self.cfg['output']['compression_enabled'],
+                    compression_level=self.cfg['output']['compression_level'],
+                    chunk_size=self.cfg['output']['chunk_size'],
+                    shuffle_filter=self.cfg['output']['shuffle']
+                )
 
             for pol in pol_list:
                 unwrapped_pol_name = f"{unwrapped_group_name}/{pol}"
@@ -244,7 +249,12 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         ds_unit,
                         grids_val,
                         xds=xds,
-                        yds=yds)
+                        yds=yds,
+                        compression_enabled=self.cfg['output']['compression_enabled'],
+                        compression_level=self.cfg['output']['compression_level'],
+                        chunk_size=self.cfg['output']['chunk_size'],
+                        shuffle_filter=self.cfg['output']['shuffle']
+                    )
 
                 wrapped_pol_name = f"{wrapped_group_name}/{pol}"
                 wrapped_pol_group = self.require_group(wrapped_pol_name)
@@ -279,6 +289,10 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        compression_enabled=self.cfg['output']['compression_enabled'],
+                        compression_level=self.cfg['output']['compression_level'],
+                        chunk_size=self.cfg['output']['chunk_size'],
+                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
                 pixeloffsets_pol_name = f"{pixeloffsets_group_name}/{pol}"
@@ -319,4 +333,8 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                         grids_val,
                         xds=xds,
                         yds=yds,
+                        compression_enabled=self.cfg['output']['compression_enabled'],
+                        compression_level=self.cfg['output']['compression_level'],
+                        chunk_size=self.cfg['output']['chunk_size'],
+                        shuffle_filter=self.cfg['output']['shuffle']
                     )

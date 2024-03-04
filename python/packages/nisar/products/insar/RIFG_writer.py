@@ -62,6 +62,8 @@ class RIFGWriter(L1InSARWriter):
         """
         Add interferogram group to swaths
         """
+        # Extract runconfiguration file
+        pcfg = self.cfg['processing']
         super().add_interferogram_to_swaths_group()
 
         # Add the wrappedInterferogram to the interferogram group
@@ -103,6 +105,10 @@ class RIFGWriter(L1InSARWriter):
                         ds_dtype,
                         ds_description,
                         units=ds_unit,
+                        compression_enabled=self.cfg['output']['compression_enabled'],
+                        compression_level=self.cfg['output']['compression_level'],
+                        chunk_size=self.cfg['output']['chunk_size'],
+                        shuffle_filter=self.cfg['output']['shuffle']
                     )
 
     def add_swaths_to_hdf5(self):

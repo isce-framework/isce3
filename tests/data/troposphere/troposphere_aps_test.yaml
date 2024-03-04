@@ -172,6 +172,9 @@ runconfig:
                 enable_wet_product: False
                 enable_hydrostatic_product: False
                 enable_comb_product: True
+        output:
+          compression_enabled: False
+          chunk_size: [ 16, 16 ]
 
         # TODO OPTIONAL - To setup type of worker
         worker:

@@ -155,3 +155,6 @@ runconfig:
                    A: [HH]
                    B: [HH]
 
+        output:
+            compression_enabled: False
+            chunk_size: [ 16, 16 ]
