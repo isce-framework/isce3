@@ -198,18 +198,18 @@ class SplitSpectrum:
         # update metadata with new parameters
         meta = dict()
         new_bandwidth = high_frequency - low_frequency
-        new_sample_freq = np.abs(new_bandwidth) * self.sampling_bandwidth_ratio
+        new_rg_sample_freq = np.abs(new_bandwidth) * self.sampling_bandwidth_ratio
 
         meta['center_frequency'] = new_center_frequency
         meta['rg_bandwidth'] = new_bandwidth
-        meta['rg_sample_freq'] = new_sample_freq
+        meta['rg_sample_freq'] = new_rg_sample_freq
 
         # Resampling changes the spacing and slant range
         if resampling:
             # due to the precision of the floating point, the resampling
             # scaling factor may be not integer.
-            resampling_scale_factor = rg_sample_freq / new_sample_freq
-            if rg_sample_freq % new_sample_freq < 0.1:
+            resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
+            if rg_sample_freq % new_rg_sample_freq < 0.1:
                 resampling_scale_factor = np.round(resampling_scale_factor)
             else:
                 err_msg = 'Resampling scaling factor ' \
@@ -283,8 +283,8 @@ class SplitSpectrum:
         height, width = slc_raster.shape
         slc_raster = np.asanyarray(slc_raster, dtype='complex')
         new_bandwidth = high_frequency - low_frequency
-        new_sample_freq = self.sampling_bandwidth_ratio * new_bandwidth
-        resampling_scale_factor = rg_sample_freq / new_sample_freq
+        new_rg_sample_freq = self.sampling_bandwidth_ratio * new_bandwidth
+        resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
 
         if new_bandwidth < 0:
             err_str = f"Low frequency is higher than high frequency"
@@ -583,8 +583,6 @@ class SplitSpectrum:
 
         # sampling frequency is 1.2 times wider than bandwith
         sampling_bandwidth_ratio = self.sampling_bandwidth_ratio
-        if self.sampling_bandwidth_ratio is None:
-            sampling_bandwidth_ratio = 1.2
 
         sampling_low_frequency = \
             freq_low - (sampling_bandwidth_ratio - 1) * subbandwidth * 0.5
