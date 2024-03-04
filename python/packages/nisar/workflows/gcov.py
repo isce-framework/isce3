@@ -513,7 +513,7 @@ def _run(cfg, raster_scratch_dir):
         # if provided, load an external orbit from the runconfig file;
         # othewise, load the orbit from the RSLC metadata
         if orbit_file is not None:
-            orbit = load_orbit_from_xml(orbit_file)
+            orbit = load_orbit_from_xml(orbit_file, radar_grid.ref_epoch)
         else:
             orbit = slc.getOrbit()
 

@@ -488,27 +488,14 @@ class GcovWriter(BaseL2WriterSingleInput):
         Populate GCOV-specific `orbit` datasets `interpMethod` and
         `referenceEpoch`
         """
-        # TODO: update the code below once the capability of storing an
-        # external orbit file is implemented
-
         error_channel = journal.error(
             'GcovWriter.populate_orbit_gcov_specific')
-        rslc_orbit_path = f'{self.output_product_path}/metadata/orbit'
-        orbit = isce3.core.load_orbit_from_h5_group(
-            self.output_hdf5_obj[rslc_orbit_path])
 
-        # The orbit `interpMethod`` was removed from the RSLC product
-        # specification in ISCE3 Release 4. However, RSLC products
-        # with previous version may include the dataset. If the field
-        # is not present in the GCOV orbit group, i.e., if it was not
-        # copied from the RSLC orbit
-        # group, add it.
-        input_orbit_group_path = \
-            (f'{self.root_path}/{self.input_product_hdf5_group_type}'
-             '/metadata/orbit/interpMethod')
-
-        if input_orbit_group_path not in self.input_hdf5_obj:
-            orbit_interp_method = orbit.get_interp_method()
+        # save the orbit interp method
+        interp_method_path = (f'{self.output_product_path}/metadata/orbit/'
+                              'interpMethod')
+        if interp_method_path not in self.output_hdf5_obj:
+            orbit_interp_method = self.orbit.get_interp_method()
             if orbit_interp_method == isce3.core.OrbitInterpMethod.HERMITE:
                 orbit_interp_method_str = 'Hermite'
             elif orbit_interp_method == isce3.core.OrbitInterpMethod.LEGENDRE:
@@ -523,4 +510,4 @@ class GcovWriter(BaseL2WriterSingleInput):
 
         self.set_value(
             '{PRODUCT}/metadata/orbit/referenceEpoch',
-            orbit.reference_epoch.isoformat_usec())
+            self.orbit.reference_epoch.isoformat_usec())
