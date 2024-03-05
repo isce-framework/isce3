@@ -485,13 +485,18 @@ def check_dem_overlap(DEMFilepath, polys):
     return perc_area
 
 
-def check_aws_connection():
+def check_aws_connection(version='1.1'):
     """Check connection to AWS s3://nisar-dem bucket
        Throw exception if no connection is established
+
+    Parameters
+    ---------
+    version: str
+        DEM Version
     """
     import boto3
     s3 = boto3.resource('s3')
-    obj = s3.Object('nisar-dem', 'EPSG3031/EPSG3031.vrt')
+    obj = s3.Object('nisar-dem', f'v{version}/EPSG3031/README.txt')
     try:
         obj.get()['Body'].read()
     except Exception:
@@ -614,7 +619,7 @@ def main(opts):
     else:
         # Check connection to AWS s3 nisar-dem bucket
         try:
-            check_aws_connection()
+            check_aws_connection(opts.version)
         except ImportError:
             import warnings
             warnings.warn('boto3 is require to verify AWS connection '
