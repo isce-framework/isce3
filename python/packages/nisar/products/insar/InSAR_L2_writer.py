@@ -13,6 +13,7 @@ from .product_paths import L2GroupsPaths
 from .units import Units
 from .utils import extract_datetime_from_string
 
+
 class L2InSARWriter(L1InSARWriter):
     """
     Writer class for L2InSARWriter products (GOFF and GUNW)
@@ -72,9 +73,10 @@ class L2InSARWriter(L1InSARWriter):
         cube_group = self.require_group(sec_cube_group_path)
         cube_shape = [len(heights), geogrid.length, geogrid.width]
 
-        zds, yds, xds = set_get_geo_info(self, sec_cube_group_path, geogrid,
-                                        z_vect=heights, flag_cube=True)
-
+        zds, yds, xds = set_get_geo_info(self, sec_cube_group_path,
+                                         geogrid,
+                                         z_vect=heights,
+                                         flag_cube=True)
         # seconds since ref epoch
         ref_epoch = radar_grid.ref_epoch
         ref_epoch_str = ref_epoch.isoformat()
@@ -140,7 +142,7 @@ class L2InSARWriter(L1InSARWriter):
             grid_zero_doppler,
             threshold_geo2rdr,
             iteration_geo2rdr,
-        )
+            )
 
         # Update the radar grids attributes
         radar_grid['slantRange'].attrs['description'] = \
