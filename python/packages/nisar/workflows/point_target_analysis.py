@@ -19,7 +19,6 @@ import numpy as np
 import argparse
 import isce3
 from nisar.products.readers import SLC
-from isce3.core.types import ComplexFloat16Decoder
 from isce3.cal import point_target_info as pti
 import warnings
 import json
@@ -370,7 +369,7 @@ def slc_pt_performance(
 
     # Open RSLC data
     slc = SLC(hdf5file=slc_input)
-    slc_data = ComplexFloat16Decoder(slc.getSlcDataset(freq_group, polarization))
+    slc_data = slc.getSlcDatasetAsNativeComplex(freq_group, polarization)
 
     #Convert input LLH (lat, lon, height) coordinates into (slant range, azimuth)
     slc_pixel, slc_line = get_radar_grid_coords(cr_llh, slc, freq_group)
@@ -646,11 +645,8 @@ def analyze_corner_reflectors(
                 f" polarizations are {set(available_pols)}"
             )
 
-    # Get the RSLC image data for the specified frequency sub-band & polarization and
-    # wrap it in a decoder layer that handles converting half-precision complex values
-    # to single-precision.
-    img_dataset = rslc.getSlcDataset(freq, pol)
-    img_data = isce3.core.types.ComplexFloat16Decoder(img_dataset)
+    # Get the RSLC image data for the specified frequency sub-band & polarization.
+    img_data = rslc.getSlcDatasetAsNativeComplex(freq, pol)
 
     # Returns point target info dict for a single target, given its location in geodetic
     # coordinates.

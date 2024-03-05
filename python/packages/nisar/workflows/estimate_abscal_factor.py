@@ -202,11 +202,8 @@ def estimate_abscal_factor(
                 f" polarizations are {set(available_pols)}"
             )
 
-    # Get the RSLC image data for the specified frequency sub-band & polarization and
-    # wrap it in a decoder layer that handles converting half-precision complex values
-    # to single-precision.
-    img_dataset = rslc.getSlcDataset(freq, pol)
-    img_data = isce3.core.types.ComplexFloat16Decoder(img_dataset)
+    # Get the RSLC image data for the specified frequency sub-band & polarization.
+    img_data = rslc.getSlcDatasetAsNativeComplex(freq, pol)
 
     # Get the radar grid on which the image data is sampled.
     radar_grid = rslc.getRadarGrid(freq)

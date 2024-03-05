@@ -27,8 +27,7 @@ def get_test_data(bandwidth: str = "20mhz") -> Dict[str, Any]:
     rslc = nisar.products.readers.SLC(hdf5file=os.fspath(rslc_hdf5))
     freq = "A"
     pol = "HH"
-    img_dataset = rslc.getSlcDataset(freq, pol)
-    img_data = isce3.core.types.ComplexFloat16Decoder(img_dataset)
+    img_data = rslc.getSlcDatasetAsNativeComplex(freq, pol)
 
     # Get product metadata.
     orbit = rslc.getOrbit()
