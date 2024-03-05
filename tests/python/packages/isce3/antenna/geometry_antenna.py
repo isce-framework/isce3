@@ -7,7 +7,6 @@ from isce3.antenna import (geo2ant, rdr2ant, sphere_range_az_to_xyz,
 from isce3.core import Ellipsoid, Quaternion
 from isce3.geometry import DEMInterpolator, rdr2geo
 from nisar.products.readers.SLC import SLC
-from isce3.core.types import ComplexFloat16Decoder
 import iscetest
 
 
@@ -34,7 +33,7 @@ class TestGeometryAntenna:
     slc = SLC(hdf5file=os.path.join(iscetest.data, file_slc))
 
     # parse dataset and find the (line, pixel) of the point target
-    dset = ComplexFloat16Decoder(slc.getSlcDataset(freq_band, pol_txrx))
+    dset = slc.getSlcDatasetAsNativeComplex(freq_band, pol_txrx)
     tg_line, tg_pixel = np.unravel_index(abs(dset[:]).argmax(), dset.shape)
 
     # get radar grid

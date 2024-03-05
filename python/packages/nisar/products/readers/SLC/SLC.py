@@ -1,18 +1,51 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 
 import h5py
 import journal
-import numpy as np
 import pyre
 from nisar.products.readers.GenericProduct import get_hdf5_file_product_type
-from isce3.core.types import complex32
+from isce3.core.types import ComplexFloat16Decoder, complex32
 
 from ..Base import Base
 from .Identification import Identification
 
 PRODUCT = 'RSLC'
+
+
+def is_complex32(dataset: h5py.Dataset) -> bool:
+    '''
+    Check if the input dataset is complex32 (i.e. pairs of 16-bit floats).
+
+    Parameters
+    ----------
+    dataset : h5py.Dataset
+        The input dataset.
+
+    Returns
+    -------
+    bool
+        True if the input dataset is complex32; otherwise False.
+    '''
+    # h5py 3.8.0 returns a compound datatype when accessing a complex32
+    # dataset's dtype (https://github.com/h5py/h5py/pull/2157). Previous
+    # versions of h5py raise TypeError when attempting to get the dtype. In this
+    # case, we try to infer whether the dataset was complex32 based on the error
+    # message.
+    try:
+        dtype = dataset.dtype
+    except TypeError as e:
+        regex = re.compile(r"^data type '([<>|=])?c4' not understood$")
+        errmsg = str(e)
+        if regex.match(errmsg):
+            return True
+        else:
+            raise
+    else:
+        return dtype == complex32
+
 
 class SLC(Base, family='nisar.productreader.slc'):
     '''
@@ -86,6 +119,38 @@ class SLC(Base, family='nisar.productreader.slc'):
         # return dataset
         return slcDataset
 
+    def getSlcDatasetAsNativeComplex(
+        self, frequency: str, polarization: str
+    ) -> h5py.Dataset | ComplexFloat16Decoder:
+        '''
+        Get an SLC raster layer as a complex64 or complex128 dataset.
+
+        Return the SLC dataset corresponding to a given frequency sub-band and
+        polarization from the HDF5 file as a complex64 (i.e. pairs of 32-bit floats)
+        or complex128 (i.e. pairs of 64-bit floats) dataset. If the data was stored as
+        complex32 (i.e. pairs of 16-bit floats), it will be lazily converted to
+        complex64 when accessed.
+
+        Parameters
+        ----------
+        frequency : str
+            The frequency sub-band of the SLC dataset.
+        pol : str
+            The Tx and Rx polarization of the SLC dataset.
+
+        Returns
+        -------
+        h5py.Dataset or isce3.core.types.ComplexFloat16Decoder
+            The HDF5 dataset, possibly wrapped in a decoder layer that handles
+            converting from half precision complex values to single precision.
+        '''
+        dataset = self.getSlcDataset(frequency, polarization)
+
+        if is_complex32(dataset):
+            return ComplexFloat16Decoder(dataset)
+        else:
+            return dataset
+
     def slcPath(self, frequency, polarization):
         '''
         return path to hdf5 dataset of given frequency and polarization
@@ -99,10 +164,9 @@ class SLC(Base, family='nisar.productreader.slc'):
         '''
         return "L1"
 
-
-    def is_dataset_complex64(self, freq, pol):
+    def is_dataset_complex32(self, freq, pol):
         '''
-        Determine if RSLC raster is of data type complex64
+        Determine if RSLC raster is of data type complex32
 
         Parameters
         ----------
@@ -112,7 +176,7 @@ class SLC(Base, family='nisar.productreader.slc'):
             Polarization of raster to check
         '''
         # Set error channel
-        error_channel = journal.error('SLC.is_dataset_complex64')
+        error_channel = journal.error('SLC.is_dataset_complex32')
 
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as h:
             freq_path = f'/{self.SwathPath}/frequency{freq}'
@@ -127,14 +191,4 @@ class SLC(Base, family='nisar.productreader.slc'):
                 error_channel.log(err_str)
                 raise LookupError(err_str)
 
-            # h5py 3.8.0 returns a compound datatype when accessing a complex32
-            # dataset's dtype (https://github.com/h5py/h5py/pull/2157).
-            # Previous versions of h5py raise TypeError when attempting to
-            # get the dtype. If such exception was raised, we assume the
-            # datatype was complex32
-            try:
-                dtype = h[slc_path].dtype
-            except TypeError:
-                return False
-            else:
-                return dtype == np.complex64
+            return is_complex32(h[slc_path])

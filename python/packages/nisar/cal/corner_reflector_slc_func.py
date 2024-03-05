@@ -8,7 +8,6 @@ import warnings
 
 from isce3.core import Ellipsoid, LUT2d, LookSide
 from isce3.geometry import geo2rdr, rdr2geo, DEMInterpolator, heading
-from isce3.core.types import ComplexFloat16Decoder
 from isce3.cal.point_target_info import get_chip, oversample
 from isce3.antenna import geo2ant, ant2geo
 
@@ -167,7 +166,7 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, freq_band='A',
         rgb_pol = []
         for pol in co_pols:
             # get decoded RSLC dataset per pol
-            dset_slc = ComplexFloat16Decoder(slc.getSlcDataset(freq_band, pol))
+            dset_slc = slc.getSlcDatasetAsNativeComplex(freq_band, pol)
             # get exact peak location and its complex value via freq-domain
             # oversampling around approximate range/azimuth bins
             # get a chip around the (azb, rgb) and interpolate.
@@ -199,9 +198,7 @@ def est_peak_loc_cr_from_slc(slc, cr_llh, *, freq_band='A',
             if len(x_pol) == 1:
                 x_pol = x_pol[0]
                 # get decoded RSLC dataset per pol
-                dset_slc_cx = ComplexFloat16Decoder(
-                    slc.getSlcDataset(freq_band, x_pol)
-                )
+                dset_slc_cx = slc.getSlcDatasetAsNativeComplex(freq_band, x_pol)
                 # oversampling around approximate range/azimuth bins
                 # get a chip around the (azb, rgb) of the peak of respective
                 # co-pol and interpolate.

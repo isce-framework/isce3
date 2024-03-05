@@ -15,7 +15,6 @@ try:
 except ImportError:
     plt = None
 
-from isce3.core.types import ComplexFloat16Decoder
 from isce3.core import (
     DateTime, TimeDelta, speed_of_light, Ellipsoid, LUT2d, LLH
 )
@@ -644,18 +643,10 @@ class FaradayRotEstBickelBates(FaradayRotAngleSlc):
             azt_lim, sr_lim, azt_blk_size, sr_blk_size)
 
         # get decoded RSLC dataset for all pols
-        dset_hv = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'HV')
-        )
-        dset_vh = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'VH')
-        )
-        dset_hh = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'HH')
-        )
-        dset_vv = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'VV')
-        )
+        dset_hv = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'HV')
+        dset_vh = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'VH')
+        dset_hh = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'HH')
+        dset_vv = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'VV')
 
         # create tmp files for memory mapping of a block under tmp dir
         fid_co = NamedTemporaryFile(suffix='_rslc_copol.c8',
@@ -986,18 +977,10 @@ class FaradayRotEstFreemanSecond(FaradayRotAngleSlc):
             azt_lim, sr_lim, azt_blk_size, sr_blk_size)
 
         # get decoded RSLC dataset for all pols
-        dset_hv = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'HV')
-        )
-        dset_vh = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'VH')
-        )
-        dset_hh = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'HH')
-        )
-        dset_vv = ComplexFloat16Decoder(
-            self._slc.getSlcDataset(self.freq_band, 'VV')
-        )
+        dset_hv = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'HV')
+        dset_vh = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'VH')
+        dset_hh = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'HH')
+        dset_vv = self._slc.getSlcDatasetAsNativeComplex(self.freq_band, 'VV')
 
         # create tmp files for memory mapping of a block under tmp dir
         fid_co = NamedTemporaryFile(suffix='_rslc_co.c8',

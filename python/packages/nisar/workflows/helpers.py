@@ -328,18 +328,18 @@ def complex_raster_path_from_h5(slc, freq, pol, hdf5_path, lines_per_block,
         File containing raster dataset. Differs from raster_path if when output
         is HDF5
     '''
-    if slc.is_dataset_complex64(freq, pol):
-        # If SLC dataset is complex64 HDF5, return GDAL path to HDF5 dataset
-        slc_h5_path = f'/{slc.SwathPath}/frequency{freq}/{pol}'
-        raster_path = f'HDF5:{hdf5_path}:{slc_h5_path}'
-        file_path = hdf5_path
-    else:
-        # If SLC dataset is not complex64 HDF5, covert to complex32, write to
+    if slc.is_dataset_complex32(freq, pol):
+        # If SLC dataset is complex32 HDF5, convert to complex64, write to
         # ENVI raster, and return path ENVI raster
         copy_raster(hdf5_path, freq, pol, lines_per_block,
                     c32_output_path, file_type='ENVI')
         raster_path = c32_output_path
         file_path = c32_output_path
+    else:
+        # If SLC dataset is complex64 HDF5, return GDAL path to HDF5 dataset
+        slc_h5_path = f'/{slc.SwathPath}/frequency{freq}/{pol}'
+        raster_path = f'HDF5:{hdf5_path}:{slc_h5_path}'
+        file_path = hdf5_path
 
     return raster_path, file_path
 

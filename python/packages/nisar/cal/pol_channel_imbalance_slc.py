@@ -11,7 +11,6 @@ from scipy.interpolate import interp1d
 
 from isce3.antenna import CrossTalk, PolImbalanceRatioAnt, rdr2ant
 from nisar.cal import CRInfoSlc, est_peak_loc_cr_from_slc
-from isce3.core.types import ComplexFloat16Decoder
 from isce3.core import Ellipsoid, DateTime
 from isce3.geometry import DEMInterpolator, rdr2geo
 from nisar.log import set_logger
@@ -589,17 +588,17 @@ class PolChannelImbalanceSlc:
                                       shape=block_shape)
 
         # get decoded RSLC dataset for all pols
-        dset_hv = ComplexFloat16Decoder(
-            self._slc_ext.getSlcDataset(self.freq_band, 'HV')
+        dset_hv = self._slc_ext.getSlcDatasetAsNativeComplex(
+            self.freq_band, 'HV'
         )
-        dset_vh = ComplexFloat16Decoder(
-            self._slc_ext.getSlcDataset(self.freq_band, 'VH')
+        dset_vh = self._slc_ext.getSlcDatasetAsNativeComplex(
+            self.freq_band, 'VH'
         )
-        dset_hh = ComplexFloat16Decoder(
-            self._slc_ext.getSlcDataset(self.freq_band, 'HH')
+        dset_hh = self._slc_ext.getSlcDatasetAsNativeComplex(
+            self.freq_band, 'HH'
         )
-        dset_vv = ComplexFloat16Decoder(
-            self._slc_ext.getSlcDataset(self.freq_band, 'VV')
+        dset_vv = self._slc_ext.getSlcDatasetAsNativeComplex(
+            self.freq_band, 'VV'
         )
 
         # container for all range bin slices
