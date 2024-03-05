@@ -24,7 +24,6 @@ from nisar.workflows.compute_stats import (compute_layover_shadow_water_stats,
                                            compute_stats_real_data)
 from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.geocode_insar_runconfig import GeocodeInsarRunConfig
-from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
 from nisar.workflows.helpers import get_cfg_freq_pols
 from nisar.workflows.yaml_argparse import YamlArgparse
 from osgeo import gdal
@@ -322,57 +321,6 @@ def add_water_to_mask(cfg, freq, geogrid, dst_h5):
         combo_pxl_mask = (mask_layer >= 0) & (mask_layer < 4) & water_mask
         mask_layer[combo_pxl_mask] += 4
         dst_h5[mask_h5_path].write_direct(mask_layer)
-
-
-def add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type):
-    ''' Write radar grid cube to HDF5
-
-    Parameters
-    ----------
-    cfg : dict
-        Dictionary containing run configuration
-    freq : str
-        Frequency in HDF5 to add cube to
-    orbit : isce3.core.orbit
-        Orbit object of current SLC
-    dst_h5: str
-        Path to output GUNW HDF5
-    input_product_type: enum
-        Input product type
-    '''
-    radar_grid_cubes_geogrid = cfg['processing']['radar_grid_cubes']['geogrid']
-    radar_grid_cubes_heights = cfg['processing']['radar_grid_cubes']['heights']
-    threshold_geo2rdr = cfg["processing"]["geo2rdr"]["threshold"]
-    iteration_geo2rdr = cfg["processing"]["geo2rdr"]["maxiter"]
-
-    ref_hdf5 = cfg["input_file_group"]["reference_rslc_file"]
-    slc = SLC(hdf5file=ref_hdf5)
-
-    # get doppler centroid
-    cube_geogrid_param = isce3.product.GeoGridParameters(
-        start_x=radar_grid_cubes_geogrid.start_x,
-        start_y=radar_grid_cubes_geogrid.start_y,
-        spacing_x=radar_grid_cubes_geogrid.spacing_x,
-        spacing_y=radar_grid_cubes_geogrid.spacing_y,
-        width=int(radar_grid_cubes_geogrid.width),
-        length=int(radar_grid_cubes_geogrid.length),
-        epsg=radar_grid_cubes_geogrid.epsg)
-
-    product_obj = GOFFGroupsPaths() if input_product_type is \
-                                       InputProduct.ROFF else GUNWGroupsPaths()
-
-    radar_grid = slc.getRadarGrid(freq)
-    native_doppler = slc.getDopplerCentroid(frequency=freq)
-    grid_zero_doppler = isce3.core.LUT2d()
-
-    # The native-Doppler LUT bounds error is turned off to
-    # compute cubes values outside radar-grid boundaries
-    native_doppler.bounds_error = False
-    add_radar_grid_cubes_to_hdf5(dst_h5, product_obj.RadarGridPath,
-                                 cube_geogrid_param, radar_grid_cubes_heights,
-                                 radar_grid, orbit, native_doppler,
-                                 grid_zero_doppler, threshold_geo2rdr,
-                                 iteration_geo2rdr)
 
 def _snake_to_camel_case(snake_case_str):
     splitted_snake_case_str = snake_case_str.split('_')
@@ -887,8 +835,6 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             if freq.upper() == 'B':
                 continue
 
-            add_radar_grid_cube(cfg, freq, radar_grid, orbit, dst_h5, input_product_type)
-
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")
 
@@ -1360,9 +1306,6 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
             # spec for NISAR GUNW does not require freq B so skip radar cube
             if freq.upper() == 'B':
                 continue
-
-            add_radar_grid_cube(cfg, freq, radar_grid, slc.getOrbit(), dst_h5,
-                                input_product_type)
 
     t_all_elapsed = time.time() - t_all
     info_channel.log(f"Successfully ran geocode in {t_all_elapsed:.3f} seconds")

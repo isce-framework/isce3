@@ -671,9 +671,9 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         descr = (f'Nominal spacing in {x_coord_units}'
                  ' between consecutive pixels')
         xds_spacing_name = os.path.join(root_ds, 'xCoordinateSpacing')
-        if xds_spacing_name in hdf5_obj:
-            del hdf5_obj[xds_spacing_name]
-        xds_spacing = hdf5_obj.create_dataset(xds_spacing_name, data=dx)
+        xds_spacing = hdf5_obj.require_dataset(xds_spacing_name,
+                                               shape=(),
+                                               dtype=np.float64, data=dx)
         xds_spacing.attrs["description"] = np.string_(descr)
         xds_spacing.attrs["units"] = np.string_(x_coord_units)
         xds_spacing.attrs["long_name"] = np.string_("x coordinate spacing")
@@ -682,9 +682,9 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         descr = (f'Nominal spacing in {y_coord_units}'
                  ' between consecutive lines')
         yds_spacing_name = os.path.join(root_ds, 'yCoordinateSpacing')
-        if yds_spacing_name in hdf5_obj:
-            del hdf5_obj[yds_spacing_name]
-        yds_spacing = hdf5_obj.create_dataset(yds_spacing_name, data=dy)
+        yds_spacing = hdf5_obj.require_dataset(yds_spacing_name,
+                                               shape=(),
+                                               dtype=np.float64, data=dy)
         yds_spacing.attrs["description"] = np.string_(descr)
         yds_spacing.attrs["units"] = np.string_(y_coord_units)
         yds_spacing.attrs["long_name"] = np.string_("y coordinates spacing")
@@ -692,9 +692,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     # xCoordinates
     descr = 'X coordinates in specified projection'
     xds_name = os.path.join(root_ds, 'xCoordinates')
-    if xds_name in hdf5_obj:
-        del hdf5_obj[xds_name]
-    xds = hdf5_obj.create_dataset(xds_name, data=x_vect)
+    xds = hdf5_obj.require_dataset(xds_name,
+                                   shape=x_vect.shape,
+                                   dtype=x_vect.dtype,
+                                   data=x_vect)
     xds.attrs['standard_name'] = x_standard_name
     xds.attrs["description"] = np.string_(descr)
     xds.attrs["units"] = np.string_(x_coord_units)
@@ -704,9 +705,11 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     descr = 'Y coordinates in specified projection'
 
     yds_name = os.path.join(root_ds, 'yCoordinates')
-    if yds_name in hdf5_obj:
-        del hdf5_obj[yds_name]
-    yds = hdf5_obj.create_dataset(yds_name, data=y_vect)
+    yds = hdf5_obj.require_dataset(yds_name,
+                                   shape=y_vect.shape,
+                                   dtype=y_vect.dtype,
+                                   data=y_vect)
+
     yds.attrs['standard_name'] = y_standard_name
     yds.attrs["description"] = np.string_(descr)
     yds.attrs["units"] = np.string_(y_coord_units)
@@ -719,9 +722,11 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
         descr = ('Height values above WGS84 Ellipsoid corresponding to the'
                  ' radar grid')
         zds_name = os.path.join(root_ds, 'heightAboveEllipsoid')
-        if zds_name in hdf5_obj:
-            del hdf5_obj[zds_name]
-        zds = hdf5_obj.create_dataset(zds_name, data=z_vect, dtype='f8')
+        z_vect = np.array(z_vect)
+        zds = hdf5_obj.require_dataset(zds_name,
+                                       shape=z_vect.shape,
+                                       dtype=np.float64,
+                                       data=z_vect)
         zds.attrs['standard_name'] = np.string_(
             "height_above_reference_ellipsoid")
         zds.attrs["description"] = np.string_(descr)
@@ -738,11 +743,10 @@ def set_get_geo_info(hdf5_obj, root_ds, geo_grid, z_vect=None,
     projection_ds_name = os.path.join(root_ds, "projection")
 
     # Create a new single int dataset for projections
-    if projection_ds_name in hdf5_obj:
-        del hdf5_obj[projection_ds_name]
-    projds = hdf5_obj.create_dataset(projection_ds_name, (), dtype='i')
-    projds[()] = epsg_code
-
+    projds = hdf5_obj.require_dataset(projection_ds_name,
+                                      shape=(),
+                                      dtype='i',
+                                      data=epsg_code)
     # Set up osr for wkt
     srs = osr.SpatialReference()
     srs.ImportFromEPSG(epsg_code)
