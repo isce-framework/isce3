@@ -70,9 +70,9 @@ class L1InSARWriter(InSARBaseWriter):
         # and range directions.
         max_spacing = 500.0
         t = radargrid.sensing_mid + \
-            (radargrid.ref_epoch - self.orbit.reference_epoch).total_seconds()
+            (radargrid.ref_epoch - self.ref_orbit.reference_epoch).total_seconds()
 
-        _, v = self.orbit.interpolate(t)
+        _, v = self.ref_orbit.interpolate(t)
         dx = np.linalg.norm(v) / radargrid.prf
 
         grid_doppler = LUT2d()
@@ -110,7 +110,7 @@ class L1InSARWriter(InSARBaseWriter):
             geolocationGrid_path,
             geolocation_radargrid,
             heights,
-            self.orbit,
+            self.ref_orbit,
             native_doppler,
             grid_doppler,
             epsg,

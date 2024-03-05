@@ -5,7 +5,6 @@ from typing import Any, Optional, Tuple
 
 import h5py
 import numpy as np
-from isce3.core import DateTime
 from isce3.core.types import complex32, to_complex32
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
@@ -35,10 +34,18 @@ class InSARBaseWriter(h5py.File):
         Path of the reference RSLC
     sec_h5_slc_file : str
         Path of the secondary RSLC
-    external_orbit_path : str
-        Path of the external orbit file
-    epoch : Datetime
+    external_ref_orbit_path : str
+        Path of the external reference orbit file
+    external_sec_orbit_path : str
+        Path of the external secondary orbit file
+    ref_orbit_epoch : Datetime
         The reference datetime for the orbit
+    sec_orbit_epoch : Datetime
+        The secondary datetime for the orbit
+    ref_orbit : isce3.core.Orbit
+        The reference orbit object
+    sec_orbit : isce3.core.Orbit
+        The secondary orbit object
     ref_rslc : nisar.products.readers.SLC
         nisar.products.readers.SLC object of reference RSLC file
     sec_rslc : nisar.products.readers.SLC
@@ -53,8 +60,6 @@ class InSARBaseWriter(h5py.File):
     def __init__(self,
                  runconfig_dict: dict,
                  runconfig_path: str,
-                 _external_orbit_path: Optional[str] = None,
-                 epoch: Optional[DateTime] = None,
                  **kwds):
         """
         Constructor of the InSAR Product Base class. Inheriting from h5py.File
@@ -65,11 +70,7 @@ class InSARBaseWriter(h5py.File):
         runconfig_dict : dict
             Runconfig dictionary
         runconfig_path : str
-            Path of the reference RSLC
-        external_orbit_path : str, optional
-            Path of the external orbit file
-        epoch : Datetime, optional
-            The reference datetime for the orbit
+            Path of the runconfig file
         """
         super().__init__(**kwds)
 
@@ -94,14 +95,23 @@ class InSARBaseWriter(h5py.File):
         # Product information
         self.product_info = InSARProductsInfo.Base()
 
-        # Epoch time
-        self.epoch = epoch
-
         # Check if reference and secondary exists as files
-        self.external_orbit_path = _external_orbit_path
+        orbit_files = \
+            self.cfg["dynamic_ancillary_file_group"]["orbit_files"]
+
+        self.external_ref_orbit_path = orbit_files['reference_orbit_file']
+        self.external_sec_orbit_path = orbit_files['secondary_orbit_file']
 
         self.ref_rslc = SLC(hdf5file=self.ref_h5_slc_file)
         self.sec_rslc = SLC(hdf5file=self.sec_h5_slc_file)
+
+        # Pull the radargrid of reference and secondary RSLC
+        freq = "A" if "A" in self.freq_pols else "B"
+        ref_radargrid = self.ref_rslc.getRadarGrid(freq)
+        sec_radargrid = self.sec_rslc.getRadarGrid(freq)
+
+        self.ref_orbit_epoch = ref_radargrid.ref_epoch
+        self.sec_orbit_epoch = sec_radargrid.ref_epoch
 
         self.ref_h5py_file_obj = \
             h5py.File(self.ref_h5_slc_file, "r", libver="latest", swmr=True)
@@ -109,11 +119,18 @@ class InSARBaseWriter(h5py.File):
         self.sec_h5py_file_obj = \
             h5py.File(self.sec_h5_slc_file, "r", libver="latest", swmr=True)
 
-        # Pull the orbit object
-        if self.external_orbit_path is not None:
-            self.orbit = load_orbit_from_xml(self.external_orbit_path)
+        # Create the orbit object and set their reference epochs
+        if self.external_ref_orbit_path is not None:
+            self.ref_orbit = load_orbit_from_xml(self.external_ref_orbit_path,
+                                                 self.ref_orbit_epoch)
         else:
-            self.orbit = self.ref_rslc.getOrbit()
+            self.ref_orbit = self.ref_rslc.getOrbit()
+
+        if self.external_sec_orbit_path is not None:
+            self.sec_orbit = load_orbit_from_xml(self.external_sec_orbit_path,
+                                                 self.sec_orbit_epoch)
+        else:
+            self.sec_orbit = self.sec_rslc.getOrbit()
 
     def add_root_attrs(self):
         """
@@ -695,13 +712,12 @@ class InSARBaseWriter(h5py.File):
             np.string_("radians / second")
 
         # Orbit population based in inputs
-        if self.external_orbit_path is None:
+        if self.external_ref_orbit_path is None:
             ref_metadata_group.copy("orbit", dst_metadata_group)
         else:
             # populate orbit group with contents of external orbit file
-            orbit = load_orbit_from_xml(self.external_orbit_path, self.epoch)
             orbit_group = dst_metadata_group.require_group("orbit")
-            orbit.save_to_h5(orbit_group)
+            self.ref_orbit.save_to_h5(orbit_group)
 
         # Orbit time
         orbit_time = dst_metadata_group["orbit"]["time"]
