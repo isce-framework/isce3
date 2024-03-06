@@ -32,8 +32,12 @@ def run(cfg):
 
     # Get parameters from SLC
     slc = SLC(hdf5file=sec_hdf5)
+
+    # Get orbit
     if sec_orbit is not None:
-        orbit = load_orbit_from_xml(sec_orbit)
+        # SLC will get first radar grid whose frequency is available.
+        # Reference epoch and orbit have no frequency dependency.
+        orbit = load_orbit_from_xml(sec_orbit, slc.getRadarGrid().ref_epoch)
     else:
         orbit = slc.getOrbit()
 

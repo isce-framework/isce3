@@ -201,16 +201,17 @@ def _get_rgrid_dopp_orbit(slc_obj, orbit_path=None):
     orbit: isce3.core.Orbit
         orbit object
     """
-    # import external orbit if file exists
-    if orbit_path is not None:
-        orbit = load_orbit_from_xml(orbit_path)
-    else:
-        orbit = slc_obj.getOrbit()
 
     # if frequency A exists, use frequencyA doppler,
     # if not, use frequency B instead.
     freq = 'A' if 'A' in slc_obj.frequencies else 'B'
     radargrid = slc_obj.getRadarGrid(freq)
+
+    # import external orbit if file exists
+    if orbit_path is not None:
+        orbit = load_orbit_from_xml(orbit_path, radargrid.ref_epoch)
+    else:
+        orbit = slc_obj.getOrbit()
 
     # baseline is estimated assuming native-doppler
     doppler = slc_obj.getDopplerCentroid(frequency=freq)

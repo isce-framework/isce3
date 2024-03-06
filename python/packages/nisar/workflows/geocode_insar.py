@@ -634,7 +634,9 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
     # init geocode members
     if ref_orbit is not None:
-        orbit = load_orbit_from_xml(ref_orbit)
+        # SLC will get first radar grid whose frequency is available.
+        # Reference epoch and orbit have no frequency dependency.
+        orbit = load_orbit_from_xml(ref_orbit, slc.getRadarGrid().ref_epoch)
     else:
         orbit = slc.getOrbit()
 
@@ -1049,7 +1051,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
 
     # init geocode members
     if ref_orbit is not None:
-        orbit = load_orbit_from_xml(ref_orbit)
+        # SLC will get first radar grid whose frequency is available.
+        # Reference epoch and orbit have no frequency dependency.
+        orbit = load_orbit_from_xml(ref_orbit, slc.getRadarGrid().ref_epoch)
     else:
         orbit = slc.getOrbit()
 
