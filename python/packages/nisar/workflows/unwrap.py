@@ -63,6 +63,9 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
         error_channel.log(err_str)
         raise ValueError(err_str)
 
+    # Open reference RSLC object
+    ref_slc = SLC(hdf5file=ref_slc_hdf5)
+
     # Start to track time
     t_all = time.time()
 
@@ -280,13 +283,15 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         # To compute azimuth resolution, get sensor speed at mid-scene
                         # And use azimuth processed bandwidth (copied from RSLC)
                         ref_orbit = cfg['dynamic_ancillary_file_group']['orbit_files']['reference_orbit_file']
-                        if ref_orbit is not None:
-                            orbit = load_orbit_from_xml(ref_orbit)
-                        else:
-                            ref_slc = SLC(hdf5file=ref_slc_hdf5)
-                            orbit = ref_slc.getOrbit()
 
                         radar_grid = ref_slc.getRadarGrid(freq)
+
+                        # Get reference orbit
+                        if ref_orbit is not None:
+                            orbit = load_orbit_from_xml(ref_orbit, radar_grid.ref_epoch)
+                        else:
+                            orbit = ref_slc.getOrbit()
+
                         _, v_mid = orbit.interpolate(radar_grid.sensing_mid)
                         vs = np.linalg.norm(v_mid)
                         # Note this is the single-look azimuth resolution
