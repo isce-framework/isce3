@@ -39,8 +39,8 @@ class bandpass_meta_data:
         """
         rdr_grid = slc_product.getRadarGrid(freq)
         rg_sample_freq = \
-            isce3.core.speed_of_light * 0.5 / \
-            rdr_grid.range_pixel_spacing
+            np.round(isce3.core.speed_of_light * 0.5 /
+                     rdr_grid.range_pixel_spacing)
         rg_bandwidth = \
             slc_product.getSwathMetadata(freq).processed_range_bandwidth
         center_frequency = \
@@ -103,7 +103,7 @@ class SplitSpectrum:
                  center_frequency,
                  slant_range,
                  freq,
-                 sampling_bandwidth_ratio=1.2):
+                 sampling_bandwidth_ratio=None):
         """Initialized Bandpass Class with SLC meta data
 
         Parameters
@@ -117,6 +117,10 @@ class SplitSpectrum:
         slant_range : new center frequency for bandpass [Hz]
         freq : {'A', 'B'}
             frequency band
+        sampling_bandwidth_ratio: float
+            The ratio of range sampling frequency to bandwidth.
+            If not provided, sampling frequency will be same as
+            input.
         """
         self.freq = freq
         self.rg_sample_freq = rg_sample_freq
@@ -125,6 +129,8 @@ class SplitSpectrum:
         self.rg_bandwidth = rg_bandwidth
         self.center_frequency = center_frequency
         self.slant_range = slant_range
+        if sampling_bandwidth_ratio is None:
+            sampling_bandwidth_ratio = rg_sample_freq / rg_bandwidth
         self.sampling_bandwidth_ratio = sampling_bandwidth_ratio
 
     def bandpass_shift_spectrum(self,
@@ -198,7 +204,8 @@ class SplitSpectrum:
         # update metadata with new parameters
         meta = dict()
         new_bandwidth = high_frequency - low_frequency
-        new_rg_sample_freq = np.abs(new_bandwidth) * self.sampling_bandwidth_ratio
+        new_rg_sample_freq = np.abs(new_bandwidth) * \
+            self.sampling_bandwidth_ratio
 
         meta['center_frequency'] = new_center_frequency
         meta['rg_bandwidth'] = new_bandwidth
@@ -581,7 +588,7 @@ class SplitSpectrum:
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        # sampling frequency is 1.2 times wider than bandwith
+        # sampling frequency is 1.2 times wider than bandwith for NISAR
         sampling_bandwidth_ratio = self.sampling_bandwidth_ratio
 
         sampling_low_frequency = \

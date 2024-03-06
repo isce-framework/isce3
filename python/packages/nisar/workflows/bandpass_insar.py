@@ -102,7 +102,8 @@ def run(cfg: dict):
             rg_bandwidth=target_meta_data.rg_bandwidth,
             center_frequency=target_meta_data.center_freq,
             slant_range=target_meta_data.slant_range,
-            freq=freq)
+            freq=freq,
+            sampling_bandwidth_ratio=1.2)
         swath_path = ref_slc.SwathPath
         dest_freq_path = f"{swath_path}/frequency{freq}"
         with h5py.File(target_hdf5, 'r', libver='latest',
