@@ -50,11 +50,15 @@ def run(cfg):
     slc = SLC(hdf5file=input_hdf5)
 
     # if provided, load an external orbit from the runconfig file;
-    # othewise, load the orbit from the RSLC metadata
+    # othewise, load the orbit from the RSLC metadata.
     if orbit_file is not None:
-        orbit = load_orbit_from_xml(orbit_file)
+        # slc will get first radar grid whose frequency is available.
+        # orbit has not frequency dependency.
+        orbit = load_orbit_from_xml(orbit_file,
+                                    slc.getRadarGrid().ref_epoch)
     else:
         orbit = slc.getOrbit()
+
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)

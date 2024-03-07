@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 from isce3.core import DateTime, StateVector, Orbit
+import journal
 
 
 def load_orbit_from_xml(f, epoch: DateTime = None) -> Orbit:
@@ -37,5 +38,8 @@ def load_orbit_from_xml(f, epoch: DateTime = None) -> Orbit:
     if len(states) != n:
         raise IOError(f"Expected {n} orbit state vectors, got {len(states)}")
     if epoch is None:
+        warning_channel = journal.warning("orbit.load_orbit_from_xml")
+        warning_channel.log("No reference epoch provided. Using first date time "
+                            "from XML file as orbit reference epoch.")
         epoch = states[0].datetime
     return Orbit(states, epoch)
