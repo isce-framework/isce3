@@ -531,23 +531,42 @@ class BaseWriterSingleInput():
             input_h5_field_path.replace(
                 '{PRODUCT}', self.input_product_hdf5_group_type)
 
-        try:
-            data = self.input_hdf5_obj[input_h5_field_path][...]
-        except KeyError:
-            # if a default value was not provided and flag
-            # `skip_if_not_present`, skip
-            if default is None and skip_if_not_present:
+        # check if the dataset is not present in the input product
+        if input_h5_field_path not in self.input_hdf5_obj:
+
+            # if the dataset is not present in the input product and
+            # a default value was not provided and the flag
+            # `skip_if_not_present` is set, print a warning and skip
+            if (default is None and skip_if_not_present):
                 warnings.warn('Metadata entry not found in the input'
                               ' product: ' + input_h5_field_path)
                 return
 
-            # otherwise, if a default value was not provided, raise an error
-            elif default is None:
+            # if the dataset is not present in the input product and
+            # a default value was not provided, raise an error
+            if default is None:
                 raise KeyError('Metadata entry not found in the input'
                                ' product: ' + input_h5_field_path)
 
-            # otherwise, assign the default value to data
-            data = default
+            # if the dataset is not present in the input product and
+            # a default value is provided, assign the default value to data
+            else:
+                data = default
+
+        # othewise, if the dataset is present in the input product,
+        # read it as the variable `h5_data_obj`
+        else:
+            h5_data_obj = self.input_hdf5_obj[input_h5_field_path]
+
+            # check if dataset contains a string. If so, read it using method
+            # `asstr()``
+            if h5py.check_string_dtype(h5_data_obj.dtype):
+                # use asstr() to read the dataset
+                data = str(h5_data_obj.asstr()[...])
+
+            # otherwise, read it directly without changing the datatype
+            else:
+                data = self.input_hdf5_obj[input_h5_field_path][...]
 
         self.set_value(output_h5_field, data=data, **kwargs)
 
