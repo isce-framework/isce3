@@ -16,7 +16,6 @@ from nisar.products.readers import SLC
 import pytest
 from scipy import interpolate
 
-
 def make_subswaths():
     # helper funtion to create subswath object based on axis where subswath
     # start and stop indices per range line defined by the 30th and 70th
