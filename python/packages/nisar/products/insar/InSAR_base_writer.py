@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from itertools import product
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, List
 
 import h5py
 import numpy as np
@@ -1132,7 +1132,7 @@ class InSARBaseWriter(h5py.File):
         compression_enabled: Optional[bool] = True,
         compression_type: Optional[str] = 'gzip',
         compression_level: Optional[int] = 5,
-        chunk_size: Optional[Tuple[int, int]] = (128, 128),
+        chunk_size: Optional[List] = [128, 128],
         shuffle_filter: Optional[bool] = True
     ):
         """
@@ -1175,15 +1175,13 @@ class InSARBaseWriter(h5py.File):
         shuffle_filter: bool
             Flag to enable/disable shuffle filter
         """
-        # use the default chunk size if the chunk_size is None
-        create_with_chunks = chunk_size[0] < shape[0] and chunk_size[1] < shape[1]
+        # Use the minimum size between the predefined chunk size and dataset shape
+        # to ensure the dataset is chunked if the compression is enabled.
+        ds_chunk_size = tuple(map(min, zip(chunk_size, shape)))
 
         # Include options for compression
         create_dataset_kwargs = {}
         if compression_enabled:
-            if not create_with_chunks:
-                err_str = "Dataset must be created with chunks if compression is enabled"
-                raise ValueError(err_str)
             if compression_type is not None:
                 create_dataset_kwargs['compression'] = compression_type
             if compression_level is not None:
@@ -1192,12 +1190,13 @@ class InSARBaseWriter(h5py.File):
             # Add shuffle filter options
             create_dataset_kwargs['shuffle'] = shuffle_filter
 
-        if create_with_chunks:
+        if compression_enabled:
             ds = h5_group.require_dataset(
-                name, dtype=dtype, shape=shape, chunks=tuple(chunk_size), **create_dataset_kwargs
+                name, dtype=dtype, shape=shape,
+                chunks=ds_chunk_size, **create_dataset_kwargs
             )
         else:
-            # create dataset without chunks when the dataset size is less than default chunks
+            # create dataset without chunks
             ds = h5_group.require_dataset(name, dtype=dtype, shape=shape,
                                           **create_dataset_kwargs)
 
