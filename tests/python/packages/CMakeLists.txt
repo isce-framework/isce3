@@ -1,6 +1,7 @@
 set(TESTFILES
 isce3/antenna/geometry_antenna.py
 isce3/atmosphere/ionosphere.py
+isce3/atmosphere/tec_products.py
 isce3/cal/corner_reflector.py
 isce3/cal/point_target_info.py
 isce3/cal/radar_cross_section.py
