@@ -5,7 +5,9 @@ from typing import Any, Optional, List
 
 import h5py
 import numpy as np
+from isce3.core import DateTime, speed_of_light
 from isce3.core.types import complex32, to_complex32
+from isce3.product import RadarGridParameters
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
@@ -224,9 +226,14 @@ class InSARBaseWriter(h5py.File):
         if rslc_name.lower() == "reference":
             rslc_h5py_file_obj = self.ref_h5py_file_obj
             rslc = self.ref_rslc
+            rslc_file = self.ref_h5_slc_file
         else:
             rslc_h5py_file_obj = self.sec_h5py_file_obj
             rslc = self.sec_rslc
+            rslc_file = self.sec_h5_slc_file
+
+        # Extract relevant identification from reference and secondary RSLC
+        id_group = rslc_h5py_file_obj[rslc.IdentificationPath]
 
         rfi_mit_path = (
             f"{rslc.ProcessingInformationPath}/algorithms/rfiMitigation"
@@ -287,7 +294,10 @@ class InSARBaseWriter(h5py.File):
         for ds_param in ds_params:
             add_dataset_and_attrs(dst_param_group, ds_param)
 
+        swath_group = rslc_h5py_file_obj[rslc.SwathPath]
         for freq, *_ in get_cfg_freq_pols(self.cfg):
+
+            rslc_radar_grid = RadarGridParameters(rslc_file, freq)
             rslc_group_frequency_name = \
                 f"{self.group_paths.ParametersPath}/{rslc_name}/frequency{freq}"
             rslc_frequency_group = self.require_group(rslc_group_frequency_name)
@@ -327,6 +337,75 @@ class InSARBaseWriter(h5py.File):
                np.string_(
                    f"Time interval in the along-track direction for {rslc_name} RSLC raster layers"
                )
+
+            # Copy the zero-Dopper information from the source RSLC to the RSLC group
+            for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
+                id_group.copy(ds_name, rslc_frequency_group)
+
+            id_group.copy('lookDirection', rslc_frequency_group)
+            rslc_frequency_group['lookDirection'].attrs['description'] = \
+                    np.string_(
+                        f"Look direction of the {rslc_name} RSLC product"
+                        )
+
+            # Add the refernece Epoch
+            ref_epoch = np.string_(rslc_radar_grid.ref_epoch.isoformat_usec())
+            ds = rslc_frequency_group.require_dataset('referenceEpoch',
+                                                      ref_epoch.shape,
+                                                      dtype = ref_epoch.dtype,
+                                                      data = ref_epoch)
+            ds.attrs['description'] = np.string_(f"Reference epoch of {rslc_name} in the format "
+                                                 "YYYY-mm-ddTHH:MM:SS.SSS")
+
+            # Add the center frequency
+            center_freq = np.array(speed_of_light / rslc_radar_grid.wavelength)
+            ds = rslc_frequency_group.require_dataset('centerFrequency',
+                                                      center_freq.shape,
+                                                      dtype = center_freq.dtype,
+                                                      data = center_freq)
+            ds.attrs['description'] = np.string_(f"Center frequency of the processed {rslc_name} data"
+                                                 " image in hertz")
+            ds.attrs['units'] = Units.hertz
+
+            # Update the description attributes of the zeroDopplerTime
+            for rslc_start_or_stop, \
+                insar_start_or_stop in (['Start', 'start'], ['End', 'stop']):
+                ds = rslc_frequency_group[f"zeroDoppler{rslc_start_or_stop}Time"]
+                ds.attrs['description'] = \
+                    np.string_(
+                        f"Azimuth {insar_start_or_stop} time of {rslc_name} RSLC product"
+                        )
+
+            slant_range = swath_frequency_group['slantRange'][()]
+            rg_names_to_be_created = [
+                DatasetParams(
+                    "slantRangeStart",
+                    slant_range[0],
+                    f"{rslc_name.capitalize()} source data slant range start distance",
+                    {'units' : Units.meter},
+                ),
+                DatasetParams(
+                    "slantRangeEnd",
+                    slant_range[-1],
+                    f"{rslc_name.capitalize()} source data slant range stop distance",
+                    {'units' : Units.meter},
+                ),
+
+                DatasetParams(
+                    "numberOfAzimuthLines",
+                    rslc_radar_grid.length,
+                    f"Number of azimuth lines within the source {rslc_name} data product",
+                    {'units' : Units.unitless},
+                ),
+                DatasetParams(
+                    "numberOfRangeSamples",
+                    rslc_radar_grid.width,
+                    f"Number of slant range samples for each azimuth line within the source {rslc_name} data",
+                    {'units' : Units.unitless},
+                ),
+            ]
+            for ds_param in rg_names_to_be_created:
+                add_dataset_and_attrs(rslc_frequency_group, ds_param)
 
             doppler_centroid_group = rslc_h5py_file_obj[
                 f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
