@@ -20,7 +20,7 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
 /**
  * Remove range and azimuth phase carrier from a block of input radar SLC data
  *
- * @param[out] phase_data_block
+ * @param[out] out
  * Block of data to be written to. All data in block will be overwritten.
  * unit: phase (complex) array2D
  * @tparam[in] carrier_phase
@@ -41,7 +41,7 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void getModulationPhase(
-    ArrayRef2D<std::complex<float>> phase_data_block,
+    ArrayRef2D<std::complex<double>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const size_t input_azimuth_first_line,
@@ -54,7 +54,7 @@ void getModulationPhase(
  * Add back range and azimuth phase carrier and simultaneously flatten the block of
  * resampled SLC
  *
- * @param[out] phase_data_block Block of data to be written to. All data in block will
+ * @param[out] out              Block of data to be written to. All data in block will
  *                              be overwritten.
  * @tparam[in] carrier_phase    carrier phase of the SLC data, in radian, as a
  *                              function of azimuth and range
@@ -67,7 +67,7 @@ void getModulationPhase(
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void getModulationPhaseAtCoords(
-    ArrayRef2D<std::complex<float>> phase_data_block,
+    ArrayRef2D<std::complex<double>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
@@ -100,7 +100,7 @@ void getModulationPhaseAtCoords(
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void modulate(
-    ArrayRef2D<std::complex<float>> slc_data_block,
+    ArrayRef2D<std::complex<double>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const size_t input_azimuth_first_line,
@@ -125,7 +125,7 @@ void modulate(
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void modulateAtCoords(
-    ArrayRef2D<std::complex<float>> slc_data_block,
+    ArrayRef2D<std::complex<double>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,

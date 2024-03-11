@@ -54,7 +54,7 @@ void addbindings_resamp(py::module & m)
 
 
     m.def(
-        "get_modulation_phase",
+        "_get_modulation_phase",
         py::overload_cast<
             isce3::image::v2::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
@@ -63,7 +63,7 @@ void addbindings_resamp(py::module & m)
             const size_t,
             const bool
         >(&isce3::image::v2::getModulationPhase<AzRgFunc>),
-        py::arg("phase_data_block"),
+        py::arg("out"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("input_azimuth_first_line"),
@@ -74,7 +74,7 @@ void addbindings_resamp(py::module & m)
 
         Parameters
         ----------
-        phase_data_block: numpy.ndarray (complex64)
+        out: numpy.ndarray (complex64)
             The output phase array to modify. Anything in this array will be
             overwritten.
         carrier_phase: isce3.core.LUT2d
@@ -93,7 +93,7 @@ void addbindings_resamp(py::module & m)
 
 
     m.def(
-        "get_modulation_phase_at_coords",
+        "_get_modulation_phase_at_coords",
         py::overload_cast<
             isce3::image::v2::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
@@ -102,7 +102,7 @@ void addbindings_resamp(py::module & m)
             const isce3::image::v2::ArrayRef2D<double>,
             const bool
         >(&isce3::image::v2::getModulationPhaseAtCoords<AzRgFunc>),
-        py::arg("phase_data_block"),
+        py::arg("out"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("azimuth_indices"),
@@ -113,7 +113,7 @@ void addbindings_resamp(py::module & m)
 
         Parameters
         ----------
-        phase_data_block: numpy.ndarray (complex64)
+        out: numpy.ndarray (complex64)
             The output phase array to modify. Anything in this array will be
             overwritten.
         carrier_phase: isce3.core.LUT2d
@@ -132,7 +132,7 @@ void addbindings_resamp(py::module & m)
 
 
     m.def(
-        "modulate",
+        "_modulate",
         py::overload_cast<
             isce3::image::v2::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
@@ -172,7 +172,7 @@ void addbindings_resamp(py::module & m)
 
 
     m.def(
-        "modulate_at_coords",
+        "_modulate_at_coords",
         py::overload_cast<
             isce3::image::v2::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,

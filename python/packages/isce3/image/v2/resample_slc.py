@@ -7,7 +7,8 @@ import journal
 import numpy as np
 from isce3.core import SINC_HALF, LUT2d
 from isce3.core.resample_block_generators import get_blocks, get_blocks_by_offsets
-from isce3.ext.isce3.image.v2 import _resample_to_coords, modulate, modulate_at_coords
+from isce3.ext.isce3.image.v2 import _resample_to_coords
+from isce3.image.v2.modulate import modulate, modulate_at_coords
 from isce3.io.dataset import DatasetReader, DatasetWriter
 from isce3.product import RadarGridParameters
 
@@ -25,8 +26,8 @@ def resample_slc_blocks(
     fill_value: np.complex64 = np.nan + 1.0j * np.nan,
     with_gpu: bool = False,
     *,
-    modulation_carriers: Iterable[LUT2d] | None = None,
-    demodulation_carriers: Iterable[LUT2d] | None = None,
+    carrier_luts: Iterable[LUT2d] | None = None,
+    remodulate: bool = False,
 ) -> None:
     """
     Resamples one or more SLCs onto a geometry described by given offsets datasets.
@@ -66,12 +67,12 @@ def resample_slc_blocks(
     with_gpu : bool, optional
         If True, run the GPU resample workflow. If False, run the CPU resample workflow.
         Defaults to False.
-    modulation_carriers: Iterable[LUT2d] or None, optional
-        Carrier phase LUT's to modulate into the output product. If none,
-        no output modulation will occur. Defaults to None.
-    demodulation_carriers: Iterable[LUT2d] or None, optional
-        Carrier phase LUT's to demodulate from the input prior to resampling. If none,
-        no output demodulation will occur. Defaults to None.
+    carrier_luts: Iterable[LUT2d] or None, optional
+        Carrier phase LUT's to demodulate from the input product. If none,
+        no input demodulation will occur. Defaults to None.
+    remodulate: bool, optional
+        If True, remodulate the carrier_luts phase into the output data. Use only if
+        carrier_luts is also given. Defaults to False.
     """
     info_channel = journal.info("resample_slc.resample_slc_blocks")
     warning_channel = journal.warning("resample_slc.resample_slc_blocks")
@@ -87,6 +88,11 @@ def resample_slc_blocks(
 
     if len(input_slcs) != len(output_resampled_slcs):
         err_log = "Number of input and output datasets do not match."
+        error_channel.log(err_log)
+        raise ValueError(err_log)
+
+    if remodulate and (carrier_luts is None):
+        err_log = "If remodulate is True, carrier_luts must also be given."
         error_channel.log(err_log)
         raise ValueError(err_log)
 
@@ -222,7 +228,7 @@ def resample_slc_blocks(
         for i in range(len(input_blocks)):
             input_block = input_blocks[i]
 
-            if demodulation_carriers is not None:
+            if carrier_luts is not None:
                 if not quiet:
                     info_channel.log(
                         f"demodulating input SLC for block {out_block_slice}..."
@@ -232,11 +238,12 @@ def resample_slc_blocks(
                 in_az_first_line = in_az_slice.start
                 in_rg_first_pixel = in_rg_slice.start
 
-                for carrier in demodulation_carriers:
+                for carrier in carrier_luts:
                     modulate(
                         slc_data_block=input_block,
+                        out=input_block,
                         carrier_phase=carrier,
-                        radar_grid=in_grid,
+                        radar_grid=input_radar_grid,
                         input_azimuth_first_line=in_az_first_line,
                         input_range_first_pixel=in_rg_first_pixel,
                         conjugate=True,
@@ -259,17 +266,17 @@ def resample_slc_blocks(
             )
 
 
-            if modulation_carriers is not None:
+            if remodulate and (carrier_luts is not None):
                 if not quiet:
                     info_channel.log(
                         f"remodulating output SLC for block {out_block_slice}..."
                     )
 
-                for carrier in modulation_carriers:
+                for carrier in carrier_luts:
                     modulate_at_coords(
                         slc_data_block=output_block,
                         carrier_phase=carrier,
-                        radar_grid=in_grid,
+                        radar_grid=input_radar_grid,
                         azimuth_indices=azimuth_index_grid,
                         range_indices=range_index_grid,
                         conjugate=False,
