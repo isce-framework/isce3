@@ -500,7 +500,7 @@ def check_aws_connection(version='1.1'):
     try:
         obj.get()['Body'].read()
     except Exception:
-        errmsg = 'No access to nisar-dem s3 bucket. Check your AWS credentials' \
+        errmsg = 'No access to nisar-dem s3 bucket. Check your AWS credentials ' \
                  'and re-run the code'
         raise ValueError(errmsg)
 
