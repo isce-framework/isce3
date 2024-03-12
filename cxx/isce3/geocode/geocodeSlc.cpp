@@ -275,7 +275,7 @@ void interpolate(
 
         // Compute doppler that was demodulated from chip in interpolation to
         // be added back
-        const auto azLocation = isce3::core::SINC_HALF + fracAzIndex;
+        const auto azLocation = fracAzIndex;
         const auto doppFreqToAddBack = doppFreq * azLocation;
         const std::complex<float> doppValAddBack(std::cos(doppFreqToAddBack),
                 std::sin(doppFreqToAddBack));
