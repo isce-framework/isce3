@@ -452,7 +452,7 @@ def check_aws_connection():
     try:
         obj.get()['Body'].read()
     except Exception:
-        errmsg = 'No access to nisar-WATERMASK s3 bucket. Check your AWS credentials' \
+        errmsg = 'No access to nisar-WATERMASK s3 bucket. Check your AWS credentials ' \
                  'and re-run the code'
         raise ValueError(errmsg)
 
