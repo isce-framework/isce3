@@ -504,6 +504,10 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
         # starting slant range at mid azimuth time of each azimuth block
         lka_first, _ = look_inc_ang_from_slant_range(sr_start, orbit, azt_mid,
                                                      dem_interp)
+        logger.info(
+            'Estimated starting off-nadir angle -> '
+            f'{np.rad2deg(lka_first):.2f} (deg)'
+        )
         # Get approximate first (starting) antenna EL angle per estimated
         # Mechanical boresight (MB) in radians
         mb_ang = compute_mb_angle(pos_ecef_mid, quat_ant2ecef_mid)
@@ -512,13 +516,20 @@ def el_rising_edge_from_raw_ant(raw, ant, *, dem_interp=None,
             'Estimated mechanical boresight angle -> '
             f'{np.rad2deg(mb_ang):.2f} (deg)'
         )
+        logger.info(
+            'Estimated starting EL angle -> '
+            f'{np.rad2deg(el_echo_first):.2f} (deg)'
+        )
         # check if the antenna starting EL angle is equal or less than the
         # "el_echo_first". If not issue an error due to lack of enough
         # antenna pattern coverage in antenna file
         if rx_beams_el.angle[0] > el_echo_first:
-            raise RuntimeError('Not enough EL angle coverage in "ant" '
-                               'at rising edge of pattern!')
-
+            raise RuntimeError(
+                'Not enough EL angle coverage in "ant" at rising edge of'
+                ' pattern! Antenna start EL '
+                f'{np.rad2deg(rx_beams_el.angle[0]):.3f} (deg) is larger than'
+                f' estimated start EL {np.rad2deg(el_echo_first):.3f} (deg)!'
+                )
         # get [start, stop) EL angle indices for antenna pattern
         # make sure to include el margin on each end to go slightly
         # beyond EL coverage of echo data!
