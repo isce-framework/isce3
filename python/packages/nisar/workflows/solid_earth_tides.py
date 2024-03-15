@@ -35,7 +35,9 @@ def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
 
         for  product_name, solid_earth_tides_product in zip(product_names,
                                                             solid_earth_tides):
-            radar_grid[product_name][...] = solid_earth_tides_product
+            ds = radar_grid[product_name]
+            ds[...] = solid_earth_tides_product
+
 
 def calculate_solid_earth_tides(inc_angle_datacube,
                                 los_unit_vector_x_datacube,

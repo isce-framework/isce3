@@ -1,11 +1,12 @@
 import os
 from datetime import datetime
 from itertools import product
-from typing import Any, Optional, List
+from typing import Any, List, Optional, Union
 
 import h5py
 import numpy as np
 from isce3.core.types import complex32, to_complex32
+from isce3.product import GeoGridParameters, RadarGridParameters
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.h5_prep import get_off_params
@@ -172,6 +173,59 @@ class InSARBaseWriter(h5py.File):
         )
 
         add_dataset_and_attrs(algo_group, software_version)
+
+    def add_baseline_info_to_cubes(self,
+                                   cube_group: h5py.Group,
+                                   grid: Union[RadarGridParameters,GeoGridParameters],
+                                   is_geogrid: bool):
+        """
+        Add the perpendicular and parallel baseline dataset to either the radarGrid or
+        geolocationGrid cubes groups
+
+        Parameters
+        ----------
+        cube_group : h5py.Group,
+            The h5py group object
+        grid : object
+            radarGridParameters or geogrid object
+        is_geogrid : bool
+            Flag to indicate if the grid object is geogrid
+        """
+
+        # Pull the heights from the radar_grid_cubes group
+        # in the runconfig
+        radar_grid_cfg = self.cfg["processing"]["radar_grid_cubes"]
+        heights = np.array(radar_grid_cfg["heights"])
+
+        # Fetch the baseline information
+        baseline_cfg = self.cfg["processing"]['baseline']
+        baseline_mode = baseline_cfg['mode']
+
+        # The shape of the baseline
+        baseline_ds_shape = [len(heights),
+                             grid.length,
+                             grid.width]
+        if baseline_mode == 'top_bottom':
+            baseline_ds_shape[0] = 2
+
+        # Add the baseline dataset to the cube
+        for baseline_name in ['parallel', 'perpendicular']:
+            ds = \
+                cube_group.require_dataset(
+                    name= f"{baseline_name}Baseline",
+                    shape=baseline_ds_shape,
+                    dtype=np.float32)
+            ds.attrs['description'] = np.string_(f"{baseline_name.capitalize()}"
+                                                 " component of the InSAR baseline")
+            ds.attrs['units'] = Units.meter
+
+            # The radarGrid group to attach the x, y, and z coordinates
+            if is_geogrid:
+                ds.attrs['grid_mapping'] = np.string_('projection')
+                ds.dims[1].attach_scale(cube_group['yCoordinates'])
+                ds.dims[2].attach_scale(cube_group['xCoordinates'])
+                if baseline_mode == '3D_full':
+                    ds.dims[0].attach_scale(cube_group['heightAboveEllipsoid'])
 
     def add_common_to_procinfo_params_group(self):
         """

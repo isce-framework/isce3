@@ -213,6 +213,11 @@ class L2InSARWriter(L1InSARWriter):
         radar_grid["groundTrackVelocity"].attrs["units"] = \
             np.string_("meters / second")
 
+        # Add the baseline dataset to radargrid
+        self.add_baseline_info_to_cubes(radar_grid,
+                                        radar_grid_cubes_geogrid,
+                                        is_geogrid = True)
+
         # Add the secondary slant range and azimuth time cubes to the radarGrid cubes
         sec_cube_rdr_grid = self.sec_rslc.getRadarGrid(cube_freq)
         sec_cube_native_doppler = self.sec_rslc.getDopplerCentroid(

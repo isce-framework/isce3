@@ -58,11 +58,10 @@ class L1InSARWriter(InSARBaseWriter):
 
         # Retrieve the group
         geolocationGrid_path = self.group_paths.GeolocationGridPath
-        self.require_group(geolocationGrid_path)
 
         # Pull the radar frequency
         cube_freq = "A" if "A" in self.freq_pols else "B"
-        radargrid = RadarGridParameters(self.ref_h5_slc_file)
+        radargrid = self.ref_rslc.getRadarGrid(cube_freq)
 
         # Figure out decimation factors that give < 500 m spacing.
         # NOTE: same with the RSLC, the max spacing = 500m is hardcoded.
@@ -116,6 +115,12 @@ class L1InSARWriter(InSARBaseWriter):
             epsg,
             **geo2rdr_params,
         )
+
+        geolocationGrid_group = self.require_group(geolocationGrid_path)
+        # Add baseline to the geolocation grid
+        self.add_baseline_info_to_cubes(geolocationGrid_group,
+                                        geolocation_radargrid,
+                                        is_geogrid= False)
 
         # Add the min and max attributes to the following dataset
         ds_names = ["incidenceAngle",
