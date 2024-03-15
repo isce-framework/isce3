@@ -7,7 +7,7 @@ import typing
 from isce3 import antenna as ant
 
 
-@dataclass(frozen=True)
+@dataclass
 class AntPatCut:
     """
     Antenna pattern cut(s) information, either relative or absolute patterns,
@@ -200,7 +200,7 @@ class AntennaParser:
             ant_el = self.el_cut(beam + 1, pol)
             # get approximate peak power locaton first
             pow_db = 20 * np.log10(abs(ant_el.copol_pattern))
-            idx_pk = pow_db.argmax()
+            idx_pk = np.nanargmax(pow_db)
             # pick 5 points rather than 3, two extra just in case.
             # perform second-order polyfit (gain in dB versus EL angle in rad)
             # and then find the peak where the first derivative is zero.
@@ -295,7 +295,7 @@ class AntennaParser:
         ela_trans = 0.5 * (el_int[idx_trans] + el_int[idx_trans + 1])
         return ela_trans, ant_el.cut_angle
 
-    def el_cut(self, beam=1, pol='H'):
+    def el_cut(self, beam=1, pol='H', full=False):
         """Parse an Elevation cut pattern from a `RX` beam.
 
         Parse individual RX Elevation-cut 1-D pattern for
@@ -305,10 +305,13 @@ class AntennaParser:
         ----------
         beam : int, default=1
             Beam number starting from one.
-
         pol : str, default='H'
             Polarization of the beam , either
             `H` or `V'. It is case insensitive.
+        full : bool, default=False
+            Whether or not to return the full angular coverage of input data.
+            If False, it will limit angular coverage to within around 10 dB
+            dynamic range w.r.t the one-way peak magnitude of the beam.
 
         Returns
         -------
@@ -331,9 +334,9 @@ class AntennaParser:
             For missing fields/attributes in HDF5
 
         """
-        return self._get_ang_cut(beam, pol, 'elevation')
+        return self._get_ang_cut(beam, pol, 'elevation', full=full)
 
-    def az_cut(self, beam=1, pol='H'):
+    def az_cut(self, beam=1, pol='H', full=False):
         """Parse an Azimuth cut pattern from a `RX` beam.
 
         Parse individual RX Azimuth-cut 1-D pattern for
@@ -343,10 +346,13 @@ class AntennaParser:
         ----------
         beam : int, default=1
             Beam number starting from one.
-
         pol : str, default='H'
             Polarization of the beam , either
             `H` or `V'. It is case insensitive.
+        full : bool, default=False
+            Whether or not to return the full angular coverage of input data.
+            If False, it will limit angular coverage to within around 10 dB
+            dynamic range w.r.t the one-way peak magnitude of the beam.
 
         Returns
         -------
@@ -369,9 +375,9 @@ class AntennaParser:
             For missing fields/attributes in HDF5
 
         """
-        return self._get_ang_cut(beam, pol, 'azimuth')
+        return self._get_ang_cut(beam, pol, 'azimuth', full=full)
 
-    def el_cut_all(self, pol='H'):
+    def el_cut_all(self, pol='H', full=False):
         """Parse all Co-pol and Cx-pol EL (Elevation) cuts.
 
         Get all uniformly-spaced EL cuts of co-pol and cx-pol and store them in
@@ -383,6 +389,11 @@ class AntennaParser:
         ----------
         pol : str, default='H'
             Polarization , either 'H' or 'V'. It is case-insensitive!
+        full : bool, default=False
+            Whether or not to return the full angular coverage of input data.
+            If False, it will limit angular coverage to within around 10 dB
+            dynamic range on both ends, first and last beam, w.r.t the
+            one-way peak magnitude of the corresponding beam.
 
         Returns
         -------
@@ -412,9 +423,9 @@ class AntennaParser:
         ones if the cx-pol patterns are missing in the product.
 
         """
-        return self._ang_cut_all(cut_type='elevation', pol=pol)
+        return self._ang_cut_all(cut_type='elevation', pol=pol, full=full)
 
-    def az_cut_all(self, pol='H'):
+    def az_cut_all(self, pol='H', full=False):
         """Parse all Co-pol and Cx-pol AZ (Azimuth) cuts.
 
         Get all uniformly-spaced AZ cuts of co-pol and cx-pol and store them in
@@ -426,6 +437,11 @@ class AntennaParser:
         ----------
         pol : str, default='H'
             Polarization , either 'H' or 'V'. It is case-insensitive!
+        full : bool, default=False
+            Whether or not to return the full angular coverage of input data.
+            If False, it will limit angular coverage to within around 10 dB
+            dynamic range on both ends, first and last beam, w.r.t the
+            one-way peak magnitude of the corresponding beam.
 
         Returns
         -------
@@ -457,7 +473,7 @@ class AntennaParser:
         ones if the cx-pol patterns are missing in the product.
 
         """
-        return self._ang_cut_all(cut_type='azimuth', pol=pol)
+        return self._ang_cut_all(cut_type='azimuth', pol=pol, full=full)
 
     def cut_angles_az_cuts(self, pol='H'):
         """
@@ -509,11 +525,36 @@ class AntennaParser:
             raise RuntimeError(
                 f"'{attr_name}' not found in attribute of '{first_cut_name}'!")
 
-    def _get_ang_cut(self, beam: int, pol: str, cut_name: str,
+    def _get_ang_cut(self, beam: int, pol: str, cut_name: str, *,
+                     full: bool = False,
                      out_keys: tuple = ("angle", "copol_pattern",
                                         "cxpol_pattern"),
                      ang_attr: str = "cut_angle") -> AntPatCut:
         """Get angle and co/cross 1-D patterns.
+
+        Parameters
+        ----------
+        beam : int
+            Beam number starting from 1.
+        pol : str
+            Polarization, either "H" or "V"
+        cut_name : str
+            Name of the principal cut. Either "azimuth" or "elevation"
+        full: bool, default=False
+            If False, the angles on either sides will be truncated
+            within one-way 10-dB beamwidth, otherwise the entire
+            angular coverage will be returned.
+        out_keys : tuple of str,
+            default=("angle", "copol_pattern", "cxpol_pattern").
+            Keys related to fieldnames in HDF5 antenna file that
+            shall be stored in antenna cut dataclass "AntPatCut".
+        ang_attr : str, default="cut_angle"
+            Name of a desired attribute for cut angle in `angle` dataset
+            of HDF5 antenna file.
+
+        Returns
+        -------
+        nisar.products.readers.antenna.AntPatCut
 
         """
         pol = self._check_pol(pol)
@@ -537,7 +578,16 @@ class AntennaParser:
                 out[key] = fld[()]
             if ang_attr and key == "angle":
                 out[ang_attr] = grp_cut[key].attrs.get(ang_attr)
-        return AntPatCut(**out)
+
+        # check for full or truncated angular coverage
+        cut = AntPatCut(**out)
+        if not full:
+            _, _, slice_ang = xdb_points_from_cut(cut)
+            cut.angle = cut.angle[slice_ang]
+            cut.copol_pattern = cut.copol_pattern[slice_ang]
+            if cut.cxpol_pattern is not None:
+                cut.cxpol_pattern = cut.cxpol_pattern[slice_ang]
+        return cut
 
     def _gridtype(self) -> str:
         """Get spherical grid type.
@@ -549,29 +599,51 @@ class AntennaParser:
         except AttributeError:
             return grd.replace('-', '_')
 
-    def _ang_cut_all(self, cut_type: str, pol: str) -> AntPatCut:
+    def _ang_cut_all(self, cut_type: str, pol: str, full: bool = False
+                     ) -> AntPatCut:
         """
         Get all co-pol and cx-pol cut patterns of a certain cut_type
         and pol.
-        cut_type is either "elevation" or "azimuth".
+
+        Parameters
+        ----------
+        cut_type : str
+            either "elevation" or "azimuth"
+        pol : str
+            Polarization
+        full: bool, default=False
+            If False, the angles on either sides will be truncated
+            within one-way 10-dB beamwidth, otherwise the entire
+            angular coverage will be returned.
+
+        Returns
+        -------
+        nisar.products.readers.antenna.AntPatCut
+
         """
         num_beam = self.num_beams(pol)
         # determine full angular coverage with uniform spcaing over all beams
         beam_first = self._get_ang_cut(
-            1, pol, cut_type, out_keys=("angle", "copol_pattern"))
+            1, pol, cut_type, full=True, out_keys=("angle", "copol_pattern"))
         if num_beam > 1:
             beam_last = self._get_ang_cut(
-                num_beam, pol, cut_type, out_keys=("angle",
-                                                   "copol_pattern"))
+                num_beam, pol, cut_type, full=True, out_keys=("angle",
+                                                              "copol_pattern"))
         else:
             beam_last = beam_first
-        num_ang = int(np.ceil((beam_last.angle[-1] - beam_first.angle[0]) / (
-            beam_first.angle[1] - beam_first.angle[0]))) + 1
-        # linearly interpolate each beam over full angular coverage with out
-        # of range values filled with float or complex zero.
+        # check for angle coverage, full or truncated
+        if full:
+            ang_first = beam_first.angle[0]
+            ang_last = beam_last.angle[-1]
+        else:  # limit angluar coverage
+            ang_first, _, _ = xdb_points_from_cut(beam_first)
+            _, ang_last, _ = xdb_points_from_cut(beam_last)
+        ang_spacing = beam_first.angle[1] - beam_first.angle[0]
+        num_ang = int(np.ceil((ang_last - ang_first) / ang_spacing)) + 1
+        # linearly interpolate each beam over desired angular coverage with
+        # out-of-range values filled with float or complex zero.
         out = {}
-        out["angle"] = np.linspace(
-            beam_first.angle[0], beam_last.angle[-1], num_ang)
+        out["angle"] = np.linspace(ang_first, ang_last, num_ang)
         out["copol_pattern"] = np.zeros((num_beam, num_ang),
                                         beam_first.copol_pattern.dtype)
         out["cxpol_pattern"] = np.zeros_like(out["copol_pattern"])
@@ -579,7 +651,7 @@ class AntennaParser:
         cut_ang_ave = 0.0
 
         for nn in range(num_beam):
-            beam = self._get_ang_cut(nn + 1, pol, cut_type)
+            beam = self._get_ang_cut(nn + 1, pol, cut_type, full=True)
             out["copol_pattern"][nn, :] = np.interp(
                 out["angle"], beam.angle, beam.copol_pattern,
                 left=out_of_range_val, right=out_of_range_val)
@@ -591,3 +663,62 @@ class AntennaParser:
 
         out["cut_angle"] = cut_ang_ave / num_beam
         return AntPatCut(**out)
+
+
+def xdb_points_from_cut(cut: AntPatCut, x_db: float = 10.0
+                        ) -> tuple[float, float, slice]:
+    """
+    Get approximate angles (radians) within x-dB dynamic range of the
+    peak of a cut pattern in EL or AZ.
+
+    Parameters
+    ----------
+    cut : nisar.products.readers.antenna.AntPatCut
+        Single-beam cut pattern info.
+    x_db : float, default=10.0
+        x dB below the peak.
+        Assumed this level is above the largest side lobe.
+
+    Returns
+    -------
+    float
+        Approximate x-dB below the peak on the left side of the peak
+        in radians
+    float
+        Approximate x-dB below the peak on the right side of the peak
+        in radians
+    slice
+        angle index slice for x-dB beamwidth.
+
+    Notes
+    -----
+    The code tries to find the first left/right angles on either side
+    of the peak to be at least `x_db` below the peak value provided enough
+    angular margins on either sides.
+
+    """
+    x = 10 ** (-abs(x_db) / 20.)
+    # ignore cx-pol pattern
+    amp_pat = abs(cut.copol_pattern)
+    idx_pk = np.argmax(amp_pat)
+    pk = amp_pat[idx_pk]
+    thrs = x * pk
+    # left side of the peak
+    idx_left = abs(amp_pat[:idx_pk] - thrs).argmin()
+    # If possible adjust the left index to make sure its mag is
+    # at least x-dB below the peak
+    if idx_left > 0 and amp_pat[idx_left] > thrs:
+        # check gain in case it is not monotonically decreasing
+        if not (amp_pat[idx_left - 1] > thrs):
+            idx_left -= 1
+    # right side of the peak
+    idx_right = abs(amp_pat[idx_pk:] - thrs).argmin() + idx_pk
+    # If possible adjust the right index to make sure its mag is
+    # at least x-dB below the peak
+    if idx_right < (amp_pat.size - 1) and amp_pat[idx_right] > thrs:
+        # check gain in case it is not monotonically decreasing
+        if not (amp_pat[idx_right + 1] > thrs):
+            idx_right += 1
+
+    return (cut.angle[idx_left], cut.angle[idx_right],
+            slice(idx_left, idx_right + 1))

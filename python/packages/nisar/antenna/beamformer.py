@@ -503,7 +503,7 @@ class RxDBF(ElevationBeamformer):
                     q_ant2ecef,
                     1.0
                 )
-                self.rg_spacing_min = abs(np.diff(sr))
+                self.rg_spacing_min = abs(np.diff(sr)[0])
 
     @property
     def slant_range_dbf(self):

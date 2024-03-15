@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from nisar.products.readers.antenna import AntennaParser
+from nisar.products.readers.antenna.antenna_parser import xdb_points_from_cut
 from isce3.ext.isce3 import antenna as ant
 import iscetest
 
@@ -58,7 +59,7 @@ class TestAntennaParser:
                              f" {pol} Pol")
 
     def test_el_cut(self):
-        elcut = self.prs.el_cut()
+        elcut = self.prs.el_cut(full=True)
 
         npt.assert_allclose(np.rad2deg(elcut.cut_angle), 0.0,
                             atol=self.atol, rtol=self.rtol,
@@ -81,7 +82,7 @@ class TestAntennaParser:
                             err_msg="Wrong 'cxpol' values")
 
     def test_az_cut(self):
-        azcut = self.prs.az_cut(3, 'V')
+        azcut = self.prs.az_cut(3, 'V', full=True)
 
         npt.assert_allclose(np.rad2deg(azcut.cut_angle), 0.1,
                             atol=self.atol, rtol=self.rtol,
@@ -105,14 +106,14 @@ class TestAntennaParser:
 
     def test_el_cut_all(self):
         num_beam = self.prs.num_beams()
-        beam_first = self.prs.el_cut(1)
-        beam_last = self.prs.el_cut(num_beam)
+        beam_first = self.prs.el_cut(1, full=True)
+        beam_last = self.prs.el_cut(num_beam, full=True)
         ang_first = beam_first.angle[0]
         ang_last = beam_last.angle[-1]
         num_ang = int(np.ceil((ang_last - ang_first) /
                               (beam_first.angle[1] - beam_first.angle[0]))) + 1
 
-        elcut = self.prs.el_cut_all()
+        elcut = self.prs.el_cut_all(full=True)
         npt.assert_equal(elcut.copol_pattern.shape, (num_beam, num_ang),
                          err_msg="Wrong shape for 'copol'")
 
@@ -142,14 +143,14 @@ class TestAntennaParser:
 
     def test_az_cut_all(self):
         num_beam = self.prs.num_beams()
-        beam_first = self.prs.az_cut(1)
-        beam_last = self.prs.az_cut(num_beam)
+        beam_first = self.prs.az_cut(1, full=True)
+        beam_last = self.prs.az_cut(num_beam, full=True)
         ang_first = beam_first.angle[0]
         ang_last = beam_last.angle[-1]
         num_ang = int(np.ceil((ang_last - ang_first) /
                               (beam_first.angle[1] - beam_first.angle[0]))) + 1
 
-        azcut = self.prs.az_cut_all()
+        azcut = self.prs.az_cut_all(full=True)
         npt.assert_equal(azcut.copol_pattern.shape, (num_beam, num_ang),
                          err_msg="Wrong shape for 'copol'")
 
@@ -209,3 +210,96 @@ class TestAntennaParser:
             npt.assert_allclose(az_peaks, az_trans,
                                 err_msg='Wrong azimuth for overlap values'
                                 f' for pol "{pol}"!')
+
+    def test_xdb_points_from_cut(self):
+        cut = self.prs.el_cut()
+        amp_pat = abs(cut.copol_pattern)
+        idx_max = amp_pat.argmax()
+        # get angular coverage for min dynamic range `xdb`
+        xdb = 7.0
+        ang_first, ang_last, slice_ang = xdb_points_from_cut(cut, x_db=xdb)
+        npt.assert_(ang_first < cut.angle[idx_max],
+                    msg='Wrong first/left angle value!')
+        npt.assert_(ang_last > cut.angle[idx_max],
+                    msg='Wrong last/right angle value!')
+        npt.assert_(slice_ang.start < idx_max < slice_ang.stop,
+                    msg='Wrong slice angle index!')
+        # check the magnitude on both left and right side of the peak
+        # to be at least "xdb" dB below the peak!
+        pk2left = 20 * np.log10(
+            amp_pat[idx_max] / amp_pat[slice_ang.start])
+        npt.assert_(pk2left >= xdb,
+                    msg=(f'Peak-to-Left mag is {pk2left:.2f} dB less than'
+                         f' min {xdb} dB!')
+                    )
+        pk2right = 20 * np.log10(
+            amp_pat[idx_max] / amp_pat[slice_ang.stop - 1])
+        npt.assert_(pk2left >= xdb,
+                    msg=(f'Peak-to-Right mag is {pk2right:.2f} dB less than'
+                         f' min {xdb} dB!')
+                    )
+
+    def test_az_cut_all_truncated(self):
+        num_beam = self.prs.num_beams()
+        beam_first = self.prs.az_cut(1, full=False)
+        beam_last = self.prs.az_cut(num_beam, full=False)
+        ang_first = beam_first.angle[0]
+        ang_last = beam_last.angle[-1]
+        num_ang = int(np.ceil((ang_last - ang_first) /
+                              (beam_first.angle[1] - beam_first.angle[0]))) + 1
+
+        azcut = self.prs.az_cut_all(full=False)
+        npt.assert_equal(azcut.copol_pattern.shape, (num_beam, num_ang),
+                         err_msg="Wrong shape for 'copol'")
+
+        angles = np.linspace(ang_first, ang_last, num_ang)
+        npt.assert_allclose(azcut.angle, angles, atol=self.atol,
+                            rtol=self.rtol, err_msg="Wrong 'angle'")
+
+        cut_angs_az = self.prs.cut_angles_az_cuts()
+        npt.assert_allclose(azcut.cut_angle, cut_angs_az.mean(), atol=0.01,
+                            rtol=0.1, err_msg="Wrong mean 'cut_ang'")
+
+        pattern = np.interp(angles, beam_first.angle, beam_first.copol_pattern,
+                            left=0.0, right=0.0)
+        npt.assert_allclose(azcut.copol_pattern[0, :], pattern,
+                            atol=self.atol, rtol=self.rtol,
+                            err_msg="Wrong 'copol' for first beam")
+
+        pattern = np.interp(angles, beam_last.angle, beam_last.copol_pattern,
+                            left=0.0, right=0.0)
+        npt.assert_allclose(azcut.copol_pattern[-1, :], pattern,
+                            atol=self.atol, rtol=self.rtol,
+                            err_msg="Wrong 'copol' for last beam")
+
+    def test_el_cut_all_truncated(self):
+        num_beam = self.prs.num_beams()
+        beam_first = self.prs.el_cut(1, full=False)
+        beam_last = self.prs.el_cut(num_beam, full=False)
+        ang_first = beam_first.angle[0]
+        ang_last = beam_last.angle[-1]
+        num_ang = int(np.ceil((ang_last - ang_first) /
+                              (beam_first.angle[1] - beam_first.angle[0]))) + 1
+
+        elcut = self.prs.el_cut_all(full=False)
+        npt.assert_equal(elcut.copol_pattern.shape, (num_beam, num_ang),
+                         err_msg="Wrong shape for 'copol'")
+
+        angles = np.linspace(ang_first, ang_last, num_ang)
+        npt.assert_allclose(elcut.angle, angles, atol=self.atol,
+                            rtol=self.rtol, err_msg="Wrong 'angle'")
+
+        npt.assert_allclose(np.rad2deg(elcut.cut_angle), 0.0, atol=0.01,
+                            rtol=0.1, err_msg="Wrong mean 'cut_ang'")
+
+        pattern = np.interp(angles, beam_first.angle, beam_first.copol_pattern,
+                            left=0.0, right=0.0)
+        npt.assert_allclose(elcut.copol_pattern[0, :], pattern,
+                            atol=self.atol, rtol=self.rtol,
+                            err_msg="Wrong 'copol' for first beam")
+
+        pattern = np.interp(angles, beam_last.angle, beam_last.copol_pattern,
+                            left=0.0, right=0.0)
+        npt.assert_allclose(elcut.copol_pattern[-1, :], pattern,
+                            atol=self.atol, rtol=self.rtol,
+                            err_msg="Wrong 'copol' for last beam")
