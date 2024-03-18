@@ -179,6 +179,7 @@ template class gpuBicubicInterpolator<thrust::complex<double>>;
 template class gpuBicubicInterpolator<float>;
 template class gpuBicubicInterpolator<thrust::complex<float>>;
 template class gpuBicubicInterpolator<unsigned char>;
+template class gpuBicubicInterpolator<unsigned short>;
 template class gpuBicubicInterpolator<unsigned int>;
 
 template __global__ void gpuInterpolator_g<double>(

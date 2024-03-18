@@ -1281,8 +1281,10 @@ class InSARBaseWriter(h5py.File):
         # create fill value if not specified
         elif np.issubdtype(dtype, np.floating):
             ds.attrs["_FillValue"] = np.nan
-        elif np.issubdtype(dtype, np.integer):
-            ds.attrs["_FillValue"] = 255
+        elif np.issubdtype(dtype, np.unsignedinteger):
+            ds.attrs["_FillValue"] = np.iinfo(dtype).max
+        elif np.issubdtype(dtype, np.signedinteger):
+            ds.attrs["_FillValue"] = np.iinfo(dtype).min
         elif np.issubdtype(dtype, np.complexfloating):
             ds.attrs["_FillValue"] = np.complex64(np.nan + 1j * np.nan)
         elif dtype == complex32:

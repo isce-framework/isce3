@@ -294,7 +294,7 @@ __global__ void interpolate(T* geo_data_block,
 void rasterDtypeInterpCheck(const int dtype,
         const isce3::core::dataInterpMethod& data_interp_method)
 {
-    if ((dtype == GDT_Byte || dtype == GDT_UInt32) &&
+    if ((dtype == GDT_Byte || dtype == GDT_UInt32 || dtype == GDT_UInt16) &&
             data_interp_method != isce3::core::NEAREST_METHOD) {
         std::string err_str {
                 "int type of raster can only use nearest neighbor interp"};
@@ -304,7 +304,8 @@ void rasterDtypeInterpCheck(const int dtype,
 
 void invalidValueCheck(const int dtype, const double invalid_value)
 {
-    const auto is_int_type = dtype == GDT_Byte or dtype == GDT_UInt32;
+    const auto is_int_type =
+        dtype == GDT_Byte or dtype == GDT_UInt16 or dtype == GDT_UInt32;
 
     if (isnan(invalid_value) and is_int_type) {
         throw isce3::except::InvalidArgument(
@@ -316,6 +317,13 @@ void invalidValueCheck(const int dtype, const double invalid_value)
             and (invalid_value > std::numeric_limits<unsigned int>::max())) {
         throw isce3::except::InvalidArgument(
                 ISCE_SRCINFO(), "unsigned int datatype invalid value exceeds type max");
+    }
+
+    // Check if invalid value is in bounds for unsigned short
+    if ((dtype == GDT_UInt16)
+            and (invalid_value > std::numeric_limits<unsigned short>::max())) {
+        throw isce3::except::InvalidArgument(
+                ISCE_SRCINFO(), "unsigned short datatype invalid value exceeds type max");
     }
 
     // Check if invalid value is in bounds for unsigned char
@@ -691,6 +699,7 @@ void Geocode::geocodeRasters(
         float invalid_float;
         double invalid_double;
         unsigned char invalid_unsigned_char;
+        unsigned short invalid_unsigned_short;
         unsigned int invalid_unsigned_int;
         if (std::isnan(invalid_value)) {
             invalid_float = std::numeric_limits<float>::quiet_NaN();
@@ -699,6 +708,7 @@ void Geocode::geocodeRasters(
             invalid_float = static_cast<float>(invalid_value);
             invalid_double = invalid_value;
             invalid_unsigned_char = static_cast<unsigned char>(invalid_value);
+            invalid_unsigned_short = static_cast<unsigned short>(invalid_value);
             invalid_unsigned_int = static_cast<unsigned int>(invalid_value);
         }
 
@@ -735,6 +745,12 @@ void Geocode::geocodeRasters(
             _data_interp_handles.push_back(std::make_shared<
                     InterpolatorHandle<unsigned char>>(interp_method));
             _invalid_values.push_back(invalid_unsigned_char);
+            break;
+        }
+        case GDT_UInt16: {
+            _data_interp_handles.push_back(std::make_shared<
+                    InterpolatorHandle<unsigned short>>(interp_method));
+            _invalid_values.push_back(invalid_unsigned_short);
             break;
         }
         case GDT_UInt32: {
@@ -822,6 +838,14 @@ void Geocode::geocodeRasters(
                         is_sinc_interp);
                 break;
             }
+            case GDT_UInt16: {
+                geocodeRasterBlock<unsigned short>(
+                        output_rasters[i_raster], input_rasters[i_raster],
+                        _data_interp_handles[i_raster],
+                        _invalid_values[i_raster],
+                        is_sinc_interp);
+                break;
+            }
             case GDT_UInt32: {
                 geocodeRasterBlock<unsigned int>(
                         output_rasters[i_raster], input_rasters[i_raster],
@@ -839,17 +863,20 @@ void Geocode::geocodeRasters(
     }
 }
 
-#define EXPLICIT_INSTATIATION(T)                                               \
-    template void Geocode::geocodeRasterBlock<T>( \
-            isce3::io::Raster& output_raster, isce3::io::Raster& input_raster, \
-            const std::shared_ptr< \
-                isce3::cuda::core::InterpolatorHandleVirtual>& interp_handle_ptr, \
-            const std::any& invalid_value_any, const bool is_sinc_interp);
+#define EXPLICIT_INSTATIATION(T)                                                    \
+    template void Geocode::geocodeRasterBlock<T>(                                   \
+            isce3::io::Raster& output_raster,                                       \
+            isce3::io::Raster& input_raster,                                        \
+            const std::shared_ptr<                                                  \
+                isce3::cuda::core::InterpolatorHandleVirtual>& interp_handle_ptr,   \
+            const std::any& invalid_value_any,                                      \
+            const bool is_sinc_interp);
 
 EXPLICIT_INSTATIATION(float);
 EXPLICIT_INSTATIATION(thrust::complex<float>);
 EXPLICIT_INSTATIATION(double);
 EXPLICIT_INSTATIATION(thrust::complex<double>);
 EXPLICIT_INSTATIATION(unsigned char);
+EXPLICIT_INSTATIATION(unsigned short);
 EXPLICIT_INSTATIATION(unsigned int);
 } // namespace isce3::cuda::geocode

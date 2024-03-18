@@ -125,5 +125,6 @@ template class InterpolatorHandle<thrust::complex<float>>;
 template class InterpolatorHandle<double>;
 template class InterpolatorHandle<thrust::complex<double>>;
 template class InterpolatorHandle<unsigned char>;
+template class InterpolatorHandle<unsigned short>;
 template class InterpolatorHandle<unsigned int>;
 } // namespace isce3::cuda::core

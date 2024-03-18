@@ -1088,9 +1088,9 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
                 # Invalid values for respective datasets named above
                 # connected_components raster has type unsigned char and an invalid
                 # value of NaN becomes 0 which conflicts with 0 being used to indicate
-                # an unmasked value/pixel. 255 is chosen as it is the most distant
-                # value from components assigned in ascending order [0, 1, ...)
-                invalid_values = [np.nan, np.nan, 255]
+                # an unmasked value/pixel. 65535 is chosen as the max mappable connected
+                # component
+                invalid_values = [np.nan, np.nan, 65535]
 
                 # Create radar grid geometry used by most datasets
                 rdr_geometry = isce3.container.RadarGeometry(radar_grid, orbit,

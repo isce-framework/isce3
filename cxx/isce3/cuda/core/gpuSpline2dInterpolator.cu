@@ -154,6 +154,7 @@ template class gpuSpline2dInterpolator<thrust::complex<double>>;
 template class gpuSpline2dInterpolator<float>;
 template class gpuSpline2dInterpolator<thrust::complex<float>>;
 template class gpuSpline2dInterpolator<unsigned char>;
+template class gpuSpline2dInterpolator<unsigned short>;
 template class gpuSpline2dInterpolator<unsigned int>;
 
 template __global__ void gpuInterpolator_g<double>(

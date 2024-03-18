@@ -327,7 +327,7 @@ class RUNWWriter(L1InSARWriter):
                 igram_ds_params = [
                     (
                         "connectedComponents",
-                        np.uint32,
+                        np.uint16,
                         f"Connected components for {pol} layer",
                         Units.dn,
                     ),

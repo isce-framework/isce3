@@ -243,7 +243,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                     ("coherenceMagnitude", np.float32,
                      f"Coherence magnitude between {pol} layers",
                      Units.unitless),
-                    ("connectedComponents", np.uint32,
+                    ("connectedComponents", np.uint16,
                      f"Connected components for {pol} layers",
                      Units.dn),
                     ("ionospherePhaseScreen", np.float32,

@@ -115,6 +115,7 @@ template class gpuBilinearInterpolator<thrust::complex<double>>;
 template class gpuBilinearInterpolator<float>;
 template class gpuBilinearInterpolator<thrust::complex<float>>;
 template class gpuBilinearInterpolator<unsigned char>;
+template class gpuBilinearInterpolator<unsigned short>;
 template class gpuBilinearInterpolator<unsigned int>;
 
 template __global__ void gpuInterpolator_g<double>(

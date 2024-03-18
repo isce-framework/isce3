@@ -232,5 +232,6 @@ EXPLICIT_INSTANTIATION(thrust::complex<double>);
 // XXX these template instantiations are needed in order to use
 // `gpuSinc2dInterpolator` with `InterpolatorHandle`
 EXPLICIT_INSTANTIATION(unsigned char);
+EXPLICIT_INSTANTIATION(unsigned short);
 EXPLICIT_INSTANTIATION(unsigned int);
 }
