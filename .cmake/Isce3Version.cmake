@@ -1,5 +1,5 @@
 # Sets result variable in parent scope
-# (Will be empty string on failure)
+# (Will be empty string on failure, or if the HEAD is a tagged commit)
 function(isce3_get_git_hash result)
 
     if(DEFINED ${result})
@@ -19,6 +19,19 @@ function(isce3_get_git_hash result)
     find_package(Git)
     if(NOT Git_FOUND)
         message(STATUS "Could not find git program")
+        return()
+    endif()
+
+    # Check if the current HEAD refers to a tagged commit.
+    # Zero on success (HEAD is a tag); nonzero on failure (HEAD is not a tag)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --exact-match --tags HEAD
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE GIT_HEAD_IS_TAG
+        )
+
+    if(GIT_HEAD_IS_TAG EQUAL 0)
+        message(STATUS "Current Git commit is tagged. Omitting hash from version string.")
         return()
     endif()
 
