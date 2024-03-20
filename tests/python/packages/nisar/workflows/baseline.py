@@ -202,8 +202,8 @@ def test_add_baseline(unit_test_params):
 
                 metadata_path_dict = {
                     "heights": f"{grid_path}/heightAboveEllipsoid",
-                    "azimuthTime": f"{grid_path}/zeroDopplerAzimuthTime",
-                    "slantRange": f"{grid_path}/slantRange",
+                    "azimuthTime": f"{grid_path}/referenceZeroDopplerAzimuthTime",
+                    "slantRange": f"{grid_path}/referenceSlantRange",
                     "coordX": f"{grid_path}/xCoordinates",
                     "coordY": f"{grid_path}/yCoordinates",
                     "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",

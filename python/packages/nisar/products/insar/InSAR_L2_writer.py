@@ -146,7 +146,7 @@ class L2InSARWriter(L1InSARWriter):
 
         # Update the radar grids attributes
         radar_grid['slantRange'].attrs['description'] = \
-            np.string_("Slant range in meters")
+            np.string_("Slant range of the reference RSLC in meters")
         radar_grid['slantRange'].attrs['units'] = Units.meter
 
         zero_dopp_azimuth_time_units = \
@@ -158,6 +158,12 @@ class L2InSARWriter(L1InSARWriter):
             zero_dopp_azimuth_time_units = time_str
         radar_grid['zeroDopplerAzimuthTime'].attrs['units'] = \
             np.string_(zero_dopp_azimuth_time_units)
+        radar_grid['zeroDopplerAzimuthTime'].attrs['description'] = \
+            np.string_("Zero doppler azimuth time of the reference RSLC image")
+
+        # Rename the dataset names
+        radar_grid.move('slantRange','referenceSlantRange')
+        radar_grid.move('zeroDopplerAzimuthTime', 'referenceZeroDopplerAzimuthTime')
 
         radar_grid['projection'][...] = \
             radar_grid['projection'][()].astype(np.uint32)

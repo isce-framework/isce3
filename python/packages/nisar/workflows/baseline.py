@@ -509,7 +509,7 @@ def add_baseline(output_paths,
         cube_ref_dataset = f'{grid_path}/coordinateX'
     else:
         grid_path = f"{dst_meta_path}/radarGrid"
-        cube_ref_dataset = f'{grid_path}/slantRange'
+        cube_ref_dataset = f'{grid_path}/referenceSlantRange'
 
     # Remove product_id from copy of output_paths to track
     # other products to insert baseline into.
@@ -772,8 +772,8 @@ def run(cfg: dict, output_paths):
         grid_path = f"{dst_meta_path}/radarGrid"
         metadata_path_dict = {
             "heights": f"{grid_path}/heightAboveEllipsoid",
-            "azimuthTime": f"{grid_path}/zeroDopplerAzimuthTime",
-            "slantRange": f"{grid_path}/slantRange",
+            "azimuthTime": f"{grid_path}/referenceZeroDopplerAzimuthTime",
+            "slantRange": f"{grid_path}/referenceSlantRange",
             "coordX": f"{grid_path}/xCoordinates",
             "coordY": f"{grid_path}/yCoordinates",
             "perpendicularBaseline": f"{grid_path}/perpendicularBaseline",
