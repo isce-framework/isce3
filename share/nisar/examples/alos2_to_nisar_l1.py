@@ -599,8 +599,7 @@ def construct_calibration_grid(metadata, sensor_name, orbit, az_pad=10.0):
     metadata['calibration_azimuth_grid'] = agrid
 
 
-def update_identification(fid, orbit, metadata, min_height=-500.,
-                          max_height=9000.):
+def update_identification(fid, orbit, metadata):
     """
     Updates the science/LSAR/identification group.
     """
@@ -618,24 +617,14 @@ def update_identification(fid, orbit, metadata, min_height=-500.,
     # Radar grid
     radar_grid = metadata['Radar Grid']
 
-    # Create DEM interpolators for min and max height
-    dem_min = DEMInterpolator(height=min_height)
-    dem_max = DEMInterpolator(height=max_height)
+    # Compute the bounding polygon at a fixed 0 m height
+    height = 0
+    dem = isce3.geometry.DEMInterpolator(height)
+    doppler = isce3.core.LUT2d()
+    poly = isce3.geometry.get_geo_perimeter_wkt(radar_grid, orbit, doppler, dem)
 
-    # Get min and max bounding boxes
-    box_min = get_geo_perimeter_wkt(radar_grid, orbit,
-                                    dem = dem_min)
-    box_max = get_geo_perimeter_wkt(radar_grid, orbit,
-                                    dem = dem_max)
-
-    # Determine minimum and maximum polygons
-    poly_min = wkt.loads(box_min)
-    poly_max = wkt.loads(box_max)
-
-    # Get polygon from intersection of poly_min and poly_max
-    poly = poly_min | poly_max
-
-    group['boundingPolygon'] = np.string_(poly.envelope)
+    # Allocate bounding polygon in the identification group
+    group['boundingPolygon'] = np.string_(poly)
     group['boundingPolygon'].attrs['epsg'] = 4326
     group['boundingPolygon'].attrs['ogr_geometry'] = np.string_('polygon')
     group['boundingPolygon'].attrs['description'] = np.string_(
