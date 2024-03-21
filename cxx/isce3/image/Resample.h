@@ -41,7 +41,7 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void getModulationPhase(
-    ArrayRef2D<std::complex<double>> out,
+    ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const size_t input_azimuth_first_line,
@@ -67,7 +67,7 @@ void getModulationPhase(
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void getModulationPhaseAtCoords(
-    ArrayRef2D<std::complex<double>> out,
+    ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
@@ -100,7 +100,7 @@ void getModulationPhaseAtCoords(
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void modulate(
-    ArrayRef2D<std::complex<double>> slc_data_block,
+    ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const size_t input_azimuth_first_line,
@@ -125,7 +125,7 @@ void modulate(
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void modulateAtCoords(
-    ArrayRef2D<std::complex<double>> slc_data_block,
+    ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
