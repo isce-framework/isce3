@@ -880,38 +880,38 @@ def add_radar_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, geogrid,
         long_name='incidence angle',
         descr=('Incidence angle is defined as the angle between the LOS vector'
                ' and the normal to the ellipsoid at the target height'),
-        units='degrees')
+        units='degrees', valid_min=0.0, valid_max=90.0)
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Elevation angle',
         descr=('Elevation angle is defined as the angle between the LOS vector'
                ' and the normal to the ellipsoid at the sensor'),
-        units='degrees')
+        units='degrees', valid_min=0.0, valid_max=90.0)
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
@@ -1034,38 +1034,38 @@ def add_geolocation_grid_cubes_to_hdf5(hdf5_obj, cube_group_name, radar_grid,
         long_name='incidence angle',
         descr='Incidence angle is defined as the angle between the LOS '
               'vector and the normal to the ellipsoid at the target height',
-        units='degrees')
+        units='degrees', valid_min=0.0, valid_max=90.0)
     los_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector X',
         descr='East component of unit vector of LOS from target to sensor',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     los_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'losUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='LOS unit vector Y',
         descr='North component of unit vector of LOS from target to sensor',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     along_track_unit_vector_x_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorX', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector X',
         descr='East component of unit vector along ground track',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     along_track_unit_vector_y_raster = _get_raster_from_hdf5_ds(
         cube_group, 'alongTrackUnitVectorY', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Along-track unit vector Y',
         descr='North component of unit vector along ground track',
-        units='1')
+        units='1', valid_min=-1.0, valid_max=1.0)
     elevation_angle_raster = _get_raster_from_hdf5_ds(
         cube_group, 'elevationAngle', np.float32, cube_shape,
         zds=zds, yds=yds, xds=xds,
         long_name='Elevation angle',
         descr='Elevation angle is defined as the angle between the LOS vector '
               'and the normal to the ellipsoid at the sensor',
-        units='degrees')
+        units='degrees', valid_min=0.0, valid_max=90.0)
     ground_track_velocity_raster = _get_raster_from_hdf5_ds(
         cube_group, 'groundTrackVelocity', np.float64, cube_shape,
         zds=zds, yds=yds, xds=xds,
