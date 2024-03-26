@@ -363,7 +363,15 @@ class AntennaPattern:
             el_pat_tx = ant.el_cut_all(tx_lp)
 
             # build Tx TRM
-            tx_trm = build_tx_trm(raw, self.pulse_times, self.freq_band, tx_p)
+            # Note that in QD and QQ modes the subbands may have different TX
+            # frequencies.  Need to make sure raw data queries have consistent
+            # pairings of freq band and TX pol.
+            tx_band = raw.frequencies[0]
+            if self.is_ssp:
+                tx0 = [pol[0] for pol in raw.polarizations[raw.frequencies[0]]]
+                if tx_p not in tx0:
+                    tx_band = raw.frequencies[1]
+            tx_trm = build_tx_trm(raw, self.pulse_times, tx_band, tx_p)
 
             # construct TX BMF object
             self.tx_bmf[tx_lp] = TxBMF(
