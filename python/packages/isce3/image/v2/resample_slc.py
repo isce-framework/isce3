@@ -6,6 +6,7 @@ from time import perf_counter
 import journal
 import numpy as np
 from isce3.core import SINC_HALF, LUT2d
+from isce3.core.poly2d import Poly2d
 from isce3.core.resample_block_generators import get_blocks, get_blocks_by_offsets
 from isce3.ext.isce3.image.v2 import _resample_to_coords
 from isce3.image.v2.modulate import modulate, modulate_at_coords
@@ -26,7 +27,7 @@ def resample_slc_blocks(
     fill_value: np.complex64 = np.nan + 1.0j * np.nan,
     with_gpu: bool = False,
     *,
-    carrier_luts: Iterable[LUT2d] | None = None,
+    phase_carriers: Iterable[LUT2d | Poly2d] | None = None,
     remodulate: bool = False,
 ) -> None:
     """
@@ -67,12 +68,12 @@ def resample_slc_blocks(
     with_gpu : bool, optional
         If True, run the GPU resample workflow. If False, run the CPU resample workflow.
         Defaults to False.
-    carrier_luts: Iterable[LUT2d] or None, optional
-        Carrier phase LUT's to demodulate from the input product. If none,
-        no input demodulation will occur. Defaults to None.
+    phase_carriers: Iterable of LUT2d or Poly2d or None, optional
+        Carrier phase, in radians, to remove prior to resampling. If None, the carrier
+        phase is assumed to be zero. Defaults to None.
     remodulate: bool, optional
-        If True, remodulate the carrier_luts phase into the output data. Use only if
-        carrier_luts is also given. Defaults to False.
+        If True, remodulate the phase_carriers phase into the output data. Use only if
+        phase_carriers is also given. Defaults to False.
     """
     info_channel = journal.info("resample_slc.resample_slc_blocks")
     warning_channel = journal.warning("resample_slc.resample_slc_blocks")
@@ -91,8 +92,8 @@ def resample_slc_blocks(
         error_channel.log(err_log)
         raise ValueError(err_log)
 
-    if remodulate and (carrier_luts is None):
-        err_log = "If remodulate is True, carrier_luts must also be given."
+    if remodulate and (phase_carriers is None):
+        err_log = "If remodulate is True, phase_carriers must also be given."
         error_channel.log(err_log)
         raise ValueError(err_log)
 
@@ -228,7 +229,7 @@ def resample_slc_blocks(
         for i in range(len(input_blocks)):
             input_block = input_blocks[i]
 
-            if carrier_luts is not None:
+            if phase_carriers is not None:
                 if not quiet:
                     info_channel.log(
                         f"demodulating input SLC for block {out_block_slice}..."
@@ -238,7 +239,7 @@ def resample_slc_blocks(
                 in_az_first_line = in_az_slice.start
                 in_rg_first_pixel = in_rg_slice.start
 
-                for carrier in carrier_luts:
+                for carrier in phase_carriers:
                     modulate(
                         slc_data_block=input_block,
                         out=input_block,
@@ -266,13 +267,13 @@ def resample_slc_blocks(
             )
 
 
-            if remodulate and (carrier_luts is not None):
+            if remodulate and (phase_carriers is not None):
                 if not quiet:
                     info_channel.log(
                         f"remodulating output SLC for block {out_block_slice}..."
                     )
 
-                for carrier in carrier_luts:
+                for carrier in phase_carriers:
                     modulate_at_coords(
                         slc_data_block=output_block,
                         carrier_phase=carrier,
