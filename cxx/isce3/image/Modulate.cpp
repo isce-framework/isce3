@@ -67,7 +67,7 @@ void getModulationPhase(
 
 
 template<typename AzRgFunc>
-void getModulationPhaseAtCoords(
+void _getModulationPhaseAtCoords(
     ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
@@ -146,7 +146,7 @@ void modulate(
 
 
 template<typename AzRgFunc>
-void modulateAtCoords(
+void _modulateAtCoords(
     ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
@@ -194,7 +194,7 @@ template void getModulationPhase(                                             \
     const isce3::product::RadarGridParameters& radar_grid,                    \
     const bool conjugate                                                      \
 );                                                                            \
-template void getModulationPhaseAtCoords(                                     \
+template void _getModulationPhaseAtCoords(                                    \
     ArrayRef2D<std::complex<float>> out,                                      \
     const AzRgFunc& carrier_phase,                                            \
     const isce3::product::RadarGridParameters& radar_grid,                    \
@@ -208,7 +208,7 @@ template void modulate(                                                       \
     const isce3::product::RadarGridParameters& radar_grid,                    \
     const bool conjugate                                                      \
 );                                                                            \
-template void modulateAtCoords(                                               \
+template void _modulateAtCoords(                                              \
     ArrayRef2D<std::complex<float>> slc_data_block,                           \
     const AzRgFunc& carrier_phase,                                            \
     const isce3::product::RadarGridParameters& radar_grid,                    \

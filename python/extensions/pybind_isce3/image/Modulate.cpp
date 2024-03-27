@@ -55,7 +55,7 @@ void addbindings_modulate(py::module & m)
             const isce3::image::modulate::ArrayRef2D<double>,
             const isce3::image::modulate::ArrayRef2D<double>,
             const bool
-        >(&isce3::image::modulate::getModulationPhaseAtCoords<AzRgFunc>),
+        >(&isce3::image::modulate::_getModulationPhaseAtCoords<AzRgFunc>),
         py::arg("out"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
@@ -126,7 +126,7 @@ void addbindings_modulate(py::module & m)
             const isce3::image::modulate::ArrayRef2D<double>,
             const isce3::image::modulate::ArrayRef2D<double>,
             const bool
-        >(&isce3::image::modulate::modulateAtCoords<AzRgFunc>),
+        >(&isce3::image::modulate::_modulateAtCoords<AzRgFunc>),
         py::arg("slc_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),

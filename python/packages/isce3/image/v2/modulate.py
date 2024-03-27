@@ -32,7 +32,7 @@ def modulate(
         Carrier phase of the SLC data, in radian, as a function of azimuth and range.
         This phase will be modulated to or demodulated from the image.
     radar_grid : RadarGridParameters
-        Parameters for the given radar grid.
+        Parameters for the given radar grid corresponding to `slc_data_block`.
     conjugate : bool, optional
         If True, modulate the conjugate of the phase, by default False
     out : np.ndarray of np.complex64 | None, optional
@@ -83,7 +83,7 @@ def modulate_at_coords(
         Carrier phase of the SLC data, in radian, as a function of azimuth and range.
         This phase will be modulated to or demodulated from the image.
     radar_grid : RadarGridParameters
-        Parameters for the given radar grid.
+        Parameters for the given radar grid corresponding to `slc_data_block`.
     azimuth_indices : np.ndarray of np.float64
         Azimuth index of each output coordinate pixel in the given radar coordinate
         system. Must be the same shape as phase_data_block.
@@ -153,7 +153,7 @@ def get_modulation_phase(
     carrier_phase : LUT2d or Poly2d
         Carrier phase, in radian, as a function of azimuth and range.
     radar_grid : RadarGridParameters
-        Parameters for the given radar grid.
+        Parameters for the given radar grid corresponding to the output block.
     conjugate : bool, optional
         If True, get the conjugate of the phase, by default False
     out : np.ndarray[np.complex64] | None, optional
@@ -198,7 +198,7 @@ def get_modulation_phase_at_coords(
     carrier_phase : LUT2d or Poly2d
         Carrier phase, in radian, as a function of azimuth and range.
     radar_grid : RadarGridParameters
-        Parameters for the given radar grid.
+        Parameters for the radar grid corresponding to the output block.
     azimuth_indices : np.ndarray of np.float64
         Azimuth index of each output coordinate pixel in the given radar coordinate
         system. Must be the same shape as phase_data_block.

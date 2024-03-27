@@ -24,9 +24,9 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  * Block of data to be written to. All data in block will be overwritten.
  * unit: array2D of complex
  * @tparam[in] carrier_phase
- * azimuth carrier phase of the SLC data, in radian, as a function of azimuth and range.
+ * azimuth carrier phase of the SLC data, ::modulate, as a function of azimuth and range.
  * @param[in] radar_grid
- * parameters for the given radar grid
+ * parameters for the given radar grid corresponding to the output block.
  * @param[in] conjugate
  * if true, get the conjugate of the phase.
  */
@@ -41,14 +41,17 @@ void getModulationPhase(
 
 /**
  * Acquire the phase of the given carrier at each given index of a radar scene.
+ * 
+ * Note that this function does not perform size checks between `out` and the indices
+ * blocks and radar grid.
  *
  * @param[out] out
  * Block of data to be written to. All data in block will be overwritten.
  * unit: array2D of complex
  * @tparam[in] carrier_phase
- * azimuth carrier phase of the SLC data, in radian, as a function of azimuth and range.
+ * azimuth carrier phase of the SLC data, in radians, as a function of azimuth and range.
  * @param[in] radar_grid
- * parameters for the given radar grid
+ * parameters for the given radar grid corresponding to the output block.
  * @param[in] azimuth_indices
  * azimuth index of each pixel in the output block w.r.t the radar grid. Must be the
  * same shape as `out`.
@@ -61,7 +64,7 @@ void getModulationPhase(
  * if true, modulate the conjugate of the phase.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
-void getModulationPhaseAtCoords(
+void _getModulationPhaseAtCoords(
     ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
@@ -78,10 +81,10 @@ void getModulationPhaseAtCoords(
  * the block of data SLC to be modulated.
  * unit: array2D of complex
  * @tparam[in] carrier_phase
- * carrier phase of the SLC data, in radian, as a function of azimuth and range.
+ * carrier phase of the SLC data, in radians, as a function of azimuth and range.
  * This phase will be modulated to or demodulated from the image.
  * @param[in] radar_grid
- * parameters for the given radar grid
+ * parameters for the given radar grid corresponding to `slc_data_block`.
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
  */
@@ -96,15 +99,18 @@ void modulate(
 
 /**
  * Evaluate and modulate or demodulate the phase carrier onto the given SLC data block.
+ * 
+ * Note that this function does not perform size checks between `slc_data_block` and the
+ * indices blocks and radar grid.
  *
  * @param[out] slc_data_block
  * the block of data SLC to be modulated.
  * unit: array2D of complex
  * @tparam[in] carrier_phase
- * carrier phase of the SLC data, in radian, as a function of azimuth and range.
+ * carrier phase of the SLC data, in radians, as a function of azimuth and range.
  * This phase will be modulated to or demodulated from the image.
  * @param[in] radar_grid
- * parameters for the given radar grid
+ * parameters for the given radar grid corresponding to `slc_data_block`.
  * @param[in] azimuth_indices
  * azimuth index of each pixel in the output block w.r.t the radar grid. Must be the
  * same shape as `slc_data_block`.
@@ -117,7 +123,7 @@ void modulate(
  * if true, modulate the conjugate of the phase.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
-void modulateAtCoords(
+void _modulateAtCoords(
     ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
