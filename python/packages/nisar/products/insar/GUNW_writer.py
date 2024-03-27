@@ -64,8 +64,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
         radar_grid = self[self.group_paths.RadarGridPath]
         descrs = ["Solid Earth tides phase along slant range direction",
                   'Solid Earth tides phase in along-track direction']
-        product_names = ['slantRangeSolidEarthTidesPhase',
-                         'alongTrackSolidEarthTidesPhase']
+        product_names = ['slantRangeSolidEarthTidesPhase']
 
         # Add the troposphere datasets to the radarGrid cube
         if tropo_cfg['enabled']:

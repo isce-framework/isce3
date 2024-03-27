@@ -16,27 +16,26 @@ from nisar.workflows.yaml_argparse import YamlArgparse
 from scipy.interpolate import RegularGridInterpolator
 
 
-def add_solid_earth_to_gunw_hdf5(solid_earth_tides,
+def add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,
                                  gunw_hdf5):
     '''
     Add the solid earth phase datacube to GUNW product
 
     Parameters
     ----------
-    solid_earth_tides: tuple
-        solid earth tides along the slant range and along-track directions
+    los_solid_earth_tides: np.ndarray
+        solid earth tides along los direction
     gunw_hdf5: str
          GUNW HDF5 file where SET will be written
     '''
 
     with h5py.File(gunw_hdf5, 'a', libver='latest', swmr=True) as hdf:
         radar_grid = hdf.get(GUNWGroupsPaths().RadarGridPath)
-        product_names = ['slantRangeSolidEarthTidesPhase', 'alongTrackSolidEarthTidesPhase']
+        product_names = ['slantRangeSolidEarthTidesPhase']
 
-        for  product_name, solid_earth_tides_product in zip(product_names,
-                                                            solid_earth_tides):
-            ds = radar_grid[product_name]
-            ds[...] = solid_earth_tides_product
+        for product_name, solid_earth_tides_product in zip(product_names,
+                                                           los_solid_earth_tides):
+            radar_grid[product_name][...] = solid_earth_tides_product
 
 
 def calculate_solid_earth_tides(inc_angle_datacube,
@@ -75,8 +74,8 @@ def calculate_solid_earth_tides(inc_angle_datacube,
 
     Returns
     -------
-    solid_earth_tides: tuple
-        solid earth tides along the los and azimuth directions
+    solid_earth_tides: np.ndarray
+        solid earth tides along the LOS direction
     '''
 
     # X and y for the entire datacube
@@ -154,10 +153,6 @@ def calculate_solid_earth_tides(inc_angle_datacube,
     # Incidence angle in radians
     inc_angle = np.deg2rad(inc_angle_datacube)
 
-    # Solid earth tides along the azimith direction
-    azimuth_solid_earth_tides_datacube = (-ref_sec_tide_e * np.sin(azimuth_angle) +
-                                          + ref_sec_tide_n * np.cos(azimuth_angle))
-
     # Solidearth tides datacube along the LOS in meters
     los_solid_earth_tides_datacube =(-ref_sec_tide_e * np.sin(inc_angle) * np.sin(azimuth_angle)
                                      + ref_sec_tide_n * np.sin(inc_angle) * np.cos(azimuth_angle)
@@ -165,10 +160,8 @@ def calculate_solid_earth_tides(inc_angle_datacube,
 
     # Convert to phase screen
     los_solid_earth_tides_datacube *= -4.0 * np.pi / wavelength
-    azimuth_solid_earth_tides_datacube *= -4.0 * np.pi / wavelength
 
-    return (los_solid_earth_tides_datacube,
-            azimuth_solid_earth_tides_datacube)
+    return los_solid_earth_tides_datacube
 
 
 
@@ -225,8 +218,8 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
 
     Returns
     ----------
-    solid_earth_tides: tuple
-        solid earth tides along the los and azimuth directions
+    solid_earth_tides: np.ndarray
+        solid earth tides along the LOS direction
     '''
 
     # Extract the HDF5 parameters
@@ -242,17 +235,17 @@ def compute_solid_earth_tides(gunw_hdf5_path: str):
     sec_start_time = _extract_params_from_gunw_hdf5(gunw_hdf5_path)
 
     # Caculate the solid earth tides
-    solid_earth_tides = calculate_solid_earth_tides(inc_angle_cube,
-                                                    los_unit_vector_x_cube,
-                                                    los_unit_vector_y_cube,
-                                                    xcoord_radar_grid,
-                                                    ycoord_radar_grid,
-                                                    int(epsg),
-                                                    wavelength,
-                                                    ref_start_time,
-                                                    sec_start_time)
+    los_solid_earth_tides = calculate_solid_earth_tides(inc_angle_cube,
+                                                        los_unit_vector_x_cube,
+                                                        los_unit_vector_y_cube,
+                                                        xcoord_radar_grid,
+                                                        ycoord_radar_grid,
+                                                        int(epsg),
+                                                        wavelength,
+                                                        ref_start_time,
+                                                        sec_start_time)
 
-    return solid_earth_tides
+    return los_solid_earth_tides
 
 
 def run(cfg: dict, gunw_hdf5_path: str):
@@ -273,11 +266,11 @@ def run(cfg: dict, gunw_hdf5_path: str):
 
     t_all = time.time()
 
-    # Compute the solid earth tides along slant range and along-track directions
-    solid_earth_tides = compute_solid_earth_tides(gunw_hdf5_path)
+    # Compute the solid earth tides along los direction
+    los_solid_earth_tides = compute_solid_earth_tides(gunw_hdf5_path)
 
     # Write the solid earth tides to GUNW product
-    add_solid_earth_to_gunw_hdf5(solid_earth_tides,
+    add_solid_earth_to_gunw_hdf5(los_solid_earth_tides,
                                  gunw_hdf5_path)
 
     t_all_elapsed = time.time() - t_all
