@@ -9,7 +9,7 @@ from isce3.core import SINC_HALF, LUT2d
 from isce3.core.poly2d import Poly2d
 from isce3.core.resample_block_generators import get_blocks, get_blocks_by_offsets
 from isce3.ext.isce3.image.v2 import _resample_to_coords
-from isce3.image.v2.modulate import modulate, modulate_at_coords
+from isce3.image.modulate import modulate, modulate_at_coords
 from isce3.io.dataset import DatasetReader, DatasetWriter
 from isce3.product import RadarGridParameters
 
