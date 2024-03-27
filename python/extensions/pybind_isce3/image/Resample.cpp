@@ -12,7 +12,6 @@
 
 namespace py = pybind11;
 
-template<typename AzRgFunc = isce3::core::Poly2d>
 void addbindings_resamp(py::module & m)
 {
     // Write _resample_to_coords as a private function. This will be used by a wrapper
@@ -51,8 +50,12 @@ void addbindings_resamp(py::module & m)
             The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
         )"
     );
+}
 
 
+template<typename AzRgFunc = isce3::core::Poly2d>
+void addbindings_modulate(py::module & m)
+{
     m.def(
         "_get_modulation_phase",
         py::overload_cast<
@@ -215,5 +218,5 @@ void addbindings_resamp(py::module & m)
     );
 }
 
-template void addbindings_resamp<isce3::core::LUT2d<double>>(py::module & m);
-template void addbindings_resamp<isce3::core::Poly2d>(py::module & m);
+template void addbindings_modulate<isce3::core::LUT2d<double>>(py::module & m);
+template void addbindings_modulate<isce3::core::Poly2d>(py::module & m);

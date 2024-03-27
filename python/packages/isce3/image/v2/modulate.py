@@ -5,7 +5,7 @@ import numpy as np
 
 from isce3.core import LUT2d
 from isce3.core.poly2d import Poly2d
-from isce3.ext.isce3.image.v2 import (
+from isce3.ext.isce3.image.modulate import (
     _get_modulation_phase,
     _get_modulation_phase_at_coords,
     _modulate,
