@@ -276,6 +276,7 @@ def resample_slc_blocks(
                 for carrier in phase_carriers:
                     modulate_at_coords(
                         slc_data_block=output_block,
+                        out=output_block,
                         carrier_phase=carrier,
                         radar_grid=input_radar_grid,
                         azimuth_indices=azimuth_index_grid,
