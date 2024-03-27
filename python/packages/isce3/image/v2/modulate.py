@@ -18,8 +18,6 @@ def modulate(
     slc_data_block: np.ndarray[np.complex64],
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
-    input_azimuth_first_line: int,
-    input_range_first_pixel: int,
     conjugate: bool = False,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
@@ -35,12 +33,6 @@ def modulate(
         This phase will be modulated to or demodulated from the image.
     radar_grid : RadarGridParameters
         Parameters for the given radar grid.
-    input_azimuth_first_line : int
-        Line index of the first sample of the block of input data with respect to the
-        origin of the full SLC scene
-    input_range_first_pixel : int
-        Pixel index of the first sample of the block of input data with respect to the
-        origin of the full SLC scene
     conjugate : bool, optional
         If True, modulate the conjugate of the phase, by default False
     out : np.ndarray of np.complex64 | None, optional
@@ -61,11 +53,9 @@ def modulate(
     np.copyto(out_array, slc_data_block)
 
     _modulate(
-        slc_data_block=out,
+        slc_data_block=out_array,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
-        input_azimuth_first_line=input_azimuth_first_line,
-        input_range_first_pixel=input_range_first_pixel,
         conjugate=conjugate,
     )
     
@@ -152,8 +142,6 @@ def modulate_at_coords(
 def get_modulation_phase(
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
-    input_azimuth_first_line: int,
-    input_range_first_pixel: int,
     conjugate: bool = False,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
@@ -166,12 +154,6 @@ def get_modulation_phase(
         Carrier phase, in radian, as a function of azimuth and range.
     radar_grid : RadarGridParameters
         Parameters for the given radar grid.
-    input_azimuth_first_line : int
-        Line index of the first sample of the block of input data with respect to the
-        origin of the full SLC scene
-    input_range_first_pixel : int
-        Pixel index of the first sample of the block of input data with respect to the
-        origin of the full SLC scene
     conjugate : bool, optional
         If True, get the conjugate of the phase, by default False
     out : np.ndarray[np.complex64] | None, optional
@@ -194,8 +176,6 @@ def get_modulation_phase(
         out=out_array,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
-        input_azimuth_first_line=input_azimuth_first_line,
-        input_range_first_pixel=input_range_first_pixel,
         conjugate=conjugate,
     )
     

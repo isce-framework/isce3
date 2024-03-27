@@ -228,25 +228,20 @@ def resample_slc_blocks(
         # Run the resampling algorithm on the given blocks.
         for i in range(len(input_blocks)):
             input_block = input_blocks[i]
+            block_grid = input_radar_grid[in_slices]
 
             if phase_carriers is not None:
                 if not quiet:
                     info_channel.log(
                         f"demodulating input SLC for block {out_block_slice}..."
                     )
-                
-                in_az_slice, in_rg_slice = in_slices
-                in_az_first_line = in_az_slice.start
-                in_rg_first_pixel = in_rg_slice.start
 
                 for carrier in phase_carriers:
                     modulate(
                         slc_data_block=input_block,
                         out=input_block,
                         carrier_phase=carrier,
-                        radar_grid=input_radar_grid,
-                        input_azimuth_first_line=in_az_first_line,
-                        input_range_first_pixel=in_rg_first_pixel,
+                        radar_grid=block_grid,
                         conjugate=True,
                     )
 
@@ -261,7 +256,7 @@ def resample_slc_blocks(
                 input_block,
                 range_index_grid,
                 azimuth_index_grid,
-                input_radar_grid[in_slices],
+                block_grid,
                 doppler,
                 fill_value,
             )
@@ -278,7 +273,7 @@ def resample_slc_blocks(
                         slc_data_block=output_block,
                         out=output_block,
                         carrier_phase=carrier,
-                        radar_grid=input_radar_grid,
+                        radar_grid=block_grid,
                         azimuth_indices=azimuth_index_grid,
                         range_indices=range_index_grid,
                         conjugate=False,

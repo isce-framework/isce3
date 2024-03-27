@@ -1,5 +1,6 @@
 #include "image.h"
 
+#include "Modulate.h"
 #include "Resample.h"
 #include "ResampSlc.h"
 
@@ -13,6 +14,8 @@ void addsubmodule_image(py::module & m)
 
     // Add the resample v2 functionality to the v2 module.
     addbindings_resamp(m_image_v2);
+
+    // Add modulation functionality.
     addbindings_modulate<isce3::core::LUT2d<double>>(m_image_modulate);
     addbindings_modulate<isce3::core::Poly2d>(m_image_modulate);
 
