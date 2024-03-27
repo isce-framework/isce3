@@ -4,6 +4,7 @@ import journal
 import numpy as np
 
 from isce3.core import LUT2d
+from isce3.core.poly2d import Poly2d
 from isce3.ext.isce3.image.v2 import (
     _get_modulation_phase,
     _get_modulation_phase_at_coords,
@@ -15,17 +16,52 @@ from isce3.product import RadarGridParameters
 
 def modulate(
     slc_data_block: np.ndarray[np.complex64],
-    carrier_phase: LUT2d,
+    carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     input_azimuth_first_line: int,
     input_range_first_pixel: int,
     conjugate: bool = False,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
-    out_array = out if out is not None else np.copy(slc_data_block)
+    """
+    Evaluate and modulate or demodulate the phase carrier onto the given SLC data block.
+
+    Parameters
+    ----------
+    slc_data_block : np.ndarray of np.complex64
+        The block of SLC data to modulate.
+    carrier_phase : LUT2d or Poly2d
+        Carrier phase of the SLC data, in radian, as a function of azimuth and range.
+        This phase will be modulated to or demodulated from the image.
+    radar_grid : RadarGridParameters
+        Parameters for the given radar grid.
+    input_azimuth_first_line : int
+        Line index of the first sample of the block of input data with respect to the
+        origin of the full SLC scene
+    input_range_first_pixel : int
+        Pixel index of the first sample of the block of input data with respect to the
+        origin of the full SLC scene
+    conjugate : bool, optional
+        If True, modulate the conjugate of the phase, by default False
+    out : np.ndarray of np.complex64 | None, optional
+        The array to output data to, or None. If given, must be the same size as
+        slc_data_block. Any contents of this array will he overwritten, by default None
+
+    Returns
+    -------
+    np.ndarray of np.complex64
+        The modulated SLC block. If `out` was given, this will be the same array as
+        the `out` array.
+    """
+    out_array = out if out is not None else np.full(
+        (radar_grid.length, radar_grid.width),
+        fill_value=np.nan + 1.0j * np.nan,
+        dtype=np.complex64,
+    )
+    np.copyto(out_array, slc_data_block)
 
     _modulate(
-        slc_data_block=out_array,
+        slc_data_block=out,
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         input_azimuth_first_line=input_azimuth_first_line,
@@ -38,15 +74,52 @@ def modulate(
 
 def modulate_at_coords(
     slc_data_block: np.ndarray[np.complex64],
-    carrier_phase: LUT2d,
+    carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     azimuth_indices: np.ndarray[np.float64],
     range_indices: np.ndarray[np.float64],
     conjugate: bool = False,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
+    """
+    Evaluate and modulate or demodulate the phase carrier onto the given SLC data block
+    at the given indices.
+
+    Parameters
+    ----------
+    slc_data_block : np.ndarray of np.complex64
+        The block of SLC data to modulate.
+    carrier_phase : LUT2d or Poly2d
+        Carrier phase of the SLC data, in radian, as a function of azimuth and range.
+        This phase will be modulated to or demodulated from the image.
+    radar_grid : RadarGridParameters
+        Parameters for the given radar grid.
+    azimuth_indices : np.ndarray of np.float64
+        Azimuth index of each output coordinate pixel in the given radar coordinate
+        system. Must be the same shape as phase_data_block.
+    range_indices : np.ndarray of np.float64
+        Range index of each output coordinate pixel in the given radar coordinate
+        system. Must be the same shape as phase_data_block.
+    conjugate : bool, optional
+        If True, modulate the conjugate of the phase, by default False
+    out : np.ndarray of np.complex64 | None, optional
+        The array to output data to, or None. If given, must be the same size as
+        slc_data_block. Any contents of this array will he overwritten, by default None
+
+    Returns
+    -------
+    np.ndarray of np.complex64
+        The modulated SLC block. If `out` was given, this will be the same array as
+        the `out` array.
+    """
     error_channel = journal.error("modulate.modulate_at_coords")
-    out_array = out if out is not None else np.copy(slc_data_block)
+    
+    out_array = out if out is not None else np.full(
+        (radar_grid.length, radar_grid.width),
+        fill_value=np.nan + 1.0j * np.nan,
+        dtype=np.complex64,
+    )
+    np.copyto(out_array, slc_data_block)
 
     if out_array.shape != azimuth_indices.shape:
         err_log = (
@@ -77,13 +150,40 @@ def modulate_at_coords(
 
 
 def get_modulation_phase(
-    carrier_phase: LUT2d,
+    carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     input_azimuth_first_line: int,
     input_range_first_pixel: int,
     conjugate: bool = False,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
+    """
+    Acquire the phase of the given carrier of a radar scene.
+
+    Parameters
+    ----------
+    carrier_phase : LUT2d or Poly2d
+        Carrier phase, in radian, as a function of azimuth and range.
+    radar_grid : RadarGridParameters
+        Parameters for the given radar grid.
+    input_azimuth_first_line : int
+        Line index of the first sample of the block of input data with respect to the
+        origin of the full SLC scene
+    input_range_first_pixel : int
+        Pixel index of the first sample of the block of input data with respect to the
+        origin of the full SLC scene
+    conjugate : bool, optional
+        If True, get the conjugate of the phase, by default False
+    out : np.ndarray[np.complex64] | None, optional
+        The output phase array to modify. Anything in this array will be overwritten.
+        Defaults to None
+
+    Returns
+    -------
+    np.ndarray of np.complex64
+        The carrier phase, in the form of complex unit vectors. If `out` was given, this
+        will be the same array as the `out` array.
+    """
     out_array = out if out is not None else np.full(
         (radar_grid.length, radar_grid.width),
         fill_value=np.nan + 1.0j * np.nan,
@@ -103,13 +203,40 @@ def get_modulation_phase(
 
 
 def get_modulation_phase_at_coords(
-    carrier_phase: LUT2d,
+    carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     azimuth_indices: np.ndarray[np.float64],
     range_indices: np.ndarray[np.float64],
     conjugate: bool = False,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
+    """
+    Acquire the phase of the given carrier at each given index of a radar scene.
+
+    Parameters
+    ----------
+    carrier_phase : LUT2d or Poly2d
+        Carrier phase, in radian, as a function of azimuth and range.
+    radar_grid : RadarGridParameters
+        Parameters for the given radar grid.
+    azimuth_indices : np.ndarray of np.float64
+        Azimuth index of each output coordinate pixel in the given radar coordinate
+        system. Must be the same shape as phase_data_block.
+    range_indices : np.ndarray of np.float64
+        Range index of each output coordinate pixel in the given radar coordinate
+        system. Must be the same shape as phase_data_block.
+    conjugate : bool, optional
+        If True, get the conjugate of the phase, by default False
+    out : np.ndarray[np.complex64] | None, optional
+        The output phase array to modify. Anything in this array will be overwritten.
+        Defaults to None
+
+    Returns
+    -------
+    np.ndarray of np.complex64
+        The carrier phase, in the form of complex unit vectors. If `out` was given, this
+        will be the same array as the `out` array.
+    """
     error_channel = journal.error("modulate.get_modulation_phase_at_coords")
     out_array = out if out is not None else np.full(
         azimuth_indices.shape,
