@@ -879,7 +879,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "lookDirection",
                 "None",
-                "Look direction can be left or right",
+                'Look direction, either "Left" or "Right"',
             ),
             DatasetParams(
                 "missionId",
@@ -889,7 +889,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "orbitPassDirection",
                 "None",
-                "Orbit direction can be ascending or descending",
+                'Orbit direction, either "Ascending" or "Descending"',
             ),
             DatasetParams(
                 "plannedDatatakeId",
@@ -904,7 +904,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "isUrgentObservation",
                 "None",
-                "Boolean indicating if observation is nominal or urgent",
+                'Flag indicating if observation is nominal ("False") or urgent ("True")',
             ),
         ]
 
@@ -986,7 +986,8 @@ class InSARBaseWriter(h5py.File):
                 "Nominal (or) Urgent (or) Custom (or) Undefined",
             ),
             DatasetParams(
-                "radarBand", radar_band_name, "Acquired frequency band"
+                "radarBand", radar_band_name,
+                'Acquired frequency band, either "L" or "S"'
             ),
             DatasetParams(
                 "productLevel",
