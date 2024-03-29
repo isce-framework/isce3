@@ -49,19 +49,6 @@ namespace isce3 {
              * "zeroDopplerTime"
             */
 
-            // Load slant range
-            std::valarray<double> values;
-            if (isce3::io::exists(group, "slantRange")) {
-                isce3::io::loadFromH5(group, "slantRange", values);
-                proc.slantRange(values);
-            }
-
-            // Load zero Doppler time
-            if (isce3::io::exists(group, "zeroDopplerTime")) {
-                isce3::io::loadFromH5(group, "zeroDopplerTime", values);
-                proc.zeroDopplerTime(values);
-            }
-
             // Load effective velocity LUT
             isce3::core::LUT2d<double> lut;
             if (isce3::io::exists(group, "effectiveVelocity")) {
@@ -69,31 +56,52 @@ namespace isce3 {
                 proc.effectiveVelocity(lut); 
             }
 
-            // Check for existence of frequency A
-            if (isce3::io::exists(group, "frequencyA")) {
-                if (isce3::io::exists(group, "frequencyA/azimuthFMRate")) {
-                    // Load azimuth FM rate and Doppler centroid for primary frequency (A)
-                    isce3::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
-                    proc.azimuthFMRate(lut, 'A');
-                }
-                if (isce3::io::exists(group, "frequencyA/dopplerCentroid")) {
-                    isce3::core::loadCalGrid(group, "frequencyA/dopplerCentroid", lut);
-                    proc.dopplerCentroid(lut, 'A');
+            std::vector<std::string> frequencies{ "A", "B" };
+
+            for (auto frequency : frequencies) {
+
+                std::string frequency_str = "frequency" + frequency;
+                // Check for existence of given frequency group
+                if (isce3::io::exists(group, frequency_str)) {
+
+                    // Get processing information subgroup
+
+                    // First, try to read the coordinate vectors "zeroDopplerTime"
+                    // and "slantRange" from the same group as the LUT.
+                    // Check for the existence of the "zeroDopplerTime" H5 dataset in
+                    // "frequency{frequency}"
+                    if (isce3::io::exists(group, frequency_str+"/zeroDopplerTime")) {
+                        isce3::io::IGroup freqGroup = group.openGroup(frequency_str);
+                        if (isce3::io::exists(freqGroup, "azimuthFMRate")) {
+                            // Load azimuth FM rate LUT (if available)
+                            isce3::core::loadCalGrid(freqGroup, "azimuthFMRate", lut);
+                            proc.azimuthFMRate(lut, frequency[0]);
+                        }
+                        if (isce3::io::exists(freqGroup, "dopplerCentroid")) {
+                            // Load azimuth Doppler centroid LUT (if available)
+                            isce3::core::loadCalGrid(freqGroup, "dopplerCentroid", lut);
+                            proc.dopplerCentroid(lut, frequency[0]);
+                        }
+                    } 
+
+                    // If not found, read the common coordinate vectors from the parent group.
+                    // This supports legacy RSLC products (created prior to ~2020) and products
+                    // created by nonofficial tools which may not support the current spec.
+                    else {
+                        if (isce3::io::exists(group, frequency_str+"/azimuthFMRate")) {
+                            // Load azimuth FM rate LUT (if available)
+                            isce3::core::loadCalGrid(group, frequency_str+"/azimuthFMRate", lut);
+                            proc.azimuthFMRate(lut, frequency[0]);
+                        }
+                        if (isce3::io::exists(group, frequency_str+"/dopplerCentroid")) {
+                            // Load azimuth Doppler centroid LUT (if available)
+                            isce3::core::loadCalGrid(group, frequency_str+"/dopplerCentroid", lut);
+                            proc.dopplerCentroid(lut, frequency[0]);
+                        }
+                    }
                 }
             }
 
-            // Check for existence of frequency B
-            if (isce3::io::exists(group, "frequencyB")) {
-
-                if (isce3::io::exists(group, "frequencyB/azimuthFMRate")) {
-                    isce3::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
-                    proc.azimuthFMRate(lut, 'B');
-                }
-                if (isce3::io::exists(group, "frequencyA/dopplerCentroid")) {
-                    isce3::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
-                    proc.dopplerCentroid(lut, 'B');
-                }
-            }
         }
 
         /** Load Swath from HDF5

@@ -33,16 +33,6 @@ class isce3::product::ProcessingInformation {
         /** Deep assignment operator */
         inline ProcessingInformation & operator=(const ProcessingInformation & proc);
 
-        /** Get read-only slant range coordinates */
-        inline const std::valarray<double> & slantRange() const { return _slantRange; }
-        /** Set slant range coordinates */
-        inline void slantRange(const std::valarray<double> & r) { _slantRange = r; }
-
-        /** Get read-only zero Doppler time coordinates */
-        inline const std::valarray<double> & zeroDopplerTime() const { return _zeroDopplerTime; }
-        /** Set zero Doppler time coordinates */
-        inline void zeroDopplerTime(const std::valarray<double> & t) { _zeroDopplerTime = t; }
-
         /** Get read-only look-up-table for effective velocity */
         inline const isce3::core::LUT2d<double> & effectiveVelocity() const {
             return _effectiveVelocity;
@@ -82,8 +72,6 @@ class isce3::product::ProcessingInformation {
 
     private:
         // Coordinates
-        std::valarray<double> _slantRange;
-        std::valarray<double> _zeroDopplerTime;
         isce3::core::DateTime _refEpoch;
 
         // Constant look up tables
@@ -97,8 +85,7 @@ class isce3::product::ProcessingInformation {
 // Copy constructor
 /** @param[in] proc ProcessingInformation */
 isce3::product::ProcessingInformation::
-ProcessingInformation(const isce3::product::ProcessingInformation & proc) :
-                      _slantRange(proc.slantRange()), _zeroDopplerTime(proc.zeroDopplerTime()) {
+ProcessingInformation(const isce3::product::ProcessingInformation & proc) {
     for (auto const & pair : proc.azimuthFMRateMap()) {
         _azimuthFMRate[pair.first] = pair.second;
     }
@@ -112,8 +99,6 @@ ProcessingInformation(const isce3::product::ProcessingInformation & proc) :
 isce3::product::ProcessingInformation &
 isce3::product::ProcessingInformation::
 operator=(const isce3::product::ProcessingInformation & proc) {
-    _slantRange = proc.slantRange();
-    _zeroDopplerTime = proc.zeroDopplerTime();
     _effectiveVelocity = proc.effectiveVelocity();
     for (auto const & pair : proc.azimuthFMRateMap()) {
         _azimuthFMRate[pair.first] = pair.second;
