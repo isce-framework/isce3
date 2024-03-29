@@ -227,7 +227,7 @@ void GeocodePolygon<T>::getPolygonMean(
                    *rtc_raster, input_terrain_radiometry,
                    output_terrain_radiometry, rtc_area_mode,
                    rtc_algorithm, rtc_area_beta_mode,
-                   geogrid_upsampling * 2, rtc_min_value_db, radar_grid_nlooks,
+                   geogrid_upsampling * 2, rtc_min_value_db,
                    out_sigma, rtc_memory_mode, interp_method, _threshold,
                    _num_iter, _delta_range);
 

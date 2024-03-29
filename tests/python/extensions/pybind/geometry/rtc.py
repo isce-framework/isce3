@@ -51,7 +51,7 @@ def test_rtc():
 
     rtc_area_mode = isce3.geometry.RtcAreaMode.AREA_FACTOR
     rtc_area_beta_mode = isce3.geometry.RtcAreaBetaMode.AUTO
- 
+
     for radar_grid_str in radar_grid_str_list:
 
         # Open DEM raster
@@ -75,7 +75,7 @@ def test_rtc():
                 filename = './rtc_bilinear_distribution_' + radar_grid_str + '.bin'
             else:
                 filename = './rtc_area_proj_' + radar_grid_str + '.bin'
-            
+
             print('generating file:', filename)
 
             # Create output raster
@@ -90,7 +90,7 @@ def test_rtc():
                                        output_terrain_radiometry,
                                        rtc_area_mode, rtc_algorithm,
                                        rtc_area_beta_mode, geogrid_upsampling)
-                                
+
             del out_raster
 
     # check results

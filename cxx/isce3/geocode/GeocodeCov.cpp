@@ -413,8 +413,6 @@ void Geocode<T>::geocodeInterp(
             else
                 rtc_memory_mode = isce3::core::MemoryModeBlocksY::MultipleBlocksY;
 
-            int radar_grid_nlooks = 1;
-
             if (out_geo_rtc_gamma0_to_sigma0 != nullptr) {
                 std::string vsimem_ref = (
                     "/vsimem/" + getTempString("geocode_cov_areaproj_rtc_sigma0"));
@@ -435,7 +433,7 @@ void Geocode<T>::geocodeInterp(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                     rtc_geogrid_upsampling, rtc_min_value_db,
-                    radar_grid_nlooks, out_geo_rdr, out_geo_grid,
+                    out_geo_rdr, out_geo_grid,
                     rtc_sigma0_raster, rtc_memory_mode,
                     dem_interp_method, _threshold,
                     _numiter, 1.0e-8, min_block_size, max_block_size);
@@ -1952,7 +1950,7 @@ void Geocode<T>::geocodeAreaProj(
                     input_terrain_radiometry, output_terrain_radiometry,
                     rtc_area_mode, rtc_algorithm, rtc_area_beta_mode,
                     rtc_geogrid_upsampling, rtc_min_value_db,
-                    radar_grid_nlooks, out_geo_rdr, out_geo_grid,
+                    out_geo_rdr, out_geo_grid,
                     rtc_sigma0_raster, rtc_memory_mode,
                     dem_interp_method, _threshold,
                     _numiter, 1.0e-8, min_block_size, max_block_size);

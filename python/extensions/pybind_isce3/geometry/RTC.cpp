@@ -90,7 +90,7 @@ void addbinding_apply_rtc(pybind11::module& m)
             py::arg("abs_cal_factor") = 1,
             py::arg("clip_min") = std::numeric_limits<float>::quiet_NaN(),
             py::arg("clip_max") = std::numeric_limits<float>::quiet_NaN(),
-            py::arg("radar_grid_nlooks") = 1, py::arg("out_sigma") = nullptr,
+            py::arg("out_sigma") = nullptr,
             py::arg("input_rtc") = nullptr, py::arg("output_rtc") = nullptr,
             py::arg("rtc_memory_mode") =
                     isce3::core::MemoryModeBlocksY::AutoBlocksY,
@@ -137,9 +137,6 @@ void addbinding_apply_rtc(pybind11::module& m)
                   Clip minimum output values
               clip_max : float, optional
                   Clip maximum output values
-              radar_grid_nlooks : float, optional
-                  Radar grid number of looks. This parameters determines
-                  the multilooking factor used to compute out_nlooks.
               out_sigma : isce3.io.Raster, optional
                   Output sigma surface area (rtc_area_mode = AREA) or area
                   factor (rtc_area_mode = AREA_FACTOR) raster
@@ -162,7 +159,7 @@ void addbinding_compute_rtc(pybind11::module& m)
                     isce3::io::Raster&, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, rtcAreaMode,
                     rtcAlgorithm, rtcAreaBetaMode,
-                    double, float, float, isce3::io::Raster*,
+                    double, float, isce3::io::Raster*,
                     isce3::core::MemoryModeBlocksY,
                     isce3::core::dataInterpMethod, double, int, double,
                     const long long, const long long>(
@@ -182,7 +179,7 @@ void addbinding_compute_rtc(pybind11::module& m)
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
                     std::numeric_limits<float>::quiet_NaN(),
-            py::arg("radar_grid_nlooks") = 1, py::arg("out_sigma") = nullptr,
+            py::arg("out_sigma") = nullptr,
             py::arg("rtc_memory_mode") =
                     isce3::core::MemoryModeBlocksY::AutoBlocksY,
             py::arg("interp_method") =
@@ -224,9 +221,6 @@ void addbinding_compute_rtc(pybind11::module& m)
              rtc_min_value_db : float, optional
                  Minimum value for the RTC area factor. Radar
               data with RTC area factor below this limit are ignored.
-             radar_grid_nlooks : float, optional
-                 Radar grid number of looks. This
-                 parameters determines the multilooking factor used to compute out_nlooks.
              out_sigma : isce3.io.Raster, optional
                  Output sigma surface area (rtc_area_mode = AREA) or area
                  factor (rtc_area_mode = AREA_FACTOR) raster
@@ -259,7 +253,7 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     const int, const int, rtcInputTerrainRadiometry,
                     rtcOutputTerrainRadiometry, rtcAreaMode,
                     rtcAlgorithm, rtcAreaBetaMode,
-                    double, float, float, isce3::io::Raster*,
+                    double, float, isce3::io::Raster*,
                     isce3::io::Raster*, isce3::io::Raster*,
                     isce3::core::MemoryModeBlocksY,
                     isce3::core::dataInterpMethod, double, int, double,
@@ -283,7 +277,7 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
                     std::numeric_limits<double>::quiet_NaN(),
             py::arg("rtc_min_value_db") =
                     std::numeric_limits<float>::quiet_NaN(),
-            py::arg("radar_grid_nlooks") = 1, py::arg("out_geo_rdr") = nullptr,
+            py::arg("out_geo_rdr") = nullptr,
             py::arg("out_geo_grid") = nullptr, py::arg("out_sigma") = nullptr,
             py::arg("rtc_memory_mode") =
                     isce3::core::MemoryModeBlocksY::AutoBlocksY,
@@ -340,9 +334,6 @@ void addbinding_compute_rtc_bbox(pybind11::module& m)
              rtc_min_value_db : float, optional
                  Minimum value for the RTC area factor. Radar
               data with RTC area factor below this limit are ignored.
-             radar_grid_nlooks : float, optional
-                 Radar grid number of looks. This
-                 parameters determines the multilooking factor used to compute out_nlooks.
              out_geo_rdr : isce3.io.Raster, optional
                  Raster to which the radar-grid positions
                  (range and azimuth) of the geogrid pixels vertices will be saved (output).
