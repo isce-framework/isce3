@@ -10,9 +10,6 @@ import datetime
 from dateutil.parser import isoparse
 import time
 
-import decimal
-import shutil
-from scipy.interpolate import interp2d
 import isce3
 
 from shapely import wkt
@@ -38,6 +35,7 @@ SPEED_OF_LIGHT = 299792458.0
 ALL_POLARIZATIONS_SET = set(['HH', 'HV', 'VV', 'VH', 'RH', 'RV'])
 CALIBRATION_FIELD_LIST = ['elevationAntennaPattern', 'nes0']
 
+
 def parse_args():
     '''
     Command line parser.
@@ -57,7 +55,8 @@ def parse_args():
                         dest='last_line', type=int,
                         help="Last azimuth line to unpack")
     parser.add_argument('-o', '--outh5', dest='outh5', type=str,
-                        help="Name of output file. If not provided, will be determined from ALOS-2 granule")
+                        help="Name of output file. If not provided, will be"
+                             " determined from ALOS-2 granule")
 
     parser_template = parser.add_mutually_exclusive_group()
     parser_template.add_argument('-t'
@@ -74,9 +73,9 @@ def parse_args():
                                  default=None)
     parser_template.add_argument('--no-template',
                                  '--do-not-use-template',
-                                dest='flag_use_template',
-                                action='store_false',
-                                help='Prevent using template L1 RSLC file')
+                                 dest='flag_use_template',
+                                 action='store_false',
+                                 help='Prevent using template L1 RSLC file')
 
     parser_verbose = parser.add_mutually_exclusive_group()
     parser_verbose.add_argument('-q',
@@ -200,7 +199,7 @@ def parse_leader_file(filenames, args):
         ldr = LeaderFile.LeaderFile(filenames['leaderfile'])
     except AssertionError as msg:
         print(msg)
-        raise AssertionError('Error parsing ALOS raw leader file: {0}'.format(filenames['leaderfile']))
+        raise AssertionError('Error parsing ALOS-2 L1.1 leader file: {0}'.format(filenames['leaderfile']))
 
     # Checks to ensure that the number of polarizations is consistent
     numpol = len(filenames) - 2 # Subtract leader and defaulth5 name
@@ -238,21 +237,22 @@ def construct_nisar_hdf5(outh5, ldr):
     ident_group.create_dataset('frameNumber', data=np.uint16(0))
 
     # Start populating metadata parts
-    rslc = lsar_group.create_group('SLC')
+    rslc = lsar_group.create_group('RSLC')
     rslc.create_group('metadata/processingInformation/inputs')
 
     # Start populating metadata
-    orbit_group = rslc.create_group('metadata/orbit', overwrite = True)
+    orbit_group = rslc.create_group('metadata/orbit', overwrite=True)
     attitude_group = rslc.create_group('metadata/attitude')
     orbit = get_alos_orbit(ldr)
     set_h5_orbit(orbit_group, orbit)
     getset_attitude(attitude_group, ldr, orbit)
 
-    del root_group['//science/LSAR/SLC/swaths/frequencyB']
-    del root_group['//science/LSAR/SLC/metadata/calibrationInformation/'
+    del root_group['//science/LSAR/RSLC/swaths/frequencyB']
+    del root_group['//science/LSAR/RSLC/metadata/calibrationInformation/'
                    'frequencyB']
 
     return orbit
+
 
 def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
                 flag_first_image):
@@ -263,7 +263,7 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
     verbose = args.verbose
 
     fid = h5py.File(args.outh5, 'r+')
-    assert(len(pol) == 2)
+    assert len(pol) == 2
 
     root_group = H5pyGroupWrapper(fid)
 
@@ -278,10 +278,11 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
     da = ldr.summary.LineSpacingInm
     bytesperpixel = (image.description.NumberOfBytesPerDataGroup //
                      image.description.NumberOfSamplesPerDataGroup)
-    width = (image.description.NumberOfBytesOfSARDataPerRecord // bytesperpixel) // image.description.NumberOfSamplesPerDataGroup
+    width = (image.description.NumberOfBytesOfSARDataPerRecord //
+             bytesperpixel) // image.description.NumberOfSamplesPerDataGroup
     length = image.description.NumberOfSARDataRecords
 
-    freq_str = '/science/LSAR/SLC/swaths/frequencyA'
+    freq_str = '/science/LSAR/RSLC/swaths/frequencyA'
 
     calibration_factor_db = ldr.calibration.header.CalibrationFactor - 32
     calibration_factor = np.sqrt(10.0**(calibration_factor_db/10))
@@ -293,7 +294,7 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
 
     # If this is first pol being written, add common information as well
     if flag_first_image:
-        freq_group = root_group.create_group(freq_str, overwrite = True)
+        freq_group = root_group.create_group(freq_str, overwrite=True)
         wavelength = ldr.summary.RadarWavelengthInm
         freq_group.create_dataset('centerFrequency', data=SPEED_OF_LIGHT / wavelength)
 
@@ -303,11 +304,15 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
         freq_group.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
         freq_group.create_dataset('chirpSlope', data=-((freq_group['rangeBandwidth'][()])/(freq_group['chirpDuration'][()])))
 
+        # The variable `ldr.summary.NominalPRFInmHz` has more significant digits
+        # but may not be more correct
+        # prf = ldr.summary.NominalPRFInmHz * 1.0e-3
         prf = firstrec.PRFInmHz * 1.0e-3
+
         freq_group.create_dataset('nominalAcquisitionPRF', data=prf)
 
-        assert(ldr.summary.SensorIDAndMode[7] == 'R' or
-               ldr.summary.SensorIDAndMode[7] == 'L')
+        assert (ldr.summary.SensorIDAndMode[7] == 'R' or
+                ldr.summary.SensorIDAndMode[7] == 'L')
 
         metadata['Center Wavelength'] = wavelength
         metadata['Bandwidth'] = bandwidth
@@ -365,7 +370,7 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata,
         freq_group.create_dataset('validSamplesSubSwath1', dtype='i8',
                                   data=np.tile([0, width], (length, 1)))
 
-        metadata['Mission'] = 'ALOS'
+        metadata['Mission'] = 'ALOS-2'
         metadata['Image Starting Range'] = r0
         metadata['Range Spacing per Bin'] = dr
         metadata['SLC width'] = width
@@ -473,7 +478,7 @@ def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A',
         not_processed_pol = ALL_POLARIZATIONS_SET - pol_set
         for pol in not_processed_pol:
             for field in CALIBRATION_FIELD_LIST:
-                key = ('//science/LSAR/SLC/metadata/calibrationInformation/'
+                key = ('//science/LSAR/RSLC/metadata/calibrationInformation/'
                        f'frequencyA/{pol}/{field}')
                 del root_group[key]
 
@@ -493,11 +498,11 @@ def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A',
 
 def update_metadata(fid, metadata, pol_list, frequency='A'):
     """
-    Update radar metadata. This function mainly interfaces with the science/LSAR/SLC/swaths
+    Update radar metadata. This function mainly interfaces with the science/LSAR/RSLC/swaths
     group to set the right scalar parameters.
     """
     # Open the correct frequency swath group
-    group = fid['science/LSAR/SLC/swaths/frequency' + frequency]
+    group = fid['science/LSAR/RSLC/swaths/frequency' + frequency]
 
     # Update polarization list
     group['listOfPolarizations'] = np.array(pol_list, dtype='S2')
@@ -544,7 +549,7 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
 
     # Create array of azimuth times
     if frequency == 'A':
-        group = fid['science/LSAR/SLC/swaths']
+        group = fid['science/LSAR/RSLC/swaths']
         pri = metadata['Average Pulse Repetition Interval']
         ref_epoch = metadata['ref_epoch']
         t0 = (metadata['Start Time of Acquisition'] - ref_epoch).total_seconds()
@@ -636,7 +641,7 @@ def update_doppler(fid, metadata, frequency):  # time, position, velocity,
     Update HDF5 file for Doppler, FM rate, and effective velocity.
     """
     # Get doppler group from metadata
-    parameters = 'science/LSAR/SLC/metadata/processingInformation/parameters'
+    parameters = 'science/LSAR/RSLC/metadata/processingInformation/parameters'
     if parameters not in fid:
         pgroup = fid.create_group(parameters)
     else:

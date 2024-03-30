@@ -78,7 +78,6 @@ class ImageFile(object):
         '''
         Read the next line from file.
         '''
-        # from isce3.parsers.CEOS.SignalDataRecordType import SignalDataRecordType
         from isce3.stripmap.readers.l1.ALOS2.CEOS.SignalDataRecordType import SignalDataRecordType
 
         #Create record type with information from description
