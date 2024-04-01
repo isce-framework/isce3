@@ -29,13 +29,16 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  * parameters for the given radar grid corresponding to the output block.
  * @param[in] conjugate
  * if true, get the conjugate of the phase.
+ * @param[in] fill_value
+ * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void getModulationPhase(
     ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 );
 
 
@@ -62,6 +65,8 @@ void getModulationPhase(
  * unit: range column indices (int)
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
+ * @param[in] fill_value
+ * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void _getModulationPhaseAtCoords(
@@ -70,7 +75,8 @@ void _getModulationPhaseAtCoords(
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
     const ConstArrayRef2D<double> range_indices,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 );
 
 
@@ -87,13 +93,16 @@ void _getModulationPhaseAtCoords(
  * parameters for the given radar grid corresponding to `slc_data_block`.
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
+ * @param[in] fill_value
+ * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void modulate(
     ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 );
 
 
@@ -121,6 +130,8 @@ void modulate(
  * unit: range column indices (int)
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
+ * @param[in] fill_value
+ * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void _modulateAtCoords(
@@ -129,7 +140,8 @@ void _modulateAtCoords(
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
     const ConstArrayRef2D<double> range_indices,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 );
 
 } // namespace isce3::image::modulate

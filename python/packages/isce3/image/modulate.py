@@ -19,6 +19,7 @@ def modulate(
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     conjugate: bool = False,
+    fill_value: np.complex64 = np.nan + 1.j * np.nan,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
@@ -35,6 +36,8 @@ def modulate(
         Parameters for the given radar grid corresponding to `slc_data_block`.
     conjugate : bool, optional
         If True, modulate the conjugate of the phase, by default False
+    fill_value: complex
+        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
     out : np.ndarray of np.complex64 | None, optional
         The array to output data to, or None. If given, must be the same size as
         slc_data_block. Any contents of this array will he overwritten, by default None
@@ -57,6 +60,7 @@ def modulate(
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         conjugate=conjugate,
+        fill_value=fill_value,
     )
     
     return out_array
@@ -69,6 +73,7 @@ def modulate_at_coords(
     azimuth_indices: np.ndarray[np.float64],
     range_indices: np.ndarray[np.float64],
     conjugate: bool = False,
+    fill_value: np.complex64 = np.nan + 1.j * np.nan,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
@@ -92,6 +97,8 @@ def modulate_at_coords(
         system. Must be the same shape as phase_data_block.
     conjugate : bool, optional
         If True, modulate the conjugate of the phase, by default False
+    fill_value: complex
+        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
     out : np.ndarray of np.complex64 | None, optional
         The array to output data to, or None. If given, must be the same size as
         slc_data_block. Any contents of this array will he overwritten, by default None
@@ -134,6 +141,7 @@ def modulate_at_coords(
         azimuth_indices=azimuth_indices,
         range_indices=range_indices,
         conjugate=conjugate,
+        fill_value=fill_value,
     )
     
     return out_array
@@ -143,6 +151,7 @@ def get_modulation_phase(
     carrier_phase: LUT2d | Poly2d,
     radar_grid: RadarGridParameters,
     conjugate: bool = False,
+    fill_value: np.complex64 = np.nan + 1.j * np.nan,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
@@ -156,6 +165,8 @@ def get_modulation_phase(
         Parameters for the given radar grid corresponding to the output block.
     conjugate : bool, optional
         If True, get the conjugate of the phase, by default False
+    fill_value: complex
+        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
     out : np.ndarray[np.complex64] | None, optional
         The output phase array to modify. Anything in this array will be overwritten.
         Defaults to None
@@ -177,6 +188,7 @@ def get_modulation_phase(
         carrier_phase=carrier_phase,
         radar_grid=radar_grid,
         conjugate=conjugate,
+        fill_value=fill_value,
     )
     
     return out_array
@@ -188,6 +200,7 @@ def get_modulation_phase_at_coords(
     azimuth_indices: np.ndarray[np.float64],
     range_indices: np.ndarray[np.float64],
     conjugate: bool = False,
+    fill_value: np.complex64 = np.nan + 1.j * np.nan,
     out: np.ndarray[np.complex64] | None = None,
 ) -> np.ndarray[np.complex64]:
     """
@@ -207,6 +220,8 @@ def get_modulation_phase_at_coords(
         system. Must be the same shape as phase_data_block.
     conjugate : bool, optional
         If True, get the conjugate of the phase, by default False
+    fill_value: complex
+        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
     out : np.ndarray[np.complex64] | None, optional
         The output phase array to modify. Anything in this array will be overwritten.
         Defaults to None
@@ -247,6 +262,7 @@ def get_modulation_phase_at_coords(
         azimuth_indices=azimuth_indices,
         range_indices=range_indices,
         conjugate=conjugate,
+        fill_value=fill_value,
     )
     
     return out_array

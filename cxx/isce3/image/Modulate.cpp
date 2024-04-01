@@ -34,7 +34,8 @@ void getModulationPhase(
     ArrayRef2D<std::complex<float>> out,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 )
 {
     // unit: azimuth row indices (int)
@@ -55,6 +56,7 @@ void getModulationPhase(
                     rg_index * radar_grid.rangePixelSpacing();
 
             if(not carrier_phase.contains(azimuth, range)){
+                out(az_index, rg_index) = fill_value;
                 continue;
             }
             
@@ -77,7 +79,8 @@ void _getModulationPhaseAtCoords(
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
     const ConstArrayRef2D<double> range_indices,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 )
 {
     const size_t outWidth = out.cols();
@@ -101,6 +104,7 @@ void _getModulationPhaseAtCoords(
                 radar_grid.rangePixelSpacing();
 
             if(not carrier_phase.contains(azimuth, range)){
+                out(az_index, rg_index) = fill_value;
                 continue;
             }
             
@@ -121,7 +125,8 @@ void modulate(
     ArrayRef2D<std::complex<float>> slc_data_block,
     const AzRgFunc& carrier_phase,
     const isce3::product::RadarGridParameters& radar_grid,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 )
 {
     // unit: azimuth row indices (int)
@@ -142,6 +147,7 @@ void modulate(
                     rg_index * radar_grid.rangePixelSpacing();
 
             if(not carrier_phase.contains(azimuth, range)){
+                slc_data_block(az_index, rg_index) = fill_value;
                 continue;
             }
             
@@ -164,7 +170,8 @@ void _modulateAtCoords(
     const isce3::product::RadarGridParameters& radar_grid,
     const ConstArrayRef2D<double> azimuth_indices,
     const ConstArrayRef2D<double> range_indices,
-    const bool conjugate
+    const bool conjugate,
+    const std::complex<float> fill_value
 )
 {
     const size_t outWidth = slc_data_block.cols();
@@ -188,6 +195,7 @@ void _modulateAtCoords(
                 radar_grid.rangePixelSpacing();
 
             if(not carrier_phase.contains(azimuth, range)){
+                slc_data_block(az_index, rg_index) = fill_value;
                 continue;
             }
 
@@ -208,7 +216,8 @@ template void getModulationPhase(                                             \
     ArrayRef2D<std::complex<float>> out,                                      \
     const AzRgFunc& carrier_phase,                                            \
     const isce3::product::RadarGridParameters& radar_grid,                    \
-    const bool conjugate                                                      \
+    const bool conjugate,                                                     \
+    const std::complex<float> fill_value                                      \
 );                                                                            \
 template void _getModulationPhaseAtCoords(                                    \
     ArrayRef2D<std::complex<float>> out,                                      \
@@ -216,13 +225,15 @@ template void _getModulationPhaseAtCoords(                                    \
     const isce3::product::RadarGridParameters& radar_grid,                    \
     const ConstArrayRef2D<double> azimuth_indices,                            \
     const ConstArrayRef2D<double> range_indices,                              \
-    const bool conjugate                                                      \
+    const bool conjugate,                                                     \
+    const std::complex<float> fill_value                                      \
 );                                                                            \
 template void modulate(                                                       \
     ArrayRef2D<std::complex<float>> slc_data_block,                           \
     const AzRgFunc& carrier_phase,                                            \
     const isce3::product::RadarGridParameters& radar_grid,                    \
-    const bool conjugate                                                      \
+    const bool conjugate,                                                     \
+    const std::complex<float> fill_value                                      \
 );                                                                            \
 template void _modulateAtCoords(                                              \
     ArrayRef2D<std::complex<float>> slc_data_block,                           \
@@ -230,7 +241,8 @@ template void _modulateAtCoords(                                              \
     const isce3::product::RadarGridParameters& radar_grid,                    \
     const ConstArrayRef2D<double> azimuth_indices,                            \
     const ConstArrayRef2D<double> range_indices,                              \
-    const bool conjugate                                                      \
+    const bool conjugate,                                                     \
+    const std::complex<float> fill_value                                      \
 )
 EXPLICIT_INSTANTIATION(isce3::core::LUT2d<double>);
 EXPLICIT_INSTANTIATION(isce3::core::Poly2d);

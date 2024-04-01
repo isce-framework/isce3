@@ -22,12 +22,16 @@ void addbindings_modulate(py::module & m)
             isce3::image::modulate::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
             const isce3::product::RadarGridParameters&,
-            const bool
+            const bool,
+            const std::complex<float>
         >(&isce3::image::modulate::getModulationPhase<AzRgFunc>),
         py::arg("out"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("conjugate"),
+        py::arg("fill_value") =
+            std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
+                                std::numeric_limits<float>::quiet_NaN()),
         R"(
         Acquire the phase of the given carrier of a radar scene.
 
@@ -42,6 +46,8 @@ void addbindings_modulate(py::module & m)
             Parameters for the given radar grid.
         conjugate: bool
             If True, get the conjugate of the phase.
+        fill_value: complex
+            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
         )"
     );
 
@@ -54,7 +60,8 @@ void addbindings_modulate(py::module & m)
             const isce3::product::RadarGridParameters&,
             const isce3::image::modulate::ArrayRefConst2D<double>,
             const isce3::image::modulate::ArrayRefConst2D<double>,
-            const bool
+            const bool,
+            const std::complex<float>
         >(&isce3::image::modulate::_getModulationPhaseAtCoords<AzRgFunc>),
         py::arg("out"),
         py::arg("carrier_phase"),
@@ -62,6 +69,9 @@ void addbindings_modulate(py::module & m)
         py::arg("azimuth_indices"),
         py::arg("range_indices"),
         py::arg("conjugate"),
+        py::arg("fill_value") =
+            std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
+                                std::numeric_limits<float>::quiet_NaN()),
         R"(
         Acquire the phase of the given carrier at each given index of a radar scene.
 
@@ -82,6 +92,8 @@ void addbindings_modulate(py::module & m)
             system. Must be the same shape as phase_data_block.
         conjugate: bool
             If True, get the conjugate of the phase.
+        fill_value: complex
+            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
         )"
     );
 
@@ -92,12 +104,16 @@ void addbindings_modulate(py::module & m)
             isce3::image::modulate::ArrayRef2D<std::complex<float>>,
             const AzRgFunc&,
             const isce3::product::RadarGridParameters&,
-            const bool
+            const bool,
+            const std::complex<float>
         >(&isce3::image::modulate::modulate<AzRgFunc>),
         py::arg("slc_data_block"),
         py::arg("carrier_phase"),
         py::arg("radar_grid"),
         py::arg("conjugate"),
+        py::arg("fill_value") =
+            std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
+                                std::numeric_limits<float>::quiet_NaN()),
         R"(
         Evaluate and modulate or demodulate the phase carrier onto the given SLC data
         block.
@@ -113,6 +129,8 @@ void addbindings_modulate(py::module & m)
             Parameters for the given radar grid.
         conjugate: bool, optional
             If True, modulate the conjugate of the phase.
+        fill_value: complex
+            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
         )"
     );
 
@@ -125,7 +143,8 @@ void addbindings_modulate(py::module & m)
             const isce3::product::RadarGridParameters&,
             const isce3::image::modulate::ArrayRefConst2D<double>,
             const isce3::image::modulate::ArrayRefConst2D<double>,
-            const bool
+            const bool,
+            const std::complex<float>
         >(&isce3::image::modulate::_modulateAtCoords<AzRgFunc>),
         py::arg("slc_data_block"),
         py::arg("carrier_phase"),
@@ -133,6 +152,9 @@ void addbindings_modulate(py::module & m)
         py::arg("azimuth_indices"),
         py::arg("range_indices"),
         py::arg("conjugate"),
+        py::arg("fill_value") =
+            std::complex<float>(std::numeric_limits<float>::quiet_NaN(),
+                                std::numeric_limits<float>::quiet_NaN()),
         R"(
         Evaluate and modulate or demodulate the phase carrier onto the given SLC data
         block at the given indices.
@@ -154,6 +176,8 @@ void addbindings_modulate(py::module & m)
             system. Must be the same shape as phase_data_block.
         conjugate: bool, optional
             If True, modulate the conjugate of the phase.
+        fill_value: complex
+            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
         )"
     );
 }
