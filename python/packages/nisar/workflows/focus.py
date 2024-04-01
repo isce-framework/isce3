@@ -1396,6 +1396,56 @@ def reduce_swath_parameters(rawlist: list[Raw],
     return min(prfs), max(bandwidths), max(center_freqs)
 
 
+def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
+    """
+    Get the output RSLC range spacing associated with each subband.  The
+    spacings will be chosen from among the range spacings in the input L0B data.
+
+    For example, if we do mixed mode processing of 20+5 and 40+5 data then the
+    common mode will be 20+5 and the returned range spacings will be the same as
+    the 20+5 L0B data.
+
+    Usually NISAR data are oversampled by a factor of 1.2, but this is not the
+    case for 77 MHz modes and may not be the case for other sensors.
+
+    Parameters
+    ----------
+    rawlist : list[Raw]
+        List of input L0B product readers.
+    common_mode : PolChannelSet
+        Set of PolChannel objects that will be generated in the RSLC.
+
+    Returns
+    -------
+    range_spacings : dict[str, float]
+        Range spacing in m for each subband.
+    """
+    # Get a PolChannel associated with the largest output bandwidth, e.g., a
+    # 20 MHz channel if we're generating 20+5 output.
+    big_channel = max(common_mode, key = lambda channel: channel.band.width)
+    # ... and smallest bandwidth
+    small_channel = min(common_mode, key = lambda channel: channel.band.width)
+    # (These will be the same if there's no secondary band).
+
+    range_spacings = dict()
+    for channel in (small_channel, big_channel):
+        # Find the raw data PolChannels associated with that output, e.g.,
+        # corresponding to [20, 40, 20] MHz bands.
+        raw_spacings = []
+        for raw in rawlist:
+            raw_channel = find_overlapping_channel(raw, big_channel)
+            freq, tx = raw_channel.freq_id, raw_channel.pol[0]
+            # Get the range spacing (sample rate) for the associated raw data.
+            raw_spacings.append(raw.getRanges(freq, tx).spacing)
+
+        # We're filtering everything down to the coarsest mode, so return the
+        # max of these spacings, e.g., the one for bw=20 MHz
+        # (where usually fs=24 MHz).
+        range_spacings[channel.freq_id] = max(raw_spacings)
+
+    return range_spacings
+
+
 def focus(runconfig, runconfig_path=""):
     # Strip off two leading namespaces.
     cfg = runconfig.runconfig.groups
@@ -1442,8 +1492,8 @@ def focus(runconfig, runconfig_path=""):
     fc_ref, dop_ref = make_doppler(cfg, epoch=grid_epoch)
 
     max_chirplen = get_max_chirp_duration(cfg) * isce3.core.speed_of_light / 2
-    max_bandwidth = max([channel.band.width for channel in common_mode])
-    dr = isce3.core.speed_of_light / (2 * 1.2 * max_bandwidth)
+    range_spacings = get_output_range_spacings(rawlist, common_mode)
+    dr = min(range_spacings.values())
     max_prf = get_max_prf(rawlist)
     side = require_constant_look_side(rawlist)
     ref_grid = make_output_grid(cfg, grid_epoch, t0, t1, max_prf, r0, r1, dr,
@@ -1454,7 +1504,7 @@ def focus(runconfig, runconfig_path=""):
     for frequency, band in get_bands(common_mode).items():
         # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B for NISAR.
-        rskip = int(np.round(max_bandwidth / band.width))
+        rskip = int(np.round(range_spacings[frequency] / dr))
         ogrid[frequency] = ref_grid[:, ::rskip]
         ogrid[frequency].wavelength = isce3.core.speed_of_light / band.center
         log.info("Output grid %s is %s", frequency, ogrid[frequency])
