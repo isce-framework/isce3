@@ -53,6 +53,10 @@ void getModulationPhase(
             // unit: distance (meters)
             const double range = radar_grid.startingRange() +
                     rg_index * radar_grid.rangePixelSpacing();
+
+            if(not carrier_phase.contains(azimuth, range)){
+                continue;
+            }
             
             // Get the carrier unit phasor for this pixel
             const auto phasor = _getPixelCarrierPhase(
@@ -95,6 +99,10 @@ void _getModulationPhaseAtCoords(
             // Slant Range at the current output pixel
             const double range = radar_grid.startingRange() + rg_carrier_index *
                 radar_grid.rangePixelSpacing();
+
+            if(not carrier_phase.contains(azimuth, range)){
+                continue;
+            }
             
             // Get the carrier phasor for this pixel
             const auto phasor = _getPixelCarrierPhase(
@@ -132,6 +140,10 @@ void modulate(
             // unit: distance (meters)
             const double range = radar_grid.startingRange() +
                     rg_index * radar_grid.rangePixelSpacing();
+
+            if(not carrier_phase.contains(azimuth, range)){
+                continue;
+            }
             
             // Get the carrier phasor for this pixel
             const auto phasor = _getPixelCarrierPhase(
@@ -174,7 +186,11 @@ void _modulateAtCoords(
             // Slant Range at the current output pixel
             const double range = radar_grid.startingRange() + rg_carrier_index *
                 radar_grid.rangePixelSpacing();
-            
+
+            if(not carrier_phase.contains(azimuth, range)){
+                continue;
+            }
+
             // Get the carrier phasor for this pixel
             const auto phasor = _getPixelCarrierPhase(
                 azimuth, range, carrier_phase, conjugate

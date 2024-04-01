@@ -72,6 +72,17 @@ public:
     /**Get coefficient by indices*/
     inline double getCoeff(int row, int col) const;
 
+    /**
+     * Check if point resides in domain of Poly2d. Added for interoperability with
+     * LUT2d, but always assumed to be true.
+     */
+    inline bool contains(double y, double x) const {
+        if (std::isnan(y) || std::isnan(x)){
+            return false;
+        }
+        return true;
+    }
+
     /**Evaluate polynomial at given y/azimuth/row ,x/range/col*/
     double eval(double y, double x) const;
 
