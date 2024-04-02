@@ -83,20 +83,16 @@ class TestModulate:
         self, frequency: float, function: str, conjugate: bool
     ) -> tuple[np.ndarray[np.complex64], np.ndarray[np.complex64]]:
         """
-        Tests the Resample SLC V2 on a randomly distributed target signal.
-
-        This test is designed to assess if Resample SLC works for a reasonably educated
-        attempt at a realistic input signal. Fail cases caught by this test include all
-        those tested for in the sinusoidal test, but using a more rigorous and
-        complicated secondary signal.
-
-        This test also tests the zero-doppler case as well as a set of several doppler
-        frequencies as provided by the frequency fixture.
+        Tests the four carrier phase acquisition/modulation functions.
 
         Fixtures
-        ----------
+        --------
         frequency : float
-            A doppler frequency for this test, in Hz.
+            A carrier frequency for this test, in Hz.
+        function : str
+            The name of the function to test.
+        conjugate : bool
+            If True, conjugate the output signal; else do not.
         """
         # The size of the generated image.
         az_length = 100
@@ -122,20 +118,26 @@ class TestModulate:
             frequency=frequency,
         )
 
-        # This will hold the output of the function
-        signal = np.full(
-            (az_length, rg_width),
-            fill_value=1. + 0.j,
-            dtype=np.complex64,
-        )
-
         # This will hold the actual expected value
         doppler_ramp_complex: np.ndarray[np.complex64]
 
+        # All of the functions call for a radar grid, carrier phase, and conjugate bool.
+        # Begin putting together a set of keyword arguments, since the function
+        # signatures are all very similar.
+        kwargs = {
+            "radar_grid": radar_grid,
+            "carrier_phase": lut,
+            "conjugate": conjugate
+        }
+
+        # This will hold the signal that is output from the function.
+        signal: np.ndarray[np.complex64]
+
         # Perform the interpolation.
         if function in ["get_modulation_phase", "modulate"]:
-            
-            # Create the expected output signal
+
+            # Create the expected output signal. For this test, a simple doppler ramp
+            # is the output.
             doppler_ramp_complex = signal * generate_doppler_ramp_complex(
                 grid_params=radar_grid,
                 az_indices=np.arange(az_length),
@@ -144,19 +146,17 @@ class TestModulate:
 
             # Run the selected function
             if function == "get_modulation_phase":
-                signal = get_modulation_phase(
-                    carrier_phase=lut,
-                    radar_grid=radar_grid,
-                    conjugate=conjugate,
-                )
-
+                signal = get_modulation_phase(**kwargs)
             elif function == "modulate":
-                signal = modulate(
-                    slc_data_block=signal,
-                    carrier_phase=lut,
-                    radar_grid=radar_grid,
-                    conjugate=conjugate,
+                # A dummy SLC of 1 + 0j to modulate - this will give the carrier
+                # phase.
+                input_slc = np.full(
+                    (az_length, rg_width),
+                    fill_value=1. + 0.j,
+                    dtype=np.complex64,
                 )
+                kwargs["slc_data_block"] = input_slc
+                signal = modulate(**kwargs)
 
         elif function in ["get_modulation_phase_at_coords", "modulate_at_coords"]:
             # Set the offsets at random positions with a range of -1.5 to 1.5 with a
@@ -171,31 +171,35 @@ class TestModulate:
             azimuth_indices = np.array(az_offsets + rows, dtype=np.float64)
             range_indices = np.array(rg_offsets + cols, dtype=np.float64)
 
-            # Create the expected output signal
+            # Create the expected output signal. For this test, a simple doppler ramp
+            # is the output.
             doppler_ramp_complex = generate_doppler_ramp_complex(
                 grid_params=radar_grid,
                 az_indices=azimuth_indices,
                 doppler_frequency=frequency,
             )
 
+            # the "at_coords" functions require a set of azimuth and range indices to
+            # evaluate at.
+            kwargs["azimuth_indices"] = azimuth_indices
+            kwargs["range_indices"] = range_indices
+
             # Run the selected function
             if function == "get_modulation_phase_at_coords":
-                signal = get_modulation_phase_at_coords(
-                    carrier_phase=lut,
-                    radar_grid=radar_grid,
-                    azimuth_indices=azimuth_indices,
-                    range_indices=range_indices,
-                    conjugate=conjugate,
-                )
+                signal = get_modulation_phase_at_coords(**kwargs)
             elif function == "modulate_at_coords":
-                signal = modulate_at_coords(
-                    slc_data_block=signal,
-                    carrier_phase=lut,
-                    radar_grid=radar_grid,
-                    azimuth_indices=azimuth_indices,
-                    range_indices=range_indices,
-                    conjugate=conjugate,
+                # A dummy SLC of 1 + 0j to modulate - this will give the carrier
+                # phase.
+                input_slc = np.full(
+                    (az_length, rg_width),
+                    fill_value=1. + 0.j,
+                    dtype=np.complex64,
                 )
+                kwargs["slc_data_block"] = input_slc
+                signal = modulate_at_coords(**kwargs)
+
+        # If conjugate was true, the ground-truth array is currently the conjugate
+        # of the output array (we hope) and must be conjugated for validation.
         if conjugate:
             doppler_ramp_complex = np.conjugate(doppler_ramp_complex)
 
