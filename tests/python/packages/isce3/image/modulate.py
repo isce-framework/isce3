@@ -205,6 +205,9 @@ class TestModulate:
 
         try:
             # Validate the generated data against the true data.
+            # The correlation is expected to be very high and the standard deviation
+            # very low. The percentage of NaN values will be variable depending on
+            # offset distance for the "at_coords" functions and zero for the others.
             validate_test_results(
                 test_arr=signal,
                 true_arr=doppler_ramp_complex,
@@ -217,6 +220,9 @@ class TestModulate:
                 rg_offset=0,
             )
         except AssertionError as err:
-            err.add_note(function)
+            # If an error is caught in the validation function, add some clarifying
+            # notes for readability.
+            err.add_note(f"function: {function}")
             err.add_note(f"frequency: {frequency}")
+            err.add_note(f"conjugate: {conjugate}")
             raise err
