@@ -47,7 +47,10 @@ void addbindings_modulate(py::module & m)
         conjugate: bool
             If True, get the conjugate of the phase.
         fill_value: complex
-            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+            The value to fill out-of-bounds pixels with. Out-of-bounds pixels are
+            defined here as any pixels that cannot be evaluated by the carrier_phase
+            function. Poly2d functions do not have out-of-bounds pixels, but LUT2d
+            functions may. Defaults to NaN + j*NaN.
         )"
     );
 
@@ -93,7 +96,10 @@ void addbindings_modulate(py::module & m)
         conjugate: bool
             If True, get the conjugate of the phase.
         fill_value: complex
-            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+            The value to fill out-of-bounds pixels with. Out-of-bounds pixels are
+            defined here as any pixels that cannot be evaluated by the carrier_phase
+            function. Poly2d functions do not have out-of-bounds pixels, but LUT2d
+            functions may. Defaults to NaN + j*NaN.
         )"
     );
 
@@ -130,7 +136,10 @@ void addbindings_modulate(py::module & m)
         conjugate: bool, optional
             If True, modulate the conjugate of the phase.
         fill_value: complex
-            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+            The value to fill out-of-bounds pixels with. Out-of-bounds pixels are
+            defined here as any pixels that cannot be evaluated by the carrier_phase
+            function. Poly2d functions do not have out-of-bounds pixels, but LUT2d
+            functions may. Defaults to NaN + j*NaN.
         )"
     );
 
@@ -177,7 +186,10 @@ void addbindings_modulate(py::module & m)
         conjugate: bool, optional
             If True, modulate the conjugate of the phase.
         fill_value: complex
-            The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+            The value to fill out-of-bounds pixels with. Out-of-bounds pixels are
+            defined here as any pixels that cannot be evaluated by the carrier_phase
+            function. Poly2d functions do not have out-of-bounds pixels, but LUT2d
+            functions may. Defaults to NaN + j*NaN.
         )"
     );
 }

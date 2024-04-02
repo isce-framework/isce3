@@ -37,7 +37,10 @@ def modulate(
     conjugate : bool, optional
         If True, modulate the conjugate of the phase, by default False
     fill_value: complex
-        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+        The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
+        here as any pixels that cannot be evaluated by the carrier_phase function.
+        Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
+        Defaults to NaN + j*NaN.
     out : np.ndarray of np.complex64 | None, optional
         The array to output data to, or None. If given, must be the same size as
         slc_data_block. Any contents of this array will he overwritten, by default None
@@ -98,7 +101,10 @@ def modulate_at_coords(
     conjugate : bool, optional
         If True, modulate the conjugate of the phase, by default False
     fill_value: complex
-        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+        The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
+        here as any pixels that cannot be evaluated by the carrier_phase function.
+        Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
+        Defaults to NaN + j*NaN.
     out : np.ndarray of np.complex64 | None, optional
         The array to output data to, or None. If given, must be the same size as
         slc_data_block. Any contents of this array will he overwritten, by default None
@@ -166,7 +172,10 @@ def get_modulation_phase(
     conjugate : bool, optional
         If True, get the conjugate of the phase, by default False
     fill_value: complex
-        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+        The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
+        here as any pixels that cannot be evaluated by the carrier_phase function.
+        Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
+        Defaults to NaN + j*NaN.
     out : np.ndarray[np.complex64] | None, optional
         The output phase array to modify. Anything in this array will be overwritten.
         Defaults to None
@@ -221,7 +230,10 @@ def get_modulation_phase_at_coords(
     conjugate : bool, optional
         If True, get the conjugate of the phase, by default False
     fill_value: complex
-        The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+        The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined
+        here as any pixels that cannot be evaluated by the carrier_phase function.
+        Poly2d functions do not have out-of-bounds pixels, but LUT2d functions may.
+        Defaults to NaN + j*NaN.
     out : np.ndarray[np.complex64] | None, optional
         The output phase array to modify. Anything in this array will be overwritten.
         Defaults to None

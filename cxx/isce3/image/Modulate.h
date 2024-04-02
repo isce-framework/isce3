@@ -30,7 +30,9 @@ using ConstArrayRef2D = Eigen::Ref<const Array2D<T, Options>>;
  * @param[in] conjugate
  * if true, get the conjugate of the phase.
  * @param[in] fill_value
- * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+ * The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined here as
+ * any pixels that cannot be evaluated by the carrier_phase function. Poly2d functions
+ * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void getModulationPhase(
@@ -66,7 +68,9 @@ void getModulationPhase(
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
  * @param[in] fill_value
- * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+ * The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined here as
+ * any pixels that cannot be evaluated by the carrier_phase function. Poly2d functions
+ * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void _getModulationPhaseAtCoords(
@@ -94,7 +98,9 @@ void _getModulationPhaseAtCoords(
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
  * @param[in] fill_value
- * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+ * The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined here as
+ * any pixels that cannot be evaluated by the carrier_phase function. Poly2d functions
+ * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void modulate(
@@ -131,7 +137,9 @@ void modulate(
  * @param[in] conjugate
  * if true, modulate the conjugate of the phase.
  * @param[in] fill_value
- * The value to fill out-of-bounds pixels with. Defaults to NaN + j*NaN.
+ * The value to fill out-of-bounds pixels with. Out-of-bounds pixels are defined here as
+ * any pixels that cannot be evaluated by the carrier_phase function. Poly2d functions
+ * do not have out-of-bounds pixels, but LUT2d functions may. Defaults to NaN + j*NaN.
  */
 template <typename AzRgFunc = isce3::core::Poly2d>
 void _modulateAtCoords(
