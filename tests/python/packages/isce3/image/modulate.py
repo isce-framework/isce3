@@ -136,9 +136,16 @@ class TestModulate:
         # Perform the interpolation.
         if function in ["get_modulation_phase", "modulate"]:
 
+            # A field of 1 + 0j for use with other functions
+            empty_signal = np.full(
+                (az_length, rg_width),
+                fill_value=1. + 0.j,
+                dtype=np.complex64,
+            )
+
             # Create the expected output signal. For this test, a simple doppler ramp
             # is the output.
-            doppler_ramp_complex = signal * generate_doppler_ramp_complex(
+            doppler_ramp_complex = empty_signal * generate_doppler_ramp_complex(
                 grid_params=radar_grid,
                 az_indices=np.arange(az_length),
                 doppler_frequency=frequency,
@@ -150,11 +157,7 @@ class TestModulate:
             elif function == "modulate":
                 # A dummy SLC of 1 + 0j to modulate - this will give the carrier
                 # phase.
-                input_slc = np.full(
-                    (az_length, rg_width),
-                    fill_value=1. + 0.j,
-                    dtype=np.complex64,
-                )
+                input_slc = empty_signal
                 kwargs["slc_data_block"] = input_slc
                 signal = modulate(**kwargs)
 
