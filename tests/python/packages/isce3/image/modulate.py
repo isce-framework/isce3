@@ -13,10 +13,7 @@ from isce3.image.modulate import (
 from isce3.core import DateTime, LUT2d
 from isce3.product import RadarGridParameters
 
-from .resample_slc_utils import (
-    generate_doppler_ramp_complex,
-    validate_test_results,
-)
+from .resample_slc_utils import validate_test_results
 
 
 def generate_carrier_ramp_complex(
@@ -63,7 +60,9 @@ def generate_carrier_ramp_complex(
 
 
 def generate_carrier_lut(
-    grid_params: RadarGridParameters, az_frequency: float, rg_frequency: float
+    grid_params: RadarGridParameters,
+    az_frequency: float,
+    rg_frequency: float,
 ) -> LUT2d:
     """
     Create a constant carrier LUT.
