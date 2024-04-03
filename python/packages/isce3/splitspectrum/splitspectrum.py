@@ -1,3 +1,5 @@
+import math
+
 from dataclasses import dataclass
 import journal
 import numpy as np
@@ -39,8 +41,14 @@ class bandpass_meta_data:
         """
         rdr_grid = slc_product.getRadarGrid(freq)
         rg_sample_freq = \
-            np.round(isce3.core.speed_of_light * 0.5 /
-                     rdr_grid.range_pixel_spacing)
+            isce3.core.speed_of_light * 0.5 /\
+            rdr_grid.range_pixel_spacing
+        is_close = math.isclose(rg_sample_freq,
+                                np.round(rg_sample_freq),
+                                rel_tol=1e-8)
+        if is_close:
+            rg_sample_freq = np.round(rg_sample_freq)
+
         rg_bandwidth = \
             slc_product.getSwathMetadata(freq).processed_range_bandwidth
         center_frequency = \
@@ -216,11 +224,11 @@ class SplitSpectrum:
             # due to the precision of the floating point, the resampling
             # scaling factor may be not integer.
             resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
-            if rg_sample_freq % new_rg_sample_freq < 0.1:
+            if rg_sample_freq % new_rg_sample_freq == 0:
                 resampling_scale_factor = np.round(resampling_scale_factor)
             else:
                 err_msg = 'Resampling scaling factor ' \
-                          f'{resampling_scale_factor} must be a integer.'
+                          f'{resampling_scale_factor} must be an integer.'
                 raise ValueError(err_msg)
 
             sub_width = int(width / resampling_scale_factor)
@@ -238,7 +246,7 @@ class SplitSpectrum:
                 self.rg_pxl_spacing * resampling_scale_factor
             meta['slant_range'] = \
                 self.slant_range(0) + \
-                    np.arange(sub_width) * meta['range_spacing']
+                np.arange(sub_width) * meta['range_spacing']
 
             return resampled_slc, meta
 
@@ -294,7 +302,7 @@ class SplitSpectrum:
         resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
 
         if new_bandwidth < 0:
-            err_str = f"Low frequency is higher than high frequency"
+            err_str = "Low frequency is higher than high frequency"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
@@ -507,11 +515,12 @@ class SplitSpectrum:
         filter_1d : np.ndarray
             one dimensional Cosine bandpass filter in frequency domain
         '''
-        filter_1d = self._construct_range_bandpass_kaiser_cosine(frequency_range,
-                                                     freq_low,
-                                                     freq_high,
-                                                     cosine_window,
-                                                     window_shape)
+        filter_1d = self._construct_range_bandpass_kaiser_cosine(
+            frequency_range,
+            freq_low,
+            freq_high,
+            cosine_window,
+            window_shape)
         return filter_1d
 
     def construct_range_bandpass_kaiser(self,
@@ -579,12 +588,12 @@ class SplitSpectrum:
         fft_size = len(frequency_range)
 
         if freq_high > np.max(frequency_range):
-            err_str = f"High frequency is out of frequency bins."
+            err_str = "High frequency is out of frequency bins."
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         if freq_low < np.min(frequency_range):
-            err_str = f"Low frequency is out of frequency bins."
+            err_str = "Low frequency is out of frequency bins."
             error_channel.log(err_str)
             raise ValueError(err_str)
 
