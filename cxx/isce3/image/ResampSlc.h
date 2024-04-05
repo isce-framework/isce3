@@ -130,10 +130,13 @@ public:
      *                              resampled SLC
      * \param[in] chipSize          size of chip used in sinc interpolation
      */
-    void resamp(isce3::io::Raster& inputSlc, isce3::io::Raster& outputSlc,
+    void resamp(isce3::io::Raster& inputSlc,
+                isce3::io::Raster& outputSlc,
                 isce3::io::Raster& rgOffsetRaster,
-                isce3::io::Raster& azOffsetRaster, int inputBand = 1,
-                bool flatten = false, int rowBuffer = 40,
+                isce3::io::Raster& azOffsetRaster,
+                int inputBand = 1,
+                bool flatten = false,
+                int rowBuffer = 40,
                 int chipSize = isce3::core::SINC_ONE);
 
     /* Generic resamp entry point: use filenames to create rasters
@@ -153,8 +156,10 @@ public:
     void resamp(const std::string& inputFilename,
                 const std::string& outputFilename,
                 const std::string& rgOffsetFilename,
-                const std::string& azOffsetFilename, int inputBand = 1,
-                bool flatten = false, int rowBuffer = 40,
+                const std::string& azOffsetFilename,
+                int inputBand = 1,
+                bool flatten = false,
+                int rowBuffer = 40,
                 int chipSize = isce3::core::SINC_ONE);
 
 protected:
@@ -203,8 +208,8 @@ protected:
     void _initializeOffsetTiles(Tile_t& tile,
                                 isce3::io::Raster& azOffsetRaster,
                                 isce3::io::Raster& rgOffsetRaster,
-                                Tile<float>& azOffTile,
-                                Tile<float>& rgOffTile,
+                                Tile<double>& azOffTile,
+                                Tile<double>& rgOffTile,
                                 size_t outWidth);
 
     /*
@@ -223,7 +228,7 @@ protected:
      *                              sinc interpolator
     */
     void _initializeTile(Tile_t& tile, isce3::io::Raster& inputSlc,
-                         const Tile<float>& azOffTile, size_t outLength,
+                         const Tile<double>& azOffTile, size_t outLength,
                          int rowBuffer, int chipHalf);
 
 
@@ -244,8 +249,8 @@ protected:
      *                              interpolator
     */
     void _transformTile(Tile_t& tile, isce3::io::Raster& outputSlc,
-                        const Tile<float>& rgOffTile,
-                        const Tile<float>& azOffTile, size_t inLength,
+                        const Tile<double>& rgOffTile,
+                        const Tile<double>& azOffTile, size_t inLength,
                         bool flatten, int chipSize);
 
     // Convenience functions

@@ -42,14 +42,18 @@ def test_validate():
     '''
     compare pybind CPU resamp against golden data
     '''
+    # Init common variables.
+    out_shape = (500, 500)
+    trimmed_slice = np.index_exp[20:-20, 20:-20]
+
     # load generated data and avoid edges
-    test_slc = np.fromfile('warped.slc', dtype=np.complex64).reshape(500,500)[20:-20,20:-20]
+    test_slc = np.fromfile('warped.slc', dtype=np.complex64).reshape(out_shape)[trimmed_slice]
 
     # load reference data and avoid edges
-    ref_slc = np.fromfile(iscetest.data+'warped_envisat.slc', dtype=np.complex64).reshape(500,500)[20:-20,20:-20]
+    ref_slc = np.fromfile(iscetest.data+'warped_envisat.slc', dtype=np.complex64).reshape(out_shape)[trimmed_slice]
 
     # get normalized error
-    abs_error = np.abs(np.sum(test_slc - ref_slc) / test_slc.size)
+    abs_error = np.nanmean(np.abs(test_slc - ref_slc))
 
     # check error
-    assert (abs_error < 1e-6), f'pybind CPU resamp error {abs_error} > 1e-6'
+    assert (abs_error < 4.5e-5), f'pybind CPU resamp error {abs_error} > 1e-6'

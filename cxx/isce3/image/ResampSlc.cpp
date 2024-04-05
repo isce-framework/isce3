@@ -45,8 +45,10 @@ void ResampSlc::resamp(
 void ResampSlc::resamp(isce3::io::Raster& inputSlc,
                        isce3::io::Raster& outputSlc,
                        isce3::io::Raster& rgOffsetRaster,
-                       isce3::io::Raster& azOffsetRaster, int inputBand,
-                       bool flatten, int rowBuffer,
+                       isce3::io::Raster& azOffsetRaster,
+                       int inputBand,
+                       bool flatten,
+                       int rowBuffer,
                        int chipSize)
 {
     // Set the band number for input SLC
@@ -83,11 +85,12 @@ void ResampSlc::resamp(isce3::io::Raster& inputSlc,
         }
 
         // Initialize offsets tiles
-        Tile<float> azOffTile, rgOffTile;
+        Tile<double> azOffTile, rgOffTile;
         _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster, azOffTile,
                                rgOffTile, outWidth);
 
-        // Get corresponding image indices
+        // Get corresponding image tile with read extents adjusted for offsets
+        // sinc interpolation and chip.
         std::cout << "Reading in image data for tile " << tileCount << "\n";
         _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer,
                         chipSize / 2);
@@ -110,8 +113,8 @@ void ResampSlc::resamp(isce3::io::Raster& inputSlc,
 // Initialize and read azimuth and range offsets
 void ResampSlc::_initializeOffsetTiles(Tile_t& tile, Raster& azOffsetRaster,
                                        Raster& rgOffsetRaster,
-                                       Tile<float>& azOffTile,
-                                       Tile<float>& rgOffTile, size_t outWidth)
+                                       Tile<double>& azOffTile,
+                                       Tile<double>& rgOffTile, size_t outWidth)
 {
     // Copy size properties and initialize azimuth offset tiles
     azOffTile.width(outWidth);
@@ -138,7 +141,7 @@ void ResampSlc::_initializeOffsetTiles(Tile_t& tile, Raster& azOffsetRaster,
 
 // Initialize tile bounds
 void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
-                                const Tile<float>& azOffTile, size_t outLength,
+                                const Tile<double>& azOffTile, size_t outLength,
                                 int rowBuffer, int chipHalf)
 {
     // Cache geometry values
@@ -146,32 +149,35 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
     const size_t inWidth = inputSlc.width();
     const size_t outWidth = azOffTile.width();
 
-    // Compute minimum row index needed from input image
+    // Convert to double and cache values for later use.
+    const auto azOffTileRowStartDbl = static_cast<double>(azOffTile.rowStart());
+    const auto chipHalfDbl = static_cast<double>(chipHalf);
+
+    // Compute minimum read-from-raster row index needed from input image.
     tile.firstImageRow(outLength - 1);
     bool haveOffsets = false;
-    for (size_t i = 0;
-         i < std::min(static_cast<size_t>(rowBuffer), azOffTile.length());
-         ++i) {
-        for (size_t j = 0; j < outWidth; ++j) {
+    for (size_t iRow = 0;
+         iRow < std::min(static_cast<size_t>(rowBuffer), azOffTile.length());
+         ++iRow) {
+        for (size_t iCol = 0; iCol < outWidth; ++iCol) {
             // Get azimuth offset for pixel
-            const double azOff = azOffTile(i, j);
+            const double azOff = azOffTile(iRow, iCol);
             // Skip null values
             if (azOff < -5.0e5 || std::isnan(azOff)) {
                 continue;
             } else {
                 haveOffsets = true;
             }
-            // Calculate corresponding minimum line index of input image.
-            // Check for possible negative imageLine by checking if azOff < 0
-            // and abs(azOff) + chipHalf > i + azOffTile.rowStart().
-            // A negative value converted to a size_t incorrectly results in
-            // std::numeric_limit<size_t>::max().
-            // If a negative, then set imageLine to 0
-            const bool isImageLineNegative =
-                static_cast<size_t>(static_cast<int>(std::abs(azOff)) + chipHalf) >
-                    i + azOffTile.rowStart() and azOff < 0;
-            const size_t imageLine = isImageLineNegative ? 0 :
-                static_cast<size_t>(i + azOff + azOffTile.rowStart() - chipHalf);
+
+            // imageLine is zero if difference is less than zero i.e. underflow
+            // Round offset to get to nearest pixel center
+            // "+ azOffTile.rowStart()" puts resulting index in reference to the raster.
+            // "- chipHalf" accounts for leading row of the tile used to populate of the associated chip.
+            const auto imageLineDbl = static_cast<double>(iRow)
+                + std::round(azOff) + azOffTileRowStartDbl - chipHalfDbl;
+            const size_t imageLine = imageLineDbl < 0 ?
+                0 : static_cast<size_t>(imageLineDbl);
+
             // Update minimum row index
             tile.firstImageRow(std::min(tile.firstImageRow(), imageLine));
         }
@@ -183,29 +189,38 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
         tile.firstImageRow(0);
     }
 
-    // Compute maximum row index needed from input image
+    // Compute maximum read-from-raster row index needed from input image.
     tile.lastImageRow(0);
     haveOffsets = false;
-    for (size_t i = std::max(azOffTile.length() - rowBuffer, static_cast<size_t>(0));
-         i < azOffTile.length(); ++i) {
-        for (size_t j = 0; j < outWidth; ++j) {
+    for (size_t iRow = std::max(azOffTile.length() - rowBuffer, static_cast<size_t>(0));
+         iRow < azOffTile.length(); ++iRow) {
+        for (size_t iCol = 0; iCol < outWidth; ++iCol) {
             // Get azimuth offset for pixel
-            const double azOff = azOffTile(i, j);
+            const double azOff = azOffTile(iRow, iCol);
             // Skip null values
             if (azOff < -5.0e5 || std::isnan(azOff)) {
                 continue;
             } else {
                 haveOffsets = true;
             }
-            // Calculate corresponding minimum line index of input image
-            const size_t imageLine = static_cast<size_t>(
-                    i + azOff + azOffTile.rowStart() + chipHalf);
+
+            // imageLine is zero if difference is less than zero i.e. underflow
+            // Round offset to get to nearest pixel center
+            // "+ azOffTile.rowStart()" puts resulting index in reference to the raster.
+            // "+ chipHalf" accounts for trailing row of the tile used to populate of the associated chip.
+            const auto imageLineDbl = static_cast<double>(iRow)
+                + std::round(azOff) + azOffTileRowStartDbl + chipHalfDbl;
+            const size_t imageLine = imageLineDbl < 0 ?
+                0 : static_cast<size_t>(imageLineDbl);
+
             // Update maximum row index
             tile.lastImageRow(std::max(tile.lastImageRow(), imageLine));
         }
     }
     // Final udpate
     if (haveOffsets) {
+        // +1 to account for computed lastImageRow being a valid index so
+        // length() in Tile is correctly computed.
         tile.lastImageRow(std::min(tile.lastImageRow() + 1, inLength));
     } else {
         tile.lastImageRow(inLength);
@@ -220,24 +235,24 @@ void ResampSlc::_initializeTile(Tile_t& tile, Raster& inputSlc,
                       tile.length(), _inputBand);
 
     // Remove carrier from input data
-    for (size_t i = 0; i < tile.length(); i++) {
-        const double az =  _sensingStart + (i + tile.firstImageRow()) / _prf;
-        for (size_t j = 0; j < inWidth; j++) {
-            const double rng = _startingRange + j * _rangePixelSpacing;
+    for (size_t iRow = 0; iRow < tile.length(); iRow++) {
+        const double az =  _sensingStart + (iRow + tile.firstImageRow()) / _prf;
+        for (size_t iCol = 0; iCol < inWidth; iCol++) {
+            const double rng = _startingRange + iCol * _rangePixelSpacing;
             // Evaluate the pixel's carrier phase
             const double phase = _rgCarrier.eval(az, rng)
                 + _azCarrier.eval(az, rng);
             // Remove the carrier
             std::complex<float> cpxPhase(std::cos(phase), -std::sin(phase));
-            tile(i, j) *= cpxPhase;
+            tile(iRow, iCol) *= cpxPhase;
         }
     }
 }
 
 // Interpolate tile to perform transformation
-void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
-                               const Tile<float>& rgOffTile,
-                               const Tile<float>& azOffTile, size_t inLength,
+void ResampSlc::_transformTile(Tile_t& originalTile, Raster& outputSlc,
+                               const Tile<double>& rgOffTile,
+                               const Tile<double>& azOffTile, size_t inLength,
                                bool flatten, int chipSize)
 {
     if (flatten && !_haveRefData) {
@@ -246,53 +261,73 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
     }
 
     // Cache geometry values
-    const size_t inWidth = tile.width();
+    const size_t inWidth = originalTile.width();
     const size_t outWidth = azOffTile.width();
     const size_t outLength = azOffTile.length();
     int chipHalf = chipSize / 2;
 
-    // Allocate valarray for output image block
-    std::valarray<std::complex<float>> imgOut(outLength * outWidth);
+    // Allocate valarray for resampled output image block
+    std::valarray<std::complex<float>> resampledTile(outLength * outWidth);
     // Initialize/fill with invalid values
-    imgOut = _invalid_value;
+    resampledTile = _invalid_value;
 
     // From this point on, transformation is multithreaded
     size_t tileLine = 0;
-    _Pragma("omp parallel shared(imgOut)")
+    _Pragma("omp parallel shared(resampledTile)")
     {
 
         // set half chip size
         // Allocate matrix for working sinc chip
         isce3::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
 
-        // Loop over lines to perform interpolation
-        for (size_t i = tile.rowStart(); i < tile.rowEnd(); ++i) {
+        for (size_t iRow = originalTile.rowStart(); iRow < originalTile.rowEnd(); ++iRow)
+        {
 
-            // Compute azimuth time at i index
-            const double az = _sensingStart + i / _prf;
+            // Compute azimuth time at iRow index
+            const double az = _sensingStart + iRow / _prf;
+
+            // Cache double casted row index.
+            const auto iRowDbl = static_cast<double>(iRow);
 
             // Loop over width
-            _Pragma("omp for") for (size_t j = 0; j < outWidth; ++j)
+            _Pragma("omp for") for (size_t iCol = 0; iCol < outWidth; ++iCol)
             {
 
                 // Unpack offsets (units of bins)
-                const float azOff = azOffTile(tileLine, j);
-                const float rgOff = rgOffTile(tileLine, j);
+                const double azOff = azOffTile(tileLine, iCol);
+                const double rgOff = rgOffTile(tileLine, iCol);
 
-                // Break into fractional and integer parts
-                const size_t intAz = static_cast<size_t>(i + azOff);
-                const size_t intRg = static_cast<size_t>(j + rgOff);
-                const double fracAz = i + azOff - intAz;
-                const double fracRg = j + rgOff - intRg;
+                // Round offset to get to nearest pixel center and add to
+                // original indices to convert to resampled indices. Save as
+                // double. If result negative, out of bounds pixel encountered
+                // and skip further processing. After addition, compute
+                // fractional remainder of azimuth and range offset-adjusted
+                // index.
+                const auto iRowResampledDbl = iRowDbl + std::round(azOff);
+                if (iRowResampledDbl < 0)
+                    continue;
+                const auto iRowResampled = static_cast<size_t>(iRowResampledDbl);
+                // Both size_t operands below are promoted to double.
+                const double fracAz = iRowDbl + azOff - iRowResampledDbl;
+
+                const auto iColResampledDbl =
+                    static_cast<double>(iCol) + std::round(rgOff);
+                if (iColResampledDbl < 0)
+                    continue;
+                const auto iColResampled = static_cast<size_t>(iColResampledDbl);
+                // Both size_t operands below are promoted to double.
+                const double fracRg = iCol + rgOff - iColResampledDbl;
 
                 // Check bounds
-                if ((intAz < chipHalf) || (intAz >= (inLength - chipHalf)))
+                if ((iRowResampled < chipHalf) ||
+                        (iRowResampled >= (inLength - chipHalf)))
                     continue;
-                if ((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)))
+                if ((iColResampled < chipHalf) || (
+                            iColResampled >= (inWidth - chipHalf)))
                     continue;
 
-                // Slant range at j index
-                const double rng = _startingRange + j * _rangePixelSpacing;
+                // Slant range at iCol index
+                const double rng = _startingRange + iCol * _rangePixelSpacing;
 
                 // Check if the Doppler LUT covers the current position
                 if (not _dopplerLUT.contains(az, rng))
@@ -316,29 +351,30 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                 if (flatten && _haveRefData) {
                     phase += ((4. * (M_PI / _wavelength)) *
                               ((_startingRange - _refStartingRange) +
-                               (j *
+                               (iCol *
                                 (_rangePixelSpacing - _refRangePixelSpacing)) +
                                (rgOff * _rangePixelSpacing))) +
                              ((4.0 * M_PI *
                                (_refStartingRange +
-                                (j * _refRangePixelSpacing))) *
+                                (iCol * _refRangePixelSpacing))) *
                               ((1.0 / _refWavelength) - (1.0 / _wavelength)));
                 }
 
                 // Read data chip without the carrier phases
-                for (int ii = 0; ii < chipSize; ++ii) {
+                for (int iChipRow = 0; iChipRow < chipSize; ++iChipRow) {
                     // Row to read from
-                    const int chipRow =
-                            intAz - tile.firstImageRow() + ii - chipHalf;
+                    const int iChipRowInTile =
+                            iRowResampled - originalTile.firstImageRow() + iChipRow - chipHalf;
                     // Carrier phase
-                    const double chipPhase = dop * (ii - chipHalf);
+                    const double chipPhase = dop * (iChipRow - chipHalf);
                     const std::complex<float> cval(
                             std::cos(chipPhase), -std::sin(chipPhase));
                     // Set the data values after removing doppler in azimuth
-                    for (int jj = 0; jj < chipSize; ++jj) {
+                    for (int iChipCol = 0; iChipCol < chipSize; ++iChipCol) {
                         // Column to read from
-                        const int chipCol = intRg + jj - chipHalf;
-                        chip(ii, jj) = tile(chipRow, chipCol) * cval;
+                        const int iChipColInTile = iColResampled + iChipCol - chipHalf;
+                        chip(iChipRow, iChipCol) =
+                            originalTile(iChipRowInTile, iChipColInTile) * cval;
                     }
                 }
 
@@ -346,8 +382,8 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
                 const std::complex<float> cval = _interp->interpolate(
                         chipHalf + fracRg, chipHalf + fracAz, chip);
 
-                // Add doppler to interpolated value and save
-                imgOut[tileLine * outWidth + j] =
+                // Add doppler to interpolated value and save to resampled tile.
+                resampledTile[tileLine * outWidth + iCol] =
                         cval *
                         std::complex<float>(std::cos(phase), std::sin(phase));
 
@@ -361,7 +397,7 @@ void ResampSlc::_transformTile(Tile_t& tile, Raster& outputSlc,
     } // end multithreaded block
 
     // Write block of data
-    outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);
+    outputSlc.setBlock(resampledTile, 0, originalTile.rowStart(), outWidth, outLength);
 }
 
 }} // namespace isce3::image

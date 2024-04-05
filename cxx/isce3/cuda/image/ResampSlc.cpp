@@ -77,37 +77,52 @@ resamp(isce3::io::Raster & inputSlc, isce3::io::Raster & outputSlc,
 
     // For each full tile of _linesPerTile lines...
     const isce3::core::LUT1d<double> dopplerLUT1d = isce3::core::avgLUT2dToLUT1d<double>(_dopplerLUT);
-    for (int tileCount = 0; tileCount < nTiles; tileCount++) {
-
+    for (int tileCount = 0; tileCount < nTiles; tileCount++)
+    {
         // Make a tile for representing input SLC data
-        Tile_t tile;
-        tile.width(inWidth);
+        Tile_t origSlcTile;
+        origSlcTile.width(inWidth);
         // Set its line index bounds (line number in output image)
-        tile.rowStart(tileCount * _linesPerTile);
+        origSlcTile.rowStart(tileCount * _linesPerTile);
         if (tileCount == (nTiles - 1)) {
-            tile.rowEnd(outLength);
+            origSlcTile.rowEnd(outLength);
         } else {
-            tile.rowEnd(tile.rowStart() + _linesPerTile);
+            origSlcTile.rowEnd(origSlcTile.rowStart() + _linesPerTile);
         }
 
         // Initialize offsets tiles
-        isce3::image::Tile<float> azOffTile, rgOffTile;
-        _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster,
+        isce3::image::Tile<double> azOffTile, rgOffTile;
+        _initializeOffsetTiles(origSlcTile, azOffsetRaster, rgOffsetRaster,
                                azOffTile, rgOffTile, outWidth);
 
         // Get corresponding image indices
-        std::cout << "Reading in image data for tile " << tileCount << std::endl;
-        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2);
+        printf("Reading in image data for tile %d of %d\n", tileCount, nTiles);
+        _initializeTile(origSlcTile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2);
 
         // Perform interpolation
-        std::cout << "Interpolating tile " << tileCount << std::endl;
-        gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier,
-                dopplerLUT1d, interp,
-                inWidth, inLength, this->startingRange(),
-                this->rangePixelSpacing(), this->sensingStart(), this->prf(),
-                this->wavelength(), this->refStartingRange(),
-                this->refRangePixelSpacing(), this->refWavelength(), flatten,
-                chipSize, _invalid_value);
+        printf("Interpolating  tile %d of %d\n", tileCount, nTiles);
+        gpuTransformTile(
+                outputSlc,
+                origSlcTile,
+                rgOffTile,
+                azOffTile,
+                _rgCarrier,
+                _azCarrier,
+                dopplerLUT1d,
+                interp,
+                inWidth,
+                inLength,
+                this->startingRange(),
+                this->rangePixelSpacing(),
+                this->sensingStart(),
+                this->prf(),
+                this->wavelength(),
+                this->refStartingRange(),
+                this->refRangePixelSpacing(),
+                this->refWavelength(),
+                flatten,
+                chipSize,
+                _invalid_value);
     }
 
     // Print out timing information and reset

@@ -47,6 +47,7 @@ class isce3::image::Tile {
 
         // Overload () operator for 2D access
         inline T & operator()(size_t row, size_t col) {return _data[row*_width+col];}
+
         // Read-only () operator for 2D access
         inline const T & operator()(size_t row, size_t col) const {return _data[row*_width+col];}
 
@@ -55,7 +56,23 @@ class isce3::image::Tile {
 
     private:
         // Geometry
-        size_t _width, _rowStart, _rowEnd, _firstImageRow, _lastImageRow;
+        size_t _width;
+
+        // First row of original tile without buffer needed to account for
+        // offset and half of chip size. Defined w.r.t. source raster.
+        size_t _rowStart;
+
+        // Last row of original tile without buffer needed to account for
+        // offset and half of chip size. Defined w.r.t. source raster.
+        size_t _rowEnd;
+
+        // First row of original tile to read from. Includes buffer needed to
+        // account for offset and half of chip size. Defined w.r.t. source raster.
+        size_t _firstImageRow;
+
+        // Last row of original tile to read from. Includes buffer needed to
+        // account for offset and half of chip size. Defined w.r.t. source raster.
+        size_t _lastImageRow;
 
         // Data
         std::valarray<T> _data;

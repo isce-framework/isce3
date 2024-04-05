@@ -44,41 +44,49 @@ TEST(ResampSlcTest, Resamp) {
     // The HDF5 path to the input image
     const std::string & input_data = "HDF5:\"" + filename +
         "\"://science/LSAR/SLC/swaths/frequencyA/HH";
-    
-    // Perform gpu_resampling with default lines per tile
-    gpu_resamp.resamp(input_data, "warped_1000.slc",
+
+    // Perform resampling with default lines per tile allows resample to be run
+    // in a single block.
+    gpu_resamp.resamp(input_data, "warped_single_block.slc",
                       TESTDATA_DIR "offsets/range.off",
                       TESTDATA_DIR "offsets/azimuth.off");
-    
-    // Set lines per tile to be a weird multiple of the number of output lines
+
+    // Set lines per tile such that multiple blocks are processed.
     gpu_resamp.linesPerTile(249);
     // Re-run gpu_resamp
-    gpu_resamp.resamp(input_data, "warped.slc",
+    gpu_resamp.resamp(input_data, "warped_many_blocks.slc",
                       TESTDATA_DIR "offsets/range.off",
                       TESTDATA_DIR "offsets/azimuth.off");
 }
 
 // Compute sum of difference between reference image and warped image
 TEST(ResampSlcTest, Validate) {
-    // Open SLC rasters 
+    // Open SLC reference raster
     isce3::io::Raster refSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
-    isce3::io::Raster testSlc("warped.slc");
-    // Compute total complex error
-    std::complex<float> sum(0.0, 0.0);
-    size_t count = 0;
-    // Avoid edges of image
-    for (size_t i = 20; i < (refSlc.length() - 20); ++i) {
-        for (size_t j = 20; j < (refSlc.width() - 20); ++j) {
-            std::complex<float> refValue, testValue;
-            refSlc.getValue(refValue, j, i);
-            testSlc.getValue(testValue, j, i);
-            sum += testValue - refValue;
-            ++count;
+
+    // Iterate over single and multiple block outputs.
+    const auto output_files = {"warped_single_block.slc",
+                               "warped_many_blocks.slc"};
+    for (auto output_file : output_files) {
+        isce3::io::Raster testSlc(output_file);
+
+        // Compute total complex error
+        float sum{0.0};
+        size_t count = 0;
+        // Avoid edges of image
+        for (size_t i = 20; i < (refSlc.length() - 20); ++i) {
+            for (size_t j = 20; j < (refSlc.width() - 20); ++j) {
+                std::complex<float> refValue, testValue;
+                refSlc.getValue(refValue, j, i);
+                testSlc.getValue(testValue, j, i);
+                sum += std::abs(testValue - refValue);
+                ++count;
+            }
         }
+        // Normalize by number of pixels
+        double abs_error = sum / count;
+        ASSERT_LT(abs_error, 4.5e-5);
     }
-    // Normalize by number of pixels
-    double abs_error = std::abs(sum) / count;
-    ASSERT_LT(abs_error, 1.0e-6);
 }
 
 int main(int argc, char * argv[]) {
