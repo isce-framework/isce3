@@ -172,7 +172,7 @@ def get_insar_polarization_code(polarizations):
 
     return None
 
-def get_radar_band(slc_path, freq='A'):
+def get_radar_band(slc_path):
     '''
     Get the radar band of the RSLC product given
     the frequency code
@@ -180,29 +180,15 @@ def get_radar_band(slc_path, freq='A'):
     Parameters
     ----------
     slc_path: str
-        Path to the SLC product file.
-    freq: (str, optional)
-        Frequency identifier (default: 'A').
+        Path to the SLC product file
 
     radar_band: str
         1 character to indicate the radar band (e.g., L)
     '''
     slc = SLC(hdf5file=slc_path)
-    swath_frequency_path = f"{slc.SwathPath}/frequency{freq}/"
-    center_frequency = slc[f'{swath_frequency_path}/processedCenterFrequency'][()]/1e9
 
-    # L band if the center frequency is between 1 GHz and 2 GHz
-    # S band if the center frequency is between 2 GHz and 4 GHz
-    # both bands are defined by the IEEE with the reference:
-    # https://en.wikipedia.org/wiki/L_band
-    # https://en.wikipedia.org/wiki/S_band
-    if (center_frequency >= 1.0) and (center_frequency <= 2.0):
-        return "L"
-    elif (center_frequency > 2.0) and (center_frequency <= 4.0):
-        return "S"
-    else:
-        return "A"
-
+    with h5py.File(slc_path, 'r', libver='latest', swmr=True) as h:
+        return h[f'{slc.IdentificationPath}/radarBand'][()]
 
 
 def get_insar_granule_id(ref_slc_path, sec_slc_path, partial_granule_id,

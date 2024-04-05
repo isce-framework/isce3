@@ -1095,31 +1095,17 @@ class InSARBaseWriter(h5py.File):
 
     def _get_band_name(self):
         """
-        Get the band name ('L', 'S'), Raises exception if neither is found.
+        Get the band name ('L', 'S')
 
         Returns
         ----------
         str
             'L', 'S'
         """
-        freq = "A" if "A" in self.freq_pols else "B"
-        swath_frequency_path = f"{self.ref_rslc.SwathPath}/frequency{freq}/"
-        freq_group = self.ref_h5py_file_obj[swath_frequency_path]
+        identification_path = f"{self.ref_rslc.IdentificationPath}"
+        radar_band = self.ref_h5py_file_obj[f"{identification_path}/radarBand"][()]
 
-        # Center frequency in GHz
-        center_frequency = freq_group["processedCenterFrequency"][()] / 1e9
-
-        # L band if the center frequency is between 1GHz and 2 GHz
-        # S band if the center frequency is between 2GHz and 4 GHz
-        # both bands are defined by the IEEE with the reference:
-        # https://en.wikipedia.org/wiki/L_band
-        # https://en.wikipedia.org/wiki/S_band
-        if (center_frequency >= 1.0) and (center_frequency <= 2.0):
-            return "L"
-        elif (center_frequency > 2.0) and (center_frequency <= 4.0):
-            return "S"
-        else:
-            raise ValueError("Unknown frequency encountered. Not L or S band")
+        return radar_band
 
     def _get_mixed_mode(self):
         """
