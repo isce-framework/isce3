@@ -12,6 +12,10 @@ from isce3.core.types import truncate_mantissa
 from nisar.products.readers.orbit import load_orbit_from_xml
 
 
+LEXICOGRAPHIC_BASE_POLS = ['HH', 'HV', 'VH', 'VV']
+COMPACT_POLS = ['RH', 'RV']
+
+
 def _get_attribute_dict(band,
                         standard_name=None,
                         long_name=None,
@@ -670,6 +674,15 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         # TODO populate attribute `epsg`
         self.copy_from_input(
             'identification/boundingPolygon')
+        'identification/boundingPolygon'
+
+        bounding_polygon_path = \
+            (f'{self.root_path}/identification/boundingPolygon')
+
+        if ('epsg' in self.input_hdf5_obj[bounding_polygon_path].attrs.keys()):
+            polygon_epsg = self.input_hdf5_obj[bounding_polygon_path]
+            self.output_hdf5_obj[bounding_polygon_path].attrs['epsg'] = \
+                polygon_epsg
 
         self.set_value(
             'identification/listOfFrequencies',
@@ -700,10 +713,26 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 self.copy_from_input(f'{cal_freq_path}/{parameter}',
                                      default=np.nan)
 
-            # The following parameters are available for all
-            # quad pols in the lexicographic base
-            # regardless of listOfPolarizations
-            for pol in ['HH', 'HV', 'VH', 'VV']:
+            # All polarimetric calibration parameters are saved into the output
+            # product regardless of listOfPolarizations. Need to check
+            # if polarizations are in the lexicographic base or compact pol
+            product_pols = []
+            for pol_list in self.freq_pols_dict.values():
+                product_pols.extend(pol_list)
+
+            if all(pol in LEXICOGRAPHIC_BASE_POLS for pol in product_pols):
+                list_of_all_pols = LEXICOGRAPHIC_BASE_POLS
+            elif all(pol in COMPACT_POLS for pol in product_pols):
+                list_of_all_pols = COMPACT_POLS
+            else:
+                error_channel = journal.error(
+                    'BaseL2WriterSingleInput.populate_calibration_information')
+                error_msg = ('Unsupported polarimetric channels:'
+                             f' {self.freq_pols_dict}')
+                error_channel.log(error_msg)
+                raise KeyError(error_msg)
+
+            for pol in list_of_all_pols:
                 for parameter in calibration_freq_pol_parameter_list:
                     self.copy_from_input(f'{cal_freq_path}/{pol}/{parameter}',
                                          default=np.nan)
@@ -745,6 +774,28 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             # product specification version prior to 1.1.0
             for frequency, pol_list in self.freq_pols_dict.items():
                 for pol in pol_list:
+
+                    zero_doppler_time_path = (
+                        f'{self.root_path}/'
+                        f'{self.input_product_hdf5_group_type}/metadata/'
+                        f'calibrationInformation/frequency{frequency}/{lut}/'
+                        'zeroDopplerTime')
+
+                    if zero_doppler_time_path in self.input_hdf5_obj:
+
+                        self.geocode_lut(
+                            output_h5_group=('{PRODUCT}/metadata/'
+                                             'calibrationInformation'
+                                             f'/frequency{frequency}/{lut}'),
+                            input_h5_group=('{PRODUCT}/metadata/'
+                                            'calibrationInformation'
+                                            f'frequency{frequency}/{lut}/'),
+                            frequency=list(self.freq_pols_dict.keys())[0],
+                            input_ds_name_list=pol,
+                            output_ds_name_list=pol,
+                            skip_if_not_present=True)
+
+                        continue
 
                     input_ds_name_list = [f'frequency{frequency}/{pol}/{lut}']
 
@@ -812,13 +863,15 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             f'{inputs_group}/l1SlcGranules',
             [self.input_file])
 
-        orbit_file = self.cfg[
-            'dynamic_ancillary_file_group']['orbit_file']
-        if orbit_file is None:
-            orbit_file = '(NOT SPECIFIED)'
-        self.set_value(
-            f'{inputs_group}/orbitFiles',
-            [orbit_file])
+        # populate input orbit and TEC files
+        for ancillary_type in ['orbit', 'tec']:
+            ancillary_file = self.cfg[
+                'dynamic_ancillary_file_group'][f'{ancillary_type}_file']
+            if ancillary_file is None:
+                ancillary_file = '(NOT SPECIFIED)'
+            self.set_value(
+                f'{inputs_group}/{ancillary_type}Files',
+                [ancillary_file])
 
         # `run_config_path` can be either a file name or a string
         # representing the contents of the runconfig file (identified
