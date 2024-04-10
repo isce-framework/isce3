@@ -172,7 +172,7 @@ runconfig:
                     # larger value of y, therefore relaxing the final threshold.
                     # The values of x outside of the defined range of y are
                     # extrapolated.
-                    y: [5.0, 20.0]
+                    y: [5.0, 2.0]
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
