@@ -1,11 +1,14 @@
+import os
+import tempfile
 from typing import Optional
 
-import isce3
+import journal
 import numpy as np
 import pytest
-from isce3.unwrap import snaphu
+from numpy.typing import DTypeLike
 
-import journal
+import isce3
+from isce3.unwrap import snaphu
 
 
 # Set journal application name and increase output verbosity level.
@@ -446,6 +449,59 @@ class TestSnaphu:
             munw = unw_raster.data[lmask]
             offset = mphase[0] - munw[0]
             assert np.allclose(mphase - offset, munw, rtol=1e-6, atol=1e-6)
+
+    @pytest.mark.parametrize("conncomp_dtype", [np.uint16, np.int32])
+    def test_conncomp_dtype(self, conncomp_dtype: DTypeLike):
+        # Simulate interferogram containing a diagonal phase ramp with multiple fringes.
+        y, x = np.ogrid[-3:3:512j, -3:3:512j]
+        phase = np.pi * (x + y)
+        igram = np.exp(1j * phase)
+
+        # Simulate sample coherence for an interferogram with no noise.
+        corr = np.ones(igram.shape)
+
+        # Create a binary mask that subdivides the array into 4 disjoint quadrants of
+        # valid samples separated by a single row & column of invalid samples.
+        mask = np.ones(igram.shape, dtype=np.uint8)
+        mask[256, :] = 0
+        mask[:, 256] = 0
+
+        # Convert the input arrays into rasters.
+        igram_raster = isce3.io.gdal.Raster(igram)
+        corr_raster = isce3.io.gdal.Raster(corr)
+        mask_raster = isce3.io.gdal.Raster(mask)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create output rasters.
+            length, width = igram.shape
+            unw_raster = isce3.io.gdal.Raster(
+                path=os.path.join(tmpdir, "unw.tif"),
+                width=width,
+                length=length,
+                datatype=np.float32,
+                driver="GTiff",
+            )
+            conncomp_raster = isce3.io.gdal.Raster(
+                path=os.path.join(tmpdir, "conncomp.tif"),
+                width=width,
+                length=length,
+                datatype=conncomp_dtype,
+                driver="GTiff",
+            )
+
+            # Unwrap.
+            snaphu.unwrap(
+                unw=unw_raster,
+                conncomp=conncomp_raster,
+                igram=igram_raster,
+                corr=corr_raster,
+                nlooks=1.0,
+                mask=mask_raster,
+            )
+
+            # Check that the output contains 4 distinct nonzero connected
+            # component labels.
+            assert set(np.unique(conncomp_raster)) == {0, 1, 2, 3, 4}
 
     def test_tile_mode(self):
         """Test SNAPHU tiled unwrapping mode."""

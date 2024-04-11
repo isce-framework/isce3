@@ -849,15 +849,15 @@ def unwrap(
     ----------
     unw : isce3.io.gdal.Raster
         Output raster for unwrapped phase, in radians. Must have the same
-        dimensions as the input interferogram and GDT_Float32 datatype.
+        dimensions as the input interferogram and floating-point datatype.
     conncomp : isce3.io.gdal.Raster
         Output connected component labels. Must have the same dimensions as the
-        input interferogram and GDT_UInt32 datatype.
+        input interferogram and integer datatype.
     igram : isce3.io.gdal.Raster
-        Input interferogram. Must have GDT_CFloat32 datatype.
+        Input interferogram. Must have complex datatype.
     corr : isce3.io.gdal.Raster
         Correlation magnitude, normalized to the interval [0, 1]. Must have the
-        same dimensions as the input interferogram and GDT_Float32 datatype.
+        same dimensions as the input interferogram and floating-point datatype.
     nlooks : float
         Effective number of looks used to form the input correlation data.
     cost : {"topo", "defo", "smooth", "p-norm"}, optional
@@ -874,7 +874,7 @@ def unwrap(
         Average intensity of the two SLCs, in linear units (not dB). Only used
         in "topo" cost mode. If None, interferogram magnitude is used as
         intensity. Must have the same dimensions as the input interferogram and
-        GDT_Float32 datatype. (default: None)
+        floating-point datatype. (default: None)
     mask : isce3.io.gdal.Raster or None, optional
         Binary mask of valid pixels. Zeros in this raster indicate interferogram
         pixels that should be masked out. Must have the same dimensions as the
@@ -882,8 +882,8 @@ def unwrap(
     unwest : isce3.io.gdal.Raster or None, optional
         Initial estimate of unwrapped phase, in radians. This can be used to
         provide a coarse unwrapped estimate to guide the algorithm. Must have
-        the same dimensions as the input interferogram and GDT_Float32 datatype.
-        (default: None)
+        the same dimensions as the input interferogram and floating-point
+        datatype. (default: None)
     tiling_params : TilingParams or None, optional
         Configuration parameters affecting scene tiling and parallel processing.
         If None, the default configuration parameters are used. (default: None)
@@ -932,14 +932,14 @@ def unwrap(
        1709-1719 (2002).
     """
     # Verify input & output raster datatypes.
-    if unw.datatype != isce3.io.gdal.GDT_Float32:
-        raise TypeError("unw raster must have GDT_Float32 datatype")
-    if conncomp.datatype != isce3.io.gdal.GDT_UInt32:
-        raise TypeError("conncomp raster must have GDT_UInt32 datatype")
-    if igram.datatype != isce3.io.gdal.GDT_CFloat32:
-        raise TypeError("igram raster must have GDT_CFloat32 datatype")
-    if corr.datatype != isce3.io.gdal.GDT_Float32:
-        raise TypeError("corr raster must have GDT_Float32 datatype")
+    if not np.issubdtype(unw.data.dtype, np.floating):
+        raise TypeError("unw raster must have floating-point datatype")
+    if not np.issubdtype(conncomp.data.dtype, np.integer):
+        raise TypeError("conncomp raster must have integer datatype")
+    if not np.issubdtype(igram.data.dtype, np.complexfloating):
+        raise TypeError("igram raster must have complex datatype")
+    if not np.issubdtype(corr.data.dtype, np.floating):
+        raise TypeError("corr raster must have floating-point datatype")
 
     length, width = igram.length, igram.width
 
@@ -1049,13 +1049,13 @@ def unwrap(
 
         # Input interferogram
         tmp_igram = d / "igram.c8"
-        to_flat_file(tmp_igram, igram, batchsize=1024)
+        to_flat_file(tmp_igram, igram, dtype=np.complex64, batchsize=1024)
         configstr += f"INFILE {tmp_igram.resolve()}\n"
         configstr += f"INFILEFORMAT COMPLEX_DATA\n"
 
         # Input correlation magnitude
         tmp_corr = d / "corr.f4"
-        to_flat_file(tmp_corr, corr, batchsize=1024)
+        to_flat_file(tmp_corr, corr, dtype=np.float32, batchsize=1024)
         configstr += f"CORRFILE {tmp_corr.resolve()}\n"
         configstr += f"CORRFILEFORMAT FLOAT_DATA\n"
 
@@ -1063,13 +1063,13 @@ def unwrap(
         if pwr is not None:
             if cost != "topo":
                 raise ValueError("SLC intensity data is only used in 'topo' mode")
-            if pwr.datatype != isce3.io.gdal.GDT_Float32:
-                raise TypeError("pwr raster must have GDT_Float32 datatype")
+            if not np.issubdtype(pwr.data.dtype, np.floating):
+                raise TypeError("pwr raster must have floating-point datatype")
             if (pwr.length != length) or (pwr.width != width):
                 raise ValueError("pwr raster dimensions must match interferogram")
 
             tmp_pwr = d / "pwr.f4"
-            to_flat_file(tmp_pwr, pwr, batchsize=1024)
+            to_flat_file(tmp_pwr, pwr, dtype=np.float32, batchsize=1024)
             configstr += f"PWRFILE {tmp_pwr.resolve()}\n"
             configstr += f"AMPFILEFORMAT FLOAT_DATA\n"
 
@@ -1081,18 +1081,18 @@ def unwrap(
                 raise ValueError("mask raster dimensions must match interferogram")
 
             tmp_mask = d / "mask.i1"
-            to_flat_file(tmp_mask, mask, batchsize=1024)
+            to_flat_file(tmp_mask, mask, dtype=np.bool_, batchsize=1024)
             configstr += f"BYTEMASKFILE {tmp_mask.resolve()}\n"
 
         # Input unwrapped phase estimate
         if unwest is not None:
-            if unwest.datatype != isce3.io.gdal.GDT_Float32:
-                raise TypeError("unwest raster must have GDT_Float32 datatype")
+            if not np.issubdtype(unwest.data.dtype, np.floating):
+                raise TypeError("unwest raster must have floating-point datatype")
             if (unwest.length != length) or (unwest.width != width):
                 raise ValueError("unwest raster dimensions must match interferogram")
 
             tmp_unwest = d / "unwest.f4"
-            to_flat_file(tmp_unwest, unwest, batchsize=1024)
+            to_flat_file(tmp_unwest, unwest, dtype=np.float32, batchsize=1024)
             configstr += f"ESTIMATEFILE {tmp_unwest.resolve()}\n"
             configstr += f"ESTFILEFORMAT FLOAT_DATA\n"
 
@@ -1114,5 +1114,5 @@ def unwrap(
         _snaphu_unwrap(str(configpath))
 
         # Copy output data to GDAL rasters.
-        from_flat_file(tmp_unw, unw, batchsize=1024)
-        from_flat_file(tmp_conncomp, conncomp, batchsize=1024)
+        from_flat_file(tmp_unw, unw, dtype=np.float32, batchsize=1024)
+        from_flat_file(tmp_conncomp, conncomp, dtype=np.uint32, batchsize=1024)
