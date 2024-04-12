@@ -309,12 +309,11 @@ class RunConfig:
         metadata_dict['y_snap'] = metadata_dict['output_posting']['y_posting']
 
         # construct geogrid
-        frequency_ref = 'A'
         metadata_geogrid = geogrid.create(
             self.cfg, 
             workflow_name=workflow_name,
             frequency_group=None, 
-            frequency=frequency_ref,
+            frequency=None,
             geocode_dict=metadata_dict,
             default_spacing_x=default_metadata_geogrid_spacing_x,
             default_spacing_y=default_metadata_geogrid_spacing_y)
