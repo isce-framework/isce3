@@ -802,6 +802,7 @@ class InSARBaseWriter(h5py.File):
         processing_type = primary_exec_cfg.get("processing_type")
         partial_granule_id = primary_exec_cfg.get("partial_granule_id")
         product_version = primary_exec_cfg.get("product_version")
+        crid = primary_exec_cfg.get("composite_release_id")
 
         # Determine processingType
         if processing_type == 'PR':
@@ -815,6 +816,10 @@ class InSARBaseWriter(h5py.File):
         # if it is None, 'JPL' will be applied
         if processing_center is None:
             processing_center = "JPL"
+
+        # If the CRID identifier is None, assign a dummy crid "A10000"
+        if crid is None:
+            crid = "A10000"
 
         # Extract relevant identification from reference and secondary RSLC
         ref_id_group = self.ref_h5py_file_obj[self.ref_rslc.IdentificationPath]
@@ -951,6 +956,11 @@ class InSARBaseWriter(h5py.File):
                 self.product_info.ProductVersion
 
         id_ds_names_to_be_created = [
+            DatasetParams(
+                "compositeReleaseId",
+                np.string_(crid),
+                "Unique version identifier of the science data production system",
+            ),
             DatasetParams(
                 "granuleId",
                 granule_id,
