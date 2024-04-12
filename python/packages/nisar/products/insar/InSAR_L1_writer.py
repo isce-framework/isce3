@@ -472,6 +472,26 @@ class L1InSARWriter(InSARBaseWriter):
                     "Slant range spacing of the offset grid",
                     {'units': Units.meter},
                 ),
+                DatasetParams(
+                    "sceneCenterAlongTrackSpacing",
+                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
+                    * az_skip,
+                    (
+                        "Nominal along-track spacing in meters between"
+                        " consecutive lines near mid-swath of the product images"
+                    ),
+                    {"units": Units.meter},
+                ),
+                DatasetParams(
+                    "sceneCenterGroundRangeSpacing",
+                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
+                    * rg_skip,
+                    (
+                        "Nominal ground range spacing in meters between"
+                        " consecutive pixels near mid-swath of the product images"
+                    ),
+                    {"units": Units.meter},
+                ),
             ]
             offset_group_name = f"{swaths_freq_group_name}/pixelOffsets"
             offset_group = self.require_group(offset_group_name)
@@ -500,32 +520,6 @@ class L1InSARWriter(InSARBaseWriter):
             rslc_freq_group = self.ref_h5py_file_obj[
                 f"{self.ref_rslc.SwathPath}/frequency{freq}"
             ]
-
-            # add scene center parameters
-            scene_center_params = [
-                DatasetParams(
-                    "sceneCenterAlongTrackSpacing",
-                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
-                    * self.igram_azimuth_looks,
-                    (
-                        "Nominal along-track spacing in meters "
-                        "between consecutive lines near mid-swath of the product images"
-                    ),
-                    {"units": Units.meter},
-                ),
-                DatasetParams(
-                    "sceneCenterGroundRangeSpacing",
-                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
-                    * self.igram_range_looks,
-                    (
-                        "Nominal ground range spacing in meters between "
-                        "consecutive pixels near mid-swath of the product images"
-                    ),
-                    {"units": Units.meter},
-                ),
-            ]
-            for ds_param in scene_center_params:
-                add_dataset_and_attrs(swaths_freq_group, ds_param)
 
             # shape of the interferogram product
             igram_shape = self._get_interferogram_dataset_shape(freq,
@@ -598,7 +592,28 @@ class L1InSARWriter(InSARBaseWriter):
                     ),
                     {'units': Units.meter},
                 ),
+                DatasetParams(
+                    "sceneCenterAlongTrackSpacing",
+                    rslc_freq_group["sceneCenterAlongTrackSpacing"][()]
+                    * self.igram_azimuth_looks,
+                    (
+                        "Nominal along-track spacing in meters "
+                        "between consecutive lines near mid-swath of the product images"
+                    ),
+                    {"units": Units.meter},
+                ),
+                DatasetParams(
+                    "sceneCenterGroundRangeSpacing",
+                    rslc_freq_group["sceneCenterGroundRangeSpacing"][()]
+                    * self.igram_range_looks,
+                    (
+                        "Nominal ground range spacing in meters between "
+                        "consecutive pixels near mid-swath of the product images"
+                    ),
+                    {"units": Units.meter},
+                ),
             ]
+
             igram_group_name = f"{swaths_freq_group_name}/interferogram"
             igram_group = self.require_group(igram_group_name)
             for ds_param in ds_igram_params:
