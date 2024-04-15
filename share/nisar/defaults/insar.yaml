@@ -361,7 +361,7 @@ runconfig:
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
                 # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-                deramping_method: 'magnitude'
+                deramping_method: 'complex'
                 # Flag to use constant range/azimuth offsets in dense offsets estimation
                 use_gross_offsets: True
                 # Constant offset along slant range to guide dense offset estimation
@@ -412,7 +412,7 @@ runconfig:
                 # Cross-correlation domain
                 cross_correlation_domain: 'frequency'
                 # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
-                deramping_method: 'magnitude'
+                deramping_method: 'complex'
                 # Anti-aliasing oversampling factor to apply to reference/secondary SLC
                 # prior to cross-correlation computation
                 slc_oversampling_factor: 2
@@ -470,7 +470,7 @@ runconfig:
                 # SNR: offsets with SNR below threshold are identified as outliers
                 # Covariance: offsets with range/azimuth covariance above threshold are outliers
                 # Median filter: offsets with median absolute deviation above thresholds are outliers
-                threshold: 0.5
+                threshold: 0.75
                 # Flag to enable mask refinement The intent of this refinement is to remove
                 # noisy spots on 1-2 pixels after the first outlier identification.
                 # The refinement is performed by thresholding the median absolute deviation of
@@ -528,7 +528,7 @@ runconfig:
                 mask:
                     general:
                 lines_per_block: 100
-                filter_type: boxcar
+                filter_type: no_filter
                 boxcar:
                     filter_size_range: 9
                     filter_size_azimuth: 9
@@ -585,7 +585,7 @@ runconfig:
                         # Distance/radius of the sampling window (pixels)
                         distance: 2
                 # Unwrapping algorithm to use
-                algorithm: icu
+                algorithm: snaphu
                 # Default parameters for ICU
                 icu:
                     # Seed point to initialize ICU algorithm
@@ -757,7 +757,7 @@ runconfig:
             # Compression level: 1: least compression; 9: best compression
             compression_level: 5
             # Chunk size of InSAR raster
-            chunk_size: [128, 128]
+            chunk_size: [512, 512]
             # Enable/disable shuffle filter
             shuffle: True
         qa:

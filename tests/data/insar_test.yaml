@@ -137,6 +137,7 @@ runconfig:
                 correlation_surface_zoom: 8
                 correlation_surface_oversampling_factor: 32
                 correlation_surface_oversampling_method: 'sinc'
+                deramping_method: 'magnitude'
 
             rubbersheet:
                 threshold: 0.01
