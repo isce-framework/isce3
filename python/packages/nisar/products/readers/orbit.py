@@ -24,7 +24,11 @@ def load_orbit_from_xml(f, epoch: DateTime = None) -> Orbit:
     It contains information such as covariance estimates and maneuvers that
     are not parsed or represented in the output object.
     """
+
+    warning_channel = journal.warning("orbit.load_orbit_from_xml")
+
     root = ET.parse(f).getroot()
+
     svl = root.find("orbitStateVectorList")
     if svl is None:
         raise IOError("Could not parse orbit XML file.")
@@ -38,8 +42,22 @@ def load_orbit_from_xml(f, epoch: DateTime = None) -> Orbit:
     if len(states) != n:
         raise IOError(f"Expected {n} orbit state vectors, got {len(states)}")
     if epoch is None:
-        warning_channel = journal.warning("orbit.load_orbit_from_xml")
         warning_channel.log("No reference epoch provided. Using first date time "
                             "from XML file as orbit reference epoch.")
         epoch = states[0].datetime
-    return Orbit(states, epoch)
+
+    orbit_kwargs = {}
+
+    # save orbit ephemeris precision type
+    orbit_type_et = root.find('productInformation/productType')
+    if orbit_type_et is None:
+        warning_channel.log("Orbit file does not contain precision"
+                            ' type (e.g., "FOE", "NOE", "MOE", "POE", or'
+                            ' "Custom").')
+    else:
+        orbit_kwargs['type'] = orbit_type_et.text
+
+    # create Orbit object
+    orbit = Orbit(states, epoch, **orbit_kwargs)
+
+    return orbit

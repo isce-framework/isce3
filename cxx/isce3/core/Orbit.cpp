@@ -12,20 +12,30 @@ using isce3::error::getErrorString;
 namespace isce3 { namespace core {
 
 Orbit::Orbit(const std::vector<StateVector> & statevecs,
-             OrbitInterpMethod interp_method)
+             OrbitInterpMethod interp_method,
+             const std::string& type)
 :
-    Orbit(statevecs, statevecs.at(0).datetime, interp_method)
+    Orbit(statevecs, statevecs.at(0).datetime, interp_method, type)
+{}
+
+Orbit::Orbit(const std::vector<StateVector> & statevecs,
+             const std::string& type)
+:
+    Orbit(statevecs, statevecs.at(0).datetime, OrbitInterpMethod::Hermite,
+          type)
 {}
 
 Orbit::Orbit(const std::vector<StateVector> & statevecs,
              const DateTime & reference_epoch,
-             OrbitInterpMethod interp_method)
+             OrbitInterpMethod interp_method,
+             const std::string& type)
 :
     _reference_epoch(reference_epoch),
     _time(detail::getOrbitTime(statevecs, reference_epoch)),
     _position(detail::getOrbitPosition(statevecs)),
     _velocity(detail::getOrbitVelocity(statevecs)),
-    _interp_method(interp_method)
+    _interp_method(interp_method),
+    _type(type)
 {}
 
 std::vector<StateVector> Orbit::getStateVectors() const
@@ -81,7 +91,8 @@ bool operator==(const Orbit & lhs, const Orbit & rhs)
            lhs.time() == rhs.time() &&
            lhs.position() == rhs.position() &&
            lhs.velocity() == rhs.velocity() &&
-           lhs.interpMethod() == rhs.interpMethod();
+           lhs.interpMethod() == rhs.interpMethod() &&
+           lhs.type() == rhs.type();
 }
 
 bool operator!=(const Orbit & lhs, const Orbit & rhs)
@@ -123,7 +134,7 @@ Orbit Orbit::crop(const DateTime& start, const DateTime& end, int npad) const
         const DateTime t = _reference_epoch + TimeDelta(_time[k]);
         statevecs[i] = {t, _position[k], _velocity[k]};
     }
-    return Orbit(statevecs, _reference_epoch, _interp_method);
+    return Orbit(statevecs, _reference_epoch, _interp_method, _type);
 }
 
 }}

@@ -37,6 +37,11 @@ def load_orbit_from_h5_group(group: h5py.Group) -> Orbit:
     time = group['time']
     pos = group['position']
     vel = group['velocity']
+    orbit_kwargs = {}
+    if 'orbitType' in group:
+        # Strip trailing null characters as a bandaid for handling older datasets.
+        orbit_type = group['orbitType'][...].tobytes().decode().rstrip('\x00')
+        orbit_kwargs['type'] = orbit_type
 
     if time.ndim != 1 or pos.ndim != 2 or vel.ndim != 2:
         raise ValueError("unexpected orbit state vector dims")
@@ -44,7 +49,7 @@ def load_orbit_from_h5_group(group: h5py.Group) -> Orbit:
     if pos.shape[1] != 3 or vel.shape[1] != 3:
         raise ValueError("unexpected orbit position/velocity vector size")
 
-    size = time.shape[0];
+    size = time.shape[0]
     if pos.shape[0] != size or vel.shape[0] != size:
         raise ValueError("mismatched orbit state vector component sizes")
 
@@ -60,7 +65,7 @@ def load_orbit_from_h5_group(group: h5py.Group) -> Orbit:
                  for i in range(size)]
 
     # construct Orbit object
-    result = Orbit(statevecs, epoch)
+    result = Orbit(statevecs, epoch, **orbit_kwargs)
 
     # set interpolation method, if specified
     if 'interpMethod' in group.keys():

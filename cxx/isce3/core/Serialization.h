@@ -116,6 +116,14 @@ inline void loadFromH5(isce3::io::IGroup & group, Orbit & orbit)
     else {
         throw std::runtime_error("unexpected orbit interpolation method '" + interp_method + "'");
     }
+
+    // get orbit ephemeris precision type
+    std::string orbit_type = "Undefined";
+    if (isce3::io::exists(group, "orbitType")) {
+        isce3::io::loadFromH5(group, "orbitType", orbit_type);
+    }
+    orbit.type(orbit_type);
+
 }
 
 /**
@@ -159,11 +167,17 @@ inline void saveToH5(isce3::io::IGroup & group, const Orbit & orbit)
         throw std::runtime_error("unexpected orbit interpolation method");
     }
 
+    std::string orbit_type = orbit.type();
+    if (orbit_type == "") {
+        orbit_type = "Undefined";
+    }
+
     // serialize
     isce3::io::saveToH5(group, "time", time);
     isce3::io::setRefEpoch(group, "time", orbit.referenceEpoch());
     isce3::io::saveToH5(group, "position", pos, dims, "meters");
     isce3::io::saveToH5(group, "velocity", vel, dims, "meters / second");
+    isce3::io::saveToH5(group, "orbitType", orbit_type);
     isce3::io::saveToH5(group, "interpMethod", interp_method);
 }
 

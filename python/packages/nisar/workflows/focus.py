@@ -1529,7 +1529,7 @@ def focus(runconfig, runconfig_path=""):
     product = cfg.primary_executable.product_type
     log.info(f"Creating output {product} product {output_slc_path}")
     slc = SLC(output_slc_path, mode="w", product=product)
-    slc.set_orbit(orbit) # TODO acceleration, orbitType
+    slc.set_orbit(orbit)
     slc.set_attitude(attitude, orbit)
     og = next(iter(ogrid.values()))
     id_data = get_identification_data_from_runconfig(cfg)

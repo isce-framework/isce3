@@ -33,7 +33,11 @@ def test_props():
 def test_members():
     import numpy
     from numpy.linalg import norm
-    o = load_h5();
+    o = load_h5()
+
+    # Verify orbit type is "POE"
+    # (contents of "//science/LSAR/SLC/metadata/orbit/orbitType")
+    assert (o.get_type() == 'POE')
 
     # Check valid earth orbit distance
     earth_radius  =  6_000e3 # meters
@@ -107,4 +111,3 @@ def test_crop():
     # Make sure reference epoch doesn't change interp and epoch properties.
     npt.assert_(cropped_orbit.get_interp_method() == orbit.get_interp_method())
     npt.assert_(cropped_orbit.reference_epoch == orbit.reference_epoch)
-

@@ -576,8 +576,12 @@ class SLC(h5py.File):
             " record. This record contains the platform velocity data with"
             " respect to WGS84 G1762 reference frame")
         # Orbit source/type
-        write_dataset(g, "orbitType", np.bytes_, type,
-            "PrOE (or) NOE (or) MOE (or) POE (or) Custom")
+        g["orbitType"].attrs["description"] = np.bytes_(
+            'Orbit product type, either "FOE", "NOE", "MOE", "POE", or'
+            ' "Custom", where "FOE" stands for Forecast Orbit Ephemeris,'
+            ' "NOE" is Near real-time Orbit Ephemeris, "MOE" is Medium'
+            ' precision Orbit Ephemeris, and "POE" is Precise Orbit'
+            ' Ephemeris')
 
     def set_attitude(self, attitude: Attitude, orbit: Orbit,
                      ellipsoid=Ellipsoid(), type="Custom"):

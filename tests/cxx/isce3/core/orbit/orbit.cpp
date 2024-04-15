@@ -176,13 +176,15 @@ struct OrbitTest : public testing::Test {
 
 TEST_F(OrbitTest, Constructor)
 {
-    Orbit orbit(statevecs);
+    std::string orbit_type = "POE";
+    Orbit orbit(statevecs, orbit_type);
 
     // reference epoch defaults to time of first state vector
     DateTime refepoch = statevecs[0].datetime;
     double dt = (statevecs[1].datetime - statevecs[0].datetime).getTotalSeconds();
     int size = statevecs.size();
 
+    EXPECT_EQ(orbit.type(), orbit_type);
     EXPECT_EQ( orbit.referenceEpoch(), refepoch );
     EXPECT_DOUBLE_EQ( orbit.spacing(), dt );
     EXPECT_EQ( orbit.size(), size );
@@ -344,8 +346,13 @@ TEST_F(OrbitTest, Comparison)
     Orbit orbit2(statevecs);
     Orbit orbit3;
 
+    std::string orbit_type_poe = "POE";
+    Orbit orbit4(statevecs, orbit_type_poe);
+
     EXPECT_TRUE( orbit1 == orbit2 );
     EXPECT_TRUE( orbit1 != orbit3 );
+    EXPECT_TRUE( orbit1 != orbit4 );
+    EXPECT_TRUE( orbit3 != orbit4 );
 }
 
 TEST_F(OrbitTest, OrbitInterpBorderMode)

@@ -134,13 +134,12 @@ def get_alos_orbit(ldr: LeaderFile.LeaderFile) -> isce3.core.Orbit:
             velocity = [sv.VelocityXInmpers, sv.VelocityYInmpers, sv.VelocityZInmpers]
         ))
     # Use tref as epoch, not time of first sample.
-    return isce3.core.Orbit(svs, isce3.core.DateTime(tref))
+    return isce3.core.Orbit(svs, isce3.core.DateTime(tref), type='DOE')
 
 
 def set_h5_orbit(group: h5py.Group, orbit: isce3.core.Orbit):
     orbit.save_to_h5(group)
-    # orbitType and acceleration not used/contained in Orbit object
-    group.create_dataset('orbitType', data=numpy.string_('DOE'))
+    # acceleration not used/contained in Orbit object
     dset = group.create_dataset("acceleration",
                                 data=numpy.zeros_like(orbit.velocity))
     dset.attrs["units"] = numpy.string_("meters per second squared")

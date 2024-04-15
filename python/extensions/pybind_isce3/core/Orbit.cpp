@@ -38,8 +38,17 @@ void addbinding(pybind11::enum_<isce3::core::OrbitInterpMethod> & pyOrbitInterpM
 void addbinding(py::class_<Orbit> & pyOrbit)
 {
     pyOrbit
-        .def(py::init<std::vector<StateVector>>())
-        .def(py::init<std::vector<StateVector>, isce3::core::DateTime>())
+        .def(py::init<std::vector<StateVector>, isce3::core::OrbitInterpMethod,
+             std::string>(),
+                py::arg("state_vectors"),
+                py::arg("interp_method")=isce3::core::OrbitInterpMethod::Hermite,
+                py::arg("type") = "")
+        .def(py::init<std::vector<StateVector>, isce3::core::DateTime,
+             isce3::core::OrbitInterpMethod, std::string>(),
+                py::arg("state_vectors"),
+                py::arg("date_time"),
+                py::arg("interp_method")=isce3::core::OrbitInterpMethod::Hermite,
+                py::arg("type") = "")
         .def_property_readonly("reference_epoch",
                 py::overload_cast<>(&Orbit::referenceEpoch, py::const_))
         // add a function rather than just a settable property since
@@ -157,5 +166,23 @@ void addbinding(py::class_<Orbit> & pyOrbit)
             The method for interpolating orbit state vectors (cubic
             Hermite spline interpolation or eighth-order Legendre
             polynomial interpolation).
+        )")
+        .def("set_type", py::overload_cast<const std::string&>(&Orbit::type),
+        py::arg("type"), R"(
+        Set orbit type.
+
+        Parameters
+        ----------
+        type : str
+            The orbit ephemeris precision type. Example: "FOE", "NOE",
+            "MOE", "POE", or "Custom".
+        )")
+       .def("get_type", py::overload_cast<>(&Orbit::type, py::const_), R"(
+        Get orbit ephemeris precision type.
+
+        Returns
+        -------
+        type : str
+            The orbit ephemeris precision type.
         )");
 }

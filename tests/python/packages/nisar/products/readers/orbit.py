@@ -12,6 +12,7 @@ def test_load_orbit():
     # Some spot checks based on visual inspection of the XML file.
     t0 = isce3.core.DateTime(2015, 12, 10, 20, 59, 43.0)
     assert orbit.reference_epoch == t0
+    assert orbit.get_type() == 'FOE'
     npt.assert_allclose(orbit.position[0], [6050436.50829497,
                                             -49963.56327277,
                                             -4790189.19514634])
