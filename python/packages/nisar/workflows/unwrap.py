@@ -275,7 +275,7 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         rg_spac = \
                             src_h5[f"{src_freq_group_path}/interferogram/slantRangeSpacing"][()]
                         az_spac = \
-                            src_h5[f"{src_freq_group_path}/""sceneCenterAlongTrackSpacing"][()]
+                            src_h5[f"{src_freq_group_path}/interferogram/sceneCenterAlongTrackSpacing"][()]
                         rg_bw = \
                             src_h5[f"{src_freq_bandwidth_group_path}/rangeBandwidth"][()]
                         # Note, this is the single-look range resolution
