@@ -189,7 +189,8 @@ def get_radar_band(slc_path, freq='A'):
     '''
     slc = SLC(hdf5file=slc_path)
     swath_frequency_path = f"{slc.SwathPath}/frequency{freq}/"
-    center_frequency = slc[f'{swath_frequency_path}/processedCenterFrequency'][()]/1e9
+    with h5py.File(slc_path, 'r', libver='latest', swmr=True) as h:
+        center_frequency = h[f'{swath_frequency_path}/processedCenterFrequency'][()] / 1e9
 
     # L band if the center frequency is between 1 GHz and 2 GHz
     # S band if the center frequency is between 2 GHz and 4 GHz
