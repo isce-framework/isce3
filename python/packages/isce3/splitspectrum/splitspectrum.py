@@ -1,3 +1,5 @@
+import math
+
 from dataclasses import dataclass
 import journal
 import numpy as np
@@ -16,11 +18,11 @@ class bandpass_meta_data:
     wavelength: float
     # sampling frequency
     rg_sample_freq: float
-    #bandiwdth
+    # bandwidth
     rg_bandwidth: float
-    #center frequency
+    # center frequency
     center_freq: float
-    #slant range
+    # slant range
     slant_range: 'method'
 
     @classmethod
@@ -39,8 +41,14 @@ class bandpass_meta_data:
         """
         rdr_grid = slc_product.getRadarGrid(freq)
         rg_sample_freq = \
-            isce3.core.speed_of_light * 0.5 / \
+            isce3.core.speed_of_light * 0.5 /\
             rdr_grid.range_pixel_spacing
+        is_close = math.isclose(rg_sample_freq,
+                                np.round(rg_sample_freq),
+                                rel_tol=1e-8)
+        if is_close:
+            rg_sample_freq = np.round(rg_sample_freq)
+
         rg_bandwidth = \
             slc_product.getSwathMetadata(freq).processed_range_bandwidth
         center_frequency = \
@@ -102,7 +110,8 @@ class SplitSpectrum:
                  rg_bandwidth,
                  center_frequency,
                  slant_range,
-                 freq):
+                 freq,
+                 sampling_bandwidth_ratio=None):
         """Initialized Bandpass Class with SLC meta data
 
         Parameters
@@ -116,6 +125,10 @@ class SplitSpectrum:
         slant_range : new center frequency for bandpass [Hz]
         freq : {'A', 'B'}
             frequency band
+        sampling_bandwidth_ratio: float
+            The ratio of range sampling frequency to bandwidth.
+            If not provided, sampling frequency will be same as
+            input.
         """
         self.freq = freq
         self.rg_sample_freq = rg_sample_freq
@@ -124,6 +137,9 @@ class SplitSpectrum:
         self.rg_bandwidth = rg_bandwidth
         self.center_frequency = center_frequency
         self.slant_range = slant_range
+        if sampling_bandwidth_ratio is None:
+            sampling_bandwidth_ratio = rg_sample_freq / rg_bandwidth
+        self.sampling_bandwidth_ratio = sampling_bandwidth_ratio
 
     def bandpass_shift_spectrum(self,
                                 slc_raster,
@@ -196,17 +212,33 @@ class SplitSpectrum:
         # update metadata with new parameters
         meta = dict()
         new_bandwidth = high_frequency - low_frequency
+        new_rg_sample_freq = np.abs(new_bandwidth) * \
+            self.sampling_bandwidth_ratio
+
         meta['center_frequency'] = new_center_frequency
         meta['rg_bandwidth'] = new_bandwidth
+        meta['rg_sample_freq'] = new_rg_sample_freq
 
         # Resampling changes the spacing and slant range
         if resampling:
-            resampling_scale_factor = rg_bandwidth / new_bandwidth
+            # due to the precision of the floating point, the resampling
+            # scaling factor may be not integer.
+            resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
+
+            # convert to integer
+            if rg_sample_freq % new_rg_sample_freq == 0:
+                resampling_scale_factor = np.round(resampling_scale_factor)
+            else:
+                err_msg = 'Resampling scaling factor ' \
+                          f'{resampling_scale_factor} must be an integer.'
+                raise ValueError(err_msg)
+
             sub_width = int(width / resampling_scale_factor)
 
             x_cand = np.arange(1, width + 1)
             # find the maximum of the multiple of resampling_scale_factor
-            resample_width_end = np.max(x_cand[x_cand % resampling_scale_factor == 0])
+            resample_width_end = np.max(x_cand[x_cand %
+                                               resampling_scale_factor == 0])
 
             # resample SLC
             resampled_slc = resample(
@@ -216,7 +248,7 @@ class SplitSpectrum:
                 self.rg_pxl_spacing * resampling_scale_factor
             meta['slant_range'] = \
                 self.slant_range(0) + \
-                    np.arange(sub_width) * meta['range_spacing']
+                np.arange(sub_width) * meta['range_spacing']
 
             return resampled_slc, meta
 
@@ -268,10 +300,11 @@ class SplitSpectrum:
         height, width = slc_raster.shape
         slc_raster = np.asanyarray(slc_raster, dtype='complex')
         new_bandwidth = high_frequency - low_frequency
-        resampling_scale_factor = rg_bandwidth / new_bandwidth
+        new_rg_sample_freq = self.sampling_bandwidth_ratio * new_bandwidth
+        resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
 
         if new_bandwidth < 0:
-            err_str = f"Low frequency is higher than high frequency"
+            err_str = "Low frequency is higher than high frequency"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
@@ -279,11 +312,11 @@ class SplitSpectrum:
             fft_size = width
 
         if fft_size < width:
-            err_str = f"FFT size is smaller than number of range bins"
+            err_str = "FFT size is smaller than number of range bins"
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        # construct window to be deconvolved 
+        # construct window to be deconvolved
         # from the original SLC in freq domain
         window_target = self.get_range_bandpass_window(
             center_frequency=0,
@@ -311,14 +344,14 @@ class SplitSpectrum:
         spectrum_target = np.divide(spectrum_target,
                                     window_target,
                                     out=np.zeros_like(spectrum_target),
-                                    where=window_target!=0)
+                                    where=window_target != 0)
 
         # apply new bandpass window to spectrum
         slc_bandpassed = ifft(spectrum_target
-                      * window_bandpass
-                      * np.sqrt(resampling_scale_factor),
-                      n=fft_size,
-                      workers=-1)
+                              * window_bandpass
+                              * np.sqrt(resampling_scale_factor),
+                              n=fft_size,
+                              workers=-1)
 
         return slc_bandpassed
 
@@ -349,7 +382,7 @@ class SplitSpectrum:
         return slc_shifted
 
     def freq_spectrum(self, cfrequency, dt, fft_size):
-        ''' Return Discrete Fourier Transform sample frequencies 
+        ''' Return Discrete Fourier Transform sample frequencies
         with center frequency bias.
 
         Parameters:
@@ -484,11 +517,12 @@ class SplitSpectrum:
         filter_1d : np.ndarray
             one dimensional Cosine bandpass filter in frequency domain
         '''
-        filter_1d = self._construct_range_bandpass_kaiser_cosine(frequency_range,
-                                                     freq_low,
-                                                     freq_high,
-                                                     cosine_window,
-                                                     window_shape)
+        filter_1d = self._construct_range_bandpass_kaiser_cosine(
+            frequency_range,
+            freq_low,
+            freq_high,
+            cosine_window,
+            window_shape)
         return filter_1d
 
     def construct_range_bandpass_kaiser(self,
@@ -556,17 +590,18 @@ class SplitSpectrum:
         fft_size = len(frequency_range)
 
         if freq_high > np.max(frequency_range):
-            err_str = f"High frequency is out of frequency bins."
+            err_str = "High frequency is out of frequency bins."
             error_channel.log(err_str)
             raise ValueError(err_str)
 
         if freq_low < np.min(frequency_range):
-            err_str = f"Low frequency is out of frequency bins."
+            err_str = "Low frequency is out of frequency bins."
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        # sampling frequency is 1.2 times wider than bandwith
-        sampling_bandwidth_ratio = 1.2
+        # sampling frequency is 1.2 times wider than bandwidth for NISAR
+        sampling_bandwidth_ratio = self.sampling_bandwidth_ratio
+
         sampling_low_frequency = \
             freq_low - (sampling_bandwidth_ratio - 1) * subbandwidth * 0.5
         sampling_high_frequency = \
