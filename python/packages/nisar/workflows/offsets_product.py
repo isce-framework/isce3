@@ -59,7 +59,7 @@ def run(cfg: dict, output_hdf5: str = None):
         raise NotImplementedError(err_str)
 
     # Get the slant range and zero doppler time spacing
-    ref_radar_grid = ref_slc.getRadarGrid('A')
+    ref_radar_grid = ref_slc.getRadarGrid()
     ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
     ref_zero_doppler_time_spacing = ref_radar_grid.az_time_interval
 
@@ -138,8 +138,8 @@ def run(cfg: dict, output_hdf5: str = None):
                     ampcor.secondaryImageWidth = sec_raster.width
 
                     # Create a layer directory and set layer-dependent params
-                    lay_scratch = out_dir / key
-                    lay_scratch.mkdir(parents=True, exist_ok=True)
+                    layer_scratch_path = out_dir / key
+                    layer_scratch_path.mkdir(parents=True, exist_ok=True)
                     lay_cfg = offs_params[key]
 
                     # Set parameters depending on the layer
@@ -153,30 +153,30 @@ def run(cfg: dict, output_hdf5: str = None):
 
                     # Create empty datasets to store Ampcor results
                     ampcor.offsetImageName = str(
-                            lay_scratch / 'dense_offsets')
+                            layer_scratch_path / 'dense_offsets')
                     ampcor.grossOffsetImageName = str(
-                            lay_scratch / 'gross_offset')
-                    ampcor.snrImageName = str(lay_scratch / 'snr')
-                    ampcor.covImageName = str(lay_scratch / 'covariance')
-                    ampcor.corrImageName = str(lay_scratch/ 'correlation_peak')
+                            layer_scratch_path / 'gross_offset')
+                    ampcor.snrImageName = str(layer_scratch_path / 'snr')
+                    ampcor.covImageName = str(layer_scratch_path / 'covariance')
+                    ampcor.corrImageName = str(layer_scratch_path/ 'correlation_peak')
 
-                    create_empty_dataset(str(lay_scratch / 'dense_offsets'),
+                    create_empty_dataset(str(layer_scratch_path / 'dense_offsets'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 2,
                                          gdal.GDT_Float32)
-                    create_empty_dataset(str(lay_scratch / 'gross_offsets'),
+                    create_empty_dataset(str(layer_scratch_path / 'gross_offsets'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 2,
                                          gdal.GDT_Float32)
-                    create_empty_dataset(str(lay_scratch / 'snr'),
+                    create_empty_dataset(str(layer_scratch_path / 'snr'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 1,
                                          gdal.GDT_Float32)
-                    create_empty_dataset(str(lay_scratch / 'covariance'),
+                    create_empty_dataset(str(layer_scratch_path / 'covariance'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 3,
                                          gdal.GDT_Float32)
-                    create_empty_dataset(str(lay_scratch / 'correlation_peak'),
+                    create_empty_dataset(str(layer_scratch_path / 'correlation_peak'),
                                          ampcor.numberWindowAcross,
                                          ampcor.numberWindowDown, 1,
                                          gdal.GDT_Float32)
@@ -190,7 +190,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
                     # Write datasets
                     along_track_offset_ds =  dst_h5[f'{prod_path}/alongTrackOffset']
-                    write_along_track_offsets_data(str(lay_scratch / 'dense_offsets'),
+                    write_along_track_offsets_data(str(layer_scratch_path / 'dense_offsets'),
                                along_track_offset_ds,
                                1, offs_params['lines_per_block'],
                                ground_track_velocity_file,
@@ -198,24 +198,26 @@ def run(cfg: dict, output_hdf5: str = None):
 
                     slant_range_ds = dst_h5[f'{prod_path}/slantRangeOffset']
                     write_slant_range_offsets_data(
-                        str(lay_scratch / 'dense_offsets'),
+                        str(layer_scratch_path / 'dense_offsets'),
                         slant_range_ds,
                         2, offs_params['lines_per_block'],
                         ref_slant_range_spacing)
 
-                    write_data(str(lay_scratch / 'covariance'),
-                               dst_h5[f'{prod_path}/alongTrackOffsetVariance'],
-                               1, offs_params['lines_per_block'])
-                    write_data(str(lay_scratch / 'covariance'),
-                               dst_h5[f'{prod_path}/slantRangeOffsetVariance'],
-                               2, offs_params['lines_per_block'])
-                    write_data(str(lay_scratch / 'covariance'),
-                               dst_h5[f'{prod_path}/crossOffsetVariance'],
-                               3, offs_params['lines_per_block'])
-                    write_data(str(lay_scratch / 'snr'),
+                    # Write the offsets covariance data
+                    _write_offsets_covariance_data(
+                        str(layer_scratch_path / 'covariance'),
+                        dst_h5[f'{prod_path}/alongTrackOffsetVariance'],
+                        dst_h5[f'{prod_path}/slantRangeOffsetVariance'],
+                        dst_h5[f'{prod_path}/crossOffsetVariance'],
+                        offs_params['lines_per_block'],
+                        ground_track_velocity_file,
+                        ref_zero_doppler_time_spacing,
+                        ref_slant_range_spacing)
+
+                    write_data(str(layer_scratch_path / 'snr'),
                                dst_h5[f'{prod_path}/snr'],
                                1, offs_params['lines_per_block'])
-                    write_data(str(lay_scratch / 'correlation_peak'),
+                    write_data(str(layer_scratch_path / 'correlation_peak'),
                                dst_h5[f'{prod_path}/correlationSurfacePeak'],
                                1, offs_params['lines_per_block'])
 
@@ -379,7 +381,7 @@ def write_along_track_offsets_data(infile, dst_h5_ds, band, lines_per_block,
     Parameters
     ----------
     infile: str
-        File path to GDAL-friendly raster from where read data
+        File path to GDAL-friendly raster from where to read data
     dst_h5_ds: h5py.Dataset
         h5py Dataset where to write the data
     band: int
@@ -387,7 +389,8 @@ def write_along_track_offsets_data(infile, dst_h5_ds, band, lines_per_block,
     lines_per_block: int
         Lines per block to read in batch
     ground_track_velocity_file: str
-        Ground track velocity file in radargrid generated by the get_geometry_product
+        GDAL-friendly file path of ground track velocity of the radargrid
+        generated by the get_geometry_product
     ref_zero_doppler_time_spacing : float
         Zero doppler time spacing of the reference RSLC
     """
@@ -499,6 +502,107 @@ def write_slant_range_offsets_data(infile, dst_h5_ds, band,
     #   failed to create GDAL dataset from file 'IH5::ID=360287970189643682''
     # Therefore, an independent function compute_stats_real_hdf5_dataset is applied here.
     compute_stats_real_hdf5_dataset(dst_h5_ds)
+
+
+def _write_offsets_covariance_data(infile,
+                                   along_track_cov_ds,
+                                   slant_range_cov_ds,
+                                   cross_cov_ds,
+                                   lines_per_block,
+                                   ground_track_velocity_file,
+                                   ref_zero_doppler_time_spacing,
+                                   ref_slant_range_spacing):
+    """
+    Write offsets covariance data from GDAL raster to HDF5 layer,
+    and convert it to meters
+
+    Parameters
+    ----------
+    infile: str
+        File path to GDAL-friendly raster from where read data
+    along_track_cov_ds: h5py.Dataset
+        The variance of the along track dataset
+    slant_range_cov_ds: h5py.Dataset
+        The variane of the slant range dataset
+    cross_cov_ds : h5py.Dataset
+        The covariance between the along track and slant range dataset
+    lines_per_block: int
+        Lines per block to read in batch
+    ground_track_velocity_file: str
+        Ground track velocity file in radargrid generated by the get_geometry_product
+    ref_zero_doppler_time_spacing : float
+        Zero doppler time spacing of the reference RSLC
+    ref_slant_range_spacing: float
+        Slant range spacing of the reference RSLC
+    """
+
+    # Get shape of input file (same as output created from prep_insar)
+    ds = gdal.Open(infile, gdal.GA_ReadOnly)
+    length = ds.RasterYSize
+    width = ds.RasterXSize
+
+    # Open the ground track velocity file
+    ground_track_velocity_ds = gdal.Open(ground_track_velocity_file,
+                                         gdal.GA_ReadOnly)
+
+    lines_per_block = min(length, lines_per_block)
+    num_blocks = int(np.ceil(length / lines_per_block))
+
+    # Iterate over available number of blocks
+    for block in range(num_blocks):
+        line_start = block * lines_per_block
+        if block == num_blocks - 1:
+            block_length = length - line_start
+        else:
+            block_length = lines_per_block
+
+        # Read ground track velocity data block
+        ground_track_velocity_data_block = \
+            ground_track_velocity_ds.\
+                GetRasterBand(1).ReadAsArray(0,
+                                             line_start,
+                                             width,
+                                             block_length)
+
+        # Read covariance data block along the track, the slant range,
+        # and between along track and slant range
+        along_track_cov_data_block, slant_range_cov_data_block,\
+            cross_cov_data_block = [ds.GetRasterBand(band).\
+                ReadAsArray(0, line_start, width, block_length)
+                for band in [1, 2, 3]]
+
+        output_slice = np.s_[line_start:line_start + block_length, :]
+        # Convert the along track pixel offsets covariance to meters using the equation
+        # along_track_offset_covaraince_in_meters =
+        # along_track_offset_covaraince_in_pixels *
+        # (ground_track_velocity * zero_doppler_spacing_of_RSLC)^2
+        along_track_cov_data_block *= (ground_track_velocity_data_block \
+            * ref_zero_doppler_time_spacing)**2
+        along_track_cov_ds.write_direct(along_track_cov_data_block,
+                                        dest_sel=output_slice)
+
+        # Convert the slant range pixel offsets covariance to meters^2 using the equation
+        # slant_range_offset_covaraince_in_meters =
+        # slant_range_offset_covaraince_in_pixels *
+        # slant_range_spacing^2
+        slant_range_cov_data_block *= ref_slant_range_spacing**2
+        slant_range_cov_ds.write_direct(slant_range_cov_data_block,
+                                        dest_sel=output_slice)
+
+        # Convert the cross covriance pixel offsets covariance to meters^2 using the equation
+        # cross_offset_covaraince_in_meters =
+        # cross_offset_covaraince_in_pixels *
+        # slant_range_spacing * ground_track_velocity * zero_doppler_spacing_of_RSLC
+        cross_cov_data_block *= ground_track_velocity_data_block \
+            * ref_zero_doppler_time_spacing * ref_slant_range_spacing
+        cross_cov_ds.write_direct(cross_cov_data_block,
+                                  dest_sel=output_slice)
+
+    # Add stats to the covaraince matrix
+    for h5_ds in [along_track_cov_ds,
+                  slant_range_cov_ds,
+                  cross_cov_ds]:
+        compute_stats_real_hdf5_dataset(h5_ds)
 
 
 def write_data(infile, outfile, band, lines_per_block):

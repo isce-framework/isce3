@@ -302,12 +302,12 @@ class ROFFWriter(L1InSARWriter):
                 (
                     "alongTrackOffsetVariance",
                     "Along-track pixel offsets variance",
-                    Units.unitless,
+                    Units.meter2,
                 ),
                 (
                     "slantRangeOffsetVariance",
                     "Slant range pixel offsets variance",
-                    Units.unitless,
+                    Units.meter2,
                 ),
                 (
                     "correlationSurfacePeak",
@@ -317,7 +317,7 @@ class ROFFWriter(L1InSARWriter):
                 (
                     "crossOffsetVariance",
                     "Off-diagonal term of the pixel offsets covariance matrix",
-                    Units.unitless,
+                    Units.meter2,
                 ),
                 (
                     "slantRangeOffset",

@@ -9,6 +9,7 @@ class Units:
     Convenience dataclass for storing units in InSAR products
     """
     meter: np.bytes_ = np.string_('meters')
+    meter2: np.bytes_ = np.string_('meters^2')
     second: np.bytes_ = np.string_('seconds')
     unitless: np.bytes_ = np.string_('1')
     dn: np.bytes_ = np.string_('DN')

@@ -43,7 +43,7 @@ def run(cfg: dict, output_hdf5: str = None):
 
     # Initialize parameters share by frequency A and B
     ref_slc = SLC(hdf5file=ref_hdf5)
-    ref_radar_grid = ref_slc.getRadarGrid('A')
+    ref_radar_grid = ref_slc.getRadarGrid()
 
     # Get the slant range and zero doppler time spacing
     ref_slant_range_spacing = ref_radar_grid.range_pixel_spacing
