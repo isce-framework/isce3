@@ -278,9 +278,14 @@ class InSARBaseWriter(h5py.File):
         if rslc_name.lower() == "reference":
             rslc_h5py_file_obj = self.ref_h5py_file_obj
             rslc = self.ref_rslc
+            rslc_file = self.ref_h5_slc_file
         else:
             rslc_h5py_file_obj = self.sec_h5py_file_obj
             rslc = self.sec_rslc
+            rslc_file = self.sec_h5_slc_file
+
+        # Extract relevant identification from reference and secondary RSLC
+        id_group = rslc_h5py_file_obj[rslc.IdentificationPath]
 
         rfi_mit_path = (
             f"{rslc.ProcessingInformationPath}/algorithms/rfiMitigation"
@@ -341,8 +346,10 @@ class InSARBaseWriter(h5py.File):
         for ds_param in ds_params:
             add_dataset_and_attrs(dst_param_group, ds_param)
 
-        for freq, *_ in get_cfg_freq_pols(self.cfg):
+        swath_group = rslc_h5py_file_obj[rslc.SwathPath]
 
+        for freq, *_ in get_cfg_freq_pols(self.cfg):
+            rslc_radar_grid = rslc.getRadarGrid(freq)
             rslc_group_frequency_name = \
                 f"{self.group_paths.ParametersPath}/{rslc_name}/frequency{freq}"
             rslc_frequency_group = self.require_group(rslc_group_frequency_name)
@@ -382,6 +389,37 @@ class InSARBaseWriter(h5py.File):
                np.string_(
                    f"Time interval in the along-track direction for {rslc_name} RSLC raster layers"
                )
+
+            # Copy the zero-Dopper information from the source RSLC to the RSLC group
+            id_group.copy('zeroDopplerStartTime', rslc_frequency_group)
+
+            # Update the description attributes of the zeroDopplerTime
+            ds_zerodopp = rslc_frequency_group[f"zeroDopplerStartTime"]
+            ds_zerodopp.attrs['description'] = \
+                np.string_(f"Azimuth Start time of the {rslc_name} RSLC product")
+
+            rg_names_to_be_created = [
+                DatasetParams(
+                    "slantRangeStart",
+                    rslc_radar_grid.starting_range,
+                    f"Slant range start distance for the {rslc_name} RSLC",
+                    {'units' : Units.meter},
+                ),
+                DatasetParams(
+                    "numberOfAzimuthLines",
+                    rslc_radar_grid.length,
+                    f"Number of azimuth lines within the {rslc_name} RSLC",
+                    {'units' : Units.unitless},
+                ),
+                DatasetParams(
+                    "numberOfRangeSamples",
+                    rslc_radar_grid.width,
+                    f"Number of slant range samples for each azimuth line within the {rslc_name} RSLC",
+                    {'units' : Units.unitless},
+                ),
+            ]
+            for ds_param in rg_names_to_be_created:
+                add_dataset_and_attrs(rslc_frequency_group, ds_param)
 
             doppler_centroid_group = rslc_h5py_file_obj[
                 f"{rslc.ProcessingInformationPath}/parameters/frequency{freq}"
