@@ -18,7 +18,7 @@ class bandpass_meta_data:
     wavelength: float
     # sampling frequency
     rg_sample_freq: float
-    # bandiwdth
+    # bandwidth
     rg_bandwidth: float
     # center frequency
     center_freq: float
@@ -224,6 +224,8 @@ class SplitSpectrum:
             # due to the precision of the floating point, the resampling
             # scaling factor may be not integer.
             resampling_scale_factor = rg_sample_freq / new_rg_sample_freq
+
+            # convert to integer
             if rg_sample_freq % new_rg_sample_freq == 0:
                 resampling_scale_factor = np.round(resampling_scale_factor)
             else:
@@ -597,7 +599,7 @@ class SplitSpectrum:
             error_channel.log(err_str)
             raise ValueError(err_str)
 
-        # sampling frequency is 1.2 times wider than bandwith for NISAR
+        # sampling frequency is 1.2 times wider than bandwidth for NISAR
         sampling_bandwidth_ratio = self.sampling_bandwidth_ratio
 
         sampling_low_frequency = \
