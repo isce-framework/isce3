@@ -607,6 +607,12 @@ class BaseWriterSingleInput():
         self.copy_from_input('identification/isDithered', default=False)
         self.copy_from_input('identification/isMixedMode', default=False)
 
+        # Copy CRID from runconfig (defaults to "A10000")
+        self.copy_from_runconfig(
+            'identification/compositeReleaseId',
+            'primary_executable/composite_release_id',
+            default="A10000")
+
     def set_value(self, h5_field, data, default=None, format_function=None):
         """
         Create an HDF5 dataset with a value set by the user

@@ -186,6 +186,12 @@
                 <annotation app="conformance"
                             lang="en">"True" if this product is a composite of data collected in multiple radar modes, "False" otherwise.</annotation>
         </string>
+        <string length="6"
+                name="/science/LSAR/identification/compositeReleaseId"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Unique version identifier of the science data production system</annotation>
+        </string>
         <!-- End of product identification -->
 
         <!-- Main layers for frequencyA -->
