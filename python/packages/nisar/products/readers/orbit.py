@@ -48,12 +48,21 @@ def load_orbit_from_xml(f, epoch: DateTime = None) -> Orbit:
 
     orbit_kwargs = {}
 
-    # save orbit ephemeris precision type
+    # read the orbit ephemeris precision type
+    # first, try to read it from `productInformation/productType`
     orbit_type_et = root.find('productInformation/productType')
+    if orbit_type_et is None:
+
+        # if not found, try to read it from `productInformation/fileType`
+        orbit_type_et = root.find('productInformation/fileType')
+
+    # if still not found, raise a warning
     if orbit_type_et is None:
         warning_channel.log("Orbit file does not contain precision"
                             ' type (e.g., "FOE", "NOE", "MOE", "POE", or'
                             ' "Custom").')
+
+    # otherwise, add the precision type to the orbit kwargs
     else:
         orbit_kwargs['type'] = orbit_type_et.text
 
