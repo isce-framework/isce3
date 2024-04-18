@@ -1,3 +1,4 @@
+from collections import defaultdict
 from enum import IntEnum, unique
 from isce3.core import Orbit, Attitude, Linspace
 from isce3.geometry import DEMInterpolator
@@ -379,16 +380,17 @@ class AntennaPattern:
                 self.reference_epoch, norm_weight=self.norm_weight,
                 rg_spacing_min=self.rg_spacing_min)
 
-    def form_pattern(self, t: float, slant_range: Linspace,
-                     nearest: bool = False):
+    def form_pattern(self, tseq, slant_range: Linspace,
+                     nearest: bool = False, tx_pols = None, rx_pols = None):
         """
         Get the two-way antenna pattern at a given time and set of ranges for
-        all polarization combinations.
+        either all or specified polarization combinations if Tx/Rx pols are
+        provided.
 
         Parameters
         ----------
-        t: float
-            Azimuth time in seconds (since same epoch as pulse_times)
+        tseq: float or np.ndarray
+            Azimuth times in seconds (since same epoch as pulse_times)
         slant_range: isce3.core.Linspace
             Range vector (in meters)
         nearest : bool
@@ -396,24 +398,47 @@ class AntennaPattern:
             then `i` will be returned (e.g., a floor operation).  If
             `nearest=True` then return the closer of the two (e.g., a round
             operation).
+        tx_pols : Optional[Iterable[str]]
+            List of Tx pols to use. Default is all available Tx pols.
+        rx_pols : Optional[Iterable[str]]
+            List of Rx pols to use. Default is all available Rx pols.
 
         Returns
         -------
         dict
             Two-way complex antenna patterns as a function of range bin
-            over all TxRx polarization products. The format of dict is
+            over either all or specified TxRx polarization products. The format of dict is
             {pol: np.ndarray[complex]}.
         """
+        if tx_pols is None:
+            tx_pols = self.tx_pols
+        elif not set(tx_pols).issubset(self.tx_pols):
+            raise ValueError(f'Specified tx_pols {tx_pols} is out of available Tx pols {self.tx_pols}!')
+        if rx_pols is None:
+            rx_pols = self.rx_pols
+        elif not set(rx_pols).issubset(self.rx_pols):
+            raise ValueError(f'Specified rx_pols {rx_pols} is out of available Rx pols {self.rx_pols}!')
+
+        tseq = np.atleast_1d(tseq)
+
         # form one-way RX patterns for all linear pols
         rx_dbf_pat = dict()
-        for p in self.rx_pols:
-            rd, wd, wl = self.finder[p].get_dbf_timing(t)
-            # Only update RxDBF if range timing changes, otherwise use cached.
-            # Presumption is that timing changes infrequently and user is
-            # likely to call form_pattern serially in time-sorted order.
-            if not ((all(rd == self.rx_trm[p].rd) and
-                     all(wd == self.rx_trm[p].wd) and
-                     all(wl == self.rx_trm[p].wl))):
+        for p in rx_pols:
+
+            # Split up provided timespan into groups with the same range timing
+            # (Adding one because get_pulse_index uses floor but we want ceil)
+            change_indices = [
+                get_pulse_index(tseq, t) + 1 for t in self.finder[p].time_changes
+                if t > tseq[0] and t < tseq[-1]
+            ]
+            tgroups = np.split(tseq, change_indices)
+
+            # Running start-index of tgroup within entire tspan
+            i0 = 0
+            for tgroup in tgroups:
+                t = tgroup[0]
+                rd, wd, wl = self.finder[p].get_dbf_timing(t)
+
                 log.info(f'Updating {p}-pol RX antenna pattern because'
                          ' change in RD/WD/WL')
 
@@ -427,12 +452,23 @@ class AntennaPattern:
                     self.rx_trm[p], self.reference_epoch,
                     norm_weight=self.rx_dbf[p].norm_weight)
 
-            rx_dbf_pat[p] = self.rx_dbf[p].form_pattern(
-                t, slant_range, channel_adj_factors=self.channel_adj_fact_rx[p]
-            )
+                pat = self.rx_dbf[p].form_pattern(
+                    tgroup, slant_range,
+                    channel_adj_factors=self.channel_adj_fact_rx[p]
+                )
+                # Initialize the pattern array so we can slice this range timing
+                # group into it - TODO move this outside the loop for clarity?
+                if p not in rx_dbf_pat:
+                    rx_dbf_pat[p] = np.empty((len(tseq), slant_range.size))
+
+                # Slice it into the full array, and
+                # bump up the index for the next slice
+                iend = i0 + len(tgroup)
+                rx_dbf_pat[p][i0:iend] = pat
+                i0 = iend
 
         # form one-way TX patterns for all TX pols
-        tx_bmf_pat = dict()
+        tx_bmf_pat = defaultdict(lambda: np.empty((len(tseq), slant_range.size)))
         if self.pol_type == PolType.compact_left:
             tx_bmf_pat['L'] = (
                 self.tx_bmf['H'].form_pattern(
@@ -453,7 +489,7 @@ class AntennaPattern:
                     channel_adj_factors=self.channel_adj_fact_tx['V'])
             )
         else:  # other non-compact pol types
-            for p in self.tx_pols:
+            for p in tx_pols:
                 tx_bmf_pat[p] = self.tx_bmf[p].form_pattern(
                     t, slant_range, nearest=nearest,
                     channel_adj_factors=self.channel_adj_fact_tx[p])
@@ -461,14 +497,14 @@ class AntennaPattern:
         # build two-way pattern for all unique TxRx products obtained from all
         # freq bands
         pat2w = dict()
-        for tx_p in self.tx_pols:
+        for tx_p in tx_pols:
             if self.pol_type == PolType.quasi_dual:
                 txrx_p = 2 * tx_p
                 pat2w[txrx_p] = np.squeeze(
                         tx_bmf_pat[tx_p] * rx_dbf_pat[tx_p]
                         )
             else:  # non quasi-dual mode
-                for rx_p in self.rx_pols:
+                for rx_p in rx_pols:
                     txrx_p = tx_p + rx_p
                     pat2w[txrx_p] = np.squeeze(
                         tx_bmf_pat[tx_p] * rx_dbf_pat[rx_p]

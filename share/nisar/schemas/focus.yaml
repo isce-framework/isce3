@@ -124,6 +124,8 @@ runconfig:
       # Azimuth spectral window, optional.  Defaults to no weighting.
       azimuth_window: include('spectral_window', required=False)
 
+      elevation_antenna_pattern: include('eap_options', required=False)
+
       radio_frequency_interference: include('rfi_options', required=False)
 
       # Range filter parameters for mixed-mode cases.
@@ -244,6 +246,11 @@ spectral_window:
   # Shape parameter. For Kaiser, 0 <= shape < Inf.
   # For Cosine, 0 <= shape <= 1
   shape: num(min=0.0, required=False)
+
+eap_options:
+  # Range spacing in meters of resampled antenna pattern grid
+  # Defaults to 5 MHz bandwidth (6 MHz sample rate)
+  spacing: num(required=False)
 
 rdr2geo_options:
   # Allowable height error in m

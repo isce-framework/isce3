@@ -7,6 +7,7 @@ import h5py
 from itertools import chain
 import json
 import logging
+import math
 import os
 from nisar.antenna import AntennaPattern
 from nisar.mixed_mode import (PolChannel, PolChannelSet, Band,
@@ -1681,11 +1682,24 @@ def focus(runconfig, runconfig_path=""):
             rcfile = Raster(fd.name, rc.output_size, rc_grid.shape[0], GDT_CFloat32)
             log.info(f"Range compressed data shape = {rcfile.data.shape}")
 
-            # And do radiometric corrections at the same time.
+            # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
                 antpat = AntennaPattern(raw, dem, antparser,
                                         instparser, orbit, attitude)
 
+                log.info("Precomputing antenna patterns")
+                i = np.arange(rc_grid.shape[0])
+                ti = np.array(rc_grid.sensing_start + i / rc_grid.prf)
+
+                spacing = cfg.processing.elevation_antenna_pattern.spacing
+                span = rc_grid.slant_ranges[-1] - rc_grid.slant_ranges[0]
+                nbins = math.ceil(span / spacing) + 1
+                pat_ranges = isce3.core.Linspace(rc_grid.slant_ranges[0], spacing, nbins)
+                patterns = antpat.form_pattern(
+                    ti, pat_ranges, nearest=not uniform_pri,
+                    tx_pols=[pol[0]], rx_pols=[pol[1]])
+
+            # And do radiometric corrections at the same time.
             for pulse in range(0, rc_grid.shape[0], na):
                 log.info(f"Range compressing block at pulse {pulse}")
                 block = np.s_[pulse:pulse+na, :]
@@ -1696,12 +1710,8 @@ def focus(runconfig, runconfig_path=""):
                 if cfg.processing.is_enabled.eap:
                     log.info("Compensating dynamic antenna pattern")
                     for i in range(rc_grid[block].shape[0]):
-                        ti = rc_grid.sensing_start + (pulse + i) / rc_grid.prf
-                        # FIXME move this out of pulse loop to avoid redundant
-                        # pattern calculations.
-                        patterns = antpat.form_pattern(
-                            ti, rc_grid.slant_ranges, nearest=not uniform_pri)
-                        rcfile.data[pulse + i, :] /= patterns[pol]
+                        interp_pattern = np.interp(rc_grid.slant_ranges, pat_ranges, patterns[pol][pulse + i])
+                        rcfile.data[pulse + i, :] /= interp_pattern
                 if cfg.processing.is_enabled.range_cor:
                     log.info("Compensating range loss")
                     # Two-way power drops with R^4, so amplitude drops with R^2.
