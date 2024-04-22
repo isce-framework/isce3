@@ -27,6 +27,7 @@ class GslcWriter(BaseL2WriterSingleInput):
         self.populate_data_parameters()
         self.populate_calibration_information()
         self.populate_calibration_information_gslc_specific()
+        self.populate_source_data()
         self.populate_processing_information_l2_common()
         self.populate_processing_information()
         self.populate_orbit()
