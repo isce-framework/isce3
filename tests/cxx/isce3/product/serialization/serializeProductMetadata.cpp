@@ -34,7 +34,7 @@ TEST(MetadataTest, FromHDF5) {
     isce3::io::IGroup metaGroup = file.openGroup("/science/LSAR/SLC/metadata");
 
     // Deserialize the Metadata
-    isce3::product::loadFromH5(metaGroup, meta);
+    isce3::product::loadFromH5(metaGroup, meta, "L1");
 
     // Get the orbit
     const isce3::core::Orbit & orbit = meta.orbit();

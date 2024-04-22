@@ -6,6 +6,8 @@ import isce3.ext.isce3 as isce3
 from nisar.workflows import gcov
 from nisar.workflows.gcov_runconfig import GCOVRunConfig
 from nisar.products.writers import GcovWriter
+from nisar.products.readers import open_product
+import numpy as np
 
 import iscetest
 
@@ -59,6 +61,35 @@ def test_run():
             with GcovWriter(runconfig=runconfig) as gcov_obj:
                 gcov_obj.populate_metadata()
                 assert gcov_obj.granule_id == expected_granule_id
+
+                doppler_centroid_lut_path = (
+                    '/science/LSAR/GCOV/metadata/sourceData/'
+                    'processingInformation/parameters/frequencyA/'
+                    'dopplerCentroid')
+
+                # verify that Doppler Centroid LUT in radar coordinates
+                # is saved into the GCOV product
+                assert doppler_centroid_lut_path in gcov_obj.output_hdf5_obj
+
+            gcov_product = open_product(sas_output_file)
+            gcov_doppler_centroid_lut = gcov_product.getDopplerCentroid()
+            assert isinstance(gcov_doppler_centroid_lut, isce3.core.LUT2d)
+
+            # The GCOV Doppler Centroid LUT in radar coordiantes must match
+            # the RSLC Doppler Centroid LUT
+            rslc_product = open_product(f'{iscetest.data}/winnipeg.h5')
+            rslc_doppler_centroid_lut = rslc_product.getDopplerCentroid()
+
+            assert np.array_equal(gcov_doppler_centroid_lut.data,
+                                    rslc_doppler_centroid_lut.data)
+
+            lut_attributes_to_check_list = ['length', 'width',
+                                            'y_spacing', 'x_spacing',
+                                            'y_start', 'x_start']
+
+            for attr in lut_attributes_to_check_list:
+                assert (gcov_doppler_centroid_lut.__getattribute__(attr) ==
+                        rslc_doppler_centroid_lut.__getattribute__(attr))
 
 
 if __name__ == '__main__':

@@ -968,6 +968,45 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 f'{output_swaths_freq_path}/numberOfRangeSamples',
                 radar_grid_obj.width)
 
+            self.copy_from_input(
+                '{PRODUCT}/metadata/sourceData/processingInformation/'
+                f'parameters/frequency{frequency}/dopplerCentroid',
+                '{PRODUCT}/metadata/processingInformation/parameters/'
+                f'frequency{frequency}/dopplerCentroid',
+                skip_if_not_present=True)
+
+            # Copy range-Doppler Doppler Centroid LUT into the sourceData
+            # group.
+            # First, we look for the coordinate vectors `zeroDopplerTime`
+            # and `slantRange` in the same level of the `dopplerCentroid` LUT.
+            # If these vectors are not found, a `KeyError` exception will be
+            # raised. We catch that exception, and look for the coordinate
+            # vectors two levels below, following old RSLC specs.
+            try:
+                self.copy_from_input(
+                    '{PRODUCT}/metadata/sourceData/processingInformation/'
+                    f'parameters/frequency{frequency}/zeroDopplerTime',
+                    '{PRODUCT}/metadata/processingInformation/parameters/'
+                    f'frequency{frequency}/zeroDopplerTime')
+            except KeyError:
+                self.copy_from_input(
+                    '{PRODUCT}/metadata/sourceData/processingInformation/'
+                    f'parameters/frequency{frequency}/zeroDopplerTime',
+                    '{PRODUCT}/metadata/processingInformation/parameters/'
+                    'zeroDopplerTime')
+            try:
+                self.copy_from_input(
+                    '{PRODUCT}/metadata/sourceData/processingInformation/'
+                    f'parameters/frequency{frequency}/slantRange',
+                    '{PRODUCT}/metadata/processingInformation/parameters/'
+                    f'frequency{frequency}/slantRange')
+            except KeyError:
+                self.copy_from_input(
+                    '{PRODUCT}/metadata/sourceData/processingInformation/'
+                    f'parameters/frequency{frequency}/slantRange',
+                    '{PRODUCT}/metadata/processingInformation/parameters/'
+                    'slantRange')
+
     def populate_processing_information_l2_common(self):
 
         # Since the flag "rfiCorrectionApplied" is not present in the RSLC

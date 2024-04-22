@@ -105,12 +105,6 @@ RadarGridProduct(isce3::io::IH5File & file) {
     // Configure swaths
     loadFromH5(imGroup, _swaths);
 
-    // Get metadata group
-    isce3::io::IGroup metaGroup = file.openGroup(metadata_group_str);
-    // Configure metadata
-
-    loadFromH5(metaGroup, _metadata);
-
     // Get look direction
     auto identification_vector = findGroupPath(base_group, "identification");
     if (identification_vector.size() == 0) {
@@ -129,6 +123,17 @@ RadarGridProduct(isce3::io::IH5File & file) {
     isce3::io::loadFromH5(
             file, identification_group_str + "/lookDirection", lookDir);
     lookSide(lookDir);
+
+    std::string product_level = "L1";
+    if (isce3::io::exists(file, identification_group_str + "/productLevel")) {
+        isce3::io::loadFromH5(
+            file, identification_group_str + "/productLevel", product_level);
+    }
+
+    // Get metadata group
+    isce3::io::IGroup metaGroup = file.openGroup(metadata_group_str);
+    // Configure metadata
+    loadFromH5(metaGroup, _metadata, product_level);
 
     // Save the filename
     _filename = file.filename();

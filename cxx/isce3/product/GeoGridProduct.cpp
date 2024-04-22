@@ -74,7 +74,7 @@ GeoGridProduct(isce3::io::IH5File & file) {
     }
 
     // Configure metadata
-    loadFromH5(metaGroup, _metadata);
+    loadFromH5(metaGroup, _metadata, "L2");
 
     // Save the filename
     _filename = file.filename();

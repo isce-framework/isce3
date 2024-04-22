@@ -176,24 +176,42 @@ class Base(pyre.component,
         '''
         if frequency is None:
             frequency = self._getFirstFrequency()
-        dopplerPath = os.path.join(self.ProcessingInformationPath,
-                                'parameters', 'frequency' + frequency,
-                                'dopplerCentroid')
 
-        zeroDopplerTimePath = os.path.join(self.ProcessingInformationPath,
-                                            'parameters/zeroDopplerTime')
+        doppler_group_path = (f'{self.ProcessingInformationPath}/parameters/'
+                              f'frequency{frequency}')
 
-        slantRangePath = os.path.join(self.ProcessingInformationPath,
-                                        'parameters/slantRange')
+        # First, we look for the coordinate vectors `zeroDopplerTime`
+        # and `slantRange` in the same level of the `dopplerCentroid` LUT.
+        # If these vectors are not found, we look for the coordinate
+        # vectors two levels below, following old RSLC specs.
+        doppler_dataset_path = f'{doppler_group_path}/dopplerCentroid'
+        zero_doppler_time_dataset_path = (f'{doppler_group_path}/'
+                                          'zeroDopplerTime')
+        slant_range_dataset_path = f'{doppler_group_path}/slantRange'
+
+        zero_doppler_time_dataset_path_other = \
+            f'{self.ProcessingInformationPath}/parameters/zeroDopplerTime'
+        slant_range_dataset_path_other = (f'{self.ProcessingInformationPath}/'
+                                          'parameters/slantRange')
+
         # extract the native Doppler dataset
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
-            doppler = fid[dopplerPath][:]
-            zeroDopplerTime = fid[zeroDopplerTimePath][:]
-            slantRange = fid[slantRangePath][:]
+
+            if zero_doppler_time_dataset_path not in fid:
+                zero_doppler_time_dataset_path = \
+                    zero_doppler_time_dataset_path_other
+            if slant_range_dataset_path not in fid:
+                slant_range_dataset_path = \
+                    slant_range_dataset_path_other
+
+            doppler = fid[doppler_dataset_path][:]
+            zeroDopplerTime = fid[zero_doppler_time_dataset_path][:]
+            slantRange = fid[slant_range_dataset_path][:]
 
         dopplerCentroid = isce3.core.LUT2d(xcoord=slantRange,
-                ycoord=zeroDopplerTime,
-                data=doppler)
+                                           ycoord=zeroDopplerTime,
+                                           data=doppler)
+
         return dopplerCentroid
 
     @pyre.export

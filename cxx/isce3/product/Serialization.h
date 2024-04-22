@@ -39,16 +39,6 @@ namespace isce3 {
           * @param[in] proc         ProcessingInformation object to be configured. */
         inline void loadFromH5(isce3::io::IGroup & group, ProcessingInformation & proc) {
 
-            /**
-             * TODO: fix this!!!
-             * The processing information is not currently populated. 
-             * Once populated, the processing information LUTs will be
-             * provided over map coordinates to follow the products'
-             * specification, which differs from the implementation below
-             * that uses range-Doppler axis "slantRange" and
-             * "zeroDopplerTime"
-            */
-
             // Load effective velocity LUT
             isce3::core::LUT2d<double> lut;
             if (isce3::io::exists(group, "effectiveVelocity")) {
@@ -357,7 +347,8 @@ namespace isce3 {
          *
          * @param[in] group         HDF5 group object.
          * @param[in] meta          Metadata object to be configured. */
-        inline void loadFromH5(isce3::io::IGroup & group, Metadata & meta) {
+        inline void loadFromH5(isce3::io::IGroup & group, Metadata & meta,
+                               const std::string& product_level) {
 
             // Get orbit subgroup
             isce3::io::IGroup orbGroup = group.openGroup("orbit");
@@ -376,9 +367,20 @@ namespace isce3 {
             meta.attitude(attitude);
 
             // Get processing information subgroup
-            isce3::io::IGroup procGroup = group.openGroup("processingInformation/parameters");
-            // Configure ProcessingInformation
-            loadFromH5(procGroup, meta.procInfo());
+            if (product_level == "L1") {
+                isce3::io::IGroup procGroup = group.openGroup("processingInformation/parameters");
+                // Configure ProcessingInformation
+                loadFromH5(procGroup, meta.procInfo());
+            }
+
+            // Get processing information subgroup for GSLC and GCOV producs
+            if (product_level == "L2" &&
+                    isce3::io::exists(group, "sourceData/processingInformation/parameters")) {
+                isce3::io::IGroup procGroup = group.openGroup("sourceData/processingInformation/parameters");
+                // Configure ProcessingInformation
+                loadFromH5(procGroup, meta.procInfo());
+            }
+
         }
 
     }

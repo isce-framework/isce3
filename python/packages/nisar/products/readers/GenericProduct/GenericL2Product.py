@@ -78,3 +78,33 @@ class GenericL2Product(GenericProduct, family='nisar.productreader.product'):
         Returns the product level
         '''
         return "L2"
+
+    @pyre.export
+    def getDopplerCentroid(self, frequency=None):
+        '''
+        Extract the Doppler centroid
+        '''
+        if frequency is None:
+            frequency = self._getFirstFrequency()
+
+        doppler_group_path = (
+            f'{self.MetadataPath}/sourceData/processingInformation/parameters/'
+            f'frequency{frequency}')
+
+        doppler_dataset_path = f'{doppler_group_path}/dopplerCentroid'
+        zero_doppler_time_dataset_path = (f'{doppler_group_path}/'
+                                          'zeroDopplerTime')
+        slant_range_dataset_path = f'{doppler_group_path}/slantRange'
+
+        # extract the native Doppler dataset
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+
+            doppler = fid[doppler_dataset_path][:]
+            zeroDopplerTime = fid[zero_doppler_time_dataset_path][:]
+            slantRange = fid[slant_range_dataset_path][:]
+
+        dopplerCentroid = isce3.core.LUT2d(xcoord=slantRange,
+                                           ycoord=zeroDopplerTime,
+                                           data=doppler)
+
+        return dopplerCentroid
