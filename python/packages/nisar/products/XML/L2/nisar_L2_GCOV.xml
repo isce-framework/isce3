@@ -1,15 +1,17 @@
 <?xml version="1.0"?>
+<!-- product specification version is 1.1.0 -->
 <algorithm name="L2_GeocodedCovariance"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
     <product template="L2_GCOV_template">
     <!-- Start of the science section of product -->
     <science uid="sci_1">
       <!-- Global attributes for the product -->
       <annotation app="conformance" Conventions="CF-1.7"
-                                    title="NISAR L2_GCOV Product"
+                                    title="NISAR L2 GCOV Product"
                                     institution="NASA JPL"
                                     mission_name="NISAR"
-                                    reference_document="D-102274 NISAR NASA SDS Product Specification Level-2 Geocoded Polarimetric Covariance L2_GCOV"
+                                    reference_document="D-102274 NISAR NASA SDS Product Specification Level-2 Geocoded Polarimetric Covariance L2 GCOV"
                                     contact="nisar-sds-ops@jpl.nasa.gov"/>
       <!-- End of global attributes for the product -->
 
@@ -224,7 +226,7 @@
         </real>
 
         <real name="/science/LSAR/GCOV/grids/frequencyA/numberOfLooks"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -273,7 +275,7 @@
         <!-- 2D CF compliant rasters -->
         <!-- Number of layers in actual product will depend on list of available polarizations above -->
         <real name="/science/LSAR/GCOV/grids/frequencyA/rtcGammaToSigmaFactor"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -283,7 +285,7 @@
                       units="1">Radiometric terrain correction factor to normalize GCOV terms from gamma0 to sigma0</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/grids/frequencyA/mask"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               signed="false"
               width="8">
           <annotation app="conformance"
@@ -294,7 +296,7 @@
                       units="1">GCOV terms mask</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HHHH"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -335,7 +337,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/HVHV"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -366,7 +368,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/VHVH"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -387,7 +389,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/VVVV"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -398,7 +400,7 @@
           <annotation app="io" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/RHRH"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -418,18 +420,8 @@
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
-        <real name="/science/LSAR/GCOV/grids/frequencyA/RVRH"
-              shape="complexDataFrequencyAShape"
-              width="32">
-          <annotation app="conformance"
-                      lang="en"
-                      _FillValue="(nan+nan*j)"
-                      grid_mapping="projection"
-                      units="1">Covariance between RV and RH</annotation>
-          <annotation app="io" kwd="complex" />
-        </real>
         <real name="/science/LSAR/GCOV/grids/frequencyA/RVRV"
-              shape="complexDataFrequencyAShape"
+              shape="realDataFrequencyAShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -517,7 +509,7 @@
         <!-- 2D CF compliant rasters -->
         <!-- Number of layers in actual product will depend on list of available polarizations above -->
         <real name="/science/LSAR/GCOV/grids/frequencyB/numberOfLooks"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -528,7 +520,7 @@
           <annotation app="io" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/rtcGammaToSigmaFactor"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -538,7 +530,7 @@
                       units="1">Radiometric terrain correction factor to normalize GCOV terms from gamma0 to sigma0</annotation>
         </real>
         <integer name="/science/LSAR/GCOV/grids/frequencyB/mask"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               signed="false"
               width="8">
           <annotation app="conformance"
@@ -549,7 +541,7 @@
                       units="1">GCOV terms mask</annotation>
         </integer>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HHHH"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -590,7 +582,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/HVHV"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -621,7 +613,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/VHVH"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -642,7 +634,7 @@
           <annotation app="io" kwd="complex" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/VVVV"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -653,7 +645,7 @@
           <annotation app="io" />
         </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/RHRH"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -673,18 +665,8 @@
                       units="1">Covariance between RH and RV</annotation>
           <annotation app="io" kwd="complex" />
         </real>
-        <real name="/science/LSAR/GCOV/grids/frequencyB/RVRH"
-              shape="complexDataFrequencyBShape"
-              width="32">
-          <annotation app="conformance"
-                      lang="en"
-                      _FillValue="(nan+nan*j)"
-                      grid_mapping="projection"
-                      units="1">Covariance between RV and RH</annotation>
-          <annotation app="io" kwd="complex" />
-        </real>
         <real name="/science/LSAR/GCOV/grids/frequencyB/RVRV"
-              shape="complexDataFrequencyBShape"
+              shape="realDataFrequencyBShape"
               width="32">
           <annotation app="conformance"
                       lang="en"
@@ -1210,46 +1192,12 @@
 
         <!-- Start of calibration parameters -->
 
-        <!-- Crosstalk 2D LUTs -->
-        <integer name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/projection"
-                 shape="scalar"
-                 signed="false"
-                 width="32">
-            <annotation app="conformance"
-                        ellipsoid="Projection ellipsoid"
-                        epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
-                        grid_mapping_name="Grid mapping variable name"
-                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        semi_major_axis="Semi-major axis"
-                        spatial_ref="Spatial reference"
-                        utm_zone_number="UTM zone number"
-                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
-        </integer>
-        <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/yCoordinates"	
-              shape="calibrationLength"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">Y coordinates corresponding to crosstalk records</annotation>	
-        </real>	
-        <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/xCoordinates"	
-              shape="calibrationWidth"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">X coordinates corresponding to crosstalk records</annotation>	
-        </real>
+        <!-- Crosstalk parameters -->
         <real name="/science/LSAR/GCOV/metadata/calibrationInformation/crosstalk/txHorizontalCrosspol"
               shape="crosstalkComplexShape"
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="(nan+nan*j)"
-                          grid_mapping="projection"
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1258,8 +1206,6 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="(nan+nan*j)"
-                          grid_mapping="projection"
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1268,8 +1214,6 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="(nan+nan*j)"
-                          grid_mapping="projection"
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1278,8 +1222,6 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="(nan+nan*j)"
-                          grid_mapping="projection"
                           units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -2166,6 +2108,12 @@
                       lang="en">List of input orbit files used</annotation>
         </string>
         <string length="0"
+                name="/science/LSAR/GCOV/metadata/processingInformation/inputs/tecFiles"
+                shape="numberOfInputTecFiles">
+          <annotation app="conformance"
+                      lang="en">List of input total electron content (TEC) files used</annotation>
+        </string>
+        <string length="0"
                 name="/science/LSAR/GCOV/metadata/processingInformation/inputs/configFiles"
                 shape="numberOfInputConfigFiles">
           <annotation app="conformance"
@@ -2448,12 +2396,21 @@
     <shape name="complexDataFrequencyAShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape associated with L-SAR frequency A imagery datasets</annotation> 
+                       lang="en">Shape associated with L-SAR frequency A complex-valued imagery datasets</annotation> 
            <dimension extent="0"
                       name="frequencyALength"/>
            <dimension extent="0"
                       name="frequencyAWidth"/>
            <dimension name="complex" extent="2"/>
+    </shape>
+    <shape name="realDataFrequencyAShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape associated with L-SAR frequency A real-valued imagery datasets</annotation> 
+           <dimension extent="0"
+                      name="frequencyALength"/>
+           <dimension extent="0"
+                      name="frequencyAWidth"/>
     </shape>
 
     <!-- Frequency B related shapes -->
@@ -2488,12 +2445,21 @@
     <shape name="complexDataFrequencyBShape"
            order="slowest...fastest">
            <annotation app="conformance"
-                       lang="en">Shape associated with L-SAR frequency B imagery datasets</annotation>
+                       lang="en">Shape associated with L-SAR frequency B complex-valued imagery datasets</annotation>
            <dimension extent="0"
                       name="frequencyBLength"/>
            <dimension extent="0"
                       name="frequencyBWidth"/>
            <dimension name="complex" extent="2"/> 
+    </shape>
+    <shape name="realDataFrequencyBShape"
+           order="slowest...fastest">
+           <annotation app="conformance"
+                       lang="en">Shape associated with L-SAR frequency B real-valued imagery datasets</annotation>
+           <dimension extent="0"
+                      name="frequencyBLength"/>
+           <dimension extent="0"
+                      name="frequencyBWidth"/>
     </shape>
 
     <!-- Geolocation cube related shapes -->
@@ -2599,10 +2565,6 @@
            order="slowest...fastest">
            <annotation app="conformance"
                        lang="en">Shape of crosstalk datasets</annotation>
-           <dimension extent="0"
-                      name="calibrationLength"/>
-           <dimension extent="0"
-                      name="calibrationWidth"/>
            <dimension name="complex" extent="2"/>
     </shape>
 
@@ -2665,6 +2627,13 @@
                   lang="en">Number of input orbit files</annotation>
       <dimension extent="0"
                  name="numberOfInputOrbitFiles"/>
+    </shape>
+    <shape name="numberOfInputTecFiles"
+           order="slowest...fastest">
+      <annotation app="conformance"
+                  lang="en">Number of input total electon content (TEC) files</annotation>
+      <dimension extent="0"
+                 name="numberOfInputTecFiles"/>
     </shape>
     <shape name="numberOfInputConfigFiles"
            order="slowest...fastest">

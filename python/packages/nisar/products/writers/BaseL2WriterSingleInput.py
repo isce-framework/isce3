@@ -742,11 +742,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                 'txVerticalCrosspol',
                                 'rxHorizontalCrosspol',
                                 'rxVerticalCrosspol']
-        self.geocode_lut(
-            '{PRODUCT}/metadata/calibrationInformation/crosstalk',
-            frequency=list(self.freq_pols_dict.keys())[0],
-            output_ds_name_list=crosstalk_parameters,
-            skip_if_not_present=True)
+        for crosstalk_parameter in crosstalk_parameters:
+            self.copy_from_input(
+                '{PRODUCT}/metadata/calibrationInformation/crosstalk/'
+                f'{crosstalk_parameter}',
+                skip_if_not_present=True)
 
         luts_list = ['elevationAntennaPattern', 'nes0']
 
@@ -812,11 +812,12 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
     def populate_orbit(self):
 
-        # save the orbit ephemeris
+        # Save the orbit ephemeris
         orbit_hdf5_group = self.output_hdf5_obj[
             f'{self.output_product_path}/metadata'].require_group(
                 "orbit")
 
+        # Save the orbit into the HDF5 file
         self.orbit.save_to_h5(orbit_hdf5_group)
 
     def populate_attitude(self):
@@ -857,6 +858,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         self.copy_from_input(
             '{PRODUCT}/metadata/sourceData/processingInformation/'
             'parameters/runConfigurationContents',
+            '{PRODUCT}/metadata/processingInformation/parameters/'
+            'runConfigurationContents',
             skip_if_not_present=True)
 
         self.copy_from_input(
@@ -942,7 +945,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                 self.set_value(
                     '{PRODUCT}/metadata/sourceData/swaths/'
                     'numberOfAzimuthLines',
-                    radar_grid_obj.length)
+                    radar_grid_obj.length,
+                    format_function=np.uint64)
 
             self.copy_from_input(
                 f'{output_swaths_freq_path}/rangeBandwidth',
@@ -966,7 +970,8 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
 
             self.set_value(
                 f'{output_swaths_freq_path}/numberOfRangeSamples',
-                radar_grid_obj.width)
+                radar_grid_obj.width,
+                format_function=np.uint64)
 
             self.copy_from_input(
                 '{PRODUCT}/metadata/sourceData/processingInformation/'

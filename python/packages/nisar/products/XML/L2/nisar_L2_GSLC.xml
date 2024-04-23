@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
+<!-- product specification version is 1.1.0 -->
 <algorithm name="L2_GeocodedSlc"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
     <product template="L2_GSLC_template">
     <!-- Start of the science section of product -->
     <science uid="sci_1">
@@ -71,8 +73,7 @@
         </string>
         <string length="0"
                 name="/science/LSAR/identification/productSpecificationVersion"
-                shape="scalar"
-                value="1.0.0">
+                shape="scalar">
           <annotation app="conformance"
                       lang="en">Product specification version which represents the schema of this product</annotation>
         </string>
@@ -1117,46 +1118,12 @@
 
         <!-- Start of calibration parameters -->
 
-        <!-- Crosstalk 2D LUTs -->
-        <integer name="/science/LSAR/GSLC/metadata/calibrationInformation/crosstalk/projection"
-                 shape="scalar"
-                 signed="false"
-                 width="32">
-            <annotation app="conformance"
-                        ellipsoid="Projection ellipsoid"
-                        epsg_code="Projection EPSG code"
-                        false_easting="The value added to all abscissa values in the rectangular coordinates for a map projection."
-                        false_northing="The value added to all ordinate values in the rectangular coordinates for a map projection."
-                        grid_mapping_name="Grid mapping variable name"
-                        inverse_flattening="Inverse flattening of the ellipsoidal figure"
-                        latitude_of_projection_origin="The latitude chosen as the origin of rectangular coordinates for a map projection."
-                        longitude_of_projection_origin="The longitude, with respect to Greenwich, of the prime meridian associated with the geodetic datum."
-                        semi_major_axis="Semi-major axis"
-                        spatial_ref="Spatial reference"
-                        utm_zone_number="UTM zone number"
-                        lang="en">Product map grid projection: EPSG code, with additional projection information as HDF5 Attributes</annotation>
-        </integer>
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/crosstalk/yCoordinates"	
-              shape="calibrationLength"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">Y coordinates corresponding to crosstalk records</annotation>	
-        </real>	
-        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/crosstalk/xCoordinates"	
-              shape="calibrationWidth"	
-              width="64">	
-              <annotation app="conformance"	
-                          lang="en"	
-                          units="meters">X coordinates corresponding to crosstalk records</annotation>	
-        </real>
+        <!-- Crosstalk parameters -->
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/crosstalk/txHorizontalCrosspol"
               shape="crosstalkComplexShape"
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="nan"
-                          grid_mapping="projection"	
                           units="1">Crosstalk in H-transmit channel expressed as ratio txV / txH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1165,8 +1132,6 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="nan"
-                          grid_mapping="projection"	
                           units="1">Crosstalk in V-transmit channel expressed as ratio txH / txV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1175,8 +1140,6 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="nan"
-                          grid_mapping="projection"	
                           units="1">Crosstalk in H-receive channel expressed as ratio rxV / rxH</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1185,8 +1148,6 @@
               width="32">
               <annotation app="conformance"
                           lang="en"
-                          _FillValue="nan"
-                          grid_mapping="projection"	
                           units="1">Crosstalk in V-recieve channel expressed as ratio rxH / rxV</annotation>
               <annotation app="io" kwd="complex" />
         </real>
@@ -1874,6 +1835,12 @@
                       lang="en">List of input orbit files used</annotation>
         </string>
         <string length="0"
+                name="/science/LSAR/GCOV/metadata/processingInformation/inputs/tecFiles"
+                shape="numberOfInputTecFiles">
+          <annotation app="conformance"
+                      lang="en">List of input total electron content (TEC) files used</annotation>
+        </string>
+        <string length="0"
                 name="/science/LSAR/GSLC/metadata/processingInformation/inputs/configFiles"
                 shape="numberOfInputConfigFiles">
           <annotation app="conformance"
@@ -2000,17 +1967,6 @@
            <dimension name="complex" extent="2"/> 
     </shape>
 
-    <!-- For marking valid samples in an image -->
-    <shape name="validSamplesShape"
-           order="slowest...fastest">
-           <annotation app="conformance"
-                       lang="en">Shape associated with L-SAR valid samples dataset</annotation>
-           <dimension extent="0"
-                      name="zeroDopplerTimeLength"/>
-           <dimension extent="2"
-                      name="firstLastPair"/>
-    </shape>
-
     <!-- Geolocation cube related shapes -->
     <shape name="radarCubeShape"
            order="slowest...fastest">
@@ -2115,10 +2071,6 @@
            order="slowest...fastest">
            <annotation app="conformance"
                        lang="en">Shape of crosstalk datasets</annotation>
-           <dimension extent="0"
-                      name="calibrationTimeLength"/>
-           <dimension extent="0"
-                      name="calibrationSlantRangeWidth"/>
            <dimension name="complex" extent="2"/>
     </shape>
 
@@ -2190,6 +2142,13 @@
                   lang="en">Number of input orbit files</annotation>
       <dimension extent="0"
                  name="numberOfInputOrbitFiles"/>
+    </shape>
+    <shape name="numberOfInputTecFiles"
+           order="slowest...fastest">
+      <annotation app="conformance"
+                  lang="en">Number of input total electon content (TEC) files</annotation>
+      <dimension extent="0"
+                 name="numberOfInputTecFiles"/>
     </shape>
     <shape name="numberOfInputConfigFiles"
            order="slowest...fastest">
