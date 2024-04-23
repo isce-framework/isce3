@@ -255,6 +255,8 @@ class GcovWriter(BaseL2WriterSingleInput):
                  ' Terrain Correction and Geocoding," in IEEE Transactions'
                  ' on Geoscience and Remote Sensing, vol. 60, pp. 1-23, 2022,'
                  ' Art no. 5222723, doi: 10.1109/TGRS.2022.3147472.')
+        else:
+            geocoding_algorithm_reference = '(NOT SPECIFIED)'
 
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
