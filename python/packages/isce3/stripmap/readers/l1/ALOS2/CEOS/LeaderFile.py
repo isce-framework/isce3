@@ -89,6 +89,7 @@ class LeaderFile(object):
         assert (record.ThirdRecordSubType == 20)
         assert (record.RecordLength == 4096)
         assert (record.SensorPlatformMissionIdentifier == 'ALOS2')
+
         # Specific check for ALOS-2 stripmap, normal observation mode
         assert (record.SensorIDAndMode[0:9] == 'ALOS2 -L ')
         assert (record.RangePulseCodeSpecifier == "LINEAR FM CHIRP")
@@ -230,7 +231,6 @@ class LeaderFile(object):
             pass
 
         record = Container()
-
 
         # Start with the header of the record
         header = RadiometricRecordType()

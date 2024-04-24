@@ -778,7 +778,7 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                     zero_doppler_time_path = (
                         f'{self.root_path}/'
                         f'{self.input_product_hdf5_group_type}/metadata/'
-                        f'calibrationInformation/frequency{frequency}/{lut}/'
+                        f'calibrationInformation/frequency{frequency}/{pol}/'
                         'zeroDopplerTime')
 
                     if zero_doppler_time_path in self.input_hdf5_obj:
@@ -789,9 +789,9 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
                                              f'/frequency{frequency}/{lut}'),
                             input_h5_group=('{PRODUCT}/metadata/'
                                             'calibrationInformation'
-                                            f'frequency{frequency}/{lut}/'),
+                                            f'/frequency{frequency}/{pol}'),
                             frequency=list(self.freq_pols_dict.keys())[0],
-                            input_ds_name_list=pol,
+                            input_ds_name_list=[lut],
                             output_ds_name_list=pol,
                             skip_if_not_present=True)
 

@@ -189,10 +189,12 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
     ds.attrs["units"] = numpy.string_("radians per second")
 
     ds = group.create_dataset("attitudeType", data=numpy.string_("Custom"))
-    ds.attrs["description"] = numpy.string_("PrOE (or) NOE (or) MOE (or) Custom")
+    ds.attrs["description"] = numpy.string_(
+        "PrOE (or) NOE (or) MOE (or) POE (or) Custom")
 
     ds = group.create_dataset("eulerAngles", data=numpy.array(rpys))
-    ds.attrs["description"] = numpy.string_("Attitude Euler angles (roll, pitch, yaw")
+    ds.attrs["description"] = numpy.string_(
+        "Attitude Euler angles (roll, pitch, yaw)")
     ds.attrs["units"] = numpy.string_("degrees")
 
     ds = group.create_dataset("quaternions", data=numpy.array(qs))
@@ -201,7 +203,8 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
 
     ds = group.create_dataset("time", data=numpy.array(times))
     ds.attrs["description"] = numpy.string_(
-        "Time vector record. This record contains the time")
+        "Time vector record. This record contains the time corresponding to"
+        " attitude and quaternion records")
     ds.attrs["units"] = numpy.string_(
         f"seconds since {orbit.reference_epoch.isoformat()}")
 
