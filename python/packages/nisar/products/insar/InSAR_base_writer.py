@@ -784,50 +784,72 @@ class InSARBaseWriter(h5py.File):
         """
         Write metadata datasets and attributes common to all InSAR products to HDF5
         """
-        # Can copy entirety of attitude
+        groups = ['reference', 'secondary']
         ref_metadata_group = self.ref_h5py_file_obj[self.ref_rslc.MetadataPath]
-        dst_metadata_group = self.require_group(self.group_paths.MetadataPath)
-        ref_metadata_group.copy("attitude", dst_metadata_group)
+        sec_metadata_group = self.sec_h5py_file_obj[self.sec_rslc.MetadataPath]
 
-        # Attitude time
-        attitude_time = dst_metadata_group["attitude"]["time"]
-        attitude_time_units = attitude_time.attrs['units']
-        attitude_time_units = extract_datetime_from_string(str(attitude_time_units),
-                                                           'seconds since ')
-        if attitude_time_units is not None:
-            attitude_time.attrs['units'] = np.string_(attitude_time_units)
+        for group, h5py_file_obj, orbit_to_save in zip(['reference', 'secondary'],
+                                                       [self.ref_h5py_file_obj,
+                                                        self.sec_h5py_file_obj],
+                                                       [self.ref_orbit,
+                                                        self.sec_orbit]):
+            # Create metadata group, copy over attitude group, and open newly create attitude group
+            metadata_group = h5py_file_obj[self.ref_rslc.MetadataPath]
+            dst_meta_data_group = self.require_group(self.group_paths.MetadataPath)
+            dst_attitude_group = self.require_group(
+                f'{self.group_paths.MetadataPath}/attitude/{group}')
+            src_attitude_group = h5py_file_obj[f'{self.ref_rslc.MetadataPath}/attitude']
+            for name, data in src_attitude_group.items():
+                src_attitude_group.copy(data, dst_attitude_group, name=name)
+            for attr_name, attr_value in src_attitude_group.attrs.items():
+                dst_attitude_group.attrs[attr_name] = attr_value  # Copy attribute
 
-        dst_metadata_group["attitude"]["quaternions"].attrs["units"] = \
-            Units.unitless
-        dst_metadata_group["attitude"]["quaternions"].attrs["eulerAngles"] = \
-            Units.radian
-        dst_metadata_group["attitude"]["quaternions"].attrs["angularVelocity"] = \
-            np.string_("radians / second")
+            # Modify description of attribute type
+            dst_attitude_group['attitudeType'].attrs['description'] = \
+                np.string_('Attitude type, either "FRP", "NRP", "PRP, or '
+                           '"Custom", where "FRP" stands for Forecast Radar Pointing, '
+                           '"NRP" is Near Real-time Pointing, and "PRP" is Precise Radar Pointing')
 
-        # Orbit population based in inputs
-        if self.external_ref_orbit_path is None:
-            ref_metadata_group.copy("orbit", dst_metadata_group)
-        else:
-            # populate orbit group with contents of external orbit file
-            orbit_group = dst_metadata_group.require_group("orbit")
-            self.ref_orbit.save_to_h5(orbit_group)
+            # Attitude time
+            attitude_time = dst_attitude_group['time']
+            attitude_time_units = attitude_time.attrs['units']
+            attitude_time_units = extract_datetime_from_string(str(attitude_time_units),
+                                                               'seconds since ')
 
-        # Orbit time
-        orbit_time = dst_metadata_group["orbit"]["time"]
-        orbit_time.attrs['description'] = \
-            np.string_("Time vector record. This record contains"
-                       " the time corresponding to position and"
-                       " velocity records"
-                       )
+            if attitude_time_units is not None:
+                attitude_time.attrs['units'] = np.string_(attitude_time_units)
 
-        orbit_time_units = orbit_time.attrs['units']
-        orbit_time_units = extract_datetime_from_string(str(orbit_time_units),
-                                                        'seconds since ')
-        if orbit_time_units is not None:
-            orbit_time.attrs['units'] = np.string_(orbit_time_units)
-        # Orbit velocity
-        dst_metadata_group["orbit"]["velocity"].attrs["units"] = \
-            np.string_("meters / second")
+            dst_attitude_group["quaternions"].attrs["units"] = \
+                Units.unitless
+            dst_attitude_group["quaternions"].attrs["eulerAngles"] = \
+                Units.radian
+            dst_attitude_group["quaternions"].attrs["angularVelocity"] = \
+                Units.rad_per_second
+
+            dst_orbit_group = self.require_group(f'{self.group_paths.MetadataPath}/orbit/{group}')
+            orbit_to_save.save_to_h5(dst_orbit_group)
+
+            # Orbit time
+            orbit_time = dst_orbit_group["time"]
+            orbit_time.attrs['description'] = np.string_(
+                "Time vector record. This record contains the time corresponding to position and velocity records")
+            orbit_time_units = orbit_time.attrs['units']
+            orbit_time_units = extract_datetime_from_string(str(orbit_time_units), 'seconds since ')
+            if orbit_time_units is not None:
+                orbit_time.attrs['units'] = np.string_(orbit_time_units)
+
+            # Orbit velocity
+            dst_orbit_group["velocity"].attrs["units"] = Units.meter_per_second
+
+            # Update orbitType description
+            dst_orbit_group['orbitType'].attrs['description'] = np.string_(
+                'Orbit product type, either "FOE", "NOE", "MOE", "POE", or "Custom", where "FOE" stands for '
+                'Forecast Orbit Ephemeris, "NOE" is Near real-time Orbit Ephemeris, "MOE" is Medium precision '
+                'Orbit Ephemeris, and "POE" is Precise Orbit Ephemeris')
+            # Add description of the orbit interpolation file
+            dst_orbit_group['interpMethod'].attrs['description'] = np.string_(
+                'Orbit interpolation method, either "Hermite" or "Legendre"'
+            )
 
     def add_identification_to_hdf5(self):
         """

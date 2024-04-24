@@ -24,7 +24,7 @@ def run(cfg: dict, out_paths: dict, run_steps: dict):
     info_channel.log("starting INSAR")
 
     t_all = time.time()
-
+    
     if run_steps['bandpass_insar']:
         bandpass_insar.run(cfg)
 

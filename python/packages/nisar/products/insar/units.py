@@ -15,4 +15,6 @@ class Units:
     dn: np.bytes_ = np.string_('DN')
     radian: np.bytes_ = np.string_('radians')
     hertz: np.bytes_ = np.string_('hertz')
+    rad_per_second: np.bytes_ = np.string_('radians / second')
+    meter_per_second: np.bytes_ = np.string_('meters / second')
 
