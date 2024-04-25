@@ -308,15 +308,22 @@ class RunConfig:
         metadata_dict['x_snap'] = metadata_dict['output_posting']['x_posting']
         metadata_dict['y_snap'] = metadata_dict['output_posting']['y_posting']
 
+        # use the first available product geogrid as reference for creating
+        # the metadata cubes geogrid
+        geogrids_ref = self.cfg['processing']['geocode']['geogrids']
+        geogrid_ref = geogrids_ref[list(geogrids_ref.keys())[0]]
+
         # construct geogrid
         metadata_geogrid = geogrid.create(
-            self.cfg, 
+            self.cfg,
             workflow_name=workflow_name,
-            frequency_group=None, 
+            frequency_group=None,
             frequency=None,
             geocode_dict=metadata_dict,
             default_spacing_x=default_metadata_geogrid_spacing_x,
-            default_spacing_y=default_metadata_geogrid_spacing_y)
+            default_spacing_y=default_metadata_geogrid_spacing_y,
+            flag_metadata_cubes=flag_cube,
+            geogrid_ref=geogrid_ref)
 
         # place geogrid in cfg for later processing
         self.cfg['processing'][group_name]['geogrid'] = metadata_geogrid

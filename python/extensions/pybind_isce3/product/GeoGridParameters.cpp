@@ -31,6 +31,8 @@ void addbinding(py::class_<GeoGridParameters> & pyGeoGridParams)
                     "start_y",
                     py::overload_cast<>(&GeoGridParameters::startY, py::const_),
                     py::overload_cast<double>(&GeoGridParameters::startY))
+            .def_property_readonly("end_x", &GeoGridParameters::endX)
+            .def_property_readonly("end_y", &GeoGridParameters::endY)
             .def_property(
                     "spacing_x",
                     py::overload_cast<>(&GeoGridParameters::spacingX,

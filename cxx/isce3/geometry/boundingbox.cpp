@@ -153,7 +153,7 @@ static void _addMarginToBoundingBox(isce3::geometry::BoundingBox& bbox,
     bbox.MinX -= delta;
     bbox.MaxX += delta;
     bbox.MinY -= delta;
-    bbox.MaxX += delta;
+    bbox.MaxY += delta;
 
     // Special checks for lonlat
     if (proj->code() == 4326) {
