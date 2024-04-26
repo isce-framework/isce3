@@ -523,8 +523,7 @@ def add_imagery(args, ldr, imgfile, pol, orbit, metadata, filenames,
         metadata['Radar Grid'] = radar_grid
 
 
-def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A',
-                  az_pad=10.0):
+def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A'):
     """
     Generate a Level-1 NISAR format HDF5 product.
     """
@@ -532,8 +531,7 @@ def populate_hdf5(metadata, outfile, orbit, pol_list, frequency='A',
     # Generate a common azimuth time vs. slant range grid for all calibration
     # grids. This also sets the reference epoch used for all subsequent
     # dataset generation
-    construct_calibration_grid(metadata, metadata['Mission'], orbit,
-                               az_pad=az_pad)
+    construct_calibration_grid(metadata, orbit)
 
     # Now open it for modification
     with h5py.File(outfile, 'r+') as root_group:
@@ -631,21 +629,34 @@ def update_metadata(fid, metadata, pol_list, frequency='A'):
         group['zeroDopplerTimeSpacing'] = pri
 
 
-def construct_calibration_grid(metadata, sensor_name, orbit, az_pad=10.0):
+def construct_calibration_grid(metadata, orbit, az_pad_in_pixels=20,
+                               rg_pad_in_pixels=20):
     """
     Construct a low-resolution azimuth time vs. slant range grid to be used
     for all calibration and geolocation grids. Spacing hard-coded for different
     sensors. This function needs to be generalized to adapt to various
     topography heights and platform altitudes.
+
+    Parameters
+    ----------
+    metadata: dict
+        Dictionary containing metadata information
+    orbit: isce3.core.Orbit
+        ISCE3 orbit object
+    az_pad_in_pixels: scalar
+        Azimuth pad in pixels
+    rg_pad_in_pixels: scalar
+        Slant-range pad in pixels
     """
     # Set calibration grid spacing
-    rspacing = metadata['Range Spacing per Bin']
-    aspacing = 0.25
+    rg_spacing = 1000
+    az_spacing = 0.25
 
     # Set slant-range bounds. Extend range stop beyond SLC width to ensure
     # SLC fully contained within calibration grid.
-    r_start = metadata['Image Starting Range']
-    r_stop = r_start + (metadata['SLC width'] + 1) * rspacing
+    r_start = metadata['Image Starting Range'] - rg_pad_in_pixels * rg_spacing
+    r_stop = (r_start + (metadata['SLC width'] + 1) * rg_spacing +
+              rg_pad_in_pixels * rg_spacing)
 
     # Get azimuth time bounds of the scene
     a0 = metadata['Start Time of Acquisition']
@@ -662,12 +673,14 @@ def construct_calibration_grid(metadata, sensor_name, orbit, az_pad=10.0):
 
     # Pad the azimuth time bounds in each direction (az_pad in units of
     # seconds)
-    a0 = round((a0 - ref_epoch).total_seconds() - az_pad)
-    a1 = round((a1 - ref_epoch).total_seconds() + az_pad)
+    a0 = round((a0 - ref_epoch).total_seconds() -
+               az_pad_in_pixels * az_spacing)
+    a1 = round((a1 - ref_epoch).total_seconds() +
+               az_pad_in_pixels * az_spacing)
 
     # Construct grids and update metadata dictionary
-    rgrid = np.arange(r_start, r_stop, rspacing, dtype=np.float64)
-    agrid = np.arange(a0, a1, aspacing, dtype=np.float64)
+    rgrid = np.arange(r_start, r_stop, rg_spacing, dtype=np.float64)
+    agrid = np.arange(a0, a1, az_spacing, dtype=np.float64)
     metadata['calibration_range_grid'] = rgrid
     metadata['calibration_azimuth_grid'] = agrid
 
