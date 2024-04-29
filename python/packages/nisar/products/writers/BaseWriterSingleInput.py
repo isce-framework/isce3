@@ -816,6 +816,8 @@ class BaseWriterSingleInput():
         # update product root attributes
         annotation_et = specs.find('./product/science/annotation')
         for key, value in annotation_et.items():
+            if key == 'app':
+                continue
             self.output_hdf5_obj.attrs[key] = np.string_(value)
 
         # iterate over all XML specs parameters
