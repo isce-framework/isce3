@@ -11,6 +11,7 @@ import numpy as np
 from osgeo import gdal
 from scipy.interpolate import griddata
 
+from isce3.core import crop_external_orbit
 from nisar.products.insar.product_paths import CommonPaths
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
@@ -208,11 +209,11 @@ def _get_rgrid_dopp_orbit(slc_obj, orbit_path=None):
     radargrid = slc_obj.getRadarGrid(freq)
 
     # import external orbit if file exists
+    orbit = slc_obj.getOrbit()
     if orbit_path is not None:
-        orbit = load_orbit_from_xml(orbit_path, radargrid.ref_epoch)
-    else:
-        orbit = slc_obj.getOrbit()
-
+        external_orbit = load_orbit_from_xml(orbit_path, radargrid.ref_epoch)
+        orbit = crop_external_orbit(external_orbit, orbit)
+        
     # baseline is estimated assuming native-doppler
     doppler = slc_obj.getDopplerCentroid(frequency=freq)
     doppler.bounds_error = False

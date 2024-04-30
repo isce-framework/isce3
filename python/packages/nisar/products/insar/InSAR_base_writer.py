@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Union
 
 import h5py
 import numpy as np
+from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, to_complex32
 from isce3.product import GeoGridParameters, RadarGridParameters
 from nisar.products.readers import SLC
@@ -114,24 +115,27 @@ class InSARBaseWriter(h5py.File):
         self.ref_orbit_epoch = ref_radargrid.ref_epoch
         self.sec_orbit_epoch = sec_radargrid.ref_epoch
 
+        self.ref_orbit = self.ref_rslc.getOrbit()
+        self.sec_orbit = self.sec_rslc.getOrbit()
+
         self.ref_h5py_file_obj = \
             h5py.File(self.ref_h5_slc_file, "r", libver="latest", swmr=True)
 
         self.sec_h5py_file_obj = \
             h5py.File(self.sec_h5_slc_file, "r", libver="latest", swmr=True)
 
-        # Create the orbit object and set their reference epochs
+        # Load the external orbits and crop them
         if self.external_ref_orbit_path is not None:
-            self.ref_orbit = load_orbit_from_xml(self.external_ref_orbit_path,
-                                                 self.ref_orbit_epoch)
-        else:
-            self.ref_orbit = self.ref_rslc.getOrbit()
+            ref_external_orbit = load_orbit_from_xml(self.external_ref_orbit_path,
+                                                     self.ref_orbit_epoch)
+            self.ref_orbit = crop_external_orbit(ref_external_orbit,
+                                                 self.ref_orbit)
 
         if self.external_sec_orbit_path is not None:
-            self.sec_orbit = load_orbit_from_xml(self.external_sec_orbit_path,
-                                                 self.sec_orbit_epoch)
-        else:
-            self.sec_orbit = self.sec_rslc.getOrbit()
+            sec_external_orbit = load_orbit_from_xml(self.external_sec_orbit_path,
+                                                     self.sec_orbit_epoch)
+            self.sec_orbit = crop_external_orbit(sec_external_orbit,
+                                                 self.sec_orbit)
 
     def add_root_attrs(self):
         """

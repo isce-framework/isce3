@@ -12,6 +12,7 @@ import h5py
 import isce3
 import journal
 import numpy as np
+from isce3.core import crop_external_orbit
 from nisar.products.insar.product_paths import (CommonPaths, GOFFGroupsPaths,
                                                 GUNWGroupsPaths,
                                                 RIFGGroupsPaths,
@@ -633,12 +634,12 @@ def cpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     geocode_cplx_obj = isce3.geocode.GeocodeCFloat32()
 
     # init geocode members
+    orbit = slc.getOrbit()
     if ref_orbit is not None:
         # SLC will get first radar grid whose frequency is available.
         # Reference epoch and orbit have no frequency dependency.
-        orbit = load_orbit_from_xml(ref_orbit, slc.getRadarGrid().ref_epoch)
-    else:
-        orbit = slc.getOrbit()
+        external_orbit = load_orbit_from_xml(ref_orbit, slc.getRadarGrid().ref_epoch)
+        orbit = crop_external_orbit(external_orbit, orbit)
 
     geocode_obj.orbit = orbit
     geocode_obj.ellipsoid = ellipsoid
@@ -1050,12 +1051,13 @@ def gpu_run(cfg, input_hdf5, output_hdf5, input_product_type=InputProduct.RUNW):
     dem_raster = isce3.io.Raster(dem_file)
 
     # init geocode members
+    orbit = slc.getOrbit()
     if ref_orbit is not None:
         # SLC will get first radar grid whose frequency is available.
         # Reference epoch and orbit have no frequency dependency.
-        orbit = load_orbit_from_xml(ref_orbit, slc.getRadarGrid().ref_epoch)
-    else:
-        orbit = slc.getOrbit()
+        external_orbit = load_orbit_from_xml(ref_orbit, slc.getRadarGrid().ref_epoch)
+        orbit = crop_external_orbit(external_orbit, orbit)
+
 
     with h5py.File(output_hdf5, "a", libver='latest', swmr=True) as dst_h5:
 

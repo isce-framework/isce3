@@ -9,6 +9,7 @@ import time
 
 import h5py
 import isce3
+from isce3.core import crop_external_orbit
 import isce3.unwrap.snaphu as snaphu
 import journal
 import numpy as np
@@ -287,10 +288,10 @@ def run(cfg: dict, input_hdf5: str, output_hdf5: str):
                         radar_grid = ref_slc.getRadarGrid(freq)
 
                         # Get reference orbit
+                        orbit = ref_slc.getOrbit()
                         if ref_orbit is not None:
-                            orbit = load_orbit_from_xml(ref_orbit, radar_grid.ref_epoch)
-                        else:
-                            orbit = ref_slc.getOrbit()
+                            external_orbit = load_orbit_from_xml(ref_orbit, radar_grid.ref_epoch)
+                            orbit = crop_external_orbit(external_orbit, orbit)
 
                         _, v_mid = orbit.interpolate(radar_grid.sensing_mid)
                         vs = np.linalg.norm(v_mid)

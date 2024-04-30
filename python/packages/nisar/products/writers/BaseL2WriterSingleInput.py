@@ -6,6 +6,7 @@ import journal
 import os
 
 import isce3
+from isce3.core import crop_external_orbit
 from nisar.products.writers import BaseWriterSingleInput
 from nisar.workflows.h5_prep import set_get_geo_info
 from isce3.core.types import truncate_mantissa
@@ -464,7 +465,7 @@ def get_file_extension(format):
 
     Parameters
     ----------
-    format: str 
+    format: str
         File format: "GTiff" or "ENVI"
 
     Returns
@@ -640,15 +641,17 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             self.cfg["dynamic_ancillary_file_group"]['orbit_file']
         self.flag_external_orbit_file = self.orbit_file is not None
 
+        orbit_path = (f'{self.root_path}/'
+                        f'{self.input_product_hdf5_group_type}'
+                        '/metadata/orbit')
+        self.orbit = isce3.core.load_orbit_from_h5_group(
+            self.input_hdf5_obj[orbit_path])
+
         if self.flag_external_orbit_file:
             ref_epoch = self.input_product_obj.getRadarGrid().ref_epoch
-            self.orbit = load_orbit_from_xml(self.orbit_file, ref_epoch)
-        else:
-            orbit_path = (f'{self.root_path}/'
-                          f'{self.input_product_hdf5_group_type}'
-                          '/metadata/orbit')
-            self.orbit = isce3.core.load_orbit_from_h5_group(
-                self.input_hdf5_obj[orbit_path])
+            external_orbit = load_orbit_from_xml(self.orbit_file, ref_epoch)
+            self.orbit = crop_external_orbit(external_orbit, self.orbit)
+
 
     def populate_identification_l2_specific(self):
         """

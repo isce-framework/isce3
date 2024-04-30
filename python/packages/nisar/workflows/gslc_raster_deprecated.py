@@ -7,6 +7,7 @@ import h5py
 import journal
 
 import isce3
+from isce3.core import crop_external_orbit
 from nisar.products.readers import SLC
 from nisar.workflows import h5_prep
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
@@ -39,10 +40,11 @@ def run(cfg):
 
     # if provided, load an external orbit from the runconfig file;
     # othewise, load the orbit from the RSLC metadata
+    orbit = slc.getOrbit()
     if orbit_file is not None:
-        orbit = load_orbit_from_xml(orbit_file)
-    else:
-        orbit = slc.getOrbit()
+        external_orbit = load_orbit_from_xml(orbit_file, slc.getRadarGrid().ref_epoch)
+        orbit = crop_external_orbit(external_orbit, orbit)
+
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()
     proj = isce3.core.make_projection(epsg)

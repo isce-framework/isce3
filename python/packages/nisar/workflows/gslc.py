@@ -8,6 +8,7 @@ import journal
 import numpy as np
 
 import isce3
+from isce3.core import crop_external_orbit
 from isce3.core.rdr_geo_block_generator import block_generator
 from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
@@ -52,13 +53,14 @@ def run(cfg):
 
     # if provided, load an external orbit from the runconfig file;
     # othewise, load the orbit from the RSLC metadata.
+    orbit = slc.getOrbit()
     if orbit_file is not None:
         # slc will get first radar grid whose frequency is available.
         # orbit has not frequency dependency.
-        orbit = load_orbit_from_xml(orbit_file,
-                                    slc.getRadarGrid().ref_epoch)
-    else:
-        orbit = slc.getOrbit()
+        external_orbit = load_orbit_from_xml(orbit_file,
+                                             slc.getRadarGrid().ref_epoch)
+        orbit = crop_external_orbit(external_orbit, orbit)
+
 
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()

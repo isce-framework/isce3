@@ -14,6 +14,7 @@ import journal
 import numpy as np
 
 import isce3
+from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, read_complex_dataset
 from nisar.products.readers import SLC
 from nisar.workflows.h5_prep import add_radar_grid_cubes_to_hdf5
@@ -69,7 +70,7 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     '''
     Copy RSLC dataset to GDAL format converting RSLC real and
     imaginary parts from float16 to float32. If the flag
-    flag_rslc_to_backscatter is enabled, the 
+    flag_rslc_to_backscatter is enabled, the
     RSLC complex values are converted to radar backscatter (square of
     the RSLC magnitude): out = abs(RSLC)**2
 
@@ -181,7 +182,7 @@ def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc):
         Flag indicating whether the radiometric terrain correction (RTC)
         area normalization factor (ANF) layer should be created.
         This RTC ANF layer provides the conversion factor from
-        from gamma0 backscatter normalization convention 
+        from gamma0 backscatter normalization convention
         to input backscatter normalization convention
         (e.g., beta0 or sigma0-ellipsoid)
     save_rtc_anf_gamma0_to_sigma0: bool
@@ -512,10 +513,10 @@ def _run(cfg, raster_scratch_dir):
 
         # if provided, load an external orbit from the runconfig file;
         # othewise, load the orbit from the RSLC metadata
+        orbit = slc.getOrbit()
         if orbit_file is not None:
-            orbit = load_orbit_from_xml(orbit_file, radar_grid.ref_epoch)
-        else:
-            orbit = slc.getOrbit()
+            external_orbit = load_orbit_from_xml(orbit_file, radar_grid.ref_epoch)
+            orbit = crop_external_orbit(external_orbit, orbit)
 
         # get azimuth ionospheric delay LUTs (if applicable)
         center_freq = \
