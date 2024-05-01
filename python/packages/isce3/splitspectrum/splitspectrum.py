@@ -256,7 +256,7 @@ class SplitSpectrum:
             meta['range_spacing'] = self.rg_pxl_spacing
             meta['slant_range'] = \
                 self.slant_range(0) + \
-                    np.arange(width) * meta['range_spacing']
+                np.arange(width) * meta['range_spacing']
 
             return slc_demodulate, meta
 
@@ -448,7 +448,8 @@ class SplitSpectrum:
 
         window_kind = window_function.lower()
 
-        # Windowing effect will appear from freq_low to freq_high for given frequency bin
+        # Windowing effect will appear from freq_low to freq_high 
+        # for given frequency bin
         if window_kind == 'tukey':
             if not (0 <= window_shape <= 1):
                 err_str = f"Expected window_shape between 0 and 1, got {window_shape}."
@@ -477,7 +478,7 @@ class SplitSpectrum:
 
         elif window_kind == 'cosine':
             if not (0 <= window_shape <= 1):
-                err_str = f"Expected window_shape between 0 and 1, got  {window_shape}."
+                err_str = f"Expected window_shape between 0 and 1, got {window_shape}."
                 error_channel.log(err_str)
                 raise ValueError(err_str)
             filter_1d = self.construct_range_bandpass_cosine(
@@ -624,13 +625,12 @@ class SplitSpectrum:
         subwindow = window_function(subband_length, window_shape)
 
         if idx_freq_low >= idx_freq_high:
-            filter_1d[idx_freq_low :] = subwindow[0 : fft_size - idx_freq_low]
+            filter_1d[idx_freq_low:] = subwindow[0:fft_size - idx_freq_low]
             filter_1d[: idx_freq_high + 1] = subwindow[fft_size - idx_freq_low:]
         else:
-            filter_1d[idx_freq_low : idx_freq_high+1] = subwindow
+            filter_1d[idx_freq_low:idx_freq_high+1] = subwindow
 
         return filter_1d
-
 
     def construct_range_bandpass_tukey(self,
                                        frequency_range,
@@ -666,7 +666,8 @@ class SplitSpectrum:
             # Get the absolute value of shifted frequency
             freq = frequency_range[i]
             freqabs = np.abs(freq - freq_mid)
-            # Passband. i.e. range of frequencies that can pass through a filter
+            # Passband. i.e. range of frequencies that can pass
+            # through a filter
             if (freq <= (freq_high - df)) and (freq >= (freq_low + df)):
                 filter_1d[i] = 1
             # Transition region
