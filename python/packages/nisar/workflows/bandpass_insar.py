@@ -92,6 +92,14 @@ def run(cfg: dict):
         sampling_bandwidth_ratio = \
             base_meta_data.rg_sample_freq / base_meta_data.rg_bandwidth
 
+        info_channel.log("base RSLC:")
+        info_channel.log(f"    bandwidth : {base_meta_data.rg_bandwidth}")
+        info_channel.log(f"    sampling_frequency : {base_meta_data.rg_sample_freq}")
+        info_channel.log("target RSLC:")
+        info_channel.log(f"    bandwidth : {target_meta_data.rg_bandwidth}")
+        info_channel.log(f"    sampling_frequency : {target_meta_data.rg_sample_freq}")
+        info_channel.log(f"sampling_frequency / bandwidth : {sampling_bandwidth_ratio}")
+
         bandwidth_half = 0.5 * base_meta_data.rg_bandwidth
         low_frequency_base = \
             base_meta_data.center_freq - bandwidth_half
