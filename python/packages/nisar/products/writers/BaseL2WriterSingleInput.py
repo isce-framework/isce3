@@ -674,18 +674,15 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
             'identification/isGeocoded',
             is_geocoded)
 
-        # TODO populate attribute `epsg`
         self.copy_from_input(
             'identification/boundingPolygon')
-        'identification/boundingPolygon'
 
         bounding_polygon_path = \
             (f'{self.root_path}/identification/boundingPolygon')
 
         if ('epsg' in self.input_hdf5_obj[bounding_polygon_path].attrs.keys()):
-            polygon_epsg = self.input_hdf5_obj[bounding_polygon_path]
             self.output_hdf5_obj[bounding_polygon_path].attrs['epsg'] = \
-                polygon_epsg
+                self.input_hdf5_obj[bounding_polygon_path].attrs['epsg']
 
         self.set_value(
             'identification/listOfFrequencies',

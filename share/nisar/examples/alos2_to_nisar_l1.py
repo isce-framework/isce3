@@ -721,8 +721,6 @@ def update_identification(fid, orbit, metadata):
     group['boundingPolygon'].attrs['ogr_geometry'] = np.string_('polygon')
 
     for name, desc in ident_descriptions.items():
-        # if name not in ident_group:
-        #     continue
         group[name].attrs["description"] = np.string_(desc)
 
 
