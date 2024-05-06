@@ -2027,7 +2027,7 @@
                 name="/science/LSAR/GCOV/metadata/orbit/interpMethod"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">Orbit interpolation method</annotation>
+                            lang="en">Orbit interpolation method, either "Hermite" or "Legendre"</annotation>
        </string>
         <real name="/science/LSAR/GCOV/metadata/orbit/time"
               shape="orbitListLength"
@@ -2083,7 +2083,7 @@
                 name="/science/LSAR/GCOV/metadata/attitude/attitudeType"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">PrOE (or) NOE (or) MOE (or) POE (or) Custom</annotation>
+                            lang="en">Attitude type, either "FRP", "NRP", "PRP, or "Custom", where "FRP" stands for Forecast Radar Pointing, "NRP" is Near Real-time Pointing, and "PRP" is Precise Radar Pointing</annotation>
         </string>
 
         <!-- Versions of various algorithm modules used -->
@@ -2149,67 +2149,131 @@
               name="/science/LSAR/GCOV/metadata/sourceData/processingDateTime"
               shape="scalar">
               <annotation app="conformance"
-                          lang="en">Source data Processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS</annotation>
+                          lang="en">Source data processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS</annotation>
         </string>
         <string name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/runConfigurationContents"
               length="0"
               shape="scalar">
               <annotation app="conformance"
-                          lang="en">Contents of the run configuration file with parameters used for processing of the source data product</annotation>
+                          lang="en">Contents of the run configuration file associated with the processing of the source data</annotation>
         </string>
+
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/referenceTerrainHeight"
+              shape="dopplerCentroidTimeLength"
+              width="32">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Reference terrain height corresponding to the source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/zeroDopplerTime"
+              shape="dopplerCentroidTimeLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/slantRange"
+              shape="dopplerCentroidSlantRangeWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyA/zeroDopplerTime"
+              shape="dopplerCentroidTimeLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyA/slantRange"
+              shape="dopplerCentroidSlantRangeWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range dimension corresponding to the source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyA/dopplerCentroid"
+              shape="dopplerCentroidShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">2D LUT of Doppler centroid for frequency A corresponding to the source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyB/zeroDopplerTime"
+              shape="dopplerCentroidTimeLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyB/slantRange"
+              shape="dopplerCentroidSlantRangeWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/parameters/frequencyB/dopplerCentroid"
+              shape="dopplerCentroidShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">2D LUT of Doppler centroid for frequency B corresponding to the source data processing information records</annotation>
+        </real>
         <string length="0"
               name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rfiDetection"
               shape="scalar">
           <annotation app="conformance"
-                      lang="en">Algorithm used for radio frequency interference (RFI) detection</annotation>
+                      lang="en">Algorithm used for radio frequency interference (RFI) detection corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
               name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rfiMitigation"
               shape="scalar">
           <annotation app="conformance"
-                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation</annotation>
+                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rangeCompression"
                 shape="scalar">
           <annotation algorithm_type="range processing"
                       app="conformance"
-                      lang="en">Algorithm for focusing the data in the range direction</annotation>
+                      lang="en">Algorithm for focusing the data in the range direction corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/elevationAntennaPatternCorrection"
                 shape="scalar">
           <annotation algorithm_type="range processing"
                       app="conformance"
-                      lang="en">Algorithm for calibrating the antenna pattern</annotation>
+                      lang="en">Algorithm for calibrating the antenna pattern corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rangeSpreadingLossCorrection"
                 shape="scalar">
           <annotation algorithm_type="range processing"
                       app="conformance"
-                      lang="en">Algorithm for calibrating range fading</annotation>
+                      lang="en">Algorithm for calibrating range fading corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/dopplerCentroidEstimation"
                 shape="scalar">
           <annotation algorithm_type="doppler centroid estimation"
                       app="conformance"
-                      lang="en">Algorithm for calculating Doppler centroid</annotation>
+                      lang="en">Algorithm for calculating Doppler centroid corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/azimuthPresumming"
                 shape="scalar">
           <annotation algorithm_type="azimuth regridding"
                       app="conformance"
-                      lang="en">Algorithm for regridding and filling gaps in the raw data in azimuth</annotation>
+                      lang="en">Algorithm for regridding and filling gaps in the raw data in azimuth corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/azimuthCompression"
                 shape="scalar">
           <annotation algorithm_type="azimuth regridding"
                       app="conformance"
-                      lang="en">Algorithm for focusing the data in the azimuth direction</annotation>
+                      lang="en">Algorithm for focusing the data in the azimuth direction corresponding to the source data processing information records</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/softwareVersion"
@@ -2567,7 +2631,30 @@
                        lang="en">Shape of crosstalk datasets</annotation>
            <dimension name="complex" extent="2"/>
     </shape>
-
+     <!-- Source data related shape -->
+    <shape name="dopplerCentroidTimeLength"
+    order="slowest...fastest">
+    <annotation app="conformance"
+                lang="en">Length dimension of Doppler centroid grid</annotation>
+    <dimension extent="0"
+               name="dopplerCentroidTimeLength"/>
+    </shape>
+    <shape name="dopplerCentroidSlantRangeWidth"
+    order="slowest...fastest">
+    <annotation app="conformance"
+                lang="en">Length dimension of Doppler centroid grid</annotation>
+    <dimension extent="0"
+               name="dopplerCentroidSlantRangeWidth"/>
+    </shape>
+    <shape name="dopplerCentroidShape"
+    order="slowest...fastest">
+    <annotation app="conformance"
+                lang="en">Shape of the Doppler centroid grid</annotation>
+    <dimension extent="0"
+               name="dopplerCentroidTimeLength"/>
+    <dimension extent="0"
+               name="dopplerCentroidSlantRangeWidth"/>
+    </shape>
     <!-- Orbit related shape -->
     <shape name="orbitListLength"
            order="slowest...fastest">

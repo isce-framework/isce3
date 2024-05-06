@@ -1760,6 +1760,12 @@
                 <annotation app="conformance"
                             lang="en">Orbit product type, either "FOE", "NOE", "MOE", "POE", or "Custom", where "FOE" stands for Forecast Orbit Ephemeris, "NOE" is Near real-time Orbit Ephemeris, "MOE" is Medium precision Orbit Ephemeris, and "POE" is Precise Orbit Ephemeris</annotation>
         </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/orbit/interpMethod"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Orbit interpolation method, either "Hermite" or "Legendre"</annotation>
+       </string>
                 
         <!-- Attitude records -->
         <real name="/science/LSAR/GSLC/metadata/attitude/time"
@@ -1787,7 +1793,7 @@
                 name="/science/LSAR/GSLC/metadata/attitude/attitudeType"
                 shape="scalar">
                 <annotation app="conformance"
-                            lang="en">PrOE (or) NOE (or) MOE (or) POE (or) Custom</annotation>
+                            lang="en">Attitude type, either "FRP", "NRP", "PRP, or "Custom", where "FRP" stands for Forecast Radar Pointing, "NRP" is Near Real-time Pointing, and "PRP" is Precise Radar Pointing</annotation>
         </string>
 
         <!-- Run configuration file contents -->
@@ -1835,7 +1841,7 @@
                       lang="en">List of input orbit files used</annotation>
         </string>
         <string length="0"
-                name="/science/LSAR/GCOV/metadata/processingInformation/inputs/tecFiles"
+                name="/science/LSAR/GSLC/metadata/processingInformation/inputs/tecFiles"
                 shape="numberOfInputTecFiles">
           <annotation app="conformance"
                       lang="en">List of input total electron content (TEC) files used</annotation>
@@ -1852,7 +1858,271 @@
           <annotation app="conformance"
                       lang="en">Description of the input digital elevation model (DEM)</annotation>
         </string>
-              </nodes>
+
+        <!-- Source data (RSLC) information -->
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/productVersion"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Product version of the source data</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/lookDirection"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Look direction, either "Left" or "Right"</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/productLevel"
+                shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Source data product level. Product level. L0A: Unprocessed instrument data; L0B: Reformatted, unprocessed instrument data; L1: Processed instrument data in radar coordinates system; and L2: Processed instrument data in geocoded coordinates system</annotation>
+        </string>
+        <string  length="27"
+              name="/science/LSAR/GSLC/metadata/sourceData/processingDateTime"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Source data processing UTC date and time in the format YYYY-mm-ddTHH:MM:SS</annotation>
+        </string>
+        <string name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/runConfigurationContents"
+              length="0"
+              shape="scalar">
+              <annotation app="conformance"
+                          lang="en">Contents of the run configuration file associated with the processing of the source data</annotation>
+        </string>
+
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/referenceTerrainHeight"
+              shape="dopplerCentroidTimeLength"
+              width="32">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Reference terrain height corresponding to the source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/zeroDopplerTime"
+              shape="dopplerCentroidTimeLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/slantRange"
+              shape="dopplerCentroidSlantRangeWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/zeroDopplerTime"
+              shape="dopplerCentroidTimeLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/slantRange"
+              shape="dopplerCentroidSlantRangeWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range dimension corresponding to the source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyA/dopplerCentroid"
+              shape="dopplerCentroidShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">2D LUT of Doppler centroid for frequency A corresponding to the source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/zeroDopplerTime"
+              shape="dopplerCentroidTimeLength"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds since YYYY-mm-ddTHH:MM:SS">Zero doppler time dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/slantRange"
+              shape="dopplerCentroidSlantRangeWidth"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range dimension corresponding to source data processing information records</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/parameters/frequencyB/dopplerCentroid"
+              shape="dopplerCentroidShape"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">2D LUT of Doppler centroid for frequency B corresponding to the source data processing information records</annotation>
+        </real>
+        <string length="0"
+              name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rfiDetection"
+              shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Algorithm used for radio frequency interference (RFI) detection corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+              name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rfiMitigation"
+              shape="scalar">
+          <annotation app="conformance"
+                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rangeCompression"
+                shape="scalar">
+          <annotation algorithm_type="range processing"
+                      app="conformance"
+                      lang="en">Algorithm for focusing the data in the range direction corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/elevationAntennaPatternCorrection"
+                shape="scalar">
+          <annotation algorithm_type="range processing"
+                      app="conformance"
+                      lang="en">Algorithm for calibrating the antenna pattern corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rangeSpreadingLossCorrection"
+                shape="scalar">
+          <annotation algorithm_type="range processing"
+                      app="conformance"
+                      lang="en">Algorithm for calibrating range fading corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/dopplerCentroidEstimation"
+                shape="scalar">
+          <annotation algorithm_type="doppler centroid estimation"
+                      app="conformance"
+                      lang="en">Algorithm for calculating Doppler centroid corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/azimuthPresumming"
+                shape="scalar">
+          <annotation algorithm_type="azimuth regridding"
+                      app="conformance"
+                      lang="en">Algorithm for regridding and filling gaps in the raw data in azimuth corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/azimuthCompression"
+                shape="scalar">
+          <annotation algorithm_type="azimuth regridding"
+                      app="conformance"
+                      lang="en">Algorithm for focusing the data in the azimuth direction corresponding to the source data processing information records</annotation>
+        </string>
+        <string length="0"
+                name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/softwareVersion"
+                shape="scalar">
+                <annotation app="conformance"
+                            lang="en">Software version used for processing the source data</annotation>
+        </string>
+        <string length="27"
+                name="/science/LSAR/GSLC/metadata/sourceData/swaths/zeroDopplerStartTime"
+                shape="scalar">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds">Azimuth start time of the source data product</annotation>
+       </string>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/zeroDopplerTimeSpacing"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds">Time interval in the along-track direction of the source data in seconds</annotation>
+        </real>
+        <integer name="/science/LSAR/GSLC/metadata/sourceData/swaths/numberOfAzimuthLines"
+              shape="scalar"
+              signed="false"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="seconds">Number of azimuth lines within the source data product</annotation>
+        </integer>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/rangeBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data processed range bandwidth in hertz</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/azimuthBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data processed azimuth bandwidth in hertz</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/centerFrequency"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Center frequency of the processed source data image in hertz</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/slantRangeStart"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Source data slant range start distance</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/slantRangeSpacing"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range spacing of the source data in meters</annotation>
+        </real>
+        <integer name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyA/numberOfRangeSamples"
+              shape="scalar"
+              signed="false"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Number of slant range samples for each azimuth line within the source data</annotation>
+        </integer>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/rangeBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data processed range bandwidth in hertz</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/azimuthBandwidth"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Source data processed azimuth bandwidth in hertz</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/centerFrequency"
+              shape="scalar"
+              width="64">
+          <annotation app="conformance"
+                      lang="en"
+                      units="hertz">Center frequency of the processed source data image in hertz</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/slantRangeStart"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Source data slant range start distance</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/slantRangeSpacing"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="meters">Slant range spacing of the source data in meters</annotation>
+        </real>
+        <integer name="/science/LSAR/GSLC/metadata/sourceData/swaths/frequencyB/numberOfRangeSamples"
+              shape="scalar"
+              signed="false"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Number of slant range samples for each azimuth line within the source data</annotation>
+        </integer>
+      </nodes>
     </science>
 
 
