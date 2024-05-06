@@ -81,7 +81,7 @@ def test_backproject():
     r = np.array(out_geometry.slant_range)
     out *= np.exp(-1j * kr * r)
 
-    info = analyze_point_target(out, nchip//2, nchip//2, nov=upsample_factor,
+    info, _ = analyze_point_target(out, nchip//2, nchip//2, nov=upsample_factor,
             chipsize=nchip//2)
     tofloatvals(info)
 

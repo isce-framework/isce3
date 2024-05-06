@@ -2,9 +2,18 @@
 """
 Analyze a point target in a complex*8 file.
 """
+from __future__ import annotations
+
 import sys
-import numpy as np
+from dataclasses import dataclass
 from warnings import warn
+
+import numpy as np
+
+from isce3.core import DateTime, LUT2d
+from isce3.ext.isce3.image.v2 import resample_to_coords
+from isce3.io.dataset import DatasetReader
+from isce3.product import RadarGridParameters
 
 desc = __doc__
 
@@ -452,84 +461,118 @@ def plot_profile(t, x, title=None):
     return fig
 
 
+@dataclass(frozen=True)
+class IPRCrossSection:
+    """
+    A 1-D cross-section of a point-like target impulse response along azimuth or range.
+
+    Attributes
+    ----------
+    data : np.ndarray of complex
+        The cross-section
+    i_indices : np.ndarray of float
+        The i indices at which the cross-section was sampled
+    j_indices : np.ndarray of float
+        The j indices at which the cross-section was sampled.
+    """
+    data: np.ndarray
+    i_indices: np.ndarray
+    j_indices: np.ndarray
+
+
 def analyze_point_target(
-    slc,
-    i,
-    j,
-    nov=32,
-    plot=False,
-    cuts=False,
-    chipsize=64,
-    fs_bw_ratio=1.2,
-    num_sidelobes=10,
-    predict_null=False,
-    window_type='rect',
-    window_parameter=0,
-    shift_domain='time',
-):
-    """Measure point-target attributes.
+    slc: DatasetReader,
+    i: float,
+    j: float,
+    nov: int = 32,
+    plot: bool = False,
+    cuts: bool = False,
+    chipsize: int = 64,
+    fs_bw_ratio: float = 1.2,
+    num_sidelobes: int = 10,
+    predict_null: bool = False,
+    window_type: str = "rect",
+    window_parameter: float = 0.0,
+    shift_domain: str = "time",
+    geo_heading: float | None = None,
+    pixel_spacing: tuple[float, float] = (1.0, 1.0)
+) -> tuple[dict, list["matplotlib.figure.Figure"] | None]:
+    """
+    Measure point-target attributes.
 
     Parameters
     ----------
-        slc: array of 2D
-            complex image (2D array).
-        i, j: float
-            Row and column indices where point-target is expected.
-            (Need not be integer.)
-        nov: int
-            Amount of oversampling.
-        plot: bool
-            Generate interactive plots.
-        cuts: bool
-            Include cuts through the peak in the output dictionary.
-        chipsize: int
-            number of samples around the point target to be included for
-            point target metric analysis
-        fs_bw_ratio: float
-            optional, sampling frequency to bandwidth ratio
-            Only used when predict_null=True
-            fs_bw_ratio = Fs / BW
-        num_sidelobes: float
-            optional total number of sidelobes for ISLR computation,
-            default is 10.
-        predict_null: boolean
-            optional, if predict_null is True, mainlobe null locations are computed based 
-            on Fs/bandwidth ratio and window_type/window_parameter, when computing
-            ISLR calculations. Otherwise, mainlobe null locations are computed based on null
-            search algorithm.
-            PSLR Exception: mainlobe does not include first sidelobes, search is always
-            conducted to find the locations of first null regardless of predict_null parameter.
-        window_type: str
-            optional, user provided window types used for tapering
-           
-            'rect': 
-                Rectangular window is applied
-            'cosine': 
-                Raised-Cosine window
-            'kaiser': 
-                Kaiser Window            
-        window_parameter: float
-            optional, window parameter. For a Kaiser window, this is the beta parameter.
-            For a Raised Cosine window, it is the pedestal height.
-            It is ignored if `window_type='rect'`.
-        shift_domain: {time, frequency}
-            If 'time' then estimate peak location using max of oversampled data.
-            If 'frequency' then estimate a phase ramp in the frequency domain.
-            Default is 'time' but 'frequency' is useful when target is well
-            focused, has high SNR, and is the only target in the neighborhood
-            (often the case in point target simulations).
+    slc : DatasetReader
+        complex 2D image.
+    i, j : float
+        Row and column indices where point-target is expected.
+        (Need not be integer.)
+    nov : int, optional
+        Amount of oversampling. Defaults to 32
+    plot : bool, optional
+        Generate interactive plots if True. Defaults to False
+    cuts : bool, optional
+        Include cuts through the peak in the output dictionary if True.
+        Defaults to False
+    chipsize : int, optional
+        number of samples around the point target to be included for point target metric
+        analysis. Defaults to 64
+    fs_bw_ratio : float, optional
+        Sampling frequency to bandwidth ratio, for use only when predict_null is True.
+        Defaults to 1.2
+    num_sidelobes : int, optional
+        The total number of sidelobes for ISLR computation. Defaults to 10
+    predict_null : bool, optional
+        if True, mainlobe null locations are computed based on Fs/bandwidth ratio and
+        window_type/window_parameter, when computing ISLR calculations. Otherwise,
+        mainlobe null locations are computed based on null search algorithm.
+        PSLR Exception: mainlobe does not include first sidelobes, search is always
+        conducted to find the locations of first null regardless of predict_null
+        parameter. Defaults to False
+    window_type : str, optional
+        User-provided window type, used for tapering, one of
+        {"rect", "cosine", "kaiser"}. Defaults to 'rect'.
+        "rect": Rectangular window is applied
+        "cosine": Raised-Cosine window
+        "kaiser": Kaiser Window.
+    window_parameter : float, optional
+        For a Kaiser window, this is the beta parameter.
+        For a Raised Cosine window, it is the pedestal height.
+        Ignored if window_type is "rect". Defaults to 0.0
+    shift_domain : str, optional
+        The domain to estimate peak location in, one of {"time", "frequency"}.
+        If "time" then estimate peak location using max of oversampled data.
+        If "frequency" then estimate a phase ramp in the frequency domain; useful when
+        target is well focused, has high SNR, and is the only target in the neighborhood
+        (often the case in point target simulations). Defaults to "time"
+    geo_heading : float or None, optional
+        Only for geocoded data: The heading of the satellite in the geodetic coordinate
+        system of input data, in radians east of north, for use only if the SLC is
+        geocoded. None if it is in radar coordinates. Defaults to None
+    pixel_spacing : tuple[float, float], optional
+        Only for geocoded data: The pixel spacing of the image in the
+        (y_spacing, x_spacing) directions, for use in adjusting the heading angle to the
+        raster dimensions. Defaults to (1.0, 1.0)
 
-    Returns:
-    --------
-        Dictionary of point target attributes.  If plot=true then return the
-        dictionary and a list of figures.
+    Returns
+    -------
+    dict:
+        Dictionary of point target attributes.
+    list[matplotlib.figure.Figure] or None
+        If plot=true then return the dictionary and a list of figures.
+        Else, return None.
     """
+    # Notation: For all references to i and j in this function, i represents row
+    # indices on the chip or its parent raster, and j represents column indices
+    # on the same.
     
     # Check if i or j indices are out of bounds w.r.t slc image
     if i > slc.shape[0] or i < 0 or j > slc.shape[1] or j < 0:
-        raise ValueError('User provided target location (lon/lat/height) points to a spot '
-        'outside of RSLC image. This could be due to residual azimuth/range delays or '
-        'incorrect geometry info or incorrect user provided target location info.')
+        raise ValueError(
+            "User provided target location points to a spot outside of image array. "
+            "This could be due to residual azimuth/range delays or incorrect geometry "
+            "info or incorrect user provided target location info."
+        )
 
     # Raise an exception if the target position was too near the border of the image,
     # with insufficient margin to extract a "chip" around it.
@@ -546,21 +589,28 @@ def analyze_point_target(
 
     chip_i0, chip_j0, chip0 = get_chip(slc, i, j, nchip=chipsize)
 
-    chip, fx, fy = oversample(chip0, nov=nov, return_slopes=True)
+    # Casting the chip to complex64 makes it compatible with the resampler which allows
+    # PTA for real-valued data using this method.
+    chip0 = np.asanyarray(chip0, dtype=np.complex64)
 
-    k = np.argmax(np.abs(chip))
-    ichip, jchip = np.unravel_index(k, chip.shape)
-    chipmax = chip[ichip, jchip]
+    upsampled_chip, fx, fy = oversample(chip0, nov, return_slopes=True)
+
+    # The chip must be contiguous in order to be resampled.
+    upsampled_chip = np.ascontiguousarray(upsampled_chip)
+
+    k = np.nanargmax(np.abs(upsampled_chip))
+    ichip, jchip = np.unravel_index(k, upsampled_chip.shape)
+    chipmax = upsampled_chip[ichip, jchip]
 
     if shift_domain == 'time':
         imax = chip_i0 + ichip * 1.0 / nov
         jmax = chip_j0 + jchip * 1.0 / nov
     elif shift_domain == 'frequency':
-        tx, ty = measure_location_from_spectrum(chip0)
-        imax = chip_i0 + ty
-        jmax = chip_j0 + tx
-        if (abs(tx - jchip / nov) > 1) or (abs(ty - ichip / nov) > 1):
-            warn(f"Spectral estimate of chip max at ({ty}, {tx}) differs from "
+        pos_j, pos_i = measure_location_from_spectrum(chip0)
+        imax = chip_i0 + pos_i
+        jmax = chip_j0 + pos_j
+        if (np.abs(pos_i - ichip / nov) > 1) or (abs(pos_j - jchip / nov) > 1):
+            warn(f"Spectral estimate of chip max at ({pos_i}, {pos_j}) differs from "
                  f"time domain estimate at ({ichip / nov}, {jchip / nov}) by "
                  "more than one pixel.  Magnitude and phase is reported using "
                  "time-domain estimate.")
@@ -568,11 +618,38 @@ def analyze_point_target(
         raise ValueError("Expected shift_domain in {'time', 'frequency'} but"
                          f" got {shift_domain}.")
 
-    az_slice = chip[:, jchip]
-    rg_slice = chip[ichip, :]
+    if geo_heading is not None:
+        spacing_i, spacing_j = pixel_spacing
 
-    dr = estimate_resolution(rg_slice, 1.0 / nov)
-    da = estimate_resolution(az_slice, 1.0 / nov)
+        az_cross_section = sample_geocoded_side_lobe(
+            chip=upsampled_chip,
+            heading=geo_heading,
+            cr_position=(ichip, jchip),
+            pixel_spacing=(spacing_i / nov, spacing_j / nov),
+            deramp=True,
+        )
+
+        # For now, assume that the collection geometry was not squinted such that the
+        # azimuth & range axes are orthogonal.
+        # TODO: add squint angle to the interface to handle squinted cases
+        rg_cross_section = sample_geocoded_side_lobe(
+            chip=upsampled_chip,
+            heading=geo_heading + np.pi / 2,
+            cr_position=(ichip, jchip),
+            pixel_spacing=(spacing_i / nov, spacing_j / nov),
+            deramp=True,
+        )
+
+        az_slice = az_cross_section.data
+        rg_slice = rg_cross_section.data
+
+    else:
+        az_slice = upsampled_chip[:, jchip]
+        rg_slice = upsampled_chip[ichip, :]
+
+    # Acquire resolution, in pixels, in the range and azimuth directions.
+    range_resolution = estimate_resolution(rg_slice, 1.0 / nov)
+    azimuth_resolution = estimate_resolution(az_slice, 1.0 / nov)
 
     # Find PSLR and ISLR of range and azimuth cuts
     fs_bw_ratio_ov = nov * fs_bw_ratio
@@ -584,6 +661,7 @@ def analyze_point_target(
         window_type=window_type,
         window_parameter=window_parameter
     )
+
     azimuth_islr_db, azimuth_pslr_db = compute_islr_pslr(
         az_slice,
         fs_bw_ratio=fs_bw_ratio_ov,
@@ -593,44 +671,194 @@ def analyze_point_target(
         window_parameter=window_parameter
     )
 
-    d = {
-        "magnitude": abs(chipmax),
+    return_dict = {
+        "magnitude": np.abs(chipmax),
         "phase": np.angle(chipmax),
-        "range": {
-            "index": jmax,
-            "offset": jmax - j,
-            "phase ramp": fx,
-            "resolution": dr,
-            "ISLR": range_islr_db,
-            "PSLR": range_pslr_db,
-        },
         "azimuth": {
-            "index": imax,
-            "offset": imax - i,
-            "phase ramp": fy,
-            "resolution": da,
             "ISLR": azimuth_islr_db,
             "PSLR": azimuth_pslr_db,
+            "resolution": azimuth_resolution,
+        },
+        "range": {
+            "ISLR": range_islr_db,
+            "PSLR": range_pslr_db,
+            "resolution": range_resolution,
         },
     }
 
-    idx = np.arange(chip.shape[0], dtype=float)
-    ti = chip_i0 + idx / nov - i
-    tj = chip_j0 + idx / nov - j
+    if geo_heading is not None:
+        return_dict["x"] = {
+            "index": jmax,
+            "offset": jmax - j,
+            "phase ramp": fx,
+        }
+        return_dict["y"] = {
+            "index": imax,
+            "offset": imax - i,
+            "phase ramp": fy,
+        }
+
+        # In the case of a geocoded dataset, the range and azimuth slices will have the
+        # peak power position located directly at the center of the slice.
+        rg_indices = np.arange(rg_slice.shape[0], dtype=np.float64) - rg_slice[0] / 2
+        az_indices = np.arange(az_slice.shape[0], dtype=np.float64) - az_slice[0] / 2
+        if cuts:
+            return_dict["azimuth"]["cut"] = az_indices.tolist()
+            return_dict["range"]["cut"] = rg_indices.tolist()
+    else:
+        return_dict["azimuth"]["index"] = imax
+        return_dict["azimuth"]["offset"] = imax - i
+        return_dict["azimuth"]["phase ramp"] = fy
+        return_dict["range"]["index"] = jmax
+        return_dict["range"]["offset"] = jmax - j
+        return_dict["range"]["phase ramp"] = fx
+
+        # In the case of a radar-coordinate dataset, the range and azimuth slices will
+        # have the peak power position located at an arbitrary point within the slice.
+        idx_rg = np.arange(rg_slice.shape[0], dtype=float)
+        idx_az = np.arange(az_slice.shape[0], dtype=float)
+        rg_indices = chip_j0 + idx_rg / nov - j
+        az_indices = chip_i0 + idx_az / nov - i
+        if cuts:
+            return_dict["azimuth"]["cut"] = az_indices.tolist()
+            return_dict["range"]["cut"] = rg_indices.tolist()
+
     if cuts:
-        d["range"]["magnitude cut"] = list(np.abs(rg_slice))
-        d["range"]["phase cut"] = list(np.angle(rg_slice))
-        d["range"]["cut"] = list(tj)
-        d["azimuth"]["magnitude cut"] = list(np.abs(az_slice))
-        d["azimuth"]["phase cut"] = list(np.angle(az_slice))
-        d["azimuth"]["cut"] = list(ti)
+        return_dict["azimuth"]["magnitude cut"] = list(np.abs(az_slice))
+        return_dict["azimuth"]["phase cut"] = list(np.angle(az_slice))
+        return_dict["range"]["magnitude cut"] = list(np.abs(rg_slice))
+        return_dict["range"]["phase cut"] = list(np.angle(rg_slice))
+    
+        for x in ["azimuth", "range"]:
+            assert len(return_dict[x]["cut"]) == len(return_dict[x]["magnitude cut"])
+            assert len(return_dict[x]["cut"]) == len(return_dict[x]["phase cut"])
+
     if plot:
         figs = [
-            plot_profile(tj, rg_slice, title="Range"),
-            plot_profile(ti, az_slice, title="Azimuth"),
+            plot_profile(az_indices, az_slice, title="Azimuth"),
+            plot_profile(rg_indices, rg_slice, title="Range"),
         ]
-        return d, figs
-    return d
+        return return_dict, figs
+    return return_dict, None
+
+
+def sample_geocoded_side_lobe(
+    chip: np.ndarray,
+    heading: float,
+    cr_position: tuple[int, int],
+    pixel_spacing: tuple[float, float],
+    deramp: bool = True,
+) -> IPRCrossSection:
+    """
+    Given a chip of geocoded data, a CR position on the chip, and a heading, return
+    side lobe slices interpolated over the data and the positions of the slices.
+
+    This function does not preserve phase data in the returned slices if basebanding
+    is used.
+
+    Parameters
+    ----------
+    chip : np.ndarray of complex64
+        A square region of geocoded data that contains a corner reflector.
+    heading : float
+        The heading of the sensor on the chip with respect to the corner
+        reflector.
+    cr_position : tuple[int, int]
+        The position of the corner reflector on the chip.
+    pixel_spacing : tuple[float, float]
+        The (north, east) pixel spacing of pixels on the chip.
+    deramp : bool, optional
+        If True, estimate and deramp the carrier frequency of the data. If `deramp` is
+        False, the data is assumed to be already base-banded (de-ramped).
+
+    Returns
+    -------
+    IPRCrossSection
+        An object containing information about a lobe cross section as described by this
+        class.
+    """
+
+    chip_size, chip_size_x = chip.shape
+    if chip_size != chip_size_x:
+        raise ValueError(f"Chip must be square. Dimensions given as {chip.shape}.")
+    
+    if deramp:
+        # Baseband the chip for resampling
+        fx, fy = estimate_frequency(chip)
+        chip = shift_frequency(chip, -fx, -fy)
+    
+    spacing_north, spacing_east = pixel_spacing
+
+    # Adjust the heading from degrees east of north in spatial units to east of north
+    # in units of pixels on the chip. This allows accurate prediction of the angle
+    # at which the side lobes will appear on the geolocated image.
+    # This is taken by taking the east and north components of the heading in units of
+    # pixels per unit time, then taking the arctangent of the east over the north to get
+    # the angle in the raster coordinate system.
+    heading_north = np.cos(heading)
+    heading_east = np.sin(heading)
+    adjusted_heading = np.arctan2(
+        heading_east / spacing_east, heading_north / spacing_north
+    )
+
+    pos_i, pos_j = cr_position
+    heading_north_az = np.cos(adjusted_heading)
+    heading_east_az = np.sin(adjusted_heading)
+
+    indices_arange = np.arange(chip_size, dtype=np.float64) - (chip_size - 1) / 2
+
+    # resample_to_coords is usually used for rectangular datasets and thus expects
+    # rectangular arrays of indices and a rectangular output array. This can be done
+    # by creating arrays that are one-by-chip-size pixels in dimension.
+    sample_indices_i = np.empty((1, chip_size), dtype=np.float64)
+    sample_indices_i[0,:] = indices_arange * heading_north_az + pos_i
+
+    sample_indices_j = np.empty((1, chip_size), dtype=np.float64)
+    sample_indices_j[0,:] = indices_arange * heading_east_az + pos_j
+
+    checking_sample = np.full(
+        (1, chip_size),
+        fill_value=np.nan + 1.0j * np.nan,
+        dtype=np.complex64
+    )
+
+    # The interpolation will happen with a dummy grid, as the chip should already
+    # be baseband and RadarGridParameters is only required for Doppler correction.
+    dummy_grid: RadarGridParameters = RadarGridParameters(
+        sensing_start=1,
+        wavelength=1,
+        prf=1,
+        starting_range=1,
+        range_pixel_spacing=1,
+        look_side="right",
+        length=chip_size,
+        width=chip_size,
+        ref_epoch=DateTime(),
+    )
+
+    # Sample all of the sample indices to get the slice.
+    resample_to_coords(
+        output_data_block=checking_sample,
+        input_data_block=chip,
+        range_input_indices=sample_indices_j,
+        azimuth_input_indices=sample_indices_i,
+        in_radar_grid=dummy_grid,
+        native_doppler=LUT2d(),
+        fill_value=np.nan + 1.0j * np.nan,
+    )
+
+    lobe_slice = checking_sample[0]
+
+    if deramp:
+        # Re-apply the phase ramp to the resampled data.
+        # `fx` and `fy` have units of 1/samples
+        lobe_slice *= np.exp(1j * (fy * sample_indices_i + fx * sample_indices_j))[0,:]
+
+    return IPRCrossSection(
+        data=lobe_slice,
+        i_indices=sample_indices_i[0,:],
+        j_indices=sample_indices_j[0,:],
+    )
 
 
 def tofloatvals(x):
@@ -739,7 +967,7 @@ def main(argv):
     m = len(x) // n
     x = x.reshape((m, n))
 
-    info = analyze_point_target(
+    info, _ = analyze_point_target(
         x,
         i,
         j,
@@ -754,8 +982,6 @@ def main(argv):
         window_parameter=args.window_parameter,
         shift_domain=args.shift_domain
     )
-    if args.i:
-        info = info[0]
 
     tofloatvals(info)
 

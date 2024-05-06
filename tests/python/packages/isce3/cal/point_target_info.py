@@ -1,11 +1,20 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
+from pathlib import Path
+
+import isce3
 import iscetest
 import numpy as np
 import numpy.testing as npt
-import isce3
-from isce3.cal import point_target_info as pt
-from numpy.fft import fftfreq, fftshift, fft, ifft
 import pickle
-from pathlib import Path
+import typing
+from isce3.cal import point_target_info as pt
+from numpy.fft import fftfreq, fftshift, ifft
+from numpy.typing import ArrayLike
+from pytest import mark
+
+from isce3.cal.point_target_info import analyze_point_target
 
 class RectNotch:
     def __init__(self, freq: float, bandwidth: float):
@@ -226,6 +235,196 @@ def test_search_null_pair():
     ileft, iright = pt.search_first_null_pair(x, ipeak)
     npt.assert_equal(ileft, true_left)
     npt.assert_equal(iright, true_right)
+
+
+def sinc2d(x: ArrayLike, y: ArrayLike, dx: float, dy: float) -> np.ndarray:
+    """
+    Generate a two-dimensional array calculated by the sinc of x multiplied by the sinc
+    of y, in the complex domain.
+    """
+    x = np.asanyarray(x)
+    y = np.asanyarray(y)
+    return np.array(np.sinc(x / dx) * np.sinc(y / dy), dtype=np.complex64)
+
+
+def complex_noise(shape: tuple[int, ...], scale: float) -> np.ndarray:
+    """
+    Generate normally distributed noise in the complex domain.
+
+    Parameters
+    ----------
+    shape : tuple[int, ...]
+        The shape of the output array.
+    scale : float
+        The standard deviation of the noise in the real and imaginary components.
+
+    Returns
+    -------
+    np.ndarray
+        The generated noise.
+    """
+    generator = np.random.default_rng(seed=0)
+    noise = (
+        generator.normal(size=shape, scale=scale) +
+        1.j * generator.normal(size=shape, scale=scale)
+    )
+    return noise
+
+
+def check_tol(value: float, lo: float, hi: float) -> str | None:
+    try:
+        assert lo < value < hi
+    except AssertionError as err:
+        return str(err)
+    return None
+
+
+def append_if_given(coll: list, value: typing.Any | None, prefix: str = "") -> None:
+    if value is None:
+        return
+    if not isinstance(value, str) and prefix != "":
+        raise ValueError(
+            "'value' given as non-string object, cannot be prefixed with string "
+            f'"{prefix}".'
+        )
+    coll += [prefix + ": " + value]
+
+
+@mark.parametrize(
+    "spacing,sinc_scale,heading_deg",
+    [
+        ([1., 1.], [2., 2.], 0),
+        ([1., 1.], [2., 2.], 90),
+        ([1., 1.], [2., 2.], 180),
+        ([1., 1.], [3., 3.], -45),
+        ([1., 1.], [2., 2.], -30),
+        ([3., 9.], [6., 18.], 0),
+        ([3., 9.], [18., 18.], 90),
+        ([3., 9.], [18., 18.], 180),
+        ([3., 9.], [9., 27.], -45),
+        ([3., 9.], [27., 9.], -30),
+    ],
+)
+@mark.parametrize("offsets", [[0, 0], [5, -5], [5, 5]])
+def test_simulated_geocoded_cr(
+    spacing : Sequence[float, float],
+    sinc_scale: Sequence[float, float],
+    offsets : Sequence[float, float],
+    heading_deg : float,
+    snr : float = 40.0,
+    dim : int = 300,
+    nov : int = 32,
+):
+    """
+    Test analysis of a simulated geocoded point target.
+
+    Parameters
+    ----------
+    spacing : Sequence[float, float]
+        The pixel spacing of the image.
+    offsets : Sequence[float, float]
+        The offset of the main lobe peak relative to the center of the
+        image, in the same units as the spacing.
+    sinc_scale : Sequence[float, float]
+        The resolution between the center of the sinc and the first null of the range,
+        azimuth axes of the image, in the same units as the spacing.
+    heading_deg : float
+        The heading, in degrees east of north.
+    snr : float, optional
+        The signal to noise ratio of the generated data. Defaults to 40.0 dB
+    dim : int, optional
+        The dimension, determines the shape of the square input image. The chip size is
+        1/4 of this. Defaults to 300
+    nov : int, optional
+        The oversampling factor. Defaults to 32
+    """
+    chipsize = dim // 4
+    if chipsize % 2 == 1:
+        chipsize += 1
+
+    e_spacing, n_spacing = spacing
+    rg_scale, az_scale = sinc_scale
+    x_offset, y_offset = offsets
+
+    # Generate the base image - a simulated radar-encoded point target.
+    x = e_spacing * np.arange(-dim//2, dim//2)
+    y = n_spacing * np.arange(-dim//2, dim//2)
+
+    # `heading` is the clockwise rotation angle to apply, in radians.
+    heading = np.deg2rad(heading_deg)
+    cos_heading = np.cos(heading)
+    sin_heading = np.sin(heading)
+
+    X, Y = np.meshgrid(x - x_offset, y - y_offset, indexing="xy")
+    X_rotated = cos_heading * X - sin_heading * Y
+    Y_rotated = sin_heading * X + cos_heading * Y
+
+    magnitude = 10.0 ** (snr / 20.0)
+    image = sinc2d(x=X_rotated, y=Y_rotated, dx=rg_scale, dy=az_scale) * magnitude
+
+    # Add simulated thermal noise to the base image.
+    # Set the noise power to 1 (standard deviation of real & imag components should be 1/sqrt(2)).
+    noise = complex_noise(shape=image.shape, scale=1.0 / np.sqrt(2))
+    image += noise
+
+    # Get "expected position" of the point target at the center of the image.
+    # This is expected to be different than the actual position due to the offset,
+    # which this test will ensure is correct.
+    targ_rows, targ_columns = image.shape
+
+    ret_dict, _ = analyze_point_target(
+        slc=image,
+        i=targ_rows / 2,
+        j=targ_columns / 2,
+        nov=nov,
+        cuts=True,
+        chipsize=chipsize,
+        geo_heading=heading,
+        pixel_spacing=(n_spacing, e_spacing)
+    )
+
+    err_msgs: list[str] = []
+
+    # Acquire and check azimuth and range ISLR, PSLR
+    az_islr = ret_dict["azimuth"]["ISLR"]
+    append_if_given(err_msgs, check_tol(az_islr, -20, -9), "Azimuth ISLR")
+    az_pslr = ret_dict["azimuth"]["PSLR"]
+    append_if_given(err_msgs, check_tol(az_pslr, -20, -9), "Azimuth PSLR")
+
+    rg_islr = ret_dict["range"]["ISLR"]
+    append_if_given(err_msgs, check_tol(rg_islr, -20, -9), "Range ISLR")
+    rg_pslr = ret_dict["range"]["PSLR"]
+    append_if_given(err_msgs, check_tol(rg_pslr, -20, -9), "Range PSLR")
+
+    expected_x_position = x_offset / e_spacing
+    x_error = expected_x_position - ret_dict["x"]["offset"]
+    append_if_given(err_msgs, check_tol(x_error, -1, 1), "X Offset Error")
+    expected_y_position = y_offset / n_spacing
+    y_error = expected_y_position - ret_dict["y"]["offset"]
+    append_if_given(err_msgs, check_tol(y_error, -1, 1), "Y Offset Error")
+
+    # Scale values are known in units of meters to the first null in the main lobe,
+    # but the function outputs the 3dB resolution in units of pixels. Convert our known
+    # values to pixels using the heading and spacing, then get multiply by 0.886 to get
+    # expected 3dB resolution in pixels and calculate a percent error, then check it.
+    az_res_out = ret_dict["azimuth"]["resolution"]
+    az_res_n = az_scale * np.cos(heading) / n_spacing
+    az_res_e = az_scale * np.sin(heading) / e_spacing
+    az_res_px = np.sqrt(az_res_n**2 + az_res_e**2)
+    az_res_3db = az_res_px * 0.886
+    az_res_err = np.abs(az_res_3db - az_res_out) / az_res_3db * 100
+    append_if_given(err_msgs, check_tol(az_res_err, 0, 3.5), "Az Resolution %Error")
+
+    rg_res_out = ret_dict["range"]["resolution"]
+    rg_res_n = rg_scale * -np.sin(heading) / n_spacing
+    rg_res_e = rg_scale * np.cos(heading) / e_spacing
+    rg_res_px = np.sqrt(rg_res_n**2 + rg_res_e**2)
+    rg_res_3db = rg_res_px * 0.886
+    rg_res_err = np.abs(rg_res_3db - rg_res_out) / rg_res_3db * 100
+    append_if_given(err_msgs, check_tol(rg_res_err, 0, 3.5), "Rg Resolution %Error")
+
+    if len(err_msgs) > 0:
+        raise AssertionError("\n\t" + "\n\t".join(err_msgs))
 
 
 if __name__ == "__main__":

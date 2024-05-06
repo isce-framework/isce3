@@ -375,24 +375,21 @@ def slc_pt_performance(
     slc_pixel, slc_line = get_radar_grid_coords(cr_llh, slc, freq_group)
 
     #compute point target performance metrics
-    performance_dict = pti.analyze_point_target(
+    performance_dict, _ = pti.analyze_point_target(
         slc_data,
         slc_line,
         slc_pixel,
-        nov,
-        plots,
-        cuts,
-        chipsize,
-        fs_bw_ratio,
-        num_sidelobes,
-        predict_null,
-        window_type,
-        window_parameter,
+        nov=nov,
+        plot=plots,
+        cuts=cuts,
+        chipsize=chipsize,
+        fs_bw_ratio=fs_bw_ratio,
+        num_sidelobes=num_sidelobes,
+        predict_null=predict_null,
+        window_type=window_type,
+        window_parameter=window_parameter,
         shift_domain=shift_domain,
     )
-   
-    if plots:
-        performance_dict = performance_dict[0] 
     
     # Write dictionary content to a json file if output is requested by user
     to_json(performance_dict, pta_output, encoder=CustomJSONEncoder)
@@ -673,7 +670,7 @@ def analyze_corner_reflectors(
             window_type=window_type,
             window_parameter=window_parameter,
             shift_domain=peak_find_domain,
-        )
+        )[0]
 
     orbit = rslc.getOrbit()
     attitude = rslc.getAttitude()
