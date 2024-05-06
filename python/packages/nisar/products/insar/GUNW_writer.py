@@ -243,8 +243,8 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                      f"Coherence magnitude between {pol} layers",
                      Units.unitless),
                     ("connectedComponents", np.uint16,
-                     f"Connected components for {pol} layers",
-                     Units.dn),
+                     f"Connected components for {pol} layer",
+                     Units.unitless),
                     ("ionospherePhaseScreen", np.float32,
                      "Ionosphere phase screen",
                      Units.radian),
@@ -329,7 +329,7 @@ class GUNWWriter(RUNWWriter, RIFGWriter, L2InSARWriter):
                 # order: dataset name,data type, description, and units
                 pixel_offsets_ds_params = [
                     ("alongTrackOffset", np.float32,
-                     "Along track offset",
+                     "Along-track offset",
                      Units.meter),
                     ("correlationSurfacePeak", np.float32,
                      "Normalized cross-correlation surface peak",

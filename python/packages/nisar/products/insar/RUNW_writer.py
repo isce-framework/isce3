@@ -69,7 +69,7 @@ class RUNWWriter(L1InSARWriter):
         ds_params = [
             DatasetParams(
                 "highBandBandwidth",
-                np.float64(high_bandwidth),
+                np.float32(high_bandwidth),
                 "Slant range bandwidth of the high sub-band image",
                 {
                     "units": Units.hertz,
@@ -77,7 +77,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "lowBandBandwidth",
-                np.float64(low_bandwidth),
+                np.float32(low_bandwidth),
                 "Slant range bandwidth of the low sub-band image",
                 {
                     "units": Units.hertz,
@@ -172,7 +172,7 @@ class RUNWWriter(L1InSARWriter):
             ),
             DatasetParams(
                 "unwrappingErrorCorrection",
-                np.bool_(unwrap_correction),
+                np.string_(unwrap_correction),
                 "Algorithm correcting unwrapping errors in sub-band"
                 " unwrapped interferograms"
                 ,
@@ -329,7 +329,7 @@ class RUNWWriter(L1InSARWriter):
                         "connectedComponents",
                         np.uint16,
                         f"Connected components for {pol} layer",
-                        Units.dn,
+                        Units.unitless,
                     ),
                     (
                         "ionospherePhaseScreen",

@@ -192,27 +192,10 @@ class L2InSARWriter(L1InSARWriter):
         radar_grid['incidenceAngle'].attrs['long_name'] = \
             np.string_("Incidence angle")
 
-        # Add the min and max attributes to the following dataset
-        ds_names = ["incidenceAngle",
-                    "losUnitVectorX",
-                    "losUnitVectorY",
-                    "alongTrackUnitVectorX",
-                    "alongTrackUnitVectorY",
-                    "elevationAngle"]
-
-        for ds_name in ds_names:
-            ds = radar_grid[ds_name][()]
-            valid_min, valid_max = np.nanmin(ds), np.nanmax(ds)
-            radar_grid[ds_name].attrs["min"] = valid_min
-            radar_grid[ds_name].attrs["max"] = valid_max
-
-            if ds_name not in ["incidenceAngle", "elevationAngle"]:
-                radar_grid[ds_name].attrs["units"] = \
-                    Units.unitless
         radar_grid["elevationAngle"].attrs["description"] = \
             np.string_("Elevation angle is defined as the angle between"
                        " the LOS vector and the normal to"
-                       " the ellipsoid at thesensor")
+                       " the ellipsoid at the sensor")
         radar_grid["groundTrackVelocity"].attrs["description"] = \
             np.string_("Absolute value of the platform velocity"
                        " scaled at the target height")
@@ -398,6 +381,6 @@ class L2InSARWriter(L1InSARWriter):
 
             # Add the description and units
             cfreq = grids_freq_group["centerFrequency"]
-            cfreq.attrs['description'] = np.string_(" Center frequency of"
+            cfreq.attrs['description'] = np.string_("Center frequency of"
                                                     " the processed image in hertz")
             cfreq.attrs['units'] = Units.hertz

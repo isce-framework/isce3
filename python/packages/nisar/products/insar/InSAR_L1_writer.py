@@ -120,22 +120,10 @@ class L1InSARWriter(InSARBaseWriter):
         # Add baseline to the geolocation grid
         self.add_baseline_info_to_cubes(geolocationGrid_group,
                                         geolocation_radargrid,
-                                        is_geogrid= False)
+                                        is_geogrid=False)
 
-        # Add the min and max attributes to the following dataset
-        ds_names = ["incidenceAngle",
-                    "losUnitVectorX",
-                    "losUnitVectorY",
-                    "alongTrackUnitVectorX",
-                    "alongTrackUnitVectorY",
-                    "elevationAngle"]
 
         geolocation_grid_group = self[geolocationGrid_path]
-        for ds_name in ds_names:
-            ds = geolocation_grid_group[ds_name][()]
-            valid_min, valid_max = np.nanmin(ds), np.nanmax(ds)
-            geolocation_grid_group[ds_name].attrs["min"] = valid_min
-            geolocation_grid_group[ds_name].attrs["max"] = valid_max
 
         geolocation_grid_group['epsg'][...] = \
             geolocation_grid_group['epsg'][()].astype(np.uint32)
@@ -145,8 +133,6 @@ class L1InSARWriter(InSARBaseWriter):
         geolocation_grid_group['epsg'].attrs['units'] = Units.unitless
         geolocation_grid_group['losUnitVectorX'].attrs['units'] = Units.unitless
         geolocation_grid_group['losUnitVectorY'].attrs['units'] = Units.unitless
-        geolocation_grid_group['losUnitVectorY'].attrs['description'] = \
-            np.string_("LOS unit vector Y")
 
         geolocation_grid_group['alongTrackUnitVectorX'].attrs['units'] = \
             Units.unitless

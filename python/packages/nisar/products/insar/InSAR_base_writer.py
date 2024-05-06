@@ -222,6 +222,7 @@ class InSARBaseWriter(h5py.File):
             ds.attrs['description'] = np.string_(f"{baseline_name.capitalize()}"
                                                  " component of the InSAR baseline")
             ds.attrs['units'] = Units.meter
+            ds.attrs['long_name'] = np.string_(f"{baseline_name.capitalize()} baseline")
 
             # The radarGrid group to attach the x, y, and z coordinates
             if is_geogrid:
@@ -257,7 +258,7 @@ class InSARBaseWriter(h5py.File):
             # Should those also be updated in the crossmul module?
             doppler_centroid_group.copy("dopplerCentroid", common_group)
             common_group["dopplerCentroid"].attrs['description'] = \
-                np.string_("Common Doppler Centroid used for processing interferogram")
+                np.string_("Common Doppler centroid used for processing interferogram")
             common_group["dopplerCentroid"].attrs['units'] = \
                 Units.hertz
 
@@ -365,6 +366,7 @@ class InSARBaseWriter(h5py.File):
                                        rslc_frequency_group)
             rslc_frequency_group['slantRangeSpacing'].attrs['description'] = \
                  f"Slant range spacing of {rslc_name} RSLC"
+            rslc_frequency_group['slantRangeSpacing'].attrs['units'] = Units.meter
 
             # TODO: the rangeBandwidth and azimuthBandwidth are placeholders heres,
             # and copied from the bandpassed RSLC data.
@@ -393,6 +395,7 @@ class InSARBaseWriter(h5py.File):
                np.string_(
                    f"Time interval in the along-track direction for {rslc_name} RSLC raster layers"
                )
+            rslc_frequency_group['zeroDopplerTimeSpacing'].attrs['units'] = Units.second
 
             # Copy the zero-Dopper information from the source RSLC to the RSLC group
             id_group.copy('zeroDopplerStartTime', rslc_frequency_group)
@@ -400,7 +403,7 @@ class InSARBaseWriter(h5py.File):
             # Update the description attributes of the zeroDopplerTime
             ds_zerodopp = rslc_frequency_group[f"zeroDopplerStartTime"]
             ds_zerodopp.attrs['description'] = \
-                np.string_(f"Azimuth Start time of the {rslc_name} RSLC product")
+                np.string_(f"Azimuth start time of the {rslc_name} RSLC product")
 
             rg_names_to_be_created = [
                 DatasetParams(
@@ -411,13 +414,13 @@ class InSARBaseWriter(h5py.File):
                 ),
                 DatasetParams(
                     "numberOfAzimuthLines",
-                    rslc_radar_grid.length,
+                    np.uint64(rslc_radar_grid.length),
                     f"Number of azimuth lines within the {rslc_name} RSLC",
                     {'units' : Units.unitless},
                 ),
                 DatasetParams(
                     "numberOfRangeSamples",
-                    rslc_radar_grid.width,
+                    np.uint64(rslc_radar_grid.width),
                     f"Number of slant range samples for each azimuth line within the {rslc_name} RSLC",
                     {'units' : Units.unitless},
                 ),
@@ -983,7 +986,7 @@ class InSARBaseWriter(h5py.File):
                 ds_name.value = slc_val
             add_dataset_and_attrs(dst_id_group, ds_name)
 
-        # Copy the zero-Dopper information from both reference and secondary RSLC
+        # Copy the zero-Doppler information from both reference and secondary RSLC
         for ds_name in ["zeroDopplerStartTime", "zeroDopplerEndTime"]:
             ref_id_group.copy(ds_name, dst_id_group,
                               f"referenceZ{ds_name[1:]}")
@@ -992,7 +995,7 @@ class InSARBaseWriter(h5py.File):
                               f"secondaryZ{ds_name[1:]}")
 
         # Update the description attributes of the zeroDoppler
-        for prod in list(product(['reference','secondary'],
+        for prod in list(product(['reference', 'secondary'],
                                  ['Start', 'End'])):
             rslc_name, start_or_stop = prod
             ds = dst_id_group[f"{rslc_name}ZeroDoppler{start_or_stop}Time"]
