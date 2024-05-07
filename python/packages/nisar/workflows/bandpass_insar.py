@@ -89,11 +89,22 @@ def run(cfg: dict):
             slc_product=target_slc,
             freq=freq)
 
+        sampling_bandwidth_ratio = \
+            base_meta_data.rg_sample_freq / base_meta_data.rg_bandwidth
+
+        info_channel.log("base RSLC:")
+        info_channel.log(f"    bandwidth : {base_meta_data.rg_bandwidth}")
+        info_channel.log(f"    sampling_frequency : {base_meta_data.rg_sample_freq}")
+        info_channel.log("target RSLC:")
+        info_channel.log(f"    bandwidth : {target_meta_data.rg_bandwidth}")
+        info_channel.log(f"    sampling_frequency : {target_meta_data.rg_sample_freq}")
+        info_channel.log(f"sampling_frequency / bandwidth : {sampling_bandwidth_ratio}")
+
         bandwidth_half = 0.5 * base_meta_data.rg_bandwidth
-        low_frequency_base = base_meta_data.center_freq - \
-                             bandwidth_half
-        high_frequency_base = base_meta_data.center_freq + \
-                              bandwidth_half
+        low_frequency_base = \
+            base_meta_data.center_freq - bandwidth_half
+        high_frequency_base = \
+            base_meta_data.center_freq + bandwidth_half
 
         # Initialize bandpass instance
         # Specify meta parameters of SLC to be bandpassed
@@ -103,7 +114,7 @@ def run(cfg: dict):
             center_frequency=target_meta_data.center_freq,
             slant_range=target_meta_data.slant_range,
             freq=freq,
-            sampling_bandwidth_ratio=1.2)
+            sampling_bandwidth_ratio=sampling_bandwidth_ratio)
         swath_path = ref_slc.SwathPath
         dest_freq_path = f"{swath_path}/frequency{freq}"
         with h5py.File(target_hdf5, 'r', libver='latest',
@@ -135,7 +146,7 @@ def run(cfg: dict):
                     # Read SLC from HDF5
                     src_h5[dest_pol_path].read_direct(
                         target_slc_image,
-                        np.s_[row_start : row_start + block_rows_data, :])
+                        np.s_[row_start:row_start + block_rows_data, :])
 
                     # Specify low and high frequency to be passed (bandpass)
                     # and the center frequency to be basebanded (demodulation)
@@ -158,15 +169,17 @@ def run(cfg: dict):
                                               [rows, np.shape(bandpass_slc)[1]],
                                               np.complex64, chunks=(128, 128))
                     # Write bandpassed SLC to HDF5
-                    dst_h5[dest_pol_path].write_direct(bandpass_slc,
-                        dest_sel=np.s_[row_start : row_start + block_rows_data, :])
+                    dst_h5[dest_pol_path].write_direct(
+                        bandpass_slc,
+                        dest_sel=np.s_[row_start:row_start + block_rows_data,
+                                       :])
 
                 dst_h5[dest_pol_path].attrs['description'] = \
                     f"Bandpass SLC image ({pol})"
-                dst_h5[dest_pol_path].attrs['units'] = f""
+                dst_h5[dest_pol_path].attrs['units'] = ""
 
-            bandpass_ratio = target_meta_data.rg_pxl_spacing /\
-                             bandpass_meta['range_spacing']
+            bandpass_ratio = \
+                target_meta_data.rg_pxl_spacing / bandpass_meta['range_spacing']
             subswath_number = src_h5[f"{dest_freq_path}/numberOfSubSwaths"][()]
             for swath_count in range(subswath_number):
                 # Update the validateSamplesSubswaths
