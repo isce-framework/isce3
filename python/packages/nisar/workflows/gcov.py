@@ -162,7 +162,8 @@ def prepare_rslc(in_file, freq, pol, out_file, lines_per_block,
     return isce3.io.Raster(out_file)
 
 
-def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc):
+def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
+                                    output_terrain_radiometry):
     '''
     Read and validate radiometric terrain correction (RTC) area
     normalization factor (ANF) flags
@@ -191,12 +192,25 @@ def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc):
         created
     '''
 
-    error_channel = journal.error(
-        "gcov.read_and_validate_rtc_anf_flags")
+    info_channel = journal.info("gcov.read_and_validate_rtc_anf_flags")
+    error_channel = journal.error("gcov.read_and_validate_rtc_anf_flags")
 
     save_rtc_anf = geocode_dict['save_rtc_anf']
     save_rtc_anf_gamma0_to_sigma0 = \
         geocode_dict['save_rtc_anf_gamma0_to_sigma0']
+
+    # Verify `flag save_rtc_anf_gamma0_to_sigma0`. The flag defaults to `True`,
+    # if `apply_rtc` is enabled and RTC output_type is set to "gamma0", or
+    # `False`, otherwise.
+    if save_rtc_anf_gamma0_to_sigma0 is None:
+
+        save_rtc_anf_gamma0_to_sigma0 = \
+            (flag_apply_rtc and
+             output_terrain_radiometry ==
+             isce3.geometry.RtcOutputTerrainRadiometry.GAMMA_NAUGHT)
+
+        info_channel.log('flag `save_rtc_anf_gamma0_to_sigma0` not set. '
+                         f'Setting it to: {save_rtc_anf_gamma0_to_sigma0}')
 
     if not flag_apply_rtc and save_rtc_anf:
         error_msg = (
@@ -346,7 +360,8 @@ def _run(cfg, raster_scratch_dir):
     flag_upsample_radar_grid = geocode_dict['upsample_radargrid']
     save_nlooks = geocode_dict['save_nlooks']
     save_rtc_anf, save_rtc_anf_gamma0_to_sigma0 = \
-        read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc)
+        read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
+                                        output_terrain_radiometry)
     save_dem = geocode_dict['save_dem']
     min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
     max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
