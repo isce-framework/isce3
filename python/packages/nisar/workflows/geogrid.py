@@ -22,7 +22,7 @@ def _grid_size(stop, start, sz):
     if None in [stop, start, sz]:
         return np.nan
 
-    return int(np.ceil(np.abs((stop-start)/sz)))
+    return int(np.round(np.abs((stop-start)/sz)))
 
 
 def create(cfg, workflow_name=None, frequency_group=None,
