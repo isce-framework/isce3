@@ -1434,7 +1434,7 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
         # corresponding to [20, 40, 20] MHz bands.
         raw_spacings = []
         for raw in rawlist:
-            raw_channel = find_overlapping_channel(raw, big_channel)
+            raw_channel = find_overlapping_channel(raw, channel)
             freq, tx = raw_channel.freq_id, raw_channel.pol[0]
             # Get the range spacing (sample rate) for the associated raw data.
             raw_spacings.append(raw.getRanges(freq, tx).spacing)
