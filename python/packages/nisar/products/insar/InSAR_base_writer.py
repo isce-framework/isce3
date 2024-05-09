@@ -7,6 +7,7 @@ import h5py
 import numpy as np
 from isce3.core import crop_external_orbit
 from isce3.core.types import complex32, to_complex32
+from nisar.products import descriptions
 from isce3.product import GeoGridParameters, RadarGridParameters
 from nisar.products.readers import SLC
 from nisar.products.readers.orbit import load_orbit_from_xml
@@ -907,10 +908,7 @@ class InSARBaseWriter(h5py.File):
             DatasetParams(
                 "boundingPolygon",
                 "None",
-                (
-                    "OGR compatible WKT representation of bounding polygon of"
-                    " the image"
-                ),
+                descriptions.bounding_polygon,
                 {
                     "ogr_geometry": "polygon",
                     "epsg": "4326",

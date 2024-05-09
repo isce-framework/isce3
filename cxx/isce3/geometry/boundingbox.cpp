@@ -29,6 +29,7 @@ using isce3::core::Vec3;
 using isce3::core::ProjectionBase;
 using isce3::core::Basis;
 
+
 isce3::geometry::Perimeter
 isce3::geometry::
 getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
@@ -41,7 +42,7 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
 {
 
     //Check for number of points on edge
-    if (pointsPerEdge <= 2)
+    if (pointsPerEdge < 2)
     {
         std::string errstr = "At least 2 points per edge should be requested "
                              "for perimeter estimation. " +
@@ -52,85 +53,87 @@ getGeoPerimeter(const isce3::product::RadarGridParameters &radarGrid,
     //Journal for warning
     pyre::journal::warning_t warning("isce.geometry.perimeter");
 
-    //Initialize results
-    isce3::geometry::Perimeter perimeter;
-
     //Ellipsoid being used for processing
     const isce3::core::Ellipsoid &ellipsoid = proj->ellipsoid();
 
-    //Skip factors along azimuth and range
-    const double azSpacing = (radarGrid.length() - 1.0) / (pointsPerEdge - 1.0);
-    const double rgSpacing = (radarGrid.width() - 1.0) / (pointsPerEdge - 1.0);
+    // Polygon ABCD defined by four corners of radar grid.
+    const double t0 = radarGrid.sensingTime(0);
+    const double t1 = radarGrid.sensingTime(radarGrid.length() - 1);
+    const double r0 = radarGrid.slantRange(0);
+    const double r1 = radarGrid.slantRange(radarGrid.width() - 1);
 
-    //Store indices of image locations
-    //This could potentially be moved to RadarGridParamters.perimeter()
-    //But that would introduce new dependency on shapes.h for RadarGridParameters
-    std::vector<double> azInd, rgInd;
-
-    //Top Edge
-    for (int ii = 0; ii < pointsPerEdge; ii++)
-    {
-        azInd.push_back(0);
-        rgInd.push_back( ii * rgSpacing );
+    // To get stable counter-clockwise order on the map, we need to change
+    // definition of points based on radar look side.  Following discussion,
+    // folks prefer to start at (t0, r0) in both cases.
+    using RadarCoord = struct { double time, range; };
+    std::vector<RadarCoord> vertices;
+    if (radarGrid.lookSide() == isce3::core::LookSide::Left) {
+        vertices = {
+            RadarCoord{t0, r0},
+            RadarCoord{t1, r0},
+            RadarCoord{t1, r1},
+            RadarCoord{t0, r1}};
+    } else {
+        vertices = {
+            RadarCoord{t0, r0},
+            RadarCoord{t0, r1},
+            RadarCoord{t1, r1},
+            RadarCoord{t1, r0}};
     }
+    // Close polygon by repeating first point.
+    vertices.push_back(vertices[0]);
 
-    //Right Edge
-    for (int ii = 1; ii < pointsPerEdge; ii++)
-    {
-        azInd.push_back( ii * azSpacing );
-        rgInd.push_back( radarGrid.width() - 1);
-    }
+    // Convert radar to map coordinates.
+    const auto rdr2llh = [&](const RadarCoord& point) -> Vec3 {
+        Vec3 xyz, llh;
+        const auto fd = doppler.eval(point.time, point.range);
 
-    //Bottom Edge
-    for (int ii = pointsPerEdge-2; ii >= 0; ii--)
-    {
-        azInd.push_back( radarGrid.length() - 1 );
-        rgInd.push_back( ii * rgSpacing );
-    }
+        const auto converged = rdr2geo_bracket(point.time, point.range, fd,
+                orbit, demInterp, xyz, radarGrid.wavelength(),
+                radarGrid.lookSide(), threshold);
 
-    //Left Edge
-    // Exclude final point.  Will force first and last point to be the same.
-    for (int ii = pointsPerEdge-2; ii > 0; ii--)
-    {
-        azInd.push_back( ii * azSpacing );
-        rgInd.push_back(0);
-    }
+        if (not converged) {
+            std::string err = "Error transforming RadarCoord(time=" +
+                std::to_string(point.time) + ", range=" +
+                std::to_string(point.range) + ") to ECEF XYZ coordinate.";
+            throw isce3::except::OutOfRange(ISCE_SRCINFO(), err);
+        }
 
-    //Loop over indices
-    for (int ii = 0; ii < rgInd.size(); ii++)
-    {
-        //Convert az index to azimuth time
-        double tline = radarGrid.sensingTime( azInd[ii] );
-
-        //Get rg index to slant range
-        double rng = radarGrid.slantRange( rgInd[ii] );
-
-        //Get doppler at pixel of interest
-        double dopp = doppler.eval(tline, rng);
-
-        //Target location
-        // Careful to initialize height since it's the initial guess.
-        Vec3 xyz, llh, mapxyz;
-
-        //Run rdr2geo
-        auto converged = rdr2geo_bracket(tline, rng, dopp, orbit, demInterp,
-            xyz, radarGrid.wavelength(), radarGrid.lookSide(), threshold);
-        
         ellipsoid.xyzToLonLat(xyz, llh);
+        return llh;
+    };
 
-        //Transform point to projection
-        int status = proj->forward(llh, mapxyz);
-        if (status or not converged)
-        {
+    // Linear interpolation between radar (time, range) coordinates.
+    // t in [0, 1] to slide between points a and b.
+    const auto lerp = [](const RadarCoord& a, const RadarCoord& b, double t) {
+        return RadarCoord{a.time + t * (b.time - a.time),
+            a.range + t * (b.range - a.range)};
+    };
+
+    // Construct edges between each vertex.  Note that the resulting polygon
+    // isn't closed yet.
+    std::vector<Vec3> map_points;
+    for (decltype(vertices.size()) iv = 0; iv < vertices.size() - 1; ++iv) {
+        const auto& current = vertices[iv], next = vertices[iv + 1];
+        for (int ie = 0; ie < pointsPerEdge - 1; ++ie) {
+            const double t = static_cast<double>(ie) / (pointsPerEdge - 1);
+            const auto radar_point = lerp(current, next, t);
+            map_points.push_back(rdr2llh(radar_point));
+        }
+    }
+
+    // Apply desired projection.
+    isce3::geometry::Perimeter perimeter;
+    for (const auto& llh : map_points) {
+        Vec3 mapxyz;
+        int errorcode = proj->forward(llh, mapxyz);
+        if (errorcode) {
             std::string errstr = "Error in transforming point (" + std::to_string(llh[0]) +
                                  "," + std::to_string(llh[1]) + "," + std::to_string(llh[2]) +
                                  ") to projection EPSG:" + std::to_string(proj->code());
             throw isce3::except::OutOfRange(ISCE_SRCINFO(), errstr);
         }
-
-        //Add transformed point to the perimeter
         perimeter.addPoint(mapxyz[0], mapxyz[1], mapxyz[2]);
-
     }
 
     // Ensure polygon is closed.  Since we skipped the last point, this will

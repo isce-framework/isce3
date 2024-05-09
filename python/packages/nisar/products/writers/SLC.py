@@ -12,6 +12,7 @@ from isce3.product import RadarGridParameters
 from isce3.geometry import DEMInterpolator
 from nisar.h5 import set_string
 from isce3.core.types import complex32
+from nisar.products import descriptions
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.rslc_cal import RslcCalibration
 from nisar.workflows.h5_prep import add_geolocation_grid_cubes_to_hdf5
@@ -690,8 +691,7 @@ class SLC(h5py.File):
         if polygon is not None:
             d = set_string(g, "boundingPolygon", polygon)
             d.attrs["epsg"] = 4326
-            d.attrs["description"] = np.bytes_("OGR compatible WKT"
-                " representation of bounding polygon of the image")
+            d.attrs["description"] = np.bytes_(descriptions.bounding_polygon)
             d.attrs["ogr_geometry"] = np.bytes_("polygon")
         else:
             log.warning("SLC bounding polygon not updated.  Using L0B polygon.")

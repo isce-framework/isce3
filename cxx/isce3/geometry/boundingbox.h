@@ -24,26 +24,31 @@ struct RadarGridBoundingBox {
 
 /** Compute the perimeter of a radar grid in map coordinates.
  *
- * @param[in] radarGrid    RadarGridParameters object
+ * @param[in] radarGrid     RadarGridParameters object
  * @param[in] orbit         Orbit object
- * @param[in] proj          ProjectionBase object indicating desired projection
- * of output.
+ * @param[in] proj          ProjectionBase object indicating desired
+ *                          map projection of output.
  * @param[in] doppler       LUT2d doppler model
  * @param[in] demInterp     DEM Interpolator
  * @param[in] pointsPerEge  Number of points to use on each edge of radar grid
  * @param[in] threshold     Height threshold (m) for rdr2geo convergence
  *
- * The outputs of this method is an OGRLinearRing.
- * Transformer from radar geometry coordinates to map coordinates with a DEM
- * The sequence of walking the perimeter is always in the following order :
- * <ul>
- * <li> Start at Early Time, Near Range edge. Always the first point of the
- * polygon. <li> From there, Walk along the Early Time edge to Early Time, Far
- * Range. <li> From there, walk along the Far Range edge to Late Time, Far
- * Range. <li> From there, walk along the Late Time edge to Late Time, Near
- * Range. <li> From there, walk along the Near Range edge back to Early Time,
- * Near Range.
- * </ul>
+ * The output of this method is an OGRLinearRing.
+ *
+ * The sequence of walking the perimeter is guaranteed to have counter-clockwise
+ * order on a map projection, which is required by the ISO 19125 specification
+ * for Simple Features used by OGR/GDAL.  (Note that ESRI shapefiles use the
+ * opposite convention.)
+ *
+ * A consequence of the consistently CCW map ordering is that the radar
+ * coordinate traversal order depends on the look direction.  If we label the
+ * corners as follows:
+ *      1. Early time, near range
+ *      2. Early time, far range
+ *      3. Late time, far range
+ *      4. Late time, near range
+ * then in the right-looking case the edges follow a 12341 ordering.  For the
+ * left-looking case, the edges follow a 14321 ordering instead.
  */
 Perimeter getGeoPerimeter(const isce3::product::RadarGridParameters& radarGrid,
         const isce3::core::Orbit& orbit,
@@ -52,7 +57,7 @@ Perimeter getGeoPerimeter(const isce3::product::RadarGridParameters& radarGrid,
         const DEMInterpolator& demInterp = DEMInterpolator(0.),
         const int pointsPerEdge = 11,
         const double threshold = detail::DEFAULT_TOL_HEIGHT);
-        
+
 
 /** Compute bounding box using min/ max altitude for quick estimates
  *

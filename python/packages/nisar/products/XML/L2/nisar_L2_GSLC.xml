@@ -150,7 +150,7 @@
                 <annotation app="conformance"
                             ogr_geometry="polygon"
                             epsg="4326"
-                            lang="en">OGR compatible WKT representation of bounding polygon of the image</annotation>
+                            lang="en">OGR compatible WKT representing the bounding polygon of the image. Horizontal coordinates are WGS84 longitude followed by latitude (both in degrees), and the vertical coordinate is the height above the WGS84 ellipsoid in meters. The first point corresponds to the start-time, near-range radar coordinate, and the perimeter is traversed in counterclockwise order on the map. This means the traversal order in radar coordinates differs for left-looking and right-looking sensors. The polygon includes the four corners of the radar grid, with equal numbers of points distributed evenly in radar coordinates along each edge</annotation>
         </string>
         <string length="27"
               name="/science/LSAR/identification/processingDateTime"

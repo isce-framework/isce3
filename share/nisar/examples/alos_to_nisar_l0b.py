@@ -9,6 +9,7 @@ import os
 from warnings import warn
 from isce3.stripmap.readers.l0raw.ALOS.CEOS import ImageFile, LeaderFile
 from nisar.antenna import CalPath
+from nisar.products import descriptions
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.Raw.Raw import get_rcs2body
 from nisar.workflows.focus import make_doppler_lut
@@ -211,8 +212,7 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
 
 ident_descriptions = {
   'absoluteOrbitNumber': 'Absolute orbit number',
-  'boundingPolygon': 'OGR compatible WKT representation of bounding polygon of '
-                     'the image',
+  'boundingPolygon': descriptions.bounding_polygon,
   'diagnosticModeFlag': 'Indicates if the radar operation mode is a diagnostic '
                         'mode (1-2) or DBFed science (0): 0, 1, or 2',
   'granuleId': 'Unique granule identification name',
@@ -402,7 +402,7 @@ def addImagery(h5file, ldr, imgfile, pol):
                  datetime.timedelta(days=int(firstrec.SensorAcquisitionDayOfYear-1))
         txgrp = fid.create_group(txgrpstr)
         time = txgrp.create_dataset('UTCtime', dtype='f8', shape=(nLines,))
-        time.attrs['units'] = "seconds since {0} 00:00:00".format(tstart.strftime('%Y-%m-%d'))
+        time.attrs['units'] = np.string_("seconds since {0}T00:00:00".format(tstart.strftime('%Y-%m-%d')))
         txgrp.create_dataset('numberOfSubSwaths', data=1)
         txgrp.create_dataset('radarTime', dtype='f8', shape=(nLines,))
         txgrp.create_dataset('rangeLineIndex', dtype='i8', shape=(nLines,))
@@ -559,8 +559,7 @@ def finalizeIdentification(h5file: str):
         def additem(name, value, description):
             ds = ident.create_dataset(name, data=numpy.string_(value))
             ds.attrs["description"] = numpy.string_(description)
-        additem("boundingPolygon", poly,
-            "OGR compatible WKT representation of bounding polygon of the image")
+        additem("boundingPolygon", poly, descriptions.bounding_polygon)
         additem("zeroDopplerStartTime", t0, "Azimuth start time of product")
         additem("zeroDopplerEndTime", t1, "Azimuth stop time of product")
 
