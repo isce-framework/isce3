@@ -78,6 +78,10 @@ class isce3::geometry::DEMInterpolator {
          * @param[out] maxValue Maximum DEM height
          * @param[out] meanValue Mean DEM height
          * 
+         * This method will also set refHeight to meanValue so that this
+         * object is guaranteed to return a value h : minValue <= h <= maxValue
+         * even if the query point is out of bounds.
+         * 
          * If stats have already been computed then no calculation is done.
          */
         void computeMinMaxMeanHeight(float &minValue, float &maxValue,

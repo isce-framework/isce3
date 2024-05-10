@@ -266,6 +266,10 @@ runconfig:
                 # nearest, bilinear, bicubic, biquintic, or sinc
                 interp_method: biquintic
 
+                # Whether workflow will terminate if DEM doesn't fully cover
+                # radar swath.
+                require_full_coverage: True
+
             # Nominal antenna dimensions to use for BLU, EAP, etc. when no
             # antenna pattern input file is provided or its contents are
             # unsuitable. Each dimension has units of meters and is assumed

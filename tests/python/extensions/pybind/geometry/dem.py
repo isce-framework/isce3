@@ -70,7 +70,7 @@ def test_compute_min_max_mean_height():
     npt.assert_(dem.min_height == dem.max_height == dem.mean_height == 0.0)
 
     # Updating reference height of constant DEM should update stats accordingly
-    href = 100.
+    href = 1.
     dem.ref_height = href
     npt.assert_(dem.min_height == dem.max_height == dem.mean_height == href)
 
@@ -81,6 +81,10 @@ def test_compute_min_max_mean_height():
     # compute min/max/mean heights
     dem.compute_min_max_mean_height()
     npt.assert_(dem.have_stats)
+
+    # Computing stats should update reference height so that it's in bounds.
+    # Note that this test file has (min, max) = (90.7, 355.3) m.
+    npt.assert_(dem.min_height <= dem.ref_height <= dem.max_height)
 
     # validate computed values
     npt.assert_allclose(np.nanmin(dem.data), dem.min_height,

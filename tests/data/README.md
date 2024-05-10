@@ -390,6 +390,18 @@ Note that a new instrument HDF5 sample file "REE_INSTRUMENT_TABLE_V2P0.h5" of ve
   $ stage_dem.py -b 81.45 28.29 81.5 28.3 -o dem_himalayas_E81p5_N28p3_short.vrt
   ```
 
+- **dem_south_pole.tif**
+
+  DEM corresponding to a failed PCM RLSC job based on an L0B file named
+  `NISAR_L0_PR_RRSD_033_010_D_250S_20230117T053529_20230117T053549_D00401_N_J_001.h5`
+  and described as issue number 9 on the wiki
+  [here](https://wiki.jpl.nasa.gov/pages/viewpage.action?spaceKey=NISARSDS&title=Test+Dataset+Assessment+by+Release).
+  It uses a polar stereographic map projection.  The version saved here was
+  drastically reduced in size from the original using the command
+  ```shell
+  gdal_translate -tr 2000 2000 dem_0.tiff dem_south_pole.tif
+  ```
+
 ## Point Target
 
 - **search_first_null.pkl**

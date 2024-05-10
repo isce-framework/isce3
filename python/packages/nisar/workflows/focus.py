@@ -304,8 +304,6 @@ def get_dem(cfg: Struct):
     fn = cfg.dynamic_ancillary_file_group.dem_file
     if fn:
         log.info(f"Loading DEM {fn}")
-        log.info("Out-of-bound DEM values will be set to "
-                 f"{cfg.processing.dem.reference_height} (m).")
         dem.load_dem(RasterIO(fn))
         dem.compute_min_max_mean_height()
     else:
@@ -431,11 +429,20 @@ def make_doppler_lut(rawfiles: list[str],
     return fc, lut
 
 
-def make_doppler(cfg: Struct, epoch: Optional[DateTime] = None):
+def make_doppler(cfg: Struct, *, epoch: Optional[DateTime] = None,
+        orbit: Optional[Orbit] = None, attitude: Optional[Attitude] = None,
+        dem: Optional[DEMInterpolator] = None):
+    """
+    Generate Doppler LUT based on RSLC config file.  Optional inputs can
+    be used to avoid unnecessarily loading files again.
+    """
     log.info("Generating Doppler LUT from pointing")
-    orbit = get_orbit(cfg)
-    attitude = get_attitude(cfg)
-    dem = get_dem(cfg)
+    if orbit is None:
+        orbit = get_orbit(cfg)
+    if attitude is None:
+        attitude = get_attitude(cfg)
+    if dem is None:
+        dem = get_dem(cfg)
     opt = cfg.processing.doppler
     az = np.radians(opt.azimuth_boresight_deg)
     rawfiles = cfg.input_file_group.input_file_path
@@ -1490,7 +1497,8 @@ def focus(runconfig, runconfig_path=""):
     log.info("Verifying ephemeris covers time span of raw data.")
     require_ephemeris_overlap(orbit, t0, t1, "Orbit")
     require_ephemeris_overlap(attitude, t0, t1, "Attitude")
-    fc_ref, dop_ref = make_doppler(cfg, epoch=grid_epoch)
+    fc_ref, dop_ref = make_doppler(cfg, epoch=grid_epoch, orbit=orbit,
+        attitude=attitude, dem=dem)
 
     max_chirplen = get_max_chirp_duration(cfg) * isce3.core.speed_of_light / 2
     range_spacings = get_output_range_spacings(rawlist, common_mode)
@@ -1600,6 +1608,19 @@ def focus(runconfig, runconfig_path=""):
 
     dump_height = (cfg.processing.debug_dump_height and
                    not cfg.processing.delete_tempfiles)
+
+    if cfg.processing.dem.require_full_coverage:
+        log.info("Checking DEM coverage.")
+        fraction_outside = isce3.geometry.compute_dem_overlap(polygon, dem,
+            plot=temp("_dem_overlap.png"))
+        if fraction_outside > 0.0:
+            percent_outside = f"{100 * fraction_outside:.1f}%"
+            raise ValueError(f"{percent_outside} of the swath falls outside of "
+                "the area covered by the DEM.  If you enabled tempfiles you "
+                "can find a plot in the scratch directory.  You can disable "
+                "this coverage check by setting dem.require_full_coverage to "
+                "False in the runconfig.groups.processing section.")
+                
 
     rfi_results = defaultdict(list)
 

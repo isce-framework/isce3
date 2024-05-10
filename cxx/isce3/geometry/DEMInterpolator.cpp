@@ -556,6 +556,9 @@ computeMinMaxMeanHeight(float &minValue, float &maxValue, float &meanValue) {
         _meanValue = meanValue;
         _maxValue = maxValue;
 
+        // Update reference height so it's in bounds.
+        refHeight(meanValue);
+
     } else if (_haveRaster) {
         info << "Using existing DEM statistics" << pyre::journal::newline;
         minValue = _minValue;
