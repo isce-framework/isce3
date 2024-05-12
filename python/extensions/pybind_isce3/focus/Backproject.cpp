@@ -77,6 +77,22 @@ Geo2RdrBracketParams parse_geo2rdr_params(const py::dict& params)
     return out;
 }
 
+void addbinding(py::class_<PolarGrid>& pyPolarGrid)
+{
+    double aztime_start, aztime_end;
+    isce3::core::Vec3 origin, axis;
+    isce3::core::Linspace<double> range;
+    isce3::core::Linspace<double> sin_squint;
+
+    pyPolarGrid
+        .def_readonly("aztime_start", &PolarGrid::aztime_start)
+        .def_readonly("aztime_end", &PolarGrid::aztime_end)
+        .def_readonly("origin", &PolarGrid::origin)
+        .def_readonly("axis", &PolarGrid::axis)
+        .def_readonly("range", &PolarGrid::range)
+        .def_readonly("sin_squint", &PolarGrid::sin_squint)
+        ;
+}
 
 void addbinding_backproject(py::module& m)
 {
@@ -164,4 +180,75 @@ void addbinding_backproject(py::module& m)
             py::arg("rdr2geo_params") = py::dict(),
             py::arg("geo2rdr_params") = py::dict(),
             py::arg("height") = py::none());
+
+    m.def("backproject_first_stage", [](
+                const py::array_t<std::complex<float>, py::array::c_style> in,
+                const RadarGeometry& in_geometry,
+                const py::array_t<double>& in_azimuth_time,
+                double range_bandwidth,
+                const DEMInterpolator& dem,
+                double fc,
+                double ds,
+                const Kernel<float>& kernel,
+                const std::string& dry_tropo_model,
+                py::dict rdr2geo_params,
+                double oversample_range,
+                double oversample_azimuth) {
+
+            if (in.ndim() != 2) {
+                throw InvalidArgument(ISCE_SRCINFO(), "input signal data must be 2-D");
+            }
+
+            if (in.shape()[0] != in_geometry.gridLength() or
+                in.shape()[1] != in_geometry.gridWidth()) {
+
+                std::string errmsg = "input signal data shape must match "
+                    "input radar grid shape";
+                throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+            }
+
+            DryTroposphereModel atm = parseDryTropoModel(dry_tropo_model);
+
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+
+            // TODO avoid copy
+            std::vector<double> aztime(in_azimuth_time.data(),
+                in_azimuth_time.data() + in_azimuth_time.size());
+
+            const std::complex<float>* in_data = in.data();
+
+            auto [err, grid, outp, heightp] = [&]() {
+                py::gil_scoped_release release;
+                return isce3::focus::backprojectFirstStage(in_data,
+                    in_geometry, aztime, range_bandwidth,
+                    dem, fc, ds, kernel, atm, r2gparams,
+                    oversample_range, oversample_azimuth);
+            }();
+
+            // TODO bind ErrorCode class.  For now return nonzero on failure.
+            bool status = err == ErrorCode::Success;
+            // TODO verify that this ctor takes ownership of data pointer!
+            auto out = py::array_t<std::complex<float>>(
+                {grid.length(), grid.width()}, {grid.width(), 1},
+                std::move(outp).get());
+            auto height = py::array_t<float>(
+                {grid.length(), grid.width()}, {grid.width(), 1},
+                std::move(heightp).get());
+            return std::make_tuple(status, grid, out, height);
+            },
+            R"(
+                Focus in azimuth via time-domain backprojection.
+            )",
+            py::arg("in"),
+            py::arg("in_geometry"),
+            py::arg("in_azimuth_time"),
+            py::arg("range_bandwidth"),
+            py::arg("dem"),
+            py::arg("fc"),
+            py::arg("ds"),
+            py::arg("kernel"),
+            py::arg("dry_tropo_model") = "tsx",
+            py::arg("rdr2geo_params") = py::dict(),
+            py::arg("oversample_range") = 1.2,
+            py::arg("oversample_azimuth") = 1.2);
 }
