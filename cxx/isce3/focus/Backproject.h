@@ -59,7 +59,7 @@ struct PolarGrid {
     auto length() const { return sin_squint.size(); }
 };
 
-// returns [ErrorCode, PolarGrid, out : vector<complex<float>>, height : vector<float>]
+// returns [ErrorCode, PolarGrid, image, height]
 auto
 backprojectFirstStage(
         const std::complex<float>* in,

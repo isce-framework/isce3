@@ -286,8 +286,8 @@ backprojectFirstStage(
     }();
 
     const auto npix = out_grid.length() * out_grid.width();
-    auto height = std::vector<float>(npix);
-    auto out = std::vector<std::complex<float>>(npix);
+    auto height = std::make_unique<float[]>(npix);
+    auto out = std::make_unique<std::complex<float>[]>(npix);
 
     // range sampling window
     double swst = 2. * in_slant_range.first() / c;
@@ -346,7 +346,7 @@ backprojectFirstStage(
 
     auto status =
             all_converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
-    return std::make_tuple(status, out_grid, out, height);
+    return std::make_tuple(status, out_grid, std::move(out), std::move(height));
 }
 
 } // namespace focus
