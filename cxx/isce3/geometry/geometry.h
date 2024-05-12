@@ -405,5 +405,19 @@ std::tuple<Eigen::ArrayXd, Eigen::ArrayXd> lookIncAngFromSlantRange(
  */
 double compute_mean_dem(const DEMInterpolator& dem);
 
+/** Convert 3D position to polar coordinates.
+ *
+ * @param[out] sinSquint    Sine of the squint angle (complement of the angle
+ *                          between the azimuth axis and the radar-to-target
+ *                          line of sight).
+ * @param[out] range        Distance to the target (m)
+ * @param[in]  xyz          Target ECEF XYZ position (m)
+ * @param[in]  origin       Origin of polar coordinate system, ECEF XYZ (m)
+ * @param[in]  axis         Azimuth axis, unit ECEF XYZ
+ */
+isce3::error::ErrorCode
+geo2polar(double* sinSquint, double* range, const isce3::core::Vec3& xyz,
+        const isce3::core::Vec3& origin, const isce3::core::Vec3& axis);
+
 } // namespace geometry
 } // namespace isce3
