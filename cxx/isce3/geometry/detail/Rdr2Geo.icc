@@ -174,7 +174,7 @@ template<class DEMInterpolator>
 CUDA_HOSTDEV isce3::error::ErrorCode
 polar2geo_bracket(isce3::core::Vec3* xyz, double* lookAngle,
         const isce3::core::Vec3& origin, const isce3::core::Vec3& axis,
-        const double slantRange, const double sinAngle, const double cosAngle,
+        const double slantRange, const double sinSquint, const double cosSquint,
         const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
         isce3::core::LookSide side, const Rdr2GeoBracketParams& params)
 {
@@ -190,8 +190,8 @@ polar2geo_bracket(isce3::core::Vec3* xyz, double* lookAngle,
 
     // Axis & angle define a cone, and range defines a sphere.
     // These intersect to make a circle with the following parameters.
-    const Vec3 center = origin + sinAngle * slantRange * axis;
-    const double radius = cosAngle * slantRange;
+    const Vec3 center = origin + sinSquint * slantRange * axis;
+    const double radius = cosSquint * slantRange;
 
     // Parameterize points on this circle with an angle similar to look angle.
     auto getXYZ = [&](double look) {

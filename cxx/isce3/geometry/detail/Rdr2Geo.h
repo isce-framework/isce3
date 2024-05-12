@@ -141,8 +141,8 @@ rdr2geo_bracket(isce3::core::Vec3* xyz,
  * @param[in]  origin           Origin of the polar grid, ECEF XYZ (m)
  * @param[in]  axis             Along-track axis of polar grid, unit ECEF XYZ
  * @param[in]  slantRange       Distance from origin to target (m)
- * @param[in]  sinAngle         Sine of squint angle
- * @param[in]  cosAngle         Cosine of squint angle
+ * @param[in]  sinSquint        Sine of squint angle
+ * @param[in]  cosSquint        Cosine of squint angle
  * @param[in]  dem              Digital elevation model (m above ellipsoid)
  * @param[in]  ellipsoid        Ellipsoid associated with DEM
  * @param[in]  side             Look direction (Left or Right)
@@ -152,7 +152,7 @@ template<class DEMInterpolator>
 CUDA_HOSTDEV isce3::error::ErrorCode
 polar2geo_bracket(isce3::core::Vec3* xyz, double* lookAngle,
         const isce3::core::Vec3& origin, const isce3::core::Vec3& axis,
-        const double slantRange, const double sinAngle, const double cosAngle,
+        const double slantRange, const double sinSquint, const double cosSquint,
         const DEMInterpolator& dem, const isce3::core::Ellipsoid& ellipsoid,
         isce3::core::LookSide side, const Rdr2GeoBracketParams& params);
 
