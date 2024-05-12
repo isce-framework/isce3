@@ -212,7 +212,7 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
 }
 
 
-auto
+std::tuple<ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
 backprojectFirstStage(
         const std::complex<float>* in, const RadarGeometry& in_geometry,
         const std::vector<double>& in_azimuth_time,

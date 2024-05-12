@@ -60,7 +60,7 @@ struct PolarGrid {
 };
 
 // returns [ErrorCode, PolarGrid, image, height]
-auto
+std::tuple<isce3::error::ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
 backprojectFirstStage(
         const std::complex<float>* in,
         const isce3::container::RadarGeometry& in_geometry,
