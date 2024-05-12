@@ -211,5 +211,143 @@ backproject(std::complex<float>* out, const RadarGeometry& out_geometry,
     return ErrorCode::Success;
 }
 
+
+auto
+backprojectFirstStage(
+        const std::complex<float>* in, const RadarGeometry& in_geometry,
+        const std::vector<double>& in_azimuth_time,
+        double range_bandwidth,
+        const DEMInterpolator& dem, double fc, double ds,
+        const Kernel<float>& kernel, DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        double oversample_range, double oversample_azimuth)
+{
+    using isce3::geometry::detail::polar2geo_bracket;
+
+    if (in_azimuth_time.size() < 2) {
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(),
+            "require at least two pulses in FBP stage1");
+    }
+
+    static constexpr double c = isce3::core::speed_of_light;
+    static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
+
+    // check that dry_tropo_model is supported internally
+    if (not(dry_tropo_model == DryTroposphereModel::NoDelay or
+            dry_tropo_model == DryTroposphereModel::TSX)) {
+
+        std::string errmsg = "unexpected dry troposphere model";
+        throw isce3::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+    }
+
+    // get input & output radar grid azimuth time & slant range
+    Linspace<double> in_slant_range = in_geometry.slantRange();
+
+    // interpolate platform position & velocity at each pulse
+    std::vector<Vec3> pos(in_azimuth_time.size());
+    std::vector<Vec3> vel(in_azimuth_time.size());
+    for (int i = 0; i < in_azimuth_time.size(); ++i) {
+        double t = in_azimuth_time[i];
+        in_geometry.orbit().interpolate(&pos[i], &vel[i], t);
+    }
+
+    const PolarGrid out_grid = [&](void) {
+        const auto iend = in_azimuth_time.size() - 1;
+        const auto jend = in_slant_range.size() - 1;
+
+        const Vec3 origin = (pos[0] + pos[iend]) / 2;
+        Vec3 axis = (vel[0] + vel[iend]) / 2;
+        const double vs = axis.norm();
+        axis /= vs;
+
+        const double
+            fmax = fc + range_bandwidth / 2,
+            length = vs * (in_azimuth_time[iend] - in_azimuth_time[0]),
+            // Yegulalp, Eq. (11) and (12)
+            dq = c / (2 * fmax * length * oversample_azimuth),
+            dr = c / (2 * range_bandwidth * oversample_range);
+
+        // evaluate Doppler at a couple of points to try to cover variation
+        const double
+            tmid = (in_azimuth_time[0] + in_azimuth_time[iend]) / 2,
+            r0 = in_slant_range.first(),
+            r1 = in_slant_range[jend],
+            dop2q = c / (fc * 2 * vs),
+            q0 = in_geometry.doppler().eval(tmid, r0) * dop2q,
+            q1 = in_geometry.doppler().eval(tmid, r1) * dop2q,
+            qmid = (q0 + q1) / 2,
+            qspan = std::abs(q1 - q0) + c / (fc * 2 * ds);
+
+        const int nr = static_cast<int>(std::ceil((r1 - r0) / dr));
+        const int nq = static_cast<int>(std::ceil(qspan / dq));
+        return PolarGrid{in_azimuth_time[0], in_azimuth_time[iend],
+            origin, axis, Linspace<double>(r0, dr, nr),
+            Linspace<double>(qmid - qspan / 2, dq, nq)};
+    }();
+
+    const auto npix = out_grid.length() * out_grid.width();
+    auto height = std::vector<float>(npix);
+    auto out = std::vector<std::complex<float>>(npix);
+
+    // range sampling window
+    double swst = 2. * in_slant_range.first() / c;
+    double dtau = 2. * in_slant_range.spacing() / c;
+    int nr = in_slant_range.size();
+    Linspace<double> sampling_window(swst, dtau, nr);
+
+    // reference ellipsoid
+    int epsg = dem.epsgCode();
+    const Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+
+    // loop over targets in output grid
+    bool all_converged = true;
+#pragma omp parallel for collapse(2)
+    for (int j = 0; j < out_grid.sin_squint.size(); ++j) {
+        const double
+            q = out_grid.sin_squint[j],
+            c = std::sqrt(1.0 - q * q);
+        for (int i = 0; i < out_grid.range.size(); ++i) {
+
+            // Run polar2geo to get target position.
+            // Only need LLH if dumping height or using TSX atmosphere model,
+            // but just compute it unconditionally.
+            Vec3 x, llh;
+            {
+                const double r = out_grid.range[i];
+                double look_angle;
+
+                const auto status = polar2geo_bracket(&x, &look_angle,
+                        out_grid.origin, out_grid.axis, r, q, c, dem, ellipsoid,
+                        in_geometry.lookSide(), r2g_params);
+
+                llh = ellipsoid.xyzToLonLat(x);
+                height[j * out_grid.width() + i] = llh[2];
+
+                if (status != isce3::error::ErrorCode::Success) {
+                    all_converged = false;
+                    out[j * out_grid.width() + i] = {nan, nan};
+                    height[j * out_grid.width() + i] = nan;
+                    continue;
+                }
+            }
+
+            // estimate dry troposphere delay
+            double tau_atm = 0.;
+            if (dry_tropo_model == DryTroposphereModel::TSX) {
+                tau_atm = dryTropoDelayTSX(out_grid.origin, llh, ellipsoid);
+            }
+
+            // integrate pulses
+            out[j * out_grid.width() + i] =
+                    sumCoherent(in, sampling_window, pos, vel, x, fc, tau_atm,
+                                kernel, 0, in_geometry.gridLength());
+        }
+    }
+
+    auto status =
+            all_converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
+    return std::make_tuple(status, out_grid, out, height);
+}
+
 } // namespace focus
 } // namespace isce3

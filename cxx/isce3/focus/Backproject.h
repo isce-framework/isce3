@@ -46,5 +46,31 @@ backproject(std::complex<float>* out,
         const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params = {},
         float* height = nullptr);
 
+
+struct PolarGrid {
+    double aztime_start, aztime_end;
+    isce3::core::Vec3 origin, axis;
+    isce3::core::Linspace<double> range;
+    isce3::core::Linspace<double> sin_squint;
+
+    PolarGrid() = delete;
+
+    auto width() const { return range.size(); }
+    auto length() const { return sin_squint.size(); }
+};
+
+// returns [ErrorCode, PolarGrid, out : vector<complex<float>>, height : vector<float>]
+auto
+backprojectFirstStage(
+        const std::complex<float>* in,
+        const isce3::container::RadarGeometry& in_geometry,
+        const std::vector<double>& in_azimuth_time,
+        double range_bandwidth,
+        const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
+        const isce3::core::Kernel<float>& kernel,
+        DryTroposphereModel dry_tropo_model,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
+        double oversample_range = 1.2, double oversample_azimuth = 1.2);
+
 } // namespace focus
 } // namespace isce3
