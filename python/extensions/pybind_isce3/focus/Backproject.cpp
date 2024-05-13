@@ -228,12 +228,13 @@ void addbinding_backproject(py::module& m)
             // TODO bind ErrorCode class.  For now return nonzero on failure.
             bool status = err == ErrorCode::Success;
             // TODO verify that this ctor takes ownership of data pointer!
+            auto bytes = sizeof(std::complex<float>);
             auto out = py::array_t<std::complex<float>>(
-                {grid.length(), grid.width()}, {grid.width(), 1},
-                std::move(outp).get());
+                {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
+                outp.release());
             auto height = py::array_t<float>(
-                {grid.length(), grid.width()}, {grid.width(), 1},
-                std::move(heightp).get());
+                {grid.length(), grid.width()}, {grid.width() * bytes, bytes},
+                heightp.release());
             return std::make_tuple(status, grid, out, height);
             },
             R"(
