@@ -168,3 +168,60 @@ def test_backproject():
     # threshold is slightly higher - see
     # https://github.jpl.nasa.gov/bhawkins/nisar-notebooks/blob/master/Azimuth%20Resolution.ipynb
     assert(azimuth_width <= 6.62)
+
+
+def test_backproject_first_stage():
+    # load point target simulation data
+    filename = Path(test_data_dir) / "point-target-sim-rc.h5"
+    d = load_h5(filename)
+
+    # eww gross
+    signal_data = d["signal_data"]
+    radar_grid = d["radar_grid"]
+    orbit = d["orbit"]
+    doppler = d["doppler"]
+    center_frequency = d["center_frequency"]
+    range_sampling_rate = d["range_sampling_rate"]
+    dem = d["dem"]
+    dry_tropo_model = d["dry_tropo_model"]
+    target_azimuth = d["target_azimuth"]
+    target_range = d["target_range"]
+
+    # range bandwidth (Hz)
+    B = 20e6
+
+    # desired azimuth resolution (m)
+    azimuth_res = 6.
+
+    # create 9-point Knab kernel
+    # use tabulated kernel for performance
+    kernel = isce.core.KnabKernel(9., B / range_sampling_rate)
+    kernel = isce.core.TabulatedKernelF32(kernel, 2048)
+
+    # focus to intermediate grids
+    aztimes = np.array(radar_grid.sensing_times)
+    factor_size = 256
+    results = []
+    for i in range(0, radar_grid.length, factor_size):
+        pulses = slice(i, i + factor_size)
+        ti = aztimes[pulses]
+        igrid = radar_grid[pulses, :]
+        igeom = isce.container.RadarGeometry(igrid, orbit, doppler)
+        idata = signal_data[pulses, :]
+        results.append(isce.focus.backproject_first_stage(
+            idata, igeom, ti, B, dem, center_frequency, azimuth_res, kernel,
+            dry_tropo_model))
+
+    # combine images with nans inbetween and dump to file
+    npad = 10
+    images = [result[2] for result in results]
+    m = sum(image.shape[0] for image in images) + npad * (len(images) - 1)
+    n = images[0].shape[1]
+    z = np.empty((m, n), dtype=np.complex64)
+    z[:] = np.nan
+    i = 0
+    for image in images:
+        mi = image.shape[0]
+        z[i:i + mi] = image
+        i += mi + npad
+    z.tofile("factors.c8")
