@@ -301,7 +301,7 @@ backprojectFirstStage(
 
     // loop over targets in output grid
     bool all_converged = true;
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for
     for (int j = 0; j < out_grid.sin_squint.size(); ++j) {
         const double
             q = out_grid.sin_squint[j],
