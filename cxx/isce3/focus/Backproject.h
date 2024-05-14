@@ -5,6 +5,7 @@
 #include <isce3/geometry/forward.h>
 
 #include <complex>
+#include <memory>
 
 #include <isce3/error/ErrorCode.h>
 #include <isce3/geometry/detail/Geo2Rdr.h>
@@ -59,13 +60,13 @@ struct PolarGrid {
     auto length() const { return sin_squint.size(); }
 };
 
-// returns [ErrorCode, PolarGrid, image, height]
-std::tuple<isce3::error::ErrorCode, PolarGrid, std::unique_ptr<std::complex<float>[]>, std::unique_ptr<float[]>>
-backprojectFirstStage(
-        const std::complex<float>* in,
+std::tuple<isce3::error::ErrorCode,
+        PolarGrid,
+        std::unique_ptr<std::complex<float>[]>,
+        std::unique_ptr<float[]>>
+backprojectFirstStage(const std::complex<float>* in,
         const isce3::container::RadarGeometry& in_geometry,
-        const std::vector<double>& in_azimuth_time,
-        double range_bandwidth,
+        const std::vector<double>& in_azimuth_time, double range_bandwidth,
         const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
         const isce3::core::Kernel<float>& kernel,
         DryTroposphereModel dry_tropo_model,
