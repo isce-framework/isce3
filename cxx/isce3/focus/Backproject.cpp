@@ -344,6 +344,17 @@ backprojectFirstStage(
         }
     }
 
+    // baseband
+    const double kw = 4 * M_PI / (c / fc);
+    #pragma omp parallel for
+    for (int i = 0; i < out_grid.range.size(); ++i) {
+        const double phi = -kw * out_grid.range[i];
+        const auto phasor = std::complex<float>(std::cos(phi), std::sin(phi));
+        for (int j = 0; j < out_grid.sin_squint.size(); ++j) {
+            out[j * out_grid.width() + i] *= phasor;
+        }
+    }
+
     auto status =
             all_converged ? ErrorCode::Success : ErrorCode::FailedToConverge;
     return std::make_tuple(status, out_grid, std::move(out), std::move(height));
