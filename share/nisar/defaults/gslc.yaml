@@ -31,6 +31,11 @@ runconfig:
             # TEC correction is applied
             tec_file:
 
+            # List of GSLCs from previous cycles.
+            # Data driven GSLC will be activated when this field has a valid value
+            # Model drivel GSLC will be activated when this field is None
+            reference_gslc:
+
         product_path_group:
             # Directory where PGE will place results. Irrelevant to SAS.
             product_path: product_path
@@ -218,6 +223,75 @@ runconfig:
             geo2rdr:
                 threshold: 1.0e-8
                 maxiter: 25
+
+            ampcor:
+                # Lines per block to process in batch
+                lines_per_block: 1000
+
+                # Number of columns for chip/template window in reference image
+                window_range: 32
+
+                # Number of lines for chip/template window in reference image
+                window_azimuth: 32
+
+                # Number of columns for search chip/template in secondary image
+                half_search_range: 4
+
+                # Number of lines for search chip/template in secondary image
+                half_search_azimuth: 4
+
+                # Number of columns to skip in reference image for next offset estimate
+                skip_range: 100
+
+                # Number of lines to skip in reference image for next offset estimate
+                skip_azimuth: 100
+
+                # Margin around image edges to avoid for offset computation
+                margin: 2
+
+                # Number of columns of output offset (covariance, snr) file
+                # TODO think about using only eihter `skip` or `width / length`
+                offset_width:
+
+                # Number of lines of output offset (covariance, snr) file
+                offset_length:
+
+                # Start pixel of the reference image along slant range
+                start_pixel_range:
+
+                # Start pixel of the reference image along azimuth
+                start_pixel_azimuth:
+
+                # Domain (frequency or spatial) where to compute cross-correlation
+                cross_correlation_domain: frequency
+
+                # Anti-aliasing oversampling factor to apply to reference/secondary SLC
+                # prior to cross-correlation computation
+                slc_oversampling_factor: 2
+
+                # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+                deramping_method: complex
+
+                # Square zoom window size for cross-correlation statistics (SNR, covariance)
+                correlation_statistics_zoom: 21
+
+                # Square zoom window size for sub-pixel offset refinement
+                correlation_surface_zoom: 8
+
+                # Oversampling factor of the correlation surface for sub-pixel offset refinement
+                correlation_surface_oversampling_factor: 64
+
+                # Correlation surface oversampling algorithm
+                correlation_surface_oversampling_method: fft
+
+                # Number of cuda streams
+                cuda_streams:
+
+                # Number of offset estimates to process in batch along slant range
+                windows_batch_range: 10
+
+                # Number of offset estimates to process in batch along azimuth
+                windows_batch_azimuth: 1
 
             blocksize:
                 x: 1000

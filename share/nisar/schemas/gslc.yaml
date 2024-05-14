@@ -30,6 +30,11 @@ runconfig:
             # TEC correction is applied
             tec_file: str(required=False)
 
+            # List of GSLCs from previous cycles.
+            # Data driven GSLC will be activated when this field has a valid value
+            # Model drivel GSLC will be activated when this field is None
+            reference_gslc: list(str(), min=1, required=False)
+
         product_path_group:
             # Directory where PGE will place results
             product_path: str()
@@ -88,6 +93,8 @@ runconfig:
 
             # Geo2rdr options
             geo2rdr: include('geo2rdr_options', required=False)
+
+            ampcor: include('ampcor_options', required=False)
 
             blocksize:
                 x: int(min=100, max=100000)
@@ -264,6 +271,75 @@ geocode_options:
 
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
+
+# AMPCOR options for data-driven GSLC. Based on InSAR workflow
+ampcor_options:
+    # Lines per block to process in batch
+    lines_per_block: int(min=1, required=False)
+
+    # Number of columns for chip/template window in reference image
+    window_range: int(min=16, max=512, required=False)
+
+    # Number of lines for chip/template window in reference image
+    window_azimuth: int(min=16, max=512, required=False)
+
+    # Number of columns for search chip/template in secondary image
+    half_search_range: int(min=4, max=128, required=False)
+
+    # Number of lines for search chip/template in secondary image
+    half_search_azimuth: int(min=4, max=128, required=False)
+
+    # Number of columns to skip in reference image for next offset estimate
+    skip_range: int(min=1, required=False)
+
+    # Number of lines to skip in reference image for next offset estimate
+    skip_azimuth: int(min=1, required=False)
+
+    # Margin around image edges to avoid for offset computation
+    margin: int(min=0, required=False)
+
+    # Number of columns of output offset (covariance, snr) file
+    offset_width: int(required=False)
+
+    # Number of lines of output offset (covariance, snr) file
+    offset_length: int(required=False)
+
+    # Start pixel of the reference image along slant range
+    start_pixel_range: int(min=0, required=False)
+
+    # Start pixel of the reference image along azimuth
+    start_pixel_azimuth: int(min=0, required=False)
+
+    # Domain (frequency or spatial) where to compute cross-correlation
+    cross_correlation_domain: enum('frequency', 'spatial', required=False)
+
+    # Anti-aliasing oversampling factor to apply to reference/secondary SLC
+    # prior to cross-correlation computation
+    slc_oversampling_factor: int(min=2, max=5, required=False)
+
+    # Deramp data prior to FFT: magnitude or complex (linear phase ramp)
+    deramping_method: enum('magnitude', 'complex', required=False)
+
+    # Square zoom window size for cross-correlation statistics (SNR, covariance)
+    correlation_statistics_zoom: int(required=False)
+
+    # Square zoom window size for sub-pixel offset refinement
+    correlation_surface_zoom: int(min=4, required=False)
+
+    # Oversampling factor of the correlation surface for sub-pixel offset refinement
+    correlation_surface_oversampling_factor: int(min=2, max=128, required=False)
+
+    # Correlation surface oversampling algorithm
+    correlation_surface_oversampling_method: enum('sinc', 'fft', required=False)
+
+    # Number of cuda streams
+    cuda_streams: int(required=False)
+
+    # Number of offset estimates to process in batch along slant range
+    windows_batch_range: int(min=1, required=False)
+
+    # Number of offset estimates to process in batch along azimuth
+    windows_batch_azimuth: int(min=1, required=False)
 
 worker_options:
     # To prevent downloading DEM / other data automatically. Default True
