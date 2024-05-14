@@ -528,9 +528,8 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
     # Get compression and chunking options
     gslc_output_options = get_dataset_output_options(cfg)
 
-    # Get complex data type and set fill value to kwargs
-    ctype, fill_value = get_complex_output_dtype(cfg, dst_h5)
-    gslc_output_options['fillvalue'] = fill_value
+    # Get complex data type and set fill value for later dataset init
+    ctype, complex_fill_value = get_complex_output_dtype(cfg, dst_h5)
 
     # Create datasets in the ouput hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
@@ -538,18 +537,31 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
         shape = (geogrids[freq].length, geogrids[freq].width)
         dst_parent_path = os.path.join(common_parent_path,
                                        f'{dst}/grids/frequency{freq}')
-
         yds, xds = set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
 
-        # create datasets for polarizations of current frequency
+        dst_grp = dst_h5[dst_parent_path]
+
+        # set complex dataset fill value to value determined above
+        gslc_output_options['fillvalue'] = complex_fill_value
+
+        # create geocoded SLC datasets for polarizations of current frequency
         for polarization in pol_list:
-            dst_grp = dst_h5[dst_parent_path]
             long_name = f'geocoded single-look complex image {polarization}'
             descr = f'Geocoded SLC image ({polarization})'
             _create_datasets(dst_grp, shape, ctype, polarization,
                              descr=descr, units='', grids="projection",
                              long_name=long_name, yds=yds, xds=xds,
-                             fill_value=fill_value, **gslc_output_options)
+                             fill_value="(nan+nan*j)", **gslc_output_options)
+
+        # create geocoded mask for geocoded SLC datasets
+        long_name = f'geocoded mask of single-look complex image'
+        descr = f'GSLC mask'
+        gslc_output_options['fillvalue'] = 255
+        _create_datasets(dst_grp, shape, np.ubyte, 'mask',
+                         descr=descr, units='', grids="projection",
+                         long_name=long_name, yds=yds, xds=xds,
+                         fill_value="255", valid_min="0",
+                         **gslc_output_options)
 
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
 
@@ -572,7 +584,8 @@ def get_off_params(pcfg, param_name, is_roff=False, pattern=None,
 def _create_datasets(dst_grp, shape, ctype, dataset_name,
                      chunks=(128, 128), descr=None, units=None,
                      grids=None, data=None, standard_name=None, long_name=None,
-                     yds=None, xds=None, fill_value=None, **kwargs):
+                     yds=None, xds=None, fill_value=None, valid_min=None,
+                     **kwargs):
     '''
     wrapper around h5py.Group.create_dataset that adds nisar.workflows specific
     attributes to avoid boilerplate calls
@@ -619,7 +632,10 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
         ds.dims[1].attach_scale(xds)
 
     if fill_value is not None:
-        ds.attrs["_FillValue"] = fill_value
+        ds.attrs["_FillValue"] = np.string_(fill_value)
+
+    if valid_min is not None:
+        ds.attrs["_valid_min"] = np.string_(valid_min)
 
 
 def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):

@@ -12,6 +12,7 @@ namespace isce3 { namespace geocode {
 
 typedef Eigen::Ref<isce3::core::EArray2D<std::complex<float>>> EArray2dc64;
 typedef Eigen::Ref<isce3::core::EArray2D<double>> EArray2df64;
+typedef Eigen::Ref<isce3::core::EArray2D<unsigned char>> EArray2duc8;
 
 /**
  * Geocode SLC to a given geogrid
@@ -162,6 +163,7 @@ void geocodeSlc(isce3::io::Raster& outputRaster, isce3::io::Raster& inputRaster,
 template<typename AzRgFunc = isce3::core::Poly2d>
 void geocodeSlc(
         std::vector<EArray2dc64>& geoDataBlocks,
+        EArray2duc8 maskBlock,
         EArray2df64 carrierPhaseBlock,
         EArray2df64 flattenPhaseBlock,
         const std::vector<EArray2dc64>& rdrDataBlocks,
