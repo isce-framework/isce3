@@ -360,5 +360,132 @@ backprojectFirstStage(
     return std::make_tuple(status, out_grid, std::move(out), std::move(height));
 }
 
+
+#if 0
+// For now structure like backproject() with inner loop on target.
+// Might make more sense to project on image at a time instead.
+ErrorCode
+backprojectFinalStage(std::complex<float>* out,
+        const RadarGeometry& out_geometry,
+        const std::vector<PolarGrid>& grids,
+        const std::vector<std::complex<float>[]>& images,
+        const DEMInterpolator& dem, double fc, double ds,
+        const Kernel<float>& kernel_rg, const Kernel<float>& kernel_az,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+        float* height)
+{
+    static constexpr double c = isce3::core::speed_of_light;
+    static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
+
+    // TODO search sorted intervals to figure out active sub images per target
+    struct Interval { double start, end; };
+    const auto intervals = std::vector<Interval>(grids.size());
+    std::transform(grids.begin(), grids.end(), intervals.begin(),
+        [](const PolarGrid& grid) {
+            return Interval{grid.aztime_start, grid.aztime_end};
+        });
+    const auto overlaps = [](const Interval& a, const Interval& b) {
+        return (a.start <= b.end) and (a.end >= b.start);
+    }
+
+    // get input & output radar grid azimuth time & slant range
+    Linspace<double> out_azimuth_time = out_geometry.sensingTime();
+    Linspace<double> out_slant_range = out_geometry.slantRange();
+
+    // reference ellipsoid
+    int epsg = dem.epsgCode();
+    Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
+
+    // carrier wavelength
+    double wvl = c / fc;
+
+    // loop over targets in output grid
+    bool all_converged = true;
+#pragma omp parallel for collapse(2)
+    for (int j = 0; j < out_azimuth_time.size(); ++j) {
+        for (int i = 0; i < out_slant_range.size(); ++i) {
+
+            // Run rdr2geo using orbit and Doppler associated with output grid
+            // to get target position.  Only need LLH if dumping height or
+            // using TSX atmosphere model, but just compute it unconditionally.
+            Vec3 x, llh;
+            {
+                double t = out_azimuth_time[j];
+                double r = out_slant_range[i];
+                double fD = out_geometry.doppler().eval(t, r);
+
+                const int converged = rdr2geo_bracket(t, r, fD,
+                        out_geometry.orbit(), dem, x, wvl,
+                        out_geometry.lookSide(), r2g_params.tol_height,
+                        r2g_params.look_min, r2g_params.look_max);
+
+                llh = ellipsoid.xyzToLonLat(x);
+
+                if (height != nullptr) {
+                    height[j * out_geometry.gridWidth() + i] = llh[2];
+                }
+                if (not converged) {
+                    all_converged = false;
+                    out[j * out_geometry.gridWidth() + i] = {nan, nan};
+                    if (height != nullptr) {
+                        height[j * out_geometry.gridWidth() + i] = nan;
+                    }
+                    continue;
+                }
+            }
+
+            // run geo2rdr using input data's orbit and azimuth carrier to
+            // estimate the center of the coherent processing window for the
+            // target
+            double t, r;
+            {
+                auto converged =
+                        geo2rdr_bracket(x, in_geometry.orbit(),
+                                in_geometry.doppler(), t, r, wvl,
+                                in_geometry.lookSide(), g2r_params.tol_aztime,
+                                g2r_params.time_start, g2r_params.time_end);
+
+                if (not converged) {
+                    all_converged = false;
+                    out[j * out_geometry.gridWidth() + i] = {nan, nan};
+                    continue;
+                }
+            }
+
+            // get platform position and velocity at center of CPI
+            Vec3 p, v;
+            in_geometry.orbit().interpolate(&p, &v, t);
+
+            // estimate synthetic aperture length required to achieve the
+            // desired azimuth resolution
+            double l = wvl * r * (p.norm() / x.norm()) / (2. * ds);
+
+            // approximate CPI duration (assuming constant platform velocity)
+            double cpi = l / v.norm();
+
+            // get coherent integration bounds (pulse indices)
+            const auto interval = Interval{t - cpi / 2, t + cpi / 2};
+            double t0 = in_azimuth_time.first();
+            double dt = in_azimuth_time.spacing();
+            auto kstart = static_cast<int>(std::floor((tstart - t0) / dt));
+            auto kstop = static_cast<int>(std::ceil((tstop - t0) / dt));
+            kstart = std::max(kstart, 0);
+            kstop = std::min(kstop, in_azimuth_time.size());
+
+            // integrate images
+            out[j * out_geometry.gridWidth() + i] =
+                    sumCoherentImages(in, sampling_window, pos, vel, x, fc, tau_atm,
+                                kernel, kstart, kstop);
+        }
+    }
+
+    if (not all_converged) {
+        return ErrorCode::FailedToConverge;
+    }
+    return ErrorCode::Success;
+}
+#endif
+
 } // namespace focus
 } // namespace isce3
