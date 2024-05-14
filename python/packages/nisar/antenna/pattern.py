@@ -3,6 +3,7 @@ from enum import IntEnum, unique
 from isce3.core import Orbit, Attitude, Linspace
 from isce3.geometry import DEMInterpolator
 import logging
+from nisar.mixed_mode.logic import PolChannelSet
 from nisar.products.readers.antenna import AntennaParser
 from nisar.products.readers.instrument import InstrumentParser
 from nisar.products.readers.Raw import Raw
@@ -152,7 +153,6 @@ def pols_type_from_raw(raw: Raw):
         raise NotImplementedError(
             'More than two frequency bands are not supported!'
         )
-    is_ssp = False
     # use the first frequency to get individual RX and TX pols
     txrx_pols = raw.polarizations
     freq = frq_list[0]
@@ -178,23 +178,26 @@ def pols_type_from_raw(raw: Raw):
                 pol_type = PolType.single
 
     # check second band to see if it is Quasi-Quad or Quasi-Dual
-    if frq_list.size == 2:
-        is_ssp = True
-        freq_b = frq_list[1]
-        txrx_pol_list_b = txrx_pols[freq_b]
-        if set(txrx_pol_list) != set(txrx_pol_list_b):
-            tx_pols.extend(
-                dict.fromkeys([p[0] for p in txrx_pol_list_b])
-            )
-            rx_pols_b = set([p[1] for p in txrx_pol_list_b])
-            rx_pols = rx_pols.union(rx_pols_b)
-            if len(rx_pols_b) == 2:
+    # Need to be careful of QD 5+5 modes where HH and VV are at different
+    # center frequencies but are recorded under the same frequency band. Rely on
+    # "regularized" mode to split them into separate bands A and B if needed.
+    channels = PolChannelSet.from_raw(raw).regularized()
+    center_freqs = {channel.band.center for channel in channels}
+    is_ssp = len(center_freqs) > 1
+    tx_pols = list({channel.pol[0] for channel in channels})
+    rx_pols = list({channel.pol[1] for channel in channels})
+    if is_ssp:
+        pols_a = {chan.pol for chan in channels if chan.freq_id == "A"}
+        pols_b = {chan.pol for chan in channels if chan.freq_id == "B"}
+        if pols_a != pols_b:
+            if len(pols_a) == len(pols_b) == 2:
                 pol_type = PolType.quasi_quad
-            else:
-                assert len(rx_pols_b) == 1
+            elif len(pols_a) == len(pols_b) == 1:
                 pol_type = PolType.quasi_dual
+            else:
+                raise NotImplementedError(f"Unexpected mode {channels}")
 
-    return pol_type, is_ssp, tx_pols, list(rx_pols), freq
+    return pol_type, is_ssp, tx_pols, rx_pols, freq
 
 
 def build_tx_trm(raw: Raw, pulse_times: np.ndarray, freq_band: str,
@@ -281,14 +284,20 @@ class AntennaPattern:
         rd_all, wd_all, wl_all = dict(), dict(), dict()
         self.finder = dict()
 
-        # get RD/WD/WL for all unique RX polarizations of first freq band
+        # get RD/WD/WL for all unique RX polarizations
+        # Loop over all freqs & pols since some RX pols may be found only on
+        # freq B (e.q. the QQP case).  Assume RD/WD/WL are the same for all
+        # freqs/pols that have the same RX polarization.
         for pol in self.rx_pols:
-            if self.pol_type == PolType.quasi_dual:
-                txrx_pol = 2 * pol
+            for freq_band, txrx_pols in raw.polarizations.items():
+                txrx_pols = [p for p in txrx_pols if p.endswith(pol)]
+                if len(txrx_pols) > 0:
+                    txrx_pol = txrx_pols[0]
+                    break
             else:
-                txrx_pol = self.tx_pols[0] + pol
+                assert False, "failed to hit guaranteed break statement"
             rd_all[pol], wd_all[pol], wl_all[pol] = raw.getRdWdWl(
-                self.freq_band, txrx_pol)
+                freq_band, txrx_pol)
             self.finder[pol] = TimingFinder(self.pulse_times, rd_all[pol],
                                             wd_all[pol], wl_all[pol])
 

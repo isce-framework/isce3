@@ -1129,18 +1129,6 @@ def require_ephemeris_overlap(ephemeris: Ephemeris,
     raise ValueError(msg)
 
 
-def require_frequency_stability(rawlist: Iterable[Raw]) -> None:
-    """Check that center frequency doesn't depend on TX polarization since
-    this is assumed in RSLC Doppler metadata.
-    """
-    for raw in rawlist:
-        for frequency, polarizations in raw.polarizations.items():
-            fc_set = {raw.getCenterFrequency(frequency, pol[0])
-                for pol in polarizations}
-            if len(fc_set) > 1:
-                raise NotImplementedError("TX frequency agility not supported")
-
-
 def require_constant_look_side(rawlist: Iterable[Raw]) -> str:
     side_set = {raw.identification.lookDirection for raw in rawlist}
     if len(side_set) > 1:
@@ -1151,7 +1139,9 @@ def require_constant_look_side(rawlist: Iterable[Raw]) -> str:
 def get_common_mode(rawlist: list[Raw]) -> PolChannelSet:
     assert len(rawlist) > 0
     modes = [PolChannelSet.from_raw(raw) for raw in rawlist]
-    return reduce(lambda mode1, mode2: mode1.intersection(mode2), modes)
+    common = reduce(lambda mode1, mode2: mode1.intersection(mode2), modes)
+    # Make sure we regularize even if only one mode.
+    return common.regularized()
 
 
 def get_bands(mode: PolChannelSet) -> dict[str, Band]:
@@ -1429,10 +1419,13 @@ def get_output_range_spacings(rawlist: list[Raw], common_mode: PolChannelSet):
         Range spacing in m for each subband.
     """
     # Get a PolChannel associated with the largest output bandwidth, e.g., a
-    # 20 MHz channel if we're generating 20+5 output.
-    big_channel = max(common_mode, key = lambda channel: channel.band.width)
-    # ... and smallest bandwidth
-    small_channel = min(common_mode, key = lambda channel: channel.band.width)
+    # 20 MHz channel if we're generating 20+5 output.  Also want the smallest
+    # bandwidth channel.  If these are equal, e.g., 20+20 or 5+5 mode, make
+    # sure we get one from each frequency.
+    channels = sorted(common_mode,
+        key = lambda channel: (channel.band.width, channel.freq_id))
+    big_channel = channels[-1]
+    small_channel = channels[0]
     # (These will be the same if there's no secondary band).
 
     range_spacings = dict()
@@ -1470,7 +1463,6 @@ def focus(runconfig, runconfig_path=""):
     scale = cfg.processing.encoding_scale_factor
     antparser, instparser = get_antpat_inst(cfg)
 
-    require_frequency_stability(rawlist)
     common_mode = get_common_mode(rawlist)
     log.info(f"output mode = {common_mode}")
 

@@ -210,19 +210,38 @@ class PolChannelSet(set):
                 else:
                     d1[newkey] = [PolChannel("B", pol, b.band)]
                 d1[key] = [a]
-        # Group entries by freq_id
-        df = defaultdict(list)
+
+        if len(d1) == 0:
+            return PolChannelSet()
+
+        # Group entries by (freq_id, band) and ensure that there's only one
+        # unique band per freq_id.  If necessary and possible, relabel frequency
+        # IDs to avoid failure (e.g., quasi-dual 5+5 mode).
+        dfb = defaultdict(list)
         for key, channels in d1.items():
-            freq, pol = key
-            df[freq].extend(channels)
-        # Check that there's only one unique band per freq_id
+            freq, _ = key
+            for chan in channels:
+                dfb[(freq, chan.band)].append(chan)
+
+        available_freq_labels = ["A", "B"]
+        if len(dfb) > len(available_freq_labels):
+            raise UnsupportedModeIntersection("more distinct bands than "
+                f"available frequency labels: {list(dfb)}")
+
+        freqs, bands = zip(*dfb)
+        if len(freqs) > len(set(freqs)):
+            # Need to relabel frequency IDs.  Sort them by center frequency.
+            bands = sorted(bands, key = lambda band: band.center)
+            band2freq = dict(zip(bands, available_freq_labels))
+            dfb = {(band2freq[band], band): channels for (freq, band), channels
+                in dfb.items()}
+
+        # Collect channels and ensure consistent freq_id in case relabeled.
         l = []
-        for freq, channels in df.items():
-            bands = {chan.band for chan in channels}
-            if len(bands) > 1:
-                raise UnsupportedModeIntersection("got multiple bands"
-                    f" on frequency{freq}: {bands}")
-            l.extend(channels)
+        for (freq, band), channels in dfb.items():
+            for chan in channels:
+                assert band == chan.band
+                l.append(PolChannel(freq, chan.pol, chan.band))
         return PolChannelSet(l)
 
 
