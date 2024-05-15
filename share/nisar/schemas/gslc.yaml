@@ -272,7 +272,7 @@ geocode_options:
         # Set bottom-right x in same units as output EPSG
         x_abs: num(required=False)
 
-# AMPCOR options for data-driven GSLC. Based on InSAR workflow
+# AMPCOR options for data-driven GSLC. Based on InSAR workflow runconfig
 ampcor_options:
     # Lines per block to process in batch
     lines_per_block: int(min=1, required=False)
