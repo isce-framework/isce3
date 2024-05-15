@@ -319,10 +319,13 @@ geocode_options:
     # Save the RTC area normalization factor (ANF) gamma0 to sigma0
     save_rtc_anf_gamma0_to_sigma0: bool(required=False)
 
+    # Save the mask layer
+    save_mask: bool(required=False)
+
     # PLACEHOLDER - Save interpolated DEM used to compute GCOV
     save_dem: bool(required=False)
 
-    # PLACEHOLDER - Save layover shadow mask
+    # PLACEHOLDER - Save the layover shadow mask
     save_layover_shadow_mask: bool(required=False)
 
     # PLACEHOLDER - Save the incidence angle

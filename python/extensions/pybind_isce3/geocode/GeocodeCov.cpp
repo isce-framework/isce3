@@ -1,6 +1,8 @@
 #include "GeocodeCov.h"
 
 #include <limits>
+
+#include <optional>
 #include <pybind11/stl.h>
 
 #include <isce3/core/Constants.h>
@@ -104,6 +106,7 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                     py::arg("output_rtc") = nullptr,
                     py::arg("input_layover_shadow_mask_raster") = nullptr,
                     py::arg("sub_swaths") = nullptr,
+                    py::arg("apply_valid_samples_sub_swath_masking") = std::nullopt,
                     py::arg("out_mask") = nullptr,
                     py::arg("memory_mode") = GeocodeMemoryMode::Auto,
                     py::arg("min_block_size") =
@@ -202,6 +205,11 @@ void addbinding(py::class_<Geocode<T>>& pyGeocode)
                         considered invalid.
                     sub_swaths: isce3.product.SubSwaths, optional
                         Sub-swaths metadata
+                    apply_valid_samples_sub_swath_masking: bool, optional
+                        Flag indicating whether the valid-samples sub-swath
+                        masking should be applied during geocoding.
+                        If not given, then sub-swath masking will be applied
+                        if the sub_swaths parameter is provided.
                     out_mask: isce3.io.Raster, optional
                         Output valid-pixels sub-swath mask
                     geocode_memory_mode: isce3.core.GeocodeMemoryMode

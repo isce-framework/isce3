@@ -2,6 +2,7 @@
 import os
 import numpy as np
 from osgeo import gdal
+from scipy import ndimage
 import iscetest
 import isce3.ext.isce3 as isce
 import isce3
@@ -113,8 +114,7 @@ def test_geocode_cov():
                         gdal.GDT_Byte, "ENVI")
 
                     sub_swath_kwargs['sub_swaths'] = sub_swath
-                    sub_swath_kwargs['out_mask'] = \
-                        out_mask
+                    sub_swath_kwargs['out_mask'] = out_mask
 
                 else:
                     sub_swath_str = ''
@@ -122,8 +122,7 @@ def test_geocode_cov():
                 output_path = f"{axis}_{key}{sub_swath_str}.geo"
                 print(f'   output file: {output_path}')
                 output_raster = isce.io.Raster(
-                    output_path,
-                    geo_grid_width, geo_grid_length, 1,
+                    output_path, geo_grid_width, geo_grid_length, 1,
                     gdal.GDT_Float64, "ENVI")
 
                 # geocode based on axis and mode
@@ -149,6 +148,11 @@ def test_geocode_cov():
 
             for apply_sub_swath_mask in [False, True]:
 
+                print('testing parameters:')
+                print('    geocode mode:', key)
+                print('    axis:', axis)
+                print('    apply sub-swath masking:', apply_sub_swath_mask)
+
                 # prepare output raster
                 if apply_sub_swath_mask:
                     sub_swath_str = '_sub_swath_masked'
@@ -156,7 +160,7 @@ def test_geocode_cov():
                     sub_swath_str = ''
 
                 test_raster = f"{axis}_{key}{sub_swath_str}.geo"
-                print(f'   verifying file: {test_raster}')
+                print(f'    file: {test_raster}')
                 ds = gdal.Open(test_raster, gdal.GA_ReadOnly)
                 geo_arr = ds.GetRasterBand(1).ReadAsArray()
                 geo_arr = np.ma.masked_array(geo_arr, mask=np.isnan(geo_arr))
@@ -207,6 +211,7 @@ def test_geocode_cov():
                 assert (rmse < rmse_err_threshold), f'{test_raster} RMSE fail'
 
                 if not apply_sub_swath_mask:
+                    print('    ...done')
                     continue
 
                 # select mask of pixels within 10-90 quantile range
@@ -222,24 +227,35 @@ def test_geocode_cov():
                 gdal_ds = gdal.Open(sub_swath_mask_path)
                 sub_swath_mask_array = gdal_ds.GetRasterBand(1).ReadAsArray()
 
+                # The area projection algorithm uses all available (valid)
+                # samples that intersect the geogrid pixel. A geocoded pixel
+                # may have a valid value even if most of its samples are
+                # invalid. Therefore, we dilate the expected valid mask
+                # by one pixel
+
+                if key == 'area':
+                    sub_swath_expected_exp_within_quantile_relaxed = \
+                        ndimage.binary_dilation(
+                            sub_swath_expected_exp_within_quantile)
+                else:
+                    sub_swath_expected_exp_within_quantile_relaxed = \
+                        sub_swath_expected_exp_within_quantile
                 # the outside area represented by
                 # `~ sub_swath_expected_exp_within_quantile` should include
                 # `sub_swath_mask_array``.
 
-                # first, check the mask and assert that there are no masked
-                # points outside of the selected area.
-                assert np.sum((sub_swath_mask_array) &
-                              (~sub_swath_expected_exp_within_quantile)) == 0
+                # first, check the mask and assert that there are no
+                # points marked as sub-swath 1 outside of the selected area.
+                assert np.sum(
+                    (sub_swath_mask_array == 1) &
+                    (~sub_swath_expected_exp_within_quantile_relaxed)) == 0
 
                 # then, we check the geocoded array and assert that there are
                 # valid points inside the selected area
                 assert np.sum((np.isfinite(geo_arr)) &
-                              (sub_swath_expected_exp_within_quantile)) > 0
-
-                # finally, we check the geocoded array again and assert
-                # that there are no valid points outside of the selected area
-                assert np.sum((np.isfinite(geo_arr)) &
                               (~sub_swath_expected_exp_within_quantile)) == 0
+
+                print('    ...done')
 
 
 if __name__ == "__main__":

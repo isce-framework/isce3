@@ -274,10 +274,13 @@ runconfig:
                 # is set to "gamma0", or `False`, otherwise
                 save_rtc_anf_gamma0_to_sigma0:
 
+                # Save the mask layer
+                save_mask: True
+
                 # Save interpolated DEM used to compute GCOV
                 save_dem: False
 
-                # PLACEHOLDER - Save layover shadow mask
+                # PLACEHOLDER - Save the layover shadow mask
                 save_layover_shadow_mask: False
 
                 # PLACEHOLDER - Save the incidence angle
@@ -396,8 +399,8 @@ runconfig:
                     y_posting: 
 
             geo2rdr:
-                threshold: 1.0e-8
-                maxiter: 100
+                threshold: 1.0e-7
+                maxiter: 50
 
             dem_interpolation_method: biquintic
 
