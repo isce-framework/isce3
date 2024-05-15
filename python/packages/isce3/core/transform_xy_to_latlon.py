@@ -39,7 +39,7 @@ def transform_xy_to_latlon(epsg, x, y, margin = 0.1):
         transformer_xy_to_latlon = osr.CoordinateTransformation(srs_src, srs_wgs84)
 
         # Stack the x and y
-        x_y_pnts_radar = np.stack((x.flatten(), y.flatten()), axis=-1)
+        x_y_pnts_radar = np.stack((x.ravel(), y.ravel()), axis=-1)
 
         # Transform to lat/lon
         lat_lon_radar = np.array(
