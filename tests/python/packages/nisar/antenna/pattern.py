@@ -58,3 +58,4 @@ def test_pattern():
     z = ap.form_pattern(times[0], r)
 
     npt.assert_(z[pol].shape == (len(r),))
+    npt.assert_(z[pol].dtype == np.complex64)

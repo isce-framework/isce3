@@ -468,7 +468,8 @@ class AntennaPattern:
                 # Initialize the pattern array so we can slice this range timing
                 # group into it - TODO move this outside the loop for clarity?
                 if p not in rx_dbf_pat:
-                    rx_dbf_pat[p] = np.empty((len(tseq), slant_range.size))
+                    rx_dbf_pat[p] = np.empty((len(tseq), slant_range.size),
+                        dtype=np.complex64)
 
                 # Slice it into the full array, and
                 # bump up the index for the next slice
@@ -477,7 +478,8 @@ class AntennaPattern:
                 i0 = iend
 
         # form one-way TX patterns for all TX pols
-        tx_bmf_pat = defaultdict(lambda: np.empty((len(tseq), slant_range.size)))
+        tx_bmf_pat = defaultdict(lambda: np.empty((len(tseq), slant_range.size),
+            dtype=np.complex64))
         if self.pol_type == PolType.compact_left:
             tx_bmf_pat['L'] = (
                 self.tx_bmf['H'].form_pattern(
@@ -486,7 +488,7 @@ class AntennaPattern:
                 1j * self.tx_bmf['V'].form_pattern(
                     t, slant_range, nearest=nearest,
                     channel_adj_factors=self.channel_adj_fact_tx['V'])
-            )
+            ).astype(np.complex64)
 
         elif self.pol_type == PolType.compact_right:
             tx_bmf_pat['R'] = (
@@ -496,12 +498,13 @@ class AntennaPattern:
                 1j * self.tx_bmf['V'].form_pattern(
                     t, slant_range, nearest=nearest,
                     channel_adj_factors=self.channel_adj_fact_tx['V'])
-            )
+            ).astype(np.complex64)
         else:  # other non-compact pol types
             for p in tx_pols:
                 tx_bmf_pat[p] = self.tx_bmf[p].form_pattern(
                     t, slant_range, nearest=nearest,
-                    channel_adj_factors=self.channel_adj_fact_tx[p])
+                    channel_adj_factors=self.channel_adj_fact_tx[p]).astype(
+                        np.complex64)
 
         # build two-way pattern for all unique TxRx products obtained from all
         # freq bands
