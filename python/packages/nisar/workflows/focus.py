@@ -1061,9 +1061,9 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
             raise ValueError("Requested RFI mitigation but disabled detection.")
         log.info("Configured to skip RFI processing")
         return raw_data, np.nan
-    if opt.mitigation_algorithm != "ST-EVD":
-        raise NotImplementedError("Only ST-EVD RFI algorithm is supported")
-    msg = "Running radio frequency interference (RFI) detection"
+    if opt.mitigation_algorithm != "ST-EVD" and opt.mitigation_algorithm != "FDNF":
+        raise NotImplementedError("Only ST-EVD and FDNF RFI algorithms are supported")
+    msg = f"Running {opt.mitigation_algorithm} radio frequency interference (RFI) detection"
     if opt.mitigation_enabled:
         msg += " and mitigation"
     log.info(msg)
@@ -1078,21 +1078,39 @@ def process_rfi(cfg: Struct, raw_data: np.ndarray,
         raw_data_mitigated = np.memmap(fd, mode="w+", shape=raw_data.shape,
                            dtype=np.complex64)
 
-    threshold_params = isce3.signal.rfi_detection_evd.ThresholdParams(
-        opt.threshold_hyperparameters.x, opt.threshold_hyperparameters.y)
+    if opt.mitigation_algorithm == "ST-EVD":
+        opt_evd = opt.slow_time_evd
+        threshold_params = isce3.signal.rfi_detection_evd.ThresholdParams(
+            opt_evd.threshold_hyperparameters.x, opt_evd.threshold_hyperparameters.y)
 
-    rfi_likelihood = isce3.signal.rfi_process_evd.run_slow_time_evd(
-        raw_data,
-        opt.cpi_length,
-        opt.max_emitters,
-        num_max_trim=opt.num_max_trim,
-        num_min_trim=opt.num_min_trim,
-        max_num_rfi_ev=opt.max_num_rfi_ev,
-        num_rng_blks=opt.num_range_blocks,
-        threshold_params=threshold_params,
-        num_cpi_tb=opt.num_cpi_per_threshold_block,
-        mitigate_enable=opt.mitigation_enabled,
-        raw_data_mitigated=raw_data_mitigated)
+        rfi_likelihood = isce3.signal.rfi_process_evd.run_slow_time_evd(
+            raw_data,
+            opt_evd.cpi_length,
+            opt_evd.max_emitters,
+            num_max_trim=opt_evd.num_max_trim,
+            num_min_trim=opt_evd.num_min_trim,
+            max_num_rfi_ev=opt_evd.max_num_rfi_ev,
+            num_rng_blks=opt.num_range_blocks,
+            threshold_params=threshold_params,
+            num_cpi_tb=opt_evd.num_cpi_per_threshold_block,
+            mitigate_enable=opt.mitigation_enabled,
+            raw_data_mitigated=raw_data_mitigated)
+    else:
+        opt_fnf = opt.freq_notch_filter
+        rfi_likelihood = isce3.signal.rfi_freq_null.run_freq_notch(
+            raw_data,
+            opt_fnf.num_pulses_az,
+            num_rng_blks=opt.num_range_blocks,
+            az_winsize=opt_fnf.az_winsize,
+            rng_winsize=opt_fnf.rng_winsize,
+            trim_frac=opt_fnf.trim_frac,
+            pvalue_threshold=opt_fnf.pvalue_threshold,
+            cdf_threshold=opt_fnf.cdf_threshold,
+            nb_detect=opt_fnf.nb_detect,
+            wb_detect=opt_fnf.wb_detect,
+            mitigate_enable=opt.mitigation_enabled,
+            raw_data_mitigated=raw_data_mitigated)
+
 
     log.info(f"RFI likelihood = {rfi_likelihood}")
     return raw_data_mitigated, rfi_likelihood

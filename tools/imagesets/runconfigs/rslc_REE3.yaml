@@ -59,52 +59,52 @@ runconfig:
                 # Defaults to True
                 detection_enabled: True
                 # Whether to attemt RFI removal. Default to False.
-                # Requires that RFI detection is also enabled.
                 mitigation_enabled: False
                 # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
-                # eigenvalue decomposition. Currently, only 'ST-EVD' is supported.
+                # eigenvalue decomposition.
                 mitigation_algorithm: ST-EVD
-                # Coherent processing interval length (pulses).  Defaults to 32.
-                cpi_length: 32
                 # Number of subdivisions in range.  Defaults to 1.
                 num_range_blocks: 1
-                # Maximum allowable number of emitters can be detected and
-                # suppressed per CPI. ST-EVD would ignore emitters exceeding
-                # this limit. This number should be less than cpi_length.
-                # Defaults to 16.
-                max_emitters: 16
-                # Number of large value outliers to be trimmed in slow-time
-                # minimum Eigenvalues.
-                num_max_trim: 0
-                # Number of small value outliers to be trimmed in slow-time
-                # minimum Eigenvalues.
-                num_min_trim: 0
-                # A detection error (miss) happens when a maximum power RFI
-                # emitter contaminates multiple consecutive CPIs, resulting in a
-                # flat maximum Eigenvalue slope in slow time. Hence the standard
-                # deviation (STD) of multiple dominant EVs across slow time
-                # defined by this parameter are compared. The one with the
-                # maximum STD is used for RFI Eigenvalue first difference
-                # computation.
-                max_num_rfi_ev: 2
-                # Number of slow-time CPIs grouped together for determining and
-                # applying a common EV slope threshold.
-                num_cpi_per_threshold_block: 20
-                # Parameters used to adaptively determine RFI eigenvalue
-                # difference thresholds
-                threshold_hyperparameters:
-                    # The computed sigma ratio of maximum and minimum Eigenvalue
-                    # first differences. It is a dimensionless figure of merit.
-                    # Larger value of x indicates higher likelihood of RFI
-                    # presence.
-                    x: [2.0, 20.0]
-                    # Estimated range of number of sigmas of the first
-                    # difference of minimum Eigenvalues across threshold block
-                    # as a function of input x, e.g., smaller x results in
-                    # larger value of y, therefore relaxing the final threshold.
-                    # The values of x outside of the defined range of y are
-                    # extrapolated.
-                    y: [5.0, 2.0]
+                slow_time_evd:
+                    # Coherent processing interval length (pulses).  Defaults to 32.
+                    cpi_length: 32
+                    # Maximum allowable number of emitters can be detected and
+                    # suppressed per CPI. ST-EVD would ignore emitters exceeding
+                    # this limit. This number should be less than cpi_length.
+                    max_emitters: 16
+                    # Number of large value outliers to be trimmed in slow-time
+                    # minimum Eigenvalues.
+                    num_max_trim: 0
+                    # Number of small value outliers to be trimmed in slow-time
+                    # minimum Eigenvalues.
+                    num_min_trim: 0
+                    # A detection error (miss) happens when a maximum power RFI
+                    # emitter contaminates multiple consecutive CPIs, resulting in a
+                    # flat maximum Eigenvalue slope in slow time. Hence the standard
+                    # deviation (STD) of multiple dominant EVs across slow time
+                    # defined by this parameter are compared. The one with the
+                    # maximum STD is used for RFI Eigenvalue first difference
+                    # computation.
+                    max_num_rfi_ev: 2
+                    # Number of slow-time CPIs grouped together for determining and
+                    # applying a common EV slope threshold.
+                    num_cpi_per_threshold_block: 20
+                    # Parameters used to adaptively determine RFI eigenvalue
+                    # difference thresholds
+                    threshold_hyperparameters:
+                        # The computed sigma ratio of maximum and minimum Eigenvalue
+                        # first differences. It is a dimensionless figure of merit.
+                        # Larger value of x indicates higher likelihood of RFI
+                        # presence.
+                        x: [2.0, 20.0]
+                        # Estimated range of number of sigmas of the first
+                        # difference of minimum Eigenvalues across threshold block
+                        # as a function of input x, e.g., smaller x results in
+                        # larger value of y, therefore relaxing the final threshold.
+                        # The values of x outside of the defined range of y are
+                        # extrapolated.
+                        y: [5.0, 2.0]
+
             range_common_band_filter:
                 attenuation: 40.0
                 width: 0.15

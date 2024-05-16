@@ -280,13 +280,19 @@ rfi_options:
   # Whether to attemt RFI removal. Default to False.
   # Requires that RFI detection is also enabled.
   mitigation_enabled: bool(required=False)
-  # Algorithm selection.  Defaults to 'ST-EVD' for slow-time eigenvalue
-  # decomposition.
-  mitigation_algorithm: enum('ST-EVD', required=False)
-  # Coherent processing interval length (pulses).  Defaults to 32.
-  cpi_length: int(min=2, required=False)
+  # RFI detection algorithm. Supported values include:
+  #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
+  #   - 'FDNF': frequency domain notch filtering algorithm
+  # Defaults to 'ST-EVD'.
+  mitigation_algorithm: enum('ST-EVD', 'FDNF', required=False)
   # Number of subdivisions in range.  Defaults to 1.
   num_range_blocks: int(min=1, required=False)
+  slow_time_evd: include('slow_time_evd_options', required=False)
+  freq_notch_filter: include('freq_notch_filter_options', required=False)
+
+slow_time_evd_options:
+  # Coherent processing interval length (pulses).  Defaults to 32.
+  cpi_length: int(min=2, required=False)
   # Maximum allowable number of emitters can be detected and suppressed per CPI.
   # ST-EVD would ignore emitters exceeding this limit. This number should be
   # less than cpi_length. Defaults to 16.
@@ -307,6 +313,42 @@ rfi_options:
   num_cpi_per_threshold_block: int(min=2, required=False)
   # Parameters used to adaptively determine RFI eigenvalue difference thresholds
   threshold_hyperparameters: include('rfi_threshold_options', required=False)
+
+freq_notch_filter_options:
+  # If Frequency Domain Notch Filtering (FDNF) is applied, this parameter
+  # defines the number of azimuth (slow time) pulses of the input data to be
+  # processed at once.
+  num_pulses_az: int(min=1, required=False)
+  # Frequency Domain Notch Filtering (FDNF) slow-time averaging window size
+  # for Time-Stationary Narrowband (TSNB) RFI detection
+  az_winsize: int(min=1, required=False)
+  # Frequency Domain Notch Filtering (FDNF) fast-time averaging window size
+  # for Time-Varying Wideband (TVWB) RFI detection
+  rng_winsize: int(min=1, required=False)
+  # If FDNF is applied, when data mean and standard deviations are computed, 
+  # 'trim_frac/2' proportion of outliers will be removed from both tails of 
+  # the distribution.
+  trim_frac: num(min=0.0, required=False)
+  # If FDNF is applied, a threshold for pvalue needs to be selected. pvalue is a
+  # measure of confidence against a null hypothesis. In FDNF:
+  # Null Hypothesis: NO RFI, Alternative Hypothesis: RFI present
+  # If p-value of the range-frequency power spectra is less than p-value threshold,
+  # alternative hypothesis is accepted. Otherwise, null hypothesis is accepted.
+  pvalue_threshold: num(min=0.0, required=False)
+  # If FDNF is applied, the cumulative probability density function (CDF) 
+  # of the input Time Stationary Narrowband (TSNB) and Time Varying Wideband 
+  # (TVWB) masks will be compared with this threshold. It represents an estimate of 
+  # RFI likelihood in the data. A small cdf_threshold value results in a high 
+  # threshold for RFI detection and vice versa.
+  cdf_threshold: num(min=0.0, required=False)
+  # If FDNF is applied, this parameter controls narrowband RFI detection.
+  # This should be enabled unless for the purpose of debugging.
+  # Defaults to True
+  nb_detect: bool(required=False)
+  # If FDNF is applied, this parameter controls wideband RFI detection.
+  # This should be enabled unless for the purpose of debugging.
+  # Defaults to True
+  wb_detect: bool(required=False)
 
 rfi_threshold_options:
     # The computed sigma ratio of maximum and minimum Eigenvalue
