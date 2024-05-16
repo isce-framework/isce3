@@ -4,6 +4,7 @@ Compute azimuth and slant range geocoding corrections as LUT2d
 import isce3
 from isce3.atmosphere.tec_product import tec_lut2d_from_json_srg, tec_lut2d_from_json_az
 from nisar.products.readers import SLC
+import journal
 
 
 def _get_accumulated_azimuth_corrections(cfg, slc, frequency, orbit):
@@ -131,3 +132,33 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
                                                              frequency, orbit)
 
     return az_corrections, srange_corrections
+
+
+def get_offset_lut(cfg, slc, frequency, orbit):
+    '''
+    A placeholder to copmpute timing correction based on offset tracking (ampcor)
+
+    Parameters
+    ----------
+    cfg: dict
+    frequency: ['A', 'B']
+        Str identifcation for NISAR SLC frequencies
+    orbit: isce3.core.Orbit
+        Object containing orbit associated with SLC
+
+    Returns
+    -------
+    az_lut: isce3.core.LUT2d
+        2d LUT containing offset in azimuth direction
+    rg_lut: isce3.core.LUT2d
+        2d LUT containing offset in range direction
+    
+    '''
+    info_channel = journal.info("geocode_corrections.get_az_srg_corrections")
+
+    info_channel.log('Data-driven GSLC will be implemented in the next release.'
+                     ' Returning empty LUT2d.')
+
+    rg_lut = isce3.core.LUT2d()
+    az_lut = isce3.core.LUT2d()
+    return az_lut, rg_lut
