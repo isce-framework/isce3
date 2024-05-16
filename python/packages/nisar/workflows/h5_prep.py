@@ -551,7 +551,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
             _create_datasets(dst_grp, shape, ctype, polarization,
                              descr=descr, units='', grids="projection",
                              long_name=long_name, yds=yds, xds=xds,
-                             fill_value="(nan+nan*j)", **gslc_output_options)
+                             fill_value=complex_fill_value, **gslc_output_options)
 
         # create geocoded mask for geocoded SLC datasets
         long_name = f'geocoded mask of single-look complex image'
@@ -560,7 +560,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
         _create_datasets(dst_grp, shape, np.ubyte, 'mask',
                          descr=descr, units='', grids="projection",
                          long_name=long_name, yds=yds, xds=xds,
-                         fill_value="255", valid_min="0",
+                         fill_value=255, valid_min=0,
                          **gslc_output_options)
 
         _add_polarization_list(dst_h5, dst, common_parent_path, freq, pol_list)
@@ -632,10 +632,10 @@ def _create_datasets(dst_grp, shape, ctype, dataset_name,
         ds.dims[1].attach_scale(xds)
 
     if fill_value is not None:
-        ds.attrs["_FillValue"] = np.string_(fill_value)
+        ds.attrs["_FillValue"] = fill_value
 
     if valid_min is not None:
-        ds.attrs["_valid_min"] = np.string_(valid_min)
+        ds.attrs["_valid_min"] = valid_min
 
 
 def _add_polarization_list(dst_h5, dst, common_parent_path, frequency, pols):
