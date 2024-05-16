@@ -195,19 +195,6 @@ class GcovWriter(BaseL2WriterSingleInput):
             rtc_algorithm_name)
 
         # TODO fix this
-        flag_rfi = (f'{self.root_path}/'
-                    f'{self.input_product_hdf5_group_type}'
-                    '/metadata/processingInformation/algorithms/rfiMitigation')
-        if flag_rfi:
-            rfi_algorithm_reference = '(RFI correction not applied)'
-        else:
-            rfi_algorithm_reference = '(NOT SPECIFIED)'
-        self.set_value(
-            '{PRODUCT}/metadata/processingInformation/algorithms/'
-            'rfiCorrection',
-            rfi_algorithm_reference)
-
-        # TODO fix this
         flag_symmetrize = self.cfg['processing']['input_subset'][
             'symmetrize_cross_pol_channels']
         if flag_symmetrize:

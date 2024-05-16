@@ -2077,12 +2077,6 @@
                       lang="en">Radiometric terrain correction (RTC) algorithm</annotation>
         </string>
         <string length="0"
-              name="/science/LSAR/GCOV/metadata/processingInformation/algorithms/rfiCorrection"
-              shape="scalar">
-          <annotation app="conformance"
-                      lang="en">RFI correction algorithm</annotation>
-        </string>
-        <string length="0"
               name="/science/LSAR/GCOV/metadata/processingInformation/algorithms/polarimetricSymmetrization"
               shape="scalar">
           <annotation app="conformance"
