@@ -164,3 +164,15 @@ def test_channel_set():
     npt.assert_(modes[128] & modes[146] == PolChannelSet([
         PolChannel("A", "HH", L05), PolChannel("A", "HV", L05)
     ]))
+
+
+def test_quasi_dual_5p5():
+    mode = PolChannelSet([
+        PolChannel("B", "HH", L05),
+        PolChannel("B", "VV", QQ5)
+    ])
+    # verify lower band gets relabeled as "A"
+    npt.assert_(mode.regularized() == PolChannelSet([
+        PolChannel("A", "HH", L05),
+        PolChannel("B", "VV", QQ5)
+    ]))

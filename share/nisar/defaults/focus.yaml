@@ -136,50 +136,93 @@ runconfig:
                 # Whether to attemt RFI removal. Default to False.
                 # Requires that RFI detection is also enabled.
                 mitigation_enabled: False
-                # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
-                # eigenvalue decomposition. Currently, only 'ST-EVD' is supported.
+                # RFI detection algorithm. Supported values include:
+                #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
+                #   - 'FDNF': frequency domain notch filtering algorithm
+                # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
-                # Coherent processing interval length (pulses).  Defaults to 32.
-                cpi_length: 32
                 # Number of subdivisions in range.  Defaults to 1.
                 num_range_blocks: 1
-                # Maximum allowable number of emitters can be detected and
-                # suppressed per CPI. ST-EVD would ignore emitters exceeding
-                # this limit. This number should be less than cpi_length.
-                # Defaults to 16.
-                max_emitters: 16
-                # Number of large value outliers to be trimmed in slow-time
-                # minimum Eigenvalues.
-                num_max_trim: 0
-                # Number of small value outliers to be trimmed in slow-time
-                # minimum Eigenvalues.
-                num_min_trim: 0
-                # A detection error (miss) happens when a maximum power RFI
-                # emitter contaminates multiple consecutive CPIs, resulting in a
-                # flat maximum Eigenvalue slope in slow time. Hence the standard
-                # deviation (STD) of multiple dominant EVs across slow time
-                # defined by this parameter are compared. The one with the
-                # maximum STD is used for RFI Eigenvalue first difference
-                # computation.
-                max_num_rfi_ev: 2
-                # Number of slow-time CPIs grouped together for determining and
-                # applying a common EV slope threshold.
-                num_cpi_per_threshold_block: 20
-                # Parameters used to adaptively determine RFI eigenvalue
-                # difference thresholds
-                threshold_hyperparameters:
-                    # The computed sigma ratio of maximum and minimum Eigenvalue
-                    # first differences. It is a dimensionless figure of merit.
-                    # Larger value of x indicates higher likelihood of RFI
-                    # presence.
-                    x: [2.0, 20.0]
-                    # Estimated range of number of sigmas of the first
-                    # difference of minimum Eigenvalues across threshold block
-                    # as a function of input x, e.g., smaller x results in
-                    # larger value of y, therefore relaxing the final threshold.
-                    # The values of x outside of the defined range of y are
-                    # extrapolated.
-                    y: [5.0, 2.0]
+
+                slow_time_evd:
+                    # Coherent processing interval length (pulses).  Defaults to 32.
+                    cpi_length: 32
+                    # Maximum allowable number of emitters can be detected and
+                    # suppressed per CPI. ST-EVD would ignore emitters exceeding
+                    # this limit. This number should be less than cpi_length.
+                    # Defaults to 16.
+                    max_emitters: 16
+                    # Number of large value outliers to be trimmed in slow-time
+                    # minimum Eigenvalues.
+                    num_max_trim: 0
+                    # Number of small value outliers to be trimmed in slow-time
+                    # minimum Eigenvalues.
+                    num_min_trim: 0
+                    # A detection error (miss) happens when a maximum power RFI
+                    # emitter contaminates multiple consecutive CPIs, resulting in a
+                    # flat maximum Eigenvalue slope in slow time. Hence the standard
+                    # deviation (STD) of multiple dominant EVs across slow time
+                    # defined by this parameter are compared. The one with the
+                    # maximum STD is used for RFI Eigenvalue first difference
+                    # computation.
+                    max_num_rfi_ev: 2
+                    # Number of slow-time CPIs grouped together for determining and
+                    # applying a common EV slope threshold.
+                    num_cpi_per_threshold_block: 20
+                    # Parameters used to adaptively determine RFI eigenvalue
+                    # difference thresholds
+                    threshold_hyperparameters:
+                        # The computed sigma ratio of maximum and minimum Eigenvalue
+                        # first differences. It is a dimensionless figure of merit.
+                        # Larger value of x indicates higher likelihood of RFI
+                        # presence.
+                        x: [2.0, 20.0]
+                        # Estimated range of number of sigmas of the first
+                        # difference of minimum Eigenvalues across threshold block
+                        # as a function of input x, e.g., smaller x results in
+                        # larger value of y, therefore relaxing the final threshold.
+                        # The values of x outside of the defined range of y are
+                        # extrapolated.
+                        y: [5.0, 2.0]
+
+                freq_notch_filter:
+                    # If Frequency Domain Notch Filtering (FDNF) is applied, this parameter
+                    # defines the number of azimuth (slow-time) pulses of the input data to be 
+                    # processed at once or processing block azimuth dimension.
+                    # Defaults to 1
+                    num_pulses_az: 1000
+                    # Frequency Domain Notch Filtering (FDNF) slow-time averaging window 
+                    # size for Time-Stationary Narrowband (TSNB) RFI detection
+                    # This is a user-defined parameter
+                    az_winsize: 256
+                    # Frequency Domain Notch Filtering (FDNF) fast-time averaging window 
+                    # size for Time-Varying Wideband (TVWB) RFI detection
+                    rng_winsize: 100
+                    # If FDNF is applied, when data mean and standard deviations are 
+                    # computed, 'trim_frac/2' proportion of outliers will be removed from 
+                    # both tails of the distribution.
+                    trim_frac: 0.01
+                    # If FDNF is applied, a threshold for pvalue needs to be selected. 
+                    # pvalue is a measure of confidence against a null hypothesis. 
+                    # In FDNF: Null Hypothesis: NO RFI, Alternative Hypothesis: RFI present
+                    # If p-value of the range-frequency power spectra is less than p-value 
+                    # threshold, alternative hypothesis is accepted. Otherwise, null hypothesis 
+                    # is accepted.
+                    pvalue_threshold: 0.005
+                    # If FDNF is applied, the cumulative probability density function (CDF)
+                    # of the input Time Stationary Narrowband (TSNB) and Time Varying Wideband
+                    # (TVWB) masks will be compared with this threshold. It represents 
+                    # an estimate of RFI likelihood in the data. A small cdf_threshold value 
+                    # results in a high threshold for RFI detection and vice versa.
+                    cdf_threshold: 0.1
+                    # If FDNF is applied, this parameter controls narrowband RFI detection.
+                    # This should be enabled unless for the purpose of debugging.
+                    # Defaults to True
+                    nb_detect: True
+                    # If FDNF is applied, this parameter controls wideband RFI detection.
+                    # This should be enabled unless for the purpose of debugging.
+                    # Defaults to True
+                    wb_detect: True
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:

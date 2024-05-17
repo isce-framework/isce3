@@ -77,9 +77,14 @@ def get_dem_boundary_polygon(dem: DEMInterpolator, n=11):
         ring.AddPoint(*point, dem.mean_height)
     polygon.AddGeometry(ring)
 
-    # Keep track of the coordinate system.
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(dem.epsg_code)
+    #XXX DEMInterpolator doesn't keep track of the full SRS of the DEM file,
+    #XXX which can include a data axis to CRS axis mapping flip.  Assume that
+    #XXX axes are flipped for EPSG:4326 (longitude is the x-axis).
+    if dem.epsg_code == 4326:
+        srs = get_srs_lonlat()
+    else:
+        srs = osr.SpatialReference()
+        srs.ImportFromEPSG(dem.epsg_code)
     polygon.AssignSpatialReference(srs)
     return polygon
 
@@ -100,8 +105,10 @@ def plot_shapely_polygon_km(poly, add_points=False, **opts):
     
     Returns
     -------
-    Result of shapely.plotting.plot_polygon
+    Result of shapely.plotting.plot_polygon or None if polygon is empty.
     """
+    if poly.is_empty:
+        return
     scaled = shapely.affinity.scale(poly, xfact=0.001, yfact=0.001, zfact=0.001,
         origin=(0.0, 0.0, 0.0))
     return shapely.plotting.plot_polygon(scaled, add_points=add_points, **opts)

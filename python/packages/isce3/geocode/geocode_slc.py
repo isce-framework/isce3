@@ -92,19 +92,20 @@ def _io_valid(geo_io_checks, rdr_io_checks):
         raise ValueError(err_str)
 
 
-def _phase_array_valid(phase_array, geo_array, which_phase):
+def _output_array_valid(output_array, geo_array, which_output):
     '''
-    Compare geo output array shape and phase array shpae to see if they match
+    Compare geo output array shape and output array shpae to see if they match
     '''
-    # default phase_array has size=0
-    if phase_array.size:
-        if phase_array.shape != geo_array.shape:
-            err_str = f'{which_phase} phase array shape does not match geocoded array shape'
+    # default output_array has size==0
+    if output_array.size:
+        if output_array.shape != geo_array.shape:
+            err_str = f'{which_output} output array shape does not match geocoded array shape'
             error_channel.log(err_str)
             raise ValueError(err_str)
 
 
 def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
+                mask_block: np.ndarray,
                 rdr_data_blocks: Union[np.ndarray, list[np.ndarray]],
                 dem_raster, radargrid,
                 geogrid, orbit, native_doppler, image_grid_doppler,
@@ -121,7 +122,7 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
                 carrier_phase_block: Optional[np.ndarray] = np.array([],
                                                                      dtype=np.float64),
                 flatten_phase_block: Optional[np.ndarray] = np.array([],
-                                                                    dtype=np.float64)):
+                                                                     dtype=np.float64)):
     '''
     Geocode a subset of pixels for multiple radar SLC arrays to a given geogrid.
     All radar SLC arrays share a common radar grid. All output geocoded arrays
@@ -132,6 +133,8 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
     ----------
     geo_data_blocks: list of numpy.ndarray
         List of output arrays containing geocoded SLC
+    mask_block: numpy.ndarray
+        Output array containing masking values of geocoded SLC
     rdr_data_blocks: list of numpy.ndarray
         List of input arrays of the SLC in radar coordinates
     dem_raster: isce3.io.Raster
@@ -203,14 +206,15 @@ def geocode_slc(geo_data_blocks: Union[np.ndarray, list[np.ndarray]],
         geo_data_blocks = [geo_data_blocks]
         rdr_data_blocks = [rdr_data_blocks]
 
-    # if not default carrier/flattening phase array, check if shape matches
-    # geoocoded array shape
-    for phase_arr, which_phase in zip([carrier_phase_block, flatten_phase_block],
-                                      ['carrier', 'flattening']):
-        _phase_array_valid(phase_arr, geo_data_blocks[0], which_phase)
+    # check if non-geocoded output array shapes matches geocoded array shape.
+    for output_arr, which_output in zip([carrier_phase_block,
+                                         flatten_phase_block,
+                                         mask_block],
+                                        ['carrier', 'flattening', 'mask']):
+        _output_array_valid(output_arr, geo_data_blocks[0], which_output)
 
-    _geocode_slc(geo_data_blocks, carrier_phase_block, flatten_phase_block,
-                 rdr_data_blocks, dem_raster, radargrid,
+    _geocode_slc(geo_data_blocks, mask_block, carrier_phase_block,
+                 flatten_phase_block, rdr_data_blocks, dem_raster, radargrid,
                  sliced_radargrid, geogrid, orbit, native_doppler,
                  image_grid_doppler, ellipsoid, threshold_geo2rdr,
                  num_iter_geo2rdr, first_azimuth_line, first_range_sample,

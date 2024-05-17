@@ -200,7 +200,7 @@ def read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
         geocode_dict['save_rtc_anf_gamma0_to_sigma0']
 
     # Verify `flag save_rtc_anf_gamma0_to_sigma0`. The flag defaults to `True`,
-    # if `apply_rtc` is enabled and RTC output_type is set to "gamma0", or
+    # if `flag_apply_rtc` is enabled and RTC output_type is set to "gamma0", or
     # `False`, otherwise.
     if save_rtc_anf_gamma0_to_sigma0 is None:
 
@@ -362,6 +362,7 @@ def _run(cfg, raster_scratch_dir):
     save_rtc_anf, save_rtc_anf_gamma0_to_sigma0 = \
         read_and_validate_rtc_anf_flags(geocode_dict, flag_apply_rtc,
                                         output_terrain_radiometry)
+    save_mask = geocode_dict['save_mask']
     save_dem = geocode_dict['save_dem']
     min_block_size_mb = cfg["processing"]["geocode"]['min_block_size']
     max_block_size_mb = cfg["processing"]["geocode"]['max_block_size']
@@ -430,7 +431,7 @@ def _run(cfg, raster_scratch_dir):
         t_freq = time.time()
 
         # get sub_swaths metadata
-        if apply_valid_samples_sub_swath_masking:
+        if apply_valid_samples_sub_swath_masking or save_mask:
             sub_swaths = slc.getSwathMetadata(frequency).sub_swaths()
         else:
             sub_swaths = None
@@ -530,7 +531,8 @@ def _run(cfg, raster_scratch_dir):
         # othewise, load the orbit from the RSLC metadata
         orbit = slc.getOrbit()
         if orbit_file is not None:
-            external_orbit = load_orbit_from_xml(orbit_file, radar_grid.ref_epoch)
+            external_orbit = load_orbit_from_xml(orbit_file,
+                                                 radar_grid.ref_epoch)
             orbit = crop_external_orbit(external_orbit, orbit)
 
         # get azimuth ionospheric delay LUTs (if applicable)
@@ -564,7 +566,8 @@ def _run(cfg, raster_scratch_dir):
                     geogrid.spacing_x, geogrid.spacing_y,
                     geogrid.width, geogrid.length, geogrid.epsg)
 
-        # create output raster
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the output imagery
         temp_output = tempfile.NamedTemporaryFile(
             dir=raster_scratch_dir, suffix=gcov_terms_file_extension)
 
@@ -574,6 +577,8 @@ def _run(cfg, raster_scratch_dir):
             input_raster_obj.num_bands,
             gdal.GDT_Float32, output_gcov_terms_raster_files_format)
 
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the off-diagonal terms (if applicable)
         nbands_off_diag_terms = 0
         out_off_diag_terms_obj = None
         if flag_fullcovariance:
@@ -589,6 +594,8 @@ def _run(cfg, raster_scratch_dir):
                     nbands_off_diag_terms,
                     gdal.GDT_CFloat32, output_gcov_terms_raster_files_format)
 
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the number of looks layer
         if save_nlooks:
             temp_nlooks = tempfile.NamedTemporaryFile(
                 dir=raster_scratch_dir,
@@ -601,6 +608,9 @@ def _run(cfg, raster_scratch_dir):
             temp_nlooks = None
             out_geo_nlooks_obj = None
 
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the radiometric terrain correction (RTC)
+        # area normalization factor (ANF) layer
         if save_rtc_anf:
             temp_rtc_anf = tempfile.NamedTemporaryFile(
                 dir=raster_scratch_dir,
@@ -613,6 +623,9 @@ def _run(cfg, raster_scratch_dir):
             temp_rtc_anf = None
             out_geo_rtc_obj = None
 
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the layer to convert gamma0 backscatter into
+        # sigma0
         if save_rtc_anf_gamma0_to_sigma0:
             temp_rtc_anf_gamma0_to_sigma0 = tempfile.NamedTemporaryFile(
                 dir=raster_scratch_dir,
@@ -625,6 +638,8 @@ def _run(cfg, raster_scratch_dir):
             temp_rtc_anf_gamma0_to_sigma0 = None
             out_geo_rtc_gamma0_to_sigma0_obj = None
 
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the interpolated DEM layer
         if save_dem:
             temp_interpolated_dem = tempfile.NamedTemporaryFile(
                 dir=raster_scratch_dir,
@@ -644,6 +659,20 @@ def _run(cfg, raster_scratch_dir):
         else:
             temp_interpolated_dem = None
             out_geo_dem_obj = None
+
+        # create a NamedTemporaryFile and an ISCE3 Raster object to
+        # temporarily hold the mask layer
+        if save_mask:
+            temp_mask_file = tempfile.NamedTemporaryFile(
+                    dir=raster_scratch_dir,
+                    suffix=secondary_layers_file_extension).name
+            out_mask_obj = isce3.io.Raster(
+                temp_mask_file,
+                geogrid.width, geogrid.length, 1,
+                gdal.GDT_Byte, secondary_layer_files_raster_files_format)
+        else:
+            temp_mask_file = None
+            out_mask_obj = None
 
         # geocode rasters
         geo.geocode(radar_grid=radar_grid,
@@ -667,15 +696,20 @@ def _run(cfg, raster_scratch_dir):
                     out_geo_nlooks=out_geo_nlooks_obj,
                     out_geo_rtc=out_geo_rtc_obj,
                     rtc_area_beta_mode=rtc_area_beta_mode_enum,
-                    out_geo_rtc_gamma0_to_sigma0=out_geo_rtc_gamma0_to_sigma0_obj,
+                    out_geo_rtc_gamma0_to_sigma0=
+                        out_geo_rtc_gamma0_to_sigma0_obj,
                     out_geo_dem=out_geo_dem_obj,
+                    out_mask=out_mask_obj,
                     input_rtc=None,
                     output_rtc=None,
                     sub_swaths=sub_swaths,
+                    apply_valid_samples_sub_swath_masking=
+                        apply_valid_samples_sub_swath_masking,
                     dem_interp_method=dem_interp_method_enum,
                     memory_mode=memory_mode,
                     **optional_geo_kwargs)
 
+        # delete Raster objects so their associated data is flushed to the disk
         del input_raster_obj
         del output_raster_obj
 
@@ -688,6 +722,10 @@ def _run(cfg, raster_scratch_dir):
         if save_rtc_anf_gamma0_to_sigma0:
             del out_geo_rtc_gamma0_to_sigma0_obj
 
+        if save_mask:
+            out_mask_obj.close_dataset()
+            del out_mask_obj
+
         if save_dem:
             del out_geo_dem_obj
 
@@ -695,6 +733,8 @@ def _run(cfg, raster_scratch_dir):
             # out_off_diag_terms_obj.close_dataset()
             del out_off_diag_terms_obj
 
+        # save Rasters' content into the output HDF5 file using temporary
+        # filenames created with NamedTemporaryFile
         with h5py.File(output_hdf5, 'a') as hdf5_obj:
             root_ds = f'/science/LSAR/GCOV/grids/frequency{frequency}'
 
@@ -738,6 +778,16 @@ def _run(cfg, raster_scratch_dir):
                              units='1',
                              valid_min=0,
                              **output_secondary_layers_kwargs)
+
+            # save mask
+            if save_mask:
+                save_dataset(temp_mask_file,
+                             hdf5_obj, root_ds,
+                             yds, xds,
+                             'mask',
+                             long_name=('Mask'),
+                             units='',
+                             valid_min=0)
 
             # save rtc
             if save_rtc_anf:

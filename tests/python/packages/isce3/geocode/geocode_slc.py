@@ -353,9 +353,11 @@ def run_geocode_slc_arrays(test_case, unit_test_params, extra_input=False,
         out_list = [out_zeros, np.zeros(wrong_shape, dtype=np.complex64)]
     else:
         out_list = [out_zeros, out_zeros.copy()]
+    mask_data = np.zeros(out_shape, dtype=np.ubyte)
 
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_list,
+        mask_block=mask_data,
         rdr_data_blocks=in_list,
         dem_raster=unit_test_params.dem_raster,
         radargrid=test_case.radargrid,
@@ -399,6 +401,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     # list of empty array to be written to by geocode_slc array mode
     out_data = np.zeros(out_shape, dtype=np.complex64)
+    mask_data = np.zeros(out_shape, dtype=np.ubyte)
 
     # Populate geocode_slc kwargs as needed
     kwargs = {}
@@ -411,6 +414,7 @@ def run_geocode_slc_array(test_case, unit_test_params):
 
     isce3.geocode.geocode_slc(
         geo_data_blocks=out_data,
+        mask_block=mask_data,
         rdr_data_blocks=in_data,
         dem_raster=unit_test_params.dem_raster,
         radargrid=test_case.radargrid,

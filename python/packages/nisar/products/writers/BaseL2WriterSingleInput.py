@@ -695,10 +695,11 @@ class BaseL2WriterSingleInput(BaseWriterSingleInput):
         calibration_freq_parameter_list = ['commonDelay',
                                            'faradayRotation']
 
-        # calibration parameters to be copied from the RSLC
-        # specific to each polarization
+        # rfiLikelihood and calibration parameters to be copied
+        # from the RSLC specific to each polarization channel
         calibration_freq_pol_parameter_list = \
-            ['differentialDelay',
+            ['rfiLikelihood',
+             'differentialDelay',
              'differentialPhase',
              'scaleFactor',
              'scaleFactorSlope']

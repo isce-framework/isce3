@@ -216,6 +216,7 @@ void addbinding_geocodeslc(py::module & m)
         )");
     m.def("_geocode_slc", py::overload_cast<
             std::vector<isce3::geocode::EArray2dc64>&,
+            isce3::geocode::EArray2duc8,
             isce3::geocode::EArray2df64,
             isce3::geocode::EArray2df64,
             const std::vector<isce3::geocode::EArray2dc64>&,
@@ -240,6 +241,7 @@ void addbinding_geocodeslc(py::module & m)
             const isce3::product::SubSwaths*>
             (&isce3::geocode::geocodeSlc<AzRgFunc>),
         py::arg("geo_data_blocks"),
+        py::arg("mask_block"),
         py::arg("carrier_phase_block"),
         py::arg("flatten_phase_block"),
         py::arg("rdr_data_blocks"),
@@ -275,6 +277,8 @@ void addbinding_geocodeslc(py::module & m)
         ----------
         geo_data_blocks: list of numpy.ndarray
             List of output arrays containing geocoded SLC
+        mask_block: numpy.ndarray
+            Output array containing masking values of geocoded SLC
         carrier_phase_block: numpy.ndarray
             Output array containing geocoded carrier phase
         flatten_phase_block: numpy.ndarray
