@@ -73,5 +73,19 @@ backprojectFirstStage(const std::complex<float>* in,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params = {},
         double oversample_range = 1.2, double oversample_azimuth = 1.2);
 
+isce3::error::ErrorCode
+backprojectFinalStage(std::complex<float>* out,
+        const isce3::container::RadarGeometry& out_geometry,
+        const isce3::core::Orbit& in_orbit,
+        const isce3::core::LUT2d<double>& in_doppler,
+        const std::vector<PolarGrid>& grids,
+        const std::vector<const std::complex<float>*>& images,
+        const isce3::geometry::DEMInterpolator& dem, double fc, double ds,
+        const isce3::core::Kernel<float>& kernel_rg,
+        const isce3::core::Kernel<float>& kernel_az,
+        const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
+        const isce3::geometry::detail::Geo2RdrBracketParams& g2r_params,
+        float* height);
+
 } // namespace focus
 } // namespace isce3

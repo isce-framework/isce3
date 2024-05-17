@@ -5,6 +5,7 @@
 #include <isce3/core/Constants.h>
 #include <isce3/core/Ellipsoid.h>
 #include <isce3/core/Interp1d.h>
+#include <isce3/core/Interp2d.h>
 #include <isce3/core/Kernels.h>
 #include <isce3/core/Projections.h>
 #include <isce3/except/Error.h>
@@ -361,14 +362,15 @@ backprojectFirstStage(
 }
 
 
-#if 0
 // For now structure like backproject() with inner loop on target.
 // Might make more sense to project on image at a time instead.
 ErrorCode
 backprojectFinalStage(std::complex<float>* out,
         const RadarGeometry& out_geometry,
+        const isce3::core::Orbit& in_orbit,
+        const isce3::core::LUT2d<double>& in_doppler,
         const std::vector<PolarGrid>& grids,
-        const std::vector<std::complex<float>[]>& images,
+        const std::vector<const std::complex<float>*>& images,
         const DEMInterpolator& dem, double fc, double ds,
         const Kernel<float>& kernel_rg, const Kernel<float>& kernel_az,
         const isce3::geometry::detail::Rdr2GeoBracketParams& r2g_params,
@@ -378,16 +380,13 @@ backprojectFinalStage(std::complex<float>* out,
     static constexpr double c = isce3::core::speed_of_light;
     static constexpr auto nan = std::numeric_limits<float>::quiet_NaN();
 
-    // TODO search sorted intervals to figure out active sub images per target
-    struct Interval { double start, end; };
-    const auto intervals = std::vector<Interval>(grids.size());
-    std::transform(grids.begin(), grids.end(), intervals.begin(),
-        [](const PolarGrid& grid) {
-            return Interval{grid.aztime_start, grid.aztime_end};
-        });
-    const auto overlaps = [](const Interval& a, const Interval& b) {
-        return (a.start <= b.end) and (a.end >= b.start);
-    }
+    // will search sorted intervals to figure out active sub images per target
+    auto starts = std::vector<double>(grids.size());
+    std::transform(grids.begin(), grids.end(), starts.begin(),
+        [](const PolarGrid& grid) { return grid.aztime_start; });
+    auto ends = std::vector<double>(grids.size());
+    std::transform(grids.begin(), grids.end(), ends.begin(),
+        [](const PolarGrid& grid) { return grid.aztime_end; });
 
     // get input & output radar grid azimuth time & slant range
     Linspace<double> out_azimuth_time = out_geometry.sensingTime();
@@ -398,7 +397,8 @@ backprojectFinalStage(std::complex<float>* out,
     Ellipsoid ellipsoid = makeProjection(epsg)->ellipsoid();
 
     // carrier wavelength
-    double wvl = c / fc;
+    const double wvl = c / fc;
+    const double kw = 4 * M_PI / wvl;
 
     // loop over targets in output grid
     bool all_converged = true;
@@ -435,15 +435,15 @@ backprojectFinalStage(std::complex<float>* out,
                 }
             }
 
-            // run geo2rdr using input data's orbit and azimuth carrier to
-            // estimate the center of the coherent processing window for the
-            // target
+            // run geo2rdr to estimate the center of the coherent processing
+            // window for the target
             double t, r;
             {
                 auto converged =
-                        geo2rdr_bracket(x, in_geometry.orbit(),
-                                in_geometry.doppler(), t, r, wvl,
-                                in_geometry.lookSide(), g2r_params.tol_aztime,
+                        geo2rdr_bracket(x, in_orbit,
+                                in_doppler, t, r, wvl,
+                                out_geometry.lookSide(),  // assumed same side
+                                g2r_params.tol_aztime,
                                 g2r_params.time_start, g2r_params.time_end);
 
                 if (not converged) {
@@ -455,7 +455,7 @@ backprojectFinalStage(std::complex<float>* out,
 
             // get platform position and velocity at center of CPI
             Vec3 p, v;
-            in_geometry.orbit().interpolate(&p, &v, t);
+            in_orbit.interpolate(&p, &v, t);
 
             // estimate synthetic aperture length required to achieve the
             // desired azimuth resolution
@@ -465,18 +465,35 @@ backprojectFinalStage(std::complex<float>* out,
             double cpi = l / v.norm();
 
             // get coherent integration bounds (pulse indices)
-            const auto interval = Interval{t - cpi / 2, t + cpi / 2};
-            double t0 = in_azimuth_time.first();
-            double dt = in_azimuth_time.spacing();
-            auto kstart = static_cast<int>(std::floor((tstart - t0) / dt));
-            auto kstop = static_cast<int>(std::ceil((tstop - t0) / dt));
-            kstart = std::max(kstart, 0);
-            kstop = std::min(kstop, in_azimuth_time.size());
+            const auto tstart = t - cpi / 2, tend = tstart + cpi;
+            // TODO check this O(log(n)) algorithm
+            //const auto kstart = std::distance(ends.begin(),
+            //    std::lower_bound(ends.begin(), ends.end(), tstart));
+            //const auto kstop = std::distance(starts.begin(),
+            //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
+            const decltype(images.size()) kstart = 0, kstop = images.size();
 
-            // integrate images
-            out[j * out_geometry.gridWidth() + i] =
-                    sumCoherentImages(in, sampling_window, pos, vel, x, fc, tau_atm,
-                                kernel, kstart, kstop);
+            for (auto k = kstart; k < kstop; ++k) {
+                const auto& grid = grids[k];
+                // check if target seen in this subimage
+                if ((grid.aztime_end < tstart) or (grid.aztime_start > tend)) {
+                    continue;
+                }
+                // compute target location in polar grid
+                double sin_squint, range;
+                geo2polar(&sin_squint, &range, x, grid.origin, grid.axis);
+                // convert to image index
+                const double ix = (range - grid.range.first()) / grid.range.spacing(),
+                    iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
+                // interpolate baseband data
+                const auto z = interp2d(kernel_rg, kernel_az, images[k], grid.width(),
+                    /* stride x */ 1, grid.length(), /* stride y*/ grid.width(),
+                    ix, iy);
+                // compensate phase and sum contribution
+                const double phase = kw * range;
+                out[j * out_geometry.gridWidth() + i] +=
+                    z * std::complex<float>(std::cos(phase), std::sin(phase));
+            }
         }
     }
 
@@ -485,7 +502,6 @@ backprojectFinalStage(std::complex<float>* out,
     }
     return ErrorCode::Success;
 }
-#endif
 
 } // namespace focus
 } // namespace isce3
