@@ -1,5 +1,6 @@
 #include "Backproject.h"
 
+#include <algorithm>
 #include <optional>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -252,4 +253,97 @@ void addbinding_backproject(py::module& m)
             py::arg("rdr2geo_params") = py::dict(),
             py::arg("oversample_range") = 1.2,
             py::arg("oversample_azimuth") = 1.2);
+
+    m.def("backproject_final_stage", [](
+                py::array_t<std::complex<float>, py::array::c_style> out,
+                const RadarGeometry& out_geometry,
+                const isce3::core::Orbit& in_orbit,
+                const isce3::core::LUT2d<double>& in_doppler,
+                const std::vector<PolarGrid>& grids,
+                const std::vector<py::array_t<std::complex<float>, py::array::c_style>>& images,
+                const DEMInterpolator& dem,
+                double fc,
+                double ds,
+                const Kernel<float>& kernel_rg,
+                const Kernel<float>& kernel_az,
+                py::dict rdr2geo_params,
+                py::dict geo2rdr_params,
+                std::optional<py::array_t<float, py::array::c_style>> height) {
+
+            if (out.ndim() != 2) {
+                throw InvalidArgument(ISCE_SRCINFO(), "output array must be 2-D");
+            }
+
+            if (out.shape()[0] != out_geometry.gridLength() or
+                out.shape()[1] != out_geometry.gridWidth()) {
+
+                std::string errmsg = "output array shape must match output "
+                    "radar grid shape";
+                throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+            }
+
+            if (grids.size() != images.size()) {
+                throw InvalidArgument(ISCE_SRCINFO(), "must have grid for each sub-image");
+            }
+            for (decltype(grids.size()) i = 0; i < grids.size(); ++i) {
+                const auto& grid = grids[i];
+                const auto& image = images[i];
+                if (image.ndim() != 2) {
+                    throw InvalidArgument(ISCE_SRCINFO(), "input sub-images must be 2-D");
+                }
+                if (image.shape()[0] != grid.length() or
+                        image.shape()[1] != grid.width()) {
+                    std::string errmsg = "input sub-image shape must match "
+                        "input radar grid shape";
+                    throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+                }
+            }
+
+            std::vector<const std::complex<float>*> images_(images.size());
+            std::transform(images.begin(), images.end(), images_.begin(),
+                [](const auto& image) { return image.data(); });
+
+            std::complex<float>* out_data = out.mutable_data();
+            float* height_data = nullptr;
+
+            if (height.has_value()) {
+                auto h = height.value();
+                if (h.shape()[0] != out_geometry.gridLength() or
+                    h.shape()[1] != out_geometry.gridWidth()) {
+
+                    std::string errmsg = "height array shape must match output "
+                        "radar grid shape";
+                    throw InvalidArgument(ISCE_SRCINFO(), errmsg);
+                }
+                height_data = h.mutable_data();
+            }
+
+            const auto r2gparams = parse_rdr2geo_params(rdr2geo_params);
+            const auto g2rparams = parse_geo2rdr_params(geo2rdr_params);
+
+            ErrorCode err;
+            {
+                py::gil_scoped_release release;
+                err = backprojectFinalStage(out_data, out_geometry, in_orbit,
+                    in_doppler, grids, images_,
+                    dem, fc, ds, kernel_rg, kernel_az, r2gparams, g2rparams,
+                    height_data);
+            }
+            // TODO bind ErrorCode class.  For now return nonzero on failure.
+            return err != ErrorCode::Success;
+        },
+        py::arg("out"),
+        py::arg("out_geometry"),
+        py::arg("in_orbit"),
+        py::arg("in_doppler"),
+        py::arg("grids"),
+        py::arg("images"),
+        py::arg("dem"),
+        py::arg("fc"),
+        py::arg("ds"),
+        py::arg("kernel_rg"),
+        py::arg("kernel_az"),
+        py::arg("rdr2geo_params") = py::dict(),
+        py::arg("geo2rdr_params") = py::dict(),
+        py::arg("height") = py::none());
 }
