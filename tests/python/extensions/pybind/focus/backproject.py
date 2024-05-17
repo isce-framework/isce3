@@ -170,7 +170,7 @@ def test_backproject():
     assert(azimuth_width <= 6.62)
 
 
-def test_backproject_first_stage():
+def test_factorized_backproject():
     # load point target simulation data
     filename = Path(test_data_dir) / "point-target-sim-rc.h5"
     d = load_h5(filename)
@@ -195,8 +195,8 @@ def test_backproject_first_stage():
 
     # create 9-point Knab kernel
     # use tabulated kernel for performance
-    kernel = isce.core.KnabKernel(9., B / range_sampling_rate)
-    kernel = isce.core.TabulatedKernelF32(kernel, 2048)
+    kernel_rg = isce.core.KnabKernel(9., B / range_sampling_rate)
+    kernel_rg = isce.core.TabulatedKernelF32(kernel_rg, 2048)
 
     # focus to intermediate grids
     aztimes = np.array(radar_grid.sensing_times)
@@ -209,7 +209,7 @@ def test_backproject_first_stage():
         igeom = isce.container.RadarGeometry(igrid, orbit, doppler)
         idata = signal_data[pulses, :]
         results.append(isce.focus.backproject_first_stage(
-            idata, igeom, ti, B, dem, center_frequency, azimuth_res, kernel,
+            idata, igeom, ti, B, dem, center_frequency, azimuth_res, kernel_rg,
             dry_tropo_model))
 
     # combine images with nans inbetween and dump to file
@@ -225,3 +225,30 @@ def test_backproject_first_stage():
         z[i:i + mi] = image
         i += mi + npad
     z.tofile("factors.c8")
+
+    # define output grid
+    nchip = 129
+    dt = radar_grid.az_time_interval
+    dr = radar_grid.range_pixel_spacing
+    t0 = target_azimuth - 0.5 * (nchip - 1) * dt
+    r0 = target_range - 0.5 * (nchip - 1) * dr
+    out_grid = isce.product.RadarGridParameters(
+            t0, radar_grid.wavelength, radar_grid.prf, r0, dr,
+            radar_grid.lookside, nchip, nchip, orbit.reference_epoch)
+    out = np.empty((nchip, nchip), np.complex64)
+    out_geometry = isce.container.RadarGeometry(out_grid, orbit, doppler)
+
+    # pull out sub-image grids
+    grids = [result[1] for result in results]
+
+    #kernel_az = isce.core.LinearKernel()
+    #kernel_az = isce.core.TabulatedKernelF32(kernel_az, 2)  # dumb...
+    kernel_az = isce.core.KnabKernel(7, 1 / 1.2)
+    kernel_az = isce.core.TabulatedKernelF32(kernel_az, 2048)
+
+    # sum factors into final image
+    isce.focus.backproject_final_stage(
+        out, out_geometry, orbit, doppler, grids, images, dem, center_frequency,
+        azimuth_res, kernel_rg, kernel_az)
+
+    out.tofile("out_ffbp.c8")
