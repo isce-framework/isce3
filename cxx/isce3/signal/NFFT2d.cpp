@@ -68,27 +68,30 @@ NFFT2d<T>::set_spectrum(const dims_t& sizes, const dims_t& strides, const std::c
         const auto pxi = x + (strides[0] * i);
         // pointer to row i of ifft buffer
         const auto pxfi = xf_.data() + (fft_sizes_[1] * i);
+        // columns [0, n2)
         for (size_t j = 0; j < n2; ++j) {
             const auto wj = weights_[1][j];
             pxfi[j] = wi * wj * pxi[strides[1] * j];
         }
+        // columns [-n2, 0)
         for (size_t j = n2; j > 0; --j) {
-            const auto wj = weights_[1][j];
-            pxfi[j] = wi * wj * pxi[strides[1] * j];
+            const auto wj = weights_[1][sizes_[1] - j];
+            pxfi[fft_sizes_[1] - j] = wi * wj * pxi[strides[1] * (sizes_[1] - j)];
         }
     }
     #pragma omp parallel for
     for (size_t i = m2; i > 0; --i) {
-        const auto wi = weights_[0][i];
-        const auto pxi = x + (strides[0] * i);
-        const auto pxfi = xf_.data() + (fft_sizes_[1] * i);
+        const auto wi = weights_[0][sizes_[0] - i];
+        // pointer to row (ny - i)
+        const auto pxi = x + (strides[0] * (sizes_[0] - i));
+        const auto pxfi = xf_.data() + (fft_sizes_[1] * (fft_sizes_[0] - i));
         for (size_t j = 0; j < n2; ++j) {
             const auto wj = weights_[1][j];
             pxfi[j] = wi * wj * pxi[strides[1] * j];
         }
         for (size_t j = n2; j > 0; --j) {
-            const auto wj = weights_[1][j];
-            pxfi[j] = wi * wj * pxi[strides[1] * j];
+            const auto wj = weights_[1][sizes_[1] - j];
+            pxfi[fft_sizes_[1] - j] = wi * wj * pxi[strides[1] * (sizes_[1] - j)];
         }
     }
 
