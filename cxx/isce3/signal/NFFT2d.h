@@ -22,6 +22,8 @@ class isce3::signal::NFFT2d {
             const std::complex<T> *x);
 
         std::complex<T> interp(const std::array<double, 2>& t) const;
+
+        const dims_t& sizes() const { return sizes_; }
         
     private:
         dims_t m_, sizes_, fft_sizes_;
