@@ -415,67 +415,67 @@ backprojectFinalStage(std::complex<float>* out,
         size_t j = iflat / out_azimuth_time.size();
         size_t i = iflat % out_azimuth_time.size();
 
-            // Run rdr2geo using orbit and Doppler associated with output grid
-            // to get target position.  Only need LLH if dumping height or
-            // using TSX atmosphere model, but just compute it unconditionally.
-            Vec3 llh;
-            {
-                double t = out_azimuth_time[j];
-                double r = out_slant_range[i];
-                double fD = out_geometry.doppler().eval(t, r);
+        // Run rdr2geo using orbit and Doppler associated with output grid
+        // to get target position.  Only need LLH if dumping height or
+        // using TSX atmosphere model, but just compute it unconditionally.
+        Vec3 llh;
+        {
+            double t = out_azimuth_time[j];
+            double r = out_slant_range[i];
+            double fD = out_geometry.doppler().eval(t, r);
 
-                const int converged = rdr2geo_bracket(t, r, fD,
-                        out_geometry.orbit(), dem, x[iflat], wvl,
-                        out_geometry.lookSide(), r2g_params.tol_height,
-                        r2g_params.look_min, r2g_params.look_max);
+            const int converged = rdr2geo_bracket(t, r, fD,
+                    out_geometry.orbit(), dem, x[iflat], wvl,
+                    out_geometry.lookSide(), r2g_params.tol_height,
+                    r2g_params.look_min, r2g_params.look_max);
 
-                llh = ellipsoid.xyzToLonLat(x[iflat]);
+            llh = ellipsoid.xyzToLonLat(x[iflat]);
 
+            if (height != nullptr) {
+                height[iflat] = llh[2];
+            }
+            if (not converged) {
+                all_converged = false;
+                out[iflat] = {nan, nan};
                 if (height != nullptr) {
-                    height[iflat] = llh[2];
+                    height[iflat] = nan;
                 }
-                if (not converged) {
-                    all_converged = false;
-                    out[iflat] = {nan, nan};
-                    if (height != nullptr) {
-                        height[iflat] = nan;
-                    }
-                    continue;
-                }
+                continue;
             }
+        }
 
-            // run geo2rdr to estimate the center of the coherent processing
-            // window for the target
-            double t, r;
-            {
-                auto converged =
-                        geo2rdr_bracket(x[iflat], in_orbit,
-                                in_doppler, t, r, wvl,
-                                out_geometry.lookSide(),  // assumed same side
-                                g2r_params.tol_aztime,
-                                g2r_params.time_start, g2r_params.time_end);
+        // run geo2rdr to estimate the center of the coherent processing
+        // window for the target
+        double t, r;
+        {
+            auto converged =
+                    geo2rdr_bracket(x[iflat], in_orbit,
+                            in_doppler, t, r, wvl,
+                            out_geometry.lookSide(),  // assumed same side
+                            g2r_params.tol_aztime,
+                            g2r_params.time_start, g2r_params.time_end);
 
-                if (not converged) {
-                    all_converged = false;
-                    out[iflat] = {nan, nan};
-                    continue;
-                }
+            if (not converged) {
+                all_converged = false;
+                out[iflat] = {nan, nan};
+                continue;
             }
+        }
 
-            // get platform position and velocity at center of CPI
-            Vec3 p, v;
-            in_orbit.interpolate(&p, &v, t);
+        // get platform position and velocity at center of CPI
+        Vec3 p, v;
+        in_orbit.interpolate(&p, &v, t);
 
-            // estimate synthetic aperture length required to achieve the
-            // desired azimuth resolution
-            double l = wvl * r * (p.norm() / x[iflat].norm()) / (2. * ds);
+        // estimate synthetic aperture length required to achieve the
+        // desired azimuth resolution
+        double l = wvl * r * (p.norm() / x[iflat].norm()) / (2. * ds);
 
-            // approximate CPI duration (assuming constant platform velocity)
-            double cpi = l / v.norm();
+        // approximate CPI duration (assuming constant platform velocity)
+        double cpi = l / v.norm();
 
-            // get coherent integration bounds (pulse indices)
-            tstart[iflat] = t - cpi / 2;
-            tend[iflat] = tstart[iflat] + cpi;
+        // get coherent integration bounds (pulse indices)
+        tstart[iflat] = t - cpi / 2;
+        tend[iflat] = tstart[iflat] + cpi;
     }
 
     // TODO reduce tstart & tend
@@ -514,23 +514,24 @@ backprojectFinalStage(std::complex<float>* out,
         // zero-pad and filter
         nfft.set_spectrum(dims, /* strides */ {dims[1], 1}, img_spectrum.data());
 
+        #pragma omp parallel for
         for (size_t iflat = 0; iflat < nout; ++iflat) {
-                // check if target seen in this subimage
-                if ((grid.aztime_end < tstart[iflat]) or (grid.aztime_start > tend[iflat])) {
-                    continue;
-                }
-                // compute target location in polar grid
-                double sin_squint, range;
-                geo2polar(&sin_squint, &range, x[iflat], grid.origin, grid.axis);
-                // convert to image index
-                const double ix = (range - grid.range.first()) / grid.range.spacing(),
-                    iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
-                // interpolate baseband data
-                const auto z = nfft.interp({iy, ix});
-                // compensate phase and sum contribution
-                const double phase = kw * range;
-                out[iflat] +=
-                    z * std::complex<float>(std::cos(phase), std::sin(phase));
+            // check if target seen in this subimage
+            if ((grid.aztime_end < tstart[iflat]) or (grid.aztime_start > tend[iflat])) {
+                continue;
+            }
+            // compute target location in polar grid
+            double sin_squint, range;
+            geo2polar(&sin_squint, &range, x[iflat], grid.origin, grid.axis);
+            // convert to image index
+            const double ix = (range - grid.range.first()) / grid.range.spacing(),
+                iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
+            // interpolate baseband data
+            const auto z = nfft.interp({iy, ix});
+            // compensate phase and sum contribution
+            const double phase = kw * range;
+            out[iflat] +=
+                z * std::complex<float>(std::cos(phase), std::sin(phase));
         }
     }
 
