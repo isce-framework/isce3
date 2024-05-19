@@ -200,7 +200,7 @@ def test_factorized_backproject():
 
     # focus to intermediate grids
     aztimes = np.array(radar_grid.sensing_times)
-    factor_size = 256
+    factor_size = 64
     results = []
     for i in range(0, radar_grid.length, factor_size):
         pulses = slice(i, i + factor_size)
