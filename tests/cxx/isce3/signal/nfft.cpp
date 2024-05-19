@@ -6,6 +6,7 @@
 #include <random>
 #include <gtest/gtest.h>
 #include "isce3/signal/NFFT.h"
+#include "isce3/signal/NFFT2d.h"
 #include "isce3/signal/Filter.h"
 
 const int seed = 1234;
@@ -153,6 +154,27 @@ TEST(Kernel, Singularity)
     // Window should be monotonically decreasing.
     EXPECT_GT(window(m-dx), window(m));
     EXPECT_GT(window(m), window(m+dx));
+}
+
+TEST(NFFT2d, Weights)
+{
+    using T = float;
+    using dims_t = isce3::signal::NFFT2d<T>::dims_t;
+    dims_t dims = {32, 84};
+    constexpr int s = 2, my = 4, mx = 4;
+    dims_t fft_dims = {dims[0] * s, dims[1] * s};
+    auto nfft = isce3::signal::NFFT2d<T>({my, mx}, dims, fft_dims);
+
+    size_t nimg = static_cast<size_t>(dims[0]) * dims[1];
+    std::vector<std::complex<T>> z(nimg);
+    z.assign(nimg, std::complex<T>(1.0, 0.0));
+
+    nfft.set_spectrum(dims, {dims[1], 1}, z.data());
+    size_t nout = static_cast<size_t>(fft_dims[0]) * fft_dims[1];
+
+    FILE* fp = fopen("spec.c8", "wb");
+    fwrite(nfft.spectrum(), 8, nout, fp);
+    fclose(fp);
 }
 
 int
