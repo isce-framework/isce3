@@ -9,10 +9,12 @@
 #include <isce3/core/Kernels.h>
 #include <isce3/core/Projections.h>
 #include <isce3/except/Error.h>
+#include <isce3/fft/FFT.h>
 #include <isce3/geometry/DEMInterpolator.h>
 #include <isce3/geometry/geometry.h>
 #include <isce3/geometry/rdr2geo_roots.h>
 #include <isce3/geometry/geo2rdr_roots.h>
+#include <isce3/signal/NFFT2d.h>
 #include <limits>
 #include <string>
 #include <vector>
@@ -24,6 +26,8 @@ using namespace isce3::geometry;
 using isce3::error::ErrorCode;
 
 using isce3::container::RadarGeometry;
+using isce3::signal::NFFT2d;
+using isce3::fft::planfft2d;
 
 namespace isce3 {
 namespace focus {
@@ -400,36 +404,41 @@ backprojectFinalStage(std::complex<float>* out,
     const double wvl = c / fc;
     const double kw = 4 * M_PI / wvl;
 
+    const size_t nout = out_geometry.gridLength() * out_geometry.gridWidth();
+    std::vector<Vec3> x(nout);
+    std::vector<double> tstart(nout), tend(nout);
+
     // loop over targets in output grid
     bool all_converged = true;
-#pragma omp parallel for collapse(2)
-    for (int j = 0; j < out_azimuth_time.size(); ++j) {
-        for (int i = 0; i < out_slant_range.size(); ++i) {
+    #pragma omp parallel for
+    for (size_t iflat = 0; iflat < nout; ++iflat) {
+        size_t j = iflat / out_azimuth_time.size();
+        size_t i = iflat % out_azimuth_time.size();
 
             // Run rdr2geo using orbit and Doppler associated with output grid
             // to get target position.  Only need LLH if dumping height or
             // using TSX atmosphere model, but just compute it unconditionally.
-            Vec3 x, llh;
+            Vec3 llh;
             {
                 double t = out_azimuth_time[j];
                 double r = out_slant_range[i];
                 double fD = out_geometry.doppler().eval(t, r);
 
                 const int converged = rdr2geo_bracket(t, r, fD,
-                        out_geometry.orbit(), dem, x, wvl,
+                        out_geometry.orbit(), dem, x[iflat], wvl,
                         out_geometry.lookSide(), r2g_params.tol_height,
                         r2g_params.look_min, r2g_params.look_max);
 
-                llh = ellipsoid.xyzToLonLat(x);
+                llh = ellipsoid.xyzToLonLat(x[iflat]);
 
                 if (height != nullptr) {
-                    height[j * out_geometry.gridWidth() + i] = llh[2];
+                    height[iflat] = llh[2];
                 }
                 if (not converged) {
                     all_converged = false;
-                    out[j * out_geometry.gridWidth() + i] = {nan, nan};
+                    out[iflat] = {nan, nan};
                     if (height != nullptr) {
-                        height[j * out_geometry.gridWidth() + i] = nan;
+                        height[iflat] = nan;
                     }
                     continue;
                 }
@@ -440,7 +449,7 @@ backprojectFinalStage(std::complex<float>* out,
             double t, r;
             {
                 auto converged =
-                        geo2rdr_bracket(x, in_orbit,
+                        geo2rdr_bracket(x[iflat], in_orbit,
                                 in_doppler, t, r, wvl,
                                 out_geometry.lookSide(),  // assumed same side
                                 g2r_params.tol_aztime,
@@ -448,7 +457,7 @@ backprojectFinalStage(std::complex<float>* out,
 
                 if (not converged) {
                     all_converged = false;
-                    out[j * out_geometry.gridWidth() + i] = {nan, nan};
+                    out[iflat] = {nan, nan};
                     continue;
                 }
             }
@@ -459,41 +468,69 @@ backprojectFinalStage(std::complex<float>* out,
 
             // estimate synthetic aperture length required to achieve the
             // desired azimuth resolution
-            double l = wvl * r * (p.norm() / x.norm()) / (2. * ds);
+            double l = wvl * r * (p.norm() / x[iflat].norm()) / (2. * ds);
 
             // approximate CPI duration (assuming constant platform velocity)
             double cpi = l / v.norm();
 
             // get coherent integration bounds (pulse indices)
-            const auto tstart = t - cpi / 2, tend = tstart + cpi;
-            // TODO check this O(log(n)) algorithm
-            //const auto kstart = std::distance(ends.begin(),
-            //    std::lower_bound(ends.begin(), ends.end(), tstart));
-            //const auto kstop = std::distance(starts.begin(),
-            //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
-            const decltype(images.size()) kstart = 0, kstop = images.size();
+            tstart[iflat] = t - cpi / 2;
+            tend[iflat] = tstart[iflat] + cpi;
+    }
 
-            for (auto k = kstart; k < kstop; ++k) {
-                const auto& grid = grids[k];
+    // TODO reduce tstart & tend
+    // TODO check this O(log(n)) algorithm
+    //const auto kstart = std::distance(ends.begin(),
+    //    std::lower_bound(ends.begin(), ends.end(), tstart));
+    //const auto kstop = std::distance(starts.begin(),
+    //    std::upper_bound(starts.start(), starts.end(), tstart + cpi));
+    const decltype(images.size()) kstart = 0, kstop = images.size();
+
+    // configure nfft for first image, and recompute only if needed
+    const auto& grid = grids[kstart];
+    NFFT2d<float>::dims_t dims {grid.length(), grid.width()};
+    constexpr int my = 2, mx = 2, s = 2;
+    auto nfft = NFFT2d<float>({my, mx}, dims, {s * dims[0], s * dims[1]});
+
+    size_t nimg = grid.length() * grid.width();
+    std::vector<std::complex<float>> img(nimg);
+    std::vector<std::complex<float>> img_spectrum(nimg);
+    auto fft = planfft2d(img_spectrum.data(), img.data(), {dims[0], dims[1]});
+
+    for (auto k = kstart; k < kstop; ++k) {
+        // check if we need to replan FFTs
+        const auto& grid = grids[k];
+        dims = {grid.length(), grid.width()};
+        if (dims != nfft.sizes()) {
+            nfft = NFFT2d<float>({my, mx}, dims, {s * dims[0], s * dims[1]});
+            nimg = grid.length() * grid.width();
+            img.resize(nimg);
+            img_spectrum.resize(nimg);
+            fft = planfft2d(img_spectrum.data(), img.data(), {dims[0], dims[1]});
+        }
+        // copy image and execute FFT
+        img.assign(images[k], images[k] + nimg);
+        fft.execute();
+        // zero-pad and filter
+        nfft.set_spectrum(dims, /* strides */ {dims[1], 1}, img_spectrum.data());
+
+        for (size_t iflat = 0; iflat < nout; ++iflat) {
                 // check if target seen in this subimage
-                if ((grid.aztime_end < tstart) or (grid.aztime_start > tend)) {
+                if ((grid.aztime_end < tstart[iflat]) or (grid.aztime_start > tend[iflat])) {
                     continue;
                 }
                 // compute target location in polar grid
                 double sin_squint, range;
-                geo2polar(&sin_squint, &range, x, grid.origin, grid.axis);
+                geo2polar(&sin_squint, &range, x[iflat], grid.origin, grid.axis);
                 // convert to image index
                 const double ix = (range - grid.range.first()) / grid.range.spacing(),
                     iy = (sin_squint - grid.sin_squint.first()) / grid.sin_squint.spacing();
                 // interpolate baseband data
-                const auto z = interp2d(kernel_rg, kernel_az, images[k], grid.width(),
-                    /* stride x */ 1, grid.length(), /* stride y*/ grid.width(),
-                    ix, iy);
+                const auto z = nfft.interp({iy, ix});
                 // compensate phase and sum contribution
                 const double phase = kw * range;
-                out[j * out_geometry.gridWidth() + i] +=
+                out[iflat] +=
                     z * std::complex<float>(std::cos(phase), std::sin(phase));
-            }
         }
     }
 
