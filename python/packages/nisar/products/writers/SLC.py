@@ -618,7 +618,7 @@ class SLC(h5py.File):
                             planned_datatake_id: Optional[str] = None,
                             planned_observation_id: Optional[str] = None,
                             is_urgent: Optional[bool] = None,
-                            product_spec_version: str = "1.1.0",
+                            product_spec_version: str = "1.1.2",
                             processing_center: str = "JPL",
                             granule_id: str = "None",
                             product_version: str = "0.1.0",
