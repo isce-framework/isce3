@@ -417,10 +417,7 @@ def _run(cfg, raster_scratch_dir):
     proj = isce3.core.make_projection(epsg)
     ellipsoid = proj.ellipsoid
 
-    if flag_fullcovariance:
-        flag_rslc_to_backscatter = False
-    else:
-        flag_rslc_to_backscatter = True
+    flag_rslc_to_backscatter = not flag_fullcovariance
 
     for frequency, input_pol_list in freq_pols.items():
 

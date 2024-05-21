@@ -194,17 +194,32 @@ class GcovWriter(BaseL2WriterSingleInput):
             'radiometricTerrainCorrection',
             rtc_algorithm_name)
 
-        # TODO fix this
-        flag_symmetrize = self.cfg['processing']['input_subset'][
-            'symmetrize_cross_pol_channels']
-        if flag_symmetrize:
-            symmetrization_algorithm_reference = '(RFI correction not applied)'
+        input_pol_list = list(self.input_freq_pols_dict.keys())
+        flag_hv_and_vh_in_pol_list = ['HV' in input_pol_list and
+                                      'VH' in input_pol_list]
+
+        flag_symmetrize = (flag_hv_and_vh_in_pol_list and
+                           self.cfg['processing']['input_subset'][
+                            'symmetrize_cross_pol_channels'])
+
+        flag_full_covariance = self.cfg['processing']['input_subset'][
+            'fullcovariance']
+
+        if flag_symmetrize and not flag_full_covariance:
+            symmetrization_algorithm = \
+                ('Cross-Polarimetric Channels HV and VH Backscatter Average'
+                 ' (Incoherent Average)')
+        elif flag_symmetrize:
+            symmetrization_algorithm = \
+                ('Cross-Polarimetric Channels HV and VH SLCs Average'
+                 ' (Coherent Average)')
         else:
-            symmetrization_algorithm_reference = '(NOT SPECIFIED)'
+            symmetrization_algorithm = 'disabled'
+
         self.set_value(
             '{PRODUCT}/metadata/processingInformation/algorithms/'
             'polarimetricSymmetrization',
-            symmetrization_algorithm_reference)
+            symmetrization_algorithm)
 
         apply_rtc = self.cfg['processing']['geocode']['apply_rtc']
         rtc_algorithm_reference = '(RTC not applied)'
