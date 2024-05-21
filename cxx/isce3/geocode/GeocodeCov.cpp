@@ -3078,9 +3078,15 @@ void Geocode<T>::_runBlock(
             // invalid sample
             bool flag_has_invalid_sample = false;
 
+            // sub_swaths is an optional parameter. If it isn't given, default to 1.
+            int sub_swaths_number = 1;
+            if (sub_swaths != nullptr && sub_swaths->numSubSwaths() > 0) {
+                sub_swaths_number = sub_swaths->numSubSwaths();
+            }
+
             // initialize vector that will store the number of radar samples
             // for each subswath
-            std::vector<int> samples_sub_swath_counts(sub_swaths->numSubSwaths(), 0);
+            std::vector<int> samples_sub_swath_counts(sub_swaths_number, 0);
 
             // add all slant-range elements that contributes to the geogrid
             // pixel
