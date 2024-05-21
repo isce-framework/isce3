@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.1.0 -->
+<!-- product specification version is 1.1.2 -->
 <algorithm name="L2_GeocodedCovariance"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GCOV_template">
@@ -2310,7 +2310,7 @@
               name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rfiMitigation"
               shape="scalar">
           <annotation app="conformance"
-                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation corresponding to the source data processing information records</annotation>
+                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation corresponding to the source data processing information records, either "ST-EVD" or "FDNF" (or "disabled" if no RFI mitigation was applied)</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GCOV/metadata/sourceData/processingInformation/algorithms/rangeCompression"
