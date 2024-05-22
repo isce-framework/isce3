@@ -218,7 +218,7 @@ def run(cfg):
                                      iteration_geo2rdr,
                                      chunk_size=(1,) + tuple(output_options['chunk_size']),
                                      compression_enabled=output_options['compression_enabled'],
-                                     compression_type=output_options['compression_type'],
+                                     compression_type='gzip',
                                      compression_level=output_options['compression_level'],
                                      shuffle_filter=output_options['shuffle_filter'])
 
