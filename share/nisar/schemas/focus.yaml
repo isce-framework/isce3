@@ -375,7 +375,7 @@ workflows_options:
   validate: bool(required=False)
   qa_reports: bool(required=False)
   absolute_radiometric_calibration: bool(required=False)
-  noise_estimation: bool(required=False)
+  nes0: bool(required=False)
   point_target_analyzer: bool(required=False)
 
 qa_reports_options:
@@ -386,6 +386,7 @@ qa_reports_options:
     longest_side_max: int(min=1, required=False)
     percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
     gamma: num(min=0.0, required=False)
+    nan_color_in_pdf: str(required=False)
     tile_shape: list(int(min=-1), min=2, max=2, required=False)
   histogram:
     decimation_ratio: list(int(min=1), min=2, max=2, required=False)
@@ -396,6 +397,10 @@ qa_reports_options:
     az_decimation: int(min=1, required=False)
     hz_to_mhz: bool(required=False)
     tile_height: int(min=-1, required=False)
+  azimuth_spectra:
+    num_columns: int(min=-1, required=False)
+    hz_to_mhz: bool(required=False)
+    tile_width: int(min=-1, required=False)
 
 absolute_radiometric_calibration_options:
   nchip: int(min=1, required=False)

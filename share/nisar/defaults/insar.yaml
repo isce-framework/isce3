@@ -775,16 +775,152 @@ runconfig:
                     qa_reports: true
 
                 qa_reports:
-                    hsi_img:
+
+                    wrapped_igram:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    coh_mag:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 95.0
+                        near_zero_threshold: 95.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                    az_and_range_offsets:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    browse_png:
+
+                        # The image to use as the basis for the browse image PNG. Options:
+                        # "phase" : Wrapped phase.
+                        # "hsi" : An HSI image with phase information encoded as Hue and
+                        # coherence encoded as Intensity.
+                        # Default: phase
+                        browse_image: phase
+
+                        # Only used if `browse_image` is set to "hsi".
                         # True to perform histogram equalization on the Intensity channel
                         # (the coherence magnitude layer) in the browse image PNG.
-                        # (Browse image is in HSI color space.) PDF report will not be affected.
+                        # False to not apply the equalization.
                         # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: True
-                        equalize_browse: true
+                        # Default: False
+                        equalize_browse: false
 
                         # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. Defaults to 2048.
+                        # side of the final 2D browse image.
                         # Default: 2048
                         longest_side_max: 2048
 
@@ -802,29 +938,300 @@ runconfig:
                     qa_reports: true
 
                 qa_reports:
+
                     phase_img:
-                        # The multiple of pi to rewrap the unwrapped phase image.
-                        # If None, no rewrapping will occur.
+
+                        # The multiple of pi to rewrap the unwrapped phase image in the report
+                        # PDF. Will be used for both the unwrapped phase image plot(s) and
+                        # the HSI image plot(s). If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
                         # Default: 7
                         rewrap: 7
 
-                    hsi_img:
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 95.0
+                        near_zero_threshold: 95.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                    coh_mag:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 95.0
+                        near_zero_threshold: 95.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                    connected_components:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 0
+                        nan_threshold: 0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 0
+                        inf_threshold: 0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 99.9
+                        near_zero_threshold: 99.9
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.9
+                        total_invalid_threshold: 99.9
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                        # Maximum number of valid connected components allowed.
+                        # If the number of valid connected components (not including
+                        # zero nor the fill value) is greater than this value,
+                        # it will be logged and an exception will be raised.
+                        # If None, this error check will be skipped.
+                        # Default: None
+                        max_num_cc:
+
+                    ionosphere_phase_screen:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    ionosphere_phase_screen_uncertainty:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    az_and_range_offsets:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    browse_png:
+
+                        # The image to use as the basis for the browse image PNG. Options:
+                        # "phase" : (Optionally re-wrapped) unwrapped phase.
+                        # "hsi" : An HSI image with phase information encoded as Hue and
+                        # coherence encoded as Intensity.
+                        # Default: phase
+                        browse_image: phase
+
+                        # Only used if `browse_image` is set to "hsi".
                         # True to perform histogram equalization on the Intensity channel
                         # (the coherence magnitude layer) in the browse image PNG.
-                        # (Browse image is in HSI color space.) PDF report will not be affected.
+                        # False to not apply the equalization.
                         # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: True
-                        equalize_browse: true
+                        # Default: False
+                        equalize_browse: false
 
                         # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. Defaults to 2048.
+                        # side of the final 2D browse image.
                         # Default: 2048
                         longest_side_max: 2048
 
                         # The multiple of pi to rewrap the unwrapped phase image
-                        # when generating the HSI image(s). If None, no rewrapping will occur.
+                        # when generating the browse PNG. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+
                         # Default: 7
                         rewrap: 7
 
@@ -842,22 +1249,342 @@ runconfig:
                     qa_reports: true
 
                 qa_reports:
-                    hsi_img:
+
+                    phase_img:
+
+                        # The multiple of pi to rewrap the unwrapped phase image in the report
+                        # PDF. Will be used for both the unwrapped phase image plot(s) and
+                        # the HSI image plot(s). If None, no rewrapping will occur.
+                        # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+                        # Default: 7
+                        rewrap: 7
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 99.0
+                        near_zero_threshold: 99.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                    wrapped_igram:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    coh_mag:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 99.0
+                        near_zero_threshold: 99.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                    connected_components:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 0
+                        nan_threshold: 0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 0
+                        inf_threshold: 0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 99.9
+                        near_zero_threshold: 99.9
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.9
+                        total_invalid_threshold: 99.9
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
+
+                        # Maximum number of valid connected components allowed.
+                        # If the number of valid connected components (not including
+                        # zero nor the fill value) is greater than this value,
+                        # it will be logged and an exception will be raised.
+                        # If None, this error check will be skipped.
+                        # Default: None
+                        max_num_cc:
+
+                    ionosphere_phase_screen:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    ionosphere_phase_screen_uncertainty:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    az_and_range_offsets:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    browse_png:
+
+                        # The image to use as the basis for the browse image PNG. Options:
+                        # "phase" : (Optionally re-wrapped) unwrapped phase.
+                        # "hsi" : An HSI image with phase information encoded as Hue and
+                        # coherence encoded as Intensity.
+                        # Default: phase
+                        browse_image: phase
+
+                        # Only used if `browse_image` is set to "hsi".
                         # True to perform histogram equalization on the Intensity channel
                         # (the coherence magnitude layer) in the browse image PNG.
-                        # (Browse image is in HSI color space.) PDF report will not be affected.
+                        # False to not apply the equalization.
                         # See: https://scikit-image.org/docs/stable/auto_examples/color_exposure/plot_equalize.html
-                        # Default: True
-                        equalize_browse: true
+                        # Default: False
+                        equalize_browse: false
 
                         # The maximum number of pixels allowed for the longest
-                        # side of the final 2D browse image. Defaults to 2048.
+                        # side of the final 2D browse image.
                         # Default: 2048
                         longest_side_max: 2048
 
                         # The multiple of pi to rewrap the unwrapped phase image
-                        # when generating the HSI image(s). If None, no rewrapping will occur.
+                        # when generating the browse PNG. If None, no rewrapping will occur.
                         # Ex: If 3 is provided, the image is rewrapped to the interval [0, 3pi).
+
                         # Default: 7
                         rewrap: 7
 
@@ -875,7 +1602,51 @@ runconfig:
                     qa_reports: true
 
                 qa_reports:
+
+                    az_and_range_offsets:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
                     quiver_plots:
+
                         # The vmin and vmax values to generate the quiver plot.
                         # The magnitude of the offsets is clipped to this interval,
                         # which (in turn) is used for the interval of the colorbar.
@@ -923,6 +1694,156 @@ runconfig:
                         # None, then `longest_side_max` will be ignored.
                         # Default: 2048
                         longest_side_max: 2048
+
+                    az_and_rg_variance:
+
+                        # The vmin and vmax values to generate the plots
+                        # for the az and slant range variance layers for ROFF and GOFF.
+                        # The square root of these layers (i.e. the standard deviation
+                        # of the offsets) is clipped to this interval,
+                        # which (in turn) is used for the interval of the colorbar.
+                        # If None, the interval is computed using the min and max
+                        # of the square root of these layers.
+                        # Default: (0.0, 0.1)
+                        colorbar_min_max: [0.0, 0.1]
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    cross_offset_variance:
+
+                        # The vmin and vmax values to generate the plots
+                        # for the cross offset variance layer for ROFF and GOFF.
+                        # If None, then the colorbar range will be computed based
+                        # on `percentile_for_clipping`.
+                        # Default: None
+                        colorbar_min_max:
+
+                        # Percentile range that the cross offset variance raster
+                        # will be clipped to, which determines the colormap interval.
+                        # Must be in range [0.0, 100.0].
+                        # Superseded by `cbar_min_max` parameter.
+                        # Default: (1.0, 99.0)
+                        percentile_for_clipping: [1.0, 99.0]
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    correlation_surface_peak:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 95.0
+                        nan_threshold: 95.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 95.0
+                        inf_threshold: 95.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 95.0
+                        fill_threshold: 95.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 95.0
+                        near_zero_threshold: 95.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 95.0
+                        total_invalid_threshold: 95.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
 
             goff:
                 workflows:
@@ -938,7 +1859,51 @@ runconfig:
                     qa_reports: true
 
                 qa_reports:
+
+                    az_and_range_offsets:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
                     quiver_plots:
+
                         # The vmin and vmax values to generate the quiver plot.
                         # The magnitude of the offsets is clipped to this interval,
                         # which (in turn) is used for the interval of the colorbar.
@@ -986,3 +1951,153 @@ runconfig:
                         # None, then `longest_side_max` will be ignored.
                         # Default: 2048
                         longest_side_max: 2048
+
+                    az_and_rg_variance:
+
+                        # The vmin and vmax values to generate the plots
+                        # for the az and slant range variance layers for ROFF and GOFF.
+                        # The square root of these layers (i.e. the standard deviation
+                        # of the offsets) is clipped to this interval,
+                        # which (in turn) is used for the interval of the colorbar.
+                        # If None, the interval is computed using the min and max
+                        # of the square root of these layers.
+                        # Default: (0.0, 0.1)
+                        colorbar_min_max: [0.0, 0.1]
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    cross_offset_variance:
+
+                        # The vmin and vmax values to generate the plots
+                        # for the cross offset variance layer for ROFF and GOFF.
+                        # If None, then the colorbar range will be computed based
+                        # on `percentile_for_clipping`.
+                        # Default: None
+                        colorbar_min_max:
+
+                        # Percentile range that the cross offset variance raster
+                        # will be clipped to, which determines the colormap interval.
+                        # Must be in range [0.0, 100.0].
+                        # Superseded by `cbar_min_max` parameter.
+                        # Default: (1.0, 99.0)
+                        percentile_for_clipping: [1.0, 99.0]
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: -1
+                        near_zero_threshold: -1
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: False
+                        zero_is_invalid: false
+
+                    correlation_surface_peak:
+
+                        # *** Threshold Percentage Parameters ***
+                        # Check for malformed datasets using these threshold percentages.
+                        # An exception is raised if the percent of pixels with the corresponding value
+                        # per the total raster area exceeds the threshold percentage provided.
+                        # Thresholds must be in the interval [0, 100], or -1 to be ignored.
+                        # (-1 logs the percentages as INFO, but will not trigger a QA failure.)
+
+                        # Percent of NaN pixels per total raster area allowed
+                        # Default: 99.0
+                        nan_threshold: 99.0
+
+                        # Percent of +/- Inf pixels per total raster area allowed
+                        # Default: 99.0
+                        inf_threshold: 99.0
+
+                        # Percent of Fill-valued pixels per total raster area allowed
+                        # Default: 99.0
+                        fill_threshold: 99.0
+
+                        # Percent of Near-zero pixels per total raster area allowed
+                        # Default: 99.0
+                        near_zero_threshold: 99.0
+
+                        # Percent of total invalid pixels per total raster area allowed
+                        # 'Total invalid pixels' is the sum of NaN, Inf, fill, & (if `zero_is_invalid` is True) near-zero pixels.
+                        # Default: 99.0
+                        total_invalid_threshold: 99.0
+
+                        # Absolute tolerance for determining if a raster pixel is 'near zero'.
+                        # Default: 1e-06
+                        epsilon: 1e-06
+
+                        # True if near-zero pixels should be counted towards the
+                        # total number of invalid pixels. False to exclude them.
+                        # If False, consider setting `near_zero_threshold` to -1.
+                        # Note: fill values are always considered invalid, so if a raster's
+                        # fill value is zero, then zeros will still be included in the total.
+                        # Default: True
+                        zero_is_invalid: true
