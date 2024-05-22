@@ -540,7 +540,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
                                        f'{dst}/grids/frequency{freq}')
         yds, xds = set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
         # compute the optimal chunk size and corresponding chink cache size
-        opt_chunk_size, = optimize_chunk_size(chunk_size, shape)
+        opt_chunk_size = optimize_chunk_size(chunk_size, shape)
         gslc_output_options['chunks'] = opt_chunk_size
 
         dst_grp = dst_h5[dst_parent_path]
