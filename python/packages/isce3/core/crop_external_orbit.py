@@ -21,9 +21,6 @@ def crop_external_orbit(external_orbit_obj,
         the cropped new orbit object
     """
 
-    # adjust npad based on the "10 seconds interval"
-    actual_npad = int(npad  * rslc_orbit_obj.spacing / external_orbit_obj.spacing)
-
     # Deal with the case that start or end time of the external orbit
     # is outside the RSLC internal orbit, in addition,
     # Both  external and internal orbits have the same reference epoch.
@@ -48,6 +45,6 @@ def crop_external_orbit(external_orbit_obj,
     cropped_orbit = external_orbit_obj.crop(
         start_datetime,
         end_datetime,
-        npad = actual_npad)
+        npad = npad)
 
     return cropped_orbit
