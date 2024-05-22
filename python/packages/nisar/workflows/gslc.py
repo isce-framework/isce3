@@ -220,7 +220,7 @@ def run(cfg):
                                      compression_enabled=output_options['compression_enabled'],
                                      compression_type='gzip',
                                      compression_level=output_options['compression_level'],
-                                     shuffle_filter=output_options['shuffle_filter'])
+                                     shuffle_filter=output_options['shuffle'])
 
     t_all_elapsed = time.perf_counter() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")
