@@ -216,7 +216,11 @@ def run(cfg):
                                      cube_rdr_grid, orbit, cube_native_doppler,
                                      image_grid_doppler, threshold_geo2rdr,
                                      iteration_geo2rdr,
-                                     chunk_size=(1,) + tuple(output_options['chunk_size']))
+                                     chunk_size=(1,) + tuple(output_options['chunk_size']),
+                                     compression_enabled=output_options['compression_enabled'],
+                                     compression_type=output_options['compression_type'],
+                                     compression_level=output_options['compression_level'],
+                                     shuffle_filter=output_options['shuffle_filter'])
 
     t_all_elapsed = time.perf_counter() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")
