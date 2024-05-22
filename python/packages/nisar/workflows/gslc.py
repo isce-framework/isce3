@@ -79,11 +79,12 @@ def run(cfg):
 
     output_gslc_shape = (geogrids['A'].length,
                          geogrids['A'].width)
-    opt_min_chunk_size = \
+    optimal_chunk_size = \
         optimize_chunk_size(output_options['chunk_size'],
                             output_gslc_shape)
-
-    page_size = compute_page_size(np.prod(opt_min_chunk_size) * np.dtype("complex64").itemsize)
+    chunk_memory_footprint = np.prod(optimal_chunk_size) * np.dtype("complex64").itemsize
+    page_size = max(chunk_memory_footprint,
+                    compute_page_size(chunk_memory_footprint))
 
     # put together the parameters related to paging
     fs_dict = dict(fs_strategy='page',
