@@ -12,6 +12,8 @@ from isce3.core import crop_external_orbit
 from isce3.core.rdr_geo_block_generator import block_generator
 from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
+from isce3.io import HDF5OptimizerReader, optimize_chunk_size, compute_page_size
+
 
 import nisar
 from nisar.products.readers import SLC
@@ -43,6 +45,8 @@ def run(cfg):
     columns_per_block = cfg['processing']['blocksize']['x']
     lines_per_block = cfg['processing']['blocksize']['y']
     flatten = cfg['processing']['flatten']
+    
+    output_options = cfg['output']
     geogrid_expansion_threshold = 100
 
     output_dir = os.path.dirname(os.path.abspath(output_hdf5))
@@ -73,9 +77,22 @@ def run(cfg):
     info_channel = journal.info("gslc_array.run")
     info_channel.log("starting geocode SLC")
 
+    output_gslc_shape = (geogrids['A'].length,
+                         geogrids['A'].width)
+    opt_min_chunk_size = \
+        optimize_chunk_size(output_options['chunk_size'],
+                            output_gslc_shape)
+
+    page_size = compute_page_size(np.prod(opt_min_chunk_size) * np.dtype("complex64").itemsize)
+
+    # put together the parameters related to paging
+    fs_dict = dict(fs_strategy='page',
+                   fs_persist=True,
+                   fs_page_size=page_size)
+
     t_all = time.perf_counter()
-    with h5py.File(output_hdf5, 'w') as dst_h5, \
-            h5py.File(input_hdf5, 'r', libver='latest', swmr=True) as src_h5:
+    with h5py.File(output_hdf5, 'w', **fs_dict) as dst_h5, \
+            HDF5OptimizerReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5:
 
         prep_gslc_dataset(cfg, 'GSLC', dst_h5)
         for freq, pol_list in freq_pols.items():
@@ -197,7 +214,8 @@ def run(cfg):
                                      cube_geogrid, radar_grid_cubes_heights,
                                      cube_rdr_grid, orbit, cube_native_doppler,
                                      image_grid_doppler, threshold_geo2rdr,
-                                     iteration_geo2rdr)
+                                     iteration_geo2rdr,
+                                     chunk_size=(1,) + tuple(output_options['chunk_size']))
 
     t_all_elapsed = time.perf_counter() - t_all
     info_channel.log(f"successfully ran geocode SLC in {t_all_elapsed:.3f} seconds")

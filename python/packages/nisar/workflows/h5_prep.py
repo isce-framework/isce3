@@ -521,6 +521,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
     # unpack info
     common_parent_path = 'science/LSAR'
     freq_pols = cfg['processing']['input_subset']['list_of_frequencies']
+    chunk_size = cfg['output']['chunk_size']
 
     gslc_output_options = {}
     # if GSLC, populate output dict with h5py.Group.create_dataset kwargs
@@ -538,6 +539,9 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
         dst_parent_path = os.path.join(common_parent_path,
                                        f'{dst}/grids/frequency{freq}')
         yds, xds = set_get_geo_info(dst_h5, dst_parent_path, geogrids[freq])
+        # compute the optimal chunk size and corresponding chink cache size
+        opt_chunk_size, = optimize_chunk_size(chunk_size, shape)
+        gslc_output_options['chunks'] = opt_chunk_size
 
         dst_grp = dst_h5[dst_parent_path]
 
