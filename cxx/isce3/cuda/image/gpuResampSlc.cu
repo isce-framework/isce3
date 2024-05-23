@@ -20,6 +20,8 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 
+namespace isce3::cuda::image {
+
 using isce3::cuda::core::gpuPoly2d;
 using isce3::cuda::core::gpuInterpolator;
 using isce3::cuda::core::gpuLUT1d;
@@ -201,7 +203,7 @@ void transformTile(thrust::complex<float> *resampledSlc,
 
 
 // Interpolate tile to perform transformation
-void isce3::cuda::image::
+void
 gpuTransformTile(
         isce3::io::Raster & outputSlc,
         isce3::image::Tile<std::complex<float>> & origSlcTile,
@@ -312,3 +314,5 @@ gpuTransformTile(
     // Write block of data
     outputSlc.setBlock(&h_resampledSlc[0], 0, origSlcTile.rowStart(), outWidth, outLength);
 }
+
+} // namespace isce3::cuda::image

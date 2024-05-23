@@ -14,6 +14,16 @@ target_compile_options(${LISCECUDA} PUBLIC
     $<$<COMPILE_LANGUAGE:CUDA>:-Werror=cross-execution-space-call>
     )
 
+# Disable thrust's architecture-specific inline namespace that was introduced in
+# https://github.com/NVIDIA/cccl/pull/443. Without this, thrust symbols in header files
+# will have different names in C++ TUs vs CUDA TUs, leading to numerous ODR violations
+# and linker errors. This can cause ABI issues if we link against other libraries that
+# do the same, but in practice should be reasonably safe.
+target_compile_definitions(${LISCECUDA} PUBLIC
+    THRUST_DISABLE_ABI_NAMESPACE
+    THRUST_IGNORE_ABI_NAMESPACE_ERROR
+    )
+
 # Add library dependencies
 find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 find_library(CUDAFFT_LIBRARY cufft ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
