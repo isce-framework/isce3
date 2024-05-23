@@ -24,6 +24,7 @@ import nisar
 import numpy as np
 import isce3
 from isce3.core import DateTime, TimeDelta, LUT2d, Attitude, Orbit
+from isce3.focus import make_el_lut
 from isce3.geometry import los2doppler
 from isce3.io.gdal import Raster, GDT_CFloat32
 from isce3.product import RadarGridParameters
@@ -390,6 +391,15 @@ def make_doppler_lut(rawfiles: list[str],
     # Now do the actual calculations.
     wvl = isce3.core.speed_of_light / fc
     epoch_in, t, r = get_total_grid(rawfiles, azimuth_spacing, range_spacing)
+
+    # If timespan is too small, only one time may be provided, causing the LUT
+    # construction to fail. Fall back to t ± Δt/2 to preserve az spacing.
+    # Also clip to orbit start/end times if the orbit timespan is too small.
+    if len(t) == 1:
+        tmin = max(t[0] - azimuth_spacing / 2, orbit.start_time)
+        tmax = min(t[0] + azimuth_spacing / 2, orbit.end_time)
+        t = [tmin, tmax]
+
     t = convert_epoch(t, epoch_in, epoch)
     dop = np.zeros((len(t), len(r)))
 
@@ -1518,6 +1528,10 @@ def focus(runconfig, runconfig_path=""):
     ref_grid = make_output_grid(cfg, grid_epoch, t0, t1, max_prf, r0, r1, dr,
                                 side, orbit, fc_ref, dop_ref, max_chirplen, dem)
 
+    wvl_ref = isce3.core.speed_of_light / fc_ref
+    el_lut = make_el_lut(orbit, attitude, side, dop_ref, wvl_ref, dem,
+                         get_rdr2geo_params(cfg))
+
     # Frequency A/B specific setup for output grid, doppler, and blocks.
     ogrid, dop, blocks_bounds = dict(), dict(), dict()
     for frequency, band in get_bands(common_mode).items():
@@ -1716,7 +1730,8 @@ def focus(runconfig, runconfig_path=""):
             # Precompute antenna patterns at downsampled spacing
             if cfg.processing.is_enabled.eap:
                 antpat = AntennaPattern(raw, dem, antparser,
-                                        instparser, orbit, attitude)
+                                        instparser, orbit, attitude,
+                                        el_lut=el_lut)
 
                 log.info("Precomputing antenna patterns")
                 i = np.arange(rc_grid.shape[0])
