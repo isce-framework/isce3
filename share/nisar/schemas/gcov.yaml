@@ -201,6 +201,7 @@ qa_reports_options:
         longest_side_max: int(min=1, required=False)
         percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
         gamma: num(min=0.0, required=False)
+        nan_color_in_pdf: str(required=False)
         tile_shape: list(int(min=-1), min=2, max=2, required=False)
     histogram:
         decimation_ratio: list(int(min=1), min=2, max=2, required=False)

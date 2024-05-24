@@ -846,7 +846,10 @@ rifg_options:
     qa_reports: include('rifg_qa_reports_options', required=False)
 
 rifg_qa_reports_options:
-    hsi_img: include('qa_hsi_img_wrapped_options', required=False)
+    wrapped_igram: include('qa_threshold_options', required=False)
+    coh_mag: include('qa_threshold_options', required=False)
+    az_and_range_offsets: include('qa_threshold_options', required=False)
+    browse_png: include('qa_browse_png_wrapped_options', required=False)
 
 runw_options:
     workflows: include('workflows_options', required=False)
@@ -854,7 +857,12 @@ runw_options:
 
 runw_qa_reports_options:
     phase_img: include('qa_phase_img_options', required=False)
-    hsi_img: include('qa_hsi_img_unwrapped_options', required=False)
+    coh_mag: include('qa_threshold_options', required=False)
+    connected_components: include('qa_cc_options', required=False)
+    ionosphere_phase_screen: include('qa_threshold_options', required=False)
+    ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
+    az_and_range_offsets: include('qa_threshold_options', required=False)
+    browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 gunw_options:
     workflows: include('workflows_options', required=False)
@@ -862,7 +870,13 @@ gunw_options:
 
 gunw_qa_reports_options:
     phase_img: include('qa_phase_img_options', required=False)
-    hsi_img: include('qa_hsi_img_unwrapped_options', required=False)
+    wrapped_igram: include('qa_threshold_options', required=False)
+    coh_mag: include('qa_threshold_options', required=False)
+    connected_components: include('qa_cc_options', required=False)
+    ionosphere_phase_screen: include('qa_threshold_options', required=False)
+    ionosphere_phase_screen_uncertainty: include('qa_threshold_options', required=False)
+    az_and_range_offsets: include('qa_threshold_options', required=False)
+    browse_png: include('qa_browse_png_unwrapped_options', required=False)
 
 roff_options:
     workflows: include('workflows_options', required=False)
@@ -873,7 +887,11 @@ goff_options:
     qa_reports: include('offsets_qa_reports_options', required=False)
 
 offsets_qa_reports_options:
+    az_and_range_offsets: include('qa_threshold_options', required=False)
     quiver_plots: include('qa_quiver_plots_options', required=False)
+    az_and_rg_variance: include('az_rg_var_options', required=False)
+    cross_offset_variance: include('cross_offset_var_options', required=False)
+    correlation_surface_peak: include('qa_threshold_options', required=False)
 
 workflows_options:
     validate: bool(required=False)
@@ -881,12 +899,31 @@ workflows_options:
 
 qa_phase_img_options:
     rewrap: num(min=0.0, required=False)
+    nan_threshold: num(min=-1.0, max=100.0, required=False)
+    inf_threshold: num(min=-1.0, max=100.0, required=False)
+    fill_threshold: num(min=-1.0, max=100.0, required=False)
+    near_zero_threshold: num(min=-1.0, max=100.0, required=False)
+    total_invalid_threshold: num(min=-1.0, max=100.0, required=False)
+    epsilon: num(min=0.0, required=False)
+    zero_is_invalid: bool(required=False)
 
-qa_hsi_img_wrapped_options:
+qa_cc_options:
+    nan_threshold: num(min=-1.0, max=100.0, required=False)
+    inf_threshold: num(min=-1.0, max=100.0, required=False)
+    fill_threshold: num(min=-1.0, max=100.0, required=False)
+    near_zero_threshold: num(min=-1.0, max=100.0, required=False)
+    total_invalid_threshold: num(min=-1.0, max=100.0, required=False)
+    epsilon: num(min=0.0, required=False)
+    zero_is_invalid: bool(required=False)
+    max_num_cc: int(min=0.0, required=False)
+
+qa_browse_png_wrapped_options:
+    browse_image: enum('phase', 'hsi', required=False)
     equalize_browse: bool(required=False)
     longest_side_max: int(min=1, required=False)
 
-qa_hsi_img_unwrapped_options:
+qa_browse_png_unwrapped_options:
+    browse_image: enum('phase', 'hsi', required=False)
     equalize_browse: bool(required=False)
     longest_side_max: int(min=1, required=False)
     rewrap: num(min=0.0, required=False)
@@ -899,6 +936,35 @@ qa_quiver_plots_options:
     arrow_scaling: num(min=0.0, required=False)
     longest_side_max: int(min=1, required=False)
 
+az_rg_var_options:
+    colorbar_min_max: list(num, min=2, max=2, required=False)
+    nan_threshold: num(min=-1.0, max=100.0, required=False)
+    inf_threshold: num(min=-1.0, max=100.0, required=False)
+    fill_threshold: num(min=-1.0, max=100.0, required=False)
+    near_zero_threshold: num(min=-1.0, max=100.0, required=False)
+    total_invalid_threshold: num(min=-1.0, max=100.0, required=False)
+    epsilon: num(min=0.0, required=False)
+    zero_is_invalid: bool(required=False)
+
+cross_offset_var_options:
+    colorbar_min_max: list(num, min=2, max=2, required=False)
+    percentile_for_clipping: list(num(min=0.0, max=100.0), min=2, max=2, required=False)
+    nan_threshold: num(min=-1.0, max=100.0, required=False)
+    inf_threshold: num(min=-1.0, max=100.0, required=False)
+    fill_threshold: num(min=-1.0, max=100.0, required=False)
+    near_zero_threshold: num(min=-1.0, max=100.0, required=False)
+    total_invalid_threshold: num(min=-1.0, max=100.0, required=False)
+    epsilon: num(min=0.0, required=False)
+    zero_is_invalid: bool(required=False)
+
+qa_threshold_options:
+    nan_threshold: num(min=-1.0, max=100.0, required=False)
+    inf_threshold: num(min=-1.0, max=100.0, required=False)
+    fill_threshold: num(min=-1.0, max=100.0, required=False)
+    near_zero_threshold: num(min=-1.0, max=100.0, required=False)
+    total_invalid_threshold: num(min=-1.0, max=100.0, required=False)
+    epsilon: num(min=0.0, required=False)
+    zero_is_invalid: bool(required=False)
 
 dem_download_options:
     # s3 bucket / curl URL / local file

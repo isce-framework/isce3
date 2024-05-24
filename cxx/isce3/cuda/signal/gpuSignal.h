@@ -8,10 +8,10 @@
 #include <cufft.h>
 #include <thrust/complex.h>
 
-#include <isce3/core/Common.h>
+namespace isce3::cuda::signal {
 
 template<class T>
-class isce3::cuda::signal::gpuSignal {
+class gpuSignal {
 
     public:
         // Default constructor
@@ -154,27 +154,29 @@ class isce3::cuda::signal::gpuSignal {
 };
 
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output);
 
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output,
         thrust::complex<T> *shiftImpact);
 
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output);
 
 template<class T>
-void upsample(isce3::cuda::signal::gpuSignal<T> &fwd,
-        isce3::cuda::signal::gpuSignal<T> &inv,
+void upsample(gpuSignal<T> &fwd,
+        gpuSignal<T> &inv,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output,
         std::valarray<std::complex<T>> &shiftImpact);
+
+} // namespace isce3::cuda::signal

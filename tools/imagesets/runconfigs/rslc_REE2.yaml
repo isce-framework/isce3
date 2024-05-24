@@ -266,26 +266,9 @@ runconfig:
         # program and which qa option(s) to enable. By default the qa SAS is not run.
         qa:
             workflows:
-                # Flag to run `validate` workflow to validate the
-                # input file against its product spec.
-                # Default: True
                 validate: True
-
-                # Flag to run `qa_reports` workflow to generate a
-                # PDF report, geolocated browse image, compute statistics
-                # on the input file, etc..
-                # Default: True
                 qa_reports: True
-
-                # Flag to run Absolute Radiometric Calibration calibration tool.
-                # Default: True
                 absolute_radiometric_calibration: True
-
-                # Flag to run Noise Estimator Tool calibration tool.
-                # Default: True
-                noise_estimation: True
-
-                # Flag to run Point Target Analyzer calibration tool.
-                # Default: True
+                nes0: True
                 point_target_analyzer: True
 
