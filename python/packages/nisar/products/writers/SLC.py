@@ -589,8 +589,10 @@ class SLC(h5py.File):
         log.info("Writing attitude to SLC")
         g = self.root.require_group("metadata/attitude")
         d = g.require_dataset("attitudeType", (), "S10", data=np.bytes_(type))
-        d.attrs["description"] = np.bytes_("PrOE (or) NOE (or) MOE (or) POE"
-                                            " (or) Custom")
+        d.attrs["description"] = np.bytes_(
+            'Attitude type, either "FRP", "NRP", "PRP, or "Custom", where'
+            ' "FRP" stands for Forecast Radar Pointing, "NRP" is Near'
+            ' Real-time Pointing, and "PRP" is Precise Radar Pointing')
         t = np.asarray(attitude.time)
         d = g.require_dataset("time", t.shape, t.dtype, data=t)
         d.attrs["description"] = np.bytes_("Time vector record. This record"
@@ -618,7 +620,7 @@ class SLC(h5py.File):
                             planned_datatake_id: Optional[str] = None,
                             planned_observation_id: Optional[str] = None,
                             is_urgent: Optional[bool] = None,
-                            product_spec_version: str = "1.1.0",
+                            product_spec_version: str = "1.1.2",
                             processing_center: str = "JPL",
                             granule_id: str = "None",
                             product_version: str = "0.1.0",

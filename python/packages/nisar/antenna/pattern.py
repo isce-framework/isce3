@@ -3,6 +3,7 @@ from enum import IntEnum, unique
 from isce3.core import Orbit, Attitude, Linspace
 from isce3.geometry import DEMInterpolator
 import logging
+from nisar.mixed_mode.logic import PolChannelSet
 from nisar.products.readers.antenna import AntennaParser
 from nisar.products.readers.instrument import InstrumentParser
 from nisar.products.readers.Raw import Raw
@@ -152,7 +153,6 @@ def pols_type_from_raw(raw: Raw):
         raise NotImplementedError(
             'More than two frequency bands are not supported!'
         )
-    is_ssp = False
     # use the first frequency to get individual RX and TX pols
     txrx_pols = raw.polarizations
     freq = frq_list[0]
@@ -178,23 +178,26 @@ def pols_type_from_raw(raw: Raw):
                 pol_type = PolType.single
 
     # check second band to see if it is Quasi-Quad or Quasi-Dual
-    if frq_list.size == 2:
-        is_ssp = True
-        freq_b = frq_list[1]
-        txrx_pol_list_b = txrx_pols[freq_b]
-        if set(txrx_pol_list) != set(txrx_pol_list_b):
-            tx_pols.extend(
-                dict.fromkeys([p[0] for p in txrx_pol_list_b])
-            )
-            rx_pols_b = set([p[1] for p in txrx_pol_list_b])
-            rx_pols = rx_pols.union(rx_pols_b)
-            if len(rx_pols_b) == 2:
+    # Need to be careful of QD 5+5 modes where HH and VV are at different
+    # center frequencies but are recorded under the same frequency band. Rely on
+    # "regularized" mode to split them into separate bands A and B if needed.
+    channels = PolChannelSet.from_raw(raw).regularized()
+    center_freqs = {channel.band.center for channel in channels}
+    is_ssp = len(center_freqs) > 1
+    tx_pols = list({channel.pol[0] for channel in channels})
+    rx_pols = list({channel.pol[1] for channel in channels})
+    if is_ssp:
+        pols_a = {chan.pol for chan in channels if chan.freq_id == "A"}
+        pols_b = {chan.pol for chan in channels if chan.freq_id == "B"}
+        if pols_a != pols_b:
+            if len(pols_a) == len(pols_b) == 2:
                 pol_type = PolType.quasi_quad
-            else:
-                assert len(rx_pols_b) == 1
+            elif len(pols_a) == len(pols_b) == 1:
                 pol_type = PolType.quasi_dual
+            else:
+                raise NotImplementedError(f"Unexpected mode {channels}")
 
-    return pol_type, is_ssp, tx_pols, list(rx_pols), freq
+    return pol_type, is_ssp, tx_pols, rx_pols, freq
 
 
 def build_tx_trm(raw: Raw, pulse_times: np.ndarray, freq_band: str,
@@ -228,6 +231,9 @@ class AntennaPattern:
         Antenna orbit ephemeris
     attitude: Attitude
         Antenna orientation
+    el_lut : LUT2d, optional
+        LUT2d to be used for range/azimuth to EL lookups.
+        If not provided, EL will be computed on-the-fly using elaz2slantrange.
     el_spacing_min: float, default=8.72665e-5
         Min EL angle spacing in (radians) used to determine min slant range
         spacing over entire swath.
@@ -240,7 +246,9 @@ class AntennaPattern:
 
     def __init__(self, raw: Raw, dem: DEMInterpolator,
                  ant: AntennaParser, ins: InstrumentParser,
-                 orbit: Orbit, attitude: Attitude, norm_weight=True,
+                 orbit: Orbit, attitude: Attitude,
+                 *, el_lut=None,
+                 norm_weight=True,
                  el_spacing_min=8.72665e-5):
 
         self.orbit = orbit.copy()
@@ -248,6 +256,7 @@ class AntennaPattern:
         self.dem = dem
         self.norm_weight = norm_weight
         self.el_spacing_min = el_spacing_min
+        self.el_lut = el_lut
 
         # get linear pols and pol type
         (self.pol_type, self.is_ssp, self.tx_pols, self.rx_pols,
@@ -281,14 +290,20 @@ class AntennaPattern:
         rd_all, wd_all, wl_all = dict(), dict(), dict()
         self.finder = dict()
 
-        # get RD/WD/WL for all unique RX polarizations of first freq band
+        # get RD/WD/WL for all unique RX polarizations
+        # Loop over all freqs & pols since some RX pols may be found only on
+        # freq B (e.q. the QQP case).  Assume RD/WD/WL are the same for all
+        # freqs/pols that have the same RX polarization.
         for pol in self.rx_pols:
-            if self.pol_type == PolType.quasi_dual:
-                txrx_pol = 2 * pol
+            for freq_band, txrx_pols in raw.polarizations.items():
+                txrx_pols = [p for p in txrx_pols if p.endswith(pol)]
+                if len(txrx_pols) > 0:
+                    txrx_pol = txrx_pols[0]
+                    break
             else:
-                txrx_pol = self.tx_pols[0] + pol
+                assert False, "failed to hit guaranteed break statement"
             rd_all[pol], wd_all[pol], wl_all[pol] = raw.getRdWdWl(
-                self.freq_band, txrx_pol)
+                freq_band, txrx_pol)
             self.finder[pol] = TimingFinder(self.pulse_times, rd_all[pol],
                                             wd_all[pol], wl_all[pol])
 
@@ -330,6 +345,7 @@ class AntennaPattern:
                 self.rx_dbf[rx_p] = RxDBF(
                     self.orbit, self.attitude, self.dem, self.el_pat_rx[rx_p],
                     self.rx_trm[rx_p], self.reference_epoch,
+                    el_lut=self.el_lut,
                     norm_weight=self.norm_weight,
                     el_spacing_min=self.el_spacing_min,
                 )
@@ -338,6 +354,7 @@ class AntennaPattern:
                 self.rx_dbf[rx_p] = RxDBF(
                     self.orbit, self.attitude, self.dem, self.el_pat_rx[rx_p],
                     self.rx_trm[rx_p], self.reference_epoch,
+                    el_lut=self.el_lut,
                     norm_weight=self.norm_weight,
                     rg_spacing_min=self.rg_spacing_min,
                 )
@@ -377,7 +394,8 @@ class AntennaPattern:
             # construct TX BMF object
             self.tx_bmf[tx_lp] = TxBMF(
                 self.orbit, self.attitude, self.dem, el_pat_tx, tx_trm,
-                self.reference_epoch, norm_weight=self.norm_weight,
+                self.reference_epoch,
+                el_lut=self.el_lut, norm_weight=self.norm_weight,
                 rg_spacing_min=self.rg_spacing_min)
 
     def form_pattern(self, tseq, slant_range: Linspace,
@@ -450,6 +468,7 @@ class AntennaPattern:
                 self.rx_dbf[p] = RxDBF(
                     self.orbit, self.attitude, self.dem, self.el_pat_rx[p],
                     self.rx_trm[p], self.reference_epoch,
+                    el_lut=self.el_lut,
                     norm_weight=self.rx_dbf[p].norm_weight)
 
                 pat = self.rx_dbf[p].form_pattern(
@@ -459,7 +478,8 @@ class AntennaPattern:
                 # Initialize the pattern array so we can slice this range timing
                 # group into it - TODO move this outside the loop for clarity?
                 if p not in rx_dbf_pat:
-                    rx_dbf_pat[p] = np.empty((len(tseq), slant_range.size))
+                    rx_dbf_pat[p] = np.empty((len(tseq), slant_range.size),
+                        dtype=np.complex64)
 
                 # Slice it into the full array, and
                 # bump up the index for the next slice
@@ -468,7 +488,8 @@ class AntennaPattern:
                 i0 = iend
 
         # form one-way TX patterns for all TX pols
-        tx_bmf_pat = defaultdict(lambda: np.empty((len(tseq), slant_range.size)))
+        tx_bmf_pat = defaultdict(lambda: np.empty((len(tseq), slant_range.size),
+            dtype=np.complex64))
         if self.pol_type == PolType.compact_left:
             tx_bmf_pat['L'] = (
                 self.tx_bmf['H'].form_pattern(
@@ -477,7 +498,7 @@ class AntennaPattern:
                 1j * self.tx_bmf['V'].form_pattern(
                     t, slant_range, nearest=nearest,
                     channel_adj_factors=self.channel_adj_fact_tx['V'])
-            )
+            ).astype(np.complex64)
 
         elif self.pol_type == PolType.compact_right:
             tx_bmf_pat['R'] = (
@@ -487,12 +508,13 @@ class AntennaPattern:
                 1j * self.tx_bmf['V'].form_pattern(
                     t, slant_range, nearest=nearest,
                     channel_adj_factors=self.channel_adj_fact_tx['V'])
-            )
+            ).astype(np.complex64)
         else:  # other non-compact pol types
             for p in tx_pols:
                 tx_bmf_pat[p] = self.tx_bmf[p].form_pattern(
                     t, slant_range, nearest=nearest,
-                    channel_adj_factors=self.channel_adj_fact_tx[p])
+                    channel_adj_factors=self.channel_adj_fact_tx[p]).astype(
+                        np.complex64)
 
         # build two-way pattern for all unique TxRx products obtained from all
         # freq bands

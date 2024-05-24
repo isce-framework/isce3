@@ -60,8 +60,19 @@ def run(cfg):
         # orbit has not frequency dependency.
         external_orbit = load_orbit_from_xml(orbit_file,
                                              slc.getRadarGrid().ref_epoch)
-        orbit = crop_external_orbit(external_orbit, orbit)
-
+        
+        # Apply 2 mins of padding before / after sensing period when cropping
+        # the external orbit.
+        # 2 mins of margin is based on the number of IMAGEN TEC samples required for 
+        # TEC computation, with few more safety margins for possible needs in the future.
+        #
+        # `7` in the line below is came from the default value for `npad` in
+        # `crop_external_orbit()`. See:
+        #.../isce3/python/isce3/core/crop_external_orbit.py
+        npad = max(int(120.0 / external_orbit.spacing),
+                   7)
+        orbit = crop_external_orbit(external_orbit, orbit,
+                                    npad=npad)
 
     dem_raster = isce3.io.Raster(dem_file)
     epsg = dem_raster.get_epsg()
@@ -107,6 +118,10 @@ def run(cfg):
                 dataset_path = f'/{root_ds}/{polarization}'
                 gslc_datasets.append(dst_h5[dataset_path])
 
+            # retrieve dataset to geo SLC mask in HDF5
+            mask_dataset_path = f'/{root_ds}/mask'
+            mask_dataset = dst_h5[mask_dataset_path]
+
             # loop over geogrid blocks skipping those without radar data
             # where block_generator skips blocks where no radar data is found
             for (rdr_blk_slice, geo_blk_slice, geo_blk_shape, blk_geo_grid) in \
@@ -130,8 +145,11 @@ def run(cfg):
                     gslc_data_blks.append(
                         np.zeros(geo_blk_shape, dtype=np.complex64))
 
+                # init geocoded mask block/array with 255 as invalid value
+                mask_data_blk = np.full(geo_blk_shape, 255, dtype=np.ubyte)
+
                 # run geocodeSlc
-                isce3.geocode.geocode_slc(gslc_data_blks, rslc_data_blks,
+                isce3.geocode.geocode_slc(gslc_data_blks, mask_data_blk, rslc_data_blks,
                                           dem_raster, radar_grid, blk_geo_grid,
                                           orbit, native_doppler,
                                           image_grid_doppler, ellipsoid,
@@ -160,6 +178,9 @@ def run(cfg):
                     # write to GSLC block HDF5
                     gslc_dataset.write_direct(gslc_data_blk,
                                               dest_sel=geo_blk_slice)
+
+                # write to mask block HDF5
+                mask_dataset.write_direct(mask_data_blk, dest_sel=geo_blk_slice)
 
             # loop over polarizations and compute statistics
             for gslc_dataset in gslc_datasets:

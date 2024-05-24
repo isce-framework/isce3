@@ -274,10 +274,13 @@ runconfig:
                 # is set to "gamma0", or `False`, otherwise
                 save_rtc_anf_gamma0_to_sigma0:
 
+                # Save the mask layer
+                save_mask: True
+
                 # Save interpolated DEM used to compute GCOV
                 save_dem: False
 
-                # PLACEHOLDER - Save layover shadow mask
+                # PLACEHOLDER - Save the layover shadow mask
                 save_layover_shadow_mask: False
 
                 # PLACEHOLDER - Save the incidence angle
@@ -396,8 +399,8 @@ runconfig:
                     y_posting: 
 
             geo2rdr:
-                threshold: 1.0e-8
-                maxiter: 100
+                threshold: 1.0e-7
+                maxiter: 50
 
             dem_interpolation_method: biquintic
 
@@ -475,6 +478,14 @@ runconfig:
                     # Default: 0.5
                     gamma: 0.5
 
+                    # Color to plot NaN pixels for the PDF report.
+                    # For transparent, set to None.
+                    # The color should given in a format recognized by matplotlib:
+                    # https://matplotlib.org/stable/users/explain/colors/colors.html
+                    # (Note: Browse image PNG will always plot NaN as transparent.)
+                    # Default: blue
+                    nan_color_in_pdf: blue
+
                     # User-preferred tile shape for processing images by batches.
                     # Actual tile shape may be modified by QA to be an integer
                     # multiple of the number of looks for multilooking, of the
@@ -491,8 +502,8 @@ runconfig:
                     # For example, [2,3] means every 2nd azimuth line and
                     # every 3rd range sample will be used to compute the histograms.
                     # Format: [<azimuth>, <range>]
-                    # Default: (10, 10)
-                    decimation_ratio: [10, 10]
+                    # Default: (8, 8)
+                    decimation_ratio: [8, 8]
 
                     # Range in dB for the backscatter histogram's bin edges. Endpoint will
                     # be included. Format: [<starting value>, <endpoint>]

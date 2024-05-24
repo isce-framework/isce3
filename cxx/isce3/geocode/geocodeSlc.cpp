@@ -23,6 +23,212 @@
 
 namespace isce3::geocode {
 
+
+/**
+ * Compute radar grid indices for a given geo grid and determine corresponding mask value.
+ *
+ * @param[out] rangeIndices     slant range indices, with respect to the radar grid, of the geo grid to be geocoded to
+ * @param[out] azimuthIndices   azimuth indices, with respect to the radar grid, of the geo grid to be geocoded to
+ * @param[out] uncorrectedSRange    slant range without correction, in meters, indexed by geo grid indices
+ * @param[out] mask             subwath mask, with respect to geo grid indices
+ * @param[in] demInterp         interpolator object for the DEM
+ * @param[in] geoGrid           geo grid parameters to be geocoded to
+ * @param[in] geoBlockLength    length of the geo grid block to be geocoded to
+ * @param[in] geoBlockWidth     width of the geo grid block to be geocoded to
+ * @param[in] radarGrid         full sized radar grid parameters
+ * @param[in] slicedRadarGrid   sliced radar grid parameters representing a valid portion of the full sized radar grid. Used to mask portions of the full sized radar grid from being geocoded.
+ * @param[in] orbit             orbit corresponding to radar grid
+ * @param[in] ellipsoid         ellipsoid object with same EPSG as DEM
+ * @param[in] nativeDoppler     2D LUT doppler of the SLC image
+ * @param[in] imageGridDoppler  2D LUT doppler that defines the image grid (radar grid). For zero-Doppler geometries, this will be an LUT that resolves always to 0. For squinted geometries, that have not been deskewed to zero-Doppler, this LUT will be the Doppler Centroid LUT associated with the grid (i.e., usually the same as nativeDoppler).
+ * @param[in] thresholdGeo2rdr  threshold to use in geo2rdr
+ * @param[in] numiterGeo2rdr    number of iterations to be used in geo2rdr
+ * @param[in] azTimeCorrection  azimuth additive correction, in seconds, as a function of azimuth and range. This correction can be an accumulation of multiple corrections that affect the radar signal differently. Individual corrections may account for phenomena such as ionosphere and solid earth tide.
+ * @param[in] sRangeCorrection  slant range additive correction, in meters, as a function of azimuth and range. This correction can be an accumulation of multiple corrections that affect the radar signal differently. Individual corrections may account for phenomena such as ionosphere and solid earth tide.
+ * @param[in] proj              projection object used to convert geo grid values to latitude and longitude
+ * @param[in] useCorrectedSRng  flag to indicate whether geo2rdr slant-range additive values should be used for phase flattening
+ * @param[in] lineStart         offset to first line of geo grid
+ * @param[in] subswaths         subswath mask representing valid portions of a swath
+ *
+ * \return  tuple consisting of first azimuth line, last azimuth line, first range pixel, and last range pixel
+ */
+std::tuple<int, int, int, int> computeGeogridRadarIndicesAndMask(
+        isce3::core::Matrix<double>& rangeIndices,
+        isce3::core::Matrix<double>& azimuthIndices,
+        isce3::core::Matrix<double>& uncorrectedSRange,
+        EArray2duc8 mask,
+        const isce3::geometry::DEMInterpolator& demInterp,
+        const isce3::product::GeoGridParameters& geoGrid,
+        const size_t geoBlockLength,
+        const size_t geoBlockWidth,
+        const isce3::product::RadarGridParameters& radarGrid,
+        const isce3::product::RadarGridParameters& slicedRadarGrid,
+        const isce3::core::Orbit& orbit,
+        const isce3::core::Ellipsoid& ellipsoid,
+        const isce3::core::LUT2d<double>& nativeDoppler,
+        const isce3::core::LUT2d<double>& imageGridDoppler,
+        const double thresholdGeo2rdr,
+        const int numiterGeo2rdr,
+        const isce3::core::LUT2d<double>& azTimeCorrection,
+        const isce3::core::LUT2d<double>& sRangeCorrection,
+        const isce3::core::ProjectionBase* proj,
+        const bool useCorrectedSRng,
+        const size_t lineStart = 0,
+        const isce3::product::SubSwaths* subswaths = nullptr)
+{
+    // Init first and last line of the data block in radar coordinates
+    int azimuthFirstLine = radarGrid.length() - 1;
+    int azimuthLastLine = 0;
+
+    // Init first and last pixel of the data block in radar coordinates
+    int rangeFirstPixel = radarGrid.width() - 1;
+    int rangeLastPixel = 0;
+
+    const int chipHalf = isce3::core::SINC_ONE / 2;
+// Loop over lines, samples of the output grid
+#pragma omp parallel for reduction(min: azimuthFirstLine, rangeFirstPixel)  \
+                         reduction(max: azimuthLastLine, rangeLastPixel)
+    for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
+        // Global line index
+        const size_t line = lineStart + blockLine;
+
+        for (size_t pixel = 0; pixel < geoBlockWidth; ++pixel) {
+            // y coordinate in the out put grid
+            // Assuming geoGrid.startY() and geoGrid.startX() represent the top-left
+            // corner of the first pixel, then 0.5 pixel shift is needed to get
+            // to the center of each pixel
+            double y = geoGrid.startY() + geoGrid.spacingY() * (line + 0.5);
+
+            // x in the output geocoded Grid
+            double x = geoGrid.startX() + geoGrid.spacingX() * (pixel + 0.5);
+
+            // compute the azimuth time and slant range for the
+            // x,y coordinates in the output grid
+            double aztime, srange;
+            aztime = radarGrid.sensingMid();
+
+            // coordinate in the output projection system
+            const isce3::core::Vec3 xyz {x, y, 0.0};
+
+            // transform the xyz in the output projection system to llh
+            isce3::core::Vec3 llh = proj->inverse(xyz);
+
+            // interpolate the height from the DEM for this pixel
+            llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
+
+            // Perform geo->rdr iterations
+            int geostat = isce3::geometry::geo2rdr(
+                    llh, ellipsoid, orbit, imageGridDoppler, aztime, srange,
+                    radarGrid.wavelength(), radarGrid.lookSide(),
+                    thresholdGeo2rdr, numiterGeo2rdr, 1.0e-8);
+
+            // Check convergence
+            if (geostat == 0)
+                continue;
+
+            // save uncorrected slant range
+            if (!useCorrectedSRng)
+                uncorrectedSRange(blockLine, pixel) = srange;
+
+            // apply timing corrections
+            // If default LUT2d is passed in for either azimuth time and
+            // slant range corrections, eval() returns 0 so no corrections
+            // are applied.
+            if (azTimeCorrection.contains(aztime, srange)) {
+                const auto aztimeCor = azTimeCorrection.eval(aztime,
+                                                             srange);
+                aztime += aztimeCor;
+            }
+
+            if (sRangeCorrection.contains(aztime, srange)) {
+                const auto srangeCor = sRangeCorrection.eval(aztime,
+                                                             srange);
+                srange += srangeCor;
+            }
+
+            // check if az time and slant within radar grid
+            if (!slicedRadarGrid.contains(aztime, srange)
+                    || !nativeDoppler.contains(aztime, srange))
+                continue;
+
+            // get the row and column index in the radar grid
+            double azimuthCoord = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
+            double rangeCoord = (srange - radarGrid.startingRange()) /
+                          radarGrid.rangePixelSpacing();
+
+            // Convert float az and range coords to int for subswath check
+            const int intAzIndex = static_cast<int>(std::floor(azimuthCoord));
+            const int intRgIndex = static_cast<int>(std::floor(rangeCoord));
+
+            // Check if indices of chip used to interpolate current pixel
+            // could be outside radar grid.
+            bool corners_in_radar_grid = true;
+            if ((intRgIndex < chipHalf)
+                    || (intRgIndex >= (radarGrid.width() - chipHalf))
+                    || (intAzIndex < chipHalf)
+                    || (intAzIndex >= (radarGrid.length() - chipHalf)))
+                corners_in_radar_grid = false;
+
+            // if subswaths provided (not nullptr), check for masking otherwise
+            // not masked (subswath 1 assigned). Masking can be checked by determining if
+            // subswaths.getSampleSubSwath returns 0 (i.e. the coordinate
+            // is not inside of a subswath) or something else (i.e. the number of
+            // the subswath that the coordinate is in.)
+            if (subswaths) {
+                // Check if interpolation center in a subswath
+                // Cast as unsigned char for later assignment
+                mask(blockLine, pixel)  =
+                    static_cast<unsigned char>(
+                            subswaths->getSampleSubSwath(intAzIndex, intRgIndex));
+
+                // If interpolation center in subswath, check if any chip
+                // pixels outside a subswath by checking all combinations of
+                // interpolation center +/- half_chip
+                if (mask(blockLine, pixel) != 0) {
+                    const std::vector<int> chipExtents = {-chipHalf, chipHalf};
+                    for (const int& azExtent : chipExtents) {
+                        for (const int& rgExtent : chipExtents) {
+                            if (subswaths->getSampleSubSwath(intAzIndex + azExtent,
+                                                             intRgIndex + rgExtent) == 0) {
+                                mask(blockLine, pixel) = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                // If no subswaths and all corners in radar grid, label as subswath 1
+                // If any corners not in radar grid, interpolation not performed.
+                // Leave mask label as invalid (default) i.e. not partial.
+                if (corners_in_radar_grid)
+                    mask(blockLine, pixel) = 1;
+            }
+
+            // If not assigned valid pixel center, skip further processing
+            if (mask(blockLine, pixel) == 0)
+                continue;
+
+            azimuthFirstLine = std::min(
+                    azimuthFirstLine, static_cast<int>(std::floor(azimuthCoord)));
+            azimuthLastLine =
+                    std::max(azimuthLastLine,
+                             static_cast<int>(std::ceil(azimuthCoord) - 1));
+            rangeFirstPixel = std::min(rangeFirstPixel,
+                                       static_cast<int>(std::floor(rangeCoord)));
+            rangeLastPixel = std::max(
+                    rangeLastPixel, static_cast<int>(std::ceil(rangeCoord) - 1));
+
+            // store the adjusted X and Y indices
+            rangeIndices(blockLine, pixel) = rangeCoord;
+            azimuthIndices(blockLine, pixel) = azimuthCoord;
+        }
+    } // end loops over lines and pixel of output grid
+
+    return std::tuple(azimuthFirstLine, azimuthLastLine,
+                      rangeFirstPixel, rangeLastPixel);
+}
+
 /**
  * Remove range and azimuth phase carrier from a block of input radar SLC data
  *
@@ -465,6 +671,13 @@ void geocodeSlc(
         isce3::core::Matrix<double> azimuthIndices(geoBlockLength, geoGrid.width());
         azimuthIndices.fill(std::numeric_limits<double>::quiet_NaN());
 
+        // Array containing masking labels applied to pixels. Inconsequentially
+        // filled with dummy values as raster mode is not used in production.
+        auto maskArr2d = isce3::core::EArray2D<unsigned char>(geoBlockLength,
+                                                              geoGrid.width());
+        maskArr2d.fill(0);
+        auto maskArr2dRef = EArray2duc8(maskArr2d);
+
         // selectively use uncorrected slant range - initialized to invalid
         // values
         isce3::core::Matrix<double> uncorrectedSRange;
@@ -473,106 +686,35 @@ void geocodeSlc(
             uncorrectedSRange.fill(std::real(invalidValue));
         }
 
-        // First and last line of the data block in radar coordinates
-        int azimuthFirstLine = radarGrid.length() - 1;
-        int azimuthLastLine = 0;
-
-        // First and last pixel of the data block in radar coordinates
-        int rangeFirstPixel = radarGrid.width() - 1;
-        int rangeLastPixel = 0;
-
         // Compute radar coordinates of each geocoded pixel
         // Determine boundary of corresponding radar raster
         size_t geoGridWidth = geoGrid.width();
-// Loop over lines, samples of the output grid
-#pragma omp parallel for reduction(min                                    \
-                                   : azimuthFirstLine,                    \
-                                     rangeFirstPixel)                     \
-        reduction(max                                                     \
-                  : azimuthLastLine, rangeLastPixel)
-        for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
-            // Global line index
-            const size_t line = lineStart + blockLine;
 
-            for (size_t pixel = 0; pixel < geoGridWidth; ++pixel) {
-                // y coordinate in the out put grid
-                // Assuming geoGrid.startY() and geoGrid.startX() represent the top-left
-                // corner of the first pixel, then 0.5 pixel shift is needed to get
-                // to the center of each pixel
-                double y = geoGrid.startY() + geoGrid.spacingY() * (line + 0.5);
-
-                // x in the output geocoded Grid
-                double x = geoGrid.startX() + geoGrid.spacingX() * (pixel + 0.5);
-
-                // compute the azimuth time and slant range for the
-                // x,y coordinates in the output grid
-                double aztime, srange;
-                aztime = radarGrid.sensingMid();
-
-                // coordinate in the output projection system
-                const isce3::core::Vec3 xyz {x, y, 0.0};
-
-                // transform the xyz in the output projection system to llh
-                isce3::core::Vec3 llh = proj->inverse(xyz);
-
-                // interpolate the height from the DEM for this pixel
-                llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
-
-                // Perform geo->rdr iterations
-                int geostat = isce3::geometry::geo2rdr(
-                        llh, ellipsoid, orbit, imageGridDoppler, aztime, srange,
-                        radarGrid.wavelength(), radarGrid.lookSide(),
-                        thresholdGeo2rdr, numiterGeo2rdr, 1.0e-8);
-
-                // Check convergence
-                if (geostat == 0)
-                    continue;
-
-                // save uncorrected slant range
-                if (!flattenWithCorrectedSRng)
-                    uncorrectedSRange(blockLine, pixel) = srange;
-
-                // apply timing corrections
-                // If default LUT2d is passed in for either azimuth time and
-                // slant range corrections, eval() returns 0 so no corrections
-                // are applied.
-                if (azTimeCorrection.contains(aztime, srange)) {
-                    const auto aztimeCor = azTimeCorrection.eval(aztime,
-                                                                 srange);
-                    aztime += aztimeCor;
-                }
-
-                if (sRangeCorrection.contains(aztime, srange)) {
-                    const auto srangeCor = sRangeCorrection.eval(aztime,
-                                                                 srange);
-                    srange += srangeCor;
-                }
-
-                // check if az time and slant within radar grid
-                if (!slicedRadarGrid.contains(aztime, srange)
-                        || !nativeDoppler.contains(aztime, srange))
-                    continue;
-
-                // get the row and column index in the radar grid
-                double azimuthCoord = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
-                double rangeCoord = (srange - radarGrid.startingRange()) /
-                              radarGrid.rangePixelSpacing();
-
-                azimuthFirstLine = std::min(
-                        azimuthFirstLine, static_cast<int>(std::floor(azimuthCoord)));
-                azimuthLastLine =
-                        std::max(azimuthLastLine,
-                                 static_cast<int>(std::ceil(azimuthCoord) - 1));
-                rangeFirstPixel = std::min(rangeFirstPixel,
-                                           static_cast<int>(std::floor(rangeCoord)));
-                rangeLastPixel = std::max(
-                        rangeLastPixel, static_cast<int>(std::ceil(rangeCoord) - 1));
-
-                // store the adjusted X and Y indices
-                rangeIndices(blockLine, pixel) = rangeCoord;
-                azimuthIndices(blockLine, pixel) = azimuthCoord;
-            }
-        } // end loops over lines and pixel of output grid
+        // Compute radar indices for each pixel in the current geogrid block.
+        auto [azimuthFirstLine, azimuthLastLine,
+              rangeFirstPixel, rangeLastPixel] =
+            computeGeogridRadarIndicesAndMask(
+                rangeIndices,
+                azimuthIndices,
+                uncorrectedSRange,
+                maskArr2dRef,
+                demInterp,
+                geoGrid,
+                geoBlockLength,
+                geoGridWidth,
+                radarGrid,
+                slicedRadarGrid,
+                orbit,
+                ellipsoid,
+                nativeDoppler,
+                imageGridDoppler,
+                thresholdGeo2rdr,
+                numiterGeo2rdr,
+                azTimeCorrection,
+                sRangeCorrection,
+                proj.get(),
+                flattenWithCorrectedSRng,
+                lineStart);
 
         // Fill the output block with the default value before checking validity
         isce3::core::EArray2D<std::complex<float>> geoDataBlock(geoBlockLength,
@@ -690,6 +832,7 @@ void geocodeSlc(
 template<typename AzRgFunc>
 void geocodeSlc(
         std::vector<EArray2dc64>& geoDataBlocks,
+        EArray2duc8 maskBlock,
         EArray2df64 carrierPhaseBlock,
         EArray2df64 flattenPhaseBlock,
         const std::vector<EArray2dc64>& rdrDataBlocks,
@@ -727,8 +870,12 @@ void geocodeSlc(
         throw isce3::except::InvalidArgument(ISCE_SRCINFO(), error_msg);
     }
 
+    //
     for (auto geoDataBlock : geoDataBlocks)
         geoDataBlock.fill(invalidValue);
+
+    // Default all mask pixls to invalid mask pixel value, 255.
+    maskBlock.fill(255);
 
     validate_slice(radarGrid, slicedRadarGrid);
 
@@ -752,6 +899,7 @@ void geocodeSlc(
     isce3::core::Matrix<double> rangeIndices(geoGrid.length(), geoGrid.width());
     isce3::core::Matrix<double> azimuthIndices(geoGrid.length(), geoGrid.width());
 
+
     // fill indices with NaNs. These do not need to be
     // invalidValue because they are not going to be
     // written to any output raster.
@@ -768,91 +916,31 @@ void geocodeSlc(
     // Compute radar coordinates of each geocoded pixel
     // Determine boundary of corresponding radar raster
     size_t geoGridWidth = geoGrid.width();
-// Loop over lines, samples of the output grid
-#pragma omp parallel for
-    for (size_t line = 0; line < geoGrid.length(); ++line) {
-        for (size_t pixel = 0; pixel < geoGridWidth; ++pixel) {
-            // y coordinate in the out put grid
-            // Assuming geoGrid.startY() and geoGrid.startX() represent the top-left
-            // corner of the first pixel, then 0.5 pixel shift is needed to get
-            // to the center of each pixel
-            double y = geoGrid.startY() + geoGrid.spacingY() * (line + 0.5);
 
-            // x in the output geocoded Grid
-            double x = geoGrid.startX() + geoGrid.spacingX() * (pixel + 0.5);
-
-            // compute the azimuth time and slant range for the
-            // x,y coordinates in the output grid
-            double aztime, srange;
-            aztime = radarGrid.sensingMid();
-
-            // coordinate in the output projection system
-            const isce3::core::Vec3 xyz {x, y, 0.0};
-
-            // transform the xyz in the output projection system to llh
-            isce3::core::Vec3 llh = proj->inverse(xyz);
-
-            // interpolate the height from the DEM for this pixel
-            llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
-
-            // Perform geo->rdr iterations
-            int geostat = isce3::geometry::geo2rdr(
-                    llh, ellipsoid, orbit, imageGridDoppler, aztime, srange,
-                    radarGrid.wavelength(), radarGrid.lookSide(),
-                    thresholdGeo2rdr, numiterGeo2rdr, 1.0e-8);
-
-            // Check convergence
-            if (geostat == 0) {
-                continue;
-            }
-
-            // save uncorrected slant range
-            if (!flattenWithCorrectedSRng)
-                uncorrectedSRange(line, pixel) = srange;
-
-            // apply timing corrections
-            // if default LUT2d used for both azimuth time and slant range
-            // corrections, uncorrected slant range and corrected slant
-            // range will be the same
-            if (azTimeCorrection.contains(aztime, srange)) {
-                const auto aztimeCor = azTimeCorrection.eval(aztime,
-                                                             srange);
-                aztime += aztimeCor;
-            }
-
-            if (sRangeCorrection.contains(aztime, srange)) {
-                const auto srangeCor = sRangeCorrection.eval(aztime,
-                                                             srange);
-                srange += srangeCor;
-            }
-
-            // get the row and column index in the radar grid
-            double azimuthCoord = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
-            double rangeCoord = (srange - radarGrid.startingRange()) /
-                          radarGrid.rangePixelSpacing();
-
-            // first do less computational masking checks against LUTs
-            if (!slicedRadarGrid.contains(aztime, srange)
-                    or !nativeDoppler.contains(aztime, srange))
-                continue;
-
-            // if subswaths provided (not nullptr), check for masking otherwise
-            // not masked. Masking can be checked by determining if
-            // subswaths.getSampleSubSwath returns 0 (i.e. the coordinate
-            // is not inside of a subswath) or something else (i.e. the number of
-            // the subswath that the coordinate is in.)
-            const bool subswath_masked = subswaths ?
-                subswaths->getSampleSubSwath(static_cast<int>(std::floor(azimuthCoord)),
-                                             static_cast<int>(std::floor(rangeCoord))) == 0 :
-                false;
-            if (subswath_masked)
-                continue;
-
-            // store the adjusted X and Y indices
-            rangeIndices(line, pixel) = rangeCoord;
-            azimuthIndices(line, pixel) = azimuthCoord;
-        }
-    } // end loops over lines and pixel of output grid
+    // Compute radar indices for each pixel in the current geogrid array.
+    computeGeogridRadarIndicesAndMask(
+            rangeIndices,
+            azimuthIndices,
+            uncorrectedSRange,
+            maskBlock,
+            demInterp,
+            geoGrid,
+            geoGrid.length(),
+            geoGridWidth,
+            radarGrid,
+            slicedRadarGrid,
+            orbit,
+            ellipsoid,
+            nativeDoppler,
+            imageGridDoppler,
+            thresholdGeo2rdr,
+            numiterGeo2rdr,
+            azTimeCorrection,
+            sRangeCorrection,
+            proj.get(),
+            flattenWithCorrectedSRng,
+            0,
+            subswaths);
 
     // loop over pairs of radar and geo block array
     for (auto [gIt, rIt] = std::tuple(geoDataBlocks.begin(), rdrDataBlocks.begin());
@@ -922,6 +1010,7 @@ template void geocodeSlc<AzRgFunc>(                                     \
         isce3::io::Raster* rgOffsetRaster);                             \
 template void geocodeSlc<AzRgFunc>(                                     \
         std::vector<EArray2dc64>& geoDataBlocks,                        \
+        EArray2duc8 maskBlock,                                          \
         EArray2df64 carrierPhaseBlock,                                  \
         EArray2df64 flattenPhaseBlock,                                  \
         const std::vector<EArray2dc64>& rdrDataBlocks,                  \

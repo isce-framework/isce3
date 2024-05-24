@@ -7,7 +7,54 @@ import numpy as np
 from scipy.fft import fft, ifft
 from numpy.polynomial import Polynomial
 from scipy import stats
-from isce3.signal.compute_evd_cpi import slice_gen
+from collections.abc import Iterator
+
+def overlap_slice_gen(total_size: int, batch_size: int, overlap: int=0) -> Iterator[slice]:
+    """Generate slices with size defined by batch_size and number of 
+    overlapping samples defined by overlap.
+
+    Parameters
+    ----------
+    total_size: int
+        size of data to be manipulated by the slice generator
+    batch_size: int
+        designated data chunk size in which data is sliced into.
+    overlap: int
+        Number of overlapping samples in each of the slices
+        Default = 0
+
+    Yields
+    ------
+    slice: slice obj
+        Iterable slices of data with specified input batch size, bounded by start_idx
+        and stop_idx.
+    """
+
+    step_size = batch_size - overlap
+    overlap_batch_size = batch_size + step_size
+
+    if batch_size < overlap:
+        raise ValueError(
+            f"The value of 'overlap' ({overlap}) must be less than that of 'batch_size' ({batch_size})."
+        )
+
+    # If total_size is less than overlap_batch_size, generate the slice that
+    # corresponds to the entire dataset.
+    if total_size < overlap_batch_size:
+        yield slice(0, total_size)
+    else:
+        # The intention is to extend the last full batch to include the remainder
+        # samples. Hence the last batch is always larger than all previous batches.
+        for start_idx in range(0, total_size - (overlap_batch_size-1), step_size):
+            stop_idx = start_idx + batch_size
+            yield slice(start_idx, stop_idx)
+
+        # Include remainder samples to include the final remainder samples, if any
+        last_blk_start = stop_idx - overlap
+        last_blk_stop = total_size
+
+        yield slice(last_blk_start, last_blk_stop)
+
 
 def run_freq_notch(
     raw_data: np.ndarray,
@@ -42,10 +89,11 @@ def run_freq_notch(
         processing block are used to estimate detection mask.
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
-        in which the frequency domain statistic properties are computed.
+        in which the averaged range spectrum is computed for narrowband detector.
     rng_winsize: int, default=100
         The size (in number of range bins) of moving average Range window 
-        in which the frequency domain statistic properties are computed.
+        in which the total power in range spectrum is computed for wideband
+        detector.
     trim_frac: float, optional
         Total proportion of data to trim. `trim_frac/2` is cut off of both tails
         of the distribution. Defaults to 0.01.
@@ -105,11 +153,13 @@ def run_freq_notch(
     rfi_pulse_count_sum = 0
 
     # Run RFI Frequency Domain Notch Filtering Mitigation
-    for idx_az, blk_slow_time in enumerate(slice_gen(num_pulses, num_pulses_az)):
+    # Generate blocks with increased number of rows and columns
+    for idx_az, blk_slow_time in enumerate(
+        overlap_slice_gen(
+            num_pulses, num_pulses_az + az_winsize-1, az_winsize-1)):
         for idx_rng, blk_fast_time in enumerate(
-            slice_gen(num_rng_samples, num_samples_rng_blk)
+            overlap_slice_gen(num_rng_samples, num_samples_rng_blk + rng_winsize-1, rng_winsize-1)
         ):
-            
             raw_blk = raw_data[blk_slow_time, blk_fast_time]
             rfi_detect_mask = rfi_freq_notch(
                 raw_blk,
@@ -158,10 +208,11 @@ def rfi_freq_notch(
         raw data to be processed, supports all numpy complex formats
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
-        in which the frequency domain statistic properties are computed.
+        in which the averaged range spectrum is computed for narrowband detector.
     rng_winsize: int, default=100
         The size (in number of range bins) of moving average Range window 
-        in which the frequency domain statistic properties are computed.
+        in which the total power in range spectrum is computed for wideband
+        detector.
     trim_frac: float, optional
         Total proportion of data to trim. `trim_frac/2` is cut off of both tails
         of the distribution. Defaults to 0.01.
@@ -248,6 +299,8 @@ def rfi_freq_notch(
             raw_data,
             raw_data_fft, 
             rfi_detect_mask, 
+            az_winsize,
+            rng_winsize,
             raw_data_mitigated,
         )
 
@@ -317,7 +370,7 @@ def detect_rfi_tsnb(
         raw data range frequency power spectra
     az_winsize: int, default=256
         The size (in number of pulses) of moving average Azimuth window 
-        in which the frequency domain statistic properties are computed.
+        in which the averaged range spectrum is computed for narrowband detector.
     pvalue_threshold: float, default=0.005
         Time Stationary Narrowband (TSNB) p-value threshold. 
         Confidence Level = 1 - pvalue_threshold
@@ -371,9 +424,6 @@ def detect_rfi_tsnb(
 
         tsnb_hits_buffer[count] = 0  # Zero out mask line
 
-    # Populate last az_winsize-1 rows with values from last non-zero row 
-    mask_tsnb[-az_winsize+1:] = mask_tsnb[-az_winsize]
-
     return mask_tsnb
 
 
@@ -394,7 +444,8 @@ def detect_rfi_tvwb(
         raw data range frequency power spectra
     rng_winsize: int, default=100
         The size (in number of range bins) of moving average Range window 
-        in which the frequency domain statistic properties are computed.
+        in which the total power in range spectrum is computed for wideband
+        detector.
     pvalue_threshold: float, default=0.005
         Time Varying Wideband (TVWB) p-value threshold. 
         Confidence Level = 1 - pvalue_threshold
@@ -464,9 +515,6 @@ def detect_rfi_tvwb(
         mask_tvwb[:, i] = tvwb_hits_buffer[count].astype(np.int32)
         tvwb_hits_buffer[count] = 0
 
-    # Populate last rng_winsize-1 columns with values from last non-zero column 
-    mask_tvwb[:, -rng_winsize + 1:] = mask_tvwb[:, -rng_winsize : -rng_winsize+1]
-
     return mask_tvwb
 
 
@@ -522,6 +570,8 @@ def rfi_freq_removal(
     raw_data,
     raw_data_fft, 
     rfi_detect_mask, 
+    az_winsize=256,
+    rng_winsize=100,
     raw_data_mitigated=None
 ):
     """Null the frequency domain FFT bins identified as RFI by the
@@ -534,8 +584,15 @@ def rfi_freq_removal(
         raw data to be processed, supports all numpy complex formats
     raw_data_fft: 2D array of complex, [num_pulses x num_rng_samples]
         Range frequency spectrum response of raw data
-    raw_freq_mask: 2D array, bool, [num_pulses x num_rng_samples]
+    raw_detect_mask: 2D array, bool, [num_pulses x num_rng_samples]
         Frequency domain binary RFI mask: 1 = RFI, 0 = No RFI
+    az_winsize: int, default=256
+        The size (in number of pulses) of moving average Azimuth window 
+        in which the averaged range spectrum is computed for narrowband detector.
+    rng_winsize: int, default=100
+        The size (in number of range bins) of moving average Range window 
+        in which the total power in range spectrum is computed for wideband
+        detector.
     raw_data_mitigated: numpy.ndarray complex [num_pulses x num_rng_samples] or None, optional
          output array in which the mitigated data values is placed. It
          must be an array-like object supporting `multidimensional array access
@@ -544,13 +601,25 @@ def rfi_freq_removal(
          If None (the default), the input 'raw' data array will be modified in-place.
     """
 
+    num_pulses, num_rng_samples = raw_data.shape
+
+    # Compute the dimensions of non-overlapped data blocks
+    num_pulses_no_overlap = num_pulses - az_winsize + 1
+    num_samples_no_overlap = num_rng_samples - rng_winsize + 1
+
+    # Trim the overlapped inputs to the dimensions of non-overlapped data blocks
+    # Only process the pulses and range samples with respect to the non-overlapped data block
+    rfi_detect_mask = rfi_detect_mask[:num_pulses_no_overlap, :num_samples_no_overlap]
+    raw_data = raw_data[:num_pulses_no_overlap, :num_samples_no_overlap]
+    raw_data_fft = raw_data_fft[:num_pulses_no_overlap, :num_samples_no_overlap]
+
     # Create an alias for raw_data if there is no 'raw_data_mitigated' as input
     if raw_data_mitigated is None:
         raw_data_mitigated = raw_data
+    else:
+        raw_data_mitigated = raw_data_mitigated[:num_pulses_no_overlap, :num_samples_no_overlap]
 
-    num_pulses, num_rng_samples = raw_data.shape
-
-    for i in range(num_pulses):
+    for i in range(num_pulses_no_overlap):
         if np.all(rfi_detect_mask[i] == 0):
             raw_data_mitigated[i] = raw_data[i]
         else:
@@ -560,4 +629,3 @@ def rfi_freq_removal(
             # Inverse FFT to tranlate into time domain
             raw_line_nulled = ifft(raw_line_fft_nulled)
             raw_data_mitigated[i] = raw_line_nulled
-

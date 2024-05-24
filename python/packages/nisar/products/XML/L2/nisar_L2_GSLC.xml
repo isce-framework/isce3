@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
-<!-- product specification version is 1.1.0 -->
+<!-- product specification version is 1.1.2 -->
 <algorithm name="L2_GeocodedSlc"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:noNamespaceSchemaLocation="../../SDS/pix/schema.xsd">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <product template="L2_GSLC_template">
     <!-- Start of the science section of product -->
     <science uid="sci_1">
@@ -1167,6 +1166,92 @@
                           units="radians">Faraday rotation correction applied in processing</annotation>
         </real>
 
+        <!-- RFI results -->
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/HH/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/HV/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/VH/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/VV/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/RH/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/RV/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/HH/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/HV/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/VH/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/VV/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/RH/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+        <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyB/RV/rfiLikelihood"
+              shape="scalar"
+              width="64">
+              <annotation app="conformance"
+                          lang="en"
+                          units="1">Severity of radio frequency interference (RFI) contamination in the data. Value is in the interval [0,1], where 0: lowest severity, and 1: highest severity (or NaN if RFI detection was skipped)</annotation>
+        </real>
+
         <!-- channel-specific corrections -->
         <!-- HH -->
         <real name="/science/LSAR/GSLC/metadata/calibrationInformation/frequencyA/HH/differentialDelay"
@@ -1964,7 +2049,7 @@
               name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rfiMitigation"
               shape="scalar">
           <annotation app="conformance"
-                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation corresponding to the source data processing information records</annotation>
+                      lang="en">Algorithm used for radio frequency interference (RFI) mitigation corresponding to the source data processing information records, either "ST-EVD" or "FDNF" (or "disabled" if no RFI mitigation was applied)</annotation>
         </string>
         <string length="0"
                 name="/science/LSAR/GSLC/metadata/sourceData/processingInformation/algorithms/rangeCompression"

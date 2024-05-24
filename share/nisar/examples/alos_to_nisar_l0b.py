@@ -191,7 +191,9 @@ def getset_attitude(group: h5py.Group, ldr: LeaderFile.LeaderFile,
 
     ds = group.create_dataset("attitudeType", data=numpy.string_("Custom"))
     ds.attrs["description"] = numpy.string_(
-        "PrOE (or) NOE (or) MOE (or) POE (or) Custom")
+        'Attitude type, either "FRP", "NRP", "PRP, or "Custom", where "FRP"'
+        ' stands for Forecast Radar Pointing, "NRP" is Near Real-time'
+        ' Pointing, and "PRP" is Precise Radar Pointing')
 
     ds = group.create_dataset("eulerAngles", data=numpy.array(rpys))
     ds.attrs["description"] = numpy.string_(

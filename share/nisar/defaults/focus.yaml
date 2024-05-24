@@ -136,50 +136,93 @@ runconfig:
                 # Whether to attemt RFI removal. Default to False.
                 # Requires that RFI detection is also enabled.
                 mitigation_enabled: False
-                # Algorithm selection.  Defaults to 'ST-EVD' for slow-time
-                # eigenvalue decomposition. Currently, only 'ST-EVD' is supported.
+                # RFI detection algorithm. Supported values include:
+                #   - 'ST-EVD': slow-time eigenvalue decomposition algorithm
+                #   - 'FDNF': frequency domain notch filtering algorithm
+                # Defaults to 'ST-EVD'.
                 mitigation_algorithm: ST-EVD
-                # Coherent processing interval length (pulses).  Defaults to 32.
-                cpi_length: 32
                 # Number of subdivisions in range.  Defaults to 1.
                 num_range_blocks: 1
-                # Maximum allowable number of emitters can be detected and
-                # suppressed per CPI. ST-EVD would ignore emitters exceeding
-                # this limit. This number should be less than cpi_length.
-                # Defaults to 16.
-                max_emitters: 16
-                # Number of large value outliers to be trimmed in slow-time
-                # minimum Eigenvalues.
-                num_max_trim: 0
-                # Number of small value outliers to be trimmed in slow-time
-                # minimum Eigenvalues.
-                num_min_trim: 0
-                # A detection error (miss) happens when a maximum power RFI
-                # emitter contaminates multiple consecutive CPIs, resulting in a
-                # flat maximum Eigenvalue slope in slow time. Hence the standard
-                # deviation (STD) of multiple dominant EVs across slow time
-                # defined by this parameter are compared. The one with the
-                # maximum STD is used for RFI Eigenvalue first difference
-                # computation.
-                max_num_rfi_ev: 2
-                # Number of slow-time CPIs grouped together for determining and
-                # applying a common EV slope threshold.
-                num_cpi_per_threshold_block: 20
-                # Parameters used to adaptively determine RFI eigenvalue
-                # difference thresholds
-                threshold_hyperparameters:
-                    # The computed sigma ratio of maximum and minimum Eigenvalue
-                    # first differences. It is a dimensionless figure of merit.
-                    # Larger value of x indicates higher likelihood of RFI
-                    # presence.
-                    x: [2.0, 20.0]
-                    # Estimated range of number of sigmas of the first
-                    # difference of minimum Eigenvalues across threshold block
-                    # as a function of input x, e.g., smaller x results in
-                    # larger value of y, therefore relaxing the final threshold.
-                    # The values of x outside of the defined range of y are
-                    # extrapolated.
-                    y: [5.0, 2.0]
+
+                slow_time_evd:
+                    # Coherent processing interval length (pulses).  Defaults to 32.
+                    cpi_length: 32
+                    # Maximum allowable number of emitters can be detected and
+                    # suppressed per CPI. ST-EVD would ignore emitters exceeding
+                    # this limit. This number should be less than cpi_length.
+                    # Defaults to 16.
+                    max_emitters: 16
+                    # Number of large value outliers to be trimmed in slow-time
+                    # minimum Eigenvalues.
+                    num_max_trim: 0
+                    # Number of small value outliers to be trimmed in slow-time
+                    # minimum Eigenvalues.
+                    num_min_trim: 0
+                    # A detection error (miss) happens when a maximum power RFI
+                    # emitter contaminates multiple consecutive CPIs, resulting in a
+                    # flat maximum Eigenvalue slope in slow time. Hence the standard
+                    # deviation (STD) of multiple dominant EVs across slow time
+                    # defined by this parameter are compared. The one with the
+                    # maximum STD is used for RFI Eigenvalue first difference
+                    # computation.
+                    max_num_rfi_ev: 2
+                    # Number of slow-time CPIs grouped together for determining and
+                    # applying a common EV slope threshold.
+                    num_cpi_per_threshold_block: 20
+                    # Parameters used to adaptively determine RFI eigenvalue
+                    # difference thresholds
+                    threshold_hyperparameters:
+                        # The computed sigma ratio of maximum and minimum Eigenvalue
+                        # first differences. It is a dimensionless figure of merit.
+                        # Larger value of x indicates higher likelihood of RFI
+                        # presence.
+                        x: [2.0, 20.0]
+                        # Estimated range of number of sigmas of the first
+                        # difference of minimum Eigenvalues across threshold block
+                        # as a function of input x, e.g., smaller x results in
+                        # larger value of y, therefore relaxing the final threshold.
+                        # The values of x outside of the defined range of y are
+                        # extrapolated.
+                        y: [5.0, 2.0]
+
+                freq_notch_filter:
+                    # If Frequency Domain Notch Filtering (FDNF) is applied, this parameter
+                    # defines the number of azimuth (slow-time) pulses of the input data to be 
+                    # processed at once or processing block azimuth dimension.
+                    # Defaults to 1
+                    num_pulses_az: 1000
+                    # Frequency Domain Notch Filtering (FDNF) slow-time averaging window 
+                    # size for Time-Stationary Narrowband (TSNB) RFI detection
+                    # This is a user-defined parameter
+                    az_winsize: 256
+                    # Frequency Domain Notch Filtering (FDNF) fast-time averaging window 
+                    # size for Time-Varying Wideband (TVWB) RFI detection
+                    rng_winsize: 100
+                    # If FDNF is applied, when data mean and standard deviations are 
+                    # computed, 'trim_frac/2' proportion of outliers will be removed from 
+                    # both tails of the distribution.
+                    trim_frac: 0.01
+                    # If FDNF is applied, a threshold for pvalue needs to be selected. 
+                    # pvalue is a measure of confidence against a null hypothesis. 
+                    # In FDNF: Null Hypothesis: NO RFI, Alternative Hypothesis: RFI present
+                    # If p-value of the range-frequency power spectra is less than p-value 
+                    # threshold, alternative hypothesis is accepted. Otherwise, null hypothesis 
+                    # is accepted.
+                    pvalue_threshold: 0.005
+                    # If FDNF is applied, the cumulative probability density function (CDF)
+                    # of the input Time Stationary Narrowband (TSNB) and Time Varying Wideband
+                    # (TVWB) masks will be compared with this threshold. It represents 
+                    # an estimate of RFI likelihood in the data. A small cdf_threshold value 
+                    # results in a high threshold for RFI detection and vice versa.
+                    cdf_threshold: 0.1
+                    # If FDNF is applied, this parameter controls narrowband RFI detection.
+                    # This should be enabled unless for the purpose of debugging.
+                    # Defaults to True
+                    nb_detect: True
+                    # If FDNF is applied, this parameter controls wideband RFI detection.
+                    # This should be enabled unless for the purpose of debugging.
+                    # Defaults to True
+                    wb_detect: True
 
             # Range filter parameters for mixed-mode cases.
             range_common_band_filter:
@@ -353,9 +396,9 @@ runconfig:
                 # Default: True
                 absolute_radiometric_calibration: true
 
-                # Flag to run Noise Estimator Tool calibration tool.
+                # Flag to run Noise Equivalent Sigma 0 Tool (nes0) Tool calibration tool.
                 # Default: True
-                noise_estimation: true
+                nes0: true
 
                 # Flag to run Point Target Analyzer calibration tool.
                 # Default: True
@@ -410,6 +453,14 @@ runconfig:
                     # Default: 0.5
                     gamma: 0.5
 
+                    # Color to plot NaN pixels for the PDF report.
+                    # For transparent, set to None.
+                    # The color should given in a format recognized by matplotlib:
+                    # https://matplotlib.org/stable/users/explain/colors/colors.html
+                    # (Note: Browse image PNG will always plot NaN as transparent.)
+                    # Default: blue
+                    nan_color_in_pdf: blue
+
                     # User-preferred tile shape for processing images by batches.
                     # Actual tile shape may be modified by QA to be an integer
                     # multiple of the number of looks for multilooking, of the
@@ -425,8 +476,8 @@ runconfig:
                     # For example, [2,3] means every 2nd azimuth line and
                     # every 3rd range sample will be used to compute the histograms.
                     # Format: [<azimuth>, <range>]
-                    # Default: (10, 10)
-                    decimation_ratio: [10, 10]
+                    # Default: (8, 8)
+                    decimation_ratio: [8, 8]
 
                     # Range in dB for the backscatter histogram's bin edges. Endpoint will
                     # be included. Format: [<starting value>, <endpoint>]
@@ -468,6 +519,27 @@ runconfig:
                     # will be fixed to the number of columns in the input raster.
                     # Default: 512
                     tile_height: 512
+
+                azimuth_spectra:
+
+                    # Azimuth spectra will be computed by averaging `num_columns` contiguous
+                    # range samples for each of near-, mid-, and far-range subswaths.
+                    # If `num_columns` is -1 or greater than the number of range samples,
+                    # it will be set to the number of range samples.
+                    # Default: 1024
+                    num_columns: 1024
+
+                    # True if the input frequencies are in Hz,
+                    # but output should be converted to MHz.
+                    # Default: False
+                    hz_to_mhz: false
+
+                    # Tile width (number of columns) for processing
+                    # each subswath by batches. -1 to set this to `num_columns`.
+                    # Note: full columns must be read in, so the number of rows for each tile
+                    # will be fixed to the height of the input raster.
+                    # Default: 256
+                    tile_width: 256
 
             absolute_radiometric_calibration:
                 # The width, in samples, of the square block of image data

@@ -1,9 +1,13 @@
 from isce3.geometry import DEMInterpolator
+import isce3
 import iscetest
+import math
 from nisar.antenna.pattern import (TimingFinder, AntennaPattern, AntennaParser,
     find_changes)
 from nisar.products.readers.Raw import Raw
 from nisar.products.readers.instrument import InstrumentParser
+from nisar.workflows.focus import make_doppler_lut
+from isce3.focus import make_el_lut
 import numpy as np
 import numpy.testing as npt
 from pathlib import Path
@@ -52,9 +56,24 @@ def test_pattern():
     orbit = raw.getOrbit()
     attitude = raw.getAttitude()
     pol = "HH"
-    ap = AntennaPattern(raw, dem, ant, ins, orbit, attitude)
-    epoch, times = raw.getPulseTimes()
-    r = raw.getRanges("A", tx=pol[0])
-    z = ap.form_pattern(times[0], r)
 
-    npt.assert_(z[pol].shape == (len(r),))
+    fc, dop = make_doppler_lut([fn_raw], 0, orbit, attitude, dem)
+    wavelength = isce3.core.speed_of_light / fc
+    rdr2geo_params = dict(
+        tol_height = 1e-5,
+        look_min = 0,
+        look_max = math.pi / 2,
+    )
+    el_lut = make_el_lut(orbit, attitude,
+                         raw.identification.lookDirection,
+                         dop, wavelength, dem,
+                         rdr2geo_params)
+
+    for lut in (None, el_lut):
+        ap = AntennaPattern(raw, dem, ant, ins, orbit, attitude, el_lut=lut)
+        epoch, times = raw.getPulseTimes()
+        r = raw.getRanges("A", tx=pol[0])
+        z = ap.form_pattern(times[0], r)
+
+        npt.assert_(z[pol].shape == (len(r),))
+        npt.assert_(z[pol].dtype == np.complex64)

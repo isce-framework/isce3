@@ -9,6 +9,8 @@
 
 #include "MaskedMinMax.h"
 
+namespace isce3::cuda::geocode {
+
 typedef thrust::tuple<double, bool> double_mask;
 
 /** Comparison function used to find the minimum of double_mask list.
@@ -120,3 +122,5 @@ thrust::pair<double, double> masked_minmax(
     return thrust::pair<double, double>(
             thrust::get<0>(data_min[0]), thrust::get<0>(data_max[0]));
 }
+
+} // namespace isce3::cuda::geocode
