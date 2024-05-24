@@ -256,7 +256,7 @@ def test_freq_null():
     az_winsize = 25
     rng_winsize = 22
     num_rng_blks = 3
-    num_pulses_az_blk = 1000
+    num_pulses_az_blk = 600
     trim_frac = 0.01
     pvalue_threshold = 0.005
     cdf_threshold = 0.68
