@@ -223,10 +223,21 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     t_since_epoch_masked = _get_tec_time(tec_json_dict, radar_grid, orbit,
                                          margin)
 
+    # find index of first unmasked value and unmask prior value so gradient
+    # value can be computed at first unmasked value. Otherwise first unmasked
+    # value will not be included in gradient computations.
+    i_before_1st_unmasked = np.where(t_since_epoch_masked.mask == False)[0][0] - 1
+    if i_before_1st_unmasked < 0:
+        err_str = 'Unable to compute azimuth TEC gradient because index of '   \
+            'first valid mask value in masked array is the same as the first ' \
+            'of the unmasked array'
+        error_channel.log(err_str)
+        raise ValueError(err_str)
+    t_since_epoch_masked.mask[i_before_1st_unmasked] = False
+
     # Load the TEC information from IMAGEN parsed as dictionary
     # Use radar grid start/end range for near/far range
     # Transpose stacked output to get shape to be consistent with coordinates
-    rg_vec = [radar_grid.starting_range, radar_grid.end_range]
     tec_suborbital = np.vstack([_get_suborbital_tec(tec_json_dict,
                                                     nr_fr,
                                                     t_since_epoch_masked.mask)
@@ -236,20 +247,22 @@ def tec_lut2d_from_json_az(json_path: str, center_freq: float,
     t_since_epoch = t_since_epoch_masked.compressed()
     tec_gradient_az_spacing = (t_since_epoch[-1] - t_since_epoch[0]) / (len(t_since_epoch) - 1)
 
-    # staggered grid to compute TEC gradient
-    tec_gradient_t_since_epoch = t_since_epoch[1:] - tec_gradient_az_spacing / 2
+    # with gradient computed, remove out of bounds value
+    t_since_epoch = t_since_epoch[1:] - tec_gradient_az_spacing / 2
 
     tec_gradient = np.diff(tec_suborbital, axis=0) / tec_gradient_az_spacing
 
     speed_vec_lut = np.array([np.linalg.norm(orbit.interpolate(t)[1]) for t in
-                              tec_gradient_t_since_epoch])
+                              t_since_epoch])
+    rg_vec = [radar_grid.starting_range, radar_grid.end_range]
     az_fm_rate = np.outer(-2 * speed_vec_lut**2 * (center_freq / isce3.core.speed_of_light),
                           1 / np.array(rg_vec))
 
     t_az_delay = (-2 * K
                   / (isce3.core.speed_of_light * az_fm_rate * center_freq)
                   * tec_gradient * TECU)
-    return isce3.core.LUT2d(rg_vec, tec_gradient_t_since_epoch, t_az_delay)
+
+    return isce3.core.LUT2d(rg_vec, t_since_epoch, t_az_delay)
 
 
 def _get_tec_time(tec_json_dict: dict,

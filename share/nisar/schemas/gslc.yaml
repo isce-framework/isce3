@@ -95,6 +95,9 @@ runconfig:
 
             flatten: bool()
 
+            # Options to generate model-based slant range and azimuth correction LUTs
+            correction_luts: include('lut_options', required=False)
+
         # Output options for GSLC raster (e.g. compression, chunking, shuffle filter)
         output: include('output_options', required=False)
 
@@ -297,3 +300,7 @@ output_options:
 
     # Enable/disable shuffle filtering of GSLC raster (default True)
     shuffle: bool(required=False)
+
+lut_options:
+    # Boolean flag to activate/deactivate model-based solid earth tide corrections
+    solid_earth_tides_enabled: bool(required=False)

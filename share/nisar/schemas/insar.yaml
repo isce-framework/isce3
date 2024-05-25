@@ -141,6 +141,9 @@ runconfig:
             # Baseline estimation options
             baseline: include('baseline_options', required=False)
 
+            # Options to generate model-based slant range and azimuth correction LUTs
+            correction_luts: include('lut_options', required=False)
+
         # To setup type of worker
         worker: include('worker_options', required=False)
 
@@ -1091,3 +1094,10 @@ output_options:
     compression_level: int(min=1, max=9, required=False)
     chunk_size: list(int(min=4), min=2, max=2, required=False)
     shuffle: bool(required=False)
+
+lut_options:
+    # Boolean flag to activate/deactivate model-based solid earth tide corrections
+    solid_earth_tides_enabled: bool(required=False)
+
+    # Boolean flag to activate/deactivate model-based TEC corrections
+    tec_enabled: bool(required=False)

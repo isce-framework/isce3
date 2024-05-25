@@ -243,7 +243,7 @@ def geocode_slc_test_cases(unit_test_params):
     method = isce3.core.DataInterpMethod.NEAREST
 
     # array of ones to be multiplied by respective offset value
-    # shape unchanging; no noeed to be in loop as only starting values change
+    # shape unchanging; no need to be in loop as only starting values change
     ones = np.ones(radargrid.shape)
 
     for axis, flatten_enabled in itertools.product('xy', [True, False]):
