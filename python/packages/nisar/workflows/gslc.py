@@ -12,7 +12,7 @@ from isce3.core import crop_external_orbit
 from isce3.core.rdr_geo_block_generator import block_generator
 from isce3.core.types import (truncate_mantissa, read_c4_dataset_as_c8,
                               to_complex32)
-from isce3.io import HDF5OptimizerReader, optimize_chunk_size, compute_page_size
+from isce3.io import HDF5OptimizedReader, optimize_chunk_size, compute_page_size
 
 
 import nisar
@@ -94,8 +94,7 @@ def run(cfg):
         optimize_chunk_size(output_options['chunk_size'],
                             output_gslc_shape)
     chunk_memory_footprint = np.prod(optimal_chunk_size) * np.dtype("complex64").itemsize
-    page_size = max(chunk_memory_footprint,
-                    compute_page_size(chunk_memory_footprint))
+    page_size = compute_page_size(chunk_memory_footprint)
 
     # put together the parameters related to paging
     fs_dict = dict(fs_strategy='page',
@@ -104,7 +103,7 @@ def run(cfg):
 
     t_all = time.perf_counter()
     with h5py.File(output_hdf5, 'w', **fs_dict) as dst_h5, \
-            HDF5OptimizerReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5:
+            HDF5OptimizedReader(name=input_hdf5, mode='r', libver='latest', swmr=True) as src_h5:
 
         prep_gslc_dataset(cfg, 'GSLC', dst_h5)
         for freq, pol_list in freq_pols.items():
