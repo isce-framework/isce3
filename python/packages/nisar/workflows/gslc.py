@@ -91,7 +91,7 @@ def run(cfg):
 
     fs_dict = dict(fs_strategy=output_options['fs_strategy'],
                    fs_persist=True,
-                   page_size = None)
+                   fs_page_size = None)
 
     if output_options['fs_strategy'] == 'page':
         # Decide what page size to use based on geogrid shape.
