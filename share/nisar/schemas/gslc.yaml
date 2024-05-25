@@ -31,8 +31,11 @@ runconfig:
             tec_file: str(required=False)
 
             # List of GSLCs from previous cycles.
-            # Data driven GSLC will be activated when this field has a valid value
-            # Model drivel GSLC will be activated when this field is None
+            # Data driven GSLC will be activated when this field has a valid value.
+            # In this case the model driven corrections will be applied first, and
+            # the residual relative geolocation error will be estimated with
+            # data driven approch.
+            # When refernce_gslc is empty, only the model driven correction will be applied.
             reference_gslc: list(str(), min=1, required=False)
 
         product_path_group:
@@ -299,10 +302,10 @@ ampcor_options:
     # Margin around image edges to avoid for offset computation
     margin: int(min=0, required=False)
 
-    # Number of columns of output offset (covariance, snr) file
+    # Number of columns of output offset (covariance, snr)
     offset_width: int(required=False)
 
-    # Number of lines of output offset (covariance, snr) file
+    # Number of lines of output offset (covariance, snr)
     offset_length: int(required=False)
 
     # Start pixel of the reference image along slant range
