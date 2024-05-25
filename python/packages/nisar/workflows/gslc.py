@@ -19,7 +19,7 @@ from nisar.products.readers.orbit import load_orbit_from_xml
 from nisar.workflows.compute_stats import compute_stats_complex_data
 from nisar.workflows.h5_prep import (add_radar_grid_cubes_to_hdf5,
                                      prep_gslc_dataset)
-from nisar.workflows.geocode_corrections import get_az_srg_corrections, get_offset_lut
+from nisar.workflows.geocode_corrections import get_az_srg_corrections, get_offset_luts
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.products.writers import GslcWriter
@@ -44,7 +44,7 @@ def run(cfg):
     lines_per_block = cfg['processing']['blocksize']['y']
     flatten = cfg['processing']['flatten']
     geogrid_expansion_threshold = 100
-    apply_data_drive_correction = cfg['dynamic_ancillary_file_group']['reference_gslc'] is not None
+    apply_data_driven_correction = cfg['dynamic_ancillary_file_group']['reference_gslc'] is not None
 
     output_dir = os.path.dirname(os.path.abspath(output_hdf5))
     os.makedirs(output_dir, exist_ok=True)
@@ -100,7 +100,7 @@ def run(cfg):
 
             # get azimuth and slant range geocoding corrections
             az_correction, srg_correction = \
-                get_offset_lut(cfg, slc, freq, orbit) if apply_data_drive_correction \
+                get_offset_luts(cfg, slc, freq, orbit) if apply_data_driven_correction \
                 else get_az_srg_corrections(cfg, slc, freq, orbit)
 
             # get subswaths for current freq SLC from its Swath
