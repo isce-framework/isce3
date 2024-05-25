@@ -87,27 +87,34 @@ def run(cfg):
 
     info_channel = journal.info("gslc_array.run")
     info_channel.log("starting geocode SLC")
+    warning_channel = journal.warning("gslc_array.run")
 
-    # Decide what page size to use based on geogrid shape.
-    # If user provides the page size, then the workflow takes that value.
-    # Otherwise, the workflow decides the pagesize automatically.
-    output_gslc_shape = (geogrids['A'].length,
-                         geogrids['A'].width)
-    optimal_chunk_size = optimize_chunk_size(output_options['chunk_size'],
-                                             output_gslc_shape)
-    if output_options['fs_page_size']:
-        validate_fs_page_size(output_options['fs_page_size'], optimal_chunk_size)
-        page_size = output_options['fs_page_size']
-    else:
-        gslc_dtype = cfg['output']['data_type'].split('_')[0]
-        gslc_dtype_size = np.dtype(gslc_dtype).itemsize
-        chunk_memory_footprint = np.prod(optimal_chunk_size) * gslc_dtype_size
-        page_size = compute_page_size(chunk_memory_footprint)
-
-    # put together the parameters related to paging
-    fs_dict = dict(fs_strategy='page',
+    fs_dict = dict(fs_strategy=output_options['fs_strategy'],
                    fs_persist=True,
-                   fs_page_size=page_size)
+                   page_size = None)
+
+    if output_options['fs_strategy'] == 'page':
+        # Decide what page size to use based on geogrid shape.
+        # If user provides the page size, then the workflow takes that value.
+        # Otherwise, the workflow decides the pagesize automatically.
+        output_gslc_shape = (geogrids['A'].length,
+                             geogrids['A'].width)
+        optimal_chunk_size = optimize_chunk_size(output_options['chunk_size'],
+                                                 output_gslc_shape)
+        if output_options['fs_page_size']:
+            validate_fs_page_size(output_options['fs_page_size'], optimal_chunk_size)
+            page_size = output_options['fs_page_size']
+        else:
+            gslc_dtype = cfg['output']['data_type'].split('_')[0]
+            gslc_dtype_size = np.dtype(gslc_dtype).itemsize
+            chunk_memory_footprint = np.prod(optimal_chunk_size) * gslc_dtype_size
+            page_size = compute_page_size(chunk_memory_footprint)
+        fs_dict['fs_page_size'] = page_size
+    else:
+        # ignore the page size because it is relevant only for 'page' file space strategy
+        if output_options['fs_strategy'] != 'page' and output_options['fs_page_size'] is not None:
+            warning_channel.log('fs_page_size is relevant only when '
+                                'fs_strategy is page. Ignoring the page size provided by user.')
 
     t_all = time.perf_counter()
     with h5py.File(output_hdf5, 'w', **fs_dict) as dst_h5, \
