@@ -291,5 +291,8 @@ output_options:
     # Chunk size of GSLC raster (default [128, 128])
     chunk_size: list(int(min=4), min=2, max=2, required=False)
 
+    # File space page size in bytes
+    fs_page_size: int(min=1, required=False)
+
     # Enable/disable shuffle filtering of GSLC raster (default True)
     shuffle: bool(required=False)

@@ -82,6 +82,9 @@ runconfig:
             # Chunk size of GSLC raster
             chunk_size: [128, 128]
 
+            # File space page size in bytes
+            fs_page_size: 4194304
+
             # Enable shuffle filtering of GSLC raster
             shuffle: True
 

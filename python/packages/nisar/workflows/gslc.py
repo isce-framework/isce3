@@ -90,11 +90,18 @@ def run(cfg):
 
     output_gslc_shape = (geogrids['A'].length,
                          geogrids['A'].width)
-    optimal_chunk_size = \
-        optimize_chunk_size(output_options['chunk_size'],
-                            output_gslc_shape)
-    chunk_memory_footprint = np.prod(optimal_chunk_size) * np.dtype("complex64").itemsize
-    page_size = compute_page_size(chunk_memory_footprint)
+    
+    # Decide what page size to use.
+    # If user provides the page size, then the workflow takes that value.
+    # Otherwise, the workflow decides the pagesize automatically.
+    if output_options['fs_page_size']:
+        page_size = output_options['fs_page_size']
+    else:
+        optimal_chunk_size = \
+            optimize_chunk_size(output_options['chunk_size'],
+                                output_gslc_shape)
+        chunk_memory_footprint = np.prod(optimal_chunk_size) * np.dtype("complex64").itemsize
+        page_size = compute_page_size(chunk_memory_footprint)
 
     # put together the parameters related to paging
     fs_dict = dict(fs_strategy='page',
