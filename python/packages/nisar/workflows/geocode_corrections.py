@@ -119,12 +119,9 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
     Yields
     ------
     az_corrections: isce3.core.LUT2d
-        Azimuth correction for geocoding. Currently only no corrections are
-        computed and a default isce3.core.LUT2d is be passed back.
+        Azimuth correction for geocoding. Unit in seconds.
     srange_corrections: isce3.core.LUT2d
-        Slant range correction for geocoding. Currently only TEC corrections
-        are considered. If no TEC JSON file is provided in the cfg parameter,
-        a default isce3.core.LUT2d will be passed back.
+        Slant range correction for geocoding. Unit in meters.
     '''
     az_corrections = _get_accumulated_azimuth_corrections(cfg, slc,
                                                           frequency, orbit)
