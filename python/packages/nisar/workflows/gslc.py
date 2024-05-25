@@ -88,19 +88,20 @@ def run(cfg):
     info_channel = journal.info("gslc_array.run")
     info_channel.log("starting geocode SLC")
 
-    output_gslc_shape = (geogrids['A'].length,
-                         geogrids['A'].width)
-    
-    # Decide what page size to use.
+    # Decide what page size to use based on geogrid shape.
     # If user provides the page size, then the workflow takes that value.
     # Otherwise, the workflow decides the pagesize automatically.
+    output_gslc_shape = (geogrids['A'].length,
+                         geogrids['A'].width)
     optimal_chunk_size = optimize_chunk_size(output_options['chunk_size'],
                                              output_gslc_shape)
     if output_options['fs_page_size']:
         validate_fs_page_size(output_options['fs_page_size'], optimal_chunk_size)
         page_size = output_options['fs_page_size']
     else:
-        chunk_memory_footprint = np.prod(optimal_chunk_size) * np.dtype("complex64").itemsize
+        gslc_dtype = cfg['output']['data_type'].split('_')[0]
+        gslc_dtype_size = np.dtype(gslc_dtype).itemsize
+        chunk_memory_footprint = np.prod(optimal_chunk_size) * gslc_dtype_size
         page_size = compute_page_size(chunk_memory_footprint)
 
     # put together the parameters related to paging
