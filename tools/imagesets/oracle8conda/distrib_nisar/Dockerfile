@@ -11,7 +11,7 @@ ARG GIT_OAUTH_TOKEN
 RUN cd /opt \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/SoilMoisture \
  && git clone https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/NISAR-ADT/QualityAssurance \
- && cd /opt/QualityAssurance && git checkout v10.0.0 && rm -rf .git \
+ && cd /opt/QualityAssurance && git checkout v11.0.0 && rm -rf .git \
  && cd /opt/SoilMoisture && git checkout 9b437761673d97004b46e22a74ee67cc1b26e280 && rm -rf .git
 
 FROM $distrib_img

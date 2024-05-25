@@ -843,6 +843,7 @@ qa_options:
 
 rifg_options:
     workflows: include('workflows_options', required=False)
+    validation: include('qa_validation_options', required=False)
     qa_reports: include('rifg_qa_reports_options', required=False)
 
 rifg_qa_reports_options:
@@ -853,6 +854,7 @@ rifg_qa_reports_options:
 
 runw_options:
     workflows: include('workflows_options', required=False)
+    validation: include('qa_validation_options', required=False)
     qa_reports: include('runw_qa_reports_options', required=False)
 
 runw_qa_reports_options:
@@ -866,6 +868,7 @@ runw_qa_reports_options:
 
 gunw_options:
     workflows: include('workflows_options', required=False)
+    validation: include('qa_validation_options', required=False)
     qa_reports: include('gunw_qa_reports_options', required=False)
 
 gunw_qa_reports_options:
@@ -880,10 +883,12 @@ gunw_qa_reports_options:
 
 roff_options:
     workflows: include('workflows_options', required=False)
+    validation: include('qa_validation_options', required=False)
     qa_reports: include('offsets_qa_reports_options', required=False)
 
 goff_options:
     workflows: include('workflows_options', required=False)
+    validation: include('qa_validation_options', required=False)
     qa_reports: include('offsets_qa_reports_options', required=False)
 
 offsets_qa_reports_options:
@@ -896,6 +901,9 @@ offsets_qa_reports_options:
 workflows_options:
     validate: bool(required=False)
     qa_reports: bool(required=False)
+
+qa_validation_options:
+    metadata_cubes_fail_if_all_nan: bool(required=False)
 
 qa_phase_img_options:
     rewrap: num(min=0.0, required=False)

@@ -365,6 +365,7 @@ rfi_threshold_options:
 qa_options:
   # For descriptions of all QA parameters, see template runconfig (in `defaults` directory)
   workflows: include('workflows_options', required=False)
+  validation: include('qa_validation_options', required=False)
   qa_reports: include('qa_reports_options', required=False)
   absolute_radiometric_calibration: include('absolute_radiometric_calibration_options', required=False)
   point_target_analyzer: include('point_target_analyzer_options', required=False)
@@ -377,6 +378,9 @@ workflows_options:
   absolute_radiometric_calibration: bool(required=False)
   nes0: bool(required=False)
   point_target_analyzer: bool(required=False)
+
+qa_validation_options:
+  metadata_cubes_fail_if_all_nan: bool(required=False)
 
 qa_reports_options:
   backscatter_img:
