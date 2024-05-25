@@ -44,7 +44,7 @@ def run(cfg):
     lines_per_block = cfg['processing']['blocksize']['y']
     flatten = cfg['processing']['flatten']
     geogrid_expansion_threshold = 100
-    apply_data_drive_gslc = cfg['dynamic_ancillary_file_group']['reference_gslc'] is not None
+    apply_data_drive_correction = cfg['dynamic_ancillary_file_group']['reference_gslc'] is not None
 
     output_dir = os.path.dirname(os.path.abspath(output_hdf5))
     os.makedirs(output_dir, exist_ok=True)
@@ -100,7 +100,7 @@ def run(cfg):
 
             # get azimuth and slant range geocoding corrections
             az_correction, srg_correction = \
-                get_offset_lut(cfg, slc, freq, orbit) if apply_data_drive_gslc \
+                get_offset_lut(cfg, slc, freq, orbit) if apply_data_drive_correction \
                 else get_az_srg_corrections(cfg, slc, freq, orbit)
 
             # get subswaths for current freq SLC from its Swath
