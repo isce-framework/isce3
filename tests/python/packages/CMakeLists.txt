@@ -9,6 +9,7 @@ isce3/core/gpu_check.py
 isce3/core/llh.py
 isce3/core/poly2d.py
 isce3/core/resample_block_generators.py
+isce3/focus/valid_regions.py
 isce3/geocode/geocode_slc.py
 isce3/geometry/polygons.py
 isce3/image/resample_slc.py

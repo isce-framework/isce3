@@ -432,7 +432,8 @@ class SLC(h5py.File):
     def update_swath(self, grid: RadarGridParameters, orbit: Orbit,
                      range_bandwidth: float, frequency: str,
                      azimuth_bandwidth: float, acquired_prf: float,
-                     acquired_range_bandwidth: float, acquired_fc: float):
+                     acquired_range_bandwidth: float, acquired_fc: float,
+                     sub_swaths: np.ndarray):
         """Write swath metadata.
 
         Parameters
@@ -453,6 +454,9 @@ class SLC(h5py.File):
             Largest chirp bandwidth (in Hz) among input files.
         acquired_fc : float
             Largest center frequency (in Hz) among input files.
+        sub_swaths : numpy.ndarray
+            Array of shape (nswaths, ntimes, 2) containing the valid
+            [start, stop) grid indices of each sub swath.
         """
         t = grid.sensing_times
         r = grid.slant_ranges
@@ -514,13 +518,18 @@ class SLC(h5py.File):
         write_dataset(g, "sceneCenterGroundRangeSpacing", float, dgr,
             "Nominal ground range spacing in meters between consecutive pixels "
             "near mid swath of the RSLC image", "meters")
-        # TODO
-        write_dataset(g, "numberOfSubSwaths", 'uint8', 1,
+
+        write_dataset(g, "numberOfSubSwaths", 'uint8', len(sub_swaths),
             "Number of swaths of continuous imagery, due to transmit gaps", "1")
-        d = write_dataset(g, "validSamplesSubSwath1", 'uint32',
-            np.zeros((len(t), 2)),
-            "First and last valid sample in each line of 1st subswath", "1")
-        d[:] = (0, len(r))
+        nth_names = ["1st", "2nd", "3rd"]
+        for i, swath in enumerate(sub_swaths):
+            name = f"validSamplesSubSwath{i + 1}"
+            nth = f"{i + 1}th"
+            if i < 3:
+                nth = nth_names[i]
+            write_dataset(g, name, 'uint32', swath,
+                f"First and last valid sample in each line of {nth} subswath",
+                "1")
 
     def set_orbit(self, orbit: Orbit, type="Custom"):
         log.info("Writing orbit to SLC")
