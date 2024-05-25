@@ -136,28 +136,31 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
 
 def get_offset_lut(cfg, slc, frequency, orbit):
     '''
-    A placeholder to copmpute timing correction based on offset tracking (ampcor)
+    A placeholder to compute timing correction based on offset tracking (ampcor)
 
     Parameters
     ----------
     cfg: dict
     frequency: ['A', 'B']
         Str identifcation for NISAR SLC frequencies
+    slc: nisar.products.readers.SLC
+        NISAR single look complex (SLC) object containing swath and radar grid
+        parameters
     orbit: isce3.core.Orbit
         Object containing orbit associated with SLC
 
     Returns
     -------
     az_lut: isce3.core.LUT2d
-        2d LUT containing offset in azimuth direction
+        2d LUT in azimuth time for geolocation correction in azimuth direction.
     rg_lut: isce3.core.LUT2d
-        2d LUT containing offset in range direction
-    
+        2d LUT in meters for geolocation correction in slant range
     '''
-    info_channel = journal.info("geocode_corrections.get_az_srg_corrections")
+    info_channel = journal.info("geocode_corrections.get_offset_lut")
 
     info_channel.log('Data-driven GSLC will be implemented in the next release.'
-                     ' Returning empty LUT2d.')
+                     ' Currently returning empty LUT2d of timing corrections in'
+                     ' both range and azimuth directions.')
 
     rg_lut = isce3.core.LUT2d()
     az_lut = isce3.core.LUT2d()

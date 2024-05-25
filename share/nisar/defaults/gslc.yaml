@@ -32,8 +32,11 @@ runconfig:
             tec_file:
 
             # List of GSLCs from previous cycles.
-            # Data driven GSLC will be activated when this field has a valid value
-            # Model drivel GSLC will be activated when this field is None
+            # Data driven GSLC will be activated when this field has a valid value.
+            # In this case the model driven corrections will be applied first, and
+            # the residual relative geolocation error will be estimated with
+            # data driven approch.
+            # When refernce_gslc is empty, only the model driven correction will be applied.
             reference_gslc:
 
         product_path_group:
