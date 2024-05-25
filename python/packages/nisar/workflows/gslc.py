@@ -25,7 +25,7 @@ from nisar.workflows.geocode_corrections import get_az_srg_corrections
 from nisar.workflows.gslc_runconfig import GSLCRunConfig
 from nisar.workflows.yaml_argparse import YamlArgparse
 from nisar.products.writers import GslcWriter
-
+from nisar.workflows.helpers import validate_fs_page_size
 
 def run(cfg):
     '''
@@ -94,12 +94,12 @@ def run(cfg):
     # Decide what page size to use.
     # If user provides the page size, then the workflow takes that value.
     # Otherwise, the workflow decides the pagesize automatically.
+    optimal_chunk_size = optimize_chunk_size(output_options['chunk_size'],
+                                             output_gslc_shape)
     if output_options['fs_page_size']:
+        validate_fs_page_size(output_options['fs_page_size'], optimal_chunk_size)
         page_size = output_options['fs_page_size']
     else:
-        optimal_chunk_size = \
-            optimize_chunk_size(output_options['chunk_size'],
-                                output_gslc_shape)
         chunk_memory_footprint = np.prod(optimal_chunk_size) * np.dtype("complex64").itemsize
         page_size = compute_page_size(chunk_memory_footprint)
 
