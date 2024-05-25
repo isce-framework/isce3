@@ -131,7 +131,7 @@ def get_az_srg_corrections(cfg, slc, frequency, orbit):
     return az_corrections, srange_corrections
 
 
-def get_offset_lut(cfg, slc, frequency, orbit):
+def get_offset_luts(cfg, slc, frequency, orbit):
     '''
     A placeholder to compute timing correction based on offset tracking (ampcor)
 
@@ -149,9 +149,9 @@ def get_offset_lut(cfg, slc, frequency, orbit):
     Returns
     -------
     az_lut: isce3.core.LUT2d
-        2d LUT in azimuth time for geolocation correction in azimuth direction.
+        2d LUT in azimuth time (seconds) for geolocation correction in azimuth direction.
     rg_lut: isce3.core.LUT2d
-        2d LUT in meters for geolocation correction in slant range
+        2d LUT in meters for geolocation correction in slant range direction.
     '''
     info_channel = journal.info("geocode_corrections.get_offset_lut")
 
