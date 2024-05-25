@@ -56,7 +56,7 @@ def run(cfg):
     slc = SLC(hdf5file=input_hdf5)
 
     # if provided, load an external orbit from the runconfig file;
-    # othewise, load the orbit from the RSLC metadata.
+    # otherwise, load the orbit from the RSLC metadata.
     orbit = slc.getOrbit()
     if orbit_file is not None:
         # slc will get first radar grid whose frequency is available.

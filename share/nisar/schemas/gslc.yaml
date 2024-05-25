@@ -285,7 +285,7 @@ output_options:
     compression_enabled: bool(required=False)
 
     # Level of compression applied to GSLC raster (default 4)
-    # 1 - least compression, 9 - best compresssion
+    # 1 - least compression, 9 - best compression
     compression_level: int(min=1, max=9, required=False)
 
     # Chunk size of GSLC raster (default [128, 128])

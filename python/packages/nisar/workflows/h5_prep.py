@@ -19,7 +19,7 @@ from nisar.workflows.helpers import get_cfg_freq_pols
 
 def get_dataset_output_options(cfg: dict):
     '''
-    Process chunking and compression options for GSLC from runconfing and
+    Process chunking and compression options for GSLC from runconfig and
     return as kwargs dict that can be passed to h5py.Dataset.create_dataset
 
     Parameters
@@ -532,7 +532,7 @@ def prep_gslc_dataset(cfg, dst, dst_h5):
     # Get complex data type and set fill value for later dataset init
     ctype, complex_fill_value = get_complex_output_dtype(cfg, dst_h5)
 
-    # Create datasets in the ouput hdf5
+    # Create datasets in the output hdf5
     geogrids = cfg['processing']['geocode']['geogrids']
     for freq, pol_list in freq_pols.items():
         shape = (geogrids[freq].length, geogrids[freq].width)
